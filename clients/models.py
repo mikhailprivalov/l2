@@ -148,9 +148,7 @@ class Individual(models.Model):
                                 number=document_object["number"] or "",
                                 date_start=document_object["issueDate"],
                                 date_end=document_object["expiryDate"],
-                                who_give=
-                                (document_object["issueOrganization"] or {"name": document_object["issuerText"] or ""})[
-                                    "name"] or "",
+                                who_give=(document_object["issueOrganization"] or {"name": document_object["issuerText"] or ""})["name"] or "",
                                 individual=self,
                                 is_active=True)
                     rowss = Document.objects.filter(document_type=data['document_type'], individual=self,
@@ -531,7 +529,7 @@ class Document(models.Model):
             cards = Card.objects.filter(individual=self.individual, base__is_rmis=True, is_archive=False)
             if not cards.exists():
                 return
-            card = cards[0]
+            # card = cards[0]
             if self.rmis_uid:
                 d = c.individuals.client.getDocument(self.rmis_uid)
                 if d["series"] != self.serial or \

@@ -1,6 +1,7 @@
 from django.db import models, transaction
-from podrazdeleniya.models import Podrazdeleniya
 from jsonfield import JSONField
+
+from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 
 
@@ -161,7 +162,8 @@ class Researches(models.Model):
     localization = models.ManyToManyField(Localization, blank=True, default=None, help_text="Возможная локализация")
     service_location = models.ManyToManyField(ServiceLocation, blank=True, default=None, help_text="Возможные места оказаний")
     wide_headers = models.BooleanField(blank=True, default=False, help_text="Заголовки полей ввода на всю страницу")
-    auto_add_hidden = models.ManyToManyField('directory.Researches', related_name="res_auto_add_hidden", default=None, blank=True, help_text="Автоматически добавляемые назначения (не отображается в интерфейсе)")
+    auto_add_hidden = models.ManyToManyField('directory.Researches', related_name="res_auto_add_hidden", default=None, blank=True,
+                                             help_text="Автоматически добавляемые назначения (не отображается в интерфейсе)")
     vertical_result_display = models.BooleanField(blank=True, default=False, help_text="Отображение дат лабораторных тестов вертикально")
 
     @staticmethod
@@ -195,7 +197,7 @@ class Researches(models.Model):
     @property
     def desc(self):
         return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology \
-            or self.is_hospital
+               or self.is_hospital
 
     @property
     def can_transfer(self):

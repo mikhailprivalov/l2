@@ -1,7 +1,10 @@
+import datetime
+
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
+
 import clients.models as clients
-import datetime
+
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
@@ -9,7 +12,6 @@ class Command(BaseCommand):
         :param path - файл с картами пациентов + диагноз Д-учета
         """
         parser.add_argument('path', type=str)
-
 
     def handle(self, *args, **kwargs):
         fp = kwargs["path"]
@@ -30,6 +32,6 @@ class Command(BaseCommand):
                     card = clients.Card.objects.filter(number_poliklinika=cells[num_card]).first()
                     day_start = datetime.datetime.strptime(cells[date_start], "%Y-%m-%d %H:%M:%S").date()
                     clients.DispensaryReg.objects.update_or_create(card=card, diagnos=cells[diag],
-                            defaults={'date_start':day_start})
+                                                                   defaults={'date_start': day_start})
                     print('добавлен/обновлен Д-учет: \n')
-                    print(card, 'Диагноз:дата постановки: ',cells[diag], day_start)
+                    print(card, 'Диагноз:дата постановки: ', cells[diag], day_start)

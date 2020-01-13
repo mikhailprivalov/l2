@@ -1,4 +1,5 @@
 from django.db import connection
+
 from laboratory.settings import TIME_ZONE
 
 
@@ -68,7 +69,7 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
         def_uet, co_executor_id, co_executor_uet, co_executor2_id, co_executor2_uet, datetime_confirm, date_confirm, time_confirm,
         maybe_onco, purpose, diagnos, iss_result, outcome, card_number, client_family, client_name, client_patronymic, birthday FROM t_iss
         LEFT JOIN t_card ON t_iss.client_id=t_card.id
-        ORDER BY datetime_confirm""",params={'d_confirms':d_conf, 'd_start':d_s, 'd_end':d_e, 'ist_fin':fin, 'can_null':can_null, 'tz': TIME_ZONE})
+        ORDER BY datetime_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin': fin, 'can_null': can_null, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
     return row
@@ -99,7 +100,7 @@ def indirect_job_sql(d_conf, d_s, d_e):
 
         SELECT date_job, title, SUM(total) FROM t_j
         GROUP BY title, date_job
-        ORDER BY date_job """, params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'tz':TIME_ZONE})
+        ORDER BY date_job """, params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
     return row
@@ -133,7 +134,7 @@ def total_report_sql(d_conf, d_s, d_e, fin):
         t_res.id, t_res.title, t_res.co_executor_2_title
         FROM iss_doc
         LEFT JOIN t_res ON iss_doc.research_id = t_res.id
-        ORDER BY iss_doc.date_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin':fin})
+        ORDER BY iss_doc.date_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin': fin})
 
         row = cursor.fetchall()
     return row
@@ -183,7 +184,7 @@ def passed_research(d_s, d_e):
         LEFT JOIN t_card ON t_iss.client_id = t_card.id
         LEFT JOIN directions_paraclinicresult ON t_iss.iss_id = directions_paraclinicresult.issledovaniye_id
         AND (directions_paraclinicresult.field_id IN (SELECT * FROM t_field))
-        ORDER BY client_id, data_sozdaniya""", params={'d_start': d_s, 'd_end': d_e, 'tz':TIME_ZONE})
+        ORDER BY client_id, data_sozdaniya""", params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
     return row
@@ -232,7 +233,7 @@ def statistics_research(research_id, d_s, d_e):
         ind_family, ind_name, patronymic, birthday, date_born,
         to_char(EXTRACT(YEAR from age(time_confirmation, date_born)), '999') as ind_age FROM t_iss
         LEFT JOIN t_card ON t_iss.client_id = t_card.id
-        ORDER BY time_confirmation""", params={'research_id':research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE})
+        ORDER BY time_confirmation""", params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
     return row

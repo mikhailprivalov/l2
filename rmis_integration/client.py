@@ -22,11 +22,10 @@ from appconf.manager import SettingManager
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, \
     RMISServiceInactive
 from directory.models import Fractions, ParaclinicInputGroups, Researches
+from laboratory import settings as l2settings
 from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
 from laboratory.utils import strdate, strtime, localtime, strfdatetime
-from mq.views import dt
 from podrazdeleniya.models import Podrazdeleniya
-from laboratory import settings as l2settings
 
 
 class Utils:
@@ -36,7 +35,7 @@ class Utils:
             for col in row["column"]:
                 if col["name"] == column:
                     return col["data"]
-        except Exception:
+        except:
             return ""
 
     @staticmethod
@@ -247,7 +246,7 @@ class Client(object):
                                  data=multipart_data,
                                  headers={'Content-Type': "multipart/form-data"},
                                  auth=self.session.auth,
-                                 proxies = RMIS_PROXY)
+                                 proxies=RMIS_PROXY)
         if stdout:
             stdout.write("put_content ANSWER: [{}] {}".format(resip.status_code, resip.text))
         return str(resip.status_code) == "200"
@@ -457,7 +456,7 @@ class Patients(BaseRequester):
         self.patient_client.createPatient(patientId=iuid, patientData={})
 
         ruid = self.smart_client.sendPatient(patientCard={
-            'patient': {'uid':iuid},
+            'patient': {'uid': iuid},
             'identifiers': {
                 'code': iuid,
                 'codeType': '7',
@@ -466,7 +465,6 @@ class Patients(BaseRequester):
         })
 
         return iuid, ruid["patientUid"]
-
 
     def edit_patient(self, individual):
         data = {
@@ -643,8 +641,8 @@ class Patients(BaseRequester):
             if q != "":
                 individual_row = self.client.getIndividual(q)
             if individual_row and (
-                    (individual_row["surname"] or individual_row["name"] or individual_row["patrName"])
-                    and individual_row["birthDate"] is not None):
+                (individual_row["surname"] or individual_row["name"] or individual_row["patrName"])
+                and individual_row["birthDate"] is not None):
                 qq = dict(family=(individual_row["surname"] or "").title(),
                           name=(individual_row["name"] or "").title(),
                           patronymic=(individual_row["patrName"] or "").title(),
@@ -837,8 +835,8 @@ class Directions(BaseRequester):
     def check_send(self, direction: Napravleniya, stdout: OutputWrapper = None):
         client_rmis = direction.client.individual.check_rmis()
         if client_rmis and client_rmis != "NONERMIS" and (
-                not direction.rmis_number or direction.rmis_number == "" or direction.rmis_number == "NONERMIS" or (
-                direction.imported_from_rmis and not direction.imported_directions_rmis_send)):
+            not direction.rmis_number or direction.rmis_number == "" or direction.rmis_number == "NONERMIS" or (
+            direction.imported_from_rmis and not direction.imported_directions_rmis_send)):
             if not direction.imported_from_rmis:
                 ref_data = dict(patientUid=client_rmis,
                                 number=str(direction.pk),
@@ -981,7 +979,7 @@ class Directions(BaseRequester):
                                     ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
                                     xresult = ""
                                     for g in ParaclinicInputGroups.objects.filter(
-                                            research=x.field.group.research).order_by("order"):
+                                        research=x.field.group.research).order_by("order"):
                                         if not ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction,
                                                                                field__group=g).exists():
                                             continue
@@ -990,8 +988,8 @@ class Directions(BaseRequester):
                                                 "{{значение}}", "")
 
                                         for y in ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction,
-                                                                                 field__group=g).exclude(value="")\
-                                                .order_by("field__order"):
+                                                                                 field__group=g).exclude(value="") \
+                                            .order_by("field__order"):
                                             v = y.value.replace("\n", "<br/>")
                                             if y.field.field_type == 1:
                                                 vv = v.split('-')
@@ -999,7 +997,7 @@ class Directions(BaseRequester):
                                                     v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                             xresult += protocol_row.replace("{{фракция}}", y.field.get_title()).replace(
                                                 "{{значение}}", v)
-                                    xresult = xresult.replace("{{едизм}}", "").replace("<sub>", "")\
+                                    xresult = xresult.replace("{{едизм}}", "").replace("<sub>", "") \
                                         .replace("</sub>", "").replace("<font>", "").replace("</font>", "")
                                     self.put_protocol(code, direction, protocol_template, ss, x, xresult, stdout)
                                     RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()

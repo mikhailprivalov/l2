@@ -1,8 +1,10 @@
+from decimal import Decimal
+
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
-from directory.models import Researches
+
 from contracts.models import PriceName, PriceCoast
-from decimal import Decimal
+from directory.models import Researches
 
 
 class Command(BaseCommand):
@@ -11,7 +13,6 @@ class Command(BaseCommand):
         :param path - файл с картами пациентов + диагноз Д-учета
         """
         parser.add_argument('path', type=str)
-
 
     def handle(self, *args, **kwargs):
         """
@@ -38,11 +39,10 @@ class Command(BaseCommand):
                     price_code = cells.index("код_прайс")
                     coast = cells.index("цена")
             else:
-                price_obj = PriceName.objects.filter(pk = int(cells[price_code])).first()
-                research_obj = Researches.objects.filter(pk = int(cells[identify])).first()
+                price_obj = PriceName.objects.filter(pk=int(cells[price_code])).first()
+                research_obj = Researches.objects.filter(pk=int(cells[identify])).first()
                 if cells[coast]:
                     coast_value = Decimal(cells[coast])
                     if price_obj and research_obj:
                         PriceCoast.objects.update_or_create(price_name=price_obj, research=research_obj,
-                                                        defaults={'coast': coast_value})
-
+                                                            defaults={'coast': coast_value})

@@ -8,4 +8,4 @@ class MqConfig(AppConfig):
 
     def ready(self):
         if RMQ_ENABLED:
-            import mq.signals
+            import mq.signals  # noqa: F401

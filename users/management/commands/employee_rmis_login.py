@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
+
 from users.models import DoctorProfile
 
 
@@ -9,7 +10,6 @@ class Command(BaseCommand):
         :param path - файл с кодами МКБ10.2019 + расшифровка
         """
         parser.add_argument('path', type=str)
-
 
     def handle(self, *args, **kwargs):
         fp = kwargs["path"]
@@ -30,5 +30,5 @@ class Command(BaseCommand):
                 if doctor:
                     doctor.rmis_login = cells[rmis_login]
                     doctor.rmis_password = cells[rmis_password]
-                    doctor.save(update_fields=['rmis_login','rmis_password'])
+                    doctor.save(update_fields=['rmis_login', 'rmis_password'])
                     print("Обновлен", doctor)

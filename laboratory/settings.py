@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import warnings
 from collections import OrderedDict
 
 PROFILING = False
@@ -252,8 +253,6 @@ if 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]:
     TESTS_IN_PROGRESS = True
     MIGRATION_MODULES = DisableMigrations()
 
-import warnings
-
 warnings.filterwarnings('ignore', message='DateTimeField*', category=RuntimeWarning)
 MAX_UPLOAD_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
 
@@ -272,7 +271,10 @@ WS_BASE = "localhost"
 WS_PORT = 8822
 WS_ENABLED = False
 
-SILKY_INTERCEPT_FUNC = lambda request: request.path not in ['/mainmenu/']
+
+def SILKY_INTERCEPT_FUNC(request):
+    return request.path not in ['/mainmenu/']
+
 
 AFTER_DATE_HOLTER = None
 
@@ -282,7 +284,7 @@ DICOM_PORT = None
 DICOM_SERVER = ""
 
 try:
-    from laboratory.local_settings import *
+    from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
     pass
 
@@ -307,4 +309,3 @@ WEBPACK_LOADER = {
         'IGNORE': ['.+\.hot-update.js', '.+\.map']
     }
 }
-

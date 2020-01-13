@@ -1,7 +1,11 @@
 import collections
-from copy import deepcopy
 import datetime
+import random
+from copy import deepcopy
+from decimal import Decimal
+
 import bleach
+import imgkit
 import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -10,10 +14,12 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import dateformat
 from django.views.decorators.csrf import csrf_exempt
-from reportlab.pdfbase import pdfdoc
-from reportlab.platypus import PageBreak, Spacer, KeepInFrame, KeepTogether
+from pdfrw import PdfReader, PdfWriter
 from reportlab.lib.colors import white, black
 from reportlab.lib.enums import TA_JUSTIFY
+from reportlab.pdfbase import pdfdoc
+from reportlab.platypus import PageBreak, Spacer, KeepInFrame, KeepTogether
+
 import directory.models as directory
 import slog.models as slog
 from appconf.manager import SettingManager
@@ -26,10 +32,6 @@ from laboratory.utils import strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
-import imgkit
-from pdfrw import PdfReader, PdfWriter
-import random
-from decimal import Decimal
 
 
 @login_required
@@ -462,7 +464,7 @@ def result_print(request):
     sick_document = request.GET.get("sick_list", "0") == "1"
     leftnone = request.GET.get("leftnone", "0") == "0"
 
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, PTOContainer, Image
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Image
     from reportlab.platypus.flowables import HRFlowable
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.lib.enums import TA_CENTER
@@ -1178,7 +1180,7 @@ def result_print(request):
                 if not protocol_plain_text:
                     sick_result = None
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by(
-                            "order"):
+                        "order"):
                         sick_title = True if group.title == "Сведения ЛН" else False
                         if sick_title:
                             sick_result = collections.OrderedDict()
@@ -1302,7 +1304,7 @@ h3 {
                     txt = ""
                     sick_result = None
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by(
-                            "order"):
+                        "order"):
                         sick_title = group.title == "Сведения ЛН"
                         if sick_title:
                             sick_result = collections.OrderedDict()
@@ -2030,7 +2032,7 @@ def result_journal_print(request):
                                   "fio": iss.napravleniye.client.individual.fio(short=True,
                                                                                 dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() +
                                          ((
-                                                  "<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
+                                              "<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
         if iss.napravleniye_id not in clientresults[key]["directions"]:
             clientresults[key]["directions"][iss.napravleniye_id] = {"researches": {}}
         # results = Result.objects.filter(issledovaniye=iss)
@@ -2237,7 +2239,6 @@ def get_day_results(request):
 @login_required
 def result_filter(request):
     """ Фильтрация списка исследований """
-    import datetime
 
     result = {"ok": False}
     if request.method == "POST":
@@ -2341,8 +2342,8 @@ def results_search_directions(request):
     if query.isdigit() or bool(re.compile(r'^([a-zA-Z0-9]{14,17})$').match(query)):
         filter_type = "card_number"
     elif bool(
-            re.compile(r'^([a-zA-Zа-яА-ЯёЁ]+)( [a-zA-Zа-яА-ЯёЁ]+)?( [a-zA-Zа-яА-ЯёЁ]+)?( \d{2}\.\d{2}\.\d{4})?$').match(
-                query)):
+        re.compile(r'^([a-zA-Zа-яА-ЯёЁ]+)( [a-zA-Zа-яА-ЯёЁ]+)?( [a-zA-Zа-яА-ЯёЁ]+)?( \d{2}\.\d{2}\.\d{4})?$').match(
+            query)):
         filter_type = "fio"
         split = query.split()
         if len(split) > 0:

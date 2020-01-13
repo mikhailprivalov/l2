@@ -2,6 +2,7 @@ from django.core.management import BaseCommand
 
 from rmis_integration.client import Client
 
+
 class Command(BaseCommand):
     help = "Получение названия организации"
 

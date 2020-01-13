@@ -13,7 +13,7 @@ def mq_send(m_type, m_obj, m_pk, queue='l2_models_events'):
                               routing_key='l2_models_events',
                               body="{}|{}|{}".format(m_type, m_obj, m_pk))
         connection.close()
-    except Exception as e:
+    except:
         import logging
         logger = logging.getLogger("pika")
         from traceback import format_exc
@@ -32,7 +32,7 @@ def get_queue_messages_count(queue='l2_models_events'):
         qq = str(q.method.__dict__)
         connection.close()
         return qq
-    except Exception as e:
+    except:
         import logging
         logger = logging.getLogger("pika")
         from traceback import format_exc

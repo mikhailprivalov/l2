@@ -1,35 +1,41 @@
-from django.core.management import BaseCommand
-import pdfkit
-import os, datetime, sys
-import pathlib, re
+import datetime
+import os
+import pathlib
+import re
+import sys
 from datetime import datetime
-from dateutil.relativedelta import *
-from directions.models import Issledovaniya, Napravleniya
-from appconf.manager import SettingManager
-from users.models import DoctorProfile
 from shutil import copytree, rmtree
+
+import pdfkit
+from dateutil.relativedelta import *
+from django.core.management import BaseCommand
+from django.utils import timezone
+from django.utils.timezone import pytz
+from pyvirtualdisplay import Display
+
+from appconf.manager import SettingManager
+from directions.models import Issledovaniya, Napravleniya
 from integration_framework.models import TempData
 from laboratory.settings import TIME_ZONE, AFTER_DATE_HOLTER
-from django.utils.timezone import pytz
-from django.utils import timezone
-from pyvirtualdisplay import Display
+from users.models import DoctorProfile
+
 
 ##################################################
 # в каталогах созданных -20 дней назад
 # найти файлы *.html дата изменния к-рые больше заданной(из базы)
 # Если такой ф-л найден и размер > 30кБайт:
-  # то попытаться найти в нем последовательность цифр направления из Адрес: <b>5555555557778978978</b>
-    #если найдена, то проверить, что такое направление существует в L2 и оно не подтверждено, или
-                   #подтверждено, но разница от дата подтверждения и текущей не более 48 часов
-      #если условия, удовлетворены, то:
-        #проверить путь на наличие директории ../год/месяц/число (дата из св-ва ф-ла модификации)
-        #если нет каталога, то создать директорию:
-          #потом сгенерировать с помощью pdfkit ф-л с названием: номер направления и ФИО-пациента (4600000121Иванов) и
-          #сохранить в каталог путь ../год/месяц/число/4600000121Иванов.pdf
-          #записать ссылку на ф-л на результат в спец поле в L2
-          #если найдена последовательность Врач: Фамилия
-              #подтвердить результат от имени врача
-          #Если нет, то от имени зав.отд.
+# то попытаться найти в нем последовательность цифр направления из Адрес: <b>5555555557778978978</b>
+# если найдена, то проверить, что такое направление существует в L2 и оно не подтверждено, или
+# подтверждено, но разница от дата подтверждения и текущей не более 48 часов
+# если условия, удовлетворены, то:
+# проверить путь на наличие директории ../год/месяц/число (дата из св-ва ф-ла модификации)
+# если нет каталога, то создать директорию:
+# потом сгенерировать с помощью pdfkit ф-л с названием: номер направления и ФИО-пациента (4600000121Иванов) и
+# сохранить в каталог путь ../год/месяц/число/4600000121Иванов.pdf
+# записать ссылку на ф-л на результат в спец поле в L2
+# если найдена последовательность Врач: Фамилия
+# подтвердить результат от имени врача
+# Если нет, то от имени зав.отд.
 
 
 class Command(BaseCommand):
@@ -41,15 +47,15 @@ class Command(BaseCommand):
         p = pathlib.Path(src_dir)
         temp_dir = SettingManager.get("temp_dir")
 
-        #в каих каталогах искать "-" дней
+        # в каих каталогах искать "-" дней
         back_days = SettingManager.get("holter_back_days")
         d_start = datetime.now().date() - relativedelta(days=back_days)
         today_dir = datetime.now().strftime('%Y/%m/%d')
-        #Ищем последовательность
+        # Ищем последовательность
         pattern = re.compile('(Направление: <b>\d+</b>;)|(Адрес: <b>\d+</b>;)')
         pattern_doc = re.compile('Врач')
 
-        #услуга относящаяся к подразделению
+        # услуга относящаяся к подразделению
         podrazdeleniye_pk = SettingManager.get("ofd")
         podrazdeleniye_users = DoctorProfile.objects.values_list('pk', 'fio').filter(podrazdeleniye=podrazdeleniye_pk)
         podrazdeleniye_manager_pk = SettingManager.get("manager_ofd")
@@ -70,7 +76,7 @@ class Command(BaseCommand):
         doctors = {}
         for i in podrazdeleniye_users:
             k = i[1].split()
-            temp_dict = {k[0]:i[0]}
+            temp_dict = {k[0]: i[0]}
             doctors.update(temp_dict)
 
         for f in p.iterdir():
@@ -164,5 +170,5 @@ class Command(BaseCommand):
                             obj_iss.link_file = f'{today_dir}/{num_dir}_{list_fio[2]}.pdf'
                             obj_iss.time_confirmation = t
                             obj_iss.time_save = t
-                            obj_iss.save(update_fields=['doc_confirmation','time_save','time_confirmation','link_file'])
+                            obj_iss.save(update_fields=['doc_confirmation', 'time_save', 'time_confirmation', 'link_file'])
                             rmtree(temp_dir)

@@ -1,33 +1,26 @@
+import datetime
+import locale
 import os
+import sys
 from copy import deepcopy
 from io import BytesIO
 
+import pytils
 from django.utils import timezone, dateformat
-from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from reportlab.lib.pagesizes import A4, portrait
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepInFrame, KeepTogether
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.platypus.flowables import HRFlowable
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, landscape, portrait
-from reportlab.lib.units import mm
-from copy import deepcopy
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 
-from clients.models import Individual, Card, Document
-# from datetime import *
-import datetime
-import locale
-import sys
-import pytils
-from . import forms_func
+from appconf.manager import SettingManager
+from clients.models import Individual, Card
 from laboratory import settings
 from laboratory.settings import FONTS_FOLDER
-from appconf.manager import SettingManager
-from django.utils.datastructures import MultiValueDictKeyError
-import ast
 
 
 def form_01(request_data):

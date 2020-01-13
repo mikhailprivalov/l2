@@ -2,8 +2,8 @@ from datetime import datetime, time
 
 from django.utils import timezone
 from django.utils.timezone import pytz
-from laboratory.settings import TIME_ZONE
 
+from laboratory.settings import TIME_ZONE
 
 
 def localtime(d: datetime):
@@ -43,6 +43,7 @@ def strdatetime(d, short_year=False):
 def tsdatetime(d):
     return int(timezone.localtime(d).timestamp())
 
+
 def current_time(only_date=False):
     user_timezone = pytz.timezone(TIME_ZONE)
     if only_date:
@@ -52,8 +53,10 @@ def current_time(only_date=False):
 
     return datetime_object
 
+
 def current_year():
     return strdate(current_time(only_date=True))[-4:]
+
 
 def start_end_year():
     # возвращает даты-время(начало конец в году): 01.01.ГОД 00:00:00 00:00:01 И 31.12.ГОД 23:59:59 59:59:59

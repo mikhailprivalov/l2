@@ -1,12 +1,12 @@
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse, JsonResponse
-from directory.models import Researches, ReleationsFT, Fractions, DirectionsGroup
 import simplejson as json
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
 import directions.models as directions
 import directory.models as direct
 import slog.models as slog
+from directory.models import Researches, ReleationsFT, Fractions, DirectionsGroup
 from podrazdeleniya.models import Podrazdeleniya
 
 
@@ -263,7 +263,8 @@ def directory_research(request):
                 ref_f = json.loads(ref_f)
             return_result["fractiontubes"]["tube-" + str(fraction.relation_id)]["fractions"].append(
                 {"title": fraction.title, "units": fraction.units, "ref_m": ref_m,
-                 "ref_f": ref_f, "pk": fraction.pk, "type": 1 if not fraction.variants else fraction.variants_id, "type_values": [] if not fraction.variants else fraction.variants.get_variants(), "num": fraction.sort_weight})
+                 "ref_f": ref_f, "pk": fraction.pk, "type": 1 if not fraction.variants else fraction.variants_id,
+                 "type_values": [] if not fraction.variants else fraction.variants.get_variants(), "num": fraction.sort_weight})
         for key in return_result["fractiontubes"].keys():
             return_result["fractiontubes"][key]["fractions"] = sorted(return_result["fractiontubes"][key]["fractions"],
                                                                       key=lambda k: k['num'])

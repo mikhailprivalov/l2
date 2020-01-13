@@ -1,7 +1,7 @@
 from django.contrib import admin
+
 import directory.models as models
-from django.forms import TextInput, Textarea
-from django.db import models as dbmodels
+
 
 class ResDispensaryRouteSheet(admin.ModelAdmin):
     list_filter = ('age_client', 'sex_client',)
@@ -13,8 +13,8 @@ class ResDispensaryRouteSheet(admin.ModelAdmin):
 class ResAdmin(admin.ModelAdmin):
     list_display = ('title', 'internal_code', 'pk', 'podrazdeleniye',)
     list_display_links = ('title', 'internal_code', 'pk', 'podrazdeleniye',)
-    list_filter = ('podrazdeleniye','groups', 'hide', 'is_doc_refferal', 'is_paraclinic', 'is_treatment',)
-    search_fields = ('title', 'internal_code','pk',)
+    list_filter = ('podrazdeleniye', 'groups', 'hide', 'is_doc_refferal', 'is_paraclinic', 'is_treatment',)
+    search_fields = ('title', 'internal_code', 'pk',)
 
 
 class RefAdmin(admin.ModelAdmin):
@@ -28,11 +28,13 @@ class RefFractions(admin.ModelAdmin):
     list_display_links = ('title', 'research', 'podr',)
     list_filter = ('research__podrazdeleniye',)
     search_fields = ('title',)
+
     def podr(self, obj):
         return obj.research.podrazdeleniye
 
     podr.short_description = "Лаборатория"
     podr.admin_order_field = 'research__podrazdeleniye'
+
 
 class RefResearch(admin.ModelAdmin):
     list_display = ('title', 'internal_code', 'podr',)
@@ -77,12 +79,9 @@ admin.site.register(models.AutoAdd)
 admin.site.register(models.ParaclinicTemplateName)
 admin.site.register(models.ParaclinicTemplateField)
 admin.site.register(models.DirectionsGroup)
-
 admin.site.register(models.DispensaryRouteSheet, ResDispensaryRouteSheet)
-
 admin.site.register(models.Culture, TitleHide)
 admin.site.register(models.Antibiotic, TitleHide)
-
 admin.site.register(models.Localization, TitleFsli)
 admin.site.register(models.ServiceLocation, TitleHide)
 admin.site.register(models.HospitalService, HospitalServiceAdmin)

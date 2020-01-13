@@ -1,36 +1,30 @@
+import locale
+import os.path
+import sys
+from copy import deepcopy
+from io import BytesIO
+
+from reportlab.lib import colors
+from reportlab.lib.colors import black
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from reportlab.lib.pagesizes import A4, portrait
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, \
+from reportlab.platypus import PageBreak, Indenter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, \
     TableStyle, Frame, KeepInFrame
-from reportlab.platypus import PageBreak, NextPageTemplate, Indenter
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, landscape, portrait
-from reportlab.lib.units import mm
-from copy import deepcopy
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
-from reportlab.platypus.flowables import HRFlowable
-from reportlab.lib.colors import HexColor
-from reportlab.lib.colors import black
 
+from api.sql_func import get_fraction_result
+from api.stationar.sql_func import get_result_value_iss
+from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction
 from appconf.manager import SettingManager
-from clients.models import Card, Document
-from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
+from directions.models import Napravleniya, Issledovaniya
 from directory.models import Fractions
 from laboratory.settings import FONTS_FOLDER
-import datetime
-import locale
-import sys
-import pytils
-import os.path
-from io import BytesIO
-from . import forms_func
-from reportlab.pdfgen import canvas
-from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction, get_direction_attrs
-from api.stationar.sql_func import get_result_value_iss
-from api.sql_func import get_fraction_result
 from utils.dates import normalize_date
-from users.models import DoctorProfile
+
 
 def form_01(request_data):
     """
@@ -134,23 +128,23 @@ def form_01(request_data):
 
     card_num_obj = patient_data['card_num'].split(' ')
     p_card_num = card_num_obj[0]
-    if len(card_num_obj) ==2:
-        p_card_type = '('+ str(card_num_obj[1]) + ')'
+    if len(card_num_obj) == 2:
+        p_card_type = '(' + str(card_num_obj[1]) + ')'
     else:
-        p_card_type =''
+        p_card_type = ''
 
     # взять самое последнее направленеие из hosp_dirs
     hosp_last_num = hosp_nums_obj[-1].get('direction')
     ############################################################################################################
-    #Получение данных из выписки
-    #Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
+    # Получение данных из выписки
+    # Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
     hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
     hosp_extract_iss, extract_research_id = None, None
     if hosp_extract:
         hosp_extract_iss = hosp_extract[0].get('iss')
         extract_research_id = hosp_extract[0].get('research_id')
     titles_field = ['Время выписки', 'Дата выписки', 'Основной диагноз (описание)',
-                    'Осложнение основного диагноза (описание)','Сопутствующий диагноз (описание)'
+                    'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
                     ]
     list_values = None
     if titles_field and hosp_extract:
@@ -176,11 +170,11 @@ def form_01(request_data):
             if len(vv) == 3:
                 date_value = "{}.{}.{}".format(vv[2], vv[1], vv[0])
 
-    #Получить отделение - из названия услуги изи самого главного направления
+    # Получить отделение - из названия услуги изи самого главного направления
     hosp_depart = hosp_nums_obj[0].get('research_title')
 
     ############################################################################################################
-    #Получить данные из первичного приема (самого первого hosp-направления)
+    # Получить данные из первичного приема (самого первого hosp-направления)
     hosp_first_num = hosp_nums_obj[0].get('direction')
     hosp_primary_receptions = hosp_get_data_direction(hosp_first_num, site_type=0, type_service='None', level=2)
     hosp_primary_iss, primary_research_id = None, None
@@ -195,7 +189,6 @@ def form_01(request_data):
                     'Диагноз направившего учреждения', 'Диагноз при поступлении']
     if titles_field and hosp_primary_receptions:
         list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
-
 
     date_entered_value, time_entered_value, type_transport, medicament_allergy = '', '', '', ''
     who_directed, plan_hospital, extra_hospital, type_hospital = '', '', '', ''
@@ -233,7 +226,7 @@ def form_01(request_data):
             if i[3] == 'Диагноз направившего учреждения':
                 diagnos_who_directed = i[2]
                 continue
-            if i[3] =='Диагноз при поступлении':
+            if i[3] == 'Диагноз при поступлении':
                 diagnos_entered = i[2]
                 continue
 
@@ -248,15 +241,15 @@ def form_01(request_data):
     fcaction_rezus_id = Fractions.objects.filter(title='Резус').first()
     group_blood_avo = get_fraction_result(ind_card.pk, fcaction_avo_id.pk, count=1)
     group_blood_rezus = get_fraction_result(ind_card.pk, fcaction_rezus_id.pk, count=1)
-    group_rezus_value = group_blood_rezus[0][5].replace('<br/>',' ')
+    group_rezus_value = group_blood_rezus[0][5].replace('<br/>', ' ')
     ###########################################################################################################
-    #получение данных клинического диагноза
+    # получение данных клинического диагноза
     hosp_day_entries = hosp_get_data_direction(hosp_first_num, site_type=1, type_service='None', level=-1)
     day_entries_iss = []
     day_entries_research_id = None
     if hosp_day_entries:
         for i in hosp_day_entries:
-            #найти дневники совместно с заведующим
+            # найти дневники совместно с заведующим
             if i.get('research_title').find('заведующ') != -1:
                 day_entries_iss.append(i.get('iss'))
                 if not day_entries_research_id:
@@ -386,29 +379,29 @@ def form_01(request_data):
 
     def first_pages(canvas, document):
         canvas.saveState()
-        #Побочное действие лекарств(непереносимость) координаты
+        # Побочное действие лекарств(непереносимость) координаты
         medicament_text = [Paragraph('{}'.format(medicament_allergy), styleJustified)]
         medicament_frame = Frame(27 * mm, 163 * mm, 175 * mm, 12 * mm, leftPadding=0, bottomPadding=0,
-                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+                                 rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         medicament_inframe = KeepInFrame(175 * mm, 12 * mm, medicament_text, hAlign='LEFT', vAlign='TOP', )
         medicament_frame.addFromList([medicament_inframe], canvas)
 
-        #Диагноз направившего учреждения координаты
+        # Диагноз направившего учреждения координаты
         diagnos_directed_text = [Paragraph('{}'.format(diagnos_who_directed), styleJustified)]
         diagnos_directed_frame = Frame(27 * mm, 81 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0,
-                                rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+                                       rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         diagnos_directed_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_directed_text, hAlign='LEFT', vAlign='TOP', )
         diagnos_directed_frame.addFromList([diagnos_directed_inframe], canvas)
 
         # Диагноз при поступлении координаты
         diagnos_entered_text = [Paragraph('{}'.format(diagnos_entered), styleJustified)]
         diagnos_entered_frame = Frame(27 * mm, 67 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0,
-                                       rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+                                      rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         diagnos_entered_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_entered_text, hAlign='LEFT',
-                                               vAlign='TOP', )
+                                              vAlign='TOP', )
         diagnos_entered_frame.addFromList([diagnos_entered_inframe], canvas)
 
-        #клинический диагноз координаты
+        # клинический диагноз координаты
         diagnos_text = [Paragraph('{}'.format(s * 1), styleJustified)]
         diagnos_frame = Frame(27 * mm, 5 * mm, 175 * mm, 55 * mm, leftPadding=0, bottomPadding=0,
                               rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
@@ -501,33 +494,33 @@ def form_01(request_data):
 
     def later_pages(canvas, document):
         canvas.saveState()
-        #Заключительные диагнозы
-        #Основной заключительный диагноз
+        # Заключительные диагнозы
+        # Основной заключительный диагноз
         final_diagnos_text = [Paragraph('{}'.format(final_diagnos), styleJustified)]
         final_diagnos_frame = Frame(27 * mm, 230 * mm, 175 * mm, 45 * mm, leftPadding=0, bottomPadding=0,
-                                rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+                                    rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         final_diagnos_inframe = KeepInFrame(175 * mm, 50 * mm, final_diagnos_text, hAlign='LEFT', vAlign='TOP', )
         final_diagnos_frame.addFromList([final_diagnos_inframe], canvas)
 
         # Осложнения основного заключительного диагноза
         other_diagnos_text = [Paragraph('{}'.format(other_diagnos), styleJustified)]
         other_diagnos_frame = Frame(27 * mm, 205 * mm, 175 * mm, 20 * mm, leftPadding=0, bottomPadding=0,
-                                       rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+                                    rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         other_diagnos_inframe = KeepInFrame(175 * mm, 20 * mm, other_diagnos_text, hAlign='LEFT', vAlign='TOP', )
         other_diagnos_frame.addFromList([other_diagnos_inframe], canvas)
 
         # Сопутствующие основного заключительного диагноза
         near_diagnos_text = [Paragraph('{}'.format(near_diagnos), styleJustified)]
         near_diagnos_frame = Frame(27 * mm, 181 * mm, 175 * mm, 20 * mm, leftPadding=0, bottomPadding=0,
-                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        near_diagnos_inframe = KeepInFrame(175 * mm, 20 * mm, near_diagnos_text, vAlign='TOP',)
+                                   rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        near_diagnos_inframe = KeepInFrame(175 * mm, 20 * mm, near_diagnos_text, vAlign='TOP', )
         near_diagnos_frame.addFromList([near_diagnos_inframe], canvas)
 
-        #Таблица операции
+        # Таблица операции
         operation_text = [tbl_o]
         operation_frame = Frame(27 * mm, 123 * mm, 175 * mm, 40 * mm, leftPadding=0, bottomPadding=0,
-                                   rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        operation_inframe = KeepInFrame(175 * mm, 40 * mm, operation_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False )
+                                rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        operation_inframe = KeepInFrame(175 * mm, 40 * mm, operation_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
         operation_frame.addFromList([operation_inframe], canvas)
         canvas.restoreState()
 

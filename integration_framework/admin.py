@@ -1,6 +1,7 @@
 from django.contrib import admin
+
 import integration_framework.models as models
-# Register your models here.
+
 
 class ResIntertationResearches(admin.ModelAdmin):
     list_display = ('type_integration', 'research',)

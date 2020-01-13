@@ -1,4 +1,5 @@
 import datetime
+
 from django.core.management import BaseCommand
 
 from clients.models import Card, Individual

@@ -1,9 +1,9 @@
 import datetime
 
-from django.core.management import BaseCommand
-from rmis_integration.client import Client as RC
-
 import simplejson as json
+from django.core.management import BaseCommand
+
+from rmis_integration.client import Client as RC
 
 
 class Command(BaseCommand):

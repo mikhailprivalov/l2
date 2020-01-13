@@ -44,4 +44,3 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     class Meta:
         verbose_name = 'Подразделение'
         verbose_name_plural = 'Подразделения'
-

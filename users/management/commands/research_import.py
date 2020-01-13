@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
+
 from directory.models import Researches, ResearchSite
 
 
@@ -9,7 +10,6 @@ class Command(BaseCommand):
         :param path - файл с картами пациентов + диагноз Д-учета
         """
         parser.add_argument('path', type=str)
-
 
     def handle(self, *args, **kwargs):
         """
@@ -45,7 +45,6 @@ class Command(BaseCommand):
                     place_research = cells.index("место")
                     podr = cells.index("подразделение")
                     pay = cells.index("платно")
-
 
                     def insert_data(ins):
                         c1 = ws1.cell(row=r, column=1)

@@ -1,5 +1,6 @@
-import clients.models as Clients
 import simplejson as json
+
+import clients.models as Clients
 from appconf.manager import SettingManager
 
 
@@ -27,7 +28,8 @@ def menu(request):
             {"url": "/logout", "title": "Выход из профиля", "nt": False, "access": ["*"], "not_show_home": True},
             {"hr": True, "access": ["*"]},
             {"url": "/mainmenu/directions", "title": "Направления и картотека", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
-            {"url": "/mainmenu/direction/info", "title": "История направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Лаборант", "Врач-лаборант", "Просмотр журнала"]},
+            {"url": "/mainmenu/direction/info", "title": "История направления", "nt": False,
+             "access": ["Лечащий врач", "Оператор лечащего врача", "Лаборант", "Врач-лаборант", "Просмотр журнала"]},
             {"url": "/mainmenu/directions/multiprint", "title": "Печать направлений", "nt": False, "access": ["*"]},
             {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
             {"url": "/mainmenu/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
@@ -40,7 +42,8 @@ def menu(request):
             {"url": "/mainmenu/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
             {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
             {"url": "/results/enter", "title": "Ввод результатов", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
-            {"url": "/mainmenu/employee-job", "title": "Учёт косвенных услуг по лаборатории", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Зав. лабораторией"], "module": "l2_employee_job"},
+            {"url": "/mainmenu/employee-job", "title": "Учёт косвенных услуг по лаборатории", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Зав. лабораторией"],
+             "module": "l2_employee_job"},
             {"url": "/construct/menu", "title": "Конструктор справочника", "nt": False,
              "access": ["Конструктор: Лабораторные исследования",
                         "Конструктор: Параклинические (описательные) исследования",
@@ -69,8 +72,11 @@ def menu(request):
             {"url": "/mainmenu/view_log", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},
             # {"url": "/reports", "title": "Отчёты", "nt": False, "access": []},
             {"url": "/admin", "title": "Администрирование L2", "nt": False, "access": []},
-            {"url": "/mainmenu/direction_visit", "title": "Регистрация направлений", "nt": False, "access": ["Посещения по направлениям", "Врач параклиники", "Врач консультаций", "Заборщик биоматериала микробиологии", "Получатель биоматериала микробиологии"], "module": "paraclinic_module"},
-            {"url": "/mainmenu/results/paraclinic", "title": "Ввод описательных результатов", "nt": False, "access": ["Врач параклиники", "Врач консультаций"], "module": "paraclinic_module"},
+            {"url": "/mainmenu/direction_visit", "title": "Регистрация направлений", "nt": False,
+             "access": ["Посещения по направлениям", "Врач параклиники", "Врач консультаций", "Заборщик биоматериала микробиологии", "Получатель биоматериала микробиологии"],
+             "module": "paraclinic_module"},
+            {"url": "/mainmenu/results/paraclinic", "title": "Ввод описательных результатов", "nt": False, "access": ["Врач параклиники", "Врач консультаций"],
+             "module": "paraclinic_module"},
             {"url": '/mainmenu/hosp', "title": "Госпитализация", "nt": True, "access": ["Госпитализация"], "module": "hosp_module"},
             {"url": '/mainmenu/stationar', "title": "Стационар", "nt": False, "access": ["Врач стационара"], "module": "l2_hosp"},
             {"url": '/mainmenu/rmis_confirm', "title": "Подтверждение отправки результатов в РМИС", "nt": False, "access": ["Подтверждение отправки результатов в РМИС"]},

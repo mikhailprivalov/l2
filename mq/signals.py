@@ -1,10 +1,11 @@
 from django.db.models.signals import post_save, post_delete
-import directions.models as directions
+
 import clients.models as clients
+import directions.models as directions
 import directory.models as directory
 import podrazdeleniya.models as podrazdeleniya
-import users.models as users
 import researches.models as researches
+import users.models as users
 from laboratory.settings import RMQ_ENABLED
 from mq.publisher import mq_send
 

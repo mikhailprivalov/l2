@@ -1,11 +1,13 @@
-from clients.models import Document, DispensaryReg
-from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
-from directory.models import Researches
-from copy import deepcopy
 from collections import OrderedDict
-from django.db.models import Q
-from laboratory import utils
+from copy import deepcopy
 from decimal import Decimal
+
+from django.db.models import Q
+
+from clients.models import Document, DispensaryReg
+from directions.models import Napravleniya, Issledovaniya
+from directory.models import Researches
+from laboratory import utils
 from laboratory.utils import strdate
 
 
@@ -100,7 +102,7 @@ def get_final_data(research_price_loc):
     for k, v in research_price_loc.items():
         # research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title')])
         research_attr = (
-        [s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title', 'internal_code')])
+            [s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title', 'internal_code')])
         research_attr_list = [list(z) for z in research_attr]
         for research_id, research_coast in v.items():
             h = []
@@ -359,7 +361,7 @@ def get_finaldata_talon(doc_result_obj):
         temp_dict['maybe_onco'] = 'Да' if i.maybe_onco else ''
 
         fin_source[dict_fsourcce].update({order: temp_dict})
-        fin_source_iss[dict_fsourcce].update({order:temp_dict_iss})
+        fin_source_iss[dict_fsourcce].update({order: temp_dict_iss})
 
         if Issledovaniya.objects.filter(parent=i).exists():
             temp_dict_iss_copy = deepcopy(temp_dict_iss)

@@ -1,31 +1,32 @@
+import datetime
+import locale
+import os.path
+import re
+import sys
+from copy import deepcopy
+from datetime import *
+from io import BytesIO
+
+import simplejson as json
+from anytree import Node, RenderTree
+from reportlab.lib import colors
+from reportlab.lib.colors import black
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from reportlab.lib.pagesizes import A4, portrait, landscape
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, portrait, landscape
-from reportlab.lib.units import mm
-from reportlab.lib.colors import black
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.platypus import PageBreak, Indenter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.platypus.flowables import HRFlowable
 
-from copy import deepcopy
-import os.path
-import locale
-import sys
-from io import BytesIO
-from . import forms_func
-from laboratory.settings import FONTS_FOLDER
-from datetime import *
-import datetime
-import simplejson as json
 from appconf.manager import SettingManager
-from directions.models import Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, ParaclinicResult
+from directions.models import Issledovaniya, Napravleniya, ParaclinicResult
 from laboratory import utils
+from laboratory.settings import FONTS_FOLDER
 from utils import tree_directions
-from anytree import Node, RenderTree
-import re
+from . import forms_func
 
 
 def form_01(request_data):
@@ -145,11 +146,11 @@ def form_01(request_data):
 
         if param:
             tbl = Table(t_opinion,
-                        colWidths=(10 * mm, 60 * mm, 19 * mm, 15 * mm, 75 * mm, 30 * mm, 70 * mm, ))
+                        colWidths=(10 * mm, 60 * mm, 19 * mm, 15 * mm, 75 * mm, 30 * mm, 70 * mm,))
         else:
             tbl = Table(t_opinion,
                         colWidths=(10 * mm, 30 * mm, 19 * mm, 15 * mm, 46 * mm, 20 * mm, 10 * mm, 13 * mm, 11 * mm,
-                               20 * mm, 20 * mm, 14 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
+                                   20 * mm, 20 * mm, 14 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
 
         tbl.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
@@ -212,7 +213,7 @@ def form_02(request_data):
                                         u'\u2063   ')
     """
 
-    #получить направления
+    # получить направления
     ind_dir = json.loads(request_data["napr_id"])
 
     hospital_name = SettingManager.get("org_title")
@@ -290,7 +291,7 @@ def form_02(request_data):
 
         space_symbol = '&nbsp;'
 
-        #Добавить сведения о пациента
+        # Добавить сведения о пациента
         content_title = [
             Indenter(left=0 * mm),
             Spacer(1, 1 * mm),
@@ -298,7 +299,7 @@ def form_02(request_data):
             Spacer(1, 2 * mm),
             Paragraph('<u>Статистический талон пациента</u>', styleCenter),
             Paragraph('{}<font size=10>Карта № </font><font fontname="PTAstraSerifBold" size=10>{}</font><font size=10> из {}</font>'.format(
-                    3 * space_symbol, p_card_num, p_card_type), styleCenter),
+                3 * space_symbol, p_card_num, p_card_type), styleCenter),
             Spacer(1, 2 * mm),
             Paragraph('<font size=11>Данные пациента:</font>', styleBold),
             Paragraph("1. Фамилия, имя, отчество:&nbsp;  <font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(
@@ -316,7 +317,7 @@ def form_02(request_data):
 
         objs.extend(content_title)
 
-        #добавить данные об услуге
+        # добавить данные об услуге
         objs.append(Spacer(1, 3 * mm))
         objs.append(Paragraph('<font size=11>Данные об услуге:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
@@ -342,10 +343,10 @@ def form_02(request_data):
                 vv = v.split('-')
                 if len(vv) == 3:
                     v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-            list_f =[[Paragraph(f.field.get_title(), styleT), Paragraph(v, styleT)]]
+            list_f = [[Paragraph(f.field.get_title(), styleT), Paragraph(v, styleT)]]
             opinion.extend(list_f)
 
-        tbl = Table(opinion, colWidths=(60 * mm, 123* mm))
+        tbl = Table(opinion, colWidths=(60 * mm, 123 * mm))
         tbl.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
@@ -353,7 +354,7 @@ def form_02(request_data):
 
         objs.append(tbl)
 
-        #Заключительные положения
+        # Заключительные положения
         objs.append(Spacer(1, 4 * mm))
         objs.append(Paragraph('<font size=11>Заключительные положения:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
@@ -377,7 +378,7 @@ def form_02(request_data):
         ]))
         objs.append(tbl)
 
-       # Добавить Дополнительные услуги
+        # Добавить Дополнительные услуги
         add_research = Issledovaniya.objects.filter(parent_id__napravleniye=obj_dir)
         if add_research:
             objs.append(Spacer(1, 3 * mm))
@@ -398,12 +399,12 @@ def form_02(request_data):
             personal_code = empty if not obj_iss.doc_confirmation.personal_code else obj_iss.doc_confirmation.personal_code
             doc_fio = obj_iss.doc_confirmation.get_fio()
 
-        objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '. format(doc_fio,
-             42 * space_symbol, personal_code),style))
+        objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '.format(doc_fio,
+                                                                                    42 * space_symbol, personal_code), style))
 
         objs.append(Spacer(1, 5 * mm))
 
-        #Получить структуру Направлений если, направление в Дереве не важно в корне в середине или в начале
+        # Получить структуру Направлений если, направление в Дереве не важно в корне в середине или в начале
         root_dir = tree_directions.root_direction(dir)
         num_iss = (root_dir[-1][-2])
         tree_dir = tree_directions.tree_direction(num_iss)
@@ -432,7 +433,7 @@ def form_02(request_data):
             result = pattern.search(row.node.name)
             current_style = styleBold if result else styleT
             count_space = len(row.pre) // 2 * 2
-            para = [Paragraph('{}{}'.format(space_symbol * count_space,  row.node.name), current_style)]
+            para = [Paragraph('{}{}'.format(space_symbol * count_space, row.node.name), current_style)]
             opinion.append(para)
 
         tbl = Table(opinion, colWidths=(190 * mm))

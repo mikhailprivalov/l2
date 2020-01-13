@@ -3,8 +3,6 @@ import directory.models as directory
 from decimal import Decimal
 
 
-# Create your models here.
-
 class PriceName(models.Model):
     title = models.CharField(max_length=511,unique=True, help_text='Наименование Прайса',db_index=True)
     active_status = models.BooleanField(default=True, help_text='Статус активности',db_index=True)

@@ -18,16 +18,6 @@ set -eo pipefail
 EXIT_VALUE=0
 
 # -------------------------------------------------------------------------------- #
-# Start                                                                            #
-# -------------------------------------------------------------------------------- #
-# UX - Show the user that the processing of a specific file has stared.            #
-# -------------------------------------------------------------------------------- #
-start()
-{
-    printf ' [ \033[00;33mInfo\033[0m ] Linting %s (%s)\n' "$1"
-}
-
-# -------------------------------------------------------------------------------- #
 # Success                                                                          #
 # -------------------------------------------------------------------------------- #
 # UX - Show the user that the processing of a specific file was successful.        #
@@ -58,7 +48,6 @@ check()
 {
     local filename="$1"
 
-    start "$filename"
     if flake8 "$filename"; then
         success "$filename"
     else

@@ -1,29 +1,26 @@
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, \
-    TableStyle
-from reportlab.platypus import PageBreak, NextPageTemplate, Indenter
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, landscape, portrait
-from reportlab.lib.units import mm
-from copy import deepcopy
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
-from reportlab.platypus.flowables import HRFlowable
-from reportlab.lib.colors import HexColor
-from reportlab.lib.colors import black
-
-from appconf.manager import SettingManager
-from clients.models import Card, Document
-from laboratory.settings import FONTS_FOLDER
 import datetime
 import locale
-import sys
-import pytils
 import os.path
+import sys
+from copy import deepcopy
 from io import BytesIO
-from . import forms_func
-from reportlab.pdfgen import canvas
+
+import pytils
+from reportlab.lib import colors
+from reportlab.lib.colors import black
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from reportlab.lib.pagesizes import A4, landscape, portrait
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import NextPageTemplate, Indenter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, \
+    TableStyle
+
+from appconf.manager import SettingManager
+from clients.models import Card
+from laboratory.settings import FONTS_FOLDER
 
 
 # def form_100_01(**kwargs):
@@ -298,7 +295,6 @@ def form_01(request_data):
     return pdf
 
 
-
 def form_02(request_data):
     """
     Форма 025/у - титульный лист амбулаторной карты
@@ -395,16 +391,17 @@ def form_02(request_data):
 
     card_num_obj = patient_data['card_num'].split(' ')
     p_card_num = card_num_obj[0]
-    if len(card_num_obj) ==2:
-        p_card_type = '('+ str(card_num_obj[1]) + ')'
+    if len(card_num_obj) == 2:
+        p_card_type = '(' + str(card_num_obj[1]) + ')'
     else:
-        p_card_type =''
+        p_card_type = ''
     content_title = [
         Indenter(left=0 * mm),
         Spacer(1, 1 * mm),
         Paragraph('МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА, <br/> ПОЛУЧАЮЩЕГО МЕДИЦИНСКУЮ ПОМОЩЬ В АМБУЛАТОРНЫХ УСЛОВИЯХ',
                   styleCenter),
-        Paragraph('{}<font size=14>№</font><font fontname="PTAstraSerifBold" size=17> <u>{}</u></font><font size=14> {}</font>'.format(3 * space_symbol, p_card_num, p_card_type), styleCenter),
+        Paragraph('{}<font size=14>№</font><font fontname="PTAstraSerifBold" size=17> <u>{}</u></font><font size=14> {}</font>'.format(3 * space_symbol, p_card_num, p_card_type),
+                  styleCenter),
         Spacer(1, 2 * mm),
         Paragraph('1.Дата заполнения медицинской карты: {}'.
                   format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())), style),
