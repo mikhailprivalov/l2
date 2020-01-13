@@ -95,7 +95,7 @@ def get_final_data(research_price_loc):
 
     total_sum = 0
     tmp_data = []
-    is_discount = False
+    # is_discount = False
     z = ""
     x = ""
     tmp_napr = []

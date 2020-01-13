@@ -4,12 +4,12 @@ import os.path
 import sys
 import zlib
 from copy import deepcopy
-from datetime import *
+from datetime import date
 from io import BytesIO
 
 import pytils
 import simplejson as json
-from dateutil.relativedelta import *
+from dateutil.relativedelta import relativedelta
 from reportlab.graphics import renderPDF
 from reportlab.graphics.barcode import code128, qr
 from reportlab.graphics.shapes import Drawing
@@ -81,7 +81,6 @@ def form_01(request_data):
     Договор, включающий услуги на оплату и необходимые реквизиты. С Учетом представителей и Заказчиков(Плательщиков)
     у пациента
     """
-    form_name = "Договор"
     p_payer = None
     p_agent = None
     ind_card = Card.objects.get(pk=request_data["card_pk"])
@@ -176,8 +175,8 @@ def form_01(request_data):
         PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'], ind_card, p_payer, p_agent)
         Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
 
-    if len(num_contract_set) == 1 and not None in num_contract_set:
-        if len(protect_code_set) == 1 and not None in protect_code_set:
+    if len(num_contract_set) == 1 and None not in num_contract_set:
+        if len(protect_code_set) == 1 and None not in protect_code_set:
             if protect_code_set.pop() == protect_code:
                 date_now_str = num_contract_set.pop()
             else:
@@ -286,7 +285,7 @@ def form_01(request_data):
     # Добавдяем представителя (мать, отец, опекун или др. не дееспособный)
     is_pagent = False
     # представитель==Заказчик ()
-    if (p_payer == None) or (p_payer == p_agent) or (p_agent and p_payer == None):
+    if (p_payer is None) or (p_payer == p_agent) or (p_agent and p_payer is None):
         payer_fio = person_data['fio']
         is_pagent = True
         p_agent_who = client_who + " (представитель пациента)"
@@ -447,7 +446,7 @@ def form_01(request_data):
     objs.append(
         Paragraph('б) данных о конкретном медицинском работнике, предоставляющем соответствующую платную медицинскую услугу (его профессиональном образовании и квалификации);', style))
     objs.append(Paragraph(
-        'в) данных о методах оказания медицинской помощи, связанных с ними рисках, возможных видах медицинского вмешательства, их последствиях и ожидаемых результатах оказания медицинской помощи;',
+        'в) данных о методах оказания медицинской помощи, связанных с ними рисках, возможных видах медицинского вмешательства, их последствиях и ожидаемых результатах оказания медицинской помощи;',  # noqa: E501
         style))
     objs.append(Paragraph('г) других сведениях, относящихся к предмету настоящего Договора.', style))
     objs.append(Paragraph('2.1.2.Оказывать Пациенту услуги, предусмотренные п. 1.1 настоящего Договора, а при необходимости и дополнительные услуги.', style))
@@ -558,8 +557,6 @@ def form_01(request_data):
     dir_n = fio_director_list[1]
     dir_p = fio_director_list[2]
     dir_npf = dir_n[0:1] + '.' + ' ' + dir_p[0:1] + '.' + ' ' + dir_f
-
-    styleAtrEndStr = deepcopy(styleAtr)
 
     space_symbol = '&nbsp;'
 
@@ -773,9 +770,6 @@ def form_01(request_data):
         qr_code.barWidth = 70
         qr_code.barHeight = 70
         qr_code.qrVersion = 1
-        bounds = qr_code.getBounds()
-        width = bounds[2] - bounds[0]
-        height = bounds[3] - bounds[1]
         d = Drawing()
         d.add(qr_code)
         renderPDF.draw(d, canvas, 90 * mm, 7)
@@ -805,9 +799,6 @@ def form_01(request_data):
         qr_code.barWidth = 70
         qr_code.barHeight = 70
         qr_code.qrVersion = 1
-        bounds = qr_code.getBounds()
-        width = bounds[2] - bounds[0]
-        height = bounds[3] - bounds[1]
         d = Drawing()
         d.add(qr_code)
         renderPDF.draw(d, canvas, 90 * mm, 7)

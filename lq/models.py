@@ -79,8 +79,6 @@ class StatusQueueL2(models.Model):
         let_num = obj_resource.get_letter()
         last_talon = StatusQueueL2.objects.values_list('talon_letter', 'talon_number').filter(queue_l2=obj_resource).order_by("-date_get").first()
         print(last_talon)
-        n = 0
-        l = ''
         num_last = 0
         let_last = ''
         if last_talon:

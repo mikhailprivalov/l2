@@ -2,7 +2,7 @@ from collections import OrderedDict
 from datetime import timedelta
 
 import openpyxl
-from openpyxl.styles import PatternFill, Border, Side, Alignment, Font, NamedStyle
+from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils.cell import get_column_letter
 
 from directions.models import IstochnikiFinansirovaniya
@@ -227,7 +227,7 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
     r = 7
     r1 = r + 1
     total_sum = []
-    one_days = timedelta(1)
+    # one_days = timedelta(1)
     current_date = ''
     for issled in issl_obj:
         # Порядок колонок в issled:
@@ -238,9 +238,9 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         # outcome, card_number, client_family, client_name, client_patronymic, \
         # birthday
         empty = ' '
-        current_datetime_confirm = issled[13]
+        # current_datetime_confirm = issled[13]
         current_date = issled[14]
-        current_count = 1
+        # current_count = 1
         current_research_title = issled[0]
         f = issled[22] or empty
         n = issled[23] or empty
@@ -267,7 +267,7 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         current_firsttime = issled[5]
         current_result = issled[19]
         current_octome = issled[20]
-        current_price = ''
+        # current_price = ''
 
         if r != 7 and r != 8:
             befor_date = ws1.cell(row=r, column=1).value

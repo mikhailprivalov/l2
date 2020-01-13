@@ -1,6 +1,5 @@
 import os
 from importlib import import_module
-from pprint import pprint
 
 from django.apps import apps
 from django.db.migrations.loader import MigrationLoader
@@ -25,7 +24,7 @@ class SettingsReference(str):
 
 
 def fullname(o):
-  return o.__module__ + "." + o.__class__.__name__
+    return o.__module__ + "." + o.__class__.__name__
 
 
 class OperationWriter:
@@ -39,8 +38,7 @@ class OperationWriter:
         d = {}
 
         def _write(_arg_name, _arg_value):
-            if (_arg_name in self.operation.serialization_expand_args and
-                    isinstance(_arg_value, (list, tuple, dict))):
+            if _arg_name in self.operation.serialization_expand_args and isinstance(_arg_value, (list, tuple, dict)):
                 if isinstance(_arg_value, dict):
                     ds = {}
                     for a, b in _arg_value.items():
@@ -67,7 +65,7 @@ class OperationWriter:
                                 if "default" in i:
                                     props["default"] = str(i["default"]) if type(i["default"]) not in [set, list, dict,
                                                                                                        int, float, bool, type(None)] else \
-                                    i["default"]
+                                        i["default"]
                                 else:
                                     props["default"] = None
 
@@ -104,10 +102,12 @@ class OperationWriter:
                 }
                 d[_arg_name] = ab
                 d["related"] = True
-            elif any([isinstance(_arg_value, str), isinstance(_arg_value, list), isinstance(_arg_value, dict), isinstance(_arg_value, bool), isinstance(_arg_value, float), isinstance(_arg_value, int)]) or _arg_value is None:
+            elif any([isinstance(_arg_value, str), isinstance(_arg_value, list), isinstance(_arg_value, dict), isinstance(_arg_value, bool), isinstance(_arg_value, float),
+                      isinstance(_arg_value, int)]) or _arg_value is None:
                 d[_arg_name] = _arg_value
             else:
                 d[_arg_name] = str(_arg_value)
+
         name, args, kwargs = self.operation.deconstruct()
         operation_args = get_func_args(self.operation.__init__)
 

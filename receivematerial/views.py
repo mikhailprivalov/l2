@@ -8,6 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import dateformat
 from django.views.decorators.csrf import csrf_exempt
+from reportlab.lib.pagesizes import A4
 
 import directory.models as directory
 import slog.models as slog
@@ -21,6 +22,8 @@ from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
+
+w, h = A4
 
 
 @csrf_exempt
@@ -286,9 +289,10 @@ def receive_execlist(request):
                     napravleniye = Issledovaniya.objects.filter(tubes__pk=tube_pk)[0].napravleniye
                     tmp = [
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % (tube.daynum if t == "received" else nn), styleSheet["BodyText"]),
-                        Paragraph('<font face="OpenSans" size="8">%s</font>' % (napravleniye.client.individual.fio() + (
-                            "" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num) + "<br/>" + napravleniye.doc.podrazdeleniye.title),
-                                  styleSheet["BodyText"]),
+                        Paragraph('<font face="OpenSans" size="8">%s</font>' % (
+                            napravleniye.client.individual.fio() +
+                            ("" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num) +
+                            "<br/>" + napravleniye.doc.podrazdeleniye.title), styleSheet["BodyText"]),
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % napravleniye.pk, styleSheet["BodyText"]),
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % tube_pk, styleSheet["BodyText"])]
                     for f in fractions_o:
@@ -356,11 +360,6 @@ def tubes_get(request):
                                         "color": tube.type.tube.color, "notice": tube.notice}})
 
     return JsonResponse(list(result), safe=False)
-
-
-from reportlab.lib.pagesizes import A4
-
-w, h = A4
 
 
 @login_required

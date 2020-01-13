@@ -1,14 +1,13 @@
-from django.db.models import Min
+import random
+
+import simplejson as json
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 import directions.models as directions
+from laboratory.settings import AFTER_DATE
 from slog.models import Log
 from . import sql_if
-from laboratory.settings import AFTER_DATE
-from laboratory import utils
-import random
-import simplejson as json
 
 
 @api_view()
@@ -39,8 +38,8 @@ def get_dir_amd(request):
     naprs = []
     result = {"ok": False, "next": naprs}
     if dirs:
-        naprs = [ i[0] for i in dirs ]
-        result = {"ok": True,"next": naprs}
+        naprs = [i[0] for i in dirs]
+        result = {"ok": True, "next": naprs}
 
     return Response(result)
 
@@ -79,8 +78,8 @@ def direction_data(request):
 
     if not iss:
         return Response({
-        "ok": False,
-    })
+            "ok": False,
+        })
 
     iss_index = random.randrange(len(iss))
 

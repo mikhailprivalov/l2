@@ -1,6 +1,7 @@
 import collections
 import datetime
 import random
+import re
 from copy import deepcopy
 from decimal import Decimal
 
@@ -17,7 +18,9 @@ from django.views.decorators.csrf import csrf_exempt
 from pdfrw import PdfReader, PdfWriter
 from reportlab.lib.colors import white, black
 from reportlab.lib.enums import TA_JUSTIFY
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.pdfbase import pdfdoc
+from reportlab.pdfgen import canvas
 from reportlab.platypus import PageBreak, Spacer, KeepInFrame, KeepTogether
 
 import directory.models as directory
@@ -93,8 +96,6 @@ def enter(request):
                                                            "lab": lab,
                                                            "labs": labs})
 
-
-# from django.db import connection
 
 @csrf_exempt
 @login_required
@@ -382,15 +383,10 @@ def get_odf_result(request):
     return redirect('/../static/tmp/result-'+fn+'.odt')'''
 
 
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4, landscape
-import re
-
-
-def lr(s, l=7, r=17):
+def lr(s, ll=7, r=17):
     if not s:
         s = ""
-    return s.ljust(l).rjust(r)
+    return s.ljust(ll).rjust(r)
 
 
 def result_normal(s):
@@ -616,7 +612,6 @@ def result_print(request):
                 date_t = strdate(iss.tubes.first().time_get)
             if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment:
                 has_paraclinic = True
-                not_lab = True
             if directory.HospitalService.objects.filter(slave_research=iss.research).exists():
                 has_paraclinic = True
             if iss.link_file:
@@ -913,8 +908,7 @@ def result_print(request):
 
                                 norm = "none"
                                 # if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
-                                if Result.objects.filter(issledovaniye=iss,
-                                                         fraction=f).exists() and f.print_title == False:
+                                if Result.objects.filter(issledovaniye=iss, fraction=f).exists() and f.print_title == False:
                                     r = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0]
                                     if show_norm:
                                         norm = r.get_is_norm(recalc=True)
@@ -999,11 +993,9 @@ def result_print(request):
                                    "" if not iss.tubes.exists() or not iss.tubes.first().time_get else strdate(
                                        iss.tubes.first().time_get), "" if not iss.comment else "<br/>" + iss.comment,),
                                          styleSheet["BodyText"]),
-                               Paragraph('<font face="OpenSans" size="8">%s</font>' % (
-                                   "Не подтверждено" if not iss.time_confirmation else strdate(iss.time_confirmation)),
+                               Paragraph('<font face="OpenSans" size="8">%s</font>' % ("Не подтверждено" if not iss.time_confirmation else strdate(iss.time_confirmation)),
                                          styleSheet["BodyText"]),
-                               Paragraph('<font face="OpenSans" size="8">%s</font>' % (
-                                   "Не подтверждено" if not iss.doc_confirmation else iss.doc_confirmation.get_fio()),
+                               Paragraph('<font face="OpenSans" size="8">%s</font>' % ("Не подтверждено" if not iss.doc_confirmation else iss.doc_confirmation.get_fio()),
                                          styleSheet["BodyText"])]
                         data.append(tmp)
 
@@ -1145,9 +1137,7 @@ def result_print(request):
                     data = []
                     tmp = [[Paragraph(
                         '<font face="OpenSans" size="8">Комментарий</font>',
-                        styleSheet["BodyText"])], [Paragraph(
-                        '<font face="OpenSans" size="8">%s</font>' % (iss.lab_comment.replace("\n", "<br/>")),
-                        styleSheet["BodyText"])], "", "", "", ""]
+                        styleSheet["BodyText"])], [Paragraph('<font face="OpenSans" size="8">%s</font>' % (iss.lab_comment.replace("\n", "<br/>")), styleSheet["BodyText"])], "", "", "", ""]
                     data.append(tmp)
                     cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178)]
                     cw = cw + [tw - sum(cw)]
@@ -1179,8 +1169,7 @@ def result_print(request):
                     fwb.append(Paragraph("Услуга: " + iss.research.title, styleBold))
                 if not protocol_plain_text:
                     sick_result = None
-                    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by(
-                        "order"):
+                    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
                         sick_title = True if group.title == "Сведения ЛН" else False
                         if sick_title:
                             sick_result = collections.OrderedDict()
@@ -1303,17 +1292,14 @@ h3 {
                 else:
                     txt = ""
                     sick_result = None
-                    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by(
-                        "order"):
+                    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
                         sick_title = group.title == "Сведения ЛН"
                         if sick_title:
                             sick_result = collections.OrderedDict()
-                        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(
-                            value="").order_by("field__order")
+                        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
                         if results.exists():
                             if group.show_title and group.title != "":
-                                txt += "<font face=\"OpenSansBold\">{}:</font>&nbsp;".format(
-                                    group.title.replace('<', '&lt;').replace('>', '&gt;'))
+                                txt += "<font face=\"OpenSansBold\">{}:</font>&nbsp;".format(group.title.replace('<', '&lt;').replace('>', '&gt;'))
                             vals = []
                             for r in results:
                                 v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
@@ -1867,10 +1853,7 @@ def result_journal_table_print(request):
                               styleSheet["BodyText"])]
             for patient in p.page(pagenum).object_list:
                 tmp2.append(TTR("%s\nКарта: %s\n%s" % (patient["fio"], patient["card"],
-                                                       "" if not patient["history"] or patient["history"] in ["None",
-                                                                                                              ""] else "История: %s" %
-                                                                                                                       patient[
-                                                                                                                           "history"]),
+                                                       "" if not patient["history"] or patient["history"] in ["None", ""] else "История: %s" % patient["history"]),
                                 domin=True))
                 patient_rs = {}
                 for research1 in patient["researches"].values():
@@ -2027,12 +2010,12 @@ def result_journal_print(request):
     for iss in iss_list.order_by("napravleniye__client__individual__family"):
         key = iss.napravleniye.client.individual.family + "-" + str(iss.napravleniye.client_id)
         if key not in clientresults.keys():
-            clientresults[key] = {"directions": {},
-                                  "ist_f": iss.napravleniye.istochnik_f.title,
-                                  "fio": iss.napravleniye.client.individual.fio(short=True,
-                                                                                dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() +
-                                         ((
-                                              "<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
+            clientresults[key] = {
+                "directions": {},
+                "ist_f": iss.napravleniye.istochnik_f.title,
+                "fio": iss.napravleniye.client.individual.fio(short=True, dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() +
+                (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")
+            }
         if iss.napravleniye_id not in clientresults[key]["directions"]:
             clientresults[key]["directions"][iss.napravleniye_id] = {"researches": {}}
         # results = Result.objects.filter(issledovaniye=iss)
@@ -2044,8 +2027,7 @@ def result_journal_print(request):
         for fr in iss.research.fractions_set.all():
             fres = Result.objects.filter(issledovaniye=iss, fraction=fr)
             if fres.exists():
-                tres = {"value": fr.title + ": " + fres.first().value, "v": fres.first().value, "code": fr.code,
-                        "title": fr.title, "fail": False}
+                tres = {"value": fr.title + ": " + fres.first().value, "v": fres.first().value, "code": fr.code, "title": fr.title, "fail": False}
                 if codes:
                     tmpval = tres["v"].lower().strip()
                     tres["fail"] = not (all([x not in tmpval for x in
@@ -2499,9 +2481,9 @@ def results_search_directions(request):
                 researches.append(tmp_r)
         if len(researches) == 0:
             continue
-        l = direction.issledovaniya_set.first().research.get_podrazdeleniye()
+        pod = direction.issledovaniya_set.first().research.get_podrazdeleniye()
         tmp_dir = {"pk": direction.pk,
-                   "laboratory": "Консультации" if not l else l.title,
+                   "laboratory": "Консультации" if not pod else pod.title,
                    "otd": (
                        "" if not direction.imported_org else direction.imported_org.title) if direction.imported_from_rmis else direction.doc.podrazdeleniye.title,
                    "doc": "" if direction.imported_from_rmis else direction.doc.get_fio(),

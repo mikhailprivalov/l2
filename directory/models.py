@@ -196,8 +196,7 @@ class Researches(models.Model):
 
     @property
     def desc(self):
-        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology \
-               or self.is_hospital
+        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology or self.is_hospital
 
     @property
     def can_transfer(self):

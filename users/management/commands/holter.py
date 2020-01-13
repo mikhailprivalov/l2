@@ -1,4 +1,3 @@
-import datetime
 import os
 import pathlib
 import re
@@ -7,7 +6,7 @@ from datetime import datetime
 from shutil import copytree, rmtree
 
 import pdfkit
-from dateutil.relativedelta import *
+from dateutil.relativedelta import relativedelta
 from django.core.management import BaseCommand
 from django.utils import timezone
 from django.utils.timezone import pytz

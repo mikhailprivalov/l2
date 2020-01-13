@@ -1,18 +1,19 @@
-from django.db import models
-import directory.models as directory
 from decimal import Decimal
+
+from django.db import models
+
+import directory.models as directory
 
 
 class PriceName(models.Model):
-    title = models.CharField(max_length=511,unique=True, help_text='Наименование Прайса',db_index=True)
-    active_status = models.BooleanField(default=True, help_text='Статус активности',db_index=True)
+    title = models.CharField(max_length=511, unique=True, help_text='Наименование Прайса', db_index=True)
+    active_status = models.BooleanField(default=True, help_text='Статус активности', db_index=True)
     date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
     research = models.ManyToManyField(directory.Researches, through='PriceCoast', help_text="Услуга-Прайс", blank=True)
 
     def __str__(self):
         return "{}".format(self.title)
-
 
     def status(self):
         return self.active_status
@@ -23,8 +24,8 @@ class PriceName(models.Model):
 
 
 class PriceCoast(models.Model):
-    price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING,db_index=True)
-    research = models.ForeignKey(directory.Researches, on_delete=models.DO_NOTHING,db_index=True)
+    price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, db_index=True)
+    research = models.ForeignKey(directory.Researches, on_delete=models.DO_NOTHING, db_index=True)
     coast = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
@@ -51,18 +52,18 @@ class PriceCoast(models.Model):
         return value
 
     class Meta:
-        unique_together =('price_name','research')
+        unique_together = ('price_name', 'research')
         verbose_name = 'Прайс - цены'
         verbose_name_plural = 'Прайс - цены'
 
 
 class Contract(models.Model):
     title = models.CharField(max_length=511, unique=True, help_text='Наименование организации', db_index=True)
-    number = models.CharField(max_length=255,blank=True, help_text='Номер договора', db_index=False)
+    number = models.CharField(max_length=255, blank=True, help_text='Номер договора', db_index=False)
     date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
     price = models.ForeignKey(PriceName, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
-    modifier = models.DecimalField(max_digits=8,decimal_places=3,default=1, help_text="10000,101")
+    modifier = models.DecimalField(max_digits=8, decimal_places=3, default=1, help_text="10000,101")
     active_status = models.BooleanField(default=True, help_text='Действующий', db_index=True)
     show_in_card = models.BooleanField(default=False, help_text='Показывать в карте пациента', db_index=True)
     main = models.BooleanField(default=False, help_text='По умолчанию действует. если несколько.'

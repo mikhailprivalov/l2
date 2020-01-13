@@ -99,7 +99,6 @@ def statistic_xls(request):
 
     # Отчет по динамике анализов
     if tp == "directions_list_dynamic":
-        from collections import OrderedDict
         pk = json.loads(pk)
         dn = Napravleniya.objects.filter(pk__in=pk)
         cards = {}
@@ -110,7 +109,7 @@ def statistic_xls(request):
         one_param = "one_param"
 
         for d in dn:
-            if d.department() == None or d.department().p_type != 2:
+            if d.department() is None or d.department().p_type != 2:
                 continue
             c = d.client
             napr_client.add(c.pk)
@@ -160,7 +159,7 @@ def statistic_xls(request):
                                            directory.Fractions.objects.values_list('pk', 'title', 'units').filter(
                                                research=i.research).order_by("sort_weight")})
 
-                if depart_fraction.get(department_id) != None:
+                if depart_fraction.get(department_id) is not None:
                     if len(dict_research_fraction.keys()) == 1:
                         one_param_temp = depart_fraction[department_id][one_param]
                         one_param_temp.update(dict_research_fraction)
@@ -214,7 +213,7 @@ def statistic_xls(request):
 
                 # Строим стр-ру {id-анализа:{(направление, дата,):{id-фракции:результат,id-фракции:результат}}}
                 # one_param - это анализы у которых несколько параметров-фракции (ОАК, ОАМ)
-                if (iss_id != 'one_param') or (iss_id != '') or (iss_id != None):
+                if iss_id != 'one_param' or iss_id != '' or iss_id is not None:
                     for d in finish_obj:
                         tmp_dict = {}
                         if iss_id == d[0]:
@@ -420,7 +419,7 @@ def statistic_xls(request):
             iss = {}
             for d in dirs:
                 for i in Issledovaniya.objects.filter(napravleniye=d).order_by("research__title").order_by(
-                        "napravleniye__istochnik_f"):
+                    "napravleniye__istochnik_f"):
                     rt = i.research.title
                     istf = i.napravleniye.istochnik_f.base.title + " - " + i.napravleniye.istochnik_f.title
                     if rt not in iss:
@@ -903,9 +902,8 @@ def statistic_xls(request):
                 otd_local_keys = [x for x in otds.keys() if isinstance(x, int)]
                 otd_external_keys = [int(x.replace("external-", "")) for x in otds.keys() if
                                      isinstance(x, str) and "external-" in x]
-                for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(
-                    Podrazdeleniya.objects.filter(pk__in=[x for x in otd_local_keys if x != pki])) + list(
-                    RMISOrgs.objects.filter(pk__in=otd_external_keys)):
+                for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(Podrazdeleniya.objects.filter(pk__in=[x for x in otd_local_keys if x != pki])) + list(
+                        RMISOrgs.objects.filter(pk__in=otd_external_keys)):
                     row_num += 2
                     row = [
                         otdd.title if otdd.pk != pki else "Сумма по всем отделениям",
@@ -970,9 +968,8 @@ def statistic_xls(request):
                 otd_external_keys = [int(x.replace("external-", "")) for x in otds_pat.keys() if
                                      isinstance(x, str) and "external-" in x]
 
-                for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(
-                    Podrazdeleniya.objects.filter(pk__in=[x for x in otd_local_keys if x != pki])) + list(
-                    RMISOrgs.objects.filter(pk__in=otd_external_keys)):
+                for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(Podrazdeleniya.objects.filter(pk__in=[x for x in otd_local_keys if x != pki])) + list(
+                        RMISOrgs.objects.filter(pk__in=otd_external_keys)):
                     row_num += 2
                     row = [
                         otdd.title,
@@ -1026,8 +1023,7 @@ def statistic_xls(request):
             return v + ("" if len(v) > 19 else "\n")
 
         for executor in DoctorProfile.objects.filter(user__groups__name__in=("Врач-лаборант", "Лаборант"),
-                                                     podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by(
-            "fio").distinct():
+                                                     podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by("fio").distinct():
 
             cnt_itogo = {}
             ws = wb.add_sheet(executor.get_fio(dots=False) + " " + str(executor.pk))
@@ -1226,8 +1222,7 @@ def statistic_xls(request):
             ws.col(col_num).width = row[col_num][1]
         row_num += 1
 
-        for tube in directory.Tubes.objects.filter(
-            releationsft__fractions__research__podrazdeleniye=lab).distinct().order_by("title"):
+        for tube in directory.Tubes.objects.filter(releationsft__fractions__research__podrazdeleniye=lab).distinct().order_by("title"):
             row = [
                 tube.title
             ]

@@ -268,16 +268,15 @@ def form_01(request_data):
 
     row_height[0] = None
     row_height[1] = None
-    tbl = Table(tbl_result, colWidths=(41 * mm, 22 * mm, 17 * mm, 17 * mm, 17 * mm, 17 * mm), rowHeights=row_height,
-                hAlign='LEFT', style=[
-            ('GRID', (0, 0), (-1, -1), 0.7, colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TOPPADDING', (0, 0), (-1, -1), 0.01 * mm),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 0.01 * mm),
-            ('LEFTPADDING ', (0, 2), (0, -1), 0.1 * mm),
-            ('SPAN', (0, 0), (0, 1)),
-            ('SPAN', (1, 0), (-1, 0)),
-        ])
+    tbl = Table(tbl_result, colWidths=(41 * mm, 22 * mm, 17 * mm, 17 * mm, 17 * mm, 17 * mm), rowHeights=row_height, hAlign='LEFT', style=[
+        ('GRID', (0, 0), (-1, -1), 0.7, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0.01 * mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0.01 * mm),
+        ('LEFTPADDING ', (0, 2), (0, -1), 0.1 * mm),
+        ('SPAN', (0, 0), (0, 1)),
+        ('SPAN', (1, 0), (-1, 0)),
+    ])
     objs.append(tbl)
 
     def first_pages(canvas, document):
@@ -359,7 +358,7 @@ def form_02(request_data):
 
     print_district = ''
     if SettingManager.get("district", default='True', default_type='b'):
-        if ind_card.district != None:
+        if ind_card.district is not None:
             print_district = 'Уч: {}'.format(ind_card.district.title)
 
     opinion = [

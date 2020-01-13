@@ -5,9 +5,12 @@ import threading
 import urllib.parse
 
 import requests
+import simplejson as json
 from django.core.cache import cache
 from django.core.management.base import OutputWrapper
 from django.db.models import Q
+from django.test import Client as TC
+from django.utils import timezone
 from requests import Session
 from requests.auth import HTTPBasicAuth
 from requests_toolbelt import MultipartEncoder
@@ -18,6 +21,7 @@ from zeep.exceptions import Fault
 from zeep.transports import Transport
 
 import clients.models as clients_models
+import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, \
     RMISServiceInactive
@@ -88,9 +92,6 @@ def get_md5(s):
     m = hashlib.md5()
     m.update(s.encode())
     return m.hexdigest()
-
-
-from django.test import Client as TC
 
 
 class DjangoCache(Base):
@@ -477,7 +478,7 @@ class Patients(BaseRequester):
                 "birthDate": individual.birthday,
             }
         }
-        r = self.client.editIndividual(**data)
+        self.client.editIndividual(**data)
 
     def sync_card_data(self, card: clients_models.Card, out: OutputWrapper = None):
         if out:
@@ -499,9 +500,7 @@ class Patients(BaseRequester):
                 for a in data['addresses']:
                     if a["type"] not in '43':
                         continue
-                    addr = ', '.join(
-                        [x['name'] for x in a['entries'] if x['type'] not in ['1', '2', '53'] and x['type']]) + (
-                               (', Дом ' + a['house']) if a['house'] else '')
+                    addr = ', '.join([x['name'] for x in a['entries'] if x['type'] not in ['1', '2', '53'] and x['type']]) + ((', Дом ' + a['house']) if a['house'] else '')
                     if a['apartment']:
                         addr += ', ' + a['apartment']
                     if a["type"] == '4' and card.main_address != addr:
@@ -640,9 +639,7 @@ class Patients(BaseRequester):
             individual_row = None
             if q != "":
                 individual_row = self.client.getIndividual(q)
-            if individual_row and (
-                (individual_row["surname"] or individual_row["name"] or individual_row["patrName"])
-                and individual_row["birthDate"] is not None):
+            if individual_row and (individual_row["surname"] or individual_row["name"] or individual_row["patrName"]) and individual_row["birthDate"] is not None:
                 qq = dict(family=(individual_row["surname"] or "").title(),
                           name=(individual_row["name"] or "").title(),
                           patronymic=(individual_row["patrName"] or "").title(),
@@ -716,11 +713,6 @@ class Services(BaseRequester):
 
 def ndate(d: datetime.datetime):
     return localtime(d).strftime("%Y-%m-%d")
-
-
-import simplejson as json
-from django.utils import timezone
-import slog.models as slog
 
 
 def get_direction_full_data_key(pk):
@@ -819,8 +811,7 @@ class Directions(BaseRequester):
         if len(attachments) > 1:
             attachments = [int(x) for x in attachments]
             attachment = max(attachments)
-            deleted.append(self.main_client.req(
-                self.main_client.get_addr("referral-attachments-ws/rs/referralAttachments/" + str(attachment))))
+            deleted.append(self.main_client.req(self.main_client.get_addr("referral-attachments-ws/rs/referralAttachments/" + str(attachment))))
             deleted.append(attachments)
         direction.result_rmis_send = False
         direction.rmis_hosp_id = ""
@@ -834,9 +825,9 @@ class Directions(BaseRequester):
 
     def check_send(self, direction: Napravleniya, stdout: OutputWrapper = None):
         client_rmis = direction.client.individual.check_rmis()
-        if client_rmis and client_rmis != "NONERMIS" and (
-            not direction.rmis_number or direction.rmis_number == "" or direction.rmis_number == "NONERMIS" or (
-            direction.imported_from_rmis and not direction.imported_directions_rmis_send)):
+        if client_rmis and client_rmis != "NONERMIS" and \
+                (not direction.rmis_number or direction.rmis_number == "" or direction.rmis_number == "NONERMIS" or
+                    (direction.imported_from_rmis and not direction.imported_directions_rmis_send)):
             if not direction.imported_from_rmis:
                 ref_data = dict(patientUid=client_rmis,
                                 number=str(direction.pk),
@@ -970,16 +961,14 @@ class Directions(BaseRequester):
                                 send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv,
                                                                               service_rend_id, stdout, x)
                                 if ssd is not None and x.field.group.research_id not in sended_researches:
-                                    RmisServices.objects.filter(napravleniye=direction,
-                                                                rmis_id=service_rend_id).delete()
+                                    RmisServices.objects.filter(napravleniye=direction, rmis_id=service_rend_id).delete()
                                     self.main_client.rendered_services.delete_service(service_rend_id)
                                     sended_researches.append(x.field.group.research_id)
                                     if stdout:
                                         stdout.write("DATA: " + str(send_data))
                                     ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
                                     xresult = ""
-                                    for g in ParaclinicInputGroups.objects.filter(
-                                        research=x.field.group.research).order_by("order"):
+                                    for g in ParaclinicInputGroups.objects.filter(research=x.field.group.research).order_by("order"):
                                         if not ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction,
                                                                                field__group=g).exists():
                                             continue
@@ -987,9 +976,7 @@ class Directions(BaseRequester):
                                             xresult += protocol_row.replace("{{фракция}}", g.title).replace(
                                                 "{{значение}}", "")
 
-                                        for y in ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction,
-                                                                                 field__group=g).exclude(value="") \
-                                            .order_by("field__order"):
+                                        for y in ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction, field__group=g).exclude(value="").order_by("field__order"):
                                             v = y.value.replace("\n", "<br/>")
                                             if y.field.field_type == 1:
                                                 vv = v.split('-')
@@ -1021,13 +1008,10 @@ class Directions(BaseRequester):
                                         ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
                                         xresult = ""
                                         for y in Result.objects.filter(issledovaniye__napravleniye=direction,
-                                                                       fraction__research=x.fraction.research).order_by(
-                                            "fraction__sort_weight"):
+                                                                       fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
                                             xresult += protocol_row.replace("{{фракция}}", y.fraction.title).replace(
                                                 "{{значение}}", y.value).replace("{{едизм}}", y.get_units())
-                                        xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>",
-                                                                                                             "").replace(
-                                            "</font>", "")
+                                        xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
                                         if x.issledovaniye.get_analyzer() != "":
                                             xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace(
                                                 "{{значение}}",
@@ -1068,9 +1052,7 @@ class Directions(BaseRequester):
                                         "{{значение}}",
                                         x.value).replace(
                                         "{{едизм}}", x.get_units())
-                                    xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>",
-                                                                                                         "").replace(
-                                        "</font>", "")
+                                    xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
                                     if x.issledovaniye.get_analyzer() != "":
                                         xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace(
                                             "{{значение}}",
@@ -1242,11 +1224,11 @@ class Directions(BaseRequester):
                                                     issledovaniya__time_confirmation__lt=upload_lt,
                                                     rmis_number__isnull=False,
                                                     result_rmis_send=False) \
-                .exclude(rmis_number="NONERMIS") \
-                .exclude(rmis_number="") \
-                .exclude(imported_from_rmis=True, imported_directions_rmis_send=False) \
-                .exclude(istochnik_f__rmis_auto_send=False, force_rmis_send=False) \
-                .distinct()
+            .exclude(rmis_number="NONERMIS") \
+            .exclude(rmis_number="") \
+            .exclude(imported_from_rmis=True, imported_directions_rmis_send=False) \
+            .exclude(istochnik_f__rmis_auto_send=False, force_rmis_send=False) \
+            .distinct()
             cnt = to_upload.count()
             i = 0
             for d in to_upload:

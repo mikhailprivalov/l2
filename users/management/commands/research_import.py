@@ -76,7 +76,7 @@ class Command(BaseCommand):
                         stom = True if cells[type_research] == 'is_stom' else False
                         hospital = True if cells[type_research] == 'is_hospital' else False
                         if cells[place_research] == '-1':
-                            s_t == None
+                            s_t = None
                         else:
                             s_t = ResearchSite.objects.get(pk=int(cells[place_research]))
                         c = Researches.objects.create(title=cells[research], site_type=s_t,

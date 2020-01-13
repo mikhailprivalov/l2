@@ -23,7 +23,7 @@ def get_research(title_podr, vertical_result_display):
         ON t_research.podrazdeleniye_id=t_podr.podr_id
         WHERE podr_title = %(title_podr)s and vertical_result_display = %(vertical)s
         ORDER BY research_id
-        """, params={'title_podr' : title_podr, 'vertical' : vertical_result_display})
+        """, params={'title_podr': title_podr, 'vertical': vertical_result_display})
 
         row = cursor.fetchall()
     return row
@@ -61,9 +61,10 @@ def get_distinct_research(list_research_id, list_dirs, is_text_research=False):
 
         SELECT DISTINCT ON (research_id) research_id FROM t_iss
 
-        """, params={'id_researches': list_research_id, 'num_dirs': list_dirs, 'is_text_research' : is_text_research})
+        """, params={'id_researches': list_research_id, 'num_dirs': list_dirs, 'is_text_research': is_text_research})
         row = cursor.fetchall()
     return row
+
 
 def get_distinct_fraction(list_iss):
     """
@@ -135,7 +136,7 @@ def get_result_text_research(research_pk, listdirs):
             directions_paraclinicresult.field_id in (SELECT field_id from t_fields)
             order by time_confirmation, group_order, field_order
 
-         """, params={'id_research':research_pk,'id_dirs': listdirs, 'tz': TIME_ZONE})
+         """, params={'id_research': research_pk, 'id_dirs': listdirs, 'tz': TIME_ZONE})
         row = cursor.fetchall()
     return row
 
@@ -153,6 +154,6 @@ def get_result_value_iss(iss_pk, research_pk, titles_field):
             where field_id in (SELECT "id" FROM t_field)  and issledovaniye_id = %(id_iss)s
 
 
-         """, params={'id_iss' : iss_pk, 'id_research': research_pk, 'titles_field': titles_field})
+         """, params={'id_iss': iss_pk, 'id_research': research_pk, 'titles_field': titles_field})
         row = cursor.fetchall()
     return row

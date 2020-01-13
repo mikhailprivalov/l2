@@ -3,11 +3,11 @@ import locale
 import os.path
 import sys
 from copy import deepcopy
-from datetime import *
+from datetime import date
 from io import BytesIO
 
 import simplejson as json
-from dateutil.relativedelta import *
+from dateutil.relativedelta import relativedelta
 from reportlab.graphics.barcode import code128
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -39,7 +39,6 @@ def form_01(request_data):
 
     # Получить данные с клиента физлицо-ФИО, пол, дата рождения
     individual_fio = ind.fio()
-    individual_sex = ind.sex
     individual_date_born = ind.bd()
 
     # Получить все источники, у которых title-ПЛАТНО
@@ -57,7 +56,7 @@ def form_01(request_data):
             dir_temp.append(n.pk)
 
     # Получить объект прайс по источнику "платно" из всех видов источников имеющих title платно, берется первое значение
-    price_modifier_obj = PriceName.get_price(ist_f_list[0])
+    # price_modifier_obj = PriceName.get_price(ist_f_list[0])
 
     # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
     research_direction = forms_func.get_research_by_dir(dir_temp)
@@ -70,21 +69,21 @@ def form_01(request_data):
 
     hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
     hospital_address = "г. Иркутс, ул. Байкальская 201"
-    hospital_kod_ogrn = "1033801542576"
-    hospital_okpo = "31348613"
+    # hospital_kod_ogrn = "1033801542576"
+    # hospital_okpo = "31348613"
 
     # Получить данные физлицо-документы: паспорт, полис, снилс
-    document_passport = "Паспорт РФ"
+    # document_passport = "Паспорт РФ"
     documents = forms_func.get_all_doc(ind_doc)
     document_passport_num = documents['passport']['num']
     document_passport_serial = documents['passport']['serial']
-    document_passport_date_start = documents['passport']['date_start']
+    # document_passport_date_start = documents['passport']['date_start']
     document_passport_issued = documents['passport']['issued']
-    document_polis = documents['polis']['num']
-    document_snils = documents['snils']['num']
+    # document_polis = documents['polis']['num']
+    # document_snils = documents['snils']['num']
 
-    indivudual_insurance_org = "38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
-    individual_benefit_code = "_________"
+    # indivudual_insurance_org = "38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
+    # individual_benefit_code = "_________"
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')

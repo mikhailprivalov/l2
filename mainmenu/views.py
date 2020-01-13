@@ -1,30 +1,29 @@
-from collections import defaultdict
-
 import datetime
 import re
+from collections import defaultdict
 
-from django.db import IntegrityError
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+import simplejson as json
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
+from django.db import IntegrityError
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render
 from django.utils import dateformat
+from django.views.decorators.csrf import csrf_exempt
 
+import directory.models as directory
+import slog.models as slog
 from appconf.manager import SettingManager
 from clients.models import CardBase
+from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya
 from laboratory import settings
+from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
+from podrazdeleniya.models import Podrazdeleniya
+from researches.models import Tubes
 from rmis_integration.client import Client
 from users.models import DoctorProfile
-from podrazdeleniya.models import Podrazdeleniya
-from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya
-from django.views.decorators.csrf import csrf_exempt
-from researches.models import Tubes
-from laboratory.decorators import group_required
-import slog.models as slog
-from django.http import HttpResponse, JsonResponse
-import simplejson as json
-import directory.models as directory
 from utils.dates import try_parse_range
 
 
@@ -215,7 +214,7 @@ def confirm_reset(request):
             ctime = int(time.time())
             cdid = iss.doc_confirmation_id or -1
             if (ctime - ctp < SettingManager.get(
-                    "lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                "lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                 str(x) for x in request.user.groups.all()]:
                 predoc = {"fio": 'не подтверждено' if cdid == -1 else iss.doc_confirmation.get_fio(),
                           "pk": cdid,
@@ -470,7 +469,7 @@ def discharge_search(request):
         if query.isdigit():
             filter_type = "card_number"
         elif bool(re.compile(r'^([a-zA-Zа-яА-Я]+)( [a-zA-Zа-яА-Я]+)?( [a-zA-Zа-яА-Я]+)?( \d{2}\.\d{2}\.\d{4})?$').match(
-                query)):
+            query)):
             filter_type = "fio"
             split = query.split()
             if len(split) > 0:
@@ -570,7 +569,7 @@ def dashboard_from(request):
         date_start, date_end = try_parse_range(date_start, date_end)
         if request.GET.get("get_labs", "false") == "true":
             for lab in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(
-                    title="Внешние организации"):
+                title="Внешние организации"):
                 tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye__p_type=Podrazdeleniya.DEPARTMENT,
                                                               time_get__range=(date_start, date_end),
                                                               issledovaniya__research__podrazdeleniye=lab)
@@ -634,7 +633,7 @@ def users_dosync(request):
     for ldap_user in resp["entries"]:
         if "uidNumber" not in ldap_user["attributes"].keys() or "uid" not in ldap_user[
             "attributes"].keys() or "userPassword" not in ldap_user["attributes"].keys() or "displayName" not in \
-                ldap_user["attributes"].keys():
+            ldap_user["attributes"].keys():
             continue
 
         if Podrazdeleniya.objects.filter(gid_n=int(ldap_user["attributes"]["gidNumber"])).exists():

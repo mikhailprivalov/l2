@@ -4,7 +4,6 @@ import os.path
 import re
 import sys
 from copy import deepcopy
-from datetime import *
 from io import BytesIO
 
 import simplejson as json

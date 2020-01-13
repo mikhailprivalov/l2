@@ -48,7 +48,7 @@ class Command(BaseCommand):
 
             if uch:
                 title_uch = distr.get(uch)
-                if title_uch != None:
+                if title_uch is not None:
                     obj_uch, created = clients.District.objects.get_or_create(code_poliklinika=uch,
                                                                               defaults={'title': title_uch, 'is_ginekolog': False, 'sort_weight': '0'})
                     if created:
@@ -56,7 +56,7 @@ class Command(BaseCommand):
 
             if gin_uch:
                 title_gin = distr.get(gin_uch)
-                if title_gin != None:
+                if title_gin is not None:
                     obj_gin, gin_created = clients.District.objects.get_or_create(code_poliklinika=gin_uch,
                                                                                   defaults={'title': title_gin, 'is_ginekolog': True, 'sort_weight': '0'})
                     if gin_created:
@@ -128,8 +128,7 @@ class Command(BaseCommand):
                                                                      individual=ind) if cells[polis] else None
 
                     add_dist = get_district(cells[distict_num], cells[district_gin])
-                    m_address = str(cells[city]).strip() + ', ' + str(cells[street]).strip() + ', д.' + str(cells[house]).strip() + \
-                                ', кв.' + str(cells[room]).strip()
+                    m_address = str(cells[city]).strip() + ', ' + str(cells[street]).strip() + ', д.' + str(cells[house]).strip() + ', кв.' + str(cells[room]).strip()
                     c = clients.Card.objects.create(individual=ind, number=clients.Card.next_l2_n(), base=base_l2, number_poliklinika=cells[num_card],
                                                     polis=document_polis, district=add_dist[0], ginekolog_district=add_dist[1], main_address=m_address,
                                                     fact_address=m_address)

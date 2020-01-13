@@ -316,7 +316,8 @@ def directory_researches_group(request):
         researches = json.loads(request.POST["researches"])
         for k in researches.keys():
             if researches[k]:
-                if k == "" or not k.isdigit() or not Researches.objects.filter(pk=k).exists(): continue
+                if k == "" or not k.isdigit() or not Researches.objects.filter(pk=k).exists():
+                    continue
                 research = Researches.objects.get(pk=k)
                 research.direction = direction
                 research.save()

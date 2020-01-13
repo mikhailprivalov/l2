@@ -232,7 +232,7 @@ def gen_pdf_dir(request):
         c.showPage()
         tx = '<font face="OpenSansBold" size="10">Памятка пациенту по проведению исследований</font>\n'
         for i in instructions_filtered:
-            tx += '--------------------------------------------------------------------------------------\n<font face="OpenSansBold" size="10">{}</font>\n<font face="OpenSans" size="10">&nbsp;&nbsp;&nbsp;&nbsp;{}\n</font>'.format(
+            tx += '--------------------------------------------------------------------------------------\n<font face="OpenSansBold" size="10">{}</font>\n<font face="OpenSans" size="10">&nbsp;&nbsp;&nbsp;&nbsp;{}\n</font>'.format(  # noqa: E501
                 i["title"], i["text"])
         data = [[Paragraph(tx.replace("\n", "<br/>"), s)]]
 
@@ -325,9 +325,11 @@ def framePage(canvas):
 
 def printDirection(c: Canvas, n, dir: Napravleniya):
     xn = 0
-    if n % 2 != 0: xn = 1
+    if n % 2 != 0:
+        xn = 1
     yn = 0
-    if n > 2: yn = 1
+    if n > 2:
+        yn = 1
     barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=17)
     bounds = barcode.getBounds()
     width = bounds[2] - bounds[0]
@@ -426,7 +428,6 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     vid = []
     has_descriptive = False
     has_doc_refferal = False
-    has_micro = False
     need_qr_code = False
     for i in issledovaniya:
         rtp = i.research.reversed_type
@@ -899,8 +900,7 @@ def print_history(request):
     c = canvas.Canvas(buffer, pagesize=A4)  # Холст
     tubes = []
     if not filter:
-        tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(
-            time_get__lt=datetime.now().date())  # Получение пробирок с материалом, взятым текущим пользователем
+        tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(time_get__lt=datetime.now().date())
     else:
         for v in filterArray:
             tubes.append(TubesRegistration.objects.get(pk=v))
@@ -908,8 +908,7 @@ def print_history(request):
     for v in tubes:  # Перебор пробирок
         iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
         iss_list = []  # Список исследований
-        k = v.doc_get.podrazdeleniye.title + "@" + str(iss[
-                                                           0].research.get_podrazdeleniye().title)  # Формирование ключа для группировки по подгруппе лаборатории и названию подразделения направившего на анализ врача
+        k = v.doc_get.podrazdeleniye.title + "@" + str(iss[0].research.get_podrazdeleniye().title)
         for val in iss:  # Цикл перевода полученных исследований в список
             iss_list.append(val.research.title)
         if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
@@ -926,8 +925,7 @@ def print_history(request):
                  "tube_id": str(v.id),
                  "history_num": iss[0].napravleniye.history_num,
                  "fio": iss[
-                     0].napravleniye.client.individual.fio(short=True,
-                                                           dots=True)})  # Добавление в список исследований и пробирок по ключу k в словарь labs
+                     0].napravleniye.client.individual.fio(short=True, dots=True)})  # Добавление в список исследований и пробирок по ключу k в словарь labs
     labs = collections.OrderedDict(sorted(labs.items()))  # Сортировка словаря
     c.setFont('OpenSans', 20)
 
@@ -1189,10 +1187,9 @@ def get_issledovaniya(request):
                                                          "doc_save_fio": doc_save_fio,
                                                          "doc_save_id": doc_save_id,
                                                          "current_doc_save": current_doc_save,
-                                                         "allow_disable_confirm": ((
-                                                                                       ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                                                                       str(x) for x in
-                                                                                       request.user.groups.all()]) and confirmed,
+                                                         "allow_disable_confirm": ((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or
+                                                                                   request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                                                   str(x) for x in request.user.groups.all()]) and confirmed,
                                                          "ctp": ctp,
                                                          "ctime": ctime,
                                                          "ctime_ctp": ctime - ctp,
@@ -1390,7 +1387,7 @@ def form38002(c: Canvas, dir: Napravleniya):
         except ObjectDoesNotExist:
             issledovaniye = None
 
-        dp_title, title, full_title = "", "", ""
+        dp_title, full_title = "", "", ""
         comment, info, service_location_title, localization = "", "", "", ""
         if issledovaniye:
             dp_title = issledovaniye.research.podrazdeleniye.title
