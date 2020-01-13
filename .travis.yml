@@ -1,15 +1,12 @@
-language: python
-sudo: false
-cache: pip
-python:
-  - '3.6'
 matrix:
   include:
     - python: 3.6
       dist: xenial
       sudo: true
-fail_fast: true
-before_install:
-  - pip install pycodestyle
-script:
-  - pycodestyle
+      fail_fast: true
+      before_install:
+        - git clone https://github.com/TravisToolbox/pycodestyle-travis.git
+      install:
+        - ./pycodestyle-travis/install.sh
+      script:
+        - ./pycodestyle-travis/scan.sh
