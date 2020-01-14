@@ -526,13 +526,13 @@
     "@babel/helper-plugin-utils" "^7.0.0"
     "@babel/plugin-syntax-pipeline-operator" "^7.5.0"
 
-"@babel/plugin-proposal-throw-expressions@^7.0.0":
-  version "7.2.0"
-  resolved "https://registry.yarnpkg.com/@babel/plugin-proposal-throw-expressions/-/plugin-proposal-throw-expressions-7.2.0.tgz#2d9e452d370f139000e51db65d0a85dc60c64739"
-  integrity sha512-adsydM8DQF4i5DLNO4ySAU5VtHTPewOtNBV3u7F4lNMPADFF9bWQ+iDtUUe8+033cYCUz+bFlQdXQJmJOwoLpw==
+"@babel/plugin-proposal-throw-expressions@^7.8.3":
+  version "7.8.3"
+  resolved "https://registry.yarnpkg.com/@babel/plugin-proposal-throw-expressions/-/plugin-proposal-throw-expressions-7.8.3.tgz#155f36ae40c2a88ae685c35e3220f8a0d426cf24"
+  integrity sha512-tH40s9JnoR+r45ZXKWW+PC5xzPQfVJix3pR1D8Ty5l9sn5NnrbZUzw8MtnNxu/Bz7p0imyeSYj9FQVccEymOEg==
   dependencies:
-    "@babel/helper-plugin-utils" "^7.0.0"
-    "@babel/plugin-syntax-throw-expressions" "^7.2.0"
+    "@babel/helper-plugin-utils" "^7.8.3"
+    "@babel/plugin-syntax-throw-expressions" "^7.8.3"
 
 "@babel/plugin-proposal-unicode-property-regex@^7.7.0":
   version "7.7.0"
@@ -654,12 +654,12 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.0.0"
 
-"@babel/plugin-syntax-throw-expressions@^7.2.0":
-  version "7.2.0"
-  resolved "https://registry.yarnpkg.com/@babel/plugin-syntax-throw-expressions/-/plugin-syntax-throw-expressions-7.2.0.tgz#79001ee2afe1b174b1733cdc2fc69c9a46a0f1f8"
-  integrity sha512-ngwynuqu1Rx0JUS9zxSDuPgW1K8TyVZCi2hHehrL4vyjqE7RGoNHWlZsS7KQT2vw9Yjk4YLa0+KldBXTRdPLRg==
+"@babel/plugin-syntax-throw-expressions@^7.8.3":
+  version "7.8.3"
+  resolved "https://registry.yarnpkg.com/@babel/plugin-syntax-throw-expressions/-/plugin-syntax-throw-expressions-7.8.3.tgz#c763bcf26d202ddb65f1299a29d63aad312adb54"
+  integrity sha512-Mv3shY1i7ZssY4OY+eLZJAmNCwqTcpv2qOKO9x6irELSygfKWVSMXk0igJsA9UhU4hOdw0qMGkjj9TAk4MqzwQ==
   dependencies:
-    "@babel/helper-plugin-utils" "^7.0.0"
+    "@babel/helper-plugin-utils" "^7.8.3"
 
 "@babel/plugin-syntax-top-level-await@^7.7.0":
   version "7.7.0"
