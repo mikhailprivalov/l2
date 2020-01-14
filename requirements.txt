@@ -48,7 +48,7 @@ pyaml==19.12.0
 pyasn1==0.4.8
 pycodestyle==2.5.0
 Pygments==2.5.2
-pymongo==3.9.0
+pymongo==3.10.1
 pymorphy2==0.8
 pymorphy2-dicts==2.4.393442.3710985
 pymorphy2-dicts-ru==2.4.404381.4453942
