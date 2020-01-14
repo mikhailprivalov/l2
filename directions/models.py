@@ -1,4 +1,5 @@
 import re
+import time
 import unicodedata
 from datetime import date
 
@@ -911,6 +912,25 @@ class Issledovaniya(models.Model):
 
     def get_analyzer(self):
         return "" if not self.api_app else self.api_app.name
+
+    def allow_reset_confirm(self, user: User):
+        from api.stationar.stationar_func import forbidden_edit_dir
+        if not self.time_confirmation:
+            return False
+        if user.is_superuser:
+            return True
+        groups = [str(x) for x in user.groups.all()]
+        if self.research.can_transfer:
+            return "Сброс подтверждения переводного эпикриза" in groups
+        if self.research.is_extract:
+            return "Сброс подтверждения выписки" in groups
+        if forbidden_edit_dir(self.napravleniye_id):
+            return False
+        ctp = int(0 if not self.time_confirmation else int(time.mktime(timezone.localtime(self.time_confirmation).timetuple())))
+        ctime = int(time.time())
+        current_doc_confirmation = self.doc_confirmation
+        rt = SettingManager.get("lab_reset_confirm_time_min") * 60
+        return (ctime - ctp < rt and current_doc_confirmation == user.doctorprofile) or "Сброс подтверждений результатов" in groups
 
     class Meta:
         verbose_name = 'Назначение на исследование'

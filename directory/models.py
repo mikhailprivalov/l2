@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models, transaction
 from jsonfield import JSONField
 
@@ -203,6 +204,12 @@ class Researches(models.Model):
         if self.desc:
             return False
         return 'перевод' in self.title.lower()
+
+    @property
+    def is_extract(self):
+        if self.desc:
+            return False
+        return 'выписка' in self.title.lower()
 
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)

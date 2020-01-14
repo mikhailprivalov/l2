@@ -13,7 +13,7 @@ const menuItems = Object.freeze({
   'epicrisis': 'Эпикризы',
   'extracts': 'Выписки',
   'all': 'Показать всё',
-})
+});
 
 export default {
   data() {
