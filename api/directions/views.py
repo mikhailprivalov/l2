@@ -729,7 +729,6 @@ def directions_results_report(request):
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара")
 def directions_paraclinic_form(request):
-    import time
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1) or -1
