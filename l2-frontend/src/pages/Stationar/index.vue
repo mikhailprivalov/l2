@@ -111,19 +111,20 @@
                                @click.native="stationar_research = r.pk"
                                class="research-select"
                                v-for="r in stationar_researches_filtered"
+                               force_tippy
                                :key="r.pk"/>
               </div>
               <div v-else-if="row.research.transfer_direction">
                 <a href="#" @click.prevent="print_hosp(row.research.transfer_direction)"><i class="fa fa-barcode"/></a>
                 История болезни <a href="#" @click.prevent="print_direction(row.research.transfer_direction)">
-                  №{{row.research.transfer_direction}}
-                </a>
+                №{{row.research.transfer_direction}}
+              </a>
                 <br/>
                 {{row.research.transfer_direction_iss[0]}}
               </div>
             </div>
           </div>
-          <div class="control-row">
+          <div class="control-row" :key="row.research.version">
             <div class="res-title">{{row.research.title}}:</div>
             <iss-status :i="row"/>
             <button class="btn btn-blue-nb" @click="save(row)"
@@ -517,28 +518,30 @@
           this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
-      reset_confirm(iss) {
-        let msg = `Сбросить подтверждение исследования ${iss.research.title}?`;
-        let doreset = confirm(msg);
-        if (doreset === false || doreset === null) {
+      async reset_confirm(iss) {
+        try {
+          await this.$dialog.confirm(`Подтвердите сброс подтверждения услуги «${iss.research.title}»`)
+        } catch (_) {
           return
         }
-        this.$store.dispatch(action_types.INC_LOADING).then();
-        directions_point.paraclinicResultConfirmReset({iss_pk: iss.pk}).then(data => {
-          if (data.ok) {
-            okmessage('Подтверждение сброшено');
-            iss.confirmed = false;
-            this.reload_if_need(true)
-            if (data.is_transfer) {
-              this.forbidden_edit = !!data.forbidden_edit
-            }
-            iss.forbidden_edit = data.forbidden_edit;
-          } else {
-            errmessage(data.message)
+
+        await this.$store.dispatch(action_types.INC_LOADING).then();
+
+        const data = await directions_point.paraclinicResultConfirmReset({iss_pk: iss.pk});
+
+        if (data.ok) {
+          okmessage('Подтверждение сброшено');
+          iss.confirmed = false;
+          this.reload_if_need(true)
+          if (data.is_transfer || data.is_extract) {
+            this.forbidden_edit = !!data.forbidden_edit
           }
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
-        })
+          iss.forbidden_edit = data.forbidden_edit;
+        } else {
+          errmessage(data.message);
+        }
+
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       r_is_transfer({research}) {
         return research.can_transfer
@@ -705,12 +708,12 @@
         return this.$store.getters.modules.l2_fast_templates
       },
       can_reset_transfer() {
-          for (let g of (this.$store.getters.user_data.groups || [])) {
-              if (g === 'Сброс подтверждения переводного эпикриза') {
-                  return true
-              }
+        for (let g of (this.$store.getters.user_data.groups || [])) {
+          if (g === 'Сброс подтверждения переводного эпикриза') {
+            return true
           }
-          return false
+        }
+        return false
       },
     }
   }

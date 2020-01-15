@@ -9,7 +9,7 @@ admin.site.register(IstochnikiFinansirovaniya)
 
 @admin.register(Napravleniya)
 class CardAdmin(admin.ModelAdmin):
-    raw_id_fields = ('client',)
+    raw_id_fields = ('client', 'case', 'parent', 'parent_auto_gen', )
 
 
 @admin.register(Issledovaniya)

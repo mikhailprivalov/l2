@@ -4,14 +4,14 @@ attrs==19.3.0
 autopep8==1.4.4
 bleach==3.1.0
 cached-property==1.5.1
-certifi==2019.9.11
+certifi==2019.11.28
 chardet==3.0.4
 DAWG==0.7.8
 DAWG-Python==0.7.2
 defusedxml==0.6.0
 Django==2.2.8
 django-ajax-selects==1.7.1
-django-cors-middleware==1.4.0
+django-cors-middleware==1.5.0
 django-debug-panel==0.8.3
 django-debug-toolbar==2.1
 django-extensions==2.2.5
@@ -26,7 +26,7 @@ docopt==0.6.2
 docutils==0.15.2
 et-xmlfile==1.0.1
 Genshi==0.7.3
-gprof2dot==2017.9.19
+gprof2dot==2019.11.30
 gunicorn==20.0.4
 idna==2.8
 isodate==0.6.0
@@ -44,10 +44,10 @@ pdfrw==0.4
 pika==1.1.0
 Pillow==6.2.1
 psycopg2==2.8.2
-pyaml==19.4.1
+pyaml==19.12.0
 pyasn1==0.4.8
 pycodestyle==2.5.0
-Pygments==2.5.1
+Pygments==2.5.2
 pymongo==3.9.0
 pymorphy2==0.8
 pymorphy2-dicts==2.4.393442.3710985
@@ -57,7 +57,7 @@ python-dateutil==2.8.1
 python3-memcached==1.51
 pytils==0.3
 pytz==2019.3
-PyYAML==5.1.2
+PyYAML==5.3
 redis==3.3.11
 relatorio==0.9.0
 reportlab==3.5.32
@@ -76,7 +76,7 @@ zeep==3.4.0
 djangorestframework==3.10.3
 pdfkit==0.6.1
 PyVirtualDisplay==0.2.4
-anytree==2.7.2
+anytree==2.7.3
 orthanc-rest-client==0.5.7
 transliterate==1.10.2
 imgkit==1.0.2
