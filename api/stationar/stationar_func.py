@@ -325,7 +325,8 @@ def forbidden_edit_dir(num_dir):
     """
     Проверяет подтверждена ли выписка, или переводной эпикриз. И возвращает True|False - для редактирвоания протколов
     """
-    #если услуга имеет тип is_doc_refferal, или is_paraclinic вернуть False
+
+    # если услуга имеет тип is_doc_refferal, или is_paraclinic вернуть False
     obj_iss = Issledovaniya.objects.filter(napravleniye_id=num_dir).first()
     if obj_iss.research.is_doc_refferal or obj_iss.research.is_paraclinic:
         return False
