@@ -124,7 +124,7 @@
               </div>
             </div>
           </div>
-          <div class="control-row">
+          <div class="control-row" :key="row.research.version">
             <div class="res-title">{{row.research.title}}:</div>
             <iss-status :i="row"/>
             <button class="btn btn-blue-nb" @click="save(row)"
@@ -549,6 +549,31 @@
       r(research) {
         return this.r_list(research).length === 0
       },
+      r_list(research) {
+        const l = [];
+        if (research.confirmed) {
+          return []
+        }
+
+        for (const g of research.research.groups) {
+          if (!vGroup(g, research.research.groups, this.patient_form)) {
+            continue
+          }
+          let n = 0;
+          for (const f of g.fields) {
+            n++;
+            if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value) &&
+              (f.field_type !== 3 ||
+                vField(g, research.research.groups, f.visibility, this.patient_form))) {
+              l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title))
+            }
+          }
+        }
+        if (this.r_is_transfer(research) && this.stationar_research === -1) {
+          l.push('Отделение перевода');
+        }
+        return l.slice(0, 2)
+      },
       change_mkb() {
       },
       template_fields_values(row, dataTemplate, title) {
@@ -652,32 +677,6 @@
         researches: 'researches',
         bases: 'bases',
       }),
-      r_list() {
-        return research => {
-          const l = [];
-          if (research.confirmed) {
-            return []
-          }
-
-          for (const g of research.research.groups) {
-            if (!vGroup(g, research.research.groups, this.patient_form)) {
-              continue
-            }
-            let n = 0;
-            for (const f of g.fields) {
-              n++;
-              if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value) &&
-                (f.field_type !== 3 || vField(g, research.research.groups, f.visibility, this.patient_form))) {
-                l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title))
-              }
-            }
-          }
-          if (this.r_is_transfer(research) && this.stationar_research === -1) {
-            l.push('Отделение перевода');
-          }
-          return l.slice(0, 2)
-        }
-      },
       stationar_researches_filtered() {
         return [{
           pk: -1,

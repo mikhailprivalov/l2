@@ -799,6 +799,7 @@ def directions_paraclinic_form(request):
                     "pk": i.pk,
                     "research": {
                         "title": i.research.title,
+                        "version": i.pk * 10000,
                         "is_paraclinic": i.research.is_paraclinic,
                         "is_doc_refferal": i.research.is_doc_refferal,
                         "is_treatment": i.research.is_treatment,
