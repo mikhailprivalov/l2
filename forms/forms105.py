@@ -468,7 +468,6 @@ def form_03(request_data):
 
     # num_dir = request_data["dir_pk"]
     direction_obj = Napravleniya.objects.get(pk=num_dir)
-    history_num = direction_obj.history_num
     hosp_nums_obj = hosp_get_hosp_direction(num_dir)
     hosp_nums = ''
     for i in hosp_nums_obj:
@@ -531,7 +530,7 @@ def form_03(request_data):
 
     print_district = ''
     if SettingManager.get("district", default='True', default_type='b'):
-        if ind_card.district != None:
+        if ind_card.district is not None:
             print_district = 'Уч: {}'.format(ind_card.district.title)
 
     opinion = [
@@ -563,10 +562,6 @@ def form_03(request_data):
 
     card_num_obj = patient_data['card_num'].split(' ')
     p_card_num = card_num_obj[0]
-    if len(card_num_obj) == 2:
-        p_card_type = '(' + str(card_num_obj[1]) + ')'
-    else:
-        p_card_type = ''
 
     # взять самое последнее направленеие из hosp_dirs
     hosp_last_num = hosp_nums_obj[-1].get('direction')

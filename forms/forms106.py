@@ -93,7 +93,7 @@ def form_01(request_data):
 
     print_district = ''
     if SettingManager.get("district", default='True', default_type='b'):
-        if ind_card.district != None:
+        if ind_card.district is not None:
             print_district = 'Уч: {}'.format(ind_card.district.title)
 
     opinion = [
