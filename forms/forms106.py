@@ -1,36 +1,28 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, \
-    TableStyle, Frame, KeepInFrame
-from reportlab.platypus import PageBreak, NextPageTemplate, Indenter
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, KeepInFrame
+from reportlab.platypus import PageBreak, Indenter
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, landscape, portrait
+from reportlab.lib.pagesizes import A4, portrait
 from reportlab.lib.units import mm
 from copy import deepcopy
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
-from reportlab.platypus.flowables import HRFlowable
-from reportlab.lib.colors import HexColor
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.colors import black
 
 from appconf.manager import SettingManager
-from clients.models import Card, Document
-from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
+from directions.models import Napravleniya, Issledovaniya
 from directory.models import Fractions
 from laboratory.settings import FONTS_FOLDER
-import datetime
 import locale
 import sys
-import pytils
 import os.path
 from io import BytesIO
-from . import forms_func
-from reportlab.pdfgen import canvas
-from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction, get_direction_attrs
+from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction
 from api.stationar.sql_func import get_result_value_iss
 from api.sql_func import get_fraction_result
 from utils.dates import normalize_date
-from users.models import DoctorProfile
+
 
 def form_01(request_data):
     """
@@ -39,7 +31,6 @@ def form_01(request_data):
 
     num_dir = request_data["dir_pk"]
     direction_obj = Napravleniya.objects.get(pk=num_dir)
-    history_num = direction_obj.history_num
     hosp_nums_obj = hosp_get_hosp_direction(num_dir)
     hosp_nums = ''
     for i in hosp_nums_obj:
