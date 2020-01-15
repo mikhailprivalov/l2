@@ -10,7 +10,7 @@ DAWG==0.7.8
 DAWG-Python==0.7.2
 defusedxml==0.6.0
 Django==2.2.8
-django-ajax-selects==1.7.1
+django-ajax-selects==1.8.0
 django-cors-middleware==1.5.0
 django-debug-panel==0.8.3
 django-debug-toolbar==2.1
