@@ -170,19 +170,25 @@
       return {
         prev_scroll: 0,
         prev_scrollHeightTop: 0,
+        versionTickTimer: null
       }
     },
     watch: {
       groups: {
         deep: true,
         handler() {
-          this.research.version = (this.research.version || 0) + 1;
+          this.inc_version();
         },
       }
     },
+    mounted() {
+      this.versionTickTimer = setInterval(() => this.inc_version(), 2000)
+    },
+    beforeDestroy() {
+      clearInterval(this.versionTickTimer);
+    },
     computed: {
       notFilled() {
-        this.research.version = (this.research.version || 0) + 1;
         const l = [];
         if (this.confirmed) {
           return []
@@ -204,6 +210,9 @@
       }
     },
     methods: {
+      inc_version() {
+        this.research.version = (this.research.version || 0) + 1;
+      },
       enter_field(skip) {
         if (!skip) {
           return () => {

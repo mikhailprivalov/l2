@@ -328,7 +328,7 @@ def forbidden_edit_dir(num_dir):
 
     # (если услуга имеет тип is_doc_refferal, или is_paraclinic) и направление не имеет parent услугу типа hosp вернуть False
     obj_iss = Issledovaniya.objects.filter(napravleniye_id=num_dir).first()
-    parent = Napravleniya.objects.filter(pk=num_dir).first().parent
+    parent = Napravleniya.objects.get(pk=num_dir).parent
     if not parent and (obj_iss.research.is_doc_refferal or obj_iss.research.is_paraclinic):
         return False
 

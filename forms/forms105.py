@@ -463,10 +463,7 @@ def form_03(request_data):
     """
     Статистическая форма 066/у Приложение № 5 к приказу Минздрава России от 30 декабря 2002 г. № 413
     """
-    num_dir1 = json.loads(request_data["napr_id"])
-    num_dir = num_dir1[0]
-
-    # num_dir = request_data["dir_pk"]
+    num_dir = request_data["dir_pk"]
     direction_obj = Napravleniya.objects.get(pk=num_dir)
     hosp_nums_obj = hosp_get_hosp_direction(num_dir)
     hosp_nums = ''
