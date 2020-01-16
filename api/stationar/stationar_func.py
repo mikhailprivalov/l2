@@ -334,7 +334,7 @@ def forbidden_edit_dir(num_dir):
 
     if parent:
         parent_is_hospital = parent.research.is_hospital
-        if (obj_iss.research.is_doc_refferal or obj_iss.research.is_paraclinic) and parent_is_hospital != True:
+        if (obj_iss.research.is_doc_refferal or obj_iss.research.is_paraclinic) and not parent_is_hospital:
             return False
 
     hosp_nums_obj = hosp_get_hosp_direction(num_dir)
