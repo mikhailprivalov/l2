@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from copy import deepcopy
 
-from directions.models import Issledovaniya
+from directions.models import Issledovaniya, Napravleniya
 from directory.models import Researches
 from podrazdeleniya.models import Podrazdeleniya
 from utils import tree_directions
@@ -326,13 +326,18 @@ def forbidden_edit_dir(num_dir):
     Проверяет подтверждена ли выписка, или переводной эпикриз. И возвращает True|False - для редактирвоания протколов
     """
 
-    # если услуга имеет тип is_doc_refferal, или is_paraclinic вернуть False
+    # (если услуга имеет тип is_doc_refferal, или is_paraclinic) и направление не имеет parent услугу типа hosp вернуть False
     obj_iss = Issledovaniya.objects.filter(napravleniye_id=num_dir).first()
-    if obj_iss.research.is_doc_refferal or obj_iss.research.is_paraclinic:
+    parent = Napravleniya.objects.filter(pk=num_dir).first().parent
+    if not parent and (obj_iss.research.is_doc_refferal or obj_iss.research.is_paraclinic):
         return False
 
+    if parent:
+        parent_is_hospital = parent.research.is_hospital
+        if (obj_iss.research.is_doc_refferal or obj_iss.research.is_paraclinic) and parent_is_hospital != True:
+            return False
+
     hosp_nums_obj = hosp_get_hosp_direction(num_dir)
-    print(hosp_nums_obj)
     hosp_last_num = hosp_nums_obj[-1].get('direction')
     hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
     if hosp_extract and hosp_extract[0].get('date_confirm'):
