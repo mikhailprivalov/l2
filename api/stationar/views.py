@@ -2,7 +2,7 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir
+from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, hosp_get_hosp_direction
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import HospitalService
@@ -39,6 +39,18 @@ def load(request):
                 "card_pk": card.pk,
                 "individual_pk": card.individual_id,
             },
+            "tree": list(filter(
+                lambda d: not d["cancel"],
+                map(
+                    lambda dirc: {
+                        **dirc,
+                        "research_title": dirc["research_title"].replace("отделение", "отд.").replace("Отделение", "Отд."),
+                        "isCurrent": int(dirc["direction"]) == pk,
+                        "cancel": Napravleniya.objects.get(pk=dirc["direction"]).cancel,
+                    },
+                    hosp_get_hosp_direction(pk)
+                )
+            ))
         }
         break
     return JsonResponse(result)

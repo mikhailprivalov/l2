@@ -10,7 +10,9 @@
         <div class="inner" v-if="direction !== null && !!patient.fio_age">
           <div class="inner-card">
             <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" target="_blank" style="float: right">форма 003/у</a>
-            История/б №{{direction}}
+            <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" target="_blank">
+              История/б №{{direction}}
+            </a>
           </div>
           <div class="inner-card">
             {{issTitle}}
@@ -34,6 +36,26 @@
               <i class="fa fa-plus"/>
             </button>
           </div>
+          <template v-for="(dir, index) in tree">
+            <div class="sidebar-btn-wrapper" v-if="dir.isCurrent" :key="dir.direction">
+              <button class="btn btn-blue-nb sidebar-btn active-btn" style="font-size: 12px">
+                <i class="fa fa-arrow-down" v-if="index < tree.length - 1"/>
+                <i class="fa fa-dot-circle-o" v-else/>
+                №{{dir.direction}} {{dir.research_title}}
+                <i class="fa fa-check" />
+              </button>
+            </div>
+            <div class="sidebar-btn-wrapper" v-else :key="dir.direction">
+              <button class="btn btn-blue-nb sidebar-btn"
+                      style="font-size: 12px"
+                      @click="load_pk(dir.direction)"
+              >
+                <i class="fa fa-arrow-down" v-if="index < tree.length - 1"/>
+                <i class="fa fa-dot-circle-o" v-else/>
+                №{{dir.direction}} {{dir.research_title}}
+              </button>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -115,12 +137,15 @@
                                :key="r.pk"/>
               </div>
               <div v-else-if="row.research.transfer_direction">
-                <a href="#" @click.prevent="print_hosp(row.research.transfer_direction)"><i class="fa fa-barcode"/></a>
-                История болезни <a href="#" @click.prevent="print_direction(row.research.transfer_direction)">
-                №{{row.research.transfer_direction}}
-              </a>
+                История болезни №{{row.research.transfer_direction}}
                 <br/>
                 {{row.research.transfer_direction_iss[0]}}
+                <br/>
+                <a href="#" @click.prevent="print_hosp(row.research.transfer_direction)">Печать ш/к браслета</a>
+                <br/>
+                <a href="#" @click.prevent="print_direction(row.research.transfer_direction)">Печать направления</a>
+                <br/>
+                <a href="#" @click.prevent="load_pk(row.research.transfer_direction)">Открыть историю</a>
               </div>
             </div>
           </div>
@@ -295,6 +320,7 @@
         openPlusMode: null,
         openPlusId: null,
         create_directions_data: [],
+        tree: [],
         hosp_services: [],
         direction_service: -1,
         show_results_pk: -1,
@@ -358,6 +384,10 @@
         this.patient_form = null;
         this.stationar_research = -1;
       },
+      load_pk(pk) {
+        this.pk = String(pk);
+        this.load();
+      },
       async load() {
         this.close_list_directions();
         this.direction = null;
@@ -372,6 +402,7 @@
         this.forbidden_edit = false;
         this.stationar_research = -1;
         this.create_directions_data = [];
+        this.tree = [];
         await this.$store.dispatch(action_types.INC_LOADING);
         const {ok, data, message} = await stationar_point.load(this, ['pk']);
         if (ok) {
@@ -382,6 +413,7 @@
           this.issTitle = data.iss_title;
           this.finId = data.fin_pk;
           this.forbidden_edit = data.forbidden_edit;
+          this.tree = data.tree;
           this.patient = new Patient(data.patient);
           this.counts = await stationar_point.counts(this, ['direction']);
           if (message && message.length > 0) {
@@ -476,7 +508,7 @@
           if (data.ok) {
             okmessage('Сохранено');
             iss.saved = true;
-            iss.direction.transfer_direction_iss = data.transfer_direction_iss;
+            iss.research.transfer_direction_iss = data.transfer_direction_iss;
             this.reload_if_need(true)
           } else {
             errmessage(data.message)
@@ -892,7 +924,8 @@
     padding: 0 12px;
     height: 24px;
 
-    &:not(:hover) {
+    &:not(:hover), &.active-btn:hover {
+      cursor: default;
       background-color: rgba(#000, .02) !important;
       color: #000;
       border-bottom: 1px solid #b1b1b1 !important;
