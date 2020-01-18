@@ -26,7 +26,7 @@ from laboratory import utils
 from laboratory.settings import FONTS_FOLDER
 from utils import tree_directions
 from . import forms_func
-from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction
+from api.stationar.stationar_func import hosp_get_hosp_direction
 
 
 def form_01(request_data):
@@ -560,8 +560,6 @@ def form_03(request_data):
 
     doc_patient = f"{patient_data['type_doc']}, {patient_data['serial']} - {patient_data['num']}"
     polis_data = f"{patient_data['oms']['polis_serial']} {patient_data['oms']['polis_num']}"
-
-    hosp_first_num = hosp_nums_obj[0].get('direction')
 
     title_page = [
         Indenter(left=0 * mm),
