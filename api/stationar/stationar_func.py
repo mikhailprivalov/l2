@@ -263,83 +263,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
     return result_filtered
 
 
-# def hosp_get_text_iss(current_iss, extract=False, mode='is_paraclinic'):
-#     # # Возврат стр-ра:
-#     # {'paraclinic': [{'title_research': 'Проведение электрокардиографических исследований ( ЭКГ )', 'result': [
-#     #                 {'date': '05.01.20 117', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
-#     #                       'value': 'Повышение пучка Гиса'}]}]},
-#     #                 {'date': '05.01.20 119', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
-#     #                       'value': 'Диффузные нарушения'}]}]}]} ]}]
-#     #                                                                                                                     ]}
-#
-#     num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
-#     # получить все направления в истории по типу hosp
-#     hosp_dirs = hosp_get_hosp_direction(num_dir)
-#
-#     # получить текущее направление типа hosp из текущего эпикриза
-#     current_dir = hosp_get_curent_hosp_dir(current_iss)
-#     if not extract:
-#         hosp_dirs = [i for i in hosp_dirs if i["direction"] <= current_dir]
-#
-#     # получить по каждому hosp_dirs Дочерние направления по типу is_paraclinic, is_doc_refferal
-#     num_paraclinic_dirs = set()
-#     for h in hosp_dirs:
-#         obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service=mode, level=2)
-#         for k in obj_hosp_dirs:
-#             paraclinic_dir = k.get('direction')
-#             num_paraclinic_dirs.add(paraclinic_dir)
-#
-#     num_paraclinic_dirs = list(num_paraclinic_dirs)
-#     get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True) if num_paraclinic_dirs else []
-#
-#     research_distinct = [d[0] for d in get_research_id]
-#     result = []
-#     for research in research_distinct:
-#         field_result = get_result_text_research(research, num_paraclinic_dirs)
-#         fields = []
-#         last_group = None
-#         last_date = None
-#         data = []
-#         data_in = []
-#         for i in field_result:
-#             fields.append({'title_field': i[4], 'value': i[5]})
-#             date = f'{i[1]} {i[2]}'
-#             group = i[3]
-#             group_fields = {'group_title': group, 'fields': fields.copy()}
-#
-#             if group != last_group:
-#                 if date != last_date:
-#                     data_in = []
-#                 if date == last_date:
-#                     data_in.append(group_fields.copy())
-#                 fields = []
-#
-#             if date == last_date:
-#                 if len(data) > 0:
-#                     last_element = data.pop()
-#                     tmp_list_group_fields = last_element['data']
-#                     tmp_list_group_fields.append(group_fields.copy())
-#                     last_element['data'] = tmp_list_group_fields.copy()
-#                     data.append(last_element.copy())
-#
-#             if date != last_date:
-#                 data_in.append(group_fields.copy())
-#                 data.append({'date': date, 'data': data_in.copy()})
-#                 fields = []
-#                 data_in = []
-#
-#             last_date = date
-#             last_group = group
-#
-#         temp_result = {}
-#         title_research = Researches.objects.get(pk=research).title
-#         temp_result['title_research'] = title_research
-#         temp_result['result'] = data
-#         result.append(temp_result.copy())
-#
-#     return {'paraclinic': result}
-
-def hosp_get_text_iss(current_iss, extract=False, mode='is_paraclinic'):
+def hosp_get_text(current_iss, extract=False, mode=None):
     # # Возврат стр-ра:
     # {'paraclinic': [{'title_research': 'Проведение электрокардиографических исследований ( ЭКГ )', 'result': [
     #                 {'date': '05.01.20 117', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
@@ -347,7 +271,8 @@ def hosp_get_text_iss(current_iss, extract=False, mode='is_paraclinic'):
     #                 {'date': '05.01.20 119', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
     #                       'value': 'Диффузные нарушения'}]}]}]} ]}]
     #                                                                                                                     ]}
-
+    if mode is None:
+        return {}
     num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
     # получить все направления в истории по типу hosp
     hosp_dirs = hosp_get_hosp_direction(num_dir)
@@ -360,12 +285,13 @@ def hosp_get_text_iss(current_iss, extract=False, mode='is_paraclinic'):
     # получить по каждому hosp_dirs Дочерние направления по типу is_paraclinic, is_doc_refferal
     num_paraclinic_dirs = set()
     for h in hosp_dirs:
-        obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service='is_paraclinic', level=2)
+        obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service=mode, level=2)
         for k in obj_hosp_dirs:
             paraclinic_dir = k.get('direction')
             num_paraclinic_dirs.add(paraclinic_dir)
 
     num_paraclinic_dirs = list(num_paraclinic_dirs)
+    #[0] - заглушка для запроса. research c id =0 не бывает
     get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True)
     research_distinct = [d[0] for d in get_research_id]
     result = []
@@ -412,8 +338,18 @@ def hosp_get_text_iss(current_iss, extract=False, mode='is_paraclinic'):
         temp_result['result'] = data
         result.append(temp_result.copy())
 
-    return {'paraclinic': result}
+    return {mode : result}
 
+
+def hosp_get_text_iss(current_iss, is_extract, mode):
+    if mode is None:
+        return []
+    if mode == 'desc':
+        res_paraclinic = hosp_get_text_iss(current_iss, is_extract, 'is_paraclinic')
+        res_consult = hosp_get_text_iss(current_iss, is_extract, 'is_doc_refferal')
+        return [res_paraclinic, res_consult]
+
+    return [hosp_get_text(current_iss, is_extract, mode=mode)]
 
 
 def forbidden_edit_dir(num_dir):
