@@ -77,7 +77,8 @@ def get_direction_attrs(direction, site_type=-1, type_service='None', level=-1):
                                   'podrazdeleniye': dir_attr.get('podrazdeleniye_title'), }
 
     for k, v in dict_temp.items():
-        dict_result = {'type': v['type'], 'pk': k, 'date_create': v['date_create'], 'confirm': v['confirm'], 'researches': v['researches'],
+        dict_result = {'type': v['type'], 'pk': k, 'date_create': v['date_create'], 'confirm': v['confirm'],
+                       'researches': v['researches'],
                        'researches_short': v['researches_short'], 'podrazdeleniye': v['podrazdeleniye']}
         data.append(dict_result)
 
@@ -97,7 +98,8 @@ def hosp_get_hosp_direction(num_dir):
     hosp_is_hosp = True
     hosp_level = -1
     hosp_dirs = tree_directions.hospital_get_direction(num_iss, main_research, hosp_site_type, hosp_is_paraclinic,
-                                                       hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all)
+                                                       hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level,
+                                                       hosp_is_all)
 
     data = [{'direction': i[0], 'research_title': i[9]} for i in hosp_dirs]
 
@@ -291,7 +293,7 @@ def hosp_get_text(current_iss, extract=False, mode=None):
             num_paraclinic_dirs.add(paraclinic_dir)
 
     num_paraclinic_dirs = list(num_paraclinic_dirs)
-    #[0] - заглушка для запроса. research c id =0 не бывает
+    # [0] - заглушка для запроса. research c id =0 не бывает
     get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True)
     research_distinct = [d[0] for d in get_research_id]
     result = []
@@ -338,7 +340,7 @@ def hosp_get_text(current_iss, extract=False, mode=None):
         temp_result['result'] = data
         result.append(temp_result.copy())
 
-    return {mode : result}
+    return {mode: result}
 
 
 def hosp_get_text_iss(current_iss, is_extract, mode):
