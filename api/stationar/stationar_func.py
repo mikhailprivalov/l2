@@ -139,6 +139,8 @@ def hosp_get_lab_iss(current_iss, extract=False):
             num_lab_dirs.add(lab_dir)
 
     num_lab_dirs = list(num_lab_dirs)
+    if len(num_lab_dirs) == 0:
+        return {}
 
     # Получить титл подразделений типа Лаборатория
     departs_obj = Podrazdeleniya.objects.filter(p_type=2).order_by('title')
@@ -158,6 +160,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
             # получить уникальные research_id по направления
             get_research_id = get_distinct_research(id_research_vertical, num_lab_dirs, is_text_research=False)
             research_distinct = [d[0] for d in get_research_id]
+            print('----',research_distinct)
             if research_distinct:
                 for id_research_vertical in research_distinct:
                     # получить исследования по направлениям и соответсвующим research_id

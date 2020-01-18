@@ -144,9 +144,9 @@ def directions_by_key(request):
             "consultation": "is_doc_refferal",
             "all": "None",
         }.get(r_type, "None")
-        result = get_direction_attrs(base_direction_pk, type_service=type_service)
+        result = get_direction_attrs(base_direction_pk, type_service=type_service, level=2)
     else:
-        result = get_direction_attrs(base_direction_pk, site_type=type_by_key)
+        result = get_direction_attrs(base_direction_pk, site_type=type_by_key, level=2)
     return JsonResponse({"data": list(reversed(result))})
 
 
