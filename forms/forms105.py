@@ -16,21 +16,17 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import PageBreak, Indenter, Frame, KeepInFrame
+from reportlab.platypus import PageBreak, Indenter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.platypus.flowables import HRFlowable
 
 from appconf.manager import SettingManager
 from directions.models import Issledovaniya, Napravleniya, ParaclinicResult
-from directory.models import Fractions
 from laboratory import utils
 from laboratory.settings import FONTS_FOLDER
 from utils import tree_directions
 from . import forms_func
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction
-from api.stationar.sql_func import get_result_value_iss
-from api.sql_func import get_fraction_result
-from utils.dates import normalize_date
 
 
 def form_01(request_data):
@@ -553,10 +549,6 @@ def form_03(request_data):
         patient_data['serial'] = patient_data['passport_serial']
         patient_data['num'] = patient_data['passport_num']
 
-    p_phone = ''
-    if patient_data['phone']:
-        p_phone = 'тел. ' + ", ".join(patient_data['phone'])
-
     card_num_obj = patient_data['card_num'].split(' ')
     p_card_num = card_num_obj[0]
 
@@ -581,9 +573,6 @@ def form_03(request_data):
                     'Вид госпитализации',
                     'Время через, которое доставлен после начала заболевания, получения травмы',
                     'Диагноз направившего учреждения', 'Диагноз при поступлении']
-    list_values = None
-    if titles_field and hosp_primary_receptions:
-        list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
 
     title_page = [
         Indenter(left=0 * mm),
