@@ -164,4 +164,5 @@ def aggregate_desc(request):
     r_type = data.get("r_type")
     type_service = HospitalService.TYPES_REVERSED.get(r_type, "None")
     result = hosp_get_text_iss(pk, extract, mode=type_service)
+    print(result)
     return JsonResponse(result)
