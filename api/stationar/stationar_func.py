@@ -2,7 +2,7 @@ from collections import OrderedDict
 from copy import deepcopy
 
 from directions.models import Issledovaniya, Napravleniya
-from directory.models import Researches
+from directory.models import Researches, HospitalService
 from podrazdeleniya.models import Podrazdeleniya
 from utils import tree_directions
 from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, \
@@ -107,6 +107,8 @@ def hosp_get_hosp_direction(num_dir):
 def hosp_get_curent_hosp_dir(current_iss):
     current_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye
     hosp_dir = current_dir.parent.napravleniye_id if current_dir.parent else current_dir.pk
+    if Issledovaniya.objects.get(pk=current_iss).research.is_hospital:
+        hosp_dir = current_dir.pk
     return hosp_dir
 
 
@@ -118,25 +120,39 @@ def hosp_get_lab_iss(current_iss, extract=False):
     Выход: {КДЛ:{vert:[{titile:'',fractions:[],results:[{date:"",values:[]}]}]},
         {horizont:[{titile:'', results:[{date:'',value:''},{date:'',value:''}]}]}}
     """
-
-    num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+    obj_iss = Issledovaniya.objects.get(pk=current_iss)
+    num_dir = obj_iss.napravleniye_id
 
     # получить все направления в истории по типу hosp
     hosp_dirs = hosp_get_hosp_direction(num_dir)
 
     # получить текущее направление типа hosp из текущего эпикриза
     current_dir = hosp_get_curent_hosp_dir(current_iss)
+    # проверить - это переводной эпикриз
+    epicrisis = False
+    if obj_iss.research.is_slave_hospital:
+        obj_hospital_service = HospitalService.objects.filter(slave_research=obj_iss.research).first().site_type
+        if obj_hospital_service == 6:
+            epicrisis = True
 
-    if not extract:
+    if epicrisis:
         hosp_dirs = [i for i in hosp_dirs if i["direction"] <= current_dir]
 
-    # получить по каждому hosp_dirs Дочерние направления по типу лаборатория
     num_lab_dirs = set()
-    for h in hosp_dirs:
-        obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service='is_lab', level=2)
+    if (not extract) and (not epicrisis):
+        obj_hosp_dirs = hosp_get_data_direction(current_dir, site_type=-1, type_service='is_lab', level=2)
         for k in obj_hosp_dirs:
             lab_dir = k.get('direction')
             num_lab_dirs.add(lab_dir)
+
+    # получить по каждому hosp_dirs Дочерние направления по типу лаборатория
+
+    if extract or epicrisis:
+        for h in hosp_dirs:
+            obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service='is_lab', level=2)
+            for k in obj_hosp_dirs:
+                lab_dir = k.get('direction')
+                num_lab_dirs.add(lab_dir)
 
     num_lab_dirs = list(num_lab_dirs)
     if len(num_lab_dirs) == 0:
@@ -160,7 +176,6 @@ def hosp_get_lab_iss(current_iss, extract=False):
             # получить уникальные research_id по направления
             get_research_id = get_distinct_research(id_research_vertical, num_lab_dirs, is_text_research=False)
             research_distinct = [d[0] for d in get_research_id]
-            print('----',research_distinct)
             if research_distinct:
                 for id_research_vertical in research_distinct:
                     # получить исследования по направлениям и соответсвующим research_id
