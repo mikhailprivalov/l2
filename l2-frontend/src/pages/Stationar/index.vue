@@ -124,6 +124,7 @@
             :confirmed="row.confirmed || row.forbidden_edit"
             :patient="patient_form"
             :change_mkb="change_mkb(row)"
+            :hospital_r_type="row.research.r_type"
           />
           <div class="group" v-if="r_is_transfer(row)">
             <div class="group-title">Отделение перевода</div>
@@ -176,6 +177,11 @@
         </div>
         <div style="padding: 5px">
           <AggregateLaboratory v-if="opened_list_key === 'laboratory'" :pk="iss"/>
+          <AggregateDesc
+            v-if="['paraclinical', 'consultation'].includes(opened_list_key)"
+            :pk="iss"
+            :r_type="opened_list_key"
+          />
         </div>
       </div>
     </div>
@@ -295,10 +301,12 @@
   import ResultsViewer from '../../modals/ResultsViewer'
   import DisplayDirection from './DisplayDirection'
   import AggregateLaboratory from '../../fields/AggregateLaboratory'
+  import AggregateDesc from "../../fields/AggregateDesc";
 
   export default {
     mixins: [menuMixin],
     components: {
+      AggregateDesc,
       AggregateLaboratory,
       DisplayDirection,
       ResultsViewer,

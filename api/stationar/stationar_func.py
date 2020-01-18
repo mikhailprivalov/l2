@@ -245,7 +245,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
     return result_filtered
 
 
-def hosp_get_text_iss(current_iss, extract=False):
+def hosp_get_text_iss(current_iss, extract=False, mode='is_paraclinic'):
     # # Возврат стр-ра:
     # {'paraclinic': [{'title_research': 'Проведение электрокардиографических исследований ( ЭКГ )', 'result': [
     #                 {'date': '05.01.20 117', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
@@ -261,18 +261,19 @@ def hosp_get_text_iss(current_iss, extract=False):
     # получить текущее направление типа hosp из текущего эпикриза
     current_dir = hosp_get_curent_hosp_dir(current_iss)
     if not extract:
-        hosp_dirs = [i for i in hosp_dirs if i <= current_dir]
+        hosp_dirs = [i for i in hosp_dirs if i["direction"] <= current_dir]
 
     # получить по каждому hosp_dirs Дочерние направления по типу is_paraclinic, is_doc_refferal
     num_paraclinic_dirs = set()
     for h in hosp_dirs:
-        obj_hosp_dirs = hosp_get_data_direction(h, site_type=-1, type_service='is_paraclinic', level=2)
+        obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service=mode, level=2)
         for k in obj_hosp_dirs:
             paraclinic_dir = k.get('direction')
             num_paraclinic_dirs.add(paraclinic_dir)
 
     num_paraclinic_dirs = list(num_paraclinic_dirs)
-    get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True)
+    get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True) if num_paraclinic_dirs else []
+
     research_distinct = [d[0] for d in get_research_id]
     result = []
     for research in research_distinct:

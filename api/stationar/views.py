@@ -2,7 +2,7 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, hosp_get_hosp_direction
+from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, hosp_get_hosp_direction, hosp_get_text_iss
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import HospitalService
@@ -138,15 +138,10 @@ def directions_by_key(request):
     r_type = data["r_type"]
     type_by_key = HospitalService.TYPES_BY_KEYS.get(r_type, -1)
     if type_by_key == -1:
-        type_service = {
-            "paraclinical": "is_paraclinic",
-            "laboratory": "is_lab",
-            "consultation": "is_doc_refferal",
-            "all": "None",
-        }.get(r_type, "None")
-        result = get_direction_attrs(base_direction_pk, type_service=type_service)
+        type_service = HospitalService.TYPES_REVERSED.get(r_type, "None")
+        result = get_direction_attrs(base_direction_pk, type_service=type_service, level=2)
     else:
-        result = get_direction_attrs(base_direction_pk, site_type=type_by_key)
+        result = get_direction_attrs(base_direction_pk, site_type=type_by_key, level=2)
     return JsonResponse({"data": list(reversed(result))})
 
 
@@ -157,4 +152,16 @@ def aggregate_laboratory(request):
     pk = data.get('pk', -1)
     extract = data.get('extract', False)
     result = hosp_get_lab_iss(pk, extract)
+    return JsonResponse(result)
+
+
+@login_required
+@group_required("Врач стационара")
+def aggregate_desc(request):
+    data = json.loads(request.body)
+    pk = data.get('pk', -1)
+    extract = data.get('extract', False)
+    r_type = data.get("r_type")
+    type_service = HospitalService.TYPES_REVERSED.get(r_type, "None")
+    result = hosp_get_text_iss(pk, extract, mode=type_service)
     return JsonResponse(result)
