@@ -585,32 +585,6 @@ def form_03(request_data):
     if titles_field and hosp_primary_receptions:
         list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
 
-    date_entered_value, time_entered_value, type_transport, medicament_allergy = '', '', '', ''
-    who_directed, plan_hospital, extra_hospital, type_hospital = '', '', '', ''
-    time_start_ill, diagnos_who_directed, diagnos_entered = '', '', ''
-
-    if list_values:
-        for i in list_values:
-            if i[3] == 'Дата поступления':
-                date_entered_value = normalize_date(i[2])
-                continue
-            if i[3] == 'Время поступления':
-                time_entered_value = i[2]
-                continue
-            if i[3] == 'Виды транспортировки':
-                type_transport = i[2]
-                continue
-            if i[3] == 'Побочное действие лекарств (непереносимость)':
-                medicament_allergy = i[2]
-                continue
-            if i[3] == 'Кем направлен больной':
-                who_directed = i[2]
-                continue
-            if i[3] == 'Вид госпитализации':
-                type_hospital = i[2]
-            if type_hospital == 'Экстренная':
-                time_start_ill_obj = get_result_value_iss(hosp_primary_iss, primary_research_id, ['Время через, которое доставлен после начала заболевания, получения травмы'])
-
     title_page = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),
@@ -639,11 +613,6 @@ def form_03(request_data):
                   'лицо,  подвергшееся  радиационному  облучению  - 4;  в  т.ч.  в  Чернобыле  - 5;'
                   'инв. I гр.  - 6;   инв. II гр.  -  7;   инв. III гр.  -  8;   ребенок - инвалид  -  9;'
                   'инвалид с детства - 10; прочие - 11', style),
-        Paragraph('12. Кем направлен: {} N напр. __________ Дата: ___.___.________'.format(who_directed), style),
-        Paragraph('13. Кем доставлен _________________________________________________________________________'
-                  ' Код ___ Номер наряда ____________', style),
-        Paragraph('14. Диагноз направившего учреждения:'.format(diagnos_who_directed), style),
-
     ]
     objs.extend(title_page)
 
