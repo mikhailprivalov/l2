@@ -105,11 +105,12 @@ def hosp_get_hosp_direction(num_dir):
 
 
 def hosp_get_curent_hosp_dir(current_iss):
-    current_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye
-    hosp_dir = current_dir.parent.napravleniye_id if current_dir.parent else current_dir.pk
-    if Issledovaniya.objects.get(pk=current_iss).research.is_hospital:
-        hosp_dir = current_dir.pk
-    return hosp_dir
+    obj_iss = Issledovaniya.objects.get(pk=current_iss)
+    current_dir = obj_iss.napravleniye
+    if obj_iss.research.is_hospital:
+        return current_dir.pk
+    if current_dir.parent:
+        return current_dir.parent.napravleniye_id
 
 
 def hosp_get_lab_iss(current_iss, extract=False):
