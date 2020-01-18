@@ -610,20 +610,6 @@ def form_03(request_data):
                 type_hospital = i[2]
             if type_hospital == 'Экстренная':
                 time_start_ill_obj = get_result_value_iss(hosp_primary_iss, primary_research_id, ['Время через, которое доставлен после начала заболевания, получения травмы'])
-                if time_start_ill_obj:
-                    time_start_ill = time_start_ill_obj[0][2]
-                extra_hospital = "Да"
-                plan_hospital = "Нет"
-            else:
-                plan_hospital = "Да"
-                extra_hospital = "Нет"
-                time_start_ill = ''
-            if i[3] == 'Диагноз направившего учреждения':
-                diagnos_who_directed = i[2]
-                continue
-            if i[3] == 'Диагноз при поступлении':
-                diagnos_entered = i[2]
-                continue
 
     title_page = [
         Indenter(left=0 * mm),
@@ -640,7 +626,7 @@ def form_03(request_data):
         Paragraph('1. Код пациента: ________  2. Ф.И.О.: {}'.format(patient_data['fio']), style),
         Paragraph('3. Пол: {} {}4. Дата рождения'.format(sex, space_symbol * 24, patient_data['born']), style),
         Paragraph('5. Документ, удостов. личность: (название, серия, номер) {} {}'.
-                  format(space_symbol * 2, doc_patient ), style),
+                  format(space_symbol * 2, doc_patient), style),
         Paragraph('6. Адрес: регистрация по месту жительства: {}'.format(patient_data['main_address']), style),
         Paragraph('7. Код территории проживания: ___ Житель: город - 1; село - 2.', style),
         Paragraph('8. Страховой полис (серия, номер):{}'.format(polis_data), style),
