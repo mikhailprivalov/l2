@@ -344,7 +344,6 @@ def forbidden_edit_dir(num_dir):
     """
     Проверяет подтверждена ли выписка, или переводной эпикриз. И возвращает True|False - для редактирвоания протколов
     """
-
     # (если услуга имеет тип is_doc_refferal, или is_paraclinic) и направление не имеет parent услугу типа hosp вернуть False
     obj_iss = Issledovaniya.objects.filter(napravleniye_id=num_dir).first()
     parent = Napravleniya.objects.get(pk=num_dir).parent
@@ -362,7 +361,7 @@ def forbidden_edit_dir(num_dir):
     if hosp_extract and hosp_extract[0].get('date_confirm'):
         return True
 
-    if not hosp_extract:
+    if not hosp_extract or not hosp_extract[0].get('date_confirm'):
         # Проверить подтверждение переводного эпикриза
         # Получить hosp_dir для текужего направления
         current_iss = Issledovaniya.objects.get(napravleniye_id=num_dir)
