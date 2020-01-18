@@ -814,6 +814,7 @@ def directions_paraclinic_form(request):
                                                                              Issledovaniya.objects.filter(
                                                                                  napravleniye=transfer_d.pk)
                                                                              ],
+                        "r_type": i.research.r_type,
                     },
                     "pacs": None if not i.research.podrazdeleniye or not i.research.podrazdeleniye.can_has_pacs else
                     search_dicom_study(d.pk),

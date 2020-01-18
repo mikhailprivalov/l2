@@ -31,7 +31,7 @@
                          :duration="400"
                          :on-confirm="clear_val" :value="field"
                          action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                         v-if="!confirmed && ![3, 10, 12, 15, 16].includes(field.field_type)">
+                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17].includes(field.field_type)">
                 ×
               </longpress>
               <div class="field-inputs"
@@ -102,6 +102,13 @@
               <div class="field-value" v-else-if="field.field_type === 16 && pk">
                 <AggregateLaboratory :pk="pk" extract/>
               </div>
+              <div class="field-value" v-else-if="field.field_type === 17 && pk && hospital_r_type">
+                <AggregateDesc
+                  :pk="pk"
+                  extract
+                  :r_type="hospital_r_type"
+                />
+              </div>
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
                     placement : 'left',
@@ -131,10 +138,12 @@
   import SearchFractionValueField from '../fields/SearchFractionValueField'
   import RichTextEditor from '../fields/RichTextEditor'
   import AggregateLaboratory from '../fields/AggregateLaboratory'
+  import AggregateDesc from "../fields/AggregateDesc";
 
   export default {
     name: 'DescriptiveForm',
     components: {
+      AggregateDesc,
       AggregateLaboratory,
       RichTextEditor,
       SearchFractionValueField,
@@ -163,6 +172,10 @@
         type: Function,
         default: () => {
         },
+        required: false,
+      },
+      hospital_r_type: {
+        type: String,
         required: false,
       },
     },

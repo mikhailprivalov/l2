@@ -210,6 +210,24 @@ class Researches(models.Model):
             return False
         return 'выписка' in self.title.lower()
 
+    @property
+    def r_type(self):
+        if self.is_paraclinic:
+            return "is_paraclinic"
+
+        if self.is_doc_referral:
+            return "consultation"
+
+        hs = HospitalService.objects.filter(slave_research=self).first()
+
+        if hs:
+            return HospitalService.TYPES_BY_KEYS_REVERSED.get(hs.site_type, 'None')
+
+        if self.podrazdeleniye and self.podrazdeleniye.p_type == Podrazdeleniya.LABORATORY:
+            return "laboratory"
+
+        return "None"
+
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)
 
@@ -250,6 +268,25 @@ class HospitalService(models.Model):
         'epicrisis': 6,
         'extracts': 7,
         'bl': 8,
+    }
+
+    TYPES_BY_KEYS_REVERSED = {
+        0: 'primary receptions',
+        1: 'diaries',
+        2: 'vc',
+        3: 'operation',
+        4: 'pharmacotherapy',
+        5: 'physiotherapy',
+        6: 'epicrisis',
+        7: 'extracts',
+        8: 'bl',
+    }
+
+    TYPES_REVERSED = {
+        "paraclinical": "is_paraclinic",
+        "laboratory": "is_lab",
+        "consultation": "is_doc_refferal",
+        "all": "None",
     }
 
     main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE,
@@ -298,6 +335,7 @@ class ParaclinicInputField(models.Model):
         (14, 'Protocol raw field'),
         (15, 'Rich text'),
         (16, 'Agg lab'),
+        (17, 'Agg desc'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')

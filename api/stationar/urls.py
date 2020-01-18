@@ -9,4 +9,5 @@ urlpatterns = [
     path('make-service', views.make_service),
     path('directions-by-key', views.directions_by_key),
     path('aggregate-laboratory', views.aggregate_laboratory),
+    path('aggregate-desc', views.aggregate_desc),
 ]
