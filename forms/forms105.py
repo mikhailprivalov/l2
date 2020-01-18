@@ -562,17 +562,6 @@ def form_03(request_data):
     polis_data = f"{patient_data['oms']['polis_serial']} {patient_data['oms']['polis_num']}"
 
     hosp_first_num = hosp_nums_obj[0].get('direction')
-    hosp_primary_receptions = hosp_get_data_direction(hosp_first_num, site_type=0, type_service='None', level=2)
-    hosp_primary_iss, primary_research_id = None, None
-    if hosp_primary_receptions:
-        hosp_primary_iss = hosp_primary_receptions[0].get('iss')
-        primary_research_id = hosp_primary_receptions[0].get('research_id')
-
-    titles_field = ['Дата поступления', 'Время поступления', 'Виды транспортировки',
-                    'Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
-                    'Вид госпитализации',
-                    'Время через, которое доставлен после начала заболевания, получения травмы',
-                    'Диагноз направившего учреждения', 'Диагноз при поступлении']
 
     title_page = [
         Indenter(left=0 * mm),
