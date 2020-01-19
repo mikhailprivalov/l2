@@ -124,7 +124,7 @@
             :confirmed="row.confirmed || row.forbidden_edit"
             :patient="patient_form"
             :change_mkb="change_mkb(row)"
-            :hospital_r_type="row.research.r_type"
+            :hospital_r_type="'desc'"
           />
           <div class="group" v-if="r_is_transfer(row)">
             <div class="group-title">Отделение перевода</div>
