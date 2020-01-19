@@ -4,6 +4,8 @@
             .btn-group
                 button(onclick="refsettings();", type="button")#ref-settings-btn.btn.btn-sm.btn-primary.btn-blue-nb.btn-ell Настройка референсов
             .btn-group
+                button(onclick="clear_all();", type="button")#clear-all-btn.btn.btn-sm.btn-primary.btn-blue-nb.btn-ell Очистить всё
+            .btn-group
                 button(onclick="restore_values();save();", type="button")#save-btn.btn.btn-sm.btn-primary.btn-blue-nb.btn-ell Сохранить
             .btn-group
                 button(onclick="restore_values();save(true,confirm_result);", type="button")#confirm-btn.btn.btn-sm.btn-primary.btn-blue-nb.btn-ell Подтвердить
@@ -292,6 +294,16 @@ script.
             });
             $(`[data-pk=${fpk}]`).val(JSON.stringify(groups[fpk]));
         });
+    }
+
+    function clear_all() {
+        let r = confirm("Очистить все результаты?");
+        if (!r) {
+            return
+        }
+        $("#result-jade-form .result-enter").each(function () {
+            $(this).val('');
+        })
     }
 
     function hide_vals(gpk, th) {
