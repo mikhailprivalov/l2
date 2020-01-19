@@ -340,18 +340,26 @@ def hosp_get_text(current_iss, extract=False, mode=None):
         temp_result['result'] = data
         result.append(temp_result.copy())
 
-    return {mode: result}
+    return result
 
 
 def hosp_get_text_iss(current_iss, is_extract, mode):
     if mode is None:
         return []
     if mode == 'desc':
-        res_paraclinic = hosp_get_text_iss(current_iss, is_extract, 'is_paraclinic')
-        res_consult = hosp_get_text_iss(current_iss, is_extract, 'is_doc_refferal')
-        return [res_paraclinic, res_consult]
+        modes = [
+            'is_paraclinic',
+            'is_doc_refferal',
+        ]
+    else:
+        modes = [mode]
 
-    return [hosp_get_text(current_iss, is_extract, mode=mode)]
+    v = []
+
+    for m in modes:
+        v.extend(hosp_get_text(current_iss, is_extract, mode=m))
+
+    return v
 
 
 def forbidden_edit_dir(num_dir):
