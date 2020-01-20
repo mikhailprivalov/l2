@@ -4,13 +4,14 @@
       <div class="research-title">{{research.title_research}}</div>
       <div class="research-date" v-for="res in research.result">
         <div class="research-date-title">{{res.date}}:</div>
-        <div class="research-group" v-for="g in res.data" v-if="non_empty_group(g)">
-          <div class="research-group-title" v-if="g.group_title !== ''">{{g.group_title}}</div>
-          <div class="group-field" v-for="f in g.fields">
-            <div class="group-field-title" v-if="f.title_field !== ''">{{f.title_field}}:</div>
-            <div v-html="fix_html(f.value)"/>
-          </div>
-        </div>
+        <span class="research-group" v-for="g in res.data" v-if="non_empty_group(g)">
+          <span class="research-group-title" v-if="g.group_title !== ''">
+            {{fix_space(g.group_title)}}<span v-if="non_empty_fields(g)">:</span>
+          </span>
+          <span class="group-field" v-for="(f, fi) in g.fields" v-if="f.value !== ''">
+            <span class="group-field-title" v-if="f.title_field !== ''">{{fix_space(f.title_field)}}:</span>&nbsp;<span
+            v-html="fix_html(f.value)"/>;<span v-if="fi + 1 < g.fields.length"> </span></span>.
+        </span>
       </div>
     </div>
   </div>
@@ -45,19 +46,25 @@
       },
       fix_html(v) {
         let lv = v;
-        lv = lv.replace('<', '&lt;').replace('>', '&gt;');
-        lv.replace('&lt;sub&gt;', '<sub>');
-        lv.replace('&lt;/sub&gt;', '</sub>');
-        lv.replace('&lt;sup&gt;', '<sup>');
-        lv.replace('&lt;/sup&gt;', '</sup>');
-        lv = lv.replace('\n', '<br/>');
-        return lv;
+        lv = lv.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+        lv = lv.replaceAll('&lt;sub&gt;', '<sub>');
+        lv = lv.replaceAll('&lt;/sub&gt;', '</sub>');
+        lv = lv.replaceAll('&lt;sup&gt;', '<sup>');
+        lv = lv.replaceAll('&lt;/sup&gt;', '</sup>');
+        lv = lv.replaceAll('\n', '<br/>');
+        return lv.trim();
+      },
+      fix_space(v) {
+        return v.replace(' ', ' ')
       },
       non_empty_group(g) {
         if (g.group_title !== '') {
           return true;
         }
 
+        return this.non_empty_fields(g);
+      },
+      non_empty_fields(g) {
         for (const f of g.fields) {
           if (f.value !== '') {
             return true;
@@ -71,16 +78,23 @@
 </script>
 
 <style scoped lang="scss">
-  .research-title {
-    font-weight: bold;
-    font-size: 110%;
+  .root-agg {
+    line-height: 1.5;
   }
 
-  .research-group {
-    margin-bottom: 5px;
-
+  .research {
     &-title {
       font-weight: bold;
+      font-size: 110%;
+    }
+
+    &-date {
+      text-align: justify;
+    }
+
+    &-group-title {
+      font-weight: bold;
+      text-decoration: underline;
     }
   }
 
@@ -89,6 +103,6 @@
   }
 
   .root-agg {
-    max-width: 800px;
+    max-width: 21cm;
   }
 </style>
