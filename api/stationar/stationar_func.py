@@ -297,47 +297,49 @@ def hosp_get_text(current_iss, extract=False, mode=None):
     get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True)
     research_distinct = [d[0] for d in get_research_id]
     result = []
+
     for research in research_distinct:
         field_result = get_result_text_research(research, num_paraclinic_dirs)
-        fields = []
         last_group = None
         last_date = None
-        data = []
         data_in = []
+        new_date_data = {}
         for i in field_result:
-            fields.append({'title_field': i[4], 'value': i[5]})
             date = f'{i[1]} {i[2]}'
             group = i[3]
-            group_fields = {'group_title': group, 'fields': fields.copy()}
-
-            if group != last_group:
-                if date != last_date:
-                    data_in = []
-                if date == last_date:
-                    data_in.append(group_fields.copy())
-                fields = []
-
-            if date == last_date:
-                if len(data) > 0:
-                    last_element = data.pop()
-                    tmp_list_group_fields = last_element['data']
-                    tmp_list_group_fields.append(group_fields.copy())
-                    last_element['data'] = tmp_list_group_fields.copy()
-                    data.append(last_element.copy())
+            fields = {'title_field': i[4], 'value': i[5]}
 
             if date != last_date:
-                data_in.append(group_fields.copy())
-                data.append({'date': date, 'data': data_in.copy()})
-                fields = []
-                data_in = []
+                if new_date_data:
+                    data_in.append(new_date_data.copy())
 
-            last_date = date
-            last_group = group
+                new_date_data = {}
+                new_date_data['date'] = date
+                new_date_data['data'] = [{'group_title': group, 'fields': [fields.copy()]}]
+                last_date = date
+                last_group = group
+                continue
+
+            if group != last_group and date == last_date:
+                current_data = new_date_data.get('data')
+                current_data.append({'group_title': group, 'fields': [fields.copy()]})
+                new_date_data['data'] = current_data.copy()
+                last_group = group
+                continue
+
+            current_data = new_date_data.get('data')
+            get_last_group = current_data.pop()
+            last_fields = get_last_group.get('fields')
+            last_fields.append(fields.copy())
+            get_last_group['fields'] = last_fields.copy()
+            current_data.append(get_last_group.copy())
+            new_date_data['data'] = current_data.copy()
+
+        data_in.append(new_date_data.copy())
 
         temp_result = {}
-        title_research = Researches.objects.get(pk=research).title
-        temp_result['title_research'] = title_research
-        temp_result['result'] = data
+        temp_result['title_research'] = Researches.objects.get(pk=research).title
+        temp_result['result'] = data_in.copy()
         result.append(temp_result.copy())
 
     return result
