@@ -82,6 +82,8 @@
   }
 
   .research {
+    margin-bottom: 10px;
+
     &-title {
       font-weight: bold;
       font-size: 110%;
