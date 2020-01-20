@@ -346,7 +346,7 @@ def hosp_get_text(current_iss, extract=False, mode=None):
         temp_result['title_research'] = Researches.objects.get(pk=research).title
         temp_result['result'] = data_in.copy()
         result.append(temp_result.copy())
-    print(result)
+
     return result
 
 
