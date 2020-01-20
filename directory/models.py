@@ -256,6 +256,7 @@ class HospitalService(models.Model):
         (6, 'Эпикриз'),
         (7, 'Выписка'),
         (8, 'Больничный лист'),
+        (9, 't, ad, p – лист'),
     )
 
     TYPES_BY_KEYS = {
@@ -268,6 +269,7 @@ class HospitalService(models.Model):
         'epicrisis': 6,
         'extracts': 7,
         'bl': 8,
+        't, ad, p sheet': 9,
     }
 
     TYPES_BY_KEYS_REVERSED = {
@@ -280,6 +282,7 @@ class HospitalService(models.Model):
         6: 'epicrisis',
         7: 'extracts',
         8: 'bl',
+        9: 't, ad, p sheet',
     }
 
     TYPES_REVERSED = {
