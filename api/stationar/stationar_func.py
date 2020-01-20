@@ -304,15 +304,10 @@ def hosp_get_text(current_iss, extract=False, mode=None):
         last_date = None
         data_in = []
         new_date_data = {}
-        x = 0
-        date = ''
-        group = ''
-        fields = {}
         for i in field_result:
             date = f'{i[1]} {i[2]}'
             group = i[3]
             fields = {'title_field': i[4], 'value': i[5]}
-            x = x + 1
 
             if date != last_date:
                 if new_date_data:
