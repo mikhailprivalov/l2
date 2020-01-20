@@ -1,8 +1,13 @@
 <template>
-  <label>
-    <input type="range" v-model="val" :readonly="disabled"/>
-    {{val}}
-  </label>
+  <div>
+    <template v-if="!disabled">
+      <input type="range" v-model="val" :min="min" :max="max" :step="step"/>
+      <span>{{val}}&nbsp;{{units}}</span>
+    </template>
+    <template v-else>
+      <span>{{val}}</span>
+    </template>
+  </div>
 </template>
 
 <script>
@@ -22,27 +27,49 @@
     },
     data() {
       return {
-        val: this.value,
-        min: 0,
-        max: 1,
-        step: 1,
+        val: !this.disabled ? (this.value || '34').split(' ')[0] : this.value,
+        min: 34,
+        max: 42,
+        step: 0.1,
+        units: '°C',
       }
     },
     mounted() {
+      if (this.disabled) {
+        return
+      }
       const l = this.variants.length;
       if (l > 0) {
-        this.min = Number(this.variants[0])
+        this.min = Number(this.variants[0]) || 34
       }
       if (l > 1) {
-        this.max = Number(this.variants[1])
+        this.max = Number(this.variants[1]) || 42
       }
       if (l > 2) {
-        this.step = Number(this.variants[2])
+        this.step = Number(this.variants[2]) || 0.1
+      }
+      if (l > 3) {
+        this.step = this.variants[3] || this.variants[3] === '' ? this.variants[3] : '°C'
       }
     },
     watch: {
-      val() {
-        this.changeValue(this.val)
+      val: {
+        handler() {
+          if (this.disabled) {
+            return
+          }
+          this.changeValue((this.val + ' ' + this.units).trim())
+        },
+        immediate: true,
+      },
+      disabled(_, pv) {
+        if (this.disabled) {
+          if (!pv) {
+            this.val = (this.val + ' ' + this.units).trim()
+          }
+          return
+        }
+        this.val = (this.value || '34').split(' ')[0]
       },
     },
     model: {
@@ -55,3 +82,18 @@
     }
   }
 </script>
+
+<style scoped lang="scss">
+  div {
+    padding: 3px;
+  }
+
+  input {
+    max-width: 250px;
+    display: inline-block;
+  }
+
+  input, span {
+    vertical-align: middle;
+  }
+</style>

@@ -31,11 +31,12 @@
                          :duration="400"
                          :on-confirm="clear_val" :value="field"
                          action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17].includes(field.field_type)">
+                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19].includes(field.field_type)">
                 ×
               </longpress>
               <div class="field-inputs"
-                   v-if="field.values_to_input.length > 0 && !confirmed && field.field_type !== 10 && field.field_type !== 12">
+                   v-if="field.values_to_input.length > 0 && !confirmed &&
+                   ![10, 12, 18, 19].includes(field.field_type)">
                 <div class="input-values-wrap">
                   <div class="input-values">
                     <div class="inner-wrap">
@@ -109,6 +110,12 @@
                   :r_type="hospital_r_type"
                 />
               </div>
+              <div class="field-value" v-else-if="field.field_type === 18">
+                <NumberField v-model="field.value" :disabled="confirmed" />
+              </div>
+              <div class="field-value" v-else-if="field.field_type === 19">
+                <NumberRangeField :variants="field.values_to_input" v-model="field.value" :disabled="confirmed" />
+              </div>
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
                     placement : 'left',
@@ -139,10 +146,14 @@
   import RichTextEditor from '../fields/RichTextEditor'
   import AggregateLaboratory from '../fields/AggregateLaboratory'
   import AggregateDesc from "../fields/AggregateDesc";
+  import NumberField from "../fields/NumberField";
+  import NumberRangeField from "../fields/NumberRangeField";
 
   export default {
     name: 'DescriptiveForm',
     components: {
+      NumberRangeField,
+      NumberField,
       AggregateDesc,
       AggregateLaboratory,
       RichTextEditor,
