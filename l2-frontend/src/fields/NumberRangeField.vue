@@ -34,24 +34,6 @@
         units: '°C',
       }
     },
-    mounted() {
-      if (this.disabled) {
-        return
-      }
-      const l = this.variants.length;
-      if (l > 0) {
-        this.min = Number(this.variants[0]) || 34
-      }
-      if (l > 1) {
-        this.max = Number(this.variants[1]) || 42
-      }
-      if (l > 2) {
-        this.step = Number(this.variants[2]) || 0.1
-      }
-      if (l > 3) {
-        this.step = this.variants[3] || this.variants[3] === '' ? this.variants[3] : '°C'
-      }
-    },
     watch: {
       val: {
         handler() {
@@ -70,6 +52,27 @@
           return
         }
         this.val = (this.value || '34').split(' ')[0]
+      },
+      variants: {
+        handler() {
+          if (this.disabled) {
+            return
+          }
+          const l = this.variants.length;
+          if (l > 0) {
+            this.min = Number(this.variants[0]) || 34
+          }
+          if (l > 1) {
+            this.max = Number(this.variants[1]) || 42
+          }
+          if (l > 2) {
+            this.step = Number(this.variants[2]) || 0.1
+          }
+          if (l > 3) {
+            this.units = (this.variants[3] || this.variants[3] === '') ? this.variants[3] : '°C'
+          }
+        },
+        immediate: true,
       },
     },
     model: {
