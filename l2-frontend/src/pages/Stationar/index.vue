@@ -2,19 +2,32 @@
   <div ref="root" class="root">
     <div class="sidebar">
       <div class="sidebar-top">
-        <input type="text" class="form-control" v-model="pk" @keyup.enter="load" autofocus
+        <input type="text" class="form-control" v-model="pk" @keyup.enter="load()" autofocus
                placeholder="Номер истории"/>
-        <button class="btn btn-blue-nb" @click="load" :disabled="pk === ''">Загрузить</button>
+        <button class="btn btn-blue-nb" @click="load()" :disabled="pk === ''">Загрузить</button>
       </div>
       <div class="sidebar-content">
         <div class="inner" v-if="direction !== null && !!patient.fio_age">
           <div class="inner-card">
-            <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" target="_blank" style="float: right">форма 003/у</a>
-            <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" target="_blank">
+            <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" target="_blank" v-if="!every" style="float: right">
+              форма 003/у
+            </a>
+            <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" target="_blank" v-if="every">
+              №{{tree.map(d => d.direction).join('-')}}
+            </a>
+            <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" target="_blank" v-else>
               История/б №{{direction}}
             </a>
           </div>
-          <div class="inner-card">
+          <div class="inner-card" v-if="every">
+            Загружены все истории
+          </div>
+          <div class="inner-card" v-if="every">
+            <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" target="_blank">
+              форма 003/у
+            </a>
+          </div>
+          <div class="inner-card" v-else>
             {{issTitle}}
           </div>
           <div class="inner-card" v-if="cancel">
@@ -30,19 +43,22 @@
               <span v-if="Boolean(counts[key])" class="counts">{{counts[key]}} шт.</span> {{title}}
             </button>
             <button class="btn btn-blue-nb sidebar-btn"
-                    v-if="menuNeedPlus[key] && (!allowedOnlyOneEntry[key] || !Boolean(counts[key])) && !forbidden_edit"
+                    v-if="!every &&
+                    menuNeedPlus[key] &&
+                    (!allowedOnlyOneEntry[key] || !Boolean(counts[key])) &&
+                    !forbidden_edit"
                     @click="plus(key)"
             >
               <i class="fa fa-plus"/>
             </button>
           </div>
           <template v-for="(dir, index) in tree">
-            <div class="sidebar-btn-wrapper" v-if="dir.isCurrent" :key="dir.direction">
+            <div class="sidebar-btn-wrapper" v-if="!every && dir.isCurrent" :key="dir.direction">
               <button class="btn btn-blue-nb sidebar-btn active-btn" style="font-size: 12px">
                 <i class="fa fa-arrow-down" v-if="index < tree.length - 1"/>
                 <i class="fa fa-dot-circle-o" v-else/>
                 №{{dir.direction}} {{dir.research_title}}
-                <i class="fa fa-check" />
+                <i class="fa fa-check"/>
               </button>
             </div>
             <div class="sidebar-btn-wrapper" v-else :key="dir.direction">
@@ -56,6 +72,15 @@
               </button>
             </div>
           </template>
+          <div class="sidebar-btn-wrapper" v-if="tree.length > 1">
+            <button class="btn btn-blue-nb sidebar-btn text-center"
+                    style="font-size: 12px"
+                    @click="load_pk(tree[0].direction, true)"
+            >
+              <i class="fa fa-cubes"/>
+              Загрузить всё
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -317,6 +342,7 @@
     data() {
       return {
         pk: '',
+        every: false,
         direction: null,
         forbidden_edit: null,
         cancel: false,
@@ -392,11 +418,11 @@
         this.patient_form = null;
         this.stationar_research = -1;
       },
-      load_pk(pk) {
+      load_pk(pk, every = false) {
         this.pk = String(pk);
-        this.load();
+        this.load(every);
       },
-      async load() {
+      async load(every = false) {
         this.close_list_directions();
         this.direction = null;
         this.cancel = false;
@@ -408,13 +434,15 @@
         this.openPlusId = null;
         this.openPlusMode = null;
         this.forbidden_edit = false;
+        this.every = false;
         this.stationar_research = -1;
         this.create_directions_data = [];
         this.tree = [];
         await this.$store.dispatch(action_types.INC_LOADING);
-        const {ok, data, message} = await stationar_point.load(this, ['pk']);
+        const {ok, data, message} = await stationar_point.load(this, ['pk'], {every});
         if (ok) {
           this.pk = '';
+          this.every = every;
           this.direction = data.direction;
           this.cancel = data.cancel;
           this.iss = data.iss;
@@ -423,7 +451,7 @@
           this.forbidden_edit = data.forbidden_edit;
           this.tree = data.tree;
           this.patient = new Patient(data.patient);
-          this.counts = await stationar_point.counts(this, ['direction']);
+          this.counts = await stationar_point.counts(this, ['direction'], {every});
           if (message && message.length > 0) {
             wrnmessage(message)
           }
@@ -448,6 +476,7 @@
         const {data} = await stationar_point.directionsByKey({
           direction: this.direction,
           r_type: key,
+          every: this.every,
         });
         this.list_directions = data;
         this.opened_list_key = key;
@@ -925,7 +954,9 @@
 
   .sidebar-btn {
     border-radius: 0;
-    text-align: left;
+    &:not(.text-center) {
+      text-align: left;
+    }
     border-top: none !important;
     border-right: none !important;
     border-left: none !important;

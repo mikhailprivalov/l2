@@ -186,7 +186,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             when %(hosp_is_doc_refferal)s = TRUE THEN
             is_doc_refferal = true and site_type is NULL
             when %(hosp_is_lab)s = TRUE THEN
-            is_paraclinic = FALSE and is_doc_refferal = FALSE and is_stom = FALSE and is_hospital = FALSE and is_microbiology = FALSE and site_type is NULL
+            is_paraclinic = FALSE and is_doc_refferal = FALSE and is_stom = FALSE and is_hospital = FALSE and is_microbiology = FALSE and site_type is NULL AND is_slave_hospital = FALSE
             when %(hosp_site_type)s = -1 and %(hosp_is_all)s = TRUE THEN
                 EXISTS (SELECT id FROM r)
             END       
