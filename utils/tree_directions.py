@@ -171,7 +171,13 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
                 LEFT JOIN t_podrazdeleniye ON t_podrazdeleniye.id = directory_researches.podrazdeleniye_id),
 
             t_hospital_service AS (SELECT site_type, slave_research_id FROM directory_hospitalservice
-            WHERE main_research_id = %(main_research)s),
+            WHERE 
+                CASE 
+                WHEN %(hosp_level)s > -1 THEN 
+                    main_research_id = %(main_research)s
+                WHEN %(hosp_level)s = -1 THEN 
+                EXISTS (SELECT id FROM r)
+                END),
             
             t_all AS (SELECT * FROM r
             LEFT JOIN t_research ON r.research_id = t_research.research_iddir
@@ -200,7 +206,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
                 WHEN %(hosp_level)s > -1 THEN 
                     level = %(hosp_level)s
                 WHEN %(hosp_level)s = -1 THEN 
-                    EXISTS (SELECT id FROM r)
+                EXISTS (SELECT id FROM r)
                 END
            ;""",
                        params={'num_issledovaniye': iss, 'main_research': main_research,
