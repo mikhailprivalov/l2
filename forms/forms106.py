@@ -124,8 +124,6 @@ def form_01(request_data):
         p_phone = 'тел. ' + ", ".join(patient_data['phone'])
 
     p_address = ''
-    count_space = space_symbol
-
     if len(patient_data['main_address']) <= 50:
         p_address = patient_data['main_address'] + space_symbol * 50 + '_'
     else:
