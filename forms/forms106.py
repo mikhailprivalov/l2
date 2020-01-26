@@ -123,6 +123,14 @@ def form_01(request_data):
     if patient_data['phone']:
         p_phone = 'тел. ' + ", ".join(patient_data['phone'])
 
+    p_address = ''
+    count_space = space_symbol
+
+    if len(patient_data['main_address']) <= 50:
+        p_address = patient_data['main_address'] + space_symbol * 50 + '_'
+    else:
+        p_address = patient_data['main_address']
+
     card_num_obj = patient_data['card_num'].split(' ')
     p_card_num = card_num_obj[0]
 
@@ -311,7 +319,7 @@ def form_01(request_data):
             '2. Пол: {} {} 3. Дата рождения: {}'.format(patient_data['sex'], 3 * space_symbol, patient_data['born']),
             style),
         Spacer(1, 2 * mm),
-        Paragraph('4. Постоянное место жительства: город, село: {}'.format(patient_data['main_address']), style),
+        Paragraph('4. Постоянное место жительства: город, село: {}'.format(p_address), style),
         Paragraph('{}'.format(p_phone), style),
         Spacer(1, 2 * mm),
         Paragraph('5. Место работы, профессия или должность', style),
