@@ -129,7 +129,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             SELECT nn.id,
             to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
             to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') as time_create,
-            nn.parent_id, 
+            nn.parent_id, nn.cancel,
             ii.napravleniye_id,
             ii.id as iss, 
             to_char(ii.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm, 
@@ -146,7 +146,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             SELECT n.id, 
                   to_char(n.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
                   to_char(n.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') as time_create,
-                  n.parent_id,
+                  n.parent_id, n.cancel,
                   i.napravleniye_id,
                   i.id, 
                   to_char(i.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm, 
@@ -171,7 +171,13 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
                 LEFT JOIN t_podrazdeleniye ON t_podrazdeleniye.id = directory_researches.podrazdeleniye_id),
 
             t_hospital_service AS (SELECT site_type, slave_research_id FROM directory_hospitalservice
-            WHERE main_research_id = %(main_research)s),
+            WHERE 
+              CASE 
+               WHEN %(hosp_level)s > -1 THEN 
+                    main_research_id = %(main_research)s
+               WHEN %(hosp_level)s = -1 THEN 
+                  EXISTS (SELECT id FROM r)
+              END),
             
             t_all AS (SELECT * FROM r
             LEFT JOIN t_research ON r.research_id = t_research.research_iddir
@@ -195,12 +201,12 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
 
             SELECT "id", date_create, time_create, parent_id, napravleniye_id, iss, date_confirm, time_confirm, research_id, title,
             diagnos, "level", research_iddir, podrazdeleniye_id, is_paraclinic, is_doc_refferal, is_stom, is_hospital, 
-            is_microbiology, podr_title, p_type, site_type, slave_research_id, short_title, is_slave_hospital FROM t_all WHERE 
+            is_microbiology, podr_title, p_type, site_type, slave_research_id, short_title, is_slave_hospital, cancel FROM t_all WHERE 
                 CASE 
                 WHEN %(hosp_level)s > -1 THEN 
                     level = %(hosp_level)s
                 WHEN %(hosp_level)s = -1 THEN 
-                    EXISTS (SELECT id FROM r)
+                EXISTS (SELECT id FROM r)
                 END
            ;""",
                        params={'num_issledovaniye': iss, 'main_research': main_research,

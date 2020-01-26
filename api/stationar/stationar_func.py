@@ -101,7 +101,7 @@ def hosp_get_hosp_direction(num_dir):
                                                        hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level,
                                                        hosp_is_all)
 
-    data = [{'direction': i[0], 'research_title': i[9]} for i in hosp_dirs]
+    data = [{'direction': i[0], 'research_title': i[9]} for i in hosp_dirs if not i[25]]
 
     return data
 
