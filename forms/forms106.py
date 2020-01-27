@@ -18,7 +18,7 @@ import locale
 import sys
 import os.path
 from io import BytesIO
-from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction
+from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction, check_tranfer_epicrisis
 from api.stationar.sql_func import get_result_value_iss
 from api.sql_func import get_fraction_result
 from utils.dates import normalize_date
@@ -281,7 +281,28 @@ def form_01(request_data):
                     if len(vv) == 3:
                         date_diag = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                         s = s + i[1][2] + '; дата:' + str(date_diag) + '<br/>'
+#####################################################################################################
+    #получить даные из переводного эпикриза: Дата перевода, Время перевода, в какое отделение переведен
+    #у каждого hosp-направления найти подчиненное эпикриз Перевеод*
+    x = 0
+    print(hosp_nums_obj)
+    epicrisis_data = None
+    for i in range(len(hosp_nums_obj)):
+        if i == 0:
+            continue
+        curent_transfer = hosp_nums_obj[i].get('research_title')
+        print('переведен из', hosp_nums_obj[i-1].get('research_title'), ' в', hosp_nums_obj[i].get('research_title'))
+        print('номер откуда', hosp_nums_obj[i-1].get('direction'))
+        # получить для текущего hosp_dir эпикриз с title - перевод.....
+        current_dir_hosp_dir = hosp_nums_obj[i-1].get('direction')
+        print(current_dir_hosp_dir)
+        epicrisis_data = hosp_get_data_direction(current_dir_hosp_dir, site_type=6, type_service='None', level=2)
+        if epicrisis_data:
+            result_check = check_tranfer_epicrisis(epicrisis_data)
+            print(result_check[1])
+        epicrisis_data = None
 
+#####################################################################################################
     title_page = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),
