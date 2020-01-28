@@ -395,14 +395,14 @@ def forbidden_edit_dir(num_dir):
         # получить для текущего hosp_dir эпикриз с title - перевод.....
         epicrisis_data = hosp_get_data_direction(current_dir_hosp_dir, site_type=6, type_service='None', level=2)
         if epicrisis_data:
-            result_check = check_tranfer_epicrisis(epicrisis_data)
+            result_check = check_transfer_epicrisis(epicrisis_data)
             return result_check[0]
     return False
 
 
-def check_tranfer_epicrisis(data):
+def check_transfer_epicrisis(data):
     for i in data:
         if i.get("research_title").lower().find('перевод') != -1:
             if i.get('date_confirm'):
-                return (True, i.get('direction'),)
-    return (False, -1)
+                return (True, i.get('iss'), i.get('research_id'),)
+    return (False, None, None)

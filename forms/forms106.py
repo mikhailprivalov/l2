@@ -18,7 +18,7 @@ import locale
 import sys
 import os.path
 from io import BytesIO
-from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction, check_tranfer_epicrisis
+from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction, check_transfer_epicrisis
 from api.stationar.sql_func import get_result_value_iss
 from api.sql_func import get_fraction_result
 from utils.dates import normalize_date
@@ -284,23 +284,35 @@ def form_01(request_data):
 #####################################################################################################
     #получить даные из переводного эпикриза: Дата перевода, Время перевода, в какое отделение переведен
     #у каждого hosp-направления найти подчиненное эпикриз Перевеод*
-    x = 0
-    print(hosp_nums_obj)
-    epicrisis_data = None
+    titles_field = ['Дата перевода', 'Время перевода']
+    date_transfer_value, time_transfer_value = None, None
+    tranfers = ''
     for i in range(len(hosp_nums_obj)):
         if i == 0:
             continue
-        curent_transfer = hosp_nums_obj[i].get('research_title')
-        print('переведен из', hosp_nums_obj[i-1].get('research_title'), ' в', hosp_nums_obj[i].get('research_title'))
-        print('номер откуда', hosp_nums_obj[i-1].get('direction'))
+        transfer_research_title = hosp_nums_obj[i].get('research_title')
         # получить для текущего hosp_dir эпикриз с title - перевод.....
-        current_dir_hosp_dir = hosp_nums_obj[i-1].get('direction')
-        print(current_dir_hosp_dir)
-        epicrisis_data = hosp_get_data_direction(current_dir_hosp_dir, site_type=6, type_service='None', level=2)
+        from_hosp_dir_transfer = hosp_nums_obj[i-1].get('direction')
+        epicrisis_data = hosp_get_data_direction(from_hosp_dir_transfer, site_type=6, type_service='None', level=2)
         if epicrisis_data:
-            result_check = check_tranfer_epicrisis(epicrisis_data)
-            print(result_check[1])
-        epicrisis_data = None
+            result_check = check_transfer_epicrisis(epicrisis_data)
+            if result_check[1] > -1:
+                iss_transfer, research_id_transfer = result_check[1], result_check[2]
+                if titles_field and iss_transfer:
+                    list_values = get_result_value_iss(iss_transfer, research_id_transfer, titles_field)
+            else:
+                continue
+        if list_values:
+            for i in list_values:
+                if i[3] == 'Дата перевода':
+                    date_transfer_value = normalize_date(i[2])
+                    continue
+                if i[3] == 'Время перевода':
+                    time_transfer_value = i[2]
+                    continue
+
+        tranfers = f"{tranfers} {transfer_research_title} {date_transfer_value} в {time_transfer_value} ;"
+    print(tranfers)
 
 #####################################################################################################
     title_page = [
