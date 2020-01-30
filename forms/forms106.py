@@ -286,7 +286,7 @@ def form_01(request_data):
     #у каждого hosp-направления найти подчиненное эпикриз Перевеод*
     titles_field = ['Дата перевода', 'Время перевода']
     date_transfer_value, time_transfer_value = None, None
-    tranfers = ''
+    transfers = ''
     for i in range(len(hosp_nums_obj)):
         if i == 0:
             continue
@@ -311,8 +311,7 @@ def form_01(request_data):
                     time_transfer_value = i[2]
                     continue
 
-        tranfers = f"{tranfers} {transfer_research_title} {date_transfer_value} в {time_transfer_value} ;"
-    print(tranfers)
+        transfers = f"{transfers} в {transfer_research_title} {date_transfer_value}/{time_transfer_value};"
 
 #####################################################################################################
     title_page = [
@@ -334,7 +333,7 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Paragraph('Палата №: {}'.format('_________________________'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Переведен в отделение: {}'.format('______________'), style),
+        Paragraph('Переведен в отделение: {}'.format(transfers), style),
         Spacer(1, 2 * mm),
         Paragraph('Проведено койко-дней: {}'.format('______________________________________________'), style),
         Spacer(1, 2 * mm),
@@ -351,7 +350,6 @@ def form_01(request_data):
             style),
         Spacer(1, 2 * mm),
         Paragraph('4. Постоянное место жительства: город, село: {}'.format(p_address), style),
-        Paragraph('{}'.format(p_phone), style),
         Spacer(1, 2 * mm),
         Paragraph('5. Место работы, профессия или должность', style),
         Spacer(1, 2 * mm),
