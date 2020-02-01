@@ -50,3 +50,41 @@ class PageNumCanvas(canvas.Canvas):
         page = "Лист {} из {}".format(self._pageNumber, page_count)
         self.setFont("PTAstraSerifReg", 9)
         self.drawRightString(200 * mm, 8 * mm, page)
+
+
+class PageNumCanvasStationar(PageNumCanvas):
+    def draw_page_number(self, page_count):
+        """
+        Add the page number
+        """
+        pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+        page = "Лист {} из {}".format(self._pageNumber+2, page_count+2)
+        self.setFont("PTAstraSerifReg", 9)
+        self.drawRightString(200 * mm, 8 * mm, page)
+
+
+class PageNumCanvasStationarTitul(PageNumCanvas):
+    def save(self):
+        """
+        Add the page number to each page (page x of y)
+        """
+        page_count = len(self.pages)
+        x = 0
+        for page in self.pages:
+            x = x + 1
+            self.__dict__.update(page)
+            if x != 1:
+                self.draw_page_number(page_count)
+            canvas.Canvas.showPage(self)
+
+        canvas.Canvas.save(self)
+
+
+    def draw_page_number(self, page_count):
+        """
+        Add the page number
+        """
+        pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+        page = "Лист {}".format(self._pageNumber)
+        self.setFont("PTAstraSerifReg", 9)
+        self.drawRightString(200 * mm, 8 * mm, page)

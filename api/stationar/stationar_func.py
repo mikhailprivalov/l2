@@ -36,7 +36,6 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
     data = []
     if hosp_dirs:
         for i in hosp_dirs:
-            print(i)
             data.append({'direction': i[0], 'date_create': i[1], 'time_create': i[2], 'iss': i[5], 'date_confirm': i[6],
                          'time_confirm': i[7], 'research_id': i[8], 'research_title': i[9], 'podrazdeleniye_id': i[13],
                          'is_paraclinic': i[14], 'is_doc_refferal': i[15], 'is_stom': i[16], 'is_hospital': i[17],
