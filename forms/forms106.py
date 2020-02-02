@@ -22,7 +22,7 @@ from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_
 from api.stationar.sql_func import get_result_value_iss
 from api.sql_func import get_fraction_result
 from utils.dates import normalize_date
-from .forms_func import primary_reception_get_data, hosp_extract_get_data, hosp_get_clinical_diagnos
+from .forms_func import primary_reception_get_data, hosp_extract_get_data, hosp_get_clinical_diagnos, hosp_get_transfers_data
 
 
 def form_01(request_data):
@@ -142,7 +142,7 @@ def form_01(request_data):
     # 'Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
     date_value, time_value, final_diagnos, other_diagnos, near_diagnos = hosp_extract_get_data(hosp_last_num)
 
-    # Получить отделение - из названия услуги изи самого главного направления
+    # Получить отделение - из названия услуги или самого главного направления
     hosp_depart = hosp_nums_obj[0].get('research_title')
 
     ############################################################################################################
@@ -155,7 +155,7 @@ def form_01(request_data):
     diagnos_who_directed, diagnos_entered = primary_reception_get_data(hosp_first_num)
 
     ###########################################################################################################
-    #Получение данных группы крови
+    # Получение данных группы крови
     fcaction_avo_id = Fractions.objects.filter(title='Групповая принадлежность крови по системе АВО').first()
     fcaction_rezus_id = Fractions.objects.filter(title='Резус').first()
     group_blood_avo = get_fraction_result(ind_card.pk, fcaction_avo_id.pk, count=1)
@@ -173,35 +173,8 @@ def form_01(request_data):
 
     #####################################################################################################
     # получить даные из переводного эпикриза: Дата перевода, Время перевода, в какое отделение переведен
-    # у каждого hosp-направления найти подчиненное эпикриз Перевеод*
-    titles_field = ['Дата перевода', 'Время перевода']
-    date_transfer_value, time_transfer_value = None, None
-    transfers = ''
-    for i in range(len(hosp_nums_obj)):
-        if i == 0:
-            continue
-        transfer_research_title = hosp_nums_obj[i].get('research_title')
-        # получить для текущего hosp_dir эпикриз с title - перевод.....
-        from_hosp_dir_transfer = hosp_nums_obj[i - 1].get('direction')
-        epicrisis_data = hosp_get_data_direction(from_hosp_dir_transfer, site_type=6, type_service='None', level=2)
-        if epicrisis_data:
-            result_check = check_transfer_epicrisis(epicrisis_data)
-            if result_check[1] > -1:
-                iss_transfer, research_id_transfer = result_check[1], result_check[2]
-                if titles_field and iss_transfer:
-                    list_values = get_result_value_iss(iss_transfer, research_id_transfer, titles_field)
-            else:
-                continue
-        if list_values:
-            for i in list_values:
-                if i[3] == 'Дата перевода':
-                    date_transfer_value = normalize_date(i[2])
-                    continue
-                if i[3] == 'Время перевода':
-                    time_transfer_value = i[2]
-                    continue
-
-        transfers = f"{transfers} в {transfer_research_title} {date_transfer_value}/{time_transfer_value};"
+    # у каждого hosp-направления найти подчиненное эпикриз Перевод*
+    transfers = hosp_get_transfers_data(hosp_nums_obj)
 
     #####################################################################################################
     title_page = [
