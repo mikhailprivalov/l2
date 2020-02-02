@@ -151,8 +151,8 @@ def form_01(request_data):
     # 'Вид госпитализации','Время через, которое доставлен после начала заболевания, получения травмы',
     # 'Диагноз направившего учреждения', 'Диагноз при поступлении'
     hosp_first_num = hosp_nums_obj[0].get('direction')
-    date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital, time_start_ill, \
-    diagnos_who_directed, diagnos_entered = primary_reception_get_data(hosp_first_num)
+    date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital, time_start_ill, diagnos_who_directed, diagnos_entered = primary_reception_get_data(
+        hosp_first_num)
 
     ###########################################################################################################
     # Получение данных группы крови
