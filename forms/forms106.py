@@ -22,7 +22,6 @@ from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_
 from api.stationar.sql_func import get_result_value_iss
 from api.sql_func import get_fraction_result
 from utils.dates import normalize_date
-from utils.pagenum import PageNumCanvasStationarTitul, PageNumCanvasStationar
 
 
 def form_01(request_data):
@@ -284,9 +283,9 @@ def form_01(request_data):
                     if len(vv) == 3:
                         date_diag = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                         s = s + i[1][2] + '; дата:' + str(date_diag) + '<br/>'
-#####################################################################################################
-    #получить даные из переводного эпикриза: Дата перевода, Время перевода, в какое отделение переведен
-    #у каждого hosp-направления найти подчиненное эпикриз Перевеод*
+    #####################################################################################################
+    # получить даные из переводного эпикриза: Дата перевода, Время перевода, в какое отделение переведен
+    # у каждого hosp-направления найти подчиненное эпикриз Перевеод*
     titles_field = ['Дата перевода', 'Время перевода']
     date_transfer_value, time_transfer_value = None, None
     transfers = ''
@@ -295,7 +294,7 @@ def form_01(request_data):
             continue
         transfer_research_title = hosp_nums_obj[i].get('research_title')
         # получить для текущего hosp_dir эпикриз с title - перевод.....
-        from_hosp_dir_transfer = hosp_nums_obj[i-1].get('direction')
+        from_hosp_dir_transfer = hosp_nums_obj[i - 1].get('direction')
         epicrisis_data = hosp_get_data_direction(from_hosp_dir_transfer, site_type=6, type_service='None', level=2)
         if epicrisis_data:
             result_check = check_transfer_epicrisis(epicrisis_data)
@@ -316,7 +315,7 @@ def form_01(request_data):
 
         transfers = f"{transfers} в {transfer_research_title} {date_transfer_value}/{time_transfer_value};"
 
-#####################################################################################################
+    #####################################################################################################
     title_page = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),
@@ -422,7 +421,7 @@ def form_01(request_data):
         # Переведен
         transfers_text = [Paragraph('{}'.format(transfers), styleJustified)]
         transfers_frame = Frame(27 * mm, 206 * mm, 175 * mm, 7 * mm, leftPadding=0, bottomPadding=0,
-                                 rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
+                                rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
         transfers_inframe = KeepInFrame(175 * mm, 12 * mm, transfers_text, hAlign='LEFT', vAlign='TOP', )
         transfers_frame.addFromList([transfers_inframe], canvas)
 
@@ -434,16 +433,16 @@ def form_01(request_data):
         medicament_frame.addFromList([medicament_inframe], canvas)
 
         # ФИО
-        fio_text =[Paragraph("<font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(patient_data['fio']), style)]
+        fio_text = [Paragraph("<font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(patient_data['fio']), style)]
         fio_frame = Frame(77 * mm, 159 * mm, 125 * mm, 8 * mm, leftPadding=0, bottomPadding=0,
-                                 rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
+                          rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
         fio_inframe = KeepInFrame(175 * mm, 12 * mm, fio_text, hAlign='LEFT', vAlign='TOP', )
         fio_frame.addFromList([fio_inframe], canvas)
 
         # Постоянное место жительства
-        live_text =[Paragraph('{}'.format(p_address), style)]
+        live_text = [Paragraph('{}'.format(p_address), style)]
         live_frame = Frame(88 * mm, 144 * mm, 115 * mm, 9 * mm, leftPadding=0, bottomPadding=0,
-                                 rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
+                           rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
         live_inframe = KeepInFrame(175 * mm, 12 * mm, live_text, hAlign='LEFT', vAlign='TOP', )
         live_frame.addFromList([live_inframe], canvas)
 
@@ -457,7 +456,7 @@ def form_01(request_data):
         # Кем направлен больной
         who_directed_text = [Paragraph('{}'.format(who_directed), style)]
         who_directed_frame = Frame(77 * mm, 132 * mm, 126 * mm, 5 * mm, leftPadding=0, bottomPadding=0,
-                           rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
+                                   rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
         who_directed_inframe = KeepInFrame(175 * mm, 12 * mm, who_directed_text, hAlign='LEFT', vAlign='TOP', )
         who_directed_frame.addFromList([who_directed_inframe], canvas)
 
@@ -500,7 +499,7 @@ def form_01(request_data):
         agent = f"{agent_status}: {agent_fio}, тел.:{agent_phone}"
         agent_text = [Paragraph('{}'.format(agent), styleRight)]
         agent_frame = Frame(27 * mm, 5 * mm, 175 * mm, 7 * mm, leftPadding=0, bottomPadding=0,
-                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
+                            rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
         agent_inframe = KeepInFrame(175 * mm, 10 * mm, agent_text)
         agent_frame.addFromList([agent_inframe], canvas)
         canvas.restoreState()
@@ -630,7 +629,7 @@ def form_01(request_data):
 
         canvas.restoreState()
 
-    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvasStationarTitul)
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
     pdf = buffer.getvalue()
     buffer.close()
 
