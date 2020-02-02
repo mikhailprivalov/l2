@@ -22,6 +22,7 @@ from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_
 from api.stationar.sql_func import get_result_value_iss
 from api.sql_func import get_fraction_result
 from utils.dates import normalize_date
+from .forms_func import primary_reception_get_data, hosp_extract_get_data, hosp_get_clinical_diagnos
 
 
 def form_01(request_data):
@@ -127,7 +128,6 @@ def form_01(request_data):
         p_phone = 'тел.: ' + ", ".join(patient_data['phone'])
 
     p_address = patient_data['main_address']
-
     work_place = patient_data['work_place_db'] if patient_data['work_place_db'] else patient_data['work_place']
     p_work = work_place
 
@@ -139,105 +139,23 @@ def form_01(request_data):
     ############################################################################################################
     # Получение данных из выписки
     # Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
-    hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
-    hosp_extract_iss, extract_research_id = None, None
-    if hosp_extract:
-        hosp_extract_iss = hosp_extract[0].get('iss')
-        extract_research_id = hosp_extract[0].get('research_id')
-    titles_field = ['Время выписки', 'Дата выписки', 'Основной диагноз (описание)',
-                    'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
-                    ]
-    list_values = None
-    if titles_field and hosp_extract:
-        list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
-    date_value, time_value = '', ''
-    final_diagnos, other_diagnos, near_diagnos = '', '', ''
-
-    if list_values:
-        for i in list_values:
-            if i[3] == 'Дата выписки':
-                date_value = i[2]
-            if i[3] == 'Время выписки':
-                time_value = i[2]
-            if i[3] == 'Основной диагноз (описание)':
-                final_diagnos = i[2]
-            if i[3] == 'Осложнение основного диагноза (описание)':
-                other_diagnos = i[2]
-            if i[3] == 'Сопутствующий диагноз (описание)':
-                near_diagnos = i[2]
-
-        if date_value:
-            vv = date_value.split('-')
-            if len(vv) == 3:
-                date_value = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+    # 'Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
+    date_value, time_value, final_diagnos, other_diagnos, near_diagnos = hosp_extract_get_data(hosp_last_num)
 
     # Получить отделение - из названия услуги изи самого главного направления
     hosp_depart = hosp_nums_obj[0].get('research_title')
 
     ############################################################################################################
     # Получить данные из первичного приема (самого первого hosp-направления)
+    # 'Дата поступления', 'Время поступления', 'Виды транспортировки','Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
+    # 'Вид госпитализации','Время через, которое доставлен после начала заболевания, получения травмы',
+    # 'Диагноз направившего учреждения', 'Диагноз при поступлении'
     hosp_first_num = hosp_nums_obj[0].get('direction')
-    hosp_primary_receptions = hosp_get_data_direction(hosp_first_num, site_type=0, type_service='None', level=2)
-    hosp_primary_iss, primary_research_id = None, None
-    if hosp_primary_receptions:
-        hosp_primary_iss = hosp_primary_receptions[0].get('iss')
-        primary_research_id = hosp_primary_receptions[0].get('research_id')
-
-    titles_field = ['Дата поступления', 'Время поступления', 'Виды транспортировки',
-                    'Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
-                    'Вид госпитализации',
-                    'Время через, которое доставлен после начала заболевания, получения травмы',
-                    'Диагноз направившего учреждения', 'Диагноз при поступлении']
-    if titles_field and hosp_primary_receptions:
-        list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
-
-    date_entered_value, time_entered_value, type_transport, medicament_allergy = '', '', '', ''
-    who_directed, plan_hospital, extra_hospital, type_hospital = '', '', '', ''
-    time_start_ill, diagnos_who_directed, diagnos_entered = '', '', ''
-
-    if list_values:
-        for i in list_values:
-            if i[3] == 'Дата поступления':
-                date_entered_value = i[2]
-                continue
-            if i[3] == 'Время поступления':
-                time_entered_value = i[2]
-                continue
-            if i[3] == 'Виды транспортировки':
-                type_transport = i[2]
-                continue
-            if i[3] == 'Побочное действие лекарств (непереносимость)':
-                medicament_allergy = i[2]
-                continue
-            if i[3] == 'Кем направлен больной':
-                who_directed = i[2]
-                continue
-            if i[3] == 'Вид госпитализации':
-                type_hospital = i[2]
-            if type_hospital == 'Экстренная':
-                time_start_ill_obj = get_result_value_iss(hosp_primary_iss, primary_research_id, ['Время через, которое доставлен после начала заболевания, получения травмы'])
-                if time_start_ill_obj:
-                    time_start_ill = time_start_ill_obj[0][2]
-                extra_hospital = "Да"
-                plan_hospital = "Нет"
-            else:
-                plan_hospital = "Да"
-                extra_hospital = "Нет"
-                time_start_ill = ''
-            if i[3] == 'Диагноз направившего учреждения':
-                diagnos_who_directed = i[2]
-                continue
-            if i[3] == 'Диагноз при поступлении':
-                diagnos_entered = i[2]
-                continue
-
-        if date_entered_value:
-            vv = date_entered_value.split('-')
-            if len(vv) == 3:
-                date_entered_value = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+    date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital, time_start_ill, \
+    diagnos_who_directed, diagnos_entered = primary_reception_get_data(hosp_first_num)
 
     ###########################################################################################################
-
+    #Получение данных группы крови
     fcaction_avo_id = Fractions.objects.filter(title='Групповая принадлежность крови по системе АВО').first()
     fcaction_rezus_id = Fractions.objects.filter(title='Резус').first()
     group_blood_avo = get_fraction_result(ind_card.pk, fcaction_avo_id.pk, count=1)
@@ -248,41 +166,11 @@ def form_01(request_data):
     group_rezus_value = ''
     if group_blood_rezus:
         group_rezus_value = group_blood_rezus[0][5].replace('<br/>', ' ')
+
     ###########################################################################################################
     # получение данных клинического диагноза
-    hosp_day_entries = hosp_get_data_direction(hosp_first_num, site_type=1, type_service='None', level=-1)
-    day_entries_iss = []
-    day_entries_research_id = None
-    if hosp_day_entries:
-        for i in hosp_day_entries:
-            # найти дневники совместно с заведующим
-            if i.get('research_title').find('заведующ') != -1:
-                day_entries_iss.append(i.get('iss'))
-                if not day_entries_research_id:
-                    day_entries_research_id = i.get('research_id')
+    clinical_diagnos = hosp_get_clinical_diagnos(hosp_first_num)
 
-    titles_field = ['Диагноз клинический', 'Дата установления диагноза']
-    list_values = []
-    if titles_field and day_entries_iss:
-        for i in day_entries_iss:
-            list_values.append(get_result_value_iss(i, day_entries_research_id, titles_field))
-    s = ''
-    if list_values:
-        for i in list_values:
-            if (i[1][3]).find('Дата установления диагноза') != -1:
-                date_diag = i[1][2]
-                if date_diag:
-                    vv = date_diag.split('-')
-                    if len(vv) == 3:
-                        date_diag = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-                        s = s + i[0][2] + '; дата:' + date_diag + '<br/>'
-            elif (i[0][3]).find('Дата установления диагноза') != -1:
-                date_diag = i[0][2]
-                if date_diag:
-                    vv = date_diag.split('-')
-                    if len(vv) == 3:
-                        date_diag = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-                        s = s + i[1][2] + '; дата:' + str(date_diag) + '<br/>'
     #####################################################################################################
     # получить даные из переводного эпикриза: Дата перевода, Время перевода, в какое отделение переведен
     # у каждого hosp-направления найти подчиненное эпикриз Перевеод*
@@ -433,14 +321,14 @@ def form_01(request_data):
         medicament_frame.addFromList([medicament_inframe], canvas)
 
         # ФИО
-        fio_text = [Paragraph("<font size=11.7 fontname ='PTAstraSerifBold'> {} {}</font> ".format(patient_data['fio'], p_phone), style)]
+        fio_text = [Paragraph("<font size=11.7 fontname ='PTAstraSerifBold'> {}</font> ".format(patient_data['fio']), style)]
         fio_frame = Frame(77 * mm, 159 * mm, 125 * mm, 8 * mm, leftPadding=0, bottomPadding=0,
                           rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         fio_inframe = KeepInFrame(175 * mm, 12 * mm, fio_text, hAlign='LEFT', vAlign='TOP', )
         fio_frame.addFromList([fio_inframe], canvas)
 
         # Постоянное место жительства
-        live_text = [Paragraph('{}'.format(p_address), style)]
+        live_text = [Paragraph('{}, {}'.format(p_address, p_phone), style)]
         live_frame = Frame(88 * mm, 144 * mm, 115 * mm, 9 * mm, leftPadding=0, bottomPadding=0,
                            rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         live_inframe = KeepInFrame(175 * mm, 12 * mm, live_text, hAlign='LEFT', vAlign='TOP', )
@@ -476,7 +364,7 @@ def form_01(request_data):
         diagnos_entered_frame.addFromList([diagnos_entered_inframe], canvas)
 
         # клинический диагноз координаты
-        diagnos_text = [Paragraph('{}'.format(s * 1), styleJustified)]
+        diagnos_text = [Paragraph('{}'.format(clinical_diagnos), styleJustified)]
         diagnos_frame = Frame(27 * mm, 22 * mm, 175 * mm, 55 * mm, leftPadding=0, bottomPadding=0,
                               rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         diagnos_inframe = KeepInFrame(175 * mm, 55 * mm, diagnos_text)

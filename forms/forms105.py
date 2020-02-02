@@ -486,7 +486,7 @@ def form_03(request_data):
                             leftMargin=25 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
                             bottomMargin=4 * mm, allowSplitting=1,
-                            title="Форма {}".format("003/у"))
+                            title="Форма {}".format("066/у-02"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
