@@ -179,6 +179,6 @@ def aggregate_desc(request):
     pk = data.get('pk', -1)
     extract = data.get('extract', False)
     r_type = data.get("r_type")
-    type_service = HospitalService.TYPES_REVERSED.get(r_type, None)
+    type_service = HospitalService.TYPES_REVERSED.get(r_type, None) if r_type != 'desc' else 'desc'
     result = hosp_get_text_iss(pk, extract, mode=type_service)
     return JsonResponse(result, safe=False)
