@@ -124,7 +124,7 @@ def form_01(request_data):
 
     p_phone = ''
     if patient_data['phone']:
-        p_phone = 'тел. ' + ", ".join(patient_data['phone'])
+        p_phone = 'тел.: ' + ", ".join(patient_data['phone'])
 
     p_address = patient_data['main_address']
 
@@ -433,7 +433,7 @@ def form_01(request_data):
         medicament_frame.addFromList([medicament_inframe], canvas)
 
         # ФИО
-        fio_text = [Paragraph("<font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(patient_data['fio']), style)]
+        fio_text = [Paragraph("<font size=11.7 fontname ='PTAstraSerifBold'> {} {}</font> ".format(patient_data['fio'], p_phone), style)]
         fio_frame = Frame(77 * mm, 159 * mm, 125 * mm, 8 * mm, leftPadding=0, bottomPadding=0,
                           rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         fio_inframe = KeepInFrame(175 * mm, 12 * mm, fio_text, hAlign='LEFT', vAlign='TOP', )
