@@ -486,7 +486,7 @@ def form_03(request_data):
                             leftMargin=25 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
                             bottomMargin=4 * mm, allowSplitting=1,
-                            title="Форма {}".format("003/у"))
+                            title="Форма {}".format("066/у-02"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -589,6 +589,7 @@ def form_03(request_data):
                   'лицо,  подвергшееся  радиационному  облучению  - 4;  в  т.ч.  в  Чернобыле  - 5;'
                   'инв. I гр.  - 6;   инв. II гр.  -  7;   инв. III гр.  -  8;   ребенок - инвалид  -  9;'
                   'инвалид с детства - 10; прочие - 11', style),
+
     ]
     objs.extend(title_page)
 
