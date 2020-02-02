@@ -18,7 +18,7 @@ import locale
 import sys
 import os.path
 from io import BytesIO
-from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction, check_transfer_epicrisis
+from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction
 from api.stationar.sql_func import get_result_value_iss
 from api.sql_func import get_fraction_result
 from utils.dates import normalize_date
