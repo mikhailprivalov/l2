@@ -114,7 +114,9 @@
       <div class="results-top">
         <div class="row">
           <div class="col-xs-6">
-            <div>Направление №<a href="#" @click.prevent="print_direction(data.direction.pk)">{{data.direction.pk}}</a>
+            <div>
+              Направление
+              №<a href="#" class="a-under" @click.prevent="print_direction(data.direction.pk)">{{data.direction.pk}}</a>
               от
               {{data.direction.date}}
             </div>

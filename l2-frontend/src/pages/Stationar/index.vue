@@ -9,13 +9,14 @@
       <div class="sidebar-content">
         <div class="inner" v-if="direction !== null && !!patient.fio_age">
           <div class="inner-card">
-            <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" target="_blank" v-if="!every" style="float: right">
+            <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" class="a-under"
+               target="_blank" v-if="!every" style="float: right">
               форма 003/у
             </a>
-            <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" target="_blank" v-if="every">
+            <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" class="a-under" target="_blank" v-if="every">
               №{{tree.map(d => d.direction).join('-')}}
             </a>
-            <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" target="_blank" v-else>
+            <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" class="a-under" target="_blank" v-else>
               История/б №{{direction}}
             </a>
           </div>
@@ -23,7 +24,7 @@
             Загружены все истории
           </div>
           <div class="inner-card" v-if="every">
-            <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" target="_blank">
+            <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" class="a-under" target="_blank">
               форма 003/у
             </a>
           </div>
@@ -34,6 +35,31 @@
             <strong>Направление отменено</strong>
           </div>
           <patient-card :patient="patient" class="inner-card"/>
+          <div class="inner-card">
+            <a href="#"
+               v-tippy="{ placement : 'right', arrow: true, reactive : true,
+                  popperOptions: {
+                    modifiers: {
+                      preventOverflow: {
+                        boundariesElement: 'window'
+                      },
+                      hide: {
+                        enabled: false
+                      }
+                    }
+                  },
+                  interactive : true, html: '#template-anamnesis' }"
+               @show="load_anamnesis"
+               class="a-under"
+               @click.prevent="edit_anamnesis">Анамнез жизни</a>
+            <div id="template-anamnesis">
+              <strong>Анамнез жизни</strong><br/>
+              <span v-if="anamnesis_loading">загрузка...</span>
+              <pre v-else
+                   style="padding: 5px;text-align: left;white-space: pre-wrap;word-break: keep-all;max-width:600px"
+              >{{anamnesis_data.text || 'нет данных'}}</pre>
+            </div>
+          </div>
           <div class="sidebar-btn-wrapper"
                v-for="(title, key) in menuItems"
                :key="key">
@@ -90,7 +116,7 @@
           <span>
             {{menuItems[opened_list_key]}}
             <br/>
-            <a href="#" @click.prevent="print_all_list"><i class="fa fa-print"/> результатов</a>
+            <a href="#" class="a-under" @click.prevent="print_all_list"><i class="fa fa-print"/> результатов</a>
           </span>
           <i class="top-right fa fa-times" @click="close_list_directions"/>
         </div>
@@ -167,11 +193,17 @@
                 <br/>
                 {{row.research.transfer_direction_iss[0]}}
                 <br/>
-                <a href="#" @click.prevent="print_hosp(row.research.transfer_direction)">Печать ш/к браслета</a>
+                <a class="a-under" href="#" @click.prevent="print_hosp(row.research.transfer_direction)">
+                  Печать ш/к браслета
+                </a>
                 <br/>
-                <a href="#" @click.prevent="print_direction(row.research.transfer_direction)">Печать направления</a>
+                <a class="a-under" href="#" @click.prevent="print_direction(row.research.transfer_direction)">
+                  Печать направления
+                </a>
                 <br/>
-                <a href="#" @click.prevent="load_pk(row.research.transfer_direction)">Открыть историю</a>
+                <a class="a-under" href="#" @click.prevent="load_pk(row.research.transfer_direction)">
+                  Открыть историю
+                </a>
               </div>
             </div>
           </div>
@@ -301,6 +333,28 @@
         </div>
       </div>
     </modal>
+    <modal v-if="anamnesis_edit" ref="modalAnamnesisEdit" @close="hide_modal_anamnesis_edit" show-footer="true"
+           white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+      <span slot="header">Редактор анамнеза жизни – карта {{patient.card}}, {{patient.fio_age}}</span>
+      <div slot="body" style="min-height: 140px" class="registry-body">
+          <textarea v-model="anamnesis_data.text" rows="14" class="form-control"
+                    placeholder="Анамнез жизни"></textarea>
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-4">
+            <button @click="hide_modal_anamnesis_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+              Отмена
+            </button>
+          </div>
+          <div class="col-xs-4">
+            <button @click="save_anamnesis()" class="btn btn-primary-nb btn-blue-nb" type="button">
+              Сохранить
+            </button>
+          </div>
+        </div>
+      </div>
+    </modal>
     <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1" no_desc/>
   </div>
 </template>
@@ -326,7 +380,8 @@
   import ResultsViewer from '../../modals/ResultsViewer'
   import DisplayDirection from './DisplayDirection'
   import AggregateLaboratory from '../../fields/AggregateLaboratory'
-  import AggregateDesc from "../../fields/AggregateDesc";
+  import AggregateDesc from '../../fields/AggregateDesc'
+  import patients_point from '../../api/patients-point'
 
   export default {
     mixins: [menuMixin],
@@ -366,6 +421,12 @@
         templates: {},
         stationar_researches: [],
         stationar_research: -1,
+        anamnesis_edit: false,
+        anamnesis_data: {
+          text: '',
+        },
+        anamnesis_loading: false,
+        new_anamnesis: null,
       }
     },
     watch: {
@@ -374,84 +435,88 @@
       }
     },
     async mounted() {
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {researches} = await researches_point.getResearchesByDepartment({department: -5});
-      this.stationar_researches = researches;
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(action_types.INC_LOADING)
+      const {researches} = await researches_point.getResearchesByDepartment({department: -5})
+      this.stationar_researches = researches
+      await this.$store.dispatch(action_types.DEC_LOADING)
       this.$root.$on('hide_results', () => {
         this.show_results_pk = -1
       })
     },
     methods: {
       async confirm_service() {
-        await this.$store.dispatch(action_types.INC_LOADING);
+        await this.$store.dispatch(action_types.INC_LOADING)
         const {pk} = await stationar_point.makeService({
           service: this.direction_service,
           main_direction: this.direction,
-        });
-        await this.load_directions(this.openPlusId);
-        await this.open_form({pk, type: this.plusDirectionsMode[this.openPlusId] ? 'directions' : 'stationar'});
-        await this.closePlus();
-        this.counts = await stationar_point.counts(this, ['direction']);
+        })
+        await this.load_directions(this.openPlusId)
+        await this.open_form({pk, type: this.plusDirectionsMode[this.openPlusId] ? 'directions' : 'stationar'})
+        await this.closePlus()
+        this.counts = await stationar_point.counts(this, ['direction'])
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       select_research(pk) {
         this.direction_service = pk
       },
       async open_form(d) {
-        const mode = d.type;
+        const mode = d.type
         if (mode === 'stationar') {
-          this.close_form();
-          this.opened_form_pk = d.pk;
-          await this.$store.dispatch(action_types.INC_LOADING);
-          const {researches, patient} = await directions_point.getParaclinicForm({pk: d.pk, force: true});
-          this.researches_forms = researches;
-          this.patient_form = patient;
+          this.close_form()
+          this.opened_form_pk = d.pk
+          await this.$store.dispatch(action_types.INC_LOADING)
+          const {researches, patient} = await directions_point.getParaclinicForm({pk: d.pk, force: true})
+          this.researches_forms = researches
+          this.patient_form = patient
           await this.$store.dispatch(action_types.DEC_LOADING)
         } else {
           this.show_results_pk = d.pk
         }
       },
       close_form() {
-        this.opened_form_pk = null;
-        this.researches_forms = null;
-        this.patient_form = null;
-        this.stationar_research = -1;
+        this.opened_form_pk = null
+        this.researches_forms = null
+        this.patient_form = null
+        this.stationar_research = -1
       },
       load_pk(pk, every = false) {
-        this.pk = String(pk);
-        this.load(every);
+        this.pk = String(pk)
+        this.load(every)
       },
       async load(every = false) {
-        this.close_list_directions();
-        this.direction = null;
-        this.cancel = false;
-        this.iss = null;
-        this.issTitle = null;
-        this.finId = null;
-        this.counts = {};
-        this.patient = new Patient({});
-        this.openPlusId = null;
-        this.openPlusMode = null;
-        this.forbidden_edit = false;
-        this.every = false;
-        this.stationar_research = -1;
-        this.create_directions_data = [];
-        this.tree = [];
-        await this.$store.dispatch(action_types.INC_LOADING);
-        const {ok, data, message} = await stationar_point.load(this, ['pk'], {every});
+        this.close_list_directions()
+        this.anamnesis_edit = false
+        this.anamnesis_data = {
+          text: ''
+        }
+        this.direction = null
+        this.cancel = false
+        this.iss = null
+        this.issTitle = null
+        this.finId = null
+        this.counts = {}
+        this.patient = new Patient({})
+        this.openPlusId = null
+        this.openPlusMode = null
+        this.forbidden_edit = false
+        this.every = false
+        this.stationar_research = -1
+        this.create_directions_data = []
+        this.tree = []
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const {ok, data, message} = await stationar_point.load(this, ['pk'], {every})
         if (ok) {
-          this.pk = '';
-          this.every = every;
-          this.direction = data.direction;
-          this.cancel = data.cancel;
-          this.iss = data.iss;
-          this.issTitle = data.iss_title;
-          this.finId = data.fin_pk;
-          this.forbidden_edit = data.forbidden_edit;
-          this.tree = data.tree;
-          this.patient = new Patient(data.patient);
-          this.counts = await stationar_point.counts(this, ['direction'], {every});
+          this.pk = ''
+          this.every = every
+          this.direction = data.direction
+          this.cancel = data.cancel
+          this.iss = data.iss
+          this.issTitle = data.iss_title
+          this.finId = data.fin_pk
+          this.forbidden_edit = data.forbidden_edit
+          this.tree = data.tree
+          this.patient = new Patient(data.patient)
+          this.counts = await stationar_point.counts(this, ['direction'], {every})
           if (message && message.length > 0) {
             wrnmessage(message)
           }
@@ -464,12 +529,12 @@
         this.$root.$emit('print:results', this.list_directions.map(d => d.pk))
       },
       close_list_directions() {
-        this.close_form();
-        this.list_directions = [];
+        this.close_form()
+        this.list_directions = []
         this.opened_list_key = null
       },
       async load_directions(key, no_close = false) {
-        await this.$store.dispatch(action_types.INC_LOADING);
+        await this.$store.dispatch(action_types.INC_LOADING)
         if (!no_close) {
           this.close_list_directions()
         }
@@ -477,34 +542,34 @@
           direction: this.direction,
           r_type: key,
           every: this.every,
-        });
-        this.list_directions = data;
-        this.opened_list_key = key;
+        })
+        this.list_directions = data
+        this.opened_list_key = key
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async plus(key) {
-        const mode = this.plusDirectionsMode[key] ? 'directions' : 'stationar';
+        const mode = this.plusDirectionsMode[key] ? 'directions' : 'stationar'
         if (mode === 'stationar') {
-          await this.$store.dispatch(action_types.INC_LOADING);
+          await this.$store.dispatch(action_types.INC_LOADING)
           const {data} = await stationar_point.hospServicesByType({
             direction: this.direction,
             r_type: key,
-          });
-          this.hosp_services = data;
+          })
+          this.hosp_services = data
           if (data.length === 1) {
             this.direction_service = data[0].pk
           }
           await this.$store.dispatch(action_types.DEC_LOADING)
         }
-        this.openPlusMode = mode;
+        this.openPlusMode = mode
         this.openPlusId = key
       },
       async closePlus() {
-        this.openPlusMode = null;
-        this.openPlusId = null;
-        this.create_directions_data = [];
-        this.hosp_services = [];
-        this.direction_service = -1;
+        this.openPlusMode = null
+        this.openPlusId = null
+        this.create_directions_data = []
+        this.hosp_services = []
+        this.direction_service = -1
 
         if (this.$refs.modalStationar && this.$refs.modalStationar.$el) {
           this.$refs.modalStationar.$el.style.display = 'none'
@@ -514,9 +579,9 @@
           this.$refs.modalStationar2.$el.style.display = 'none'
         }
 
-        this.$store.dispatch(action_types.INC_LOADING).then();
-        this.counts = await stationar_point.counts(this, ['direction']);
-        this.$store.dispatch(action_types.DEC_LOADING).then();
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.counts = await stationar_point.counts(this, ['direction'])
+        this.$store.dispatch(action_types.DEC_LOADING).then()
         this.reload_if_need(true)
       },
       print_results(pk) {
@@ -529,7 +594,7 @@
         this.load_directions(this.opened_list_key, no_close)
       },
       save(iss) {
-        this.$store.dispatch(action_types.INC_LOADING).then();
+        this.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.paraclinicResultSave({
           force: true,
           data: {
@@ -543,9 +608,9 @@
           visibility_state: this.visibility_state(iss)
         }).then(data => {
           if (data.ok) {
-            okmessage('Сохранено');
-            iss.saved = true;
-            iss.research.transfer_direction_iss = data.transfer_direction_iss;
+            okmessage('Сохранено')
+            iss.saved = true
+            iss.research.transfer_direction_iss = data.transfer_direction_iss
             this.reload_if_need(true)
           } else {
             errmessage(data.message)
@@ -555,7 +620,7 @@
         })
       },
       save_and_confirm(iss) {
-        this.$store.dispatch(action_types.INC_LOADING).then();
+        this.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.paraclinicResultSave({
           force: true,
           data: {
@@ -569,16 +634,16 @@
           visibility_state: this.visibility_state(iss)
         }).then(data => {
           if (data.ok) {
-            okmessage('Сохранено');
-            okmessage('Подтверждено');
-            iss.saved = true;
-            iss.allow_reset_confirm = !data.forbidden_edit || this.can_reset_transfer;
-            iss.confirmed = true;
-            iss.research.transfer_direction = data.transfer_direction;
-            iss.research.transfer_direction_iss = data.transfer_direction_iss;
-            iss.forbidden_edit = data.forbidden_edit;
-            this.forbidden_edit = data.forbidden_edit;
-            this.stationar_research = -1;
+            okmessage('Сохранено')
+            okmessage('Подтверждено')
+            iss.saved = true
+            iss.allow_reset_confirm = !data.forbidden_edit || this.can_reset_transfer
+            iss.confirmed = true
+            iss.research.transfer_direction = data.transfer_direction
+            iss.research.transfer_direction_iss = data.transfer_direction_iss
+            iss.forbidden_edit = data.forbidden_edit
+            this.forbidden_edit = data.forbidden_edit
+            this.stationar_research = -1
             this.reload_if_need(true)
           } else {
             errmessage(data.message)
@@ -594,20 +659,20 @@
           return
         }
 
-        await this.$store.dispatch(action_types.INC_LOADING).then();
+        await this.$store.dispatch(action_types.INC_LOADING).then()
 
-        const data = await directions_point.paraclinicResultConfirmReset({iss_pk: iss.pk});
+        const data = await directions_point.paraclinicResultConfirmReset({iss_pk: iss.pk})
 
         if (data.ok) {
-          okmessage('Подтверждение сброшено');
-          iss.confirmed = false;
+          okmessage('Подтверждение сброшено')
+          iss.confirmed = false
           this.reload_if_need(true)
           if (data.is_transfer || data.is_extract) {
             this.forbidden_edit = !!data.forbidden_edit
           }
-          iss.forbidden_edit = data.forbidden_edit;
+          iss.forbidden_edit = data.forbidden_edit
         } else {
-          errmessage(data.message);
+          errmessage(data.message)
         }
 
         await this.$store.dispatch(action_types.DEC_LOADING)
@@ -619,7 +684,7 @@
         return this.r_list(research).length === 0
       },
       r_list(research) {
-        const l = [];
+        const l = []
         if (research.confirmed) {
           return []
         }
@@ -628,9 +693,9 @@
           if (!vGroup(g, research.research.groups, this.patient_form)) {
             continue
           }
-          let n = 0;
+          let n = 0
           for (const f of g.fields) {
-            n++;
+            n++
             if (f.required && f.field_type !== 3 && (f.value === '' || f.value === '- Не выбрано' || !f.value) &&
               vField(g, research.research.groups, f.visibility, this.patient_form)) {
               l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title))
@@ -638,7 +703,7 @@
           }
         }
         if (this.r_is_transfer(research) && this.stationar_research === -1) {
-          l.push('Отделение перевода');
+          l.push('Отделение перевода')
         }
         return l.slice(0, 2)
       },
@@ -677,7 +742,7 @@
         this.$dialog
           .confirm('Вы действительно хотите очистить результаты?')
           .then(() => {
-            okmessage('Очищено');
+            okmessage('Очищено')
             for (const g of row.research.groups) {
               for (const f of g.fields) {
                 if (![3].includes(f.field_type)) {
@@ -691,7 +756,7 @@
         field.value = ''
       },
       append_value(field, value) {
-        let add_val = value;
+        let add_val = value
         if (add_val !== ',' && add_val !== '.') {
           if (field.value.length > 0 && field.value[field.value.length - 1] !== ' ' && field.value[field.value.length - 1] !== '\n') {
             if (field.value[field.value.length - 1] === '.') {
@@ -705,7 +770,7 @@
         field.value += add_val
       },
       load_template(row, pk) {
-        this.$store.dispatch(action_types.INC_LOADING).then();
+        this.$store.dispatch(action_types.INC_LOADING).then()
         researches_point.getTemplateData({pk: parseInt(pk)}).then(({data: {fields: data, title}}) => {
           this.template_fields_values(row, data, title)
         }).finally(() => {
@@ -713,14 +778,14 @@
         })
       },
       visibility_state(iss) {
-        const groups = {};
-        const fields = {};
-        const {groups: igroups} = iss.research;
+        const groups = {}
+        const fields = {}
+        const {groups: igroups} = iss.research
         for (const group of iss.research.groups) {
           if (!vGroup(group, igroups, this.patient_form)) {
             groups[group.pk] = false
           } else {
-            groups[group.pk] = true;
+            groups[group.pk] = true
             for (const field of group.fields) {
               fields[field.pk] = vField(group, igroups, field.visibility, this.patient_form)
             }
@@ -738,6 +803,30 @@
       print_hosp(pk) {
         this.$root.$emit('print:hosp', [pk])
       },
+      async load_anamnesis() {
+        this.anamnesis_loading = true
+        this.anamnesis_data = await patients_point.loadAnamnesis(this.patient, 'card_pk')
+        this.anamnesis_loading = false
+      },
+      async edit_anamnesis() {
+        this.$store.dispatch(action_types.INC_LOADING)
+        const data = await patients_point.loadAnamnesis(this.patient, 'card_pk')
+        this.anamnesis_data = data
+
+        this.$store.dispatch(action_types.DEC_LOADING).then()
+        this.anamnesis_edit = true
+      },
+      async save_anamnesis() {
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        await patients_point.saveAnamnesis(this.patient, 'card_pk', {text: this.anamnesis_data.text})
+        this.$store.dispatch(action_types.DEC_LOADING).then()
+        this.new_anamnesis = this.anamnesis_data.text
+        this.hide_modal_anamnesis_edit()
+      },
+      hide_modal_anamnesis_edit() {
+        this.$refs.modalAnamnesisEdit.$el.style.display = 'none'
+        this.anamnesis_edit = false
+      },
     },
     computed: {
       ...mapGetters({
@@ -749,7 +838,7 @@
         return [{
           pk: -1,
           title: 'Не выбрано'
-        }, ...this.stationar_researches.filter(r => r.title !== this.issTitle && !r.hide)];
+        }, ...this.stationar_researches.filter(r => r.title !== this.issTitle && !r.hide)]
       },
       bases_obj() {
         return this.bases.reduce((a, b) => ({
@@ -953,9 +1042,11 @@
 
   .sidebar-btn {
     border-radius: 0;
+
     &:not(.text-center) {
       text-align: left;
     }
+
     border-top: none !important;
     border-right: none !important;
     border-left: none !important;

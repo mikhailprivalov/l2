@@ -35,13 +35,13 @@
                 </li>
               </ul>
             </div>
-            <a href="#" @click.prevent="do_show_rmis_directions" v-if="selected_card.is_rmis">
+            <a href="#" class="a-under" @click.prevent="do_show_rmis_directions" v-if="selected_card.is_rmis">
               <span>Направления из РМИС</span>
             </a>
-            <a :href="report_url">
+            <a class="a-under" :href="report_url">
               <span>Отчёт по результатам</span>
             </a>
-            <a v-if="can_create_tickets" :href="ticket_url">
+            <a class="a-under" v-if="can_create_tickets" :href="ticket_url">
               <span>Создать статталон</span>
             </a>
           </div>

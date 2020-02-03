@@ -376,7 +376,7 @@ class ParaclinicInputField(models.Model):
                 ft = f.get_title(recursive=True)
                 if ft not in titles and not recursive:
                     titles[-1] = titles[-1] + ' – ' + ft
-            title = ', '.join([t for t in titles if t])
+        title = ', '.join([t for t in titles if t])
         return title
 
 

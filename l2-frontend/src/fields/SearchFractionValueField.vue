@@ -11,7 +11,9 @@
       <span v-else class="input-group-addon">{{title}}</span>
       <input type="text" :readonly="readonly" v-model="val" class="form-control"/>
     </div>
-    <a v-if="direction" href="#" @click="print_results">печать результатов направления {{direction}}</a>
+    <a v-if="direction" href="#" class="a-under" @click.prevent="print_results">
+      печать результатов направления {{direction}}
+    </a>
   </div>
 </template>
 

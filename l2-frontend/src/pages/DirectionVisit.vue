@@ -27,7 +27,7 @@
                     <td>Номер</td>
                     <td>
                       <h3 style="margin: 2px;padding: 0;">{{loaded_pk}}
-                        <small><a href="#" @click.prevent="print_direction">печать</a></small>
+                        <small><a class="a-under" href="#" @click.prevent="print_direction">печать</a></small>
                       </h3>
                     </td>
                   </tr>
@@ -102,10 +102,11 @@
                       Посещение {{visit_date}}<br/>
                       {{direction_data.visit_who_mark}}
                       <div v-if="allow_reset_confirm">
-                        <a @click.prevent="cancel_visit" href="#" v-if="direction_data.has_microbiology && can_get">отменить
+                        <a @click.prevent="cancel_visit" class="a-under" href="#"
+                           v-if="direction_data.has_microbiology && can_get">отменить
                           забор
                           материала</a>
-                        <a @click.prevent="cancel_visit" href="#"
+                        <a @click.prevent="cancel_visit" class="a-under" href="#"
                            v-else-if="!direction_data.has_microbiology && can_visit">отменить посещение</a>
                       </div>
                     </div>
@@ -113,7 +114,7 @@
                          v-if="direction_data.has_microbiology && can_receive">
                       <div v-if="receive_status">
                         Материал принят<br/>{{receive_datetime}}<br/>
-                        <a @click.prevent="cancel_receive" href="#">отменить приём материала</a>
+                        <a @click.prevent="cancel_receive" class="a-under" href="#">отменить приём материала</a>
                       </div>
                       <div v-else>
                         <button @click="make_receive()" class="btn btn-blue-nb">
@@ -138,8 +139,8 @@
                             :val.sync="journal_date" :def="journal_date"/>
             <span style="margin-top: 7px;display: inline-block;">Журнал посещений</span></div>
           <div class="panel-body" style="padding-top: 5px">
-            <div class="text-right" style="margin-bottom: 5px"><a href="#" class="fli" @click.prevent="show_modal">создание
-              отчёта</a></div>
+            <div class="text-right" style="margin-bottom: 5px">
+              <a href="#" class="fli a-under" @click.prevent="show_modal">создание отчёта</a></div>
             <div v-if="journal_data.length === 0" class="text-center">
               нет данных
             </div>

@@ -16,7 +16,9 @@
         <input :readonly="readonly" class="form-control" v-else v-model="val"/>
       </div>
     </div>
-    <a v-if="direction" href="#" @click="print_results">печать результатов направления {{direction}}</a>
+    <a v-if="direction" class="a-under" href="#" @click.prevent="print_results">
+      печать результатов направления {{direction}}
+    </a>
   </div>
 </template>
 
