@@ -1,6 +1,8 @@
 import threading
+
 import simplejson as json
 from django.core.management import BaseCommand
+
 from directions.models import Napravleniya
 from rmis_integration.client import Client
 from users.models import DoctorProfile

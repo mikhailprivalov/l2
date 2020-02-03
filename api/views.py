@@ -1,5 +1,5 @@
 import time
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 
 import simplejson as json
 import yaml
@@ -19,6 +19,7 @@ from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document
 from directory.models import Fractions, ParaclinicInputField, ResearchSite
+from directory.models import Researches as DResearches
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from podrazdeleniya.models import Podrazdeleniya
@@ -27,7 +28,6 @@ from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, \
     ExcludePurposes
 from utils.dates import try_parse_range, try_strptime
-from directory.models import Researches as DResearches
 
 
 def translit(locallangstring):
@@ -162,7 +162,6 @@ def send(request):
                             issled.save()
                             fraction_result.get_ref(re_save=True)
                             fraction_result.issledovaniye.doc_save = astm_user  # Кто сохранил
-                            from datetime import datetime
                             fraction_result.issledovaniye.time_save = timezone.now()  # Время сохранения
                             fraction_result.issledovaniye.save()
                             if issled not in pks:
@@ -483,9 +482,7 @@ def statistics_tickets_get(request):
     request_data = json.loads(request.body)
     date_start, date_end = try_parse_range(request_data["date"])
     n = 0
-    for row in StatisticsTicket.objects.filter(
-            Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(
-        date__range=(date_start, date_end,)).order_by('pk'):
+    for row in StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(date__range=(date_start, date_end,)).order_by('pk'):
         if not row.invalid_ticket:
             n += 1
         response["data"].append({
@@ -501,8 +498,8 @@ def statistics_tickets_get(request):
             "primary": row.primary_visit,
             "info": row.info,
             "disp": row.get_dispensary_registration_display()
-                    + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
-                    + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
+            + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
+            + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
             "result": row.result.title if row.result else "",
             "outcome": row.outcome.title if row.outcome else "",
             "invalid": row.invalid_ticket,
@@ -515,9 +512,7 @@ def statistics_tickets_get(request):
 def statistics_tickets_invalidate(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
-    if StatisticsTicket.objects.filter(
-            Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(
-        pk=request_data.get("pk", -1)).exists():
+    if StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(pk=request_data.get("pk", -1)).exists():
         if StatisticsTicket.objects.get(pk=request_data["pk"]).can_invalidate():
             for s in StatisticsTicket.objects.filter(pk=request_data["pk"]):
                 s.invalid_ticket = request_data.get("invalid", False)
@@ -556,8 +551,7 @@ def get_reset_time_vars(n):
 def mkb10(request):
     kw = request.GET.get("keyword", "").split(' ')[0]
     data = []
-    for d in directions.Diagnoses.objects.filter(d_type="mkb10.4", code__istartswith=kw).order_by("code").distinct()[
-             :11]:
+    for d in directions.Diagnoses.objects.filter(d_type="mkb10.4", code__istartswith=kw).order_by("code").distinct()[:11]:
         data.append({"pk": d.pk, "code": d.code, "title": d.title})
     return JsonResponse({"data": data})
 
@@ -566,8 +560,7 @@ def methods_of_taking(request):
     prescription = request.GET.get("prescription", "")
     kw = request.GET.get("keyword", "")
     data = []
-    m = directions.MethodsOfTaking.objects.filter(drug_prescription=prescription,
-                                                  method_of_taking__istartswith=kw).order_by("-count").distinct()[:10]
+    m = directions.MethodsOfTaking.objects.filter(drug_prescription=prescription, method_of_taking__istartswith=kw).order_by("-count").distinct()[:10]
     for d in m:
         data.append({"pk": d.pk, "method_of_taking": d.method_of_taking})
     return JsonResponse({"data": data})
@@ -661,8 +654,7 @@ def search_template(request):
     result = []
     q = request.GET.get('q', '')
     if q != '':
-        for r in users.AssignmentTemplates.objects.filter(title__istartswith=q, global_template=False).order_by(
-                'title')[:10]:
+        for r in users.AssignmentTemplates.objects.filter(title__istartswith=q, global_template=False).order_by('title')[:10]:
             result.append({"pk": r.pk, "title": r.title, "researches": [x.research.pk for x in
                                                                         users.AssignmentResearches.objects.filter(
                                                                             template=r, research__hide=False)]})
@@ -734,38 +726,38 @@ def modules_view(request):
 def autocomplete(request):
     t = request.GET.get("type")
     v = request.GET.get("value", "")
-    l = request.GET.get("limit", 10)
+    limit = request.GET.get("limit", 10)
     data = []
-    if v != "" and l > 0:
+    if v != "" and limit > 0:
         if t == "fias":
             data = fias.suggest(v)
         if t == "name":
-            p = Individual.objects.filter(name__istartswith=v).distinct('name')[:l]
+            p = Individual.objects.filter(name__istartswith=v).distinct('name')[:limit]
             if p.exists():
                 data = [x.name for x in p]
         if t == "family":
-            p = Individual.objects.filter(family__istartswith=v).distinct('family')[:l]
+            p = Individual.objects.filter(family__istartswith=v).distinct('family')[:limit]
             if p.exists():
                 data = [x.family for x in p]
         if t == "patronymic":
-            p = Individual.objects.filter(patronymic__istartswith=v).distinct('patronymic')[:l]
+            p = Individual.objects.filter(patronymic__istartswith=v).distinct('patronymic')[:limit]
             if p.exists():
                 data = [x.patronymic for x in p]
         if t == "work_place":
-            p = Card.objects.filter(work_place__istartswith=v).distinct('work_place')[:l]
+            p = Card.objects.filter(work_place__istartswith=v).distinct('work_place')[:limit]
             if p.exists():
                 data = [x.work_place for x in p]
         if t == "main_diagnosis":
-            p = Card.objects.filter(main_diagnosis__istartswith=v).distinct('main_diagnosis')[:l]
+            p = Card.objects.filter(main_diagnosis__istartswith=v).distinct('main_diagnosis')[:limit]
             if p.exists():
                 data = [x.main_diagnosis for x in p]
         if t == "work_position":
-            p = Card.objects.filter(work_position__istartswith=v).distinct('work_position')[:l]
+            p = Card.objects.filter(work_position__istartswith=v).distinct('work_position')[:limit]
             if p.exists():
                 data = [x.work_position for x in p]
         if "who_give:" in t:
             tpk = t.split(":")[1]
-            p = Document.objects.filter(document_type__pk=tpk, who_give__istartswith=v).distinct('who_give')[:l]
+            p = Document.objects.filter(document_type__pk=tpk, who_give__istartswith=v).distinct('who_give')[:limit]
             if p.exists():
                 data = [x.who_give for x in p]
     return JsonResponse({"data": data})
@@ -775,9 +767,7 @@ def laborants(request):
     data = []
     if SettingManager.l2('results_laborants'):
         data = [{"pk": '-1', "fio": 'Не выбрано'}]
-        for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант",
-                                                    podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by(
-                                                    'fio'):
+        for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by('fio'):
             data.append({"pk": str(d.pk), "fio": d.fio})
     return JsonResponse({"data": data,
                          "doc": request.user.doctorprofile.has_group("Врач-лаборант")})
@@ -993,8 +983,7 @@ def job_types(request):
     is_zav_lab = (g and g in request.user.groups.all()) or request.user.is_superuser
     users_list = [request.user.doctorprofile.get_data()]
     if is_zav_lab:
-        for user in users.DoctorProfile.objects.filter(user__groups__name__in=["Лаборант", "Врач-лаборант"])\
-                .exclude(pk=request.user.doctorprofile.pk).order_by("fio").distinct():
+        for user in users.DoctorProfile.objects.filter(user__groups__name__in=["Лаборант", "Врач-лаборант"]).exclude(pk=request.user.doctorprofile.pk).order_by("fio").distinct():
             users_list.append(user.get_data())
     return JsonResponse({"types": types, "is_zav_lab": is_zav_lab, "users": users_list})
 
@@ -1002,7 +991,6 @@ def job_types(request):
 @login_required
 def job_save(request):
     data = json.loads(request.body)
-    g = Group.objects.filter(name="Зав. лабораторией").first()
     ej = directions.EmployeeJob(type_job_id=data["type"], count=data["count"],
                                 doc_execute_id=data["executor"], date_job=try_strptime(data["date"]).date())
     ej.save()
@@ -1017,13 +1005,11 @@ def job_list(request):
     is_zav_lab = (g and g in request.user.groups.all()) or request.user.is_superuser
     users_list = [request.user.doctorprofile]
     if is_zav_lab:
-        for user in users.DoctorProfile.objects.filter(user__groups__name__in=["Лаборант", "Врач-лаборант"])\
-                .exclude(pk=request.user.doctorprofile.pk).order_by("fio").distinct():
+        for user in users.DoctorProfile.objects.filter(user__groups__name__in=["Лаборант", "Врач-лаборант"]).exclude(pk=request.user.doctorprofile.pk).order_by("fio").distinct():
             users_list.append(user)
-    l = []
-    for j in directions.EmployeeJob.objects.filter(doc_execute__in=users_list, date_job=date).order_by("doc_execute",
-                                                                                                       "-time_save"):
-        l.append({
+    result = []
+    for j in directions.EmployeeJob.objects.filter(doc_execute__in=users_list, date_job=date).order_by("doc_execute", "-time_save"):
+        result.append({
             "pk": j.pk,
             "executor": j.doc_execute.get_fio(),
             "type": j.type_job.title,
@@ -1031,7 +1017,7 @@ def job_list(request):
             "saved": strdatetime(j.time_save),
             "canceled": bool(j.who_do_cancel),
         })
-    return JsonResponse({"list": l})
+    return JsonResponse({"list": result})
 
 
 @login_required

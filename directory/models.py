@@ -1,6 +1,7 @@
 from django.db import models, transaction
-from podrazdeleniya.models import Podrazdeleniya
 from jsonfield import JSONField
+
+from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 
 
@@ -161,7 +162,8 @@ class Researches(models.Model):
     localization = models.ManyToManyField(Localization, blank=True, default=None, help_text="Возможная локализация")
     service_location = models.ManyToManyField(ServiceLocation, blank=True, default=None, help_text="Возможные места оказаний")
     wide_headers = models.BooleanField(blank=True, default=False, help_text="Заголовки полей ввода на всю страницу")
-    auto_add_hidden = models.ManyToManyField('directory.Researches', related_name="res_auto_add_hidden", default=None, blank=True, help_text="Автоматически добавляемые назначения (не отображается в интерфейсе)")
+    auto_add_hidden = models.ManyToManyField('directory.Researches', related_name="res_auto_add_hidden", default=None, blank=True,
+                                             help_text="Автоматически добавляемые назначения (не отображается в интерфейсе)")
     vertical_result_display = models.BooleanField(blank=True, default=False, help_text="Отображение дат лабораторных тестов вертикально")
 
     @staticmethod
@@ -194,14 +196,37 @@ class Researches(models.Model):
 
     @property
     def desc(self):
-        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology \
-            or self.is_hospital
+        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology or self.is_hospital
 
     @property
     def can_transfer(self):
         if self.desc:
             return False
         return 'перевод' in self.title.lower()
+
+    @property
+    def is_extract(self):
+        if self.desc:
+            return False
+        return 'выписка' in self.title.lower()
+
+    @property
+    def r_type(self):
+        if self.is_paraclinic:
+            return "is_paraclinic"
+
+        if self.is_doc_referral:
+            return "consultation"
+
+        hs = HospitalService.objects.filter(slave_research=self).first()
+
+        if hs:
+            return HospitalService.TYPES_BY_KEYS_REVERSED.get(hs.site_type, 'None')
+
+        if self.podrazdeleniye and self.podrazdeleniye.p_type == Podrazdeleniya.LABORATORY:
+            return "laboratory"
+
+        return "None"
 
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)
@@ -231,6 +256,7 @@ class HospitalService(models.Model):
         (6, 'Эпикриз'),
         (7, 'Выписка'),
         (8, 'Больничный лист'),
+        (9, 't, ad, p – лист'),
     )
 
     TYPES_BY_KEYS = {
@@ -243,6 +269,27 @@ class HospitalService(models.Model):
         'epicrisis': 6,
         'extracts': 7,
         'bl': 8,
+        't, ad, p sheet': 9,
+    }
+
+    TYPES_BY_KEYS_REVERSED = {
+        0: 'primary receptions',
+        1: 'diaries',
+        2: 'vc',
+        3: 'operation',
+        4: 'pharmacotherapy',
+        5: 'physiotherapy',
+        6: 'epicrisis',
+        7: 'extracts',
+        8: 'bl',
+        9: 't, ad, p sheet',
+    }
+
+    TYPES_REVERSED = {
+        "paraclinical": "is_paraclinic",
+        "laboratory": "is_lab",
+        "consultation": "is_doc_refferal",
+        "all": "None",
     }
 
     main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE,
@@ -291,6 +338,9 @@ class ParaclinicInputField(models.Model):
         (14, 'Protocol raw field'),
         (15, 'Rich text'),
         (16, 'Agg lab'),
+        (17, 'Agg desc'),
+        (18, 'Number'),
+        (19, 'Number range'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')

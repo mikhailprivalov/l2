@@ -1,0 +1,14 @@
+matrix:
+  include:
+    - language: python
+      name: "PEP8 check (Python 3.6)"
+      python: 3.6
+      os: linux
+      fail_fast: true
+      before_install:
+        - chmod +x ./travis-pep8-install.sh
+        - chmod +x ./travis-pep8-scan.sh
+      install:
+        - ./travis-pep8-install.sh
+      script:
+        - ./travis-pep8-scan.sh

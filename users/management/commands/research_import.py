@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
+
 from directory.models import Researches, ResearchSite
 
 
@@ -9,7 +10,6 @@ class Command(BaseCommand):
         :param path - файл с картами пациентов + диагноз Д-учета
         """
         parser.add_argument('path', type=str)
-
 
     def handle(self, *args, **kwargs):
         """
@@ -46,7 +46,6 @@ class Command(BaseCommand):
                     podr = cells.index("подразделение")
                     pay = cells.index("платно")
 
-
                     def insert_data(ins):
                         c1 = ws1.cell(row=r, column=1)
                         c2 = ws1.cell(row=r, column=2)
@@ -77,7 +76,7 @@ class Command(BaseCommand):
                         stom = True if cells[type_research] == 'is_stom' else False
                         hospital = True if cells[type_research] == 'is_hospital' else False
                         if cells[place_research] == '-1':
-                            s_t == None
+                            s_t = None
                         else:
                             s_t = ResearchSite.objects.get(pk=int(cells[place_research]))
                         c = Researches.objects.create(title=cells[research], site_type=s_t,

@@ -25,4 +25,8 @@ export default generator({
     url: 'stationar/aggregate-laboratory',
     onReject: {}
   },
+  aggregateDesc: {
+    url: 'stationar/aggregate-desc',
+    onReject: {}
+  },
 })

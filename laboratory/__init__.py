@@ -1,3 +1,2 @@
-__version__ = (2020, 1, 13, 1)
-__version_type__ = "release"
-VERSION = ".".join(map(str, __version__)) + " " + __version_type__
+__version__ = (2020, 2, 3, '6f1335a9')
+VERSION = ".".join(map(str, __version__))

@@ -134,10 +134,21 @@
                   <strong>Значение по умолчанию:</strong>
                   <rich-text-editor v-model="row.default" />
                 </div>
-                <v-collapse-wrapper v-show="row.field_type === 0 || row.field_type === 10 || row.field_type === 12">
+                <div v-if="row.field_type === 18">
+                  <strong>Значение по умолчанию:</strong>
+                  <NumberField v-model="row.default" />
+                </div>
+                <div v-if="row.field_type === 19">
+                  <strong>Значение по умолчанию:</strong>
+                  <NumberRangeField :variants="row.values_to_input" v-model="row.default" />
+                </div>
+                <v-collapse-wrapper v-show="[0, 10, 12, 19].includes(row.field_type)">
                   <div class="header" v-collapse-toggle>
                     <a href="#" @click.prevent v-if="row.field_type === 0">
                       Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
+                    </a>
+                    <a href="#" @click.prevent v-else-if="row.field_type === 19">
+                      Мин, Макс, Шаг, Единицы измерения
                     </a>
                     <a href="#" @click.prevent v-else>
                       Варианты (кол-во: {{ row.values_to_input.length }})
@@ -217,6 +228,9 @@
                     <option value="14">Поле описательного результата без заголовка</option>
                     <option value="15">Текст с форматированием</option>
                     <option value="16">(Стационар) агрегация по лаборатории</option>
+                    <option value="17">(Стационар) агрегация по описательным</option>
+                    <option value="18">Число</option>
+                    <option value="19">Число через range</option>
                   </select>
                 </label>
               </div>
@@ -248,10 +262,12 @@
     import FastTemplatesEditor from './FastTemplatesEditor'
     import * as action_types from '../store/action-types'
     import RichTextEditor from '../fields/RichTextEditor'
+    import NumberField from "../fields/NumberField";
+    import NumberRangeField from "../fields/NumberRangeField";
 
     export default {
         name: 'paraclinic-research-editor',
-        components: {RichTextEditor, FastTemplatesEditor},
+        components: {NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor},
         props: {
             pk: {
                 type: Number,

@@ -213,8 +213,7 @@ class MigrationAutodetector:
             old_model_state = self.from_state.models[app_label, old_model_name]
             for field_name, field in old_model_state.fields:
                 old_field = self.old_apps.get_model(app_label, old_model_name)._meta.get_field(field_name)
-                if (hasattr(old_field, "remote_field") and getattr(old_field.remote_field, "through", None) and
-                        not old_field.remote_field.through._meta.auto_created):
+                if (hasattr(old_field, "remote_field") and getattr(old_field.remote_field, "through", None) and not old_field.remote_field.through._meta.auto_created):
                     through_key = (
                         old_field.remote_field.through._meta.app_label,
                         old_field.remote_field.through._meta.model_name,
@@ -407,7 +406,7 @@ class MigrationAutodetector:
             )
         # Unknown dependency. Raise an error.
         else:
-            raise ValueError("Can't handle dependency %r" % (dependency, ))
+            raise ValueError("Can't handle dependency %r" % (dependency,))
 
     def add_operation(self, app_label, operation, dependencies=None, beginning=False):
         # Dependencies are (app_label, model_name, field_name, create/delete as True/False)
@@ -512,8 +511,7 @@ class MigrationAutodetector:
                             related_fields[field.name] = field
                     # through will be none on M2Ms on swapped-out models;
                     # we can treat lack of through as auto_created=True, though.
-                    if (getattr(field.remote_field, "through", None) and
-                            not field.remote_field.through._meta.auto_created):
+                    if (getattr(field.remote_field, "through", None) and not field.remote_field.through._meta.auto_created):
                         related_fields[field.name] = field
             for field in model_opts.local_many_to_many:
                 if field.remote_field.model:
@@ -698,8 +696,7 @@ class MigrationAutodetector:
                         related_fields[field.name] = field
                     # through will be none on M2Ms on swapped-out models;
                     # we can treat lack of through as auto_created=True, though.
-                    if (getattr(field.remote_field, "through", None) and
-                            not field.remote_field.through._meta.auto_created):
+                    if (getattr(field.remote_field, "through", None) and not field.remote_field.through._meta.auto_created):
                         related_fields[field.name] = field
             for field in model._meta.local_many_to_many:
                 if field.remote_field.model:
@@ -898,8 +895,7 @@ class MigrationAutodetector:
                 if both_m2m or neither_m2m:
                     # Either both fields are m2m or neither is
                     preserve_default = True
-                    if (old_field.null and not new_field.null and not new_field.has_default() and
-                            not new_field.many_to_many):
+                    if (old_field.null and not new_field.null and not new_field.has_default() and not new_field.many_to_many):
                         field = new_field.clone()
                         new_default = self.questioner.ask_not_null_alteration(field_name, model_name)
                         if new_default is not models.NOT_PROVIDED:
@@ -1081,8 +1077,7 @@ class MigrationAutodetector:
             old_model_name = self.renamed_models.get((app_label, model_name), model_name)
             old_model_state = self.from_state.models[app_label, old_model_name]
             new_model_state = self.to_state.models[app_label, model_name]
-            if (old_model_state.options.get("order_with_respect_to") !=
-                    new_model_state.options.get("order_with_respect_to")):
+            if (old_model_state.options.get("order_with_respect_to") != new_model_state.options.get("order_with_respect_to")):
                 # Make sure it comes second if we're adding
                 # (removal dependency is part of RemoveField)
                 dependencies = []

@@ -1,27 +1,34 @@
+import os.path
 import sys
 from datetime import date, datetime
 from io import BytesIO
 
+import numpy as np
 import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.utils import dateformat
-from django.db.models import Q
+from django.utils import timezone
 from django.utils.text import Truncator
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.graphics import renderPDF
 from reportlab.graphics.barcode import eanbc, qr
 from reportlab.graphics.shapes import Drawing
+from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfdoc
-from reportlab.pdfgen import canvas
-from reportlab.pdfgen.canvas import Canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-import os.path
+from reportlab.pdfgen import canvas
+from reportlab.pdfgen.canvas import Canvas
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
+from transliterate import translit
 
 import directory.models as directory
 import slog.models as slog
@@ -35,14 +42,6 @@ from utils import xh
 from utils.dates import try_parse_range
 
 w, h = A4
-
-from django.utils import timezone
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet
-import numpy as np
-from transliterate import translit
-from django.core.exceptions import ObjectDoesNotExist
 
 
 @login_required
@@ -156,6 +155,7 @@ def gen_pdf_execlist(request):
     response.write(pdf)  # Запись PDF в ответ
     return response
 
+
 # @cache_page(60 * 15)
 @logged_in_or_token
 def gen_pdf_dir(request):
@@ -232,7 +232,7 @@ def gen_pdf_dir(request):
         c.showPage()
         tx = '<font face="OpenSansBold" size="10">Памятка пациенту по проведению исследований</font>\n'
         for i in instructions_filtered:
-            tx += '--------------------------------------------------------------------------------------\n<font face="OpenSansBold" size="10">{}</font>\n<font face="OpenSans" size="10">&nbsp;&nbsp;&nbsp;&nbsp;{}\n</font>'.format(
+            tx += '--------------------------------------------------------------------------------------\n<font face="OpenSansBold" size="10">{}</font>\n<font face="OpenSans" size="10">&nbsp;&nbsp;&nbsp;&nbsp;{}\n</font>'.format(  # noqa: E501
                 i["title"], i["text"])
         data = [[Paragraph(tx.replace("\n", "<br/>"), s)]]
 
@@ -255,7 +255,7 @@ def gen_pdf_dir(request):
     c.save()  # Сохранение отрисованного на PDF
     pdf = buffer.getvalue()  # Получение данных из буфера
 
-    #Проверить, если единый источник финансирвоания у направлений и title==платно, тогода печатать контракт
+    # Проверить, если единый источник финансирвоания у направлений и title==платно, тогода печатать контракт
     fin_ist_set = set()
     card_pk_set = set()
     for n in dn:
@@ -277,7 +277,7 @@ def gen_pdf_dir(request):
         if request.GET["contract"] == '1' and SettingManager.get("direction_contract", default='False', default_type='b'):
             if len(card_pk_set) == 1 and fin_status:
                 from forms.forms102 import form_01 as f_contract
-                fc = f_contract(request_data={**dict(request.GET.items()), "user": request.user, "card_pk":card_pk_set.pop()})
+                fc = f_contract(request_data={**dict(request.GET.items()), "user": request.user, "card_pk": card_pk_set.pop()})
                 if fc:
                     fc_buf = BytesIO()
                     fc_buf.write(fc)
@@ -325,9 +325,11 @@ def framePage(canvas):
 
 def printDirection(c: Canvas, n, dir: Napravleniya):
     xn = 0
-    if n % 2 != 0: xn = 1
+    if n % 2 != 0:
+        xn = 1
     yn = 0
-    if n > 2: yn = 1
+    if n > 2:
+        yn = 1
     barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=17)
     bounds = barcode.getBounds()
     width = bounds[2] - bounds[0]
@@ -426,7 +428,6 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     vid = []
     has_descriptive = False
     has_doc_refferal = False
-    has_micro = False
     need_qr_code = False
     for i in issledovaniya:
         rtp = i.research.reversed_type
@@ -439,8 +440,8 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
                 -5: 'Стационар',
                 -6: 'Микробиология',
             }[rtp]
-            if rtp == -6:
-                has_micro = True
+            # if rtp == -6:
+            #     has_micro = True
         else:
             rt = i.research.podrazdeleniye.get_title()
         if rt not in vid:
@@ -548,7 +549,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
                                      + ("" if one_sl else "№{}: ".format(n)) +
                                      obj["title"]
                                      + ("" if not obj["count"] or obj["count"] == 1
-                                        else" ({}шт.)".format(str(obj["count"]))) +
+                                        else " ({}шт.)".format(str(obj["count"]))) +
                                      ("" if not obj["comment"]
                                       else " <font face=\"OpenSans\" size=\"" + str(font_size * 0.8) +
                                            "\">[{}]</font>".format(obj["comment"]))
@@ -610,7 +611,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
             nn = 9
             c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn,
                          Truncator("Выписал: %s, %s" % (
-                         dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title)).chars(63))
+                             dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title)).chars(63))
         c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn,
                      "Отделение: " + Truncator(dir.doc.podrazdeleniye.title).chars(50))
         c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, "Л/врач: " + dir.doc.get_fio())
@@ -899,8 +900,7 @@ def print_history(request):
     c = canvas.Canvas(buffer, pagesize=A4)  # Холст
     tubes = []
     if not filter:
-        tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(
-            time_get__lt=datetime.now().date())  # Получение пробирок с материалом, взятым текущим пользователем
+        tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(time_get__lt=datetime.now().date())
     else:
         for v in filterArray:
             tubes.append(TubesRegistration.objects.get(pk=v))
@@ -908,8 +908,7 @@ def print_history(request):
     for v in tubes:  # Перебор пробирок
         iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
         iss_list = []  # Список исследований
-        k = v.doc_get.podrazdeleniye.title + "@" + str(iss[
-                                                           0].research.get_podrazdeleniye().title)  # Формирование ключа для группировки по подгруппе лаборатории и названию подразделения направившего на анализ врача
+        k = v.doc_get.podrazdeleniye.title + "@" + str(iss[0].research.get_podrazdeleniye().title)
         for val in iss:  # Цикл перевода полученных исследований в список
             iss_list.append(val.research.title)
         if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
@@ -926,8 +925,7 @@ def print_history(request):
                  "tube_id": str(v.id),
                  "history_num": iss[0].napravleniye.history_num,
                  "fio": iss[
-                     0].napravleniye.client.individual.fio(short=True,
-                                                           dots=True)})  # Добавление в список исследований и пробирок по ключу k в словарь labs
+                     0].napravleniye.client.individual.fio(short=True, dots=True)})  # Добавление в список исследований и пробирок по ключу k в словарь labs
     labs = collections.OrderedDict(sorted(labs.items()))  # Сортировка словаря
     c.setFont('OpenSans', 20)
 
@@ -1189,10 +1187,9 @@ def get_issledovaniya(request):
                                                          "doc_save_fio": doc_save_fio,
                                                          "doc_save_id": doc_save_id,
                                                          "current_doc_save": current_doc_save,
-                                                         "allow_disable_confirm": ((
-                                                                                           ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                                                                       str(x) for x in
-                                                                                       request.user.groups.all()]) and confirmed,
+                                                         "allow_disable_confirm": ((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or
+                                                                                   request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                                                   str(x) for x in request.user.groups.all()]) and confirmed,
                                                          "ctp": ctp,
                                                          "ctime": ctime,
                                                          "ctime_ctp": ctime - ctp,
@@ -1390,7 +1387,7 @@ def form38002(c: Canvas, dir: Napravleniya):
         except ObjectDoesNotExist:
             issledovaniye = None
 
-        dp_title, title, full_title = "", "", ""
+        dp_title, full_title = "", "", ""
         comment, info, service_location_title, localization = "", "", "", ""
         if issledovaniye:
             dp_title = issledovaniye.research.podrazdeleniye.title
@@ -1415,10 +1412,10 @@ def form38002(c: Canvas, dir: Napravleniya):
         # Данные пациента
         y_patient = []
         y = 0
-        for i in range(0,9):
+        for i in range(0, 9):
             y_patient.append(y_coord - y)
             y += 5
-        c.drawString(x_coord * mm, 250 * mm , "№ " + str(dir.pk))  # Номер направления
+        c.drawString(x_coord * mm, 250 * mm, "№ " + str(dir.pk))  # Номер направления
 
         c.setFont('PTAstraSerifReg', 12)
         c.drawString(x_coord * mm, y_patient[0] * mm, "Дата: " + strdate(dir.data_sozdaniya))
@@ -1435,7 +1432,7 @@ def form38002(c: Canvas, dir: Napravleniya):
             if diagnosis != "":
                 c.drawString(x_coord * mm, y_patient[5] * mm,
                              ("" if dir.vich_code == "" else (
-                                         "Код: " + dir.vich_code + "  ")) + "Диагноз (МКБ 10): " + (
+                                 "Код: " + dir.vich_code + "  ")) + "Диагноз (МКБ 10): " + (
                                  "не указан" if diagnosis == "-" else diagnosis))
             if dir.istochnik_f:
                 c.drawString(x_coord * mm, y_patient[6] * mm,
@@ -1447,8 +1444,7 @@ def form38002(c: Canvas, dir: Napravleniya):
             c.drawString((x_coord) * mm, y_patient[7] * mm, "С/к: " + ind_data['oms']['polis_issued'])
             c.drawString((x_coord) * mm, y_patient[8] * mm, "Полис №: " + ind_data['oms']['polis_num'])
 
-
-        #Данные направления
+        # Данные направления
         y_dir_data = []
         y = 50
         for i in range(0, 4):
@@ -1458,37 +1454,37 @@ def form38002(c: Canvas, dir: Napravleniya):
         c.setFont('PTAstraSerifBold', 12)
         c.drawString(x_coord * mm, y_dir_data[0] * mm, "Назначение: " + full_title)
         c.setFont('PTAstraSerifReg', 12)
-        c.drawString(x_coord * mm, y_dir_data[1] * mm, "Область исследования (комментарий): "  + localization + ' ' + comment)
+        c.drawString(x_coord * mm, y_dir_data[1] * mm, "Область исследования (комментарий): " + localization + ' ' + comment)
         c.drawString(x_coord * mm, y_dir_data[2] * mm, "Информация: " + info)
         c.drawString(x_coord * mm, y_dir_data[3] * mm, "Место оказания: " + service_location_title)
 
-        #Специфицные данные формы
+        # Специфицные данные формы
         y_dir_form = []
         y = 75
         for i in range(0, 19):
             y_dir_form.append(y_coord - y)
             y += 6
         c.setLineWidth(.2)
-        c.drawString(x_coord * mm, y_dir_form[0] * mm,  "Цель исследования:")
+        c.drawString(x_coord * mm, y_dir_form[0] * mm, "Цель исследования:")
         c.line((x_coord + 40) * mm, y_dir_form[0] * mm, 200 * mm, y_dir_form[0] * mm)
 
-        c.drawString(x_coord * mm, y_dir_form[1] * mm,  "Онкологические заболевания в анамнезе: " + "отрицает /")
+        c.drawString(x_coord * mm, y_dir_form[1] * mm, "Онкологические заболевания в анамнезе: " + "отрицает /")
         c.line((x_coord + 95) * mm, y_dir_form[1] * mm, 200 * mm, y_dir_form[1] * mm)
 
-        c.drawString(x_coord * mm, y_dir_form[2] * mm,  "Операции по поводу онкологических заболеваний: " + "Нет / Да")
+        c.drawString(x_coord * mm, y_dir_form[2] * mm, "Операции по поводу онкологических заболеваний: " + "Нет / Да")
         c.line((x_coord + 110) * mm, y_dir_form[2] * mm, 200 * mm, y_dir_form[2] * mm)
 
-        c.drawString(x_coord * mm, y_dir_form[3] * mm,  "Данные инструментальных методов исследования в зоне  исследования МСКТ:")
-        c.drawString(x_coord * mm, y_dir_form[4] * mm,  "УЗС:")
+        c.drawString(x_coord * mm, y_dir_form[3] * mm, "Данные инструментальных методов исследования в зоне  исследования МСКТ:")
+        c.drawString(x_coord * mm, y_dir_form[4] * mm, "УЗС:")
         c.line((x_coord + 10) * mm, y_dir_form[4] * mm, 200 * mm, y_dir_form[4] * mm)
         c.line(x_coord * mm, y_dir_form[5] * mm, 200 * mm, y_dir_form[5] * mm)
         c.line(x_coord * mm, y_dir_form[6] * mm, 200 * mm, y_dir_form[6] * mm)
 
-        c.drawString(x_coord * mm, y_dir_form[7] * mm,  "ФБС, ФГС, колоноскопия, R – графия, МРТ:")
-        c.drawString(x_coord * mm, y_dir_form[8] * mm,  "Аллергия на контрастные вещества: Нет / Да")
+        c.drawString(x_coord * mm, y_dir_form[7] * mm, "ФБС, ФГС, колоноскопия, R – графия, МРТ:")
+        c.drawString(x_coord * mm, y_dir_form[8] * mm, "Аллергия на контрастные вещества: Нет / Да")
         c.line((x_coord + 83) * mm, y_dir_form[8] * mm, 200 * mm, y_dir_form[8] * mm)
 
-        c.drawString(x_coord * mm, y_dir_form[9] * mm,  "При планировании МСКТ ангиографии необходимо указать анализы:")
+        c.drawString(x_coord * mm, y_dir_form[9] * mm, "При планировании МСКТ ангиографии необходимо указать анализы:")
         c.line(x_coord * mm, y_dir_form[10] * mm, 200 * mm, y_dir_form[10] * mm)
 
         c.drawString(x_coord * mm, y_dir_form[11] * mm, "При ЭКГ – синхронизированных исследованиях сердца указать ЧСС")
@@ -1498,16 +1494,16 @@ def form38002(c: Canvas, dir: Napravleniya):
         c.drawString(x_coord * mm, y_dir_form[13] * mm, "с барием: Нет / Да")
         c.drawString(x_coord * mm, y_dir_form[14] * mm, "Обязательно предоставлять данные предыдущих КТ и МРТ исследований (!!!)")
 
-        #Служебные данные дата, врач, отделение
+        # Служебные данные дата, врач, отделение
         c.drawString(x_coord * mm, y_dir_form[17] * mm, "Лечащий врач: " + dir.doc.get_fio())
         c.line((x_coord + 120) * mm, y_dir_form[17] * mm, 200 * mm, y_dir_form[17] * mm)
         c.setFont('PTAstraSerifReg', 9)
-        c.drawString((x_coord + 140)* mm, (y_dir_form[17] - 3)  * mm, "(подпись)")
+        c.drawString((x_coord + 140) * mm, (y_dir_form[17] - 3) * mm, "(подпись)")
 
         c.setFont('PTAstraSerifReg', 12)
         c.drawString(x_coord * mm, y_dir_form[18] * mm, "Отделение: " + Truncator(dir.doc.podrazdeleniye.title).chars(100))
 
-        #QR-code
+        # QR-code
         qr_value = translit(dir.client.individual.fio(), 'ru', reversed=True)
         qr_code = qr.QrCodeWidget(qr_value)
         qr_code.barWidth = 80

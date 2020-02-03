@@ -3,22 +3,21 @@ import re
 import threading
 
 import pytz
-from django.contrib.auth.decorators import login_required
-
 import simplejson as json
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import model_to_dict
 from django.http import JsonResponse
 
+from api import sql_func
 from clients.models import CardBase, Individual, Card, Document, DocumentType, District, AnamnesisHistory, \
     DispensaryReg, CardDocUsage, BenefitReg, BenefitType
 from contracts.models import Company
 from laboratory import settings
-from laboratory.utils import strdate, strdateiso, start_end_year
+from laboratory.utils import strdate, start_end_year
 from rmis_integration.client import Client
 from slog.models import Log
-from api import sql_func
 
 
 def full_patient_search_data(p, query):
@@ -83,11 +82,9 @@ def patients_search_card(request):
             if len(split) > 3:
                 objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
                                                     patronymic__istartswith=p, card__base=card_type,
-                                                    birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())[
-                          :10]
+                                                    birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())[:10]
 
-            if (card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10))) \
-                    or (card_type.internal_type and inc_rmis):
+            if (card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10))) or (card_type.internal_type and inc_rmis):
                 objects = list(objects)
                 try:
                     if not c:
@@ -96,9 +93,7 @@ def patients_search_card(request):
                 except ConnectionError:
                     pass
 
-        if (re.search(p3, query) and not card_type.is_rmis) \
-                or (len(list(objects)) == 0 and len(query) == 16 and card_type.internal_type) \
-                or (card_type.is_rmis and not re.search(p3, query)):
+        if (re.search(p3, query) and not card_type.is_rmis) or (len(list(objects)) == 0 and len(query) == 16 and card_type.internal_type) or (card_type.is_rmis and not re.search(p3, query)):
             resync = True
             if len(list(objects)) == 0:
                 resync = False
@@ -120,15 +115,15 @@ def patients_search_card(request):
                 sema = threading.BoundedSemaphore(10)
                 threads = list()
 
-                def sync_i(o: Individual, client: Client):
+                def sync_i(ind_local: Individual, client: Client):
                     sema.acquire()
                     try:
-                        o.sync_with_rmis(c=client)
+                        ind_local.sync_with_rmis(c=client)
                     finally:
                         sema.release()
 
-                for o in objects:
-                    thread = threading.Thread(target=sync_i, args=(o, c))
+                for obj in objects:
+                    thread = threading.Thread(target=sync_i, args=(obj, c))
                     threads.append(thread)
                     thread.start()
 
@@ -303,15 +298,10 @@ def patients_get_card_data(request, card_id):
 
 def patients_card_save(request):
     request_data = json.loads(request.body)
-    result = "fail"
     message = ""
     messages = []
-    card_pk = -1
-    individual_pk = -1
 
-    if "new_individual" in request_data and (
-            request_data["new_individual"] or not Individual.objects.filter(pk=request_data["individual_pk"])) and \
-            request_data["card_pk"] < 0:
+    if "new_individual" in request_data and (request_data["new_individual"] or not Individual.objects.filter(pk=request_data["individual_pk"])) and request_data["card_pk"] < 0:
         i = Individual(family=request_data["family"],
                        name=request_data["name"],
                        patronymic=request_data["patronymic"],
@@ -324,10 +314,7 @@ def patients_card_save(request):
             pk=request_data["individual_pk"] if request_data["card_pk"] < 0 else Card.objects.get(
                 pk=request_data["card_pk"]).individual_id)
         if i.family != request_data["family"] \
-                or i.name != request_data["name"] \
-                or i.patronymic != request_data["patronymic"] \
-                or str(i.birthday) != request_data["birthday"] \
-                or i.sex != request_data["sex"]:
+                or i.name != request_data["name"] or i.patronymic != request_data["patronymic"] or str(i.birthday) != request_data["birthday"] or i.sex != request_data["sex"]:
             changed = True
         i.family = request_data["family"]
         i.name = request_data["name"]
@@ -398,8 +385,7 @@ def individual_search(request):
             "fio": i.fio(full=True),
             "docs": [
                 {**model_to_dict(x), "type_title": x.document_type.title}
-                for x in Document.objects.filter(individual=i, is_active=True)
-                    .distinct("number", "document_type", "serial", "date_end", "date_start")
+                for x in Document.objects.filter(individual=i, is_active=True).distinct("number", "document_type", "serial", "date_end", "date_start")
             ],
             "l2_cards": [
                 x.number for x in Card.objects.filter(individual=i, base__internal_type=True, is_archive=False)
@@ -515,7 +501,7 @@ def edit_agent(request):
         upd[key] = card
         if need_doc:
             upd[key + "_doc_auth"] = doc
-        if not key in Card.AGENT_CANT_SELECT:
+        if key not in Card.AGENT_CANT_SELECT:
             upd["who_is_agent"] = key
 
     parent_card.update(**upd)
@@ -630,16 +616,13 @@ def save_dreg(request):
         return s
 
     if not a.date_start and d["date_start"] \
-            or str(a.date_start) != fd(d["date_start"]) \
-            or a.spec_reg != request.user.doctorprofile.specialities \
-            or a.doc_start_reg != request.user.doctorprofile:
+            or str(a.date_start) != fd(d["date_start"]) or a.spec_reg != request.user.doctorprofile.specialities or a.doc_start_reg != request.user.doctorprofile:
         a.date_start = fd(d["date_start"])
         a.doc_start_reg = request.user.doctorprofile
         a.spec_reg = request.user.doctorprofile.specialities
         c = True
 
-    if not a.date_end and d["close"] \
-            or (d["close"] and str(a.date_end) != fd(d["date_end"])):
+    if not a.date_end and d["close"] or (d["close"] and str(a.date_end) != fd(d["date_end"])):
         a.date_end = fd(d["date_end"])
         a.why_stop = d["why_stop"]
         a.doc_end_reg = request.user.doctorprofile
@@ -702,9 +685,7 @@ def save_benefit(request):
             s = '{}-{}-{}'.format(s[2], s[1], s[0])
         return s
 
-    if not a.date_start and d["date_start"] \
-            or str(a.date_start) != fd(d["date_start"]) \
-            or a.doc_start_reg != request.user.doctorprofile:
+    if not a.date_start and d["date_start"] or str(a.date_start) != fd(d["date_start"]) or a.doc_start_reg != request.user.doctorprofile:
         a.date_start = fd(d["date_start"])
         a.doc_start_reg = request.user.doctorprofile
         c = True
@@ -713,9 +694,7 @@ def save_benefit(request):
         a.registration_basis = d["registration_basis"]
         c = True
 
-    if not a.date_end and d["close"] \
-            or (d["close"] and a.doc_end_reg != request.user.doctorprofile) \
-            or (d["close"] and str(a.date_end) != fd(d["date_end"])):
+    if not a.date_end and d["close"] or (d["close"] and a.doc_end_reg != request.user.doctorprofile) or (d["close"] and str(a.date_end) != fd(d["date_end"])):
         a.date_end = fd(d["date_end"])
         a.doc_end_reg = request.user.doctorprofile
         c = True

@@ -1,16 +1,13 @@
 import datetime
-import re
 
 import requests
 import simplejson as json
-from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from zeep.exceptions import Fault
 
 from appconf.manager import SettingManager
 from clients.models import Phones, District
-from users.models import DoctorProfile
 from . import models as Clients
 
 
@@ -38,15 +35,15 @@ def get_db(request):
     docs_types = Clients.DocumentType.objects.filter(title__startswith="Полис ОМС")
     snils_types = Clients.DocumentType.objects.filter(title__startswith="СНИЛС")
     for x in Clients.Card.objects.filter(base__short_title=code, is_archive=False). \
-            values("number",
-                   "pk",
-                   "individual_id",
-                   "district_id",
-                   "individual__family", "individual__name", "individual__patronymic", "individual__sex",
-                   "individual__birthday",
-                   "polis",
-                   "main_diagnosis",
-                   "main_address"):
+        values("number",
+               "pk",
+               "individual_id",
+               "district_id",
+               "individual__family", "individual__name", "individual__patronymic", "individual__sex",
+               "individual__birthday",
+               "polis",
+               "main_diagnosis",
+               "main_address"):
         doc = Clients.Document.objects.get(pk=x["polis"]) if x["polis"] else Clients.Document.objects.filter(
             document_type__in=docs_types, individual__pk=x["individual_id"]).first()
         snils = Clients.Document.objects.filter(document_type__in=snils_types,
@@ -167,7 +164,8 @@ def receive_db(request):
         Clients.Card.objects.filter(pk__in=todelete).delete()
         if not Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exists():
             polis = list(polis)
-            card = Clients.Card(number=x["Number"], base=base, individual=individual, is_archive=False, polis=None if len(polis) == 0 else polis[0], main_diagnosis=x.get("MainDiagnosis", ""))
+            card = Clients.Card(number=x["Number"], base=base, individual=individual, is_archive=False, polis=None if len(polis) == 0 else polis[0],
+                                main_diagnosis=x.get("MainDiagnosis", ""))
             card.save()
             for t in x.get("Tels", []):
                 card.add_phone(t)

@@ -1,12 +1,17 @@
-from clients.models import Document, DispensaryReg
-from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
-from directory.models import Researches
-from copy import deepcopy
 from collections import OrderedDict
-from django.db.models import Q
-from laboratory import utils
+from copy import deepcopy
 from decimal import Decimal
+
+from django.db.models import Q
+
+from clients.models import Document, DispensaryReg
+from directions.models import Napravleniya, Issledovaniya
+from directory.models import Researches
+from laboratory import utils
 from laboratory.utils import strdate
+from api.stationar.stationar_func import hosp_get_data_direction, check_transfer_epicrisis
+from api.stationar.sql_func import get_result_value_iss
+from utils.dates import normalize_date
 
 
 def get_all_doc(docs: [Document]):
@@ -93,14 +98,14 @@ def get_final_data(research_price_loc):
 
     total_sum = 0
     tmp_data = []
-    is_discount = False
+    # is_discount = False
     z = ""
     x = ""
     tmp_napr = []
     for k, v in research_price_loc.items():
         # research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title')])
         research_attr = (
-        [s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title', 'internal_code')])
+            [s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title', 'internal_code')])
         research_attr_list = [list(z) for z in research_attr]
         for research_id, research_coast in v.items():
             h = []
@@ -261,11 +266,11 @@ def get_doc_results(doc_obj, date_result):
 def get_finaldata_talon(doc_result_obj):
     """
     Вход результаты врача за определенную дату
-    Выход: стр-ра данных {'№п.п':'номер',	'ФИО пациента':'Иванов Иван Иванович',	'№ карты (тип)':'1212 (L2)',
+    Выход: стр-ра данных {'№п.п':'номер', 'ФИО пациента':'Иванов Иван Иванович', '№ карты (тип)':'1212 (L2)',
                           'Данные полиса':'номер;Компаня', 'цель посещения': '(код)', 'первичны прием':'Нет',
-                          'Диагноз по МКБ': '(код)',	'Впервые':'Да',	'Результат обращения':'код',
-                          'Исход':'Код',	'Д-стоит':'коды', 'Д-взят':'коды', 'Д-снят':'коды'
-						  'причина снятия':'', 'Онкоподозрение':'Да'
+                          'Диагноз по МКБ': '(код)', 'Впервые':'Да', 'Результат обращения':'код',
+                          'Исход':'Код', 'Д-стоит':'коды', 'Д-взят':'коды', 'Д-снят':'коды'
+                          'причина снятия':'', 'Онкоподозрение':'Да'
     """
 
     fin_oms = 'омс'
@@ -359,7 +364,7 @@ def get_finaldata_talon(doc_result_obj):
         temp_dict['maybe_onco'] = 'Да' if i.maybe_onco else ''
 
         fin_source[dict_fsourcce].update({order: temp_dict})
-        fin_source_iss[dict_fsourcce].update({order:temp_dict_iss})
+        fin_source_iss[dict_fsourcce].update({order: temp_dict_iss})
 
         if Issledovaniya.objects.filter(parent=i).exists():
             temp_dict_iss_copy = deepcopy(temp_dict_iss)
@@ -372,3 +377,165 @@ def get_finaldata_talon(doc_result_obj):
             fin_source_iss[dict_fsourcce].update(add_iss_dict)
 
     return [fin_source, fin_source_iss]
+
+
+def primary_reception_get_data(hosp_first_num):
+    # Получение данных из певичного приема
+    hosp_primary_receptions = hosp_get_data_direction(hosp_first_num, site_type=0, type_service='None', level=2)
+    hosp_primary_iss, primary_research_id = None, None
+    if hosp_primary_receptions:
+        hosp_primary_iss = hosp_primary_receptions[0].get('iss')
+        primary_research_id = hosp_primary_receptions[0].get('research_id')
+
+    titles_field = ['Дата поступления', 'Время поступления', 'Виды транспортировки',
+                    'Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
+                    'Вид госпитализации',
+                    'Время через, которое доставлен после начала заболевания, получения травмы',
+                    'Диагноз направившего учреждения', 'Диагноз при поступлении']
+    list_values = None
+    if titles_field and hosp_primary_receptions:
+        list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
+
+    date_entered_value, time_entered_value, type_transport, medicament_allergy = '', '', '', ''
+    who_directed, plan_hospital, extra_hospital, type_hospital = '', '', '', ''
+    time_start_ill, diagnos_who_directed, diagnos_entered = '', '', ''
+
+    if list_values:
+        for i in list_values:
+            if i[3] == 'Дата поступления':
+                date_entered_value = normalize_date(i[2])
+                continue
+            if i[3] == 'Время поступления':
+                time_entered_value = i[2]
+                continue
+            if i[3] == 'Виды транспортировки':
+                type_transport = i[2]
+                continue
+            if i[3] == 'Побочное действие лекарств (непереносимость)':
+                medicament_allergy = i[2]
+                continue
+            if i[3] == 'Кем направлен больной':
+                who_directed = i[2]
+                continue
+            if i[3] == 'Вид госпитализации':
+                type_hospital = i[2]
+            if type_hospital == 'Экстренная':
+                time_start_ill_obj = get_result_value_iss(hosp_primary_iss, primary_research_id, ['Время через, которое доставлен после начала заболевания, получения травмы'])
+                if time_start_ill_obj:
+                    time_start_ill = time_start_ill_obj[0][2]
+                extra_hospital = "Да"
+                plan_hospital = "Нет"
+            else:
+                plan_hospital = "Да"
+                extra_hospital = "Нет"
+                time_start_ill = ''
+            if i[3] == 'Диагноз направившего учреждения':
+                diagnos_who_directed = i[2]
+                continue
+            if i[3] == 'Диагноз при поступлении':
+                diagnos_entered = i[2]
+                continue
+
+    return (date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital,
+            time_start_ill, diagnos_who_directed, diagnos_entered,)
+
+
+def hosp_extract_get_data(hosp_last_num):
+    # Получение данных из выписки
+    hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
+    hosp_extract_iss, extract_research_id = None, None
+    if hosp_extract:
+        hosp_extract_iss = hosp_extract[0].get('iss')
+        extract_research_id = hosp_extract[0].get('research_id')
+    titles_field = ['Время выписки', 'Дата выписки', 'Основной диагноз (описание)',
+                    'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
+                    ]
+    list_values = None
+    if titles_field and hosp_extract:
+        list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
+    date_value, time_value = '', ''
+    final_diagnos, other_diagnos, near_diagnos = '', '', ''
+
+    if list_values:
+        for i in list_values:
+            if i[3] == 'Дата выписки':
+                date_value = normalize_date(i[2])
+            if i[3] == 'Время выписки':
+                time_value = i[2]
+            if i[3] == 'Основной диагноз (описание)':
+                final_diagnos = i[2]
+            if i[3] == 'Осложнение основного диагноза (описание)':
+                other_diagnos = i[2]
+            if i[3] == 'Сопутствующий диагноз (описание)':
+                near_diagnos = i[2]
+
+    return (date_value, time_value, final_diagnos, other_diagnos, near_diagnos,)
+
+
+def hosp_get_clinical_diagnos(hosp_first_num):
+    hosp_day_entries = hosp_get_data_direction(hosp_first_num, site_type=1, type_service='None', level=-1)
+    day_entries_iss = []
+    day_entries_research_id = None
+    if hosp_day_entries:
+        for i in hosp_day_entries:
+            # найти дневники совместно с заведующим
+            if i.get('research_title').find('заведующ') != -1:
+                day_entries_iss.append(i.get('iss'))
+                if not day_entries_research_id:
+                    day_entries_research_id = i.get('research_id')
+
+    titles_field = ['Диагноз клинический', 'Дата установления диагноза']
+    list_values = []
+    if titles_field and day_entries_iss:
+        for i in day_entries_iss:
+            list_values.append(get_result_value_iss(i, day_entries_research_id, titles_field))
+    s = []
+    if list_values:
+        for i in list_values:
+            if (i[1][3]).find('Дата установления диагноза') != -1:
+                date_diag = normalize_date(i[1][2])
+                if date_diag and i[0][2]:
+                    s.append(i[0][2] + '; дата:' + date_diag)
+            elif (i[0][3]).find('Дата установления диагноза') != -1:
+                date_diag = i[0][2]
+                if date_diag and i[1][2]:
+                    s.append(i[1][2] + '; дата:' + str(date_diag))
+    clinic_diagnos = ''
+    if len(s) > 0:
+        clinic_diagnos = s.pop()
+
+    return clinic_diagnos
+
+
+def hosp_get_transfers_data(hosp_nums_obj):
+    titles_field = ['Дата перевода', 'Время перевода']
+    date_transfer_value, time_transfer_value = '', ''
+    transfers = ''
+    list_values = None
+    for i in range(len(hosp_nums_obj)):
+        if i == 0:
+            continue
+        transfer_research_title = hosp_nums_obj[i].get('research_title')
+        # получить для текущего hosp_dir эпикриз с title - перевод.....
+        from_hosp_dir_transfer = hosp_nums_obj[i - 1].get('direction')
+        epicrisis_data = hosp_get_data_direction(from_hosp_dir_transfer, site_type=6, type_service='None', level=2)
+        if epicrisis_data:
+            result_check = check_transfer_epicrisis(epicrisis_data)
+            if result_check[1] > -1:
+                iss_transfer, research_id_transfer = result_check[1], result_check[2]
+                if titles_field and iss_transfer:
+                    list_values = get_result_value_iss(iss_transfer, research_id_transfer, titles_field)
+            else:
+                continue
+        if list_values:
+            for i in list_values:
+                if i[3] == 'Дата перевода':
+                    date_transfer_value = normalize_date(i[2])
+                    continue
+                if i[3] == 'Время перевода':
+                    time_transfer_value = i[2]
+                    continue
+
+        transfers = f"{transfers} в {transfer_research_title} {date_transfer_value}/{time_transfer_value};"
+
+    return transfers

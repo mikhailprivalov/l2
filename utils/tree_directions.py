@@ -1,4 +1,5 @@
 from django.db import connection
+
 from laboratory.settings import TIME_ZONE
 
 
@@ -115,8 +116,8 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
     Вернуть стуркутру в след порядке:
     num_dir, date_creat, time_create, parent_iss, num_dir,
     issled_id, date_confirm, time_confirm, id_research, title_research,
-    diagnos, Level-подчинения, id_research,	id_podrazde, is_paraclinic,
-    is_doc,	is_stom, is_hospital, is_micrbiology, title_podr,
+    diagnos, Level-подчинения, id_research, id_podrazde, is_paraclinic,
+    is_doc, is_stom, is_hospital, is_micrbiology, title_podr,
     p_type_podr, site_type_hospital, slave_research_id
     в SQL:
     nn - directions_napravleniya
@@ -128,7 +129,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             SELECT nn.id,
             to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
             to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') as time_create,
-            nn.parent_id, 
+            nn.parent_id, nn.cancel,
             ii.napravleniye_id,
             ii.id as iss, 
             to_char(ii.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm, 
@@ -145,7 +146,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             SELECT n.id, 
                   to_char(n.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
                   to_char(n.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') as time_create,
-                  n.parent_id,
+                  n.parent_id, n.cancel,
                   i.napravleniye_id,
                   i.id, 
                   to_char(i.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm, 
@@ -167,10 +168,16 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             t_research AS (SELECT directory_researches.id as research_iddir, podrazdeleniye_id, is_paraclinic, is_doc_refferal, 
             is_stom, is_hospital, is_microbiology, is_slave_hospital, t_podrazdeleniye.title as podr_title, 
             t_podrazdeleniye.p_type FROM directory_researches
-			    LEFT JOIN t_podrazdeleniye ON t_podrazdeleniye.id = directory_researches.podrazdeleniye_id),
-			
-			t_hospital_service AS (SELECT site_type, slave_research_id FROM directory_hospitalservice
-            WHERE main_research_id = %(main_research)s),
+                LEFT JOIN t_podrazdeleniye ON t_podrazdeleniye.id = directory_researches.podrazdeleniye_id),
+
+            t_hospital_service AS (SELECT site_type, slave_research_id FROM directory_hospitalservice
+            WHERE 
+              CASE 
+               WHEN %(hosp_level)s > -1 THEN 
+                    main_research_id = %(main_research)s
+               WHEN %(hosp_level)s = -1 THEN 
+                  EXISTS (SELECT id FROM r)
+              END),
             
             t_all AS (SELECT * FROM r
             LEFT JOIN t_research ON r.research_id = t_research.research_iddir
@@ -185,23 +192,24 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             when %(hosp_is_doc_refferal)s = TRUE THEN
             is_doc_refferal = true and site_type is NULL
             when %(hosp_is_lab)s = TRUE THEN
-            is_paraclinic = FALSE and is_doc_refferal = FALSE and is_stom = FALSE and is_hospital = FALSE and is_microbiology = FALSE and site_type is NULL
+            is_paraclinic = FALSE and is_doc_refferal = FALSE and is_stom = FALSE and is_hospital = FALSE and is_microbiology = FALSE and site_type is NULL AND is_slave_hospital = FALSE
             when %(hosp_site_type)s = -1 and %(hosp_is_all)s = TRUE THEN
                 EXISTS (SELECT id FROM r)
             END       
-         
-			ORDER BY napravleniye_id, p_type, site_type)
-			
-			SELECT "id", date_create, time_create, parent_id, napravleniye_id, iss, date_confirm, time_confirm, research_id, title,
-			diagnos, "level", research_iddir, podrazdeleniye_id, is_paraclinic, is_doc_refferal, is_stom, is_hospital, 
-			is_microbiology, podr_title, p_type, site_type, slave_research_id, short_title, is_slave_hospital FROM t_all WHERE 
-			    CASE 
-			    WHEN %(hosp_level)s > -1 THEN 
+
+            ORDER BY napravleniye_id, p_type, site_type)
+
+            SELECT DISTINCT "id", date_create, time_create, parent_id, napravleniye_id, iss, date_confirm, time_confirm, research_id, title,
+            diagnos, "level", research_iddir, podrazdeleniye_id, is_paraclinic, is_doc_refferal, is_stom, is_hospital, 
+            is_microbiology, podr_title, p_type, site_type, slave_research_id, short_title, is_slave_hospital, cancel FROM t_all WHERE 
+                CASE 
+                WHEN %(hosp_level)s > -1 THEN 
                     level = %(hosp_level)s
                 WHEN %(hosp_level)s = -1 THEN 
-                    EXISTS (SELECT id FROM r)
+                EXISTS (SELECT id FROM r)
                 END
-	       ;""",
+            ORDER BY napravleniye_id
+           ;""",
                        params={'num_issledovaniye': iss, 'main_research': main_research,
                                'hosp_site_type': hosp_site_type,
                                'hosp_is_paraclinic': hosp_is_paraclinic, 'hosp_is_doc_refferal': hosp_is_doc_refferal,

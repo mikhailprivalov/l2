@@ -1,4 +1,5 @@
 import re
+import time
 import unicodedata
 from datetime import date
 
@@ -104,13 +105,6 @@ class TubesRegistration(models.Model):
             new_t = True
             self.set_r(doc)
         if not self.daynum:
-            '''from django.utils import timezone, datetime_safe
-            last_num = 0
-            date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-            date2 = datetime_safe.datetime.now()
-            if TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0, issledovaniya__research__subgroup__podrazdeleniye=doc.podrazdeleniye).exists():
-                last_num = max([x.daynum for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0, issledovaniya__research__subgroup__podrazdeleniye=doc.podrazdeleniye)])
-            self.daynum = last_num + 1'''
             self.daynum = num
             self.save()
 
@@ -134,8 +128,7 @@ class TubesRegistration(models.Model):
         Получение статуса взятия
         :return:
         """
-        return (self.time_get_local is not None and self.doc_get is not None) or (
-                self.type.receive_in_lab and one_by_one)
+        return (self.time_get_local is not None and self.doc_get is not None) or (self.type.receive_in_lab and one_by_one)
 
     def set_r(self, doc_r):
         """
@@ -615,9 +608,9 @@ class Napravleniya(models.Model):
                                                   deferred=False)
                     loc = ""
                     if str(research.pk) in localizations:
-                        l = directory.Localization.objects.get(pk=localizations[str(research.pk)]["code"])
-                        issledovaniye.localization = l
-                        loc = l.barcode
+                        localization = directory.Localization.objects.get(pk=localizations[str(research.pk)]["code"])
+                        issledovaniye.localization = localization
+                        loc = localization.barcode
                     if str(research.pk) in service_locations and service_locations[str(research.pk)]:
                         s = directory.ServiceLocation.objects.get(pk=service_locations[str(research.pk)]["code"])
                         issledovaniye.service_location = s
@@ -919,6 +912,25 @@ class Issledovaniya(models.Model):
 
     def get_analyzer(self):
         return "" if not self.api_app else self.api_app.name
+
+    def allow_reset_confirm(self, user: User):
+        from api.stationar.stationar_func import forbidden_edit_dir
+        if not self.time_confirmation:
+            return False
+        if user.is_superuser:
+            return True
+        groups = [str(x) for x in user.groups.all()]
+        if self.research.can_transfer:
+            return "Сброс подтверждения переводного эпикриза" in groups
+        if self.research.is_extract:
+            return "Сброс подтверждения выписки" in groups
+        if forbidden_edit_dir(self.napravleniye_id):
+            return False
+        ctp = int(0 if not self.time_confirmation else int(time.mktime(timezone.localtime(self.time_confirmation).timetuple())))
+        ctime = int(time.time())
+        current_doc_confirmation = self.doc_confirmation
+        rt = SettingManager.get("lab_reset_confirm_time_min") * 60
+        return (ctime - ctp < rt and current_doc_confirmation == user.doctorprofile) or "Сброс подтверждений результатов" in groups
 
     class Meta:
         verbose_name = 'Назначение на исследование'

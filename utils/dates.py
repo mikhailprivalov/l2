@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 
 
-def try_strptime(s, formats=('%d.%m.%Y',), delta: timedelta=None) -> [datetime, None]:
+def try_strptime(s, formats=('%d.%m.%Y',), delta: timedelta = None) -> [datetime, None]:
     for fmt in formats:
         try:
             r = datetime.strptime(s, fmt)
@@ -28,11 +28,9 @@ def now():
     return timezone.now()
 
 
-def normalize_date(date_value:str):
+def normalize_date(date_value: str):
     if date_value:
         vv = date_value.split('-')
         if len(vv) == 3:
             date_value = "{}.{}.{}".format(vv[2], vv[1], vv[0])
     return date_value
-
-

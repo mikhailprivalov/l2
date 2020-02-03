@@ -1,9 +1,10 @@
-from podrazdeleniya.models import Podrazdeleniya
-from directory.models import Researches
-from directions.models import Issledovaniya, Napravleniya
-from utils import tree_directions
 from collections import OrderedDict
 from copy import deepcopy
+
+from directions.models import Issledovaniya, Napravleniya
+from directory.models import Researches, HospitalService
+from podrazdeleniya.models import Podrazdeleniya
+from utils import tree_directions
 from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, \
     get_result_text_research
 
@@ -39,7 +40,7 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
                          'time_confirm': i[7], 'research_id': i[8], 'research_title': i[9], 'podrazdeleniye_id': i[13],
                          'is_paraclinic': i[14], 'is_doc_refferal': i[15], 'is_stom': i[16], 'is_hospital': i[17],
                          'is_microbiology': i[18], 'podrazdeleniye_title': i[19], 'site_type': i[21],
-                         'research_short_title': i[23], 'is_slave_hospital' : i[24]})
+                         'research_short_title': i[23], 'is_slave_hospital': i[24]})
 
     return data
 
@@ -68,15 +69,16 @@ def get_direction_attrs(direction, site_type=-1, type_service='None', level=-1):
             confirm = bool(dir_attr.get('date_confirm'))
             if dir_attr.get('is_slave_hospital'):
                 type_dir = 'stationar'
-            dict_temp[num_dir] = {'type' : type_dir,
+            dict_temp[num_dir] = {'type': type_dir,
                                   'date_create': dir_attr.get('date_create'),
                                   'confirm': confirm,
                                   'researches': [dir_attr.get('research_title')],
                                   'researches_short': [dir_attr.get('research_short_title')],
-                                  'podrazdeleniye': dir_attr.get('podrazdeleniye_title'),}
+                                  'podrazdeleniye': dir_attr.get('podrazdeleniye_title'), }
 
     for k, v in dict_temp.items():
-        dict_result = {'type' : v['type'], 'pk': k, 'date_create': v['date_create'], 'confirm': v['confirm'], 'researches': v['researches'],
+        dict_result = {'type': v['type'], 'pk': k, 'date_create': v['date_create'], 'confirm': v['confirm'],
+                       'researches': v['researches'],
                        'researches_short': v['researches_short'], 'podrazdeleniye': v['podrazdeleniye']}
         data.append(dict_result)
 
@@ -96,17 +98,21 @@ def hosp_get_hosp_direction(num_dir):
     hosp_is_hosp = True
     hosp_level = -1
     hosp_dirs = tree_directions.hospital_get_direction(num_iss, main_research, hosp_site_type, hosp_is_paraclinic,
-                                                       hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all)
+                                                       hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level,
+                                                       hosp_is_all)
 
-    data = [{'direction': i[0], 'research_title': i[9]} for i in hosp_dirs]
+    data = [{'direction': i[0], 'research_title': i[9]} for i in hosp_dirs if not i[25]]
 
     return data
 
 
 def hosp_get_curent_hosp_dir(current_iss):
-    current_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye
-    hosp_dir = current_dir.parent.napravleniye_id if current_dir.parent else current_dir.pk
-    return hosp_dir
+    obj_iss = Issledovaniya.objects.get(pk=current_iss)
+    current_dir = obj_iss.napravleniye
+    if obj_iss.research.is_hospital:
+        return current_dir.pk
+    if current_dir.parent:
+        return current_dir.parent.napravleniye_id
 
 
 def hosp_get_lab_iss(current_iss, extract=False):
@@ -117,27 +123,42 @@ def hosp_get_lab_iss(current_iss, extract=False):
     Выход: {КДЛ:{vert:[{titile:'',fractions:[],results:[{date:"",values:[]}]}]},
         {horizont:[{titile:'', results:[{date:'',value:''},{date:'',value:''}]}]}}
     """
-
-    num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+    obj_iss = Issledovaniya.objects.get(pk=current_iss)
+    num_dir = obj_iss.napravleniye_id
 
     # получить все направления в истории по типу hosp
     hosp_dirs = hosp_get_hosp_direction(num_dir)
 
-    # получить текущее направление типа hosp из текущего эпикриза
+    # получить текущее направление типа hosp из текущего исследования
     current_dir = hosp_get_curent_hosp_dir(current_iss)
+    # проверить - это переводной эпикриз
+    epicris = False
+    if obj_iss.research.is_slave_hospital:
+        obj_hospital_service = HospitalService.objects.filter(slave_research=obj_iss.research).first().site_type
+        if obj_hospital_service == 6:
+            epicris = True
 
-    if not extract:
+    if epicris:
         hosp_dirs = [i for i in hosp_dirs if i["direction"] <= current_dir]
 
-    # получить по каждому hosp_dirs Дочерние направления по типу лаборатория
     num_lab_dirs = set()
-    for h in hosp_dirs:
-        obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service='is_lab', level=2)
+    if (not extract) and (not epicris):
+        obj_hosp_dirs = hosp_get_data_direction(current_dir, site_type=-1, type_service='is_lab', level=2)
         for k in obj_hosp_dirs:
             lab_dir = k.get('direction')
             num_lab_dirs.add(lab_dir)
 
+    # получить по каждому hosp_dirs Дочерние направления по типу лаборатория
+    if extract or epicris:
+        for h in hosp_dirs:
+            obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service='is_lab', level=2)
+            for k in obj_hosp_dirs:
+                lab_dir = k.get('direction')
+                num_lab_dirs.add(lab_dir)
+
     num_lab_dirs = list(num_lab_dirs)
+    if len(num_lab_dirs) == 0:
+        return {}
 
     # Получить титл подразделений типа Лаборатория
     departs_obj = Podrazdeleniya.objects.filter(p_type=2).order_by('title')
@@ -244,7 +265,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
     return result_filtered
 
 
-def hosp_get_text_iss(current_iss, extract=False):
+def hosp_get_text(current_iss, extract=False, mode=None):
     # # Возврат стр-ра:
     # {'paraclinic': [{'title_research': 'Проведение электрокардиографических исследований ( ЭКГ )', 'result': [
     #                 {'date': '05.01.20 117', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
@@ -252,7 +273,8 @@ def hosp_get_text_iss(current_iss, extract=False):
     #                 {'date': '05.01.20 119', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
     #                       'value': 'Диффузные нарушения'}]}]}]} ]}]
     #                                                                                                                     ]}
-
+    if mode is None:
+        return {}
     num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
     # получить все направления в истории по типу hosp
     hosp_dirs = hosp_get_hosp_direction(num_dir)
@@ -260,86 +282,127 @@ def hosp_get_text_iss(current_iss, extract=False):
     # получить текущее направление типа hosp из текущего эпикриза
     current_dir = hosp_get_curent_hosp_dir(current_iss)
     if not extract:
-        hosp_dirs = [i for i in hosp_dirs if i <= current_dir]
+        hosp_dirs = [i for i in hosp_dirs if i["direction"] <= current_dir]
 
     # получить по каждому hosp_dirs Дочерние направления по типу is_paraclinic, is_doc_refferal
     num_paraclinic_dirs = set()
     for h in hosp_dirs:
-        obj_hosp_dirs = hosp_get_data_direction(h, site_type=-1, type_service='is_paraclinic', level=2)
+        obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service=mode, level=2)
         for k in obj_hosp_dirs:
             paraclinic_dir = k.get('direction')
             num_paraclinic_dirs.add(paraclinic_dir)
 
     num_paraclinic_dirs = list(num_paraclinic_dirs)
+    # [0] - заглушка для запроса. research c id =0 не бывает
     get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True)
     research_distinct = [d[0] for d in get_research_id]
     result = []
+
     for research in research_distinct:
         field_result = get_result_text_research(research, num_paraclinic_dirs)
-        fields = []
         last_group = None
         last_date = None
-        data = []
         data_in = []
+        new_date_data = {}
         for i in field_result:
-            fields.append({'title_field': i[4], 'value': i[5]})
             date = f'{i[1]} {i[2]}'
             group = i[3]
-            group_fields = {'group_title': group, 'fields': fields.copy()}
-
-            if group != last_group:
-                if date != last_date:
-                    data_in = []
-                if date == last_date:
-                    data_in.append(group_fields.copy())
-                fields = []
-
-            if date == last_date:
-                if len(data) > 0:
-                    last_element = data.pop()
-                    tmp_list_group_fields = last_element['data']
-                    tmp_list_group_fields.append(group_fields.copy())
-                    last_element['data'] = tmp_list_group_fields.copy()
-                    data.append(last_element.copy())
+            fields = {'title_field': i[4], 'value': i[5]}
 
             if date != last_date:
-                data_in.append(group_fields.copy())
-                data.append({'date': date, 'data': data_in.copy()})
-                fields = []
-                data_in = []
+                if new_date_data:
+                    data_in.append(new_date_data.copy())
 
-            last_date = date
-            last_group = group
+                new_date_data = {}
+                new_date_data['date'] = date
+                new_date_data['data'] = [{'group_title': group, 'fields': [fields.copy()]}]
+                last_date = date
+                last_group = group
+                continue
+
+            if group != last_group and date == last_date:
+                current_data = new_date_data.get('data')
+                current_data.append({'group_title': group, 'fields': [fields.copy()]})
+                new_date_data['data'] = current_data.copy()
+                last_group = group
+                continue
+
+            current_data = new_date_data.get('data')
+            get_last_group = current_data.pop()
+            last_fields = get_last_group.get('fields')
+            last_fields.append(fields.copy())
+            get_last_group['fields'] = last_fields.copy()
+            current_data.append(get_last_group.copy())
+            new_date_data['data'] = current_data.copy()
+
+        data_in.append(new_date_data.copy())
 
         temp_result = {}
-        title_research = Researches.objects.get(pk=research).title
-        temp_result['title_research'] = title_research
-        temp_result['result'] = data
+        temp_result['title_research'] = Researches.objects.get(pk=research).title
+        temp_result['result'] = data_in.copy()
         result.append(temp_result.copy())
 
-    return {'paraclinic': result}
+    return result
+
+
+def hosp_get_text_iss(current_iss, is_extract, mode):
+    if mode is None:
+        return []
+    if mode == 'desc':
+        modes = [
+            'is_paraclinic',
+            'is_doc_refferal',
+        ]
+    else:
+        modes = [mode]
+
+    v = []
+
+    for m in modes:
+        v.extend(hosp_get_text(current_iss, is_extract, mode=m))
+
+    return v
 
 
 def forbidden_edit_dir(num_dir):
     """
     Проверяет подтверждена ли выписка, или переводной эпикриз. И возвращает True|False - для редактирвоания протколов
     """
+    # (если услуга имеет тип is_doc_refferal, или is_paraclinic) и направление не имеет parent услугу типа hosp вернуть False
+    obj_iss = Issledovaniya.objects.filter(napravleniye_id=num_dir).first()
+    parent = Napravleniya.objects.get(pk=num_dir).parent
+    if not parent and (obj_iss.research.is_doc_refferal or obj_iss.research.is_paraclinic):
+        return False
+
+    if parent:
+        parent_is_hospital = parent.research.is_hospital
+        if (obj_iss.research.is_doc_refferal or obj_iss.research.is_paraclinic) and not parent_is_hospital:
+            return False
+
     hosp_nums_obj = hosp_get_hosp_direction(num_dir)
     hosp_last_num = hosp_nums_obj[-1].get('direction')
     hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
     if hosp_extract and hosp_extract[0].get('date_confirm'):
         return True
 
-    if not hosp_extract:
-        #Проверить подтверждение переводного эпикриза
-        #Получить hosp_dir для текужего направления
+    if not hosp_extract or not hosp_extract[0].get('date_confirm'):
+        # Проверить подтверждение переводного эпикриза
+        # Получить hosp_dir для текужего направления
         current_iss = Issledovaniya.objects.get(napravleniye_id=num_dir)
-        current_dir_hosp_dir = hosp_get_curent_hosp_dir(current_iss.pk)
-        #получить для текущего hosp_dir эпикриз с title - перевод.....
+        current_dir_hosp_dir = num_dir
+        if not current_iss.research.is_hospital:
+            current_dir_hosp_dir = hosp_get_curent_hosp_dir(current_iss.pk)
+        # получить для текущего hosp_dir эпикриз с title - перевод.....
         epicrisis_data = hosp_get_data_direction(current_dir_hosp_dir, site_type=6, type_service='None', level=2)
         if epicrisis_data:
-            for i in epicrisis_data:
-                if i.get("research_title").lower().find('перевод') != -1:
-                    if i.get('date_confirm'):
-                        return True
+            result_check = check_transfer_epicrisis(epicrisis_data)
+            return result_check[0]
     return False
+
+
+def check_transfer_epicrisis(data):
+    for i in data:
+        if i.get("research_title").lower().find('перевод') != -1:
+            if i.get('date_confirm'):
+                return (True, i.get('iss'), i.get('research_id'),)
+    return (False, None, None)

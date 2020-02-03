@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
+
 from directions.models import KeyValue
 
 
@@ -9,7 +10,6 @@ class Command(BaseCommand):
         :param path - файл с кодами МКБ10.2019 + расшифровка
         """
         parser.add_argument('path', type=str)
-
 
     def handle(self, *args, **kwargs):
         fp = kwargs["path"]

@@ -2,17 +2,32 @@
   <div ref="root" class="root">
     <div class="sidebar">
       <div class="sidebar-top">
-        <input type="text" class="form-control" v-model="pk" @keyup.enter="load" autofocus
+        <input type="text" class="form-control" v-model="pk" @keyup.enter="load()" autofocus
                placeholder="Номер истории"/>
-        <button class="btn btn-blue-nb" @click="load" :disabled="pk === ''">Загрузить</button>
+        <button class="btn btn-blue-nb" @click="load()" :disabled="pk === ''">Загрузить</button>
       </div>
       <div class="sidebar-content">
         <div class="inner" v-if="direction !== null && !!patient.fio_age">
           <div class="inner-card">
-            <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" target="_blank" style="float: right">форма 003/у</a>
-            История/б №{{direction}}
+            <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" target="_blank" v-if="!every" style="float: right">
+              форма 003/у
+            </a>
+            <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" target="_blank" v-if="every">
+              №{{tree.map(d => d.direction).join('-')}}
+            </a>
+            <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" target="_blank" v-else>
+              История/б №{{direction}}
+            </a>
           </div>
-          <div class="inner-card">
+          <div class="inner-card" v-if="every">
+            Загружены все истории
+          </div>
+          <div class="inner-card" v-if="every">
+            <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" target="_blank">
+              форма 003/у
+            </a>
+          </div>
+          <div class="inner-card" v-else>
             {{issTitle}}
           </div>
           <div class="inner-card" v-if="cancel">
@@ -28,10 +43,42 @@
               <span v-if="Boolean(counts[key])" class="counts">{{counts[key]}} шт.</span> {{title}}
             </button>
             <button class="btn btn-blue-nb sidebar-btn"
-                    v-if="menuNeedPlus[key] && (!allowedOnlyOneEntry[key] || !Boolean(counts[key])) && !forbidden_edit"
+                    v-if="!every &&
+                    menuNeedPlus[key] &&
+                    (!allowedOnlyOneEntry[key] || !Boolean(counts[key])) &&
+                    !forbidden_edit"
                     @click="plus(key)"
             >
               <i class="fa fa-plus"/>
+            </button>
+          </div>
+          <template v-for="(dir, index) in tree">
+            <div class="sidebar-btn-wrapper" v-if="!every && dir.isCurrent" :key="dir.direction">
+              <button class="btn btn-blue-nb sidebar-btn active-btn" style="font-size: 12px">
+                <i class="fa fa-arrow-down" v-if="index < tree.length - 1"/>
+                <i class="fa fa-dot-circle-o" v-else/>
+                №{{dir.direction}} {{dir.research_title}}
+                <i class="fa fa-check"/>
+              </button>
+            </div>
+            <div class="sidebar-btn-wrapper" v-else :key="dir.direction">
+              <button class="btn btn-blue-nb sidebar-btn"
+                      style="font-size: 12px"
+                      @click="load_pk(dir.direction)"
+              >
+                <i class="fa fa-arrow-down" v-if="index < tree.length - 1"/>
+                <i class="fa fa-dot-circle-o" v-else/>
+                №{{dir.direction}} {{dir.research_title}}
+              </button>
+            </div>
+          </template>
+          <div class="sidebar-btn-wrapper" v-if="tree.length > 1">
+            <button class="btn btn-blue-nb sidebar-btn text-center"
+                    style="font-size: 12px"
+                    @click="load_pk(tree[0].direction, true)"
+            >
+              <i class="fa fa-cubes"/>
+              Загрузить всё
             </button>
           </div>
         </div>
@@ -102,6 +149,7 @@
             :confirmed="row.confirmed || row.forbidden_edit"
             :patient="patient_form"
             :change_mkb="change_mkb(row)"
+            :hospital_r_type="'desc'"
           />
           <div class="group" v-if="r_is_transfer(row)">
             <div class="group-title">Отделение перевода</div>
@@ -111,19 +159,23 @@
                                @click.native="stationar_research = r.pk"
                                class="research-select"
                                v-for="r in stationar_researches_filtered"
+                               force_tippy
                                :key="r.pk"/>
               </div>
               <div v-else-if="row.research.transfer_direction">
-                <a href="#" @click.prevent="print_hosp(row.research.transfer_direction)"><i class="fa fa-barcode"/></a>
-                История болезни <a href="#" @click.prevent="print_direction(row.research.transfer_direction)">
-                  №{{row.research.transfer_direction}}
-                </a>
+                История болезни №{{row.research.transfer_direction}}
                 <br/>
                 {{row.research.transfer_direction_iss[0]}}
+                <br/>
+                <a href="#" @click.prevent="print_hosp(row.research.transfer_direction)">Печать ш/к браслета</a>
+                <br/>
+                <a href="#" @click.prevent="print_direction(row.research.transfer_direction)">Печать направления</a>
+                <br/>
+                <a href="#" @click.prevent="load_pk(row.research.transfer_direction)">Открыть историю</a>
               </div>
             </div>
           </div>
-          <div class="control-row">
+          <div class="control-row" :key="row.research.version">
             <div class="res-title">{{row.research.title}}:</div>
             <iss-status :i="row"/>
             <button class="btn btn-blue-nb" @click="save(row)"
@@ -150,6 +202,11 @@
         </div>
         <div style="padding: 5px">
           <AggregateLaboratory v-if="opened_list_key === 'laboratory'" :pk="iss"/>
+          <AggregateDesc
+            v-if="['paraclinical', 'consultation'].includes(opened_list_key)"
+            :pk="iss"
+            :r_type="opened_list_key"
+          />
         </div>
       </div>
     </div>
@@ -269,10 +326,12 @@
   import ResultsViewer from '../../modals/ResultsViewer'
   import DisplayDirection from './DisplayDirection'
   import AggregateLaboratory from '../../fields/AggregateLaboratory'
+  import AggregateDesc from "../../fields/AggregateDesc";
 
   export default {
     mixins: [menuMixin],
     components: {
+      AggregateDesc,
       AggregateLaboratory,
       DisplayDirection,
       ResultsViewer,
@@ -283,6 +342,7 @@
     data() {
       return {
         pk: '',
+        every: false,
         direction: null,
         forbidden_edit: null,
         cancel: false,
@@ -294,6 +354,7 @@
         openPlusMode: null,
         openPlusId: null,
         create_directions_data: [],
+        tree: [],
         hosp_services: [],
         direction_service: -1,
         show_results_pk: -1,
@@ -357,7 +418,11 @@
         this.patient_form = null;
         this.stationar_research = -1;
       },
-      async load() {
+      load_pk(pk, every = false) {
+        this.pk = String(pk);
+        this.load(every);
+      },
+      async load(every = false) {
         this.close_list_directions();
         this.direction = null;
         this.cancel = false;
@@ -369,20 +434,24 @@
         this.openPlusId = null;
         this.openPlusMode = null;
         this.forbidden_edit = false;
+        this.every = false;
         this.stationar_research = -1;
         this.create_directions_data = [];
+        this.tree = [];
         await this.$store.dispatch(action_types.INC_LOADING);
-        const {ok, data, message} = await stationar_point.load(this, ['pk']);
+        const {ok, data, message} = await stationar_point.load(this, ['pk'], {every});
         if (ok) {
           this.pk = '';
+          this.every = every;
           this.direction = data.direction;
           this.cancel = data.cancel;
           this.iss = data.iss;
           this.issTitle = data.iss_title;
           this.finId = data.fin_pk;
           this.forbidden_edit = data.forbidden_edit;
+          this.tree = data.tree;
           this.patient = new Patient(data.patient);
-          this.counts = await stationar_point.counts(this, ['direction']);
+          this.counts = await stationar_point.counts(this, ['direction'], {every});
           if (message && message.length > 0) {
             wrnmessage(message)
           }
@@ -407,6 +476,7 @@
         const {data} = await stationar_point.directionsByKey({
           direction: this.direction,
           r_type: key,
+          every: this.every,
         });
         this.list_directions = data;
         this.opened_list_key = key;
@@ -475,7 +545,7 @@
           if (data.ok) {
             okmessage('Сохранено');
             iss.saved = true;
-            iss.direction.transfer_direction_iss = data.transfer_direction_iss;
+            iss.research.transfer_direction_iss = data.transfer_direction_iss;
             this.reload_if_need(true)
           } else {
             errmessage(data.message)
@@ -517,28 +587,30 @@
           this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
-      reset_confirm(iss) {
-        let msg = `Сбросить подтверждение исследования ${iss.research.title}?`;
-        let doreset = confirm(msg);
-        if (doreset === false || doreset === null) {
+      async reset_confirm(iss) {
+        try {
+          await this.$dialog.confirm(`Подтвердите сброс подтверждения услуги «${iss.research.title}»`)
+        } catch (_) {
           return
         }
-        this.$store.dispatch(action_types.INC_LOADING).then();
-        directions_point.paraclinicResultConfirmReset({iss_pk: iss.pk}).then(data => {
-          if (data.ok) {
-            okmessage('Подтверждение сброшено');
-            iss.confirmed = false;
-            this.reload_if_need(true)
-            if (data.is_transfer) {
-              this.forbidden_edit = !!data.forbidden_edit
-            }
-            iss.forbidden_edit = data.forbidden_edit;
-          } else {
-            errmessage(data.message)
+
+        await this.$store.dispatch(action_types.INC_LOADING).then();
+
+        const data = await directions_point.paraclinicResultConfirmReset({iss_pk: iss.pk});
+
+        if (data.ok) {
+          okmessage('Подтверждение сброшено');
+          iss.confirmed = false;
+          this.reload_if_need(true)
+          if (data.is_transfer || data.is_extract) {
+            this.forbidden_edit = !!data.forbidden_edit
           }
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
-        })
+          iss.forbidden_edit = data.forbidden_edit;
+        } else {
+          errmessage(data.message);
+        }
+
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       r_is_transfer({research}) {
         return research.can_transfer
@@ -559,9 +631,8 @@
           let n = 0;
           for (const f of g.fields) {
             n++;
-            if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value) &&
-              (f.field_type !== 3 ||
-                vField(g, research.research.groups, f.visibility, this.patient_form))) {
+            if (f.required && f.field_type !== 3 && (f.value === '' || f.value === '- Не выбрано' || !f.value) &&
+              vField(g, research.research.groups, f.visibility, this.patient_form)) {
               l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title))
             }
           }
@@ -705,12 +776,12 @@
         return this.$store.getters.modules.l2_fast_templates
       },
       can_reset_transfer() {
-          for (let g of (this.$store.getters.user_data.groups || [])) {
-              if (g === 'Сброс подтверждения переводного эпикриза') {
-                  return true
-              }
+        for (let g of (this.$store.getters.user_data.groups || [])) {
+          if (g === 'Сброс подтверждения переводного эпикриза') {
+            return true
           }
-          return false
+        }
+        return false
       },
     }
   }
@@ -882,14 +953,17 @@
 
   .sidebar-btn {
     border-radius: 0;
-    text-align: left;
+    &:not(.text-center) {
+      text-align: left;
+    }
     border-top: none !important;
     border-right: none !important;
     border-left: none !important;
     padding: 0 12px;
     height: 24px;
 
-    &:not(:hover) {
+    &:not(:hover), &.active-btn:hover {
+      cursor: default;
       background-color: rgba(#000, .02) !important;
       color: #000;
       border-bottom: 1px solid #b1b1b1 !important;

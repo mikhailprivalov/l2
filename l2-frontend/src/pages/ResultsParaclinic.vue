@@ -1040,30 +1040,30 @@
                     this.load_location()
                 })
             },
-            reset_confirm(iss) {
+            async reset_confirm(iss) {
                 this.hide_results();
-                let msg = `Сбросить подтверждение исследования ${iss.research.title}?`;
-                let doreset = confirm(msg);
-                if (doreset === false || doreset === null) {
-                    return
+
+                try {
+                  await this.$dialog.confirm(`Подтвердите сброс подтверждения услуги «${iss.research.title}»`)
+                } catch (_) {
+                  return
                 }
+
                 this.inserted = false;
-                this.$store.dispatch(action_types.INC_LOADING).then();
-                directions_point.paraclinicResultConfirmReset({iss_pk: iss.pk}).then(data => {
-                    if (data.ok) {
-                        okmessage('Подтверждение сброшено');
-                        iss.confirmed = false;
-                        this.data.direction.amd = 'not_need';
-                        this.reload_if_need();
-                        this.changed = false
-                    } else {
-                        errmessage(data.message)
-                    }
-                }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then();
-                    this.inserted = true;
-                    this.load_location()
-                })
+                await this.$store.dispatch(action_types.INC_LOADING);
+                const data = await directions_point.paraclinicResultConfirmReset({iss_pk: iss.pk});
+                if (data.ok) {
+                    okmessage('Подтверждение сброшено');
+                    iss.confirmed = false;
+                    this.data.direction.amd = 'not_need';
+                    this.reload_if_need();
+                    this.changed = false
+                } else {
+                    errmessage(data.message)
+                }
+                await this.$store.dispatch(action_types.DEC_LOADING);
+                this.inserted = true;
+                this.load_location()
             },
             clear(ignore) {
                 ignore = ignore || false;

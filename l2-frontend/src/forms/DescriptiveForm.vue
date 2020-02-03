@@ -1,7 +1,7 @@
 <template>
   <div>
     <visibility-group-wrapper :group="group"
-                              :groups="research.groups"
+                              :groups="groups"
                               :patient="patient"
                               :key="group.pk"
                               v-for="group in research.groups">
@@ -31,11 +31,12 @@
                          :duration="400"
                          :on-confirm="clear_val" :value="field"
                          action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                         v-if="!confirmed && ![3, 10, 12, 15, 16].includes(field.field_type)">
+                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19].includes(field.field_type)">
                 ×
               </longpress>
               <div class="field-inputs"
-                   v-if="field.values_to_input.length > 0 && !confirmed && field.field_type !== 10 && field.field_type !== 12">
+                   v-if="field.values_to_input.length > 0 && !confirmed &&
+                   ![10, 12, 18, 19].includes(field.field_type)">
                 <div class="input-values-wrap">
                   <div class="input-values">
                     <div class="inner-wrap">
@@ -102,6 +103,19 @@
               <div class="field-value" v-else-if="field.field_type === 16 && pk">
                 <AggregateLaboratory :pk="pk" extract/>
               </div>
+              <div class="field-value" v-else-if="field.field_type === 17 && pk && hospital_r_type">
+                <AggregateDesc
+                  :pk="pk"
+                  extract
+                  :r_type="hospital_r_type"
+                />
+              </div>
+              <div class="field-value" v-else-if="field.field_type === 18">
+                <NumberField v-model="field.value" :disabled="confirmed" />
+              </div>
+              <div class="field-value" v-else-if="field.field_type === 19">
+                <NumberRangeField :variants="field.values_to_input" v-model="field.value" :disabled="confirmed" />
+              </div>
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
                     placement : 'left',
@@ -131,10 +145,16 @@
   import SearchFractionValueField from '../fields/SearchFractionValueField'
   import RichTextEditor from '../fields/RichTextEditor'
   import AggregateLaboratory from '../fields/AggregateLaboratory'
+  import AggregateDesc from "../fields/AggregateDesc";
+  import NumberField from "../fields/NumberField";
+  import NumberRangeField from "../fields/NumberRangeField";
 
   export default {
     name: 'DescriptiveForm',
     components: {
+      NumberRangeField,
+      NumberField,
+      AggregateDesc,
       AggregateLaboratory,
       RichTextEditor,
       SearchFractionValueField,
@@ -165,24 +185,43 @@
         },
         required: false,
       },
+      hospital_r_type: {
+        type: String,
+        required: false,
+      },
     },
     data() {
       return {
         prev_scroll: 0,
         prev_scrollHeightTop: 0,
+        versionTickTimer: null
       }
+    },
+    watch: {
+      groups: {
+        deep: true,
+        handler() {
+          this.inc_version();
+        },
+      }
+    },
+    mounted() {
+      this.versionTickTimer = setInterval(() => this.inc_version(), 2000)
+    },
+    beforeDestroy() {
+      clearInterval(this.versionTickTimer);
     },
     computed: {
       notFilled() {
-        const l = []
+        const l = [];
         if (this.confirmed) {
           return []
         }
 
         for (const g of this.research.groups) {
-          let n = 0
+          let n = 0;
           for (const f of g.fields) {
-            n++
+            n++;
             if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
               l.push(f.pk)
             }
@@ -190,18 +229,24 @@
         }
         return l
       },
+      groups() {
+        return this.research.groups;
+      }
     },
     methods: {
+      inc_version() {
+        this.research.version = (this.research.version || 0) + 1;
+      },
       enter_field(skip) {
         if (!skip) {
           return () => {
           }
         }
         return $e => {
-          this.prev_scroll = $('.results-editor').scrollTop()
-          const {offsetHeight: oh, scrollHeight: sh} = $('.results-editor')[0]
-          this.prev_scrollHeightTop = sh - oh
-          const $elem = $($e.target)
+          this.prev_scroll = $('.results-editor').scrollTop();
+          const {offsetHeight: oh, scrollHeight: sh} = $('.results-editor')[0];
+          this.prev_scrollHeightTop = sh - oh;
+          const $elem = $($e.target);
           $elem.addClass('open-field')
         }
       },
@@ -211,15 +256,15 @@
           }
         }
         return $e => {
-          const {offsetHeight: oh, scrollHeight: sh} = $('.results-editor > div')[0]
+          const {offsetHeight: oh, scrollHeight: sh} = $('.results-editor > div')[0];
           if (sh > oh && this.prev_scrollHeightTop < $('.results-editor').scrollTop())
-            $('.results-editor').scrollTo(this.prev_scroll).scrollLeft(0)
-          let $elem = $($e.target)
+            $('.results-editor').scrollTo(this.prev_scroll).scrollLeft(0);
+          let $elem = $($e.target);
           $elem.removeClass('open-field')
         }
       },
       append_value(field, value) {
-        let add_val = value
+        let add_val = value;
         if (add_val !== ',' && add_val !== '.') {
           if (field.value.length > 0 && field.value[field.value.length - 1] !== ' ' && field.value[field.value.length - 1] !== '\n') {
             if (field.value[field.value.length - 1] === '.') {

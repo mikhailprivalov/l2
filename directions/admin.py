@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import IstochnikiFinansirovaniya, Napravleniya, TubesRegistration, Issledovaniya, Result, \
     FrequencyOfUseResearches, CustomResearchOrdering, RMISOrgs, RMISServiceInactive, Diagnoses, TypeJob, EmployeeJob, \
     KeyValue, PersonContract
@@ -8,7 +9,7 @@ admin.site.register(IstochnikiFinansirovaniya)
 
 @admin.register(Napravleniya)
 class CardAdmin(admin.ModelAdmin):
-    raw_id_fields = ('client',)
+    raw_id_fields = ('client', 'case', 'parent', 'parent_auto_gen', )
 
 
 @admin.register(Issledovaniya)
@@ -39,7 +40,6 @@ class ResDiagnoses(admin.ModelAdmin):
 
 
 class ResPersonContract(admin.ModelAdmin):
-    # list_display = ('num_contract', 'dir_list', 'sum_contract', 'patient_data',)
     list_display = ('num_contract', 'sum_contract', 'patient_data', 'patient_card', 'dir_list', 'protect_code',)
     search_fields = ('num_contract',)
 
@@ -54,4 +54,4 @@ admin.site.register(Diagnoses, ResDiagnoses)
 admin.site.register(TypeJob, ResTypeJob)
 admin.site.register(EmployeeJob, ResEmployeeJob)
 admin.site.register(KeyValue, ResKeyValue)
-admin.site.register(PersonContract,ResPersonContract )
+admin.site.register(PersonContract, ResPersonContract)

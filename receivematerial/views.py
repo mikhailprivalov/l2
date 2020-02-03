@@ -8,6 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import dateformat
 from django.views.decorators.csrf import csrf_exempt
+from reportlab.lib.pagesizes import A4
 
 import directory.models as directory
 import slog.models as slog
@@ -21,6 +22,8 @@ from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
+
+w, h = A4
 
 
 @csrf_exempt
@@ -163,7 +166,7 @@ def last_received(request):
                                         doc_recive=request.user.doctorprofile, **f).exists():
         last_num = max([x.daynum for x in
                         TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0,
-                                        doc_recive=request.user.doctorprofile, **f)])
+                                                         doc_recive=request.user.doctorprofile, **f)])
     return JsonResponse({"last_n": last_num})
 
 
@@ -252,7 +255,8 @@ def receive_execlist(request):
             else:
                 tubes = [x.pk for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2),
                                                                         issledovaniya__doc_confirmation__isnull=True,
-                                                                        issledovaniya__research=research).order_by("issledovaniya__napravleniye__client__individual__family", "issledovaniya__napravleniye__client__individual__name")]
+                                                                        issledovaniya__research=research).order_by("issledovaniya__napravleniye__client__individual__family",
+                                                                                                                   "issledovaniya__napravleniye__client__individual__name")]
             pages = Paginator(tubes, 16)
             nn = 0
             for pg_num in pages.page_range:
@@ -285,9 +289,10 @@ def receive_execlist(request):
                     napravleniye = Issledovaniya.objects.filter(tubes__pk=tube_pk)[0].napravleniye
                     tmp = [
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % (tube.daynum if t == "received" else nn), styleSheet["BodyText"]),
-                        Paragraph('<font face="OpenSans" size="8">%s</font>' % (napravleniye.client.individual.fio() + (
-                            "" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num) + "<br/>" + napravleniye.doc.podrazdeleniye.title),
-                                  styleSheet["BodyText"]),
+                        Paragraph('<font face="OpenSans" size="8">%s</font>' % (
+                            napravleniye.client.individual.fio() +
+                            ("" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num) +
+                            "<br/>" + napravleniye.doc.podrazdeleniye.title), styleSheet["BodyText"]),
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % napravleniye.pk, styleSheet["BodyText"]),
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % tube_pk, styleSheet["BodyText"])]
                     for f in fractions_o:
@@ -329,7 +334,8 @@ def tubes_get(request):
     """ Получение списка не принятых пробирок """
     result = []
     k = set()
-    if request.method == "GET" and "lab" in request.GET and request.GET["lab"].isdigit() and "from" in request.GET and request.GET["from"].isdigit() and "datestart" in request.GET and "dateend" in request.GET:
+    if request.method == "GET" and "lab" in request.GET and request.GET["lab"].isdigit()\
+            and "from" in request.GET and request.GET["from"].isdigit() and "datestart" in request.GET and "dateend" in request.GET:
         filter_type = request.GET.get("type", "wait")
         lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
         podrazledeniye = Podrazdeleniya.objects.get(pk=request.GET["from"])
@@ -354,11 +360,6 @@ def tubes_get(request):
                                         "color": tube.type.tube.color, "notice": tube.notice}})
 
     return JsonResponse(list(result), safe=False)
-
-
-from reportlab.lib.pagesizes import A4
-
-w, h = A4
 
 
 @login_required
@@ -419,11 +420,12 @@ def receive_journal(request):
     n_dict = {}
 
     n = 1
-    for v in tubes:  # Перебор пробирок
+    for v in tubes:
         idv = v.id
-        if idv in vids: continue
+        if idv in vids:
+            continue
         vids.add(idv)
-        iss = Issledovaniya.objects.filter(tubes__id=v.id) # Получение исследований для пробирки
+        iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
 
         if group == -1:
             iss = iss.filter(research__groups__isnull=True)
@@ -590,7 +592,8 @@ def receive_journal(request):
     else:
         group_str = "Без группы"
 
-    slog.Log(key="", type=25, body=json.dumps({"group": group_str, "start": start, "otds": ["%s, %s" % (users.Podrazdeleniya.objects.get(pk=int(x)).title, x) for x in otd]}), user=request.user.doctorprofile).save()
+    slog.Log(key="", type=25, body=json.dumps({"group": group_str, "start": start, "otds": ["%s, %s" % (users.Podrazdeleniya.objects.get(pk=int(x)).title, x) for x in otd]}),
+             user=request.user.doctorprofile).save()
     return response
 
 
@@ -621,4 +624,3 @@ def drawTituls(c, pages, page, paddingx, lab, otd="", group=-2):
                       "Дата: " + str(dateformat.format(date.today(), settings.DATE_FORMAT)))
 
     c.drawRightString(w - paddingx, 20, "Страница " + str(page) + " из " + str(pages))
-

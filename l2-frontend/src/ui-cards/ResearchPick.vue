@@ -1,8 +1,8 @@
 <template>
   <div v-tippy="{ html: '#' + tid, reactive: true, arrow: true, delay: [500,0], animation: 'fade', duration: 0, theme: 'light'}">
     <span class="rps">{{ research.title }}</span>
-    <div :id="tid" v-if="research.full_title || research.code">
-      <div class="rtitle">{{research.full_title}}</div>
+    <div :id="tid" v-if="research.full_title || research.code || force_tippy">
+      <div class="rtitle">{{research.full_title || research.title}}</div>
       <span class="s-code" v-if="research.code !== ''">{{research.code}}</span>
     </div>
   </div>
@@ -15,6 +15,11 @@
       research: {
         type: Object,
         required: true
+      },
+      force_tippy: {
+        type: Boolean,
+        required: false,
+        default: false,
       }
     },
     computed: {

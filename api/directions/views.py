@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.utils import dateformat, timezone
 
+from api import sql_func
 from api.dicom import search_dicom_study
 from api.sql_func import get_fraction_result, get_field_result
 from api.stationar.stationar_func import forbidden_edit_dir
@@ -24,7 +25,6 @@ from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
 from utils.dates import try_parse_range
-from api import sql_func
 
 
 @login_required
@@ -143,8 +143,7 @@ def directions_history(request):
                              0].research.is_doc_refferal
                          else iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"],
                          "checked": False,
-                         "pacs": None if not iss_list[0].research.podrazdeleniye or
-                                         not iss_list[0].research.podrazdeleniye.can_has_pacs else
+                         "pacs": None if not iss_list[0].research.podrazdeleniye or not iss_list[0].research.podrazdeleniye.can_has_pacs else
                          search_dicom_study(int(napr["pk"])),
                          "has_hosp": has_hosp,
                          "has_descriptive": has_descriptive})
@@ -229,8 +228,7 @@ def directions_results(request):
             result["direction"]["pk"] = napr.pk
             result["full"] = False
             result["ok"] = True
-            result["pacs"] = None if not iss_list[0].research.podrazdeleniye or \
-                                     not iss_list[0].research.podrazdeleniye.can_has_pacs else search_dicom_study(pk)
+            result["pacs"] = None if not iss_list[0].research.podrazdeleniye or not iss_list[0].research.podrazdeleniye.can_has_pacs else search_dicom_study(pk)
             if iss_list.filter(doc_confirmation__isnull=False).exists():
                 result["direction"]["doc"] = iss_list.filter(doc_confirmation__isnull=False)[
                     0].doc_confirmation.get_fio()
@@ -384,8 +382,8 @@ def directions_services(request):
     if dn.exists():
         n = dn[0]
         if Issledovaniya.objects.filter(
-                Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True) | Q(
-                    research__is_microbiology=True)).exists():
+            Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True) | Q(
+                research__is_microbiology=True)).exists():
             cdid, ctime, ctp, rt = get_reset_time_vars(n)
 
             response["ok"] = True
@@ -394,8 +392,8 @@ def directions_services(request):
             has_microbiology = False
             receive_datetime = None
             for i in Issledovaniya.objects.filter(napravleniye=n).filter(
-                    Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True) | Q(
-                        research__is_microbiology=True)).distinct():
+                Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True) | Q(
+                    research__is_microbiology=True)).distinct():
                 researches.append({"title": i.research.title,
                                    "department": ""
                                    if not i.research.podrazdeleniye
@@ -452,17 +450,15 @@ def directions_mark_visit(request):
     f = False
     if dn.exists():
         n = dn[0]
-        if Issledovaniya.objects.filter(
-                Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).exists():
+        if Issledovaniya.objects.filter(Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).exists():
             if not cancel:
                 n.visit_date = timezone.now()
                 n.visit_who_mark = request.user.doctorprofile
                 n.save()
                 cdid, ctime, ctp, rt = get_reset_time_vars(n)
-                allow_reset_confirm = bool(((
-                                                    ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                                str(x) for x in
-                                                request.user.groups.all()]) and n.visit_date)
+                allow_reset_confirm = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                    str(x) for x in
+                    request.user.groups.all()]) and n.visit_date)
                 response["visit_status"] = n.visit_date is not None
                 response["visit_date"] = strdatetime(n.visit_date)
                 response["allow_reset_confirm"] = allow_reset_confirm
@@ -473,10 +469,9 @@ def directions_mark_visit(request):
                 cdid = -1 if not n.visit_who_mark else n.visit_who_mark_id
                 rtm = SettingManager.get("visit_reset_time_min", default="20.0", default_type='f')
                 rt = rtm * 60
-                allow_reset_confirm = bool(((
-                                                    ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                                str(x) for x in
-                                                request.user.groups.all()]) and n.visit_date)
+                allow_reset_confirm = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                    str(x) for x in
+                    request.user.groups.all()]) and n.visit_date)
                 if allow_reset_confirm:
                     response["ok"] = True
                     response["visit_status"] = None
@@ -550,8 +545,7 @@ def directions_recv_journal(request):
     request_data = json.loads(request.body)
     date_start, date_end = try_parse_range(request_data["date"])
     for v in Napravleniya.objects.filter(time_microbiology_receive__range=(date_start, date_end,),
-                                         doc_microbiology_receive=request.user.doctorprofile).order_by(
-        "-time_microbiology_receive"):
+                                         doc_microbiology_receive=request.user.doctorprofile).order_by("-time_microbiology_receive"):
         tubes = []
         for i in Issledovaniya.objects.filter(napravleniye=v, research__microbiology_tube__isnull=False):
             tube = i.research.microbiology_tube
@@ -649,7 +643,6 @@ def directions_results_report(request):
     params = request_data.get("params", [])
 
     date_start, date_end = try_parse_range(request_data.get("date_start"), request_data.get("date_end"))
-    pat = re.compile(r"^\d+(.\d+)?-\d+(.\d+)?$")
 
     if Individual.objects.filter(pk=individual_pk).exists():
         i = Individual.objects.get(pk=individual_pk)
@@ -688,8 +681,7 @@ def directions_results_report(request):
                     f = Fractions.objects.get(pk=ppk)
                     for r in Result.objects.filter(issledovaniye__napravleniye__client__individual=i,
                                                    fraction=f,
-                                                   issledovaniye__time_confirmation__range=(
-                                                           date_start, date_end)):
+                                                   issledovaniye__time_confirmation__range=(date_start, date_end)):
                         if r.value == "":
                             continue
                         is_norm = r.get_is_norm()
@@ -737,7 +729,6 @@ def directions_results_report(request):
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара")
 def directions_paraclinic_form(request):
-    import time
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1) or -1
@@ -803,19 +794,12 @@ def directions_paraclinic_form(request):
                             "get": i.get_visit_date(force=True),
                             "n": d.microbiology_n,
                         }
-                ctp = int(0 if not i.time_confirmation else int(
-                    time.mktime(timezone.localtime(i.time_confirmation).timetuple())))
-                ctime = int(time.time())
-                cdid = -1 if not i.doc_confirmation else i.doc_confirmation_id
-                rt = SettingManager.get("lab_reset_confirm_time_min") * 60
                 transfer_d = Napravleniya.objects.filter(parent_auto_gen=i, cancel=False).first()
-                groups = [str(x) for x in request.user.groups.all()]
-                is_transfer = i.research.can_transfer
-                force_reset = not is_transfer or "Сброс подтверждения переводного эпикриза" in groups
                 iss = {
                     "pk": i.pk,
                     "research": {
                         "title": i.research.title,
+                        "version": i.pk * 10000,
                         "is_paraclinic": i.research.is_paraclinic,
                         "is_doc_refferal": i.research.is_doc_refferal,
                         "is_treatment": i.research.is_treatment,
@@ -824,11 +808,13 @@ def directions_paraclinic_form(request):
                         "comment": i.localization.title if i.localization else i.comment,
                         "groups": [],
                         "can_transfer": i.research.can_transfer,
+                        "is_extract": i.research.is_extract,
                         "transfer_direction": None if not transfer_d else transfer_d.pk,
                         "transfer_direction_iss": [] if not transfer_d else [r.research.title for r in
                                                                              Issledovaniya.objects.filter(
                                                                                  napravleniye=transfer_d.pk)
                                                                              ],
+                        "r_type": i.research.r_type,
                     },
                     "pacs": None if not i.research.podrazdeleniye or not i.research.podrazdeleniye.can_has_pacs else
                     search_dicom_study(d.pk),
@@ -836,10 +822,7 @@ def directions_paraclinic_form(request):
                     "templates": [],
                     "saved": i.time_save is not None,
                     "confirmed": i.time_confirmation is not None,
-                    "allow_reset_confirm": (not is_transfer or force_reset) and
-                                           ((ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
-                                            or request.user.is_superuser or "Сброс подтверждений результатов" in groups
-                                            ) and i.time_confirmation is not None,
+                    "allow_reset_confirm": i.allow_reset_confirm(request.user),
                     "more": [x.research_id for x in Issledovaniya.objects.filter(parent=i)],
                     "sub_directions": [],
                     "recipe": [],
@@ -1116,7 +1099,7 @@ def directions_paraclinic_confirm(request):
     return JsonResponse(response)
 
 
-@group_required("Врач параклиники", "Сброс подтверждений результатов", "Врач консультаций", "Врач стационара")
+@group_required("Врач параклиники", "Сброс подтверждений результатов", "Врач консультаций", "Врач стационара", "Сброс подтверждения переводного эпикриза", "Сброс подтверждения выписки")
 def directions_paraclinic_confirm_reset(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
@@ -1124,22 +1107,16 @@ def directions_paraclinic_confirm_reset(request):
 
     if Issledovaniya.objects.filter(pk=pk).exists():
         iss = Issledovaniya.objects.get(pk=pk)
-        groups = [str(x) for x in request.user.groups.all()]
         is_transfer = iss.research.can_transfer
-        force_reset = "Сброс подтверждения переводного эпикриза" in groups
+        is_extract = iss.research.is_extract
 
-        if (not is_transfer or not force_reset) and forbidden_edit_dir(iss.napravleniye_id):
+        allow_reset = iss.allow_reset_confirm(request.user)
+
+        if not allow_reset:
             response["message"] = "Редактирование запрещено"
             return JsonResponse(response)
 
-        import time
-        ctp = int(
-            0 if not iss.time_confirmation else int(time.mktime(timezone.localtime(iss.time_confirmation).timetuple())))
-        ctime = int(time.time())
-        cdid = -1 if not iss.doc_confirmation else iss.doc_confirmation_id
-        if (ctime - ctp < SettingManager.get(
-                "lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
-            str(x) for x in request.user.groups.all()]:
+        if allow_reset:
             predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation_id,
                       "direction": iss.napravleniye_id}
             iss.doc_confirmation = iss.time_confirmation = None
@@ -1158,11 +1135,11 @@ def directions_paraclinic_confirm_reset(request):
                 i.save()
             Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
         else:
-            response["message"] = "Сброс подтверждения разрешен в течении %s минут" % (
-                str(SettingManager.get("lab_reset_confirm_time_min")))
+            response["message"] = "Сброс подтверждения разрешен в течении %s минут" % (str(SettingManager.get("lab_reset_confirm_time_min")))
         response["amd"] = iss.napravleniye.amd_status
         response["amd_number"] = iss.napravleniye.amd_number
         response["is_transfer"] = is_transfer
+        response["is_extract"] = is_extract
         if is_transfer:
             response["forbidden_edit"] = forbidden_edit_dir(iss.napravleniye_id)
     return JsonResponse(response)
@@ -1177,9 +1154,8 @@ def directions_paraclinic_history(request):
 
     for direction in Napravleniya.objects.filter(Q(issledovaniya__doc_save=request.user.doctorprofile) |
                                                  Q(issledovaniya__doc_confirmation=request.user.doctorprofile)) \
-            .filter(Q(issledovaniya__time_confirmation__range=(date_start, date_end)) |
-                    Q(issledovaniya__time_save__range=(date_start, date_end))) \
-            .order_by("-issledovaniya__time_save", "-issledovaniya__time_confirmation"):
+        .filter(Q(issledovaniya__time_confirmation__range=(date_start, date_end)) |
+                Q(issledovaniya__time_save__range=(date_start, date_end))).order_by("-issledovaniya__time_save", "-issledovaniya__time_confirmation"):
         if direction.pk in has_dirs:
             continue
         has_dirs.append(direction.pk)
@@ -1215,8 +1191,7 @@ def directions_patient_history(request):
 
     for i in Issledovaniya.objects.filter(time_confirmation__isnull=False,
                                           research=iss.research,
-                                          napravleniye__client__individual=iss.napravleniye.client.individual).order_by(
-        '-time_confirmation').exclude(pk=request_data["pk"]):
+                                          napravleniye__client__individual=iss.napravleniye.client.individual).order_by('-time_confirmation').exclude(pk=request_data["pk"]):
         data.append({
             "pk": i.pk,
             "direction": i.napravleniye_id,

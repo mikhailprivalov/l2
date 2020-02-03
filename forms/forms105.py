@@ -1,31 +1,32 @@
+import datetime
+import locale
+import os.path
+import re
+import sys
+from copy import deepcopy
+from io import BytesIO
+
+import simplejson as json
+from anytree import Node, RenderTree
+from reportlab.lib import colors
+from reportlab.lib.colors import black
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from reportlab.lib.pagesizes import A4, portrait, landscape
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, portrait, landscape
-from reportlab.lib.units import mm
-from reportlab.lib.colors import black
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.platypus import PageBreak, Indenter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.platypus.flowables import HRFlowable
 
-from copy import deepcopy
-import os.path
-import locale
-import sys
-from io import BytesIO
-from . import forms_func
-from laboratory.settings import FONTS_FOLDER
-from datetime import *
-import datetime
-import simplejson as json
 from appconf.manager import SettingManager
-from directions.models import Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, ParaclinicResult
+from directions.models import Issledovaniya, Napravleniya, ParaclinicResult
 from laboratory import utils
+from laboratory.settings import FONTS_FOLDER
 from utils import tree_directions
-from anytree import Node, RenderTree
-import re
+from . import forms_func
+from api.stationar.stationar_func import hosp_get_hosp_direction
 
 
 def form_01(request_data):
@@ -145,11 +146,11 @@ def form_01(request_data):
 
         if param:
             tbl = Table(t_opinion,
-                        colWidths=(10 * mm, 60 * mm, 19 * mm, 15 * mm, 75 * mm, 30 * mm, 70 * mm, ))
+                        colWidths=(10 * mm, 60 * mm, 19 * mm, 15 * mm, 75 * mm, 30 * mm, 70 * mm,))
         else:
             tbl = Table(t_opinion,
                         colWidths=(10 * mm, 30 * mm, 19 * mm, 15 * mm, 46 * mm, 20 * mm, 10 * mm, 13 * mm, 11 * mm,
-                               20 * mm, 20 * mm, 14 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
+                                   20 * mm, 20 * mm, 14 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
 
         tbl.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
@@ -196,6 +197,7 @@ def form_01(request_data):
     return pdf
 
 
+################################################################################################################
 def form_02(request_data):
     """
     Отдельный статталон по отдельному амбулаторному приему.
@@ -212,7 +214,7 @@ def form_02(request_data):
                                         u'\u2063   ')
     """
 
-    #получить направления
+    # получить направления
     ind_dir = json.loads(request_data["napr_id"])
 
     hospital_name = SettingManager.get("org_title")
@@ -290,7 +292,7 @@ def form_02(request_data):
 
         space_symbol = '&nbsp;'
 
-        #Добавить сведения о пациента
+        # Добавить сведения о пациента
         content_title = [
             Indenter(left=0 * mm),
             Spacer(1, 1 * mm),
@@ -298,7 +300,7 @@ def form_02(request_data):
             Spacer(1, 2 * mm),
             Paragraph('<u>Статистический талон пациента</u>', styleCenter),
             Paragraph('{}<font size=10>Карта № </font><font fontname="PTAstraSerifBold" size=10>{}</font><font size=10> из {}</font>'.format(
-                    3 * space_symbol, p_card_num, p_card_type), styleCenter),
+                3 * space_symbol, p_card_num, p_card_type), styleCenter),
             Spacer(1, 2 * mm),
             Paragraph('<font size=11>Данные пациента:</font>', styleBold),
             Paragraph("1. Фамилия, имя, отчество:&nbsp;  <font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(
@@ -316,7 +318,7 @@ def form_02(request_data):
 
         objs.extend(content_title)
 
-        #добавить данные об услуге
+        # добавить данные об услуге
         objs.append(Spacer(1, 3 * mm))
         objs.append(Paragraph('<font size=11>Данные об услуге:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
@@ -342,10 +344,10 @@ def form_02(request_data):
                 vv = v.split('-')
                 if len(vv) == 3:
                     v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-            list_f =[[Paragraph(f.field.get_title(), styleT), Paragraph(v, styleT)]]
+            list_f = [[Paragraph(f.field.get_title(), styleT), Paragraph(v, styleT)]]
             opinion.extend(list_f)
 
-        tbl = Table(opinion, colWidths=(60 * mm, 123* mm))
+        tbl = Table(opinion, colWidths=(60 * mm, 123 * mm))
         tbl.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
@@ -353,7 +355,7 @@ def form_02(request_data):
 
         objs.append(tbl)
 
-        #Заключительные положения
+        # Заключительные положения
         objs.append(Spacer(1, 4 * mm))
         objs.append(Paragraph('<font size=11>Заключительные положения:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
@@ -377,7 +379,7 @@ def form_02(request_data):
         ]))
         objs.append(tbl)
 
-       # Добавить Дополнительные услуги
+        # Добавить Дополнительные услуги
         add_research = Issledovaniya.objects.filter(parent_id__napravleniye=obj_dir)
         if add_research:
             objs.append(Spacer(1, 3 * mm))
@@ -398,12 +400,12 @@ def form_02(request_data):
             personal_code = empty if not obj_iss.doc_confirmation.personal_code else obj_iss.doc_confirmation.personal_code
             doc_fio = obj_iss.doc_confirmation.get_fio()
 
-        objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '. format(doc_fio,
-             42 * space_symbol, personal_code),style))
+        objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '.format(doc_fio,
+                                                                                    42 * space_symbol, personal_code), style))
 
         objs.append(Spacer(1, 5 * mm))
 
-        #Получить структуру Направлений если, направление в Дереве не важно в корне в середине или в начале
+        # Получить структуру Направлений если, направление в Дереве не важно в корне в середине или в начале
         root_dir = tree_directions.root_direction(dir)
         num_iss = (root_dir[-1][-2])
         tree_dir = tree_directions.tree_direction(num_iss)
@@ -445,6 +447,161 @@ def form_02(request_data):
         objs.append(PageBreak())
 
     doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
+
+
+##########################################################################################################################
+
+def form_03(request_data):
+    """
+    Статистическая форма 066/у Приложение № 5 к приказу Минздрава России от 30 декабря 2002 г. № 413
+    """
+    num_dir = request_data["dir_pk"]
+    direction_obj = Napravleniya.objects.get(pk=num_dir)
+    hosp_nums_obj = hosp_get_hosp_direction(num_dir)
+    hosp_nums = ''
+    for i in hosp_nums_obj:
+        hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
+
+    ind_card = direction_obj.client
+    patient_data = ind_card.get_data_individual()
+
+    hospital_name = SettingManager.get("org_title")
+    hospital_address = SettingManager.get("org_address")
+    hospital_kod_ogrn = SettingManager.get("org_ogrn")
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4,
+                            leftMargin=25 * mm,
+                            rightMargin=5 * mm, topMargin=6 * mm,
+                            bottomMargin=4 * mm, allowSplitting=1,
+                            title="Форма {}".format("066/у-02"))
+    width, height = portrait(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.leading = 15
+    style.spaceAfter = 0.5 * mm
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 12
+    styleCenter.leading = 15
+    styleCenter.spaceAfter = 1 * mm
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 15
+    styleCenterBold.face = 'PTAstraSerifBold'
+    styleCenterBold.borderColor = black
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    objs = []
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+    styleT.face = 'PTAstraSerifReg'
+
+    print_district = ''
+    if SettingManager.get("district", default='True', default_type='b'):
+        if ind_card.district is not None:
+            print_district = 'Уч: {}'.format(ind_card.district.title)
+
+    opinion = [
+        [Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} <br/><u>{}</u> </font>'.format(
+            hospital_name, hospital_address, hospital_kod_ogrn, print_district), styleT),
+            Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: 31348613<br/>'
+                      'Медицинская документация<br/>форма № 003/у</font>', styleT)],
+    ]
+
+    tbl = Table(opinion, 2 * [90 * mm])
+    tbl.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+        ('LEFTPADDING', (1, 0), (-1, -1), 80),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+
+    objs.append(tbl)
+    space_symbol = '&nbsp;'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+        patient_data['serial'] = patient_data['bc_serial']
+        patient_data['num'] = patient_data['bc_num']
+    else:
+        patient_data['serial'] = patient_data['passport_serial']
+        patient_data['num'] = patient_data['passport_num']
+
+    card_num_obj = patient_data['card_num'].split(' ')
+    p_card_num = card_num_obj[0]
+
+    sex = patient_data['sex']
+    if sex == 'м':
+        sex = f'{sex} - 1'
+    if sex == 'ж':
+        sex = f'{sex} - 2'
+
+    doc_patient = f"{patient_data['type_doc']}, {patient_data['serial']} - {patient_data['num']}"
+    polis_data = f"{patient_data['oms']['polis_serial']} {patient_data['oms']['polis_num']}"
+
+    title_page = [
+        Indenter(left=0 * mm),
+        Spacer(1, 8 * mm),
+        Paragraph(
+            '<font fontname="PTAstraSerifBold" size=13>СТАТИСТИЧЕСКАЯ КАРТА ВЫБЫВШЕГО ИЗ СТАЦИОНАРА<br/> '
+            'круглосуточного пребывания, дневного стационара при больничном<br/> учреждении, дневного стационара при'
+            ' амбулаторно-поликлиническом<br/> учреждении, стационара на дому<br/>'
+            'N медицинской карты {} {}</font>'.format(p_card_num, hosp_nums), styleCenter),
+        Spacer(1, 2 * mm),
+        Spacer(1, 2 * mm),
+        Spacer(1, 2 * mm),
+
+        Paragraph('1. Код пациента: ________  2. Ф.И.О.: {}'.format(patient_data['fio']), style),
+        Paragraph('3. Пол: {} {}4. Дата рождения'.format(sex, space_symbol * 24, patient_data['born']), style),
+        Paragraph('5. Документ, удостов. личность: (название, серия, номер) {} {}'.
+                  format(space_symbol * 2, doc_patient), style),
+        Paragraph('6. Адрес: регистрация по месту жительства: {}'.format(patient_data['main_address']), style),
+        Paragraph('7. Код территории проживания: ___ Житель: город - 1; село - 2.', style),
+        Paragraph('8. Страховой полис (серия, номер):{}'.format(polis_data), style),
+        Paragraph('Выдан: {}'.format(patient_data['oms']['polis_issued']), style),
+        Paragraph('9. Вид оплаты:______________', style),
+        Paragraph('10. Социальный статус:    дошкольник -  1:    организован -  2;    неорганизован -  3; '
+                  'учащийся  -  4;    работает  - 5;    не  работает  - 6;   БОМЖ  - 7;   пенсионер  - 8; '
+                  'военнослужащий - 9; Код _______; Член семьи военнослужащего - 10.', style),
+        Paragraph('11. Категория льготности: инвалид  ВОВ - 1;  участник ВОВ - 2; воин - интернационалист- 3;  '
+                  'лицо,  подвергшееся  радиационному  облучению  - 4;  в  т.ч.  в  Чернобыле  - 5;'
+                  'инв. I гр.  - 6;   инв. II гр.  -  7;   инв. III гр.  -  8;   ребенок - инвалид  -  9;'
+                  'инвалид с детства - 10; прочие - 11', style),
+
+    ]
+    objs.extend(title_page)
+
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
     pdf = buffer.getvalue()
     buffer.close()
 

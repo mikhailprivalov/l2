@@ -1,6 +1,6 @@
+import re
 import sys
 
-import re
 from django.db import models
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]

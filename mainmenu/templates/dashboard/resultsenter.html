@@ -1308,6 +1308,7 @@
                             $('.data-research-confirmed').show()
                             $('#ref-settings-btn').prop('disabled', true)
                             $('#save-btn').prop('disabled', true)
+                            $('#clear-all-btn').prop('disabled', true)
                             $('#confirm-btn').prop('disabled', true)
                             $('#confirm-andsave-btn').prop('disabled', true)
                             resize()
@@ -1893,6 +1894,7 @@
                     if (data2.confirmed) {
                         $('#confirm-btn').attr('disabled', 1)
                         $('#save-btn').attr('disabled', 1)
+                        $('#clear-all-btn').attr('disabled', 1)
                         $('#ref-settings-btn').prop('disabled', true)
                         $('#confirm-andsave-btn').attr('disabled', 1)
                         $('.result-enter').prop('readonly', true)
@@ -1906,12 +1908,14 @@
                     } else if (data2.saved) {
                         $('#confirm-btn').removeAttr('disabled')
                         $('#save-btn').removeAttr('disabled')
+                        $('#clear-all-btn').removeAttr('disabled')
                         $('#ref-settings-btn').prop('disabled', false)
                         $('#confirm-andsave-btn').removeAttr('disabled')
                         datatype = 1
                     } else {
                         $('#confirm-btn').attr('disabled', 1)
                         $('#save-btn').removeAttr('disabled')
+                        $('#clear-all-btn').removeAttr('disabled')
                         $('#ref-settings-btn').prop('disabled', false)
                         $('#confirm-andsave-btn').removeAttr('disabled')
                     }
@@ -2271,6 +2275,7 @@
             insave = true
             $('#confirm-btn').attr('disabled', 1)
             $('#save-btn').attr('disabled', 1)
+            $('#clear-all-btn').attr('disabled', 1)
             $('#confirm-andsave-btn').attr('disabled', 1)
             if (datatype === 2) return
             $(this).disabled = true
@@ -2350,6 +2355,7 @@
         function confirm_result() {
             $('#confirm_result-btn').attr('disabled', 1)
             $('#save-btn').attr('disabled', 1)
+            $('#clear-all-btn').attr('disabled', 1)
             $('#confirm_result-andsave-btn').attr('disabled', 1)
             $('#ref-settings-btn').prop('disabled', true)
             $.ajax({

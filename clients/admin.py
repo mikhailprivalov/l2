@@ -48,10 +48,10 @@ class DispensaryRegAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.BenefitType)
-class DispensaryRegAdmin(admin.ModelAdmin):
+class BenefitTypeAdmin(admin.ModelAdmin):
     pass
 
 
 @admin.register(models.BenefitReg)
-class DispensaryRegAdmin(admin.ModelAdmin):
+class BenefitRegAdmin(admin.ModelAdmin):
     raw_id_fields = ('card',)

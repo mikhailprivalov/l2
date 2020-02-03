@@ -1,20 +1,18 @@
-import threading
-
-import simplejson as json
-from django.core.management import BaseCommand
+import time
 from datetime import date, datetime
 
-from django.utils import timezone
+from django.core.management import BaseCommand
 from zeep import helpers
-import time
 
 from directions.models import RMISServiceInactive
 from rmis_integration.client import Client as RC
+
 
 def json_serial(obj):
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
     raise TypeError("Type %s not serializable" % type(obj))
+
 
 class Command(BaseCommand):
     help = "Получение списка услуг из РМИС"
@@ -49,7 +47,7 @@ class Command(BaseCommand):
                 if self.n % 100 == 0 or self.n == self.cnt:
                     sec = time.time() - self.start_time
                     self.start_time = time.time()
-                    self.stdout.write("--- %s op/s ---" % (int(self.nn/sec)))
+                    self.stdout.write("--- %s op/s ---" % (int(self.nn / sec)))
                     self.nn = 0
                 # sema.release()
 

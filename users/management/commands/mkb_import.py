@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
+
 from directions.models import Diagnoses
 
 
@@ -9,7 +10,6 @@ class Command(BaseCommand):
         :param path - файл с кодами МКБ10.2019 + расшифровка
         """
         parser.add_argument('path', type=str)
-
 
     def handle(self, *args, **kwargs):
         fp = kwargs["path"]
@@ -28,4 +28,3 @@ class Command(BaseCommand):
             else:
                 Diagnoses.objects.create(d_type='mkb10.4', m_type=2, code=cells[code], title=cells[title])
                 print(f'добавлен MKB:{cells[code]}:{cells[title]}')
-

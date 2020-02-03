@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User, Group
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
+
 import podrazdeleniya.models as pod
 import users.models as users
 from api.views import translit
@@ -11,7 +12,7 @@ class Command(BaseCommand):
         parser.add_argument('path', type=str)
 
     def handle(self, *args, **kwargs):
-        fixF = lambda s: s[:1].upper() + s[1:] if s else ''
+        fixF = lambda s: s[:1].upper() + s[1:] if s else ''  # noqa: E731
         fp = kwargs["path"]
         self.stdout.write("Path: " + fp)
         wb = load_workbook(filename=fp)

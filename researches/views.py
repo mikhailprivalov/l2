@@ -82,7 +82,7 @@ def researches_get_one(request):
                                "f": ref_f,
                                "default": -1 if not val.default_ref else val.default_ref_id,
                                "available": av,
-                                          },
+                           },
                            "num": val.sort_weight,
                            "formula": val.formula}
                     if val.sort_weight and val.sort_weight > 0:

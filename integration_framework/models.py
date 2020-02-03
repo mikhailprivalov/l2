@@ -1,5 +1,7 @@
 from django.db import models
+
 from directory.models import Researches
+
 
 class IntegrationNamespace(models.Model):
     key = models.CharField(max_length=128, primary_key=True)
@@ -22,7 +24,7 @@ class IntegrationJournal(models.Model):
 
 
 class IntegrationResearches(models.Model):
-    TYPES =  (
+    TYPES = (
         ('mbu', 'MBU'),
         ('amd', 'AMD'),
     )

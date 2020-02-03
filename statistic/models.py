@@ -1,7 +1,8 @@
 from django.db import models
-import users.models as users
-import slog.models as slog
+
 import directory.models as directory
+import slog.models as slog
+import users.models as users
 from laboratory.utils import localtime
 
 
@@ -17,7 +18,7 @@ class Uet(models.Model):
     @staticmethod
     def add(user: users.DoctorProfile, research: directory.Researches, direction: int):
         isdoc = True
-        #isdoc = user.labtype == 1
+        # isdoc = user.labtype == 1
         pts = sum([x.uet_doc if isdoc else x.uet_lab for x in directory.Fractions.objects.filter(research__pk=research.pk)])
         if pts > 0:
             row = Uet(user=user, points=pts)

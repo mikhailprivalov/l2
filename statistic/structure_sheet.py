@@ -1,11 +1,10 @@
-from openpyxl.utils.cell import get_column_letter
 from collections import OrderedDict
-from openpyxl.styles import PatternFill, Border, Side, Alignment, Font, NamedStyle, Color, Fill, colors
+
 import openpyxl
+from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
+from openpyxl.utils.cell import get_column_letter
+
 from directions.models import IstochnikiFinansirovaniya
-from datetime import  timedelta
-from laboratory import utils
-from copy import deepcopy, copy
 
 month_dict = {1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Май', 6: 'Июнь', 7: 'Июль', 8: 'Август',
               9: 'Сентябрь',
@@ -73,16 +72,16 @@ def passed_research_base(ws1, data_date):
     # габариты ячеек
     ws1.row_dimensions[2].height = 115
     columns = [
-    ('№ п/п', 5), ('Время поступления', 8),
-    ('Услуга (дата-время подтверждения)', 14), ('Направление', 11),
-    ('Фамилия, имя, отчество больного', 20), ('Дата рождения', 10),
-    ('Постоянное место жительства или адрес родственников, близких и N телефона', 23),('Каким учреждением был направлен или доставлен', 15),
-    ('Отделение, в которое помещен больной', 12),('N карты (стационарного) больного', 10),
-    ('Диагноз направившего учреждения', 7),('Диагноз при поступлении', 7),
-    ('№ ДДУ', 16),('Полис', 21),
-    ('Примечания', 10),('Выписан, переведен в другой стационар, умер (вписать и указать дату и название стационара, куда переведен', 20),
-    ('Отметка о сообщении родственникам или учреждению', 11),('Если не был госпитализирован указать причину и принятые меры', 11),
-    ('отказ в приеме первичный, повторный (вписать)', 11)
+        ('№ п/п', 5), ('Время поступления', 8),
+        ('Услуга (дата-время подтверждения)', 14), ('Направление', 11),
+        ('Фамилия, имя, отчество больного', 20), ('Дата рождения', 10),
+        ('Постоянное место жительства или адрес родственников, близких и N телефона', 23), ('Каким учреждением был направлен или доставлен', 15),
+        ('Отделение, в которое помещен больной', 12), ('N карты (стационарного) больного', 10),
+        ('Диагноз направившего учреждения', 7), ('Диагноз при поступлении', 7),
+        ('№ ДДУ', 16), ('Полис', 21),
+        ('Примечания', 10), ('Выписан, переведен в другой стационар, умер (вписать и указать дату и название стационара, куда переведен', 20),
+        ('Отметка о сообщении родственникам или учреждению', 11), ('Если не был госпитализирован указать причину и принятые меры', 11),
+        ('отказ в приеме первичный, повторный (вписать)', 11)
     ]
 
     for idx, column in enumerate(columns, 1):
@@ -178,15 +177,15 @@ def statistics_tickets_base(ws1, i_obj, type_fin, d1, d2, style_border, style_o)
     """
 
     columns = [
-        ('Дата',13), ('Кол-во', 7),
-        ('Услуга',15), ('Соисполнитель', 9),
-        ('ФИО пациента,\n№ направления',31), ('Дата рождения', 13),
-        ('№ карты',12), ('Данные полиса', 27),
-        ('Код услуги',16), ('Услуга \n (ует/мин)', 12),
-        ('Время \n подтверждения',18), ('Онкоподозрение', 13),
-        ('Первичный прием',12), ('Цель \n посещения\n(код)е', 13),
-        ('Диагноз \n МКБ',13), ('Впервые', 13),
-        ('Результат \n обращения \n(код)',13), ('Исход(код)', 13)
+        ('Дата', 13), ('Кол-во', 7),
+        ('Услуга', 15), ('Соисполнитель', 9),
+        ('ФИО пациента,\n№ направления', 31), ('Дата рождения', 13),
+        ('№ карты', 12), ('Данные полиса', 27),
+        ('Код услуги', 16), ('Услуга \n (ует/мин)', 12),
+        ('Время \n подтверждения', 18), ('Онкоподозрение', 13),
+        ('Первичный прием', 12), ('Цель \n посещения\n(код)е', 13),
+        ('Диагноз \n МКБ', 13), ('Впервые', 13),
+        ('Результат \n обращения \n(код)', 13), ('Исход(код)', 13)
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=7, column=idx).value = column[0]
@@ -217,7 +216,7 @@ def statistics_tickets_base(ws1, i_obj, type_fin, d1, d2, style_border, style_o)
 
 
 def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
-    #i_obj - обеъект доктор
+    # i_obj - обеъект доктор
 
     my_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094',
                                                 end_color='a9d094')
@@ -227,7 +226,7 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
     r = 7
     r1 = r + 1
     total_sum = []
-    one_days = timedelta(1)
+    # one_days = timedelta(1)
     current_date = ''
     for issled in issl_obj:
         # Порядок колонок в issled:
@@ -237,10 +236,10 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         # time_confirm, maybe_onco, purpose, diagnos, iss_result, \
         # outcome, card_number, client_family, client_name, client_patronymic, \
         # birthday
-        empty =' '
-        current_datetime_confirm = issled[13]
+        empty = ' '
+        # current_datetime_confirm = issled[13]
         current_date = issled[14]
-        current_count = 1
+        # current_count = 1
         current_research_title = issled[0]
         f = issled[22] or empty
         n = issled[23] or empty
@@ -267,15 +266,15 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         current_firsttime = issled[5]
         current_result = issled[19]
         current_octome = issled[20]
-        current_price = ''
+        # current_price = ''
 
         if r != 7 and r != 8:
             befor_date = ws1.cell(row=r, column=1).value
             if current_date != befor_date and not (ws1.cell(row=r, column=1).value).istitle():
                 r = r + 1
-                ws1.cell(row=r, column=1).value = 'Итого за ' +  befor_date[:2]
-                ws1.cell(row=r, column=2).value = f'=SUM(B{r1}:B{r-1})'
-                ws1.cell(row=r, column=10).value = f'=SUM(J{r1}:J{r-1})'
+                ws1.cell(row=r, column=1).value = 'Итого за ' + befor_date[:2]
+                ws1.cell(row=r, column=2).value = f'=SUM(B{r1}:B{r - 1})'
+                ws1.cell(row=r, column=10).value = f'=SUM(J{r1}:J{r - 1})'
 
                 total_sum.append(r)
                 ws1.row_dimensions.group(r1, r - 1, hidden=True)
@@ -332,8 +331,8 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
 
     r = r + 1
     ws1.cell(row=r, column=1).value = 'Итого за ' + current_date[:2]
-    ws1.cell(row=r, column=2).value = f'=SUM(B{r1}:B{r-1})'
-    ws1.cell(row=r, column=10).value = f'=SUM(J{r1}:J{r-1})'
+    ws1.cell(row=r, column=2).value = f'=SUM(B{r1}:B{r - 1})'
+    ws1.cell(row=r, column=10).value = f'=SUM(J{r1}:J{r - 1})'
     ws1.row_dimensions.group(r1, r - 1, hidden=True)
     total_sum.append(r)
     rows = ws1[f'A{r}:V{r}']
@@ -406,13 +405,13 @@ def statistic_research_base(ws1, d1, d2, research_titile):
     ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
 
     columns = [
-        ('Исполнитель',26),('Направление, за дату',15),
-        ('Дата подтверждения',16.5),('Время подтверждения',16.5),
-        ('Источник',10),('Цена',10),
-        ('Кол-во',7),('Скидка',7.5),
-        ('Сумма',14),('Физлицо',26),
-        ('Дата рождения',12),('Возраст',8),
-        ('Карта',15)
+        ('Исполнитель', 26), ('Направление, за дату', 15),
+        ('Дата подтверждения', 16.5), ('Время подтверждения', 16.5),
+        ('Источник', 10), ('Цена', 10),
+        ('Кол-во', 7), ('Скидка', 7.5),
+        ('Сумма', 14), ('Физлицо', 26),
+        ('Дата рождения', 12), ('Возраст', 8),
+        ('Карта', 15)
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]

@@ -16,3 +16,6 @@ makemigrations:
 
 migrate:
 	python3 manage.py migrate
+
+up:
+	/bin/bash update-version.sh

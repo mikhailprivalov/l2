@@ -1,7 +1,9 @@
 import math
-from django.db import models
-import directory.models as directory_models
 import uuid
+
+from django.db import models
+
+import directory.models as directory_models
 
 
 class Application(models.Model):
@@ -16,15 +18,19 @@ class Application(models.Model):
     PLACES = (
         (PLACES_FRACTION, 'Брать из RelationFractionASTM.signs_after_point'),
         (PLACES_APP, 'Брать из Application.decimal_places'),
-        (PLACES_BOTH_MIN, 'Брать минимальное между RelationFractionASTM.signs_after_point и Application.decimal_places'),
-        (PLACES_BOTH_MAX, 'Брать максимальное между RelationFractionASTM.signs_after_point и Application.decimal_places'),
+        (
+            PLACES_BOTH_MIN, 'Брать минимальное между RelationFractionASTM.signs_after_point и Application.decimal_places'),
+        (PLACES_BOTH_MAX,
+         'Брать максимальное между RelationFractionASTM.signs_after_point и Application.decimal_places'),
         (PLACES_AS_IS, 'Не модифицировать'),
     )
 
-    key = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
+    key = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически",
+                           db_index=True)
     name = models.CharField(max_length=255, help_text="Название приложения")
     active = models.BooleanField(default=True, help_text="Флаг активности")
-    direction_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами направлений")
+    direction_work = models.BooleanField(default=False,
+                                         help_text="Работа с номерами, пришедшими с анализатора как с номерами направлений")
     decimal_places = models.PositiveIntegerField(default=4)
     places_type = models.CharField(max_length=10, default=PLACES_FRACTION, choices=PLACES)
     is_superuser = False
@@ -34,14 +40,15 @@ class Application(models.Model):
             return str(round(value))
         if self.places_type != Application.PLACES_AS_IS:
             if self.places_type == Application.PLACES_FRACTION and rel.signs_after_point:
-                return f'{value:.{rel.signs_after_point}f}'
-            elif self.places_type == Application.PLACES_APP or\
-                    (self.places_type == Application.PLACES_FRACTION and not rel.signs_after_point):
-                return f'{value:.{self.decimal_places}f}'
+                return f'{value:.{rel.signs_after_point}f}'.rstrip('0').rstrip('.')
+            elif self.places_type == Application.PLACES_APP or (self.places_type == Application.PLACES_FRACTION and not rel.signs_after_point):
+                return f'{value:.{self.decimal_places}f}'.rstrip('0').rstrip('.')
             elif self.places_type == Application.PLACES_BOTH_MIN:
-                return f'{value:.{min(self.decimal_places, rel.signs_after_point or self.decimal_places)}f}'
+                return f'{value:.{min(self.decimal_places, rel.signs_after_point or self.decimal_places)}f}'.rstrip(
+                    '0').rstrip('.')
             elif self.places_type == Application.PLACES_BOTH_MAX:
-                return f'{value:.{max(self.decimal_places, rel.signs_after_point or self.decimal_places)}f}'
+                return f'{value:.{max(self.decimal_places, rel.signs_after_point or self.decimal_places)}f}'.rstrip(
+                    '0').rstrip('.')
         return value
 
     @property
@@ -87,19 +94,22 @@ class RelationFractionASTM(models.Model):
     """
     Модель соответствия фракций из ASTM для LIS
     """
-    MULTIPLIERS = ((0, 1), (1, 10), (2, 100), (3, 1000), (4, 1.9), (5, 2.2), (6, 2.5), (7, 0.1), (8, 0.01),(9,0.001))
+    MULTIPLIERS = ((0, 1), (1, 10), (2, 100), (3, 1000), (4, 1.9), (5, 2.2), (6, 2.5), (7, 0.1), (8, 0.01), (9, 0.001))
     astm_field = models.CharField(max_length=127, help_text="ASTM-поле", db_index=True)
     fraction = models.ForeignKey(directory_models.Fractions, help_text="Фракция", on_delete=models.CASCADE)
     multiplier = models.IntegerField(choices=MULTIPLIERS, default=0, help_text="Множитель результата")
-    default_ref = models.ForeignKey(directory_models.References, help_text="Референс для сохранения через API", default=None, blank=True, null=True, on_delete=models.CASCADE)
+    default_ref = models.ForeignKey(directory_models.References, help_text="Референс для сохранения через API",
+                                    default=None, blank=True, null=True, on_delete=models.CASCADE)
     full_round = models.BooleanField(default=False, blank=True, help_text="Округлять весь результат?")
     analyzer = models.ManyToManyField('api.Analyzer', help_text="Анализаторы", blank=True, default=None)
     application_api = models.ManyToManyField('api.Application', help_text="Приложение API", blank=True, default=None)
     is_code = models.BooleanField(default=False, help_text="astm_field - это код (id)?")
-    signs_after_point = models.IntegerField(default=None, null=True, blank=True, help_text="Количество знаков после запятой")
+    signs_after_point = models.IntegerField(default=None, null=True, blank=True,
+                                            help_text="Количество знаков после запятой")
 
     def __str__(self):
-        return self.astm_field + " to \"" + self.fraction.research.title + "." + self.fraction.title + "\" x " + str(self.get_multiplier_display())
+        return self.astm_field + " to \"" + self.fraction.research.title + "." + self.fraction.title + "\" x " + str(
+            self.get_multiplier_display())
 
     class Meta:
         verbose_name = 'Связь ASTM и фракций'

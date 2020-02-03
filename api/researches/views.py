@@ -1,19 +1,19 @@
 from collections import defaultdict
 
+import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
-import simplejson as json
 
-from researches.models import Tubes
-from slog.models import Log
 import users.models as users
 from directory.models import Researches as DResearches, AutoAdd, ParaclinicInputGroups, Fractions, \
     ParaclinicTemplateName, ParaclinicInputField, ParaclinicTemplateField, HospitalService
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
+from researches.models import Tubes
+from slog.models import Log
 
 
 class ResearchesTemplates(View):
@@ -22,9 +22,9 @@ class ResearchesTemplates(View):
 
         templates = []
         for t in users.AssignmentTemplates.objects.filter(global_template=True) \
-                .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
-                        Q(doc=request.user.doctorprofile) |
-                        Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
+            .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
+                    Q(doc=request.user.doctorprofile) |
+                    Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
             templates.append({"values": [x.research_id for x in users.AssignmentResearches.objects.filter(template=t)],
                               "pk": t.pk,
                               "title": t.title,
@@ -42,8 +42,7 @@ class Researches(View):
         tubes = []
         deps = defaultdict(list)
 
-        for r in DResearches.objects.filter(hide=False).order_by("title")\
-                .exclude(pk__in=[x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]):
+        for r in DResearches.objects.filter(hide=False).order_by("title").exclude(pk__in=[x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]):
             autoadd = [x.b_id for x in AutoAdd.objects.filter(a=r)]
             addto = [x.a_id for x in AutoAdd.objects.filter(b=r)]
 

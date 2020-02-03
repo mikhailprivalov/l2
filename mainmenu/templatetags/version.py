@@ -1,8 +1,11 @@
-from django import template
-import time
 import os
-#import lis
+import time
+
+from django import template
+
+
 register = template.Library()
+
 
 @register.simple_tag
 def version_date():

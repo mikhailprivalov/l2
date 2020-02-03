@@ -1,8 +1,10 @@
+import socket
+from functools import reduce
+
 from orthanc_rest_client import Orthanc
+
 from directions.models import Issledovaniya
 from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_PORT, DICOM_ADDRESS
-from functools import reduce
-import socket
 
 
 def sum(x, y):

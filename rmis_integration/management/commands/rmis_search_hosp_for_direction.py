@@ -1,7 +1,8 @@
-from django.core.management import BaseCommand
-from rmis_integration.client import Client as RC
-import directions.models as directions
 import simplejson as json
+from django.core.management import BaseCommand
+
+import directions.models as directions
+from rmis_integration.client import Client as RC
 
 
 class Command(BaseCommand):

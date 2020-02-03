@@ -1,12 +1,13 @@
 from django.contrib import admin
+from django.db import models as dbmodels
+from django.forms import TextInput
 
 import forms.models as models
-from django.forms import TextInput, Textarea
-from django.db import models as dbmodels
+
 
 class ResFormsList(admin.ModelAdmin):
     list_filter = ('is_active',)
-    list_display = ('title','is_active','comment',)
+    list_display = ('title', 'is_active', 'comment',)
     list_display_links = ('title',)
     search_fields = ('comment',)
 
@@ -15,5 +16,4 @@ class ResFormsList(admin.ModelAdmin):
     }
 
 
-admin.site.register(models.FormsList,ResFormsList)
-
+admin.site.register(models.FormsList, ResFormsList)

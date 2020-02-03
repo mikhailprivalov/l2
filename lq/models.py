@@ -1,11 +1,12 @@
 from django.db import models
 from django.utils import timezone
+
 from users.models import DoctorProfile
 
 
 class WindowL2(models.Model):
-    title = models.CharField(max_length=511,unique=True, help_text='Наименование экрана для очередей',db_index=True)
-    active_status = models.BooleanField(default=True, help_text='Статус активности',db_index=True)
+    title = models.CharField(max_length=511, unique=True, help_text='Наименование экрана для очередей', db_index=True)
+    active_status = models.BooleanField(default=True, help_text='Статус активности', db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
@@ -16,10 +17,10 @@ class WindowL2(models.Model):
 
 
 class ResourceL2(models.Model):
-    title = models.CharField(max_length=511, unique=True, help_text='Наименование ресурса-очереди',db_index=True)
-    short_title = models.CharField(max_length=255, default='', help_text='Короткое наименование очереди',db_index=True)
+    title = models.CharField(max_length=511, unique=True, help_text='Наименование ресурса-очереди', db_index=True)
+    short_title = models.CharField(max_length=255, default='', help_text='Короткое наименование очереди', db_index=True)
     windows_obj = models.ForeignKey(WindowL2, blank=False, null=False, db_index=True, on_delete=models.CASCADE)
-    letter = models.CharField(max_length=511, help_text='Буквы для счетчика, через запятую',db_index=True)
+    letter = models.CharField(max_length=511, help_text='Буквы для счетчика, через запятую', db_index=True)
     max_number = models.SmallIntegerField(default=0, help_text='Максимальное число для буквы')
     disable = models.BooleanField(default=False, blank=True, help_text='Отключить очередь?')
 
@@ -35,8 +36,8 @@ class ResourceL2(models.Model):
 
 
 class VoiceDo(models.Model):
-    title = models.CharField(max_length=511, unique=True, help_text='Ресурс озвучки для очередей',db_index=True)
-    resource = models.ManyToManyField(ResourceL2, help_text='Очередь' )
+    title = models.CharField(max_length=511, unique=True, help_text='Ресурс озвучки для очередей', db_index=True)
+    resource = models.ManyToManyField(ResourceL2, help_text='Очередь')
 
     def __str__(self):
         return "{}".format(self.title)
@@ -45,15 +46,16 @@ class VoiceDo(models.Model):
         verbose_name = 'Звуковой ресуры'
         verbose_name_plural = 'Звуковые ресурсы'
 
+
 class StatusQueueL2(models.Model):
     STATUS_GET = 0
     STATUS_USED = 1
     STATUS_NOW = 2
 
     STATUS_TALON = (
-        (STATUS_GET,  "Получен пациентом"),
+        (STATUS_GET, "Получен пациентом"),
         (STATUS_USED, "Вызван"),
-        (STATUS_NOW,  "Озвучить"),
+        (STATUS_NOW, "Озвучить"),
     )
 
     queue_l2 = models.ForeignKey(ResourceL2, on_delete=models.DO_NOTHING, db_index=True)
@@ -75,10 +77,8 @@ class StatusQueueL2(models.Model):
     def next_talon_num(queue_resource):
         obj_resource = ResourceL2.objects.filter(pk=queue_resource).first()
         let_num = obj_resource.get_letter()
-        last_talon = StatusQueueL2.objects.values_list('talon_letter','talon_number').filter(queue_l2=obj_resource).order_by("-date_get").first()
+        last_talon = StatusQueueL2.objects.values_list('talon_letter', 'talon_number').filter(queue_l2=obj_resource).order_by("-date_get").first()
         print(last_talon)
-        n = 0
-        l = ''
         num_last = 0
         let_last = ''
         if last_talon:
@@ -89,14 +89,12 @@ class StatusQueueL2(models.Model):
         if num_last == let_num[1]:
             n = 1
             if let_last == let_list[-1]:
-                l = let_list[0]
+                ll = let_list[0]
             else:
                 index = let_list.index(let_last)
-                l = let_list[index+1]
+                ll = let_list[index + 1]
         else:
             n = num_last + 1
-            l = let_last
+            ll = let_last
 
-        return (l,n)
-
-
+        return ll, n

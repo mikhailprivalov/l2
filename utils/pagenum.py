@@ -1,9 +1,12 @@
-from reportlab.pdfgen import canvas
+import os.path
+
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
+
 from laboratory.settings import FONTS_FOLDER
-import os.path
+
 
 class PageNumCanvas(canvas.Canvas):
     """

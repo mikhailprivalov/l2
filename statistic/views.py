@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import deepcopy
 
 import pytz
 import simplejson as json
@@ -12,18 +13,15 @@ from django.views.decorators.csrf import csrf_exempt
 import directory.models as directory
 import slog.models as slog
 from clients.models import CardBase
-from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
+from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, \
+    ParaclinicResult
 from directory.models import Researches
 from laboratory import settings
+from laboratory import utils
 from researches.models import Tubes
-from statistics_tickets.models import StatisticsTicket
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
-from copy import deepcopy
-
-# from ratelimit.decorators import ratelimit
 from utils.dates import try_parse_range
-from laboratory import utils
 from . import sql_func
 from . import structure_sheet
 
@@ -48,11 +46,11 @@ def statistic_page(request):
                                               "statistics_tickets_users": json.dumps(
                                                   [{"pk": -1, "fio": 'Пользователь не выбран'},
                                                    *[{"pk": str(x.pk), "fio": str(x)} for x in
-                                                   statistics_tickets_users]]),
+                                                     statistics_tickets_users]]),
                                               "statistics_tickets_deps": json.dumps(
                                                   [{"pk": -1, "title": 'Подразделение не выбрано'},
                                                    *[{"pk": str(x.pk), "title": x.title} for x in
-                                                    statistics_tickets_deps]]),
+                                                     statistics_tickets_deps]]),
                                               "statistics_researches_res": json.dumps(
                                                   [{"pk": -1, "title": 'Услуга не выбрана'},
                                                    *[{"pk": str(x.pk), "title": x.title} for x in
@@ -69,7 +67,7 @@ def statistic_xls(request):
     import xlwt
     import openpyxl
     import datetime
-    from collections import  OrderedDict
+    from collections import OrderedDict
 
     wb = xlwt.Workbook(encoding='utf-8')
     response = HttpResponse(content_type='application/ms-excel')
@@ -101,7 +99,6 @@ def statistic_xls(request):
 
     # Отчет по динамике анализов
     if tp == "directions_list_dynamic":
-        from collections import OrderedDict
         pk = json.loads(pk)
         dn = Napravleniya.objects.filter(pk__in=pk)
         cards = {}
@@ -112,7 +109,7 @@ def statistic_xls(request):
         one_param = "one_param"
 
         for d in dn:
-            if d.department()==None or d.department().p_type != 2:
+            if d.department() is None or d.department().p_type != 2:
                 continue
             c = d.client
             napr_client.add(c.pk)
@@ -162,7 +159,7 @@ def statistic_xls(request):
                                            directory.Fractions.objects.values_list('pk', 'title', 'units').filter(
                                                research=i.research).order_by("sort_weight")})
 
-                if depart_fraction.get(department_id) != None:
+                if depart_fraction.get(department_id) is not None:
                     if len(dict_research_fraction.keys()) == 1:
                         one_param_temp = depart_fraction[department_id][one_param]
                         one_param_temp.update(dict_research_fraction)
@@ -177,8 +174,8 @@ def statistic_xls(request):
                         depart_fraction[department_id].update({research_iss: dict_research_fraction})
                         depart_fraction[department_id].update({one_param: {}})
 
-    # Все возможные анализы в направлениях - стр-ра А
-    # направления по лабораториям (тип лаборатории, [номера направлений])
+        # Все возможные анализы в направлениях - стр-ра А
+        # направления по лабораториям (тип лаборатории, [номера направлений])
         obj = []
         for type_lab, l_napr in depart_napr.items():
             a = ([[p, r, n, datetime.datetime.strftime(utils.localtime(t), "%d.%m.%y")] for p, r, n, t in
@@ -216,7 +213,7 @@ def statistic_xls(request):
 
                 # Строим стр-ру {id-анализа:{(направление, дата,):{id-фракции:результат,id-фракции:результат}}}
                 # one_param - это анализы у которых несколько параметров-фракции (ОАК, ОАМ)
-                if (iss_id != 'one_param') or (iss_id != '') or (iss_id != None):
+                if iss_id != 'one_param' or iss_id != '' or iss_id is not None:
                     for d in finish_obj:
                         tmp_dict = {}
                         if iss_id == d[0]:
@@ -280,7 +277,6 @@ def statistic_xls(request):
                     col_num += 1
                 row_num += 1
             row_num += 1
-
 
     if tp == "directions_list":
         pk = json.loads(pk)
@@ -365,7 +361,6 @@ def statistic_xls(request):
                     row_num += 1
                     row = []
 
-
     if tp == "statistics-visits":
         date_start, date_end = try_parse_range(date_start_o, date_end_o)
         t = request.GET.get("t", "sum")
@@ -423,8 +418,7 @@ def statistic_xls(request):
             row_num += 1
             iss = {}
             for d in dirs:
-                for i in Issledovaniya.objects.filter(napravleniye=d).order_by("research__title").order_by(
-                        "napravleniye__istochnik_f"):
+                for i in Issledovaniya.objects.filter(napravleniye=d).order_by("research__title").order_by("napravleniye__istochnik_f"):
                     rt = i.research.title
                     istf = i.napravleniye.istochnik_f.base.title + " - " + i.napravleniye.istochnik_f.title
                     if rt not in iss:
@@ -525,7 +519,7 @@ def statistic_xls(request):
             month_obj = int(data_date['month']) + 1
             _, num_days = calendar.monthrange(int(data_date['year']), month_obj)
             d1 = datetime.date(int(data_date['year']), month_obj, 1)
-            d2 = datetime.date(int(data_date['year']),month_obj, num_days)
+            d2 = datetime.date(int(data_date['year']), month_obj, num_days)
 
         type_fin = request_data.get("fin")
         title_fin = IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
@@ -549,7 +543,7 @@ def statistic_xls(request):
 
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
-        #Проверить, что роль у объекта Врач-Лаборант, или Лаборант, или Врач параклиники, или Лечащий врач
+        # Проверить, что роль у объекта Врач-Лаборант, или Лаборант, или Врач параклиники, или Лечащий врач
         if us_o:
             for i in us_o:
                 if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
@@ -647,7 +641,7 @@ def statistic_xls(request):
             month_obj = int(data_date['month']) + 1
             _, num_days = calendar.monthrange(int(data_date['year']), month_obj)
             d1 = datetime.date(int(data_date['year']), month_obj, 1)
-            d2 = datetime.date(int(data_date['year']),month_obj, num_days)
+            d2 = datetime.date(int(data_date['year']), month_obj, num_days)
 
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
@@ -798,7 +792,7 @@ def statistic_xls(request):
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate(
             "attachment; filename=\"Статистика_Лаборатория_{}_{}-{}.xls\"".format(lab.title.replace(" ", "_"),
-                                                                                date_start_o, date_end_o), tr)
+                                                                                  date_start_o, date_end_o), tr)
 
         import directions.models as d
         from operator import itemgetter
@@ -907,9 +901,8 @@ def statistic_xls(request):
                 otd_local_keys = [x for x in otds.keys() if isinstance(x, int)]
                 otd_external_keys = [int(x.replace("external-", "")) for x in otds.keys() if
                                      isinstance(x, str) and "external-" in x]
-                for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(
-                        Podrazdeleniya.objects.filter(pk__in=[x for x in otd_local_keys if x != pki])) + list(
-                    RMISOrgs.objects.filter(pk__in=otd_external_keys)):
+                for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(Podrazdeleniya.objects.filter(pk__in=[x for x in otd_local_keys if x != pki])) + list(
+                        RMISOrgs.objects.filter(pk__in=otd_external_keys)):
                     row_num += 2
                     row = [
                         otdd.title if otdd.pk != pki else "Сумма по всем отделениям",
@@ -974,9 +967,8 @@ def statistic_xls(request):
                 otd_external_keys = [int(x.replace("external-", "")) for x in otds_pat.keys() if
                                      isinstance(x, str) and "external-" in x]
 
-                for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(
-                        Podrazdeleniya.objects.filter(pk__in=[x for x in otd_local_keys if x != pki])) + list(
-                    RMISOrgs.objects.filter(pk__in=otd_external_keys)):
+                for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(Podrazdeleniya.objects.filter(pk__in=[x for x in otd_local_keys if x != pki])) + list(
+                        RMISOrgs.objects.filter(pk__in=otd_external_keys)):
                     row_num += 2
                     row = [
                         otdd.title,
@@ -1030,8 +1022,7 @@ def statistic_xls(request):
             return v + ("" if len(v) > 19 else "\n")
 
         for executor in DoctorProfile.objects.filter(user__groups__name__in=("Врач-лаборант", "Лаборант"),
-                                                     podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by(
-            "fio").distinct():
+                                                     podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by("fio").distinct():
 
             cnt_itogo = {}
             ws = wb.add_sheet(executor.get_fio(dots=False) + " " + str(executor.pk))
@@ -1108,7 +1099,7 @@ def statistic_xls(request):
         otd = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate(
             "attachment; filename=\"Статистика_Отделение_{0}_{1}-{2}.xls\"".format(otd.title.replace(" ", "_"),
-                                                                                 date_start_o, date_end_o), tr)
+                                                                                   date_start_o, date_end_o), tr)
 
         ws = wb.add_sheet("Выписано направлений")
 
@@ -1186,7 +1177,7 @@ def statistic_xls(request):
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate(
             "attachment; filename=\"Статистика_Принято_емкостей_{0}_{1}-{2}.xls\"".format(lab.title.replace(" ", "_"),
-                                                                                        date_start_o, date_end_o), tr)
+                                                                                          date_start_o, date_end_o), tr)
 
         import directions.models as d
         from operator import itemgetter
@@ -1230,8 +1221,7 @@ def statistic_xls(request):
             ws.col(col_num).width = row[col_num][1]
         row_num += 1
 
-        for tube in directory.Tubes.objects.filter(
-                releationsft__fractions__research__podrazdeleniye=lab).distinct().order_by("title"):
+        for tube in directory.Tubes.objects.filter(releationsft__fractions__research__podrazdeleniye=lab).distinct().order_by("title"):
             row = [
                 tube.title
             ]

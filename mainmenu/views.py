@@ -1,30 +1,31 @@
-from collections import defaultdict
-
 import datetime
 import re
+from collections import defaultdict
 
-from django.db import IntegrityError
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+import simplejson as json
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
+from django.db import IntegrityError
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render
 from django.utils import dateformat
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
+import directory.models as directory
+import podrazdeleniya.models as pod
+import slog.models as slog
 from appconf.manager import SettingManager
 from clients.models import CardBase
+from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya
 from laboratory import settings
+from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
+from podrazdeleniya.models import Podrazdeleniya
+from researches.models import Tubes
 from rmis_integration.client import Client
 from users.models import DoctorProfile
-from podrazdeleniya.models import Podrazdeleniya
-from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya
-from django.views.decorators.csrf import csrf_exempt
-from researches.models import Tubes
-from laboratory.decorators import group_required
-import slog.models as slog
-from django.http import HttpResponse, JsonResponse
-import simplejson as json
-import directory.models as directory
 from utils.dates import try_parse_range
 
 
@@ -120,9 +121,6 @@ def update_pass(request):
     return JsonResponse({"ok": False})
 
 
-from django.utils import timezone
-
-
 @csrf_exempt
 @login_required
 @group_required("Просмотр журнала")
@@ -214,9 +212,8 @@ def confirm_reset(request):
                     time.mktime(timezone.localtime(iss.time_confirmation).timetuple())))
             ctime = int(time.time())
             cdid = iss.doc_confirmation_id or -1
-            if (ctime - ctp < SettingManager.get(
-                    "lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                str(x) for x in request.user.groups.all()]:
+            if (ctime - ctp < SettingManager.get("lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) \
+                    or request.user.is_superuser or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]:
                 predoc = {"fio": 'не подтверждено' if cdid == -1 else iss.doc_confirmation.get_fio(),
                           "pk": cdid,
                           "direction": iss.napravleniye_id}
@@ -393,9 +390,6 @@ def discharge(request):
                                                         "users": json.dumps(users)})
 
 
-import podrazdeleniya.models as pod
-
-
 @csrf_exempt
 @login_required
 @group_required("Лечащий врач", "Загрузка выписок")
@@ -469,8 +463,7 @@ def discharge_search(request):
 
         if query.isdigit():
             filter_type = "card_number"
-        elif bool(re.compile(r'^([a-zA-Zа-яА-Я]+)( [a-zA-Zа-яА-Я]+)?( [a-zA-Zа-яА-Я]+)?( \d{2}\.\d{2}\.\d{4})?$').match(
-                query)):
+        elif bool(re.compile(r'^([a-zA-Zа-яА-Я]+)( [a-zA-Zа-яА-Я]+)?( [a-zA-Zа-яА-Я]+)?( \d{2}\.\d{2}\.\d{4})?$').match(query)):
             filter_type = "fio"
             split = query.split()
             if len(split) > 0:
@@ -502,18 +495,20 @@ def discharge_search(request):
             rows = rows.filter(client_cardnum=int(query))
         import os
         for row in rows.order_by("-created_at"):
-            r["rows"].append({"date": str(dateformat.format(row.created_at.date(), settings.DATE_FORMAT)),
-                              "client": {
-                                  "surname": row.client_surname,
-                                  "name": row.client_name,
-                                  "patronymic": row.client_patronymic,
-                                  "sex": row.client_sex,
-                                  "birthday": row.client_birthday
-                              },
-                              "otd": row.otd.title,
-                              "doc_fio": row.doc_fio,
-                              "filename": os.path.basename(row.file.name),
-                              "fileurl": row.file.url})
+            r["rows"].append({
+                "date": str(dateformat.format(row.created_at.date(), settings.DATE_FORMAT)),
+                "client": {
+                    "surname": row.client_surname,
+                    "name": row.client_name,
+                    "patronymic": row.client_patronymic,
+                    "sex": row.client_sex,
+                    "birthday": row.client_birthday
+                },
+                "otd": row.otd.title,
+                "doc_fio": row.doc_fio,
+                "filename": os.path.basename(row.file.name),
+                "fileurl": row.file.url,
+            })
 
     return JsonResponse(r)
 
@@ -569,8 +564,7 @@ def dashboard_from(request):
     try:
         date_start, date_end = try_parse_range(date_start, date_end)
         if request.GET.get("get_labs", "false") == "true":
-            for lab in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(
-                    title="Внешние организации"):
+            for lab in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации"):
                 tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye__p_type=Podrazdeleniya.DEPARTMENT,
                                                               time_get__range=(date_start, date_end),
                                                               issledovaniya__research__podrazdeleniye=lab)
@@ -632,9 +626,8 @@ def users_dosync(request):
     resp = json.loads(c.response_to_json())
     i = 0
     for ldap_user in resp["entries"]:
-        if "uidNumber" not in ldap_user["attributes"].keys() or "uid" not in ldap_user[
-            "attributes"].keys() or "userPassword" not in ldap_user["attributes"].keys() or "displayName" not in \
-                ldap_user["attributes"].keys():
+        if "uidNumber" not in ldap_user["attributes"].keys() or \
+                "uid" not in ldap_user["attributes"].keys() or "userPassword" not in ldap_user["attributes"].keys() or "displayName" not in ldap_user["attributes"].keys():
             continue
 
         if Podrazdeleniya.objects.filter(gid_n=int(ldap_user["attributes"]["gidNumber"])).exists():

@@ -1,14 +1,15 @@
+from collections import defaultdict
+
+import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir
+from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, \
+    hosp_get_hosp_direction, hosp_get_text_iss
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import HospitalService
 from laboratory.decorators import group_required
-import simplejson as json
-
-from laboratory.utils import strdate
 
 
 @login_required
@@ -41,6 +42,18 @@ def load(request):
                 "card_pk": card.pk,
                 "individual_pk": card.individual_id,
             },
+            "tree": list(filter(
+                lambda d: not d["cancel"],
+                map(
+                    lambda dirc: {
+                        **dirc,
+                        "research_title": dirc["research_title"].replace("отделение", "отд.").replace("Отделение", "Отд."),
+                        "isCurrent": int(dirc["direction"]) == pk,
+                        "cancel": Napravleniya.objects.get(pk=dirc["direction"]).cancel,
+                    },
+                    hosp_get_hosp_direction(pk)
+                )
+            ))
         }
         break
     return JsonResponse(result)
@@ -51,9 +64,24 @@ def load(request):
 def counts(request):
     data = json.loads(request.body)
     pk = int(data["direction"])
-    result = {}
-    for i in Issledovaniya.objects.filter(napravleniye__pk=pk, research__is_hospital=True):
-        by_keys = {}
+    every = data.get("every", False)
+    result = defaultdict(int)
+
+    if every:
+        hosps = list(
+            map(
+                lambda d: d["direction"],
+                filter(
+                    lambda d: not Napravleniya.objects.get(pk=d["direction"]).cancel,
+                    hosp_get_hosp_direction(pk)
+                )
+            )
+        )
+        result["all"] += 1
+    else:
+        hosps = [pk]
+
+    for i in Issledovaniya.objects.filter(napravleniye__pk__in=hosps, research__is_hospital=True).distinct():
         for k in HospitalService.TYPES_BY_KEYS:
             hss = HospitalService.objects.filter(
                 main_research=i.research,
@@ -63,18 +91,15 @@ def counts(request):
                 parent=i,
                 issledovaniya__research__in=[x.slave_research for x in hss]
             ).distinct()
-            by_keys[k] = nested.count()
-        result = {
-            "laboratory": Napravleniya.objects.filter(parent=i,
-                                                      issledovaniya__research__podrazdeleniye__p_type=2).distinct().count(),
-            "paraclinical": Napravleniya.objects.filter(parent=i,
-                                                        issledovaniya__research__is_paraclinic=True).distinct().count(),
-            "consultation": Napravleniya.objects.filter(parent=i,
-                                                        issledovaniya__research__is_doc_refferal=True).distinct().count(),
-            **by_keys,
-            "all": Napravleniya.objects.filter(parent=i).count(),
-        }
-    return JsonResponse(result)
+            result[k] += nested.count()
+        result["laboratory"] += Napravleniya.objects.filter(parent=i,
+                                                            issledovaniya__research__podrazdeleniye__p_type=2).distinct().count()
+        result["paraclinical"] += Napravleniya.objects.filter(parent=i,
+                                                              issledovaniya__research__is_paraclinic=True).distinct().count()
+        result["consultation"] += Napravleniya.objects.filter(parent=i,
+                                                              issledovaniya__research__is_doc_refferal=True).distinct().count()
+        result["all"] += Napravleniya.objects.filter(parent=i).count()
+    return JsonResponse(dict(result))
 
 
 @login_required
@@ -126,17 +151,14 @@ def directions_by_key(request):
     data = json.loads(request.body)
     base_direction_pk = int(data["direction"])
     r_type = data["r_type"]
+    every = data.get("every", False)
+    level = -1 if every else 2
     type_by_key = HospitalService.TYPES_BY_KEYS.get(r_type, -1)
     if type_by_key == -1:
-        type_service = {
-            "paraclinical": "is_paraclinic",
-            "laboratory": "is_lab",
-            "consultation": "is_doc_refferal",
-            "all": "None",
-        }.get(r_type, "None")
-        result = get_direction_attrs(base_direction_pk, type_service=type_service)
+        type_service = HospitalService.TYPES_REVERSED.get(r_type, "None")
+        result = get_direction_attrs(base_direction_pk, type_service=type_service, level=level)
     else:
-        result = get_direction_attrs(base_direction_pk, site_type=type_by_key)
+        result = get_direction_attrs(base_direction_pk, site_type=type_by_key, level=level)
     return JsonResponse({"data": list(reversed(result))})
 
 
@@ -148,3 +170,15 @@ def aggregate_laboratory(request):
     extract = data.get('extract', False)
     result = hosp_get_lab_iss(pk, extract)
     return JsonResponse(result)
+
+
+@login_required
+@group_required("Врач стационара")
+def aggregate_desc(request):
+    data = json.loads(request.body)
+    pk = data.get('pk', -1)
+    extract = data.get('extract', False)
+    r_type = data.get("r_type")
+    type_service = HospitalService.TYPES_REVERSED.get(r_type, None) if r_type != 'desc' else 'desc'
+    result = hosp_get_text_iss(pk, extract, mode=type_service)
+    return JsonResponse(result, safe=False)
