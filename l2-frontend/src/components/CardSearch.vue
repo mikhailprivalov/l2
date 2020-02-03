@@ -6,8 +6,8 @@
         {{selected_base.title}}
       </button>
       <ul class="dropdown-menu">
-        <li v-for="row in bases" :value="row.pk" v-if="!row.hide && row.pk !== selected_base.pk"><a href="#"
-                                                                                                    @click.prevent="select_base(row.pk)">{{row.title}}</a>
+        <li v-for="row in bases" :value="row.pk" v-if="!row.hide && row.pk !== selected_base.pk">
+          <a href="#" @click.prevent="select_base(row.pk)">{{row.title}}</a>
         </li>
       </ul>
     </div>

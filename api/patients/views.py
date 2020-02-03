@@ -550,7 +550,7 @@ def load_benefit(request):
 
 
 def load_dreg_detail(request):
-    a = DispensaryReg.objects.get(pk=json.loads(request.body)["pk"])
+    a = DispensaryReg.objects.get(pk=json.loads(request.body)["card_pk"])
     data = {
         "diagnos": a.diagnos + ' ' + a.illnes,
         "date_start": None if not a.date_start else a.date_start,
@@ -562,7 +562,7 @@ def load_dreg_detail(request):
 
 
 def load_benefit_detail(request):
-    pk = json.loads(request.body)["pk"]
+    pk = json.loads(request.body)["card_pk"]
     if pk > -1:
         a = BenefitReg.objects.get(pk=pk)
         data = {

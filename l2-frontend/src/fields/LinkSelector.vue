@@ -4,7 +4,8 @@
     <div class="hidden popover_content">
       <table class="table table-responsive">
         <tr v-for="row_option in options">
-          <td><a href="#" :instance_id="uuid" func="update_val" :val="row_option.key" onclick="vue_cb(this); return false">{{row_option.title}}</a></td>
+          <td><a href="#" :instance_id="uuid" func="update_val"
+                 :val="row_option.key" onclick="vue_cb(this); return false">{{row_option.title}}</a></td>
           <td v-html="row_option.about"></td>
         </tr>
       </table>

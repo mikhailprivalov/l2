@@ -144,13 +144,13 @@
                 </div>
                 <v-collapse-wrapper v-show="[0, 10, 12, 19].includes(row.field_type)">
                   <div class="header" v-collapse-toggle>
-                    <a href="#" @click.prevent v-if="row.field_type === 0">
+                    <a href="#" class="a-under" @click.prevent v-if="row.field_type === 0">
                       Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
                     </a>
-                    <a href="#" @click.prevent v-else-if="row.field_type === 19">
+                    <a href="#" class="a-under" @click.prevent v-else-if="row.field_type === 19">
                       Мин, Макс, Шаг, Единицы измерения
                     </a>
-                    <a href="#" @click.prevent v-else>
+                    <a href="#" class="a-under" @click.prevent v-else>
                       Варианты (кол-во: {{ row.values_to_input.length }})
                     </a>
                   </div>

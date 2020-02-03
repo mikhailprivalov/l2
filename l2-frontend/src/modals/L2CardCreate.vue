@@ -91,7 +91,7 @@
           <div class="info-row">
             Связь с РМИС – {{card.has_rmis_card ? 'ЕСТЬ' : 'НЕТ'}}
             <strong v-if="card.has_rmis_card">{{card.rmis_uid}}</strong>
-            <a href="#" @click.prevent="sync_rmis" tabindex="-1">синхронизировать</a>
+            <a href="#" class="a-under" @click.prevent="sync_rmis" tabindex="-1">синхронизировать</a>
           </div>
         </div>
       </div>
