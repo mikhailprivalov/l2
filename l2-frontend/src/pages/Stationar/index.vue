@@ -37,18 +37,18 @@
           <patient-card :patient="patient" class="inner-card"/>
           <div class="inner-card">
             <a href="#"
-               v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
-                   popperOptions: {
-                     modifiers: {
-                       preventOverflow: {
-                         enabled: false
-                       },
-                       hide: {
-                         enabled: false
-                       }
-                     }
-                   },
-                   interactive : true, html: '#template-anamnesis' }"
+               v-tippy="{ placement : 'right', arrow: true, reactive : true,
+                  popperOptions: {
+                    modifiers: {
+                      preventOverflow: {
+                        boundariesElement: 'window'
+                      },
+                      hide: {
+                        enabled: false
+                      }
+                    }
+                  },
+                  interactive : true, html: '#template-anamnesis' }"
                @show="load_anamnesis"
                class="a-under"
                @click.prevent="edit_anamnesis">Анамнез жизни</a>
