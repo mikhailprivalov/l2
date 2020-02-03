@@ -346,8 +346,6 @@ def form_01(request_data):
         # представитель пациента
         p_agent = None
         agent_status = ''
-        agent_fio = ''
-        agent_phone = ''
         agent = ''
         if ind_card.who_is_agent:
             p_agent = getattr(ind_card, ind_card.who_is_agent)
@@ -356,8 +354,8 @@ def form_01(request_data):
             agent_data = p_agent.get_data_individual()
             agent_fio = agent_data['fio']
             agent_phone = ','.join(agent_data['phone'])
+            agent = f"{agent_status}: {agent_fio}, тел.:{agent_phone}"
 
-        agent = f"{agent_status}: {agent_fio}, тел.:{agent_phone}"
         agent_text = [Paragraph('<u>{}</u>'.format(agent), styleRight)]
         agent_frame = Frame(27 * mm, 5 * mm, 175 * mm, 7 * mm, leftPadding=0, bottomPadding=0,
                             rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
