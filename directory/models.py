@@ -361,21 +361,22 @@ class ParaclinicInputField(models.Model):
         titles = ['']
         if self.title:
             titles.append(self.title)
-        if self.field_type == 11 and Fractions.objects.filter(pk=self.default_value).exists():
-            f = Fractions.objects.get(pk=self.default_value)
-            titles.append(f.research.title)
-            if f.title not in titles:
-                titles[-1] = titles[-1] + ' – ' + f.title
-        if self.field_type in [13, 14] and ParaclinicInputField.objects.filter(pk=self.default_value).exists():
-            f = ParaclinicInputField.objects.get(pk=self.default_value)
-            titles.append(f.group.research.title)
-            gt = f.group.title
-            if gt not in titles:
-                titles[-1] = titles[-1] + ' – ' + gt
-            ft = f.get_title(recursive=True)
-            if ft not in titles and not recursive:
-                titles[-1] = titles[-1] + ' – ' + ft
-        title = ', '.join([t for t in titles if t])
+        if self.field_type != 14:
+            if self.field_type == 11 and Fractions.objects.filter(pk=self.default_value).exists():
+                f = Fractions.objects.get(pk=self.default_value)
+                titles.append(f.research.title)
+                if f.title not in titles:
+                    titles[-1] = titles[-1] + ' – ' + f.title
+            if self.field_type == 13 and ParaclinicInputField.objects.filter(pk=self.default_value).exists():
+                f = ParaclinicInputField.objects.get(pk=self.default_value)
+                titles.append(f.group.research.title)
+                gt = f.group.title
+                if gt not in titles:
+                    titles[-1] = titles[-1] + ' – ' + gt
+                ft = f.get_title(recursive=True)
+                if ft not in titles and not recursive:
+                    titles[-1] = titles[-1] + ' – ' + ft
+            title = ', '.join([t for t in titles if t])
         return title
 
 
