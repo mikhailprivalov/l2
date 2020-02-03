@@ -942,7 +942,7 @@ def directions_paraclinic_result(request):
     v_f = visibility_state.get("fields", {})
     recipe = request_data.get("recipe", [])
     tube = request_data.get("direction", {}).get("tube", {})
-    force = request_data.get("force", False)
+    force = rb.get("force", False)
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if force or diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
                             | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
