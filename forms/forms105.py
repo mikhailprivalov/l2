@@ -568,7 +568,7 @@ def form_03(request_data):
     # 'Диагноз направившего учреждения', 'Диагноз при поступлении'
     hosp_first_num = hosp_nums_obj[0].get('direction')
     date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital, time_start_ill, \
-    diagnos_who_directed, diagnos_entered, what_time_hospitalized = primary_reception_get_data(hosp_first_num)
+        diagnos_who_directed, diagnos_entered, what_time_hospitalized = primary_reception_get_data(hosp_first_num)
 
     hospitalized = 'первично — 1; повторно — 2; по экстренным показаниям — 3; в плановом порядке — 4.'
     if what_time_hospitalized and plan_hospital:
