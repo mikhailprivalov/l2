@@ -140,7 +140,7 @@ def form_01(request_data):
     # Получение данных из выписки
     # Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
     # 'Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
-    date_value, time_value, final_diagnos, other_diagnos, near_diagnos = hosp_extract_get_data(hosp_last_num)
+    date_value, time_value, final_diagnos, other_diagnos, near_diagnos, outcome = hosp_extract_get_data(hosp_last_num)
 
     # Получить отделение - из названия услуги или самого главного направления
     hosp_depart = hosp_nums_obj[0].get('research_title')
@@ -152,7 +152,7 @@ def form_01(request_data):
     # 'Диагноз направившего учреждения', 'Диагноз при поступлении'
     hosp_first_num = hosp_nums_obj[0].get('direction')
     date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital, time_start_ill, \
-        diagnos_who_directed, diagnos_entered = primary_reception_get_data(hosp_first_num)
+        diagnos_who_directed, diagnos_entered, what_time_hospitalized = primary_reception_get_data(hosp_first_num)
 
     ###########################################################################################################
     # Получение данных группы крови

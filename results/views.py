@@ -676,7 +676,6 @@ def result_print(request):
             ('SPAN', (-1, 5), (-1, -1))
 
         ]))
-        hosp = True
         if not hosp:
             fwb.append(t)
             fwb.append(Spacer(1, 5 * mm))

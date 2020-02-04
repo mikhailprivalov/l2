@@ -25,7 +25,7 @@ from directions.models import Issledovaniya, Napravleniya, ParaclinicResult
 from laboratory import utils
 from laboratory.settings import FONTS_FOLDER
 from utils import tree_directions
-from . import forms_func
+from .forms_func import get_doc_results, get_finaldata_talon, primary_reception_get_data, hosp_extract_get_data
 from api.stationar.stationar_func import hosp_get_hosp_direction
 
 
@@ -39,8 +39,8 @@ def form_01(request_data):
     req_date = request_data['date']
     str_date = json.loads(req_date)
     date_confirm = datetime.datetime.strptime(str_date, "%d.%m.%Y")
-    doc_results = forms_func.get_doc_results(doc_confirm, date_confirm)
-    data_talon = forms_func.get_finaldata_talon(doc_results)
+    doc_results = get_doc_results(doc_confirm, date_confirm)
+    data_talon = get_finaldata_talon(doc_results)
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
@@ -561,6 +561,44 @@ def form_03(request_data):
     doc_patient = f"{patient_data['type_doc']}, {patient_data['serial']} - {patient_data['num']}"
     polis_data = f"{patient_data['oms']['polis_serial']} {patient_data['oms']['polis_num']}"
 
+    ############################################################################################################
+    # Получить данные из первичного приема (самого первого hosp-направления)
+    # 'Дата поступления', 'Время поступления', 'Виды транспортировки','Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
+    # 'Вид госпитализации','Время через, которое доставлен после начала заболевания, получения травмы',
+    # 'Диагноз направившего учреждения', 'Диагноз при поступлении'
+    hosp_first_num = hosp_nums_obj[0].get('direction')
+    date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital, time_start_ill, \
+    diagnos_who_directed, diagnos_entered, what_time_hospitalized = primary_reception_get_data(hosp_first_num)
+
+    hospitalized = 'первично — 1; повторно — 2; по экстренным показаниям — 3; в плановом порядке — 4.'
+    if what_time_hospitalized and plan_hospital:
+        if what_time_hospitalized == 'впервые':
+            hospitalized = "первично - 1"
+        if what_time_hospitalized == 'повторно':
+            hospitalized = "повторно - 2"
+        if plan_hospital == 'Да':
+            hospitalized = f"{hospitalized}; в плановом порядке -4"
+        if extra_hospital == 'Да':
+            hospitalized = f"{hospitalized}; по экстренным показаниям - 3"
+
+    # Получить отделение - из названия услуги или самого главного направления
+    hosp_depart = hosp_nums_obj[0].get('research_title')
+
+    # взять самое последнее направленеие из hosp_dirs
+    hosp_last_num = hosp_nums_obj[-1].get('direction')
+    # 'Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
+    date_value, time_value, final_diagnos, other_diagnos, near_diagnos, outcome = hosp_extract_get_data(hosp_last_num)
+
+    result_outcome = 'выздоровление - 1; улучшение - 2; без перемен - 3; ухудшение - 4; здоров - 5; умер - 6.'
+    if outcome == 'выздоровление':
+        result_outcome = 'выздоровление - 1'
+    if outcome == 'улучшение':
+        result_outcome = 'улучшение - 2'
+    if outcome == 'ухудшение':
+        result_outcome = 'ухудшение - 4'
+    if outcome == 'без перемен':
+        result_outcome = 'без перемен - 3'
+
     title_page = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),
@@ -589,8 +627,27 @@ def form_03(request_data):
                   'лицо,  подвергшееся  радиационному  облучению  - 4;  в  т.ч.  в  Чернобыле  - 5;'
                   'инв. I гр.  - 6;   инв. II гр.  -  7;   инв. III гр.  -  8;   ребенок - инвалид  -  9;'
                   'инвалид с детства - 10; прочие - 11', style),
-
+        Paragraph('12. Кем направлен больной: {}'.format(who_directed), style),
+        Paragraph('13. Кем доставлен: _________________________________ Код______ Номер наряда__________', style),
+        Paragraph('14. Диагноз направившего учреждения:{}'.format(diagnos_who_directed), style),
+        Paragraph('15. Диагноз приемного отделения:{}'.format(diagnos_entered), style),
+        Paragraph('16. Доставлен в состоянии опьянения: Алкогольного — 1; Наркотического — 2.', style),
+        Paragraph('17. Госпитализирован по поводу данного заболевания в текущем году: {}'.format(hospitalized), style),
+        Paragraph('18.Доставлен в стационар от начала заболевания(получения травмы):  первые 6 часов — 1; в теч. 7— 24 часов — 2; позднее 24-х часов — 3.', style),
+        Paragraph('19. Травма: — производственная: промышленная — 1; транспортная — 2, в т. ч. ДТП — 3; с/хоз — 4; прочие — 5;', style),
+        Paragraph('— непроизводственная: бытовая — 6; уличная — 7; транспортная — 8, в т. ч. ДТП — 9; школьная — 10; спортивная — 11; противоправная травма — 12; прочие — 13.', style),
+        Paragraph('20. Дата поступления в приемное отделение:______________ Время__________', style),
+        Paragraph('21. Название отделения: <u>{}</u>; дата поступления: <u>{}</u>; время: <u>{}</u>'.format(hosp_depart, date_entered_value, time_entered_value), style),
+        Paragraph('Подпись врача приемного отделения ______________ Код __________', style),
+        Paragraph('22. Дата выписки (смерти): {}; Время {}'.format(date_value, time_value), style),
+        Paragraph('23. Продолжительность госпитализации (койко - дней): _ _ _', style),
+        Paragraph('24. Исход госпитализации: выписан - 1; в т.ч. в дневной стационар - 2; в круглосуточный стационар - 3; переведен в другой стационар - 4;', style),
+        Paragraph('24.1. Результат госпитализации: {}'.format(result_outcome), style),
+        Paragraph('25. Листок нетрудоспособности: открыт _ _._ _._ _ _ _ закрыт:_ _._ _._ _ _ _', style),
+        Paragraph('25.1. По уходу за больным Полных лет: _____ Пол: {}'.format(sex), style),
+        Paragraph('26. Движение пациента по отделениям:', style),
     ]
+
     objs.extend(title_page)
 
     def first_pages(canvas, document):

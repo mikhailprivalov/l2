@@ -391,7 +391,7 @@ def primary_reception_get_data(hosp_first_num):
                     'Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
                     'Вид госпитализации',
                     'Время через, которое доставлен после начала заболевания, получения травмы',
-                    'Диагноз направившего учреждения', 'Диагноз при поступлении']
+                    'Диагноз направившего учреждения', 'Диагноз при поступлении', 'Госпитализирован по поводу данного заболевания']
     list_values = None
     if titles_field and hosp_primary_receptions:
         list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
@@ -399,6 +399,7 @@ def primary_reception_get_data(hosp_first_num):
     date_entered_value, time_entered_value, type_transport, medicament_allergy = '', '', '', ''
     who_directed, plan_hospital, extra_hospital, type_hospital = '', '', '', ''
     time_start_ill, diagnos_who_directed, diagnos_entered = '', '', ''
+    what_time_hospitalized = ''
 
     if list_values:
         for i in list_values:
@@ -435,9 +436,12 @@ def primary_reception_get_data(hosp_first_num):
             if i[3] == 'Диагноз при поступлении':
                 diagnos_entered = i[2]
                 continue
+            if i[3] == 'Госпитализирован по поводу данного заболевания':
+                what_time_hospitalized = i[2]
+                continue
 
     return (date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital,
-            time_start_ill, diagnos_who_directed, diagnos_entered,)
+            time_start_ill, diagnos_who_directed, diagnos_entered, what_time_hospitalized,)
 
 
 def hosp_extract_get_data(hosp_last_num):
@@ -448,13 +452,13 @@ def hosp_extract_get_data(hosp_last_num):
         hosp_extract_iss = hosp_extract[0].get('iss')
         extract_research_id = hosp_extract[0].get('research_id')
     titles_field = ['Время выписки', 'Дата выписки', 'Основной диагноз (описание)',
-                    'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
+                    'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)', 'Исход заболевания'
                     ]
     list_values = None
     if titles_field and hosp_extract:
         list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
     date_value, time_value = '', ''
-    final_diagnos, other_diagnos, near_diagnos = '', '', ''
+    final_diagnos, other_diagnos, near_diagnos, outcome = '', '', '', ''
 
     if list_values:
         for i in list_values:
@@ -468,8 +472,10 @@ def hosp_extract_get_data(hosp_last_num):
                 other_diagnos = i[2]
             if i[3] == 'Сопутствующий диагноз (описание)':
                 near_diagnos = i[2]
+            if i[3] == 'Исход заболевания':
+                outcome = i[2]
 
-    return (date_value, time_value, final_diagnos, other_diagnos, near_diagnos,)
+    return (date_value, time_value, final_diagnos, other_diagnos, near_diagnos, outcome, )
 
 
 def hosp_get_clinical_diagnos(hosp_first_num):
