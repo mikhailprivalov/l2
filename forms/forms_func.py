@@ -497,7 +497,7 @@ def hosp_get_clinical_diagnos(hosp_first_num):
                 if date_diag and i[0][2]:
                     s.append(i[0][2] + '; дата:' + date_diag)
             elif (i[0][3]).find('Дата установления диагноза') != -1:
-                date_diag = i[0][2]
+                date_diag = normalize_date(i[0][2])
                 if date_diag and i[1][2]:
                     s.append(i[1][2] + '; дата:' + str(date_diag))
     clinic_diagnos = ''

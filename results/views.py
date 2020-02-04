@@ -459,6 +459,7 @@ def result_print(request):
     protocol_plain_text = request.GET.get("protocol_plain_text", "0") == "1"
     sick_document = request.GET.get("sick_list", "0") == "1"
     leftnone = request.GET.get("leftnone", "0") == "0"
+    hosp = request.GET.get("hosp", "0") == "1"
 
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Image
     from reportlab.platypus.flowables import HRFlowable
@@ -675,8 +676,10 @@ def result_print(request):
             ('SPAN', (-1, 5), (-1, -1))
 
         ]))
-        fwb.append(t)
-        fwb.append(Spacer(1, 5 * mm))
+        hosp = True
+        if not hosp:
+            fwb.append(t)
+            fwb.append(Spacer(1, 5 * mm))
         if not has_paraclinic:
             tw = pw
 
@@ -1161,12 +1164,16 @@ def result_print(request):
         else:
             for iss in Issledovaniya.objects.filter(napravleniye=direction).order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
-                if iss.research.is_doc_refferal:
+                if not hosp:
+                    if iss.research.is_doc_refferal:
+                        fwb.append(Paragraph(iss.research.title, styleBold))
+                    elif iss.doc_confirmation.podrazdeleniye.vaccine:
+                        fwb.append(Paragraph("Вакцина: " + iss.research.title, styleBold))
+                    else:
+                        fwb.append(Paragraph("Услуга: " + iss.research.title, styleBold))
+                if hosp:
                     fwb.append(Paragraph(iss.research.title, styleBold))
-                elif iss.doc_confirmation.podrazdeleniye.vaccine:
-                    fwb.append(Paragraph("Вакцина: " + iss.research.title, styleBold))
-                else:
-                    fwb.append(Paragraph("Услуга: " + iss.research.title, styleBold))
+
                 if not protocol_plain_text:
                     sick_result = None
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
@@ -1380,11 +1387,13 @@ h3 {
                                 fwb.append(Paragraph('{}-{}'.format(i.research.code, i.research.title), style))
 
                 fwb.append(Spacer(1, 3 * mm))
-                if iss.research.is_doc_refferal:
-                    fwb.append(Paragraph("Дата осмотра: {}".format(strdate(iss.get_medical_examination())), styleBold))
-                else:
-                    fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
-                fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
+                if not hosp:
+                    if iss.research.is_doc_refferal:
+                        fwb.append(Paragraph("Дата осмотра: {}".format(strdate(iss.get_medical_examination())), styleBold))
+                    else:
+                        fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
+                    fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
+
                 if iss.doc_confirmation.podrazdeleniye.vaccine:
                     fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio,
                                                                       iss.doc_confirmation.podrazdeleniye.title),

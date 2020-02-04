@@ -316,7 +316,7 @@ def form_01(request_data):
 
         # Кем направлен больной
         who_directed_text = [Paragraph('{}'.format(who_directed), style)]
-        who_directed_frame = Frame(77 * mm, 132 * mm, 126 * mm, 5 * mm, leftPadding=0, bottomPadding=0,
+        who_directed_frame = Frame(77 * mm, 129.5 * mm, 126 * mm, 7 * mm, leftPadding=0, bottomPadding=0,
                                    rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         who_directed_inframe = KeepInFrame(175 * mm, 12 * mm, who_directed_text, hAlign='LEFT', vAlign='TOP', )
         who_directed_frame.addFromList([who_directed_inframe], canvas)
