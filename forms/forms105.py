@@ -10,7 +10,7 @@ import simplejson as json
 from anytree import Node, RenderTree
 from reportlab.lib import colors
 from reportlab.lib.colors import black
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import A4, portrait, landscape
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
@@ -567,18 +567,17 @@ def form_03(request_data):
     # 'Вид госпитализации','Время через, которое доставлен после начала заболевания, получения травмы',
     # 'Диагноз направившего учреждения', 'Диагноз при поступлении'
     hosp_first_num = hosp_nums_obj[0].get('direction')
-    date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital, time_start_ill, \
-        diagnos_who_directed, diagnos_entered, what_time_hospitalized = primary_reception_get_data(hosp_first_num)
+    primary_reception_data = primary_reception_get_data(hosp_first_num)
 
     hospitalized = 'первично — 1; повторно — 2; по экстренным показаниям — 3; в плановом порядке — 4.'
-    if what_time_hospitalized and plan_hospital:
-        if what_time_hospitalized == 'впервые':
+    if primary_reception_data['what_time_hospitalized'] and primary_reception_data['plan_hospital']:
+        if primary_reception_data['what_time_hospitalized'] == 'впервые':
             hospitalized = "первично - 1"
-        if what_time_hospitalized == 'повторно':
+        if primary_reception_data['what_time_hospitalized'] == 'повторно':
             hospitalized = "повторно - 2"
-        if plan_hospital == 'Да':
+        if primary_reception_data['plan_hospital'] == 'Да':
             hospitalized = f"{hospitalized}; в плановом порядке -4"
-        if extra_hospital == 'Да':
+        if primary_reception_data['extra_hospital'] == 'Да':
             hospitalized = f"{hospitalized}; по экстренным показаниям - 3"
 
     # Получить отделение - из названия услуги или самого главного направления
@@ -587,16 +586,17 @@ def form_03(request_data):
     # взять самое последнее направленеие из hosp_dirs
     hosp_last_num = hosp_nums_obj[-1].get('direction')
     # 'Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
-    date_value, time_value, final_diagnos, other_diagnos, near_diagnos, outcome = hosp_extract_get_data(hosp_last_num)
+    date_value, time_value, final_diagnos, other_diagnos, near_diagnos, outcome = '','','','','',''
+    hosp_extract_data = hosp_extract_get_data(hosp_last_num)
 
     result_outcome = 'выздоровление - 1; улучшение - 2; без перемен - 3; ухудшение - 4; здоров - 5; умер - 6.'
-    if outcome == 'выздоровление':
+    if hosp_extract_data['outcome'] == 'выздоровление':
         result_outcome = 'выздоровление - 1'
-    if outcome == 'улучшение':
+    if hosp_extract_data['outcome'] == 'улучшение':
         result_outcome = 'улучшение - 2'
-    if outcome == 'ухудшение':
+    if hosp_extract_data['outcome'] == 'ухудшение':
         result_outcome = 'ухудшение - 4'
-    if outcome == 'без перемен':
+    if hosp_extract_data['outcome'] == 'без перемен':
         result_outcome = 'без перемен - 3'
 
     title_page = [
@@ -627,17 +627,18 @@ def form_03(request_data):
                   'лицо,  подвергшееся  радиационному  облучению  - 4;  в  т.ч.  в  Чернобыле  - 5;'
                   'инв. I гр.  - 6;   инв. II гр.  -  7;   инв. III гр.  -  8;   ребенок - инвалид  -  9;'
                   'инвалид с детства - 10; прочие - 11', style),
-        Paragraph('12. Кем направлен больной: {}'.format(who_directed), style),
+        Paragraph('12. Кем направлен больной: {}'.format(primary_reception_data['who_directed']), style),
         Paragraph('13. Кем доставлен: _________________________________ Код______ Номер наряда__________', style),
-        Paragraph('14. Диагноз направившего учреждения:{}'.format(diagnos_who_directed), style),
-        Paragraph('15. Диагноз приемного отделения:{}'.format(diagnos_entered), style),
+        Paragraph('14. Диагноз направившего учреждения:{}'.format(primary_reception_data['diagnos_who_directed']), style),
+        Paragraph('15. Диагноз приемного отделения:{}'.format(primary_reception_data['diagnos_entered']), style),
         Paragraph('16. Доставлен в состоянии опьянения: Алкогольного — 1; Наркотического — 2.', style),
         Paragraph('17. Госпитализирован по поводу данного заболевания в текущем году: {}'.format(hospitalized), style),
         Paragraph('18.Доставлен в стационар от начала заболевания(получения травмы):  первые 6 часов — 1; в теч. 7— 24 часов — 2; позднее 24-х часов — 3.', style),
         Paragraph('19. Травма: — производственная: промышленная — 1; транспортная — 2, в т. ч. ДТП — 3; с/хоз — 4; прочие — 5;', style),
         Paragraph('— непроизводственная: бытовая — 6; уличная — 7; транспортная — 8, в т. ч. ДТП — 9; школьная — 10; спортивная — 11; противоправная травма — 12; прочие — 13.', style),
         Paragraph('20. Дата поступления в приемное отделение:______________ Время__________', style),
-        Paragraph('21. Название отделения: <u>{}</u>; дата поступления: <u>{}</u>; время: <u>{}</u>'.format(hosp_depart, date_entered_value, time_entered_value), style),
+        Paragraph('21. Название отделения: <u>{}</u>; дата поступления: <u>{}</u>; время: <u>{}</u>'.format(hosp_depart, primary_reception_data['date_entered_value'],
+                                                                                                            primary_reception_data['time_entered_value']), style),
         Paragraph('Подпись врача приемного отделения ______________ Код __________', style),
         Paragraph('22. Дата выписки (смерти): {}; Время {}'.format(date_value, time_value), style),
         Paragraph('23. Продолжительность госпитализации (койко - дней): _ _ _', style),
@@ -649,6 +650,48 @@ def form_03(request_data):
     ]
 
     objs.extend(title_page)
+
+    styleTB = deepcopy(style)
+    styleTB.fontSize = 10
+    styleTB.alignment = TA_CENTER
+    # styleTB.fontName = "PTAstraSerifBold"
+
+    styleTC = deepcopy(style)
+    styleTC.fontSize = 10.5
+    styleTC.alignment = TA_LEFT
+
+    styleTCright = deepcopy(styleTC)
+    styleTCright.alignment = TA_RIGHT
+
+    styleTCcenter = deepcopy(styleTC)
+    styleTCcenter.alignment = TA_CENTER
+
+    opinion = [
+        [Paragraph('N', styleTB), Paragraph('Код отделения', styleTB), Paragraph('Профиль коек', styleTB), Paragraph('Код врача', styleTB),
+         Paragraph('Дата поступления', styleTB), Paragraph('Дата выписки, перевода', styleTB), Paragraph('Код диагноза по МКБ', styleTB),
+         Paragraph('Код медицинского стандарта', styleTB), Paragraph('Код прерванного случая', styleTB), Paragraph('Вид оплаты', styleTB),
+        ],
+        [Paragraph('1', styleTB), Paragraph('2', styleTB), Paragraph('3', styleTB), Paragraph('4', styleTB),
+         Paragraph('5', styleTB), Paragraph('6', styleTB), Paragraph('7', styleTB),
+         Paragraph('8', styleTB), Paragraph('9', styleTB), Paragraph('10', styleTB),
+         ],
+        [Paragraph('1', styleTB), Paragraph('2', styleTB), Paragraph('3', styleTB), Paragraph('4', styleTB),
+         Paragraph('5', styleTB), Paragraph('6', styleTB), Paragraph('7', styleTB),
+         Paragraph('8', styleTB), Paragraph('9', styleTB), Paragraph('10', styleTB),
+         ],
+    ]
+
+    #получить структуру данных для таблицы
+
+    # opinion.extend(example_template)
+    tbl_act = Table(opinion, repeatRows=1, colWidths=(7 * mm, 15 * mm, 30 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 15 * mm, 15 * mm, 20 * mm))
+
+    tbl_act.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    objs.append(tbl_act)
 
     def first_pages(canvas, document):
         canvas.saveState()

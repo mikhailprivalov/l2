@@ -440,8 +440,12 @@ def primary_reception_get_data(hosp_first_num):
                 what_time_hospitalized = i[2]
                 continue
 
-    return (date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital,
-            time_start_ill, diagnos_who_directed, diagnos_entered, what_time_hospitalized,)
+    # return (date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital,
+    #         time_start_ill, diagnos_who_directed, diagnos_entered, what_time_hospitalized,)
+    return {'date_entered_value':date_entered_value, 'time_entered_value':time_entered_value, 'type_transport':type_transport,
+            'medicament_allergy':medicament_allergy, 'who_directed':who_directed, 'plan_hospital':plan_hospital, 'extra_hospital':extra_hospital,
+            'type_hospital':type_hospital, 'time_start_ill':time_start_ill, 'diagnos_who_directed':diagnos_who_directed,
+            'diagnos_entered':diagnos_entered, 'what_time_hospitalized':what_time_hospitalized}
 
 
 def hosp_extract_get_data(hosp_last_num):
@@ -475,7 +479,8 @@ def hosp_extract_get_data(hosp_last_num):
             if i[3] == 'Исход заболевания':
                 outcome = i[2]
 
-    return (date_value, time_value, final_diagnos, other_diagnos, near_diagnos, outcome, )
+    return {'date_value':date_value, 'time_value':time_value, 'final_diagnos':final_diagnos, 'other_diagnos':other_diagnos, 'near_diagnos':near_diagnos,
+            'outcome':outcome}
 
 
 def hosp_get_clinical_diagnos(hosp_first_num):
@@ -545,3 +550,9 @@ def hosp_get_transfers_data(hosp_nums_obj):
         transfers = f"{transfers} в {transfer_research_title} {date_transfer_value}/{time_transfer_value};"
 
     return transfers
+
+
+def hosp_patient_movement(hosp_nums_obj):
+    hosp_depart = hosp_nums_obj[0].get('research_title')
+
+

@@ -140,7 +140,7 @@ def form_01(request_data):
     # Получение данных из выписки
     # Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
     # 'Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
-    date_value, time_value, final_diagnos, other_diagnos, near_diagnos, outcome = hosp_extract_get_data(hosp_last_num)
+    hosp_extract_data = hosp_extract_get_data(hosp_last_num)
 
     # Получить отделение - из названия услуги или самого главного направления
     hosp_depart = hosp_nums_obj[0].get('research_title')
@@ -151,8 +151,7 @@ def form_01(request_data):
     # 'Вид госпитализации','Время через, которое доставлен после начала заболевания, получения травмы',
     # 'Диагноз направившего учреждения', 'Диагноз при поступлении'
     hosp_first_num = hosp_nums_obj[0].get('direction')
-    date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital, time_start_ill, \
-        diagnos_who_directed, diagnos_entered, what_time_hospitalized = primary_reception_get_data(hosp_first_num)
+    primary_reception_data = primary_reception_get_data(hosp_first_num)
 
     ###########################################################################################################
     # Получение данных группы крови
@@ -187,10 +186,10 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
 
-        Paragraph('Дата и время поступления: {} - {}'.format(date_entered_value, time_entered_value), style),
+        Paragraph('Дата и время поступления: {} - {}'.format(primary_reception_data['date_entered_value'], primary_reception_data['time_entered_value']), style),
         Spacer(1, 0.5 * mm),
 
-        Paragraph('Дата и время выписки: {} - {}'.format(date_value, time_value), style),
+        Paragraph('Дата и время выписки: {} - {}'.format(hosp_extract_data['date_value'], hosp_extract_data['time_value']), style),
         Spacer(1, 0.5 * mm),
         Paragraph('Отделение: {}'.format(hosp_depart), style),
         Spacer(1, 0.5 * mm),
@@ -200,7 +199,7 @@ def form_01(request_data):
         Spacer(1, 8 * mm),
         Paragraph('Проведено койко-дней: {}'.format('______________________________________________'), style),
         Spacer(1, 0.5 * mm),
-        Paragraph('Виды транспортировки(на каталке, на кресле, может идти): {}'.format(type_transport), style),
+        Paragraph('Виды транспортировки(на каталке, на кресле, может идти): {}'.format(primary_reception_data['type_transport']), style),
         Spacer(1, 0.5 * mm),
         Paragraph('Группа крови: {}. Резус-принадлежность: {}'.format(group_blood_avo_value, group_rezus_value), style),
         Spacer(1, 1 * mm),
@@ -218,11 +217,11 @@ def form_01(request_data):
         Spacer(1, 0.5 * mm),
         Paragraph('6. Кем направлен больной:', style),
         Spacer(1, 0.5 * mm),
-        Paragraph('7. Доставлен в стационар по экстренным показаниям: {}'.format(extra_hospital), style),
+        Paragraph('7. Доставлен в стационар по экстренным показаниям: {}'.format(primary_reception_data['extra_hospital']), style),
         Spacer(1, 0.5 * mm),
-        Paragraph(' через: {} часов после начала заболевания, получения травмы; '.format(time_start_ill), style),
+        Paragraph(' через: {} часов после начала заболевания, получения травмы; '.format(primary_reception_data['time_start_ill']), style),
         Spacer(1, 0.5 * mm),
-        Paragraph(' госпитализирован в плановом порядке (подчеркнуть) {}.'.format(plan_hospital), style),
+        Paragraph(' госпитализирован в плановом порядке (подчеркнуть) {}.'.format(primary_reception_data['plan_hospital']), style),
         Spacer(1, 0.5 * mm),
         Paragraph('8. Диагноз направившего учреждения:', style),
         Spacer(1, 8 * mm),
@@ -287,7 +286,7 @@ def form_01(request_data):
         transfers_frame.addFromList([transfers_inframe], canvas)
 
         # Побочное действие лекарств(непереносимость) координаты
-        medicament_text = [Paragraph('{}'.format(medicament_allergy), styleJustified)]
+        medicament_text = [Paragraph('{}'.format(primary_reception_data['medicament_allergy']), styleJustified)]
         medicament_frame = Frame(27 * mm, 171 * mm, 175 * mm, 9 * mm, leftPadding=0, bottomPadding=0,
                                  rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         medicament_inframe = KeepInFrame(175 * mm, 12 * mm, medicament_text, hAlign='LEFT', vAlign='TOP', )
@@ -315,21 +314,21 @@ def form_01(request_data):
         work_frame.addFromList([work_inframe], canvas)
 
         # Кем направлен больной
-        who_directed_text = [Paragraph('{}'.format(who_directed), style)]
+        who_directed_text = [Paragraph('{}'.format(primary_reception_data['who_directed']), style)]
         who_directed_frame = Frame(77 * mm, 129.5 * mm, 126 * mm, 7 * mm, leftPadding=0, bottomPadding=0,
                                    rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         who_directed_inframe = KeepInFrame(175 * mm, 12 * mm, who_directed_text, hAlign='LEFT', vAlign='TOP', )
         who_directed_frame.addFromList([who_directed_inframe], canvas)
 
         # Диагноз направившего учреждения координаты
-        diagnos_directed_text = [Paragraph('{}'.format(diagnos_who_directed), styleJustified)]
+        diagnos_directed_text = [Paragraph('{}'.format(primary_reception_data['diagnos_who_directed']), styleJustified)]
         diagnos_directed_frame = Frame(27 * mm, 98 * mm, 175 * mm, 9 * mm, leftPadding=0, bottomPadding=0,
                                        rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         diagnos_directed_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_directed_text, hAlign='LEFT', vAlign='TOP', )
         diagnos_directed_frame.addFromList([diagnos_directed_inframe], canvas)
 
         # Диагноз при поступлении координаты
-        diagnos_entered_text = [Paragraph('{}'.format(diagnos_entered), styleJustified)]
+        diagnos_entered_text = [Paragraph('{}'.format(primary_reception_data['diagnos_entered']), styleJustified)]
         diagnos_entered_frame = Frame(27 * mm, 83 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0,
                                       rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         diagnos_entered_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_entered_text, hAlign='LEFT',
@@ -451,21 +450,21 @@ def form_01(request_data):
         canvas.saveState()
         # Заключительные диагнозы
         # Основной заключительный диагноз
-        final_diagnos_text = [Paragraph('{}'.format(final_diagnos), styleJustified)]
+        final_diagnos_text = [Paragraph('{}'.format(hosp_extract_data['final_diagnos']), styleJustified)]
         final_diagnos_frame = Frame(27 * mm, 230 * mm, 175 * mm, 45 * mm, leftPadding=0, bottomPadding=0,
                                     rightPadding=0, topPadding=0, showBoundary=0)
         final_diagnos_inframe = KeepInFrame(175 * mm, 50 * mm, final_diagnos_text, hAlign='LEFT', vAlign='TOP', )
         final_diagnos_frame.addFromList([final_diagnos_inframe], canvas)
 
         # Осложнения основного заключительного диагноза
-        other_diagnos_text = [Paragraph('{}'.format(other_diagnos), styleJustified)]
+        other_diagnos_text = [Paragraph('{}'.format(hosp_extract_data['other_diagnos']), styleJustified)]
         other_diagnos_frame = Frame(27 * mm, 205 * mm, 175 * mm, 20 * mm, leftPadding=0, bottomPadding=0,
                                     rightPadding=0, topPadding=0, showBoundary=0)
         other_diagnos_inframe = KeepInFrame(175 * mm, 20 * mm, other_diagnos_text, hAlign='LEFT', vAlign='TOP', )
         other_diagnos_frame.addFromList([other_diagnos_inframe], canvas)
 
         # Сопутствующие основного заключительного диагноза
-        near_diagnos_text = [Paragraph('{}'.format(near_diagnos), styleJustified)]
+        near_diagnos_text = [Paragraph('{}'.format(hosp_extract_data['near_diagnos']), styleJustified)]
         near_diagnos_frame = Frame(27 * mm, 181 * mm, 175 * mm, 20 * mm, leftPadding=0, bottomPadding=0,
                                    rightPadding=0, topPadding=0, showBoundary=0)
         near_diagnos_inframe = KeepInFrame(175 * mm, 20 * mm, near_diagnos_text, vAlign='TOP', )
