@@ -169,7 +169,10 @@ def form_01(request_data):
     #####################################################################################################
     # получить даные из переводного эпикриза: Дата перевода, Время перевода, в какое отделение переведен
     # у каждого hosp-направления найти подчиненное эпикриз Перевод*
-    transfers = hosp_get_transfers_data(hosp_nums_obj)
+    transfers_data = hosp_get_transfers_data(hosp_nums_obj)
+    transfers = ''
+    for i in transfers_data:
+        transfers = f"{transfers} в {i['transfer_research_title']} {i['date_transfer_value']}/{i['time_transfer_value']};"
 
     #####################################################################################################
     title_page = [

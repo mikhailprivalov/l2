@@ -521,7 +521,7 @@ def hosp_get_clinical_diagnos(hosp_first_num):
 def hosp_get_transfers_data(hosp_nums_obj):
     titles_field = ['Дата перевода', 'Время перевода']
     date_transfer_value, time_transfer_value = '', ''
-    transfers = ''
+    transfers = []
     list_values = None
     for i in range(len(hosp_nums_obj)):
         if i == 0:
@@ -547,12 +547,14 @@ def hosp_get_transfers_data(hosp_nums_obj):
                     time_transfer_value = i[2]
                     continue
 
-        transfers = f"{transfers} в {transfer_research_title} {date_transfer_value}/{time_transfer_value};"
+        transfers.append({'transfer_research_title':transfer_research_title, 'date_transfer_value':date_transfer_value, 'time_transfer_value':time_transfer_value})
 
     return transfers
 
 
 def hosp_patient_movement(hosp_nums_obj):
     hosp_depart = hosp_nums_obj[0].get('research_title')
+    transfers_data = hosp_get_transfers_data(hosp_nums_obj)
+
 
 
