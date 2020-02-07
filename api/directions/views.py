@@ -1112,7 +1112,7 @@ def directions_paraclinic_confirm_reset(request):
 
         allow_reset = iss.allow_reset_confirm(request.user)
 
-        if not allow_reset:
+        if not allow_reset or forbidden_edit_dir(iss.napravleniye_id):
             response["message"] = "Редактирование запрещено"
             return JsonResponse(response)
 

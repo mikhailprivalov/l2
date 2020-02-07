@@ -140,6 +140,17 @@ def form_01(request_data):
     # Получение данных из выписки
     # Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
+    extrac_date = ''
+    extract_time = ''
+    final_diagnos = ''
+    other_diagnos = ''
+    near_diagnos = ''
+    if hosp_extract_data:
+        extrac_date = hosp_extract_data['date_value']
+        extract_time = hosp_extract_data['time_value']
+        final_diagnos = hosp_extract_data['final_diagnos']
+        other_diagnos = hosp_extract_data['other_diagnos']
+        near_diagnos = hosp_extract_data['near_diagnos']
 
     # Получить отделение - из названия услуги или самого главного направления
     hosp_depart = hosp_nums_obj[0].get('research_title')
@@ -188,7 +199,7 @@ def form_01(request_data):
         Paragraph('Дата и время поступления: {} - {}'.format(primary_reception_data['date_entered_value'], primary_reception_data['time_entered_value']), style),
         Spacer(1, 0.5 * mm),
 
-        Paragraph('Дата и время выписки: {} - {}'.format(hosp_extract_data['date_value'], hosp_extract_data['time_value']), style),
+        Paragraph('Дата и время выписки: {} - {}'.format(extrac_date, extract_time), style),
         Spacer(1, 0.5 * mm),
         Paragraph('Отделение: {}'.format(hosp_depart), style),
         Spacer(1, 0.5 * mm),
@@ -382,21 +393,24 @@ def form_01(request_data):
 
     hosp_operation = hosp_get_data_direction(num_dir, site_type=3, type_service='None', level=-1)
     operation_iss = []
-    operation_research_id = None
+    operation_research_id = []
     if hosp_operation:
         for i in hosp_operation:
             # найти протоколы по типу операции
-            if i.get('research_title').lower().find('операци') != -1:
+            if (i.get('research_title').lower().find('операци') or i.get('research_title').lower().find('манипул')) != -1:
                 operation_iss.append(i.get('iss'))
-                if not operation_research_id:
-                    operation_research_id = i.get('research_id')
+                operation_research_id.append(i.get('research_id'))
 
     titles_field = ['Название операции', 'Дата проведения',
                     'Время начала', 'Время окончания', 'Метод обезболивания', 'Осложнения']
     list_values = []
+    print(operation_iss)
+    print(operation_research_id)
     if titles_field and operation_research_id and hosp_operation:
+        count = 0
         for i in operation_iss:
-            list_values.append(get_result_value_iss(i, operation_research_id, titles_field))
+            list_values.append(get_result_value_iss(i, operation_research_id[count], titles_field))
+            count = +1
 
         operation_result = []
         x = 0
@@ -449,21 +463,21 @@ def form_01(request_data):
         canvas.saveState()
         # Заключительные диагнозы
         # Основной заключительный диагноз
-        final_diagnos_text = [Paragraph('{}'.format(hosp_extract_data['final_diagnos']), styleJustified)]
+        final_diagnos_text = [Paragraph('{}'.format(final_diagnos), styleJustified)]
         final_diagnos_frame = Frame(27 * mm, 230 * mm, 175 * mm, 45 * mm, leftPadding=0, bottomPadding=0,
                                     rightPadding=0, topPadding=0, showBoundary=0)
         final_diagnos_inframe = KeepInFrame(175 * mm, 50 * mm, final_diagnos_text, hAlign='LEFT', vAlign='TOP', )
         final_diagnos_frame.addFromList([final_diagnos_inframe], canvas)
 
         # Осложнения основного заключительного диагноза
-        other_diagnos_text = [Paragraph('{}'.format(hosp_extract_data['other_diagnos']), styleJustified)]
+        other_diagnos_text = [Paragraph('{}'.format(other_diagnos), styleJustified)]
         other_diagnos_frame = Frame(27 * mm, 205 * mm, 175 * mm, 20 * mm, leftPadding=0, bottomPadding=0,
                                     rightPadding=0, topPadding=0, showBoundary=0)
         other_diagnos_inframe = KeepInFrame(175 * mm, 20 * mm, other_diagnos_text, hAlign='LEFT', vAlign='TOP', )
         other_diagnos_frame.addFromList([other_diagnos_inframe], canvas)
 
         # Сопутствующие основного заключительного диагноза
-        near_diagnos_text = [Paragraph('{}'.format(hosp_extract_data['near_diagnos']), styleJustified)]
+        near_diagnos_text = [Paragraph('{}'.format(near_diagnos), styleJustified)]
         near_diagnos_frame = Frame(27 * mm, 181 * mm, 175 * mm, 20 * mm, leftPadding=0, bottomPadding=0,
                                    rightPadding=0, topPadding=0, showBoundary=0)
         near_diagnos_inframe = KeepInFrame(175 * mm, 20 * mm, near_diagnos_text, vAlign='TOP', )

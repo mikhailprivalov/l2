@@ -25,7 +25,7 @@ from directions.models import Issledovaniya, Napravleniya, ParaclinicResult
 from laboratory import utils
 from laboratory.settings import FONTS_FOLDER
 from utils import tree_directions
-from .forms_func import get_doc_results, get_finaldata_talon, primary_reception_get_data, hosp_extract_get_data
+from .forms_func import get_doc_results, get_finaldata_talon, primary_reception_get_data, hosp_extract_get_data, hosp_patient_movement
 from api.stationar.stationar_func import hosp_get_hosp_direction
 
 
@@ -587,14 +587,15 @@ def form_03(request_data):
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
 
     result_outcome = 'выздоровление - 1; улучшение - 2; без перемен - 3; ухудшение - 4; здоров - 5; умер - 6.'
-    if hosp_extract_data['outcome'] == 'выздоровление':
-        result_outcome = 'выздоровление - 1'
-    if hosp_extract_data['outcome'] == 'улучшение':
-        result_outcome = 'улучшение - 2'
-    if hosp_extract_data['outcome'] == 'ухудшение':
-        result_outcome = 'ухудшение - 4'
-    if hosp_extract_data['outcome'] == 'без перемен':
-        result_outcome = 'без перемен - 3'
+    if hosp_extract_data:
+        if hosp_extract_data['outcome'] == 'выздоровление':
+            result_outcome = 'выздоровление - 1'
+        if hosp_extract_data['outcome'] == 'улучшение':
+            result_outcome = 'улучшение - 2'
+        if hosp_extract_data['outcome'] == 'ухудшение':
+            result_outcome = 'ухудшение - 4'
+        if hosp_extract_data['outcome'] == 'без перемен':
+            result_outcome = 'без перемен - 3'
 
     title_page = [
         Indenter(left=0 * mm),
@@ -645,7 +646,6 @@ def form_03(request_data):
         Paragraph('25.1. По уходу за больным Полных лет: _____ Пол: {}'.format(sex), style),
         Paragraph('26. Движение пациента по отделениям:', style),
     ]
-
     objs.extend(title_page)
 
     styleTB = deepcopy(style)
@@ -654,7 +654,7 @@ def form_03(request_data):
     # styleTB.fontName = "PTAstraSerifBold"
 
     styleTC = deepcopy(style)
-    styleTC.fontSize = 10.5
+    styleTC.fontSize = 9.7
     styleTC.alignment = TA_LEFT
 
     styleTCright = deepcopy(styleTC)
@@ -668,20 +668,24 @@ def form_03(request_data):
          Paragraph('Дата поступления', styleTB), Paragraph('Дата выписки, перевода', styleTB), Paragraph('Код диагноза по МКБ', styleTB),
          Paragraph('Код медицинского стандарта', styleTB), Paragraph('Код прерванного случая', styleTB), Paragraph('Вид оплаты', styleTB),
         ],
-        [Paragraph('1', styleTB), Paragraph('2', styleTB), Paragraph('3', styleTB), Paragraph('4', styleTB),
-         Paragraph('5', styleTB), Paragraph('6', styleTB), Paragraph('7', styleTB),
-         Paragraph('8', styleTB), Paragraph('9', styleTB), Paragraph('10', styleTB),
-         ],
-        [Paragraph('1', styleTB), Paragraph('2', styleTB), Paragraph('3', styleTB), Paragraph('4', styleTB),
-         Paragraph('5', styleTB), Paragraph('6', styleTB), Paragraph('7', styleTB),
-         Paragraph('8', styleTB), Paragraph('9', styleTB), Paragraph('10', styleTB),
-         ],
     ]
+
+    patient_movement = hosp_patient_movement(hosp_nums_obj)
+    x = 0
+    for i in patient_movement:
+        x = x + 1
+        tmp_data = [[Paragraph(str(x), styleTB), Paragraph('', styleTB), Paragraph(i.get('bed_profile_research_title'), styleTB),
+                     Paragraph(str(i.get('doc_confirm_code')), styleTB), Paragraph(i.get('date_entered_value'), styleTB),
+                     Paragraph(i.get('date_oute'), styleTB), Paragraph(i.get('diagnos_mkb'), styleTB), Paragraph('', styleTB),
+                     Paragraph('', styleTB), Paragraph('ОМС', styleTB),
+        ],]
+
+        opinion.extend(tmp_data.copy())
 
     #получить структуру данных для таблицы
 
     # opinion.extend(example_template)
-    tbl_act = Table(opinion, repeatRows=1, colWidths=(7 * mm, 15 * mm, 30 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 15 * mm, 15 * mm, 20 * mm))
+    tbl_act = Table(opinion, repeatRows=1, colWidths=(7 * mm, 15 * mm, 30 * mm, 20 * mm, 21 * mm, 21 * mm, 20 * mm, 14 * mm, 14 * mm, 20 * mm))
 
     tbl_act.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
@@ -689,6 +693,18 @@ def form_03(request_data):
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
     objs.append(tbl_act)
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('27. Хирургические операции(обозначить: основную операцию, использование спец.аппаратуры):', style),)
+
+    opinion = [
+        [Paragraph('Дата, Час', styleTB), Paragraph('Код хирурга', styleTB), Paragraph('Код отделения', styleTB), Paragraph('Код врача', styleTB),
+         Paragraph('Дата поступления', styleTB), Paragraph('Дата выписки, перевода', styleTB), Paragraph('Код диагноза по МКБ', styleTB),
+         Paragraph('Код медицинского стандарта', styleTB), Paragraph('Код прерванного случая', styleTB), Paragraph('Вид оплаты', styleTB),
+        ],
+    ]
+
+
+
 
     def first_pages(canvas, document):
         canvas.saveState()

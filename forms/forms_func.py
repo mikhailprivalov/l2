@@ -454,15 +454,17 @@ def hosp_extract_get_data(hosp_last_num):
     hosp_extract_iss, extract_research_id = None, None
     if hosp_extract:
         hosp_extract_iss = hosp_extract[0].get('iss')
+        if not Issledovaniya.objects.get(pk=hosp_extract_iss).doc_confirmation:
+            return {}
         extract_research_id = hosp_extract[0].get('research_id')
     titles_field = ['Время выписки', 'Дата выписки', 'Основной диагноз (описание)',
-                    'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)', 'Исход заболевания'
-                    ]
+                    'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)', 'Исход заболевания',
+                    'Код по МКБ10']
     list_values = None
     if titles_field and hosp_extract:
         list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
     date_value, time_value = '', ''
-    final_diagnos, other_diagnos, near_diagnos, outcome = '', '', '', ''
+    final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb = '', '', '', '',''
 
     if list_values:
         for i in list_values:
@@ -478,9 +480,11 @@ def hosp_extract_get_data(hosp_last_num):
                 near_diagnos = i[2]
             if i[3] == 'Исход заболевания':
                 outcome = i[2]
+            if i[3] == 'Код по МКБ10':
+                final_diagnos_mkb = str(i[2]).split(' ')[0]
 
     return {'date_value':date_value, 'time_value':time_value, 'final_diagnos':final_diagnos, 'other_diagnos':other_diagnos, 'near_diagnos':near_diagnos,
-            'outcome':outcome}
+            'outcome':outcome, 'final_diagnos_mkb':final_diagnos_mkb, 'extract_iss':hosp_extract_iss}
 
 
 def hosp_get_clinical_diagnos(hosp_first_num):
@@ -526,14 +530,15 @@ def hosp_get_transfers_data(hosp_nums_obj):
     for i in range(len(hosp_nums_obj)):
         if i == 0:
             continue
+
         transfer_research_title = hosp_nums_obj[i].get('research_title')
         # получить для текущего hosp_dir эпикриз с title - перевод.....
         from_hosp_dir_transfer = hosp_nums_obj[i - 1].get('direction')
         epicrisis_data = hosp_get_data_direction(from_hosp_dir_transfer, site_type=6, type_service='None', level=2)
         if epicrisis_data:
             result_check = check_transfer_epicrisis(epicrisis_data)
-            if result_check[1] > -1:
-                iss_transfer, research_id_transfer = result_check[1], result_check[2]
+            if result_check['iss']:
+                iss_transfer, research_id_transfer = result_check['iss'], result_check['research_id']
                 if titles_field and iss_transfer:
                     list_values = get_result_value_iss(iss_transfer, research_id_transfer, titles_field)
             else:
@@ -553,8 +558,42 @@ def hosp_get_transfers_data(hosp_nums_obj):
 
 
 def hosp_patient_movement(hosp_nums_obj):
-    hosp_depart = hosp_nums_obj[0].get('research_title')
-    transfers_data = hosp_get_transfers_data(hosp_nums_obj)
+    titles_field = ['Дата перевода']
+    patient_movement = []
+    list_values = None
 
+    for i in range(len(hosp_nums_obj)):
+        date_out, diagnos_mkb, doc_confirm_code = '', '', ''
+        bed_profile_research_title = hosp_nums_obj[i].get('research_title')
+        hosp_dir = hosp_nums_obj[i].get('direction')
+        primary_reception_data = primary_reception_get_data(hosp_dir)
+        hosp_extract_data = hosp_get_data_direction(hosp_dir, site_type=7, type_service='None', level=2)
+        if hosp_extract_data:
+            extract_data = hosp_extract_get_data(hosp_dir)
+            if extract_data:
+                date_out = extract_data['date_value']
+                diagnos_mkb = extract_data['final_diagnos_mkb']
+                doc_confirm_code = Issledovaniya.objects.get(pk=extract_data['extract_iss']).doc_confirmation.personal_code
 
+        epicrisis_data = hosp_get_data_direction(hosp_dir, site_type=6, type_service='None', level=2)
+        if epicrisis_data:
+            result_check = check_transfer_epicrisis(epicrisis_data)
+            if result_check['iss']:
+                iss_transfer, research_id_transfer = result_check['iss'], result_check['research_id']
+                if titles_field and iss_transfer:
+                    list_values = get_result_value_iss(iss_transfer, research_id_transfer, titles_field)
+            else:
+                continue
+        if list_values:
+            for i in list_values:
+                if i[3] == 'Дата перевода':
+                    date_out = normalize_date(i[2])
+                if i[3] == 'Клинический диагноз по МКБ':
+                    diagnos_mkb = i[2]
 
+#TODO: проверить подтверждение переводного эпикриза
+
+        patient_movement.append({'bed_profile_research_title':bed_profile_research_title, 'date_entered_value':primary_reception_data['date_entered_value'],
+                                'date_oute':date_out, 'diagnos_mkb':diagnos_mkb, 'doc_confirm_code':doc_confirm_code})
+
+    return patient_movement
