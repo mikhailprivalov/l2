@@ -665,9 +665,9 @@ def form_03(request_data):
 
     opinion = [
         [Paragraph('N', styleTB), Paragraph('Код отделения', styleTB), Paragraph('Профиль коек', styleTB), Paragraph('Код врача', styleTB),
-        Paragraph('Дата поступления', styleTB), Paragraph('Дата выписки, перевода', styleTB), Paragraph('Код диагноза по МКБ', styleTB),
-        Paragraph('Код медицинского стандарта', styleTB), Paragraph('Код прерванного случая', styleTB), Paragraph('Вид оплаты', styleTB),
-            ],
+         Paragraph('Дата поступления', styleTB), Paragraph('Дата выписки, перевода', styleTB), Paragraph('Код диагноза по МКБ', styleTB),
+         Paragraph('Код медицинского стандарта', styleTB), Paragraph('Код прерванного случая', styleTB), Paragraph('Вид оплаты', styleTB),
+        ],
     ]
 
     patient_movement = hosp_patient_movement(hosp_nums_obj)
@@ -683,7 +683,6 @@ def form_03(request_data):
         opinion.extend(tmp_data.copy())
 
     #получить структуру данных для таблицы
-    # opinion.extend(example_template)
     tbl_act = Table(opinion, repeatRows=1, colWidths=(7 * mm, 15 * mm, 30 * mm, 20 * mm, 21 * mm, 21 * mm, 20 * mm, 14 * mm, 14 * mm, 20 * mm))
 
     tbl_act.setStyle(TableStyle([
