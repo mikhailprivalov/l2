@@ -25,7 +25,7 @@ from directions.models import Issledovaniya, Napravleniya, ParaclinicResult
 from laboratory import utils
 from laboratory.settings import FONTS_FOLDER
 from utils import tree_directions
-from .forms_func import get_doc_results, get_finaldata_talon, primary_reception_get_data, hosp_extract_get_data, hosp_patient_movement
+from .forms_func import get_doc_results, get_finaldata_talon, primary_reception_get_data, hosp_extract_get_data, hosp_patient_movement, hosp_get_operation_data
 from api.stationar.stationar_func import hosp_get_hosp_direction
 
 
@@ -454,7 +454,6 @@ def form_02(request_data):
 
 
 ##########################################################################################################################
-
 def form_03(request_data):
     """
     Статистическая форма 066/у Приложение № 5 к приказу Минздрава России от 30 декабря 2002 г. № 413
@@ -649,12 +648,12 @@ def form_03(request_data):
     objs.extend(title_page)
 
     styleTB = deepcopy(style)
-    styleTB.fontSize = 10
+    styleTB.fontSize = 9.3
     styleTB.alignment = TA_CENTER
     # styleTB.fontName = "PTAstraSerifBold"
 
     styleTC = deepcopy(style)
-    styleTC.fontSize = 9.7
+    styleTC.fontSize = 9.5
     styleTC.alignment = TA_LEFT
 
     styleTCright = deepcopy(styleTC)
@@ -670,10 +669,10 @@ def form_03(request_data):
     patient_movement = hosp_patient_movement(hosp_nums_obj)
     x = 0
     for i in patient_movement:
-        x = x + 1
-        tmp_data = [[Paragraph(str(x), styleTB), Paragraph('', styleTB), Paragraph(i.get('bed_profile_research_title'), styleTB),
-                     Paragraph(str(i.get('doc_confirm_code')), styleTB), Paragraph(i.get('date_entered_value'), styleTB),
-                     Paragraph(i.get('date_oute'), styleTB), Paragraph(i.get('diagnos_mkb'), styleTB), Paragraph('', styleTB),
+        x += 1
+        tmp_data = [[Paragraph(str(x), styleTB), Paragraph('', styleTB), Paragraph(i['bed_profile_research_title'], styleTB),
+                     Paragraph(str(i['doc_confirm_code']), styleTB), Paragraph(i.get['date_entered_value'], styleTB),
+                     Paragraph(i.get['date_oute'], styleTB), Paragraph(i.get['diagnos_mkb'], styleTB), Paragraph('', styleTB),
                      Paragraph('', styleTB), Paragraph('ОМС', styleTB),
                      ], ]
 
@@ -690,6 +689,74 @@ def form_03(request_data):
     objs.append(tbl_act)
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('27. Хирургические операции(обозначить: основную операцию, использование спец.аппаратуры):', style), )
+
+    opinion = [[Paragraph('Дата, Час', styleTB), Paragraph('Код <br/>хирурга', styleTB), Paragraph('Код отделения', styleTB), Paragraph('наименование операции', styleTB),
+                Paragraph('код операции', styleTB), Paragraph('наименование осложнения', styleTB), Paragraph('Код ослонения', styleTB), Paragraph('Анестезия', styleTB),
+                Paragraph('энд.', styleTB), Paragraph('лазер.', styleTB), Paragraph('криог.', styleTB), Paragraph('Вид оплаты', styleTB)]]
+
+    patient_operation = hosp_get_operation_data(num_dir)
+    operation_result = []
+    for i in patient_operation:
+        operation_template = [''] * 12
+        operation_template[0] = Paragraph(i['date'] + '<br/>' + i['time_start'] + '-' + i['time_end'], styleTB)
+        operation_template[1] = Paragraph(str(i['doc_code']), styleTB)
+        operation_template[3] = Paragraph(i['name_operation'], styleTB)
+        operation_template[4] = Paragraph(i['code_operation'], styleTB)
+        operation_template[7] = Paragraph(i['anesthesia method'], styleTB)
+        operation_template[5] = Paragraph(i['complications'], styleTB)
+        operation_template[11] = Paragraph(" ОМС", styleTB)
+        operation_result.append(operation_template.copy())
+
+    opinion.extend(operation_result)
+    tbl_act = Table(opinion, repeatRows=1, colWidths=(22 * mm, 12 * mm, 11 * mm, 26 * mm, 26 * mm, 20 * mm, 10 * mm, 12 * mm, 8 * mm, 8 * mm, 8 * mm, 16 * mm))
+    tbl_act.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    objs.append(tbl_act)
+    objs.append(Spacer(1, 2 * mm))
+    space_symbol = '&nbsp;'
+
+    objs.append(Paragraph('28. Обследован: RW {}  AIDS '.format(space_symbol * 10), style), )
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('29. Диагноз стационара(при выписке):', style), )
+
+    opinion = [[Paragraph('Клинический заключительный', styleTB), Paragraph('Основное заболевание', styleTB), Paragraph('Код МКБ', styleTB), Paragraph('Осложнение', styleTB),
+                Paragraph('Код МКБ', styleTB), Paragraph('Сопутствующее заболевание', styleTB), Paragraph('Код МКБ', styleTB)]]
+
+    hosp_last_num = hosp_nums_obj[-1].get('direction')
+    hosp_extract_data = hosp_extract_get_data(hosp_last_num)
+
+    opinion_diagnos = [[Paragraph('', styleTB), Paragraph(hosp_extract_data['final_diagnos'], styleTB), Paragraph(hosp_extract_data['final_diagnos_mkb'], styleTB),
+                        Paragraph(hosp_extract_data['other_diagnos'], styleTB), Paragraph(hosp_extract_data['other_diagnos_mkb'], styleTB),
+                        Paragraph(hosp_extract_data['near_diagnos'], styleTB), Paragraph(hosp_extract_data['near_diagnos_mkb'], styleTB)]]
+
+    opinion.extend(opinion_diagnos)
+    opinion_pathologist = [[Paragraph('Патологоанатомический	', styleTB), Paragraph('', styleTB), Paragraph('', styleTB), Paragraph('', styleTB),
+                            Paragraph('', styleTB), Paragraph('', styleTB), Paragraph('', styleTB)]]
+
+    opinion.extend(opinion_pathologist)
+    tbl_act = Table(opinion, repeatRows=1, colWidths=(28 * mm, 45 * mm, 15 * mm, 30 * mm, 15 * mm, 30 * mm, 15 * mm))
+    tbl_act.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('SPAN', (0, 0), (0, 1)),
+    ]))
+
+    objs.append(tbl_act)
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('30.В случае смерти указать основную причину:______________________________________________________________'
+                          'Код МКБ', style), )
+    objs.append(Spacer(1, 20 * mm))
+    objs.append(Paragraph(
+        '31. Дефекты догоспитального этапа: несвоевременность госпитализации - 1; недостаточный объем клинико - диагностического обследования - 2; неправильная тактика лечения - 3; несовпадение диагноза - 4.',
+        style), )
+    objs.append(Spacer(1, 7 * mm))
+    objs.append(Paragraph('Подпись лечащего врача', style), )
+    objs.append(Spacer(1, 7 * mm))
+    objs.append(Paragraph('Подпись заведующего отделением', style), )
 
     def first_pages(canvas, document):
         canvas.saveState()
