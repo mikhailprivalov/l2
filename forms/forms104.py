@@ -151,7 +151,6 @@ def form_01(request_data):
     barcode128 = code128.Code128(num, barHeight=9 * mm, barWidth=1.25)
     # date_now = datetime.strftime(datetime.now(), "%d.%m.%Y")
 
-
     opinion = [
         [Paragraph('№ карты:', style), Paragraph(num + "-" + "(" + num + ")", styleTBold), barcode128],
     ]
@@ -202,12 +201,11 @@ def form_01(request_data):
     styleTCcenter = deepcopy(styleTC)
     styleTCcenter.alignment = TA_CENTER
 
-
     opinion = [
-            [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
-             Paragraph('Информация', styleTB), Paragraph('Утвержденный перечень исследований', styleTB)
-             , ],
-        ]
+        [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
+         Paragraph('Информация', styleTB), Paragraph('Утвержденный перечень исследований', styleTB)
+            , ],
+    ]
 
     example_template = [
         [Paragraph('1.2.3', style), Paragraph('4856397', style), Paragraph('Полный гематологический анализ', style),
@@ -232,7 +230,6 @@ def form_01(request_data):
 
     tbl = Table(opinion, colWidths=(18 * mm, 25 * mm, 52 * mm, 45 * mm, 59 * mm))
 
-
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
@@ -243,7 +240,6 @@ def form_01(request_data):
     objs.append(tbl)
     objs.append(Spacer(1, 2 * mm))
     objs.append(Spacer(1, 2 * mm))
-
 
     objs.append(Spacer(1, 2 * mm))
     # start_day = datetime.today()

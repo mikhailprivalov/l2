@@ -22,7 +22,7 @@ from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_
 from api.stationar.sql_func import get_result_value_iss
 from api.sql_func import get_fraction_result
 from utils.dates import normalize_date
-from .forms_func import primary_reception_get_data, hosp_extract_get_data, hosp_get_clinical_diagnos, hosp_get_transfers_data
+from .forms_func import primary_reception_get_data, hosp_extract_get_data, hosp_get_clinical_diagnos, hosp_get_transfers_data, hosp_get_operation_data
 
 
 def form_01(request_data):
@@ -391,64 +391,21 @@ def form_01(request_data):
          ]
     ]
 
-    hosp_operation = hosp_get_data_direction(num_dir, site_type=3, type_service='None', level=-1)
-    operation_iss = []
-    operation_research_id = []
-    if hosp_operation:
-        for i in hosp_operation:
-            # найти протоколы по типу операции
-            if (i.get('research_title').lower().find('операци') or i.get('research_title').lower().find('манипул')) != -1:
-                operation_iss.append(i.get('iss'))
-                operation_research_id.append(i.get('research_id'))
+    hosp_operation = hosp_get_operation_data(num_dir)
+    x = 0
+    operation_result = []
+    for i in hosp_operation:
+        operation_template = [''] * 6
+        x += 1
+        operation_template[0] = Paragraph(str(x), styleTO)
+        operation_template[1] = Paragraph(i['name_operation'], styleTO)
+        operation_template[2] = Paragraph(i['date'] + '<br/>' + i['time_start'] + '-' + i['time_end'], styleTO)
+        operation_template[3] = Paragraph(i['anesthesia method'], styleTO)
+        operation_template[4] = Paragraph(i['complications'], styleTO)
+        operation_template[5] = Paragraph(i['doc_fio'], styleTO)
+        operation_result.append(operation_template.copy())
 
-    titles_field = ['Название операции', 'Дата проведения',
-                    'Время начала', 'Время окончания', 'Метод обезболивания', 'Осложнения']
-    list_values = []
-    print(operation_iss)
-    print(operation_research_id)
-    if titles_field and operation_research_id and hosp_operation:
-        count = 0
-        for i in operation_iss:
-            list_values.append(get_result_value_iss(i, operation_research_id[count], titles_field))
-            count = +1
-
-        operation_result = []
-        x = 0
-        operation_template = [''] * len(titles_field)
-        for fields_operation in list_values:
-            date_time = {}
-            date_time['date'], date_time['time_start'], date_time['time_end'] = '', '', ''
-            field = None
-            iss_obj = Issledovaniya.objects.filter(pk=fields_operation[0][1]).first()
-            if not iss_obj.doc_confirmation:
-                continue
-            x += 1
-            for field in fields_operation:
-                if field[3] == 'Название операции':
-                    operation_template[1] = Paragraph(field[2], styleTO)
-                    continue
-                if field[3] == 'Дата проведения':
-                    date_time['date'] = normalize_date(field[2])
-                    continue
-                if field[3] == 'Время начала':
-                    date_time['time_start'] = field[2]
-                    continue
-                if field[3] == 'Время окончания':
-                    date_time['time_end'] = field[2]
-                    continue
-                if field[3] == 'Метод обезболивания':
-                    operation_template[3] = Paragraph(field[2], styleTO)
-                    continue
-                if field[3] == 'Осложнения':
-                    operation_template[4] = Paragraph(field[2], styleTO)
-                    continue
-            operation_template[0] = Paragraph(str(x), styleTO)
-            operation_template[2] = Paragraph(date_time.get('date') + '<br/>' + date_time.get('time_start') + '-' +
-                                              date_time.get('time_end'), styleTO)
-            doc_fio = iss_obj.doc_confirmation.get_fio()
-            operation_template[5] = Paragraph(doc_fio, styleTO)
-            operation_result.append(operation_template.copy())
-        opinion_oper.extend(operation_result)
+    opinion_oper.extend(operation_result)
 
     t_opinion_oper = opinion_oper.copy()
     tbl_o = Table(t_opinion_oper,

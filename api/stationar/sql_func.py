@@ -151,7 +151,7 @@ def get_result_value_iss(iss_pk, research_pk, titles_field):
 
             SELECT field_id, issledovaniye_id, "value", title FROM public.directions_paraclinicresult
             LEFT JOIN t_field ON directions_paraclinicresult.field_id = t_field.id
-            where field_id in (SELECT "id" FROM t_field)  and issledovaniye_id = %(id_iss)s
+            where field_id in (SELECT "id" FROM t_field) and issledovaniye_id = %(id_iss)s
 
 
          """, params={'id_iss': iss_pk, 'id_research': research_pk, 'titles_field': titles_field})

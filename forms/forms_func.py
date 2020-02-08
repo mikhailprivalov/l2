@@ -442,10 +442,10 @@ def primary_reception_get_data(hosp_first_num):
 
     # return (date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital,
     #         time_start_ill, diagnos_who_directed, diagnos_entered, what_time_hospitalized,)
-    return {'date_entered_value':date_entered_value, 'time_entered_value':time_entered_value, 'type_transport':type_transport,
-            'medicament_allergy':medicament_allergy, 'who_directed':who_directed, 'plan_hospital':plan_hospital, 'extra_hospital':extra_hospital,
-            'type_hospital':type_hospital, 'time_start_ill':time_start_ill, 'diagnos_who_directed':diagnos_who_directed,
-            'diagnos_entered':diagnos_entered, 'what_time_hospitalized':what_time_hospitalized}
+    return {'date_entered_value': date_entered_value, 'time_entered_value': time_entered_value, 'type_transport': type_transport,
+            'medicament_allergy': medicament_allergy, 'who_directed': who_directed, 'plan_hospital': plan_hospital, 'extra_hospital': extra_hospital,
+            'type_hospital': type_hospital, 'time_start_ill': time_start_ill, 'diagnos_who_directed': diagnos_who_directed,
+            'diagnos_entered': diagnos_entered, 'what_time_hospitalized': what_time_hospitalized}
 
 
 def hosp_extract_get_data(hosp_last_num):
@@ -464,7 +464,7 @@ def hosp_extract_get_data(hosp_last_num):
     if titles_field and hosp_extract:
         list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
     date_value, time_value = '', ''
-    final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb = '', '', '', '',''
+    final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb = '', '', '', '', ''
 
     if list_values:
         for i in list_values:
@@ -483,8 +483,8 @@ def hosp_extract_get_data(hosp_last_num):
             if i[3] == 'Код по МКБ10':
                 final_diagnos_mkb = str(i[2]).split(' ')[0]
 
-    return {'date_value':date_value, 'time_value':time_value, 'final_diagnos':final_diagnos, 'other_diagnos':other_diagnos, 'near_diagnos':near_diagnos,
-            'outcome':outcome, 'final_diagnos_mkb':final_diagnos_mkb, 'extract_iss':hosp_extract_iss}
+    return {'date_value': date_value, 'time_value': time_value, 'final_diagnos': final_diagnos, 'other_diagnos': other_diagnos, 'near_diagnos': near_diagnos,
+            'outcome': outcome, 'final_diagnos_mkb': final_diagnos_mkb, 'extract_iss': hosp_extract_iss}
 
 
 def hosp_get_clinical_diagnos(hosp_first_num):
@@ -552,7 +552,7 @@ def hosp_get_transfers_data(hosp_nums_obj):
                     time_transfer_value = i[2]
                     continue
 
-        transfers.append({'transfer_research_title':transfer_research_title, 'date_transfer_value':date_transfer_value, 'time_transfer_value':time_transfer_value})
+        transfers.append({'transfer_research_title': transfer_research_title, 'date_transfer_value': date_transfer_value, 'time_transfer_value': time_transfer_value})
 
     return transfers
 
@@ -591,9 +591,56 @@ def hosp_patient_movement(hosp_nums_obj):
                 if i[3] == 'Клинический диагноз по МКБ':
                     diagnos_mkb = i[2]
 
-#TODO: проверить подтверждение переводного эпикриза
-
-        patient_movement.append({'bed_profile_research_title':bed_profile_research_title, 'date_entered_value':primary_reception_data['date_entered_value'],
-                                'date_oute':date_out, 'diagnos_mkb':diagnos_mkb, 'doc_confirm_code':doc_confirm_code})
+        patient_movement.append({'bed_profile_research_title': bed_profile_research_title, 'date_entered_value': primary_reception_data['date_entered_value'],
+                                 'date_oute': date_out, 'diagnos_mkb': diagnos_mkb, 'doc_confirm_code': doc_confirm_code})
 
     return patient_movement
+
+
+def hosp_get_operation_data(num_dir):
+    hosp_operation = hosp_get_data_direction(num_dir, site_type=3, type_service='None', level=-1)
+    operation_iss_research = []
+    if hosp_operation:
+        for i in hosp_operation:
+            # найти протоколы по типу операции
+            if (i.get('research_title').lower().find('операци') or i.get('research_title').lower().find('манипул')) != -1:
+                operation_iss_research.append({'iss': i['iss'], 'research': i['research_id']})
+
+    titles_field = ['Название операции', 'Дата проведения',
+                    'Время начала', 'Время окончания', 'Метод обезболивания', 'Осложнения']
+    list_values = []
+
+    operation_result = []
+    if titles_field and operation_iss_research and hosp_operation:
+        for i in operation_iss_research:
+            list_values.append(get_result_value_iss(i['iss'], i['research'], titles_field))
+
+        operation_result = []
+        for fields_operation in list_values:
+            operation_data = {'name_operation': '', 'date': '', 'time_start': '', 'time_end': '', 'anesthesia method': '', 'complications': '', 'doc_fio': ''}
+            iss_obj = Issledovaniya.objects.filter(pk=fields_operation[0][1]).first()
+            if not iss_obj.doc_confirmation:
+                continue
+            operation_data['doc_fio'] = iss_obj.doc_confirmation.get_fio()
+            for field in fields_operation:
+                if field[3] == 'Название операции':
+                    operation_data['name_operation'] = field[2]
+                    continue
+                if field[3] == 'Дата проведения':
+                    operation_data['date'] = normalize_date(field[2])
+                    continue
+                if field[3] == 'Время начала':
+                    operation_data['time_start'] = field[2]
+                    continue
+                if field[3] == 'Время окончания':
+                    operation_data['time_end'] = field[2]
+                    continue
+                if field[3] == 'Метод обезболивания':
+                    operation_data['anesthesia method'] = field[2]
+                    continue
+                if field[3] == 'Осложнения':
+                    operation_data['complications'] = field[2]
+                    continue
+            operation_result.append(operation_data.copy())
+
+    return operation_result

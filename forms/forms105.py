@@ -530,7 +530,7 @@ def form_03(request_data):
         [Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} <br/><u>{}</u> </font>'.format(
             hospital_name, hospital_address, hospital_kod_ogrn, print_district), styleT),
             Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: 31348613<br/>'
-                      'Медицинская документация<br/>форма № 003/у</font>', styleT)],
+                      'Медицинская документация<br/>форма № 066/у-02</font>', styleT)],
     ]
 
     tbl = Table(opinion, 2 * [90 * mm])
