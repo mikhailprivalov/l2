@@ -11,17 +11,15 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.colors import black
 
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Issledovaniya
+from directions.models import Napravleniya
 from directory.models import Fractions
 from laboratory.settings import FONTS_FOLDER
 import locale
 import sys
 import os.path
 from io import BytesIO
-from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction
-from api.stationar.sql_func import get_result_value_iss
+from api.stationar.stationar_func import hosp_get_hosp_direction
 from api.sql_func import get_fraction_result
-from utils.dates import normalize_date
 from .forms_func import primary_reception_get_data, hosp_extract_get_data, hosp_get_clinical_diagnos, hosp_get_transfers_data, hosp_get_operation_data
 
 

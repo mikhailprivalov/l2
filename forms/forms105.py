@@ -583,7 +583,7 @@ def form_03(request_data):
     # взять самое последнее направленеие из hosp_dirs
     hosp_last_num = hosp_nums_obj[-1].get('direction')
     # 'Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
-    date_value, time_value, final_diagnos, other_diagnos, near_diagnos, outcome = '','','','','',''
+    date_value, time_value = '',''
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
 
     result_outcome = 'выздоровление - 1; улучшение - 2; без перемен - 3; ухудшение - 4; здоров - 5; умер - 6.'

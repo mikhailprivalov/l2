@@ -1,4 +1,3 @@
-import datetime
 import locale
 import os.path
 import sys
@@ -41,9 +40,7 @@ def form_01(request_data):
     individual_date_born = ind.bd()
 
     # Получить все источники, у которых title-ПЛАТНО
-    ist_f = []
     ist_f = list(IstochnikiFinansirovaniya.objects.values_list('id').filter(title__exact='Платно'))
-    ist_f_list = []
     ist_f_list = ([int(x[0]) for x in ist_f])
 
     napr = Napravleniya.objects.filter(id__in=ind_dir)
@@ -55,21 +52,12 @@ def form_01(request_data):
             dir_temp.append(n.pk)
 
     # Получить объект прайс по источнику "платно" из всех видов источников имеющих title платно, берется первое значение
-    # price_modifier_obj = PriceName.get_price(ist_f_list[0])
-
     # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
-    research_direction = forms_func.get_research_by_dir(dir_temp)
+    # research_direction = forms_func.get_research_by_dir(dir_temp)
 
     # получить по направлению-услугам цену из Issledovaniya
-    # research_price = forms_func.get_coast(research_direction, price_modifier_obj)
-    research_price = forms_func.get_coast_from_issledovanie(research_direction)
-
-    result_data = forms_func.get_final_data(research_price)
-
     hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть ИАПО\""
     hospital_address = "г. Иркутс, ул. Жукова 9"
-    # hospital_kod_ogrn = "1033801542576"
-    # hospital_okpo = "31348613"
 
     # Получить данные физлицо-документы: паспорт, полис, снилс
     # document_passport = "Паспорт РФ"
@@ -124,10 +112,8 @@ def form_01(request_data):
     styleJustified.fontSize = 12
     styleJustified.leading = 4.5 * mm
 
-    objs = []
     date_now = ''
 
-    # date_now = datetime.strftime(datetime.now(), "%d.%m.%Y")
     objs = [
         Paragraph('{}'.format(hospital_name), styleCenter),
         Spacer(1, 1 * mm),
@@ -149,7 +135,6 @@ def form_01(request_data):
 
     num = ind_card.number
     barcode128 = code128.Code128(num, barHeight=9 * mm, barWidth=1.25)
-    # date_now = datetime.strftime(datetime.now(), "%d.%m.%Y")
 
     opinion = [
         [Paragraph('№ карты:', style), Paragraph(num + "-" + "(" + num + ")", styleTBold), barcode128],
@@ -224,7 +209,6 @@ def form_01(request_data):
          Paragraph('каб.16 с 9.00 до 15.00', style), Paragraph('', style)
             , ],
     ]
-    # #
 
     opinion.extend(example_template)
 
@@ -242,10 +226,6 @@ def form_01(request_data):
     objs.append(Spacer(1, 2 * mm))
 
     objs.append(Spacer(1, 2 * mm))
-    # start_day = datetime.today()
-    end_date = (date.today() + relativedelta(days=+10))
-    end_date1 = ''
-
     objs.append(Spacer(1, 7 * mm))
 
     doc.build(objs)
