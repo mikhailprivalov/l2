@@ -663,12 +663,9 @@ def form_03(request_data):
     styleTCcenter = deepcopy(styleTC)
     styleTCcenter.alignment = TA_CENTER
 
-    opinion = [
-        [Paragraph('N', styleTB), Paragraph('Код отделения', styleTB), Paragraph('Профиль коек', styleTB), Paragraph('Код врача', styleTB),
-         Paragraph('Дата поступления', styleTB), Paragraph('Дата выписки, перевода', styleTB), Paragraph('Код диагноза по МКБ', styleTB),
-         Paragraph('Код медицинского стандарта', styleTB), Paragraph('Код прерванного случая', styleTB), Paragraph('Вид оплаты', styleTB),
-        ],
-    ]
+    opinion = [[Paragraph('N', styleTB), Paragraph('Код отделения', styleTB), Paragraph('Профиль коек', styleTB), Paragraph('Код врача', styleTB), Paragraph('Дата поступления', styleTB),
+                Paragraph('Дата выписки, перевода', styleTB), Paragraph('Код диагноза по МКБ', styleTB), Paragraph('Код медицинского стандарта', styleTB),
+                Paragraph('Код прерванного случая', styleTB), Paragraph('Вид оплаты', styleTB)]]
 
     patient_movement = hosp_patient_movement(hosp_nums_obj)
     x = 0
@@ -678,11 +675,11 @@ def form_03(request_data):
                      Paragraph(str(i.get('doc_confirm_code')), styleTB), Paragraph(i.get('date_entered_value'), styleTB),
                      Paragraph(i.get('date_oute'), styleTB), Paragraph(i.get('diagnos_mkb'), styleTB), Paragraph('', styleTB),
                      Paragraph('', styleTB), Paragraph('ОМС', styleTB),
-        ],]
+                     ], ]
 
         opinion.extend(tmp_data.copy())
 
-    #получить структуру данных для таблицы
+    # получить структуру данных для таблицы
     tbl_act = Table(opinion, repeatRows=1, colWidths=(7 * mm, 15 * mm, 30 * mm, 20 * mm, 21 * mm, 21 * mm, 20 * mm, 14 * mm, 14 * mm, 20 * mm))
 
     tbl_act.setStyle(TableStyle([
@@ -692,8 +689,7 @@ def form_03(request_data):
     ]))
     objs.append(tbl_act)
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('27. Хирургические операции(обозначить: основную операцию, использование спец.аппаратуры):', style),)
-
+    objs.append(Paragraph('27. Хирургические операции(обозначить: основную операцию, использование спец.аппаратуры):', style), )
 
     def first_pages(canvas, document):
         canvas.saveState()
