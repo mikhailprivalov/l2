@@ -35,6 +35,11 @@
     <script src="{% static 'js/pdfobject.js' %}"></script>
     <script>
         const pks = {{ request.GET.pk|safe }};
+        {% if 'hosp' in request.GET %}
+        const hosp = {{ request.GET.hosp }};
+        {% else %}
+        const hosp = 0;
+        {% endif %}
         $(document).ready(function () {
             $(window).bind('keydown', function(event) {
                 if (event.ctrlKey || event.metaKey) {
@@ -84,7 +89,7 @@
             let sick_list = $("#sick_list").is(":checked");
             localStorage.setItem("print_results_sick_list", sick_list + "");
 
-            return `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}&inline=${inline? 1: 0}&protocol_plain_text=${protocol_plain_text? 1: 0}&sick_list=${sick_list? 1: 0}`;
+            return `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}&inline=${inline? 1: 0}&protocol_plain_text=${protocol_plain_text? 1: 0}&sick_list=${sick_list? 1: 0}&hosp=${hosp}`;
         }
         function updatePreview(){
             PDFObject.embed(get_url(true), '#previewContainer')
