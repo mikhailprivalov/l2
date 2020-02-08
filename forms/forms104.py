@@ -2,11 +2,9 @@ import locale
 import os.path
 import sys
 from copy import deepcopy
-from datetime import date
 from io import BytesIO
 
 import simplejson as json
-from dateutil.relativedelta import relativedelta
 from reportlab.graphics.barcode import code128
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
