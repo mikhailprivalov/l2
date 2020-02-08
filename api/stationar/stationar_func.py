@@ -407,5 +407,5 @@ def check_transfer_epicrisis(data):
         if i.get("research_title").lower().find('перевод') != -1:
             if i.get('date_confirm'):
                 # return (True, i.get('iss'), i.get('research_id'),)
-                return {'is_transfer':True, 'iss':i.get('iss'), 'research_id':i.get('research_id')}
-    return {'is_transfer':False, 'iss':None, 'research_id':None}
+                return {'is_transfer': True, 'iss': i.get('iss'), 'research_id': i.get('research_id')}
+    return {'is_transfer': False, 'iss': None, 'research_id': None}
