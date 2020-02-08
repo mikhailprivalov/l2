@@ -192,20 +192,15 @@ def form_01(request_data):
 
     example_template = [
         [Paragraph('1.2.3', style), Paragraph('4856397', style), Paragraph('Полный гематологический анализ', style),
-         Paragraph('', style), Paragraph('', style)
-            , ],
+         Paragraph('', style), Paragraph('', style),],
         [Paragraph('1.2.3', style), Paragraph('97', style), Paragraph('ЛОР', style),
-         Paragraph('каб.45', style), Paragraph('Аудиометрия, Исследование вестибулярного анализатора', style)
-            , ],
+         Paragraph('каб.45', style), Paragraph('Аудиометрия, Исследование вестибулярного анализатора', style),],
         [Paragraph('1.2.3', style), Paragraph('4856398', style), Paragraph('Офтальмолог', style),
-         Paragraph('каб.14 с 8.00 до 15.00', style), Paragraph('биомикроскопия переднего отрезка глаза, Острота зрения, поле зрения', style)
-            , ],
+         Paragraph('каб.14 с 8.00 до 15.00', style), Paragraph('биомикроскопия переднего отрезка глаза, Острота зрения, поле зрения', style),],
         [Paragraph('1.2', style), Paragraph('98', style), Paragraph('Рентгенография грудной клетки в 2 проекциях', style),
-         Paragraph('каб.19 с 8.00 до 15.00', style), Paragraph('', style)
-            , ],
+         Paragraph('каб.19 с 8.00 до 15.00', style), Paragraph('', style),],
         [Paragraph('1.5', style), Paragraph('981', style), Paragraph('Спирометрия', style),
-         Paragraph('каб.16 с 9.00 до 15.00', style), Paragraph('', style)
-            , ],
+         Paragraph('каб.16 с 9.00 до 15.00', style), Paragraph('', style),],
     ]
 
     opinion.extend(example_template)
