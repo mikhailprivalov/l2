@@ -583,7 +583,7 @@ def form_03(request_data):
     # взять самое последнее направленеие из hosp_dirs
     hosp_last_num = hosp_nums_obj[-1].get('direction')
     # 'Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
-    date_value, time_value = '',''
+    date_value, time_value = '', ''
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
 
     result_outcome = 'выздоровление - 1; улучшение - 2; без перемен - 3; ухудшение - 4; здоров - 5; умер - 6.'
@@ -665,10 +665,10 @@ def form_03(request_data):
 
     opinion = [
         [Paragraph('N', styleTB), Paragraph('Код отделения', styleTB), Paragraph('Профиль коек', styleTB), Paragraph('Код врача', styleTB),
-         Paragraph('Дата поступления', styleTB), Paragraph('Дата выписки, перевода', styleTB), Paragraph('Код диагноза по МКБ', styleTB),
-         Paragraph('Код медицинского стандарта', styleTB), Paragraph('Код прерванного случая', styleTB), Paragraph('Вид оплаты', styleTB),
+        Paragraph('Дата поступления', styleTB), Paragraph('Дата выписки, перевода', styleTB), Paragraph('Код диагноза по МКБ', styleTB),
+        Paragraph('Код медицинского стандарта', styleTB), Paragraph('Код прерванного случая', styleTB), Paragraph('Вид оплаты', styleTB),
             ],
-        ]
+    ]
 
     patient_movement = hosp_patient_movement(hosp_nums_obj)
     x = 0

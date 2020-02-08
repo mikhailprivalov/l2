@@ -584,6 +584,7 @@ def hosp_patient_movement(hosp_nums_obj):
                     list_values = get_result_value_iss(iss_transfer, research_id_transfer, titles_field)
             else:
                 continue
+
         if list_values:
             for i in list_values:
                 if i[3] == 'Дата перевода':

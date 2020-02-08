@@ -186,8 +186,8 @@ def form_01(request_data):
 
     opinion = [
         [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
-         Paragraph('Информация', styleTB), Paragraph('Утвержденный перечень исследований', styleTB)
-            , ],
+         Paragraph('Информация', styleTB), Paragraph('Утвержденный перечень исследований', styleTB),
+         ],
     ]
 
     example_template = [
