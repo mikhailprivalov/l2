@@ -709,7 +709,7 @@ def direction_info(request):
                         dir.client.individual.fio(), dir.client.individual.bd(), dir.client.individual.sex)],
                     ["Карта", "%s %s" % (dir.client.number, dir.client.base.title)],
                     ["Архив", yesno[dir.client.is_archive]],
-                    ["Источник финансирования", "" if not dir.istochnik_f else dir.istochnik_f.title],
+                    ["Источник финансирования", dir.fin_title],
                     ["Диагноз", dir.diagnos],
                     ["Направление создано на основе направления из РМИС", yesno[dir.imported_from_rmis]],
                     ["Направивляющая организация из РМИС", "" if not dir.imported_org else dir.imported_org.title],

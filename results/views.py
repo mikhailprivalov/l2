@@ -1707,9 +1707,9 @@ def result_journal_table_print(request):
                                                                                       "research__sort_weight"):
         d = iss.napravleniye
         otd = d.doc.podrazdeleniye
-        k = "%d_%s" % (otd.pk, iss.napravleniye.istochnik_f.title)
+        k = "%d_%s" % (otd.pk, iss.napravleniye.fin_title)
         if k not in patients:
-            patients[k] = {"title": otd.title, "ist_f": iss.napravleniye.istochnik_f.title, "patients": {}}
+            patients[k] = {"title": otd.title, "ist_f": iss.napravleniye.fin_title, "patients": {}}
         if d.client_id not in patients[k]["patients"]:
             patients[k]["patients"][d.client_id] = {"fio": d.client.individual.fio(short=True, dots=True),
                                                     "card": d.client.number_with_type(),
@@ -2011,7 +2011,7 @@ def result_journal_print(request):
         if key not in clientresults.keys():
             clientresults[key] = {
                 "directions": {},
-                "ist_f": iss.napravleniye.istochnik_f.title,
+                "ist_f": iss.napravleniye.fin_title,
                 "fio": iss.napravleniye.client.individual.fio(short=True, dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() +
                 (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")
             }
@@ -2039,10 +2039,10 @@ def result_journal_print(request):
                             "fail"] = True
                 clientresults[key]["directions"][iss.napravleniye_id]["researches"][iss.research_id]["res"].append(tres)
         if not group_to_otd:
-            otds[iss.napravleniye.doc.podrazdeleniye.title + " - " + iss.napravleniye.istochnik_f.title][key] = \
+            otds[iss.napravleniye.doc.podrazdeleniye.title + " - " + iss.napravleniye.fin_title][key] = \
                 clientresults[key]
         else:
-            otds[iss.napravleniye.istochnik_f.title][key] = clientresults[key]
+            otds[iss.napravleniye.fin_title][key] = clientresults[key]
     j = 0
     # clientresults = collections.OrderedDict(sorted(clientresults.items()))
     for otd in otds.keys():

@@ -844,7 +844,7 @@ class Directions(BaseRequester):
                                     org_id=self.main_client.search_organization_id()),
                                 refServiceId=self.main_client.services.get_service_ids(direction),
                                 fundingSourceTypeId=Utils.get_fin_src_id(
-                                    direction.istochnik_f.title,
+                                    direction.fin_title,
                                     self.main_client.get_fin_dict()),
                                 note='Автоматический вывод из Информационной Системы L2',
                                 goalId=self.main_client.get_directory(
@@ -897,7 +897,7 @@ class Directions(BaseRequester):
                          note='Результаты в направлении или в протоколе.\nАвтоматический вывод из МИС L2',
                          quantity=1)
         if not direction.imported_from_rmis:
-            send_data["fundingSourceTypeId"] = Utils.get_fin_src_id(direction.istochnik_f.title,
+            send_data["fundingSourceTypeId"] = Utils.get_fin_src_id(direction.fin_title,
                                                                     self.main_client.get_fin_dict())
         if direction.rmis_case_id not in [None, ""] and direction.rmis_hosp_id not in [None, ""]:
             send_data["medicalCaseId"] = direction.rmis_case_id
@@ -1127,7 +1127,7 @@ class Directions(BaseRequester):
                          note='Результаты в направлении на фирменном бланке или в протоколе.\nАвтоматический вывод из L2',
                          patientUid=rindiv)
         if not direction.imported_from_rmis:
-            send_data["fundingSourceTypeId"] = Utils.get_fin_src_id(direction.istochnik_f.title,
+            send_data["fundingSourceTypeId"] = Utils.get_fin_src_id(direction.fin_title,
                                                                     self.main_client.get_fin_dict()),
         if stdout:
             stdout.write("SR: " + str(service_rend_id))

@@ -774,7 +774,7 @@ def directions_paraclinic_form(request):
                 "pk": d.pk,
                 "date": strdate(d.data_sozdaniya),
                 "diagnos": d.diagnos,
-                "fin_source": "" if not d.istochnik_f else d.istochnik_f.title,
+                "fin_source": d.fin_title,
                 "fin_source_id": d.istochnik_f_id,
                 "tube": None,
                 "amd": d.amd_status,

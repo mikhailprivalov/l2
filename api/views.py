@@ -600,7 +600,7 @@ def rmis_confirm_list(request):
             "fiodr": x.client.individual.fio(full=True),
             "card": x.client.number_with_type()
         },
-        "fin": x.istochnik_f.title
+        "fin": x.fin_title
     } for x in d]
     return JsonResponse(data)
 
