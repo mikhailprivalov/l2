@@ -1387,7 +1387,7 @@ def form38002(c: Canvas, dir: Napravleniya):
         except ObjectDoesNotExist:
             issledovaniye = None
 
-        dp_title, full_title = "", "", ""
+        dp_title, full_title = "", ""
         comment, info, service_location_title, localization = "", "", "", ""
         if issledovaniye:
             dp_title = issledovaniye.research.podrazdeleniye.title

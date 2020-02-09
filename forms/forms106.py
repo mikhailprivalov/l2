@@ -11,18 +11,16 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.colors import black
 
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Issledovaniya
+from directions.models import Napravleniya
 from directory.models import Fractions
 from laboratory.settings import FONTS_FOLDER
 import locale
 import sys
 import os.path
 from io import BytesIO
-from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction
-from api.stationar.sql_func import get_result_value_iss
+from api.stationar.stationar_func import hosp_get_hosp_direction
 from api.sql_func import get_fraction_result
-from utils.dates import normalize_date
-from .forms_func import primary_reception_get_data, hosp_extract_get_data, hosp_get_clinical_diagnos, hosp_get_transfers_data
+from .forms_func import primary_reception_get_data, hosp_extract_get_data, hosp_get_clinical_diagnos, hosp_get_transfers_data, hosp_get_operation_data
 
 
 def form_01(request_data):
@@ -139,20 +137,26 @@ def form_01(request_data):
     ############################################################################################################
     # Получение данных из выписки
     # Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
-    # 'Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
-    date_value, time_value, final_diagnos, other_diagnos, near_diagnos = hosp_extract_get_data(hosp_last_num)
+    hosp_extract_data = hosp_extract_get_data(hosp_last_num)
+    extrac_date = ''
+    extract_time = ''
+    final_diagnos = ''
+    other_diagnos = ''
+    near_diagnos = ''
+    if hosp_extract_data:
+        extrac_date = hosp_extract_data['date_value']
+        extract_time = hosp_extract_data['time_value']
+        final_diagnos = hosp_extract_data['final_diagnos']
+        other_diagnos = hosp_extract_data['other_diagnos']
+        near_diagnos = hosp_extract_data['near_diagnos']
 
     # Получить отделение - из названия услуги или самого главного направления
     hosp_depart = hosp_nums_obj[0].get('research_title')
 
     ############################################################################################################
     # Получить данные из первичного приема (самого первого hosp-направления)
-    # 'Дата поступления', 'Время поступления', 'Виды транспортировки','Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
-    # 'Вид госпитализации','Время через, которое доставлен после начала заболевания, получения травмы',
-    # 'Диагноз направившего учреждения', 'Диагноз при поступлении'
     hosp_first_num = hosp_nums_obj[0].get('direction')
-    date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital, time_start_ill, \
-        diagnos_who_directed, diagnos_entered = primary_reception_get_data(hosp_first_num)
+    primary_reception_data = primary_reception_get_data(hosp_first_num)
 
     ###########################################################################################################
     # Получение данных группы крови
@@ -174,7 +178,10 @@ def form_01(request_data):
     #####################################################################################################
     # получить даные из переводного эпикриза: Дата перевода, Время перевода, в какое отделение переведен
     # у каждого hosp-направления найти подчиненное эпикриз Перевод*
-    transfers = hosp_get_transfers_data(hosp_nums_obj)
+    transfers_data = hosp_get_transfers_data(hosp_nums_obj)
+    transfers = ''
+    for i in transfers_data:
+        transfers = f"{transfers} в {i['transfer_research_title']} {i['date_transfer_value']}/{i['time_transfer_value']};"
 
     #####################################################################################################
     title_page = [
@@ -187,10 +194,10 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
 
-        Paragraph('Дата и время поступления: {} - {}'.format(date_entered_value, time_entered_value), style),
+        Paragraph('Дата и время поступления: {} - {}'.format(primary_reception_data['date_entered_value'], primary_reception_data['time_entered_value']), style),
         Spacer(1, 0.5 * mm),
 
-        Paragraph('Дата и время выписки: {} - {}'.format(date_value, time_value), style),
+        Paragraph('Дата и время выписки: {} - {}'.format(extrac_date, extract_time), style),
         Spacer(1, 0.5 * mm),
         Paragraph('Отделение: {}'.format(hosp_depart), style),
         Spacer(1, 0.5 * mm),
@@ -200,7 +207,7 @@ def form_01(request_data):
         Spacer(1, 8 * mm),
         Paragraph('Проведено койко-дней: {}'.format('______________________________________________'), style),
         Spacer(1, 0.5 * mm),
-        Paragraph('Виды транспортировки(на каталке, на кресле, может идти): {}'.format(type_transport), style),
+        Paragraph('Виды транспортировки(на каталке, на кресле, может идти): {}'.format(primary_reception_data['type_transport']), style),
         Spacer(1, 0.5 * mm),
         Paragraph('Группа крови: {}. Резус-принадлежность: {}'.format(group_blood_avo_value, group_rezus_value), style),
         Spacer(1, 1 * mm),
@@ -218,11 +225,11 @@ def form_01(request_data):
         Spacer(1, 0.5 * mm),
         Paragraph('6. Кем направлен больной:', style),
         Spacer(1, 0.5 * mm),
-        Paragraph('7. Доставлен в стационар по экстренным показаниям: {}'.format(extra_hospital), style),
+        Paragraph('7. Доставлен в стационар по экстренным показаниям: {}'.format(primary_reception_data['extra_hospital']), style),
         Spacer(1, 0.5 * mm),
-        Paragraph(' через: {} часов после начала заболевания, получения травмы; '.format(time_start_ill), style),
+        Paragraph(' через: {} часов после начала заболевания, получения травмы; '.format(primary_reception_data['time_start_ill']), style),
         Spacer(1, 0.5 * mm),
-        Paragraph(' госпитализирован в плановом порядке (подчеркнуть) {}.'.format(plan_hospital), style),
+        Paragraph(' госпитализирован в плановом порядке (подчеркнуть) {}.'.format(primary_reception_data['plan_hospital']), style),
         Spacer(1, 0.5 * mm),
         Paragraph('8. Диагноз направившего учреждения:', style),
         Spacer(1, 8 * mm),
@@ -287,7 +294,7 @@ def form_01(request_data):
         transfers_frame.addFromList([transfers_inframe], canvas)
 
         # Побочное действие лекарств(непереносимость) координаты
-        medicament_text = [Paragraph('{}'.format(medicament_allergy), styleJustified)]
+        medicament_text = [Paragraph('{}'.format(primary_reception_data['medicament_allergy']), styleJustified)]
         medicament_frame = Frame(27 * mm, 171 * mm, 175 * mm, 9 * mm, leftPadding=0, bottomPadding=0,
                                  rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         medicament_inframe = KeepInFrame(175 * mm, 12 * mm, medicament_text, hAlign='LEFT', vAlign='TOP', )
@@ -315,21 +322,21 @@ def form_01(request_data):
         work_frame.addFromList([work_inframe], canvas)
 
         # Кем направлен больной
-        who_directed_text = [Paragraph('{}'.format(who_directed), style)]
-        who_directed_frame = Frame(77 * mm, 132 * mm, 126 * mm, 5 * mm, leftPadding=0, bottomPadding=0,
+        who_directed_text = [Paragraph('{}'.format(primary_reception_data['who_directed']), style)]
+        who_directed_frame = Frame(77 * mm, 129.5 * mm, 126 * mm, 7 * mm, leftPadding=0, bottomPadding=0,
                                    rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         who_directed_inframe = KeepInFrame(175 * mm, 12 * mm, who_directed_text, hAlign='LEFT', vAlign='TOP', )
         who_directed_frame.addFromList([who_directed_inframe], canvas)
 
         # Диагноз направившего учреждения координаты
-        diagnos_directed_text = [Paragraph('{}'.format(diagnos_who_directed), styleJustified)]
+        diagnos_directed_text = [Paragraph('{}'.format(primary_reception_data['diagnos_who_directed']), styleJustified)]
         diagnos_directed_frame = Frame(27 * mm, 98 * mm, 175 * mm, 9 * mm, leftPadding=0, bottomPadding=0,
                                        rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         diagnos_directed_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_directed_text, hAlign='LEFT', vAlign='TOP', )
         diagnos_directed_frame.addFromList([diagnos_directed_inframe], canvas)
 
         # Диагноз при поступлении координаты
-        diagnos_entered_text = [Paragraph('{}'.format(diagnos_entered), styleJustified)]
+        diagnos_entered_text = [Paragraph('{}'.format(primary_reception_data['diagnos_entered']), styleJustified)]
         diagnos_entered_frame = Frame(27 * mm, 83 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0,
                                       rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         diagnos_entered_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_entered_text, hAlign='LEFT',
@@ -382,61 +389,21 @@ def form_01(request_data):
          ]
     ]
 
-    hosp_operation = hosp_get_data_direction(num_dir, site_type=3, type_service='None', level=-1)
-    operation_iss = []
-    operation_research_id = None
-    if hosp_operation:
-        for i in hosp_operation:
-            # найти протоколы по типу операции
-            if i.get('research_title').lower().find('операци') != -1:
-                operation_iss.append(i.get('iss'))
-                if not operation_research_id:
-                    operation_research_id = i.get('research_id')
+    hosp_operation = hosp_get_operation_data(num_dir)
+    x = 0
+    operation_result = []
+    for i in hosp_operation:
+        operation_template = [''] * 6
+        x += 1
+        operation_template[0] = Paragraph(str(x), styleTO)
+        operation_template[1] = Paragraph(i['name_operation'], styleTO)
+        operation_template[2] = Paragraph(i['date'] + '<br/>' + i['time_start'] + '-' + i['time_end'], styleTO)
+        operation_template[3] = Paragraph(i['anesthesia method'], styleTO)
+        operation_template[4] = Paragraph(i['complications'], styleTO)
+        operation_template[5] = Paragraph(i['doc_fio'], styleTO)
+        operation_result.append(operation_template.copy())
 
-    titles_field = ['Название операции', 'Дата проведения',
-                    'Время начала', 'Время окончания', 'Метод обезболивания', 'Осложнения']
-    list_values = []
-    if titles_field and operation_research_id and hosp_operation:
-        for i in operation_iss:
-            list_values.append(get_result_value_iss(i, operation_research_id, titles_field))
-
-        operation_result = []
-        x = 0
-        operation_template = [''] * len(titles_field)
-        for fields_operation in list_values:
-            date_time = {}
-            date_time['date'], date_time['time_start'], date_time['time_end'] = '', '', ''
-            field = None
-            iss_obj = Issledovaniya.objects.filter(pk=fields_operation[0][1]).first()
-            if not iss_obj.doc_confirmation:
-                continue
-            x += 1
-            for field in fields_operation:
-                if field[3] == 'Название операции':
-                    operation_template[1] = Paragraph(field[2], styleTO)
-                    continue
-                if field[3] == 'Дата проведения':
-                    date_time['date'] = normalize_date(field[2])
-                    continue
-                if field[3] == 'Время начала':
-                    date_time['time_start'] = field[2]
-                    continue
-                if field[3] == 'Время окончания':
-                    date_time['time_end'] = field[2]
-                    continue
-                if field[3] == 'Метод обезболивания':
-                    operation_template[3] = Paragraph(field[2], styleTO)
-                    continue
-                if field[3] == 'Осложнения':
-                    operation_template[4] = Paragraph(field[2], styleTO)
-                    continue
-            operation_template[0] = Paragraph(str(x), styleTO)
-            operation_template[2] = Paragraph(date_time.get('date') + '<br/>' + date_time.get('time_start') + '-' +
-                                              date_time.get('time_end'), styleTO)
-            doc_fio = iss_obj.doc_confirmation.get_fio()
-            operation_template[5] = Paragraph(doc_fio, styleTO)
-            operation_result.append(operation_template.copy())
-        opinion_oper.extend(operation_result)
+    opinion_oper.extend(operation_result)
 
     t_opinion_oper = opinion_oper.copy()
     tbl_o = Table(t_opinion_oper,
