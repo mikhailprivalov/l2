@@ -118,13 +118,15 @@ new Vue({
       window.open(tpl.replace('{pks}', JSON.stringify(pks)), '_blank')
     }
 
+    const hosp = window.location.href.includes('/stationar') ? 1 : 0;
+
     this.$root.$on('print:directions', (pks) => printForm('/directions/pdf?napr_id={pks}', pks))
     this.$root.$on('print:hosp', (pks) => printForm('/barcodes/hosp?napr_id={pks}', pks))
     this.$root.$on('print:directions:contract', (pks) => printForm('/directions/pdf?napr_id={pks}&contract=1', pks))
 
     this.$root.$on('print:barcodes', (pks) => printForm('/barcodes/tubes?napr_id={pks}', pks))
 
-    this.$root.$on('print:results', (pks) => printForm('/results/preview?pk={pks}', pks))
+    this.$root.$on('print:results', (pks) => printForm(`/results/preview?pk={pks}&hosp=${hosp}`, pks))
 
     this.$root.$on('print:directions_list', (pks) => printForm('/statistic/xls?pk={pks}&type=directions_list', pks))
 
