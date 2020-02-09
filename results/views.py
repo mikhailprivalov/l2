@@ -1451,20 +1451,15 @@ h3 {
         if not hosp:
             form = canvas.acroForm
             # canvas.drawString(25, 780, '')
-            form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12,
-                       x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
-                       width=470, height=18, textColor=black, forceBorder=False)
+            form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12, x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
+                           width=470, height=18, textColor=black, forceBorder=False)
             canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.setFont('PTAstraSerifBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-        canvas.drawString(55 * mm, 9 * mm,
-                          '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(),num_card,
-                                                              number_poliklinika))
+        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), num_card, number_poliklinika))
         canvas.drawString(55 * mm, 6 * mm,
                           'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
-
         canvas.restoreState()
 
     def later_pages(canvas, document):
@@ -1483,7 +1478,6 @@ h3 {
         doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
     else:
         doc.build(naprs, onFirstPage=first_pages, onLaterPages=later_pages)
-
 
     if len(link_result) > 0:
         date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
