@@ -49,27 +49,15 @@ def form_01(request_data):
         if (n.istochnik_f_id in ist_f_list) and (n.client == ind_card):
             dir_temp.append(n.pk)
 
-    # Получить объект прайс по источнику "платно" из всех видов источников имеющих title платно, берется первое значение
-    # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
-    # research_direction = forms_func.get_research_by_dir(dir_temp)
-
     # получить по направлению-услугам цену из Issledovaniya
     hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть ИАПО\""
     hospital_address = "г. Иркутс, ул. Жукова 9"
 
     # Получить данные физлицо-документы: паспорт, полис, снилс
-    # document_passport = "Паспорт РФ"
     documents = forms_func.get_all_doc(ind_doc)
     document_passport_num = documents['passport']['num']
     document_passport_serial = documents['passport']['serial']
-    # document_passport_date_start = documents['passport']['date_start']
     document_passport_issued = documents['passport']['issued']
-    # document_polis = documents['polis']['num']
-    # document_snils = documents['snils']['num']
-
-    # indivudual_insurance_org = "38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
-    # individual_benefit_code = "_________"
-
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:

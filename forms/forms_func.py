@@ -440,8 +440,6 @@ def primary_reception_get_data(hosp_first_num):
                 what_time_hospitalized = i[2]
                 continue
 
-    # return (date_entered_value, time_entered_value, type_transport, medicament_allergy, who_directed, plan_hospital, extra_hospital, type_hospital,
-    #         time_start_ill, diagnos_who_directed, diagnos_entered, what_time_hospitalized,)
     return {'date_entered_value': date_entered_value, 'time_entered_value': time_entered_value, 'type_transport': type_transport,
             'medicament_allergy': medicament_allergy, 'who_directed': who_directed, 'plan_hospital': plan_hospital, 'extra_hospital': extra_hospital,
             'type_hospital': type_hospital, 'time_start_ill': time_start_ill, 'diagnos_who_directed': diagnos_who_directed,

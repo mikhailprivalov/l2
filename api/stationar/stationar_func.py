@@ -288,7 +288,7 @@ def hosp_get_text(current_iss, extract=False, mode=None):
     num_paraclinic_dirs = set()
     for h in hosp_dirs:
         obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service=mode, level=2)
-        if len(obj_hosp_dirs) == 0:
+        if not obj_hosp_dirs:
             return {}
         for k in obj_hosp_dirs:
             paraclinic_dir = k.get('direction')
@@ -406,6 +406,5 @@ def check_transfer_epicrisis(data):
     for i in data:
         if i.get("research_title").lower().find('перевод') != -1:
             if i.get('date_confirm'):
-                # return (True, i.get('iss'), i.get('research_id'),)
                 return {'is_transfer': True, 'iss': i.get('iss'), 'research_id': i.get('research_id')}
     return {'is_transfer': False, 'iss': None, 'research_id': None}
