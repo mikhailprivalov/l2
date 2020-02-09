@@ -1445,6 +1445,7 @@ h3 {
     num_card = hosp_nums
     if not hosp:
         num_card = pk[0]
+
     def first_pages(canvas, document):
         canvas.saveState()
         # вывести интерактивную форму "текст"
