@@ -385,6 +385,10 @@ class Napravleniya(models.Model):
             r.append({"pk": i.research_id, "title": i.research.title, "text": i.research.instructions})
         return r
 
+    @property
+    def fin_title(self):
+        return self.istochnik_f.title if self.istochnik_f else ''
+
     def set_polis(self):
         i = self.client.get_data_individual(empty=True)
         c = False
@@ -720,7 +724,7 @@ class Napravleniya(models.Model):
         napr_data['number_poliklinika'] = ind_data['number_poliklinika']
         napr_data['polis_n'] = self.polis_n if self.polis_n else ''
         napr_data['polis_who_give'] = self.polis_who_give if self.polis_who_give else ''
-        napr_data['istochnik_f'] = self.istochnik_f.title.lower() if self.istochnik_f else ''
+        napr_data['istochnik_f'] = self.fin_title.lower()
 
         return napr_data
 

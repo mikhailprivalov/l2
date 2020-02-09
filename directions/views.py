@@ -1240,7 +1240,7 @@ def get_issledovaniya(request):
                 res["imported_org"] = "" if not napr.imported_org else napr.imported_org.title
                 res["directioner"] = "" if napr.imported_from_rmis else napr.doc.fio
                 res["otd"] = "" if napr.imported_from_rmis else napr.doc.podrazdeleniye.title
-                res["fin_source"] = "" if napr.imported_from_rmis else napr.istochnik_f.title
+                res["fin_source"] = "" if napr.imported_from_rmis else napr.fin_title
                 res["ok"] = True
                 res["in_rmis"] = napr.result_rmis_send
             res["q"] = {"text": id, "type": t}
@@ -1387,7 +1387,7 @@ def form38002(c: Canvas, dir: Napravleniya):
         except ObjectDoesNotExist:
             issledovaniye = None
 
-        dp_title, full_title = "", "", ""
+        dp_title, full_title = "", ""
         comment, info, service_location_title, localization = "", "", "", ""
         if issledovaniye:
             dp_title = issledovaniye.research.podrazdeleniye.title

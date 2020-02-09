@@ -35,6 +35,7 @@ from laboratory.utils import strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
+from api.stationar.stationar_func import hosp_get_hosp_direction
 
 
 @login_required
@@ -459,6 +460,7 @@ def result_print(request):
     protocol_plain_text = request.GET.get("protocol_plain_text", "0") == "1"
     sick_document = request.GET.get("sick_list", "0") == "1"
     leftnone = request.GET.get("leftnone", "0") == "0"
+    hosp = request.GET.get("hosp", "0") == "1"
 
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Image
     from reportlab.platypus.flowables import HRFlowable
@@ -590,10 +592,16 @@ def result_print(request):
     # cl = Client()
     link_result = []
     fwb = []
+    hosp_nums_obj = hosp_get_hosp_direction(pk[0])
+    hosp_nums = ''
+    for i in hosp_nums_obj:
+        hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
+
     for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
                             key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
                                 issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
         dpk = direction.pk
+
         if not direction.is_all_confirm():
             continue
         # if not normis:
@@ -675,8 +683,9 @@ def result_print(request):
             ('SPAN', (-1, 5), (-1, -1))
 
         ]))
-        fwb.append(t)
-        fwb.append(Spacer(1, 5 * mm))
+        if not hosp:
+            fwb.append(t)
+            fwb.append(Spacer(1, 5 * mm))
         if not has_paraclinic:
             tw = pw
 
@@ -1161,12 +1170,16 @@ def result_print(request):
         else:
             for iss in Issledovaniya.objects.filter(napravleniye=direction).order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
-                if iss.research.is_doc_refferal:
-                    fwb.append(Paragraph(iss.research.title, styleBold))
-                elif iss.doc_confirmation.podrazdeleniye.vaccine:
-                    fwb.append(Paragraph("Вакцина: " + iss.research.title, styleBold))
-                else:
-                    fwb.append(Paragraph("Услуга: " + iss.research.title, styleBold))
+                if not hosp:
+                    if iss.research.is_doc_refferal:
+                        fwb.append(Paragraph(iss.research.title, styleBold))
+                    elif iss.doc_confirmation.podrazdeleniye.vaccine:
+                        fwb.append(Paragraph("Вакцина: " + iss.research.title, styleBold))
+                    else:
+                        fwb.append(Paragraph("Услуга: " + iss.research.title, styleBold))
+                if hosp:
+                    fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
+
                 if not protocol_plain_text:
                     sick_result = None
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
@@ -1380,11 +1393,13 @@ h3 {
                                 fwb.append(Paragraph('{}-{}'.format(i.research.code, i.research.title), style))
 
                 fwb.append(Spacer(1, 3 * mm))
-                if iss.research.is_doc_refferal:
-                    fwb.append(Paragraph("Дата осмотра: {}".format(strdate(iss.get_medical_examination())), styleBold))
-                else:
-                    fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
-                fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
+                if not hosp:
+                    if iss.research.is_doc_refferal:
+                        fwb.append(Paragraph("Дата осмотра: {}".format(strdate(iss.get_medical_examination())), styleBold))
+                    else:
+                        fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
+                    fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
+
                 if iss.doc_confirmation.podrazdeleniye.vaccine:
                     fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio,
                                                                       iss.doc_confirmation.podrazdeleniye.title),
@@ -1424,26 +1439,27 @@ h3 {
             naprs.append(fwb)
             client_prev = direction.client.individual_id
             continue
-
         naprs.append(KeepTogether([KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph - 6 * mm, hAlign='RIGHT')]))
         client_prev = direction.client.individual_id
+
+    num_card = hosp_nums
+    if not hosp:
+        num_card = pk[0]
 
     def first_pages(canvas, document):
         canvas.saveState()
         # вывести интерактивную форму "текст"
-        form = canvas.acroForm
-        # canvas.drawString(25, 780, '')
-        form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12,
-                       x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
-                       width=470, height=18, textColor=black, forceBorder=False)
+        if not hosp:
+            form = canvas.acroForm
+            # canvas.drawString(25, 780, '')
+            form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12, x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
+                           width=470, height=18, textColor=black, forceBorder=False)
+            canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.setFont('PTAstraSerifBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-        canvas.drawString(55 * mm, 9 * mm,
-                          '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), pk[0],
-                                                              number_poliklinika))
+        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), num_card, number_poliklinika))
         canvas.drawString(55 * mm, 6 * mm,
                           'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-        canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
         canvas.restoreState()
 
@@ -1452,16 +1468,17 @@ h3 {
         # вывести атрибуты пациента: № карты, № направления, ФИО. И Организацию
         canvas.setFont('PTAstraSerifBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(), pk[0]))
+        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(), num_card))
         canvas.drawString(55 * mm, 6 * mm,
                           'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-        canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
+        if not hosp:
+            canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
 
-    if len(pk) == 1 and not link_result:
+    if len(pk) == 1 and not link_result and not hosp:
         doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
     else:
-        doc.build(naprs)
+        doc.build(naprs, onFirstPage=first_pages, onLaterPages=later_pages)
 
     if len(link_result) > 0:
         date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
@@ -1707,9 +1724,9 @@ def result_journal_table_print(request):
                                                                                       "research__sort_weight"):
         d = iss.napravleniye
         otd = d.doc.podrazdeleniye
-        k = "%d_%s" % (otd.pk, iss.napravleniye.istochnik_f.title)
+        k = "%d_%s" % (otd.pk, iss.napravleniye.fin_title)
         if k not in patients:
-            patients[k] = {"title": otd.title, "ist_f": iss.napravleniye.istochnik_f.title, "patients": {}}
+            patients[k] = {"title": otd.title, "ist_f": iss.napravleniye.fin_title, "patients": {}}
         if d.client_id not in patients[k]["patients"]:
             patients[k]["patients"][d.client_id] = {"fio": d.client.individual.fio(short=True, dots=True),
                                                     "card": d.client.number_with_type(),
@@ -2011,7 +2028,7 @@ def result_journal_print(request):
         if key not in clientresults.keys():
             clientresults[key] = {
                 "directions": {},
-                "ist_f": iss.napravleniye.istochnik_f.title,
+                "ist_f": iss.napravleniye.fin_title,
                 "fio": iss.napravleniye.client.individual.fio(short=True, dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() +
                 (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")
             }
@@ -2039,10 +2056,10 @@ def result_journal_print(request):
                             "fail"] = True
                 clientresults[key]["directions"][iss.napravleniye_id]["researches"][iss.research_id]["res"].append(tres)
         if not group_to_otd:
-            otds[iss.napravleniye.doc.podrazdeleniye.title + " - " + iss.napravleniye.istochnik_f.title][key] = \
+            otds[iss.napravleniye.doc.podrazdeleniye.title + " - " + iss.napravleniye.fin_title][key] = \
                 clientresults[key]
         else:
-            otds[iss.napravleniye.istochnik_f.title][key] = clientresults[key]
+            otds[iss.napravleniye.fin_title][key] = clientresults[key]
     j = 0
     # clientresults = collections.OrderedDict(sorted(clientresults.items()))
     for otd in otds.keys():

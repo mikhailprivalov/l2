@@ -420,7 +420,7 @@ def statistic_xls(request):
             for d in dirs:
                 for i in Issledovaniya.objects.filter(napravleniye=d).order_by("research__title").order_by("napravleniye__istochnik_f"):
                     rt = i.research.title
-                    istf = i.napravleniye.istochnik_f.base.title + " - " + i.napravleniye.istochnik_f.title
+                    istf = i.napravleniye.istochnik_f.base.title + " - " + i.napravleniye.fin_title
                     if rt not in iss:
                         iss[rt] = {}
 
