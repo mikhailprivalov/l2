@@ -35,6 +35,7 @@ from laboratory.utils import strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
+from api.stationar.stationar_func import hosp_get_hosp_direction
 
 
 @login_required
@@ -591,10 +592,16 @@ def result_print(request):
     # cl = Client()
     link_result = []
     fwb = []
+    hosp_nums_obj = hosp_get_hosp_direction(pk[0])
+    hosp_nums = ''
+    for i in hosp_nums_obj:
+        hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
+
     for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
                             key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
                                 issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
         dpk = direction.pk
+
         if not direction.is_all_confirm():
             continue
         # if not normis:
@@ -1171,7 +1178,7 @@ def result_print(request):
                     else:
                         fwb.append(Paragraph("Услуга: " + iss.research.title, styleBold))
                 if hosp:
-                    fwb.append(Paragraph(iss.research.title, styleBold))
+                    fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
 
                 if not protocol_plain_text:
                     sick_result = None
@@ -1432,27 +1439,32 @@ h3 {
             naprs.append(fwb)
             client_prev = direction.client.individual_id
             continue
-
         naprs.append(KeepTogether([KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph - 6 * mm, hAlign='RIGHT')]))
         client_prev = direction.client.individual_id
 
+    num_card = hosp_nums
+    if not hosp:
+        num_card = pk[0]
     def first_pages(canvas, document):
         canvas.saveState()
         # вывести интерактивную форму "текст"
-        form = canvas.acroForm
-        # canvas.drawString(25, 780, '')
-        form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12,
+        if not hosp:
+            form = canvas.acroForm
+            # canvas.drawString(25, 780, '')
+            form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12,
                        x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
                        width=470, height=18, textColor=black, forceBorder=False)
+            canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.setFont('PTAstraSerifBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
         canvas.drawString(55 * mm, 9 * mm,
-                          '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), pk[0],
+                          '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(),num_card,
                                                               number_poliklinika))
         canvas.drawString(55 * mm, 6 * mm,
                           'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-        canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
+
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
+
         canvas.restoreState()
 
     def later_pages(canvas, document):
@@ -1460,16 +1472,18 @@ h3 {
         # вывести атрибуты пациента: № карты, № направления, ФИО. И Организацию
         canvas.setFont('PTAstraSerifBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(), pk[0]))
+        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(), num_card))
         canvas.drawString(55 * mm, 6 * mm,
                           'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-        canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
+        if not hosp:
+            canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
 
-    if len(pk) == 1 and not link_result:
+    if len(pk) == 1 and not link_result and not hosp:
         doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
     else:
-        doc.build(naprs)
+        doc.build(naprs, onFirstPage=first_pages, onLaterPages=later_pages)
+
 
     if len(link_result) > 0:
         date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
