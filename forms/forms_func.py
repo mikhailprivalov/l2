@@ -420,7 +420,7 @@ def primary_reception_get_data(hosp_first_num):
                 continue
             if i[3] == 'Вид госпитализации':
                 type_hospital = i[2]
-            if type_hospital == 'Экстренная':
+            if type_hospital.lower() == 'экстренная':
                 time_start_ill_obj = get_result_value_iss(hosp_primary_iss, primary_research_id, ['Время через, которое доставлен после начала заболевания, получения травмы'])
                 if time_start_ill_obj:
                     time_start_ill = time_start_ill_obj[0][2]
@@ -458,13 +458,14 @@ def hosp_extract_get_data(hosp_last_num):
     titles_field = ['Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Основной диагноз по МКБ',
                     'Осложнение основного диагноза (описание)', 'Осложнение основного диагноза по МКБ',
                     'Сопутствующий диагноз (описание)', 'Сопутствующий диагноз по МКБ',
-                    'Исход заболевания',
+                    'Исход заболевания', 'Проведено койко-дней'
                     ]
     list_values = None
     if titles_field and hosp_extract:
         list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
     date_value, time_value = '', ''
     final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', '', ''
+    days_count = ''
 
     if list_values:
         for i in list_values:
@@ -486,10 +487,12 @@ def hosp_extract_get_data(hosp_last_num):
                 other_diagnos_mkb = str(i[2]).split(' ')[0]
             if i[3] == 'Сопутствующий диагноз по МКБ':
                 near_diagnos_mkb = str(i[2]).split(' ')[0]
+            if i[3] == 'Проведено койко-дней':
+                days_count = str(i[2])
 
     return {'date_value': date_value, 'time_value': time_value, 'final_diagnos': final_diagnos, 'other_diagnos': other_diagnos, 'near_diagnos': near_diagnos,
             'outcome': outcome, 'final_diagnos_mkb': final_diagnos_mkb, 'other_diagnos_mkb': other_diagnos_mkb, 'near_diagnos_mkb': near_diagnos_mkb,
-            'extract_iss': hosp_extract_iss
+            'extract_iss': hosp_extract_iss, 'days_count': days_count
             }
 
 

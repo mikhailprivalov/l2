@@ -1477,6 +1477,8 @@ h3 {
 
     if len(pk) == 1 and not link_result and not hosp:
         doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
+    elif len(pk) == 1 and not link_result and hosp:
+        doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages)
     else:
         doc.build(naprs, onFirstPage=first_pages, onLaterPages=later_pages)
 

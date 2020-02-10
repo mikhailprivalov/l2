@@ -143,12 +143,14 @@ def form_01(request_data):
     final_diagnos = ''
     other_diagnos = ''
     near_diagnos = ''
+    days_count = '__________________________'
     if hosp_extract_data:
         extrac_date = hosp_extract_data['date_value']
         extract_time = hosp_extract_data['time_value']
         final_diagnos = hosp_extract_data['final_diagnos']
         other_diagnos = hosp_extract_data['other_diagnos']
         near_diagnos = hosp_extract_data['near_diagnos']
+        days_count = hosp_extract_data['days_count']
 
     # Получить отделение - из названия услуги или самого главного направления
     hosp_depart = hosp_nums_obj[0].get('research_title')
@@ -205,7 +207,7 @@ def form_01(request_data):
         Spacer(1, 0.5 * mm),
         Paragraph('Переведен в отделение:', style),
         Spacer(1, 8 * mm),
-        Paragraph('Проведено койко-дней: {}'.format('______________________________________________'), style),
+        Paragraph('Проведено койко-дней: {}'.format(days_count), style),
         Spacer(1, 0.5 * mm),
         Paragraph('Виды транспортировки(на каталке, на кресле, может идти): {}'.format(primary_reception_data['type_transport']), style),
         Spacer(1, 0.5 * mm),

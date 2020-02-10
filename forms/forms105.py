@@ -584,7 +584,7 @@ def form_03(request_data):
     # 'Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Осложнение основного диагноза (описание)', 'Сопутствующий диагноз (описание)'
     date_value, time_value = '', ''
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
-
+    days_count = '__________________________'
     result_outcome = 'выздоровление - 1; улучшение - 2; без перемен - 3; ухудшение - 4; здоров - 5; умер - 6.'
     if hosp_extract_data:
         if hosp_extract_data['outcome'] == 'выздоровление':
@@ -595,6 +595,7 @@ def form_03(request_data):
             result_outcome = 'ухудшение - 4'
         if hosp_extract_data['outcome'] == 'без перемен':
             result_outcome = 'без перемен - 3'
+        days_count = hosp_extract_data['days_count']
 
     title_page = [
         Indenter(left=0 * mm),
@@ -609,7 +610,7 @@ def form_03(request_data):
         Spacer(1, 2 * mm),
 
         Paragraph('1. Код пациента: ________  2. Ф.И.О.: {}'.format(patient_data['fio']), style),
-        Paragraph('3. Пол: {} {}4. Дата рождения'.format(sex, space_symbol * 24, patient_data['born']), style),
+        Paragraph('3. Пол: {} {}4. Дата рождения {}'.format(sex, space_symbol * 24, patient_data['born']), style),
         Paragraph('5. Документ, удостов. личность: (название, серия, номер) {} {}'.
                   format(space_symbol * 2, doc_patient), style),
         Paragraph('6. Адрес: регистрация по месту жительства: {}'.format(patient_data['main_address']), style),
@@ -638,7 +639,7 @@ def form_03(request_data):
                                                                                                             primary_reception_data['time_entered_value']), style),
         Paragraph('Подпись врача приемного отделения ______________ Код __________', style),
         Paragraph('22. Дата выписки (смерти): {}; Время {}'.format(date_value, time_value), style),
-        Paragraph('23. Продолжительность госпитализации (койко - дней): _ _ _', style),
+        Paragraph('23. Продолжительность госпитализации (койко - дней): {}'.format(days_count), style),
         Paragraph('24. Исход госпитализации: выписан - 1; в т.ч. в дневной стационар - 2; в круглосуточный стационар - 3; переведен в другой стационар - 4;', style),
         Paragraph('24.1. Результат госпитализации: {}'.format(result_outcome), style),
         Paragraph('25. Листок нетрудоспособности: открыт _ _._ _._ _ _ _ закрыт:_ _._ _._ _ _ _', style),
