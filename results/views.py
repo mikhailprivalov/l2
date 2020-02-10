@@ -31,7 +31,7 @@ from directions.models import TubesRegistration, Issledovaniya, Result, Napravle
     ParaclinicResult, Recipe
 from laboratory.decorators import group_required, logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
-from laboratory.utils import strdate
+from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
@@ -881,8 +881,8 @@ def result_print(request):
                                                      styleSheet["BodyText"]))
                             else:
                                 tmp.append("")
-                            if prev_date_conf != strdate(iss.time_confirmation, short_year=True):
-                                prev_date_conf = strdate(iss.time_confirmation, short_year=True)
+                            if prev_date_conf != strdate(iss.time_confirmation, short_year=True) + '<br/>' + strtime(iss.time_confirmation)[0:5]:
+                                prev_date_conf = strdate(iss.time_confirmation, short_year=True) + '<br/>' + strtime(iss.time_confirmation)[0:5]
                                 tmp.append(Paragraph('<font face="OpenSans" size="7">%s</font>' % prev_date_conf,
                                                      styleSheet["BodyText"]))
                             else:
