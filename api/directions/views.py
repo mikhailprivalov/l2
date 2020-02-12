@@ -658,7 +658,7 @@ def directions_results_report(request):
                                                                  issledovaniye=i).order_by("field__order"):
                             if r.value == "":
                                 continue
-                            res.append((r.field.get_title() + ": " if r.field.get_title() != "" else "") + r.value)
+                            res.append((r.field.get_title(force_type=r.get_field_type()) + ": " if r.field.get_title(force_type=r.get_field_type()) != "" else "") + r.value)
 
                         if len(res) == 0:
                             continue
@@ -885,19 +885,20 @@ def directions_paraclinic_form(request):
                     g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
                          "hide": group.hide, "fields": [], "visibility": group.visibility}
                     for field in ParaclinicInputField.objects.filter(group=group, hide=False).order_by("order"):
+                        result_field = None if not ParaclinicResult.objects.filter(
+                                issledovaniye=i, field=field).exists() else ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0]
+                        field_type = field.field_type if not result_field else result_field.get_field_type()
                         g["fields"].append({
                             "pk": field.pk,
                             "order": field.order,
                             "lines": field.lines,
                             "title": field.title,
                             "hide": field.hide,
-                            "values_to_input": ([] if not field.required or field.field_type not in [10, 12] else
+                            "values_to_input": ([] if not field.required or field_type not in [10, 12] else
                                                 ['- Не выбрано']) + json.loads(field.input_templates),
-                            "value": (field.default_value if field.field_type not in [3, 11, 13, 14] else '')
-                            if not ParaclinicResult.objects.filter(
-                                issledovaniye=i, field=field).exists() else
-                            ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value,
-                            "field_type": field.field_type,
+                            "value": (field.default_value if field_type not in [3, 11, 13, 14] else '')
+                            if not result_field else result_field.value,
+                            "field_type": field_type,
                             "default_value": field.default_value,
                             "visibility": field.visibility,
                             "required": field.required,
@@ -995,7 +996,19 @@ def directions_paraclinic_result(request):
                 else:
                     f_result = ParaclinicResult.objects.filter(issledovaniye=iss, field=f)[0]
                 f_result.value = field["value"]
+                f_result.field_type = f.field_type
                 f_result.save()
+                if f.field_type == 16 and iss.napravleniye.parent and iss.napravleniye.parent.research.is_hospital:
+                    if with_confirm:
+                        val = json.loads(field["value"])
+                        if isinstance(val, list):
+                            iss.napravleniye.parent.aggregate_lab = val
+                        else:
+                            iss.napravleniye.parent.aggregate_lab = None
+                    else:
+                        iss.napravleniye.parent.aggregate_lab = None
+                    iss.napravleniye.parent.save()
+
         iss.doc_save = request.user.doctorprofile
         iss.time_save = timezone.now()
         if iss.research.is_doc_refferal:

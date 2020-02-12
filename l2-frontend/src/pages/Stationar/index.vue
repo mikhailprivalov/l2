@@ -172,7 +172,7 @@
           <DescriptiveForm
             :research="row.research"
             :pk="row.pk"
-            :confirmed="Boolean(row.confirmed || row.forbidden_edit)"
+            :confirmed="Boolean(!!row.confirmed || !!row.forbidden_edit)"
             :patient="patient_form"
             :change_mkb="change_mkb(row)"
             :hospital_r_type="'desc'"

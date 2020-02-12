@@ -335,16 +335,16 @@ def form_02(request_data):
         ]
 
         # Найти и добавить поля у к-рых флаг "for_talon". Отсортировано по 'order' (группа, поле)
-        field_iss = ParaclinicResult.objects.filter(issledovaniye=obj_iss, field__for_talon=True, ).order_by(
-            'field__group__order', 'field__order')
+        field_iss = ParaclinicResult.objects.filter(issledovaniye=obj_iss, field__for_talon=True).order_by('field__group__order', 'field__order')
 
         for f in field_iss:
             v = f.value.replace("\n", "<br/>")
-            if f.field.field_type == 1:
+            field_type = f.get_field_type()
+            if field_type == 1:
                 vv = v.split('-')
                 if len(vv) == 3:
                     v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-            list_f = [[Paragraph(f.field.get_title(), styleT), Paragraph(v, styleT)]]
+            list_f = [[Paragraph(f.field.get_title(force_type=field_type), styleT), Paragraph(v, styleT)]]
             opinion.extend(list_f)
 
         tbl = Table(opinion, colWidths=(60 * mm, 123 * mm))

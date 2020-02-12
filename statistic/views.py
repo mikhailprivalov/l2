@@ -491,12 +491,13 @@ def statistic_xls(request):
                 continue
             v = {}
             for p in ParaclinicResult.objects.filter(issledovaniye=i):
-                if p.field.get_title() in ts:
-                    if p.field.field_type == 1:
+                field_type = p.get_field_type()
+                if p.field.get_title(force_type=field_type) in ts:
+                    if field_type == 1:
                         v_date = p.value.replace("-", ".")
-                        v[p.field.get_title()] = v_date
+                        v[p.field.get_title(force_type=field_type)] = v_date
                     else:
-                        v[p.field.get_title()] = p.value
+                        v[p.field.get_title(force_type=field_type)] = p.value
             for t in ts:
                 row.append(v.get(t, ""))
             row.append("V")
@@ -505,8 +506,6 @@ def statistic_xls(request):
             row_num += 1
 
     elif tp == "statistics-tickets-print":
-        access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name',
-                                                                                  flat=True)) or request.user.is_superuser
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
 
