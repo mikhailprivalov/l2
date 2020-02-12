@@ -998,15 +998,28 @@ def directions_paraclinic_result(request):
                 f_result.value = field["value"]
                 f_result.field_type = f.field_type
                 f_result.save()
-                if f.field_type == 16 and iss.napravleniye.parent and iss.napravleniye.parent.research.is_hospital:
-                    if with_confirm:
-                        val = json.loads(field["value"])
-                        if isinstance(val, list):
-                            iss.napravleniye.parent.aggregate_lab = val
+                if f.field_type in [16, 17] and iss.napravleniye.parent and iss.napravleniye.parent.research.is_hospital:
+                    try:
+                        val = json.loads(str(field["value"]))
+                    except Exception:
+                        val = None
+
+                    if f.field_type == 16:
+                        if with_confirm:
+                            if isinstance(val, list):
+                                iss.napravleniye.parent.aggregate_lab = val
+                            else:
+                                iss.napravleniye.parent.aggregate_lab = None
                         else:
                             iss.napravleniye.parent.aggregate_lab = None
-                    else:
-                        iss.napravleniye.parent.aggregate_lab = None
+                    elif f.field_type == 17:
+                        if with_confirm:
+                            if isinstance(val, list):
+                                iss.napravleniye.parent.aggregate_desc = val
+                            else:
+                                iss.napravleniye.parent.aggregate_desc = None
+                        else:
+                            iss.napravleniye.parent.aggregate_desc = None
                     iss.napravleniye.parent.save()
 
         iss.doc_save = request.user.doctorprofile
