@@ -885,8 +885,8 @@ def directions_paraclinic_form(request):
                     g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
                          "hide": group.hide, "fields": [], "visibility": group.visibility}
                     for field in ParaclinicInputField.objects.filter(group=group, hide=False).order_by("order"):
-                        result_field = None if not ParaclinicResult.objects.filter(
-                                issledovaniye=i, field=field).exists() else ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0]
+                        result_field = None if not ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists()\
+                            else ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0]
                         field_type = field.field_type if not result_field else result_field.get_field_type()
                         g["fields"].append({
                             "pk": field.pk,

@@ -847,7 +847,8 @@ class Issledovaniya(models.Model):
                                                                   null=True, blank=True,
                                                                   help_text='Авто назначаемое при подтверждении',
                                                                   on_delete=models.SET_NULL)
-    aggregate_lab = JSONField(null=True, blank=True, default=None, help_text='ID направлений, привязаных к стационарному случаю')
+    aggregate_lab = JSONField(null=True, blank=True, default=None, help_text='ID направлений лаборатории, привязаных к стационарному случаю')
+    aggregate_desc = JSONField(null=True, blank=True, default=None, help_text='ID направлений описательных, привязаных к стационарному случаю')
 
     @property
     def time_save_local(self):
