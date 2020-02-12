@@ -296,7 +296,7 @@ def hosp_get_text(current_iss, extract=False, mode=None):
 
     num_paraclinic_dirs = list(num_paraclinic_dirs)
     # [0] - заглушка для запроса. research c id =0 не бывает
-    get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True)
+    get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True) if num_paraclinic_dirs else []
     research_distinct = [d[0] for d in get_research_id]
     result = []
 

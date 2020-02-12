@@ -108,6 +108,7 @@
                   :pk="pk"
                   extract
                   :r_type="hospital_r_type"
+                  v-model="field.value"
                 />
               </div>
               <div class="field-value" v-else-if="field.field_type === 18">
