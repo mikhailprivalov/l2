@@ -53,7 +53,8 @@ def directions_generate(request):
                                                             parent_iss=p.get("parent_iss", None),
                                                             counts=p.get("counts", {}),
                                                             localizations=p.get("localizations", {}),
-                                                            service_locations=p.get("service_locations", {}))
+                                                            service_locations=p.get("service_locations", {}),
+                                                            direction_purpose=p.get("direction_purpose", "NONE"))
         result["ok"] = rc["r"]
         result["directions"] = rc["list_id"]
         if "message" in rc:
@@ -1294,3 +1295,15 @@ def reset_amd(request):
         direction.error_amd = False
         direction.save()
     return JsonResponse({"ok": True})
+
+
+def purposes(request):
+    result = [
+        {"pk": "NONE", "title": "Не выбрано"}
+    ]
+    for p in Napravleniya.PURPOSES:
+        result.append({
+            "pk": p[0],
+            "title": p[1],
+        })
+    return JsonResponse({"purposes": result})

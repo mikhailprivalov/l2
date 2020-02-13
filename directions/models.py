@@ -301,6 +301,12 @@ class Napravleniya(models.Model):
     """
     Таблица направлений
     """
+    PURPOSE_PROFESSIONAL_EXAMINATION = 'PROFESSIONAL_EXAMINATION'
+
+    PURPOSES = (
+        (PURPOSE_PROFESSIONAL_EXAMINATION, 'Профосмотр'),
+    )
+
     data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
     visit_date = models.DateTimeField(help_text='Дата посещения по направлению', db_index=True, default=None,
                                       blank=True, null=True)
@@ -365,6 +371,7 @@ class Napravleniya(models.Model):
                                   help_text='Номер документа в АМД')
     error_amd = models.BooleanField(default=False, blank=True, help_text='Ошибка отправка в АМД?')
     amd_excluded = models.BooleanField(default=False, blank=True, help_text='Исключить из выгрузки в АМД?')
+    purpose = models.CharField(max_length=64, null=True, blank=True, default=None, db_index=True, choices=PURPOSES, help_text="Цель направления")
 
     @property
     def data_sozdaniya_local(self):
@@ -418,7 +425,8 @@ class Napravleniya(models.Model):
                          rmis_data: [dict, None] = None,
                          parent_id=None,
                          parent_auto_gen_id=None,
-                         rmis_slot=None) -> 'Napravleniya':
+                         rmis_slot=None,
+                         direction_purpose="NONE") -> 'Napravleniya':
         """
         Генерация направления
         :param client_id:
@@ -459,6 +467,8 @@ class Napravleniya(models.Model):
             if ofname_id > -1 and ofname:
                 dir.doc = ofname
                 dir.doc_who_create = doc_current
+        if direction_purpose != "NONE":
+            dir.purpose = direction_purpose
         if save:
             dir.save()
         dir.set_polis()
@@ -485,7 +495,7 @@ class Napravleniya(models.Model):
                                           researches, comments, for_rmis=None, rmis_data=None, vich_code='',
                                           count=1, discount=0, parent_iss=None, rmis_slot=None, counts=None,
                                           localizations=None, service_locations=None, visited=None,
-                                          parent_auto_gen=None):
+                                          parent_auto_gen=None, direction_purpose="NONE"):
         if not visited:
             visited = []
         if counts is None:
@@ -572,7 +582,8 @@ class Napravleniya(models.Model):
                                                                                              rmis_data=rmis_data,
                                                                                              parent_id=parent_iss,
                                                                                              parent_auto_gen_id=parent_auto_gen,
-                                                                                             rmis_slot=rmis_slot)
+                                                                                             rmis_slot=rmis_slot,
+                                                                                             direction_purpose=direction_purpose)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
                     if dir_group == -1:
@@ -589,7 +600,8 @@ class Napravleniya(models.Model):
                                                                                              rmis_data=rmis_data,
                                                                                              parent_id=parent_iss,
                                                                                              parent_auto_gen_id=parent_auto_gen,
-                                                                                             rmis_slot=rmis_slot)
+                                                                                             rmis_slot=rmis_slot,
+                                                                                             direction_purpose=direction_purpose)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
 

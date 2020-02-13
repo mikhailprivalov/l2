@@ -37,6 +37,7 @@ class SettingManager:
             "benefit",
             "microbiology",
             "amd",
+            "direction_purpose",
         ]}, "consults_module": SettingManager.get("consults_module", default='false', default_type='b')}
 
     @staticmethod
