@@ -652,7 +652,6 @@ def form_03(request_data):
     styleTB.fontSize = 8.7
     styleTB.alignment = TA_CENTER
     styleTB.leading = 3.5 * mm
-    # styleTB.fontName = "PTAstraSerifBold"
 
     styleTC = deepcopy(style)
     styleTC.fontSize = 9.5
