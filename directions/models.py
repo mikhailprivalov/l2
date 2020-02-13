@@ -301,10 +301,14 @@ class Napravleniya(models.Model):
     """
     Таблица направлений
     """
-    PURPOSE_PROFESSIONAL_EXAMINATION = 'PROFESSIONAL_EXAMINATION'
+    PURPOSE_WORK_EXAMINATION = 'WORK_EXAMINATION'
+    PURPOSE_DRIVE_EXAMINATION = 'DRIVE_EXAMINATION'
+    PURPOSE_WEAPON_EXAMINATION = 'WEAPON_EXAMINATION'
 
     PURPOSES = (
-        (PURPOSE_PROFESSIONAL_EXAMINATION, 'Профосмотр'),
+        (PURPOSE_WORK_EXAMINATION, 'На работу'),
+        (PURPOSE_DRIVE_EXAMINATION, 'На водительское'),
+        (PURPOSE_WEAPON_EXAMINATION, 'На оружие'),
     )
 
     data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
@@ -769,7 +773,7 @@ class PersonContract(models.Model):
     """
     num_contract = models.CharField(max_length=25, null=False, db_index=True, help_text='Номер договора')
     protect_code = models.CharField(max_length=32, null=False, db_index=True, help_text="Контрольная сумма контракта")
-    dir_list = models.CharField(max_length=255, null=False, db_index=True, help_text="Направления для контракта")
+    dir_list = models.CharField(max_length=512, null=False, db_index=True, help_text="Направления для контракта")
     sum_contract = models.CharField(max_length=255, null=False, db_index=True, help_text="Итоговая сумма контракта")
     patient_data = models.CharField(max_length=255, null=False, db_index=True,
                                     help_text="Фамилия инициалы Заказчика-Пациента")

@@ -67,10 +67,17 @@
           <col>
         </colgroup>
         <tbody>
-          <tr>
+          <tr v-if="direction_purpose_enabled">
             <th>Цель направления:</th>
             <td class="cl-td">
               <SelectFieldTitled v-model="direction_purpose" :variants="purposes" />
+            </td>
+          </tr>
+          <tr>
+            <th>Количество:</th>
+            <td class="cl-td">
+              <input v-model="directions_count" min="1" max="10"
+                     style="max-width: 160px" class="form-control" type="number" step="1"/>
             </td>
           </tr>
         </tbody>
@@ -248,9 +255,26 @@
         discount: 0,
         purposes: [],
         direction_purpose: 'NONE',
+        directions_count: '1',
       }
     },
     watch: {
+      directions_count() {
+        if (this.directions_count.trim() === '') {
+          return
+        }
+
+        let nd = Number(this.directions_count) || 1
+
+        if (nd < 1) {
+          nd = 1
+        }
+        if (nd > 10) {
+          nd = 10
+        }
+
+        this.directions_count = String(nd)
+      },
       count() {
         this.count = Math.min(Math.max(parseInt(this.count) || 1, 1), 1000)
       },
@@ -481,12 +505,14 @@
           parent_iss: this.parent_iss,
           kk: this.kk,
           direction_purpose: this.direction_purpose,
+          directions_count: Number(this.directions_count) || 1,
         })
       },
       clear_all() {
         this.$root.$emit('researches-picker:deselect_all' + this.kk)
         this.clear_fin()
         this.direction_purpose = 'NONE'
+        this.directions_count = '1'
       },
       clear_fin() {
         this.select_fin(-1)
@@ -503,7 +529,7 @@
         return this.$store.getters.modules.l2_direction_purpose
       },
       show_additions() {
-        return this.direction_purpose_enabled && this.researches.length > 0
+        return this.researches.length > 0
       },
       current_fin() {
         return this.get_fin_obj(this.fin)
