@@ -387,11 +387,9 @@ def primary_reception_get_data(hosp_first_num):
         hosp_primary_iss = hosp_primary_receptions[0].get('iss')
         primary_research_id = hosp_primary_receptions[0].get('research_id')
 
-    titles_field = ['Дата поступления', 'Время поступления', 'Виды транспортировки',
-                    'Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
-                    'Вид госпитализации',
-                    'Время через, которое доставлен после начала заболевания, получения травмы',
-                    'Диагноз направившего учреждения', 'Диагноз при поступлении', 'Госпитализирован по поводу данного заболевания']
+    titles_field = ['Дата поступления', 'Время поступления', 'Виды транспортировки', 'Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
+                    'Вид госпитализации','Время через, которое доставлен после начала заболевания, получения травмы', 'Диагноз направившего учреждения',
+                    'Диагноз при поступлении', 'Госпитализирован по поводу данного заболевания', 'Общее состояние']
     list_values = None
     if titles_field and hosp_primary_receptions:
         list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
@@ -399,7 +397,7 @@ def primary_reception_get_data(hosp_first_num):
     date_entered_value, time_entered_value, type_transport, medicament_allergy = '', '', '', ''
     who_directed, plan_hospital, extra_hospital, type_hospital = '', '', '', ''
     time_start_ill, diagnos_who_directed, diagnos_entered = '', '', ''
-    what_time_hospitalized = ''
+    what_time_hospitalized, state = '', ''
 
     if list_values:
         for i in list_values:
@@ -439,11 +437,14 @@ def primary_reception_get_data(hosp_first_num):
             if i[3] == 'Госпитализирован по поводу данного заболевания':
                 what_time_hospitalized = i[2]
                 continue
+            if i[3] == 'Общее состояние':
+                state = i[2]
+                continue
 
     return {'date_entered_value': date_entered_value, 'time_entered_value': time_entered_value, 'type_transport': type_transport,
             'medicament_allergy': medicament_allergy, 'who_directed': who_directed, 'plan_hospital': plan_hospital, 'extra_hospital': extra_hospital,
             'type_hospital': type_hospital, 'time_start_ill': time_start_ill, 'diagnos_who_directed': diagnos_who_directed,
-            'diagnos_entered': diagnos_entered, 'what_time_hospitalized': what_time_hospitalized}
+            'diagnos_entered': diagnos_entered, 'what_time_hospitalized': what_time_hospitalized, 'state': state}
 
 
 def hosp_extract_get_data(hosp_last_num):
@@ -458,14 +459,14 @@ def hosp_extract_get_data(hosp_last_num):
     titles_field = ['Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Основной диагноз по МКБ',
                     'Осложнение основного диагноза (описание)', 'Осложнение основного диагноза по МКБ',
                     'Сопутствующий диагноз (описание)', 'Сопутствующий диагноз по МКБ',
-                    'Исход заболевания', 'Проведено койко-дней'
+                    'Исход госпитализации', 'Результат госпитализации', 'Проведено койко-дней'
                     ]
     list_values = None
     if titles_field and hosp_extract:
         list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
     date_value, time_value = '', ''
     final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', '', ''
-    days_count = ''
+    days_count, result_hospital = '', ''
 
     if list_values:
         for i in list_values:
@@ -479,8 +480,10 @@ def hosp_extract_get_data(hosp_last_num):
                 other_diagnos = i[2]
             if i[3] == 'Сопутствующий диагноз (описание)':
                 near_diagnos = i[2]
-            if i[3] == 'Исход заболевания':
+            if i[3] == 'Исход госпитализации':
                 outcome = i[2]
+            if i[3] == 'Результат госпитализации':
+                result_hospital = i[2]
             if i[3] == 'Основной диагноз по МКБ':
                 final_diagnos_mkb = str(i[2]).split(' ')[0]
             if i[3] == 'Осложнение основного диагноза по МКБ':
@@ -492,7 +495,7 @@ def hosp_extract_get_data(hosp_last_num):
 
     return {'date_value': date_value, 'time_value': time_value, 'final_diagnos': final_diagnos, 'other_diagnos': other_diagnos, 'near_diagnos': near_diagnos,
             'outcome': outcome, 'final_diagnos_mkb': final_diagnos_mkb, 'other_diagnos_mkb': other_diagnos_mkb, 'near_diagnos_mkb': near_diagnos_mkb,
-            'extract_iss': hosp_extract_iss, 'days_count': days_count
+            'extract_iss': hosp_extract_iss, 'days_count': days_count, 'result_hospital': result_hospital
             }
 
 
@@ -613,11 +616,11 @@ def hosp_get_operation_data(num_dir):
     if hosp_operation:
         for i in hosp_operation:
             # найти протоколы по типу операции
-            if i.get('research_title').lower().find('операци') != -1 or i.get('research_title').lower().find('манипул') != -1:
+            if (i.get('research_title').lower().find('операци') != -1 or i.get('research_title').lower().find('манипул') != -1) and i['date_confirm']:
                 operation_iss_research.append({'iss': i['iss'], 'research': i['research_id']})
 
-    titles_field = ['Название операции', 'Дата проведения',
-                    'Время начала', 'Время окончания', 'Метод обезболивания', 'Осложнения', 'Код операции', 'Код манипуляции']
+    titles_field = ['Название операции', 'Дата проведения', 'Время начала', 'Время окончания', 'Метод обезболивания', 'Осложнения', 'Код операции',
+                    'Код манипуляции', 'Оперативное вмешательство', 'Код анестезиолога']
     list_values = []
 
     operation_result = []
@@ -629,12 +632,14 @@ def hosp_get_operation_data(num_dir):
         for fields_operation in list_values:
             pk_iss_operation = fields_operation[0][1]
             operation_data = {'name_operation': '', 'date': '', 'time_start': '', 'time_end': '', 'anesthesia method': '', 'complications': '', 'doc_fio': '',
-                              'code_operation': ''}
+                              'code_operation': '', 'code_doc_anesthesia': '', 'plan_operation': ''}
             iss_obj = Issledovaniya.objects.filter(pk=pk_iss_operation).first()
             if not iss_obj.doc_confirmation:
                 continue
             operation_data['doc_fio'] = iss_obj.doc_confirmation.get_fio()
             operation_data['doc_code'] = Issledovaniya.objects.get(pk=pk_iss_operation).doc_confirmation.personal_code
+            if operation_data['doc_code'] == 0:
+                operation_data['doc_code'] = ''
             for field in fields_operation:
                 if field[3] == 'Название операции':
                     operation_data['name_operation'] = field[2]
@@ -654,8 +659,17 @@ def hosp_get_operation_data(num_dir):
                 if field[3] == 'Осложнения':
                     operation_data['complications'] = field[2]
                     continue
-                if field[3] == 'Код операции' or 'Код манипуляции':
+                if field[3] == 'Код операции':
                     operation_data['code_operation'] = field[2]
+                    continue
+                if field[3] == 'Код манипуляции':
+                    operation_data['code_operation'] = field[2]
+                    continue
+                if field[3] == 'Код анестезиолога':
+                    operation_data['code_doc_anesthesia'] = field[2]
+                    continue
+                if field[3] == 'Оперативное вмешательство':
+                    operation_data['plan_operation'] = field[2]
                     continue
             operation_result.append(operation_data.copy())
 
