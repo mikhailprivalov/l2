@@ -6,7 +6,7 @@
         <div><strong>{{row.title_research}}</strong></div>
         <table>
           <colgroup>
-            <col width="60" />
+            <col width="60"/>
           </colgroup>
           <thead>
           <tr>
@@ -26,7 +26,7 @@
         <div><strong>{{row.title_research}}</strong></div>
         <table>
           <colgroup>
-            <col width="120" />
+            <col width="120"/>
           </colgroup>
           <thead>
           <tr>
@@ -55,7 +55,8 @@
       extract: {
         type: Boolean,
         default: false
-      }
+      },
+      value: {},
     },
     data() {
       return {
@@ -68,6 +69,37 @@
     methods: {
       async load() {
         this.data = await stationar_point.aggregateLaboratory(this, ['pk', 'extract'])
+      },
+    },
+    computed: {
+      directions() {
+        const d = []
+        try {
+          for (const lab of Object.values(this.data)) {
+            if (Array.isArray(lab.vertical)) {
+              for (const row of lab.vertical) {
+                for (const dateDir of Object.keys(row.result)) {
+                  d.push(parseInt(dateDir.split(' ')[1]));
+                }
+              }
+            }
+            if (Array.isArray(lab.horizontal)) {
+              for (const row of lab.horizontal) {
+                for (const dateDir of Object.keys(row.result)) {
+                  d.push(parseInt(dateDir.split(' ')[1]));
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error(e)
+        }
+        return d
+      },
+    },
+    watch: {
+      directions() {
+        this.$emit('input', JSON.stringify(this.directions))
       },
     },
   }

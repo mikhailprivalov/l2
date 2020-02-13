@@ -101,13 +101,14 @@
                                 v-model="field.value"/>
               </div>
               <div class="field-value" v-else-if="field.field_type === 16 && pk">
-                <AggregateLaboratory :pk="pk" extract/>
+                <AggregateLaboratory :pk="pk" extract v-model="field.value"/>
               </div>
               <div class="field-value" v-else-if="field.field_type === 17 && pk && hospital_r_type">
                 <AggregateDesc
                   :pk="pk"
                   extract
                   :r_type="hospital_r_type"
+                  v-model="field.value"
                 />
               </div>
               <div class="field-value" v-else-if="field.field_type === 18">

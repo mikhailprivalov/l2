@@ -847,6 +847,8 @@ class Issledovaniya(models.Model):
                                                                   null=True, blank=True,
                                                                   help_text='Авто назначаемое при подтверждении',
                                                                   on_delete=models.SET_NULL)
+    aggregate_lab = JSONField(null=True, blank=True, default=None, help_text='ID направлений лаборатории, привязаных к стационарному случаю')
+    aggregate_desc = JSONField(null=True, blank=True, default=None, help_text='ID направлений описательных, привязаных к стационарному случаю')
 
     @property
     def time_save_local(self):
@@ -1020,7 +1022,11 @@ class ParaclinicResult(models.Model):
     field = models.ForeignKey(directory.ParaclinicInputField, db_index=True,
                               help_text='Поле результата',
                               on_delete=models.CASCADE)
+    field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
     value = models.TextField()
+
+    def get_field_type(self):
+        return self.field_type if self.issledovaniye.time_confirmation and self.field_type is not None else self.field.field_type
 
 
 class MicrobiologyResult(models.Model):

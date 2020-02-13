@@ -1196,7 +1196,8 @@ def result_print(request):
                                 fwb.append(Spacer(1, 0.25 * mm))
                                 group_title = True
                             for r in results:
-                                if r.field.field_type == 15:
+                                field_type = r.get_field_type()
+                                if field_type == 15:
                                     date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
                                     dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
                                     file_tmp = os.path.join(dir_param, f'field_{date_now1}_{r.pk}.png')
@@ -1286,22 +1287,22 @@ h3 {
                                     v = v.replace('&lt;/sub&gt;', '</sub>')
                                     v = v.replace('&lt;sup&gt;', '<sup>')
                                     v = v.replace('&lt;/sup&gt;', '</sup>')
-                                    if r.field.field_type == 1:
+                                    if field_type == 1:
                                         vv = v.split('-')
                                         if len(vv) == 3:
                                             v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-                                    if r.field.field_type in [11, 13]:
+                                    if field_type in [11, 13]:
                                         v = '<font face="ChampB" size="8">{}</font>'.format(
                                             v.replace("&lt;br/&gt;", " "))
-                                    if r.field.get_title() != "":
+                                    if r.field.get_title(force_type=field_type) != "":
                                         fwb.append(Paragraph(
                                             "<font face=\"OpenSansBold\">{}:</font> {}".format(
-                                                r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v),
+                                                r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;'), v),
                                             style_ml if group_title else style))
                                     else:
                                         fwb.append(Paragraph(v, style))
                                     if sick_title:
-                                        sick_result[r.field.get_title()] = v
+                                        sick_result[r.field.get_title(force_type=field_type)] = v
                 else:
                     txt = ""
                     sick_result = None
@@ -1315,24 +1316,25 @@ h3 {
                                 txt += "<font face=\"OpenSansBold\">{}:</font>&nbsp;".format(group.title.replace('<', '&lt;').replace('>', '&gt;'))
                             vals = []
                             for r in results:
+                                field_type = r.get_field_type()
                                 v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
                                 v = v.replace('&lt;sub&gt;', '<sub>')
                                 v = v.replace('&lt;/sub&gt;', '</sub>')
                                 v = v.replace('&lt;sup&gt;', '<sup>')
                                 v = v.replace('&lt;/sup&gt;', '</sup>')
-                                if r.field.field_type == 1:
+                                if field_type == 1:
                                     vv = v.split('-')
                                     if len(vv) == 3:
                                         v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-                                if r.field.field_type in [11, 13]:
+                                if field_type in [11, 13]:
                                     v = '<font face="ChampB" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
-                                if r.field.get_title() != "":
+                                if r.field.get_title(force_type=field_type) != "":
                                     vals.append("{}:&nbsp;{}".format(
                                         r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
                                 else:
                                     vals.append(v)
                                 if sick_title:
-                                    sick_result[r.field.get_title()] = v
+                                    sick_result[r.field.get_title(force_type=field_type)] = v
 
                             txt += "; ".join(vals)
                             txt = txt.strip()
