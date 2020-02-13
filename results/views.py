@@ -36,6 +36,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
 from api.stationar.stationar_func import hosp_get_hosp_direction
+from pyvirtualdisplay import Display
 
 
 @login_required
@@ -1258,6 +1259,8 @@ h3 {
 }
                                     """
 
+                                    display = Display(visible=0, size=(800, 600))
+                                    display.start()
                                     imgkit.from_string(f"""
 <html>
     <head>
@@ -1275,6 +1278,8 @@ h3 {
     </body>
 </html>
                                     """, file_tmp)
+
+                                    display.stop()
 
                                     i = Image(file_tmp)
                                     i.drawHeight = i.drawHeight * (pw / i.drawWidth)
