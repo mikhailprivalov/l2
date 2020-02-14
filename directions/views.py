@@ -453,6 +453,9 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn, "Вид: " + ", ".join(vid))
 
+    if dir.purpose:
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 120) + (h / 2) * yn, "Цель напр.: " + dir.get_purpose_display())
+
     from reportlab.platypus import Table, TableStyle
     from reportlab.lib import colors
     from reportlab.platypus import Paragraph

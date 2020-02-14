@@ -117,6 +117,10 @@
               <div class="field-value" v-else-if="field.field_type === 19">
                 <NumberRangeField :variants="field.values_to_input" v-model="field.value" :disabled="confirmed" />
               </div>
+              <div class="field-value" v-else-if="field.field_type === 20">
+                <input :readonly="confirmed" class="form-control" style="width: 110px" type="time"
+                       v-model="field.value"/>
+              </div>
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
                     placement : 'left',
