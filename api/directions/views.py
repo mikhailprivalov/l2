@@ -25,6 +25,8 @@ from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
 from utils.dates import try_parse_range
+import re
+from utils.dates import normalize_date
 
 
 @login_required
@@ -1274,10 +1276,14 @@ def last_field_result(request):
     result = None
     if rows:
         row = rows[0]
+        match = re.fullmatch(r'\d{4}-\d\d-\d\d', row[5])
+        value = row[5]
+        if match:
+            value = normalize_date(row[5])
         result = {
             "direction": row[1],
             "date": row[4],
-            "value": row[5]
+            "value": value
         }
     return JsonResponse({"result": result})
 
