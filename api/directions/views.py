@@ -37,27 +37,36 @@ def directions_generate(request):
         if type_card.base.forbidden_create_napr:
             result["message"] = "Для данного типа карт нельзя создать направления"
             return JsonResponse(result)
-        rc = Napravleniya.gen_napravleniya_by_issledovaniya(p.get("card_pk"),
-                                                            p.get("diagnos"),
-                                                            p.get("fin_source"),
-                                                            p.get("history_num"),
-                                                            p.get("ofname_pk"),
-                                                            request.user.doctorprofile,
-                                                            p.get("researches"),
-                                                            p.get("comments"),
-                                                            p.get("for_rmis"),
-                                                            p.get("rmis_data", {}),
-                                                            vich_code=p.get("vich_code", ""),
-                                                            count=p.get("count", 1),
-                                                            discount=p.get("discount", 0),
-                                                            parent_iss=p.get("parent_iss", None),
-                                                            counts=p.get("counts", {}),
-                                                            localizations=p.get("localizations", {}),
-                                                            service_locations=p.get("service_locations", {}))
-        result["ok"] = rc["r"]
-        result["directions"] = rc["list_id"]
-        if "message" in rc:
-            result["message"] = rc["message"]
+        args = [
+            p.get("card_pk"),
+            p.get("diagnos"),
+            p.get("fin_source"),
+            p.get("history_num"),
+            p.get("ofname_pk"),
+            request.user.doctorprofile,
+            p.get("researches"),
+            p.get("comments"),
+            p.get("for_rmis"),
+            p.get("rmis_data", {}),
+        ]
+        kwargs = dict(
+            vich_code=p.get("vich_code", ""),
+            count=p.get("count", 1),
+            discount=p.get("discount", 0),
+            parent_iss=p.get("parent_iss", None),
+            counts=p.get("counts", {}),
+            localizations=p.get("localizations", {}),
+            service_locations=p.get("service_locations", {}),
+            direction_purpose=p.get("direction_purpose", "NONE")
+        )
+        for _ in range(p.get("directions_count", 1)):
+            rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
+            result["ok"] = rc["r"]
+            if "message" in rc:
+                result["message"] = rc["message"]
+            result["directions"].extend(rc["list_id"])
+            if not result["ok"]:
+                break
     return JsonResponse(result)
 
 
@@ -1294,3 +1303,15 @@ def reset_amd(request):
         direction.error_amd = False
         direction.save()
     return JsonResponse({"ok": True})
+
+
+def purposes(request):
+    result = [
+        {"pk": "NONE", "title": " – Не выбрано"}
+    ]
+    for p in Napravleniya.PURPOSES:
+        result.append({
+            "pk": p[0],
+            "title": p[1],
+        })
+    return JsonResponse({"purposes": result})
