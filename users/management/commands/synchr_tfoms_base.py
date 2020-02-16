@@ -28,20 +28,11 @@ class Command(BaseCommand):
                     starts = True
                     num_card = cells.index("карта")
                     distict_num = cells.index("участок")
-                    lastname = cells.index("фамилия")
-                    name = cells.index("имя")
-                    patronymic = cells.index("отчество")
-                    sex = cells.index("пол")
-                    house = cells.index("дом")
-                    room = cells.index("квартриа")
                     district_gin = cells.index("участок-жк")
-                    city = cells.index("город")
-                    street = cells.index("улица")
                     pasport_serial = cells.index("серия")
                     pasport_num = cells.index("номер")
                     snils = cells.index("снилс")
                     polis = cells.index("полис")
-                    born_date = cells.index("дата рождения")
                     base_l2 = clients.CardBase.objects.get(internal_type=True)
             else:
                 # если есть индивидуал по документам
