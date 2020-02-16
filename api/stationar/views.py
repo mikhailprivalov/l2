@@ -169,6 +169,7 @@ def aggregate_laboratory(request):
     pk = data.get('pk', -1)
     extract = data.get('extract', False)
     result = hosp_get_lab_iss(pk, extract)
+    print(result)
     return JsonResponse(result)
 
 

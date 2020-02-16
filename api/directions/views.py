@@ -1276,10 +1276,10 @@ def last_field_result(request):
     result = None
     if rows:
         row = rows[0]
-        match = re.fullmatch(r'\d{4}-\d\d-\d\d', row[5])
         value = row[5]
+        match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
         if match:
-            value = normalize_date(row[5])
+            value = normalize_date(value)
         result = {
             "direction": row[1],
             "date": row[4],

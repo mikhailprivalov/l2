@@ -115,7 +115,7 @@ def hosp_get_curent_hosp_dir(current_iss):
         return current_dir.parent.napravleniye_id
 
 
-def hosp_get_lab_iss(current_iss, extract=False):
+def hosp_get_lab_iss(current_iss, extract=False, *directions):
     """
     агрегация результатов исследований
     возврат:  Если extract=True(выписка), то берем по всем hosp-dirs. Если эпикриз, то берем все исследования
