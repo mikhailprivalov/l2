@@ -63,23 +63,28 @@
       </table>
       <table class="table table-bordered table-condensed" style="table-layout: fixed" v-if="show_additions">
         <colgroup>
-          <col width="160">
+          <col width="165">
           <col>
         </colgroup>
         <tbody>
-          <tr v-if="direction_purpose_enabled">
-            <th>Цель направления:</th>
-            <td class="cl-td">
-              <SelectFieldTitled v-model="direction_purpose" :variants="purposes" />
-            </td>
-          </tr>
-          <tr>
-            <th>Количество:</th>
-            <td class="cl-td">
-              <input v-model="directions_count" min="1" max="10"
-                     style="max-width: 160px" class="form-control" type="number" step="1"/>
-            </td>
-          </tr>
+        <tr v-if="direction_purpose_enabled">
+          <th>Цель направления:</th>
+          <td class="cl-td">
+            <SelectFieldTitled v-model="direction_purpose" :variants="purposes"/>
+          </td>
+        </tr>
+        <tr>
+          <th>Кол-во повторений:</th>
+          <td class="cl-td">
+            <input v-model="directions_count" min="1" max="10"
+                   style="max-width: 165px;display: inline-block;" class="form-control" type="number" step="1"
+            />
+            <span v-if="directions_count > 1" class="small">
+              &nbsp;&nbsp;
+              выбранное&nbsp;будет&nbsp;назначено&nbsp;{{directions_count}}&nbsp;раз{{directions_count > 1 && directions_count < 5 ? 'а': ''}}
+            </span>
+          </td>
+        </tr>
         </tbody>
       </table>
     </div>
@@ -168,7 +173,7 @@
   import vSelect from 'vue-select'
   import TypeAhead from 'vue2-typeahead'
   import MKBField from '../fields/MKBField'
-  import SelectFieldTitled from "../fields/SelectFieldTitled";
+  import SelectFieldTitled from '../fields/SelectFieldTitled'
 
   export default {
     name: 'selected-researches',
@@ -382,7 +387,7 @@
         immediate: true,
         handler() {
           if (this.direction_purpose_enabled) {
-            this.load_direction_purposes();
+            this.load_direction_purposes()
           }
         },
       },
