@@ -137,8 +137,11 @@
         },
       }
     },
-    mounted() {
-      this.load()
+    async mounted() {
+      await this.load()
+      if (Object.prototype.toString.call(this.value) === '[object Object]' && this.value.excluded) {
+        this.excluded = this.value.excluded
+      }
     },
     methods: {
       getAfterGroup(s) {
@@ -223,7 +226,10 @@
     },
     watch: {
       directions() {
-        this.$emit('input', JSON.stringify(this.directions))
+        this.$emit('input', JSON.stringify({
+          directions: this.directions,
+          excluded: this.excluded,
+        }))
       },
     },
   }
