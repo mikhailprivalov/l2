@@ -135,14 +135,17 @@
           dateDir: [],
           titles: [],
         },
+        inited: false,
       }
     },
     async mounted() {
       await this.load()
-      if (Object.prototype.toString.call(this.value) === '[object Object]' && this.value.excluded) {
-        this.excluded.dateDir = this.value.excluded.dateDir || []
-        this.excluded.titles = this.value.excluded.titles || []
+      const valOrig = JSON.parse(this.value || '[]')
+      if (Object.prototype.toString.call(valOrig) === '[object Object]' && valOrig.excluded) {
+        this.excluded.dateDir = valOrig.excluded.dateDir || []
+        this.excluded.titles = valOrig.excluded.titles || []
       }
+      this.inited = true
     },
     methods: {
       getAfterGroup(s) {
@@ -224,13 +227,21 @@
         }
         return d
       },
-    },
-    watch: {
-      directions() {
-        this.$emit('input', JSON.stringify({
+      val_data() {
+        return {
           directions: this.directions,
           excluded: this.excluded,
-        }))
+        };
+      },
+    },
+    watch: {
+      val_data: {
+        deep: true,
+        handler() {
+          if (this.inited) {
+            this.$emit('input', JSON.stringify(this.val_data))
+          }
+        }
       },
     },
   }

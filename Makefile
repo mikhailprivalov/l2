@@ -1,6 +1,8 @@
-all: build collect
-all_prod: build_prod collect
+all: front mm
+all_prod: front_prod mm
 mm: makemigrations migrate
+front: build collect
+front_prod: build_prod collect
 
 build:
 	npm run --prefix l2-frontend build
