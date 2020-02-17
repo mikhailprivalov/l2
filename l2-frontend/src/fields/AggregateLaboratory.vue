@@ -140,7 +140,8 @@
     async mounted() {
       await this.load()
       if (Object.prototype.toString.call(this.value) === '[object Object]' && this.value.excluded) {
-        this.excluded = this.value.excluded
+        this.excluded.dateDir = this.value.excluded.dateDir || []
+        this.excluded.titles = this.value.excluded.titles || []
       }
     },
     methods: {
