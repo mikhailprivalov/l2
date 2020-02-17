@@ -115,7 +115,7 @@ def hosp_get_curent_hosp_dir(current_iss):
         return current_dir.parent.napravleniye_id
 
 
-def hosp_get_lab_iss(current_iss, extract=False, *directions):
+def hosp_get_lab_iss(current_iss, extract=False, directions=[]):
     """
     агрегация результатов исследований
     возврат:  Если extract=True(выписка), то берем по всем hosp-dirs. Если эпикриз, то берем все исследования
@@ -123,38 +123,41 @@ def hosp_get_lab_iss(current_iss, extract=False, *directions):
     Выход: {КДЛ:{vert:[{titile:'',fractions:[],results:[{date:"",values:[]}]}]},
         {horizont:[{titile:'', results:[{date:'',value:''},{date:'',value:''}]}]}}
     """
-    obj_iss = Issledovaniya.objects.get(pk=current_iss)
-    num_dir = obj_iss.napravleniye_id
+    if not directions:
+        obj_iss = Issledovaniya.objects.get(pk=current_iss)
+        num_dir = obj_iss.napravleniye_id
 
-    # получить все направления в истории по типу hosp
-    hosp_dirs = hosp_get_hosp_direction(num_dir)
+        # получить все направления в истории по типу hosp
+        hosp_dirs = hosp_get_hosp_direction(num_dir)
 
-    # получить текущее направление типа hosp из текущего исследования
-    current_dir = hosp_get_curent_hosp_dir(current_iss)
-    # проверить - это переводной эпикриз
-    epicris = False
-    if obj_iss.research.is_slave_hospital:
-        obj_hospital_service = HospitalService.objects.filter(slave_research=obj_iss.research).first().site_type
-        if obj_hospital_service == 6:
-            epicris = True
+        # получить текущее направление типа hosp из текущего исследования
+        current_dir = hosp_get_curent_hosp_dir(current_iss)
+        # проверить - это переводной эпикриз
+        epicris = False
+        if obj_iss.research.is_slave_hospital:
+            obj_hospital_service = HospitalService.objects.filter(slave_research=obj_iss.research).first().site_type
+            if obj_hospital_service == 6:
+                epicris = True
 
-    if epicris:
-        hosp_dirs = [i for i in hosp_dirs if i["direction"] <= current_dir]
+        if epicris:
+            hosp_dirs = [i for i in hosp_dirs if i["direction"] <= current_dir]
 
-    num_lab_dirs = set()
-    if (not extract) and (not epicris):
-        obj_hosp_dirs = hosp_get_data_direction(current_dir, site_type=-1, type_service='is_lab', level=2)
-        for k in obj_hosp_dirs:
-            lab_dir = k.get('direction')
-            num_lab_dirs.add(lab_dir)
-
-    # получить по каждому hosp_dirs Дочерние направления по типу лаборатория
-    if extract or epicris:
-        for h in hosp_dirs:
-            obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service='is_lab', level=2)
+        num_lab_dirs = set()
+        if (not extract) and (not epicris):
+            obj_hosp_dirs = hosp_get_data_direction(current_dir, site_type=-1, type_service='is_lab', level=2)
             for k in obj_hosp_dirs:
                 lab_dir = k.get('direction')
                 num_lab_dirs.add(lab_dir)
+
+        # получить по каждому hosp_dirs Дочерние направления по типу лаборатория
+        if extract or epicris:
+            for h in hosp_dirs:
+                obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service='is_lab', level=2)
+                for k in obj_hosp_dirs:
+                    lab_dir = k.get('direction')
+                    num_lab_dirs.add(lab_dir)
+    if directions:
+        num_lab_dirs = directions
 
     num_lab_dirs = list(num_lab_dirs)
     if len(num_lab_dirs) == 0:

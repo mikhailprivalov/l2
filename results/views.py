@@ -37,6 +37,7 @@ from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
 from api.stationar.stationar_func import hosp_get_hosp_direction
 from pyvirtualdisplay import Display
+from .prepare_data import lab_iss_to_pdf
 
 
 @login_required
@@ -1327,6 +1328,9 @@ h3 {
                                 v = v.replace('&lt;/sub&gt;', '</sub>')
                                 v = v.replace('&lt;sup&gt;', '<sup>')
                                 v = v.replace('&lt;/sup&gt;', '</sup>')
+                                if field_type == 16:
+                                    lab_iss_to_pdf(v)
+                                    continue
                                 if field_type == 1:
                                     vv = v.split('-')
                                     if len(vv) == 3:
