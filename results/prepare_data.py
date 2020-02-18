@@ -12,11 +12,17 @@ import json
 # }
 
 def lab_iss_to_pdf(data):
-    data1 = '{"directions":[113123, 113122], "exclude": {"titles": [], "dirDate": []}}'
-    directions = json.loads(data1)
-    print(directions, type(directions))
-    # a = hosp_get_lab_iss(None, False, directions)
-    print('from prepare')
+    # print(data)
+    # data1 = '{"directions":[113123, 113122], "exclude": {"titles": [], "dirDate": []}}'
+    data = json.loads(data)
+    print(data)
+    print(data['directions'])
+    exclude_direction = data['excluded']['dateDir']
+    exclude_fraction = data['excluded']['titles']
+    print(exclude_direction)
+    print(exclude_fraction)
+    a = hosp_get_lab_iss(None, False, [113122])
+    print('from prepare', a)
 
 
 def text_iss_to_pdf():

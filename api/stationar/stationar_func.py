@@ -158,7 +158,6 @@ def hosp_get_lab_iss(current_iss, extract=False, *directions):
                     num_lab_dirs.add(lab_dir)
     if directions:
         num_lab_dirs = directions
-        print(type(num_lab_dirs), num_lab_dirs)
 
     num_lab_dirs = list(num_lab_dirs)
     if len(num_lab_dirs) == 0:
