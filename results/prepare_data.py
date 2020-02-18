@@ -1,4 +1,5 @@
 from api.stationar.stationar_func import hosp_get_lab_iss
+import json
 # field_type
 # (16, 'Agg lab'),
 # (17, 'Agg desc')
@@ -11,9 +12,12 @@ from api.stationar.stationar_func import hosp_get_lab_iss
 # }
 
 def lab_iss_to_pdf(data):
-    # a = hosp_get_lab_iss(None, extract=False, directions=data)
-    # print('from prepare', a)
-    pass
+    data1 = '{"directions":[113123, 113122], "exclude": {"titles": [], "dirDate": []}}'
+    directions = json.loads(data1)
+    print(directions, type(directions))
+    # a = hosp_get_lab_iss(None, False, directions)
+    print('from prepare')
+
 
 def text_iss_to_pdf():
     pass
