@@ -81,7 +81,9 @@
           if (Array.isArray(this.data)) {
             for (const res of this.data) {
               for (const row of res.result) {
-                d.push(parseInt(row.date.split(' ')[1]));
+                if (row.date) {
+                  d.push(parseInt(row.date.split(' ')[1]));
+                }
               }
             }
           }
