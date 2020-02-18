@@ -2,50 +2,42 @@
   <div class="root-agg">
     <div v-for="(lab, title) in data">
       <div><strong>{{title}}</strong></div>
-      <div v-if="excludedTitlesByGroup(title).length > 0">
+      <div v-if="excludedTitlesByGroup(title).length > 0" class="excluded">
         <u><strong>Исключённые исследования:</strong></u>
-        <span v-for="t in excludedTitlesByGroup(title)" :key="t">
-          <span @click="cancelExcludeTitle(t)"
-                v-tippy="{ placement : 'top', arrow: true }"
-                title="Вернуть"
-                class="clickable-td">
-            {{getAfterGroup(t)}}
-          </span>;
+        <span v-for="t in excludedTitlesByGroup(title)" :key="t" @click="cancelExcludeTitle(t)"
+              v-tippy="{ placement : 'top', arrow: true }"
+              title="Вернуть"
+              class="clickable-return">
+          {{getAfterGroup(t)}}
         </span>
       </div>
-      <div v-if="excludedDateDirByGroup(title).length > 0">
+      <div v-if="excludedDateDirByGroup(title).length > 0" class="excluded">
         <u><strong>Исключённые направления:</strong></u>
-        <span v-for="t in excludedDateDirByGroup(title)" :key="t">
-          <span @click="cancelExcludeDateDir(t)"
-                v-tippy="{ placement : 'top', arrow: true }"
-                title="Вернуть"
-                class="clickable-td">
-            {{getAfterGroup(t)}}
-          </span>;
+        <span v-for="t in excludedDateDirByGroup(title)" :key="t" @click="cancelExcludeDateDir(t)"
+              v-tippy="{ placement : 'top', arrow: true }"
+              title="Вернуть"
+              class="clickable-return">
+          {{getAfterGroup(t)}}
         </span>
       </div>
       <div v-for="row in lab.vertical">
         <div><strong>{{row.title_research}}</strong></div>
-        <div v-if="excludedTitlesByGroup(row.title_research).length > 0">
+        <div v-if="excludedTitlesByGroup(row.title_research).length > 0" class="excluded">
           <u><strong>Исключённые фракции:</strong></u>
-          <span v-for="t in excludedTitlesByGroup(row.title_research)" :key="t">
-            <span @click="cancelExcludeTitle(t)"
-                  v-tippy="{ placement : 'top', arrow: true }"
-                  title="Вернуть"
-                  class="clickable-td">
-              {{getAfterGroup(t)}}
-            </span>;
+          <span v-for="t in excludedTitlesByGroup(row.title_research)" :key="t" @click="cancelExcludeTitle(t)"
+                v-tippy="{ placement : 'top', arrow: true }"
+                title="Вернуть"
+                class="clickable-return">
+            {{getAfterGroup(t)}}
           </span>
         </div>
-        <div v-if="excludedDateDirByGroup(row.title_research).length > 0">
+        <div v-if="excludedDateDirByGroup(row.title_research).length > 0" class="excluded">
           <u><strong>Исключённые направления:</strong></u>
-          <span v-for="t in excludedDateDirByGroup(row.title_research)" :key="t">
-            <span @click="cancelExcludeDateDir(t)"
-                  v-tippy="{ placement : 'top', arrow: true }"
-                  title="Вернуть"
-                  class="clickable-td">
-              {{getAfterGroup(t)}}
-            </span>;
+          <span v-for="t in excludedDateDirByGroup(row.title_research)" :key="t" @click="cancelExcludeDateDir(t)"
+                v-tippy="{ placement : 'top', arrow: true }"
+                title="Вернуть"
+                class="clickable-return">
+            {{getAfterGroup(t)}}
           </span>
         </div>
         <table>
@@ -279,6 +271,31 @@
 
     &:hover {
       text-decoration: underline;
+      background: rgba(#000, .05);
     }
+  }
+
+  .clickable-return {
+    cursor: pointer;
+    padding: 0 2px;
+    border: 1px solid rgba(#049372, .4);
+    border-radius: 3px;
+    margin-left: 4px;
+    margin-bottom: 5px;
+    transition: .2s ease-in all;
+    white-space: nowrap;
+    display: inline-block;
+
+    &:hover {
+      color: #fff;
+      background: #049372;
+      border: 1px solid #049372;
+      box-shadow: 0 7px 14px #04937254, 0 5px 5px #049372ba;
+    }
+  }
+
+  .excluded {
+    white-space: normal;
+    word-break: break-word;
   }
 </style>
