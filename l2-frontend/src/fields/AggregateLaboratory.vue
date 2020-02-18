@@ -2,28 +2,82 @@
   <div class="root-agg">
     <div v-for="(lab, title) in data">
       <div><strong>{{title}}</strong></div>
+      <div v-if="excludedTitlesByGroup(title).length > 0">
+        <u><strong>Исключённые исследования:</strong></u>
+        <span v-for="t in excludedTitlesByGroup(title)" :key="t">
+          <span @click="cancelExcludeTitle(t)"
+                v-tippy="{ placement : 'top', arrow: true }"
+                title="Вернуть"
+                class="clickable-td">
+            {{getAfterGroup(t)}}
+          </span>;
+        </span>
+      </div>
+      <div v-if="excludedDateDirByGroup(title).length > 0">
+        <u><strong>Исключённые направления:</strong></u>
+        <span v-for="t in excludedDateDirByGroup(title)" :key="t">
+          <span @click="cancelExcludeDateDir(t)"
+                v-tippy="{ placement : 'top', arrow: true }"
+                title="Вернуть"
+                class="clickable-td">
+            {{getAfterGroup(t)}}
+          </span>;
+        </span>
+      </div>
       <div v-for="row in lab.vertical">
         <div><strong>{{row.title_research}}</strong></div>
+        <div v-if="excludedTitlesByGroup(row.title_research).length > 0">
+          <u><strong>Исключённые фракции:</strong></u>
+          <span v-for="t in excludedTitlesByGroup(row.title_research)" :key="t">
+            <span @click="cancelExcludeTitle(t)"
+                  v-tippy="{ placement : 'top', arrow: true }"
+                  title="Вернуть"
+                  class="clickable-td">
+              {{getAfterGroup(t)}}
+            </span>;
+          </span>
+        </div>
+        <div v-if="excludedDateDirByGroup(row.title_research).length > 0">
+          <u><strong>Исключённые направления:</strong></u>
+          <span v-for="t in excludedDateDirByGroup(row.title_research)" :key="t">
+            <span @click="cancelExcludeDateDir(t)"
+                  v-tippy="{ placement : 'top', arrow: true }"
+                  title="Вернуть"
+                  class="clickable-td">
+              {{getAfterGroup(t)}}
+            </span>;
+          </span>
+        </div>
         <table>
           <colgroup>
-            <col width="60"/>
+            <col width="64"/>
           </colgroup>
           <thead>
           <tr>
             <th>Дата, напр.</th>
-            <th v-for="t in row.title_fracions" :key="t">{{t}}</th>
+            <th v-for="t in row.title_fracions" :key="t" class="clickable-td" title="Скрыть"
+                @click="excludeTitle(t, row.title_research)"
+                v-if="!excludedTitle(t, row.title_research)"
+                v-tippy="{ placement : 'top', arrow: true }">
+              {{t}}
+            </th>
           </tr>
           </thead>
           <tbody>
-          <tr v-for="(r, dateDir) in row.result" :key="dateDir">
-            <td>{{dateDir}}</td>
-            <td v-for="(v, i) in r" :key="i">{{v}}</td>
+          <tr v-for="(r, dateDir) in row.result" :key="dateDir" v-if="!excludedDateDir(dateDir, row.title_research)">
+            <td class="clickable-td" title="Скрыть"
+                @click="excludeDateDir(dateDir, row.title_research)"
+                v-tippy="{ placement : 'top', arrow: true }">
+              {{dateDir}}
+            </td>
+            <td v-for="(v, i) in r" :key="i" v-if="!excludedTitleAtPos(row.title_fracions, i, row.title_research)">
+              {{v}}
+            </td>
           </tr>
           </tbody>
         </table>
       </div>
       <div v-for="row in lab.horizontal">
-        <div><strong>{{row.title_research}}</strong></div>
         <table>
           <colgroup>
             <col width="120"/>
@@ -31,13 +85,25 @@
           <thead>
           <tr>
             <th>Дата, напр.</th>
-            <td v-for="(_, dateDir) in row.result" :key="dateDir">{{dateDir}}</td>
+            <td v-for="(_, dateDir) in row.result" :key="dateDir" class="clickable-td" title="Скрыть"
+                @click="excludeDateDir(dateDir, title)"
+                v-if="!excludedDateDir(dateDir, title)"
+                v-tippy="{ placement : 'top', arrow: true }">
+              {{dateDir}}
+            </td>
           </tr>
           </thead>
           <tbody>
-          <tr v-for="(t, i) in row.title_fracions" :key="i">
-            <th class="th2">{{t}}</th>
-            <td v-for="(v, dateDir) in row.result" :key="dateDir">{{v[i]}}</td>
+          <tr v-for="(t, i) in row.title_fracions" :key="i" v-if="!excludedTitle(t, title)">
+            <th class="th2 clickable-td" title="Скрыть"
+                @click="excludeTitle(t, title)"
+                v-tippy="{ placement : 'top', arrow: true }">
+              {{t}}
+            </th>
+            <td v-for="(v, dateDir) in row.result" :key="dateDir"
+                v-if="!excludedDateDir(dateDir, title)">
+              {{v[i]}}
+            </td>
           </tr>
           </tbody>
         </table>
@@ -48,6 +114,10 @@
 
 <script>
   import stationar_point from '../api/stationar-point'
+
+  const delimiter = '#@#'
+
+  const makeKey = (t, group) => `${group}${delimiter}${t}`;
 
   export default {
     props: {
@@ -60,15 +130,76 @@
     },
     data() {
       return {
-        data: {}
+        data: {},
+        excluded: {
+          dateDir: [],
+          titles: [],
+        },
+        inited: false,
       }
     },
-    mounted() {
-      this.load()
+    async mounted() {
+      await this.load()
+      const valOrig = JSON.parse(this.value || '[]')
+      if (Object.prototype.toString.call(valOrig) === '[object Object]' && valOrig.excluded) {
+        this.excluded.dateDir = valOrig.excluded.dateDir || []
+        this.excluded.titles = valOrig.excluded.titles || []
+      }
+      this.inited = true
     },
     methods: {
+      getAfterGroup(s) {
+        return s.split(delimiter)[1]
+      },
       async load() {
+        this.excluded.dateDir = []
+        this.excluded.titles = []
         this.data = await stationar_point.aggregateLaboratory(this, ['pk', 'extract'])
+      },
+      excludedTitle(t, group) {
+        const title = makeKey(t, group)
+        return this.excluded.titles.includes(title)
+      },
+      excludedTitleAtPos(titles, pos, group) {
+        return this.excludedTitle(titles[pos], group)
+      },
+      excludedDateDir(t, group) {
+        const title = makeKey(t, group)
+        return this.excluded.dateDir.includes(title)
+      },
+      excludeTitle(t, group) {
+        const title = makeKey(t, group)
+        if (!this.excluded.titles.includes(title)) {
+          this.excluded.titles.push(title)
+        }
+      },
+      excludeDateDir(t, group) {
+        const title = makeKey(t, group)
+        if (!this.excluded.dateDir.includes(title)) {
+          this.excluded.dateDir.push(title)
+        }
+      },
+      cancelExcludeTitle(title) {
+        const pos = this.excluded.titles.findIndex(v => v === title)
+        if (pos === -1) {
+          return
+        }
+        this.excluded.titles.splice(pos, 1);
+      },
+      cancelExcludeDateDir(title) {
+        const pos = this.excluded.dateDir.findIndex(v => v === title)
+        if (pos === -1) {
+          return
+        }
+        this.excluded.dateDir.splice(pos, 1);
+      },
+      excludedTitlesByGroup(group) {
+        const titleStart = makeKey('', group)
+        return this.excluded.titles.filter(s => s.startsWith(titleStart))
+      },
+      excludedDateDirByGroup(group) {
+        const titleStart = makeKey('', group)
+        return this.excluded.dateDir.filter(s => s.startsWith(titleStart))
       },
     },
     computed: {
@@ -96,10 +227,21 @@
         }
         return d
       },
+      val_data() {
+        return {
+          directions: this.directions,
+          excluded: this.excluded,
+        };
+      },
     },
     watch: {
-      directions() {
-        this.$emit('input', JSON.stringify(this.directions))
+      val_data: {
+        deep: true,
+        handler() {
+          if (this.inited) {
+            this.$emit('input', JSON.stringify(this.val_data))
+          }
+        }
       },
     },
   }
@@ -129,6 +271,14 @@
 
     td, th {
       padding: 2px;
+    }
+  }
+
+  .clickable-td {
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
     }
   }
 </style>
