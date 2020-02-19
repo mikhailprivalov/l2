@@ -2,7 +2,7 @@
   <div class="root-agg">
     <div v-for="(lab, title) in data">
       <div><strong>{{title}}</strong></div>
-      <div v-if="excludedTitlesByGroup(title).length > 0" class="excluded">
+      <div v-if="excludedTitlesByGroup(title).length > 0 && !disabled" class="excluded">
         <u><strong>Исключённые исследования:</strong></u>
         <span v-for="t in excludedTitlesByGroup(title)" :key="t" @click="cancelExcludeTitle(t)"
               v-tippy="{ placement : 'top', arrow: true }"
@@ -11,7 +11,7 @@
           {{getAfterGroup(t)}}
         </span>
       </div>
-      <div v-if="excludedDateDirByGroup(title).length > 0" class="excluded">
+      <div v-if="excludedDateDirByGroup(title).length > 0 && !disabled" class="excluded">
         <u><strong>Исключённые направления:</strong></u>
         <span v-for="t in excludedDateDirByGroup(title)" :key="t" @click="cancelExcludeDateDir(t)"
               v-tippy="{ placement : 'top', arrow: true }"
@@ -22,7 +22,7 @@
       </div>
       <div v-for="row in lab.vertical">
         <div><strong>{{row.title_research}}</strong></div>
-        <div v-if="excludedTitlesByGroup(row.title_research).length > 0" class="excluded">
+        <div v-if="excludedTitlesByGroup(row.title_research).length > 0 && !disabled" class="excluded">
           <u><strong>Исключённые фракции:</strong></u>
           <span v-for="t in excludedTitlesByGroup(row.title_research)" :key="t" @click="cancelExcludeTitle(t)"
                 v-tippy="{ placement : 'top', arrow: true }"
@@ -31,7 +31,7 @@
             {{getAfterGroup(t)}}
           </span>
         </div>
-        <div v-if="excludedDateDirByGroup(row.title_research).length > 0" class="excluded">
+        <div v-if="excludedDateDirByGroup(row.title_research).length > 0 && !disabled" class="excluded">
           <u><strong>Исключённые направления:</strong></u>
           <span v-for="t in excludedDateDirByGroup(row.title_research)" :key="t" @click="cancelExcludeDateDir(t)"
                 v-tippy="{ placement : 'top', arrow: true }"
@@ -119,6 +119,10 @@
         default: false
       },
       value: {},
+      disabled: {
+        type: Boolean,
+        default: false
+      },
     },
     data() {
       return {
@@ -160,12 +164,18 @@
         return this.excluded.dateDir.includes(title)
       },
       excludeTitle(t, group) {
+        if (this.disabled) {
+          return
+        }
         const title = makeKey(t, group)
         if (!this.excluded.titles.includes(title)) {
           this.excluded.titles.push(title)
         }
       },
       excludeDateDir(t, group) {
+        if (this.disabled) {
+          return
+        }
         const title = makeKey(t, group)
         if (!this.excluded.dateDir.includes(title)) {
           this.excluded.dateDir.push(title)
