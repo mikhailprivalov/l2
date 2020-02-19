@@ -245,6 +245,7 @@
       width: 100%;
       table-layout: fixed;
       border-collapse: collapse;
+      margin-bottom: 5px;
     }
 
     table, th, td {
