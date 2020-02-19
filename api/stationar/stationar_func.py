@@ -7,6 +7,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from utils import tree_directions
 from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, \
     get_result_text_research
+import json
 
 
 def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', level=-1):
@@ -268,7 +269,7 @@ def hosp_get_lab_iss(current_iss, extract=False, *directions):
     return result_filtered
 
 
-def hosp_get_text(current_iss, extract=False, mode=None):
+def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
     # # Возврат стр-ра:
     # {'paraclinic': [{'title_research': 'Проведение электрокардиографических исследований ( ЭКГ )', 'result': [
     #                 {'date': '05.01.20 117', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
@@ -276,26 +277,30 @@ def hosp_get_text(current_iss, extract=False, mode=None):
     #                 {'date': '05.01.20 119', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
     #                       'value': 'Диффузные нарушения'}]}]}]} ]}]
     #                                                                                                                     ]}
-    if mode is None:
-        return {}
-    num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
-    # получить все направления в истории по типу hosp
-    hosp_dirs = hosp_get_hosp_direction(num_dir)
+    if not directions:
+        if mode is None:
+            return {}
+        num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+        # получить все направления в истории по типу hosp
+        hosp_dirs = hosp_get_hosp_direction(num_dir)
 
-    # получить текущее направление типа hosp из текущего эпикриза
-    current_dir = hosp_get_curent_hosp_dir(current_iss)
-    if not extract:
-        hosp_dirs = [i for i in hosp_dirs if i["direction"] <= current_dir]
+        # получить текущее направление типа hosp из текущего эпикриза
+        current_dir = hosp_get_curent_hosp_dir(current_iss)
+        if not extract:
+            hosp_dirs = [i for i in hosp_dirs if i["direction"] <= current_dir]
 
-    # получить по каждому hosp_dirs Дочерние направления по типу is_paraclinic, is_doc_refferal
-    num_paraclinic_dirs = set()
-    for h in hosp_dirs:
-        obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service=mode, level=2)
-        if not obj_hosp_dirs:
-            continue
-        for k in obj_hosp_dirs:
-            paraclinic_dir = k.get('direction')
-            num_paraclinic_dirs.add(paraclinic_dir)
+        # получить по каждому hosp_dirs Дочерние направления по типу is_paraclinic, is_doc_refferal
+        num_paraclinic_dirs = set()
+        for h in hosp_dirs:
+            obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service=mode, level=2)
+            if not obj_hosp_dirs:
+                continue
+            for k in obj_hosp_dirs:
+                paraclinic_dir = k.get('direction')
+                num_paraclinic_dirs.add(paraclinic_dir)
+
+    if directions:
+        num_paraclinic_dirs = directions
 
     num_paraclinic_dirs = list(num_paraclinic_dirs)
     # [0] - заглушка для запроса. research c id =0 не бывает

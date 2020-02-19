@@ -37,7 +37,8 @@ from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
 from api.stationar.stationar_func import hosp_get_hosp_direction
 from pyvirtualdisplay import Display
-from .prepare_data import lab_iss_to_pdf
+from .prepare_data import lab_iss_to_pdf, text_iss_to_pdf
+
 
 
 @login_required
@@ -1293,6 +1294,18 @@ h3 {
                                     v = v.replace('&lt;/sub&gt;', '</sub>')
                                     v = v.replace('&lt;sup&gt;', '<sup>')
                                     v = v.replace('&lt;/sup&gt;', '</sup>')
+                                    if field_type == 16:
+                                        aggr_lab = lab_iss_to_pdf(v)
+                                        fwb.extend(aggr_lab)
+                                        continue
+                                    if field_type == 17:
+                                        aggr_text = text_iss_to_pdf(v)
+                                        fwb.append(Paragraph(
+                                            "<font face=\"OpenSansBold\">{}:</font>".format(
+                                                r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
+                                             style))
+                                        fwb.extend(aggr_text)
+                                        continue
                                     if field_type == 1:
                                         vv = v.split('-')
                                         if len(vv) == 3:
@@ -1328,9 +1341,8 @@ h3 {
                                 v = v.replace('&lt;/sub&gt;', '</sub>')
                                 v = v.replace('&lt;sup&gt;', '<sup>')
                                 v = v.replace('&lt;/sup&gt;', '</sup>')
-                                if field_type == 16:
-                                    lab_iss_to_pdf(v)
-                                    continue
+                                    # continue
+
                                 if field_type == 1:
                                     vv = v.split('-')
                                     if len(vv) == 3:
