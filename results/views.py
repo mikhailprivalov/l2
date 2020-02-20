@@ -474,8 +474,8 @@ def result_print(request):
     # w, h = A4
 
     doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=(54 if leftnone else 5) * mm,
-                            rightMargin=5 * mm, topMargin=5 * mm,
+                            leftMargin=(27 if leftnone else 10) * mm,
+                            rightMargin=14 * mm, topMargin=5 * mm,
                             bottomMargin=16 * mm, allowSplitting=1,
                             title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
 
@@ -1295,6 +1295,7 @@ h3 {
                                     v = v.replace('&lt;sup&gt;', '<sup>')
                                     v = v.replace('&lt;/sup&gt;', '</sup>')
                                     if field_type == 16:
+                                        print(field_type, v)
                                         aggr_lab = lab_iss_to_pdf(v)
                                         fwb.append(Paragraph(
                                             "<font face=\"OpenSansBold\">{}:</font>".format(

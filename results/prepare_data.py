@@ -36,7 +36,7 @@ def lab_iss_to_pdf(data):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "OpenSans"
-    style.fontSize = 9
+    style.fontSize = 7.7
     style.leading = 10
     style.spaceAfter = 0.5 * mm
     style.alignment = TA_LEFT
@@ -48,17 +48,17 @@ def lab_iss_to_pdf(data):
     styleBold = deepcopy(style_ml)
     styleBold.fontName = "OpenSansBold"
 
+    print(data)
     data = json.loads(data)
     exclude_direction = data['excluded']['dateDir']
     exclude_fraction = data['excluded']['titles']
-    print("exclude_direction: ", exclude_direction)
-    print("exclude_fraction: ", exclude_fraction)
+    # print("exclude_direction: ", exclude_direction)
+    # print("exclude_fraction: ", exclude_fraction)
     lab_iss = hosp_get_lab_iss(None, False, data['directions'])
     # Таблица для операции
     prepare_fwb = []
+    const_width = 165
     for type_lab, v in lab_iss.items():
-        print(type_lab)
-        print(v)
         for type_disposition, data in v.items():
             if type_disposition == 'vertical':
                 if not data:
@@ -68,7 +68,6 @@ def lab_iss_to_pdf(data):
                     prepare_fwb.append(Paragraph('{}'.format(title_research), style))
                     prepare_fwb.append(Spacer(1, 1.5 * mm))
                     title_fractions = i['title_fracions']
-
                     # получить индексы ислючнных фракций
                     fractions_index_to_remove = []
                     for fraction in title_fractions:
@@ -88,14 +87,19 @@ def lab_iss_to_pdf(data):
                     result_values_for_research = []
                     result_values_for_research.append(title_fractions_final)
                     for date_dir, val in fractions_result.items():
-                        values_final = [Paragraph(f, style) for f in val if val.index(f) not in fractions_index_to_remove]
+                        values_final = []
+                        for w in range(len(val)):
+                            if w not in fractions_index_to_remove:
+                                values_final.append(Paragraph('{}'.format(val[w]), style))
                         values_final.insert(0, Paragraph(date_dir, style))
                         result_values_for_research.append(values_final)
-                        print(result_values_for_research)
 
-                    row_count = 14
-                    rowWeights = [12 * mm] * row_count
+                    row_count = len(values_final) - 1
+                    width_one_column = const_width / row_count
+                    width_one_column = round(width_one_column, 1)
 
+                    rowWeights = [width_one_column * mm] * row_count
+                    rowWeights.insert(0, 15 * mm)
                     tbl = Table(result_values_for_research, colWidths=rowWeights)
                     tbl.setStyle(TableStyle([
                         ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
