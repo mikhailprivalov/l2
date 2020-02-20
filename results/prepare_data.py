@@ -24,6 +24,9 @@ from laboratory.settings import FONTS_FOLDER
 #     dirDate: [],
 # }
 # }
+# row_count = row_count + 5
+# rowHeights = row_count * [None]
+# rowHeights[4] = 35
 
 def lab_iss_to_pdf(data):
 
@@ -34,10 +37,16 @@ def lab_iss_to_pdf(data):
     style = styleSheet["Normal"]
     style.fontName = "OpenSans"
     style.fontSize = 9
-    style.leading = 5
+    style.leading = 10
     style.spaceAfter = 0.5 * mm
     style.alignment = TA_LEFT
     style.spaceAfter = 0.2 * mm
+
+    style_ml = deepcopy(style)
+    style_ml.leftIndent = 5 * mm
+
+    styleBold = deepcopy(style_ml)
+    styleBold.fontName = "OpenSansBold"
 
     data = json.loads(data)
     exclude_direction = data['excluded']['dateDir']
@@ -56,33 +65,67 @@ def lab_iss_to_pdf(data):
                     continue
                 for i in data:
                     title_research = i['title_research']
-                    print('reser', title_research)
                     prepare_fwb.append(Paragraph('{}'.format(title_research), style))
-                    prepare_fwb.append(Spacer(1, 8 * mm))
+                    prepare_fwb.append(Spacer(1, 1.5 * mm))
                     title_fractions = i['title_fracions']
+
+                    # получить индексы ислючнных фракций
+                    fractions_index_to_remove = []
                     for fraction in title_fractions:
                         maybe_exclude_fraction = f'{title_research}#@#{fraction}'
                         if maybe_exclude_fraction in exclude_fraction:
-                            print("Exclude: ", maybe_exclude_fraction)
+                            fractions_index_to_remove.append(title_fractions.index(fraction))
+                            continue
+                    prepare_fwb.append(Paragraph('{}'.format(title_research), styleBold))
+                    prepare_fwb.append(Spacer(1, 1.5 * mm))
 
-            if type_disposition == 'horizontal':
-                if not data:
-                    continue
-                for i in data:
-                    title_fractions = i['title_fracions']
-                    result_fraction = i['result']
-                    for fraction in title_fractions:
-                        print('frac', fraction)
-                        prepare_fwb.append(Paragraph('{}'.format(fraction), style))
-                        prepare_fwb.append(Spacer(1, 8 * mm))
-                        maybe_exclude_fraction = f'{title_research}#@#{fraction}'
-                        if maybe_exclude_fraction in exclude_fraction:
-                            print("Exclude: ", maybe_exclude_fraction)
+                    # удалить заголовки для исключенных фракци
+                    title_fractions_final = [Paragraph(f, style) for f in title_fractions if title_fractions.index(f) not in fractions_index_to_remove]
+                    title_fractions_final.insert(0, Paragraph('Дата, напр.', style))
 
-                    for dir_date, value in result_fraction.items():
-                        maybe_exclude_dir = f'{type_lab}#@#{dir_date}'
-                        if maybe_exclude_dir in exclude_direction:
-                            print("Exclude: ", maybe_exclude_dir)
+                    # удалить результаты для исключенных фракций
+                    fractions_result = i['result']
+                    result_values_for_research = []
+                    result_values_for_research.append(title_fractions_final)
+                    for date_dir, val in fractions_result.items():
+                        values_final = [Paragraph(f, style) for f in val if val.index(f) not in fractions_index_to_remove]
+                        values_final.insert(0, Paragraph(date_dir, style))
+                        result_values_for_research.append(values_final)
+                        print(result_values_for_research)
+
+                    row_count = 14
+                    rowWeights = [12 * mm] * row_count
+
+                    tbl = Table(result_values_for_research, colWidths=rowWeights)
+                    tbl.setStyle(TableStyle([
+                        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ]))
+
+                    prepare_fwb.append(tbl)
+                    prepare_fwb.append(Spacer(1, 2 * mm))
+
+
+
+            # if type_disposition == 'horizontal':
+            #     if not data:
+            #         continue
+            #     for i in data:
+            #         title_fractions = i['title_fracions']
+            #         result_fraction = i['result']
+            #         for fraction in title_fractions:
+            #             print('frac', fraction)
+            #             prepare_fwb.append(Paragraph('{}'.format(fraction), style))
+            #             prepare_fwb.append(Spacer(1, 8 * mm))
+            #             maybe_exclude_fraction = f'{title_research}#@#{fraction}'
+            #             if maybe_exclude_fraction in exclude_fraction:
+            #                 print("Exclude: ", maybe_exclude_fraction)
+            #
+            #         for dir_date, value in result_fraction.items():
+            #             maybe_exclude_dir = f'{type_lab}#@#{dir_date}'
+            #             if maybe_exclude_dir in exclude_direction:
+            #                 print("Exclude: ", maybe_exclude_dir)
     return prepare_fwb
 
 
@@ -102,7 +145,7 @@ def text_iss_to_pdf(data):
     style_ml = deepcopy(style)
     style_ml.leftIndent = 5 * mm
 
-    styleBold = deepcopy(style)
+    styleBold = deepcopy(style_ml)
     styleBold.fontName = "OpenSansBold"
 
     data = json.loads(data)

@@ -1296,6 +1296,10 @@ h3 {
                                     v = v.replace('&lt;/sup&gt;', '</sup>')
                                     if field_type == 16:
                                         aggr_lab = lab_iss_to_pdf(v)
+                                        fwb.append(Paragraph(
+                                            "<font face=\"OpenSansBold\">{}:</font>".format(
+                                                r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
+                                            style))
                                         fwb.extend(aggr_lab)
                                         continue
                                     if field_type == 17:
