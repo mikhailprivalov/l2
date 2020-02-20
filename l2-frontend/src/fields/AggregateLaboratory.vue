@@ -136,10 +136,14 @@
     },
     async mounted() {
       await this.load()
-      const valOrig = JSON.parse(this.value || '[]')
-      if (Object.prototype.toString.call(valOrig) === '[object Object]' && valOrig.excluded) {
-        this.excluded.dateDir = valOrig.excluded.dateDir || []
-        this.excluded.titles = valOrig.excluded.titles || []
+      try {
+        const valOrig = JSON.parse(this.value || '[]')
+        if (Object.prototype.toString.call(valOrig) === '[object Object]' && valOrig.excluded) {
+          this.excluded.dateDir = valOrig.excluded.dateDir || []
+          this.excluded.titles = valOrig.excluded.titles || []
+        }
+      } catch (e) {
+        console.log('Aggregate error:', e);
       }
       this.inited = true
     },
