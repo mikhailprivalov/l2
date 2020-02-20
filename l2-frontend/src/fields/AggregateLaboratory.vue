@@ -255,6 +255,11 @@
           }
         }
       },
+      inited() {
+        if (this.inited) {
+          this.$emit('input', JSON.stringify(this.val_data))
+        }
+      },
     },
   }
 </script>
