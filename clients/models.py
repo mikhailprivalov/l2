@@ -847,7 +847,6 @@ class DispensaryReg(models.Model):
                                     on_delete=models.CASCADE)
     date_end = models.DateField(help_text='Дата сняти с Д-учета', db_index=True, default=None, blank=True, null=True)
     why_stop = models.CharField(max_length=511, help_text='Причина снятия с Д-учета', default='', blank=True)
-    maybe_onco = models.BooleanField(default=False, help_text="Подозрение на онко")
 
     class Meta:
         verbose_name = 'Д-учет'
