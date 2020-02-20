@@ -145,7 +145,7 @@
               </div>
               <a style="margin-left: 3px"
                  href="#"
-                 v-if="data.card_internal && data.has_doc_referral"
+                 v-if="data.card_internal && (data.has_doc_referral || data.has_paraclinic)"
                  v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
                    interactive : true, html: '#template-dreg' }"
                  :class="{dreg_nex: !data.patient.has_dreg, dreg_ex: data.patient.has_dreg }"
@@ -153,7 +153,7 @@
                  @click.prevent="dreg = true"><i class="fa fa-database"></i></a>
               <div id="template-dreg"
                    v-if="data.card_internal"
-                   :class="{hidden: !data.ok || !data.has_doc_referral || !data.card_internal}">
+                   :class="{hidden: !data.ok || (!data.has_doc_referral && !data.has_paraclinic) || !data.card_internal}">
                 <strong>Диспансерный учёт</strong><br/>
                 <span v-if="dreg_rows_loading">загрузка...</span>
                 <ul v-else style="padding-left: 25px;text-align: left">
@@ -166,12 +166,12 @@
               <a style="margin-left: 3px"
                  href="#"
                  :class="{dreg_nex: !data.patient.has_benefit, dreg_ex: data.patient.has_benefit }"
-                 v-if="data.card_internal && data.has_doc_referral"
+                 v-if="data.card_internal && (data.has_doc_referral || data.has_paraclinic)"
                  v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
                    interactive : true, html: '#template-benefit' }"
                  @show="load_benefit_rows"
                  @click.prevent="benefit = true"><i class="fa fa-cubes"></i></a>
-              <div id="template-benefit" :class="{hidden: !data.ok || !data.has_doc_referral || !data.card_internal}"
+              <div id="template-benefit" :class="{hidden: !data.ok || (!data.has_doc_referral && !data.has_paraclinic) || !data.card_internal}"
                    v-if="data.card_internal">
                 <strong>Льготы пациента</strong><br/>
                 <span v-if="benefit_rows_loading">загрузка...</span>

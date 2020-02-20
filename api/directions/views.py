@@ -763,6 +763,7 @@ def directions_paraclinic_form(request):
         if df.exists():
             response["ok"] = True
             response["has_doc_referral"] = False
+            response["has_paraclinic"] = False
             response["has_microbiology"] = False
             response["card_internal"] = d.client.base.internal_type
             response["patient"] = {
@@ -794,6 +795,8 @@ def directions_paraclinic_form(request):
             for i in df:
                 if i.research.is_doc_refferal:
                     response["has_doc_referral"] = True
+                if i.research.is_paraclinic:
+                    response["has_paraclinic"] = True
                 if i.research.is_microbiology and not response["has_microbiology"]:
                     response["has_microbiology"] = True
                     if i.research.microbiology_tube:
