@@ -27,22 +27,8 @@ from laboratory.settings import FONTS_FOLDER
 
 def lab_iss_to_pdf(data):
 
-    pdfmetrics.registerFont(
-        TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('Champ', os.path.join(FONTS_FOLDER, 'Champ.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('ChampB', os.path.join(FONTS_FOLDER, 'Calibri.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('CalibriBold', os.path.join(FONTS_FOLDER, 'calibrib.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('OpenSansItalic', os.path.join(FONTS_FOLDER, 'OpenSans-Italic.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('OpenSansBoldItalic', os.path.join(FONTS_FOLDER, 'OpenSans', 'OpenSans-BoldItalic.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('OpenSansLight', os.path.join(FONTS_FOLDER, 'OpenSans', 'OpenSans-Light.ttf')))
+    pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
+    pdfmetrics.registerFont(TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -101,22 +87,8 @@ def lab_iss_to_pdf(data):
 
 
 def text_iss_to_pdf(data):
-    pdfmetrics.registerFont(
-        TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('Champ', os.path.join(FONTS_FOLDER, 'Champ.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('ChampB', os.path.join(FONTS_FOLDER, 'Calibri.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('CalibriBold', os.path.join(FONTS_FOLDER, 'calibrib.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('OpenSansItalic', os.path.join(FONTS_FOLDER, 'OpenSans-Italic.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('OpenSansBoldItalic', os.path.join(FONTS_FOLDER, 'OpenSans', 'OpenSans-BoldItalic.ttf')))
-    pdfmetrics.registerFont(
-        TTFont('OpenSansLight', os.path.join(FONTS_FOLDER, 'OpenSans', 'OpenSans-Light.ttf')))
+    pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
+    pdfmetrics.registerFont(TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -136,7 +108,6 @@ def text_iss_to_pdf(data):
     data = json.loads(data)
     text_iss = hosp_get_text(None, False, None, data)
     prepare_fwb = []
-    title_researches = ''
     for i in text_iss:
         title_research = i['title_research']
         prepare_fwb.append(Paragraph('{}'.format(title_research), styleBold))
