@@ -668,6 +668,7 @@ class Card(models.Model):
     number_poliklinika = models.CharField(max_length=20, blank=True, default='',
                                           help_text="Идетификатор карты поликлиника", db_index=True)
     phone = models.CharField(max_length=20, blank=True, default='')
+    harmful_factor = models.CharField(max_length=32, blank=True, default='')
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)

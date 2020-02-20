@@ -2,7 +2,7 @@
   <div class="root-agg">
     <div v-for="(lab, title) in data">
       <div><strong>{{title}}</strong></div>
-      <div v-if="excludedTitlesByGroup(title).length > 0 && !disabled" class="excluded">
+      <div v-if="excludedTitlesByGroup(title).length > 0" class="excluded">
         <u><strong>Исключённые исследования:</strong></u>
         <span v-for="t in excludedTitlesByGroup(title)" :key="t" @click="cancelExcludeTitle(t)"
               v-tippy="{ placement : 'top', arrow: true }"
@@ -11,7 +11,7 @@
           {{getAfterGroup(t)}}
         </span>
       </div>
-      <div v-if="excludedDateDirByGroup(title).length > 0 && !disabled" class="excluded">
+      <div v-if="excludedDateDirByGroup(title).length > 0" class="excluded">
         <u><strong>Исключённые направления:</strong></u>
         <span v-for="t in excludedDateDirByGroup(title)" :key="t" @click="cancelExcludeDateDir(t)"
               v-tippy="{ placement : 'top', arrow: true }"
@@ -22,7 +22,7 @@
       </div>
       <div v-for="row in lab.vertical">
         <div><strong>{{row.title_research}}</strong></div>
-        <div v-if="excludedTitlesByGroup(row.title_research).length > 0 && !disabled" class="excluded">
+        <div v-if="excludedTitlesByGroup(row.title_research).length > 0" class="excluded">
           <u><strong>Исключённые фракции:</strong></u>
           <span v-for="t in excludedTitlesByGroup(row.title_research)" :key="t" @click="cancelExcludeTitle(t)"
                 v-tippy="{ placement : 'top', arrow: true }"
@@ -31,7 +31,7 @@
             {{getAfterGroup(t)}}
           </span>
         </div>
-        <div v-if="excludedDateDirByGroup(row.title_research).length > 0 && !disabled" class="excluded">
+        <div v-if="excludedDateDirByGroup(row.title_research).length > 0" class="excluded">
           <u><strong>Исключённые направления:</strong></u>
           <span v-for="t in excludedDateDirByGroup(row.title_research)" :key="t" @click="cancelExcludeDateDir(t)"
                 v-tippy="{ placement : 'top', arrow: true }"
@@ -136,10 +136,14 @@
     },
     async mounted() {
       await this.load()
-      const valOrig = JSON.parse(this.value || '[]')
-      if (Object.prototype.toString.call(valOrig) === '[object Object]' && valOrig.excluded) {
-        this.excluded.dateDir = valOrig.excluded.dateDir || []
-        this.excluded.titles = valOrig.excluded.titles || []
+      try {
+        const valOrig = JSON.parse(this.value || '[]')
+        if (Object.prototype.toString.call(valOrig) === '[object Object]' && valOrig.excluded) {
+          this.excluded.dateDir = valOrig.excluded.dateDir || []
+          this.excluded.titles = valOrig.excluded.titles || []
+        }
+      } catch (e) {
+        console.log('Aggregate error:', e);
       }
       this.inited = true
     },
@@ -182,6 +186,9 @@
         }
       },
       cancelExcludeTitle(title) {
+        if (this.disabled) {
+          return
+        }
         const pos = this.excluded.titles.findIndex(v => v === title)
         if (pos === -1) {
           return
@@ -189,6 +196,9 @@
         this.excluded.titles.splice(pos, 1);
       },
       cancelExcludeDateDir(title) {
+        if (this.disabled) {
+          return
+        }
         const pos = this.excluded.dateDir.findIndex(v => v === title)
         if (pos === -1) {
           return
@@ -243,6 +253,11 @@
           if (this.inited) {
             this.$emit('input', JSON.stringify(this.val_data))
           }
+        }
+      },
+      inited() {
+        if (this.inited) {
+          this.$emit('input', JSON.stringify(this.val_data))
         }
       },
     },

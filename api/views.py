@@ -729,6 +729,10 @@ def autocomplete(request):
     limit = request.GET.get("limit", 10)
     data = []
     if v != "" and limit > 0:
+        if t == "harmful":
+            p = Card.objects.filter(harmful_factor__istartswith=v).distinct('harmful_factor')[:limit]
+            if p.exists():
+                data = [x.harmful_factor for x in p]
         if t == "fias":
             data = fias.suggest(v)
         if t == "name":

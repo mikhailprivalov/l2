@@ -306,6 +306,18 @@
             </div>
           </div>
         </div>
+        <div class="row" style="margin-bottom: 10px">
+          <div class="col-xs-12 col-form mid">
+            <div class="form-row sm-f">
+                <div class="row-t">Фактор вредности</div>
+                <TypeAhead :delayTime="100" :getResponse="getResponse"
+                           :highlighting="highlighting" :limit="10"
+                           :minChars="1" :onHit="onHit('harmful')" :selectFirst="true" maxlength="32"
+                           ref="n" src="/api/autocomplete?value=:keyword&type=harmful" v-model="card.harmful"
+                />
+            </div>
+          </div>
+        </div>
       </div>
       <modal v-if="document_to_edit > -2" ref="modalDocEdit" @close="hide_modal_doc_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
         <span slot="header">Редактор документов (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
@@ -579,6 +591,7 @@
           agent_doc: null,
           agent_pk: null,
           phone: '',
+          harmful: '',
         },
         individuals: [],
         document_to_edit: -2,
@@ -734,7 +747,7 @@
           const data = await patients_point.sendCard(this.card,
             ['family', 'name', 'patronymic', 'birthday', 'sex', 'new_individual', 'base_pk',
               'fact_address', 'main_address', 'work_place', 'main_diagnosis', 'work_position', 'work_place_db',
-              'custom_workplace', 'district', 'phone', 'number_poli'], {
+              'custom_workplace', 'district', 'phone', 'number_poli', 'harmful'], {
               card_pk: this.card_pk, individual_pk: this.card.individual, gin_district: this.card.ginekolog_district,
               base_pk: this.base_pk,
             })
