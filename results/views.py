@@ -474,8 +474,8 @@ def result_print(request):
     # w, h = A4
 
     doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=(27 if leftnone else 10) * mm,
-                            rightMargin=14 * mm, topMargin=5 * mm,
+                            leftMargin=(27 if leftnone else 15) * mm,
+                            rightMargin=12 * mm, topMargin=5 * mm,
                             bottomMargin=16 * mm, allowSplitting=1,
                             title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
 
@@ -1295,7 +1295,6 @@ h3 {
                                     v = v.replace('&lt;sup&gt;', '<sup>')
                                     v = v.replace('&lt;/sup&gt;', '</sup>')
                                     if field_type == 16:
-                                        print(field_type, v)
                                         aggr_lab = lab_iss_to_pdf(v)
                                         fwb.append(Paragraph(
                                             "<font face=\"OpenSansBold\">{}:</font>".format(
@@ -1354,6 +1353,18 @@ h3 {
                                         v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                 if field_type in [11, 13]:
                                     v = '<font face="ChampB" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
+                                if field_type == 16:
+                                    txt += "; ".join(vals)
+                                    fwb.append(Paragraph(txt, style))
+                                    txt = ''
+                                    vals = []
+                                    fwb.append(Spacer(1, 2 * mm))
+                                    fwb.append(Paragraph('Лабораторные исследования', styleBold))
+                                    aggr_lab = lab_iss_to_pdf(v)
+                                    fwb.extend(aggr_lab)
+                                    continue
+                                if field_type == 17:
+                                    v = text_iss_to_pdf(v, protocol_plain_text)
                                 if r.field.get_title(force_type=field_type) != "":
                                     vals.append("{}:&nbsp;{}".format(
                                         r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
