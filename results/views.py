@@ -40,7 +40,6 @@ from pyvirtualdisplay import Display
 from .prepare_data import lab_iss_to_pdf, text_iss_to_pdf
 
 
-
 @login_required
 @group_required("Лечащий врач", "Зав. отделением")
 @csrf_exempt
@@ -1296,18 +1295,16 @@ h3 {
                                     v = v.replace('&lt;/sup&gt;', '</sup>')
                                     if field_type == 16:
                                         aggr_lab = lab_iss_to_pdf(v)
-                                        fwb.append(Paragraph(
-                                            "<font face=\"OpenSansBold\">{}:</font>".format(
-                                                r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
-                                            style))
+                                        fwb.append(
+                                            Paragraph("<font face=\"OpenSansBold\">{}:</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
+                                                      style))
                                         fwb.extend(aggr_lab)
                                         continue
                                     if field_type == 17:
                                         aggr_text = text_iss_to_pdf(v)
-                                        fwb.append(Paragraph(
-                                            "<font face=\"OpenSansBold\">{}:</font>".format(
-                                                r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
-                                             style))
+                                        fwb.append(
+                                            Paragraph("<font face=\"OpenSansBold\">{}:</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
+                                                      style))
                                         fwb.extend(aggr_text)
                                         continue
                                     if field_type == 1:
@@ -1315,8 +1312,7 @@ h3 {
                                         if len(vv) == 3:
                                             v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                     if field_type in [11, 13]:
-                                        v = '<font face="ChampB" size="8">{}</font>'.format(
-                                            v.replace("&lt;br/&gt;", " "))
+                                        v = '<font face="ChampB" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
                                     if r.field.get_title(force_type=field_type) != "":
                                         fwb.append(Paragraph(
                                             "<font face=\"OpenSansBold\">{}:</font> {}".format(
@@ -1345,7 +1341,7 @@ h3 {
                                 v = v.replace('&lt;/sub&gt;', '</sub>')
                                 v = v.replace('&lt;sup&gt;', '<sup>')
                                 v = v.replace('&lt;/sup&gt;', '</sup>')
-                                    # continue
+                                # continue
 
                                 if field_type == 1:
                                     vv = v.split('-')
@@ -2071,7 +2067,7 @@ def result_journal_print(request):
                 "directions": {},
                 "ist_f": iss.napravleniye.fin_title,
                 "fio": iss.napravleniye.client.individual.fio(short=True, dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() +
-                (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")
+                       (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")
             }
         if iss.napravleniye_id not in clientresults[key]["directions"]:
             clientresults[key]["directions"][iss.napravleniye_id] = {"researches": {}}
