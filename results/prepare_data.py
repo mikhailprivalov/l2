@@ -99,7 +99,6 @@ def lab_iss_to_pdf(data1):
                     const_width = const_width_vertical
                     if values_final:
                         row_count = len(values_final) - 1
-
                         width_one_column = const_width / row_count
                         width_one_column = round(width_one_column, 1)
                         row_widths = [width_one_column * mm] * row_count
@@ -142,7 +141,6 @@ def lab_iss_to_pdf(data1):
 
                     result_values_for_fractions.insert(0, [Paragraph(type_lab, styleBold)])
                     row_count = len(fractions_result)
-
                     const_width = const_width_horizontal
                     width_one_column = const_width / row_count
                     width_one_column = round(width_one_column, 1)
