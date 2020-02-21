@@ -54,8 +54,6 @@ def lab_iss_to_pdf(data1):
     data1 = json.loads(data1)
     exclude_direction = data1['excluded']['dateDir']
     exclude_fraction = data1['excluded']['titles']
-    print(data1)
-
     exclude_direction_final = [i.split('#@#')[1] for i in exclude_direction]
     lab_iss = hosp_get_lab_iss(None, False, data1['directions'])
     # Таблица для операции

@@ -5,9 +5,9 @@ from directions.models import Issledovaniya, Napravleniya
 from directory.models import Researches, HospitalService
 from podrazdeleniya.models import Podrazdeleniya
 from utils import tree_directions
-from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, \
-    get_result_text_research
-import json
+from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, get_result_text_research
+from api.dicom import search_dicom_study
+
 
 
 def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', level=-1):
@@ -314,8 +314,10 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
         last_date = None
         data_in = []
         new_date_data = {}
+        link_image = None
         for i in field_result:
             date = f'{i[1]} {i[2]}'
+            link_image = search_dicom_study(i[2])
             group = i[3]
             fields = {'title_field': i[4], 'value': i[5]}
 
@@ -325,6 +327,7 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
 
                 new_date_data = {}
                 new_date_data['date'] = date
+                new_date_data['link_image'] = link_image if link_image else ''
                 new_date_data['data'] = [{'group_title': group, 'fields': [fields.copy()]}]
                 last_date = date
                 last_group = group
@@ -367,7 +370,6 @@ def hosp_get_text_iss(current_iss, is_extract, mode):
         modes = [mode]
 
     v = []
-
     for m in modes:
         v.extend(hosp_get_text(current_iss, is_extract, mode=m))
 
