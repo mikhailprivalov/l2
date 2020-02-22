@@ -9,7 +9,6 @@ from .sql_func import get_research, get_iss, get_distinct_research, get_distinct
 from api.dicom import search_dicom_study
 
 
-
 def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', level=-1):
     # получить данные по разделу Стационарной карты
     # hosp_site_type=-1 - не получать ничего.
@@ -314,7 +313,7 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
         last_date = None
         data_in = []
         new_date_data = {}
-        link_image = None
+        link_dicom = None
         for i in field_result:
             date = f'{i[1]} {i[2]}'
             link_dicom = search_dicom_study(i[2])

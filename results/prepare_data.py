@@ -1,4 +1,4 @@
-from api.stationar.stationar_func import hosp_get_lab_iss, hosp_get_text_iss, hosp_get_text
+from api.stationar.stationar_func import hosp_get_lab_iss, hosp_get_text
 import json
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
