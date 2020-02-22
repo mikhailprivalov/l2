@@ -317,7 +317,7 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
         link_image = None
         for i in field_result:
             date = f'{i[1]} {i[2]}'
-            link_image = search_dicom_study(i[2])
+            link_dicom = search_dicom_study(i[2])
             group = i[3]
             fields = {'title_field': i[4], 'value': i[5]}
 
@@ -327,7 +327,7 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
 
                 new_date_data = {}
                 new_date_data['date'] = date
-                new_date_data['link_image'] = link_image if link_image else ''
+                new_date_data['link_dicom'] = link_dicom if link_dicom else ''
                 new_date_data['data'] = [{'group_title': group, 'fields': [fields.copy()]}]
                 last_date = date
                 last_group = group
