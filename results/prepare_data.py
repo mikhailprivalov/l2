@@ -2,32 +2,18 @@ from api.stationar.stationar_func import hosp_get_lab_iss, hosp_get_text_iss, ho
 import json
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, KeepInFrame
-from reportlab.platypus import PageBreak, Indenter
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, portrait
 from reportlab.lib.units import mm
 from copy import deepcopy
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
-from reportlab.lib.colors import black
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 import os.path
 from laboratory.settings import FONTS_FOLDER
+from pyvirtualdisplay import Display
+import imgkit
+import sys
 
-
-# field_type
-# (16, 'Agg lab'),
-# (17, 'Agg desc')
-# {
-# directions: [],
-# exclude: {
-#     titles: [],
-#     dirDate: [],
-# }
-# }
-# row_count = row_count + 5
-# rowHeights = row_count * [None]
-# rowHeights[4] = 35
 
 def lab_iss_to_pdf(data1):
     pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
@@ -51,7 +37,6 @@ def lab_iss_to_pdf(data1):
     styleBold = deepcopy(style)
     styleBold.fontName = "OpenSansBold"
 
-    data1 = json.loads(data1)
     exclude_direction = data1['excluded']['dateDir']
     exclude_fraction = data1['excluded']['titles']
     exclude_direction_final = [i.split('#@#')[1] for i in exclude_direction]
@@ -226,3 +211,92 @@ def text_iss_to_pdf(data, solid_text=False):
         prepare_fwb = txt
 
     return prepare_fwb
+
+
+def html_to_pdf(file_tmp, r_value, pw, leftnone=False, solid_text=False):
+    linux = None
+    if sys.platform == 'linux':
+        linux = True
+    size_css = f"""
+    html, body {{
+        width: {1000 if leftnone else 1300}px;
+    }}
+    """
+
+    css = """
+    html, body, div,
+    h1, h2, h3, h4, h5, h6 {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        font-family: sans-serif;
+        font-size: 14px;
+    }
+
+    body {
+        padding-left: 15px;
+    }
+
+    table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+    }
+
+    table, th, td {
+        border: 1px solid black;
+    }
+
+    th, td {
+        word-break: break-word;
+        white-space: normal;
+    }
+
+    td {
+        padding: 2px;
+    }
+
+    td p, li p {
+        margin: 0;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+
+    h3 {
+        font-size: 18px;
+    }
+                                        """
+    if linux:
+        display = Display(visible=0, size=(800, 600))
+        display.start()
+    imgkit.from_string(f"""
+    <html>
+        <head>
+            <meta name="imgkit-format" content="png"/>
+            <meta name="imgkit-quality" content="100"/>
+            <meta name="imgkit-zoom" content="3"/>
+            <meta charset="utf-8">
+            <style>
+                {size_css}
+                {css}
+            </style>
+        </head>
+        <body>
+            {r_value}
+        </body>
+    </html>
+                                        """, file_tmp)
+    if linux:
+        display.stop()
+
+    i = Image(file_tmp)
+    i.drawHeight = i.drawHeight * (pw / i.drawWidth)
+    i.drawWidth = pw
+
+    return i

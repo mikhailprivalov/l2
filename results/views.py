@@ -37,7 +37,7 @@ from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
 from api.stationar.stationar_func import hosp_get_hosp_direction
 from pyvirtualdisplay import Display
-from .prepare_data import lab_iss_to_pdf, text_iss_to_pdf
+from .prepare_data import lab_iss_to_pdf, text_iss_to_pdf, html_to_pdf
 
 
 @login_required
@@ -1203,89 +1203,8 @@ def result_print(request):
                                     date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
                                     dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
                                     file_tmp = os.path.join(dir_param, f'field_{date_now1}_{r.pk}.png')
-
-                                    size_css = f"""
-html, body {{
-    width: {1000 if leftnone else 1300}px;
-}}
-"""
-
-                                    css = """
-html, body, div,
-h1, h2, h3, h4, h5, h6 {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    font-family: sans-serif;
-    font-size: 14px;
-}
-
-body {
-    padding-left: 15px;
-}
-
-table {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-}
-
-table, th, td {
-    border: 1px solid black;
-}
-
-th, td {
-    word-break: break-word;
-    white-space: normal;
-}
-
-td {
-    padding: 2px;
-}
-
-td p, li p {
-    margin: 0;
-}
-
-h1 {
-    font-size: 24px;
-}
-
-h2 {
-    font-size: 20px;
-}
-
-h3 {
-    font-size: 18px;
-}
-                                    """
-
-                                    display = Display(visible=0, size=(800, 600))
-                                    display.start()
-                                    imgkit.from_string(f"""
-<html>
-    <head>
-        <meta name="imgkit-format" content="png"/>
-        <meta name="imgkit-quality" content="100"/>
-        <meta name="imgkit-zoom" content="3"/>
-        <meta charset="utf-8">
-        <style>
-            {size_css}
-            {css}
-        </style>
-    </head>
-    <body>
-        {r.value}
-    </body>
-</html>
-                                    """, file_tmp)
-
-                                    display.stop()
-
-                                    i = Image(file_tmp)
-                                    i.drawHeight = i.drawHeight * (pw / i.drawWidth)
-                                    i.drawWidth = pw
-                                    fwb.append(i)
+                                    img = html_to_pdf(file_tmp, r.value, pw, leftnone)
+                                    fwb.append(img)
                                     os.remove(file_tmp)
                                 else:
                                     v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
@@ -1294,6 +1213,9 @@ h3 {
                                     v = v.replace('&lt;sup&gt;', '<sup>')
                                     v = v.replace('&lt;/sup&gt;', '</sup>')
                                     if field_type == 16:
+                                        v = json.loads(v)
+                                        if not v['directions']:
+                                            continue
                                         aggr_lab = lab_iss_to_pdf(v)
                                         fwb.append(
                                             Paragraph("<font face=\"OpenSansBold\">{}:</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
@@ -1301,12 +1223,13 @@ h3 {
                                         fwb.extend(aggr_lab)
                                         continue
                                     if field_type == 17:
-                                        aggr_text = text_iss_to_pdf(v)
-                                        fwb.append(
-                                            Paragraph("<font face=\"OpenSansBold\">{}:</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
-                                                      style))
-                                        fwb.extend(aggr_text)
-                                        continue
+                                        if v:
+                                            aggr_text = text_iss_to_pdf(v)
+                                            fwb.append(
+                                                Paragraph("<font face=\"OpenSansBold\">{}:</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
+                                                          style))
+                                            fwb.extend(aggr_text)
+                                            continue
                                     if field_type == 1:
                                         vv = v.split('-')
                                         if len(vv) == 3:
@@ -1349,7 +1272,23 @@ h3 {
                                         v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                 if field_type in [11, 13]:
                                     v = '<font face="ChampB" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
+                                if field_type == 15:
+                                    txt += "; ".join(vals)
+                                    fwb.append(Paragraph(txt, style))
+                                    txt = ''
+                                    vals = []
+                                    date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
+                                    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+                                    file_tmp = os.path.join(dir_param, f'field_{date_now1}_{r.pk}.png')
+                                    fwb.append(Spacer(1, 2 * mm))
+                                    img = html_to_pdf(file_tmp, r.value, pw, leftnone)
+                                    fwb.append(img)
+                                    os.remove(file_tmp)
+                                    continue
                                 if field_type == 16:
+                                    v = json.loads(v)
+                                    if not v['directions']:
+                                        continue
                                     txt += "; ".join(vals)
                                     fwb.append(Paragraph(txt, style))
                                     txt = ''
@@ -1360,7 +1299,8 @@ h3 {
                                     fwb.extend(aggr_lab)
                                     continue
                                 if field_type == 17:
-                                    v = text_iss_to_pdf(v, protocol_plain_text)
+                                    if v:
+                                        v = text_iss_to_pdf(v, protocol_plain_text)
                                 if r.field.get_title(force_type=field_type) != "":
                                     vals.append("{}:&nbsp;{}".format(
                                         r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
