@@ -35,6 +35,7 @@ def lab_iss_to_pdf(data1):
     style_ml.leftIndent = 5 * mm
 
     styleBold = deepcopy(style)
+    styleBold.fontSize = 8.5
     styleBold.fontName = "OpenSansBold"
 
     exclude_direction = data1['excluded']['dateDir']
@@ -79,16 +80,10 @@ def lab_iss_to_pdf(data1):
                         result_values_for_research.append(values_final)
 
                     result_values_for_research.insert(0, [Paragraph(title_research, styleBold)])
-                    const_width = const_width_vertical
                     if values_final:
                         row_count = len(values_final) - 1
-                        width_one_column = const_width / row_count
-                        width_one_column = round(width_one_column, 1)
-                        row_widths = [width_one_column * mm] * row_count
-                        row_widths.insert(0, 13 * mm)
-                        tbl = gen_table(result_values_for_research, row_widths)
-
-                        prepare_fwb.append(Spacer(1, 2 * mm))
+                        tbl = gen_table(result_values_for_research, const_width_vertical, row_count, type_disposition)
+                        # prepare_fwb.append(Spacer(1, 1 * mm))
                         prepare_fwb.append(tbl)
                         prepare_fwb.append(Spacer(1, 2 * mm))
 
@@ -124,13 +119,7 @@ def lab_iss_to_pdf(data1):
 
                     result_values_for_fractions.insert(0, [Paragraph(type_lab, styleBold)])
                     row_count = len(fractions_result)
-                    const_width = const_width_horizontal
-                    width_one_column = const_width / row_count
-                    width_one_column = round(width_one_column, 1)
-                    row_widths = [width_one_column * mm] * row_count
-                    row_widths.insert(0, 30 * mm)
-
-                    tbl = gen_table(result_values_for_fractions, row_widths)
+                    tbl = gen_table(result_values_for_fractions, const_width_horizontal, row_count, type_disposition)
                     prepare_fwb.append(Spacer(1, 2 * mm))
                     prepare_fwb.append(tbl)
                     prepare_fwb.append(Spacer(1, 2 * mm))
@@ -138,7 +127,14 @@ def lab_iss_to_pdf(data1):
     return prepare_fwb
 
 
-def gen_table(data, row_widths):
+def gen_table(data, const_width, row_count, type_disposition):
+    width_one_column = const_width / row_count
+    width_one_column = round(width_one_column, 1)
+    row_widths = [width_one_column * mm] * row_count
+    if type_disposition == 'horizontal':
+        row_widths.insert(0, 30 * mm)
+    else:
+        row_widths.insert(0, 13 * mm)
     tbl = Table(data, repeatRows=2, colWidths=row_widths)
     tbl.setStyle(TableStyle([
         ('SPAN', (0, 0), (-1, 0)),
@@ -213,7 +209,7 @@ def text_iss_to_pdf(data, solid_text=False):
     return prepare_fwb
 
 
-def html_to_pdf(file_tmp, r_value, pw, leftnone=False, solid_text=False):
+def html_to_pdf(file_tmp, r_value, pw, leftnone=False):
     linux = None
     if sys.platform == 'linux':
         linux = True

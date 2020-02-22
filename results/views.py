@@ -1217,6 +1217,7 @@ def result_print(request):
                                         if not v['directions']:
                                             continue
                                         aggr_lab = lab_iss_to_pdf(v)
+                                        fwb.append(Spacer(1, 2 * mm))
                                         fwb.append(
                                             Paragraph("<font face=\"OpenSansBold\">{}:</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
                                                       style))
@@ -1294,7 +1295,7 @@ def result_print(request):
                                     txt = ''
                                     vals = []
                                     fwb.append(Spacer(1, 2 * mm))
-                                    fwb.append(Paragraph('Лабораторные исследования', styleBold))
+                                    fwb.append(Paragraph(r.field.get_title(), styleBold))
                                     aggr_lab = lab_iss_to_pdf(v)
                                     fwb.extend(aggr_lab)
                                     continue
