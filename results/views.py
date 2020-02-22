@@ -6,7 +6,6 @@ from copy import deepcopy
 from decimal import Decimal
 
 import bleach
-import imgkit
 import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -31,11 +30,12 @@ from directions.models import TubesRegistration, Issledovaniya, Result, Napravle
     ParaclinicResult, Recipe
 from laboratory.decorators import group_required, logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
-from laboratory.utils import strdate
+from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
 from api.stationar.stationar_func import hosp_get_hosp_direction
+from .prepare_data import lab_iss_to_pdf, text_iss_to_pdf, html_to_pdf
 
 
 @login_required
@@ -471,8 +471,8 @@ def result_print(request):
     # w, h = A4
 
     doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=(54 if leftnone else 5) * mm,
-                            rightMargin=5 * mm, topMargin=5 * mm,
+                            leftMargin=(27 if leftnone else 15) * mm,
+                            rightMargin=12 * mm, topMargin=5 * mm,
                             bottomMargin=16 * mm, allowSplitting=1,
                             title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
 
@@ -881,8 +881,8 @@ def result_print(request):
                                                      styleSheet["BodyText"]))
                             else:
                                 tmp.append("")
-                            if prev_date_conf != strdate(iss.time_confirmation, short_year=True):
-                                prev_date_conf = strdate(iss.time_confirmation, short_year=True)
+                            if prev_date_conf != strdate(iss.time_confirmation, short_year=True) + '<br/>' + strtime(iss.time_confirmation)[0:5]:
+                                prev_date_conf = strdate(iss.time_confirmation, short_year=True) + '<br/>' + strtime(iss.time_confirmation)[0:5]
                                 tmp.append(Paragraph('<font face="OpenSans" size="7">%s</font>' % prev_date_conf,
                                                      styleSheet["BodyText"]))
                             else:
@@ -1201,85 +1201,8 @@ def result_print(request):
                                     date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
                                     dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
                                     file_tmp = os.path.join(dir_param, f'field_{date_now1}_{r.pk}.png')
-
-                                    size_css = f"""
-html, body {{
-    width: {1000 if leftnone else 1300}px;
-}}
-"""
-
-                                    css = """
-html, body, div,
-h1, h2, h3, h4, h5, h6 {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    font-family: sans-serif;
-    font-size: 14px;
-}
-
-body {
-    padding-left: 15px;
-}
-
-table {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-}
-
-table, th, td {
-    border: 1px solid black;
-}
-
-th, td {
-    word-break: break-word;
-    white-space: normal;
-}
-
-td {
-    padding: 2px;
-}
-
-td p, li p {
-    margin: 0;
-}
-
-h1 {
-    font-size: 24px;
-}
-
-h2 {
-    font-size: 20px;
-}
-
-h3 {
-    font-size: 18px;
-}
-                                    """
-
-                                    imgkit.from_string(f"""
-<html>
-    <head>
-        <meta name="imgkit-format" content="png"/>
-        <meta name="imgkit-quality" content="100"/>
-        <meta name="imgkit-zoom" content="3"/>
-        <meta charset="utf-8">
-        <style>
-            {size_css}
-            {css}
-        </style>
-    </head>
-    <body>
-        {r.value}
-    </body>
-</html>
-                                    """, file_tmp)
-
-                                    i = Image(file_tmp)
-                                    i.drawHeight = i.drawHeight * (pw / i.drawWidth)
-                                    i.drawWidth = pw
-                                    fwb.append(i)
+                                    img = html_to_pdf(file_tmp, r.value, pw, leftnone)
+                                    fwb.append(img)
                                     os.remove(file_tmp)
                                 else:
                                     v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
@@ -1287,13 +1210,31 @@ h3 {
                                     v = v.replace('&lt;/sub&gt;', '</sub>')
                                     v = v.replace('&lt;sup&gt;', '<sup>')
                                     v = v.replace('&lt;/sup&gt;', '</sup>')
+                                    if field_type == 16:
+                                        v = json.loads(v)
+                                        if not v['directions']:
+                                            continue
+                                        aggr_lab = lab_iss_to_pdf(v)
+                                        fwb.append(Spacer(1, 2 * mm))
+                                        fwb.append(
+                                            Paragraph("<font face=\"OpenSansBold\">{}:</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
+                                                      style))
+                                        fwb.extend(aggr_lab)
+                                        continue
+                                    if field_type == 17:
+                                        if v:
+                                            aggr_text = text_iss_to_pdf(v)
+                                            fwb.append(
+                                                Paragraph("<font face=\"OpenSansBold\">{}:</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
+                                                          style))
+                                            fwb.extend(aggr_text)
+                                            continue
                                     if field_type == 1:
                                         vv = v.split('-')
                                         if len(vv) == 3:
                                             v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                     if field_type in [11, 13]:
-                                        v = '<font face="ChampB" size="8">{}</font>'.format(
-                                            v.replace("&lt;br/&gt;", " "))
+                                        v = '<font face="ChampB" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
                                     if r.field.get_title(force_type=field_type) != "":
                                         fwb.append(Paragraph(
                                             "<font face=\"OpenSansBold\">{}:</font> {}".format(
@@ -1322,12 +1263,43 @@ h3 {
                                 v = v.replace('&lt;/sub&gt;', '</sub>')
                                 v = v.replace('&lt;sup&gt;', '<sup>')
                                 v = v.replace('&lt;/sup&gt;', '</sup>')
+                                # continue
+
                                 if field_type == 1:
                                     vv = v.split('-')
                                     if len(vv) == 3:
                                         v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                 if field_type in [11, 13]:
                                     v = '<font face="ChampB" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
+                                if field_type == 15:
+                                    txt += "; ".join(vals)
+                                    fwb.append(Paragraph(txt, style))
+                                    txt = ''
+                                    vals = []
+                                    date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
+                                    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+                                    file_tmp = os.path.join(dir_param, f'field_{date_now1}_{r.pk}.png')
+                                    fwb.append(Spacer(1, 2 * mm))
+                                    img = html_to_pdf(file_tmp, r.value, pw, leftnone)
+                                    fwb.append(img)
+                                    os.remove(file_tmp)
+                                    continue
+                                if field_type == 16:
+                                    v = json.loads(v)
+                                    if not v['directions']:
+                                        continue
+                                    txt += "; ".join(vals)
+                                    fwb.append(Paragraph(txt, style))
+                                    txt = ''
+                                    vals = []
+                                    fwb.append(Spacer(1, 2 * mm))
+                                    fwb.append(Paragraph(r.field.get_title(), styleBold))
+                                    aggr_lab = lab_iss_to_pdf(v)
+                                    fwb.extend(aggr_lab)
+                                    continue
+                                if field_type == 17:
+                                    if v:
+                                        v = text_iss_to_pdf(v, protocol_plain_text)
                                 if r.field.get_title(force_type=field_type) != "":
                                     vals.append("{}:&nbsp;{}".format(
                                         r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
@@ -1479,6 +1451,8 @@ h3 {
 
     if len(pk) == 1 and not link_result and not hosp:
         doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
+    elif len(pk) == 1 and not link_result and hosp:
+        doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages)
     else:
         doc.build(naprs, onFirstPage=first_pages, onLaterPages=later_pages)
 
@@ -2031,9 +2005,8 @@ def result_journal_print(request):
             clientresults[key] = {
                 "directions": {},
                 "ist_f": iss.napravleniye.fin_title,
-                "fio": iss.napravleniye.client.individual.fio(short=True, dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() +
-                (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")
-            }
+                "fio": iss.napravleniye.client.individual.fio(short=True, dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() + (
+                    ("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
         if iss.napravleniye_id not in clientresults[key]["directions"]:
             clientresults[key]["directions"][iss.napravleniye_id] = {"researches": {}}
         # results = Result.objects.filter(issledovaniye=iss)
