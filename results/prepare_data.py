@@ -91,7 +91,6 @@ def lab_iss_to_pdf(data1):
                 if not data:
                     continue
                 for i in data:
-                    # title_research = i['title_research']
                     title_fractions = i['title_fracions']
                     # получить индексы ислючнных фракций
                     fractions_index_to_remove = []

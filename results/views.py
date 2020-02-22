@@ -6,7 +6,6 @@ from copy import deepcopy
 from decimal import Decimal
 
 import bleach
-import imgkit
 import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -36,7 +35,6 @@ from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
 from api.stationar.stationar_func import hosp_get_hosp_direction
-from pyvirtualdisplay import Display
 from .prepare_data import lab_iss_to_pdf, text_iss_to_pdf, html_to_pdf
 
 
