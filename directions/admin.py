@@ -15,6 +15,7 @@ class CardAdmin(admin.ModelAdmin):
 @admin.register(Issledovaniya)
 class IssAdmin(admin.ModelAdmin):
     raw_id_fields = ('napravleniye', 'research',)
+    search_fields = ('napravleniye__pk',)
 
 
 class ResTypeJob(admin.ModelAdmin):

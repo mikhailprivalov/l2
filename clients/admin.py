@@ -39,7 +39,7 @@ class AgeCacheAdmin(admin.ModelAdmin):
 
 @admin.register(models.District)
 class DistrictAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('title', 'is_ginekolog', 'code_poliklinika',)
 
 
 @admin.register(models.DispensaryReg)
