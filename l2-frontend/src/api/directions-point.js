@@ -90,4 +90,7 @@ export default generator({
   resetAMD: {
     url: 'directions/reset-amd',
   },
+  getPurposes: {
+    url: 'directions/purposes',
+  },
 })

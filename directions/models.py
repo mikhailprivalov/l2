@@ -297,10 +297,27 @@ class RMISOrgs(models.Model):
         return self.title
 
 
+class ExternalOrganization(models.Model):
+    title = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.title
+
+
 class Napravleniya(models.Model):
     """
     Таблица направлений
     """
+    PURPOSE_WORK_EXAMINATION = 'WORK_EXAMINATION'
+    PURPOSE_DRIVE_EXAMINATION = 'DRIVE_EXAMINATION'
+    PURPOSE_WEAPON_EXAMINATION = 'WEAPON_EXAMINATION'
+
+    PURPOSES = (
+        (PURPOSE_WORK_EXAMINATION, 'На работу'),
+        (PURPOSE_DRIVE_EXAMINATION, 'На водительское'),
+        (PURPOSE_WEAPON_EXAMINATION, 'На оружие'),
+    )
+
     data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
     visit_date = models.DateTimeField(help_text='Дата посещения по направлению', db_index=True, default=None,
                                       blank=True, null=True)
@@ -365,6 +382,8 @@ class Napravleniya(models.Model):
                                   help_text='Номер документа в АМД')
     error_amd = models.BooleanField(default=False, blank=True, help_text='Ошибка отправка в АМД?')
     amd_excluded = models.BooleanField(default=False, blank=True, help_text='Исключить из выгрузки в АМД?')
+    purpose = models.CharField(max_length=64, null=True, blank=True, default=None, db_index=True, choices=PURPOSES, help_text="Цель направления")
+    harmful_factor = models.CharField(max_length=32, blank=True, default='')
 
     @property
     def data_sozdaniya_local(self):
@@ -418,7 +437,8 @@ class Napravleniya(models.Model):
                          rmis_data: [dict, None] = None,
                          parent_id=None,
                          parent_auto_gen_id=None,
-                         rmis_slot=None) -> 'Napravleniya':
+                         rmis_slot=None,
+                         direction_purpose="NONE") -> 'Napravleniya':
         """
         Генерация направления
         :param client_id:
@@ -447,6 +467,7 @@ class Napravleniya(models.Model):
                            data_sozdaniya=timezone.now(),
                            diagnos=diagnos, cancel=False, parent_id=parent_id, parent_auto_gen_id=parent_auto_gen_id,
                            rmis_slot_id=rmis_slot)
+        dir.harmful_factor = dir.client.harmful_factor
         if for_rmis:
             dir.rmis_number = rmis_data.get("rmis_number")
             dir.imported_from_rmis = True
@@ -459,6 +480,8 @@ class Napravleniya(models.Model):
             if ofname_id > -1 and ofname:
                 dir.doc = ofname
                 dir.doc_who_create = doc_current
+        if direction_purpose != "NONE":
+            dir.purpose = direction_purpose
         if save:
             dir.save()
         dir.set_polis()
@@ -485,7 +508,7 @@ class Napravleniya(models.Model):
                                           researches, comments, for_rmis=None, rmis_data=None, vich_code='',
                                           count=1, discount=0, parent_iss=None, rmis_slot=None, counts=None,
                                           localizations=None, service_locations=None, visited=None,
-                                          parent_auto_gen=None):
+                                          parent_auto_gen=None, direction_purpose="NONE"):
         if not visited:
             visited = []
         if counts is None:
@@ -572,7 +595,8 @@ class Napravleniya(models.Model):
                                                                                              rmis_data=rmis_data,
                                                                                              parent_id=parent_iss,
                                                                                              parent_auto_gen_id=parent_auto_gen,
-                                                                                             rmis_slot=rmis_slot)
+                                                                                             rmis_slot=rmis_slot,
+                                                                                             direction_purpose=direction_purpose)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
                     if dir_group == -1:
@@ -589,7 +613,8 @@ class Napravleniya(models.Model):
                                                                                              rmis_data=rmis_data,
                                                                                              parent_id=parent_iss,
                                                                                              parent_auto_gen_id=parent_auto_gen,
-                                                                                             rmis_slot=rmis_slot)
+                                                                                             rmis_slot=rmis_slot,
+                                                                                             direction_purpose=direction_purpose)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
 
@@ -757,7 +782,7 @@ class PersonContract(models.Model):
     """
     num_contract = models.CharField(max_length=25, null=False, db_index=True, help_text='Номер договора')
     protect_code = models.CharField(max_length=32, null=False, db_index=True, help_text="Контрольная сумма контракта")
-    dir_list = models.CharField(max_length=255, null=False, db_index=True, help_text="Направления для контракта")
+    dir_list = models.CharField(max_length=512, null=False, db_index=True, help_text="Направления для контракта")
     sum_contract = models.CharField(max_length=255, null=False, db_index=True, help_text="Итоговая сумма контракта")
     patient_data = models.CharField(max_length=255, null=False, db_index=True,
                                     help_text="Фамилия инициалы Заказчика-Пациента")
@@ -847,6 +872,8 @@ class Issledovaniya(models.Model):
                                                                   null=True, blank=True,
                                                                   help_text='Авто назначаемое при подтверждении',
                                                                   on_delete=models.SET_NULL)
+    aggregate_lab = JSONField(null=True, blank=True, default=None, help_text='ID направлений лаборатории, привязаных к стационарному случаю')
+    aggregate_desc = JSONField(null=True, blank=True, default=None, help_text='ID направлений описательных, привязаных к стационарному случаю')
 
     @property
     def time_save_local(self):
@@ -1020,7 +1047,11 @@ class ParaclinicResult(models.Model):
     field = models.ForeignKey(directory.ParaclinicInputField, db_index=True,
                               help_text='Поле результата',
                               on_delete=models.CASCADE)
+    field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
     value = models.TextField()
+
+    def get_field_type(self):
+        return self.field_type if self.issledovaniye.time_confirmation and self.field_type is not None else self.field.field_type
 
 
 class MicrobiologyResult(models.Model):

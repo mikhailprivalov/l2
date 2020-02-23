@@ -30,6 +30,7 @@
         type: String,
         required: true,
       },
+      value: {},
     },
     data() {
       return {
@@ -72,6 +73,30 @@
 
         return false;
       }
+    },
+    computed: {
+      directions() {
+        const d = []
+        try {
+          if (Array.isArray(this.data)) {
+            for (const res of this.data) {
+              for (const row of res.result) {
+                if (row.date) {
+                  d.push(parseInt(row.date.split(' ')[1]));
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error(e)
+        }
+        return d
+      },
+    },
+    watch: {
+      directions() {
+        this.$emit('input', JSON.stringify(this.directions))
+      },
     },
   }
 </script>

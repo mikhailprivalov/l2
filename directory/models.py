@@ -341,6 +341,7 @@ class ParaclinicInputField(models.Model):
         (17, 'Agg desc'),
         (18, 'Number'),
         (19, 'Number range'),
+        (20, 'Time HH:MM'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
@@ -357,17 +358,18 @@ class ParaclinicInputField(models.Model):
     helper = models.CharField(max_length=999, blank=True, default='')
     for_extract_card = models.BooleanField(default=False, help_text='В выписку', blank=True)
 
-    def get_title(self, recursive=False):
+    def get_title(self, force_type=None, recursive=False):
+        field_type = force_type or self.field_type
         titles = ['']
         if self.title:
             titles.append(self.title)
-        if self.field_type != 14:
-            if self.field_type == 11 and Fractions.objects.filter(pk=self.default_value).exists():
+        if field_type != 14:
+            if field_type == 11 and Fractions.objects.filter(pk=self.default_value).exists():
                 f = Fractions.objects.get(pk=self.default_value)
                 titles.append(f.research.title)
                 if f.title not in titles:
                     titles[-1] = titles[-1] + ' – ' + f.title
-            if self.field_type == 13 and ParaclinicInputField.objects.filter(pk=self.default_value).exists():
+            if field_type == 13 and ParaclinicInputField.objects.filter(pk=self.default_value).exists():
                 f = ParaclinicInputField.objects.get(pk=self.default_value)
                 titles.append(f.group.research.title)
                 gt = f.group.title

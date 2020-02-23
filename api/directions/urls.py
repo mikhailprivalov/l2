@@ -26,4 +26,5 @@ urlpatterns = [
     path('last-field-result', views.last_field_result),
     path('send-amd', views.send_amd),
     path('reset-amd', views.reset_amd),
+    path('purposes', views.purposes),
 ]

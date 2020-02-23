@@ -25,6 +25,8 @@ from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
 from utils.dates import try_parse_range
+import re
+from utils.dates import normalize_date
 
 
 @login_required
@@ -37,27 +39,36 @@ def directions_generate(request):
         if type_card.base.forbidden_create_napr:
             result["message"] = "Для данного типа карт нельзя создать направления"
             return JsonResponse(result)
-        rc = Napravleniya.gen_napravleniya_by_issledovaniya(p.get("card_pk"),
-                                                            p.get("diagnos"),
-                                                            p.get("fin_source"),
-                                                            p.get("history_num"),
-                                                            p.get("ofname_pk"),
-                                                            request.user.doctorprofile,
-                                                            p.get("researches"),
-                                                            p.get("comments"),
-                                                            p.get("for_rmis"),
-                                                            p.get("rmis_data", {}),
-                                                            vich_code=p.get("vich_code", ""),
-                                                            count=p.get("count", 1),
-                                                            discount=p.get("discount", 0),
-                                                            parent_iss=p.get("parent_iss", None),
-                                                            counts=p.get("counts", {}),
-                                                            localizations=p.get("localizations", {}),
-                                                            service_locations=p.get("service_locations", {}))
-        result["ok"] = rc["r"]
-        result["directions"] = rc["list_id"]
-        if "message" in rc:
-            result["message"] = rc["message"]
+        args = [
+            p.get("card_pk"),
+            p.get("diagnos"),
+            p.get("fin_source"),
+            p.get("history_num"),
+            p.get("ofname_pk"),
+            request.user.doctorprofile,
+            p.get("researches"),
+            p.get("comments"),
+            p.get("for_rmis"),
+            p.get("rmis_data", {}),
+        ]
+        kwargs = dict(
+            vich_code=p.get("vich_code", ""),
+            count=p.get("count", 1),
+            discount=p.get("discount", 0),
+            parent_iss=p.get("parent_iss", None),
+            counts=p.get("counts", {}),
+            localizations=p.get("localizations", {}),
+            service_locations=p.get("service_locations", {}),
+            direction_purpose=p.get("direction_purpose", "NONE")
+        )
+        for _ in range(p.get("directions_count", 1)):
+            rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
+            result["ok"] = rc["r"]
+            if "message" in rc:
+                result["message"] = rc["message"]
+            result["directions"].extend(rc["list_id"])
+            if not result["ok"]:
+                break
     return JsonResponse(result)
 
 
@@ -658,7 +669,7 @@ def directions_results_report(request):
                                                                  issledovaniye=i).order_by("field__order"):
                             if r.value == "":
                                 continue
-                            res.append((r.field.get_title() + ": " if r.field.get_title() != "" else "") + r.value)
+                            res.append((r.field.get_title(force_type=r.get_field_type()) + ": " if r.field.get_title(force_type=r.get_field_type()) != "" else "") + r.value)
 
                         if len(res) == 0:
                             continue
@@ -754,6 +765,7 @@ def directions_paraclinic_form(request):
         if df.exists():
             response["ok"] = True
             response["has_doc_referral"] = False
+            response["has_paraclinic"] = False
             response["has_microbiology"] = False
             response["card_internal"] = d.client.base.internal_type
             response["patient"] = {
@@ -785,6 +797,8 @@ def directions_paraclinic_form(request):
             for i in df:
                 if i.research.is_doc_refferal:
                     response["has_doc_referral"] = True
+                if i.research.is_paraclinic:
+                    response["has_paraclinic"] = True
                 if i.research.is_microbiology and not response["has_microbiology"]:
                     response["has_microbiology"] = True
                     if i.research.microbiology_tube:
@@ -885,19 +899,20 @@ def directions_paraclinic_form(request):
                     g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
                          "hide": group.hide, "fields": [], "visibility": group.visibility}
                     for field in ParaclinicInputField.objects.filter(group=group, hide=False).order_by("order"):
+                        result_field = None if not ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists()\
+                            else ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0]
+                        field_type = field.field_type if not result_field else result_field.get_field_type()
                         g["fields"].append({
                             "pk": field.pk,
                             "order": field.order,
                             "lines": field.lines,
                             "title": field.title,
                             "hide": field.hide,
-                            "values_to_input": ([] if not field.required or field.field_type not in [10, 12] else
+                            "values_to_input": ([] if not field.required or field_type not in [10, 12] else
                                                 ['- Не выбрано']) + json.loads(field.input_templates),
-                            "value": (field.default_value if field.field_type not in [3, 11, 13, 14] else '')
-                            if not ParaclinicResult.objects.filter(
-                                issledovaniye=i, field=field).exists() else
-                            ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value,
-                            "field_type": field.field_type,
+                            "value": (field.default_value if field_type not in [3, 11, 13, 14] else '')
+                            if not result_field else result_field.value,
+                            "field_type": field_type,
                             "default_value": field.default_value,
                             "visibility": field.visibility,
                             "required": field.required,
@@ -995,7 +1010,34 @@ def directions_paraclinic_result(request):
                 else:
                     f_result = ParaclinicResult.objects.filter(issledovaniye=iss, field=f)[0]
                 f_result.value = field["value"]
+                f_result.field_type = f.field_type
                 f_result.save()
+                if f.field_type in [16, 17] and iss.napravleniye.parent and iss.napravleniye.parent.research.is_hospital:
+                    try:
+                        val = json.loads(str(field["value"]))
+                    except Exception:
+                        val = None
+
+                    if f.field_type == 16:
+                        if with_confirm:
+                            if isinstance(val, list):
+                                iss.napravleniye.parent.aggregate_lab = val
+                            elif isinstance(val, dict) and val.get("directions"):
+                                iss.napravleniye.parent.aggregate_lab = val["directions"]
+                            else:
+                                iss.napravleniye.parent.aggregate_lab = None
+                        else:
+                            iss.napravleniye.parent.aggregate_lab = None
+                    elif f.field_type == 17:
+                        if with_confirm:
+                            if isinstance(val, list):
+                                iss.napravleniye.parent.aggregate_desc = val
+                            else:
+                                iss.napravleniye.parent.aggregate_desc = None
+                        else:
+                            iss.napravleniye.parent.aggregate_desc = None
+                    iss.napravleniye.parent.save()
+
         iss.doc_save = request.user.doctorprofile
         iss.time_save = timezone.now()
         if iss.research.is_doc_refferal:
@@ -1239,10 +1281,14 @@ def last_field_result(request):
     result = None
     if rows:
         row = rows[0]
+        value = row[5]
+        match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
+        if match:
+            value = normalize_date(value)
         result = {
             "direction": row[1],
             "date": row[4],
-            "value": row[5]
+            "value": value
         }
     return JsonResponse({"result": result})
 
@@ -1268,3 +1314,15 @@ def reset_amd(request):
         direction.error_amd = False
         direction.save()
     return JsonResponse({"ok": True})
+
+
+def purposes(request):
+    result = [
+        {"pk": "NONE", "title": " – Не выбрано"}
+    ]
+    for p in Napravleniya.PURPOSES:
+        result.append({
+            "pk": p[0],
+            "title": p[1],
+        })
+    return JsonResponse({"purposes": result})

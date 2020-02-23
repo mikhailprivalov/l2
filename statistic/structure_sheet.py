@@ -286,7 +286,7 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
 
         r = r + 1
         ws1.cell(row=r, column=1).value = current_date
-        ws1.cell(row=r, column=2).value = "1"
+        ws1.cell(row=r, column=2).value = 1
         ws1.cell(row=r, column=3).value = current_research_title
         sum_uet = 0
         co_exec = ''

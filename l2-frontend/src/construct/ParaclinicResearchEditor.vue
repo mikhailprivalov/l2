@@ -231,6 +231,7 @@
                     <option value="17">(Стационар) агрегация по описательным</option>
                     <option value="18">Число</option>
                     <option value="19">Число через range</option>
+                    <option value="20">Время ЧЧ:ММ</option>
                   </select>
                 </label>
               </div>

@@ -293,6 +293,7 @@ def patients_get_card_data(request, card_id):
         "rmis_uid": rc[0].number if rc.exists() else None,
         "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()],
         "number_poli": card.number_poliklinika,
+        "harmful": card.harmful_factor,
     })
 
 
@@ -365,6 +366,7 @@ def patients_card_save(request):
     c.ginekolog_district_id = request_data["gin_district"] if request_data["gin_district"] != -1 else None
     c.work_position = request_data["work_position"]
     c.phone = request_data["phone"]
+    c.harmful_factor = request_data.get("harmful", "")
     c.save()
     if c.individual.primary_for_rmis:
         try:
