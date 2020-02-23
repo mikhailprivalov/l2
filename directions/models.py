@@ -297,6 +297,13 @@ class RMISOrgs(models.Model):
         return self.title
 
 
+class ExternalOrganization(models.Model):
+    title = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.title
+
+
 class Napravleniya(models.Model):
     """
     Таблица направлений
@@ -376,6 +383,7 @@ class Napravleniya(models.Model):
     error_amd = models.BooleanField(default=False, blank=True, help_text='Ошибка отправка в АМД?')
     amd_excluded = models.BooleanField(default=False, blank=True, help_text='Исключить из выгрузки в АМД?')
     purpose = models.CharField(max_length=64, null=True, blank=True, default=None, db_index=True, choices=PURPOSES, help_text="Цель направления")
+    harmful_factor = models.CharField(max_length=32, blank=True, default='')
 
     @property
     def data_sozdaniya_local(self):
@@ -459,6 +467,7 @@ class Napravleniya(models.Model):
                            data_sozdaniya=timezone.now(),
                            diagnos=diagnos, cancel=False, parent_id=parent_id, parent_auto_gen_id=parent_auto_gen_id,
                            rmis_slot_id=rmis_slot)
+        dir.harmful_factor = dir.client.harmful_factor
         if for_rmis:
             dir.rmis_number = rmis_data.get("rmis_number")
             dir.imported_from_rmis = True
