@@ -1,3 +1,5 @@
+const titleSplitter = ' > ';
+
 export default class UrlData {
   static set(data) {
     if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
@@ -18,5 +20,15 @@ export default class UrlData {
 
     }
     return null;
+  }
+
+  static title(newTitle) {
+    const baseTitleSplit = window.document.title.split(titleSplitter);
+    const baseTitle = baseTitleSplit.length > 1 ? baseTitleSplit[1] : baseTitleSplit[0];
+    if (newTitle) {
+      window.document.title = newTitle + titleSplitter + baseTitle;
+    } else {
+      window.document.title = baseTitle;
+    }
   }
 }
