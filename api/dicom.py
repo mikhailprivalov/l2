@@ -18,8 +18,8 @@ def check_sum_ean13(num):
 
 
 def check_server_port(address, port):
-    TCP_IP = address
-    TCP_PORT = port
+    TCP_IP = address or '127.0.0.1'
+    TCP_PORT = port or 4242
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(0.2)
     try:

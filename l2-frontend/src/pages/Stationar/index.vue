@@ -107,6 +107,15 @@
               Загрузить всё
             </button>
           </div>
+          <div class="sidebar-btn-wrapper" v-if="tree.length > 1">
+            <button class="btn btn-blue-nb sidebar-btn text-center"
+                    style="font-size: 12px"
+                    @click="close()"
+            >
+              <i class="fa fa-close"/>
+              Отмена просмотра истории
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -382,6 +391,7 @@
   import AggregateLaboratory from '../../fields/AggregateLaboratory'
   import AggregateDesc from '../../fields/AggregateDesc'
   import patients_point from '../../api/patients-point'
+  import UrlData from "../../UrlData";
 
   export default {
     mixins: [menuMixin],
@@ -442,6 +452,10 @@
       this.$root.$on('hide_results', () => {
         this.show_results_pk = -1
       })
+      const storedData = UrlData.get();
+      if (storedData && typeof storedData === 'object' && storedData.pk) {
+        this.load_pk(storedData.pk);
+      }
     },
     methods: {
       async confirm_service() {
@@ -483,7 +497,14 @@
         this.pk = String(pk)
         this.load(every)
       },
-      async load(every = false) {
+      async close(force = false) {
+        if (!force) {
+          try {
+            await this.$dialog.confirm(`Подтвердите отмену просмотра истории «${this.direction}»`)
+          } catch (_) {
+            return
+          }
+        }
         this.close_list_directions()
         this.anamnesis_edit = false
         this.anamnesis_data = {
@@ -503,9 +524,14 @@
         this.stationar_research = -1
         this.create_directions_data = []
         this.tree = []
+        UrlData.set(null);
+      },
+      async load(every = false) {
+        await this.close(true);
         await this.$store.dispatch(action_types.INC_LOADING)
         const {ok, data, message} = await stationar_point.load(this, ['pk'], {every})
         if (ok) {
+          UrlData.set({pk: this.pk});
           this.pk = ''
           this.every = every
           this.direction = data.direction

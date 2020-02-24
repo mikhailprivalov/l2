@@ -276,7 +276,9 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
     #                 {'date': '05.01.20 119', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
     #                       'value': 'Диффузные нарушения'}]}]}]} ]}]
     #                                                                                                                     ]}
-    if not directions:
+    if directions:
+        num_paraclinic_dirs = directions
+    else:
         if mode is None:
             return {}
         num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
@@ -297,9 +299,6 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
             for k in obj_hosp_dirs:
                 paraclinic_dir = k.get('direction')
                 num_paraclinic_dirs.add(paraclinic_dir)
-
-    if directions:
-        num_paraclinic_dirs = directions
 
     num_paraclinic_dirs = list(num_paraclinic_dirs)
     # [0] - заглушка для запроса. research c id =0 не бывает
