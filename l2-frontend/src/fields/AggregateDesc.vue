@@ -4,7 +4,7 @@
       <div class="research-title">{{research.title_research}}</div>
       <div class="research-date" v-for="res in research.result">
         <div class="research-date-title">{{res.date}}:</div>
-        <a class="a-under" :href="res.link_dicom" target="_blank">снимок</a><br />
+        <a class="a-under" :href="res.link_dicom" v-if="res.link_dicom" target="_blank">снимок</a><br />
         <span class="research-group" v-for="g in res.data" v-if="non_empty_group(g)">
           <span class="research-group-title" v-if="g.group_title !== ''">
             {{fix_space(g.group_title)}}<span v-if="non_empty_fields(g)">:</span></span>
