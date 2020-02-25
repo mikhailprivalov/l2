@@ -63,6 +63,11 @@ def form_01(request_data):
     style.fontSize = 12
     style.leading = 15
     style.spaceAfter = 0.5 * mm
+
+    styleLead = deepcopy(style)
+    styleLead.leading = 12
+    styleLead.alignment = TA_JUSTIFY
+
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
     styleCenter = deepcopy(style)
@@ -151,6 +156,9 @@ def form_01(request_data):
         other_diagnos = hosp_extract_data['other_diagnos']
         near_diagnos = hosp_extract_data['near_diagnos']
         days_count = hosp_extract_data['days_count']
+        if hosp_extract_data['outcome']:
+            outcome = hosp_extract_data['outcome']
+        doc_fio = hosp_extract_data['doc_fio']
 
     # Получить отделение - из названия услуги или самого главного направления
     hosp_depart = hosp_nums_obj[0].get('research_title')
@@ -251,36 +259,38 @@ def form_01(request_data):
         Paragraph('в) сопутствующий:', style),
         Spacer(1, 19 * mm),
         Paragraph('12. Госпитализирован в данном году по поводу данного заболевания: впервые, повторно (подчеркнуть),'
-                  'всего  - ___раз.:{}'.format(''), style),
+                  'всего  - ___раз.:{}'.format(''), styleLead),
         Spacer(1, 1 * mm),
-        Paragraph('13. Хирургические операции, методы обезболивания и послеоперационные осложнения:', style),
+        Paragraph('13. Хирургические операции, методы обезболивания и послеоперационные осложнения:', styleLead),
         Spacer(1, 40 * mm),
-        Paragraph('14. Другие виды лечения:___________________________________________'.format('Из '), style),
+        Paragraph('14. Другие виды лечения:___________________________________________'.format('Из '), styleLead),
         Spacer(1, 0.2 * mm),
-        Paragraph('для больных злокачественными новообразованиями.', style),
+        Paragraph('для больных злокачественными новообразованиями.', styleLead),
         Spacer(1, 0.2 * mm),
         Paragraph(' 1.Специальное лечение: хирургическое(дистанционная гамматерапия, рентгенотерапия, быстрые '
                   'электроны, контактная и дистанционная гамматерапия, контактная гамматерапия и глубокая '
                   'рентгенотерапия); комбинированное(хирургическое и гамматерапия, хирургическое и рентгено - '
-                  'терапия, хирургическое и сочетанное лучевое); химиопрепаратами, гормональными препаратами.', style),
+                  'терапия, хирургическое и сочетанное лучевое); химиопрепаратами, гормональными препаратами.', styleLead),
         Spacer(1, 1 * mm),
-        Paragraph('2. Паллиативное', style),
+        Paragraph('2. Паллиативное', styleLead),
         Spacer(1, 0.2 * mm),
-        Paragraph('3. Симптоматическое лечение.', style),
+        Paragraph('3. Симптоматическое лечение.', styleLead),
         Spacer(1, 0.2 * mm),
-        Paragraph('15. Отметка о выдаче листка нетрудоспособности: {}'.format(''), style),
+        Paragraph('15. Отметка о выдаче листка нетрудоспособности: {}'.format(''), styleLead),
         Spacer(1, 1 * mm),
-        Paragraph('16. Исход заболевания: {}'.format(''), style),
+        Paragraph('16. Исход заболевания: {}'.format(outcome), styleLead),
         Spacer(1, 1 * mm),
         Paragraph('17.  Трудоспособность восстановлена полностью, снижена, временно утрачена, стойко утрачена в связи '
-                  'с данным заболеванием, с другими причинами(подчеркнуть): {}'.format(''), style),
+                  'с данным заболеванием, с другими причинами(подчеркнуть): {}'.format(''), styleLead),
         Spacer(1, 1 * mm),
-        Paragraph('18. Для поступивших на экспертизу - заключение:___________________', style),
+        Paragraph('18. Для поступивших на экспертизу - заключение:___________________', styleLead),
         Spacer(1, 1 * mm),
-        Paragraph('___________________________________________________________________', style),
+        Paragraph('___________________________________________________________________', styleLead),
         Spacer(1, 1 * mm),
         Paragraph('19. Особые отметки', style),
-        PageBreak()
+        Spacer(1, 2 * mm),
+        Paragraph('Лечащий врач: {}'.format(doc_fio), style),
+        Paragraph('Заведующий отделением:', style),
     ]
 
     objs.extend(title_page)

@@ -484,7 +484,7 @@ def form_03(request_data):
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=25 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
-                            bottomMargin=4 * mm, allowSplitting=1,
+                            bottomMargin=10 * mm, allowSplitting=1,
                             title="Форма {}".format("066/у-02"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
@@ -595,6 +595,8 @@ def form_03(request_data):
         if hosp_extract_data['time_value']:
             time_value = hosp_extract_data['time_value']
         days_count = hosp_extract_data['days_count']
+        doc_fio = hosp_extract_data['doc_fio']
+
 
     title_page = [
         Indenter(left=0 * mm),
@@ -674,15 +676,9 @@ def form_03(request_data):
         doc_code = ''
         if i['doc_confirm_code']:
             doc_code = str(i['doc_confirm_code'])
-
-        # tmp_data = [[Paragraph(str(x), styleTB), Paragraph('', styleTB), Paragraph(i['bed_profile_research_title'], styleTB),
-        #              Paragraph(str(i['doc_confirm_code']), styleTB), Paragraph(i.get['date_entered_value'], styleTB),
-        #              Paragraph(i.get['date_oute'], styleTB), Paragraph(i.get['diagnos_mkb'], styleTB), Paragraph('', styleTB),
-        #              Paragraph('', styleTB), Paragraph('ОМС', styleTB),
-        #              ], ]
         tmp_data = [[Paragraph(str(x), styleTB), Paragraph('', styleTB), Paragraph(i['bed_profile_research_title'], styleTB),
-                     Paragraph("", styleTB), Paragraph("", styleTB),
-                     Paragraph("", styleTB), Paragraph("", styleTB), Paragraph('', styleTB),
+                     Paragraph(doc_code, styleTB), Paragraph(i['date_entered_value'], styleTB),
+                     Paragraph(i['date_oute'], styleTB), Paragraph(i['diagnos_mkb'], styleTB), Paragraph('', styleTB),
                      Paragraph('', styleTB), Paragraph('ОМС', styleTB),
                      ], ]
 
@@ -707,7 +703,6 @@ def form_03(request_data):
     patient_operation = hosp_get_operation_data(num_dir)
     operation_result = []
     for i in patient_operation:
-        print(i)
         operation_template = [''] * 12
         operation_template[0] = Paragraph(i['date'] + '<br/>' + i['time_start'] + '-' + i['time_end'], styleTB)
         operation_template[1] = Paragraph(str(i['doc_code']), styleTB)
@@ -765,7 +760,7 @@ def form_03(request_data):
         '31. Дефекты догоспитального этапа: несвоевременность госпитализации - 1; недостаточный объем клинико - диагностического обследования - 2; '
         'неправильная тактика лечения - 3; несовпадение диагноза - 4.', style), )
     objs.append(Spacer(1, 7 * mm))
-    objs.append(Paragraph('Подпись лечащего врача', style), )
+    objs.append(Paragraph('Подпись лечащего врача ({}) ____________________________'. format(doc_fio), style), )
     objs.append(Spacer(1, 7 * mm))
     objs.append(Paragraph('Подпись заведующего отделением', style), )
 
