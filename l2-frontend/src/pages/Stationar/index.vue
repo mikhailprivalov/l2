@@ -107,6 +107,15 @@
               Загрузить всё
             </button>
           </div>
+          <div class="sidebar-btn-wrapper" v-if="tree.length > 1">
+            <button class="btn btn-blue-nb sidebar-btn text-center"
+                    style="font-size: 12px"
+                    @click="close()"
+            >
+              <i class="fa fa-close"/>
+              Отмена просмотра истории
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -382,6 +391,7 @@
   import AggregateLaboratory from '../../fields/AggregateLaboratory'
   import AggregateDesc from '../../fields/AggregateDesc'
   import patients_point from '../../api/patients-point'
+  import UrlData from "../../UrlData";
 
   export default {
     mixins: [menuMixin],
@@ -427,12 +437,20 @@
         },
         anamnesis_loading: false,
         new_anamnesis: null,
+        inited: false,
       }
     },
     watch: {
       pk() {
         this.pk = this.pk.replace(/\D/g, '')
-      }
+      },
+      navState() {
+        if (this.inited) {
+          UrlData.set(this.navState);
+        }
+
+        UrlData.title(this.every ? null : this.direction);
+      },
     },
     async mounted() {
       await this.$store.dispatch(action_types.INC_LOADING)
@@ -442,6 +460,24 @@
       this.$root.$on('hide_results', () => {
         this.show_results_pk = -1
       })
+      const storedData = UrlData.get();
+      if (storedData && typeof storedData === 'object') {
+        if (storedData.pk) {
+          await this.load_pk(storedData.pk, storedData.every || false);
+        }
+        if (storedData.opened_list_key) {
+          await this.load_directions(storedData.opened_list_key)
+        }
+        if (storedData.opened_form_pk && Array.isArray(this.list_directions)) {
+          for (const dir of this.list_directions) {
+            if (storedData.opened_form_pk ===dir.pk) {
+              await this.open_form(dir);
+              break;
+            }
+          }
+        }
+      }
+      this.inited = true
     },
     methods: {
       async confirm_service() {
@@ -479,11 +515,18 @@
         this.patient_form = null
         this.stationar_research = -1
       },
-      load_pk(pk, every = false) {
+      async load_pk(pk, every = false) {
         this.pk = String(pk)
-        this.load(every)
+        await this.load(every)
       },
-      async load(every = false) {
+      async close(force = false) {
+        if (!force) {
+          try {
+            await this.$dialog.confirm(`Подтвердите отмену просмотра истории «${this.direction}»`)
+          } catch (_) {
+            return
+          }
+        }
         this.close_list_directions()
         this.anamnesis_edit = false
         this.anamnesis_data = {
@@ -503,6 +546,9 @@
         this.stationar_research = -1
         this.create_directions_data = []
         this.tree = []
+      },
+      async load(every = false) {
+        await this.close(true);
         await this.$store.dispatch(action_types.INC_LOADING)
         const {ok, data, message} = await stationar_point.load(this, ['pk'], {every})
         if (ok) {
@@ -834,6 +880,17 @@
         researches: 'researches',
         bases: 'bases',
       }),
+      navState() {
+        if (!this.direction) {
+          return null
+        }
+        return {
+          pk: this.direction,
+          opened_list_key: this.opened_list_key,
+          opened_form_pk: this.opened_form_pk,
+          every: this.every,
+        };
+      },
       stationar_researches_filtered() {
         return [{
           pk: -1,
