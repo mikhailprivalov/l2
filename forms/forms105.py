@@ -671,9 +671,18 @@ def form_03(request_data):
     x = 0
     for i in patient_movement:
         x += 1
+        doc_code = ''
+        if i['doc_confirm_code']:
+            doc_code = str(i['doc_confirm_code'])
+
+        # tmp_data = [[Paragraph(str(x), styleTB), Paragraph('', styleTB), Paragraph(i['bed_profile_research_title'], styleTB),
+        #              Paragraph(str(i['doc_confirm_code']), styleTB), Paragraph(i.get['date_entered_value'], styleTB),
+        #              Paragraph(i.get['date_oute'], styleTB), Paragraph(i.get['diagnos_mkb'], styleTB), Paragraph('', styleTB),
+        #              Paragraph('', styleTB), Paragraph('ОМС', styleTB),
+        #              ], ]
         tmp_data = [[Paragraph(str(x), styleTB), Paragraph('', styleTB), Paragraph(i['bed_profile_research_title'], styleTB),
-                     Paragraph(str(i['doc_confirm_code']), styleTB), Paragraph(i.get['date_entered_value'], styleTB),
-                     Paragraph(i.get['date_oute'], styleTB), Paragraph(i.get['diagnos_mkb'], styleTB), Paragraph('', styleTB),
+                     Paragraph("", styleTB), Paragraph("", styleTB),
+                     Paragraph("", styleTB), Paragraph("", styleTB), Paragraph('', styleTB),
                      Paragraph('', styleTB), Paragraph('ОМС', styleTB),
                      ], ]
 

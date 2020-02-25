@@ -468,6 +468,7 @@ def hosp_extract_get_data(hosp_last_num):
     final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', '', ''
     days_count, result_hospital = '', ''
 
+    days_count = ''
     if list_values:
         for i in list_values:
             if i[3] == 'Дата выписки':
