@@ -597,7 +597,6 @@ def form_03(request_data):
         days_count = hosp_extract_data['days_count']
         doc_fio = hosp_extract_data['doc_fio']
 
-
     title_page = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),

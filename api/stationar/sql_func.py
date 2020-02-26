@@ -176,5 +176,3 @@ def get_result_temperature_list(iss_pk_list, research_pk, titles_field):
          """, params={'id_iss': iss_pk_list, 'id_research': research_pk, 'titles_field': titles_field})
         row = cursor.fetchall()
     return row
-
-
