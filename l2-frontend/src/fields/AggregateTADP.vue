@@ -1,11 +1,11 @@
 <template>
   <div class="root-agg">
-    <div class="chart" v-for="chart in charts" v-if="!!data[chart]">
+    <div class="chart" v-for="chart in charts" v-if="!!dataCharts[chart]">
       <div class="chart-title">{{chart}}</div>
       <VueApexCharts
         type="line"
         height="330"
-        :options="get_options(data[chart])" :series="get_series(data[chart], chart)"
+        :options="get_options(dataCharts[chart])" :series="dataCharts[chart].series"
       />
     </div>
   </div>
@@ -19,9 +19,13 @@
   const charts = [
     'Температура (°C)',
     'Пульс (уд/с)',
-    'Систолическое давление (мм рт.с)',
-    'Диастолическое давление (мм рт.с)'
+    'Давление',
   ];
+
+  const mergeData = {
+    'Систолическое давление (мм рт.с)': 'Давление',
+    'Диастолическое давление (мм рт.с)': 'Давление',
+  };
 
   export default {
     components: {
@@ -38,6 +42,25 @@
     },
     async mounted() {
       await this.load()
+    },
+    computed: {
+      dataCharts() {
+        const result = {};
+        for (const k of Object.keys(this.data)) {
+          const lk = mergeData[k] || k;
+          if (!result[lk]) {
+            result[lk] = {
+              xtext: this.data[k].xtext || [],
+              series: [],
+            }
+          }
+          result[lk].series.push({
+            name: k,
+            data: this.data[k].data || [],
+          })
+        }
+        return result;
+      },
     },
     methods: {
       async load() {
@@ -88,14 +111,6 @@
             size: 4,
           },
         };
-      },
-      get_series(data, chart) {
-        return [
-          {
-            name: chart,
-            data: data.data || [],
-          }
-        ];
       },
     },
   }
