@@ -68,7 +68,8 @@
       },
       get_options(data) {
         return {
-          chart: {animations: {
+          chart: {
+            animations: {
               enabled: false,
             },
             toolbar: {
