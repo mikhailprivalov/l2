@@ -241,7 +241,7 @@
             </div>
           </div>
         </div>
-        <div style="padding: 5px">
+        <div style="padding: 5px" v-if="!opened_form_pk">
           <AggregateLaboratory v-if="opened_list_key === 'laboratory'" :pk="iss"/>
           <AggregateDesc
             v-if="['paraclinical', 'consultation'].includes(opened_list_key)"
