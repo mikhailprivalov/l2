@@ -93,6 +93,7 @@
           stroke: {
             curve: 'straight',
             width: 2,
+            dashArray: [0, 8, 5],
           },
           theme: {
             palette: 'palette5',
