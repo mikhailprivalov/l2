@@ -248,6 +248,10 @@
             :pk="iss"
             :r_type="opened_list_key"
           />
+          <AggregateTADP
+            v-if="opened_list_key === 't, ad, p sheet'"
+            :pk="iss"
+          />
         </div>
       </div>
     </div>
@@ -392,10 +396,12 @@
   import AggregateDesc from '../../fields/AggregateDesc'
   import patients_point from '../../api/patients-point'
   import UrlData from "../../UrlData";
+  import AggregateTADP from "../../fields/AggregateTADP";
 
   export default {
     mixins: [menuMixin],
     components: {
+      AggregateTADP,
       AggregateDesc,
       AggregateLaboratory,
       DisplayDirection,

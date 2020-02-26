@@ -471,31 +471,19 @@ def get_temperature_list(hosp_num_dir):
     final_data.pop('Дата измерения', None)
     final_data.pop('Время измерения', None)
     for k, v in final_data.items():
-        if k == 'Температура':
-            t_data = v['data']
-            max_v = max(t_data)
-            min_v = min(t_data)
-            step = 0.1
-            v['param'] = [min_v, max_v, step]
+        if 'температура' in k.lower() or 'давление' in k.lower() or 'пульс' in k.lower():
+            v['data'] = list(map(force_to_number, v['data']))
             final_data[k] = v
-        if k.lower().find('давление') != -1:
-            t_data = v['data']
-            max_v = max(t_data)
-            min_v = min(t_data)
-            step = 5
-            v['param'] = [min_v, max_v, step]
-            final_data[k] = v
-        if k.lower().find('пульс') != -1:
-            t_data = v['data']
-            max_v = max(t_data)
-            min_v = min(t_data)
-            step = 1
-            v['param'] = [min_v, max_v, step]
-            final_data[k] = v
+    if 'Температура' in final_data:
+        final_data['Температура (°C)'] = final_data.pop('Температура')
     return final_data
 
 
 def get_date_time_tl(dict_data):
-    time = dict_data['Время измерения']
-    date = dict_data['Дата измерения']
+    time = dict_data.get('Время измерения', 'Нет поля "Время измерения"')
+    date = dict_data.get('Дата измерения', 'Нет поля "Дата измерения"').replace('.20', '.')
     return f'{date} {time}'
+
+
+def force_to_number(val):
+    return float(''.join(c for c in val if c.isdigit() or c == '.') or 0)

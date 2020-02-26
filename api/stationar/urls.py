@@ -10,4 +10,5 @@ urlpatterns = [
     path('directions-by-key', views.directions_by_key),
     path('aggregate-laboratory', views.aggregate_laboratory),
     path('aggregate-desc', views.aggregate_desc),
+    path('aggregate-tadp', views.aggregate_tadp),
 ]
