@@ -5,8 +5,9 @@ from directions.models import Issledovaniya, Napravleniya
 from directory.models import Researches, HospitalService
 from podrazdeleniya.models import Podrazdeleniya
 from utils import tree_directions
-from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, get_result_text_research
+from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, get_result_text_research, get_result_temperature_list
 from api.dicom import search_dicom_study
+from utils.dates import normalize_date
 
 
 def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', level=-1):
@@ -416,3 +417,59 @@ def check_transfer_epicrisis(data):
             if i.get('date_confirm'):
                 return {'is_transfer': True, 'iss': i.get('iss'), 'research_id': i.get('research_id')}
     return {'is_transfer': False, 'iss': None, 'research_id': None}
+
+
+def get_temperature_list(hosp_num_dir):
+    """
+    :param num_dir:
+    :return:
+    {
+    temperature: {data: [36.6, 36.7, 37.1 итд], xtext: ['21.01.20 13:30', '21.01.20 20:00', '22.01.20 12:10' итд],},
+    systolic: {data[], xtext :[]}, diastolic: {data[], xtext :[]},
+    pulse: {data[], xtext :[]}
+    }
+    """
+    # tl - temperature list
+    tl_objs = hosp_get_data_direction(hosp_num_dir, site_type=9, type_service='None', level=2)
+    tl_iss = [i['iss'] for i in tl_objs]
+    research_id = None
+    for i in tl_objs:
+        research_id = i['research_id']
+        break
+    if research_id is None:
+        return {}
+    final_data = {}
+    title_list = ['Температура', 'Пульс (уд/с)', 'Дата измерения', 'Время измерения', 'Систолическое давление (мм рт.с)', 'Диастолическое давление (мм рт.с)']
+    a = get_result_temperature_list(tl_iss, research_id, title_list)
+    data = {}
+    for i in a:
+        value = i[2]
+        field = i[3]
+        if field.lower().find('дата') != -1:
+            value = normalize_date(value)
+        in_data = {field: value}
+        key = i[1]
+        if not data.get(key):
+            data.update({key: {}})
+        t_data = data.get(key)
+        t_data.update(in_data)
+        data[key] = t_data
+
+    for k, v in data.items():
+        date_time = get_date_time(v)
+        for title, value in v.items():
+            if not final_data.get(title):
+                final_data[title] = {'data': [], 'xtext': []}
+            t_final_data = final_data.get(title)
+            t_data = t_final_data['data']
+            t_data.append(value)
+            t_xtext = t_final_data['xtext']
+            t_xtext.append(date_time)
+            final_data[title] = {'data': t_data, 'xtext': t_xtext}
+    return final_data
+
+
+def get_date_time(dict_data):
+    time = dict_data['Время измерения']
+    date = dict_data['Дата измерения']
+    return f'{date} {time}'
