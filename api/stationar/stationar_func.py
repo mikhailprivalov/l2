@@ -456,7 +456,7 @@ def get_temperature_list(hosp_num_dir):
         data[key] = t_data
 
     for k, v in data.items():
-        date_time = get_date_time(v)
+        date_time = get_date_time_tl(v)
         for title, value in v.items():
             if not final_data.get(title):
                 final_data[title] = {'data': [], 'xtext': []}
@@ -469,7 +469,7 @@ def get_temperature_list(hosp_num_dir):
     return final_data
 
 
-def get_date_time(dict_data):
+def get_date_time_tl(dict_data):
     time = dict_data['Время измерения']
     date = dict_data['Дата измерения']
     return f'{date} {time}'
