@@ -1367,7 +1367,7 @@ def result_print(request):
                                 fwb.append(Paragraph('{}-{}'.format(i.research.code, i.research.title), style))
 
                 fwb.append(Spacer(1, 3 * mm))
-                if not hosp:
+                if not hosp and not iss.research.is_slave_hospital:
                     if iss.research.is_doc_refferal:
                         fwb.append(Paragraph("Дата осмотра: {}".format(strdate(iss.get_medical_examination())), styleBold))
                     else:
