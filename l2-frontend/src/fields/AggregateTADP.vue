@@ -4,7 +4,7 @@
       <div class="chart-title">{{chart}}</div>
       <VueApexCharts
         type="line"
-        height="300"
+        height="330"
         :options="get_options(data[chart])" :series="get_series(data[chart], chart)"
       />
     </div>
@@ -83,6 +83,9 @@
                 show: true,
               }
             },
+          },
+          markers: {
+            size: 4,
           },
         };
       },
