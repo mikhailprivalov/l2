@@ -458,7 +458,7 @@ def get_temperature_list(hosp_num_dir):
     for k, v in data.items():
         date_time = get_date_time_tl(v)
         for title, value in v.items():
-            if not value:
+            if not value or value == '0':
                 continue
             if not final_data.get(title):
                 final_data[title] = {'data': [], 'xtext': []}
