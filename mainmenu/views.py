@@ -12,6 +12,7 @@ from django.shortcuts import render
 from django.utils import dateformat
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from sentry_sdk import capture_message
 
 import directory.models as directory
 import podrazdeleniya.models as pod
@@ -787,6 +788,7 @@ def cards(request):
 
 
 def v404(request, exception=None):
+    capture_message("Page not found!", level="error")
     return render(request, 'dashboard/error.html',
                   {"message": "Ошибка 404 - страница не найдена", "update": False, "to_home": True}, status=404)
 
