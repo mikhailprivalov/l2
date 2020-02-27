@@ -110,7 +110,7 @@ def tree_direction(iss):
 
 
 def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclinic, hosp_is_doc_refferal,
-                           hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all):
+                           hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all, hosp_diaries=False):
     """
     парам: услуга
     Вернуть стуркутру в след порядке:
@@ -214,7 +214,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
                                'hosp_site_type': hosp_site_type,
                                'hosp_is_paraclinic': hosp_is_paraclinic, 'hosp_is_doc_refferal': hosp_is_doc_refferal,
                                'hosp_is_lab': hosp_is_lab, 'hosp_is_hosp': hosp_is_hosp, 'hosp_level': hosp_level,
-                               'hosp_is_all': hosp_is_all, 'tz': TIME_ZONE})
+                               'hosp_is_all': hosp_is_all, 'hosp_diaries': hosp_diaries, 'tz': TIME_ZONE})
         row = cursor.fetchall()
     return row
 

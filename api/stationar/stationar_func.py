@@ -20,7 +20,7 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
 
     hosp_site_type = site_type
     hosp_level = level
-    hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_is_all = False, False, False, False, False
+    hosp_is_paraclinic, hosp_is_doc_refferal, hosp_diaries, hosp_is_lab, hosp_is_hosp, hosp_is_all = False, False, False, False, False, False
     if type_service == 'is_paraclinic':
         hosp_is_paraclinic = True
     elif type_service == 'is_doc_refferal':
@@ -32,7 +32,7 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
 
     hosp_dirs = tree_directions.hospital_get_direction(num_iss, main_research, hosp_site_type, hosp_is_paraclinic,
                                                        hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level,
-                                                       hosp_is_all)
+                                                       hosp_is_all, hosp_diaries)
 
     data = []
     if hosp_dirs:
@@ -269,7 +269,7 @@ def hosp_get_lab_iss(current_iss, extract=False, *directions):
     return result_filtered
 
 
-def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
+def hosp_get_text(current_iss, extract=False, mode=None, directions=None):
     # # Возврат стр-ра:
     # {'paraclinic': [{'title_research': 'Проведение электрокардиографических исследований ( ЭКГ )', 'result': [
     #                 {'date': '05.01.20 117', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
@@ -277,6 +277,8 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
     #                 {'date': '05.01.20 119', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
     #                       'value': 'Диффузные нарушения'}]}]}]} ]}]
     #                                                                                                                     ]}
+    if directions is None:
+        directions = []
     if directions:
         num_paraclinic_dirs = directions
     else:
@@ -313,7 +315,6 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
         last_date = None
         data_in = []
         new_date_data = {}
-        link_dicom = None
         for i in field_result:
             date = f'{i[1]} {i[2]}'
             link_dicom = search_dicom_study(i[2])
