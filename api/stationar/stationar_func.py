@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from copy import deepcopy
+from typing import List
 
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import Researches, HospitalService
@@ -269,7 +270,7 @@ def hosp_get_lab_iss(current_iss, extract=False, *directions):
     return result_filtered
 
 
-def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
+def hosp_get_text(current_iss, extract=False, mode=None, directions=None):
     # # Возврат стр-ра:
     # {'paraclinic': [{'title_research': 'Проведение электрокардиографических исследований ( ЭКГ )', 'result': [
     #                 {'date': '05.01.20 117', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
@@ -277,6 +278,8 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
     #                 {'date': '05.01.20 119', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
     #                       'value': 'Диффузные нарушения'}]}]}]} ]}]
     #                                                                                                                     ]}
+    if directions is None:
+        directions = []
     if directions:
         num_paraclinic_dirs = directions
     else:
@@ -302,18 +305,22 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
                 num_paraclinic_dirs.add(paraclinic_dir)
 
     num_paraclinic_dirs = list(num_paraclinic_dirs)
+
+    return desc_to_data(num_paraclinic_dirs)
+
+
+def desc_to_data(num_dirs: List[int], force_all_fields: bool = False):
     # [0] - заглушка для запроса. research c id =0 не бывает
-    get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True) if num_paraclinic_dirs else []
+    get_research_id = get_distinct_research([0], num_dirs, is_text_research=True) if num_dirs else []
     research_distinct = [d[0] for d in get_research_id]
     result = []
 
     for research in research_distinct:
-        field_result = get_result_text_research(research, num_paraclinic_dirs)
+        field_result = get_result_text_research(research, num_dirs, force_all_fields)
         last_group = None
         last_date = None
         data_in = []
         new_date_data = {}
-        link_dicom = None
         for i in field_result:
             date = f'{i[1]} {i[2]}'
             link_dicom = search_dicom_study(i[2])

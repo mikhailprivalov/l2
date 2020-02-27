@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
 from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, \
-    hosp_get_hosp_direction, hosp_get_text_iss, get_temperature_list
+    hosp_get_hosp_direction, hosp_get_text_iss, get_temperature_list, desc_to_data
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import HospitalService
@@ -181,7 +181,12 @@ def aggregate_desc(request):
     extract = data.get('extract', False)
     r_type = data.get("r_type")
     type_service = HospitalService.TYPES_REVERSED.get(r_type, None) if r_type != 'desc' else 'desc'
-    result = hosp_get_text_iss(pk, extract, mode=type_service)
+    if type_service == "diaries":
+        diaries_researches = [x.slave_research for x in HospitalService.objects.filter(site_type=HospitalService.TYPES_BY_KEYS["diaries"])]
+        num_dirs = [x.pk for x in Napravleniya.objects.filter(issledovaniya__research__in=diaries_researches, parent__pk=pk)]
+        result = desc_to_data(num_dirs, True)
+    else:
+        result = hosp_get_text_iss(pk, extract, mode=type_service)
     return JsonResponse(result, safe=False)
 
 

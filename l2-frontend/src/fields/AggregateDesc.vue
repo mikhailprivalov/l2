@@ -48,10 +48,11 @@
       fix_html(v) {
         let lv = v;
         lv = lv.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-        lv = lv.replaceAll('&lt;sub&gt;', '<sub>');
-        lv = lv.replaceAll('&lt;/sub&gt;', '</sub>');
-        lv = lv.replaceAll('&lt;sup&gt;', '<sup>');
-        lv = lv.replaceAll('&lt;/sup&gt;', '</sup>');
+        const tagsToRevert = ['sub', 'sup', 'u', 'p', 'strong', 'em'];
+        for (const tag of tagsToRevert) {
+          lv = lv.replaceAll(`&lt;${tag}&gt;`, `<${tag}>`);
+          lv = lv.replaceAll(`&lt;/${tag}&gt;`, `</${tag}>`);
+        }
         lv = lv.replaceAll('\n', '<br/>');
         return lv.trim();
       },
