@@ -72,7 +72,7 @@
                     v-if="!every &&
                     menuNeedPlus[key] &&
                     (!allowedOnlyOneEntry[key] || !Boolean(counts[key])) &&
-                    !forbidden_edit"
+                    (!forbidden_edit || (can_add_tadp && key === 't, ad, p sheet'))"
                     @click="plus(key)"
             >
               <i class="fa fa-plus"/>
@@ -493,7 +493,9 @@
           main_direction: this.direction,
         })
         await this.load_directions(this.openPlusId)
-        await this.open_form({pk, type: this.plusDirectionsMode[this.openPlusId] ? 'directions' : 'stationar'})
+        if (pk) {
+          await this.open_form({pk, type: this.plusDirectionsMode[this.openPlusId] ? 'directions' : 'stationar'})
+        }
         await this.closePlus()
         this.counts = await stationar_point.counts(this, ['direction'])
         await this.$store.dispatch(action_types.DEC_LOADING)
@@ -566,6 +568,7 @@
           this.issTitle = data.iss_title
           this.finId = data.fin_pk
           this.forbidden_edit = data.forbidden_edit
+          this.soft_forbidden = !!data.soft_forbidden
           this.tree = data.tree
           this.patient = new Patient(data.patient)
           this.counts = await stationar_point.counts(this, ['direction'], {every})
@@ -695,6 +698,7 @@
             iss.research.transfer_direction_iss = data.transfer_direction_iss
             iss.forbidden_edit = data.forbidden_edit
             this.forbidden_edit = data.forbidden_edit
+            this.soft_forbidden = data.soft_forbidden
             this.stationar_research = -1
             this.reload_if_need(true)
           } else {
@@ -931,6 +935,14 @@
         for (let g of (this.$store.getters.user_data.groups || [])) {
           if (g === 'Сброс подтверждения переводного эпикриза') {
             return true
+          }
+        }
+        return false
+      },
+      can_add_tadp() {
+        for (let g of (this.$store.getters.user_data.groups || [])) {
+          if (g === 't, ad, p') {
+            return !!this.soft_forbidden || !this.forbidden_edit
           }
         }
         return false

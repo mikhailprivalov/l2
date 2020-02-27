@@ -55,6 +55,7 @@
             }
           }
           result[lk].series.push({
+            type: 'line',
             name: k,
             data: this.data[k].data || [],
           })
@@ -69,6 +70,7 @@
       get_options(data) {
         return {
           chart: {
+            type: 'area',
             animations: {
               enabled: false,
             },
@@ -80,7 +82,12 @@
             },
             fontFamily: 'Open Sans, Helvetica, Arial, sans-serif',
           },
-          xaxis: {categories: data.xtext || []},
+          xaxis: {
+            categories: data.xtext || [],
+            labels: {
+              cssClass: 'apexcharts-xaxis-label',
+            },
+          },
           yaxis: {
             labels: {
               show: true,
@@ -102,7 +109,7 @@
             show: true,
             yaxis: {
               lines: {
-                show: true,
+                show: false,
               }
             },
             xaxis: {
@@ -111,8 +118,8 @@
               }
             },
           },
-          markers: {
-            size: 4,
+          dataLabels: {
+            enabled: true,
           },
         };
       },
@@ -137,5 +144,11 @@
   .apexcharts-yaxis-label {
     font-weight: 600;
     font-size: 13px;
+  }
+
+  .apexcharts-xaxis-label {
+    max-width: 60px;
+    white-space: normal;
+    word-break: keep-all;
   }
 </style>

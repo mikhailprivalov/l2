@@ -13,7 +13,7 @@ from laboratory.decorators import group_required
 
 
 @login_required
-@group_required("Врач стационара")
+@group_required("Врач стационара", "t, ad, p")
 def load(request):
     data = json.loads(request.body)
     result = {"ok": False, "message": "Нет данных", "data": {}}
@@ -28,13 +28,15 @@ def load(request):
         result["message"] = ""
         if direction.cancel:
             result["message"] = "Направление было отменено"
+        forbidden_edit = forbidden_edit_dir(direction.pk)
         result["data"] = {
             "direction": direction.pk,
             "cancel": direction.cancel,
             "fin_pk": direction.istochnik_f_id,
             "iss": i.pk,
             "iss_title": i.research.title,
-            "forbidden_edit": forbidden_edit_dir(direction.pk),
+            "forbidden_edit": forbidden_edit or "Врач стационара" not in [str(x) for x in request.user.groups.all()],
+            "soft_forbidden": not forbidden_edit,
             "patient": {
                 "fio_age": card.individual.fio(full=True),
                 "card": card.number_with_type(),
@@ -60,7 +62,7 @@ def load(request):
 
 
 @login_required
-@group_required("Врач стационара")
+@group_required("Врач стационара", "t, ad, p")
 def counts(request):
     data = json.loads(request.body)
     pk = int(data["direction"])
@@ -103,7 +105,7 @@ def counts(request):
 
 
 @login_required
-@group_required("Врач стационара")
+@group_required("Врач стационара", "t, ad, p")
 def hosp_services_by_type(request):
     data = json.loads(request.body)
     base_direction_pk = int(data["direction"])
@@ -121,12 +123,14 @@ def hosp_services_by_type(request):
 
 
 @login_required
-@group_required("Врач стационара")
+@group_required("Врач стационара", "t, ad, p")
 def make_service(request):
     data = json.loads(request.body)
     main_direction = Napravleniya.objects.get(pk=data["main_direction"])
     parent_iss = Issledovaniya.objects.filter(napravleniye=main_direction, research__is_hospital=True).first()
     service = HospitalService.objects.get(pk=data["service"])
+    if "Врач стационара" not in [str(x) for x in request.user.groups.all()] and "Температура" not in service.slave_research.title:
+        return JsonResponse({"pk": None})
     result = Napravleniya.gen_napravleniya_by_issledovaniya(main_direction.client_id,
                                                             "",
                                                             None,
@@ -146,7 +150,6 @@ def make_service(request):
 
 
 @login_required
-@group_required("Врач стационара")
 def directions_by_key(request):
     data = json.loads(request.body)
     base_direction_pk = int(data["direction"])
@@ -163,7 +166,6 @@ def directions_by_key(request):
 
 
 @login_required
-@group_required("Врач стационара")
 def aggregate_laboratory(request):
     data = json.loads(request.body)
     pk = data.get('pk', -1)
@@ -173,7 +175,6 @@ def aggregate_laboratory(request):
 
 
 @login_required
-@group_required("Врач стационара")
 def aggregate_desc(request):
     data = json.loads(request.body)
     pk = data.get('pk', -1)
