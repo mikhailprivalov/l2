@@ -913,8 +913,8 @@ def directions_paraclinic_form(request):
                             "hide": field.hide,
                             "values_to_input": ([] if not field.required or field_type not in [10, 12] else
                                                 ['- Не выбрано']) + json.loads(field.input_templates),
-                            "value": ((field.default_value if field_type not in [3, 11, 13, 14] else '')
-                            if not result_field else result_field.value) if field_type not in [1, 20] else (get_default_for_field(field_type) if not result_field else result_field.value),
+                            "value": ((field.default_value if field_type not in [3, 11, 13, 14] else '') if not result_field else result_field.value) if field_type not in [1, 20] else
+                            (get_default_for_field(field_type) if not result_field else result_field.value),
                             "field_type": field_type,
                             "default_value": field.default_value,
                             "visibility": field.visibility,
