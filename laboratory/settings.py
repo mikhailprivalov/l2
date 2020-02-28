@@ -3,8 +3,6 @@ import os
 import sys
 import warnings
 from collections import OrderedDict
-import sentry_sdk
-from sentry_sdk.integrations.django import DjangoIntegration
 
 PROFILING = False
 

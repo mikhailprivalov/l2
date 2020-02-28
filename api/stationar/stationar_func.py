@@ -312,10 +312,10 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=None):
 def desc_to_data(num_dirs: List[int], force_all_fields: bool = False):
     # [0] - заглушка для запроса. research c id =0 не бывает
     get_research_id = get_distinct_research([0], num_dirs, is_text_research=True) if num_dirs else []
-    research_distinct = [d[0] for d in get_research_id]
     result = []
 
-    for research in research_distinct:
+    for research_base in get_research_id:
+        research = research_base[0]
         field_result = get_result_text_research(research, num_dirs, force_all_fields)
         last_group = None
         last_date = None
@@ -323,7 +323,7 @@ def desc_to_data(num_dirs: List[int], force_all_fields: bool = False):
         new_date_data = {}
         for i in field_result:
             date = f'{i[1]} {i[2]}'
-            link_dicom = search_dicom_study(i[2])
+            link_dicom = search_dicom_study(i[2]) if not force_all_fields else None
             group = i[3]
             fields = {'title_field': i[4], 'value': i[5]}
 
@@ -331,7 +331,7 @@ def desc_to_data(num_dirs: List[int], force_all_fields: bool = False):
                 if new_date_data:
                     data_in.append(new_date_data.copy())
 
-                new_date_data = {}
+                new_date_data = dict()
                 new_date_data['date'] = date
                 new_date_data['link_dicom'] = link_dicom if link_dicom else ''
                 new_date_data['data'] = [{'group_title': group, 'fields': [fields.copy()]}]
@@ -349,17 +349,17 @@ def desc_to_data(num_dirs: List[int], force_all_fields: bool = False):
             current_data = new_date_data.get('data')
             get_last_group = current_data.pop()
             last_fields = get_last_group.get('fields')
-            last_fields.append(fields.copy())
+            last_fields.append(fields)
             get_last_group['fields'] = last_fields.copy()
             current_data.append(get_last_group.copy())
             new_date_data['data'] = current_data.copy()
 
-        data_in.append(new_date_data.copy())
+        data_in.append(new_date_data)
 
         temp_result = {}
         temp_result['title_research'] = Researches.objects.get(pk=research).title
-        temp_result['result'] = data_in.copy()
-        result.append(temp_result.copy())
+        temp_result['result'] = data_in
+        result.append(temp_result)
 
     return result
 
