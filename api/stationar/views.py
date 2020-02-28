@@ -176,8 +176,6 @@ def aggregate_laboratory(request):
 
 @login_required
 def aggregate_desc(request):
-    import time
-    start = time.time()
     data = json.loads(request.body)
     pk = data.get('pk', -1)
     extract = data.get('extract', False)
@@ -190,8 +188,6 @@ def aggregate_desc(request):
         result = desc_to_data(num_dirs, True)
     else:
         result = hosp_get_text_iss(pk, extract, mode=type_service)
-    end = time.time()
-    print('EXECUTION TIME:', end - start, 's')
     return JsonResponse(result, safe=False)
 
 
