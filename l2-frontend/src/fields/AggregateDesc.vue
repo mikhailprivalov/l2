@@ -9,8 +9,12 @@
           <span class="research-group-title" v-if="g.group_title !== ''">
             {{fix_space(g.group_title)}}<span v-if="non_empty_fields(g)">:</span></span>
           <span class="group-field" v-for="(f, fi) in g.fields" v-if="f.value !== ''">
-            <span class="group-field-title" v-if="f.title_field !== ''">{{fix_space(f.title_field)}}:</span><span
-            v-html="fix_html(f.value)"/><span v-if="fi + 1 < g.fields.length">; </span></span>.
+            <span class="group-field-title" v-if="f.title_field !== ''">{{fix_space(f.title_field)}}:&nbsp;</span><span
+            v-html="fix_html(f.value)"/><span
+            v-if="fi + 1 < g.fields.length && !f.value.endsWith(';') && !f.value.endsWith('.')">; </span><span
+            v-else-if="fi + 1 === g.fields.length && !f.value.endsWith(';') && !f.value.endsWith('.')">.</span><span
+            v-else>&nbsp;</span>
+          </span>
         </span>
       </div>
     </div>
