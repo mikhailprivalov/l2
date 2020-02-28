@@ -182,8 +182,9 @@ def aggregate_desc(request):
     r_type = data.get("r_type")
     type_service = HospitalService.TYPES_REVERSED.get(r_type, None) if r_type != 'desc' else 'desc'
     if type_service == "diaries":
-        diaries_researches = [x.slave_research for x in HospitalService.objects.filter(site_type=HospitalService.TYPES_BY_KEYS["diaries"])]
-        num_dirs = [x.pk for x in Napravleniya.objects.filter(issledovaniya__research__in=diaries_researches, parent__pk=pk)]
+        iss = Issledovaniya.objects.get(pk=pk)
+        diaries_researches = [x.slave_research for x in HospitalService.objects.filter(site_type=HospitalService.TYPES_BY_KEYS["diaries"], main_research=iss.research)]
+        num_dirs = [x.pk for x in Napravleniya.objects.filter(issledovaniya__research__in=diaries_researches, parent=iss, issledovaniya__time_confirmation__isnull=False)]
         result = desc_to_data(num_dirs, True)
     else:
         result = hosp_get_text_iss(pk, extract, mode=type_service)
