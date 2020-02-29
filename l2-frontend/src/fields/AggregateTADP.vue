@@ -1,9 +1,10 @@
 <template>
   <div class="root-agg">
-    <a :href="printHref" target="_blank" v-if="selectedCharts.length > 0" class="top-print a-under">печать</a>
+    <a :href="printHref" target="_blank" v-if="selectedChartsValues.length > 0" class="top-print a-under">печать</a>
     <div class="chart" v-for="chart in charts" v-if="!!dataCharts[chart]">
-      <label class="chart-title" @click.prevent="toggleSelectChart(chart)">
-        <input type="checkbox" :checked="selectedCharts.includes(chart)"/>&nbsp;{{chart}}
+      <label class="chart-title">
+        <input type="checkbox" v-model="selectedCharts[chart]"/>
+        {{chart}}
       </label>
       <VueApexCharts
         type="line"
@@ -11,7 +12,7 @@
         :options="get_options(dataCharts[chart])" :series="dataCharts[chart].series"
       />
     </div>
-    <a :href="printHref" target="_blank" v-if="selectedCharts.length > 0" class="bottom-print a-under">печать</a>
+    <a :href="printHref" target="_blank" v-if="selectedChartsValues.length > 0" class="bottom-print a-under">печать</a>
   </div>
 </template>
 
@@ -42,7 +43,7 @@
       return {
         charts,
         data: {},
-        selectedCharts: [],
+        selectedCharts: charts.reduce((a, c) => ({...a, [c]: false}), {}),
       }
     },
     async mounted() {
@@ -67,22 +68,18 @@
         }
         return result;
       },
+      selectedChartsValues() {
+        return this.charts.filter(c => this.selectedCharts[c]);
+      },
       printHref() {
-        const titles = encodeURI(JSON.stringify(charts.filter(chart => this.selectedCharts.includes(chart))));
+        const titles = encodeURI(JSON.stringify(this.selectedChartsValues));
         const directions = encodeURI(JSON.stringify(this.directions));
-        return `/forms/pdf?type=106.01&hosp_pks=${directions}&titles=${titles}`;
+        return `/forms/pdf?type=107.01&hosp_pks=${directions}&titles=${titles}`;
       },
     },
     methods: {
       async load() {
         this.data = await stationar_point.aggregateTADP(this, ['directions'])
-      },
-      toggleSelectChart(chart) {
-        if (this.selectedCharts.includes(chart)) {
-          this.selectedCharts.splice(this.selectedCharts.indexOf(chart), 1);
-        } else {
-          this.selectedCharts.push(chart);
-        }
       },
       get_options(data) {
         return {
