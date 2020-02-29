@@ -194,7 +194,24 @@ def aggregate_desc(request):
 @login_required
 def aggregate_tadp(request):
     data = json.loads(request.body)
-    iss_pk = data.get('pk', -1)
-    pk = Issledovaniya.objects.get(pk=iss_pk).napravleniye_id
-    result = get_temperature_list(pk)
+    directions = data.get('directions', [])
+    result = {}
+    for pk in directions:
+        if not result:
+            result = get_temperature_list(pk)
+        else:
+            next_result = get_temperature_list(pk)
+            for k in next_result:
+                merge_sub_tadp(result[k], next_result[k])
     return JsonResponse(result)
+
+
+def merge_sub_tadp(a, b):
+    try:
+        a['data'].extend(b['data'])
+    except:
+        pass
+    try:
+        a['xtext'].extend(b['xtext'])
+    except:
+        pass

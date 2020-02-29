@@ -1,13 +1,17 @@
 <template>
   <div class="root-agg">
+    <a :href="printHref" target="_blank" v-if="selectedCharts.length > 0" class="top-print a-under">печать</a>
     <div class="chart" v-for="chart in charts" v-if="!!dataCharts[chart]">
-      <div class="chart-title">{{chart}}</div>
+      <label class="chart-title" @click.prevent="toggleSelectChart(chart)">
+        <input type="checkbox" :checked="selectedCharts.includes(chart)" />&nbsp;{{chart}}
+      </label>
       <VueApexCharts
         type="line"
         height="330"
         :options="get_options(dataCharts[chart])" :series="dataCharts[chart].series"
       />
     </div>
+    <a :href="printHref" target="_blank" v-if="selectedCharts.length > 0" class="bottom-print a-under">печать</a>
   </div>
 </template>
 
@@ -32,12 +36,13 @@
       VueApexCharts,
     },
     props: {
-      pk: {},
+      directions: {},
     },
     data() {
       return {
         charts,
         data: {},
+        selectedCharts: [],
       }
     },
     async mounted() {
@@ -62,10 +67,22 @@
         }
         return result;
       },
+      printHref() {
+        const titles = encodeURI(JSON.stringify(charts.filter(chart => this.selectedCharts.includes(chart))));
+        const directions = encodeURI(JSON.stringify(this.directions));
+        return `/forms/pdf?type=106.01&hosp_pks=${directions}&titles=${titles}`;
+      },
     },
     methods: {
       async load() {
-        this.data = await stationar_point.aggregateTADP(this, ['pk'])
+        this.data = await stationar_point.aggregateTADP(this, ['directions'])
+      },
+      toggleSelectChart(chart) {
+        if (this.selectedCharts.includes(chart)) {
+          this.selectedCharts.splice(this.selectedCharts.indexOf(chart), 1);
+        } else {
+          this.selectedCharts.push(chart);
+        }
       },
       get_options(data) {
         return {
@@ -129,6 +146,19 @@
 
 <style scoped lang="scss">
   .root-agg {
+    position: relative;
+  }
+
+  .top-print {
+    position: absolute;
+    top: 0;
+    right: 5px;
+  }
+
+  .bottom-print {
+    position: absolute;
+    bottom: 0;
+    right: 5px;
   }
 
   .chart {
