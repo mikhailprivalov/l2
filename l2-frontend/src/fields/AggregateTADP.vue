@@ -153,6 +153,7 @@
     position: absolute;
     top: 0;
     right: 5px;
+    z-index: 1;
   }
 
   .bottom-print {
