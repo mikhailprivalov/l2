@@ -465,7 +465,7 @@ def get_temperature_list(hosp_num_dir):
     for k, v in data.items():
         date_time = get_date_time_tl(v)
         for title, value in v.items():
-            if not value:
+            if not value or value == '0':
                 continue
             if not final_data.get(title):
                 final_data[title] = {'data': [], 'xtext': []}
@@ -479,7 +479,9 @@ def get_temperature_list(hosp_num_dir):
     final_data.pop('Время измерения', None)
     for k, v in final_data.items():
         if 'температура' in k.lower() or 'давление' in k.lower() or 'пульс' in k.lower():
-            v['data'] = list(map(force_to_number, v['data']))
+            number_data = list(map(force_to_number, v['data']))
+            v['data'] = number_data
+            v['min_max'] = [min(number_data), max(number_data)]
             final_data[k] = v
     if 'Температура' in final_data:
         final_data['Температура (°C)'] = final_data.pop('Температура')
@@ -488,7 +490,7 @@ def get_temperature_list(hosp_num_dir):
 
 def get_date_time_tl(dict_data):
     time = dict_data.get('Время измерения', 'Нет поля "Время измерения"')
-    date = dict_data.get('Дата измерения', 'Нет поля "Дата измерения"').replace('.20', '.')
+    date = dict_data.get('Дата измерения', 'Нет поля "Дата измерения"').replace('.2020', '')
     return f'{date} {time}'
 
 
