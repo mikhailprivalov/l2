@@ -1,6 +1,9 @@
 <template>
   <div>
-    <div>{{patient.fio_age}}</div>
+    <a :href="`/mainmenu/directions?card_pk=${patient.cardId}&base_pk=${patient.base}`"
+       target="_blank" class="a-under">
+      {{patient.fio_age}}
+    </a>
   </div>
 </template>
 
