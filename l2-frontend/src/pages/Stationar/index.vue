@@ -250,7 +250,7 @@
           />
           <AggregateTADP
             v-if="opened_list_key === 't, ad, p sheet'"
-            :pk="iss"
+            :directions="every ? tree.map(d => d.direction) : [direction]"
           />
         </div>
       </div>
