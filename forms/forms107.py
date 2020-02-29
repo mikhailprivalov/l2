@@ -24,9 +24,18 @@ from laboratory import utils
 from laboratory.settings import FONTS_FOLDER
 from api.stationar.stationar_func import hosp_get_hosp_direction, get_temperature_list
 from reportlab.lib import colors
-from reportlab.graphics.shapes import Drawing
-from reportlab.graphics.charts.linecharts import SampleHorizontalLineChart
+from reportlab.graphics.shapes import Drawing, _DrawingEditorMixin
+from reportlab.graphics.charts.linecharts import SampleHorizontalLineChart, HorizontalLineChart
+from reportlab.graphics.samples.linechart_with_markers import LineChartWithMarkers
+from reportlab.graphics.charts import linecharts
 from reportlab.graphics.widgets.markers import makeMarker
+
+from reportlab.graphics.charts.legends import Legend
+from reportlab.graphics.charts.lineplots import LinePlot
+from reportlab.graphics.shapes import Drawing, _DrawingEditorMixin, String
+from reportlab.graphics.widgets.markers import makeMarker
+from reportlab.graphics.charts.textlabels import Label
+from reportlab.graphics.samples.excelcolors import *
 
 
 def form_01(request_data):
@@ -158,7 +167,10 @@ def draw_graph(value):
         # (5, 20, 46, 38, 23, 21, 6, 14)
     ]
 
-    lc = SampleHorizontalLineChart()
+    # lc = SampleHorizontalLineChart()
+    lc = HorizontalLineChart()
+    # lc = LineChartWithMarkers()
+    # lc = LineChart
     lc.x = 0
     lc.y = 0
     lc.height = 70
@@ -169,21 +181,31 @@ def draw_graph(value):
     # lc.lines.symbol = makeMarker('FilledDiamond')
     # lc.lines.symbol = makeMarker('FilledCircle')
     lc.lines.symbol = makeMarker('FilledSquare')
+    lc.lines.symbol.size = 5
     lc.lines[0].strokeColor = colors.black
+    # print(lc.categoryAxis.labels.getProperties())
+
+    # print(lc.valueAxis.getProperties())
     # lc.lines[0].strokeDashArray = [3, 1]
     lc.lineLabelFormat = '%3.1f'
-    catNames = ['26.02.20\n09:30', '26.02.20\n18:00', '26.02.20\n21:00', '27.02.20\n09:20', '27.02.20\n09:20', '27.02.20\n09:24', '28.02.20\n06:23',
-                '26.02.20\n09:30', '26.02.20\n18:00', '26.02.20\n21:00', '27.02.20\n09:20', '27.02.20\n09:20', '27.02.20\n09:24', '28.02.20\n06:23',
-                '26.02.20\n09:30', '26.02.20\n18:00', '26.02.20\n21:00', '27.02.20\n09:20', '27.02.20\n09:20', '27.02.20\n09:24', '28.02.20\n06:23',
-                '26.02.20\n09:30', '26.02.20\n18:00', '26.02.20\n21:00', '27.02.20\n09:20', '27.02.20\n09:20', '27.02.20\n09:24', '28.02.20\n06:23']
+    print(lc.valueAxis.getProperties())
+    catNames = ['26.02\n09:30', '26.02\n18:00', '26.02\n21:00', '27.02\n09:20', '27.02\n09:20', '27.02\n09:24', '28.02\n06:23',
+                '26.02\n09:30', '26.02\n18:00', '26.02\n21:00', '27.02\n09:20', '27.02\n09:20', '27.02\n09:24', '28.02\n06:23',
+                '26.02\n09:30', '26.02\n18:00', '26.02\n21:00', '27.02\n09:20', '27.02\n09:20', '27.02\n09:24', '28.02\n06:23',
+                '26.02\n09:30', '26.02\n18:00', '26.02\n21:00', '27.02\n09:20', '27.02\n09:20', '27.02\n09:24', '28.02\n06:23']
     lc.categoryAxis.categoryNames = catNames
     lc.categoryAxis.labels.boxAnchor = 'n'
-    lc.categoryAxis.labels.angle = 90
-    lc.categoryAxis.labels.dy = -18
-    lc.categoryAxis.labels.dx = -13
+    lc.categoryAxis.labels.angle = 0
+    lc.categoryAxis.labels.dy = -1
+    lc.categoryAxis.labels.dx = 0
+    lc.categoryAxis.labels.setProperties({'fontSize': 8})
+
     lc.valueAxis.valueMin = 34
     lc.valueAxis.valueMax = 40
     lc.valueAxis.valueStep = 1
     drawing.add(lc)
 
+    # drawing.add(title_draw(100, -50, 'Температура'))
+
     return drawing
+
