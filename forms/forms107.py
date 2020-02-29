@@ -5,13 +5,13 @@ from copy import deepcopy
 from io import BytesIO
 import simplejson as json
 from reportlab.lib.colors import black
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
-from reportlab.lib.pagesizes import A4,landscape
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import PageBreak, Indenter
+from reportlab.platypus import Indenter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
@@ -137,7 +137,7 @@ def draw_temper_pulse(value, step, x_coord, y_coord):
     catNames = []
     min_value = 0
     max_value = 0
-    for k,v in value.items():
+    for k, v in value.items():
         if k == 'data':
             data1 = tuple([i for i in v])
             data.append(data1)
@@ -157,7 +157,7 @@ def draw_temper_pulse(value, step, x_coord, y_coord):
     lc.strokeColor = colors.white
     # из markers
     lc.lines.symbol = makeMarker('FilledSquare')
-    lc.lines.symbol.size = 4 # маркер
+    lc.lines.symbol.size = 4
     # lineLabels - свойства надбисей линии из textlabels class Label(Widget):
     lc.lineLabels.fontSize = 9
     lc.lineLabels.fontName = 'PTAstraSerifBold'
@@ -212,7 +212,7 @@ def draw_pressure(value, step, x_coord, y_coord):
     # из markers
     lc.lines[0].symbol = makeMarker('FilledCircle')
     lc.lines.symbol = makeMarker('FilledSquare')
-    lc.lines.symbol.size = 4 # маркер
+    lc.lines.symbol.size = 4
     # lineLabels - свойства надбисей линии из textlabels class Label(Widget):
     lc.lineLabels.fontSize = 9
     lc.lineLabels.fontName = 'PTAstraSerifBold'
