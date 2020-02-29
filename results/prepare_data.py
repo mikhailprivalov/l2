@@ -167,7 +167,7 @@ def text_iss_to_pdf(data, solid_text=False):
 
     styleBold = deepcopy(style_ml)
     styleBold.fontName = "OpenSansBold"
-
+    print(data)
     data = json.loads(data)
     text_iss = hosp_get_text(None, False, None, data)
     prepare_fwb = []

@@ -1,12 +1,14 @@
 from collections import OrderedDict
 from copy import deepcopy
+from typing import List
 
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import Researches, HospitalService
 from podrazdeleniya.models import Podrazdeleniya
 from utils import tree_directions
-from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, get_result_text_research
+from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, get_result_text_research, get_result_temperature_list
 from api.dicom import search_dicom_study
+from utils.dates import normalize_date
 
 
 def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', level=-1):
@@ -268,7 +270,7 @@ def hosp_get_lab_iss(current_iss, extract=False, *directions):
     return result_filtered
 
 
-def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
+def hosp_get_text(current_iss, extract=False, mode=None, directions=None):
     # # Возврат стр-ра:
     # {'paraclinic': [{'title_research': 'Проведение электрокардиографических исследований ( ЭКГ )', 'result': [
     #                 {'date': '05.01.20 117', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
@@ -276,7 +278,11 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
     #                 {'date': '05.01.20 119', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
     #                       'value': 'Диффузные нарушения'}]}]}]} ]}]
     #                                                                                                                     ]}
-    if not directions:
+    if directions is None:
+        directions = []
+    if directions:
+        num_paraclinic_dirs = directions
+    else:
         if mode is None:
             return {}
         num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
@@ -298,25 +304,26 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
                 paraclinic_dir = k.get('direction')
                 num_paraclinic_dirs.add(paraclinic_dir)
 
-    if directions:
-        num_paraclinic_dirs = directions
-
     num_paraclinic_dirs = list(num_paraclinic_dirs)
+
+    return desc_to_data(num_paraclinic_dirs)
+
+
+def desc_to_data(num_dirs: List[int], force_all_fields: bool = False):
     # [0] - заглушка для запроса. research c id =0 не бывает
-    get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True) if num_paraclinic_dirs else []
-    research_distinct = [d[0] for d in get_research_id]
+    get_research_id = get_distinct_research([0], num_dirs, is_text_research=True) if num_dirs else []
     result = []
 
-    for research in research_distinct:
-        field_result = get_result_text_research(research, num_paraclinic_dirs)
+    for research_base in get_research_id:
+        research = research_base[0]
+        field_result = get_result_text_research(research, num_dirs, force_all_fields)
         last_group = None
         last_date = None
         data_in = []
         new_date_data = {}
-        link_dicom = None
         for i in field_result:
             date = f'{i[1]} {i[2]}'
-            link_dicom = search_dicom_study(i[2])
+            link_dicom = search_dicom_study(i[2]) if not force_all_fields else None
             group = i[3]
             fields = {'title_field': i[4], 'value': i[5]}
 
@@ -324,7 +331,7 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
                 if new_date_data:
                     data_in.append(new_date_data.copy())
 
-                new_date_data = {}
+                new_date_data = dict()
                 new_date_data['date'] = date
                 new_date_data['link_dicom'] = link_dicom if link_dicom else ''
                 new_date_data['data'] = [{'group_title': group, 'fields': [fields.copy()]}]
@@ -342,17 +349,17 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=[]):
             current_data = new_date_data.get('data')
             get_last_group = current_data.pop()
             last_fields = get_last_group.get('fields')
-            last_fields.append(fields.copy())
+            last_fields.append(fields)
             get_last_group['fields'] = last_fields.copy()
             current_data.append(get_last_group.copy())
             new_date_data['data'] = current_data.copy()
 
-        data_in.append(new_date_data.copy())
+        data_in.append(new_date_data)
 
         temp_result = {}
         temp_result['title_research'] = Researches.objects.get(pk=research).title
-        temp_result['result'] = data_in.copy()
-        result.append(temp_result.copy())
+        temp_result['result'] = data_in
+        result.append(temp_result)
 
     return result
 
@@ -417,3 +424,75 @@ def check_transfer_epicrisis(data):
             if i.get('date_confirm'):
                 return {'is_transfer': True, 'iss': i.get('iss'), 'research_id': i.get('research_id')}
     return {'is_transfer': False, 'iss': None, 'research_id': None}
+
+
+def get_temperature_list(hosp_num_dir):
+    """
+    :param num_dir:
+    :return:
+    {
+    temperature: {data: [36.6, 36.7, 37.1 итд], xtext: ['21.01.20 13:30', '21.01.20 20:00', '22.01.20 12:10' итд],},
+    systolic: {data[], xtext :[]}, diastolic: {data[], xtext :[]},
+    pulse: {data[], xtext :[]}
+    }
+    """
+    # tl - temperature list
+    tl_objs = hosp_get_data_direction(hosp_num_dir, site_type=9, type_service='None', level=2)
+    tl_iss = [i['iss'] for i in tl_objs]
+    research_id = None
+    for i in tl_objs:
+        research_id = i['research_id']
+        break
+    if research_id is None:
+        return {}
+    final_data = {}
+    title_list = ['Температура', 'Пульс (уд/с)', 'Дата измерения', 'Время измерения', 'Систолическое давление (мм рт.с)', 'Диастолическое давление (мм рт.с)']
+    a = get_result_temperature_list(tl_iss, research_id, title_list)
+    data = {}
+    for i in a:
+        value = i[2]
+        field = i[3]
+        if field.lower().find('дата') != -1:
+            value = normalize_date(value)
+        in_data = {field: value}
+        key = i[1]
+        if not data.get(key):
+            data.update({key: {}})
+        t_data = data.get(key)
+        t_data.update(in_data)
+        data[key] = t_data
+
+    for k, v in data.items():
+        date_time = get_date_time_tl(v)
+        for title, value in v.items():
+            if not value or value == '0':
+                continue
+            if not final_data.get(title):
+                final_data[title] = {'data': [], 'xtext': []}
+            t_final_data = final_data.get(title)
+            t_data = t_final_data['data']
+            t_data.append(value)
+            t_xtext = t_final_data['xtext']
+            t_xtext.append(date_time)
+            final_data[title] = {'data': t_data, 'xtext': t_xtext}
+    final_data.pop('Дата измерения', None)
+    final_data.pop('Время измерения', None)
+    for k, v in final_data.items():
+        if 'температура' in k.lower() or 'давление' in k.lower() or 'пульс' in k.lower():
+            number_data = list(map(force_to_number, v['data']))
+            v['data'] = number_data
+            v['min_max'] = [min(number_data), max(number_data)]
+            final_data[k] = v
+    if 'Температура' in final_data:
+        final_data['Температура (°C)'] = final_data.pop('Температура')
+    return final_data
+
+
+def get_date_time_tl(dict_data):
+    time = dict_data.get('Время измерения', 'Нет поля "Время измерения"')
+    date = dict_data.get('Дата измерения', 'Нет поля "Дата измерения"').replace('.2020', '')
+    return f'{date} {time}'
+
+
+def force_to_number(val):
+    return float(''.join(c for c in val if c.isdigit() or c == '.') or 0)

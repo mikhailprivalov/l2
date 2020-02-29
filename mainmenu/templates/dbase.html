@@ -85,6 +85,8 @@
             day = day.length > 1 ? day : '0' + day
             return day + '.' + month + '.' + year
         }
+
+        window.org_title = `{{ org_title |safe  }}`;
     </script>
     {% block head_cn %}{% endblock %}
 </head>

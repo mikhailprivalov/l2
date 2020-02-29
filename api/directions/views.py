@@ -19,7 +19,7 @@ from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicRes
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
-from laboratory.utils import strdatetime, strdate, tsdatetime, localtime, start_end_year
+from laboratory.utils import strdatetime, strdate, tsdatetime, localtime, start_end_year, strfdatetime, current_time
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
@@ -738,7 +738,7 @@ def directions_results_report(request):
     return JsonResponse({"data": data})
 
 
-@group_required("Врач параклиники", "Врач консультаций", "Врач стационара")
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_form(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
@@ -749,6 +749,7 @@ def directions_paraclinic_form(request):
         pk //= 10
     add_fr = {}
     f = False
+    g = [str(x) for x in request.user.groups.all()]
     if not request.user.is_superuser:
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
 
@@ -809,6 +810,8 @@ def directions_paraclinic_form(request):
                             "n": d.microbiology_n,
                         }
                 transfer_d = Napravleniya.objects.filter(parent_auto_gen=i, cancel=False).first()
+                forbidden_edit = forbidden_edit_dir(d.pk)
+                more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
                 iss = {
                     "pk": i.pk,
                     "research": {
@@ -836,13 +839,13 @@ def directions_paraclinic_form(request):
                     "templates": [],
                     "saved": i.time_save is not None,
                     "confirmed": i.time_confirmation is not None,
-                    "allow_reset_confirm": i.allow_reset_confirm(request.user),
+                    "allow_reset_confirm": i.allow_reset_confirm(request.user) and (not more_forbidden or "Температура" in i.research.title),
                     "more": [x.research_id for x in Issledovaniya.objects.filter(parent=i)],
                     "sub_directions": [],
                     "recipe": [],
                     "microbiology": [],
                     "lab_comment": i.lab_comment,
-                    "forbidden_edit": forbidden_edit_dir(d.pk)
+                    "forbidden_edit": forbidden_edit
                 }
 
                 if i.research.is_microbiology:
@@ -899,7 +902,7 @@ def directions_paraclinic_form(request):
                     g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
                          "hide": group.hide, "fields": [], "visibility": group.visibility}
                     for field in ParaclinicInputField.objects.filter(group=group, hide=False).order_by("order"):
-                        result_field = None if not ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists()\
+                        result_field = None if not ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists() \
                             else ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0]
                         field_type = field.field_type if not result_field else result_field.get_field_type()
                         g["fields"].append({
@@ -910,8 +913,8 @@ def directions_paraclinic_form(request):
                             "hide": field.hide,
                             "values_to_input": ([] if not field.required or field_type not in [10, 12] else
                                                 ['- Не выбрано']) + json.loads(field.input_templates),
-                            "value": (field.default_value if field_type not in [3, 11, 13, 14] else '')
-                            if not result_field else result_field.value,
+                            "value": ((field.default_value if field_type not in [3, 11, 13, 14] else '') if not result_field else result_field.value) if field_type not in [1, 20] else
+                            (get_default_for_field(field_type) if not result_field else result_field.value),
                             "field_type": field_type,
                             "default_value": field.default_value,
                             "visibility": field.visibility,
@@ -944,7 +947,15 @@ def directions_paraclinic_form(request):
     return JsonResponse(response)
 
 
-@group_required("Врач параклиники", "Врач консультаций", "Врач стационара")
+def get_default_for_field(field_type):
+    if field_type == 1:
+        return strfdatetime(current_time(), '%Y-%m-%d')
+    if field_type == 20:
+        return strfdatetime(current_time(), '%H:%M')
+    return ''
+
+
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_result(request):
     response = {"ok": False, "message": ""}
     rb = json.loads(request.body)
@@ -964,7 +975,11 @@ def directions_paraclinic_result(request):
                             | Q(research__is_stom=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
 
-        if forbidden_edit_dir(iss.napravleniye_id):
+        g = [str(x) for x in request.user.groups.all()]
+        tadp = "Температура" in iss.research.title
+        more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
+
+        if forbidden_edit_dir(iss.napravleniye_id) or (more_forbidden and not tadp):
             response["message"] = "Редактирование запрещено"
             return JsonResponse(response)
 
@@ -1102,11 +1117,13 @@ def directions_paraclinic_result(request):
                                                                                 napravleniye=transfer_d.pk)
                                                                             ]
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
-        response["forbidden_edit"] = forbidden_edit_dir(iss.napravleniye_id)
+        forbidden_edit = forbidden_edit_dir(iss.napravleniye_id)
+        response["forbidden_edit"] = forbidden_edit or more_forbidden
+        response["soft_forbidden"] = not forbidden_edit
     return JsonResponse(response)
 
 
-@group_required("Врач параклиники", "Врач консультаций", "Врач стационара")
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_confirm(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
@@ -1117,7 +1134,10 @@ def directions_paraclinic_confirm(request):
                    | Q(research__is_slave_hospital=True)
                    | Q(research__is_stom=True)).exists():
         iss = Issledovaniya.objects.get(pk=pk)
-        if forbidden_edit_dir(iss.napravleniye_id):
+        g = [str(x) for x in request.user.groups.all()]
+        tadp = "Температура" in iss.research.title
+        more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
+        if forbidden_edit_dir(iss.napravleniye_id) or (more_forbidden and not tadp):
             response["message"] = "Редактирование запрещено"
             return JsonResponse(response)
         t = timezone.now()
@@ -1141,7 +1161,8 @@ def directions_paraclinic_confirm(request):
     return JsonResponse(response)
 
 
-@group_required("Врач параклиники", "Сброс подтверждений результатов", "Врач консультаций", "Врач стационара", "Сброс подтверждения переводного эпикриза", "Сброс подтверждения выписки")
+@group_required("Врач параклиники", "Сброс подтверждений результатов", "Врач консультаций",
+                "Врач стационара", "Сброс подтверждения переводного эпикриза", "Сброс подтверждения выписки", "t, ad, p")
 def directions_paraclinic_confirm_reset(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
@@ -1152,10 +1173,14 @@ def directions_paraclinic_confirm_reset(request):
         is_transfer = iss.research.can_transfer
         is_extract = iss.research.is_extract
 
-        allow_reset = iss.allow_reset_confirm(request.user)
+        g = [str(x) for x in request.user.groups.all()]
+        tadp = "Температура" in iss.research.title
+        more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
+
+        allow_reset = iss.allow_reset_confirm(request.user) and (not more_forbidden or tadp)
 
         if not allow_reset:
-            response["message"] = "Редактирование запрещено"
+            response["message"] = "Редактирование запрещено. Запросите сброс подтверждения у администратора"
             return JsonResponse(response)
 
         if allow_reset:

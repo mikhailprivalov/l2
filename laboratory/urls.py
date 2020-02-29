@@ -16,9 +16,15 @@ from users.views import home
 
 admin.site.site_header = 'Администрирование L2'
 
+handler404 = mainmenu.views.v404
+
 if not settings.DEBUG:
-    handler404 = mainmenu.views.v404
     handler500 = mainmenu.views.v500
+
+
+def trigger_error(request):
+    return 1 / 0
+
 
 urlpatterns = [
     path('favicon.ico', RedirectView.as_view(url='/static/icon/favicon.ico', permanent=True)),
@@ -52,6 +58,7 @@ urlpatterns = [
     path('mq/', include('mq.urls')),
     path('logout/', LogoutView.as_view(), {'next_page': '/'}),
     path('if/', include('integration_framework.urls')),
+    path('sentry-debug/', trigger_error),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if 'silk' in settings.INSTALLED_APPS:

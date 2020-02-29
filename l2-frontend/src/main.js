@@ -10,6 +10,10 @@ import VueCollapse from 'vue2-collapse'
 import 'vuejs-dialog/dist/vuejs-dialog.min.css';
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
 import RmisLocation from './ui-cards/RmisLocation'
+import * as Sentry from '@sentry/browser';
+import * as Integrations from '@sentry/integrations';
+
+
 const VueInputMask = require('vue-inputmask').default;
 
 Vue.use(VuejsDialog, {
@@ -26,6 +30,12 @@ Vue.use(Tippy)
 const promiseFinally = require('promise.prototype.finally');
 Vue.dialog.registerComponent('replace-append-modal', ReplaceAppendModal);
 promiseFinally.shim()
+
+Sentry.init({
+  dsn: 'https://dab77c771228499a902ea3843f187be9@sentry.io/3083627',
+  integrations: [new Integrations.Vue({Vue, attachProps: true, logErrors: true})],
+  environment: window.org_title || "Default L2",
+});
 
 new Vue({
   el: '#app',

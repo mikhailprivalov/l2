@@ -29,4 +29,8 @@ export default generator({
     url: 'stationar/aggregate-desc',
     onReject: {}
   },
+  aggregateTADP: {
+    url: 'stationar/aggregate-tadp',
+    onReject: {}
+  },
 })

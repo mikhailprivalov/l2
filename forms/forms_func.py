@@ -450,10 +450,11 @@ def primary_reception_get_data(hosp_first_num):
 def hosp_extract_get_data(hosp_last_num):
     # Получение данных из выписки
     hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
-    hosp_extract_iss, extract_research_id = None, None
+    hosp_extract_iss, extract_research_id, doc_confirm = None, None, None
     if hosp_extract:
         hosp_extract_iss = hosp_extract[0].get('iss')
-        if not Issledovaniya.objects.get(pk=hosp_extract_iss).doc_confirmation:
+        doc_confirm = Issledovaniya.objects.get(pk=hosp_extract_iss).doc_confirmation
+        if not doc_confirm:
             return {}
         extract_research_id = hosp_extract[0].get('research_id')
     titles_field = ['Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Основной диагноз по МКБ',
@@ -468,6 +469,7 @@ def hosp_extract_get_data(hosp_last_num):
     final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', '', ''
     days_count, result_hospital = '', ''
 
+    days_count = ''
     if list_values:
         for i in list_values:
             if i[3] == 'Дата выписки':
@@ -493,9 +495,10 @@ def hosp_extract_get_data(hosp_last_num):
             if i[3] == 'Проведено койко-дней':
                 days_count = str(i[2])
 
+    doc_fio = doc_confirm.get_fio()
     return {'date_value': date_value, 'time_value': time_value, 'final_diagnos': final_diagnos, 'other_diagnos': other_diagnos, 'near_diagnos': near_diagnos,
             'outcome': outcome, 'final_diagnos_mkb': final_diagnos_mkb, 'other_diagnos_mkb': other_diagnos_mkb, 'near_diagnos_mkb': near_diagnos_mkb,
-            'extract_iss': hosp_extract_iss, 'days_count': days_count, 'result_hospital': result_hospital
+            'extract_iss': hosp_extract_iss, 'days_count': days_count, 'result_hospital': result_hospital, 'doc_fio': doc_fio
             }
 
 
@@ -596,8 +599,6 @@ def hosp_patient_movement(hosp_nums_obj):
                 iss_transfer, research_id_transfer = result_check['iss'], result_check['research_id']
                 if titles_field and iss_transfer:
                     list_values = get_result_value_iss(iss_transfer, research_id_transfer, titles_field)
-            else:
-                continue
 
         if list_values:
             for i in list_values:

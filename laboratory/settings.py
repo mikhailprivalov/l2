@@ -27,7 +27,7 @@ INSTALLED_APPS = (
     'django_extensions',
     'ajax_select',
     'health',
-    'appconf',
+    'appconf.apps.AppconfConfig',
     'clients',
     'users',
     'mainmenu',
@@ -40,7 +40,7 @@ INSTALLED_APPS = (
     'slog',
     'directory',
     'statistic',
-    'api',
+    'api.apps.ApiConfig',
     'discharge',
     'rmis_integration',
     'rest_framework',
@@ -282,6 +282,8 @@ DICOM_SEARCH_TAGS = []
 DICOM_ADDRESS = ''
 DICOM_PORT = None
 DICOM_SERVER = ""
+
+SENTRY_DSN = "https://4a6968777ec240b190abd11cbf1c96e1@sentry.io/3083440"
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

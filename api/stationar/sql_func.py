@@ -105,7 +105,7 @@ def get_result_fraction(list_iss):
     return row
 
 
-def get_result_text_research(research_pk, listdirs):
+def get_result_text_research(research_pk, listdirs, force_all_fields=False):
     with connection.cursor() as cursor:
         cursor.execute("""
            WITH
@@ -120,7 +120,11 @@ def get_result_text_research(research_pk, listdirs):
                          directory_paraclinicinputfield.group_id, group_title, group_order
                          FROM public.directory_paraclinicinputfield
             LEFT JOIN t_groups on directory_paraclinicinputfield.group_id = t_groups.group_id
-            WHERE (directory_paraclinicinputfield.group_id in (SELECT group_id from t_groups) and for_extract_card=true) or
+            WHERE (directory_paraclinicinputfield.group_id in (SELECT group_id from t_groups) and
+                    (
+                        for_extract_card = true or
+                        (%(force_all_fields)s = true and NOT (field_type = ANY(ARRAY[16,17]))))
+                    ) or
                     (directory_paraclinicinputfield.group_id in (SELECT group_id from t_groups) and title ILIKE 'Заключение')),
             
             t_iss AS (SELECT id as iss_id, time_confirmation,
@@ -136,7 +140,7 @@ def get_result_text_research(research_pk, listdirs):
             directions_paraclinicresult.field_id in (SELECT field_id from t_fields)
             order by time_confirmation, group_order, field_order
 
-         """, params={'id_research': research_pk, 'id_dirs': listdirs, 'tz': TIME_ZONE})
+         """, params={'id_research': research_pk, 'id_dirs': listdirs, 'force_all_fields': force_all_fields, 'tz': TIME_ZONE})
         row = cursor.fetchall()
     return row
 
@@ -155,5 +159,24 @@ def get_result_value_iss(iss_pk, research_pk, titles_field):
 
 
          """, params={'id_iss': iss_pk, 'id_research': research_pk, 'titles_field': titles_field})
+        row = cursor.fetchall()
+    return row
+
+
+def get_result_temperature_list(iss_pk_list, research_pk, titles_field):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+        WITH
+           t_field AS (SELECT "id", title FROM directory_paraclinicinputfield
+           WHERE group_id in (SELECT "id" FROM directory_paraclinicinputgroups WHERE research_id=%(id_research)s)
+             AND title = ANY(ARRAY[%(titles_field)s]))
+
+            SELECT field_id, issledovaniye_id, "value", title FROM public.directions_paraclinicresult
+            LEFT JOIN t_field ON directions_paraclinicresult.field_id = t_field.id
+            where field_id in (SELECT "id" FROM t_field) and issledovaniye_id = ANY(ARRAY[%(id_iss)s])
+            ORDER by issledovaniye_id
+
+
+         """, params={'id_iss': iss_pk_list, 'id_research': research_pk, 'titles_field': titles_field})
         row = cursor.fetchall()
     return row

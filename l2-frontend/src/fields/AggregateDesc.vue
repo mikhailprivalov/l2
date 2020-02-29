@@ -4,12 +4,17 @@
       <div class="research-title">{{research.title_research}}</div>
       <div class="research-date" v-for="res in research.result">
         <div class="research-date-title">{{res.date}}:</div>
+        <div v-if="res.link_dicom"><a class="a-under" :href="res.link_dicom" target="_blank">снимок</a></div>
         <span class="research-group" v-for="g in res.data" v-if="non_empty_group(g)">
           <span class="research-group-title" v-if="g.group_title !== ''">
             {{fix_space(g.group_title)}}<span v-if="non_empty_fields(g)">:</span></span>
           <span class="group-field" v-for="(f, fi) in g.fields" v-if="f.value !== ''">
-            <span class="group-field-title" v-if="f.title_field !== ''">{{fix_space(f.title_field)}}:</span><span
-            v-html="fix_html(f.value)"/><span v-if="fi + 1 < g.fields.length">; </span></span>.
+            <span class="group-field-title" v-if="f.title_field !== ''">{{fix_space(f.title_field)}}:&nbsp;</span><span
+            v-html="fix_html(f.value)"/><span
+            v-if="fi + 1 < g.fields.length && !f.value.endsWith(';') && !f.value.endsWith('.')">; </span><span
+            v-else-if="fi + 1 === g.fields.length && !f.value.endsWith(';') && !f.value.endsWith('.')">.</span><span
+            v-else>&nbsp;</span>
+          </span>
         </span>
       </div>
     </div>
@@ -47,10 +52,11 @@
       fix_html(v) {
         let lv = v;
         lv = lv.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-        lv = lv.replaceAll('&lt;sub&gt;', '<sub>');
-        lv = lv.replaceAll('&lt;/sub&gt;', '</sub>');
-        lv = lv.replaceAll('&lt;sup&gt;', '<sup>');
-        lv = lv.replaceAll('&lt;/sup&gt;', '</sup>');
+        const tagsToRevert = ['sub', 'sup', 'u', 'p', 'strong', 'em'];
+        for (const tag of tagsToRevert) {
+          lv = lv.replaceAll(`&lt;${tag}&gt;`, `<${tag}>`);
+          lv = lv.replaceAll(`&lt;/${tag}&gt;`, `</${tag}>`);
+        }
         lv = lv.replaceAll('\n', '<br/>');
         return lv.trim();
       },

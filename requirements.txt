@@ -80,3 +80,4 @@ anytree==2.7.3
 orthanc-rest-client==0.5.7
 transliterate==1.10.2
 imgkit==1.0.2
+sentry-sdk==0.14.1

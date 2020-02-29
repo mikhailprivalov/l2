@@ -289,6 +289,7 @@ class HospitalService(models.Model):
         "paraclinical": "is_paraclinic",
         "laboratory": "is_lab",
         "consultation": "is_doc_refferal",
+        "diaries": "diaries",
         "all": "None",
     }
 
