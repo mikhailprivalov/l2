@@ -1,41 +1,26 @@
-import datetime
 import locale
 import os.path
 import sys
 from copy import deepcopy
 from io import BytesIO
-
 import simplejson as json
-from reportlab.lib import colors
 from reportlab.lib.colors import black
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
-from reportlab.lib.pagesizes import A4, portrait, landscape
+from reportlab.lib.pagesizes import A4,landscape
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import PageBreak, Indenter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.platypus.flowables import HRFlowable
-
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from appconf.manager import SettingManager
-from directions.models import Issledovaniya, Napravleniya, ParaclinicResult
-from laboratory import utils
+from directions.models import Napravleniya
 from laboratory.settings import FONTS_FOLDER
 from api.stationar.stationar_func import hosp_get_hosp_direction, get_temperature_list
 from reportlab.lib import colors
-from reportlab.graphics.shapes import Drawing, _DrawingEditorMixin
-from reportlab.graphics.charts.linecharts import SampleHorizontalLineChart, HorizontalLineChart
-from reportlab.graphics.samples.linechart_with_markers import LineChartWithMarkers
-from reportlab.graphics.charts import linecharts
+from reportlab.graphics.charts.linecharts import HorizontalLineChart
+from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.widgets.markers import makeMarker
-
-from reportlab.graphics.charts.legends import Legend, LineLegend
-from reportlab.graphics.charts.lineplots import LinePlot
-from reportlab.graphics.shapes import Drawing, _DrawingEditorMixin, String
-from reportlab.graphics.widgets.markers import makeMarker
-from reportlab.graphics.charts.textlabels import Label
-from reportlab.graphics.samples.excelcolors import *
 
 
 def form_01(request_data):
@@ -43,8 +28,7 @@ def form_01(request_data):
     Температурный лист (АД, Пульс)
     на входе: type=107.01&hosps_pk=[113110]&titles=['Температура (°C)', 'Пульс', 'Давление']
     """
-    # num_dir = request_data["hosps_pk"]
-    num_dir = json.loads(request_data["hosps_pk"])
+    num_dir = json.loads(request_data["hosp_pks"])
     direction_obj = Napravleniya.objects.get(pk=num_dir[0])
     hosp_nums_obj = hosp_get_hosp_direction(num_dir[0])
     hosp_nums = ''
@@ -53,10 +37,6 @@ def form_01(request_data):
 
     ind_card = direction_obj.client
     patient_data = ind_card.get_data_individual()
-
-    hospital_name = SettingManager.get("org_title")
-    hospital_address = SettingManager.get("org_address")
-    hospital_kod_ogrn = SettingManager.get("org_ogrn")
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -106,12 +86,6 @@ def form_01(request_data):
     styleT.leading = 4.5 * mm
     styleT.face = 'PTAstraSerifReg'
 
-    print_district = ''
-    if SettingManager.get("district", default='True', default_type='b'):
-        if ind_card.district is not None:
-            print_district = 'Уч: {}'.format(ind_card.district.title)
-
-    space_symbol = '&nbsp;'
     if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
         patient_data['serial'] = patient_data['bc_serial']
         patient_data['num'] = patient_data['bc_num']
@@ -133,29 +107,25 @@ def form_01(request_data):
 
     result = get_temperature_list(num_dir[0])
     titles = json.loads(request_data["titles"])
-    temperature_data = result['Температура (°C)']
-    pulse_data = result['Пульс (уд/с)']
-    pressure_data = {'Диастолическое давление (мм рт.с)': result['Диастолическое давление (мм рт.с)'],
-                     'Систолическое давление (мм рт.с)': result['Систолическое давление (мм рт.с)']}
+    print(titles)
+    if 'Температура (°C)' in titles:
+        temperature_data = result['Температура (°C)']
+        objs.append(Paragraph('Температура (°C)', style))
+        objs.append(draw_temper_pulse(temperature_data, 1, 250 * mm, 30 * mm))
+        objs.append(Spacer(1, 15 * mm))
+    if 'Пульс (уд/с)' in titles:
+        pulse_data = result['Пульс (уд/с)']
+        objs.append(Paragraph('Пульс (уд/с)', style))
+        objs.append(draw_temper_pulse(pulse_data, 10, 250 * mm, 30 * mm))
+        objs.append(Spacer(1, 15 * mm))
+    if 'Давление' in titles:
+        pressure_data = {'Диастолическое давление (мм рт.с)': result['Диастолическое давление (мм рт.с)'],
+                         'Систолическое давление (мм рт.с)': result['Систолическое давление (мм рт.с)']}
+        objs.append(Paragraph('Давление', style))
+        objs.append(draw_pressure(pressure_data, 10, 250 * mm, 30 * mm))
+        objs.append(Spacer(1, 15 * mm))
 
-    objs.append(Paragraph('Температура (°C)', style))
-    objs.append(draw_temper_pulse(temperature_data, 1, 250 * mm, 30 * mm))
-    objs.append(Spacer(1, 15 * mm))
-    objs.append(Paragraph('Пульс (уд/с)', style))
-    objs.append(draw_temper_pulse(pulse_data, 10, 250 * mm, 30 * mm))
-    objs.append(Spacer(1, 15 * mm))
-    objs.append(Paragraph('Давление', style))
-    objs.append(draw_pressure(pressure_data, 10, 250 * mm, 30 * mm))
-
-    def first_pages(canvas, document):
-        canvas.saveState()
-        canvas.restoreState()
-
-    def later_pages(canvas, document):
-        canvas.saveState()
-        canvas.restoreState()
-
-    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+    doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
@@ -164,6 +134,9 @@ def form_01(request_data):
 def draw_temper_pulse(value, step, x_coord, y_coord):
     drawing = Drawing(x_coord, y_coord)
     data = []
+    catNames = []
+    min_value = 0
+    max_value = 0
     for k,v in value.items():
         if k == 'data':
             data1 = tuple([i for i in v])
@@ -183,9 +156,8 @@ def draw_temper_pulse(value, step, x_coord, y_coord):
     lc.joinedLines = 1
     lc.strokeColor = colors.white
     # из markers
-    # lc.lines.symbol = makeMarker('FilledCircle')
     lc.lines.symbol = makeMarker('FilledSquare')
-    lc.lines.symbol.size = 3 # маркер
+    lc.lines.symbol.size = 4 # маркер
     # lineLabels - свойства надбисей линии из textlabels class Label(Widget):
     lc.lineLabels.fontSize = 9
     lc.lineLabels.fontName = 'PTAstraSerifBold'
@@ -193,7 +165,6 @@ def draw_temper_pulse(value, step, x_coord, y_coord):
     lc.lineLabels.dx = 2
     lc.lineLabels.dy = 1
     lc.lines[0].strokeColor = colors.black
-    # lc.lines[0].strokeDashArray = [3, 1]
     lc.lineLabelFormat = '%3.1f'
 
     lc.categoryAxis.categoryNames = catNames
@@ -218,8 +189,6 @@ def draw_temper_pulse(value, step, x_coord, y_coord):
 def draw_pressure(value, step, x_coord, y_coord):
     drawing = Drawing(x_coord, y_coord)
     data = []
-    catNames = []
-
     data_diastolic = value['Диастолическое давление (мм рт.с)']
     data1 = [i for i in data_diastolic['data']]
     data.append(tuple(data1))
@@ -241,9 +210,9 @@ def draw_pressure(value, step, x_coord, y_coord):
     lc.joinedLines = 1
     lc.strokeColor = colors.white
     # из markers
-    # lc.lines.symbol = makeMarker('FilledCircle')
+    lc.lines[0].symbol = makeMarker('FilledCircle')
     lc.lines.symbol = makeMarker('FilledSquare')
-    lc.lines.symbol.size = 3 # маркер
+    lc.lines.symbol.size = 4 # маркер
     # lineLabels - свойства надбисей линии из textlabels class Label(Widget):
     lc.lineLabels.fontSize = 9
     lc.lineLabels.fontName = 'PTAstraSerifBold'
@@ -251,7 +220,7 @@ def draw_pressure(value, step, x_coord, y_coord):
     lc.lineLabels.dx = 2
     lc.lineLabels.dy = 0
     lc.lines[0].strokeColor = colors.black
-    lc.lines[0].strokeDashArray = [3, 1]
+    lc.lines[0].strokeDashArray = [3, 3]
     lc.lineLabelFormat = '%3.1f'
 
     lc.categoryAxis.categoryNames = catNames
@@ -268,6 +237,4 @@ def draw_pressure(value, step, x_coord, y_coord):
     lc.valueAxis.labels.fontName = 'PTAstraSerifReg'
     lc.valueAxis.labels.fontSize = 9
     drawing.add(lc)
-
     return drawing
-
