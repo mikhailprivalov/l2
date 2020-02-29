@@ -479,7 +479,9 @@ def get_temperature_list(hosp_num_dir):
     final_data.pop('Время измерения', None)
     for k, v in final_data.items():
         if 'температура' in k.lower() or 'давление' in k.lower() or 'пульс' in k.lower():
-            v['data'] = list(map(force_to_number, v['data']))
+            number_data = list(map(force_to_number, v['data']))
+            v['data'] = number_data
+            v['min_max'] = [min(number_data), max(number_data)]
             final_data[k] = v
     if 'Температура' in final_data:
         final_data['Температура (°C)'] = final_data.pop('Температура')

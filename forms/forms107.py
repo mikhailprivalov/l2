@@ -30,7 +30,7 @@ from reportlab.graphics.samples.linechart_with_markers import LineChartWithMarke
 from reportlab.graphics.charts import linecharts
 from reportlab.graphics.widgets.markers import makeMarker
 
-from reportlab.graphics.charts.legends import Legend
+from reportlab.graphics.charts.legends import Legend, LineLegend
 from reportlab.graphics.charts.lineplots import LinePlot
 from reportlab.graphics.shapes import Drawing, _DrawingEditorMixin, String
 from reportlab.graphics.widgets.markers import makeMarker
@@ -68,8 +68,8 @@ def form_01(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=landscape(A4),
-                            leftMargin=25 * mm,
-                            rightMargin=5 * mm, topMargin=5 * mm,
+                            leftMargin=15 * mm,
+                            rightMargin=5 * mm, topMargin=13 * mm,
                             bottomMargin=10 * mm, allowSplitting=1,
                             title="Форма {}".format("Лист показателей"))
     width, height = landscape(A4)
@@ -133,13 +133,19 @@ def form_01(request_data):
 
     result = get_temperature_list(num_dir[0])
     titles = json.loads(request_data["titles"])
-    print(result)
-    print(titles)
-    for k, v in result.items():
-        if k in titles:
-            objs.append(Paragraph('Температура (°C)', style))
-            objs.append(draw_graph(v))
-            break
+    temperature_data = result['Температура (°C)']
+    pulse_data = result['Пульс (уд/с)']
+    pressure_data = {'Диастолическое давление (мм рт.с)': result['Диастолическое давление (мм рт.с)'],
+                     'Систолическое давление (мм рт.с)': result['Систолическое давление (мм рт.с)']}
+
+    objs.append(Paragraph('Температура (°C)', style))
+    objs.append(draw_temper_pulse(temperature_data, 1, 250 * mm, 30 * mm))
+    objs.append(Spacer(1, 15 * mm))
+    objs.append(Paragraph('Пульс (уд/с)', style))
+    objs.append(draw_temper_pulse(pulse_data, 10, 250 * mm, 30 * mm))
+    objs.append(Spacer(1, 15 * mm))
+    objs.append(Paragraph('Давление', style))
+    objs.append(draw_pressure(pressure_data, 10, 250 * mm, 30 * mm))
 
     def first_pages(canvas, document):
         canvas.saveState()
@@ -152,25 +158,23 @@ def form_01(request_data):
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
     pdf = buffer.getvalue()
     buffer.close()
-
     return pdf
 
 
-def draw_graph(value):
-    for k, v in value.items():
-        print(k, v)
+def draw_temper_pulse(value, step, x_coord, y_coord):
+    drawing = Drawing(x_coord, y_coord)
+    data = []
+    for k,v in value.items():
+        if k == 'data':
+            data1 = tuple([i for i in v])
+            data.append(data1)
+        if k == 'xtext':
+            catNames = [i.replace(' ', '\n') for i in v]
+        if k == 'min_max':
+            min_value = v[0] - step
+            max_value = v[1] + step
 
-    drawing = Drawing(250 * mm, 25 * mm)
-    data = [
-        (36.6, 36.5, 37.0, 38.4, 34.5, 36.7, 38.2, 36.6, 36.5, 37.0, 38.4, 34.5, 36.7, 38.2, 36.6, 36.5, 37.0, 38.4, 34.5, 36.7, 38.2,
-         36.6, 36.5, 37.0, 38.4, 34.5, 36.7, 38.2),
-        # (5, 20, 46, 38, 23, 21, 6, 14)
-    ]
-
-    # lc = SampleHorizontalLineChart()
     lc = HorizontalLineChart()
-    # lc = LineChartWithMarkers()
-    # lc = LineChart
     lc.x = 0
     lc.y = 0
     lc.height = 70
@@ -178,34 +182,92 @@ def draw_graph(value):
     lc.data = data
     lc.joinedLines = 1
     lc.strokeColor = colors.white
-    # lc.lines.symbol = makeMarker('FilledDiamond')
+    # из markers
     # lc.lines.symbol = makeMarker('FilledCircle')
     lc.lines.symbol = makeMarker('FilledSquare')
-    lc.lines.symbol.size = 5
+    lc.lines.symbol.size = 3 # маркер
+    # lineLabels - свойства надбисей линии из textlabels class Label(Widget):
+    lc.lineLabels.fontSize = 9
+    lc.lineLabels.fontName = 'PTAstraSerifBold'
+    lc.lineLabels.angle = 0
+    lc.lineLabels.dx = 2
+    lc.lineLabels.dy = 1
     lc.lines[0].strokeColor = colors.black
-    # print(lc.categoryAxis.labels.getProperties())
-
-    # print(lc.valueAxis.getProperties())
     # lc.lines[0].strokeDashArray = [3, 1]
     lc.lineLabelFormat = '%3.1f'
-    print(lc.valueAxis.getProperties())
-    catNames = ['26.02\n09:30', '26.02\n18:00', '26.02\n21:00', '27.02\n09:20', '27.02\n09:20', '27.02\n09:24', '28.02\n06:23',
-                '26.02\n09:30', '26.02\n18:00', '26.02\n21:00', '27.02\n09:20', '27.02\n09:20', '27.02\n09:24', '28.02\n06:23',
-                '26.02\n09:30', '26.02\n18:00', '26.02\n21:00', '27.02\n09:20', '27.02\n09:20', '27.02\n09:24', '28.02\n06:23',
-                '26.02\n09:30', '26.02\n18:00', '26.02\n21:00', '27.02\n09:20', '27.02\n09:20', '27.02\n09:24', '28.02\n06:23']
+
     lc.categoryAxis.categoryNames = catNames
     lc.categoryAxis.labels.boxAnchor = 'n'
     lc.categoryAxis.labels.angle = 0
-    lc.categoryAxis.labels.dy = -1
+    lc.categoryAxis.labels.dy = -2
     lc.categoryAxis.labels.dx = 0
-    lc.categoryAxis.labels.setProperties({'fontSize': 8})
+    lc.categoryAxis.labels.fontSize = 9
+    lc.categoryAxis.labels.fontName = 'PTAstraSerifReg'
+    lc.categoryAxis.labels.leading = 8
 
-    lc.valueAxis.valueMin = 34
-    lc.valueAxis.valueMax = 40
-    lc.valueAxis.valueStep = 1
+    lc.valueAxis.valueMin = min_value
+    lc.valueAxis.valueMax = max_value
+    lc.valueAxis.valueStep = step
+    lc.valueAxis.labels.fontName = 'PTAstraSerifReg'
+    lc.valueAxis.labels.fontSize = 9
     drawing.add(lc)
 
-    # drawing.add(title_draw(100, -50, 'Температура'))
+    return drawing
+
+
+def draw_pressure(value, step, x_coord, y_coord):
+    drawing = Drawing(x_coord, y_coord)
+    data = []
+    catNames = []
+
+    data_diastolic = value['Диастолическое давление (мм рт.с)']
+    data1 = [i for i in data_diastolic['data']]
+    data.append(tuple(data1))
+    min_max = data_diastolic['min_max']
+    data_systolic = value['Систолическое давление (мм рт.с)']
+    data1 = [i for i in data_systolic['data']]
+    data.append(tuple(data1))
+    catNames = [i.replace(' ', '\n') for i in data_diastolic['xtext']]
+    min_max.extend(data_systolic['min_max'])
+    min_value = min(min_max) - step
+    max_value = max(min_max) + step
+
+    lc = HorizontalLineChart()
+    lc.x = 0
+    lc.y = 0
+    lc.height = 70
+    lc.width = 250 * mm
+    lc.data = data
+    lc.joinedLines = 1
+    lc.strokeColor = colors.white
+    # из markers
+    # lc.lines.symbol = makeMarker('FilledCircle')
+    lc.lines.symbol = makeMarker('FilledSquare')
+    lc.lines.symbol.size = 3 # маркер
+    # lineLabels - свойства надбисей линии из textlabels class Label(Widget):
+    lc.lineLabels.fontSize = 9
+    lc.lineLabels.fontName = 'PTAstraSerifBold'
+    lc.lineLabels.angle = 0
+    lc.lineLabels.dx = 2
+    lc.lineLabels.dy = 0
+    lc.lines[0].strokeColor = colors.black
+    lc.lines[0].strokeDashArray = [3, 1]
+    lc.lineLabelFormat = '%3.1f'
+
+    lc.categoryAxis.categoryNames = catNames
+    lc.categoryAxis.labels.boxAnchor = 'n'
+    lc.categoryAxis.labels.angle = 0
+    lc.categoryAxis.labels.dy = -2
+    lc.categoryAxis.labels.dx = 0
+    lc.categoryAxis.labels.fontSize = 9
+    lc.categoryAxis.labels.fontName = 'PTAstraSerifReg'
+    lc.categoryAxis.labels.leading = 8
+    lc.valueAxis.valueMin = min_value
+    lc.valueAxis.valueMax = max_value
+    lc.valueAxis.valueStep = step
+    lc.valueAxis.labels.fontName = 'PTAstraSerifReg'
+    lc.valueAxis.labels.fontSize = 9
+    drawing.add(lc)
 
     return drawing
 
