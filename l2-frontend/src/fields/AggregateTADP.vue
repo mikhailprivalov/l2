@@ -3,7 +3,7 @@
     <a :href="printHref" target="_blank" v-if="selectedCharts.length > 0" class="top-print a-under">печать</a>
     <div class="chart" v-for="chart in charts" v-if="!!dataCharts[chart]">
       <label class="chart-title" @click.prevent="toggleSelectChart(chart)">
-        <input type="checkbox" :checked="selectedCharts.includes(chart)" />&nbsp;{{chart}}
+        <input type="checkbox" :checked="selectedCharts.includes(chart)"/>&nbsp;{{chart}}
       </label>
       <VueApexCharts
         type="line"
@@ -133,6 +133,10 @@
               lines: {
                 show: true,
               }
+            },
+            padding: {
+              right: 35,
+              left: 35,
             },
           },
           dataLabels: {
