@@ -107,22 +107,27 @@ def form_01(request_data):
 
     result = get_temperature_list(num_dir[0])
     titles = json.loads(request_data["titles"])
+    print(titles)
     if 'Температура (°C)' in titles:
         temperature_data = result['Температура (°C)']
-        objs.append(Paragraph('Температура (°C)', style))
-        objs.append(draw_temper_pulse(temperature_data, 1, 250 * mm, 30 * mm))
-        objs.append(Spacer(1, 15 * mm))
+        objs.append(Paragraph(' <u>Температура (°C)</u>', style))
+        objs.append(Spacer(1, 2 * mm))
+        objs.append(draw_temper_pulse(temperature_data, 1, 250 * mm, 27 * mm))
+        objs.append(Spacer(1, 10 * mm))
     if 'Пульс (уд/с)' in titles:
         pulse_data = result['Пульс (уд/с)']
-        objs.append(Paragraph('Пульс (уд/с)', style))
-        objs.append(draw_temper_pulse(pulse_data, 10, 250 * mm, 30 * mm))
-        objs.append(Spacer(1, 15 * mm))
+        objs.append(Paragraph(' <u>Пульс (уд/с)</u>', style))
+        objs.append(Spacer(1, 2 * mm))
+        objs.append(draw_temper_pulse(pulse_data, 10, 250 * mm, 27 * mm))
+        objs.append(Spacer(1, 10 * mm))
     if 'Давление' in titles:
         pressure_data = {'Диастолическое давление (мм рт.с)': result['Диастолическое давление (мм рт.с)'],
                          'Систолическое давление (мм рт.с)': result['Систолическое давление (мм рт.с)']}
-        objs.append(Paragraph('Давление', style))
-        objs.append(draw_pressure(pressure_data, 10, 250 * mm, 30 * mm))
-        objs.append(Spacer(1, 15 * mm))
+        objs.append(Paragraph('<u>Давление:</u> (<img src="forms/img/squreline.png" width="20" height="10" />  систолическое, '
+                              '<img src="forms/img/strokedot.png" width="20" height="10" />  диастолическое)', style))
+        objs.append(Spacer(1, 2 * mm))
+        objs.append(draw_pressure(pressure_data, 10, 250 * mm, 45 * mm))
+        objs.append(Spacer(1, 10 * mm))
 
     doc.build(objs)
     pdf = buffer.getvalue()
@@ -147,13 +152,14 @@ def draw_temper_pulse(value, step, x_coord, y_coord):
             max_value = v[1] + step
 
     lc = HorizontalLineChart()
-    lc.x = 0
+    lc.x = 15
     lc.y = 0
-    lc.height = 70
+    lc.height = 28 * mm
     lc.width = 250 * mm
     lc.data = data
     lc.joinedLines = 1
     lc.strokeColor = colors.white
+    lc.strokeColor = None
     # из markers
     lc.lines.symbol = makeMarker('FilledSquare')
     lc.lines.symbol.size = 4
@@ -201,9 +207,9 @@ def draw_pressure(value, step, x_coord, y_coord):
     max_value = max(min_max) + step
 
     lc = HorizontalLineChart()
-    lc.x = 0
+    lc.x = 15
     lc.y = 0
-    lc.height = 70
+    lc.height = 45 * mm
     lc.width = 250 * mm
     lc.data = data
     lc.joinedLines = 1
@@ -217,8 +223,9 @@ def draw_pressure(value, step, x_coord, y_coord):
     lc.lineLabels.fontName = 'PTAstraSerifBold'
     lc.lineLabels.angle = 0
     lc.lineLabels.dx = 2
-    lc.lineLabels.dy = 0
+    lc.lineLabels.dy = -1
     lc.lines[0].strokeColor = colors.black
+    lc.lines[1].strokeColor = colors.black
     lc.lines[0].strokeDashArray = [3, 3]
     lc.lineLabelFormat = '%3.1f'
 
@@ -237,3 +244,4 @@ def draw_pressure(value, step, x_coord, y_coord):
     lc.valueAxis.labels.fontSize = 9
     drawing.add(lc)
     return drawing
+
