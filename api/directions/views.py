@@ -29,6 +29,9 @@ import re
 from utils.dates import normalize_date
 
 
+TADP = SettingManager.get("tadp", default='Температура', default_type='s')
+
+
 @login_required
 @group_required("Лечащий врач", "Оператор лечащего врача")
 def directions_generate(request):
@@ -839,7 +842,7 @@ def directions_paraclinic_form(request):
                     "templates": [],
                     "saved": i.time_save is not None,
                     "confirmed": i.time_confirmation is not None,
-                    "allow_reset_confirm": i.allow_reset_confirm(request.user) and (not more_forbidden or "Температура" in i.research.title),
+                    "allow_reset_confirm": i.allow_reset_confirm(request.user) and (not more_forbidden or TADP in i.research.title),
                     "more": [x.research_id for x in Issledovaniya.objects.filter(parent=i)],
                     "sub_directions": [],
                     "recipe": [],
@@ -976,7 +979,7 @@ def directions_paraclinic_result(request):
         iss = Issledovaniya.objects.get(pk=pk)
 
         g = [str(x) for x in request.user.groups.all()]
-        tadp = "Температура" in iss.research.title
+        tadp = TADP in iss.research.title
         more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
 
         if forbidden_edit_dir(iss.napravleniye_id) or (more_forbidden and not tadp):
@@ -1135,7 +1138,7 @@ def directions_paraclinic_confirm(request):
                    | Q(research__is_stom=True)).exists():
         iss = Issledovaniya.objects.get(pk=pk)
         g = [str(x) for x in request.user.groups.all()]
-        tadp = "Температура" in iss.research.title
+        tadp = TADP in iss.research.title
         more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
         if forbidden_edit_dir(iss.napravleniye_id) or (more_forbidden and not tadp):
             response["message"] = "Редактирование запрещено"
@@ -1174,7 +1177,7 @@ def directions_paraclinic_confirm_reset(request):
         is_extract = iss.research.is_extract
 
         g = [str(x) for x in request.user.groups.all()]
-        tadp = "Температура" in iss.research.title
+        tadp = TADP in iss.research.title
         more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
 
         allow_reset = iss.allow_reset_confirm(request.user) and (not more_forbidden or tadp)

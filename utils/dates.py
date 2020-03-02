@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-
 from django.utils import timezone
 
 
@@ -34,3 +33,5 @@ def normalize_date(date_value: str):
         if len(vv) == 3:
             date_value = "{}.{}.{}".format(vv[2], vv[1], vv[0])
     return date_value
+
+

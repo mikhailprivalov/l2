@@ -225,3 +225,5 @@ static/*
 !/static/.gitkeep
 .DS_Store
 venv*
+
+newrelic.ini
