@@ -27,4 +27,5 @@ urlpatterns = [
     path('send-amd', views.send_amd),
     path('reset-amd', views.reset_amd),
     path('purposes', views.purposes),
+    path('external-organizations', views.external_organizations),
 ]

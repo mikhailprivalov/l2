@@ -38,6 +38,7 @@ class SettingManager:
             "microbiology",
             "amd",
             "direction_purpose",
+            "external_organizations",
         ]}, "consults_module": SettingManager.get("consults_module", default='false', default_type='b')}
 
     @staticmethod

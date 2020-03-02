@@ -299,6 +299,7 @@ class RMISOrgs(models.Model):
 
 class ExternalOrganization(models.Model):
     title = models.CharField(max_length=255)
+    hide = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.title
@@ -383,6 +384,8 @@ class Napravleniya(models.Model):
     error_amd = models.BooleanField(default=False, blank=True, help_text='Ошибка отправка в АМД?')
     amd_excluded = models.BooleanField(default=False, blank=True, help_text='Исключить из выгрузки в АМД?')
     purpose = models.CharField(max_length=64, null=True, blank=True, default=None, db_index=True, choices=PURPOSES, help_text="Цель направления")
+    external_organization = models.ForeignKey(ExternalOrganization, default=None, blank=True, null=True, help_text='Внешняя организация',
+                                              on_delete=models.SET_NULL)
     harmful_factor = models.CharField(max_length=32, blank=True, default='')
 
     @property
@@ -438,7 +441,8 @@ class Napravleniya(models.Model):
                          parent_id=None,
                          parent_auto_gen_id=None,
                          rmis_slot=None,
-                         direction_purpose="NONE") -> 'Napravleniya':
+                         direction_purpose="NONE",
+                         external_organization="NONE") -> 'Napravleniya':
         """
         Генерация направления
         :param client_id:
@@ -482,6 +486,8 @@ class Napravleniya(models.Model):
                 dir.doc_who_create = doc_current
         if direction_purpose != "NONE":
             dir.purpose = direction_purpose
+        if external_organization != "NONE":
+            dir.external_organization_id = int(external_organization)
         if save:
             dir.save()
         dir.set_polis()
@@ -508,7 +514,7 @@ class Napravleniya(models.Model):
                                           researches, comments, for_rmis=None, rmis_data=None, vich_code='',
                                           count=1, discount=0, parent_iss=None, rmis_slot=None, counts=None,
                                           localizations=None, service_locations=None, visited=None,
-                                          parent_auto_gen=None, direction_purpose="NONE"):
+                                          parent_auto_gen=None, direction_purpose="NONE", external_organization="NONE"):
         if not visited:
             visited = []
         if counts is None:
@@ -596,7 +602,8 @@ class Napravleniya(models.Model):
                                                                                              parent_id=parent_iss,
                                                                                              parent_auto_gen_id=parent_auto_gen,
                                                                                              rmis_slot=rmis_slot,
-                                                                                             direction_purpose=direction_purpose)
+                                                                                             direction_purpose=direction_purpose,
+                                                                                             external_organization=external_organization)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
                     if dir_group == -1:
@@ -614,7 +621,8 @@ class Napravleniya(models.Model):
                                                                                              parent_id=parent_iss,
                                                                                              parent_auto_gen_id=parent_auto_gen,
                                                                                              rmis_slot=rmis_slot,
-                                                                                             direction_purpose=direction_purpose)
+                                                                                             direction_purpose=direction_purpose,
+                                                                                             external_organization=external_organization)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
 

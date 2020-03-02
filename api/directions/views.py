@@ -15,7 +15,7 @@ from api.stationar.stationar_func import forbidden_edit_dir
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
-from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult, Recipe, MethodsOfTaking
+from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult, Recipe, MethodsOfTaking, ExternalOrganization
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
@@ -62,7 +62,8 @@ def directions_generate(request):
             counts=p.get("counts", {}),
             localizations=p.get("localizations", {}),
             service_locations=p.get("service_locations", {}),
-            direction_purpose=p.get("direction_purpose", "NONE")
+            direction_purpose=p.get("direction_purpose", "NONE"),
+            external_organization=p.get("external_organization", "NONE"),
         )
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
@@ -1354,3 +1355,15 @@ def purposes(request):
             "title": p[1],
         })
     return JsonResponse({"purposes": result})
+
+
+def external_organizations(request):
+    result = [
+        {"pk": "NONE", "title": " – Не выбрано"}
+    ]
+    for e in ExternalOrganization.objects.filter(hide=False).order_by('pk'):
+        result.append({
+            "pk": e.pk,
+            "title": e.title,
+        })
+    return JsonResponse({"organizations": result})
