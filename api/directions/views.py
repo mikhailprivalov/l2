@@ -27,7 +27,6 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
 from utils.dates import try_parse_range
 import re
 from utils.dates import normalize_date
-from appconf.manager import SettingManager
 
 
 TADP = SettingManager.get("tadp", default='Температура', default_type='s')
