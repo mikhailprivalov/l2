@@ -304,6 +304,10 @@ class ExternalOrganization(models.Model):
     def __str__(self):
         return self.title
 
+    class Meta:
+        verbose_name = 'Внешняя организация'
+        verbose_name_plural = 'Внешние организации'
+
 
 class Napravleniya(models.Model):
     """
