@@ -107,7 +107,6 @@ def form_01(request_data):
 
     result = get_temperature_list(num_dir[0])
     titles = json.loads(request_data["titles"])
-    print(titles)
     if 'Температура (°C)' in titles:
         temperature_data = result['Температура (°C)']
         objs.append(Paragraph('Температура (°C)', style))
