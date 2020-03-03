@@ -128,7 +128,9 @@
     methods: {
       hide_modal() {
         this.$root.$emit('hide_fte')
-        this.$refs.modal.$el.style.display = 'none'
+        if (this.$refs.modal) {
+          this.$refs.modal.$el.style.display = 'none'
+        }
       },
       clear() {
         this.checked = false;

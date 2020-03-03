@@ -63,7 +63,7 @@
       </table>
       <table class="table table-bordered table-condensed" style="table-layout: fixed" v-if="show_additions">
         <colgroup>
-          <col width="165">
+          <col width="185">
           <col>
         </colgroup>
         <tbody>
@@ -71,6 +71,12 @@
           <th>Цель направления:</th>
           <td class="cl-td">
             <SelectFieldTitled v-model="direction_purpose" :variants="purposes"/>
+          </td>
+        </tr>
+        <tr v-if="external_organizations_enabled">
+          <th>Внешняя организация:</th>
+          <td class="cl-td">
+            <SelectFieldTitled v-model="external_organization" :variants="externalOrganizations"/>
           </td>
         </tr>
         <tr>
@@ -259,7 +265,9 @@
         count: 1,
         discount: 0,
         purposes: [],
+        externalOrganizations: [],
         direction_purpose: 'NONE',
+        external_organization: 'NONE',
         directions_count: '1',
       }
     },
@@ -391,6 +399,14 @@
           }
         },
       },
+      external_organizations_enabled: {
+        immediate: true,
+        handler() {
+          if (this.external_organizations_enabled) {
+            this.load_external_organizations()
+          }
+        },
+      },
     },
     mounted() {
       this.$root.$on('researches-picker:clear_all' + this.kk, this.clear_all)
@@ -434,11 +450,15 @@
       highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
       hide_window() {
         this.hide_window_update = true
-        this.$refs.modal.$el.style.display = 'none'
+        if (this.$refs.modal) {
+          this.$refs.modal.$el.style.display = 'none'
+        }
       },
       show_window() {
         this.hide_window_update = false
-        this.$refs.modal.$el.style.display = 'block'
+        if (this.$refs.modal) {
+          this.$refs.modal.$el.style.display = 'block'
+        }
       },
       researches_departments_simple() {
         let r = {}
@@ -510,6 +530,7 @@
           parent_iss: this.parent_iss,
           kk: this.kk,
           direction_purpose: this.direction_purpose,
+          external_organization: this.external_organization,
           directions_count: Number(this.directions_count) || 1,
         })
       },
@@ -517,6 +538,7 @@
         this.$root.$emit('researches-picker:deselect_all' + this.kk)
         this.clear_fin()
         this.direction_purpose = 'NONE'
+        this.external_organization = 'NONE'
         this.directions_count = '1'
       },
       clear_fin() {
@@ -528,10 +550,19 @@
         this.purposes = purposes
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
+      async load_external_organizations() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const {organizations} = await directions_point.getExternalOrgranizations()
+        this.externalOrganizations = organizations
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      },
     },
     computed: {
       direction_purpose_enabled() {
-        return this.$store.getters.modules.l2_direction_purpose
+        return this.$store.getters.modules.l2_direction_purpose && this.kk !== 'stationar'
+      },
+      external_organizations_enabled() {
+        return this.$store.getters.modules.l2_external_organizations && this.kk !== 'stationar'
       },
       show_additions() {
         return this.researches.length > 0

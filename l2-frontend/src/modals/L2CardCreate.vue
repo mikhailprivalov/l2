@@ -733,7 +733,9 @@
       },
       hide_modal() {
         this.$root.$emit('hide_l2_card_create')
-        this.$refs.modal.$el.style.display = 'none'
+        if (this.$refs.modal) {
+          this.$refs.modal.$el.style.display = 'none'
+        }
       },
       save_hide_modal() {
         this.save(true)
@@ -881,11 +883,15 @@
         this.document_to_edit = pk
       },
       hide_modal_doc_edit() {
-        this.$refs.modalDocEdit.$el.style.display = 'none'
+        if (this.$refs.modalDocEdit) {
+          this.$refs.modalDocEdit.$el.style.display = 'none'
+        }
         this.document_to_edit = -2
       },
       hide_modal_agent_edit() {
-        this.$refs.modalAgentEdit.$el.style.display = 'none';
+        if (this.$refs.modalAgentEdit) {
+          this.$refs.modalAgentEdit.$el.style.display = 'none';
+        }
         this.agent_to_edit = null;
       },
       save_doc() {
@@ -1042,6 +1048,10 @@
 
       .row-t, input, .row-v, /deep/ input {
         border-right: 1px solid #434a54 !important;
+      }
+
+      .form-row .input-group {
+        width: 65%;
       }
     }
     &:not(.left):not(.mid) {

@@ -93,4 +93,7 @@ export default generator({
   getPurposes: {
     url: 'directions/purposes',
   },
+  getExternalOrgranizations: {
+    url: 'directions/external-organizations',
+  },
 })

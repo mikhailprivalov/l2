@@ -230,7 +230,9 @@
       },
       hide_modal() {
         this.$root.$emit('hide_rmis_directions')
-        this.$refs.modal.$el.style.display = 'none'
+        if (this.$refs.modal) {
+          this.$refs.modal.$el.style.display = 'none'
+        }
       },
       load_data() {
         this.loaded = false

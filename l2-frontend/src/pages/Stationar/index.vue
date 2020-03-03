@@ -880,7 +880,9 @@
         this.hide_modal_anamnesis_edit()
       },
       hide_modal_anamnesis_edit() {
-        this.$refs.modalAnamnesisEdit.$el.style.display = 'none'
+        if (this.$refs.modalAnamnesisEdit) {
+          this.$refs.modalAnamnesisEdit.$el.style.display = 'none'
+        }
         this.anamnesis_edit = false
       },
     },
@@ -905,7 +907,7 @@
         return [{
           pk: -1,
           title: 'Не выбрано'
-        }, ...this.stationar_researches.filter(r => r.title !== this.issTitle && !r.hide)]
+        }, ...(this.stationar_researches || []).filter(r => r.title !== this.issTitle && !r.hide)]
       },
       bases_obj() {
         return this.bases.reduce((a, b) => ({
@@ -1089,6 +1091,7 @@
       border-bottom: 1px solid #b1b1b1;
       width: 166px !important;
       flex: 2 166px;
+      min-width: 0;
     }
 
     button {

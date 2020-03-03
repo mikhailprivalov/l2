@@ -118,7 +118,9 @@
     methods: {
       hide_modal() {
         this.showModal = false
-        this.$refs.modal.$el.style.display = 'none'
+        if (this.$refs.modal) {
+          this.$refs.modal.$el.style.display = 'none'
+        }
       },
       select_base(pk) {
         this.base = pk
