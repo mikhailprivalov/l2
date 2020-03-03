@@ -905,7 +905,7 @@
         return [{
           pk: -1,
           title: 'Не выбрано'
-        }, ...this.stationar_researches.filter(r => r.title !== this.issTitle && !r.hide)]
+        }, ...(this.stationar_researches || []).filter(r => r.title !== this.issTitle && !r.hide)]
       },
       bases_obj() {
         return this.bases.reduce((a, b) => ({
