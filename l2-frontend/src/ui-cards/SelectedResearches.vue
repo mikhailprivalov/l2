@@ -559,10 +559,10 @@
     },
     computed: {
       direction_purpose_enabled() {
-        return this.$store.getters.modules.l2_direction_purpose
+        return this.$store.getters.modules.l2_direction_purpose && this.kk !== 'stationar'
       },
       external_organizations_enabled() {
-        return this.$store.getters.modules.l2_external_organizations
+        return this.$store.getters.modules.l2_external_organizations && this.kk !== 'stationar'
       },
       show_additions() {
         return this.researches.length > 0
