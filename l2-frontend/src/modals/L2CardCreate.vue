@@ -1049,6 +1049,10 @@
       .row-t, input, .row-v, /deep/ input {
         border-right: 1px solid #434a54 !important;
       }
+
+      .form-row .input-group {
+        width: 65%;
+      }
     }
     &:not(.left):not(.mid) {
       padding-left: 0!important;

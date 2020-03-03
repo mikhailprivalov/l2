@@ -1091,6 +1091,7 @@
       border-bottom: 1px solid #b1b1b1;
       width: 166px !important;
       flex: 2 166px;
+      min-width: 0;
     }
 
     button {

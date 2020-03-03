@@ -103,6 +103,7 @@
           <a :href="data.pacs" target="_blank" class="btn btn-primary-nb btn-blue-nb" v-if="!!data.pacs">
             Снимок
           </a>
+          <div style="height: 14px;" v-else />
           <br><br>
           <button type="button" @click="hide_modal" class="btn btn-primary-nb btn-blue-nb">Закрыть</button>
         </div>
