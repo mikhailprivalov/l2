@@ -186,6 +186,7 @@
                  href="#"
                  :class="{[`disp_${data.status_disp}`]: true}"
                  v-if="data.card_internal && data.has_doc_referral"
+                 @click.prevent
                  v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
                     theme : 'light bordered',
                     html: '#template-disp',
