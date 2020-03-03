@@ -504,7 +504,9 @@
         })
       },
       hide_modal_anamnesis() {
-        this.$refs.modalAnamnesis.$el.style.display = 'none';
+        if (this.$refs.modalAnamnesis) {
+          this.$refs.modalAnamnesis.$el.style.display = 'none';
+        }
         this.anamnesis_data = {};
         this.anamnesis = false
       },

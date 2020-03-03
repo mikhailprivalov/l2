@@ -174,11 +174,15 @@
         this.edit_pk = pk;
       },
       hide_edit() {
-        this.$refs.modalEdit.$el.style.display = 'none';
+        if (this.$refs.modalEdit) {
+          this.$refs.modalEdit.$el.style.display = 'none';
+        }
         this.edit_pk = -2;
       },
       hide_modal() {
-        this.$refs.modal.$el.style.display = 'none'
+        if (this.$refs.modal) {
+          this.$refs.modal.$el.style.display = 'none'
+        }
         this.$root.$emit('hide_dreg')
       },
       async save() {

@@ -450,11 +450,15 @@
       highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
       hide_window() {
         this.hide_window_update = true
-        this.$refs.modal.$el.style.display = 'none'
+        if (this.$refs.modal) {
+          this.$refs.modal.$el.style.display = 'none'
+        }
       },
       show_window() {
         this.hide_window_update = false
-        this.$refs.modal.$el.style.display = 'block'
+        if (this.$refs.modal) {
+          this.$refs.modal.$el.style.display = 'block'
+        }
       },
       researches_departments_simple() {
         let r = {}

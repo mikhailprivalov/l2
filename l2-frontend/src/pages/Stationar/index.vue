@@ -880,7 +880,9 @@
         this.hide_modal_anamnesis_edit()
       },
       hide_modal_anamnesis_edit() {
-        this.$refs.modalAnamnesisEdit.$el.style.display = 'none'
+        if (this.$refs.modalAnamnesisEdit) {
+          this.$refs.modalAnamnesisEdit.$el.style.display = 'none'
+        }
         this.anamnesis_edit = false
       },
     },
