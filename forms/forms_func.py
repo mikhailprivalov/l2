@@ -450,6 +450,8 @@ def primary_reception_get_data(hosp_first_num):
 def hosp_extract_get_data(hosp_last_num):
     # Получение данных из выписки
     hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
+    if not hosp_extract:
+        return {}
     hosp_extract_iss, extract_research_id, doc_confirm = None, None, None
     if hosp_extract:
         hosp_extract_iss = hosp_extract[0].get('iss')

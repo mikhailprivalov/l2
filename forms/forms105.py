@@ -585,6 +585,7 @@ def form_03(request_data):
     date_value, time_value, outcome, result_hospital = '', '', '', ''
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
     days_count = '__________________________'
+    doc_fio = ''
     if hosp_extract_data:
         if hosp_extract_data['result_hospital']:
             result_hospital = hosp_extract_data['result_hospital']
@@ -733,9 +734,11 @@ def form_03(request_data):
     hosp_last_num = hosp_nums_obj[-1].get('direction')
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
 
-    opinion_diagnos = [[Paragraph('', styleTB), Paragraph(hosp_extract_data['final_diagnos'], styleTB), Paragraph(hosp_extract_data['final_diagnos_mkb'], styleTB),
-                        Paragraph(hosp_extract_data['other_diagnos'], styleTB), Paragraph(hosp_extract_data['other_diagnos_mkb'], styleTB),
-                        Paragraph(hosp_extract_data['near_diagnos'], styleTB), Paragraph(hosp_extract_data['near_diagnos_mkb'], styleTB)]]
+    opinion_diagnos = []
+    if hosp_extract_data:
+        opinion_diagnos = [[Paragraph('', styleTB), Paragraph(hosp_extract_data['final_diagnos'], styleTB), Paragraph(hosp_extract_data['final_diagnos_mkb'], styleTB),
+                            Paragraph(hosp_extract_data['other_diagnos'], styleTB), Paragraph(hosp_extract_data['other_diagnos_mkb'], styleTB),
+                            Paragraph(hosp_extract_data['near_diagnos'], styleTB), Paragraph(hosp_extract_data['near_diagnos_mkb'], styleTB)]]
 
     opinion.extend(opinion_diagnos)
     opinion_pathologist = [[Paragraph('Патологоанатомический	', styleTB), Paragraph('', styleTB), Paragraph('', styleTB), Paragraph('', styleTB),

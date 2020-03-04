@@ -454,10 +454,15 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn, "Вид: " + ", ".join(vid))
 
     if dir.purpose:
-        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 120) + (h / 2) * yn, "Цель напр.: " + dir.get_purpose_display())
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 120) + (h / 2) * yn, "Цель: " + dir.get_purpose_display())
 
     if dir.external_organization:
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 134) + (h / 2) * yn, dir.external_organization.title)
+
+    if dir.parent and dir.parent.research.is_hospital:
+        c.setFont('OpenSansBold', 8)
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 129) + (h / 2) * yn, ("Стационар-" + str(dir.parent.napravleniye_id)))
+    c.setFont('OpenSans', 9)
 
     from reportlab.platypus import Table, TableStyle
     from reportlab.lib import colors

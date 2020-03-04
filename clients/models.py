@@ -852,7 +852,6 @@ class DispensaryReg(models.Model):
     class Meta:
         verbose_name = 'Д-учет'
         verbose_name_plural = 'Д-учет'
-        unique_together = [['card', 'diagnos', 'date_end']]
 
 
 class Phones(models.Model):
