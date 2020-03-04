@@ -131,9 +131,6 @@ def form_01(request_data):
         objs.append(draw_pressure(pressure_data, 10, 250 * mm, 45 * mm))
         objs.append(Spacer(1, 10 * mm))
 
-    a = Researches.objects.filter(Q(is_hospital=True) | Q(is_slave_hospital=True))
-    print(a)
-
     doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()

@@ -1161,7 +1161,8 @@ class Directions(BaseRequester):
         uploaded = []
         exclude_res = Researches.objects.filter(Q(is_hospital=True) | Q(is_slave_hospital=True))
         to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date).filter(
-            Q(rmis_number__isnull=True) | Q(rmis_number="") | Q(imported_from_rmis=True, imported_directions_rmis_send=False)).exclude(issledovaniya__research__in=exclude_res).distinct()
+            Q(rmis_number__isnull=True) | Q(rmis_number="") | Q(imported_from_rmis=True, imported_directions_rmis_send=False)).exclude(
+            issledovaniya__research__in=exclude_res).distinct()
         cnt = to_upload.count()
         if stdout:
             stdout.write("Directions to upload: {}".format(cnt))
