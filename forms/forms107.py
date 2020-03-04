@@ -22,9 +22,6 @@ from reportlab.graphics.charts.linecharts import HorizontalLineChart
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.widgets.markers import makeMarker
 
-from directory.models import Researches
-from django.db.models import Q
-
 
 def form_01(request_data):
     """
