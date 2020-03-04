@@ -149,6 +149,8 @@ def form_01(request_data):
     other_diagnos = ''
     near_diagnos = ''
     days_count = '__________________________'
+    outcome = ''
+    doc_fio = ''
     if hosp_extract_data:
         extrac_date = hosp_extract_data['date_value']
         extract_time = hosp_extract_data['time_value']
