@@ -393,6 +393,20 @@
         }
         return arr
     }
+
+    if (!Element.prototype.closest) {
+        Element.prototype.closest = function(css) {
+            let node = this;
+
+            while (node) {
+                if (node.matches(css)) return node;
+                else node = node.parentElement;
+            }
+
+            return null;
+        };
+    }
+
     if (!Array.prototype.last) {
         Array.prototype.last = function () {
             return this[this.length - 1]

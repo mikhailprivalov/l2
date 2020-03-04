@@ -1591,6 +1591,10 @@ body > .container-fluid {
   }
 }
 
+input[type=date].form-control {
+  line-height: 1;
+}
+
 @import "./variables";
 @import "./editor";
 @import "./menubar";

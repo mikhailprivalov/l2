@@ -10,13 +10,12 @@ const state = {
 }
 
 const getters = {
-  allDepartments: state => state.all,
-  oldDepartments: state => state.old_all,
-  diff_departments: state => {
+  allDepartments: state => state.all || [],
+  oldDepartments: state => state.old_all || [],
+  diff_departments: (state, getters) => {
     let diff = []
-    let departments = state.all
-    for (let row of departments) {
-      for (let in_row of state.old_all) {
+    for (let row of getters.allDepartments) {
+      for (let in_row of getters.oldDepartments) {
         if (in_row.pk === row.pk) {
           if (in_row.title !== row.title || in_row.type !== row.type) {
             diff.push(row)

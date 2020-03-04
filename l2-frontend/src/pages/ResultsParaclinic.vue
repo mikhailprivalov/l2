@@ -186,6 +186,7 @@
                  href="#"
                  :class="{[`disp_${data.status_disp}`]: true}"
                  v-if="data.card_internal && data.has_doc_referral"
+                 @click.prevent
                  v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
                     theme : 'light bordered',
                     html: '#template-disp',
@@ -866,7 +867,9 @@
                 return l.slice(0, 2)
             },
             hide_modal_anamnesis_edit() {
-                this.$refs.modalAnamnesisEdit.$el.style.display = 'none';
+                if (this.$refs.modalAnamnesisEdit) {
+                  this.$refs.modalAnamnesisEdit.$el.style.display = 'none';
+                }
                 this.anamnesis_edit = false
             },
             save_anamnesis() {
@@ -932,7 +935,9 @@
                 })
             },
             hide_modal_create_directions() {
-                this.$refs.modalCD.$el.style.display = 'none';
+                if (this.$refs.modalCD) {
+                  this.$refs.modalCD.$el.style.display = 'none';
+                }
                 this.create_directions_for = -1;
                 this.create_directions_data = [];
                 this.create_directions_diagnosis = ''
