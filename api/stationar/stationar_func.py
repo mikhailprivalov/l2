@@ -498,3 +498,8 @@ def get_date_time_tl(dict_data):
 
 def force_to_number(val):
     return float(''.join(c for c in val if c.isdigit() or c == '.') or 0)
+
+
+
+
+

@@ -20,7 +20,7 @@ import os.path
 from io import BytesIO
 from api.stationar.stationar_func import hosp_get_hosp_direction
 from api.sql_func import get_fraction_result
-from .forms_func import primary_reception_get_data, hosp_extract_get_data, hosp_get_clinical_diagnos, hosp_get_transfers_data, hosp_get_operation_data
+from .forms_func import primary_reception_get_data, hosp_extract_get_data, hosp_get_clinical_diagnos, hosp_get_transfers_data, hosp_get_operation_data, closed_bl
 
 
 def form_01(request_data):
@@ -298,8 +298,13 @@ def form_01(request_data):
     objs.extend(title_page)
     objs.extend(second_page)
 
+    closed_bl_result = closed_bl(hosp_nums_obj[0].get('direction'))
+
     def first_pages(canvas, document):
         canvas.saveState()
+        if closed_bl_result:
+            canvas.setFont('PTAstraSerifBold', 12)
+            canvas.drawString(7 * mm, 290 * mm, 'ЛН')
         # Переведен
         transfers_text = [Paragraph('{}'.format(transfers), styleJustified)]
         transfers_frame = Frame(27 * mm, 206 * mm, 175 * mm, 7 * mm, leftPadding=0, bottomPadding=0,

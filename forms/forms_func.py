@@ -679,3 +679,17 @@ def hosp_get_operation_data(num_dir):
             operation_result.append(operation_data.copy())
 
     return operation_result
+
+
+def closed_bl(hosp_num_dir):
+    """
+    Подтверждены больничные-протоколы со словом закрытие среди Б/Л?
+    """
+    result_bl = hosp_get_data_direction(hosp_num_dir, site_type=8, type_service='None', level=-1)
+    for i in result_bl:
+        if i['date_confirm'] is None:
+            continue
+        if i["research_title"].lower().find('закрыт') != -1:
+            return True
+
+    return False
