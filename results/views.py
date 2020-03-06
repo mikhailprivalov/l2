@@ -20,7 +20,7 @@ from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.pdfbase import pdfdoc
 from reportlab.pdfgen import canvas
-from reportlab.platypus import PageBreak, Spacer, KeepInFrame, KeepTogether
+from reportlab.platypus import PageBreak, Spacer, KeepTogether
 
 import directory.models as directory
 import slog.models as slog
@@ -528,7 +528,6 @@ def result_print(request):
             SettingManager.get("org_title"), SettingManager.get("org_www"), SettingManager.get("org_phones")),
         styleAb), '', '', '']
     pw = doc.width
-    ph = doc.height
     import operator
 
     def print_vtype(data, f, iss, j, style_t, styleSheet):
