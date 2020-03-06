@@ -1413,7 +1413,7 @@ def result_print(request):
             naprs.append(fwb)
             client_prev = direction.client.individual_id
             continue
-        naprs.append(KeepTogether([KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph - 6 * mm, hAlign='RIGHT')]))
+        naprs.append(KeepTogether(fwb))
         client_prev = direction.client.individual_id
 
     num_card = hosp_nums
