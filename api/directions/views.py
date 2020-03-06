@@ -6,7 +6,7 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse
-from django.utils import dateformat, timezone
+from django.utils import dateformat
 
 from api import sql_func
 from api.dicom import search_dicom_study
@@ -27,7 +27,9 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
 from utils.dates import try_parse_range
 import re
 from utils.dates import normalize_date
-
+from api.patients.views import save_dreg
+from django.utils import timezone
+from django.http import HttpRequest
 
 TADP = SettingManager.get("tadp", default='Температура', default_type='s')
 
@@ -1082,7 +1084,6 @@ def directions_paraclinic_result(request):
             iss.gen_direction_with_research_after_confirm_id = stationar_research
 
         iss.save()
-
         more = request_data.get("more", [])
         h = []
         for m in more:
@@ -1120,6 +1121,16 @@ def directions_paraclinic_result(request):
                                                                             Issledovaniya.objects.filter(
                                                                                 napravleniye=transfer_d.pk)
                                                                             ]
+            if iss.maybe_onco:
+                card_pk = iss.napravleniye.client.pk
+                dstart_onco = strdate(current_time(only_date=True))
+                dispensery_onco = json.dumps(
+                    {'card_pk': card_pk, 'pk': -1, 'data': {'date_start': dstart_onco, 'date_end': '', 'why_stop': '', 'close': False, 'diagnos': 'U999 Онкоподозрение', 'illnes': ''}})
+                dispensery_obj = HttpRequest()
+                dispensery_obj._body = dispensery_onco
+                dispensery_obj.user = request.user
+                save_dreg(dispensery_obj)
+
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
         forbidden_edit = forbidden_edit_dir(iss.napravleniye_id)
         response["forbidden_edit"] = forbidden_edit or more_forbidden

@@ -649,6 +649,10 @@ def save_dreg(request):
     if a.diagnos != ds or a.illnes != i:
         a.diagnos = ds
         a.illnes = i
+        disp_obj = DispensaryReg.objects.filter(card_id=rd["card_pk"], diagnos=ds, date_start=fd(d["date_start"]))
+        if disp_obj:
+            a.delete()
+            return ''
         c = True
 
     if c:
