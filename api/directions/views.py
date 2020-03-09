@@ -168,8 +168,6 @@ def directions_history_old(request):
                          "has_descriptive": has_descriptive})
     except (ValueError, IndexError) as e:
         res["message"] = str(e)
-
-
     return JsonResponse(res)
 
 
@@ -213,21 +211,18 @@ def directions_history(request):
     #                      "has_descriptive": False}]
     researches_pks = []
     researches_titles = ''
-    last_dir = None
-    dir = None
     final_result = []
-    status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None
+    last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
     maybe_onco = False
     status_set = {-1}
     for i in result_sql:
         if i[14]:
             continue
         if i[0] != last_dir:
-            ss = sorted(status_set)
-            status = ss.pop(0)
+            status = min(status_set)
             if (req_status == 2 and status == 2) or (req_status == 3 and status != -1) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0) or\
                 (req_status == 4 and status != -1):
-                final_result.append({'pk':dir, 'status': status , 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
+                final_result.append({'pk': dir, 'status': status, 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
                                      'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco})
             dir = i[0]
             researches_titles = ''
@@ -257,8 +252,6 @@ def directions_history(request):
             maybe_onco = True
         last_dir = dir
     res['directions'] = final_result
-    # return res
-
     return JsonResponse(res)
 
 

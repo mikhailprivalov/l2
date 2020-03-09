@@ -1,6 +1,7 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE
 
+
 def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv):
     with connection.cursor() as cursor:
         cursor.execute("""WITH 
