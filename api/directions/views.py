@@ -30,7 +30,7 @@ from utils.dates import normalize_date
 from api.patients.views import save_dreg
 from django.utils import timezone
 from django.http import HttpRequest
-from datetime import datetime, time
+from datetime import datetime, time as dtime
 from .sql_func import get_history_dir
 
 TADP = SettingManager.get("tadp", default='Температура', default_type='s')
@@ -180,8 +180,8 @@ def directions_history(request):
     services = list(map(int, services or []))
 
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
-    date_start = datetime.combine(date_start, time.min)
-    date_end = datetime.combine(date_end, time.max)
+    date_start = datetime.combine(date_start, dtime.min)
+    date_end = datetime.combine(date_end, dtime.max)
     user_creater = -1
     patient_card = -1
     # status: 4 - выписано пользователем,   0 - только выписанные, 1 - Материал получен лабораторией. 2 - результат подтвержден, 3 - направления пациента,  -1 - отменено,
@@ -220,8 +220,7 @@ def directions_history(request):
             continue
         if i[0] != last_dir:
             status = min(status_set)
-            if (req_status == 2 and status == 2) or (req_status == 3 and status != -1) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0) or\
-                (req_status == 4 and status != -1):
+            if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -1) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
                 final_result.append({'pk': dir, 'status': status, 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
                                      'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco})
             dir = i[0]
