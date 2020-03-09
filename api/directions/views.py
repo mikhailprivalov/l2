@@ -30,6 +30,8 @@ from utils.dates import normalize_date
 from api.patients.views import save_dreg
 from django.utils import timezone
 from django.http import HttpRequest
+from datetime import datetime, time
+from .sql_func import get_history_dir
 
 TADP = SettingManager.get("tadp", default='Температура', default_type='s')
 
@@ -79,7 +81,7 @@ def directions_generate(request):
 
 
 @login_required
-def directions_history(request):
+def directions_history_old(request):
     res = {"directions": []}
     request_data = json.loads(request.body)
 
@@ -167,6 +169,95 @@ def directions_history(request):
     except (ValueError, IndexError) as e:
         res["message"] = str(e)
 
+
+    return JsonResponse(res)
+
+
+def directions_history(request):
+    res = {"directions": []}
+    request_data = json.loads(request.body)
+    pk = request_data.get("patient", -1)
+    req_status = request_data.get("type", 4)
+    services = request_data.get("services", [])
+    services = list(map(int, services or []))
+
+    date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
+    date_start = datetime.combine(date_start, time.min)
+    date_end = datetime.combine(date_end, time.max)
+    user_creater = -1
+    patient_card = -1
+    # status: 4 - выписано пользователем,   0 - только выписанные, 1 - Материал получен лабораторией. 2 - результат подтвержден, 3 - направления пациента,  -1 - отменено,
+    if req_status == 4:
+        user_creater = request.user.doctorprofile.pk
+    if req_status in [0, 1, 2, 3]:
+        patient_card = pk
+
+    is_service = False
+    if services:
+        is_service = True
+
+    if not is_service:
+        services = [-1]
+
+    result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service)
+    # napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title, date_create,
+    # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs, is_slave_hospital
+    # res['directions'] = [{"pk": 136416, "status": 0,
+    #                       "researches": "Ретикулоциты (кровь с ЭДТА) | Полный гематологический анализ",
+    #                      "researches_pks": [247, 52],
+    #                      "date": "07.03.20",
+    #                      "cancel": False,
+    #                      "checked": False,
+    #                      "pacs": None,
+    #                      "has_hosp": False,
+    #                      "has_descriptive": False}]
+    researches_pks = []
+    researches_titles = ''
+    last_dir = None
+    dir = None
+    final_result = []
+    status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None
+    maybe_onco = False
+    status_set = {-1}
+    for i in result_sql:
+        if i[14]:
+            continue
+        if i[0] != last_dir:
+            ss = sorted(status_set)
+            status = ss.pop(0)
+            if (req_status == 2 and status == 2) or (req_status == 3 and status != -1) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0) or\
+                (req_status == 4 and status != -1):
+                final_result.append({'pk':dir, 'status': status , 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
+                                     'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco})
+            dir = i[0]
+            researches_titles = ''
+            date = i[6]
+            status_set = set()
+            cancel = i[1]
+            researches_pks = []
+            pacs = None
+            maybe_onco = False
+            if i[13]:
+                pacs = search_dicom_study(int(dir))
+            has_hosp = False
+            if i[11]:
+                has_hosp = True
+        if researches_titles:
+            researches_titles = f'{researches_titles} | {i[5]}'
+        if not researches_titles:
+            researches_titles = i[5]
+        status_val = 0
+        if i[8] or i[9]:
+            status_val = 1
+        if i[7]:
+            status_val = 2
+        status_set.add(status_val)
+        researches_pks.append(i[4])
+        if i[12]:
+            maybe_onco = True
+        last_dir = dir
+    res['directions'] = final_result
+    # return res
 
     return JsonResponse(res)
 

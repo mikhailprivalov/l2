@@ -1,7 +1,7 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE
 
-def get_history_dir(d_s, d_e, card_id, who_create_dir):
+def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv):
     with connection.cursor() as cursor:
         cursor.execute("""WITH 
         t_iss AS (SELECT 
@@ -11,22 +11,24 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir):
             directory_researches.id as res_id, 
             directory_researches.code, 
             directory_researches.is_hospital,
+            directory_researches.is_slave_hospital,
             directory_researches.podrazdeleniye_id,
-            directions_napravleniya.data_sozdaniya, 
+            directions_napravleniya.data_sozdaniya,
             directions_napravleniya.doc_who_create_id,
             directions_issledovaniya.napravleniye_id,
+            directions_napravleniya.cancel,
             directions_issledovaniya.doc_confirmation_id, 
             directions_issledovaniya.maybe_onco,
-            directions_issledovaniya.time_save
+            to_char(directions_issledovaniya.time_save AT TIME ZONE %(tz)s, 'DD.MM.YYYY-HH24:MI:SS') as ch_time_save
         FROM directions_issledovaniya
         LEFT JOIN directory_researches
         ON directions_issledovaniya.research_id = directory_researches.Id
         LEFT JOIN directions_napravleniya
-        ON directions_issledovaniya.napravleniye_i d =directions_napravleniya.id
+        ON directions_issledovaniya.napravleniye_id =directions_napravleniya.id
         WHERE directions_napravleniya.data_sozdaniya BETWEEN %(d_start)s AND %(d_end)s
         AND
         CASE when %(card_id)s > -1 THEN 
-        irections_napravleniya.client_id = %(card)s
+        directions_napravleniya.client_id = %(card_id)s
         when %(who_create)s > -1 THEN
         directions_napravleniya.doc_who_create_id = %(who_create)s
         END),
@@ -44,12 +46,26 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir):
         
         t_podrazdeleniye AS (SELECT id AS podr_id, can_has_pacs, title AS podr_title FROM podrazdeleniya_podrazdeleniya)
         
-        SELECT napravleniye_id, iss_id, tubesregistration_id, res_id, res_title, data_sozdaniya, doc_confirmation_id, time_recive, time_save, podr_title, is_hospital, maybe_onco, can_has_pacs  from t_iss_tubes
+        SELECT napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title,
+        to_char(data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YY') as date_create,
+        doc_confirmation_id,
+        to_char(time_recive AT TIME ZONE %(tz)s, 'DD.MM.YY HH24:MI:SS.US'), 
+        ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs, is_slave_hospital
+        FROM t_iss_tubes
         LEFT JOIN t_recive
         ON t_iss_tubes.tubesregistration_id = t_recive.id_t_recive
         LEFT JOIN t_podrazdeleniye
         ON t_iss_tubes.podrazdeleniye_id = t_podrazdeleniye.podr_id
-        ORDER BY napravleniye_id DESC""", params={'d_start': d_s, 'd_end': d_e, 'card': card_id, 'who_create': who_create_dir})
+        WHERE
+        CASE
+        WHEN %(is_serv)s = TRUE THEN 
+            res_id = ANY(ARRAY[%(services_p)s])
+        WHEN %(is_serv)s = FALSE THEN 
+            EXISTS (SELECT res_id FROM t_iss)
+        END
+        
+        ORDER BY napravleniye_id DESC""", params={'d_start': d_s, 'd_end': d_e, 'card_id': card_id, 'who_create': who_create_dir,
+                                                  'services_p': services, 'is_serv': is_serv, 'tz': TIME_ZONE, })
 
         row = cursor.fetchall()
     return row
