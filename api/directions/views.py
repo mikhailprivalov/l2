@@ -81,7 +81,7 @@ def directions_generate(request):
 
 
 @login_required
-def directions_history_old(request):
+def directions_history(request):
     res = {"directions": []}
     request_data = json.loads(request.body)
 
@@ -171,7 +171,7 @@ def directions_history_old(request):
     return JsonResponse(res)
 
 
-def directions_history(request):
+def directions_history_new(request):
     res = {"directions": []}
     request_data = json.loads(request.body)
     pk = request_data.get("patient", -1)
@@ -214,20 +214,19 @@ def directions_history(request):
     final_result = []
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
     maybe_onco = False
-    status_set = {-1}
+    status_set = {-2}
     for i in result_sql:
         if i[14]:
             continue
         if i[0] != last_dir:
             status = min(status_set)
-            if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -1) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
+            if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
                 final_result.append({'pk': dir, 'status': status, 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
                                      'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco})
             dir = i[0]
             researches_titles = ''
             date = i[6]
             status_set = set()
-            cancel = i[1]
             researches_pks = []
             pacs = None
             maybe_onco = False
@@ -245,11 +244,15 @@ def directions_history(request):
             status_val = 1
         if i[7]:
             status_val = 2
+        if i[1]:
+            status_val = -1
         status_set.add(status_val)
         researches_pks.append(i[4])
         if i[12]:
             maybe_onco = True
         last_dir = dir
+        cancel = i[1]
+        print(i[1])
     res['directions'] = final_result
     return JsonResponse(res)
 
