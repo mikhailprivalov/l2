@@ -81,7 +81,8 @@ def directions_generate(request):
 
 
 @login_required
-def directions_history22(request):
+def directions_history_old(request):
+    # ORM-query
     res = {"directions": []}
     request_data = json.loads(request.body)
 
@@ -172,6 +173,7 @@ def directions_history22(request):
 
 
 def directions_history(request):
+    # SQL-query
     res = {"directions": []}
     request_data = json.loads(request.body)
     pk = request_data.get("patient", -1)
