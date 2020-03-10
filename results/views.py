@@ -20,7 +20,7 @@ from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.pdfbase import pdfdoc
 from reportlab.pdfgen import canvas
-from reportlab.platypus import PageBreak, Spacer, KeepTogether, KeepInFrame
+from reportlab.platypus import PageBreak, Spacer, KeepTogether
 
 import directory.models as directory
 import slog.models as slog
@@ -528,7 +528,7 @@ def result_print(request):
             SettingManager.get("org_title"), SettingManager.get("org_www"), SettingManager.get("org_phones")),
         styleAb), '', '', '']
     pw = doc.width
-    ph = doc.height
+    # ph = doc.height
     import operator
 
     def print_vtype(data, f, iss, j, style_t, styleSheet):
@@ -597,11 +597,9 @@ def result_print(request):
     for i in hosp_nums_obj:
         hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
 
-    directions_list = sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
+    for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
            key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
-               issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk)
-
-    for direction in directions_list:
+               issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
         dpk = direction.pk
 
         if not direction.is_all_confirm():
@@ -722,7 +720,7 @@ def result_print(request):
             else:
                 cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178)]
             cw = cw + [tw - sum(cw)]
-            t = Table(data, colWidths=cw)
+            t = Table(data, repeatRows=1, colWidths=cw)
             style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                   ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                                   ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
@@ -1415,10 +1413,7 @@ def result_print(request):
             naprs.append(fwb)
             client_prev = direction.client.individual_id
             continue
-        if len(directions_list) == 1:
-            naprs.append(KeepTogether([KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph - 6 * mm, hAlign='RIGHT')]))
-        else:
-            naprs.append(KeepTogether(fwb))
+        naprs.append(KeepTogether(fwb))
         client_prev = direction.client.individual_id
 
     num_card = hosp_nums
