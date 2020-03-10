@@ -598,8 +598,8 @@ def result_print(request):
         hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
 
     for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
-           key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
-               issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
+                            key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
+                                issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
         dpk = direction.pk
 
         if not direction.is_all_confirm():
