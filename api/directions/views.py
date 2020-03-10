@@ -81,7 +81,7 @@ def directions_generate(request):
 
 
 @login_required
-def directions_history(request):
+def directions_history22(request):
     res = {"directions": []}
     request_data = json.loads(request.body)
 
@@ -171,11 +171,12 @@ def directions_history(request):
     return JsonResponse(res)
 
 
-def directions_history_new(request):
+def directions_history(request):
     res = {"directions": []}
     request_data = json.loads(request.body)
     pk = request_data.get("patient", -1)
     req_status = request_data.get("type", 4)
+    iss_pk = request_data.get("iss_pk", None)
     services = request_data.get("services", [])
     services = list(map(int, services or []))
 
@@ -197,32 +198,32 @@ def directions_history_new(request):
     if not is_service:
         services = [-1]
 
-    result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service)
+    is_parent = False
+    if iss_pk:
+        is_parent = True
+
+    result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service, iss_pk, is_parent)
     # napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title, date_create,
-    # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs, is_slave_hospital
-    # res['directions'] = [{"pk": 136416, "status": 0,
-    #                       "researches": "Ретикулоциты (кровь с ЭДТА) | Полный гематологический анализ",
-    #                      "researches_pks": [247, 52],
-    #                      "date": "07.03.20",
-    #                      "cancel": False,
-    #                      "checked": False,
-    #                      "pacs": None,
-    #                      "has_hosp": False,
-    #                      "has_descriptive": False}]
+    # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs,
+    # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology
     researches_pks = []
     researches_titles = ''
     final_result = []
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
     maybe_onco = False
     status_set = {-2}
+    lab = set()
+    lab_title = None
     for i in result_sql:
         if i[14]:
             continue
         if i[0] != last_dir:
             status = min(status_set)
+            if len(lab):
+                lab_title = ', '.join(lab)
             if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
                 final_result.append({'pk': dir, 'status': status, 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
-                                     'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco})
+                                     'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco, 'lab': lab_title})
             dir = i[0]
             researches_titles = ''
             date = i[6]
@@ -235,10 +236,13 @@ def directions_history_new(request):
             has_hosp = False
             if i[11]:
                 has_hosp = True
+            lab = set()
+
         if researches_titles:
             researches_titles = f'{researches_titles} | {i[5]}'
         if not researches_titles:
             researches_titles = i[5]
+
         status_val = 0
         if i[8] or i[9]:
             status_val = 1
@@ -252,7 +256,21 @@ def directions_history_new(request):
             maybe_onco = True
         last_dir = dir
         cancel = i[1]
-        print(i[1])
+        title_podr = i[10]
+        if title_podr is None:
+            title_podr = ''
+        if title_podr not in lab:
+            lab.add(title_podr)
+        if i[14] or i[15] or i[16] or i[17] or i[18] or i[19]:
+            has_descriptive = True
+
+    status = min(status_set)
+    if len(lab):
+        lab_title = ', '.join(lab)
+    if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
+        final_result.append({'pk': dir, 'status': status, 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
+                             'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco, 'lab': lab_title})
+
     res['directions'] = final_result
     return JsonResponse(res)
 
