@@ -219,7 +219,7 @@ def directions_history(request):
             continue
         if i[0] != last_dir:
             status = min(status_set)
-            if len(lab):
+            if len(lab) > 0:
                 lab_title = ', '.join(lab)
             if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
                 final_result.append({'pk': dir, 'status': status, 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
@@ -265,7 +265,7 @@ def directions_history(request):
             has_descriptive = True
 
     status = min(status_set)
-    if len(lab):
+    if len(lab) > 0:
         lab_title = ', '.join(lab)
     if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
         final_result.append({'pk': dir, 'status': status, 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
