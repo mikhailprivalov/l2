@@ -32,6 +32,7 @@ from django.utils import timezone
 from django.http import HttpRequest
 from datetime import datetime, time as dtime
 from .sql_func import get_history_dir
+from laboratory.settings import DICOM_SERVER
 
 TADP = SettingManager.get("tadp", default='Температура', default_type='s')
 
@@ -207,7 +208,8 @@ def directions_history(request):
     result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service, iss_pk, is_parent)
     # napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title, date_create,
     # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs,
-    # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology
+    # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id,
+    # study_instance_uid
     researches_pks = []
     researches_titles = ''
     final_result = []
@@ -234,7 +236,10 @@ def directions_history(request):
             pacs = None
             maybe_onco = False
             if i[13]:
-                pacs = search_dicom_study(int(dir))
+                if i[21]:
+                    pacs = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={i[21]}'
+                else:
+                    pacs = search_dicom_study(int(dir))
             has_hosp = False
             if i[11]:
                 has_hosp = True
