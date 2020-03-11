@@ -1,5 +1,4 @@
 from django.db import connection
-
 from laboratory.settings import TIME_ZONE
 
 

@@ -599,10 +599,12 @@ def save_dreg(request):
     d = rd["data"]
     pk = rd["pk"]
     n = False
+    create_disp_record = False
     if pk == -1:
         a = DispensaryReg.objects.create(card_id=rd["card_pk"])
         pk = a.pk
         n = True
+        create_disp_record = True
     else:
         pk = rd["pk"]
         a = DispensaryReg.objects.get(pk=pk)
@@ -649,6 +651,11 @@ def save_dreg(request):
     if a.diagnos != ds or a.illnes != i:
         a.diagnos = ds
         a.illnes = i
+        if create_disp_record:
+            disp_obj = DispensaryReg.objects.filter(card_id=rd["card_pk"], diagnos=ds, date_start=fd(d["date_start"]), doc_start_reg=request.user.doctorprofile)
+            if disp_obj.exists():
+                a.delete()
+                return JsonResponse({"ok": False, "pk": -1, "c": False})
         c = True
 
     if c:
