@@ -528,7 +528,6 @@ def result_print(request):
             SettingManager.get("org_title"), SettingManager.get("org_www"), SettingManager.get("org_phones")),
         styleAb), '', '', '']
     pw = doc.width
-    # ph = doc.height
     import operator
 
     def print_vtype(data, f, iss, j, style_t, styleSheet):

@@ -173,6 +173,7 @@ def directions_history_old(request):
     return JsonResponse(res)
 
 
+@login_required
 def directions_history(request):
     # SQL-query
     res = {"directions": []}
@@ -247,7 +248,7 @@ def directions_history(request):
 
         if researches_titles:
             researches_titles = f'{researches_titles} | {i[5]}'
-        if not researches_titles:
+        else:
             researches_titles = i[5]
 
         status_val = 0
