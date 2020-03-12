@@ -92,6 +92,39 @@ def passed_research_base(ws1, data_date):
     return ws1
 
 
+def onco_base(ws1, d_s, d_e):
+    """
+    :param ws1:
+    :return:
+    """
+    style_border = NamedStyle(name="style_border")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=13)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.merge_cells(start_row=1, start_column=1, end_row=1, end_column=8)
+    ws1.cell(row=1, column=1).value = f'ЖУРНАЛ учета онкоподозрения c {d_s} по {d_e}'
+    ws1.cell(row=1, column=1).style = style_border
+
+    # габариты ячеек
+    # ws1.row_dimensions[2].height = 85
+    columns = [
+        ('№ п/п', 5),
+        ('ФИО пациента', 30), ('Дата рождения', 15),
+        ('N карты', 15), ('Врач поставил', 30), ('Дата постановки', 20),
+        ('Врач снял', 30), ('Дата снятия', 20)
+    ]
+    ws1.row_dimensions[2].height = 15
+    ws1.cell(row=2, column=1).value = ''
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=3, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=3, column=idx).style = style_border
+
+    return ws1
+
+
 def passed_research_data(ws1, data):
     r = 2
     n = 0

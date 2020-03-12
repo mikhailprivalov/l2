@@ -236,3 +236,19 @@ def statistics_research(research_id, d_s, d_e):
 
         row = cursor.fetchall()
     return row
+
+
+def disp_diagnos(diagnos, d_s, d_e):
+    with connection.cursor() as cursor:
+        cursor.execute("""WITH
+        t_iss AS (
+    SELECT * FROM public.clients_dispensaryreg
+    WHERE diagnos = 'U999' and date_start
+    BETWEEN '2020-03-06' and '2020-03-12'
+    ORDER BY date_start DESC),
+    
+    """,params={'diagnos': diagnos, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE})
+
+        row = cursor.fetchall()
+    return row
+
