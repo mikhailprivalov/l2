@@ -26,9 +26,13 @@ const syncRmis = creator({url: 'patients/individuals/sync-rmis'}, {})
 
 const loadDreg = creator({url: 'patients/individuals/load-dreg'}, {})
 
+const loadVaccine = creator({url: 'patients/individuals/load-vaccine'}, {})
+
 const loadBenefit = creator({url: 'patients/individuals/load-benefit'}, {})
 
 const loadDregDetail = creator({url: 'patients/individuals/load-dreg-detail'}, {})
+
+const loadVaccineDetail = creator({url: 'patients/individuals/load-vaccine-detail'}, {})
 
 const loadBenefitDetail = creator({url: 'patients/individuals/load-benefit-detail'}, {})
 
@@ -38,11 +42,13 @@ const saveAnamnesis = creator({url: 'patients/individuals/save-anamnesis'}, {})
 
 const saveDreg = creator({url: 'patients/individuals/save-dreg'}, {})
 
+const saveVaccine = creator({url: 'patients/individuals/save-vaccine'}, {})
+
 const saveBenefit = creator({url: 'patients/individuals/save-benefit'}, {})
 
 export default {
   searchCard, searchIndividual, searchL2Card, syncRmis,
   getCard, sendCard, individualsSearch, individualSex, editDoc, updateCdu, updateWIA,
-  editAgent, loadAnamnesis, saveAnamnesis, loadDreg, saveDreg, loadDregDetail,
+  editAgent, loadAnamnesis, saveAnamnesis, loadDreg, loadVaccine, saveDreg, saveVaccine, loadDregDetail, loadVaccineDetail,
   loadBenefit, loadBenefitDetail, saveBenefit,
 }

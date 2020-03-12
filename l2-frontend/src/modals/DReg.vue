@@ -164,7 +164,7 @@
             illnes: '',
           };
         } else {
-          const d = await patients_point.loadDregDetail({card_pk: pk})
+          const d = await patients_point.loadDregDetail({pk})
           this.edit_data = {
             ...this.edit_data,
             ...d,

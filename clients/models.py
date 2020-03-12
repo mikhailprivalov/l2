@@ -925,8 +925,22 @@ class BenefitReg(models.Model):
     registration_basis = models.TextField(default="", blank=True)
 
 
+class VaccineReg(models.Model):
+    STEPS = ('V', 'V1', 'V2', 'V3', 'V4', 'R', 'R1', 'R2', 'R3',)
+    STEPS_CHOICES = ((x, x,) for x in STEPS)
 
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    date = models.DateField(help_text='Дата', db_index=True, null=True, default=None, blank=True)
+    direction = models.CharField(max_length=20, help_text='Направление', db_index=True, default='', blank=True)
+    title = models.CharField(max_length=255, help_text='Название', db_index=True, default='', blank=True)
+    series = models.CharField(max_length=255, help_text='Серия', db_index=True, default='', blank=True)
+    amount = models.CharField(max_length=127, help_text='Доза', db_index=True, default='', blank=True)
+    method = models.CharField(max_length=127, help_text='Способ', db_index=True, default='', blank=True)
+    step = models.CharField(max_length=20, help_text='Этап', db_index=True, choices=STEPS_CHOICES, default='V', blank=True)
+    tap = models.CharField(max_length=20, help_text='Отвод', db_index=True, default='', blank=True)
+    comment = models.TextField(help_text='Примечание', default='', blank=True)
+    doc = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Кто создал запись', on_delete=models.SET_NULL)
 
-
-
-
+    class Meta:
+        verbose_name = 'Д-учет'
+        verbose_name_plural = 'Д-учет'
