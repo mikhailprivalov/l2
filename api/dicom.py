@@ -36,6 +36,9 @@ def check_server_port(address, port):
 
 def search_dicom_study(direction=None):
     if direction:
+        research_obj = Issledovaniya.objects.filter(napravleniye__pk=direction).first()
+        if not research_obj.research.podrazdeleniye or not research_obj.research.podrazdeleniye.can_has_pacs:
+            return ''
         dicom_study = Issledovaniya.objects.values('study_instance_uid').filter(napravleniye=direction).first()
         if dicom_study and dicom_study['study_instance_uid']:
             return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study["study_instance_uid"]}'

@@ -6,7 +6,7 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse
-from django.utils import dateformat, timezone
+from django.utils import dateformat
 
 from api import sql_func
 from api.dicom import search_dicom_study
@@ -19,7 +19,7 @@ from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicRes
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
-from laboratory.utils import strdatetime, strdate, tsdatetime, localtime, start_end_year, strfdatetime, current_time
+from laboratory.utils import strdatetime, strdate, tsdatetime, start_end_year, strfdatetime, current_time
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
@@ -27,7 +27,12 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
 from utils.dates import try_parse_range
 import re
 from utils.dates import normalize_date
-
+from api.patients.views import save_dreg
+from django.utils import timezone
+from django.http import HttpRequest
+from datetime import datetime, time as dtime
+from .sql_func import get_history_dir
+from laboratory.settings import DICOM_SERVER
 
 TADP = SettingManager.get("tadp", default='Температура', default_type='s')
 
@@ -78,9 +83,9 @@ def directions_generate(request):
 
 @login_required
 def directions_history(request):
+    # SQL-query
     res = {"directions": []}
     request_data = json.loads(request.body)
-
     pk = request_data.get("patient", -1)
     req_status = request_data.get("type", 4)
     iss_pk = request_data.get("iss_pk", None)
@@ -88,82 +93,100 @@ def directions_history(request):
     services = list(map(int, services or []))
 
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
-    try:
-        if pk >= 0 or req_status == 4 or iss_pk:
-            if iss_pk:
-                rows = Napravleniya.objects.filter(parent_id=iss_pk).order_by("data_sozdaniya").prefetch_related()
-            elif req_status != 4:
-                rows = Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end),
-                                                   client__pk=pk).order_by(
-                    "-data_sozdaniya").prefetch_related()
-            else:
-                rows = Napravleniya.objects.filter(Q(data_sozdaniya__range=(date_start, date_end),
-                                                     doc_who_create=request.user.doctorprofile)
-                                                   | Q(data_sozdaniya__range=(date_start, date_end),
-                                                       doc=request.user.doctorprofile)).order_by(
-                    "-data_sozdaniya")
+    date_start = datetime.combine(date_start, dtime.min)
+    date_end = datetime.combine(date_end, dtime.max)
+    user_creater = -1
+    patient_card = -1
+    # status: 4 - выписано пользователем,   0 - только выписанные, 1 - Материал получен лабораторией. 2 - результат подтвержден, 3 - направления пациента,  -1 - отменено,
+    if req_status == 4:
+        user_creater = request.user.doctorprofile.pk
+    if req_status in [0, 1, 2, 3]:
+        patient_card = pk
 
-            if services:
-                rows = rows.filter(issledovaniya__research__pk__in=services)
+    is_service = False
+    if services:
+        is_service = True
 
-            for napr in rows.values("pk", "data_sozdaniya", "cancel"):
-                iss_list = Issledovaniya.objects.filter(napravleniye__pk=napr["pk"]).prefetch_related(
-                    "tubes", "research", "research__podrazdeleniye")
-                if not iss_list.exists():
-                    continue
-                status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден. -1 - отменено
-                has_conf = False
-                researches_list = []
-                researches_pks = []
-                has_descriptive = False
-                has_hosp = False
-                has_slave_hospital = False
-                for v in iss_list:
-                    if v.research.is_slave_hospital and not v.research.is_doc_refferal:
-                        has_slave_hospital = True
-                        break
+    if not is_service:
+        services = [-1]
 
-                    if not has_descriptive and v.research.desc:
-                        has_descriptive = True
-                    if not has_hosp and v.research.is_hospital:
-                        has_hosp = True
-                    researches_list.append(v.research.title)
-                    researches_pks.append(v.research_id)
-                    iss_status = 1
-                    if not v.doc_confirmation and not v.doc_save and not v.deferred:
-                        iss_status = 1
-                        if v.tubes.count() == 0:
-                            iss_status = 0
-                        else:
-                            for t in v.tubes.all():
-                                if not t.time_recive:
-                                    iss_status = 0
-                    elif v.doc_confirmation or v.deferred:
-                        iss_status = 2
-                    if v.doc_confirmation and not has_conf:
-                        has_conf = True
-                    status = min(iss_status, status)
-                if has_slave_hospital:
-                    continue
-                if status == 2 and not has_conf:
-                    status = 1
-                if req_status in [3, 4] or req_status == status or iss_pk:
-                    res["directions"].append(
-                        {"pk": napr["pk"], "status": -1 if status == 0 and napr["cancel"] else status,
-                         "researches": ' | '.join(researches_list),
-                         "researches_pks": researches_pks,
-                         "date": str(
-                             dateformat.format(localtime(napr["data_sozdaniya"]).date(), settings.DATE_FORMAT_SHORT)),
-                         "lab": "Консультации" if not iss_list[0].research.get_podrazdeleniye() or iss_list[
-                             0].research.is_doc_refferal
-                         else iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"],
-                         "checked": False,
-                         "pacs": None if not iss_list[0].research.podrazdeleniye or not iss_list[0].research.podrazdeleniye.can_has_pacs else
-                         search_dicom_study(int(napr["pk"])),
-                         "has_hosp": has_hosp,
-                         "has_descriptive": has_descriptive})
-    except (ValueError, IndexError) as e:
-        res["message"] = str(e)
+    is_parent = False
+    if iss_pk:
+        is_parent = True
+
+    result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service, iss_pk, is_parent)
+    # napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title, date_create,
+    # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs,
+    # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid
+    researches_pks = []
+    researches_titles = ''
+    final_result = []
+    last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
+    maybe_onco = False
+    status_set = {-2}
+    lab = set()
+    lab_title = None
+    for i in result_sql:
+        if i[14]:
+            continue
+        if i[0] != last_dir:
+            status = min(status_set)
+            if len(lab) > 0:
+                lab_title = ', '.join(lab)
+            if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
+                final_result.append({'pk': dir, 'status': status, 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
+                                     'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco, 'lab': lab_title})
+            dir = i[0]
+            researches_titles = ''
+            date = i[6]
+            status_set = set()
+            researches_pks = []
+            pacs = None
+            maybe_onco = False
+            if i[13]:
+                if i[21]:
+                    pacs = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={i[21]}'
+                else:
+                    pacs = search_dicom_study(int(dir))
+            has_hosp = False
+            if i[11]:
+                has_hosp = True
+            lab = set()
+
+        if researches_titles:
+            researches_titles = f'{researches_titles} | {i[5]}'
+        else:
+            researches_titles = i[5]
+
+        status_val = 0
+        if i[8] or i[9]:
+            status_val = 1
+        if i[7]:
+            status_val = 2
+        if i[1]:
+            status_val = -1
+        status_set.add(status_val)
+        researches_pks.append(i[4])
+        if i[12]:
+            maybe_onco = True
+        last_dir = dir
+        cancel = i[1]
+        title_podr = i[10]
+        if title_podr is None:
+            title_podr = ''
+        if title_podr not in lab:
+            lab.add(title_podr)
+        if i[14] or i[15] or i[16] or i[17] or i[18] or i[19]:
+            has_descriptive = True
+
+    status = min(status_set)
+    if len(lab) > 0:
+        lab_title = ', '.join(lab)
+    if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
+        final_result.append({'pk': dir, 'status': status, 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
+                             'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco, 'lab': lab_title})
+
+    res['directions'] = final_result
     return JsonResponse(res)
 
 
@@ -1082,7 +1105,6 @@ def directions_paraclinic_result(request):
             iss.gen_direction_with_research_after_confirm_id = stationar_research
 
         iss.save()
-
         more = request_data.get("more", [])
         h = []
         for m in more:
@@ -1120,6 +1142,16 @@ def directions_paraclinic_result(request):
                                                                             Issledovaniya.objects.filter(
                                                                                 napravleniye=transfer_d.pk)
                                                                             ]
+            if iss.maybe_onco:
+                card_pk = iss.napravleniye.client.pk
+                dstart_onco = strdate(current_time(only_date=True))
+                dispensery_onco = json.dumps(
+                    {'card_pk': card_pk, 'pk': -1, 'data': {'date_start': dstart_onco, 'date_end': '', 'why_stop': '', 'close': False, 'diagnos': 'U999 Онкоподозрение', 'illnes': ''}})
+                dispensery_obj = HttpRequest()
+                dispensery_obj._body = dispensery_onco
+                dispensery_obj.user = request.user
+                save_dreg(dispensery_obj)
+
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
         forbidden_edit = forbidden_edit_dir(iss.napravleniye_id)
         response["forbidden_edit"] = forbidden_edit or more_forbidden
