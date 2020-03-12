@@ -71,10 +71,12 @@
           <td class="text-center">{{row.date}}</td>
           <td>{{row.pk}}</td>
           <td class="researches" :title="row.researches">{{row.researches}}</td>
-          <td class="text-center" :title="statuses[row.status === 1 && row.has_descriptive ? -2 : row.status]"
+          <td class="text-center"
+              :title="statuses[row.status === 1 && row.has_descriptive ? -2 : row.status] +
+                (row.maybe_onco ? '. Онкоподозрение' : '')"
               v-tippy="{ placement : 'bottom', arrow: true }"
               :class="['status-' + row.status]">
-            <strong>{{row.status}}</strong></td>
+            <strong>{{row.status}}<span v-if="row.maybe_onco">*О</span></strong></td>
           <td class="button-td">
             <div class="button-td-inner" :class="{has_pacs: !!row.pacs}">
               <a :href="row.pacs" title="Снимок" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.pacs">
