@@ -30,11 +30,13 @@
     data() {
       return {
         inited: false,
-        lv: '-1'
+        lv: '-1',
+        ready: false,
       }
     },
     mounted() {
       this.check_init();
+      this.ready = true
     },
     watch: {
       options() {
@@ -82,8 +84,13 @@
         }, 5)
       },
       resyncVal(v) {
+        if (!this.ready) {
+          return
+        }
         const $el = this.jel;
-        $el.selectpicker('val', v)
+        setTimeout(function () {
+          $el.selectpicker('val', v)
+        }, 5)
       },
       init_el() {
         let $el = this.jel;

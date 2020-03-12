@@ -486,7 +486,7 @@
           this.checked_researches = this.checked_researches.filter(item => item !== pk)
           let research = this.research_data(pk)
           if (this.autoselect === 'directions') {
-            for (let addto_pk of research.addto) {
+            for (let addto_pk of (research.addto || [])) {
               this.deselect_research_ignore(addto_pk)
             }
           }
