@@ -64,11 +64,25 @@ class HospitalServiceAdmin(admin.ModelAdmin):
     list_display = ('main_research', 'site_type', 'slave_research', 'hide')
 
 
+class ResParaclinicInputField(admin.ModelAdmin):
+    list_display = ('title', 'group',)
+    list_display_links = ('title', 'group',)
+    list_filter = ('group',)
+    search_fields = ('group__pk',)
+
+
+class ResParaclinicInputGroups(admin.ModelAdmin):
+    list_display = ('title', 'pk', 'research',)
+    list_display_links = ('title',)
+    list_filter = ('research',)
+    search_fields = ('research__title',)
+
+
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
-admin.site.register(models.ParaclinicInputGroups)
-admin.site.register(models.ParaclinicInputField)
+admin.site.register(models.ParaclinicInputGroups, ResParaclinicInputGroups)
+admin.site.register(models.ParaclinicInputField, ResParaclinicInputField)
 admin.site.register(models.References, RefAdmin)
 admin.site.register(models.ResultVariants)
 admin.site.register(models.MaterialVariants)
