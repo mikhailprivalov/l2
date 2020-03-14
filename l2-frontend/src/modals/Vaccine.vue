@@ -1,6 +1,7 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%" marginLeftRight="auto" margin-top>
-    <span slot="header">Диспансерный учёт пациента
+  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%"
+         marginLeftRight="auto" margin-top>
+    <span slot="header">Вакцинация пациента
       <span v-if="!card_data.fio_age">{{card_data.family}} {{card_data.name}} {{card_data.twoname}},
       {{card_data.age}}, карта {{card_data.num}}</span>
       <span v-else>{{card_data.fio_age}}</span>
@@ -10,29 +11,35 @@
              style="table-layout: fixed; font-size: 12px">
         <colgroup>
           <col width="70" />
-          <col width="98" />
-          <col />
-          <col width="70" />
-          <col />
+          <col/>
+          <col/>
+          <col/>
+          <col/>
+          <col/>
+          <col/>
           <col width="45" />
         </colgroup>
         <thead>
-          <tr>
-            <th>Дата начала</th>
-            <th>Дата прекращения</th>
-            <th>Диагноз</th>
-            <th>Код по МКБ-10</th>
-            <th>Врач</th>
-            <th></th>
-          </tr>
+        <tr>
+          <th>Дата</th>
+          <th>Название</th>
+          <th>Серия</th>
+          <th>Доза</th>
+          <th>Способ</th>
+          <th>Этап</th>
+          <th>Отвод</th>
+          <th></th>
+        </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :class="{stop: !!r.date_end}">
-            <td>{{r.date_start}}</td>
-            <td>{{r.date_end}}</td>
-            <td>{{r.illnes}}</td>
-            <td>{{r.diagnos}}</td>
-            <td>{{r.spec_reg}} {{r.doc_start_reg}}</td>
+          <tr v-for="r in rows">
+            <td>{{r.date}}</td>
+            <td>{{r.title}}</td>
+            <td>{{r.series}}</td>
+            <td>{{r.amount}}</td>
+            <td>{{r.method}}</td>
+            <td>{{r.step}}</td>
+            <td>{{r.tap}}</td>
             <td>
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
@@ -40,7 +47,7 @@
                   <i class="glyphicon glyphicon-pencil"></i>
                 </button>
             </td>
-          </tr>
+        </tr>
         </tbody>
       </table>
       <div style="margin: 0 auto; width: 200px">
@@ -48,32 +55,48 @@
                 @click="edit(-1)"
                 type="button"><i class="fa fa-plus"></i> Создать запись</button>
       </div>
-      <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
-        <span slot="header" v-if="edit_pk > -1">Редактор диспансерного учёта</span>
-        <span slot="header" v-else>Создание записи диспансерного учёта</span>
+      <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
+             width="100%" marginLeftRight="auto" margin-top>
+        <span slot="header" v-if="edit_pk > -1">Редактор вакцинации</span>
+        <span slot="header" v-else>Создание записи вакцинации</span>
         <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
           <div class="form-group">
-            <label for="de-f3">Дата начала:</label>
-            <input class="form-control" type="date" id="de-f3" v-model="edit_data.date_start" :max="td"
-                   :readonly="edit_data.close">
+            <label for="de-f3">Дата:</label>
+            <input class="form-control" type="date" id="de-f3" v-model="edit_data.date" :max="td" required>
           </div>
-          <div class="form-group mkb10" style="width: 100%">
-            <label>Диагноз в полной форме (код по МКБ и название):</label>
-            <m-k-bfield v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false" />
-            <input class="form-control" v-model="edit_data.diagnos" v-else readonly>
+          <div class="form-group" v-if="edit_data.direction !== ''">
+            <label for="de-f5">Направление:</label>
+            <input class="form-control" id="de-f5" v-model="edit_data.direction" readonly>
           </div>
-          <div class="checkbox" style="padding-left: 15px;">
-            <label>
-              <input type="checkbox" v-model="edit_data.close"> прекращён
-            </label>
+          <div class="form-group">
+            <label for="de-f6">Название:</label>
+            <input class="form-control" id="de-f6" v-model="edit_data.title">
           </div>
-          <div class="form-group" v-if="edit_data.close">
-            <label for="de-f5">Дата прекращения:</label>
-            <input class="form-control" type="date" id="de-f5" v-model="edit_data.date_end" :min="td">
+          <div class="form-group">
+            <label for="de-f7">Серия:</label>
+            <input class="form-control" id="de-f7" v-model="edit_data.series">
           </div>
-          <div class="form-group" v-if="edit_data.close">
-            <label for="de-f6">Причина прекращения:</label>
-            <input class="form-control" id="de-f6" v-model="edit_data.why_stop">
+          <div class="form-group">
+            <label for="de-f8">Доза:</label>
+            <input class="form-control" id="de-f8" v-model="edit_data.amount">
+          </div>
+          <div class="form-group">
+            <label for="de-f81">Способ:</label>
+            <input class="form-control" id="de-f81" v-model="edit_data.method">
+          </div>
+          <div class="form-group">
+            <label for="de-f9">Этап:</label>
+            <select v-model="edit_data.step" id="de-f9" class="form-control">
+              <option v-for="s in steps" :value="s">{{s}}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="de-f10">Отвод:</label>
+            <input class="form-control" id="de-f10" v-model="edit_data.tap">
+          </div>
+          <div class="form-group">
+            <label for="de-f11">Примечание:</label>
+            <textarea class="form-control" id="de-f11" v-model="edit_data.comment"/>
           </div>
         </div>
         <div slot="footer">
@@ -84,7 +107,7 @@
               </button>
             </div>
             <div class="col-xs-4">
-              <button :disabled="!valid_reg" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">
+              <button :disabled="!valid" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">
                 Сохранить
               </button>
             </div>
@@ -110,12 +133,11 @@
   import Modal from '../ui-cards/Modal'
   import patients_point from '../api/patients-point'
   import * as action_types from '../store/action-types'
-  import MKBfield from '../fields/MKBField'
-  import moment from 'moment';
+  import moment from 'moment'
 
   export default {
-    name: 'd-reg',
-    components: {Modal, MKBfield},
+    name: 'vaccine',
+    components: {Modal},
     props: {
       card_pk: {
         type: Number,
@@ -128,78 +150,82 @@
     },
     data() {
       return {
-        td: moment().format('YYYY-MM-DD'),
         rows: [],
-        edit_data: {
-          date_start: '',
-          date_end: '',
-          why_stop: '',
-          close: false,
-          diagnos: '',
-          illnes: '',
-        },
         edit_pk: -2,
+        td: moment().format('YYYY-MM-DD'),
+        edit_data: {
+          date: '',
+          direction: '',
+          title: '',
+          series: '',
+          amount: '',
+          method: '',
+          step: 'V',
+          tap: '',
+          comment: '',
+        },
+        steps: ['V', 'V1', 'V2', 'V3', 'V4', 'R', 'R1', 'R2', 'R3'],
       }
     },
     created() {
       this.load_data()
     },
     computed: {
-      valid_reg() {
-        return this.edit_pk > -2 &&
-          this.edit_data.diagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?.*/gm) &&
-          this.edit_data.date_start !== '' &&
-          (!this.edit_data.close || this.edit_data.date_end !== '');
-      }
+      valid() {
+        return this.edit_data.date !== '' && this.edit_data.title !== '';
+      },
     },
     methods: {
       async edit(pk) {
+        this.td = moment().format('YYYY-MM-DD')
         if (pk === -1) {
           this.edit_data = {
-            date_start: this.td,
-            date_end: this.td,
-            why_stop: '',
-            close: false,
-            diagnos: '',
-            illnes: '',
-          };
+            date: moment().format('YYYY-MM-DD'),
+            direction: '',
+            title: '',
+            series: '',
+            amount: '',
+            method: '',
+            step: 'V',
+            tap: '',
+            comment: '',
+          }
         } else {
-          const d = await patients_point.loadDregDetail({pk})
+          const d = await patients_point.loadVaccineDetail({pk})
           this.edit_data = {
             ...this.edit_data,
             ...d,
-            date_end: d.date_end || this.td,
           };
         }
-        this.edit_pk = pk;
-      },
-      hide_edit() {
-        if (this.$refs.modalEdit) {
-          this.$refs.modalEdit.$el.style.display = 'none';
-        }
-        this.edit_pk = -2;
+        this.edit_pk = pk
       },
       hide_modal() {
         if (this.$refs.modal) {
           this.$refs.modal.$el.style.display = 'none'
         }
-        this.$root.$emit('hide_dreg')
+        this.$root.$emit('hide_vaccine')
       },
-      async save() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const data = await patients_point.saveDreg({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
-        this.$store.dispatch(action_types.DEC_LOADING).then()
-        okmessage('Сохранено');
-        this.hide_edit()
-        this.load_data()
+      hide_edit() {
+        if (this.$refs.modalEdit) {
+          this.$refs.modalEdit.$el.style.display = 'none'
+        }
+        this.edit_pk = -2
       },
       load_data() {
         this.$store.dispatch(action_types.INC_LOADING).then()
-        patients_point.loadDreg(this, 'card_pk').then(({rows}) => {
+        patients_point.loadVaccine(this, 'card_pk').then(({rows}) => {
           this.rows = rows
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING).then()
         })
+      },
+      async save() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const data = await patients_point.saveVaccine({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
+        this.$store.dispatch(action_types.DEC_LOADING).then()
+        okmessage('Сохранено');
+        this.hide_edit()
+        this.load_data()
       },
     }
   }
@@ -213,6 +239,7 @@
 
   .nonPrior {
     opacity: .7;
+
     &:hover {
       opacity: 1;
     }
@@ -246,10 +273,13 @@
     width: 100%;
     display: flex;
     border-bottom: 1px solid #434a54;
+
     &:first-child:not(.nbt-i) {
       border-top: 1px solid #434a54;
     }
+
     justify-content: stretch;
+
     .row-t {
       background-color: #AAB2BD;
       padding: 7px 0 0 10px;
@@ -275,6 +305,7 @@
       .row-t {
         padding: 2px 0 0 10px;
       }
+
       input, .row-v, /deep/ input {
         height: 26px;
       }
@@ -283,6 +314,7 @@
     /deep/ input {
       width: 100% !important;
     }
+
     .row-v {
       padding: 7px 0 0 10px;
     }
@@ -307,21 +339,25 @@
       }
     }
   }
+
   .col-form {
     &.left {
-      padding-right: 0!important;
+      padding-right: 0 !important;
 
       .row-t, input, .row-v, /deep/ input {
         border-right: 1px solid #434a54 !important;
       }
     }
+
     &:not(.left):not(.mid) {
-      padding-left: 0!important;
+      padding-left: 0 !important;
+
       .row-t {
         border-right: 1px solid #434a54;
       }
     }
   }
+
   .info-row {
     padding: 7px;
   }
@@ -333,6 +369,7 @@
       background-color: rgba(0, 0, 0, .15);
     }
   }
+
   .str /deep/ .input-group {
     width: 100%;
   }
@@ -360,6 +397,7 @@
     text-overflow: ellipsis;
     padding: 2px .25rem;
     margin: 0 .2rem;
+
     a {
       padding: 2px 10px;
     }
@@ -368,9 +406,10 @@
   tr.stop {
     opacity: .7;
     text-decoration: line-through;
+
     &:hover {
       opacity: 1;
-    text-decoration: none;
+      text-decoration: none;
     }
   }
 </style>

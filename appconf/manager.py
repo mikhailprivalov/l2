@@ -39,6 +39,7 @@ class SettingManager:
             "amd",
             "direction_purpose",
             "external_organizations",
+            "vaccine",
         ]}, "consults_module": SettingManager.get("consults_module", default='false', default_type='b')}
 
     @staticmethod

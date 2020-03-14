@@ -73,6 +73,11 @@
             </td>
             <td colspan="2">
               <div v-if="selected_base.internal_type && l2_cards" class="internal_type">
+                <button class="btn last btn-blue-nb nbr" type="button"
+                        @click="open_vaccine"
+                        v-tippy="{ placement : 'bottom'}" title="Вакцинация" v-if="selected_card.pk && l2_vaccine">
+                  В
+                </button>
                 <button class="btn last btn-blue-nb nbr" :class="{[`disp_${selected_card.status_disp}`]: true}"
                         ref="disp"
                         type="button" v-tippy="{ placement : 'bottom', arrow: false, reactive : true,
@@ -205,6 +210,7 @@
     </modal>
     <l2-card-create :card_pk="editor_pk" v-if="editor_pk !== -2" :base_pk="base"/>
     <d-reg :card_pk="selected_card.pk" :card_data="selected_card" v-if="dreg"/>
+    <vaccine :card_pk="selected_card.pk" :card_data="selected_card" v-if="vaccine"/>
     <benefit :card_pk="selected_card.pk" :card_data="selected_card" v-if="benefit" :readonly="false"/>
     <modal v-if="anamnesis" ref="modalAnamnesis" @close="hide_modal_anamnesis" show-footer="true" white-bg="true"
            max-width="710px" width="100%" marginLeftRight="auto" margin-top class="an">
@@ -251,10 +257,11 @@
   import * as action_types from '../store/action-types'
   import patients_point from '../api/patients-point'
   import {mapGetters} from 'vuex'
+  import Vaccine from '../modals/Vaccine'
 
   export default {
     name: 'patient-picker',
-    components: {LinkSelector, PatientCard, SelectPickerB, Modal, L2CardCreate, DReg, Benefit},
+    components: {Vaccine, LinkSelector, PatientCard, SelectPickerB, Modal, L2CardCreate, DReg, Benefit},
     props: {
       directive_from_need: {
         default: 'false',
@@ -299,6 +306,7 @@
         },
         dreg: false,
         benefit: false,
+        vaccine: false,
       }
     },
     created() {
@@ -336,6 +344,9 @@
       });
       this.$root.$on('hide_benefit', () => {
         this.benefit = false
+      });
+      this.$root.$on('hide_vaccine', () => {
+        this.vaccine = false
       });
       this.inited();
     },
@@ -430,6 +441,9 @@
         }
         return false
       },
+      l2_vaccine() {
+        return this.$store.getters.modules.l2_vaccine;
+      },
       directive_from_departments() {
         let r = {};
         for (let dep of this.local_directive_departments) {
@@ -515,6 +529,16 @@
       },
       open_dreg() {
         this.dreg = true
+      },
+      open_vaccine() {
+        this.vaccine = true
+      },
+      hide_modal_anamnesis() {
+        if (this.$refs.modalAnamnesis) {
+          this.$refs.modalAnamnesis.$el.style.display = 'none';
+        }
+        this.anamnesis_data = {};
+        this.anamnesis = false
       },
       open_benefit() {
         this.benefit = true

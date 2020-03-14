@@ -91,6 +91,9 @@ class Log(models.Model):
 
         (60000, 'Выгрузка в АМД: успешно'),
         (60001, 'Выгрузка в АМД: не успешно'),
+
+        (70000, 'Вакцинация: создание записи'),
+        (70001, 'Вакцинация: редактирование записи'),
     )
     key = models.CharField(max_length=2047)
     type = models.IntegerField(choices=TYPES)
