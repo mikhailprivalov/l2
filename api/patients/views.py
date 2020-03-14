@@ -12,7 +12,7 @@ from django.http import JsonResponse
 
 from api import sql_func
 from clients.models import CardBase, Individual, Card, Document, DocumentType, District, AnamnesisHistory, \
-    DispensaryReg, CardDocUsage, BenefitReg, BenefitType
+    DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg
 from contracts.models import Company
 from laboratory import settings
 from laboratory.utils import strdate, start_end_year
@@ -533,6 +533,23 @@ def load_dreg(request):
     return JsonResponse({"rows": data})
 
 
+def load_vaccine(request):
+    request_data = json.loads(request.body)
+    data = []
+    for a in VaccineReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date', 'pk'):
+        data.append({
+            "pk": a.pk,
+            "date": strdate(a.date) if a.date else '',
+            "title": a.title,
+            "series": a.series,
+            "amount": a.amount,
+            "method": a.method,
+            "step": a.step,
+            "tap": a.tap,
+        })
+    return JsonResponse({"rows": data})
+
+
 def load_benefit(request):
     request_data = json.loads(request.body)
     data = []
@@ -552,13 +569,29 @@ def load_benefit(request):
 
 
 def load_dreg_detail(request):
-    a = DispensaryReg.objects.get(pk=json.loads(request.body)["card_pk"])
+    a = DispensaryReg.objects.get(pk=json.loads(request.body)["pk"])
     data = {
         "diagnos": a.diagnos + ' ' + a.illnes,
         "date_start": None if not a.date_start else a.date_start,
         "date_end": None if not a.date_end else a.date_end,
         "close": bool(a.date_end),
         "why_stop": a.why_stop,
+    }
+    return JsonResponse(data)
+
+
+def load_vaccine_detail(request):
+    a = VaccineReg.objects.get(pk=json.loads(request.body)["pk"])
+    data = {
+        "date": a.date,
+        "direction": a.direction,
+        "title": a.title,
+        "series": a.series,
+        "amount": a.amount,
+        "method": a.method,
+        "step": a.step,
+        "tap": a.tap,
+        "comment": a.comment,
     }
     return JsonResponse(data)
 
@@ -656,6 +689,76 @@ def save_dreg(request):
             if disp_obj.exists():
                 a.delete()
                 return JsonResponse({"ok": False, "pk": -1, "c": False})
+        c = True
+
+    if c:
+        a.save()
+
+    return JsonResponse({"ok": True, "pk": pk, "c": c})
+
+
+@transaction.atomic
+def save_vaccine(request):
+    rd = json.loads(request.body)
+    d = rd["data"]
+    pk = rd["pk"]
+    n = False
+    if pk == -1:
+        a = VaccineReg.objects.create(card_id=rd["card_pk"])
+        pk = a.pk
+        n = True
+    else:
+        pk = rd["pk"]
+        a = VaccineReg.objects.get(pk=pk)
+
+    Log.log(pk, 70000 if n else 70001, request.user.doctorprofile, rd)
+
+    c = False
+
+    def fd(s):
+        if '.' in s:
+            s = s.split('.')
+            s = '{}-{}-{}'.format(s[2], s[1], s[0])
+        return s
+
+    if str(a.date) != fd(d["date"]):
+        a.date = fd(d["date"])
+        c = True
+
+    if a.direction != d["direction"]:
+        a.direction = d["direction"]
+        c = True
+
+    if a.title != d["title"]:
+        a.title = d["title"]
+        c = True
+
+    if a.series != d["series"]:
+        a.series = d["series"]
+        c = True
+
+    if a.amount != d["amount"]:
+        a.amount = d["amount"]
+        c = True
+
+    if a.step != d["step"]:
+        a.step = d["step"]
+        c = True
+
+    if a.tap != d["tap"]:
+        a.tap = d["tap"]
+        c = True
+
+    if a.comment != d["comment"]:
+        a.comment = d["comment"]
+        c = True
+
+    if a.method != d["method"]:
+        a.method = d["method"]
+        c = True
+
+    if not a.doc:
+        a.doc = request.user.doctorprofile
         c = True
 
     if c:
