@@ -41,6 +41,7 @@ export default {
       },
       allowedOnlyOneEntry: {
         'primary receptions': true,
+        extracts: true,
       }
     }
   }
