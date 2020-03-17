@@ -624,6 +624,24 @@ def statistic_xls(request):
         wb.save(response)
         return response
 
+    elif tp == "statistics-onco":
+        d_s = request_data.get("date-start")
+        d_e = request_data.get("date-end")
+        d1 = datetime.datetime.strptime(d_s, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(d_e, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        onco_query = sql_func.disp_diagnos('U999', start_date, end_date)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet(f'{d_s}-{d_e}')
+        ws = structure_sheet.onco_base(ws, d_s, d_e)
+        ws = structure_sheet.passed_onco_data(ws, onco_query)
+
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Онкоподозрения.xlsx\"", tr)
+        wb.save(response)
+        return response
+
     elif tp == "statistics-research":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Услуги.xlsx\"", tr)
         pk = request_data.get("research")
@@ -1509,5 +1527,6 @@ def statistic_xls(request):
                     font_style.alignment.wrap = 3
                     font_style.alignment.horz = 3
                 ws.write(row_num, col_num, row[col_num], font_style)
+
     wb.save(response)
     return response

@@ -384,7 +384,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
 
     c.setFont('OpenSans', 9)
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 70) + (h / 2) * yn,
-                 "Дата: " + strdate(dir.data_sozdaniya))
+                 "Дата: " + strdate(dir.data_sozdaniya) + " (" + strtime(dir.data_sozdaniya)[:5] + ")")
     if dir.history_num and len(dir.history_num) > 0:
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn,
                           "№ истории: " + dir.history_num)
