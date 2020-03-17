@@ -477,6 +477,11 @@ class Napravleniya(models.Model):
                            diagnos=diagnos, cancel=False, parent_id=parent_id, parent_auto_gen_id=parent_auto_gen_id,
                            rmis_slot_id=rmis_slot)
         dir.harmful_factor = dir.client.harmful_factor
+        if Clients.Card.objects.get(pk=client_id).work_place_db:
+            workplace_title = Clients.Card.objects.get(pk=client_id).work_place_db.title
+        else:
+            workplace_title = Clients.Card.objects.get(pk=client_id).work_place
+        dir.workplace = workplace_title
         if for_rmis:
             dir.rmis_number = rmis_data.get("rmis_number")
             dir.imported_from_rmis = True
