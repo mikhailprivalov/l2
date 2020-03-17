@@ -470,18 +470,15 @@ class Napravleniya(models.Model):
             rmis_data = {}
         if issledovaniya is None:
             pass
-        dir = Napravleniya(client=Clients.Card.objects.get(pk=client_id),
+        client = Clients.Card.objects.get(pk=client_id)
+        dir = Napravleniya(client=client,
                            doc=doc if not for_rmis else None,
                            istochnik_f=istochnik_f,
                            data_sozdaniya=timezone.now(),
                            diagnos=diagnos, cancel=False, parent_id=parent_id, parent_auto_gen_id=parent_auto_gen_id,
                            rmis_slot_id=rmis_slot)
         dir.harmful_factor = dir.client.harmful_factor
-        if Clients.Card.objects.get(pk=client_id).work_place_db:
-            workplace_title = Clients.Card.objects.get(pk=client_id).work_place_db.title
-        else:
-            workplace_title = Clients.Card.objects.get(pk=client_id).work_place
-        dir.workplace = workplace_title
+        dir.workplace = client.work_place_db.title if client.work_place_db else client.work_place
         if for_rmis:
             dir.rmis_number = rmis_data.get("rmis_number")
             dir.imported_from_rmis = True
