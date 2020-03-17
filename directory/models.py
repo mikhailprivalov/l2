@@ -240,6 +240,11 @@ class Researches(models.Model):
     def get_full_short_title(self):
         return self.title if self.get_title() == self.title else "{} ({})".format(self.title, self.get_title())
 
+    def get_full_short_title_concat(self):
+        if self.get_title() == self.title:
+            return self.title
+        return f'{self.title} – {self.short_title}'
+
     class Meta:
         verbose_name = 'Вид исследования'
         verbose_name_plural = 'Виды исследований'
@@ -301,7 +306,7 @@ class HospitalService(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие услуги', db_index=True)
 
     def get_title(self):
-        return f"{self.main_research.title} – {self.slave_research.title}"
+        return f"{self.main_research.title} – {self.slave_research.get_full_short_title_concat()}"
 
     def __str__(self):
         return f"{self.main_research.title} - {self.site_type} - {self.slave_research.title} - {self.hide}"

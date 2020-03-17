@@ -15,7 +15,7 @@
             </button>
           </span>
         </div>
-        <div class="input-group" v-if="!simple">
+        <div class="input-group">
           <span class="input-group-addon">Краткое <small>(для создания направлений)</small></span>
           <input type="text" class="form-control" v-model="short_title">
         </div>
