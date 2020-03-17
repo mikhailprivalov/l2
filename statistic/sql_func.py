@@ -269,6 +269,7 @@ def disp_diagnos(diagnos, d_s, d_e):
             LEFT JOIN t_ind ON t_iss.card_id = t_ind.card_id
             LEFT JOIN t_doc_start ON t_iss.doc_start_reg_id = t_doc_start.docstart_id
             LEFT JOIN t_doc_end ON t_iss.doc_end_reg_id = t_doc_end.docend_id
+            ORDER by patient
             """, params={'diagnos': diagnos, 'd_start': d_s, 'd_end': d_e})
         row = cursor.fetchall()
     return row
