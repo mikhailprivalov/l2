@@ -609,6 +609,7 @@ def result_print(request):
         date_t = ""
         has_paraclinic = False
         link_files = False
+        is_extract = False
         for iss in Issledovaniya.objects.filter(napravleniye=direction, time_save__isnull=False):
             if iss.time_save:
                 dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
@@ -624,6 +625,8 @@ def result_print(request):
             if iss.link_file:
                 link_result.append(iss.link_file)
                 link_files = True
+            if 'выпис' in iss.research.title.lower():
+                is_extract = True
 
         if link_files:
             continue
@@ -682,7 +685,7 @@ def result_print(request):
             ('SPAN', (-1, 5), (-1, -1))
 
         ]))
-        if not hosp:
+        if not hosp or is_extract:
             fwb.append(t)
             fwb.append(Spacer(1, 5 * mm))
         if not has_paraclinic:

@@ -1,9 +1,9 @@
 <template>
   <div v-tippy="{ html: '#' + tid, reactive: true, arrow: true, delay: [500,0], animation: 'fade', duration: 0, theme: 'light'}">
-    <span class="rps">{{ research.title }}</span>
+    <span class="rps">{{ research.short_title || research.title }}</span>
     <div :id="tid" v-if="research.full_title || research.code || force_tippy">
       <div class="rtitle">{{research.full_title || research.title}}</div>
-      <span class="s-code" v-if="research.code !== ''">{{research.code}}</span>
+      <span class="s-code" v-if="research.code">{{research.code}}</span>
     </div>
   </div>
 </template>
@@ -20,7 +20,7 @@
         type: Boolean,
         required: false,
         default: false,
-      }
+      },
     },
     computed: {
       tid() {

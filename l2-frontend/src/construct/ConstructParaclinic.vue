@@ -11,7 +11,8 @@
         <div v-if="researches_list_filtered.length === 0">Не найдено</div>
         <div class="research" :class="{rhide: row.hide}"
              v-for="row in researches_list_filtered"
-             @click="open_editor(row.pk)">{{row.title}}
+             @click="open_editor(row.pk)">
+          {{row.title}}
         </div>
       </div>
       <button class="btn btn-blue-nb sidebar-footer" @click="open_editor(-1)">

@@ -20,11 +20,11 @@ TADP = SettingManager.get("tadp", default='Температура', default_type
 @group_required("Врач стационара", "t, ad, p")
 def load(request):
     data = json.loads(request.body)
-    result = {"ok": False, "message": "Нет данных", "data": {}}
     pk = int(data["pk"])
     if pk >= 4600000000000:
         pk -= 4600000000000
         pk //= 10
+    result = {"ok": False, "message": "Нет данных", "data": {}}
     for i in Issledovaniya.objects.filter(napravleniye__pk=pk, research__is_hospital=True):
         direction: Napravleniya = i.napravleniye
         card: Card = direction.client
@@ -121,6 +121,7 @@ def hosp_services_by_type(request):
             result.append({
                 "pk": hs.pk,
                 "title": hs.slave_research.title,
+                "short_title": hs.slave_research.short_title,
                 "main_title": hs.main_research.title,
             })
     return JsonResponse({"data": result})

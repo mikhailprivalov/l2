@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path('templates', views.ResearchesTemplates.as_view()),
-    path('all', views.Researches.as_view()),
+    path('all', views.get_researches),
     path('by-department', views.researches_by_department),
     path('params', views.researches_params),
     path('update', views.researches_update),

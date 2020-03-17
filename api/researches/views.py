@@ -6,6 +6,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.core.cache import cache
 
 import users.models as users
 from directory.models import Researches as DResearches, AutoAdd, ParaclinicInputGroups, Fractions, \
@@ -18,18 +19,22 @@ from slog.models import Log
 
 class ResearchesTemplates(View):
     def get(self, request):
-        from django.db.models import Q
+        templates = cache.get('view:ResearchesTemplates')
+        if not templates:
+            from django.db.models import Q
 
-        templates = []
-        for t in users.AssignmentTemplates.objects.filter(global_template=True) \
-            .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
-                    Q(doc=request.user.doctorprofile) |
-                    Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
-            templates.append({"values": [x.research_id for x in users.AssignmentResearches.objects.filter(template=t)],
-                              "pk": t.pk,
-                              "title": t.title,
-                              "for_current_user": t.doc is not None,
-                              "for_users_department": t.podrazdeleniye is not None})
+            templates = []
+            for t in users.AssignmentTemplates.objects.filter(global_template=True) \
+                .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
+                        Q(doc=request.user.doctorprofile) |
+                        Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
+                templates.append({"values": [x.research_id for x in users.AssignmentResearches.objects.filter(template=t)],
+                                  "pk": t.pk,
+                                  "title": t.title,
+                                  "for_current_user": t.doc is not None,
+                                  "for_users_department": t.podrazdeleniye is not None})
+            cache.set('view:ResearchesTemplates', templates, 100)
+
         return JsonResponse({"templates": templates})
 
     @method_decorator(login_required)
@@ -37,8 +42,9 @@ class ResearchesTemplates(View):
         return super(self.__class__, self).dispatch(request, *args, **kwargs)
 
 
-class Researches(View):
-    def get(self, request):
+def get_researches(request):
+    result = cache.get('view:get_researches')
+    if not result:
         tubes = []
         deps = defaultdict(list)
 
@@ -74,11 +80,10 @@ class Researches(View):
                 "color": t.color
             })
 
-        return JsonResponse({"researches": deps, "tubes": tubes})
+        result = {"researches": deps, "tubes": tubes}
+        cache.set('view:get_researches', result, 100)
 
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        return super(self.__class__, self).dispatch(request, *args, **kwargs)
+    return JsonResponse(result)
 
 
 @login_required
