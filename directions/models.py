@@ -391,6 +391,7 @@ class Napravleniya(models.Model):
     external_organization = models.ForeignKey(ExternalOrganization, default=None, blank=True, null=True, help_text='Внешняя организация',
                                               on_delete=models.SET_NULL)
     harmful_factor = models.CharField(max_length=32, blank=True, default='')
+    workplace = models.CharField(max_length=255, blank=True, default='')
 
     @property
     def data_sozdaniya_local(self):
