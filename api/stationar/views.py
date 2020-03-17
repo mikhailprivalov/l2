@@ -2,7 +2,6 @@ from collections import defaultdict
 
 import simplejson as json
 from django.contrib.auth.decorators import login_required
-from django.core.cache import cache
 from django.http import JsonResponse
 
 from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, \
