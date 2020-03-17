@@ -682,7 +682,7 @@ def result_print(request):
             ('SPAN', (-1, 5), (-1, -1))
 
         ]))
-        if not hosp:
+        if not hosp or 'выпис' in iss.research.title.lower():
             fwb.append(t)
             fwb.append(Spacer(1, 5 * mm))
         if not has_paraclinic:
