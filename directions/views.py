@@ -36,7 +36,7 @@ from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration
 from laboratory.decorators import logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
-from laboratory.utils import strtime, strdate, strdatetime
+from laboratory.utils import strtime, strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
 from utils.dates import try_parse_range
