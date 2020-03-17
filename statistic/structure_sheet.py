@@ -92,39 +92,6 @@ def passed_research_base(ws1, data_date):
     return ws1
 
 
-def onco_base(ws1, d_s, d_e):
-    """
-    :param ws1:
-    :return:
-    """
-    style_border = NamedStyle(name="style_border")
-    bd = Side(style='thin', color="000000")
-    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-    style_border.font = Font(bold=True, size=13)
-    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
-
-    ws1.merge_cells(start_row=1, start_column=1, end_row=1, end_column=8)
-    ws1.cell(row=1, column=1).value = f'ЖУРНАЛ учета онкоподозрения c {d_s} по {d_e}'
-    ws1.cell(row=1, column=1).style = style_border
-
-    # габариты ячеек
-    # ws1.row_dimensions[2].height = 85
-    columns = [
-        ('№ п/п', 5),
-        ('ФИО пациента', 30), ('Дата рождения', 15),
-        ('N карты', 15), ('Врач поставил', 30), ('Дата постановки', 20),
-        ('Врач снял', 30), ('Дата снятия', 20)
-    ]
-    ws1.row_dimensions[2].height = 15
-    ws1.cell(row=2, column=1).value = ''
-    for idx, column in enumerate(columns, 1):
-        ws1.cell(row=3, column=idx).value = column[0]
-        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
-        ws1.cell(row=3, column=idx).style = style_border
-
-    return ws1
-
-
 def passed_research_data(ws1, data):
     r = 2
     n = 0
@@ -178,6 +145,74 @@ def passed_research_data(ws1, data):
         ws1.cell(row=r, column=18).value = ' '
         ws1.cell(row=r, column=19).value = ' '
         for j in range(1, 20):
+            ws1.cell(row=r, column=j).style = style_border1
+
+    return ws1
+
+
+def onco_base(ws1, d_s, d_e):
+    """
+    :param ws1:
+    :return:
+    """
+    style_border = NamedStyle(name="style_border")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=13)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.merge_cells(start_row=1, start_column=1, end_row=1, end_column=8)
+    ws1.cell(row=1, column=1).value = f'ЖУРНАЛ учета онкоподозрения c {d_s} по {d_e}'
+    ws1.cell(row=1, column=1).style = style_border
+
+    # габариты ячеек
+    # ws1.row_dimensions[2].height = 85
+    columns = [
+        ('№ п/п', 5),
+        ('ФИО пациента', 30), ('Дата рождения', 15),
+        ('N карты', 15), ('Врач поставил', 30), ('Дата постановки', 20),
+        ('Врач снял', 30), ('Дата снятия', 20)
+    ]
+    ws1.row_dimensions[2].height = 15
+    ws1.cell(row=2, column=1).value = ''
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=3, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=3, column=idx).style = style_border
+
+    return ws1
+
+
+def passed_onco_data(ws1, data):
+    r = 3
+    n = 0
+    empty = ' '
+
+    style_border1 = NamedStyle(name="style_border1")
+    bd = Side(style='thin', color="000000")
+    style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border1.font = Font(bold=False, size=12)
+    style_border1.alignment = Alignment(wrap_text=True, horizontal='left', vertical='center')
+
+    for i in data:
+        current_patient = i[0] or empty
+        current_birhday = i[1] or empty
+        current_num_card = i[2] or empty
+        current_doc_start = i[3] or empty
+        current_date_start = i[4] or empty
+        current_doc_end = i[5] or empty
+        current_date_end = i[6] or empty
+        r = r + 1
+        n = n + 1
+        ws1.cell(row=r, column=1).value = n
+        ws1.cell(row=r, column=2).value = current_patient
+        ws1.cell(row=r, column=3).value = current_birhday
+        ws1.cell(row=r, column=4).value = current_num_card
+        ws1.cell(row=r, column=5).value = current_doc_start
+        ws1.cell(row=r, column=6).value = current_date_start
+        ws1.cell(row=r, column=7).value = current_doc_end
+        ws1.cell(row=r, column=8).value = current_date_end
+        for j in range(1, 9):
             ws1.cell(row=r, column=j).style = style_border1
 
     return ws1

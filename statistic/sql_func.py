@@ -241,14 +241,34 @@ def statistics_research(research_id, d_s, d_e):
 def disp_diagnos(diagnos, d_s, d_e):
     with connection.cursor() as cursor:
         cursor.execute("""WITH
-        t_iss AS (
-    SELECT * FROM public.clients_dispensaryreg
-    WHERE diagnos = 'U999' and date_start
-    BETWEEN '2020-03-06' and '2020-03-12'
-    ORDER BY date_start DESC),
-    
-    """,params={'diagnos': diagnos, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE})
-
+            t_iss AS (
+            SELECT id, diagnos, illnes, date_start, date_end, why_stop, card_id, 
+                        doc_end_reg_id, doc_start_reg_id, spec_reg_id 
+            FROM public.clients_dispensaryreg
+            WHERE diagnos = 'U999' and (date_start
+            BETWEEN %(d_start)s AND %(d_end)s OR date_end BETWEEN %(d_start)s AND %(d_end)s)
+            ORDER BY date_start DESC),
+            t_card AS (SELECT id as card_id, individual_id, number as num_card from clients_card WHERE id in (SELECT card_id from t_iss)),
+            
+            t_ind AS (SELECT family as p_family, name as p_name, patronymic as p_patr, birthday, t_card.card_id, t_card.num_card 
+                  FROM clients_individual
+            LEFT JOIN t_card ON t_card.individual_id = id 
+            where id in (SELECT individual_id from t_card)),
+            
+            t_doc_start AS (SELECT id as docstart_id, fio from users_doctorprofile where id in (SELECT doc_start_reg_id from t_iss) ),
+            t_doc_end AS (SELECT id as docend_id, fio from users_doctorprofile where id in (SELECT doc_end_reg_id from t_iss) )
+            
+            SELECT concat(p_family, ' ', p_name, ' ', p_patr) as patient, 
+            to_char(t_ind.birthday, 'DD.MM.YYYY') as birthday,
+            t_ind.num_card, 
+            t_doc_start.fio as doc_start, 
+            to_char(date_start, 'DD.MM.YYYY') as date_start,
+            t_doc_end.fio as doc_stop, 
+            to_char(date_end, 'DD.MM.YYYY') as date_end
+            FROM t_iss
+            LEFT JOIN t_ind ON t_iss.card_id = t_ind.card_id
+            LEFT JOIN t_doc_start ON t_iss.doc_start_reg_id = t_doc_start.docstart_id
+            LEFT JOIN t_doc_end ON t_iss.doc_end_reg_id = t_doc_end.docend_id
+            """, params={'diagnos': diagnos, 'd_start': d_s, 'd_end': d_e})
         row = cursor.fetchall()
     return row
-
