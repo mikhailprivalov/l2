@@ -323,6 +323,7 @@
             <research-pick :class="{ active: row.pk === direction_service }" :research="row"
                            @click.native="select_research(row.pk)"
                            class="research-select"
+                           force_tippy
                            v-for="row in hosp_services"
                            :key="row.pk"/>
             <div v-if="hosp_services.length === 0">не настроено</div>

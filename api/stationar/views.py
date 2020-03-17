@@ -121,6 +121,7 @@ def hosp_services_by_type(request):
             result.append({
                 "pk": hs.pk,
                 "title": hs.slave_research.title,
+                "short_title": hs.slave_research.short_title,
                 "main_title": hs.main_research.title,
             })
     return JsonResponse({"data": result})
