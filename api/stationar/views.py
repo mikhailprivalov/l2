@@ -2,6 +2,7 @@ from collections import defaultdict
 
 import simplejson as json
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.http import JsonResponse
 
 from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, \
@@ -20,11 +21,11 @@ TADP = SettingManager.get("tadp", default='Температура', default_type
 @group_required("Врач стационара", "t, ad, p")
 def load(request):
     data = json.loads(request.body)
-    result = {"ok": False, "message": "Нет данных", "data": {}}
     pk = int(data["pk"])
     if pk >= 4600000000000:
         pk -= 4600000000000
         pk //= 10
+    result = {"ok": False, "message": "Нет данных", "data": {}}
     for i in Issledovaniya.objects.filter(napravleniye__pk=pk, research__is_hospital=True):
         direction: Napravleniya = i.napravleniye
         card: Card = direction.client

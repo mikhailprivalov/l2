@@ -5,6 +5,7 @@ import simplejson as json
 import yaml
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
+from django.core.cache import cache
 from django.db.models import Q
 from django.http import JsonResponse
 from django.utils import timezone
@@ -343,91 +344,102 @@ def departments(request):
 
 
 def bases(request):
-    return JsonResponse({"bases": [
-        {"pk": x.pk,
-         "title": x.title,
-         "code": x.short_title,
-         "hide": x.hide,
-         "history_number": x.history_number,
-         "internal_type": x.internal_type,
-         "fin_sources": [{
-             "pk": y.pk,
-             "title": y.title,
-             "default_diagnos": y.default_diagnos
-         } for y in directions.IstochnikiFinansirovaniya.objects.filter(base=x, hide=False).order_by('-order_weight')]
-         } for x in CardBase.objects.all().order_by('-order_weight')]})
+    k = f'view:bases:{request.user.pk}'
+    ret = cache.get(k)
+    if not ret:
+        ret = {"bases": [
+            {"pk": x.pk,
+             "title": x.title,
+             "code": x.short_title,
+             "hide": x.hide,
+             "history_number": x.history_number,
+             "internal_type": x.internal_type,
+             "fin_sources": [{
+                 "pk": y.pk,
+                 "title": y.title,
+                 "default_diagnos": y.default_diagnos
+             } for y in directions.IstochnikiFinansirovaniya.objects.filter(base=x, hide=False).order_by('-order_weight')]
+             } for x in CardBase.objects.all().order_by('-order_weight')]}
+        cache.set(k, ret, 100)
+    return JsonResponse(ret)
 
 
 def current_user_info(request):
-    ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "",
-           "department": {"pk": -1, "title": ""}, "groups": [], "modules": SettingManager.l2_modules(),
-           "user_services": [], "rmis_enabled": SettingManager.get("rmis_enabled", default='false', default_type='b')}
-    if ret["auth"]:
-        ret["username"] = request.user.username
-        ret["fio"] = request.user.doctorprofile.fio
-        ret["groups"] = list(request.user.groups.values_list('name', flat=True))
-        if request.user.is_superuser:
-            ret["groups"].append("Admin")
-        ret["doc_pk"] = request.user.doctorprofile.pk
-        ret["rmis_location"] = request.user.doctorprofile.rmis_location
-        ret["rmis_login"] = request.user.doctorprofile.rmis_login
-        ret["rmis_password"] = request.user.doctorprofile.rmis_password
-        ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye_id,
-                             "title": request.user.doctorprofile.podrazdeleniye.title}
-        ret["restricted"] = [x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]
-        ret["user_services"] = [x.pk for x in
-                                request.user.doctorprofile.users_services.all() if x not in ret["restricted"]]
-        ret["su"] = request.user.is_superuser
+    k = f'view:current_user_info:{request.user.pk}'
+    ret = cache.get(k)
+    if not ret:
+        ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "",
+               "department": {"pk": -1, "title": ""}, "groups": [], "modules": SettingManager.l2_modules(),
+               "user_services": [], "rmis_enabled": SettingManager.get("rmis_enabled", default='false', default_type='b')}
+        if ret["auth"]:
+            ret["username"] = request.user.username
+            ret["fio"] = request.user.doctorprofile.fio
+            ret["groups"] = list(request.user.groups.values_list('name', flat=True))
+            if request.user.is_superuser:
+                ret["groups"].append("Admin")
+            ret["doc_pk"] = request.user.doctorprofile.pk
+            ret["rmis_location"] = request.user.doctorprofile.rmis_location
+            ret["rmis_login"] = request.user.doctorprofile.rmis_login
+            ret["rmis_password"] = request.user.doctorprofile.rmis_password
+            ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye_id,
+                                 "title": request.user.doctorprofile.podrazdeleniye.title}
+            ret["restricted"] = [x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]
+            ret["user_services"] = [x.pk for x in
+                                    request.user.doctorprofile.users_services.all() if x not in ret["restricted"]]
+            ret["su"] = request.user.is_superuser
 
-        en = SettingManager.en()
-        ret["extended_departments"] = {}
+            en = SettingManager.en()
+            ret["extended_departments"] = {}
 
-        st_base = ResearchSite.objects.filter(hide=False).order_by('title')
-        for e in en:
-            if e < 4 or not en[e]:
-                continue
+            st_base = ResearchSite.objects.filter(hide=False).order_by('title')
+            for e in en:
+                if e < 4 or not en[e]:
+                    continue
 
-            t = e - 4
-            has_def = DResearches.objects.filter(hide=False, site_type__isnull=True,
-                                                 **DResearches.filter_type(e)).exists()
+                t = e - 4
+                has_def = DResearches.objects.filter(hide=False, site_type__isnull=True,
+                                                     **DResearches.filter_type(e)).exists()
 
-            if has_def:
-                d = [
-                    {
-                        "pk": None,
-                        "title": 'Общие',
-                        'type': t,
+                if has_def:
+                    d = [
+                        {
+                            "pk": None,
+                            "title": 'Общие',
+                            'type': t,
+                            "extended": True,
+                        }
+                    ]
+                else:
+                    d = []
+
+                ret["extended_departments"][e] = [
+                    *d,
+                    *[{
+                        "pk": x.pk,
+                        "title": x.title,
+                        "type": t,
                         "extended": True,
-                    }
+                        'e': e,
+                    } for x in st_base.filter(site_type=t)]
                 ]
-            else:
-                d = []
-
-            ret["extended_departments"][e] = [
-                *d,
-                *[{
-                    "pk": x.pk,
-                    "title": x.title,
-                    "type": t,
-                    "extended": True,
-                    'e': e,
-                } for x in st_base.filter(site_type=t)]
-            ]
+        cache.set(k, ret, 300)
     return JsonResponse(ret)
 
 
 @login_required
 def directive_from(request):
-    from users.models import DoctorProfile
-    data = []
-    for dep in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by('title'):
-        d = {"pk": dep.pk,
-             "title": dep.title,
-             "docs": [{"pk": x.pk, "fio": x.fio} for x in DoctorProfile.objects.filter(podrazdeleniye=dep,
-                                                                                       user__groups__name="Лечащий врач").order_by(
-                 "fio")]
-             }
-        data.append(d)
+    data = cache.get('view:directive_from')
+    if not data:
+        from users.models import DoctorProfile
+        data = []
+        for dep in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by('title'):
+            d = {
+                "pk": dep.pk,
+                "title": dep.title,
+                "docs": [{"pk": x.pk, "fio": x.fio} for x in DoctorProfile.objects.filter(podrazdeleniye=dep, user__groups__name="Лечащий врач").order_by("fio")],
+            }
+            data.append(d)
+        cache.set('view:directive_from', data, 100)
 
     return JsonResponse({"data": data})
 
@@ -492,8 +504,8 @@ def statistics_tickets_get(request):
             "primary": row.primary_visit,
             "info": row.info,
             "disp": row.get_dispensary_registration_display()
-            + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
-            + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
+                    + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
+                    + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
             "result": row.result.title if row.result else "",
             "outcome": row.outcome.title if row.outcome else "",
             "invalid": row.invalid_ticket,
