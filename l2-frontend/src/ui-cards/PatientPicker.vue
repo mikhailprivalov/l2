@@ -360,7 +360,7 @@
         this.check_base()
       },
       directive_department() {
-        this.update_ofname()
+        this.update_ofname(this.directive_department !== '-1')
       },
       directive_doc() {
         this.emit_input()
@@ -378,7 +378,7 @@
         if (!this.inLoading && this.search_after_loading) {
           this.search()
         }
-      }
+      },
     },
     computed: {
       bases() {
@@ -481,8 +481,9 @@
       async inited() {
         await this.$store.dispatch(action_types.INC_LOADING);
         await this.$store.dispatch(action_types.GET_DIRECTIVE_FROM);
+        await this.$store.dispatch(action_types.DEC_LOADING);
 
-        (() => {
+        setTimeout(() => {
           this.local_directive_departments = this.$store.getters.directive_from;
           this.directive_departments_select = [];
           for (let dep of this.local_directive_departments) {
@@ -503,9 +504,7 @@
           }
 
           this.check_base();
-        })();
-
-        await this.$store.dispatch(action_types.DEC_LOADING);
+        }, 10);
       },
       open_anamnesis() {
         this.$store.dispatch(action_types.INC_LOADING).then();
@@ -566,8 +565,8 @@
         if (this.$refs.modal)
           this.$refs.modal.$el.style.display = 'none'
       },
-      update_ofname() {
-        if (this.ofname_to_set === '-2' || this.inLoading)
+      update_ofname(force) {
+        if (this.ofname_to_set === '-2' || (this.inLoading && !force))
           return;
         if (this.ofname_to_set !== '-1') {
           if (this.ofname_to_set_dep !== '-1') {
@@ -585,7 +584,7 @@
             for (let d of dps) {
               let users = this.directive_from_departments[d].docs;
               for (let u of users) {
-                if (u.pk.toString() === onts) {
+                if (u.pk.toString() === onts.toString()) {
                   this.directive_department = d.toString();
                   this.directive_doc = onts;
                   this.emit_input();

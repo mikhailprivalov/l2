@@ -1,6 +1,6 @@
 <template>
   <div :class="{'no-border-left': noBorderLeft === 'true'}">
-    <select v-model="lv" ref="sel" class="selectpicker"
+    <select v-model="lv" ref="sel" class="form-control"
             :disabled="disabled"
             data-width="100%" data-container="body" data-none-selected-text="Ничего не выбрано">
       <option :value="option.value" v-for="option in options">{{ option.label }}</option>
@@ -22,6 +22,11 @@
         default: 'false'
       },
       disabled: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
+      strictNotReady: {
         type: Boolean,
         required: false,
         default: false,
@@ -50,12 +55,7 @@
         }
       },
       value() {
-        if (this.options.length > 0 && !this.inited) {
-          this.lv = this.value;
-          this.resyncVal(this.lv);
-          this.init_el();
-          this.inited = true
-        } else if (this.inited) {
+        if (this.inited) {
           this.lv = this.value;
           this.resyncVal(this.lv)
         }
@@ -67,15 +67,18 @@
     methods: {
       check_init() {
         if (!this.inited) {
-          if (this.options.length > 0 && this.lv === '-1') {
-            this.init_el();
-            this.inited = true
+          if (!this.strictNotReady && this.options.length > 0 && this.lv === '-1') {
+            this.inited = true;
+            setTimeout(() =>this.init_el(), 100);
+          } else {
+            setTimeout(() => this.check_init(), 150);
           }
-          setTimeout(() => this.check_init(), 100);
         }
       },
       update_val(v) {
-        this.$emit('input', v)
+        if (this.inited) {
+          this.$emit('input', v)
+        }
       },
       resync() {
         const $el = this.jel;
@@ -130,9 +133,14 @@
   }
 </script>
 
-<style>
+<style scoped>
   .no-border-left .bootstrap-select .btn {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+  }
+
+  .form-control {
+    opacity: 0;
+    height: 38px;
   }
 </style>
