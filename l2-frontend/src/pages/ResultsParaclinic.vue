@@ -1170,7 +1170,7 @@
             replace_fields_values(row, data) {
                 for (const g of row.research.groups) {
                     for (const f of g.fields) {
-                        if (![3].includes(f.field_type)) {
+                        if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type)) {
                             f.value = data[f.pk] || ''
                         }
                     }
@@ -1179,7 +1179,7 @@
             append_fields_values(row, data) {
                 for (const g of row.research.groups) {
                     for (const f of g.fields) {
-                        if (![3, 1, 11].includes(f.field_type) && data[f.pk]) {
+                        if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type) && data[f.pk]) {
                             this.append_value(f, data[f.pk])
                         }
                     }
@@ -1192,7 +1192,7 @@
                         okmessage('Очищено');
                         for (const g of row.research.groups) {
                             for (const f of g.fields) {
-                                if (![3].includes(f.field_type)) {
+                                if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type)) {
                                     this.clear_val(f)
                                 }
                             }
