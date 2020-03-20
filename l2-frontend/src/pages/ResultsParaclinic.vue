@@ -450,14 +450,6 @@
                   <input v-model="row.diagnos" class="form-control" :readonly="true"/>
                 </div>
               </div>
-              <div class="field">
-                <div class="field-title">
-                  Подозрение на онко
-                </div>
-                <label class="field-value">
-                  <input type="checkbox" v-model="row.maybe_onco" :disabled="row.confirmed"/>
-                </label>
-              </div>
               <div class="field" v-if="row.research.is_doc_refferal">
                 <div class="field-title">
                   Дата осмотра
@@ -465,6 +457,18 @@
                 <label class="field-value">
                   <input :max="tdm()" :min="td_m_year" :readonly="row.confirmed" class="form-control"
                          required style="width: 160px" type="date" v-model="row.examination_date"/>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="group">
+            <div class="fields">
+              <div class="field">
+                <div class="field-title">
+                  Подозрение на онко
+                </div>
+                <label class="field-value">
+                  <input type="checkbox" v-model="row.maybe_onco" :disabled="row.confirmed"/>
                 </label>
               </div>
             </div>
