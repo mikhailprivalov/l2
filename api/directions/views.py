@@ -1291,10 +1291,16 @@ def directions_patient_history(request):
     request_data = json.loads(request.body)
 
     iss = Issledovaniya.objects.get(pk=request_data["pk"])
+    filtered = Issledovaniya.objects.filter(time_confirmation__isnull=False,
+                                            research=iss.research,
+                                            napravleniye__client__individual=iss.napravleniye.client.individual)
 
-    for i in Issledovaniya.objects.filter(time_confirmation__isnull=False,
-                                          research=iss.research,
-                                          napravleniye__client__individual=iss.napravleniye.client.individual).order_by('-time_confirmation').exclude(pk=request_data["pk"]):
+    is_same_parent = request_data.get("isSameParent", False)
+
+    if is_same_parent:
+        filtered = filtered.filter(napravleniye__parent=iss.napravleniye.parent)
+
+    for i in filtered.order_by('-time_confirmation').exclude(pk=request_data["pk"]):
         data.append({
             "pk": i.pk,
             "direction": i.napravleniye_id,

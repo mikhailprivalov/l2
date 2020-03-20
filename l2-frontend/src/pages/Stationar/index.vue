@@ -144,6 +144,24 @@
             <div class="research-left">
               {{row.research.title}}
               <span class="comment" v-if="row.research.comment && row.research.comment !== ''"> [{{row.research.comment}}]</span>
+              <dropdown :visible="research_open_history === row.pk"
+                        :position='["left", "bottom", "left", "top"]'
+                        @clickout="hide_results">
+                <a style="font-weight: normal"
+                   href="#" @click.prevent="open_results(row.pk)">
+                  (другие результаты)
+                </a>
+                <div class="results-history" slot="dropdown">
+                  <ul>
+                    <li v-for="r in research_history">
+                      Результат от {{r.date}}
+                      <a href="#" @click.prevent="print_results(r.direction)">печать</a>
+                      <a href="#" @click.prevent="copy_results(row, r.pk)" v-if="!row.confirmed">скопировать</a>
+                    </li>
+                    <li v-if="research_history.length === 0">результатов не найдено</li>
+                  </ul>
+                </div>
+              </dropdown>
             </div>
             <div class="research-right">
               <template v-if="row.confirmed">
@@ -375,6 +393,7 @@
 
 <script>
   import {mapGetters} from 'vuex'
+  import dropdown from 'vue-my-dropdown'
   import menuMixin from './mixins/menu'
   import * as action_types from '../../store/action-types'
   import stationar_point from '../../api/stationar-point'
@@ -402,6 +421,7 @@
   export default {
     mixins: [menuMixin],
     components: {
+      dropdown,
       AggregateTADP,
       AggregateDesc,
       AggregateLaboratory,
@@ -444,6 +464,8 @@
         },
         anamnesis_loading: false,
         new_anamnesis: null,
+        research_open_history: null,
+        research_history: [],
         inited: false,
       }
     },
@@ -477,7 +499,7 @@
         }
         if (storedData.opened_form_pk && Array.isArray(this.list_directions)) {
           for (const dir of this.list_directions) {
-            if (storedData.opened_form_pk ===dir.pk) {
+            if (storedData.opened_form_pk === dir.pk) {
               await this.open_form(dir);
               break;
             }
@@ -519,6 +541,7 @@
         }
       },
       close_form() {
+        this.hide_results();
         this.opened_form_pk = null
         this.researches_forms = null
         this.patient_form = null
@@ -529,6 +552,7 @@
         await this.load(every)
       },
       async close(force = false) {
+        this.hide_results();
         if (!force) {
           try {
             await this.$dialog.confirm(`Подтвердите отмену просмотра истории «${this.direction}»`)
@@ -557,6 +581,7 @@
         this.tree = []
       },
       async load(every = false) {
+        this.hide_results();
         await this.close(true);
         await this.$store.dispatch(action_types.INC_LOADING)
         const {ok, data, message} = await stationar_point.load(this, ['pk'], {every})
@@ -650,6 +675,7 @@
         this.load_directions(this.opened_list_key, no_close)
       },
       save(iss) {
+        this.hide_results();
         this.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.paraclinicResultSave({
           force: true,
@@ -676,6 +702,7 @@
         })
       },
       save_and_confirm(iss) {
+        this.hide_results();
         this.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.paraclinicResultSave({
           force: true,
@@ -710,6 +737,7 @@
         })
       },
       async reset_confirm(iss) {
+        this.hide_results();
         try {
           await this.$dialog.confirm(`Подтвердите сброс подтверждения услуги «${iss.research.title}»`)
         } catch (_) {
@@ -733,6 +761,27 @@
         }
 
         await this.$store.dispatch(action_types.DEC_LOADING)
+      },
+      async copy_results(row, pk) {
+        await this.$store.dispatch(action_types.INC_LOADING);
+        this.hide_results();
+        const {data} = await directions_point.paraclinicDataByFields({pk});
+        this.replace_fields_values(row, data);
+        await this.$store.dispatch(action_types.DEC_LOADING);
+      },
+      async open_results(pk) {
+        if (this.research_open_history) {
+          this.hide_results();
+          return
+        }
+        await this.$store.dispatch(action_types.INC_LOADING);
+        this.research_history = (await directions_point.paraclinicResultPatientHistory({pk, isSameParent: true})).data || [];
+        await this.$store.dispatch(action_types.DEC_LOADING);
+        this.research_open_history = pk
+      },
+      hide_results() {
+        this.research_history = [];
+        this.research_open_history = null
       },
       r_is_transfer({research}) {
         return research.can_transfer
@@ -780,7 +829,7 @@
       replace_fields_values(row, data) {
         for (const g of row.research.groups) {
           for (const f of g.fields) {
-            if (![3].includes(f.field_type)) {
+            if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type)) {
               f.value = data[f.pk] || ''
             }
           }
@@ -789,7 +838,7 @@
       append_fields_values(row, data) {
         for (const g of row.research.groups) {
           for (const f of g.fields) {
-            if (![3, 1, 11].includes(f.field_type) && data[f.pk]) {
+            if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type) && data[f.pk]) {
               this.append_value(f, data[f.pk])
             }
           }
@@ -802,7 +851,7 @@
             okmessage('Очищено')
             for (const g of row.research.groups) {
               for (const f of g.fields) {
-                if (![3].includes(f.field_type)) {
+                if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type)) {
                   this.clear_val(f)
                 }
               }
@@ -1297,5 +1346,37 @@
 
   .status-none {
     color: #CF3A24
+  }
+
+  .results-history {
+    margin-top: -95px;
+    margin-left: -295px;
+    margin-right: -100px;
+    padding: 8px;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+
+    ul {
+      padding-left: 20px;
+      margin: 0;
+
+      li {
+        font-weight: normal;
+
+        a {
+          font-weight: bold;
+          display: inline-block;
+          padding: 2px 4px;
+          background: rgba(#000, .03);
+          border-radius: 4px;
+          margin-left: 3px;
+
+          &:hover {
+            background: rgba(#000, .1);
+          }
+        }
+      }
+    }
   }
 </style>
