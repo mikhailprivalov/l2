@@ -374,9 +374,9 @@ class Napravleniya(models.Model):
                                         db_index=True,
                                         blank=True, null=True, default=None, on_delete=models.SET_NULL)
     parent_slave_hosp = models.ForeignKey('Issledovaniya', related_name='parent_slave_hosp',
-                                        help_text="Из стационарного протокола",
-                                        db_index=True,
-                                        blank=True, null=True, default=None, on_delete=models.SET_NULL)
+                                          help_text="Из стационарного протокола",
+                                          db_index=True,
+                                          blank=True, null=True, default=None, on_delete=models.SET_NULL)
     rmis_slot_id = models.CharField(max_length=15, blank=True, null=True, default=None, help_text="РМИС слот")
     microbiology_n = models.CharField(max_length=10, blank=True, default='',
                                       help_text="Номер в микробиологической лаборатории")
