@@ -218,18 +218,23 @@
       directions() {
         const d = []
         try {
-          for (const lab of Object.values(this.data)) {
+          for (const title of Object.keys(this.data)) {
+            const lab = this.data[title];
             if (Array.isArray(lab.vertical)) {
               for (const row of lab.vertical) {
                 for (const dateDir of Object.keys(row.result)) {
-                  d.push(parseInt(dateDir.split(' ')[1]));
+                  if (!this.excludedDateDir(dateDir, row.title_research)) {
+                    d.push(parseInt(dateDir.split(' ')[1]));
+                  }
                 }
               }
             }
             if (Array.isArray(lab.horizontal)) {
               for (const row of lab.horizontal) {
                 for (const dateDir of Object.keys(row.result)) {
-                  d.push(parseInt(dateDir.split(' ')[1]));
+                  if (!this.excludedDateDir(dateDir, title)) {
+                    d.push(parseInt(dateDir.split(' ')[1]));
+                  }
                 }
               }
             }

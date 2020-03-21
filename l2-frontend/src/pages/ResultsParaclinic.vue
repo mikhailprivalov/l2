@@ -1435,7 +1435,7 @@
     text-align: center;
     padding: 5px;
     font-weight: bold;
-    z-index: 2;
+    z-index: 4;
     display: flex;
   }
 

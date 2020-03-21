@@ -1074,6 +1074,8 @@ def directions_paraclinic_result(request):
                         if with_confirm:
                             if isinstance(val, list):
                                 iss.napravleniye.parent.aggregate_desc = val
+                            elif isinstance(val, dict) and val.get("directions"):
+                                iss.napravleniye.parent.aggregate_desc = val["directions"]
                             else:
                                 iss.napravleniye.parent.aggregate_desc = None
                         else:
