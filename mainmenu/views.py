@@ -537,7 +537,9 @@ def results_history_search(request):
         if type == "otd":
             collect = d.Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
                                                     issledovaniya__time_confirmation__range=(day1, day2),
-                                                    doc__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
+                                                    doc__podrazdeleniye=request.user.doctorprofile.podrazdeleniye,
+                                                    issledovaniya__research__is_doc_refferal=False,
+                                                    issledovaniya__research__is_slave_hospital=False)
         else:
             collect = d.Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
                                                     issledovaniya__time_confirmation__range=(day1, day2),
