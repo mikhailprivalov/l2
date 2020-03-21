@@ -1368,6 +1368,26 @@ def result_print(request):
                             for i in add_research:
                                 fwb.append(Paragraph('{}-{}'.format(i.research.code, i.research.title), style))
 
+                # Добавить выписанные направления для стационарныхдневников
+                if iss.research.is_slave_hospital:
+                    # Найти все направления где данное исследование родитель
+                    napr_child = Napravleniya.objects.filter(parent_slave_hosp=iss, cancel=False)
+                    br = ""
+                    if not protocol_plain_text:
+                        br = '<br/>'
+                    if napr_child:
+                        fwb.append(Paragraph("Направления:".format(t1), styleBold))
+                        s_napr = ""
+                        for n_child in napr_child:
+                            iss_research = [s.research.title for s in
+                                            Issledovaniya.objects.filter(napravleniye=n_child)]
+                            iss_research_str = ', '.join(iss_research)
+                            n = "<font face=\"OpenSansBold\">№{}:&nbsp;</font>".format(n_child.pk)
+                            n += "{}; {} ".format(iss_research_str, br)
+                            s_napr = s_napr + n + '\n'
+                            n = ""
+                        fwb.append(Paragraph("{}".format(s_napr), style))
+
                 fwb.append(Spacer(1, 3 * mm))
                 if not hosp and not iss.research.is_slave_hospital:
                     if iss.research.is_doc_refferal:
