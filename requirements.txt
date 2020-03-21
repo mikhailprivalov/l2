@@ -76,7 +76,7 @@ zeep==3.4.0
 djangorestframework==3.11.0
 pdfkit==0.6.1
 PyVirtualDisplay==0.2.5
-anytree==2.7.3
+anytree==2.8.0
 orthanc-rest-client==0.5.7
 transliterate==1.10.2
 imgkit==1.0.2
