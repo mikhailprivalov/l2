@@ -373,6 +373,10 @@ class Napravleniya(models.Model):
                                         help_text="Авто сгенерированное",
                                         db_index=True,
                                         blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    parent_slave_hosp = models.ForeignKey('Issledovaniya', related_name='parent_slave_hosp',
+                                          help_text="Из стационарного протокола",
+                                          db_index=True,
+                                          blank=True, null=True, default=None, on_delete=models.SET_NULL)
     rmis_slot_id = models.CharField(max_length=15, blank=True, null=True, default=None, help_text="РМИС слот")
     microbiology_n = models.CharField(max_length=10, blank=True, default='',
                                       help_text="Номер в микробиологической лаборатории")
@@ -445,6 +449,7 @@ class Napravleniya(models.Model):
                          rmis_data: [dict, None] = None,
                          parent_id=None,
                          parent_auto_gen_id=None,
+                         parent_slave_hosp_id=None,
                          rmis_slot=None,
                          direction_purpose="NONE",
                          external_organization="NONE") -> 'Napravleniya':
@@ -475,7 +480,7 @@ class Napravleniya(models.Model):
                            doc=doc if not for_rmis else None,
                            istochnik_f=istochnik_f,
                            data_sozdaniya=timezone.now(),
-                           diagnos=diagnos, cancel=False, parent_id=parent_id, parent_auto_gen_id=parent_auto_gen_id,
+                           diagnos=diagnos, cancel=False, parent_id=parent_id, parent_auto_gen_id=parent_auto_gen_id, parent_slave_hosp_id=parent_slave_hosp_id,
                            rmis_slot_id=rmis_slot)
         dir.harmful_factor = dir.client.harmful_factor
         dir.workplace = client.work_place_db.title if client.work_place_db else client.work_place
@@ -519,7 +524,7 @@ class Napravleniya(models.Model):
     @staticmethod
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments, for_rmis=None, rmis_data=None, vich_code='',
-                                          count=1, discount=0, parent_iss=None, rmis_slot=None, counts=None,
+                                          count=1, discount=0, parent_iss=None, parent_slave_hosp=None, rmis_slot=None, counts=None,
                                           localizations=None, service_locations=None, visited=None,
                                           parent_auto_gen=None, direction_purpose="NONE", external_organization="NONE"):
         if not visited:
@@ -608,6 +613,7 @@ class Napravleniya(models.Model):
                                                                                              rmis_data=rmis_data,
                                                                                              parent_id=parent_iss,
                                                                                              parent_auto_gen_id=parent_auto_gen,
+                                                                                             parent_slave_hosp_id=parent_slave_hosp,
                                                                                              rmis_slot=rmis_slot,
                                                                                              direction_purpose=direction_purpose,
                                                                                              external_organization=external_organization)
@@ -627,6 +633,7 @@ class Napravleniya(models.Model):
                                                                                              rmis_data=rmis_data,
                                                                                              parent_id=parent_iss,
                                                                                              parent_auto_gen_id=parent_auto_gen,
+                                                                                             parent_slave_hosp_id=parent_slave_hosp,
                                                                                              rmis_slot=rmis_slot,
                                                                                              direction_purpose=direction_purpose,
                                                                                              external_organization=external_organization)
