@@ -127,6 +127,8 @@ def lab_iss_to_pdf(data1):
 
 
 def gen_table(data, const_width, row_count, type_disposition):
+    if row_count == 0:
+        return ' '
     width_one_column = const_width / row_count
     width_one_column = round(width_one_column, 1)
     row_widths = [width_one_column * mm] * row_count
@@ -167,7 +169,6 @@ def text_iss_to_pdf(data, solid_text=False):
 
     styleBold = deepcopy(style_ml)
     styleBold.fontName = "OpenSansBold"
-    print(data)
     data = json.loads(data)
     text_iss = hosp_get_text(None, False, None, data)
     prepare_fwb = []
