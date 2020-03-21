@@ -14,7 +14,7 @@ django-ajax-selects==1.9.1
 django-cors-middleware==1.5.0
 django-debug-panel==0.8.3
 django-debug-toolbar==2.1
-django-extensions==2.2.5
+django-extensions==2.2.8
 django-filter==2.2.0
 django-logtail==0.3.0
 django-ratelimit==2.0.0
