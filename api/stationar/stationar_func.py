@@ -315,7 +315,6 @@ def desc_to_data(num_dirs: List[int], force_all_fields: bool = False):
     # [0] - заглушка для запроса. research c id =0 не бывает
     get_research_id = get_distinct_research([0], num_dirs, is_text_research=True) if num_dirs else []
     result = []
-
     for research_base in get_research_id:
         research = research_base[0]
         field_result = get_result_text_research(research, num_dirs, force_all_fields)
