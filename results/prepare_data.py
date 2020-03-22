@@ -1,5 +1,4 @@
 from api.stationar.stationar_func import hosp_get_lab_iss, hosp_get_text
-import json
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, Image
