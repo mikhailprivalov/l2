@@ -131,7 +131,7 @@ def get_result_text_research(research_pk, listdirs, force_all_fields=False):
                       to_char(time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YY') as date_confirm,
                       napravleniye_id, t_research.research_title FROM directions_issledovaniya
                 LEFT JOIN t_research on t_research.research_id = directions_issledovaniya.research_id
-                WHERE directions_issledovaniya.research_id=%(id_research)s and napravleniye_id = ANY(ARRAY[%(id_dirs)s]))
+                WHERE directions_issledovaniya.research_id=%(id_research)s and napravleniye_id = ANY(ARRAY[%(id_dirs)s]) and time_confirmation is not Null)
                      
             SELECT research_title, date_confirm, napravleniye_id, group_title, title, "value" FROM directions_paraclinicresult
             LEFT JOIN t_iss on directions_paraclinicresult.issledovaniye_id = t_iss.iss_id
