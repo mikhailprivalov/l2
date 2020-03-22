@@ -872,7 +872,8 @@ def directions_paraclinic_form(request):
                     "recipe": [],
                     "microbiology": [],
                     "lab_comment": i.lab_comment,
-                    "forbidden_edit": forbidden_edit
+                    "forbidden_edit": forbidden_edit,
+                    "maybe_onco": i.maybe_onco,
                 }
 
                 if i.research.is_microbiology:
@@ -895,7 +896,6 @@ def directions_paraclinic_form(request):
                         "first_time": i.first_time,
                         "result": i.result_reception_id,
                         "outcome": i.outcome_illness_id,
-                        "maybe_onco": i.maybe_onco,
                         "diagnos": i.diagnos,
 
                         "purpose_list": [{"pk": x.pk, "title": x.title} for x in
