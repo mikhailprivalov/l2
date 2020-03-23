@@ -128,7 +128,6 @@ def directions_history(request):
     lab = set()
     lab_title = None
 
-    # type_service variants: is_paraclinic, is_lab, is_doc_refferal
     type_service = request_data.get("type_service", None)
     for i in result_sql:
         if type_service == 'is_paraclinic' and not i[18] :
