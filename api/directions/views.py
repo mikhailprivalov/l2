@@ -91,8 +91,6 @@ def directions_history(request):
     iss_pk = request_data.get("iss_pk", None)
     services = request_data.get("services", [])
     services = list(map(int, services or []))
-    # type_service variants: is_paraclinic, is_lab, is_doc_refferal
-    type_service = request_data.get("type_service", None)
 
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
     date_start = datetime.combine(date_start, dtime.min)
@@ -130,6 +128,8 @@ def directions_history(request):
     lab = set()
     lab_title = None
 
+    # type_service variants: is_paraclinic, is_lab, is_doc_refferal
+    type_service = request_data.get("type_service", None)
     for i in result_sql:
         if type_service == 'is_paraclinic':
             if not i[18]:
