@@ -26,7 +26,7 @@
     "tiptap": "^1.26.6",
     "tiptap-extensions": "^1.28.6",
     "transform-runtime": "0.0.0",
-    "v-tooltip": "^2.0.0-rc.32",
+    "v-tooltip": "^2.0.3",
     "vue": "^2.5.16",
     "vue-apexcharts": "^1.5.2",
     "vue-autosize": "^1.0.2",
