@@ -17,6 +17,7 @@
           class="research-date-title"
           @click="excludeDateDir(res.date, research.title_research)"
           title="Скрыть направление"
+          v-tippy="{ placement : 'top', arrow: true }"
         >
           {{res.date}}:
         </div>
@@ -56,6 +57,10 @@
         required: true,
       },
       value: {},
+      disabled: {
+        type: Boolean,
+        default: false
+      },
     },
     data() {
       return {
