@@ -115,6 +115,7 @@ def directions_history(request):
         is_parent = True
 
     result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service, iss_pk, is_parent)
+
     # napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title, date_create,
     # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs,
     # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid
@@ -126,7 +127,15 @@ def directions_history(request):
     status_set = {-2}
     lab = set()
     lab_title = None
+
+    type_service = request_data.get("type_service", None)
     for i in result_sql:
+        if type_service == 'is_paraclinic' and not i[18] :
+            continue
+        elif type_service == 'is_doc_refferal' and not i[17]:
+            continue
+        elif type_service == 'is_lab' and (i[11] or i[14] or i[15] or i[16] or i[17] or i[18] or i[19]):
+            continue
         if i[14]:
             continue
         if i[0] != last_dir:
