@@ -2,8 +2,25 @@
   <div class="root-agg">
     <div class="research" v-for="research in data">
       <div class="research-title">{{research.title_research}}</div>
-      <div class="research-date" v-for="res in research.result">
-        <div class="research-date-title">{{res.date}}:</div>
+      <div v-if="excludedDateDirByGroup(research.title_research).length > 0" class="excluded">
+        <u><strong>Исключённые направления:</strong></u>
+        <span v-for="t in excludedDateDirByGroup(research.title_research)" :key="t" @click="cancelExcludeDateDir(t)"
+              v-tippy="{ placement : 'top', arrow: true }"
+              title="Вернуть"
+              class="clickable-return">
+          {{getAfterGroup(t)}}
+        </span>
+      </div>
+      <div class="research-date" v-for="res in research.result"
+           v-if="!excludedDateDir(res.date, research.title_research)">
+        <div
+          class="research-date-title"
+          @click="excludeDateDir(res.date, research.title_research)"
+          title="Скрыть направление"
+          v-tippy="{ placement : 'top', arrow: true }"
+        >
+          {{res.date}}:
+        </div>
         <div v-if="res.link_dicom"><a class="a-under" :href="res.link_dicom" target="_blank">снимок</a></div>
         <span class="research-group" v-for="g in res.data" v-if="non_empty_group(g)">
           <span class="research-group-title" v-if="g.group_title !== ''">
@@ -24,6 +41,10 @@
 <script>
   import stationar_point from '../api/stationar-point'
 
+  const delimiter = '#@#';
+
+  const makeKey = (t, group) => `${group}${delimiter}${t}`;
+
   export default {
     props: {
       pk: {},
@@ -36,16 +57,34 @@
         required: true,
       },
       value: {},
+      disabled: {
+        type: Boolean,
+        default: false
+      },
     },
     data() {
       return {
-        data: []
+        data: [],
+        excluded: [],
+        inited: false,
       }
     },
-    mounted() {
-      this.load()
+    async mounted() {
+      await this.load()
+      try {
+        const valOrig = JSON.parse(this.value || '[]')
+        if (Object.prototype.toString.call(valOrig) === '[object Object]' && valOrig.excluded) {
+          this.excluded = valOrig.excluded || []
+        }
+      } catch (e) {
+        console.log('Aggregate error:', e);
+      }
+      this.inited = true
     },
     methods: {
+      getAfterGroup(s) {
+        return s.split(delimiter)[1]
+      },
       async load() {
         this.data = await stationar_point.aggregateDesc(this, ['pk', 'extract', 'r_type'])
       },
@@ -78,7 +117,34 @@
         }
 
         return false;
-      }
+      },
+      excludedDateDirByGroup(group) {
+        const title = makeKey('', group);
+        return this.excluded.filter(s => s.startsWith(title));
+      },
+      cancelExcludeDateDir(title) {
+        if (this.disabled) {
+          return
+        }
+        const pos = this.excluded.findIndex(v => v === title);
+        if (pos === -1) {
+          return
+        }
+        this.excluded.splice(pos, 1);
+      },
+      excludeDateDir(t, group) {
+        if (this.disabled) {
+          return
+        }
+        const title = makeKey(t, group);
+        if (!this.excluded.includes(title)) {
+          this.excluded.push(title);
+        }
+      },
+      excludedDateDir(t, group) {
+        const title = makeKey(t, group);
+        return this.excluded.includes(title);
+      },
     },
     computed: {
       directions() {
@@ -87,7 +153,7 @@
           if (Array.isArray(this.data)) {
             for (const res of this.data) {
               for (const row of res.result) {
-                if (row.date) {
+                if (row.date && !this.excludedDateDir(row.date, res.title_research)) {
                   d.push(parseInt(row.date.split(' ')[1]));
                 }
               }
@@ -98,10 +164,26 @@
         }
         return d
       },
+      val_data() {
+        return {
+          directions: this.directions,
+          excluded: this.excluded,
+        };
+      },
     },
     watch: {
-      directions() {
-        this.$emit('input', JSON.stringify(this.directions))
+      val_data: {
+        deep: true,
+        handler() {
+          if (this.inited) {
+            this.$emit('input', JSON.stringify(this.val_data))
+          }
+        }
+      },
+      inited() {
+        if (this.inited) {
+          this.$emit('input', JSON.stringify(this.val_data))
+        }
       },
     },
   }
@@ -131,9 +213,39 @@
 
   .research-date-title {
     font-weight: bold;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+      background: rgba(#000, .05);
+    }
   }
 
   .root-agg {
     max-width: 21cm;
+  }
+
+  .clickable-return {
+    cursor: pointer;
+    padding: 0 2px;
+    border: 1px solid rgba(#049372, .4);
+    border-radius: 3px;
+    margin-left: 4px;
+    margin-bottom: 5px;
+    transition: .2s ease-in all;
+    white-space: nowrap;
+    display: inline-block;
+
+    &:hover {
+      color: #fff;
+      background: #049372;
+      border: 1px solid #049372;
+      box-shadow: 0 7px 14px #04937254, 0 5px 5px #049372ba;
+    }
+  }
+
+  .excluded {
+    white-space: normal;
+    word-break: break-word;
   }
 </style>

@@ -408,12 +408,12 @@
                 </div>
               </div>
               <div class="field">
-                <div class="field-title">
+                <label class="field-title" for="first-time">
                   Впервые
-                </div>
-                <label class="field-value">
-                  <input type="checkbox" v-model="row.first_time" :disabled="row.confirmed"/>
                 </label>
+                <div class="field-value">
+                  <input type="checkbox" id="first-time" v-model="row.first_time" :disabled="row.confirmed"/>
+                </div>
               </div>
               <div class="field">
                 <div class="field-title">
@@ -464,12 +464,12 @@
           <div class="group">
             <div class="fields">
               <div class="field">
-                <div class="field-title">
+                <label class="field-title" for="onco">
                   Подозрение на онко
-                </div>
-                <label class="field-value">
-                  <input type="checkbox" v-model="row.maybe_onco" :disabled="row.confirmed"/>
                 </label>
+                <div class="field-value">
+                  <input type="checkbox" id="onco" v-model="row.maybe_onco" :disabled="row.confirmed"/>
+                </div>
               </div>
             </div>
           </div>
@@ -1435,7 +1435,7 @@
     text-align: center;
     padding: 5px;
     font-weight: bold;
-    z-index: 2;
+    z-index: 4;
     display: flex;
   }
 
@@ -1877,5 +1877,9 @@
     &-ok {
       color: #049372
     }
+  }
+
+  label.field-title {
+    font-weight: normal;
   }
 </style>

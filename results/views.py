@@ -1217,17 +1217,24 @@ def result_print(request):
                                         if not v['directions']:
                                             continue
                                         aggr_lab = lab_iss_to_pdf(v)
+                                        if not aggr_lab:
+                                            continue
                                         fwb.append(Spacer(1, 2 * mm))
                                         fwb.append(
-                                            Paragraph("<font face=\"OpenSansBold\">{}:</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
+                                            Paragraph("<font face=\"OpenSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
                                                       style))
                                         fwb.extend(aggr_lab)
                                         continue
                                     if field_type == 17:
                                         if v:
+                                            v = json.loads(v)
+                                            if not v['directions']:
+                                                continue
                                             aggr_text = text_iss_to_pdf(v)
+                                            if not aggr_text:
+                                                continue
                                             fwb.append(
-                                                Paragraph("<font face=\"OpenSansBold\">{}:</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
+                                                Paragraph("<font face=\"OpenSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
                                                           style))
                                             fwb.extend(aggr_text)
                                             continue
