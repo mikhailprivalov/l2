@@ -131,15 +131,12 @@ def directions_history(request):
     # type_service variants: is_paraclinic, is_lab, is_doc_refferal
     type_service = request_data.get("type_service", None)
     for i in result_sql:
-        if type_service == 'is_paraclinic':
-            if not i[18]:
-                continue
-        elif type_service == 'is_doc_refferal':
-            if not i[17]:
-                continue
-        elif type_service == 'is_lab':
-            if i[11] or i[14] or i[15] or i[16] or i[17] or i[18] or i[19]:
-                continue
+        if type_service == 'is_paraclinic' and not i[18] :
+            continue
+        elif type_service == 'is_doc_refferal' and not i[17]:
+            continue
+        elif type_service == 'is_lab' and (i[11] or i[14] or i[15] or i[16] or i[17] or i[18] or i[19]):
+            continue
         if i[14]:
             continue
         if i[0] != last_dir:
