@@ -365,81 +365,74 @@ def bases(request):
 
 
 def current_user_info(request):
-    k = f'view:current_user_info:{request.user.pk}'
-    ret = cache.get(k)
-    if not ret:
-        ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "",
-               "department": {"pk": -1, "title": ""}, "groups": [], "modules": SettingManager.l2_modules(),
-               "user_services": [], "rmis_enabled": SettingManager.get("rmis_enabled", default='false', default_type='b')}
-        if ret["auth"]:
-            ret["username"] = request.user.username
-            ret["fio"] = request.user.doctorprofile.fio
-            ret["groups"] = list(request.user.groups.values_list('name', flat=True))
-            if request.user.is_superuser:
-                ret["groups"].append("Admin")
-            ret["doc_pk"] = request.user.doctorprofile.pk
-            ret["rmis_location"] = request.user.doctorprofile.rmis_location
-            ret["rmis_login"] = request.user.doctorprofile.rmis_login
-            ret["rmis_password"] = request.user.doctorprofile.rmis_password
-            ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye_id,
-                                 "title": request.user.doctorprofile.podrazdeleniye.title}
-            ret["restricted"] = [x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]
-            ret["user_services"] = [x.pk for x in
-                                    request.user.doctorprofile.users_services.all() if x not in ret["restricted"]]
-            ret["su"] = request.user.is_superuser
+    ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "",
+           "department": {"pk": -1, "title": ""}, "groups": [], "modules": SettingManager.l2_modules(),
+           "user_services": [], "rmis_enabled": SettingManager.get("rmis_enabled", default='false', default_type='b')}
+    if ret["auth"]:
+        ret["username"] = request.user.username
+        ret["fio"] = request.user.doctorprofile.fio
+        ret["groups"] = list(request.user.groups.values_list('name', flat=True))
+        if request.user.is_superuser:
+            ret["groups"].append("Admin")
+        ret["doc_pk"] = request.user.doctorprofile.pk
+        ret["rmis_location"] = request.user.doctorprofile.rmis_location
+        ret["rmis_login"] = request.user.doctorprofile.rmis_login
+        ret["rmis_password"] = request.user.doctorprofile.rmis_password
+        ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye_id,
+                             "title": request.user.doctorprofile.podrazdeleniye.title}
+        ret["restricted"] = [x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]
+        ret["user_services"] = [x.pk for x in
+                                request.user.doctorprofile.users_services.all() if x not in ret["restricted"]]
+        ret["su"] = request.user.is_superuser
 
-            en = SettingManager.en()
-            ret["extended_departments"] = {}
+        en = SettingManager.en()
+        ret["extended_departments"] = {}
 
-            st_base = ResearchSite.objects.filter(hide=False).order_by('title')
-            for e in en:
-                if e < 4 or not en[e]:
-                    continue
+        st_base = ResearchSite.objects.filter(hide=False).order_by('title')
+        for e in en:
+            if e < 4 or not en[e]:
+                continue
 
-                t = e - 4
-                has_def = DResearches.objects.filter(hide=False, site_type__isnull=True,
-                                                     **DResearches.filter_type(e)).exists()
+            t = e - 4
+            has_def = DResearches.objects.filter(hide=False, site_type__isnull=True,
+                                                 **DResearches.filter_type(e)).exists()
 
-                if has_def:
-                    d = [
-                        {
-                            "pk": None,
-                            "title": 'Общие',
-                            'type': t,
-                            "extended": True,
-                        }
-                    ]
-                else:
-                    d = []
-
-                ret["extended_departments"][e] = [
-                    *d,
-                    *[{
-                        "pk": x.pk,
-                        "title": x.title,
-                        "type": t,
+            if has_def:
+                d = [
+                    {
+                        "pk": None,
+                        "title": 'Общие',
+                        'type': t,
                         "extended": True,
-                        'e': e,
-                    } for x in st_base.filter(site_type=t)]
+                    }
                 ]
-        cache.set(k, ret, 300)
+            else:
+                d = []
+
+            ret["extended_departments"][e] = [
+                *d,
+                *[{
+                    "pk": x.pk,
+                    "title": x.title,
+                    "type": t,
+                    "extended": True,
+                    'e': e,
+                } for x in st_base.filter(site_type=t)]
+            ]
     return JsonResponse(ret)
 
 
 @login_required
 def directive_from(request):
-    data = cache.get('view:directive_from')
-    if not data:
-        from users.models import DoctorProfile
-        data = []
-        for dep in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by('title'):
-            d = {
-                "pk": dep.pk,
-                "title": dep.title,
-                "docs": [{"pk": x.pk, "fio": x.fio} for x in DoctorProfile.objects.filter(podrazdeleniye=dep, user__groups__name="Лечащий врач").order_by("fio")],
-            }
-            data.append(d)
-        cache.set('view:directive_from', data, 100)
+    from users.models import DoctorProfile
+    data = []
+    for dep in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by('title'):
+        d = {
+            "pk": dep.pk,
+            "title": dep.title,
+            "docs": [{"pk": x.pk, "fio": x.fio} for x in DoctorProfile.objects.filter(podrazdeleniye=dep, user__groups__name="Лечащий врач").order_by("fio")],
+        }
+        data.append(d)
 
     return JsonResponse({"data": data})
 

@@ -1,9 +1,8 @@
 <template>
   <div ref="root" class="construct-root">
-    <div class="construct-sidebar" v-show="opened_id === -2">
+    <div class="construct-sidebar" v-show="opened_id === -2" v-if="departments_of_type.length > 0">
       <div class="sidebar-select">
-        <select-picker-m style="height: 34px;" :options="departments_of_type" v-model="department"
-                         v-if="departments_of_type.length > 0"/>
+        <select-picker-b style="height: 34px;" :options="departments_of_type" v-model="department"/>
       </div>
       <input class="form-control" v-model="title_filter" style="padding-top: 7px;padding-bottom: 7px"
              placeholder="Фильтр по названию"/>
@@ -37,7 +36,7 @@
 </template>
 
 <script>
-  import SelectPickerM from '../fields/SelectPickerM'
+  import SelectPickerB from '../fields/SelectPickerM'
   import ParaclinicResearchEditor from './ParaclinicResearchEditor'
   import MicrobiologyResearchEditor from './MicrobiologyResearchEditor'
   import researches_point from '../api/researches-point'
@@ -48,7 +47,7 @@
   export default {
     components: {
       StationarFormEditor,
-      SelectPickerM,
+      SelectPickerB,
       ParaclinicResearchEditor,
       MicrobiologyResearchEditor,
     },
@@ -81,6 +80,10 @@
         this.load_researches()
       },
       update_deps() {
+        if (this.departments.length === 0 || !this.$store.getters.user_data || !this.$store.getters.user_data.department) {
+          return
+        }
+
         let d = [];
         if (Object.keys(this.modules).length > 0) {
           for (let row of this.departments) {
@@ -132,7 +135,7 @@
           || !this.$store.getters.user_data.department)
           return;
         for (let row of deps) {
-          if (row.value === this.$store.getters.user_data.department.pk) {
+          if (row.value.toString() === this.$store.getters.user_data.department.pk.toString()) {
             this.department = row.value.toString();
             return
           }
