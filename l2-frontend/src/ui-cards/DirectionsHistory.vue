@@ -162,6 +162,11 @@
         type: String,
         default: '',
       },
+      forHospSlave: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
     },
     data() {
       return {
@@ -308,7 +313,7 @@
         vm.directions = []
         vm.all_checked = false
 
-        directions_point.getHistory(this, ['iss_pk', 'services'], {
+        directions_point.getHistory(this, ['iss_pk', 'services', 'forHospSlave'], {
           type: this.active_type,
           patient: this.patient_pk,
           date_from: moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY'),
