@@ -240,6 +240,9 @@
       parent_iss: {
         default: null,
       },
+      parent_slave_iss: {
+        default: null,
+      },
       clear_after_gen: {
         type: Boolean,
         default: false
@@ -528,6 +531,7 @@
           discount: this.discount,
           need_contract: this.pay_source,
           parent_iss: this.parent_iss,
+          parent_slave_hosp: this.parent_slave_iss,
           kk: this.kk,
           direction_purpose: this.direction_purpose,
           external_organization: this.external_organization,

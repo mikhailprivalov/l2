@@ -27,7 +27,7 @@
             }
         },
         mounted() {
-            if ((!this.val || this.val === '' || !this.variants.includes(this.val)) && this.variants.length > 0) {
+            if ((!this.val || !this.variants.includes(this.val)) && this.variants.length > 0) {
                 this.val = this.variants[0]
             }
         },

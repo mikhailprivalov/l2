@@ -46,7 +46,7 @@
             }
         },
         mounted() {
-            if ((!this.val || this.val === '' || !this.variants.includes(this.val)) && this.variants.length > 0) {
+            if ((!this.val || !this.variants.includes(this.val)) && this.variants.length > 0) {
                 this.changeValue(this.variants[0])
             }
         },

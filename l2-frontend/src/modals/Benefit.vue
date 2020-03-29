@@ -112,12 +112,11 @@
   import Modal from '../ui-cards/Modal'
   import patients_point from '../api/patients-point'
   import * as action_types from '../store/action-types'
-  import MKBfield from '../fields/MKBField'
   import moment from 'moment'
 
   export default {
     name: 'benefit',
-    components: {Modal, MKBfield},
+    components: {Modal},
     props: {
       card_pk: {
         type: Number,
@@ -177,7 +176,7 @@
       },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const data = await patients_point.saveBenefit({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
+        await patients_point.saveBenefit({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
         this.$store.dispatch(action_types.DEC_LOADING).then()
         okmessage('Сохранено')
         this.hide_edit()

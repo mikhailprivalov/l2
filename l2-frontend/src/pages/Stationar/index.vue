@@ -143,7 +143,7 @@
           <div class="research-title">
             <div class="research-left">
               {{row.research.title}}
-              <span class="comment" v-if="row.research.comment && row.research.comment !== ''"> [{{row.research.comment}}]</span>
+              <span class="comment" v-if="row.research.comment"> [{{row.research.comment}}]</span>
               <dropdown :visible="research_open_history === row.pk"
                         :position='["left", "bottom", "left", "top"]'
                         @clickout="hide_results">
@@ -234,6 +234,22 @@
               </div>
             </div>
           </div>
+          <div class="group" v-if="is_diary(row.research)">
+            <div class="group-title">Направления в рамках приёма</div>
+            <div class="row">
+              <div class="col-xs-12">
+                <div class="sd">
+                  <directions-history :iss_pk="row.pk" kk="stationar" forHospSlave/>
+                </div>
+                <div class="sd empty" v-if="!row.confirmed">
+                  <button @click="create_directions(row)"
+                          class="btn btn-primary-nb btn-blue-nb" type="button">
+                    <i class="fa fa-plus"></i> создать направления
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="control-row" :key="row.research.version">
             <div class="res-title">{{row.research.title}}:</div>
             <iss-status :i="row"/>
@@ -277,7 +293,7 @@
     <modal @close="closePlus" marginLeftRight="auto"
            margin-top="60px"
            max-width="1400px" ref="modalStationar" show-footer="true"
-           v-if="openPlusMode === 'directions'"
+           v-if="openPlusMode === 'directions' || create_directions_for > -1"
            white-bg="true" width="100%">
       <span slot="header">Создание направлений – история {{direction}} {{issTitle}}, {{patient.fio_age}}</span>
       <div class="registry-body" slot="body" style="min-height: 140px">
@@ -294,11 +310,12 @@
               kk="stationar"
               :base="bases_obj[patient.base]"
               :researches="create_directions_data"
-              :main_diagnosis="'-'"
+              :main_diagnosis="create_directions_diagnosis"
               :valid="true"
               :card_pk="patient.cardId"
               :initial_fin="finId"
               :parent_iss="iss"
+              :parent_slave_iss="create_directions_for > -1 ? create_directions_for : null"
               :clear_after_gen="true"
               style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"
             />
@@ -418,10 +435,12 @@
   import patients_point from '../../api/patients-point'
   import UrlData from "../../UrlData";
   import AggregateTADP from "../../fields/AggregateTADP";
+  import DirectionsHistory from "../../ui-cards/DirectionsHistory";
 
   export default {
     mixins: [menuMixin],
     components: {
+      DirectionsHistory,
       dropdown,
       AggregateTADP,
       AggregateDesc,
@@ -450,6 +469,8 @@
         tree: [],
         hosp_services: [],
         direction_service: -1,
+        create_directions_for: -1,
+        create_directions_diagnosis: '',
         show_results_pk: -1,
         list_directions: [],
         opened_list_key: null,
@@ -510,6 +531,14 @@
       this.inited = true
     },
     methods: {
+      is_diary(research) {
+        const res_title = research.title.toLowerCase();
+        return res_title.includes('осмотр') || res_title.includes('дневник');
+      },
+      create_directions(iss) {
+        this.create_directions_diagnosis = iss.diagnos;
+        this.create_directions_for = iss.pk
+      },
       async confirm_service() {
         await this.$store.dispatch(action_types.INC_LOADING)
         const {pk} = await stationar_point.makeService({
@@ -647,7 +676,9 @@
         this.openPlusId = key
       },
       async closePlus() {
+        this.create_directions_for = -1
         this.openPlusMode = null
+        this.create_directions_diagnosis = ''
         this.openPlusId = null
         this.create_directions_data = []
         this.hosp_services = []
@@ -978,6 +1009,9 @@
         }
         if (this.openPlusId === 'consultation') {
           return [4]
+        }
+        if (this.openPlusId === null) {
+          return [2, 3, 4]
         }
         return []
       },
@@ -1378,6 +1412,18 @@
           }
         }
       }
+    }
+  }
+
+  .direction, .sd {
+    padding: 5px;
+    margin: 5px;
+    border-radius: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.07) 100%);
+
+    hr {
+      margin: 3px;
     }
   }
 </style>

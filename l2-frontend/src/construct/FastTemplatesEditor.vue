@@ -45,7 +45,7 @@
                     <m-k-b-field v-model="template_data.fields[field.pk]" :short="false" />
                   </div>
                   <div class="ft-field-value" v-else-if="field.field_type === 2 && template_data.readonly">
-                    <input v-model="template_data.fields[field.pk]" readonly class="form-control" :readonly="true" />
+                    <input v-model="template_data.fields[field.pk]" readonly class="form-control" />
                   </div>
                   <div v-else>не доступно для заполнения</div>
                 </div>
@@ -80,11 +80,10 @@
   import MKBField from '../fields/MKBField'
   import researches_point from '../api/researches-point'
   import * as action_types from '../store/action-types'
-  import ResearchesPicker from '../ui-cards/ResearchesPicker'
 
   export default {
     name: 'fast-templates-editor',
-    components: {Modal, ResearchesPicker, MKBField},
+    components: {Modal, MKBField},
     props: {
       research_pk: {
         type: Number,

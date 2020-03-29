@@ -242,7 +242,7 @@
           <div class="research-title">
             <div class="research-left">
               {{row.research.title}}
-              <span class="comment" v-if="row.research.comment && row.research.comment !== ''"> [{{row.research.comment}}]</span>
+              <span class="comment" v-if="row.research.comment"> [{{row.research.comment}}]</span>
               <dropdown :visible="research_open_history === row.pk"
                         :position='["left", "bottom", "left", "top"]'
                         v-if="!data.has_microbiology"
@@ -658,22 +658,19 @@
     import Benefit from '../modals/Benefit'
     import DirectionsHistory from '../ui-cards/DirectionsHistory'
     import RecipeInput from '../ui-cards/RecipeInput'
-    import CultureInput from '../forms/CultureInput'
     import ResultsViewer from '../modals/ResultsViewer'
     import LastResult from '../ui-cards/LastResult'
     import IssStatus from '../ui-cards/IssStatus'
     import {vField, vGroup} from '../components/visibility-triggers'
-    import TemplateEditor from '../construct/TemplateEditor'
     import DescriptiveForm from '../forms/DescriptiveForm'
 
     export default {
         name: 'results-paraclinic',
         components: {
             DescriptiveForm,
-            TemplateEditor,
             DateFieldNav, Modal, MKBField, ResearchesPicker, SelectedResearches,
             dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-            LastResult, RecipeInput, CultureInput, IssStatus,
+            LastResult, RecipeInput, IssStatus,
         },
         data() {
             return {

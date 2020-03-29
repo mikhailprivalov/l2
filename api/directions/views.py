@@ -64,6 +64,7 @@ def directions_generate(request):
             count=p.get("count", 1),
             discount=p.get("discount", 0),
             parent_iss=p.get("parent_iss", None),
+            parent_slave_hosp=p.get("parent_slave_hosp", None),
             counts=p.get("counts", {}),
             localizations=p.get("localizations", {}),
             service_locations=p.get("service_locations", {}),
@@ -89,6 +90,7 @@ def directions_history(request):
     pk = request_data.get("patient", -1)
     req_status = request_data.get("type", 4)
     iss_pk = request_data.get("iss_pk", None)
+    for_slave_hosp = request_data.get("forHospSlave", False)
     services = request_data.get("services", [])
     services = list(map(int, services or []))
 
@@ -114,7 +116,7 @@ def directions_history(request):
     if iss_pk:
         is_parent = True
 
-    result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service, iss_pk, is_parent)
+    result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service, iss_pk, is_parent, for_slave_hosp)
 
     # napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title, date_create,
     # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs,

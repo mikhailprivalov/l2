@@ -1308,6 +1308,9 @@ def result_print(request):
                                     continue
                                 if field_type == 17:
                                     if v:
+                                        v = json.loads(v)
+                                        if not v['directions']:
+                                            continue
                                         v = text_iss_to_pdf(v, protocol_plain_text)
                                 if r.field.get_title(force_type=field_type) != "":
                                     vals.append("{}:&nbsp;{}".format(
@@ -1383,7 +1386,7 @@ def result_print(request):
                     if not protocol_plain_text:
                         br = '<br/>'
                     if napr_child:
-                        fwb.append(Paragraph("Направления:".format(t1), styleBold))
+                        fwb.append(Paragraph("Назначено:".format(t1), styleBold))
                         s_napr = ""
                         for n_child in napr_child:
                             iss_research = [s.research.title for s in

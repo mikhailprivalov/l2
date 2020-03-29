@@ -2,7 +2,7 @@ from django.db import connection
 from laboratory.settings import TIME_ZONE
 
 
-def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk, is_parent):
+def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk, is_parent, for_slave_hosp):
     with connection.cursor() as cursor:
         cursor.execute("""WITH 
         t_iss AS (SELECT 
@@ -27,7 +27,8 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directions_issledovaniya.doc_confirmation_id, 
             directions_issledovaniya.maybe_onco,
             to_char(directions_issledovaniya.time_save AT TIME ZONE %(tz)s, 'DD.MM.YYYY-HH24:MI:SS') as ch_time_save,
-            directions_issledovaniya.study_instance_uid
+            directions_issledovaniya.study_instance_uid,
+            directions_napravleniya.parent_slave_hosp_id
         FROM directions_issledovaniya
         LEFT JOIN directory_researches
         ON directions_issledovaniya.research_id = directory_researches.Id
@@ -36,8 +37,10 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
         WHERE directions_napravleniya.data_sozdaniya BETWEEN %(d_start)s AND %(d_end)s
         AND
         CASE
-        WHEN %(is_parent)s = TRUE THEN 
+        WHEN %(is_parent)s = TRUE AND %(for_slave_hosp)s = FALSE THEN 
             directions_napravleniya.parent_id = %(iss_pk)s
+        WHEN %(is_parent)s = TRUE AND %(for_slave_hosp)s = TRUE THEN
+            directions_napravleniya.parent_slave_hosp_id = %(iss_pk)s
         when %(card_id)s > -1 THEN 
         directions_napravleniya.client_id = %(card_id)s
         when %(who_create)s > -1 THEN
@@ -62,7 +65,7 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
         doc_confirmation_id,
         to_char(time_recive AT TIME ZONE %(tz)s, 'DD.MM.YY HH24:MI:SS.US'), 
         ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs, is_slave_hospital,
-        is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid
+        is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid, parent_slave_hosp_id
         FROM t_iss_tubes
         LEFT JOIN t_recive
         ON t_iss_tubes.tubesregistration_id = t_recive.id_t_recive
@@ -77,7 +80,7 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
         END
         
         ORDER BY napravleniye_id DESC""", params={'d_start': d_s, 'd_end': d_e, 'card_id': card_id, 'who_create': who_create_dir,
-                                                  'services_p': services, 'is_serv': is_serv, 'tz': TIME_ZONE, 'iss_pk': iss_pk, 'is_parent': is_parent})
+                                                  'services_p': services, 'is_serv': is_serv, 'tz': TIME_ZONE, 'iss_pk': iss_pk, 'is_parent': is_parent, 'for_slave_hosp': for_slave_hosp})
 
         row = cursor.fetchall()
     return row

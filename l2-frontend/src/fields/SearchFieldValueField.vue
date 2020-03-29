@@ -66,7 +66,7 @@
         this.checkDirection()
 
         setTimeout(() => {
-          if (!this.val || this.val === '') {
+          if (!this.val) {
             this.loadLast()
           }
         }, 200)

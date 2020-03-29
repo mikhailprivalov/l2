@@ -20,11 +20,11 @@
     props: {
       researches: {
         type: Array,
-        reqired: true
+        required: true
       },
       params_directory: {
         type: Object,
-        reqired: true
+        required: true
       },
       value: {}
     },

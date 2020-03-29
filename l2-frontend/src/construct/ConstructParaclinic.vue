@@ -181,6 +181,9 @@
         return parseInt(this.department)
       },
       researches_list_filtered() {
+        if (!this.researches_list) {
+          return [];
+        }
         return this.researches_list.filter(row => row.title.trim().toLowerCase().indexOf(this.title_filter.trim().toLowerCase()) >= 0)
       },
       ...mapGetters({
