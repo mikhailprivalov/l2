@@ -1037,13 +1037,13 @@
     "@sentry/utils" "5.12.5"
     tslib "^1.9.3"
 
-"@sentry/integrations@^5.12.5":
-  version "5.12.5"
-  resolved "https://registry.yarnpkg.com/@sentry/integrations/-/integrations-5.12.5.tgz#7ac25447626ca96f52c8aa6f980f2faad1b5a187"
-  integrity sha512-MIM5smikFJTfoFOjrlwTH65J3jGpkrucshScvCL3YKWUrOjnMmc/zW9STYrXgF+gIxKFdtgkSB5Uqclz/sDmwg==
+"@sentry/integrations@^5.15.2":
+  version "5.15.2"
+  resolved "https://registry.yarnpkg.com/@sentry/integrations/-/integrations-5.15.2.tgz#7c0f7986f54acc6a30a9bda2111f614a1cefc07c"
+  integrity sha512-AUwnZ3DCndk0cYWywILheQP7VwAcM14j8dfKwhQhVEQbwEN+1ca8K4+GASVBad0Pq0uR6dmbuznaDzqvKCLfxg==
   dependencies:
-    "@sentry/types" "5.12.4"
-    "@sentry/utils" "5.12.5"
+    "@sentry/types" "5.15.2"
+    "@sentry/utils" "5.15.2"
     tslib "^1.9.3"
 
 "@sentry/minimal@5.12.5":
@@ -1060,12 +1060,25 @@
   resolved "https://registry.yarnpkg.com/@sentry/types/-/types-5.12.4.tgz#6e52639bc3b4e136e9a0da5385890f8f78bb7697"
   integrity sha512-JoN3YIp7Z+uxUZArj2B6NcEoXFQDhd0kqO0QpfiHZyg4Dhx2/E2aHuVx0H6Fndk+60iEZSECaCBXe2MOPo4fqA==
 
+"@sentry/types@5.15.2":
+  version "5.15.2"
+  resolved "https://registry.yarnpkg.com/@sentry/types/-/types-5.15.2.tgz#50a7620ae578bd291ca946c05dcfd7d835bb016b"
+  integrity sha512-wfCinZzbqdehRhvRbv6lrH/rRDsCHoNG9M7xkEz4Jt+a9qSEOxL5Jnphsn00HypKtkuJJPad/HmFNjCfAJoVlg==
+
 "@sentry/utils@5.12.5":
   version "5.12.5"
   resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-5.12.5.tgz#7c6227a2090bef8969476bf06ea9befac46809fc"
   integrity sha512-xzZleXbxefrVETm3V2+frs4T4RRrOYy6UN1ZrNlnHHQHuSuOfyzU1U7DJEpNfpk2ZlRSRMtzk7CjDk4jf0Wktg==
   dependencies:
     "@sentry/types" "5.12.4"
+    tslib "^1.9.3"
+
+"@sentry/utils@5.15.2":
+  version "5.15.2"
+  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-5.15.2.tgz#457745802172be35a576ad26bd5c521c55cbe1bb"
+  integrity sha512-cnpRyK+vjyuDpthx3yV8Z5Y9JJVnJba0Tk0MnMC62arcQQQOzS7F89aYYCmUa9NvRSLb1hHxCdCy/ZijHLXxlw==
+  dependencies:
+    "@sentry/types" "5.15.2"
     tslib "^1.9.3"
 
 "@types/events@*":
