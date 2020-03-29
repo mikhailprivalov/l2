@@ -82,14 +82,13 @@
 </template>
 
 <script>
-  import PatientCard from './PatientCard'
   import Modal from './Modal'
   import * as action_types from '../store/action-types'
   import patients_point from '../api/patients-point'
 
   export default {
     name: 'patient-small-picker',
-    components: {PatientCard, Modal},
+    components: {Modal},
     props: {
       base_pk: {
         type: Number,
