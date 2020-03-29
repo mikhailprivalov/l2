@@ -143,7 +143,7 @@
           <div class="research-title">
             <div class="research-left">
               {{row.research.title}}
-              <span class="comment" v-if="row.research.comment && row.research.comment !== ''"> [{{row.research.comment}}]</span>
+              <span class="comment" v-if="row.research.comment"> [{{row.research.comment}}]</span>
               <dropdown :visible="research_open_history === row.pk"
                         :position='["left", "bottom", "left", "top"]'
                         @clickout="hide_results">

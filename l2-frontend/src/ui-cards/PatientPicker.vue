@@ -80,7 +80,7 @@
                 </button>
                 <button class="btn last btn-blue-nb nbr" :class="{[`disp_${selected_card.status_disp}`]: true}"
                         ref="disp"
-                        type="button" v-tippy="{ placement : 'bottom', arrow: false, reactive : true,
+                        type="button" v-tippy="{ placement : 'bottom', reactive : true,
                                                 theme : 'light bordered',
                                                 duration : 0,
                                                 arrow: true,
@@ -251,7 +251,6 @@
   import L2CardCreate from '../modals/L2CardCreate'
   import DReg from '../modals/DReg'
   import Benefit from '../modals/Benefit'
-  import LinkSelector from '../fields/LinkSelector'
   import PatientCard from './PatientCard'
   import Modal from './Modal'
   import * as action_types from '../store/action-types'
@@ -261,7 +260,7 @@
 
   export default {
     name: 'patient-picker',
-    components: {Vaccine, LinkSelector, PatientCard, SelectPickerB, Modal, L2CardCreate, DReg, Benefit},
+    components: {Vaccine, PatientCard, SelectPickerB, Modal, L2CardCreate, DReg, Benefit},
     props: {
       directive_from_need: {
         default: 'false',

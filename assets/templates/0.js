@@ -225,7 +225,7 @@ function exec_formula(th) {
     formula.str = formula.body;
 
     if (formula.necessary != null) {
-        for (i = 0; i < formula.necessary.length; i++) {
+        for (let i = 0; i < formula.necessary.length; i++) {
             formula.necessary[i] = formula.necessary[i].replace(/\{|\}/g, "");
             fval = 0;
             try {

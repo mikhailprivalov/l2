@@ -212,7 +212,7 @@
                 <label style="line-height: 1"
                        v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14">
                   Число строк:<br/>
-                  <input class="form-control" type="number" min="1" v-model.int="row.lines"/>
+                  <input class="form-control" type="number" min="1" v-model.number="row.lines"/>
                 </label>
                 <label>
                   Тип поля:<br/>

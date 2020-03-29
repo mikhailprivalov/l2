@@ -74,7 +74,7 @@
       try {
         const valOrig = JSON.parse(this.value || '[]')
         if (Object.prototype.toString.call(valOrig) === '[object Object]' && valOrig.excluded) {
-          this.excluded = valOrig.excluded || []
+          this.excluded = valOrig.excluded
         }
       } catch (e) {
         console.log('Aggregate error:', e);
