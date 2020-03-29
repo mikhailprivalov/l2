@@ -531,13 +531,6 @@
       open_vaccine() {
         this.vaccine = true
       },
-      hide_modal_anamnesis() {
-        if (this.$refs.modalAnamnesis) {
-          this.$refs.modalAnamnesis.$el.style.display = 'none';
-        }
-        this.anamnesis_data = {};
-        this.anamnesis = false
-      },
       open_benefit() {
         this.benefit = true
       },
