@@ -77,6 +77,12 @@ class ResParaclinicInputGroups(admin.ModelAdmin):
     list_filter = ('research',)
     search_fields = ('research__title',)
 
+class ResHospitalService(admin.ModelAdmin):
+    list_display = ('main_research', 'site_type', 'slave_research',)
+    list_display_links = ('main_research', 'slave_research',)
+    list_filter = ('main_research',)
+    search_fields = ('slave_research__title',)
+
 
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
@@ -98,4 +104,4 @@ admin.site.register(models.Culture, TitleHide)
 admin.site.register(models.Antibiotic, TitleHide)
 admin.site.register(models.Localization, TitleFsli)
 admin.site.register(models.ServiceLocation, TitleHide)
-admin.site.register(models.HospitalService, HospitalServiceAdmin)
+admin.site.register(models.HospitalService, ResHospitalService)

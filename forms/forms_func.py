@@ -470,14 +470,14 @@ def hosp_extract_get_data(hosp_last_num):
     titles_field = ['Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Основной диагноз по МКБ',
                     'Осложнение основного диагноза (описание)', 'Осложнение основного диагноза по МКБ',
                     'Сопутствующий диагноз (описание)', 'Сопутствующий диагноз по МКБ',
-                    'Исход госпитализации', 'Результат госпитализации', 'Проведено койко-дней'
+                    'Исход госпитализации', 'Результат госпитализации', 'Проведено койко-дней', 'Заведующий отделением'
                     ]
     list_values = None
     if titles_field and hosp_extract:
         list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
     date_value, time_value = '', ''
     final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', '', ''
-    days_count, result_hospital = '', ''
+    days_count, result_hospital, manager_depart = '', '', ''
 
     days_count = ''
     if list_values:
@@ -504,88 +504,47 @@ def hosp_extract_get_data(hosp_last_num):
                 near_diagnos_mkb = str(i[2]).split(' ')[0]
             if i[3] == 'Проведено койко-дней':
                 days_count = str(i[2])
+            if i[3] == 'Заведующий отделением':
+                manager_depart = str(i[2])
 
     doc_fio = doc_confirm.get_fio()
     return {'date_value': date_value, 'time_value': time_value, 'final_diagnos': final_diagnos, 'other_diagnos': other_diagnos, 'near_diagnos': near_diagnos,
             'outcome': outcome, 'final_diagnos_mkb': final_diagnos_mkb, 'other_diagnos_mkb': other_diagnos_mkb, 'near_diagnos_mkb': near_diagnos_mkb,
-            'extract_iss': hosp_extract_iss, 'days_count': days_count, 'result_hospital': result_hospital, 'doc_fio': doc_fio
+            'extract_iss': hosp_extract_iss, 'days_count': days_count, 'result_hospital': result_hospital, 'doc_fio': doc_fio, 'manager_depart': manager_depart
             }
 
 
-def hosp_get_clinical_diagnos11(hosp_first_num):
-    hosp_day_entries = hosp_get_data_direction(hosp_first_num, site_type=1, type_service='None', level=-1)
-    day_entries_iss = []
-    day_entries_research_id = None
-    if hosp_day_entries:
-        for i in hosp_day_entries:
-            # найти дневники совместно с заведующим
-            if i.get('research_title').find('заведующ') != -1:
-                day_entries_iss.append(i.get('iss'))
-                if not day_entries_research_id:
-                    day_entries_research_id = i.get('research_id')
-
-    titles_field = ['Диагноз клинический', 'Дата установления диагноза']
-    list_values = []
-    if titles_field and day_entries_iss:
-        for i in day_entries_iss:
-            list_values.append(get_result_value_iss(i, day_entries_research_id, titles_field))
-    s = []
-    if list_values:
-        for i in list_values:
-            if not i:
-                continue
-            if (i[1][3]).find('Дата установления диагноза') != -1:
-                date_diag = normalize_date(i[1][2])
-                if date_diag and i[0][2]:
-                    s.append(i[0][2] + '; дата:' + date_diag)
-            elif (i[0][3]).find('Дата установления диагноза') != -1:
-                date_diag = normalize_date(i[0][2])
-                if date_diag and i[1][2]:
-                    s.append(i[1][2] + '; дата:' + str(date_diag))
+def hosp_get_clinical_diagnos(hosp_obj):
     clinic_diagnos = ''
-    if len(s) > 0:
-        clinic_diagnos = s.pop()
+    for i in hosp_obj:
+        hosp_diagnostic_epicris = hosp_get_data_direction(i['direction'], site_type=6, type_service='None', level=2)
+        day_entries_iss = []
+        day_entries_research_id = None
+        if hosp_diagnostic_epicris:
+            for i in hosp_diagnostic_epicris:
+                # найти эпикризы диагностические
+                if i.get('research_title').lower().find('диагностич') != -1:
+                    day_entries_iss.append(i.get('iss'))
+                    if not day_entries_research_id:
+                        day_entries_research_id = i.get('research_id')
+        titles_field = ['Диагноз клинический', 'Дата установления диагноза']
+        list_values = []
+        if titles_field and day_entries_iss:
+            for i in day_entries_iss:
+                list_values.append(get_result_value_iss(i, day_entries_research_id, titles_field))
 
-    return clinic_diagnos
-
-
-def hosp_get_clinical_diagnos(hosp_first_num):
-    hosp_diagnostic_epicris = hosp_get_data_direction(hosp_first_num, site_type=6, type_service='None', level=-1)
-    print(hosp_diagnostic_epicris)
-    day_entries_iss = []
-    day_entries_research_id = None
-    if hosp_diagnostic_epicris:
-        for i in hosp_diagnostic_epicris:
-            # найти эпикризы диагностические
-            if i.get('research_title').lower().find('диагностич') != -1:
-                day_entries_iss.append(i.get('iss'))
-                if not day_entries_research_id:
-                    day_entries_research_id = i.get('research_id')
-
-    titles_field = ['Диагноз клинический', 'Дата установления диагноза']
-    list_values = []
-    if titles_field and day_entries_iss:
-        for i in day_entries_iss:
-            list_values.append(get_result_value_iss(i, day_entries_research_id, titles_field))
-    s = []
-    if list_values:
-        for i in list_values:
-            if not i:
-                continue
-            if (i[1][3]).find('Дата установления диагноза') != -1:
-                date_diag = normalize_date(i[1][2])
-                if date_diag and i[0][2]:
-                    s.append(f'{i[0][2]}; дата: {str(date_diag)}\n')
-            elif (i[0][3]).find('Дата установления диагноза') != -1:
-                date_diag = normalize_date(i[0][2])
-                if date_diag and i[1][2]:
-                    # s.append(i[1][2] + '; дата:' + str(date_diag))
-                    s.append(f'{i[1][2]}; дата: {str(date_diag)}\n')
-    clinic_diagnos = ''
-    # if len(s) > 0:
-        # clinic_diagnos = s.pop()
-    clinic_diagnos = ''.join(s)
-
+        if list_values:
+            for i in list_values:
+                if not i:
+                    continue
+                if (i[1][3]).find('Дата установления диагноза') != -1:
+                    date_diag = normalize_date(i[1][2])
+                    if date_diag and i[0][2]:
+                        clinic_diagnos = f'{clinic_diagnos}{i[0][2]}; дата: {str(date_diag)} <br/>'
+                elif (i[0][3]).find('Дата установления диагноза') != -1:
+                    date_diag = normalize_date(i[0][2])
+                    if date_diag and i[1][2]:
+                        clinic_diagnos = f'{clinic_diagnos}{i[1][2]}; дата: {str(date_diag)} <br/>'
     return clinic_diagnos
 
 

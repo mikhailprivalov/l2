@@ -151,6 +151,7 @@ def form_01(request_data):
     days_count = '__________________________'
     outcome = ''
     doc_fio = ''
+    manager_depart = ''
     if hosp_extract_data:
         extrac_date = hosp_extract_data['date_value']
         extract_time = hosp_extract_data['time_value']
@@ -161,6 +162,7 @@ def form_01(request_data):
         if hosp_extract_data['outcome']:
             outcome = hosp_extract_data['outcome']
         doc_fio = hosp_extract_data['doc_fio']
+        manager_depart = hosp_extract_data['manager_depart']
 
     # Получить отделение - из названия услуги или самого главного направления
     hosp_depart = hosp_nums_obj[0].get('research_title')
@@ -185,7 +187,7 @@ def form_01(request_data):
 
     ###########################################################################################################
     # получение данных клинического диагноза
-    clinical_diagnos = hosp_get_clinical_diagnos(hosp_first_num)
+    clinical_diagnos = hosp_get_clinical_diagnos(hosp_nums_obj)
 
     #####################################################################################################
     # получить даные из переводного эпикриза: Дата перевода, Время перевода, в какое отделение переведен
@@ -292,7 +294,7 @@ def form_01(request_data):
         Paragraph('19. Особые отметки', style),
         Spacer(1, 2 * mm),
         Paragraph('Лечащий врач: {}'.format(doc_fio), style),
-        Paragraph('Заведующий отделением:', style),
+        Paragraph('Заведующий отделением: {}'.format(manager_depart), style),
     ]
 
     objs.extend(title_page)
