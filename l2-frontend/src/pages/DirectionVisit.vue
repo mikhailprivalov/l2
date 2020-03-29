@@ -66,7 +66,7 @@
                 <ol>
                   <li v-for="r in researches">
                     {{r.title}}
-                    <span class="comment" v-if="r.comment && r.comment !== ''"> [{{r.comment}}]</span>
+                    <span class="comment" v-if="r.comment"> [{{r.comment}}]</span>
                   </li>
                 </ol>
                 <div style="margin-top: 5px" v-if="direction_data.tubes && direction_data.tubes.length > 0">

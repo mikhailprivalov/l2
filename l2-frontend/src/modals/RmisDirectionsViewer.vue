@@ -11,7 +11,7 @@
           <div>Направляющая организация: {{d.referralOrganization}}</div>
           <hr/>
           <ol>
-            <li v-for="s in d.services"><span class="s-code" v-if="s.code && s.code !== ''">{{s.code}}</span>
+            <li v-for="s in d.services"><span class="s-code" v-if="s.code">{{s.code}}</span>
               {{s.title}}
             </li>
           </ol>
@@ -24,7 +24,7 @@
         <div class="direction-data">
           <h4>РМИС-направление №{{direction_data.pk}} от {{direction_data.referralDate}}</h4>
           Организация: {{direction_data.referralOrganization}}<br/>
-          <div v-if="direction_data.diagnosis && direction_data.diagnosis !== ''">Диагноз: {{direction_data.diagnosis}}
+          <div v-if="direction_data.diagnosis">Диагноз: {{direction_data.diagnosis}}
             ({{direction_data.diagnosisName}})
           </div>
           <hr/>
@@ -198,7 +198,6 @@
         }
 
         this.post = true
-        const pk = this.selected_direction
         this.$root.$emit('generate-directions', {
           type: 'direction',
           card_pk: this.card.pk,

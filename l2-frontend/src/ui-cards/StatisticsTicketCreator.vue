@@ -79,7 +79,7 @@
     props: {
       base: {
         type: Object,
-        reqired: true
+        required: true
       },
       card_pk: {
         type: Number

@@ -34,7 +34,7 @@
     },
     props: {
       research: {
-        reqired: true
+        required: true
       },
       value: {
         type: Array
