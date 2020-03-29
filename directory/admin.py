@@ -77,6 +77,7 @@ class ResParaclinicInputGroups(admin.ModelAdmin):
     list_filter = ('research',)
     search_fields = ('research__title',)
 
+
 class ResHospitalService(admin.ModelAdmin):
     list_display = ('main_research', 'site_type', 'slave_research',)
     list_display_links = ('main_research', 'slave_research',)
