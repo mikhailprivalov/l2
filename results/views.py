@@ -1308,6 +1308,9 @@ def result_print(request):
                                     continue
                                 if field_type == 17:
                                     if v:
+                                        v = json.loads(v)
+                                        if not v['directions']:
+                                            continue
                                         v = text_iss_to_pdf(v, protocol_plain_text)
                                 if r.field.get_title(force_type=field_type) != "":
                                     vals.append("{}:&nbsp;{}".format(
