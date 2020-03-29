@@ -532,7 +532,8 @@
     },
     methods: {
       is_diary(research) {
-        return research.title.toLowerCase().includes('дневник');
+        const res_title = research.title.toLowerCase();
+        return res_title.includes('осмотр') || res_title.includes('дневник');
       },
       create_directions(iss) {
         this.create_directions_diagnosis = iss.diagnos;
