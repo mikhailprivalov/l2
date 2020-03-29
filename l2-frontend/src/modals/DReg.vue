@@ -187,7 +187,7 @@
       },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const data = await patients_point.saveDreg({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
+        await patients_point.saveDreg({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
         this.$store.dispatch(action_types.DEC_LOADING).then()
         okmessage('Сохранено');
         this.hide_edit()

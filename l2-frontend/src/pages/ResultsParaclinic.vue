@@ -643,7 +643,6 @@
     import * as action_types from '../store/action-types'
     import directions_point from '../api/directions-point'
     import SelectPickerM from '../fields/SelectPickerM'
-    import SelectPickerB from '../fields/SelectPickerB'
     import researches_point from '../api/researches-point'
     import Modal from '../ui-cards/Modal'
     import MKBField from '../fields/MKBField'
@@ -669,7 +668,7 @@
         components: {
             DescriptiveForm,
             DateFieldNav, Modal, MKBField, ResearchesPicker, SelectedResearches,
-            dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
+            dropdown, SelectPickerM, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
             LastResult, RecipeInput, IssStatus,
         },
         data() {

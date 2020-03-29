@@ -251,7 +251,6 @@
   import L2CardCreate from '../modals/L2CardCreate'
   import DReg from '../modals/DReg'
   import Benefit from '../modals/Benefit'
-  import PatientCard from './PatientCard'
   import Modal from './Modal'
   import * as action_types from '../store/action-types'
   import patients_point from '../api/patients-point'
@@ -260,7 +259,7 @@
 
   export default {
     name: 'patient-picker',
-    components: {Vaccine, PatientCard, SelectPickerB, Modal, L2CardCreate, DReg, Benefit},
+    components: {Vaccine, SelectPickerB, Modal, L2CardCreate, DReg, Benefit},
     props: {
       directive_from_need: {
         default: 'false',

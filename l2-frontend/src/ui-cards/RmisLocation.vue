@@ -11,7 +11,6 @@
 
 <script>
   import {mapGetters} from 'vuex'
-  import users_point from '../api/user-point'
 
   export default {
     name: 'RmisLocation',
