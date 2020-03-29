@@ -82,7 +82,6 @@
 </template>
 
 <script>
-  import LinkSelector from '../fields/LinkSelector'
   import PatientCard from './PatientCard'
   import Modal from './Modal'
   import * as action_types from '../store/action-types'
@@ -90,7 +89,7 @@
 
   export default {
     name: 'patient-small-picker',
-    components: {LinkSelector, PatientCard, Modal},
+    components: {PatientCard, Modal},
     props: {
       base_pk: {
         type: Number,

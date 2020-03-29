@@ -79,14 +79,13 @@
 
 <script>
   import SelectPickerB from '../fields/SelectPickerB'
-  import LinkSelector from '../fields/LinkSelector'
   import Modal from './Modal'
   import * as action_types from '../store/action-types'
   import patients_point from '../api/patients-point'
 
   export default {
     name: 'individual-picker',
-    components: {LinkSelector, SelectPickerB, Modal},
+    components: {SelectPickerB, Modal},
     props: {
       directive_from_need: {
         default: 'false',
