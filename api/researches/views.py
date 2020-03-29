@@ -19,21 +19,19 @@ from slog.models import Log
 
 class ResearchesTemplates(View):
     def get(self, request):
-        templates = cache.get('view:ResearchesTemplates')
-        if not templates:
-            from django.db.models import Q
+        from django.db.models import Q
 
-            templates = []
-            for t in users.AssignmentTemplates.objects.filter(global_template=True) \
-                .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
-                        Q(doc=request.user.doctorprofile) |
-                        Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
-                templates.append({"values": [x.research_id for x in users.AssignmentResearches.objects.filter(template=t)],
-                                  "pk": t.pk,
-                                  "title": t.title,
-                                  "for_current_user": t.doc is not None,
-                                  "for_users_department": t.podrazdeleniye is not None})
-            cache.set('view:ResearchesTemplates', templates, 100)
+        templates = []
+        for t in users.AssignmentTemplates.objects.filter(global_template=True) \
+            .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
+                    Q(doc=request.user.doctorprofile) |
+                    Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
+            templates.append({"values": [x.research_id for x in users.AssignmentResearches.objects.filter(template=t)],
+                              "pk": t.pk,
+                              "title": t.title,
+                              "for_current_user": t.doc is not None,
+                              "for_users_department": t.podrazdeleniye is not None})
+        cache.set('view:ResearchesTemplates', templates, 100)
 
         return JsonResponse({"templates": templates})
 
@@ -81,7 +79,7 @@ def get_researches(request):
             })
 
         result = {"researches": deps, "tubes": tubes}
-        cache.set('view:get_researches', result, 100)
+        cache.set('view:get_researches', result, 90)
 
     return JsonResponse(result)
 
