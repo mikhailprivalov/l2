@@ -117,7 +117,6 @@ def directions_history(request):
         is_parent = True
 
     result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service, iss_pk, is_parent, for_slave_hosp)
-
     # napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title, date_create,
     # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs,
     # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid
@@ -170,6 +169,7 @@ def directions_history(request):
             researches_titles = i[5]
 
         status_val = 0
+        has_descriptive = False
         if i[8] or i[9]:
             status_val = 1
         if i[7]:
