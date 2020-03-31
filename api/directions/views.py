@@ -170,6 +170,7 @@ def directions_history(request):
             researches_titles = i[5]
 
         status_val = 0
+        has_descriptive = False
         if i[8] or i[9]:
             status_val = 1
         if i[7]:
