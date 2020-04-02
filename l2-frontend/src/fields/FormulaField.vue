@@ -32,8 +32,11 @@
             value() {
                 this.content = this.value
             },
-            content() {
+            content: {
+              handler() {
                 this.$emit('input', this.content)
+              },
+              immediate: true,
             },
             func_formula() {
                 this.content = this.func_formula.toString()
