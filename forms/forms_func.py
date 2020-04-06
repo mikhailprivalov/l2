@@ -512,7 +512,7 @@ def hosp_extract_get_data(hosp_last_num):
                 days_count = str(i[2])
             if i[3] == 'Заведующий отделением':
                 manager_depart = str(i[2])
-    print(days_count)
+
     doc_fio = doc_confirm.get_fio()
     return {'date_value': date_value, 'time_value': time_value, 'final_diagnos': final_diagnos, 'other_diagnos': other_diagnos, 'near_diagnos': near_diagnos,
             'outcome': outcome, 'final_diagnos_mkb': final_diagnos_mkb, 'other_diagnos_mkb': other_diagnos_mkb, 'near_diagnos_mkb': near_diagnos_mkb,
