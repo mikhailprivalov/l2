@@ -619,13 +619,8 @@ def form_03(request_data):
         Paragraph('8. Страховой полис (серия, номер):{}'.format(polis_data), style),
         Paragraph('Выдан: {}'.format(patient_data['oms']['polis_issued']), style),
         Paragraph('9. Вид оплаты:______________', style),
-        Paragraph('10. Социальный статус:    дошкольник -  1:    организован -  2;    неорганизован -  3; '
-                  'учащийся  -  4;    работает  - 5;    не  работает  - 6;   БОМЖ  - 7;   пенсионер  - 8; '
-                  'военнослужащий - 9; Код _______; Член семьи военнослужащего - 10.', style),
-        Paragraph('11. Категория льготности: инвалид  ВОВ - 1;  участник ВОВ - 2; воин - интернационалист- 3;  '
-                  'лицо,  подвергшееся  радиационному  облучению  - 4;  в  т.ч.  в  Чернобыле  - 5;'
-                  'инв. I гр.  - 6;   инв. II гр.  -  7;   инв. III гр.  -  8;   ребенок - инвалид  -  9;'
-                  'инвалид с детства - 10; прочие - 11', style),
+        Paragraph('10. Социальный статус: {}'.format(primary_reception_data['social_status']), style),
+        Paragraph('11. Категория льготности: {}'.format(primary_reception_data['category_privilege']), style),
         Paragraph('12. Кем направлен больной: {}'.format(primary_reception_data['who_directed']), style),
         Paragraph('13. Кем доставлен: _________________________________ Код______ Номер наряда__________', style),
         Paragraph('14. Диагноз направившего учреждения: {}'.format(primary_reception_data['diagnos_who_directed']), style),
