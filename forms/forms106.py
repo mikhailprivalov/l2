@@ -52,8 +52,8 @@ def form_01(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=25 * mm,
-                            rightMargin=5 * mm, topMargin=6 * mm,
+                            leftMargin=20 * mm,
+                            rightMargin=12 * mm, topMargin=6 * mm,
                             bottomMargin=4 * mm, allowSplitting=1,
                             title="Форма {}".format("003/у"))
     width, height = portrait(A4)
@@ -241,7 +241,7 @@ def form_01(request_data):
         Spacer(1, 0.5 * mm),
         Paragraph('7. Доставлен в стационар по экстренным показаниям: {}'.format(primary_reception_data['extra_hospital']), style),
         Spacer(1, 0.5 * mm),
-        Paragraph(' через: {} часов после начала заболевания, получения травмы; '.format(primary_reception_data['time_start_ill']), style),
+        Paragraph(' через: {} после начала заболевания, получения травмы; '.format(primary_reception_data['time_start_ill']), style),
         Spacer(1, 0.5 * mm),
         Paragraph(' госпитализирован в плановом порядке (подчеркнуть) {}.'.format(primary_reception_data['plan_hospital']), style),
         Spacer(1, 0.5 * mm),
@@ -262,8 +262,8 @@ def form_01(request_data):
         Spacer(1, 18 * mm),
         Paragraph('в) сопутствующий:', style),
         Spacer(1, 19 * mm),
-        Paragraph('12. Госпитализирован в данном году по поводу данного заболевания: впервые, повторно (подчеркнуть),'
-                  'всего  - ___раз.:{}'.format(''), styleLead),
+        Paragraph('12. Госпитализирован в данном году по поводу данного заболевания: {}, <br/>'
+                  'всего  - ___раз.:'.format(primary_reception_data['what_time_hospitalized']), styleLead),
         Spacer(1, 1 * mm),
         Paragraph('13. Хирургические операции, методы обезболивания и послеоперационные осложнения:', styleLead),
         Spacer(1, 40 * mm),
@@ -461,7 +461,7 @@ def form_01(request_data):
 
         # Таблица операции
         operation_text = [tbl_o]
-        operation_frame = Frame(27 * mm, 123 * mm, 175 * mm, 40 * mm, leftPadding=0, bottomPadding=0,
+        operation_frame = Frame(22 * mm, 123 * mm, 170 * mm, 40 * mm, leftPadding=0, bottomPadding=0,
                                 rightPadding=0, topPadding=0, showBoundary=0)
         operation_inframe = KeepInFrame(175 * mm, 40 * mm, operation_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
         operation_frame.addFromList([operation_inframe], canvas)
