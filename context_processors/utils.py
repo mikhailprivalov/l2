@@ -100,6 +100,11 @@ def menu(request):
             pages.append(
                 {"url": SettingManager.get(key="support", default="false"), "title": "Техническая поддержка",
                  "nt": True, "access": ["*"]})
+        if SettingManager.get("vks", default="false") != "false":
+            pages.append(
+                {"url": SettingManager.get(key="vks", default="false"), "title": "ВКС",
+                 "nt": True, "access": ["*"]})
+
         data = make_menu(pages, groups, request.user.is_superuser, request.path)
     return {"mainmenu": data, "version": VERSION}
 
