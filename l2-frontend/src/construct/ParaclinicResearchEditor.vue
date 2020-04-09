@@ -142,7 +142,7 @@
                   <strong>Значение по умолчанию:</strong>
                   <NumberRangeField :variants="row.values_to_input" v-model="row.default" />
                 </div>
-                <v-collapse-wrapper v-show="[0, 10, 12, 19].includes(row.field_type)">
+                <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19].includes(row.field_type)">
                   <div class="header" v-collapse-toggle>
                     <a href="#" class="a-under" @click.prevent v-if="row.field_type === 0">
                       Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})

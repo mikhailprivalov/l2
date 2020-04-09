@@ -6,7 +6,7 @@
                 title="Загрузить последний результат"
                 @click="loadLast"
                 v-tippy="{ placement : 'bottom', arrow: true }">
-            <i class="fa fa-circle" />
+            <i class="fa fa-circle"/>
         </button>
       </span>
       <textarea :readonly="readonly" :rows="lines" class="form-control"
@@ -75,6 +75,9 @@
     watch: {
       val() {
         this.changeValue(this.val)
+      },
+      value() {
+        this.val = this.value;
       },
     },
     model: {
