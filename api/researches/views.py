@@ -1,4 +1,3 @@
-import operator
 from collections import defaultdict
 
 import simplejson as json
@@ -45,7 +44,9 @@ def get_researches(request):
     tubes = []
     deps = defaultdict(list)
 
-    res = DResearches.objects.filter(hide=False).exclude(pk__in=[x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]).distinct()
+    res = DResearches.objects.filter(hide=False).exclude(pk__in=[x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]).distinct().order_by('title')
+
+    print(res.query)
 
     for r in res:
         autoadd = [x.b_id for x in AutoAdd.objects.filter(a=r)]
@@ -78,9 +79,6 @@ def get_researches(request):
             "title": t.title,
             "color": t.color
         })
-
-    for k in deps:
-        deps[k].sort(key=operator.itemgetter('title'))
 
     result = {"researches": deps, "tubes": tubes}
 
