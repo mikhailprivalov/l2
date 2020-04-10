@@ -1,3 +1,4 @@
+import operator
 from collections import defaultdict
 
 import simplejson as json
@@ -41,45 +42,47 @@ class ResearchesTemplates(View):
 
 
 def get_researches(request):
-    result = cache.get('view:get_researches')
-    if not result:
-        tubes = []
-        deps = defaultdict(list)
+    tubes = []
+    deps = defaultdict(list)
 
-        for r in DResearches.objects.filter(hide=False).order_by("title").exclude(pk__in=[x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]):
-            autoadd = [x.b_id for x in AutoAdd.objects.filter(a=r)]
-            addto = [x.a_id for x in AutoAdd.objects.filter(b=r)]
+    res = DResearches.objects.filter(hide=False).exclude(pk__in=[x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]).distinct().order_by('title')
 
-            deps[r.reversed_type].append(
-                {"pk": r.pk,
-                 "onlywith": r.onlywith_id or -1,
-                 "department_pk": r.reversed_type,
-                 "title": r.get_title(),
-                 "full_title": r.title,
-                 "doc_refferal": r.is_doc_refferal,
-                 "treatment": r.is_treatment,
-                 "is_hospital": r.is_hospital,
-                 "stom": r.is_stom,
-                 "need_vich_code": r.need_vich_code,
-                 "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
-                 "autoadd": autoadd,
-                 "addto": addto,
-                 "code": r.code,
-                 "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
-                 "site_type": r.site_type_id,
-                 "localizations": [{"code": x.pk, "label": x.title} for x in r.localization.all()],
-                 "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location.all()],
-                 })
+    for r in res:
+        autoadd = [x.b_id for x in AutoAdd.objects.filter(a=r)]
+        addto = [x.a_id for x in AutoAdd.objects.filter(b=r)]
 
-        for t in Tubes.objects.all():
-            tubes.append({
-                "pk": t.pk,
-                "title": t.title,
-                "color": t.color
-            })
+        deps[r.reversed_type].append(
+            {"pk": r.pk,
+             "onlywith": r.onlywith_id or -1,
+             "department_pk": r.reversed_type,
+             "title": r.get_title(),
+             "full_title": r.title,
+             "doc_refferal": r.is_doc_refferal,
+             "treatment": r.is_treatment,
+             "is_hospital": r.is_hospital,
+             "stom": r.is_stom,
+             "need_vich_code": r.need_vich_code,
+             "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
+             "autoadd": autoadd,
+             "addto": addto,
+             "code": r.code,
+             "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
+             "site_type": r.site_type_id,
+             "localizations": [{"code": x.pk, "label": x.title} for x in r.localization.all()],
+             "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location.all()],
+             })
 
-        result = {"researches": deps, "tubes": tubes}
-        cache.set('view:get_researches', result, 90)
+    for t in Tubes.objects.all():
+        tubes.append({
+            "pk": t.pk,
+            "title": t.title,
+            "color": t.color
+        })
+
+    for k in deps:
+        deps[k].sort(key=operator.itemgetter('title'))
+
+    result = {"researches": deps, "tubes": tubes}
 
     return JsonResponse(result)
 
