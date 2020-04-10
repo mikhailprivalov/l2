@@ -45,7 +45,7 @@ def get_researches(request):
     tubes = []
     deps = defaultdict(list)
 
-    res = DResearches.objects.filter(hide=False).exclude(pk__in=[x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]).distinct().order_by('title')
+    res = DResearches.objects.filter(hide=False).exclude(pk__in=[x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]).distinct()
 
     for r in res:
         autoadd = [x.b_id for x in AutoAdd.objects.filter(a=r)]
