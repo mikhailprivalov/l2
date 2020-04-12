@@ -583,8 +583,21 @@ class DispensaryRouteSheet(models.Model):
         verbose_name_plural = 'Диспансеризация-Шаблоны'
 
 
+class GroupCulture(models.Model):
+    title = models.CharField(max_length=255, help_text="Группа культур")
+    hide = models.BooleanField()
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Группа для культуры'
+        verbose_name_plural = 'Культуры - группы'
+
+
 class Culture(models.Model):
     title = models.CharField(max_length=255, help_text="Название культуры")
+    group_culture = models.ForeignKey(GroupCulture, db_index=True, null=True, blank=True, help_text='Группа для культуры', on_delete=models.SET_NULL)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
     hide = models.BooleanField()
 
@@ -596,8 +609,22 @@ class Culture(models.Model):
         verbose_name_plural = 'Культуры'
 
 
+class GroupAntibiotic(models.Model):
+    title = models.CharField(max_length=255, help_text="Группа антибиотиков")
+    hide = models.BooleanField()
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Группа для антибиотиков'
+        verbose_name_plural = 'Антибиотики - группы'
+
+
 class Antibiotic(models.Model):
     title = models.CharField(max_length=255, help_text="Название антибиотика")
+    group_antibiotic = models.ForeignKey(GroupAntibiotic, db_index=True, null=True, blank=True, help_text='Группа антибиотиков',
+                                 on_delete=models.SET_NULL)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
     hide = models.BooleanField()
 
