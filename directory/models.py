@@ -623,8 +623,7 @@ class GroupAntibiotic(models.Model):
 
 class Antibiotic(models.Model):
     title = models.CharField(max_length=255, help_text="Название антибиотика")
-    group_antibiotic = models.ForeignKey(GroupAntibiotic, db_index=True, null=True, blank=True, help_text='Группа антибиотиков',
-                                 on_delete=models.SET_NULL)
+    group_antibiotic = models.ForeignKey(GroupAntibiotic, db_index=True, null=True, blank=True, help_text='Группа антибиотиков', on_delete=models.SET_NULL)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
     hide = models.BooleanField()
 
