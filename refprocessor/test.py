@@ -211,6 +211,5 @@ class CheckAgeChecking(unittest.TestCase):
             self.assertEqual(age[2], in_range, f"Вхождение должно быть '{age[2]}', а не '{in_range}' для '{age[0]}' '{right.age_range}' и '{age[1]}'")
 
 
-
 if __name__ == '__main__':
     unittest.main()
