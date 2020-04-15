@@ -181,7 +181,28 @@ class CheckAgeChecking(unittest.TestCase):
             ["до 5 дней", [0, 0, 0], True],
             ["от 3 до 8 дней", [4, 0, 0], True],
             ["от 3 до 10 месяцев", [0, 3, 0], True],
+            ["от 3 до 10 месяцев", [1, 3, 0], True],
             ["от 7 до 10 лет", [0, 0, 10], True],
+            ["от 7 до 10 лет", [1, 2, 10], True],
+        ]
+
+        for age in ages:
+            right = AgeRight(age[0])
+            in_range = right.test(age[1])
+            self.assertEqual(age[2], in_range, f"Вхождение должно быть '{age[2]}', а не '{in_range}' для '{age[0]}' '{right.age_range}' и '{age[1]}'")
+
+    def test_not_in_age_right(self):
+        ages = [
+            ["до 5 дней", [6, 0, 0], False],
+            ["до 5 дней", [0, 1, 0], False],
+            ["до 5 дней", [0, 0, 1], False],
+            ["от 3 до 8 дней", [2, 0, 0], False],
+            ["от 3 до 8 дней", [9, 0, 0], False],
+            ["от 3 до 10 месяцев", [1, 0, 0], False],
+            ["от 3 до 10 месяцев", [0, 2, 0], False],
+            ["от 7 до 10 лет", [0, 0, 12], False],
+            ["старше 8 лет", [0, 0, 8], False],
+            ["< 8 лет", [0, 0, 8], False],
         ]
 
         for age in ages:
