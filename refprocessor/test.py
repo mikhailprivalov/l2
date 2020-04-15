@@ -14,6 +14,8 @@ class CheckAgeRightsFunctions(unittest.TestCase):
             ("дней", AgeRight.MODE_DAY),
             ("день", AgeRight.MODE_DAY),
             ("дня", AgeRight.MODE_DAY),
+            ("дн.", AgeRight.MODE_DAY),
+            ("дн", AgeRight.MODE_DAY),
             ("д", AgeRight.MODE_DAY),
             ("д.", AgeRight.MODE_DAY),
             ("месяц", AgeRight.MODE_MONTH),
@@ -59,11 +61,12 @@ class CheckAgeRightsFunctions(unittest.TestCase):
             ("младше", SIGN_LT),
             ("меньше", SIGN_LT),
             ("менее", SIGN_LT),
+            ("до", SIGN_LT),
 
             ("<=", SIGN_LTE),
             ("≤", SIGN_LTE),
             ("&le;", SIGN_LTE),
-            ("до", SIGN_LTE),
+            ("по", SIGN_LTE),
         )
 
         for s in signs:
@@ -135,13 +138,13 @@ class ParseAgeRights(unittest.TestCase):
             ["с 1 дня", (1, "]"), float("inf"), AgeRight.MODE_DAY],
             [">= 1 дня", (1, "]"), float("inf"), AgeRight.MODE_DAY],
             ["&ge; 1 дня", (1, "]"), float("inf"), AgeRight.MODE_DAY],
-            ["до 7 дней", 0, (7, "]"), AgeRight.MODE_DAY],
+            ["до 7 дней", 0, (7, ")"), AgeRight.MODE_DAY],
             ["< 7 дней", 0, (7, ")"), AgeRight.MODE_DAY],
             ["старше 5 лет", (5, ")"), float("inf"), AgeRight.MODE_YEAR],
             ["младше 5 лет", 0, (5, ")"), AgeRight.MODE_YEAR],
             ["меньше 5 лет", 0, (5, ")"), AgeRight.MODE_YEAR],
             ["менее 5 лет", 0, (5, ")"), AgeRight.MODE_YEAR],
-            ["до 20", 0, (20, "]"), AgeRight.MODE_YEAR],
+            ["до 20", 0, (20, ")"), AgeRight.MODE_YEAR],
             ["< 100", 0, (100, ")"), AgeRight.MODE_YEAR],
             ["&lt; 100", 0, (100, ")"), AgeRight.MODE_YEAR],
             ["≤ 100", 0, (100, "]"), AgeRight.MODE_YEAR],
@@ -163,9 +166,10 @@ class ParseAgeRights(unittest.TestCase):
             ["1 г - 2 г", 1, 2, AgeRight.MODE_YEAR],
             ["10 лет – 20 лет", 10, 20, AgeRight.MODE_YEAR],
             ["2г. – 3г.", 2, 3, AgeRight.MODE_YEAR],
-            ["от 3 до 5 дней", 3, 5, AgeRight.MODE_DAY],
-            ["от 3 дней до 5", 3, 5, AgeRight.MODE_DAY],
-            ["от 3 месяцев до 5 месяцев", 3, 5, AgeRight.MODE_MONTH],
+            ["от 3 до 5 дней", 3, (5, ")"), AgeRight.MODE_DAY],
+            ["от 3 дней до 5", 3, (5, ")"), AgeRight.MODE_DAY],
+            ["от 3 месяцев до 5 месяцев", 3, (5, ")"), AgeRight.MODE_MONTH],
+            ["с 3 по 5", 3, 5, AgeRight.MODE_YEAR],
         ]
 
         for age in ages:
@@ -184,8 +188,8 @@ class CheckAgeChecking(unittest.TestCase):
             ["от 3 до 8 дней", [4, 0, 0], True],
             ["от 3 до 10 месяцев", [0, 3, 0], True],
             ["от 3 до 10 месяцев", [1, 3, 0], True],
-            ["от 7 до 10 лет", [0, 0, 10], True],
-            ["от 7 до 10 лет", [1, 2, 10], True],
+            ["от 7 до 11 лет", [0, 0, 10], True],
+            ["от 7 до 11 лет", [1, 2, 10], True],
         ]
 
         for age in ages:
@@ -195,7 +199,7 @@ class CheckAgeChecking(unittest.TestCase):
 
     def test_not_in_age_right(self):
         ages = [
-            ["до 5 дней", [6, 0, 0], False],
+            ["до 5 дней", [5, 0, 0], False],
             ["до 5 дней", [0, 1, 0], False],
             ["до 5 дней", [0, 0, 1], False],
             ["от 3 до 8 дней", [2, 0, 0], False],

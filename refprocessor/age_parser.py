@@ -30,13 +30,14 @@ SIGNS_LT = (
     "младше",
     "меньше",
     "менее",
+    "до",
 )
 # Знаки меньше или равно
 SIGNS_LTE = (
     "<=",
     "≤",
     "&le;",
-    "до",
+    "по",
 )
 
 SIGNS_ORIG_TO_SIGN = (
@@ -67,7 +68,7 @@ class Age:
 
 
 class AgeRange:
-    RANGE_TEMPLATE = r"^(от )?(\d+)( )?([\w.]+)* ([-–] |до )(\d+)( )?([\w.]+)*$"
+    RANGE_TEMPLATE = r"^(от |с )?(\d+)( )?([\w.]+)* ([-–] |до |по )(\d+)( )?([\w.]+)*$"
 
     def __init__(self, age_from: Union[Age, int, float, Tuple[Union[int, float], str]], age_to: Union[Age, int, float]):
         if isinstance(age_from, Age):
@@ -110,6 +111,8 @@ class AgeRight:
         "дней",
         "день",
         "дня",
+        "дн",
+        "дн.",
         "д",
         "д.",
     )
@@ -264,7 +267,7 @@ class AgeRight:
         return False
 
     @staticmethod
-    def check_is_full_range(orig_str: str) -> Union[bool, Tuple[str, int, int]]:
+    def check_is_full_range(orig_str: str) -> Union[bool, Tuple[str, Union[int, Age], Union[int, Age]]]:
         matched = re.match(AgeRange.RANGE_TEMPLATE, orig_str)
 
         if matched:
@@ -275,6 +278,9 @@ class AgeRight:
                     return False
             else:
                 mode = AgeRight.MODE_YEAR
+
+            if g[4] == 'до ':
+                return mode, int(g[1]), Age(int(g[5]), mode=Age.MODE_STRICT)
 
             return mode, int(g[1]), int(g[5])
 
