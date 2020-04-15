@@ -19,6 +19,8 @@ class CheckAgeRightsFunctions(unittest.TestCase):
             ("месяц", AgeRight.MODE_MONTH),
             ("месяцев", AgeRight.MODE_MONTH),
             ("месяца", AgeRight.MODE_MONTH),
+            ("мес", AgeRight.MODE_MONTH),
+            ("мес.", AgeRight.MODE_MONTH),
             ("м", AgeRight.MODE_MONTH),
             ("м.", AgeRight.MODE_MONTH),
             ("год", AgeRight.MODE_YEAR),
