@@ -107,7 +107,7 @@ def form_01(request_data):
 
     result = get_temperature_list(num_dir[0])
     titles = json.loads(request_data["titles"])
-    count_in_graph = 28
+    count_in_graph = 26
     if 'Температура (°C)' in titles:
         result_data = result['Температура (°C)']
         min_max = result_data['min_max']
