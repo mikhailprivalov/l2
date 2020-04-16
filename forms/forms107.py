@@ -167,28 +167,27 @@ def count_len_param(param_object, count_in_graph):
 
 
 def count_graph_el(count_in_graph, param_object):
-    data = []
-    xtext = []
-    for t in range(count_in_graph):
-        data.append(param_object['data'].pop(0))
-        xtext.append(param_object['xtext'].pop(0))
-        if len(param_object['data']) == 0:
-            break
+    data = param_object['data'][:count_in_graph]
+    del param_object['data'][:count_in_graph]
+    xtext = param_object['xtext'][:count_in_graph]
+    del param_object['xtext'][:count_in_graph]
+
     return data, xtext
 
 
 def count_graph_el_pressure(count_in_graph, param_object, diastolic, systolic, min_max_diastolic, min_max_systolic):
-    data_diastolic = []
-    data_systolic = []
-    xtext_diastolic = []
-    xtext_systolic = []
-    for t in range(count_in_graph):
-        data_diastolic.append(param_object[diastolic]['data'].pop(0))
-        data_systolic.append(param_object[systolic]['data'].pop(0))
-        xtext_diastolic.append(param_object[diastolic]['xtext'].pop(0))
-        xtext_systolic.append(param_object[systolic]['xtext'].pop(0))
-        if len(param_object[diastolic]['data']) == 0:
-            break
+    data_diastolic = param_object[diastolic]['data'][:count_in_graph]
+    del param_object[diastolic]['data'][:count_in_graph]
+
+    data_systolic = param_object[systolic]['data'][:count_in_graph]
+    del param_object[systolic]['data'][:count_in_graph]
+
+    xtext_diastolic = param_object[diastolic]['xtext'][:count_in_graph]
+    del param_object[diastolic]['xtext'][:count_in_graph]
+
+    xtext_systolic = param_object[systolic]['xtext'][:count_in_graph]
+    del param_object[systolic]['xtext'][:count_in_graph]
+
     return {diastolic: {'data': data_diastolic, 'xtext': xtext_diastolic, 'min_max': min_max_diastolic},
             systolic: {'data': data_systolic, 'xtext': xtext_systolic, 'min_max': min_max_systolic}}
 
