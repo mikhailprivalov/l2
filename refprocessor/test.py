@@ -1,16 +1,17 @@
 import unittest
 
-from refprocessor.age_parser import AgeRight, AgeRange, SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE
+from refprocessor.age_parser import AgeRight
+from refprocessor.common import SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE, ValueRange, get_sign_by_string
 
 
-class CheckAgeRightsFunctions(unittest.TestCase):
+class CheckFunctions(unittest.TestCase):
     """Проверка утилитарных функций"""
 
     def test_detect_mode(self):
         """Проверка на обнаружение режима возраста"""
 
         modes = (
-            ("invalid", AgeRight.MODE_UNKNOW),
+            ("invalid", AgeRight.MODE_UNKNOWN),
             ("дней", AgeRight.MODE_DAY),
             ("день", AgeRight.MODE_DAY),
             ("дня", AgeRight.MODE_DAY),
@@ -70,7 +71,7 @@ class CheckAgeRightsFunctions(unittest.TestCase):
         )
 
         for s in signs:
-            sign = AgeRight.get_sign_by_string(s[0])
+            sign = get_sign_by_string(s[0])
             self.assertEqual(s[1], sign, f"Знак '{sign}' должен быть '{s[1]}'")
 
 
@@ -81,7 +82,7 @@ class ParseAgeRights(unittest.TestCase):
         """Возраст в виде простого числа определяется корректно"""
 
         right = AgeRight("5 ")
-        correct_range = AgeRange(5, 5)
+        correct_range = ValueRange(5, 5)
         self.assertEqual(correct_range, right.age_range, f"Диапазон должен быть '{correct_range}'")
         self.assertEqual(AgeRight.MODE_YEAR, right.mode, "Режим должен быть 'year'")
 
@@ -90,7 +91,7 @@ class ParseAgeRights(unittest.TestCase):
 
         strs = ["все", "Все", " все ", ""]
 
-        correct_range = AgeRange(0, float('inf'))
+        correct_range = ValueRange(0, float('inf'))
 
         for s in strs:
             right = AgeRight(s)
@@ -102,7 +103,7 @@ class ParseAgeRights(unittest.TestCase):
 
         strs = ["1-10", "1 - 10", " 1 - 10 "]
 
-        correct_range = AgeRange(1, 10)
+        correct_range = ValueRange(1, 10)
 
         for s in strs:
             right = AgeRight(s)
@@ -120,7 +121,7 @@ class ParseAgeRights(unittest.TestCase):
         ]
 
         for age in ages:
-            correct_range = AgeRange(age[1], age[1])
+            correct_range = ValueRange(age[1], age[1])
             right = AgeRight(age[0])
             self.assertEqual(correct_range, right.age_range, f"Диапазон должен быть '{correct_range}' для '{age[0]}'")
             self.assertEqual(age[2], right.mode, f"Режим должен быть 'year' для '{age[0]}'")
@@ -153,7 +154,7 @@ class ParseAgeRights(unittest.TestCase):
         ]
 
         for age in ages:
-            correct_range = AgeRange(age[1], age[2])
+            correct_range = ValueRange(age[1], age[2])
             right = AgeRight(age[0])
             self.assertEqual(correct_range, right.age_range, f"Диапазон должен быть '{correct_range}', а не '{right.age_range}' для '{age[0]}'")
             self.assertEqual(age[3], right.mode, f"Режим должен быть '{age[3]}' для '{age[0]}'")
@@ -173,7 +174,7 @@ class ParseAgeRights(unittest.TestCase):
         ]
 
         for age in ages:
-            correct_range = AgeRange(age[1], age[2])
+            correct_range = ValueRange(age[1], age[2])
             right = AgeRight(age[0])
             self.assertEqual(correct_range, right.age_range, f"Диапазон должен быть '{correct_range}', а не '{right.age_range}' для '{age[0]}'")
             self.assertEqual(age[3], right.mode, f"Режим должен быть '{age[3]}' для '{age[0]}'")
