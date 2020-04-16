@@ -12,15 +12,17 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Indenter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, KeepTogether
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
 from laboratory.settings import FONTS_FOLDER
 from api.stationar.stationar_func import hosp_get_hosp_direction, get_temperature_list
 from reportlab.lib import colors
 from reportlab.graphics.charts.linecharts import HorizontalLineChart
+from reportlab.graphics.charts.textlabels import Label
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.widgets.markers import makeMarker
+from copy import deepcopy
 
 
 def form_01(request_data):
@@ -107,31 +109,90 @@ def form_01(request_data):
 
     result = get_temperature_list(num_dir[0])
     titles = json.loads(request_data["titles"])
+    count_in_graph = 28
     if 'Температура (°C)' in titles:
-        temperature_data = result['Температура (°C)']
-        objs.append(Paragraph(' <u>Температура (°C)</u>', style))
-        objs.append(Spacer(1, 2 * mm))
-        objs.append(draw_temper_pulse(temperature_data, 1, 250 * mm, 27 * mm))
-        objs.append(Spacer(1, 10 * mm))
-    if 'Пульс (уд/с)' in titles:
-        pulse_data = result['Пульс (уд/с)']
-        objs.append(Paragraph(' <u>Пульс (уд/с)</u>', style))
-        objs.append(Spacer(1, 2 * mm))
-        objs.append(draw_temper_pulse(pulse_data, 10, 250 * mm, 27 * mm))
-        objs.append(Spacer(1, 10 * mm))
-    if 'Давление' in titles:
-        pressure_data = {'Диастолическое давление (мм рт.с)': result['Диастолическое давление (мм рт.с)'],
-                         'Систолическое давление (мм рт.с)': result['Систолическое давление (мм рт.с)']}
-        objs.append(Paragraph('<u>Давление:</u> (<img src="forms/img/squreline.png" width="20" height="10" />  систолическое, '
-                              '<img src="forms/img/strokedot.png" width="20" height="10" />  диастолическое)', style))
-        objs.append(Spacer(1, 2 * mm))
-        objs.append(draw_pressure(pressure_data, 10, 250 * mm, 45 * mm))
-        objs.append(Spacer(1, 10 * mm))
+        result_data = result['Температура (°C)']
+        min_max = result_data['min_max']
+        count_param = count_len_param(result_data, count_in_graph)
+        for i in range(count_param):
+            elements = count_graph_el(count_in_graph, result_data)
+            temp_obj = [Paragraph(' <u>Температура (°C)</u>', style),
+                        Spacer(1, 2 * mm),
+                        draw_temper_pulse({'data': elements[0], 'xtext': elements[1], 'min_max': min_max}, 1, 250 * mm, 27 * mm),
+                        Spacer(1, 10 * mm)
+                        ]
+            objs.append(KeepTogether(temp_obj))
 
+    if 'Пульс (уд/с)' in titles:
+        result_data = result['Пульс (уд/с)']
+        min_max = result_data['min_max']
+        count_param = count_len_param(result_data, count_in_graph)
+        for i in range(count_param):
+            elements = count_graph_el(count_in_graph, result_data)
+            temp_obj = [Paragraph(' <u>Пульс (уд/с)</u>', style),
+                        Spacer(1, 2 * mm),
+                        draw_temper_pulse({'data': elements[0], 'xtext': elements[1], 'min_max': min_max}, 10, 250 * mm, 27 * mm),
+                        Spacer(1, 10 * mm)
+                        ]
+            objs.append(KeepTogether(temp_obj))
+
+    if 'Давление' in titles:
+        diastolic = 'Диастолическое давление (мм рт.с)'
+        systolic = 'Систолическое давление (мм рт.с)'
+        result_data = {diastolic: result[diastolic], systolic: result[systolic]}
+        min_max_diastolic = result_data[diastolic]['min_max']
+        min_max_systolic = result_data[systolic]['min_max']
+        count_param = count_len_param(result_data[diastolic], count_in_graph)
+        for i in range(count_param):
+            elements = count_graph_el_pressure(count_in_graph, result_data, diastolic, systolic, min_max_diastolic, min_max_systolic)
+            temp_obj = [Paragraph('<u>Давление:</u> (<img src="forms/img/squreline.png" width="20" height="10" />  систолическое, '
+                                  '<img src="forms/img/strokedot.png" width="20" height="10" />  диастолическое)', style),
+                        Spacer(1, 2 * mm),
+                        draw_pressure(elements, 10, 250 * mm, 45 * mm),
+                        Spacer(1, 10 * mm)
+                        ]
+            objs.append(KeepTogether(temp_obj))
     doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
+
+
+def count_len_param(param_object, count_in_graph):
+    len_param = len(param_object['data'])
+    count_param = 0
+    if len_param > count_in_graph:
+        count_param = len_param // count_in_graph
+    if len_param % count_in_graph > 0 or count_param == 0:
+        count_param += 1
+    return count_param
+
+
+def count_graph_el(count_in_graph, param_object):
+    data = []
+    xtext = []
+    for t in range(count_in_graph):
+        data.append(param_object['data'].pop(0))
+        xtext.append(param_object['xtext'].pop(0))
+        if len(param_object['data']) == 0:
+            break
+    return data, xtext
+
+
+def count_graph_el_pressure(count_in_graph, param_object, diastolic, systolic, min_max_diastolic, min_max_systolic):
+    data_diastolic = []
+    data_systolic = []
+    xtext_diastolic = []
+    xtext_systolic = []
+    for t in range(count_in_graph):
+        data_diastolic.append(param_object[diastolic]['data'].pop(0))
+        data_systolic.append(param_object[systolic]['data'].pop(0))
+        xtext_diastolic.append(param_object[diastolic]['xtext'].pop(0))
+        xtext_systolic.append(param_object[systolic]['xtext'].pop(0))
+        if len(param_object[diastolic]['data']) == 0:
+            break
+    return {diastolic: {'data': data_diastolic, 'xtext': xtext_diastolic, 'min_max': min_max_diastolic},
+            systolic: {'data': data_systolic, 'xtext': xtext_systolic, 'min_max': min_max_systolic}}
 
 
 def draw_temper_pulse(value, step, x_coord, y_coord):
@@ -243,4 +304,3 @@ def draw_pressure(value, step, x_coord, y_coord):
     lc.valueAxis.labels.fontSize = 9
     drawing.add(lc)
     return drawing
-
