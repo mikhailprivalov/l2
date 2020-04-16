@@ -19,10 +19,8 @@ from laboratory.settings import FONTS_FOLDER
 from api.stationar.stationar_func import hosp_get_hosp_direction, get_temperature_list
 from reportlab.lib import colors
 from reportlab.graphics.charts.linecharts import HorizontalLineChart
-from reportlab.graphics.charts.textlabels import Label
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.widgets.markers import makeMarker
-from copy import deepcopy
 
 
 def form_01(request_data):
