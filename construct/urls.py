@@ -15,4 +15,5 @@ urlpatterns = [
     path('refs', views.refs),
     path('consults', views.construct_consults),
     path('templates', views.construct_templates),
+    path('bacteria', views.construct_bacteria),
 ]
