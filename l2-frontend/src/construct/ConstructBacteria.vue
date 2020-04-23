@@ -1,9 +1,20 @@
 <template>
     <div>
-        <div class="r-button">
-          <radio-field v-model="searchTypes" :variants="types" fullWidth />
+        <div class="radio-button-object">
+          <radio-field v-model="searchTypesObject" :variants="typesObject" fullWidth />
         </div>
+        <div class="radio-button-object radio-button-groups">
+           <radio-field v-model="searchTypesGroups" :variants="typesGroups" fullWidth />
+        </div>
+
         <div class="lists">
+          <div class="edit-element" >
+            <h6>{{searchTypesObject}}</h6>
+            <div class="content-edit" :class="['right-top']">
+              rerererererererer
+            </div>
+          </div>
+
           <div class="left">
              <v-select :clearable="false" label="title" :options="bacteriaGroups" :searchable="true"
                            v-model="selected"/>
@@ -11,30 +22,47 @@
             <draggable class="list-group" :list="list1" group="people" @change="log">
 
               <div class="item" v-for="(element) in filteredList" :key="element.title">
-                {{ element.title }} <i class="glyphicon glyphicon-pencil"></i>
+<!--                <div v-if="searchTypesGroups === 'Группы'"> {{ element.title }} <i class="glyphicon glyphicon-pencil sidebar-btn"></i></div>-->
+                <div v-if="searchTypesGroups === 'Группы'"> {{ element.title }} <i class="fa fa-pencil-square-o sidebar-btn" aria-hidden="true"></i></div>
+<!--                <div v-else>{{ element.title }} <i class="glyphicon glyphicon-arrow-right"></i> </div>-->
+                <div v-else>{{ element.title }} <i class="fa fa-angle-double-right sidebar-btn" style="font-size:23px"></i> </div>
               </div>
-
             </draggable>
-            <button class="btn btn-blue-nb sidebar-footer" @click="load_culture_groups">
-                <i class="glyphicon glyphicon-plus"></i>
-                Добавить
-            </button>
-            <button class="btn btn-blue-nb sidebar-footer" @click="load_culture_groups">
-                Сохранить
-            </button>
 
           </div>
 
-            <div class="right">
-               <v-select :clearable="false" label="title" :options="bacteriaGroups2" :searchable="true"
-                           v-model="selected1"/>
-                <draggable class="list-group" :class="['right-top']" :list="list2" group="people" @change="log">
-                  <div class="item" v-for="(element) in list2" :key="element.title">
-                    {{ element.title }}
-                  </div>
-                </draggable>
-              </div>
+          <div class="right">
+             <v-select :clearable="false" label="title" :options="bacteriaGroups2" :searchable="true"
+                         v-model="selected1"/>
+              <draggable class="list-group" :class="['right-top']" :list="list2" group="people" @change="log">
+                <div class="item" v-for="(element) in list2" :key="element.title">
+                  {{ element.title }}
+                </div>
+              </draggable>
+            </div>
           </div>
+       <div class="buttons">
+         <div class="button-create">
+           <button class="btn btn-blue-nb sidebar-footer" @click="load_culture_groups">
+             <i class="glyphicon glyphicon-plus"></i>
+             Создать
+           </button>
+           <button class="btn btn-blue-nb sidebar-footer" @click="load_culture_groups">
+             Сохранить
+           </button>
+         </div>
+         <div class="button-create"></div>
+          <div class="button-create">
+           <button class="btn btn-blue-nb sidebar-footer" @click="load_culture_groups">
+             <i class="glyphicon glyphicon-plus"></i>
+             Создать
+           </button>
+           <button class="btn btn-blue-nb sidebar-footer" @click="load_culture_groups">
+             Сохранить
+           </button>
+         </div>
+
+       </div>
     </div>
 
 </template>
@@ -61,13 +89,15 @@
         selected: '',
         selected1: '',
         searchElement: '',
-        types: [
+        typesObject: [
             'Бактерии',
             'Антибиоткики',
             'Бактериофаги',
             // 'Среды',
         ],
-        searchTypes: ""
+        typesGroups: ['Группы', 'Наборы'],
+        searchTypesObject: "",
+        searchTypesGroups: ""
       }
     },
     created() {
@@ -116,30 +146,38 @@
   input[type="text"] {
     width: 45vh;
 }
-  .r-button {
-    /*width: 500px;*/
+  .radio-button-object {
     width: 70%;
     margin-left: auto;
     margin-right: auto;
     margin-top: 2%;
+  }
+  .radio-button-groups {
+    width: 40%;
     margin-bottom: 3%;
   }
+
   .sidebar-footer {
     border-radius: 4px;
     margin: 0;
   }
-  .glyphicon {
-    alignment: right;
-  }
+
   .lists {
     padding-left: 5vw;
     margin-left: auto;
     margin-right: auto;
     display: flex;
-    width: 70%;
-
+    width: 100%;
     align-items: flex-start;
-
+    .content-edit {
+      height: 40vh;
+      width: 45vh;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+      transition: all .2s cubic-bezier(.25, .8, .25, 1);
+      position: relative;
+      border-radius: 4px;
+      padding-right: 50px;
+    }
     .left,
     .right {
       padding-left: 40px;
@@ -167,6 +205,41 @@
 
   .right-top {
     margin-top: 3.5vh;
+  }
+
+  .buttons {
+    padding-left: 5vw;
+    margin-right: auto;
+    display: flex;
+    width: 100%;
+    align-items: flex-start;
+
+  .button-create {
+    height: 5vh;
+    width: 45vh;
+    margin-right: 40px;
+   }
+  }
+
+   .sidebar-btn {
+    border-radius: 0;
+
+    &:not(.text-center) {
+      text-align: left;
+    }
+
+    border-top: none !important;
+    border-right: none !important;
+    border-left: none !important;
+    padding: 0 7px;
+    height: 23px;
+
+    &:not(:hover), &.active-btn:hover {
+      cursor: default;
+      background-color: rgba(#737373, .01) !important;
+      color: #37BC9B;
+      border-bottom: 1px solid #b1b1b1 !important;
+    }
   }
 
 
