@@ -16,29 +16,40 @@
           </div>
 
           <div class="left">
-             <v-select :clearable="false" label="title" :options="bacteriaGroups" :searchable="true"
+             <v-select :clearable="false" label="title" :options="list1" :searchable="true"
                            v-model="selected"/>
             <input type="text" v-model="searchElement" placeholder="Фильтр по названию.."/>
             <draggable class="list-group" :list="list1" group="people" @change="log">
-
               <div class="item" v-for="(element) in filteredList" :key="element.title">
-<!--                <div v-if="searchTypesGroups === 'Группы'"> {{ element.title }} <i class="glyphicon glyphicon-pencil sidebar-btn"></i></div>-->
-                <div v-if="searchTypesGroups === 'Группы'"> {{ element.title }} <i class="fa fa-pencil-square-o sidebar-btn" aria-hidden="true"></i></div>
-<!--                <div v-else>{{ element.title }} <i class="glyphicon glyphicon-arrow-right"></i> </div>-->
-                <div v-else>{{ element.title }} <i class="fa fa-angle-double-right sidebar-btn" style="font-size:23px"></i> </div>
-              </div>
+                <div>
+                  {{ element.title }}
+                  <button class="btn btn-blue-nb sidebar-btn"
+                      style="font-size: 12px"
+                      @click="load_culture_groups">
+                    <i class="glyphicon glyphicon-pencil" v-if="searchTypesGroups === 'Группы'"/>
+                    <i class="glyphicon glyphicon-arrow-right" v-tippy="{ placement : 'bottom'}" title="Добавить в набор" v-else/>
+                    </button>
+                </div>
+
+                </div>
             </draggable>
 
           </div>
 
           <div class="right">
-             <v-select :clearable="false" label="title" :options="bacteriaGroups2" :searchable="true"
+             <v-select :clearable="false" label="title" :options="list3" :searchable="true"
                          v-model="selected1"/>
-              <draggable class="list-group" :class="['right-top']" :list="list2" group="people" @change="log">
+              <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :class="['right-top']" :list="list2" group="people" @change="log" >
                 <div class="item" v-for="(element) in list2" :key="element.title">
                   {{ element.title }}
                 </div>
-              </draggable>
+              </draggable >
+              <div v-else class="list-group" :class="['right-top']" :list="list2"  >
+                <div class="item" v-for="(element) in list2" :key="element.title">
+                  {{ element.title }}
+                </div>
+              </div >
+
             </div>
           </div>
        <div class="buttons">
@@ -68,6 +79,7 @@
 </template>
 
 <script>
+
   import vSelect from 'vue-select'
   import draggable from "vuedraggable";
   import RadioField from '../fields/RadioField'
@@ -85,6 +97,7 @@
         bacteriaGroups2: [],
         list1: [],
         list2: [],
+        list3: [],
         bacteriaGroup: 'all',
         selected: '',
         selected1: '',
@@ -112,7 +125,7 @@
           console.log("22",data.groups)
           t.bacteriaGroups = data.groups
           // t.bacteriaGroups2 = JSON.parse(JSON.stringify(t.bacteriaGroups));
-          t.bacteriaGroups2 = {...data.groups}
+          t.list3 = {...data.groups}
           t.list1 = data.groups
           t.list2 = [{"pk": "43", "title": "Бактерия1"}, {"pk": "44", "title": "Бактерия2"},
             {"pk": "45", "title": "Бактеррррррр ррррррррррррррррррр рррррррррия3"},
@@ -187,7 +200,7 @@
         overflow-y: scroll;
         .item {
           background-color: #fff;
-          padding: 3px;
+          padding: 1px;
           margin: 7px;
           border-radius: 4px;
           cursor: pointer;
@@ -222,7 +235,8 @@
   }
 
    .sidebar-btn {
-    border-radius: 0;
+     float: right;
+     border-radius: 4px;
 
     &:not(.text-center) {
       text-align: left;
@@ -231,14 +245,14 @@
     border-top: none !important;
     border-right: none !important;
     border-left: none !important;
-    padding: 0 7px;
+    border-bottom: none !important;
+    padding: 4px;
     height: 23px;
 
     &:not(:hover), &.active-btn:hover {
       cursor: default;
       background-color: rgba(#737373, .01) !important;
       color: #37BC9B;
-      border-bottom: 1px solid #b1b1b1 !important;
     }
   }
 
