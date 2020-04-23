@@ -25,4 +25,4 @@ def load_culture(request):
         for g in group_culture_onj:
             groups.append({"pk": g.pk, "title": g.title})
 
-    return JsonResponse({"groups":groups, "elements": elements})
+    return JsonResponse({"groups": groups, "elements": elements})
