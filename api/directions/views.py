@@ -733,7 +733,7 @@ def directions_results_report(request):
                                                    issledovaniye__time_confirmation__range=(date_start, date_end)):
                         if r.value == "":
                             continue
-                        is_norm = r.get_is_norm()
+                        is_norm, ref_sign = r.get_is_norm()
                         not_norm_dir = ""
                         delta = ""
                         active_ref = r.calc_normal(fromsave=False, only_ref=True)

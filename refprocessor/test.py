@@ -1,7 +1,7 @@
 import unittest
 
 from refprocessor.age_parser import AgeRight
-from refprocessor.common import SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE, ValueRange, get_sign_by_string
+from refprocessor.common import SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE, ValueRange, get_sign_by_string, RANGE_IN, RANGE_LOWER, RANGE_OVER, RANGE_NEQ
 from refprocessor.result_parser import ResultRight
 
 
@@ -281,18 +281,18 @@ class ParseResultRights(unittest.TestCase):
 
     def test_of_test(self):
         rs = [
-            ["от 5", 5, ResultRight.RESULT_MODE_NORMAL],
-            ["от 5", 6, ResultRight.RESULT_MODE_NORMAL],
-            ["от 5", 4, ResultRight.RESULT_MODE_NOT_NORMAL],
-            ["> 5", 5, ResultRight.RESULT_MODE_NOT_NORMAL],
-            ["> 5.1", 5.2, ResultRight.RESULT_MODE_NORMAL],
-            ["от 3 до 5.5", 5.2, ResultRight.RESULT_MODE_NORMAL],
-            ["от 3 до 5.5", 0, ResultRight.RESULT_MODE_NOT_NORMAL],
-            ["< 10", -1, ResultRight.RESULT_MODE_NORMAL],
-            ["< 10", "9 8 7 6 5 4 3 2.2 1,1", ResultRight.RESULT_MODE_NORMAL],
-            ["< 10", "9 8 7 6 5 4 3 2.2 1,1 10 11", ResultRight.RESULT_MODE_NOT_NORMAL],
-            ["< 10", "test", ResultRight.RESULT_MODE_MAYBE],
-            ["test", "1", ResultRight.RESULT_MODE_MAYBE],
+            ["от 5", 5, (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
+            ["от 5", 6, (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
+            ["от 5", 4, (ResultRight.RESULT_MODE_NOT_NORMAL, RANGE_LOWER)],
+            ["> 5", 5, (ResultRight.RESULT_MODE_NOT_NORMAL, RANGE_LOWER)],
+            ["> 5.1", 5.2, (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
+            ["от 3 до 5.5", 5.2, (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
+            ["от 3 до 5.5", 0, (ResultRight.RESULT_MODE_NOT_NORMAL, RANGE_LOWER)],
+            ["< 10", -1, (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
+            ["< 10", "9 8 7 6 5 4 3 2.2 1,1", (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
+            ["< 10", "9 8 7 6 5 4 3 2.2 1,1 10 11", (ResultRight.RESULT_MODE_NOT_NORMAL, RANGE_OVER)],
+            ["< 10", "test", (ResultRight.RESULT_MODE_MAYBE, RANGE_NEQ)],
+            ["test", "1", (ResultRight.RESULT_MODE_MAYBE, RANGE_NEQ)],
         ]
 
         for r in rs:

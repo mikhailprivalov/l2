@@ -2,7 +2,7 @@ import re
 from typing import Tuple, Union, List
 
 from refprocessor.common import RANGE_REGEXP, SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE, get_sign_by_string, ValueRange, \
-    POINT_STRICT, Value
+    POINT_STRICT, Value, RANGE_IN
 
 
 class AgeRight:
@@ -104,7 +104,7 @@ class AgeRight:
         else:
             age_var = age[2]
 
-        return self.age_range.in_range(age_var)
+        return self.age_range.in_range(age_var) == RANGE_IN
 
     @staticmethod
     def check_is_all(orig_str: str) -> bool:

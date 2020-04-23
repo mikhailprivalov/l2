@@ -1,7 +1,7 @@
 import re
 from typing import Union, Tuple
 
-from refprocessor.common import ValueRange, Value, get_sign_by_string, POINT_STRICT, SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE, RANGE_REGEXP
+from refprocessor.common import ValueRange, Value, get_sign_by_string, POINT_STRICT, SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE, RANGE_REGEXP, RANGE_IN, RANGE_NEQ
 
 
 class ResultRight:
@@ -40,26 +40,29 @@ class ResultRight:
         self.mode = ResultRight.MODE_CONSTANT
         self.const = orig_str
 
-    def test(self, value: str) -> str:
+    def test(self, value: str) -> Tuple[str, str]:
         if self.mode == ResultRight.MODE_ANY:
-            return ResultRight.RESULT_MODE_NORMAL
+            return ResultRight.RESULT_MODE_NORMAL, RANGE_IN
 
         value = value.strip().lower()
 
         if self.mode == ResultRight.MODE_CONSTANT:
-            return ResultRight.RESULT_MODE_NORMAL if value == self.const else ResultRight.RESULT_MODE_MAYBE
+            return (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)\
+                if value == self.const else\
+                (ResultRight.RESULT_MODE_MAYBE, RANGE_NEQ)
 
         numbers = re.findall(r"-?\d*[.,]\d+|-?\d+", value)
 
         if numbers:
             for n in numbers:
                 n = float(n.replace(',', '.'))
-                if not self.range.in_range(n):
-                    return ResultRight.RESULT_MODE_NOT_NORMAL
+                rv = self.range.in_range(n)
+                if rv != RANGE_IN:
+                    return ResultRight.RESULT_MODE_NOT_NORMAL, rv
         elif value:
-            return ResultRight.RESULT_MODE_MAYBE
+            return ResultRight.RESULT_MODE_MAYBE, RANGE_NEQ
 
-        return ResultRight.RESULT_MODE_NORMAL
+        return ResultRight.RESULT_MODE_NORMAL, RANGE_IN
 
     @staticmethod
     def check_is_range(s: str) -> Union[bool, Tuple[str, Union[float, Value], Union[float, Value]]]:

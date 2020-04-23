@@ -51,6 +51,16 @@ RANGE_REGEXP = r"^(от |с )?(-?\d+|-?\d+[.,]\d+)( )?(\w+\.?)*( ?[-–] ?| до
 POINT_STRICT = ")"
 POINT_NON_STRICT = "]"
 
+RANGE_OVER = ">"
+RANGE_IN = "ok"
+RANGE_NEQ = "!="
+RANGE_LOWER = "<"
+
+RANGE_NOT_IN = {
+    RANGE_OVER: "  ▲",
+    RANGE_LOWER: "  ▼",
+    RANGE_NEQ: "",
+}
 
 def get_sign_by_string(s: str) -> Union[None, str]:
     for signs in SIGNS_ORIG_TO_SIGN:
@@ -79,7 +89,7 @@ class Value:
 
 
 class ValueRange:
-    def __init__(self, val_from: Union[Value, int, float, str, Tuple[Union[int, float], str]], val_to: Union[Value, str, int, float]):
+    def __init__(self, val_from: Union[Value, int, float, str, Tuple[Union[int, float], str]], val_to: Union[Value, str, int, float, Tuple[Union[int, float], str]]):
         if isinstance(val_from, Value):
             self.val_from = val_from
         else:
@@ -92,16 +102,16 @@ class ValueRange:
 
     def in_range(self, val: Union[int, float]):
         if self.val_from.mode == POINT_STRICT and val <= self.val_from.value:
-            return False
+            return RANGE_LOWER
         if self.val_from.mode == POINT_NON_STRICT and val < self.val_from.value:
-            return False
+            return RANGE_LOWER
 
         if self.val_to.mode == POINT_STRICT and val >= self.val_to.value:
-            return False
+            return RANGE_OVER
         if self.val_to.mode == POINT_NON_STRICT and val > self.val_to.value:
-            return False
+            return RANGE_OVER
 
-        return True
+        return RANGE_IN
 
     def __eq__(self, other: 'ValueRange'):
         return self.val_from == other.val_from and self.val_to == other.val_to

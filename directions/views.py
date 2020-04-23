@@ -1162,9 +1162,9 @@ def get_issledovaniya(request):
                                     current_doc_save = 0
                                 isnorm = "normal"
                                 if issledovaniye.result_set.count() > 0:
-                                    if any([x.get_is_norm() == "not_normal" for x in issledovaniye.result_set.all()]):
+                                    if any([x.get_is_norm()[0] == "not_normal" for x in issledovaniye.result_set.all()]):
                                         isnorm = "not_normal"
-                                    elif any([x.get_is_norm() == "maybe" for x in issledovaniye.result_set.all()]):
+                                    elif any([x.get_is_norm()[0] == "maybe" for x in issledovaniye.result_set.all()]):
                                         isnorm = "maybe"
 
                             if not issledovaniye.doc_confirmation:
