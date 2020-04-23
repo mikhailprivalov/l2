@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="radio-button-object">
-          <radio-field v-model="searchTypesObject" :variants="typesObject" fullWidth />
+          <radio-field v-model="searchTypesObject" :variants="typesObject" fullWidth @click="filteredtypesGroups"/>
         </div>
         <div class="radio-button-object radio-button-groups">
            <radio-field v-model="searchTypesGroups" :variants="typesGroups" fullWidth />
@@ -9,9 +9,12 @@
 
         <div class="lists">
           <div class="edit-element" >
-            <h6>{{searchTypesObject}}</h6>
+            <h6><strong>{{searchTypesObject}}</strong> (создание/редактирование)</h6>
             <div class="content-edit" :class="['right-top']">
-              rerererererererer
+              Название:
+              <input type="text" :placeholder="[[searchTypesObject]] + ': введите название' " />
+              <p>Код ФСЛИ</p>
+              <input type="text" placeholder="Введите код ФСЛИ.."/>
             </div>
           </div>
 
@@ -19,7 +22,7 @@
              <v-select :clearable="false" label="title" :options="list1" :searchable="true"
                            v-model="selected"/>
             <input type="text" v-model="searchElement" placeholder="Фильтр по названию.."/>
-            <draggable class="list-group" :list="list1Elements" group="people" @change="log">
+            <draggable class="list-group" :list="list1Elements" group="some" @change="log">
               <div class="item" v-for="(element) in filteredList" :key="element.title">
                 <div>
                   {{ element.title }}
@@ -39,7 +42,7 @@
           <div class="right">
              <v-select :clearable="false" label="title" :options="list2" :searchable="true"
                          v-model="selected1"/>
-              <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :class="['right-top']" :list="list2Elements" group="people" @change="log" >
+              <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :class="['right-top']" :list="list2Elements" group="some" @change="log" >
                 <div class="item" v-for="(element) in list2Elements" :key="element.title">
                   {{ element.title }}
                 </div>
@@ -101,9 +104,8 @@
             'Бактерии',
             'Антибиоткики',
             'Бактериофаги',
-            // 'Среды',
         ],
-        typesGroups: ['Группы', 'Наборы'],
+        typesGroups: [],
         searchTypesObject: "",
         searchTypesGroups: ""
       }
@@ -137,7 +139,10 @@
       return this.list1Elements.filter(element => {
         return element.title.toLowerCase().includes(this.searchElement.toLowerCase())
       })
-    }
+    },
+       filteredtypesGroups() {
+         return this.searchTypesObject === "Антибиоткики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы']
+       }
   }
 
     }
@@ -244,5 +249,8 @@
     }
   }
 
+  p{
+    padding-top: 15px;
+  }
 
 </style>

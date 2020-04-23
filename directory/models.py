@@ -633,3 +633,16 @@ class Antibiotic(models.Model):
     class Meta:
         verbose_name = 'Антибиотик'
         verbose_name_plural = 'Антибиотики'
+
+
+class AntibioticSets(models.Model):
+    title = models.CharField(max_length=255, help_text="Название антибиотика")
+    antibiotics = models.ManyToManyField(Antibiotic)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Антибиотик - Наборы'
+        verbose_name_plural = 'Антибиотики - Наборы'
+
