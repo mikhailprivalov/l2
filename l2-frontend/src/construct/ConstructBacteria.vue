@@ -19,7 +19,7 @@
              <v-select :clearable="false" label="title" :options="list1" :searchable="true"
                            v-model="selected"/>
             <input type="text" v-model="searchElement" placeholder="Фильтр по названию.."/>
-            <draggable class="list-group" :list="list1" group="people" @change="log">
+            <draggable class="list-group" :list="list1Elements" group="people" @change="log">
               <div class="item" v-for="(element) in filteredList" :key="element.title">
                 <div>
                   {{ element.title }}
@@ -37,10 +37,10 @@
           </div>
 
           <div class="right">
-             <v-select :clearable="false" label="title" :options="list3" :searchable="true"
+             <v-select :clearable="false" label="title" :options="list2" :searchable="true"
                          v-model="selected1"/>
-              <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :class="['right-top']" :list="list2" group="people" @change="log" >
-                <div class="item" v-for="(element) in list2" :key="element.title">
+              <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :class="['right-top']" :list="list2Elements" group="people" @change="log" >
+                <div class="item" v-for="(element) in list2Elements" :key="element.title">
                   {{ element.title }}
                 </div>
               </draggable >
@@ -54,10 +54,6 @@
           </div>
        <div class="buttons">
          <div class="button-create">
-           <button class="btn btn-blue-nb sidebar-footer" @click="load_culture_groups">
-             <i class="glyphicon glyphicon-plus"></i>
-             Создать
-           </button>
            <button class="btn btn-blue-nb sidebar-footer" @click="load_culture_groups">
              Сохранить
            </button>
@@ -93,11 +89,10 @@
     },
       data() {
       return {
-        bacteriaGroups: [],
-        bacteriaGroups2: [],
         list1: [],
         list2: [],
-        list3: [],
+        list1Elements: [],
+        list2Elements: [],
         bacteriaGroup: 'all',
         selected: '',
         selected1: '',
@@ -119,18 +114,11 @@
     methods:{
         load_culture_groups() {
         const t = this;
-        t.bacteriaGroups = [];
-        t.bacteriaGroups2 = [];
         fetch("/api/bacteria/loadculture?type=" + t.bacteriaGroup).then(r => r.json()).then(data => {
-          console.log("22",data.groups)
-          t.bacteriaGroups = data.groups
-          // t.bacteriaGroups2 = JSON.parse(JSON.stringify(t.bacteriaGroups));
-          t.list3 = {...data.groups}
           t.list1 = data.groups
-          t.list2 = [{"pk": "43", "title": "Бактерия1"}, {"pk": "44", "title": "Бактерия2"},
-            {"pk": "45", "title": "Бактеррррррр ррррррррррррррррррр рррррррррия3"},
-            {"pk": "46", "title": "Бактерия4"}, {"pk": "23", "title": "Бактерия5"}, {"pk": "24", "title": "Бактерия6"},
-            {"pk": "25", "title": "Бактерия7"}, {"pk": "26", "title": "Бактерия8"}]
+          t.list2 = [...t.list1]
+          t.list1Elements = data.elements
+          t.list2Elements = [...t.list1Elements]
         })
       },
       log: function(evt) {
@@ -146,7 +134,7 @@
            return this.selected.title
     },
        filteredList() {
-      return this.list1.filter(element => {
+      return this.list1Elements.filter(element => {
         return element.title.toLowerCase().includes(this.searchElement.toLowerCase())
       })
     }
