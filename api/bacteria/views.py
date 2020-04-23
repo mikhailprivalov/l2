@@ -1,8 +1,6 @@
-
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from directory.models import Culture, GroupCulture, Antibiotic, GroupAntibiotic
-
+from directory.models import Culture, GroupCulture
 
 
 @login_required
