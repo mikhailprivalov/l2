@@ -2,12 +2,13 @@ import unittest
 
 from refprocessor.age_parser import AgeRight
 from refprocessor.common import SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE, ValueRange, get_sign_by_string
+from refprocessor.result_parser import ResultRight
 
 
 class CheckFunctions(unittest.TestCase):
     """Проверка утилитарных функций"""
 
-    def test_detect_mode(self):
+    def test_detect_age_mode(self):
         """Проверка на обнаружение режима возраста"""
 
         modes = (
@@ -216,6 +217,88 @@ class CheckAgeChecking(unittest.TestCase):
             right = AgeRight(age[0])
             in_range = right.test(age[1])
             self.assertEqual(age[2], in_range, f"Вхождение должно быть '{age[2]}', а не '{in_range}' для '{age[0]}' '{right.age_range}' и '{age[1]}'")
+
+
+class ParseResultRights(unittest.TestCase):
+    """Проверка разбора референсов результатов"""
+
+    def test_empty(self):
+        """Пустой референс должен иметь особый режим"""
+        rs = ["", " "]
+        for r in rs:
+            right = ResultRight(r)
+            self.assertEqual(ResultRight.MODE_ANY, right.mode, f"Режим должен быть '{ResultRight.MODE_ANY}' для '{r}'")
+
+    def test_range(self):
+        """Диапазон число - число"""
+        rs = [
+            ["10-100", 10, 100],
+            ["10 -100", 10, 100],
+            ["-10 - 100", -10, 100],
+            ["-100 - -10", -100, -10],
+            ["10 – 20", 10, 20],
+            ["0.55 – 0.633", 0.55, 0.633],
+            ["0,23 - 2,0", 0.23, 2.0],
+            ["от 1 до 2", 1, (2, ")")],
+        ]
+
+        for r in rs:
+            right = ResultRight(r[0])
+            valid = ValueRange(r[1], r[2])
+            self.assertEqual(valid, right.range, f"Диапазон должен быть '{valid}', а не '{right.range}' для '{r[0]}'")
+
+    def test_value_from_to(self):
+        """Значения от или до (больше, меньше, >=, <=)"""
+        rs = [
+            ["> 1.1", (1.1, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["> 1,1", (1.1, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["> 1", (1, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["&gt; 1", (1, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["больше 1", (1, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+
+            [">= 1.1", (1.1, "]"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["≥ 1.1", (1.1, "]"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["&ge; 1.1", (1.1, "]"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["от 1.1", (1.1, "]"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+
+            ["< 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
+            ["&lt; 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
+            ["меньше 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
+            ["менее 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
+            ["до 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
+
+            ["<= 10,1", float("-inf"), (10.1, "]"), ResultRight.MODE_NUMBER_RANGE],
+            ["≤ 10", float("-inf"), (10, "]"), ResultRight.MODE_NUMBER_RANGE],
+            ["&le; 10", float("-inf"), (10, "]"), ResultRight.MODE_NUMBER_RANGE],
+            ["по 10", float("-inf"), (10, "]"), ResultRight.MODE_NUMBER_RANGE],
+        ]
+
+        for r in rs:
+            right = ResultRight(r[0])
+            valid = ValueRange(r[1], r[2])
+            self.assertEqual(valid, right.range, f"Диапазон должен быть '{valid}', а не '{right.range}' для '{r[0]}'")
+            self.assertEqual(r[3], right.mode, f"Режим должен быть '{r[3]}' для '{r[0]}'")
+
+    def test_of_test(self):
+        rs = [
+            ["от 5", 5, ResultRight.RESULT_MODE_NORMAL],
+            ["от 5", 6, ResultRight.RESULT_MODE_NORMAL],
+            ["от 5", 4, ResultRight.RESULT_MODE_NOT_NORMAL],
+            ["> 5", 5, ResultRight.RESULT_MODE_NOT_NORMAL],
+            ["> 5.1", 5.2, ResultRight.RESULT_MODE_NORMAL],
+            ["от 3 до 5.5", 5.2, ResultRight.RESULT_MODE_NORMAL],
+            ["от 3 до 5.5", 0, ResultRight.RESULT_MODE_NOT_NORMAL],
+            ["< 10", -1, ResultRight.RESULT_MODE_NORMAL],
+            ["< 10", "9 8 7 6 5 4 3 2.2 1,1", ResultRight.RESULT_MODE_NORMAL],
+            ["< 10", "9 8 7 6 5 4 3 2.2 1,1 10 11", ResultRight.RESULT_MODE_NOT_NORMAL],
+            ["< 10", "test", ResultRight.RESULT_MODE_MAYBE],
+            ["test", "1", ResultRight.RESULT_MODE_MAYBE],
+        ]
+
+        for r in rs:
+            right = ResultRight(r[0])
+            in_range = right.test(str(r[1]))
+            self.assertEqual(r[2], in_range, f"Вхождение должно быть '{r[2]}', а не '{in_range}' для '{r[0]}' '{right.range}' и '{r[1]}'")
 
 
 if __name__ == '__main__':

@@ -138,7 +138,7 @@ class AgeRight:
 
     @staticmethod
     def check_is_constant_age_with_sign_and_optional_mode(orig_str: str) -> Union[bool, Tuple[str, Value, Value]]:
-        matched = re.match(r"^([\w|<>+≤≥&;=]+) (\d+)( )?(\w+)?$", orig_str)
+        matched = re.match(r"^([\w<>≤≥&;=]+) (\d+)( )?(\w+)?$", orig_str)
 
         if matched:
             g = list(matched.groups())
@@ -175,7 +175,7 @@ class AgeRight:
         matched = re.match(RANGE_REGEXP, orig_str)
 
         if matched:
-            g = list(matched.groups())
+            g = list(map(lambda x: x if not x else x.strip(), matched.groups()))
             if g[3] or g[7]:
                 mode = AgeRight.get_mode_by_string(g[3] or g[7])
                 if mode == AgeRight.MODE_UNKNOWN:
@@ -183,7 +183,7 @@ class AgeRight:
             else:
                 mode = AgeRight.MODE_YEAR
 
-            if g[4] == 'до ':
+            if g[4] == 'до':
                 return mode, int(g[1]), Value(int(g[5]), mode=POINT_STRICT)
 
             return mode, int(g[1]), int(g[5])
