@@ -1,7 +1,7 @@
 import re
 from typing import Union, Tuple
 
-from refprocessor.common import ValueRange, Value, get_sign_by_string, POINT_STRICT, SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE, RANGE_REGEXP, RANGE_IN, RANGE_NEQ
+from refprocessor.common import ValueRange, Value, get_sign_by_string, POINT_STRICT, SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE, RANGE_REGEXP, RANGE_IN, RANGE_NEQ, replace_pow
 
 
 class ResultRight:
@@ -21,7 +21,7 @@ class ResultRight:
             self.mode = ResultRight.MODE_ANY
             return
 
-        orig_str = re.sub(' +', ' ', orig_str)
+        orig_str = replace_pow(re.sub(' +', ' ', orig_str))
 
         simple_range = ResultRight.check_is_range(orig_str)
 
@@ -44,14 +44,23 @@ class ResultRight:
         if self.mode == ResultRight.MODE_ANY:
             return ResultRight.RESULT_MODE_NORMAL, RANGE_IN
 
-        value = value.strip().lower()
+        value = replace_pow(value.strip().lower().replace("''", "\""))
+
+        if "един" in value:
+            value = "1"
+
+        if "отсутств" in value or "нет" in value:
+            value = "0"
 
         if self.mode == ResultRight.MODE_CONSTANT:
             return (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)\
                 if value == self.const else\
                 (ResultRight.RESULT_MODE_MAYBE, RANGE_NEQ)
 
-        numbers = re.findall(r"-?\d*[.,]\d+|-?\d+", value)
+        if "сплошь" in value.lower() or "++" in value or "+ +" in value or "++++" in value or "+" == value.strip() or "оксал ед" in value:
+            value = float("inf")
+
+        numbers = re.findall(r"-?\d*[.,]\d+|-?\d+|inf", value)
 
         if numbers:
             for n in numbers:

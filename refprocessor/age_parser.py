@@ -54,6 +54,11 @@ class AgeRight:
             self.mode = AgeRight.MODE_YEAR
             return
 
+        if "един" in orig_str:
+            orig_str = "0-2"
+        if "отсутств" in orig_str:
+            orig_str = "0-0"
+
         constant_simple_year = AgeRight.check_is_constant_simple_year(orig_str)
         if constant_simple_year:
             self.age_range = ValueRange(constant_simple_year, constant_simple_year)

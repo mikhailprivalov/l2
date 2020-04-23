@@ -62,11 +62,21 @@ RANGE_NOT_IN = {
     RANGE_NEQ: "",
 }
 
+
 def get_sign_by_string(s: str) -> Union[None, str]:
     for signs in SIGNS_ORIG_TO_SIGN:
         if s in signs[0]:
             return signs[1]
     return None
+
+
+def replace_pow(v):
+    for j in range(1, 9):
+        for i in range(0, 12):
+            v = v.replace("%s*10<sup>%s</sup>" % (j, i), str(j * (10 ** i)))
+    for i in range(0, 12):
+        v = v.replace("10<sup>%s</sup>" % str(i), str(10 ** i))
+    return v
 
 
 class Value:
