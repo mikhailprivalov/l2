@@ -619,9 +619,11 @@ class Culture(models.Model):
     def get_cultures(group):
         if group == "Все":
             culture_obj = Culture.objects.all()
+        elif group == "Без группы":
+            culture_obj = Culture.objects.filter(group_culture=None)
         else:
             culture_obj = Culture.objects.filter(group_culture__title=group)
-        elements = [{"pk": i.pk, "title": i.title, "group": i.group_culture.pk} for i in culture_obj]
+        elements = [{"pk": i.pk, "title": i.title, "group": i.group_culture.pk, "fsli": i.fsli} for i in culture_obj]
 
         return elements
 
@@ -662,9 +664,11 @@ class Antibiotic(models.Model):
     def get_antibiotics(group):
         if group == "Все":
             antibiotic_obj = Antibiotic.objects.all()
+        elif group == "Без группы":
+            antibiotic_obj = Antibiotic.objects.filter(group_antibiotic=None)
         else:
             antibiotic_obj = Antibiotic.objects.filter(group_antibiotic__title=group)
-        elements = [{"pk": i.pk, "title": i.title, "group": i.group_antibiotic.pk} for i in antibiotic_obj]
+        elements = [{"pk": i.pk, "title": i.title, "fsli": i.fsli} for i in antibiotic_obj]
 
         return elements
 

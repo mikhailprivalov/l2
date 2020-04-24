@@ -1,10 +1,11 @@
 <template>
     <div>
         <div class="radio-button-object">
-          <radio-field v-model="searchTypesObject" :variants="typesObject" fullWidth @click="filteredtypesGroups"/>
+          <radio-field v-model="searchTypesObject" :variants="typesObject" fullWidth @click="filteredGroupObject"/>
         </div>
+
         <div class="radio-button-object radio-button-groups">
-           <radio-field v-model="searchTypesGroups" :variants="typesGroups" fullWidth />
+           <radio-field v-model="searchTypesGroups" :variants="typesGroups" fullWidth @click="onChangeGroup"/>
         </div>
 
         <div class="lists">
@@ -12,31 +13,27 @@
             <h6><strong>{{searchTypesObject}}</strong> (создание/редактирование)</h6>
             <div class="content-edit" :class="['right-top']">
               Название:
-              <input type="text" :placeholder="[[searchTypesObject]] + ': введите название' " />
+              <input type="text" v-model="editElement" :placeholder="[[searchTypesObject]] + ': введите название' " />
               <p>Код ФСЛИ</p>
               <input type="text" placeholder="Введите код ФСЛИ.."/>
             </div>
           </div>
 
           <div class="left">
-             <v-select :clearable="false" label="title" :options="list1" :searchable="true"
+             <v-select :clearable="false" label="title" :options="list1" :searchable="true" placeholder="Выберите группу"
                            v-model="selected1" v-on:change="load_culture_groups(selected1.title, '1')"/>
             <input type="text" v-model="searchElement" placeholder="Фильтр по названию.."/>
             <draggable class="list-group" :list="list1Elements" group="some" @change="log">
               <div class="item" v-for="(element) in filteredList" :key="element.title">
                 <div>
                   {{ element.title }}
-                  <button class="btn btn-blue-nb sidebar-btn"
-                      style="font-size: 12px"
-                      @click="load_culture_groups">
+                  <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px">
                     <i class="glyphicon glyphicon-pencil" v-if="searchTypesGroups === 'Группы'"/>
                     <i class="glyphicon glyphicon-arrow-right" v-tippy="{ placement : 'bottom'}" title="Добавить в набор" v-else/>
                     </button>
                 </div>
-
                 </div>
             </draggable>
-
           </div>
 
           <div class="right">
@@ -47,8 +44,8 @@
                   {{ element.title }}
                 </div>
               </draggable >
-              <div v-else class="list-group" :class="['right-top']" :list="list2"  >
-                <div class="item" v-for="(element) in list2" :key="element.title">
+              <div v-else class="list-group" :class="['right-top']" :list="listSets"  >
+                <div class="item" v-for="(element) in listSetsElements" :key="element.title">
                   {{ element.title }}
                 </div>
               </div >
@@ -94,19 +91,22 @@
       return {
         list1: [],
         list2: [],
+        listSets: [],
         list1Elements: [],
         list2Elements: [],
+        listSetsElements: [],
         selected1: '',
         selected2: '',
         searchElement: '',
         typesObject: [
             'Бактерии',
-            'Антибиоткики',
+            'Антибиотики',
             'Бактериофаги',
         ],
         typesGroups: [],
         searchTypesObject: "Бактерии",
-        searchTypesGroups: ""
+        searchTypesGroups: "",
+        editElement: ""
       }
     },
     created() {
@@ -117,7 +117,9 @@
         const t = this;
         fetch( `/api/bacteria/loadculture?type=${titlegroup}&searchObj=${t.searchTypesObject}`).then(r => r.json()).then(data => {
           t.list1 = data.groups;
-          t.list2 = [...t.list1];
+          if (t.searchTypesGroups === 'Группы'){
+            t.list2 = [...t.list1];
+          }
           objList === "1" ? this.list1Elements = data.elements : this.list2Elements = data.elements
         })
       },
@@ -125,23 +127,36 @@
         window.console.log(evt);
       }},
      watch: {
+        // searchTypesObject(){
+        //   this.selected1 = '';
+        //   this.selected2 = '';
+        //   this.searchTypesObject === "Антибиотики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы'];
+        //   this.load_culture_groups("Все", "1")
+        // }
 
     },
      computed: {
-        selectedID: function () {
-           return this.selected.title
-    },
        filteredList() {
-      return this.list1Elements.filter(element => {
-        return element.title.toLowerCase().includes(this.searchElement.toLowerCase())
+        return this.list1Elements.filter(element => {
+          return element.title.toLowerCase().includes(this.searchElement.toLowerCase())
       })
     },
-       filteredtypesGroups() {
-         return this.searchTypesObject === "Антибиоткики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы']
+       filteredGroupObject() {
+         this.load_culture_groups("Все", "1")
+         this.selected1 = '';
+         this.selected2 = '';
+         this.searchTypesObject === "Антибиотики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы'];
        },
-  }
-
+       onChangeGroup() {
+         if (this.searchTypesGroups === "Наборы") {
+           this.list2 = [];
+           this.list2Elements = [];
+           this.selected2 = ""
+         }
+         else {this.load_culture_groups("Все", "1")}
+       },
     }
+  }
 </script>
 
 <style lang="scss" scoped>
