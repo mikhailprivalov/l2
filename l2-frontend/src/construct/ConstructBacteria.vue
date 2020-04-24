@@ -116,7 +116,7 @@
     methods:{
         load_culture_groups() {
         const t = this;
-        fetch("/api/bacteria/loadculture?type=" + t.bacteriaGroup).then(r => r.json()).then(data => {
+        fetch("/api/bacteria/loadculture?type=" + "all").then(r => r.json()).then(data => {
           t.list1 = data.groups
           t.list2 = [...t.list1]
           t.list1Elements = data.elements

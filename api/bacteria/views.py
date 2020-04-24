@@ -10,19 +10,11 @@ def load_culture(request):
     groups = []
     if type == "all":
         culture_obj = Culture.objects.all()
-        for i in culture_obj:
-            elements.append({"pk": i.pk, "title": i.title, "group": i.group_culture.pk})
-        group_culture_onj = GroupCulture.objects.all()
-        for g in group_culture_onj:
-            groups.append({"pk": g.pk, "title": g.title})
     else:
         culture_obj = Culture.objects.filter(group_culture__title=type)
-        for i in culture_obj:
-            elements.append({"pk": i.pk, "title": i.title, "group": i.group_culture.pk})
+    elements = [{"pk": i.pk, "title": i.title, "group": i.group_culture.pk} for i in culture_obj]
 
-        group_culture_onj = GroupCulture.objects.filter(title=type)
-
-        for g in group_culture_onj:
-            groups.append({"pk": g.pk, "title": g.title})
+    group_culture_obj = GroupCulture.objects.all()
+    groups = [{"pk": g.pk, "title": g.title} for g in group_culture_obj]
 
     return JsonResponse({"groups": groups, "elements": elements})
