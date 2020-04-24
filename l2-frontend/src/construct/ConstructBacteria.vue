@@ -96,7 +96,6 @@
         list2: [],
         list1Elements: [],
         list2Elements: [],
-        bacteriaGroup: 'Все',
         selected1: '',
         selected2: '',
         searchElement: '',
@@ -116,8 +115,7 @@
     methods:{
         load_culture_groups(titlegroup, objList) {
         const t = this;
-
-        fetch("/api/bacteria/loadculture?type=" + titlegroup).then(r => r.json()).then(data => {
+        fetch( `/api/bacteria/loadculture?type=${titlegroup}&searchObj=${t.searchTypesObject}`).then(r => r.json()).then(data => {
           t.list1 = data.groups;
           t.list2 = [...t.list1];
           objList === "1" ? this.list1Elements = data.elements : this.list2Elements = data.elements
@@ -127,9 +125,6 @@
         window.console.log(evt);
       }},
      watch: {
-        bacteriaGroup() {
-        this.load_culture_groups()
-      },
        selected1(){
           this.load_culture_groups(this.selected1.title,  "1")
        },
