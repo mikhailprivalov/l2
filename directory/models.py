@@ -594,6 +594,13 @@ class GroupCulture(models.Model):
         verbose_name = 'Группа для культуры'
         verbose_name_plural = 'Культуры - группы'
 
+    @staticmethod
+    def get_all_cultures_groups():
+        group_culture_obj = GroupCulture.objects.all()
+        groups = [{"pk": g.pk, "title": g.title} for g in group_culture_obj]
+
+        return groups
+
 
 class Culture(models.Model):
     title = models.CharField(max_length=255, help_text="Название культуры")
@@ -608,6 +615,16 @@ class Culture(models.Model):
         verbose_name = 'Культура'
         verbose_name_plural = 'Культуры'
 
+    @staticmethod
+    def get_cultures(group):
+        if group == "Все":
+            culture_obj = Culture.objects.all()
+        else:
+            culture_obj = Culture.objects.filter(group_culture__title=group)
+        elements = [{"pk": i.pk, "title": i.title, "group": i.group_culture.pk} for i in culture_obj]
+
+        return elements
+
 
 class GroupAntibiotic(models.Model):
     title = models.CharField(max_length=255, help_text="Группа антибиотиков")
@@ -619,6 +636,13 @@ class GroupAntibiotic(models.Model):
     class Meta:
         verbose_name = 'Группа для антибиотиков'
         verbose_name_plural = 'Антибиотики - группы'
+
+    @staticmethod
+    def get_all_antibiotic_groups():
+        group_antibiotic_obj = GroupAntibiotic.objects.all()
+        groups = [{"pk": g.pk, "title": g.title} for g in group_antibiotic_obj]
+
+        return groups
 
 
 class Antibiotic(models.Model):
@@ -634,6 +658,16 @@ class Antibiotic(models.Model):
         verbose_name = 'Антибиотик'
         verbose_name_plural = 'Антибиотики'
 
+    @staticmethod
+    def get_antibiotics(group):
+        if group == "Все":
+            antibiotic_obj = Antibiotic.objects.all()
+        else:
+            antibiotic_obj = Antibiotic.objects.filter(group_antibiotic__title=group)
+        elements = [{"pk": i.pk, "title": i.title, "group": i.group_antibiotic.pk} for i in antibiotic_obj]
+
+        return elements
+
 
 class AntibioticSets(models.Model):
     title = models.CharField(max_length=255, help_text="Название антибиотика")
@@ -645,4 +679,7 @@ class AntibioticSets(models.Model):
     class Meta:
         verbose_name = 'Антибиотик - Наборы'
         verbose_name_plural = 'Антибиотики - Наборы'
+
+
+
 

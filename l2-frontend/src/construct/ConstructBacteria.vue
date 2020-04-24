@@ -20,7 +20,7 @@
 
           <div class="left">
              <v-select :clearable="false" label="title" :options="list1" :searchable="true"
-                           v-model="selected1"/>
+                           v-model="selected1" v-on:change="load_culture_groups(selected1.title, '1')"/>
             <input type="text" v-model="searchElement" placeholder="Фильтр по названию.."/>
             <draggable class="list-group" :list="list1Elements" group="some" @change="log">
               <div class="item" v-for="(element) in filteredList" :key="element.title">
@@ -41,7 +41,7 @@
 
           <div class="right">
              <v-select :clearable="false" label="title" :options="list2" :searchable="true"
-                         v-model="selected2"/>
+                         v-model="selected2" v-on:change="load_culture_groups(selected2.title, '2')"/>
               <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :class="['right-top']" :list="list2Elements" group="some" @change="log" >
                 <div class="item" v-for="(element) in list2Elements" :key="element.title">
                   {{ element.title }}
@@ -105,7 +105,7 @@
             'Бактериофаги',
         ],
         typesGroups: [],
-        searchTypesObject: "",
+        searchTypesObject: "Бактерии",
         searchTypesGroups: ""
       }
     },
@@ -125,12 +125,6 @@
         window.console.log(evt);
       }},
      watch: {
-       selected1(){
-          this.load_culture_groups(this.selected1.title,  "1")
-       },
-       selected2(){
-          this.load_culture_groups(this.selected2.title, "2")
-       },
 
     },
      computed: {
@@ -144,7 +138,7 @@
     },
        filteredtypesGroups() {
          return this.searchTypesObject === "Антибиоткики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы']
-       }
+       },
   }
 
     }

@@ -7,30 +7,18 @@ from directory.models import Culture, GroupCulture, Antibiotic, GroupAntibiotic
 def load_culture(request):
     type = request.GET.get('type')
     searchObj = request.GET.get('searchObj')
-    print(searchObj)
-    result = {"groups": [], "elements": []}
-    obj_el, obj_group = None, None
-
+    groups = [{"pk": -2, "title": "не найдено"}]
+    elements = []
     if searchObj == 'Бактерии':
-        obj_el = Culture
-        obj_group = GroupCulture
-
-    if searchObj == 'Антибиоткики':
-        obj_el = Antibiotic
-        obj_group = GroupAntibiotic
-    if obj_el:
-        if type == "Все":
-            elements_send = obj_el.objects.all()
-        else:
-            elements_send = obj_el.objects.filter(group_culture__title=type)
-        elements = [{"pk": i.pk, "title": i.title, "group": i.group_culture.pk} for i in elements_send]
-
-        group_send_obj = obj_group.objects.all()
-        groups = [{"pk": g.pk, "title": g.title} for g in group_send_obj]
+        elements = Culture.get_cultures(type)
+        groups = GroupCulture.get_all_cultures_groups()
         groups.insert(0, {"pk": -1, "title": "Все"})
 
-        result = {"groups": groups, "elements": elements}
+    if searchObj == 'Антибиотики':
+        elements = Antibiotic.get_antibiotics(type)
+        groups = GroupAntibiotic.get_all_antibiotic_groups()
+        groups.insert(0, {"pk": -1, "title": "Все"})
 
-    return JsonResponse(result)
+    return JsonResponse({"groups": groups, "elements": elements})
 
 
