@@ -20,7 +20,7 @@
 
           <div class="left">
              <v-select :clearable="false" label="title" :options="list1" :searchable="true"
-                           v-model="selected"/>
+                           v-model="selected1"/>
             <input type="text" v-model="searchElement" placeholder="Фильтр по названию.."/>
             <draggable class="list-group" :list="list1Elements" group="some" @change="log">
               <div class="item" v-for="(element) in filteredList" :key="element.title">
@@ -41,7 +41,7 @@
 
           <div class="right">
              <v-select :clearable="false" label="title" :options="list2" :searchable="true"
-                         v-model="selected1"/>
+                         v-model="selected2"/>
               <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :class="['right-top']" :list="list2Elements" group="some" @change="log" >
                 <div class="item" v-for="(element) in list2Elements" :key="element.title">
                   {{ element.title }}
@@ -96,9 +96,9 @@
         list2: [],
         list1Elements: [],
         list2Elements: [],
-        bacteriaGroup: 'all',
-        selected: '',
+        bacteriaGroup: 'Все',
         selected1: '',
+        selected2: '',
         searchElement: '',
         typesObject: [
             'Бактерии',
@@ -111,16 +111,16 @@
       }
     },
     created() {
-         this.load_culture_groups()
+         this.load_culture_groups("Все", "1")
     },
     methods:{
-        load_culture_groups() {
+        load_culture_groups(titlegroup, objList) {
         const t = this;
-        fetch("/api/bacteria/loadculture?type=" + "all").then(r => r.json()).then(data => {
-          t.list1 = data.groups
-          t.list2 = [...t.list1]
-          t.list1Elements = data.elements
-          t.list2Elements = [...t.list1Elements]
+
+        fetch("/api/bacteria/loadculture?type=" + titlegroup).then(r => r.json()).then(data => {
+          t.list1 = data.groups;
+          t.list2 = [...t.list1];
+          objList === "1" ? this.list1Elements = data.elements : this.list2Elements = data.elements
         })
       },
       log: function(evt) {
@@ -129,7 +129,14 @@
      watch: {
         bacteriaGroup() {
         this.load_culture_groups()
-      }
+      },
+       selected1(){
+          this.load_culture_groups(this.selected1.title,  "1")
+       },
+       selected2(){
+          this.load_culture_groups(this.selected2.title, "2")
+       },
+
     },
      computed: {
         selectedID: function () {
