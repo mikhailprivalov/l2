@@ -644,6 +644,8 @@ class Culture(models.Model):
         """
         Запись в базу сведений о культуре
         """
+        if group == "Все":
+            return ""
         if group == "Без группы":
             Culture.objects.filter(pk__in=elements).update(group_culture=None)
         else:
@@ -713,6 +715,9 @@ class Antibiotic(models.Model):
         """
         Запись в базу сведений о культуре
         """
+        if group == "Все":
+            return ""
+
         if group == "Без группы":
             Antibiotic.objects.filter(pk__in=elements).update(group_antibiotic=None)
         else:
