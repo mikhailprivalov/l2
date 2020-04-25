@@ -209,7 +209,7 @@
            this.list2 = [];
            this.list2Elements = [];
            this.onClearContentEdit();
-           returnthis.selected2 = "";
+           return this.selected2 = "";
 
          }
          else {
