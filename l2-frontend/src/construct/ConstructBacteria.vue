@@ -183,7 +183,7 @@
           errmessage('Ошибка', message)
         }
         this.onClearContentEdit();
-        this.load_culture_groups(this.selected1.title, "1");
+        this.load_culture_groups("Все", "1");
         pksElements1 = [];
         pksElements2 = [];
         this.$store.dispatch(action_types.DEC_LOADING).then()
@@ -201,6 +201,8 @@
          this.load_culture_groups("Все", "1")
          this.selected1 = '';
          this.selected2 = '';
+         if (this.searchTypesObject === "Бактерии") {
+         this.searchTypesGroups = 'Группы';}
          return this.searchTypesObject === "Антибиотики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы'];
 
        },
@@ -210,7 +212,6 @@
            this.list2Elements = [];
            this.onClearContentEdit();
            return this.selected2 = "";
-
          }
          else {
            this.load_culture_groups("Все", "1");
