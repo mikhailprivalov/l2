@@ -201,19 +201,20 @@
          this.load_culture_groups("Все", "1")
          this.selected1 = '';
          this.selected2 = '';
-         this.searchTypesObject === "Антибиотики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы'];
+         return this.searchTypesObject === "Антибиотики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы'];
 
        },
        onChangeGroup() {
          if (this.searchTypesGroups === "Наборы") {
            this.list2 = [];
            this.list2Elements = [];
-           this.selected2 = "";
            this.onClearContentEdit();
+           returnthis.selected2 = "";
+
          }
          else {
            this.load_culture_groups("Все", "1");
-           this.onClearContentEdit();
+           return this.onClearContentEdit();
          }
        }
     }
