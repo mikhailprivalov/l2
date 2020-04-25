@@ -625,9 +625,7 @@ class Culture(models.Model):
         else:
             culture_obj = Culture.objects.filter(group_culture__title=group).order_by('title')
         elements = [{"pk": i.pk, "title": i.title, "fsli": i.fsli} for i in culture_obj]
-
         return elements
-
 
     @staticmethod
     def culture_save(pk, title='', fsli=''):

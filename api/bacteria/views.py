@@ -51,9 +51,9 @@ def save_group(request):
     obj = request_data['obj']
 
     if types_object == 'Бактерии':
-       for i in obj:
-           if 'group' in i.keys() and 'elements' in i.keys():
-               Culture.culture_update_group(i['group'], i['elements'])
+        for i in obj:
+            if 'group' in i.keys() and 'elements' in i.keys():
+                Culture.culture_update_group(i['group'], i['elements'])
 
     if types_object == 'Антибиотики':
         for i in obj:
