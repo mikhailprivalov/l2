@@ -13,9 +13,9 @@
             <h6><strong>{{searchTypesObject}}</strong> (создание/редактирование)</h6>
             <div class="content-edit" :class="['right-top']">
               Название:
-              <input type="text" v-model="editElement" :placeholder="[[searchTypesObject]] + ': введите название' " />
+              <input type="text" v-model="editElementTitle" :placeholder="[[searchTypesObject]] + ': введите название' " />
               <p>Код ФСЛИ</p>
-              <input type="text" placeholder="Введите код ФСЛИ.."/>
+              <input type="text" v-model="editElementFsli" placeholder="Введите код ФСЛИ.."/>
             </div>
           </div>
 
@@ -28,7 +28,7 @@
                 <div>
                   {{ element.title }}
                   <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px">
-                    <i class="glyphicon glyphicon-pencil" v-if="searchTypesGroups === 'Группы'"/>
+                    <i class="glyphicon glyphicon-pencil" v-if="searchTypesGroups === 'Группы'" @click="onEditElement(element)"/>
                     <i class="glyphicon glyphicon-arrow-right" v-tippy="{ placement : 'bottom'}" title="Добавить в набор" v-else/>
                     </button>
                 </div>
@@ -79,6 +79,9 @@
   import vSelect from 'vue-select'
   import draggable from "vuedraggable";
   import RadioField from '../fields/RadioField'
+  import * as action_types from "../store/action-types";
+  import construct_point from "../api/construct-point";
+  import users_point from "../api/user-point";
 
     export default {
       name: "ConstructBacteria",
@@ -106,7 +109,8 @@
         typesGroups: [],
         searchTypesObject: "Бактерии",
         searchTypesGroups: "",
-        editElement: ""
+        editElementTitle: "",
+        editElementFsli: ""
       }
     },
     created() {
@@ -125,7 +129,17 @@
       },
       log: function(evt) {
         window.console.log(evt);
-      }},
+      },
+      onEditElement: function(element) {
+          this.editElementTitle = element.title;
+          this.editElementFsli = element.fsli;
+         console.log(element_cult)
+       },
+      async saveElement() {
+          // const {ok, npk, message} = await `/api/bacteria/?type=${titlegroup}&searchObj=${t.searchTypesObject}`
+          const {ok, npk, message} = await `/api/bacteria/?type=${titlegroup}&searchObj=${t.searchTypesObject}`
+       }
+      },
      watch: {
         // searchTypesObject(){
         //   this.selected1 = '';
@@ -154,7 +168,7 @@
            this.selected2 = ""
          }
          else {this.load_culture_groups("Все", "1")}
-       },
+       }
     }
   }
 </script>

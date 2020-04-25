@@ -7,8 +7,6 @@ from directory.models import Culture, GroupCulture, Antibiotic, GroupAntibiotic
 def load_culture(request):
     type = request.GET.get('type')
     searchObj = request.GET.get('searchObj')
-    print(searchObj)
-    print(type)
     groups = [{"pk": -2, "title": "не найдено"}]
     elements = []
     if searchObj == 'Бактерии':
@@ -29,3 +27,7 @@ def load_culture(request):
     return JsonResponse({"groups": groups, "elements": elements})
 
 
+@login_required
+def save_culture(request):
+    type = request.GET.get('type')
+    searchObj = request.GET.get('searchObj')

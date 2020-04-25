@@ -628,6 +628,24 @@ class Culture(models.Model):
         return elements
 
 
+    @staticmethod
+    def culture_save(pk=-1, title='', fsli=''):
+        """
+        Запись в базу сведений о культуре
+        """
+        culture_obj = None
+        if pk > 0:
+            culture_obj = Culture.objects.filter(pk=pk)
+            culture_obj.title = title
+            culture_obj.fsli = fsli
+
+        if pk == -1:
+            culture_obj = Culture(title=title, fsli=fsli)
+
+        if culture_obj.exist():
+            culture_obj.save()
+
+
 class GroupAntibiotic(models.Model):
     title = models.CharField(max_length=255, help_text="Группа антибиотиков")
     hide = models.BooleanField()
