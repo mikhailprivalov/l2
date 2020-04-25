@@ -3,6 +3,7 @@ from jsonfield import JSONField
 
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
+from django.db.models.functions import Lower
 
 
 class DirectionsGroup(models.Model):
@@ -585,7 +586,7 @@ class DispensaryRouteSheet(models.Model):
 
 class GroupCulture(models.Model):
     title = models.CharField(max_length=255, help_text="Группа культур")
-    hide = models.BooleanField()
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции', db_index=True)
 
     def __str__(self):
         return self.title
@@ -606,7 +607,7 @@ class Culture(models.Model):
     title = models.CharField(max_length=255, help_text="Название культуры")
     group_culture = models.ForeignKey(GroupCulture, db_index=True, null=True, blank=True, help_text='Группа для культуры', on_delete=models.SET_NULL)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
-    hide = models.BooleanField()
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции', db_index=True)
 
     def __str__(self):
         return self.title
@@ -617,38 +618,45 @@ class Culture(models.Model):
 
     @staticmethod
     def get_cultures(group):
-        if group == "Все":
-            culture_obj = Culture.objects.all()
+        if group == "Все" or group == '':
+            culture_obj = Culture.objects.all().order_by('title')
         elif group == "Без группы":
-            culture_obj = Culture.objects.filter(group_culture=None)
+            culture_obj = Culture.objects.filter(group_culture=None).order_by('title')
         else:
-            culture_obj = Culture.objects.filter(group_culture__title=group)
-        elements = [{"pk": i.pk, "title": i.title, "group": i.group_culture.pk, "fsli": i.fsli} for i in culture_obj]
+            culture_obj = Culture.objects.filter(group_culture__title=group).order_by('title')
+        elements = [{"pk": i.pk, "title": i.title, "fsli": i.fsli} for i in culture_obj]
 
         return elements
 
 
     @staticmethod
-    def culture_save(pk=-1, title='', fsli=''):
+    def culture_save(pk, title='', fsli=''):
         """
         Запись в базу сведений о культуре
         """
-        culture_obj = None
         if pk > 0:
-            culture_obj = Culture.objects.filter(pk=pk)
-            culture_obj.title = title
-            culture_obj.fsli = fsli
+            Culture.objects.filter(pk=pk).update(title=title, fsli=fsli)
 
         if pk == -1:
-            culture_obj = Culture(title=title, fsli=fsli)
-
-        if culture_obj.exist():
+            culture_obj = Culture(title=title, fsli=fsli, group_culture=None)
             culture_obj.save()
+
+    @staticmethod
+    def culture_update_group(group, elements):
+        """
+        Запись в базу сведений о культуре
+        """
+        if group == "Без группы":
+            Culture.objects.filter(pk__in=elements).update(group_culture=None)
+        else:
+            gr = GroupCulture.objects.get(title=group)
+            if gr.pk > 0:
+                Culture.objects.filter(pk__in=elements).update(group_culture=gr)
 
 
 class GroupAntibiotic(models.Model):
     title = models.CharField(max_length=255, help_text="Группа антибиотиков")
-    hide = models.BooleanField()
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции', db_index=True)
 
     def __str__(self):
         return self.title
@@ -669,7 +677,7 @@ class Antibiotic(models.Model):
     title = models.CharField(max_length=255, help_text="Название антибиотика")
     group_antibiotic = models.ForeignKey(GroupAntibiotic, db_index=True, null=True, blank=True, help_text='Группа антибиотиков', on_delete=models.SET_NULL)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
-    hide = models.BooleanField()
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции', db_index=True)
 
     def __str__(self):
         return self.title
@@ -680,15 +688,39 @@ class Antibiotic(models.Model):
 
     @staticmethod
     def get_antibiotics(group):
-        if group == "Все":
-            antibiotic_obj = Antibiotic.objects.all()
+        if group == "Все" or group == '':
+            antibiotic_obj = Antibiotic.objects.all().order_by(Lower('title'))
         elif group == "Без группы":
-            antibiotic_obj = Antibiotic.objects.filter(group_antibiotic=None)
+            antibiotic_obj = Antibiotic.objects.filter(group_antibiotic=None).order_by(Lower('title'))
         else:
-            antibiotic_obj = Antibiotic.objects.filter(group_antibiotic__title=group)
+            antibiotic_obj = Antibiotic.objects.filter(group_antibiotic__title=group).order_by(Lower('title'))
         elements = [{"pk": i.pk, "title": i.title, "fsli": i.fsli} for i in antibiotic_obj]
 
         return elements
+
+    @staticmethod
+    def antibiotic_save(pk, title='', fsli=''):
+        """
+        Запись в базу сведений об антибиотике
+        """
+        if pk > 0:
+            Antibiotic.objects.filter(pk=pk).update(title=title, fsli=fsli)
+
+        if pk == -1:
+            antibiotic_obj = Antibiotic(title=title, fsli=fsli, group_antibiotic=None)
+            antibiotic_obj.save()
+
+    @staticmethod
+    def antibiotic_update_group(group, elements):
+        """
+        Запись в базу сведений о культуре
+        """
+        if group == "Без группы":
+            Antibiotic.objects.filter(pk__in=elements).update(group_antibiotic=None)
+        else:
+            gr = GroupAntibiotic.objects.get(title=group)
+            if gr.pk > 0:
+                Antibiotic.objects.filter(pk__in=elements).update(group_antibiotic=gr)
 
 
 class AntibioticSets(models.Model):
@@ -701,7 +733,3 @@ class AntibioticSets(models.Model):
     class Meta:
         verbose_name = 'Антибиотик - Наборы'
         verbose_name_plural = 'Антибиотики - Наборы'
-
-
-
-

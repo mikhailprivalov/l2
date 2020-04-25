@@ -12,10 +12,14 @@
           <div class="edit-element" >
             <h6><strong>{{searchTypesObject}}</strong> (создание/редактирование)</h6>
             <div class="content-edit" :class="['right-top']">
-              Название:
+                Название:
+                  <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="onClearContentEdit">
+                    <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Очистить"></i>
+                  </button>
               <input type="text" v-model="editElementTitle" :placeholder="[[searchTypesObject]] + ': введите название' " />
               <p>Код ФСЛИ</p>
               <input type="text" v-model="editElementFsli" placeholder="Введите код ФСЛИ.."/>
+              <p>{{editElementPk}}</p>
             </div>
           </div>
 
@@ -54,7 +58,7 @@
           </div>
        <div class="buttons">
          <div class="button-create">
-           <button class="btn btn-blue-nb sidebar-footer" @click="load_culture_groups">
+           <button class="btn btn-blue-nb sidebar-footer" @click="save_element">
              Сохранить
            </button>
          </div>
@@ -64,7 +68,7 @@
              <i class="glyphicon glyphicon-plus"></i>
              Создать
            </button>
-           <button class="btn btn-blue-nb sidebar-footer" @click="load_culture_groups">
+           <button class="btn btn-blue-nb sidebar-footer" @click="save_groups">
              Сохранить
            </button>
          </div>
@@ -75,13 +79,11 @@
 </template>
 
 <script>
-
+  import bacteria_point from '../api/bacteria-point'
   import vSelect from 'vue-select'
   import draggable from "vuedraggable";
   import RadioField from '../fields/RadioField'
   import * as action_types from "../store/action-types";
-  import construct_point from "../api/construct-point";
-  import users_point from "../api/user-point";
 
     export default {
       name: "ConstructBacteria",
@@ -98,7 +100,7 @@
         list1Elements: [],
         list2Elements: [],
         listSetsElements: [],
-        selected1: '',
+        selected1: {"pk": -1, "title": "Все"},
         selected2: '',
         searchElement: '',
         typesObject: [
@@ -110,11 +112,13 @@
         searchTypesObject: "Бактерии",
         searchTypesGroups: "",
         editElementTitle: "",
-        editElementFsli: ""
+        editElementFsli: "",
+        editElementPk: -1
       }
     },
     created() {
-         this.load_culture_groups("Все", "1")
+      this.load_culture_groups("Все", "1")
+      this.selected1 = {"pk": -1, "title": "Все"}
     },
     methods:{
         load_culture_groups(titlegroup, objList) {
@@ -131,23 +135,61 @@
         window.console.log(evt);
       },
       onEditElement: function(element) {
+          this.editElementPk = element.pk;
+          console.log(this.editElementPk);
           this.editElementTitle = element.title;
           this.editElementFsli = element.fsli;
-         console.log(element_cult)
+          console.log(element)
        },
-      async saveElement() {
-          // const {ok, npk, message} = await `/api/bacteria/?type=${titlegroup}&searchObj=${t.searchTypesObject}`
-          const {ok, npk, message} = await `/api/bacteria/?type=${titlegroup}&searchObj=${t.searchTypesObject}`
-       }
+      async save_element() {
+        this.$store.dispatch(action_types.INC_LOADING).then();
+        const {ok, message} = await bacteria_point.saveElement({'TypesObject': this.searchTypesObject ,'title': this.editElementTitle, 'fsli': this.editElementFsli, 'pk': this.editElementPk});
+        if (ok) {
+          okmessage('Элемент сохранён', `${this.searchTypesObject} – ${this.editElementTitle}`)
+        } else {
+          errmessage('Ошибка', message)
+        }
+        this.onClearContentEdit();
+        this.load_culture_groups("Все", "1")
+        this.$store.dispatch(action_types.DEC_LOADING).then()
+      },
+      onClearContentEdit() {
+        this.editElementTitle = '';
+        this.editElementFsli = '';
+        this.editElementPk = -1;
+      },
+      async save_groups() {
+        let pksElements2 = [];
+        for (let i in this.list2Elements) {
+          if (i > -1) {
+            pksElements2.push(this.list2Elements[i].pk)
+            }
+          }
+        let pksElements1 = [];
+        for (let i in this.list1Elements) {
+          if (i > -1) {
+            pksElements1.push(this.list1Elements[i].pk)
+            }
+          }
+
+        this.$store.dispatch(action_types.INC_LOADING).then();
+        // const {ok, message} = await bacteria_point.saveGroup({'TypesObject': this.searchTypesObject ,
+        //   'group': this.selected2.title, 'elements': pksElements2});
+        const {ok, message} = await bacteria_point.saveGroup({'TypesObject': this.searchTypesObject ,
+          'obj': [{'group':this.selected1.title, 'elements': pksElements1}, {'group': this.selected2.title, 'elements': pksElements2}]});
+        if (ok) {
+          okmessage('Группа сохранена', `${this.searchTypesObject} – ${this.selected2.title}`)
+        } else {
+          errmessage('Ошибка', message)
+        }
+        this.onClearContentEdit();
+        this.load_culture_groups(this.selected1.title, "1");
+        pksElements1 = [];
+        pksElements2 = [];
+        this.$store.dispatch(action_types.DEC_LOADING).then()
+      }
       },
      watch: {
-        // searchTypesObject(){
-        //   this.selected1 = '';
-        //   this.selected2 = '';
-        //   this.searchTypesObject === "Антибиотики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы'];
-        //   this.load_culture_groups("Все", "1")
-        // }
-
     },
      computed: {
        filteredList() {
@@ -160,14 +202,19 @@
          this.selected1 = '';
          this.selected2 = '';
          this.searchTypesObject === "Антибиотики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы'];
+
        },
        onChangeGroup() {
          if (this.searchTypesGroups === "Наборы") {
            this.list2 = [];
            this.list2Elements = [];
-           this.selected2 = ""
+           this.selected2 = "";
+           this.onClearContentEdit();
          }
-         else {this.load_culture_groups("Все", "1")}
+         else {
+           this.load_culture_groups("Все", "1");
+           this.onClearContentEdit();
+         }
        }
     }
   }
@@ -208,6 +255,7 @@
       position: relative;
       border-radius: 4px;
       padding-right: 50px;
+      position: relative;
     }
     .left,
     .right {
@@ -277,5 +325,7 @@
   p{
     padding-top: 15px;
   }
+  input {
+          border-radius: 4px;}
 
 </style>
