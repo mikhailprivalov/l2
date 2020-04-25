@@ -173,8 +173,6 @@
           }
 
         this.$store.dispatch(action_types.INC_LOADING).then();
-        // const {ok, message} = await bacteria_point.saveGroup({'TypesObject': this.searchTypesObject ,
-        //   'group': this.selected2.title, 'elements': pksElements2});
         const {ok, message} = await bacteria_point.saveGroup({'TypesObject': this.searchTypesObject ,
           'obj': [{'group':this.selected1.title, 'elements': pksElements1}, {'group': this.selected2.title, 'elements': pksElements2}]});
         if (ok) {
