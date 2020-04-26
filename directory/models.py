@@ -599,8 +599,13 @@ class GroupCulture(models.Model):
     def get_all_cultures_groups():
         group_culture_obj = GroupCulture.objects.all()
         groups = [{"pk": g.pk, "title": g.title} for g in group_culture_obj]
-
         return groups
+
+    @staticmethod
+    def create_culture_group(title):
+        culture_group = GroupCulture(title=title)
+        culture_group.save()
+        return culture_group
 
 
 class Culture(models.Model):
@@ -669,8 +674,13 @@ class GroupAntibiotic(models.Model):
     def get_all_antibiotic_groups():
         group_antibiotic_obj = GroupAntibiotic.objects.all()
         groups = [{"pk": g.pk, "title": g.title} for g in group_antibiotic_obj]
-
         return groups
+
+    @staticmethod
+    def create_antibiotic_group(title):
+        antibiotic_group = GroupAntibiotic(title=title)
+        antibiotic_group.save()
+        return antibiotic_group
 
 
 class Antibiotic(models.Model):
@@ -728,7 +738,7 @@ class Antibiotic(models.Model):
 
 class AntibioticSets(models.Model):
     title = models.CharField(max_length=255, help_text="Название антибиотика")
-    antibiotics = models.ManyToManyField(Antibiotic)
+    antibiotics = models.ManyToManyField(Antibiotic, )
 
     def __str__(self):
         return self.title
@@ -736,3 +746,16 @@ class AntibioticSets(models.Model):
     class Meta:
         verbose_name = 'Антибиотик - Наборы'
         verbose_name_plural = 'Антибиотики - Наборы'
+
+    @staticmethod
+    def create_antibiotic_set(title):
+        antibiotic_set = AntibioticSets(title=title)
+        antibiotic_set.save()
+        return antibiotic_set
+
+    @staticmethod
+    def get_antibiotic_set():
+        antibiotic_set = AntibioticSets.objects.all().order_by('title')
+        sets = [{"pk": i.pk, "title": i.title} for i in antibiotic_set]
+        return sets
+

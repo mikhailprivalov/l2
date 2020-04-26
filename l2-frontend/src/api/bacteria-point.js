@@ -7,10 +7,15 @@ export default generator({
   },
   saveElement: {
     url: 'bacteria/saveculture',
-    onReject: {pk: -1, department: -1, title: '', short_title: '', code: ''},
   },
   saveGroup: {
     url: 'bacteria/savegroup',
-    onReject: {pk: -1, department: -1, title: '', short_title: '', code: ''},
-  }
+  },
+  addNewGroup: {
+    url: 'bacteria/addnewgroup',
+  },
+  loadantibioticset: {
+    url: 'bacteria/loadantibioticset',
+  },
+
 })

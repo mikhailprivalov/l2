@@ -43,13 +43,12 @@
           <div class="right">
              <v-select :clearable="false" label="title" :options="list2" :searchable="true"
                          v-model="selected2" v-on:change="load_culture_groups(selected2.title, '2')"/>
-            <input type="text" style = "width: 92%"  v-model="newGroup" :placeholder="'Добавить в ' + [[searchTypesGroups.toLowerCase()]]"/>
+            <input type="text" v-model="newgroup" style = "width: 92%"   placeholder="Добавить группу"/>
               <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px">
-                <i class="fa fa-floppy-o fa-lg" aria-hidden="true" v-tippy="{ placement : 'bottom'}" :title="'Соханить в '+ '&#171;' + [[searchTypesGroups.toUpperCase().trim()]] +'&#187;'"></i>
+                <i class="fa fa-floppy-o fa-lg" aria-hidden="true" @click="addNewGroup"
+                   v-tippy="{ placement : 'bottom'}" :title="'Соханить в '+ '&#171;' + [[searchTypesGroups.toUpperCase().trim()]] +'&#187;'"></i>
               </button>
-
-
-            <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :list="list2Elements" group="some" @change="log" >
+             <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :list="list2Elements" group="some" @change="log" >
                 <div class="item" v-for="(element) in list2Elements" :key="element.title">
                   {{ element.title }}
                 </div>
@@ -119,7 +118,7 @@
         editElementTitle: "",
         editElementFsli: "",
         editElementPk: -1,
-        newGroup: ""
+        newgroup: ""
       }
     },
     created() {
@@ -129,13 +128,23 @@
     methods:{
         load_culture_groups(titlegroup, objList) {
         const t = this;
+        if (t.searchTypesGroups === "Группы") {
         fetch( `/api/bacteria/loadculture?type=${titlegroup}&searchObj=${t.searchTypesObject}`).then(r => r.json()).then(data => {
           t.list1 = data.groups;
-          if (t.searchTypesGroups === 'Группы'){
+          // if (t.searchTypesGroups === 'Группы'){
             t.list2 = [...t.list1];
-          }
+          // }
           objList === "1" ? this.list1Elements = data.elements : this.list2Elements = data.elements
-        })
+        })}
+        else {
+          fetch( `/api/bacteria/loadculture?type=${titlegroup}&searchObj=${t.searchTypesObject}`).then(r => r.json()).then(data => {
+          t.list1 = data.groups;})
+
+          fetch( `/api/bacteria/loadantibioticset?TypesObject=${t.searchTypesObject}&typeGroups=${t.searchTypesGroups}`).
+            then(r => r.json()).then(data => {
+              t.list2 = data.groups;
+          })
+        }
       },
       log: function(evt) {
         window.console.log(evt);
@@ -170,6 +179,18 @@
         this.editElementFsli = '';
         this.editElementPk = -1;
       },
+      async addNewGroup() {
+        this.$store.dispatch(action_types.INC_LOADING).then();
+        const {ok, message} = await bacteria_point.addNewGroup({'TypesObject': this.searchTypesObject, 'typeGroups': this.searchTypesGroups,
+            'newgroup': this.newgroup});
+        if (ok) {
+          this.load_culture_groups("Все", "1");
+          okmessage('Сохранено в:', `${this.searchTypesGroups} - ${this.searchTypesObject} – ${this.newgroup}`)
+        } else {
+          errmessage('Ошибка', message)
+        }
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+      },
       async save_groups() {
         let pksElements2 = [];
         for (let i in this.list2Elements) {
@@ -183,9 +204,8 @@
             pksElements1.push(this.list1Elements[i].pk)
             }
           }
-
         this.$store.dispatch(action_types.INC_LOADING).then();
-        const {ok, message} = await bacteria_point.saveGroup({'TypesObject': this.searchTypesObject ,
+        const {ok, message} = await bacteria_point.saveGroup({'TypesObject': this.searchTypesObject, 'typeGroups': this.searchTypesGroups,
           'obj': [{'group':this.selected1.title, 'elements': pksElements1}, {'group': this.selected2.title, 'elements': pksElements2}]});
         if (ok) {
           okmessage('Группа сохранена', `${this.searchTypesObject} – ${this.selected2.title}`)
@@ -197,7 +217,15 @@
         pksElements1 = [];
         pksElements2 = [];
         this.$store.dispatch(action_types.DEC_LOADING).then()
+      },
+      async loadAntibioticSet() {
+          this.$store.dispatch(action_types.INC_LOADING).then();
+          const data = await bacteria_point.loadantibioticset({'TypesObject': this.searchTypesObject, 'typeGroups': this.searchTypesGroups});
+          this.list2 = data.groups
+          console.log(this.list2)
+          this.$store.dispatch(action_types.DEC_LOADING).then();
       }
+
       },
      watch: {
     },

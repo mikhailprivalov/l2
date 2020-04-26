@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from directory.models import Culture, GroupCulture, Antibiotic, GroupAntibiotic
+from directory.models import Culture, GroupCulture, Antibiotic, GroupAntibiotic, AntibioticSets
 import simplejson as json
 
 
@@ -63,3 +63,44 @@ def save_group(request):
     result = {"ok": True, "message": ""}
 
     return JsonResponse(result)
+
+
+@login_required
+def new_group(request):
+    request_data = json.loads(request.body)
+    types_object = request_data['TypesObject']
+    types_group = request_data['typeGroups']
+    title = request_data['newgroup']
+
+    result = {"ok": False, "message": "Ошибка"}
+
+    if types_object == 'Бактерии':
+        GroupCulture.create_culture_group(title)
+        result = {"ok": True, "message": ""}
+
+    if types_object == 'Антибиотики' and types_group == 'Группы':
+        GroupAntibiotic.create_antibiotic_group(title)
+        result = {"ok": True, "message": ""}
+
+    if types_object == 'Антибиотики' and types_group == 'Наборы':
+        AntibioticSets.create_antibiotic_set(title)
+        result = {"ok": True, "message": ""}
+
+    return JsonResponse(result)
+
+
+def load_antibiotic_set(request):
+    # request_data = json.loads(request.body)
+    # types_object = request_data['TypesObject']
+    # types_group = request_data['typeGroups']
+    types_object = request.GET.get('TypesObject')
+    types_group = request.GET.get('typeGroups')
+    groups = {"pk": -2, "title": "не найдено"}
+    print(types_object, types_group)
+
+    if types_object == 'Антибиотики' and types_group == 'Наборы':
+        groups = AntibioticSets.get_antibiotic_set()
+
+    print(groups)
+
+    return JsonResponse({"groups": groups})
