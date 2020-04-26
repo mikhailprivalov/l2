@@ -33,7 +33,7 @@
                   {{ element.title }}
                   <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px">
                     <i class="glyphicon glyphicon-pencil" v-if="searchTypesGroups === 'Группы'" @click="onEditElement(element)"/>
-                    <i class="glyphicon glyphicon-arrow-right" v-tippy="{ placement : 'bottom'}" title="Добавить в набор" v-else/>
+                    <i class="glyphicon glyphicon-arrow-right" @click="onAddToSet(element)" v-tippy="{ placement : 'bottom'}" title="Добавить в набор" v-else/>
                     </button>
                 </div>
                 </div>
@@ -43,7 +43,13 @@
           <div class="right">
              <v-select :clearable="false" label="title" :options="list2" :searchable="true"
                          v-model="selected2" v-on:change="load_culture_groups(selected2.title, '2')"/>
-              <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :class="['right-top']" :list="list2Elements" group="some" @change="log" >
+            <input type="text" style = "width: 92%"  v-model="newGroup" :placeholder="'Добавить в ' + [[searchTypesGroups.toLowerCase()]]"/>
+              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px">
+                <i class="fa fa-floppy-o fa-lg" aria-hidden="true" v-tippy="{ placement : 'bottom'}" :title="'Соханить в '+ '&#171;' + [[searchTypesGroups.toUpperCase().trim()]] +'&#187;'"></i>
+              </button>
+
+
+            <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :list="list2Elements" group="some" @change="log" >
                 <div class="item" v-for="(element) in list2Elements" :key="element.title">
                   {{ element.title }}
                 </div>
@@ -51,6 +57,9 @@
               <div v-else class="list-group" :class="['right-top']" :list="listSets"  >
                 <div class="item" v-for="(element) in listSetsElements" :key="element.title">
                   {{ element.title }}
+                   <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="delFromlistSetsElements(element)">
+                    <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Удалть из Набора"></i>
+                  </button>
                 </div>
               </div >
 
@@ -64,10 +73,6 @@
          </div>
          <div class="button-create"></div>
           <div class="button-create">
-           <button class="btn btn-blue-nb sidebar-footer" @click="load_culture_groups">
-             <i class="glyphicon glyphicon-plus"></i>
-             Создать
-           </button>
            <button class="btn btn-blue-nb sidebar-footer" @click="save_groups">
              Сохранить
            </button>
@@ -113,7 +118,8 @@
         searchTypesGroups: "",
         editElementTitle: "",
         editElementFsli: "",
-        editElementPk: -1
+        editElementPk: -1,
+        newGroup: ""
       }
     },
     created() {
@@ -141,6 +147,12 @@
           this.editElementFsli = element.fsli;
           console.log(element)
        },
+      onAddToSet(element) {
+          return this.listSetsElements.push(element)
+      },
+      delFromlistSetsElements(element){
+        return this.listSetsElements = this.listSetsElements.filter(item => item !== element)
+      },
       async save_element() {
         this.$store.dispatch(action_types.INC_LOADING).then();
         const {ok, message} = await bacteria_point.saveElement({'TypesObject': this.searchTypesObject ,'title': this.editElementTitle, 'fsli': this.editElementFsli, 'pk': this.editElementPk});
@@ -224,6 +236,7 @@
   input[type="text"] {
     width: 45vh;
 }
+
   .radio-button-object {
     width: 70%;
     margin-left: auto;
@@ -285,6 +298,7 @@
   .right-top {
     margin-top: 3.5vh;
   }
+
 
   .buttons {
     padding-left: 5vw;
