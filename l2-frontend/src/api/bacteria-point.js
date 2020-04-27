@@ -17,5 +17,11 @@ export default generator({
   loadantibioticset: {
     url: 'bacteria/loadantibioticset',
   },
+  loadCultures: {
+    url: 'bacteria/loadculture',
+  },
+  loadSetElements: {
+    url: 'bacteria/loadsetelements',
+  },
 
 })

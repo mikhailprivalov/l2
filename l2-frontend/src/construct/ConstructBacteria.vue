@@ -53,8 +53,8 @@
                   {{ element.title }}
                 </div>
               </draggable >
-              <div v-else class="list-group" :class="['right-top']" :list="listSets"  >
-                <div class="item" v-for="(element) in listSetsElements" :key="element.title">
+              <div v-else class="list-group" :class="['right-top']" :list="list2"  >
+                <div class="item" v-for="(element) in list2Elements" :key="element.title">
                   {{ element.title }}
                    <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="delFromlistSetsElements(element)">
                     <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Удалть из Набора"></i>
@@ -121,46 +121,57 @@
         newgroup: ""
       }
     },
-    created() {
-      this.load_culture_groups("Все", "1")
-      this.selected1 = {"pk": -1, "title": "Все"}
-    },
+    // created() {
+    //   this.load_culture_groups("Все", "1")
+    //   this.selected1 = {"pk": -1, "title": "Все"}
+    // },
     methods:{
-        load_culture_groups(titlegroup, objList) {
+      async load_culture_groups(titlegroup, objList) {
         const t = this;
-        if (t.searchTypesGroups === "Группы") {
-        fetch( `/api/bacteria/loadculture?type=${titlegroup}&searchObj=${t.searchTypesObject}`).then(r => r.json()).then(data => {
-          t.list1 = data.groups;
-          // if (t.searchTypesGroups === 'Группы'){
-            t.list2 = [...t.list1];
-          // }
-          objList === "1" ? this.list1Elements = data.elements : this.list2Elements = data.elements
-        })}
-        else {
-          fetch( `/api/bacteria/loadculture?type=${titlegroup}&searchObj=${t.searchTypesObject}`).then(r => r.json()).then(data => {
-          t.list1 = data.groups;})
-
-          fetch( `/api/bacteria/loadantibioticset?TypesObject=${t.searchTypesObject}&typeGroups=${t.searchTypesGroups}`).
-            then(r => r.json()).then(data => {
-              t.list2 = data.groups;
-          })
+        if (!titlegroup || titlegroup.length === 0) {
+          titlegroup = "Все"
         }
-      },
-      log: function(evt) {
-        window.console.log(evt);
+        if (t.searchTypesGroups === "Группы") {
+          bacteria_point.loadCultures({'type': titlegroup, 'searchObj': t.searchTypesObject})
+            .then(data => {
+                t.list1 = data.groups;
+                t.list2 = [...t.list1];
+                objList === "1" ? t.list1Elements = data.elements : t.list2Elements = data.elements;
+              }
+            )
+        } else {
+          bacteria_point.loadCultures({'type': titlegroup, 'searchObj': t.searchTypesObject})
+            .then(data => {
+                t.list1 = data.groups;
+                objList === "1" ? t.list1Elements = data.elements : t.list2Elements = data.elements;
+              }
+            );
+
+          const data = await bacteria_point.loadantibioticset({
+            'TypesObject': t.searchTypesObject,
+            'typeGroups': t.searchTypesGroups
+          });
+          t.list2 = data.groups;
+          t.list2Elements = ""
+          if (titlegroup.length !== 0) {
+            const setElements = await bacteria_point.loadSetElements({
+              'type': titlegroup,
+              'typeGroups': t.searchTypesGroups
+            });
+            t.list2Elements = setElements.elements
+          }
+        }
       },
       onEditElement: function(element) {
           this.editElementPk = element.pk;
-          console.log(this.editElementPk);
           this.editElementTitle = element.title;
           this.editElementFsli = element.fsli;
-          console.log(element)
        },
       onAddToSet(element) {
-          return this.listSetsElements.push(element)
+          return this.list2Elements.push(element)
       },
       delFromlistSetsElements(element){
-        return this.listSetsElements = this.listSetsElements.filter(item => item !== element)
+        return this.list2Elements = this.list2Elements.filter(item => item !== element)
       },
       async save_element() {
         this.$store.dispatch(action_types.INC_LOADING).then();
@@ -206,7 +217,8 @@
           }
         this.$store.dispatch(action_types.INC_LOADING).then();
         const {ok, message} = await bacteria_point.saveGroup({'TypesObject': this.searchTypesObject, 'typeGroups': this.searchTypesGroups,
-          'obj': [{'group':this.selected1.title, 'elements': pksElements1}, {'group': this.selected2.title, 'elements': pksElements2}]});
+          'obj': [{'group':this.selected1.title, 'elements': pksElements1}, {'group': this.selected2.title, 'elements': pksElements2}],
+           'set': {'group': this.selected2.title, 'elements': pksElements2}});
         if (ok) {
           okmessage('Группа сохранена', `${this.searchTypesObject} – ${this.selected2.title}`)
         } else {
@@ -217,17 +229,7 @@
         pksElements1 = [];
         pksElements2 = [];
         this.$store.dispatch(action_types.DEC_LOADING).then()
-      },
-      async loadAntibioticSet() {
-          this.$store.dispatch(action_types.INC_LOADING).then();
-          const data = await bacteria_point.loadantibioticset({'TypesObject': this.searchTypesObject, 'typeGroups': this.searchTypesGroups});
-          this.list2 = data.groups
-          console.log(this.list2)
-          this.$store.dispatch(action_types.DEC_LOADING).then();
       }
-
-      },
-     watch: {
     },
      computed: {
        filteredList() {

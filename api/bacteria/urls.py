@@ -7,5 +7,6 @@ urlpatterns = [
     path('saveculture', views.save_culture),
     path('savegroup', views.save_group),
     path('addnewgroup', views.new_group),
-    path('loadantibioticset', views.load_antibiotic_set)
+    path('loadantibioticset', views.load_antibiotic_set),
+    path('loadsetelements', views.load_set_elements)
 ]

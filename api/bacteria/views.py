@@ -6,8 +6,10 @@ import simplejson as json
 
 @login_required
 def load_culture(request):
-    type = request.GET.get('type')
-    searchObj = request.GET.get('searchObj')
+    request_data = json.loads(request.body)
+    type = request_data['type']
+    searchObj = request_data['searchObj']
+
     groups = [{"pk": -2, "title": "не найдено"}]
     elements = []
     if searchObj == 'Бактерии':
@@ -48,17 +50,23 @@ def save_culture(request):
 def save_group(request):
     request_data = json.loads(request.body)
     types_object = request_data['TypesObject']
+    types_group = request_data['typeGroups']
     obj = request_data['obj']
 
-    if types_object == 'Бактерии':
+    if types_object == 'Бактерии' and types_group == 'Группы':
         for i in obj:
             if 'group' in i.keys() and 'elements' in i.keys():
                 Culture.culture_update_group(i['group'], i['elements'])
 
-    if types_object == 'Антибиотики':
+    if types_object == 'Антибиотики' and types_group == 'Группы':
         for i in obj:
             if 'group' in i.keys() and 'elements' in i.keys():
                 Antibiotic.antibiotic_update_group(i['group'], i['elements'])
+
+    if types_object == 'Антибиотики' and types_group == 'Наборы':
+        set = request_data['set']
+        if 'group' in set.keys() and 'elements' in set.keys():
+            AntibioticSets.update_antibiotic_set_elements(set['group'], set['elements'])
 
     result = {"ok": True, "message": ""}
 
@@ -90,17 +98,24 @@ def new_group(request):
 
 
 def load_antibiotic_set(request):
-    # request_data = json.loads(request.body)
-    # types_object = request_data['TypesObject']
-    # types_group = request_data['typeGroups']
-    types_object = request.GET.get('TypesObject')
-    types_group = request.GET.get('typeGroups')
+    request_data = json.loads(request.body)
+    types_object = request_data['TypesObject']
+    types_group = request_data['typeGroups']
     groups = {"pk": -2, "title": "не найдено"}
-    print(types_object, types_group)
 
     if types_object == 'Антибиотики' and types_group == 'Наборы':
         groups = AntibioticSets.get_antibiotic_set()
 
-    print(groups)
-
     return JsonResponse({"groups": groups})
+
+
+def load_set_elements(request):
+    request_data = json.loads(request.body)
+    types_group = request_data['typeGroups']
+    elements = None
+    result = {"pk": -2, "title": "не найдено"}
+    if types_group == 'Наборы' and request_data['type']:
+        title = request_data['type']
+        result = AntibioticSets.get_antibiotic_set_elements(title)
+
+    return JsonResponse({"elements": result})

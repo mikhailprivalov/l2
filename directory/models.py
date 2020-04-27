@@ -759,3 +759,23 @@ class AntibioticSets(models.Model):
         sets = [{"pk": i.pk, "title": i.title} for i in antibiotic_set]
         return sets
 
+    @staticmethod
+    def get_antibiotic_set_elements(title):
+        elements = None
+        if title:
+            set_obj = AntibioticSets.objects.get(title=title)
+            antibiotic_obj = set_obj.antibiotics.all().order_by('title')
+            elements = [{"pk": i.pk, "title": i.title} for i in antibiotic_obj]
+
+        return elements
+
+    @staticmethod
+    def update_antibiotic_set_elements(group, elements):
+        if group and elements:
+            gr = AntibioticSets.objects.get(title=group)
+            if gr.pk > 0:
+                set_obj = AntibioticSets.objects.get(title=group)
+                element_ant = Antibiotic.objects.filter(pk__in=elements)
+                set_obj.antibiotics.add(*element_ant)
+
+        return elements
