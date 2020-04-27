@@ -53,7 +53,7 @@
                   {{ element.title }}
                 </div>
               </draggable >
-              <div v-else class="list-group" :class="['right-top']" :list="list2"  >
+              <div v-else class="list-group" :list="list2"  >
                 <div class="item" v-for="(element) in list2Elements" :key="element.title">
                   {{ element.title }}
                    <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="delFromlistSetsElements(element)">
@@ -121,10 +121,6 @@
         newgroup: ""
       }
     },
-    // created() {
-    //   this.load_culture_groups("Все", "1")
-    //   this.selected1 = {"pk": -1, "title": "Все"}
-    // },
     methods:{
       async load_culture_groups(titlegroup, objList) {
         const t = this;
