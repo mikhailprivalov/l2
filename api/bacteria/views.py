@@ -112,7 +112,6 @@ def load_antibiotic_set(request):
 def load_set_elements(request):
     request_data = json.loads(request.body)
     types_group = request_data['typeGroups']
-    elements = None
     result = {"pk": -2, "title": "не найдено"}
     if types_group == 'Наборы' and request_data['type']:
         title = request_data['type']
