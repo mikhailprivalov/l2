@@ -10,7 +10,7 @@ def load_culture(request):
     type = request_data['type']
     searchObj = request_data['searchObj']
 
-    groups = [{"pk": -2, "title": "не найдено"}]
+    groups = [{"pk": -3, "title": "не найдено"}]
     elements = []
     if searchObj == 'Бактерии':
         elements = Culture.get_cultures(type)

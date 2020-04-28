@@ -30,8 +30,9 @@
           <div class="left">
              <v-select :clearable="false" label="title" :options="list1" :searchable="true" placeholder="Выберите группу"
                            v-model="selected1" v-on:change="load_culture_groups(selected1.title, '1')"/>
+
             <input type="text" v-model="searchElement" placeholder="Фильтр по названию.."/>
-            <draggable class="list-group" :list="list1Elements" group="some" @change="log">
+            <draggable class="list-group" :list="list1Elements" group="some">
               <div class="item" v-for="(element) in filteredList" :key="element.title">
                 <div :class="{background: element.hide}">
                   {{ element.title }}
@@ -45,14 +46,14 @@
           </div>
 
           <div class="right">
-             <v-select :clearable="false" label="title" :options="list2" :searchable="true"
+              <v-select :clearable="false" label="title" :options="list2" :searchable="true"
                          v-model="selected2" v-on:change="load_culture_groups(selected2.title, '2')"/>
             <input type="text" v-model="newgroup" style = "width: 92%"   placeholder="Добавить группу"/>
               <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px">
                 <i class="fa fa-floppy-o fa-lg" aria-hidden="true" @click="addNewGroup"
                    v-tippy="{ placement : 'bottom'}" :title="'Соханить в '+ '&#171;' + [[searchTypesGroups.toUpperCase().trim()]] +'&#187;'"></i>
               </button>
-             <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :list="list2Elements" group="some" @change="log" >
+             <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :list="list2Elements" group="some">
                 <div class="item" v-for="(element) in list2Elements" :key="element.title">
                   <div :class="{background: element.hide}">{{ element.title }}</div>
                 </div>
@@ -60,11 +61,11 @@
               <div v-else class="list-group" :list="list2"  >
                 <div class="item" v-for="(element) in list2Elements" :key="element.title">
                   <div :class="{background: element.hide}">
-                  {{ element.title }}
-                   <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="delFromlistSetsElements(element)">
-                    <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Удалть из Набора"></i>
-                  </button>
-                    </div>
+                    {{ element.title }}
+                     <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="delFromlistSetsElements(element)">
+                       <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Удалть из Набора"></i>
+                     </button>
+                  </div>
                 </div>
               </div >
 
@@ -81,9 +82,17 @@
            <button class="btn btn-blue-nb sidebar-footer" @click="save_groups">
              Сохранить
            </button>
+           <button class="btn btn-blue-nb sidebar-footer" @click="group_edit">
+             Изменить название
+           </button>
          </div>
 
        </div>
+          <bacteria-edit-title-group v-if="group_edit_open"
+                           :group_title="Uheggf"
+                           :group_pk="-3"
+                           :typesGroups="searchTypesGroups"
+    />
     </div>
 
 </template>
@@ -93,6 +102,7 @@
   import vSelect from 'vue-select'
   import draggable from "vuedraggable";
   import RadioField from '../fields/RadioField'
+  import BacteriaEditTitleGroup from './BacteriaEditTitleGroup'
   import * as action_types from "../store/action-types";
 
     export default {
@@ -100,7 +110,8 @@
       components: {
       vSelect,
       draggable,
-        RadioField
+      RadioField,
+      BacteriaEditTitleGroup,
     },
       data() {
       return {
@@ -110,8 +121,8 @@
         list1Elements: [],
         list2Elements: [],
         listSetsElements: [],
-        selected1: {"pk": -1, "title": "Все"},
-        selected2: '',
+        selected1: "" ,
+        selected2: "",
         searchElement: '',
         typesObject: [
             'Бактерии',
@@ -125,10 +136,17 @@
         editElementFsli: "",
         editElementHide: "",
         editElementPk: -1,
-        newgroup: ""
+        newgroup: "",
+        group_edit_open: false
       }
     },
     methods:{
+      group_edit() {
+        this.group_edit_open = true
+      },
+      group_edit_hide() {
+        this.group_edit_open = false
+      },
       async load_culture_groups(titlegroup, objList) {
         const t = this;
         if (!titlegroup || titlegroup.length === 0) {
@@ -155,7 +173,7 @@
             'typeGroups': t.searchTypesGroups
           });
           t.list2 = data.groups;
-          t.list2Elements = ""
+          t.list2Elements = [];
           if (titlegroup.length !== 0) {
             const setElements = await bacteria_point.loadSetElements({
               'type': titlegroup,
@@ -236,7 +254,10 @@
         this.$store.dispatch(action_types.DEC_LOADING).then()
       }
     },
-     computed: {
+      // created() {
+      //   this.load_culture_groups("Все", "1")
+      // },
+      computed: {
        filteredList() {
         return this.list1Elements.filter(element => {
           return element.title.toLowerCase().includes(this.searchElement.toLowerCase())
@@ -249,7 +270,6 @@
          if (this.searchTypesObject === "Бактерии") {
          this.searchTypesGroups = 'Группы';}
          return this.searchTypesObject === "Антибиотики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы'];
-
        },
        onChangeGroup() {
          if (this.searchTypesGroups === "Наборы") {
@@ -303,7 +323,6 @@
       position: relative;
       border-radius: 4px;
       padding-right: 50px;
-      position: relative;
     }
     .left,
     .right {
@@ -375,7 +394,8 @@
     padding-top: 15px;
   }
   input {
-          border-radius: 4px;}
+    border-radius: 4px;}
+
   .background {
     padding: 0;
     background-color: #cacfd2;
