@@ -629,19 +629,19 @@ class Culture(models.Model):
             culture_obj = Culture.objects.filter(group_culture=None).order_by('title')
         else:
             culture_obj = Culture.objects.filter(group_culture__title=group).order_by('title')
-        elements = [{"pk": i.pk, "title": i.title, "fsli": i.fsli} for i in culture_obj]
+        elements = [{"pk": i.pk, "title": i.title, "fsli": i.fsli, "hide": i.hide} for i in culture_obj]
         return elements
 
     @staticmethod
-    def culture_save(pk, title='', fsli=''):
+    def culture_save(pk, title='', fsli='', hide=False):
         """
         Запись в базу сведений о культуре
         """
         if pk > 0:
-            Culture.objects.filter(pk=pk).update(title=title, fsli=fsli)
+            Culture.objects.filter(pk=pk).update(title=title, fsli=fsli, hide=hide)
 
         if pk == -1:
-            culture_obj = Culture(title=title, fsli=fsli, group_culture=None)
+            culture_obj = Culture(title=title, fsli=fsli, hide=hide, group_culture=None)
             culture_obj.save()
 
     @staticmethod
@@ -704,20 +704,20 @@ class Antibiotic(models.Model):
             antibiotic_obj = Antibiotic.objects.filter(group_antibiotic=None).order_by(Lower('title'))
         else:
             antibiotic_obj = Antibiotic.objects.filter(group_antibiotic__title=group).order_by(Lower('title'))
-        elements = [{"pk": i.pk, "title": i.title, "fsli": i.fsli} for i in antibiotic_obj]
+        elements = [{"pk": i.pk, "title": i.title, "fsli": i.fsli, "hide": i.hide} for i in antibiotic_obj]
 
         return elements
 
     @staticmethod
-    def antibiotic_save(pk, title='', fsli=''):
+    def antibiotic_save(pk, title='', fsli='', hide=False):
         """
         Запись в базу сведений об антибиотике
         """
         if pk > 0:
-            Antibiotic.objects.filter(pk=pk).update(title=title, fsli=fsli)
+            Antibiotic.objects.filter(pk=pk).update(title=title, fsli=fsli, hide=hide)
 
         if pk == -1:
-            antibiotic_obj = Antibiotic(title=title, fsli=fsli, group_antibiotic=None)
+            antibiotic_obj = Antibiotic(title=title, fsli=fsli, hide=hide, group_antibiotic=None)
             antibiotic_obj.save()
 
     @staticmethod
@@ -765,7 +765,7 @@ class AntibioticSets(models.Model):
         if title:
             set_obj = AntibioticSets.objects.get(title=title)
             antibiotic_obj = set_obj.antibiotics.all().order_by('title')
-            elements = [{"pk": i.pk, "title": i.title} for i in antibiotic_obj]
+            elements = [{"pk": i.pk, "title": i.title, "hide": i.hide} for i in antibiotic_obj]
 
         return elements
 

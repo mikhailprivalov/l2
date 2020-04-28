@@ -19,6 +19,10 @@
               <input type="text" v-model="editElementTitle" :placeholder="[[searchTypesObject]] + ': введите название' " />
               <p>Код ФСЛИ</p>
               <input type="text" v-model="editElementFsli" placeholder="Введите код ФСЛИ.."/>
+              <p>
+              Скрыть
+              <input type="checkbox" id="checkbox" v-model="editElementHide">
+              </p>
               <p>{{editElementPk}}</p>
             </div>
           </div>
@@ -29,7 +33,7 @@
             <input type="text" v-model="searchElement" placeholder="Фильтр по названию.."/>
             <draggable class="list-group" :list="list1Elements" group="some" @change="log">
               <div class="item" v-for="(element) in filteredList" :key="element.title">
-                <div>
+                <div :class="{background: element.hide}">
                   {{ element.title }}
                   <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px">
                     <i class="glyphicon glyphicon-pencil" v-if="searchTypesGroups === 'Группы'" @click="onEditElement(element)"/>
@@ -50,15 +54,17 @@
               </button>
              <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :list="list2Elements" group="some" @change="log" >
                 <div class="item" v-for="(element) in list2Elements" :key="element.title">
-                  {{ element.title }}
+                  <div :class="{background: element.hide}">{{ element.title }}</div>
                 </div>
               </draggable >
               <div v-else class="list-group" :list="list2"  >
                 <div class="item" v-for="(element) in list2Elements" :key="element.title">
+                  <div :class="{background: element.hide}">
                   {{ element.title }}
                    <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="delFromlistSetsElements(element)">
                     <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Удалть из Набора"></i>
                   </button>
+                    </div>
                 </div>
               </div >
 
@@ -117,6 +123,7 @@
         searchTypesGroups: "",
         editElementTitle: "",
         editElementFsli: "",
+        editElementHide: "",
         editElementPk: -1,
         newgroup: ""
       }
@@ -162,6 +169,7 @@
           this.editElementPk = element.pk;
           this.editElementTitle = element.title;
           this.editElementFsli = element.fsli;
+          this.editElementHide = element.hide;
        },
       onAddToSet(element) {
           return this.list2Elements.push(element)
@@ -171,7 +179,8 @@
       },
       async save_element() {
         this.$store.dispatch(action_types.INC_LOADING).then();
-        const {ok, message} = await bacteria_point.saveElement({'TypesObject': this.searchTypesObject ,'title': this.editElementTitle, 'fsli': this.editElementFsli, 'pk': this.editElementPk});
+        const {ok, message} = await bacteria_point.saveElement({'TypesObject': this.searchTypesObject ,'title': this.editElementTitle, 'fsli': this.editElementFsli,
+          'pk': this.editElementPk, 'hide': this.editElementHide});
         if (ok) {
           okmessage('Элемент сохранён', `${this.searchTypesObject} – ${this.editElementTitle}`)
         } else {
@@ -367,5 +376,10 @@
   }
   input {
           border-radius: 4px;}
+  .background {
+    padding: 0;
+    background-color: #cacfd2;
+    border-radius: 4px;
+  }
 
 </style>
