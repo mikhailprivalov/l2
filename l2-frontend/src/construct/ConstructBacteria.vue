@@ -58,7 +58,7 @@
                   <div :class="{background: element.hide}">{{ element.title }}</div>
                 </div>
               </draggable >
-              <div v-else class="list-group" :list="list2"  >
+              <div v-else class="list-group" >
                 <div class="item" v-for="(element) in list2Elements" :key="element.title">
                   <div :class="{background: element.hide}">
                     {{ element.title }}
@@ -89,10 +89,9 @@
 
        </div>
           <bacteria-edit-title-group v-if="group_edit_open"
-                           :group_title="Uheggf"
-                           :group_pk="-3"
-                           :typesGroups="searchTypesGroups"
-    />
+                           :group_title="selected2"
+                           :group_pk="selected2.pk"
+                           :typesGroups="searchTypesGroups"/>
     </div>
 
 </template>
@@ -121,7 +120,7 @@
         list1Elements: [],
         list2Elements: [],
         listSetsElements: [],
-        selected1: "" ,
+        selected1: {'pk': -1, 'title': 'Все'} ,
         selected2: "",
         searchElement: '',
         typesObject: [
@@ -140,7 +139,7 @@
         group_edit_open: false
       }
     },
-    methods:{
+      methods:{
       group_edit() {
         this.group_edit_open = true
       },
@@ -173,7 +172,7 @@
             'typeGroups': t.searchTypesGroups
           });
           t.list2 = data.groups;
-          t.list2Elements = [];
+          // t.list2Elements = [];
           if (titlegroup.length !== 0) {
             const setElements = await bacteria_point.loadSetElements({
               'type': titlegroup,
@@ -254,9 +253,10 @@
         this.$store.dispatch(action_types.DEC_LOADING).then()
       }
     },
-      // created() {
-      //   this.load_culture_groups("Все", "1")
-      // },
+      mounted() {
+         this.$root.$on('hide_fte', () => this.group_edit_hide())
+      },
+
       computed: {
        filteredList() {
         return this.list1Elements.filter(element => {
@@ -269,6 +269,7 @@
          this.selected2 = '';
          if (this.searchTypesObject === "Бактерии") {
          this.searchTypesGroups = 'Группы';}
+         this.list2Elements = [];
          return this.searchTypesObject === "Антибиотики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы'];
        },
        onChangeGroup() {

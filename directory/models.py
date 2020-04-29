@@ -598,7 +598,7 @@ class GroupCulture(models.Model):
     @staticmethod
     def get_all_cultures_groups():
         group_culture_obj = GroupCulture.objects.all()
-        groups = [{"pk": g.pk, "title": g.title} for g in group_culture_obj]
+        groups = [{"pk": g.pk, "title": g.title, "hide": g.hide} for g in group_culture_obj]
         return groups
 
     @staticmethod
@@ -673,7 +673,7 @@ class GroupAntibiotic(models.Model):
     @staticmethod
     def get_all_antibiotic_groups():
         group_antibiotic_obj = GroupAntibiotic.objects.all()
-        groups = [{"pk": g.pk, "title": g.title} for g in group_antibiotic_obj]
+        groups = [{"pk": g.pk, "title": g.title, "hide": g.hide} for g in group_antibiotic_obj]
         return groups
 
     @staticmethod
@@ -776,6 +776,7 @@ class AntibioticSets(models.Model):
             if gr.pk > 0:
                 set_obj = AntibioticSets.objects.get(title=group)
                 element_ant = Antibiotic.objects.filter(pk__in=elements)
+                set_obj.antibiotics.clear()
                 set_obj.antibiotics.add(*element_ant)
 
         return elements

@@ -23,6 +23,7 @@ def load_culture(request):
         groups = GroupAntibiotic.get_all_antibiotic_groups()
         groups.insert(0, {"pk": -1, "title": "Все"})
         groups.insert(1, {"pk": -2, "title": "Без группы"})
+    print(groups)
 
     return JsonResponse({"groups": groups, "elements": elements})
 
@@ -113,7 +114,8 @@ def load_antibiotic_set(request):
 def load_set_elements(request):
     request_data = json.loads(request.body)
     types_group = request_data['typeGroups']
-    result = {"pk": -2, "title": "не найдено"}
+    result = {"pk": -2, "title": "не загружено"}
+
     if types_group == 'Наборы' and request_data['type']:
         title = request_data['type']
         result = AntibioticSets.get_antibiotic_set_elements(title)
