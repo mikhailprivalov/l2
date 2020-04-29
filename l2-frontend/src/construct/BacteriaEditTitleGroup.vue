@@ -29,7 +29,6 @@
 
 <script>
   import Modal from '../ui-cards/Modal'
-  import bacteria_point from '../api/bacteria-point'
   import * as action_types from "../store/action-types";
 
     export default {
