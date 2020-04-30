@@ -89,8 +89,8 @@
 
        </div>
           <bacteria-edit-title-group v-if="group_edit_open"
-                           :group_title="selected2"
-                           :group_pk="selected2.pk"
+                           :group_obj="selected2"
+                           :typesObject="searchTypesObject"
                            :typesGroups="searchTypesGroups"/>
     </div>
 

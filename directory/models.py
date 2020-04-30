@@ -586,7 +586,7 @@ class DispensaryRouteSheet(models.Model):
 
 class GroupCulture(models.Model):
     title = models.CharField(max_length=255, help_text="Группа культур")
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие группы', db_index=True)
 
     def __str__(self):
         return self.title
@@ -603,7 +603,15 @@ class GroupCulture(models.Model):
 
     @staticmethod
     def create_culture_group(title):
-        culture_group = GroupCulture(title=title)
+        culture_group = GroupCulture.objects.get(title=title)
+        culture_group.save()
+        return culture_group
+
+    @staticmethod
+    def update_culture_group(pk, title, hide):
+        culture_group = GroupCulture(pk=pk)
+        culture_group.title = title
+        culture_group.hide = hide
         culture_group.save()
         return culture_group
 
@@ -612,7 +620,7 @@ class Culture(models.Model):
     title = models.CharField(max_length=255, help_text="Название культуры")
     group_culture = models.ForeignKey(GroupCulture, db_index=True, null=True, blank=True, help_text='Группа для культуры', on_delete=models.SET_NULL)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие культуры', db_index=True)
 
     def __str__(self):
         return self.title
@@ -661,7 +669,7 @@ class Culture(models.Model):
 
 class GroupAntibiotic(models.Model):
     title = models.CharField(max_length=255, help_text="Группа антибиотиков")
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие группы', db_index=True)
 
     def __str__(self):
         return self.title
@@ -682,12 +690,20 @@ class GroupAntibiotic(models.Model):
         antibiotic_group.save()
         return antibiotic_group
 
+    @staticmethod
+    def update_antibiotic_group(pk, title, hide):
+        antibiotic_group = GroupAntibiotic.objects.get(pk=pk)
+        antibiotic_group.title = title
+        antibiotic_group.hide = hide
+        antibiotic_group.save()
+        return antibiotic_group
+
 
 class Antibiotic(models.Model):
     title = models.CharField(max_length=255, help_text="Название антибиотика")
     group_antibiotic = models.ForeignKey(GroupAntibiotic, db_index=True, null=True, blank=True, help_text='Группа антибиотиков', on_delete=models.SET_NULL)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие антибиотика', db_index=True)
 
     def __str__(self):
         return self.title
@@ -739,6 +755,7 @@ class Antibiotic(models.Model):
 class AntibioticSets(models.Model):
     title = models.CharField(max_length=255, help_text="Название антибиотика")
     antibiotics = models.ManyToManyField(Antibiotic, )
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие набора', db_index=True)
 
     def __str__(self):
         return self.title
@@ -754,9 +771,17 @@ class AntibioticSets(models.Model):
         return antibiotic_set
 
     @staticmethod
+    def update_antibiotic_set(pk, title, hide):
+        antibiotic_set = AntibioticSets.objects.get(pk=pk)
+        antibiotic_set.title = title
+        antibiotic_set.hide = hide
+        antibiotic_set.save()
+        return antibiotic_set
+
+    @staticmethod
     def get_antibiotic_set():
         antibiotic_set = AntibioticSets.objects.all().order_by('title')
-        sets = [{"pk": i.pk, "title": i.title} for i in antibiotic_set]
+        sets = [{"pk": i.pk, "title": i.title, "hide": i.hide} for i in antibiotic_set]
         return sets
 
     @staticmethod

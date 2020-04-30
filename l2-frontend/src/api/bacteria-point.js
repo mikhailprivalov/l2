@@ -11,6 +11,9 @@ export default generator({
   saveGroup: {
     url: 'bacteria/savegroup',
   },
+  updateGroup: {
+    url: 'bacteria/updategroup',
+  },
   addNewGroup: {
     url: 'bacteria/addnewgroup',
   },

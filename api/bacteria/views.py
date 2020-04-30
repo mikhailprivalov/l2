@@ -23,7 +23,6 @@ def load_culture(request):
         groups = GroupAntibiotic.get_all_antibiotic_groups()
         groups.insert(0, {"pk": -1, "title": "Все"})
         groups.insert(1, {"pk": -2, "title": "Без группы"})
-    print(groups)
 
     return JsonResponse({"groups": groups, "elements": elements})
 
@@ -121,3 +120,29 @@ def load_set_elements(request):
         result = AntibioticSets.get_antibiotic_set_elements(title)
 
     return JsonResponse({"elements": result})
+
+
+@login_required
+def update_group(request):
+    request_data = json.loads(request.body)
+    types_object = request_data['TypesObject']
+    types_group = request_data['typeGroups']
+    obj = request_data['obj']
+
+    if types_object == 'Бактерии' and types_group == 'Группы':
+        if 'pk' in obj.keys() and 'title' in obj.keys() and 'hide' in obj.keys():
+            GroupCulture.update_culture_group(obj['pk'], obj['title'], obj['hide'])
+
+    if types_object == 'Антибиотики' and types_group == 'Группы':
+        if 'pk' in obj.keys() and 'title' in obj.keys() and 'hide' in obj.keys():
+            GroupAntibiotic.update_antibiotic_group(obj['pk'], obj['title'], obj['hide'])
+
+    if types_object == 'Антибиотики' and types_group == 'Наборы':
+        if 'pk' in obj.keys() and 'title' in obj.keys() and 'hide' in obj.keys():
+            AntibioticSets.update_antibiotic_set(obj['pk'], obj['title'], obj['hide'])
+
+    result = {"ok": True, "message": ""}
+
+    return JsonResponse(result)
+
+

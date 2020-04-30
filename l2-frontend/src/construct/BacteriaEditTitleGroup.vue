@@ -3,10 +3,10 @@
          max-width="40%" width="100%" marginLeftRight="auto" margin-top="20%">
     <span slot="header">Настройка группы</span>
     <div slot="body" style="min-height: 20px" class="registry-body">
-      <input type="text" v-model="group_title.title">
+      <input type="text" v-model="group_obj.title">
        <p>
          Скрыть
-         <input type="checkbox" id="checkbox" v-model="group_title.hide">
+         <input type="checkbox" id="checkbox" v-model="group_obj.hide">
        </p>
     </div>
     <div slot="footer">
@@ -30,16 +30,17 @@
 <script>
   import Modal from '../ui-cards/Modal'
   import * as action_types from "../store/action-types";
+  import bacteria_point from '../api/bacteria-point'
 
     export default {
       name: "BacteriaEditTitleGroup",
       components: {Modal, },
       props: {
-      group_pk: {
-        type: Number,
+      typesObject: {
+        type: String,
         required: true
       },
-      group_title: {
+      group_obj: {
         type: Object,
         required: true,
       },
@@ -50,15 +51,21 @@
     },
       methods: {
        hide_modal() {
-        this.$root.$emit('hide_fte')
+        this.$root.$emit('hide_fte');
         if (this.$refs.modal) {
           this.$refs.modal.$el.style.display = 'none'
         }
       },
         async updateGroup() {
         this.$store.dispatch(action_types.INC_LOADING).then();
-
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        const {ok, message} = await bacteria_point.updateGroup({'TypesObject': this.typesObject ,'typeGroups': this.typesGroups,
+        'obj':{'pk': this.group_obj.pk, 'title': this.group_obj.title, 'hide': this.group_obj.hide} });
+        if (ok) {
+          okmessage('Группа сохранён', `${this.group_obj.title}`)
+        } else {
+          errmessage('Ошибка', message)
+        }
+        this.$store.dispatch(action_types.DEC_LOADING).then();
       },
       },
     }
