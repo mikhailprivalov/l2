@@ -249,9 +249,11 @@
           errmessage('Ошибка', message)
         }
         this.onClearContentEdit();
+        this.selected1 = ""
         this.load_culture_groups("Все", "1");
         pksElements1 = [];
         pksElements2 = [];
+
         this.$store.dispatch(action_types.DEC_LOADING).then()
       }
     },
