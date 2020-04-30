@@ -191,10 +191,10 @@
           this.editElementHide = element.hide;
        },
       onAddToSet(element) {
-          return this.list2Elements.push(element)
+          this.list2Elements.push(element)
       },
       delFromlistSetsElements(element){
-        return this.list2Elements = this.list2Elements.filter(item => item !== element)
+        this.list2Elements = this.list2Elements.filter(item => item !== element)
       },
       async save_element() {
         this.$store.dispatch(action_types.INC_LOADING).then();
