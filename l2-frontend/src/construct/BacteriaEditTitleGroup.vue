@@ -2,7 +2,8 @@
   <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" min-width="40%"
          max-width="40%" width="100%" marginLeftRight="auto" margin-top="20%">
     <span slot="header">Настройка группы</span>
-    <div slot="body" style="min-height: 20px" class="registry-body">
+    <div slot="body" style="min-height: 20px" class="directions-manage">
+<!--    <div slot="body" style="min-height: 20px" class="registry-body">-->
       <input type="text" v-model="group_obj.title">
        <p>
          Скрыть
@@ -74,16 +75,18 @@
 <style scoped lang="scss">
   .directions-manage {
     width: 100%;
-    height: 100%;
+    height: 60%;
     display: flex;
     align-items: stretch;
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: nowrap;
     align-content: stretch;
     & > div {
       align-self: stretch;
     }
   }
-  p { padding-top: 10px }
+  p {
+    display: flex;
+    padding-top: 10px }
 
 </style>

@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="radio-button-object">
-          <radio-field v-model="searchTypesObject" :variants="typesObject" fullWidth @click="filteredGroupObject"/>
+          <radio-field v-model="searchTypesObject" :variants="typesObject" @click="filteredGroupObject" fullWidth/>
         </div>
 
         <div class="radio-button-object radio-button-groups">
@@ -172,10 +172,9 @@
             'typeGroups': t.searchTypesGroups
           });
           t.list2 = data.groups;
-          // t.list2Elements = [];
-          if (titlegroup.length !== 0) {
+          if (this.selected2.title.length !== 0) {
             const setElements = await bacteria_point.loadSetElements({
-              'type': titlegroup,
+              'type': this.selected2.title,
               'typeGroups': t.searchTypesGroups
             });
             t.list2Elements = setElements.elements
@@ -254,7 +253,7 @@
       }
     },
       mounted() {
-         this.$root.$on('hide_fte', () => this.group_edit_hide())
+         this.$root.$on('hide_fte', () => this.group_edit_hide());
       },
 
       computed: {
