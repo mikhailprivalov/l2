@@ -28,9 +28,10 @@
           </div>
 
           <div class="left">
-             <v-select :clearable="false" label="title" :options="list1" :searchable="true" placeholder="Выберите группу"
-                           v-model="selected1" v-on:change="load_culture_groups(selected1.title, '1')"/>
-
+            <v-select :clearable="false" label="title" :options="list1" :searchable="true" placeholder="Выберите группу"
+                      v-model="selected1" v-on:change="load_culture_groups(selected1.title, '1')"
+                      :class="{background: selected2.hide}"
+            />
             <input type="text" v-model="searchElement" placeholder="Фильтр по названию.."/>
             <draggable class="list-group" :list="list1Elements" group="some">
               <div class="item" v-for="(element) in filteredList" :key="element.title">
@@ -46,8 +47,10 @@
           </div>
 
           <div class="right">
-              <v-select :clearable="false" label="title" :options="list2" :searchable="true"
-                         v-model="selected2" v-on:change="load_culture_groups(selected2.title, '2')"/>
+            <v-select :clearable="false" label="title" :options="list2" :searchable="true"
+                      v-model="selected2" v-on:change="load_culture_groups(selected2.title, '2')"
+                      :class="{background: selected2.hide}"
+            />
             <input type="text" v-model="newgroup" style = "width: 92%"   placeholder="Добавить группу"/>
               <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px">
                 <i class="fa fa-floppy-o fa-lg" aria-hidden="true" @click="addNewGroup"
