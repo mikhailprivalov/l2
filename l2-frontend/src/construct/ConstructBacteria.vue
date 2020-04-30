@@ -30,7 +30,7 @@
           <div class="left">
             <v-select :clearable="false" label="title" :options="list1" :searchable="true" placeholder="Выберите группу"
                       v-model="selected1" v-on:change="load_culture_groups(selected1.title, '1')"
-                      :class="{background: selected2.hide}"
+                      :class="{background: selected1.hide}"
             />
             <input type="text" v-model="searchElement" placeholder="Фильтр по названию.."/>
             <draggable class="list-group" :list="list1Elements" group="some">
