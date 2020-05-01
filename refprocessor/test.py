@@ -1,16 +1,18 @@
 import unittest
 
-from refprocessor.age_parser import AgeRight, AgeRange, SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE
+from refprocessor.age_parser import AgeRight
+from refprocessor.common import SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE, ValueRange, get_sign_by_string, RANGE_IN, RANGE_LOWER, RANGE_OVER, RANGE_NEQ
+from refprocessor.result_parser import ResultRight
 
 
-class CheckAgeRightsFunctions(unittest.TestCase):
+class CheckFunctions(unittest.TestCase):
     """Проверка утилитарных функций"""
 
-    def test_detect_mode(self):
+    def test_detect_age_mode(self):
         """Проверка на обнаружение режима возраста"""
 
         modes = (
-            ("invalid", AgeRight.MODE_UNKNOW),
+            ("invalid", AgeRight.MODE_UNKNOWN),
             ("дней", AgeRight.MODE_DAY),
             ("день", AgeRight.MODE_DAY),
             ("дня", AgeRight.MODE_DAY),
@@ -70,7 +72,7 @@ class CheckAgeRightsFunctions(unittest.TestCase):
         )
 
         for s in signs:
-            sign = AgeRight.get_sign_by_string(s[0])
+            sign = get_sign_by_string(s[0])
             self.assertEqual(s[1], sign, f"Знак '{sign}' должен быть '{s[1]}'")
 
 
@@ -81,7 +83,7 @@ class ParseAgeRights(unittest.TestCase):
         """Возраст в виде простого числа определяется корректно"""
 
         right = AgeRight("5 ")
-        correct_range = AgeRange(5, 5)
+        correct_range = ValueRange(5, 5)
         self.assertEqual(correct_range, right.age_range, f"Диапазон должен быть '{correct_range}'")
         self.assertEqual(AgeRight.MODE_YEAR, right.mode, "Режим должен быть 'year'")
 
@@ -90,7 +92,7 @@ class ParseAgeRights(unittest.TestCase):
 
         strs = ["все", "Все", " все ", ""]
 
-        correct_range = AgeRange(0, float('inf'))
+        correct_range = ValueRange(0, float('inf'))
 
         for s in strs:
             right = AgeRight(s)
@@ -102,7 +104,7 @@ class ParseAgeRights(unittest.TestCase):
 
         strs = ["1-10", "1 - 10", " 1 - 10 "]
 
-        correct_range = AgeRange(1, 10)
+        correct_range = ValueRange(1, 10)
 
         for s in strs:
             right = AgeRight(s)
@@ -120,7 +122,7 @@ class ParseAgeRights(unittest.TestCase):
         ]
 
         for age in ages:
-            correct_range = AgeRange(age[1], age[1])
+            correct_range = ValueRange(age[1], age[1])
             right = AgeRight(age[0])
             self.assertEqual(correct_range, right.age_range, f"Диапазон должен быть '{correct_range}' для '{age[0]}'")
             self.assertEqual(age[2], right.mode, f"Режим должен быть 'year' для '{age[0]}'")
@@ -153,7 +155,7 @@ class ParseAgeRights(unittest.TestCase):
         ]
 
         for age in ages:
-            correct_range = AgeRange(age[1], age[2])
+            correct_range = ValueRange(age[1], age[2])
             right = AgeRight(age[0])
             self.assertEqual(correct_range, right.age_range, f"Диапазон должен быть '{correct_range}', а не '{right.age_range}' для '{age[0]}'")
             self.assertEqual(age[3], right.mode, f"Режим должен быть '{age[3]}' для '{age[0]}'")
@@ -173,7 +175,7 @@ class ParseAgeRights(unittest.TestCase):
         ]
 
         for age in ages:
-            correct_range = AgeRange(age[1], age[2])
+            correct_range = ValueRange(age[1], age[2])
             right = AgeRight(age[0])
             self.assertEqual(correct_range, right.age_range, f"Диапазон должен быть '{correct_range}', а не '{right.age_range}' для '{age[0]}'")
             self.assertEqual(age[3], right.mode, f"Режим должен быть '{age[3]}' для '{age[0]}'")
@@ -215,6 +217,92 @@ class CheckAgeChecking(unittest.TestCase):
             right = AgeRight(age[0])
             in_range = right.test(age[1])
             self.assertEqual(age[2], in_range, f"Вхождение должно быть '{age[2]}', а не '{in_range}' для '{age[0]}' '{right.age_range}' и '{age[1]}'")
+
+
+class ParseResultRights(unittest.TestCase):
+    """Проверка разбора референсов результатов"""
+
+    def test_empty(self):
+        """Пустой референс должен иметь особый режим"""
+        rs = ["", " "]
+        for r in rs:
+            right = ResultRight(r)
+            self.assertEqual(ResultRight.MODE_ANY, right.mode, f"Режим должен быть '{ResultRight.MODE_ANY}' для '{r}'")
+
+    def test_range(self):
+        """Диапазон число - число"""
+        rs = [
+            ["10-100", 10, 100],
+            ["10 -100", 10, 100],
+            ["-10 - 100", -10, 100],
+            ["-100 - -10", -100, -10],
+            ["10 – 20", 10, 20],
+            ["0.55 – 0.633", 0.55, 0.633],
+            ["0,23 - 2,0", 0.23, 2.0],
+            ["от 1 до 2", 1, (2, ")")],
+        ]
+
+        for r in rs:
+            right = ResultRight(r[0])
+            valid = ValueRange(r[1], r[2])
+            self.assertEqual(valid, right.range, f"Диапазон должен быть '{valid}', а не '{right.range}' для '{r[0]}'")
+
+    def test_value_from_to(self):
+        """Значения от или до (больше, меньше, >=, <=)"""
+        rs = [
+            ["> 1.1", (1.1, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["> 1,1", (1.1, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["> 1", (1, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["&gt; 1", (1, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["больше 1", (1, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+
+            ["больше 10<sup>2</sup>", (100, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+
+            [">= 1.1", (1.1, "]"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["≥ 1.1", (1.1, "]"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["&ge; 1.1", (1.1, "]"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+            ["от 1.1", (1.1, "]"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
+
+            ["< 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
+            ["&lt; 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
+            ["меньше 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
+            ["менее 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
+            ["до 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
+
+            ["<= 10,1", float("-inf"), (10.1, "]"), ResultRight.MODE_NUMBER_RANGE],
+            ["≤ 10", float("-inf"), (10, "]"), ResultRight.MODE_NUMBER_RANGE],
+            ["&le; 10", float("-inf"), (10, "]"), ResultRight.MODE_NUMBER_RANGE],
+            ["по 10", float("-inf"), (10, "]"), ResultRight.MODE_NUMBER_RANGE],
+        ]
+
+        for r in rs:
+            right = ResultRight(r[0])
+            valid = ValueRange(r[1], r[2])
+            self.assertEqual(valid, right.range, f"Диапазон должен быть '{valid}', а не '{right.range}' для '{r[0]}'")
+            self.assertEqual(r[3], right.mode, f"Режим должен быть '{r[3]}' для '{r[0]}'")
+
+    def test_of_test(self):
+        rs = [
+            ["от 5", 5, (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
+            ["от 5", 6, (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
+            ["от 5", 4, (ResultRight.RESULT_MODE_NOT_NORMAL, RANGE_LOWER)],
+            ["> 5", 5, (ResultRight.RESULT_MODE_NOT_NORMAL, RANGE_LOWER)],
+            ["> 5.1", 5.2, (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
+            ["от 3 до 5.5", 5.2, (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
+            ["от 3 до 5.5", 0, (ResultRight.RESULT_MODE_NOT_NORMAL, RANGE_LOWER)],
+            ["< 10", -1, (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
+            ["< 10", "9 8 7 6 5 4 3 2.2 1,1", (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
+            ["< 10", "9 8 7 6 5 4 3 2.2 1,1 10 11", (ResultRight.RESULT_MODE_NOT_NORMAL, RANGE_OVER)],
+            ["< 10", "test", (ResultRight.RESULT_MODE_MAYBE, RANGE_NEQ)],
+            ["test", "1", (ResultRight.RESULT_MODE_MAYBE, RANGE_NEQ)],
+            [">= 10<sup>2</sup>", "10<sup>2</sup>", (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
+            ["> 10<sup>2</sup>", "10<sup>2</sup>", (ResultRight.RESULT_MODE_NOT_NORMAL, RANGE_LOWER)],
+        ]
+
+        for r in rs:
+            right = ResultRight(r[0])
+            in_range = right.test(str(r[1]))
+            self.assertEqual(r[2], in_range, f"Вхождение должно быть '{r[2]}', а не '{in_range}' для '{r[0]}' '{right.range}' и '{r[1]}'")
 
 
 if __name__ == '__main__':
