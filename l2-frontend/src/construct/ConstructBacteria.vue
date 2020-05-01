@@ -1,11 +1,11 @@
 <template>
     <div>
         <div class="radio-button-object">
-          <radio-field v-model="searchTypesObject" :variants="typesObject" @click="filteredGroupObject" fullWidth/>
+          <radio-field v-model="searchTypesObject" :variants="typesObject" @modified="filteredGroupObject" fullWidth/>
         </div>
 
         <div class="radio-button-object radio-button-groups">
-           <radio-field v-model="searchTypesGroups" :variants="typesGroups" fullWidth @click="onChangeGroup"/>
+           <radio-field v-model="searchTypesGroups" :variants="typesGroups" fullWidth @modified="filteredGroupObject"/>
         </div>
 
         <div class="lists">
@@ -124,16 +124,16 @@
         list2Elements: [],
         listSetsElements: [],
         selected1: {'pk': -1, 'title': 'Все'} ,
-        selected2: "",
+        selected2: {'pk': -1, 'title': 'Все'},
         searchElement: '',
         typesObject: [
             'Бактерии',
             'Антибиотики',
             'Бактериофаги',
         ],
-        typesGroups: [],
+        typesGroups: ["Группы"],
         searchTypesObject: "Бактерии",
-        searchTypesGroups: "",
+        searchTypesGroups: "Группы",
         editElementTitle: "",
         editElementFsli: "",
         editElementHide: "",
@@ -153,8 +153,11 @@
         const t = this;
         if (!titlegroup || titlegroup.length === 0) {
           titlegroup = "Все"
+          t.selected1 = {'pk': -1, 'title': 'Все'}
+          t.selected2 = {'pk': -1, 'title': 'Все'}
         }
         if (t.searchTypesGroups === "Группы") {
+
           bacteria_point.loadCultures({'type': titlegroup, 'searchObj': t.searchTypesObject})
             .then(data => {
                 t.list1 = data.groups;
@@ -163,10 +166,11 @@
               }
             )
         } else {
-          bacteria_point.loadCultures({'type': titlegroup, 'searchObj': t.searchTypesObject})
+          bacteria_point.loadCultures({'type': t.selected1.title, 'searchObj': t.searchTypesObject})
             .then(data => {
                 t.list1 = data.groups;
-                objList === "1" ? t.list1Elements = data.elements : t.list2Elements = data.elements;
+                t.list2Elements = [];
+                t.list1Elements = data.elements;
               }
             );
 
@@ -175,7 +179,8 @@
             'typeGroups': t.searchTypesGroups
           });
           t.list2 = data.groups;
-          if (this.selected2.title.length !== 0) {
+          t.list2Elements = [];
+          if (this.selected2.title !== "Все") {
             const setElements = await bacteria_point.loadSetElements({
               'type': this.selected2.title,
               'typeGroups': t.searchTypesGroups
@@ -255,39 +260,26 @@
         pksElements2 = [];
 
         this.$store.dispatch(action_types.DEC_LOADING).then()
-      }
+      },
+        filteredGroupObject() {
+         this.load_culture_groups("Все", "1")
+         this.selected1 = '';
+         this.selected2 = '';
+         if (this.searchTypesObject === "Бактерии") {
+         this.searchTypesGroups = 'Группы';}
+         // this.list2Elements = [];
+         this.searchTypesObject === "Антибиотики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы'];
+       },
     },
       mounted() {
-         this.$root.$on('hide_fte', () => this.group_edit_hide());
+         this.$root.$on('hide_ge', () => this.group_edit_hide());
       },
-
       computed: {
        filteredList() {
         return this.list1Elements.filter(element => {
           return element.title.toLowerCase().includes(this.searchElement.toLowerCase())
       })
     },
-       filteredGroupObject() {
-         this.load_culture_groups("Все", "1")
-         this.selected1 = '';
-         this.selected2 = '';
-         if (this.searchTypesObject === "Бактерии") {
-         this.searchTypesGroups = 'Группы';}
-         this.list2Elements = [];
-         return this.searchTypesObject === "Антибиотики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы'];
-       },
-       onChangeGroup() {
-         if (this.searchTypesGroups === "Наборы") {
-           this.list2 = [];
-           this.list2Elements = [];
-           this.onClearContentEdit();
-           return this.selected2 = "";
-         }
-         else {
-           this.load_culture_groups("Все", "1");
-           return this.onClearContentEdit();
-         }
-       }
     }
   }
 </script>

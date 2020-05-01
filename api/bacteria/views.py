@@ -9,7 +9,6 @@ def load_culture(request):
     request_data = json.loads(request.body)
     type = request_data['type']
     searchObj = request_data['searchObj']
-
     groups = [{"pk": -3, "title": "не найдено"}]
     elements = []
     if searchObj == 'Бактерии':
@@ -113,9 +112,9 @@ def load_antibiotic_set(request):
 def load_set_elements(request):
     request_data = json.loads(request.body)
     types_group = request_data['typeGroups']
-    result = {"pk": -2, "title": "не загружено"}
+    result = {""}
 
-    if types_group == 'Наборы' and request_data['type']:
+    if types_group == 'Наборы' and request_data['type'] and request_data['type'] != "Все":
         title = request_data['type']
         result = AntibioticSets.get_antibiotic_set_elements(title)
 

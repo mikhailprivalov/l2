@@ -52,7 +52,7 @@
     },
       methods: {
        hide_modal() {
-        this.$root.$emit('hide_fte');
+        this.$root.$emit('hide_ge');
         if (this.$refs.modal) {
           this.$refs.modal.$el.style.display = 'none'
         }
