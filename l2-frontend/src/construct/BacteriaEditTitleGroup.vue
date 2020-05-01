@@ -3,7 +3,6 @@
          max-width="40%" width="100%" marginLeftRight="auto" margin-top="20%">
     <span slot="header">Настройка группы</span>
     <div slot="body" style="min-height: 20px" class="directions-manage">
-<!--    <div slot="body" style="min-height: 20px" class="registry-body">-->
       <input type="text" v-model="group_obj.title">
        <p>
          Скрыть

@@ -254,7 +254,7 @@
           errmessage('Ошибка', message)
         }
         this.onClearContentEdit();
-        this.selected1 = ""
+        this.selected1 = "";
         this.load_culture_groups("Все", "1");
         pksElements1 = [];
         pksElements2 = [];
@@ -267,7 +267,6 @@
          this.selected2 = '';
          if (this.searchTypesObject === "Бактерии") {
          this.searchTypesGroups = 'Группы';}
-         // this.list2Elements = [];
          this.searchTypesObject === "Антибиотики" ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы'];
        },
     },
