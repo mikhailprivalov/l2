@@ -603,13 +603,13 @@ class GroupCulture(models.Model):
 
     @staticmethod
     def create_culture_group(title):
-        culture_group = GroupCulture.objects.get(title=title)
+        culture_group = GroupCulture(title=title)
         culture_group.save()
         return culture_group
 
     @staticmethod
     def update_culture_group(pk, title, hide):
-        culture_group = GroupCulture(pk=pk)
+        culture_group = GroupCulture.objects.get(pk=pk)
         culture_group.title = title
         culture_group.hide = hide
         culture_group.save()

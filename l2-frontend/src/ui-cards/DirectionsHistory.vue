@@ -118,10 +118,15 @@
             <li><a href="#" @click.prevent="selected_do('print_results')">Печать результатов</a></li>
             <li><a href="#" @click.prevent="selected_do('print_barcodes')">Печать штрих-кодов</a></li>
             <li><a href="#" @click.prevent="selected_do('print_directions')">Печать направлений</a></li>
+            <li><a href="#" @click="change_parent_edit">Изменить родителя</a></li>
           </ul>
         </div>
       </div>
     </div>
+    <directions-change-parent
+      v-if="change_parent_open"
+      :dir_pks="checked"
+    />
   </div>
 </template>
 
@@ -133,6 +138,7 @@
   import moment from 'moment'
   import {forDirs} from '../forms';
   import {mapGetters} from 'vuex'
+  import DirectionsChangeParent from '../modals/DirectionsChangeParent'
 
   function truncate(s, n, useWordBoundary) {
     if (s.length <= n) {
@@ -145,7 +151,7 @@
   }
 
   export default {
-    components: {SelectPickerM, DateRange},
+    components: {DirectionsChangeParent, SelectPickerM, DateRange},
     name: 'directions-history',
     props: {
       patient_pk: {
@@ -192,7 +198,8 @@
           '0': 'Направление только выписано',
           '1': 'Материал в лаборатории',
           '2': 'Результаты подтверждены',
-        }
+        },
+        change_parent_open: false
       }
     },
     computed: {
@@ -222,6 +229,7 @@
       this.is_created = true
       this.load_history()
       this.$root.$on('researches-picker:directions_created' + this.kk, this.load_history)
+      this.$root.$on('hide_pe', () => this.change_parent_hide());
     },
     methods: {
       update_so(researches) {
@@ -335,7 +343,14 @@
         } else if (!this.in_checked(pk)) {
           this.checked.push(pk)
         }
-      }
+      },
+      change_parent_edit() {
+        this.change_parent_open = true
+      },
+      change_parent_hide() {
+        this.change_parent_open = false
+      },
+
     },
     watch: {
       active_type() {
