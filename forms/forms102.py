@@ -15,7 +15,6 @@ from reportlab.graphics.barcode import code128, qr
 from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
 from reportlab.lib.colors import HexColor
-from reportlab.lib.colors import HexColor
 from reportlab.lib.colors import white, black
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import A4, portrait
