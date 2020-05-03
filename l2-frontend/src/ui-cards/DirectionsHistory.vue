@@ -349,7 +349,6 @@
         if (this.checked.length > 3) {
           this.$dialog.alert({
               title: "Количество не может быть больше 3",
-              okButtonText: "OK"
           })
         }
         else {
