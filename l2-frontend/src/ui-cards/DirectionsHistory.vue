@@ -346,7 +346,15 @@
         }
       },
       change_parent_edit() {
-        this.change_parent_open = true
+        if (this.checked.length > 3) {
+          this.$dialog.alert({
+              title: "Количество не может быть больше 3",
+              okButtonText: "OK"
+          })
+        }
+        else {
+          this.change_parent_open = true
+        }
       },
       change_parent_hide() {
         this.change_parent_open = false
