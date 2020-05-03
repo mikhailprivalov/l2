@@ -1,18 +1,26 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="40%" min-width="40%" width="100%" marginLeftRight="auto" margin-top>
+  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="50%" min-width="50%" width="100%" marginLeftRight="auto" margin-top>
     <span slot="header">Изменить родителя</span>
-    <div slot="body" style="min-height: 200px" class="container">
-      <div class="box-1">
-        <h6><strong>Подчиненные направления:</strong></h6>
-          <li v-for="dir in dir_pks">
-            {{dir}}
-          </li>
+    <div slot="body" style="min-height: 240px" >
+      <div class="container">
+        <h6><strong>Пациент: </strong>{{patientFio}}</h6>
       </div>
-      <div class="box-2">
-        <h6><strong>Главное направление:</strong></h6>
-        <v-select :clearable="false" v-model="selectStationarDir" label="label" :options="types_options" :searchable="true" placeholder="Выберите группу"/>
+      <div class="container">
+        <div class="box-1">
+          <h6><strong>Выбрано:</strong></h6>
+            <li v-for="dir in dir_pks">
+              {{dir}}
+            </li>
+        </div>
+
+        <div class="box-2">
+          <h6><strong>Главное направление:</strong></h6>
+          <v-select :clearable="false" v-model="selectStationarDir" label="label" :options="dirs_options" :searchable="true" placeholder="Выберите историю болезни"/>
+        </div>
+
       </div>
     </div>
+
     <div slot="footer">
       <div class="row">
         <div class="col-xs-4">
@@ -35,6 +43,8 @@
   import Modal from '../ui-cards/Modal'
   import * as action_types from "../store/action-types";
   import vSelect from 'vue-select'
+  import patients_point from "../api/patients-point";
+  import directions_point from "../api/directions-point";
 
   export default {
     name: "DirectionsChangeParent",
@@ -43,28 +53,45 @@
       dir_pks: {
         type: Array,
         required: true
-      }
+      },
+      card_pk: {type: Number,
+        default: -1,
+        required: false,
+      },
     },
     data() {
       return {
         parent_dir: "",
-        types_options: [{label: "2121", value: "23"}, {label: "21", value: "2"}, {label: "2121", value: "23"}, {label: "21", value: "2"},
-        {label: "2121", value: "23"}, {label: "21", value: "2"}, {label: "2121", value: "23"}, {label: "21", value: "2"},
-          {label: "2121", value: "23"}, {label: "21", value: "2"}],
-        selectStationarDir: "",
+        dirs_options: [],
+        selectStationarDir: {"label": "Не выбрано" , "value": ""},
+        card: "",
+        patientFio: ""
       }
     },
     mounted() {
-      this.selectStationarDir = this.types_options[1]
+      this.load_data();
     },
     methods: {
       hide_modal() {
-        console.log(this.dir_pks)
         this.$root.$emit('hide_pe');
         if (this.$refs.modal) {
           this.$refs.modal.$el.style.display = 'none'
         }
       },
+      load_data(){
+      patients_point.searchL2Card({card_pk: this.card_pk}).then((result) => {
+        let data = result.results[0];
+        this.patientFio = data.family + " " + data.name + " " + data.twoname
+      });
+      directions_point.getHospSetParent({"patient":this.card_pk}).then(data => {
+        let directions = data.directions;
+        this.dirs_options = [];
+        for (let i of directions){
+          let label = i.dir_num + ": " + i.researche_titles + " (от " + i.date + ")";
+          this.dirs_options.push({"label": label , "value": i.iss_id})
+        }
+      })
+    },
       async updateParent() {
         this.$store.dispatch(action_types.INC_LOADING).then();
         const ok = True;
@@ -95,7 +122,7 @@
   }
 
   .box-2{
-    flex: 1;
+    flex: 2;
     border-left: 1px solid silver;
     padding-left: 20px;
   }

@@ -9,6 +9,10 @@ export default generator({
     url: 'directions/history',
     onReject: {directions: []}
   },
+  getHospSetParent: {
+    url: 'directions/hosp_set_parent',
+    onReject: {directions: []}
+  },
   cancelDirection: {
     url: 'directions/cancel',
     onReject: {cancel: false}

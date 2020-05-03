@@ -233,17 +233,13 @@
       },
       async save_groups() {
         let pksElements2 = [];
-        for (let i in this.list2Elements) {
-          if (i > -1) {
-            pksElements2.push(this.list2Elements[i].pk)
-            }
-          }
+        for (let i of this.list2Elements) {
+          pksElements2.push(i.pk)
+        }
         let pksElements1 = [];
-        for (let i in this.list1Elements) {
-          if (i > -1) {
-            pksElements1.push(this.list1Elements[i].pk)
-            }
-          }
+        for (let i of this.list1Elements) {
+          pksElements1.push(i.pk)
+        }
         this.$store.dispatch(action_types.INC_LOADING).then();
         const {ok, message} = await bacteria_point.saveGroup({'TypesObject': this.searchTypesObject, 'typeGroups': this.searchTypesGroups,
           'obj': [{'group':this.selected1.title, 'elements': pksElements1}, {'group': this.selected2.title, 'elements': pksElements2}],

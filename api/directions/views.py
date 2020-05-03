@@ -33,6 +33,8 @@ from django.http import HttpRequest
 from datetime import datetime, time as dtime
 from .sql_func import get_history_dir
 from laboratory.settings import DICOM_SERVER
+from laboratory import utils
+from dateutil.relativedelta import relativedelta
 
 TADP = SettingManager.get("tadp", default='Температура', default_type='s')
 
@@ -196,6 +198,44 @@ def directions_history(request):
     if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
         final_result.append({'pk': dir, 'status': status, 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
                              'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco, 'lab': lab_title})
+
+    res['directions'] = final_result
+    return JsonResponse(res)
+
+
+@login_required
+def hosp_set_parent(request):
+    # SQL-query
+    date_end = utils.current_time()
+    date_start = (date_end + relativedelta(days=-30))
+    date_start = datetime.combine(date_start, dtime.min)
+    date_end = datetime.combine(date_end, dtime.max)
+    request_data = json.loads(request.body)
+    pk = request_data.get("patient", -1)
+    user_creater = -1
+    patient_card = pk
+    iss_pk = None
+    for_slave_hosp = False
+
+    is_service = False
+    services = [-1]
+    is_parent = False
+
+    result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service, iss_pk, is_parent, for_slave_hosp)
+    # napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title, date_create,
+    # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs,
+    # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid
+    res = {"directions": []}
+    final_result = []
+    for i in result_sql:
+        if i[11]:
+            if forbidden_edit_dir(i[0]):
+                continue
+            researche_title = i[5]
+            dir = i[0]
+            iss_id = i[2]
+            date_create = i[6]
+            final_result.append({'dir_num': dir, 'iss_id': iss_id, 'researche_titles': researche_title, 'date': date_create})
 
     res['directions'] = final_result
     return JsonResponse(res)
