@@ -23,7 +23,6 @@
               Скрыть
               <input type="checkbox" id="checkbox" v-model="editElementHide">
               </p>
-              <p>{{editElementPk}}</p>
             </div>
           </div>
 

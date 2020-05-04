@@ -33,7 +33,7 @@
         </div>
         <div class="col-xs-4">
           <button type="button" @click="hide_modal" class="btn btn-primary-nb btn-blue-nb">
-            Отмена
+            Закрыть
           </button>
         </div>
       </div>
