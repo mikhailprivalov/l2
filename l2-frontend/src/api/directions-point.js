@@ -11,11 +11,9 @@ export default generator({
   },
   getHospSetParent: {
     url: 'directions/hosp_set_parent',
-    onReject: {directions: []}
   },
   updateParent: {
-    url: 'directions/update_parent',
-    onReject: {directions: []}
+    url: 'directions/update_parent'
   },
   cancelDirection: {
     url: 'directions/cancel',
