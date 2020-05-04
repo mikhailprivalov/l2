@@ -637,7 +637,12 @@ class Culture(models.Model):
             culture_obj = Culture.objects.filter(group_culture=None).order_by('title')
         else:
             culture_obj = Culture.objects.filter(group_culture__title=group).order_by('title')
-        elements = [{"pk": i.pk, "title": i.title, "fsli": i.fsli, "hide": i.hide} for i in culture_obj]
+        elements = []
+        for i in culture_obj:
+            title_group = ""
+            if i.group_culture:
+                title_group = i.group_culture.title
+            elements.append({"pk": i.pk, "title": i.title, "fsli": i.fsli, "hide": i.hide, "group": title_group})
         return elements
 
     @staticmethod
@@ -720,8 +725,12 @@ class Antibiotic(models.Model):
             antibiotic_obj = Antibiotic.objects.filter(group_antibiotic=None).order_by(Lower('title'))
         else:
             antibiotic_obj = Antibiotic.objects.filter(group_antibiotic__title=group).order_by(Lower('title'))
-        elements = [{"pk": i.pk, "title": i.title, "fsli": i.fsli, "hide": i.hide} for i in antibiotic_obj]
-
+        elements = []
+        for i in antibiotic_obj:
+            title_group = ""
+            if i.group_antibiotic:
+                title_group = i.group_antibiotic.title
+            elements.append({"pk": i.pk, "title": i.title, "fsli": i.fsli, "hide": i.hide, "group": title_group})
         return elements
 
     @staticmethod

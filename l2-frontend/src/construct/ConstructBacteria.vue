@@ -12,17 +12,17 @@
           <div class="edit-element" >
             <h6><strong>{{searchTypesObject}}</strong> (создание/редактирование)</h6>
             <div class="content-edit" :class="['right-top']">
-                Название:
+                <strong>Название:</strong>
                   <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="onClearContentEdit">
                     <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Очистить"></i>
                   </button>
               <input type="text" v-model="editElementTitle" :placeholder="[[searchTypesObject]] + ': введите название' " />
-              <p>Код ФСЛИ</p>
+              <p><strong>Код ФСЛИ</strong></p>
               <input type="text" v-model="editElementFsli" placeholder="Введите код ФСЛИ.."/>
-              <p>
-              Скрыть
+              <p><strong>Скрыть</strong>
               <input type="checkbox" id="checkbox" v-model="editElementHide">
               </p>
+              <p><strong>Группа:</strong> {{editElementGroup}}</p>
             </div>
           </div>
 
@@ -137,6 +137,7 @@
         editElementFsli: "",
         editElementHide: "",
         editElementPk: -1,
+        editElementGroup: "",
         newgroup: "",
         group_edit_open: false
       }
@@ -193,6 +194,7 @@
           this.editElementTitle = element.title;
           this.editElementFsli = element.fsli;
           this.editElementHide = element.hide;
+          this.editElementGroup = element.group
        },
       onAddToSet(element) {
           this.list2Elements.push(element)
@@ -217,6 +219,9 @@
         this.editElementTitle = '';
         this.editElementFsli = '';
         this.editElementPk = -1;
+        this.editElementHide = ""
+        this.editElementGroup = ""
+
       },
       async addNewGroup() {
         this.$store.dispatch(action_types.INC_LOADING).then();

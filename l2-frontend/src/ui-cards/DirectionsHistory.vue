@@ -118,7 +118,7 @@
             <li><a href="#" @click.prevent="selected_do('print_results')">Печать результатов</a></li>
             <li><a href="#" @click.prevent="selected_do('print_barcodes')">Печать штрих-кодов</a></li>
             <li><a href="#" @click.prevent="selected_do('print_directions')">Печать направлений</a></li>
-            <li v-if="active_type ===3 "><a href="#" @click="change_parent_edit">Изменить родителя</a></li>
+            <li v-if="active_type ===3 "><a href="#" @click="change_parent_edit">Назначить главное направление</a></li>
           </ul>
         </div>
       </div>
