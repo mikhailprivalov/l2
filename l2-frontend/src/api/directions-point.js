@@ -13,6 +13,10 @@ export default generator({
     url: 'directions/hosp_set_parent',
     onReject: {directions: []}
   },
+  updateParent: {
+    url: 'directions/update_parent',
+    onReject: {directions: []}
+  },
   cancelDirection: {
     url: 'directions/cancel',
     onReject: {cancel: false}

@@ -118,7 +118,7 @@
             <li><a href="#" @click.prevent="selected_do('print_results')">Печать результатов</a></li>
             <li><a href="#" @click.prevent="selected_do('print_barcodes')">Печать штрих-кодов</a></li>
             <li><a href="#" @click.prevent="selected_do('print_directions')">Печать направлений</a></li>
-            <li><a href="#" @click="change_parent_edit">Изменить родителя</a></li>
+            <li v-if="active_type ===3 "><a href="#" @click="change_parent_edit">Изменить родителя</a></li>
           </ul>
         </div>
       </div>
@@ -127,6 +127,7 @@
       v-if="change_parent_open"
       :dir_pks="checked"
       :card_pk="patient_pk"
+      :direction_checked="direction_checked"
     />
   </div>
 </template>
@@ -200,7 +201,8 @@
           '1': 'Материал в лаборатории',
           '2': 'Результаты подтверждены',
         },
-        change_parent_open: false
+        change_parent_open: false,
+        direction_checked: []
       }
     },
     computed: {
@@ -382,9 +384,11 @@
       directions: {
         handler() {
           this.checked = []
+          this.direction_checked = []
           for (let row of this.directions) {
             if (row.checked) {
               this.checked.push(row.pk)
+              this.direction_checked.push(row)
             }
           }
         },

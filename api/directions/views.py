@@ -242,6 +242,21 @@ def hosp_set_parent(request):
 
 
 @login_required
+def update_parent(request):
+    request_data = json.loads(request.body)
+    parent = request_data.get("parent")
+    slave_dirs = request_data.get("slave_dirs")
+    if parent > -1:
+        parent_iss = Issledovaniya.objects.get(pk=parent)
+        Napravleniya.objects.filter(pk__in=slave_dirs).update(parent=parent_iss)
+    if parent == -1:
+        Napravleniya.objects.filter(pk__in=slave_dirs).update(parent=None)
+    result = {"ok": True, "message": ""}
+
+    return JsonResponse(result)
+
+
+@login_required
 def directions_rmis_directions(request):
     request_data = json.loads(request.body)
     pk = request_data.get("pk")

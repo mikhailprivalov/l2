@@ -7,9 +7,12 @@
       </div>
       <div class="container">
         <div class="box-1">
-          <h6><strong>Выбрано:</strong></h6>
-            <li v-for="dir in dir_pks">
-              {{dir}}
+          <h6><strong>Выбраны для подчинения:</strong></h6>
+            <li v-for="dir in direction_checked">
+              <p v-if="dir.has_hosp" style="color: #881c2f" v-tippy="{ placement : 'bottom'}" title="История болезни не может подчиняться">
+                <strike> <strong>{{dir.pk}}</strong>- {{dir.researches}}</strike>
+              </p>
+              <p v-else><strong>{{dir.pk}}</strong> - {{dir.researches}}</p>
             </li>
         </div>
 
@@ -54,6 +57,10 @@
         type: Array,
         required: true
       },
+      direction_checked:{
+        type: Array,
+        required: true
+      },
       card_pk: {type: Number,
         default: -1,
         required: false,
@@ -63,9 +70,10 @@
       return {
         parent_dir: "",
         dirs_options: [],
-        selectStationarDir: {"label": "Не выбрано" , "value": ""},
+        selectStationarDir: [],
         card: "",
-        patientFio: ""
+        patientFio: "",
+        slave_dirs: []
       }
     },
     mounted() {
@@ -90,17 +98,25 @@
           let label = i.dir_num + ": " + i.researche_titles + " (от " + i.date + ")";
           this.dirs_options.push({"label": label , "value": i.iss_id})
         }
-      })
+        this.dirs_options.push({"label": "0: Сбросить подчинение" , "value": -1})
+      });
+        this.slave_dirs = [];
+        for (let dir of this.direction_checked) {
+          if (!dir.has_hosp){
+            this.slave_dirs.push(dir.pk)
+          }
+        }
     },
       async updateParent() {
         this.$store.dispatch(action_types.INC_LOADING).then();
-        const ok = True;
+        const {ok, message} = await directions_point.updateParent({'parent': this.selectStationarDir.value,
+          'slave_dirs': this.slave_dirs });
         if (ok) {
-          okmessage('Группа сохранён', `${"111"}`)
+          okmessage('Cохранено')
         } else {
           errmessage('Ошибка', message)
         }
-        this.$store.dispatch(action_types.DEC_LOADING).then();
+        this.$store.dispatch(action_types.DEC_LOADING).then()
       },
     }
   }
@@ -122,7 +138,7 @@
   }
 
   .box-2{
-    flex: 2;
+    flex: 1;
     border-left: 1px solid silver;
     padding-left: 20px;
   }

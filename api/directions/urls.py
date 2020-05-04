@@ -7,6 +7,7 @@ urlpatterns = [
     path('rmis-direction', views.directions_rmis_direction),
     path('history', views.directions_history),
     path('hosp_set_parent', views.hosp_set_parent),
+    path('update_parent', views.update_parent),
     path('cancel', views.directions_cancel),
     path('results', views.directions_results),
     path('services', views.directions_services),
