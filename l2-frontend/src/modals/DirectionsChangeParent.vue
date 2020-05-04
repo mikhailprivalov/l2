@@ -53,10 +53,6 @@
     name: "DirectionsChangeParent",
     components: {Modal, vSelect},
     props: {
-      dir_pks: {
-        type: Array,
-        required: true
-      },
       direction_checked:{
         type: Array,
         required: true

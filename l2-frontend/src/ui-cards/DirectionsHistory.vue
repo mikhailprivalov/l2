@@ -125,7 +125,6 @@
     </div>
     <directions-change-parent
       v-if="change_parent_open"
-      :dir_pks="checked"
       :card_pk="patient_pk"
       :direction_checked="direction_checked"
     />
