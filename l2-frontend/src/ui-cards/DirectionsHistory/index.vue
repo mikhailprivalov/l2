@@ -23,7 +23,7 @@
           </ul>
         </div>
         <button class="btn btn-blue-nb btn-ell" style="border-radius: 0;width: 50px;flex: 1 50px;" title="Обновить"
-                @click="load_history">
+                @click="load_history_safe">
           <i class="glyphicon glyphicon-refresh"></i>
         </button>
       </div>
@@ -107,36 +107,15 @@
         </tbody>
       </table>
     </div>
-    <div class="bottom-picker" v-if="checked.length > 0 || !iss_pk">
-      <div style="padding-left: 5px;color: #fff">
-        <span v-if="checked.length > 0">Отмечено: {{checked.length}}</span>
-      </div>
-      <div class="bottom-inner">
-        <div class="dropup" style="display: inline-block;max-width: 350px;width: 100%" v-if="checked.length > 0">
-          <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-                  style="text-align: right!important;border-radius: 0;width: 100%">
-            Действие с отмеченными <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu">
-            <li v-for="f in forms" v-if="patient_pk !== -1 && (!f.need_dirs || checked.length > 0)">
-              <a :href="f.url" target="_blank">{{f.title}}</a>
-            </li>
-            <li v-for="value in menuItems">
-              <a href="#"
-                 v-if="(!value.onlyNotForIssledovaniye || !iss_pk)
-                  && (!value.onlyForTypes || value.onlyForTypes.includes(active_type))"
-                 @click.prevent="() => callAsThis(value.handler)">
-                {{value.title}}
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    <directions-change-parent
-      v-if="change_parent_open"
+    <Bottom
+      v-show="checked.length > 0 || !iss_pk"
+      class="bottom-picker"
+      :checked="checked"
+      :directions="directions"
+      :iss_pk="iss_pk"
       :card_pk="patient_pk"
-      :direction_checked="checked"
+      :active_type="active_type"
+      :kk="kk"
     />
   </div>
 </template>
@@ -147,10 +126,8 @@
   import directions_point from '../../api/directions-point'
   import * as action_types from '../../store/action-types'
   import moment from 'moment'
-  import {forDirs} from '../../forms';
   import {mapGetters} from 'vuex'
-  import DirectionsChangeParent from '../../modals/DirectionsChangeParent'
-  import menuMixin from './mixins/menu'
+  import Bottom from './Bottom';
 
   function truncate(s, n, useWordBoundary) {
     if (s.length <= n) {
@@ -163,8 +140,7 @@
   }
 
   export default {
-    mixins: [menuMixin],
-    components: {DirectionsChangeParent, SelectPickerM, DateRange},
+    components: {SelectPickerM, DateRange, Bottom},
     name: 'directions-history',
     props: {
       patient_pk: {
@@ -212,20 +188,9 @@
           '1': 'Материал в лаборатории',
           '2': 'Результаты подтверждены',
         },
-        change_parent_open: false,
       }
     },
     computed: {
-      forms() {
-        return forDirs.map(f => {
-          return {
-            ...f, url: f.url.kwf({
-              card: this.patient_pk,
-              dir: JSON.stringify(this.checked),
-            })
-          }
-        });
-      },
       active_type_obj() {
         for (let row of this.types) {
           if (row.pk === this.active_type) {
@@ -242,11 +207,11 @@
       this.is_created = true
       this.load_history()
       this.$root.$on('researches-picker:directions_created' + this.kk, this.load_history)
-      this.$root.$on('hide_pe', () => this.change_parent_hide());
+      this.$root.$on('researches-picker:refresh' + this.kk, this.load_history_safe)
     },
     methods: {
-      callAsThis(handler) {
-        handler.call(this)
+      async load_history_safe() {
+        await this.load_history(true)
       },
       update_so(researches) {
         const s = [].concat.apply([], Object.values(researches)).map(r => ({
@@ -297,26 +262,39 @@
       select_type(pk) {
         this.active_type = pk
       },
-      load_history() {
+      async load_history(safe) {
         if (!this.is_created)
           return
         this.$root.$emit('validate-datepickers')
         this.is_created = false
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        vm.directions = []
-        vm.all_checked = false
 
-        directions_point.getHistory(this, ['iss_pk', 'services', 'forHospSlave'], {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        this.directions = []
+        if (!safe) {
+          this.all_checked = false
+        }
+
+        const checked = []
+
+        if (safe) {
+          checked.push(...this.checked)
+        }
+
+        await directions_point.getHistory(this, ['iss_pk', 'services', 'forHospSlave'], {
           type: this.active_type,
           patient: this.patient_pk,
           date_from: moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY'),
           date_to: moment(this.date_range[1], 'DD.MM.YY').format('DD.MM.YYYY'),
         }).then((data) => {
-          vm.directions = data.directions
+          this.directions = data.directions
+          for (const d of this.directions) {
+            if (checked.includes(d.pk)) {
+              d.checked = true
+            }
+          }
         }).finally(() => {
-          vm.is_created = true
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.is_created = true
+          return this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
       in_checked(pk) {
@@ -330,10 +308,6 @@
           this.checked.push(pk)
         }
       },
-      change_parent_hide() {
-        this.change_parent_open = false
-      },
-
     },
     watch: {
       active_type() {
@@ -407,7 +381,7 @@
     }
   }
 
-  .content-picker, .content-none, .bottom-inner {
+  .content-picker, .content-none {
     display: flex;
     flex-wrap: wrap;
     justify-content: stretch;
@@ -461,19 +435,6 @@
     .no_abs & {
       position: relative;
     }
-  }
-
-  .bottom-inner {
-    position: absolute;
-    color: #fff;
-    height: 34px;
-    right: 0;
-    left: 155px;
-    top: 0;
-    justify-content: flex-end;
-    align-content: center;
-    align-items: center;
-    overflow: visible;
   }
 
   th {
