@@ -87,9 +87,8 @@
                  :title="'Принадлежит и/б: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.parent.parent_is_hosp">
                 <i class="fa fa-bed"/>
               </a>
-              <a @click="show_results(row.parent)"
-                 :title="'Создано в амбулаторном приеме: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]"
-                 v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.parent.parent_is_doc_refferal">
+              <a @click="row.parent.is_confirm ? show_results(row.parent) : null" :title="'Создано в амбулаторном приеме: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]"
+                 v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.parent.parent_is_doc_refferal" :class="{isDisabled: !row.parent.is_confirm}">
                  <i class="fa fa-user-md"/>
               </a>
               <button class="btn btn-blue-nb" title="Штрих-код браслета" v-tippy
@@ -416,6 +415,10 @@
 </script>
 
 <style scoped lang="scss">
+  .isDisabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
 
   .top-picker, .bottom-picker {
     height: 34px;

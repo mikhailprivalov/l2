@@ -7,10 +7,22 @@
       </div>
       <div class="container">
         <div class="box-1">
-          <h6><strong>Выбраны для подчинения:</strong></h6>
+          <h6><strong>Изменить принадлежность:</strong></h6>
             <li v-for="dir in direction_checked">
-              <p v-if="dir.has_hosp" style="color: #881c2f" v-tippy="{ placement : 'bottom'}" title="История болезни не может подчиняться">
+              <p v-if="dir.has_hosp" class="color_danger" v-tippy="{ placement : 'bottom'}" title="История болезни не может подчиняться">
                 <strike> <strong>{{dir.pk}}</strong>- {{dir.researches}}</strike>
+              </p>
+              <p v-else-if="dir.parent.parent_is_hosp || dir.parent.parent_is_doc_refferal">
+                <i class="fa fa-exclamation-triangle fa-lg" style="color: #d35400"></i><strong>{{dir.pk}}</strong> - {{dir.researches}}
+                <a :href="`${dir.parent.l2_server}{%22pk%22:${dir.parent.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
+                    v-if="dir.parent.parent_is_hosp" class="color_danger" target="_blank">
+                  (Принадлежит И/Б № {{dir.parent.pk}} - {{dir.parent.parent_title}})
+                </a>
+                <a @click="dir.parent.is_confirm ? show_results(dir.parent) : null" v-if="dir.parent.parent_is_doc_refferal"
+                    target="_blank">
+                  <span :class="[{color_danger: dir.parent.is_confirm}, {isDisabled: !dir.parent.is_confirm}]"> (Создано в амбулаторном приеме: {{dir.parent.pk}} - {{dir.parent.parent_title}})</span>
+                </a>
+
               </p>
               <p v-else><strong>{{dir.pk}}</strong> - {{dir.researches}}</p>
             </li>
@@ -76,6 +88,13 @@
       this.load_data();
     },
     methods: {
+      show_results(row) {
+        if (row.has_descriptive) {
+          this.$root.$emit('print:results', [row.pk])
+        } else {
+          this.$root.$emit('show_results', row.pk)
+        }
+      },
       hide_modal() {
         this.$root.$emit('hide_pe');
         if (this.$refs.modal) {
@@ -119,6 +138,17 @@
 </script>
 
 <style scoped lang="scss">
+  .color_danger {
+    color: #d35400;
+    cursor: pointer;
+  }
+
+  .isDisabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    color: indianred;
+  }
+
   .container {
     width: 100%;
     height: 100%;
@@ -143,5 +173,8 @@
     list-style-type: none; /* Заглавные буквы */
     padding: 5px;
    }
+  p {
+    font-size: 13px;
+  }
 
 </style>
