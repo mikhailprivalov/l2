@@ -129,6 +129,7 @@ def directions_history(request):
     final_result = []
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
     maybe_onco = False
+    parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
     status_set = {-2}
     lab = set()
     lab_title = None
@@ -198,7 +199,6 @@ def directions_history(request):
         if i[14] or i[15] or i[16] or i[17] or i[18] or i[19]:
             has_descriptive = True
 
-
     status = min(status_set)
     if len(lab) > 0:
         lab_title = ', '.join(lab)
@@ -223,6 +223,7 @@ def get_data_parent(parent_id):
 
     return {"l2_server": L2_SERVER, "iss_id": parent_id, "pk": direction, "parent_title": research_title, "parent_is_hosp": research_is_hosp,
             "parent_is_doc_refferal": research_is_doc_refferal, "is_confirm": is_confirm}
+
 
 @login_required
 def hosp_set_parent(request):
