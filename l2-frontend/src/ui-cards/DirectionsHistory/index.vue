@@ -83,7 +83,7 @@
               <a :href="row.pacs" title="Снимок" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.pacs">
                 <i class="fa fa-camera"/>
               </a>
-              <a :href="`${row.parent.l2_server}{%22pk%22:${row.parent.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
+              <a :href="`/mainmenu/stationar#{%22pk%22:${row.parent.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
                  :title="'Принадлежит и/б: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.parent.parent_is_hosp">
                 <i class="fa fa-bed"/>
               </a>

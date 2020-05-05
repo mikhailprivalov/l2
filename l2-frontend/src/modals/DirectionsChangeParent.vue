@@ -14,7 +14,7 @@
               </p>
               <p v-else-if="dir.parent.parent_is_hosp || dir.parent.parent_is_doc_refferal">
                 <i class="fa fa-exclamation-triangle fa-lg" style="color: #d35400"></i><strong>{{dir.pk}}</strong> - {{dir.researches}}
-                <a :href="`${dir.parent.l2_server}{%22pk%22:${dir.parent.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
+                <a :href="`/mainmenu/stationar#{%22pk%22:${dir.parent.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
                     v-if="dir.parent.parent_is_hosp" class="color_danger" target="_blank">
                   (Принадлежит И/Б № {{dir.parent.pk}} - {{dir.parent.parent_title}})
                 </a>

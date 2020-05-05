@@ -33,7 +33,6 @@ from django.http import HttpRequest
 from datetime import datetime, time as dtime
 from .sql_func import get_history_dir
 from laboratory.settings import DICOM_SERVER
-from laboratory.settings import L2_SERVER
 from laboratory import utils
 from dateutil.relativedelta import relativedelta
 
@@ -221,7 +220,7 @@ def get_data_parent(parent_id):
     if iss_obj.doc_confirmation:
         is_confirm = True
 
-    return {"l2_server": L2_SERVER, "iss_id": parent_id, "pk": direction, "parent_title": research_title, "parent_is_hosp": research_is_hosp,
+    return {"iss_id": parent_id, "pk": direction, "parent_title": research_title, "parent_is_hosp": research_is_hosp,
             "parent_is_doc_refferal": research_is_doc_refferal, "is_confirm": is_confirm}
 
 
