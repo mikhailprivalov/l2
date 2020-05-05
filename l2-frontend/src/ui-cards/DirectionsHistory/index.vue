@@ -102,18 +102,17 @@
               <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
             </div>
           </td>
-
-
           <td class="nopd"><input v-model="row.checked" type="checkbox"/></td>
         </tr>
         </tbody>
       </table>
     </div>
     <div class="bottom-picker" v-if="checked.length > 0 || !iss_pk">
-      <div style="padding-left: 5px;color: #fff"><span v-if="checked.length > 0">Отмечено: {{checked.length}}</span>
+      <div style="padding-left: 5px;color: #fff">
+        <span v-if="checked.length > 0">Отмечено: {{checked.length}}</span>
       </div>
       <div class="bottom-inner">
-        <div class="dropup" style="display: inline-block;max-width: 350px;width: 100%">
+        <div class="dropup" style="display: inline-block;max-width: 350px;width: 100%" v-if="checked.length > 0">
           <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
                   style="text-align: right!important;border-radius: 0;width: 100%">
             Действие с отмеченными <span class="caret"></span>
@@ -126,7 +125,7 @@
               <a href="#"
                  v-if="(!value.onlyNotForIssledovaniye || !iss_pk)
                   && (!value.onlyForTypes || value.onlyForTypes.includes(active_type))"
-                 @click.prevent="value.handler.bind(this)">
+                 @click.prevent="() => callAsThis(value.handler)">
                 {{value.title}}
               </a>
             </li>
@@ -246,6 +245,9 @@
       this.$root.$on('hide_pe', () => this.change_parent_hide());
     },
     methods: {
+      callAsThis(handler) {
+        handler.call(this)
+      },
       update_so(researches) {
         const s = [].concat.apply([], Object.values(researches)).map(r => ({
           value: String(r.pk),
