@@ -78,7 +78,8 @@
               :class="['status-' + row.status]">
             <strong>{{row.status}}<span v-if="row.maybe_onco">*О</span></strong></td>
           <td class="button-td">
-            <div class="button-td-inner" :class="{has_pacs: !!row.pacs || !!row.parent.parent_is_hosp || !!row.parent.parent_is_doc_refferal}">
+            <div class="button-td-inner" :class="[{has_pacs_stationar: !!row.pacs && !!row.parent.parent_is_hosp || !!row.pacs && !!row.parent.parent_is_doc_refferal},
+                 {has_pacs: (!!row.pacs && !row.parent.parent_is_hosp) || (!row.pacs && !!row.parent.parent_is_hosp) || !row.pacs && !!row.parent.parent_is_doc_refferal}]">
               <a :href="row.pacs" title="Снимок" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.pacs">
                 <i class="fa fa-camera"/>
               </a>
@@ -87,7 +88,7 @@
                 <i class="fa fa-bed"/>
               </a>
               <a @click="show_results(row.parent)"
-                 :title="'Принадлежит амбулаторному приему: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]"
+                 :title="'Создано в амбулаторном приеме: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]"
                  v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.parent.parent_is_doc_refferal">
                  <i class="fa fa-user-md"/>
               </a>
@@ -598,6 +599,17 @@
       &:not(.has_pacs) {
         .btn {
           flex: 0 0 50%;
+        }
+      }
+      &.has_pacs_stationar {
+        .btn {
+          flex: 0 0 32%;
+        }
+        .btn:first-child {
+          flex: 0 0 20%;
+        }
+        :nth-child(2) {
+          flex: 0 0 16%;
         }
       }
 
