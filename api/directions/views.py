@@ -33,8 +33,10 @@ from django.http import HttpRequest
 from datetime import datetime, time as dtime
 from .sql_func import get_history_dir
 from laboratory.settings import DICOM_SERVER
+from laboratory.settings import L2_SERVER
 from laboratory import utils
 from dateutil.relativedelta import relativedelta
+
 
 TADP = SettingManager.get("tadp", default='Температура', default_type='s')
 
@@ -121,7 +123,7 @@ def directions_history(request):
     result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service, iss_pk, is_parent, for_slave_hosp)
     # napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title, date_create,
     # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs,
-    # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid
+    # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid, parent_slave_hosp_id
     researches_pks = []
     researches_titles = ''
     final_result = []
@@ -133,13 +135,13 @@ def directions_history(request):
 
     type_service = request_data.get("type_service", None)
     for i in result_sql:
-        if type_service == 'is_paraclinic' and not i[18]:
+        if i[14]:
+            continue
+        elif type_service == 'is_paraclinic' and not i[18]:
             continue
         elif type_service == 'is_doc_refferal' and not i[17]:
             continue
         elif type_service == 'is_lab' and (i[11] or i[14] or i[15] or i[16] or i[17] or i[18] or i[19]):
-            continue
-        if i[14]:
             continue
         if i[0] != last_dir:
             status = min(status_set)
@@ -147,7 +149,8 @@ def directions_history(request):
                 lab_title = ', '.join(lab)
             if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
                 final_result.append({'pk': dir, 'status': status, 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
-                                     'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco, 'lab': lab_title})
+                                     'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco, 'lab': lab_title,
+                                     'parent': parent_obj})
             dir = i[0]
             researches_titles = ''
             date = i[6]
@@ -155,6 +158,7 @@ def directions_history(request):
             researches_pks = []
             pacs = None
             maybe_onco = False
+            parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
             if i[13]:
                 if i[21]:
                     pacs = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={i[21]}'
@@ -182,6 +186,8 @@ def directions_history(request):
         researches_pks.append(i[4])
         if i[12]:
             maybe_onco = True
+        if i[20]:
+            parent_obj = get_data_parent(i[20])
         last_dir = dir
         cancel = i[1]
         title_podr = i[10]
@@ -192,16 +198,27 @@ def directions_history(request):
         if i[14] or i[15] or i[16] or i[17] or i[18] or i[19]:
             has_descriptive = True
 
+
     status = min(status_set)
     if len(lab) > 0:
         lab_title = ', '.join(lab)
     if (req_status == 2 and status == 2) or (req_status in [3, 4] and status != -2) or (req_status == 1 and status == 1) or (req_status == 0 and status == 0):
         final_result.append({'pk': dir, 'status': status, 'researches': researches_titles, "researches_pks": researches_pks, 'date': date, 'cancel': cancel, 'checked': False,
-                             'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco, 'lab': lab_title})
+                             'pacs': pacs, 'has_hosp': has_hosp, 'has_descriptive': has_descriptive, 'maybe_onco': maybe_onco, 'lab': lab_title,
+                             'parent': parent_obj})
 
     res['directions'] = final_result
     return JsonResponse(res)
 
+
+def get_data_parent(parent_id):
+    iss_obj = Issledovaniya.objects.get(pk=parent_id)
+    research_title = iss_obj.research.title
+    research_is_hosp = iss_obj.research.is_hospital
+    research_is_doc_refferal = iss_obj.research.is_doc_refferal
+    direction = iss_obj.napravleniye_id
+
+    return {"l2_server": L2_SERVER, "iss_id": parent_id, "pk": direction, "parent_title": research_title, "parent_is_hosp": research_is_hosp, "parent_is_doc_refferal": research_is_doc_refferal}
 
 @login_required
 def hosp_set_parent(request):

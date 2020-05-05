@@ -78,9 +78,18 @@
               :class="['status-' + row.status]">
             <strong>{{row.status}}<span v-if="row.maybe_onco">*О</span></strong></td>
           <td class="button-td">
-            <div class="button-td-inner" :class="{has_pacs: !!row.pacs}">
+            <div class="button-td-inner" :class="{has_pacs: !!row.pacs || !!row.parent.parent_is_hosp || !!row.parent.parent_is_doc_refferal}">
               <a :href="row.pacs" title="Снимок" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.pacs">
                 <i class="fa fa-camera"/>
+              </a>
+              <a :href="`${row.parent.l2_server}{%22pk%22:${row.parent.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
+                 :title="'Принадлежит и/б: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.parent.parent_is_hosp">
+                <i class="fa fa-bed"/>
+              </a>
+              <a @click="show_results(row.parent)"
+                 :title="'Принадлежит амбулаторному приему: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]"
+                 v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.parent.parent_is_doc_refferal">
+                 <i class="fa fa-user-md"/>
               </a>
               <button class="btn btn-blue-nb" title="Штрих-код браслета" v-tippy
                       @click="print_hosp(row.pk)" v-if="row.has_hosp">
@@ -93,6 +102,8 @@
               <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
             </div>
           </td>
+
+
           <td class="nopd"><input v-model="row.checked" type="checkbox"/></td>
         </tr>
         </tbody>
