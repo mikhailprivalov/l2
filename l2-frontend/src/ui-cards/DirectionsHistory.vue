@@ -608,10 +608,10 @@
         .btn {
           flex: 0 0 32%;
         }
-        .btn:first-child {
+        .btn:nth-child(1) {
           flex: 0 0 20%;
         }
-        :nth-child(2) {
+        .btn:nth-child(2) {
           flex: 0 0 16%;
         }
       }
