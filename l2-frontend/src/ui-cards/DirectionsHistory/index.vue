@@ -122,14 +122,14 @@
             <li v-for="f in forms" v-if="patient_pk !== -1 && (!f.need_dirs || checked.length > 0)">
               <a :href="f.url" target="_blank">{{f.title}}</a>
             </li>
-            <li><a href="#" @click.prevent="selected_do('directions_list')">Создать список назначений</a></li>
-            <li v-if="!iss_pk">
-              <a href="#" @click.prevent="selected_do('copy_researches')">Скопировать исследования для назначения</a>
+            <li v-for="(value, k) in menuItems">
+              <a href="#"
+                 v-if="(!value.onlyNotForIssledovaniye || !iss_pk)
+                  && (!value.onlyForTypes || value.onlyForTypes.includes(active_type))"
+                 @click.prevent="value.handler.bind(this)">
+                {{value.title}}
+              </a>
             </li>
-            <li><a href="#" @click.prevent="selected_do('print_results')">Печать результатов</a></li>
-            <li><a href="#" @click.prevent="selected_do('print_barcodes')">Печать штрих-кодов</a></li>
-            <li><a href="#" @click.prevent="selected_do('print_directions')">Печать направлений</a></li>
-            <li v-if="active_type === 3"><a href="#" @click="selected_do('change_parent')">Назначить главное направление</a></li>
           </ul>
         </div>
       </div>
@@ -143,14 +143,15 @@
 </template>
 
 <script>
-  import SelectPickerM from '../fields/SelectPickerM'
-  import DateRange from './DateRange'
-  import directions_point from '../api/directions-point'
-  import * as action_types from '../store/action-types'
+  import SelectPickerM from '../../fields/SelectPickerM'
+  import DateRange from '../DateRange'
+  import directions_point from '../../api/directions-point'
+  import * as action_types from '../../store/action-types'
   import moment from 'moment'
-  import {forDirs} from '../forms';
+  import {forDirs} from '../../forms';
   import {mapGetters} from 'vuex'
-  import DirectionsChangeParent from '../modals/DirectionsChangeParent'
+  import DirectionsChangeParent from '../../modals/DirectionsChangeParent'
+  import menuMixin from './mixins/menu'
 
   function truncate(s, n, useWordBoundary) {
     if (s.length <= n) {
@@ -163,6 +164,7 @@
   }
 
   export default {
+    mixins: [menuMixin],
     components: {DirectionsChangeParent, SelectPickerM, DateRange},
     name: 'directions-history',
     props: {
@@ -271,57 +273,24 @@
       print_hosp(pk) {
         this.$root.$emit('print:hosp', [pk])
       },
-      cancel_direction(pk) {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.cancelDirection({pk}).then((data) => {
-          for (let dir of vm.directions) {
-            if (dir.pk === pk) {
-              dir.cancel = data.cancel
-              if (dir.status === -1 && !dir.cancel) {
-                dir.status = 0
-              } else if (dir.status === 0 && dir.cancel) {
-                dir.status = -1
-              }
-              break
-            }
-          }
-        }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-        })
+      async cancel_direction(pk) {
+        await this.$store.dispatch(action_types.INC_LOADING)
 
-      },
-      selected_do(type) {
-        switch (type) {
-          case 'change_parent':
-            this.change_parent_edit()
-            break
-          case 'resend_results_rmis':
-            break
-          case 'resend_directions_rmis':
-            break
-          case 'copy_researches':
-            for (let dir of this.directions) {
-              if (this.in_checked(dir.pk)) {
-                for (let pk of dir.researches_pks) {
-                  this.$root.$emit('researches-picker:add_research', pk)
-                }
-              }
+        const data = await directions_point.cancelDirection({pk});
+
+        for (let dir of this.directions) {
+          if (dir.pk === pk) {
+            dir.cancel = data.cancel
+            if (dir.status === -1 && !dir.cancel) {
+              dir.status = 0
+            } else if (dir.status === 0 && dir.cancel) {
+              dir.status = -1
             }
             break
-          case 'print_results':
-            this.$root.$emit('print:results', this.checked)
-            break
-          case 'print_barcodes':
-            this.$root.$emit('print:barcodes', this.checked)
-            break
-          case 'directions_list':
-            this.$root.$emit('print:directions_list', this.checked)
-            break
-          default:
-            this.$root.$emit('print:directions', this.checked)
-            break
+          }
         }
+
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       select_type(pk) {
         this.active_type = pk
@@ -357,17 +326,6 @@
           this.checked = this.checked.filter(e => e !== pk)
         } else if (!this.in_checked(pk)) {
           this.checked.push(pk)
-        }
-      },
-      change_parent_edit() {
-        if (this.checked.length > 3) {
-          this.$dialog.alert({
-              title: "Количество не может быть больше 3",
-              okText: 'OK',
-          })
-        }
-        else {
-          this.change_parent_open = true
         }
       },
       change_parent_hide() {
