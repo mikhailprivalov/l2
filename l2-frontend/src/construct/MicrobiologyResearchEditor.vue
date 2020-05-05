@@ -56,6 +56,7 @@
         </select>
       </div>
     </div>
+
     <div class="footer-editor">
       <button @click="cancel" class="btn btn-blue-nb">Отмена</button>
       <button :disabled="!valid" @click="save" class="btn btn-blue-nb">Сохранить</button>
