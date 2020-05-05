@@ -61,7 +61,6 @@ new Vue({
     'Stationar': () => import('./pages/Stationar'),
     'ConstructBacteria': () => import('./construct/ConstructBacteria'),
     RmisLocation,
-    // loading,
   },
   data: {
     timeouts: {},
@@ -85,21 +84,20 @@ new Vue({
     }
   },
   created() {
-    let vm = this
     this.$store.watch((state) => (state.departments.all), () => {
-      let diff = vm.$store.getters.diff_departments
-      vm.$store.dispatch(action_types.UPDATE_DEPARTMENTS, {type_update: 'update', to_update: diff}).then((ok) => {
+      let diff = this.$store.getters.diff_departments
+      this.$store.dispatch(action_types.UPDATE_DEPARTMENTS, {type_update: 'update', to_update: diff}).then((ok) => {
         if (Array.isArray(ok) && ok.length > 0) {
           for (let r of ok) {
-            vm.$store.commit(mutation_types.SET_UPDATED_DEPARTMENT, {pk: r.pk, value: true})
-            if (vm.timeouts.hasOwnProperty(r.pk) && vm.timeouts[r.pk] !== null) {
-              clearTimeout(vm.timeouts[r.pk])
-              vm.timeouts[r.pk] = null
+            this.$store.commit(mutation_types.SET_UPDATED_DEPARTMENT, {pk: r.pk, value: true})
+            if (this.timeouts.hasOwnProperty(r.pk) && this.timeouts[r.pk] !== null) {
+              clearTimeout(this.timeouts[r.pk])
+              this.timeouts[r.pk] = null
             }
-            vm.timeouts[r.pk] = (function (vm, r) {
+            this.timeouts[r.pk] = (function (vm, r) {
               return setTimeout(() => {
-                vm.$store.commit(mutation_types.SET_UPDATED_DEPARTMENT, {pk: r.pk, value: false})
-                vm.timeouts[r.pk] = null
+                this.$store.commit(mutation_types.SET_UPDATED_DEPARTMENT, {pk: r.pk, value: false})
+                this.timeouts[r.pk] = null
               }, 2000)
             })(vm, r)
           }
@@ -107,19 +105,19 @@ new Vue({
       })
     }, {deep: true})
 
-    vm.$store.dispatch(action_types.INC_LOADING).then()
+    this.$store.dispatch(action_types.INC_LOADING)
     this.$store.dispatch(action_types.GET_ALL_DEPARTMENTS).then(() => {
-      vm.$store.dispatch(action_types.DEC_LOADING).then()
+      this.$store.dispatch(action_types.DEC_LOADING)
     })
 
-    vm.$store.dispatch(action_types.INC_LOADING).then()
+    this.$store.dispatch(action_types.INC_LOADING)
     this.$store.dispatch(action_types.GET_BASES).then(() => {
-      vm.$store.dispatch(action_types.DEC_LOADING).then()
+      this.$store.dispatch(action_types.DEC_LOADING)
     })
 
-    vm.$store.dispatch(action_types.INC_LOADING).then()
+    this.$store.dispatch(action_types.INC_LOADING)
     this.$store.dispatch(action_types.GET_USER_DATA).then(() => {
-      vm.$store.dispatch(action_types.DEC_LOADING).then()
+      this.$store.dispatch(action_types.DEC_LOADING)
     })
 
     function printForm(tpl, pks) {
@@ -166,14 +164,14 @@ new Vue({
         errmessage('Не выбрано, от чьего имени выписываются направления')
         return
       }
-      vm.$store.dispatch(action_types.INC_LOADING).then()
+      this.$store.dispatch(action_types.INC_LOADING)
       directions_point.sendDirections({
         card_pk, diagnos, fin_source: fin_source_pk, history_num,
         ofname_pk: ofname, researches, comments, for_rmis,
         rmis_data, vich_code, count, discount, parent_iss, counts, localizations, service_locations,
         direction_purpose, directions_count, external_organization, parent_slave_hosp,
       }).then(data => {
-        vm.$store.dispatch(action_types.DEC_LOADING).then()
+        this.$store.dispatch(action_types.DEC_LOADING)
 
         if (data.ok) {
           if (type === 'direction') {

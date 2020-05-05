@@ -131,22 +131,22 @@
         window.open(`/statistic/xls?type=statistics-tickets-print&users=${encodeURIComponent(JSON.stringify([this.$store.getters.user_data.doc_pk]))}&date-start=${this.date}&date-end=${this.date}`, '_blank')
       },
       load() {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         statistics_tickets_point.loadTickets(this, 'date').then(data => {
           this.data = data.data
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
       invalidate(pk, invalid) {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         statistics_tickets_point.invalidateTicket({pk, invalid}).then(data => {
           if (!data.ok) {
             errmessage(data.message)
           }
           this.load()
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       }
     }

@@ -433,9 +433,9 @@
   import AggregateLaboratory from '../../fields/AggregateLaboratory'
   import AggregateDesc from '../../fields/AggregateDesc'
   import patients_point from '../../api/patients-point'
-  import UrlData from "../../UrlData";
-  import AggregateTADP from "../../fields/AggregateTADP";
-  import DirectionsHistory from "../../ui-cards/DirectionsHistory";
+  import UrlData from '../../UrlData'
+  import AggregateTADP from '../../fields/AggregateTADP'
+  import DirectionsHistory from '../../ui-cards/DirectionsHistory'
 
   export default {
     mixins: [menuMixin],
@@ -692,9 +692,9 @@
           this.$refs.modalStationar2.$el.style.display = 'none'
         }
 
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         this.counts = await stationar_point.counts(this, ['direction'])
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        this.$store.dispatch(action_types.DEC_LOADING)
         this.reload_if_need(true)
       },
       print_results(pk) {
@@ -708,7 +708,7 @@
       },
       save(iss) {
         this.hide_results();
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         directions_point.paraclinicResultSave({
           force: true,
           data: {
@@ -730,12 +730,12 @@
             errmessage(data.message)
           }
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
       save_and_confirm(iss) {
         this.hide_results();
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         directions_point.paraclinicResultSave({
           force: true,
           data: {
@@ -765,7 +765,7 @@
             errmessage(data.message)
           }
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
       async reset_confirm(iss) {
@@ -776,7 +776,7 @@
           return
         }
 
-        await this.$store.dispatch(action_types.INC_LOADING).then()
+        await this.$store.dispatch(action_types.INC_LOADING)
 
         const data = await directions_point.paraclinicResultConfirmReset({iss_pk: iss.pk})
 
@@ -908,11 +908,11 @@
         field.value += add_val
       },
       load_template(row, pk) {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         researches_point.getTemplateData({pk: parseInt(pk)}).then(({data: {fields: data, title}}) => {
           this.template_fields_values(row, data, title)
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
       visibility_state(iss) {
@@ -947,17 +947,15 @@
         this.anamnesis_loading = false
       },
       async edit_anamnesis() {
-        this.$store.dispatch(action_types.INC_LOADING)
-        const data = await patients_point.loadAnamnesis(this.patient, 'card_pk')
-        this.anamnesis_data = data
-
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        await this.$store.dispatch(action_types.INC_LOADING)
+        this.anamnesis_data = await patients_point.loadAnamnesis(this.patient, 'card_pk')
+        await this.$store.dispatch(action_types.DEC_LOADING)
         this.anamnesis_edit = true
       },
       async save_anamnesis() {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        await this.$store.dispatch(action_types.INC_LOADING)
         await patients_point.saveAnamnesis(this.patient, 'card_pk', {text: this.anamnesis_data.text})
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        await this.$store.dispatch(action_types.DEC_LOADING)
         this.new_anamnesis = this.anamnesis_data.text
         this.hide_modal_anamnesis_edit()
       },

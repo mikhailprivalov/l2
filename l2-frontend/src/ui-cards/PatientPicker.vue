@@ -310,43 +310,43 @@
     created() {
       this.$store.watch(state => state.bases, (oldValue, newValue) => {
         this.check_base()
-      });
+      })
       this.$root.$on('search', () => {
         this.search()
-      });
+      })
       this.$root.$on('select_card', data => {
-        this.base = data.base_pk;
-        this.query = `card_pk:${data.card_pk}`;
-        this.search_after_loading = true;
-        $(this.$refs.q).focus();
-        this.emit_input();
+        this.base = data.base_pk
+        this.query = `card_pk:${data.card_pk}`
+        this.search_after_loading = true
+        $(this.$refs.q).focus()
+        this.emit_input()
         if (!data.hide) {
           this.editor_pk = data.card_pk
         } else {
           this.editor_pk = -2
         }
         setTimeout(() => {
-          this.search();
+          this.search()
           if (!data.hide) {
             setTimeout(() => {
               this.$root.$emit('reload_editor')
             }, 5)
           }
         }, 5)
-      });
+      })
       this.$root.$on('hide_l2_card_create', () => {
         this.editor_pk = -2
-      });
+      })
       this.$root.$on('hide_dreg', () => {
         this.dreg = false
-      });
+      })
       this.$root.$on('hide_benefit', () => {
         this.benefit = false
-      });
+      })
       this.$root.$on('hide_vaccine', () => {
         this.vaccine = false
-      });
-      this.inited();
+      })
+      this.inited()
     },
     watch: {
       query() {
@@ -440,17 +440,17 @@
         return false
       },
       l2_vaccine() {
-        return this.$store.getters.modules.l2_vaccine;
+        return this.$store.getters.modules.l2_vaccine
       },
       directive_from_departments() {
-        let r = {};
+        let r = {}
         for (let dep of this.local_directive_departments) {
           r[dep.pk] = dep
         }
         return r
       },
       directive_docs_select() {
-        let o = [];
+        let o = []
         if (this.directive_department in this.directive_from_departments) {
           for (let d of this.directive_from_departments[this.directive_department].docs) {
             o.push({label: d.fio, value: d.pk})
@@ -477,13 +477,13 @@
     },
     methods: {
       async inited() {
-        await this.$store.dispatch(action_types.INC_LOADING);
-        await this.$store.dispatch(action_types.GET_DIRECTIVE_FROM);
-        await this.$store.dispatch(action_types.DEC_LOADING);
+        await this.$store.dispatch(action_types.INC_LOADING)
+        await this.$store.dispatch(action_types.GET_DIRECTIVE_FROM)
+        await this.$store.dispatch(action_types.DEC_LOADING)
 
         setTimeout(() => {
-          this.local_directive_departments = this.$store.getters.directive_from;
-          this.directive_departments_select = [];
+          this.local_directive_departments = this.$store.getters.directive_from
+          this.directive_departments_select = []
           for (let dep of this.local_directive_departments) {
             this.directive_departments_select.push({label: dep.title, value: dep.pk})
           }
@@ -493,32 +493,32 @@
             this.local_directive_departments.length > 0 && this.ofname_to_set === '-1') {
             for (let dep of this.local_directive_departments) {
               if (dep.pk === this.$store.getters.user_data.department.pk) {
-                this.directive_department = dep.pk + '';
-                this.check_base();
+                this.directive_department = dep.pk + ''
+                this.check_base()
                 return
               }
             }
             this.directive_department = this.local_directive_departments[0].pk.toString()
           }
 
-          this.check_base();
-        }, 10);
+          this.check_base()
+        }, 10)
       },
       open_anamnesis() {
-        this.$store.dispatch(action_types.INC_LOADING).then();
+        this.$store.dispatch(action_types.INC_LOADING)
         patients_point.loadAnamnesis({card_pk: this.selected_card.pk}).then(data => {
-          this.an_tab('text');
+          this.an_tab('text')
           this.anamnesis_data = data
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then();
+          this.$store.dispatch(action_types.DEC_LOADING)
           this.anamnesis = true
         })
       },
       hide_modal_anamnesis() {
         if (this.$refs.modalAnamnesis) {
-          this.$refs.modalAnamnesis.$el.style.display = 'none';
+          this.$refs.modalAnamnesis.$el.style.display = 'none'
         }
-        this.anamnesis_data = {};
+        this.anamnesis_data = {}
         this.anamnesis = false
       },
       an_tab(tab) {
@@ -552,34 +552,34 @@
         return a
       },
       hide_modal() {
-        this.showModal = false;
+        this.showModal = false
         if (this.$refs.modal)
           this.$refs.modal.$el.style.display = 'none'
       },
       update_ofname(force) {
         if (this.ofname_to_set === '-2' || (this.inLoading && !force))
-          return;
+          return
         if (this.ofname_to_set !== '-1') {
           if (this.ofname_to_set_dep !== '-1') {
-            this.directive_department = this.ofname_to_set_dep;
-            this.directive_doc = this.ofname_to_set;
-            this.$root.$emit('resync');
-            this.emit_input();
-            this.ofname_to_set = '-2';
+            this.directive_department = this.ofname_to_set_dep
+            this.directive_doc = this.ofname_to_set
+            this.$root.$emit('resync')
+            this.emit_input()
+            this.ofname_to_set = '-2'
             return
           }
-          let dps = Object.keys(this.directive_from_departments);
+          let dps = Object.keys(this.directive_from_departments)
           if (dps.length > 0 && !this.inLoading) {
-            let onts = this.ofname_to_set;
-            this.ofname_to_set = '-1';
+            let onts = this.ofname_to_set
+            this.ofname_to_set = '-1'
             for (let d of dps) {
-              let users = this.directive_from_departments[d].docs;
+              let users = this.directive_from_departments[d].docs
               for (let u of users) {
                 if (u.pk.toString() === onts.toString()) {
-                  this.directive_department = d.toString();
-                  this.directive_doc = onts;
-                  this.emit_input();
-                  this.ofname_to_set = '-2';
+                  this.directive_department = d.toString()
+                  this.directive_doc = onts
+                  this.emit_input()
+                  this.ofname_to_set = '-2'
                   return
                 }
               }
@@ -587,11 +587,11 @@
           }
           return
         }
-        let dpk = -1;
+        let dpk = -1
         if (this.directive_department !== '-1') {
           for (let d of this.directive_docs_select) {
             if (d.value === this.$store.getters.user_data.doc_pk) {
-              dpk = d.value;
+              dpk = d.value
               break
             }
           }
@@ -602,13 +602,13 @@
         this.directive_doc = dpk.toString()
       },
       select_base(pk) {
-        this.base = pk;
-        this.emit_input();
+        this.base = pk
+        this.emit_input()
         this.search()
       },
       select_card(index) {
-        this.hide_modal();
-        this.selected_card = this.founded_cards[index];
+        this.hide_modal()
+        this.selected_card = this.founded_cards[index]
         if (this.selected_card.base_pk) {
           if (this.base && this.base !== this.selected_card.base_pk) {
             this.query = ''
@@ -619,37 +619,37 @@
           if (this.selected_card.status_disp === 'need' && this.$refs.disp) {
             $(this.$refs.disp).click()
           }
-        }, 10);
-        this.emit_input();
-        this.loaded = true;
+        }, 10)
+        this.emit_input()
+        this.loaded = true
         this.$root.$emit('patient-picker:select_card')
       },
       check_base() {
         if (this.base === -1 && this.bases.length > 0) {
-          let params = new URLSearchParams(window.location.search);
-          let rmis_uid = params.get('rmis_uid');
-          let base_pk = params.get('base_pk');
-          let card_pk = params.get('card_pk');
-          let ofname = params.get('ofname');
-          let ofname_dep = params.get('ofname_dep');
+          let params = new URLSearchParams(window.location.search)
+          let rmis_uid = params.get('rmis_uid')
+          let base_pk = params.get('base_pk')
+          let card_pk = params.get('card_pk')
+          let ofname = params.get('ofname')
+          let ofname_dep = params.get('ofname_dep')
           if (rmis_uid) {
-            window.history.pushState('', '', window.location.href.split('?')[0]);
-            let has_internal = false;
+            window.history.pushState('', '', window.location.href.split('?')[0])
+            let has_internal = false
             for (let row of this.bases) {
               if (row.internal_type) {
-                this.base = row.pk;
-                this.query = rmis_uid;
-                this.search_after_loading = true;
-                has_internal = true;
+                this.base = row.pk
+                this.query = rmis_uid
+                this.search_after_loading = true
+                has_internal = true
                 break
               }
             }
             if (!has_internal) {
               for (let row of this.bases) {
                 if (row.code === 'Р') {
-                  this.base = row.pk;
-                  this.query = rmis_uid;
-                  this.search_after_loading = true;
+                  this.base = row.pk
+                  this.query = rmis_uid
+                  this.search_after_loading = true
                   break
                 }
               }
@@ -658,7 +658,7 @@
               this.base = this.bases[0].pk
             }
           } else if (base_pk) {
-            window.history.pushState('', '', window.location.href.split('?')[0]);
+            window.history.pushState('', '', window.location.href.split('?')[0])
             if (ofname) {
               this.ofname_to_set = ofname
             }
@@ -667,7 +667,7 @@
             }
             for (let row of this.bases) {
               if (row.pk === parseInt(base_pk)) {
-                this.base = row.pk;
+                this.base = row.pk
                 break
               }
             }
@@ -675,23 +675,23 @@
               this.base = this.bases[0].pk
             }
             if (card_pk) {
-              this.query = `card_pk:${card_pk}`;
+              this.query = `card_pk:${card_pk}`
               this.search_after_loading = true
             }
           } else {
             this.base = this.bases[0].pk
           }
-          $(this.$refs.q).focus();
+          $(this.$refs.q).focus()
           this.emit_input()
         }
       },
       emit_input(from_hn = false) {
-        let pk = -1;
+        let pk = -1
         if ('pk' in this.selected_card)
-          pk = this.selected_card.pk;
-        let individual_pk = -1;
+          pk = this.selected_card.pk
+        let individual_pk = -1
         if ('individual_pk' in this.selected_card)
-          individual_pk = this.selected_card.individual_pk;
+          individual_pk = this.selected_card.individual_pk
         this.$emit('input', {
           pk: pk,
           individual_pk: individual_pk,
@@ -707,27 +707,27 @@
           birthday: this.selected_card.birthday,
           age: this.selected_card.age,
           main_diagnosis: this.selected_card.main_diagnosis,
-        });
+        })
         if (pk !== -1 && !from_hn) {
           $('#fndsrc').focus()
         }
       },
       clear() {
-        this.loaded = false;
-        this.selected_card = {};
-        this.history_num = '';
-        this.founded_cards = [];
+        this.loaded = false
+        this.selected_card = {}
+        this.history_num = ''
+        this.founded_cards = []
         if (this.query.toLowerCase().includes('card_pk:')) {
           this.query = ''
         }
         this.emit_input()
       },
       open_as_l2_card() {
-        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Загрузка...'}).then();
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Загрузка...'})
         patients_point.searchL2Card({card_pk: this.selected_card.pk}).then((result) => {
-          this.clear();
+          this.clear()
           if (result.results) {
-            this.founded_cards = result.results;
+            this.founded_cards = result.results
             if (this.founded_cards.length > 1) {
               this.showModal = true
             } else if (this.founded_cards.length === 1) {
@@ -739,27 +739,27 @@
         }).catch((error) => {
           errmessage('Ошибка на сервере', error.message)
         }).finally(() => {
-          this.$store.dispatch(action_types.DISABLE_LOADING).then()
+          this.$store.dispatch(action_types.DISABLE_LOADING)
         })
       },
       search() {
         if (!this.query_valid || this.inLoading)
-          return;
-        const q = this.query;
-        this.check_base();
+          return
+        const q = this.query
+        this.check_base()
         $('input').each(function () {
           $(this).trigger('blur')
-        });
-        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then();
+        })
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'})
         patients_point.searchCard({
           type: this.base,
           query: q,
           list_all_cards: false,
           inc_rmis: this.inc_rmis || this.search_after_loading
         }).then((result) => {
-          this.clear();
+          this.clear()
           if (result.results) {
-            this.founded_cards = result.results;
+            this.founded_cards = result.results
             if (this.founded_cards.length > 1) {
               this.showModal = true
             } else if (this.founded_cards.length === 1) {
@@ -771,13 +771,13 @@
             errmessage('Ошибка на сервере')
           }
           if (this.search_after_loading) {
-            this.search_after_loading = false;
+            this.search_after_loading = false
             this.query = ''
           }
         }).catch((error) => {
           errmessage('Ошибка на сервере', error.message)
         }).finally(() => {
-          this.$store.dispatch(action_types.DISABLE_LOADING).then()
+          this.$store.dispatch(action_types.DISABLE_LOADING)
         })
       },
       add_researches(pks, full = false) {
@@ -786,7 +786,7 @@
         }
         if (full) {
           if (this.$refs.disp) {
-            $(this.$refs.disp).click();
+            $(this.$refs.disp).click()
             $(this.$refs.disp).blur()
           }
         }

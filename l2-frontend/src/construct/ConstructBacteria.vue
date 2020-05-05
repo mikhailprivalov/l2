@@ -203,7 +203,7 @@
         this.list2Elements = this.list2Elements.filter(item => item !== element)
       },
       async save_element() {
-        this.$store.dispatch(action_types.INC_LOADING).then();
+        await this.$store.dispatch(action_types.INC_LOADING)
         const {ok, message} = await bacteria_point.saveElement({'TypesObject': this.searchTypesObject ,'title': this.editElementTitle, 'fsli': this.editElementFsli,
           'pk': this.editElementPk, 'hide': this.editElementHide});
         if (ok) {
@@ -212,8 +212,8 @@
           errmessage('Ошибка', message)
         }
         this.onClearContentEdit();
-        this.load_culture_groups("Все", "1")
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        await this.load_culture_groups("Все", "1")
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       onClearContentEdit() {
         this.editElementTitle = '';
@@ -224,7 +224,7 @@
 
       },
       async addNewGroup() {
-        this.$store.dispatch(action_types.INC_LOADING).then();
+        await this.$store.dispatch(action_types.INC_LOADING)
         const {ok, message} = await bacteria_point.addNewGroup({'TypesObject': this.searchTypesObject, 'typeGroups': this.searchTypesGroups,
             'newgroup': this.newgroup});
         if (ok) {
@@ -233,7 +233,7 @@
         } else {
           errmessage('Ошибка', message)
         }
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async save_groups() {
         let pksElements2 = [];
@@ -244,7 +244,7 @@
         for (let i of this.list1Elements) {
           pksElements1.push(i.pk)
         }
-        this.$store.dispatch(action_types.INC_LOADING).then();
+        await this.$store.dispatch(action_types.INC_LOADING)
         const {ok, message} = await bacteria_point.saveGroup({'TypesObject': this.searchTypesObject, 'typeGroups': this.searchTypesGroups,
           'obj': [{'group':this.selected1.title, 'elements': pksElements1}, {'group': this.selected2.title, 'elements': pksElements2}],
            'set': {'group': this.selected2.title, 'elements': pksElements2}});
@@ -259,7 +259,7 @@
         pksElements1 = [];
         pksElements2 = [];
 
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        this.$store.dispatch(action_types.DEC_LOADING)
       },
         filteredGroupObject() {
          this.load_culture_groups("Все", "1")

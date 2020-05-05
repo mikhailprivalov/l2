@@ -58,17 +58,16 @@
       }
     },
     mounted() {
-      let vm = this
-      $(document).ready(function () {
-        vm.resize()
-        $(window).resize(function () {
-          vm.resize()
+      $(document).ready(() => {
+        this.resize()
+        $(window).resize(() => {
+          this.resize()
         })
         Split(['#cont_left', '#cont_right'], {
           gutterSize: 5,
           cursor: 'col-resize',
           minSize: 200,
-          onDrag: vm.resize
+          onDrag: this.resize
         })
 
         Split(['#left_top', '#left_bottom'], {
@@ -76,7 +75,7 @@
           gutterSize: 5,
           cursor: 'row-resize',
           minSize: 200,
-          onDrag: vm.resize
+          onDrag: this.resize
         })
 
         Split(['#right_top', '#right_bottom'], {
@@ -84,7 +83,7 @@
           gutterSize: 5,
           cursor: 'row-resize',
           minSize: 200,
-          onDrag: vm.resize
+          onDrag: this.resize
         })
       })
     },
@@ -97,16 +96,15 @@
         if (this.inLoad || pks.length === 0)
           return
         this.inLoad = true
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         researches_point.getResearchesParams({pks}).then(data => {
           for(let r of data.researches) {
-            vm.params_directory[r.pk] = r
+            this.params_directory[r.pk] = r
           }
-          vm.$root.$emit('params-load')
+          this.$root.$emit('params-load')
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-          vm.inLoad = false
+          this.$store.dispatch(action_types.DEC_LOADING)
+          this.inLoad = false
         })
       }
     },

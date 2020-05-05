@@ -149,14 +149,14 @@
       load_data(select_after) {
         this.loaded = false
         this.clear();
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         researches_point.getFastTemplates({pk: this.research_pk, all: true}).then(({data}) => {
           this.rows = data
           if (select_after) {
             this.select_template(select_after);
           }
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
           this.loaded = true
         })
       },
@@ -164,27 +164,27 @@
         if (pk === this.selected_template)
           return
         this.clear();
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         researches_point.getTemplateData({pk}).then(({data}) => {
           this.template_data = data
           this.selected_template = pk
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
       copy_template(pk) {
         this.clear();
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         researches_point.getTemplateData({pk}).then(({data}) => {
           this.template_data = {...data, title: '', hide: false, readonly: false}
           this.selected_template = -1
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
       save() {
         this.loaded = false
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         researches_point.saveFastTemplate({
           pk: this.selected_template,
           data: this.template_data,
@@ -192,7 +192,7 @@
         }).then(({pk}) => {
           this.load_data(pk)
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
           this.loaded = true
         })
       }

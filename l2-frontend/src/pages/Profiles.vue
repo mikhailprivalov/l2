@@ -227,31 +227,31 @@
         this.user.password = str_rand()
       },
       async load_users(prev_clr=false) {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        await this.$store.dispatch(action_types.INC_LOADING)
         if (!prev_clr) {
           this.departments = [];
         }
         const {departments} = await users_point.loadUsers()
         this.departments = departments
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async open(pk, dep = null) {
         if ((pk === this.open_pk && pk !== -1) || (this.open_pk === -1 && pk === -1 && dep === this.user.department)) {
           return
         }
         this.close()
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        await this.$store.dispatch(action_types.INC_LOADING)
         const {user} = await users_point.loadUser({pk})
         this.user = user
         if (pk === -1) {
           this.user.department = dep
           this.gen_passwd()
         }
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        await this.$store.dispatch(action_types.DEC_LOADING)
         this.open_pk = pk
       },
       async save() {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        await this.$store.dispatch(action_types.INC_LOADING)
         const {ok, npk, message} = await users_point.saveUser({pk: this.open_pk, user_data: this.user})
         if (ok) {
           okmessage('Пользователь сохранён', `${this.user.fio} – ${this.user.username}`)
@@ -260,7 +260,7 @@
         } else {
           errmessage('Ошибка', message)
         }
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async close() {
         this.open_pk = -2

@@ -789,28 +789,22 @@
             tdm() {
                 return moment().add(1, 'day').format('YYYY-MM-DD')
             },
-            load_dreg_rows() {
-                (async () => {
-                    this.dreg_rows_loading = true;
-                    this.dreg_rows = (await patients_point.loadDreg(this.data.patient, 'card_pk')).rows.filter(r => !r.date_end);
-                    this.data.patient.has_dreg = this.dreg_rows.length > 0;
-                    this.dreg_rows_loading = false
-                })().then()
+            async load_dreg_rows() {
+                this.dreg_rows_loading = true;
+                this.dreg_rows = (await patients_point.loadDreg(this.data.patient, 'card_pk')).rows.filter(r => !r.date_end);
+                this.data.patient.has_dreg = this.dreg_rows.length > 0;
+                this.dreg_rows_loading = false
             },
-            load_benefit_rows() {
-                (async () => {
-                    this.benefit_rows_loading = true;
-                    this.benefit_rows = (await patients_point.loadBenefit(this.data.patient, 'card_pk')).rows.filter(r => !r.date_end);
-                    this.data.patient.has_benefit = this.benefit_rows.length > 0;
-                    this.benefit_rows_loading = false
-                })().then()
+            async load_benefit_rows() {
+                this.benefit_rows_loading = true;
+                this.benefit_rows = (await patients_point.loadBenefit(this.data.patient, 'card_pk')).rows.filter(r => !r.date_end);
+                this.data.patient.has_benefit = this.benefit_rows.length > 0;
+                this.benefit_rows_loading = false
             },
-            load_anamnesis() {
-                (async () => {
-                    this.anamnesis_loading = true;
-                    this.anamnesis_data = await patients_point.loadAnamnesis(this.data.patient, 'card_pk');
-                    this.anamnesis_loading = false
-                })().then()
+            async load_anamnesis() {
+                this.anamnesis_loading = true;
+                this.anamnesis_data = await patients_point.loadAnamnesis(this.data.patient, 'card_pk');
+                this.anamnesis_loading = false
             },
             change_mkb(row) {
                 return field => {
@@ -828,12 +822,12 @@
                     this.hide_results();
                     return
                 }
-                this.$store.dispatch(action_types.INC_LOADING).then();
+                this.$store.dispatch(action_types.INC_LOADING)
                 this.research_history = [];
                 directions_point.paraclinicResultPatientHistory({pk}).then(({data}) => {
                     this.research_history = data
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then();
+                    this.$store.dispatch(action_types.DEC_LOADING)
                     this.research_open_history = pk
                 })
             },
@@ -873,29 +867,29 @@
                 this.anamnesis_edit = false
             },
             save_anamnesis() {
-                this.$store.dispatch(action_types.INC_LOADING).then();
-                patients_point.saveAnamnesis(this.data.patient, 'card_pk', {text: this.anamnesis_data.text}).then().finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then();
+                this.$store.dispatch(action_types.INC_LOADING)
+                patients_point.saveAnamnesis(this.data.patient, 'card_pk', {text: this.anamnesis_data.text}).finally(() => {
+                    this.$store.dispatch(action_types.DEC_LOADING)
                     this.new_anamnesis = this.anamnesis_data.text;
                     this.hide_modal_anamnesis_edit()
                 })
             },
             edit_anamnesis() {
-                this.$store.dispatch(action_types.INC_LOADING).then();
+                this.$store.dispatch(action_types.INC_LOADING)
                 patients_point.loadAnamnesis(this.data.patient, 'card_pk').then(data => {
                     this.anamnesis_data = data
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then();
+                    this.$store.dispatch(action_types.DEC_LOADING)
                     this.anamnesis_edit = true
                 })
             },
             load_history() {
                 this.directions_history = [];
-                this.$store.dispatch(action_types.INC_LOADING).then();
+                this.$store.dispatch(action_types.INC_LOADING)
                 directions_point.paraclinicResultUserHistory(this, 'date').then(data => {
                     this.directions_history = data.directions
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.$store.dispatch(action_types.DEC_LOADING)
                 })
             },
             reload_if_need() {
@@ -912,7 +906,7 @@
                     return
                 }
                 this.clear(true);
-                this.$store.dispatch(action_types.INC_LOADING).then();
+                this.$store.dispatch(action_types.INC_LOADING)
                 directions_point.getParaclinicForm({pk: this.pk_c}).then(data => {
                     if (data.ok) {
                         this.tnd = moment().add(1, 'day').format('YYYY-MM-DD');
@@ -931,7 +925,7 @@
                         errmessage(data.message)
                     }
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.$store.dispatch(action_types.DEC_LOADING)
                 })
             },
             hide_modal_create_directions() {
@@ -969,7 +963,7 @@
             save(iss) {
                 this.hide_results();
                 this.inserted = false;
-                this.$store.dispatch(action_types.INC_LOADING).then();
+                this.$store.dispatch(action_types.INC_LOADING)
                 directions_point.paraclinicResultSave({
                     data: {
                         ...iss,
@@ -989,7 +983,7 @@
                         errmessage(data.message)
                     }
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then();
+                    this.$store.dispatch(action_types.DEC_LOADING)
                     this.inserted = true;
                     this.load_location()
                 })
@@ -997,7 +991,7 @@
             save_and_confirm(iss) {
                 this.hide_results();
                 this.inserted = false;
-                this.$store.dispatch(action_types.INC_LOADING).then();
+                this.$store.dispatch(action_types.INC_LOADING)
                 directions_point.paraclinicResultSave({
                     data: {
                         ...iss,
@@ -1020,7 +1014,7 @@
                         errmessage(data.message)
                     }
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then();
+                    this.$store.dispatch(action_types.DEC_LOADING)
                     this.inserted = true;
                     this.load_location()
                 })
@@ -1028,7 +1022,7 @@
             confirm(iss) {
                 this.hide_results();
                 this.inserted = false;
-                this.$store.dispatch(action_types.INC_LOADING).then();
+                this.$store.dispatch(action_types.INC_LOADING)
                 directions_point.paraclinicResultConfirm({iss_pk: iss.pk}).then(data => {
                     if (data.ok) {
                         okmessage('Подтверждено');
@@ -1042,7 +1036,7 @@
                         errmessage(data.message)
                     }
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then();
+                    this.$store.dispatch(action_types.DEC_LOADING)
                     this.inserted = true;
                     this.load_location()
                 })
@@ -1096,20 +1090,20 @@
                 this.$root.$emit('print:results', [pk])
             },
             copy_results(row, pk) {
-                this.$store.dispatch(action_types.INC_LOADING).then();
+                this.$store.dispatch(action_types.INC_LOADING)
                 directions_point.paraclinicDataByFields({pk}).then(({data}) => {
                     this.hide_results();
                     this.replace_fields_values(row, data)
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.$store.dispatch(action_types.DEC_LOADING)
                 })
             },
             load_template(row, pk) {
-                this.$store.dispatch(action_types.INC_LOADING).then();
+                this.$store.dispatch(action_types.INC_LOADING)
                 researches_point.getTemplateData({pk: parseInt(pk)}).then(({data: {fields: data, title}}) => {
                     this.template_fields_values(row, data, title)
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.$store.dispatch(action_types.DEC_LOADING)
                 })
             },
             async open_slot(row) {

@@ -35,7 +35,6 @@
       this.$root.$on('validate-datepickers', this.validate)
     },
     mounted() {
-      let vm = this
       $(this.$el).datepicker({
         format: this.datef.toLowerCase(),
         todayBtn: 'linked',
@@ -43,10 +42,10 @@
         autoclose: true,
         todayHighlight: true
       }).on('changeDate', () => {
-        if(!$(vm.$refs.from).is(':focus'))
-          vm.$refs.from.dispatchEvent(new Event('change'))
-        if(!$(vm.$refs.to).is(':focus'))
-          vm.$refs.to.dispatchEvent(new Event('change'))
+        if(!$(this.$refs.from).is(':focus'))
+          this.$refs.from.dispatchEvent(new Event('change'))
+        if(!$(this.$refs.to).is(':focus'))
+          this.$refs.to.dispatchEvent(new Event('change'))
       })
     },
     watch: {

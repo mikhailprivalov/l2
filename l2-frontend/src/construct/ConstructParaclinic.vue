@@ -64,12 +64,11 @@
     },
     methods: {
       load_researches() {
-        let vm = this;
-        vm.$store.dispatch(action_types.INC_LOADING).then();
+        this.$store.dispatch(action_types.INC_LOADING)
         researches_point.getResearchesByDepartment(this, 'department').then(data => {
-          vm.researches_list = data.researches
+          this.researches_list = data.researches
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
       open_editor(pk) {
