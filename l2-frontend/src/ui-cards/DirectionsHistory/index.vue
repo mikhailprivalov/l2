@@ -121,7 +121,7 @@
             <li v-for="f in forms" v-if="patient_pk !== -1 && (!f.need_dirs || checked.length > 0)">
               <a :href="f.url" target="_blank">{{f.title}}</a>
             </li>
-            <li v-for="(value, k) in menuItems">
+            <li v-for="value in menuItems">
               <a href="#"
                  v-if="(!value.onlyNotForIssledovaniye || !iss_pk)
                   && (!value.onlyForTypes || value.onlyForTypes.includes(active_type))"

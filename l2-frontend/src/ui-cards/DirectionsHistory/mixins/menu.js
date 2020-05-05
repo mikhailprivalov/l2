@@ -1,11 +1,11 @@
-const menuItems = Object.freeze({
-  directions_list: {
+const menuItems = [
+  {
     title: 'Создать список назначений',
     handler() {
       this.$root.$emit('print:directions_list', this.checked)
     },
   },
-  copy_researches: {
+  {
     title: 'Скопировать исследования для назначения',
     onlyNotForIssledovaniye: true,
     handler() {
@@ -18,25 +18,25 @@ const menuItems = Object.freeze({
       }
     },
   },
-  print_results: {
+  {
     title: 'Печать результатов',
     handler() {
       this.$root.$emit('print:results', this.checked)
     },
   },
-  print_barcodes: {
+  {
     title: 'Печать штрих-кодов',
     handler() {
       this.$root.$emit('print:barcodes', this.checked)
     },
   },
-  print_directions: {
+  {
     title: 'Печать направлений',
     handler() {
       this.$root.$emit('print:directions', this.checked)
     },
   },
-  change_parent: {
+  {
     title: 'Назначить главное направление',
     onlyForTypes: [3],
     handler() {
@@ -51,7 +51,7 @@ const menuItems = Object.freeze({
       }
     },
   },
-})
+];
 
 export default {
   data() {
