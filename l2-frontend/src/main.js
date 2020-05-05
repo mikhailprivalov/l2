@@ -59,6 +59,7 @@ new Vue({
     'Profiles': () => import('./pages/Profiles'),
     'EmployeeJobs': () => import('./pages/EmployeeJobs'),
     'Stationar': () => import('./pages/Stationar'),
+    'ConstructBacteria': () => import('./construct/ConstructBacteria'),
     RmisLocation,
     // loading,
   },

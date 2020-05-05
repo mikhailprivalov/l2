@@ -78,9 +78,18 @@
               :class="['status-' + row.status]">
             <strong>{{row.status}}<span v-if="row.maybe_onco">*О</span></strong></td>
           <td class="button-td">
-            <div class="button-td-inner" :class="{has_pacs: !!row.pacs}">
+            <div class="button-td-inner" :class="[{has_pacs_stationar: !!row.pacs && !!row.parent.parent_is_hosp || !!row.pacs && !!row.parent.parent_is_doc_refferal},
+                 {has_pacs: (!!row.pacs && !row.parent.parent_is_hosp) || (!row.pacs && !!row.parent.parent_is_hosp) || !row.pacs && !!row.parent.parent_is_doc_refferal}]">
               <a :href="row.pacs" title="Снимок" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.pacs">
                 <i class="fa fa-camera"/>
+              </a>
+              <a :href="`/mainmenu/stationar#{%22pk%22:${row.parent.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
+                 :title="'Принадлежит и/б: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.parent.parent_is_hosp">
+                <i class="fa fa-bed"/>
+              </a>
+              <a @click="row.parent.is_confirm ? show_results(row.parent) : null" :title="'Создано в амбулаторном приеме: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]"
+                 v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.parent.parent_is_doc_refferal" :class="{isDisabled: !row.parent.is_confirm}">
+                 <i class="fa fa-user-md"/>
               </a>
               <button class="btn btn-blue-nb" title="Штрих-код браслета" v-tippy
                       @click="print_hosp(row.pk)" v-if="row.has_hosp">
@@ -99,10 +108,11 @@
       </table>
     </div>
     <div class="bottom-picker" v-if="checked.length > 0 || !iss_pk">
-      <div style="padding-left: 5px;color: #fff"><span v-if="checked.length > 0">Отмечено: {{checked.length}}</span>
+      <div style="padding-left: 5px;color: #fff">
+        <span v-if="checked.length > 0">Отмечено: {{checked.length}}</span>
       </div>
       <div class="bottom-inner">
-        <div class="dropup" style="display: inline-block;max-width: 350px;width: 100%">
+        <div class="dropup" style="display: inline-block;max-width: 350px;width: 100%" v-if="checked.length > 0">
           <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
                   style="text-align: right!important;border-radius: 0;width: 100%">
             Действие с отмеченными <span class="caret"></span>
@@ -111,28 +121,36 @@
             <li v-for="f in forms" v-if="patient_pk !== -1 && (!f.need_dirs || checked.length > 0)">
               <a :href="f.url" target="_blank">{{f.title}}</a>
             </li>
-            <li><a href="#" @click.prevent="selected_do('directions_list')">Создать список назначений</a></li>
-            <li v-if="!iss_pk">
-              <a href="#" @click.prevent="selected_do('copy_researches')">Скопировать исследования для назначения</a>
+            <li v-for="value in menuItems">
+              <a href="#"
+                 v-if="(!value.onlyNotForIssledovaniye || !iss_pk)
+                  && (!value.onlyForTypes || value.onlyForTypes.includes(active_type))"
+                 @click.prevent="() => callAsThis(value.handler)">
+                {{value.title}}
+              </a>
             </li>
-            <li><a href="#" @click.prevent="selected_do('print_results')">Печать результатов</a></li>
-            <li><a href="#" @click.prevent="selected_do('print_barcodes')">Печать штрих-кодов</a></li>
-            <li><a href="#" @click.prevent="selected_do('print_directions')">Печать направлений</a></li>
           </ul>
         </div>
       </div>
     </div>
+    <directions-change-parent
+      v-if="change_parent_open"
+      :card_pk="patient_pk"
+      :direction_checked="checked"
+    />
   </div>
 </template>
 
 <script>
-  import SelectPickerM from '../fields/SelectPickerM'
-  import DateRange from './DateRange'
-  import directions_point from '../api/directions-point'
-  import * as action_types from '../store/action-types'
+  import SelectPickerM from '../../fields/SelectPickerM'
+  import DateRange from '../DateRange'
+  import directions_point from '../../api/directions-point'
+  import * as action_types from '../../store/action-types'
   import moment from 'moment'
-  import {forDirs} from '../forms';
+  import {forDirs} from '../../forms';
   import {mapGetters} from 'vuex'
+  import DirectionsChangeParent from '../../modals/DirectionsChangeParent'
+  import menuMixin from './mixins/menu'
 
   function truncate(s, n, useWordBoundary) {
     if (s.length <= n) {
@@ -145,7 +163,8 @@
   }
 
   export default {
-    components: {SelectPickerM, DateRange},
+    mixins: [menuMixin],
+    components: {DirectionsChangeParent, SelectPickerM, DateRange},
     name: 'directions-history',
     props: {
       patient_pk: {
@@ -192,7 +211,8 @@
           '0': 'Направление только выписано',
           '1': 'Материал в лаборатории',
           '2': 'Результаты подтверждены',
-        }
+        },
+        change_parent_open: false,
       }
     },
     computed: {
@@ -222,8 +242,12 @@
       this.is_created = true
       this.load_history()
       this.$root.$on('researches-picker:directions_created' + this.kk, this.load_history)
+      this.$root.$on('hide_pe', () => this.change_parent_hide());
     },
     methods: {
+      callAsThis(handler) {
+        handler.call(this)
+      },
       update_so(researches) {
         const s = [].concat.apply([], Object.values(researches)).map(r => ({
           value: String(r.pk),
@@ -251,54 +275,24 @@
       print_hosp(pk) {
         this.$root.$emit('print:hosp', [pk])
       },
-      cancel_direction(pk) {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.cancelDirection({pk}).then((data) => {
-          for (let dir of vm.directions) {
-            if (dir.pk === pk) {
-              dir.cancel = data.cancel
-              if (dir.status === -1 && !dir.cancel) {
-                dir.status = 0
-              } else if (dir.status === 0 && dir.cancel) {
-                dir.status = -1
-              }
-              break
-            }
-          }
-        }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-        })
+      async cancel_direction(pk) {
+        await this.$store.dispatch(action_types.INC_LOADING)
 
-      },
-      selected_do(type) {
-        switch (type) {
-          case 'resend_results_rmis':
-            break
-          case 'resend_directions_rmis':
-            break
-          case 'copy_researches':
-            for (let dir of this.directions) {
-              if (this.in_checked(dir.pk)) {
-                for (let pk of dir.researches_pks) {
-                  this.$root.$emit('researches-picker:add_research', pk)
-                }
-              }
+        const data = await directions_point.cancelDirection({pk});
+
+        for (let dir of this.directions) {
+          if (dir.pk === pk) {
+            dir.cancel = data.cancel
+            if (dir.status === -1 && !dir.cancel) {
+              dir.status = 0
+            } else if (dir.status === 0 && dir.cancel) {
+              dir.status = -1
             }
             break
-          case 'print_results':
-            this.$root.$emit('print:results', this.checked)
-            break
-          case 'print_barcodes':
-            this.$root.$emit('print:barcodes', this.checked)
-            break
-          case 'directions_list':
-            this.$root.$emit('print:directions_list', this.checked)
-            break
-          default:
-            this.$root.$emit('print:directions', this.checked)
-            break
+          }
         }
+
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       select_type(pk) {
         this.active_type = pk
@@ -335,7 +329,11 @@
         } else if (!this.in_checked(pk)) {
           this.checked.push(pk)
         }
-      }
+      },
+      change_parent_hide() {
+        this.change_parent_open = false
+      },
+
     },
     watch: {
       active_type() {
@@ -377,6 +375,10 @@
 </script>
 
 <style scoped lang="scss">
+  .isDisabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
 
   .top-picker, .bottom-picker {
     height: 34px;
@@ -560,6 +562,17 @@
       &:not(.has_pacs) {
         .btn {
           flex: 0 0 50%;
+        }
+      }
+      &.has_pacs_stationar {
+        .btn {
+          flex: 0 0 32%;
+        }
+        .btn:nth-child(1) {
+          flex: 0 0 20%;
+        }
+        .btn:nth-child(2) {
+          flex: 0 0 16%;
         }
       }
 

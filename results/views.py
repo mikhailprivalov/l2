@@ -32,6 +32,7 @@ from laboratory.decorators import group_required, logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
+from refprocessor.common import RANGE_NOT_IN, RANGE_IN
 from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
 from api.stationar.stationar_func import hosp_get_hosp_direction
@@ -697,8 +698,7 @@ def result_print(request):
             data = []
             tmp = [Paragraph('<font face="OpenSansBold" size="8">Исследование</font>', styleSheet["BodyText"]),
                    Paragraph(
-                       '<font face="OpenSansBold" size="8">Результат</font>' + (
-                           '' if no_units_and_ref else '<br/><font face="OpenSans" size="8">(# - не норма)</font>'),
+                       '<font face="OpenSansBold" size="8">Результат</font>',
                        styleSheet["BodyText"])]
             if not no_units_and_ref:
                 if direction.client.individual.sex.lower() == "м":
@@ -714,7 +714,6 @@ def result_print(request):
                               styleSheet["BodyText"]))
 
             tmp.append(Paragraph('<font face="OpenSansBold" size="8">Исполнитель</font>', styleSheet["BodyText"]))
-            # tmp.append(Paragraph('<font face="OpenSans" size="8">Дата заб.</font>', styleSheet["BodyText"]))
             tmp.append(Paragraph('<font face="OpenSansBold" size="8">Дата</font>', styleSheet["BodyText"]))
             data.append(tmp)
             if no_units_and_ref:
@@ -768,11 +767,12 @@ def result_print(request):
                         tmp = [Paragraph('<font face="OpenSans" size="8">' + iss.research.title + "</font>",
                                          styleSheet["BodyText"])]
                         norm = "none"
+                        sign = RANGE_IN
                         if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                             r = Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).order_by("-pk")[0]
                             ref = r.get_ref()
                             if show_norm:
-                                norm = r.get_is_norm(recalc=True)
+                                norm, sign = r.get_is_norm(recalc=True)
                             result = result_normal(r.value)
                             f_units = r.get_units()
                         else:
@@ -803,7 +803,7 @@ def result_print(request):
                                     Paragraph('<font face="CalibriBold" size="8">' + result + "</font>", result_style))
                             else:
                                 tmp.append(
-                                    Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>",
+                                    Paragraph('<font face="CalibriBold" size="8">' + result + RANGE_NOT_IN.get(sign, "") + "</font>",
                                               result_style))
                             if not no_units_and_ref:
                                 tmp.append(
@@ -918,27 +918,24 @@ def result_print(request):
                                                      styleSheet["BodyText"]))
 
                                 norm = "none"
+                                sign = RANGE_IN
                                 # if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists() and not f.print_title:
                                     r = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0]
                                     if show_norm:
-                                        norm = r.get_is_norm(recalc=True)
+                                        norm, sign = r.get_is_norm(recalc=True)
                                     result = result_normal(r.value)
                                     ref = r.get_ref()
                                     f_units = r.get_units()
-                                # начало Касьяненко С.Н. Вывести жирным только название фракции. Если свойство print_title true
                                 elif f.print_title:
                                     tmp[0] = (Paragraph('<font face="CalibriBold" size="10">{}</font>'.format(f.title),
                                                         styleSheet["BodyText"]))
                                     data.append(tmp)
                                     continue
-                                # начало Касьяненко С.Н.
                                 else:
                                     continue
                                 if not iss.doc_confirmation and iss.deferred:
                                     result = "отложен"
-                                # elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
-                                #    result += "<br/>" + str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
                                 if norm in ["none", "normal"]:
                                     tmp.append(
                                         Paragraph('<font face="ChampB" size="8">' + result + "</font>", result_style))
@@ -948,7 +945,7 @@ def result_print(request):
                                                   result_style))
                                 else:
                                     tmp.append(
-                                        Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>",
+                                        Paragraph('<font face="CalibriBold" size="8">' + result + RANGE_NOT_IN.get(sign, "") + "</font>",
                                                   result_style))
                                 if not no_units_and_ref:
                                     tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",

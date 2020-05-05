@@ -16,6 +16,7 @@ import users.models as umodels
 import cases.models as cases
 from api.models import Application
 from laboratory.utils import strdate, localtime
+from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
 import contracts.models as contracts
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
@@ -1116,6 +1117,7 @@ class Result(models.Model):
     value = models.TextField(null=True, blank=True, help_text='Значение')
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
     is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")
+    ref_sign = models.CharField(max_length=3, default="", null=True, blank=True, help_text="Направление отклонения от нормы")
     ref_m = JSONField(default=None, blank=True, null=True, help_text="Референсы М")
     ref_f = JSONField(default=None, blank=True, null=True, help_text="Референсы Ж")
     units = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Единицы измерения")
@@ -1166,20 +1168,46 @@ class Result(models.Model):
         else:
             return json.dumps(ref)
 
+    def save(self, *args, **kw):
+        norm, ref_sign = self.calc_normal(True)
+        self.is_normal = norm
+        self.ref_sign = ref_sign
+        super(Result, self).save(*args, **kw)
+
     def get_is_norm(self, recalc=False):
         if self.is_normal == "" or recalc:
-            norm = self.calc_normal()
+            norm, ref_sign = self.calc_normal()
+            if self.is_normal != norm or self.ref_sign != ref_sign:
+                self.is_normal = norm
+                self.ref_sign = ref_sign
+                self.save(update_fields=['is_normal', 'ref_sign'])
+        else:
+            norm = self.is_normal
+            ref_sign = self.ref_sign
+        return norm, ref_sign
+
+    def calc_normal(self, fromsave=False, only_ref=False, raw_ref=True):
+        value = self.value
+        ref = self.get_ref(fromsave=fromsave)
+        age = self.issledovaniye.napravleniye.client.individual.age(iss=self.issledovaniye, days_monthes_years=True)
+
+        ref_processor = RefProcessor(ref, age)
+
+        if only_ref:
+            return ref_processor.get_active_ref(raw_ref=raw_ref)
+
+        return ref_processor.calc(value)
+
+    def get_is_norm_old(self, recalc=False):
+        if self.is_normal == "" or recalc:
+            norm = self.calc_normal_old()
             if self.is_normal != norm:
                 self.save()
         else:
             norm = self.is_normal
         return norm
 
-    def save(self, *args, **kw):
-        self.is_normal = self.calc_normal(True)
-        super(Result, self).save(*args, **kw)
-
-    def calc_normal(self, fromsave=False, only_ref=False, raw_ref=True):
+    def calc_normal_old(self, fromsave=False, only_ref=False, raw_ref=True):
         import operator
         from functools import reduce
         trues = {True: ["полож.", "положительно", "да", "положительный", "обнаружено"],
