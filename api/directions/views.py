@@ -228,13 +228,12 @@ def get_data_parent(parent_id):
 def hosp_set_parent(request):
     # SQL-query
     date_end = utils.current_time()
-    date_start = (date_end + relativedelta(days=-30))
+    date_start = (date_end + relativedelta(days=-180))
     date_start = datetime.combine(date_start, dtime.min)
     date_end = datetime.combine(date_end, dtime.max)
     request_data = json.loads(request.body)
-    pk = request_data.get("patient", -1)
+    patient_card = request_data.get("patient", -1)
     user_creater = -1
-    patient_card = pk
     iss_pk = None
     for_slave_hosp = False
 

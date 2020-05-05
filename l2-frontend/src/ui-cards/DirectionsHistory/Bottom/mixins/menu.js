@@ -47,7 +47,7 @@ const menuItems = [
         })
       }
       else {
-        this.change_parent_open = true
+        this.isOpenChangeParent = true
       }
     },
   },
