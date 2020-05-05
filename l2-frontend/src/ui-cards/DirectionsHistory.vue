@@ -129,7 +129,7 @@
             <li><a href="#" @click.prevent="selected_do('print_results')">Печать результатов</a></li>
             <li><a href="#" @click.prevent="selected_do('print_barcodes')">Печать штрих-кодов</a></li>
             <li><a href="#" @click.prevent="selected_do('print_directions')">Печать направлений</a></li>
-            <li v-if="active_type === 3"><a href="#" @click="change_parent_edit">Назначить главное направление</a></li>
+            <li v-if="active_type === 3"><a href="#" @click="selected_do('change_parent')">Назначить главное направление</a></li>
           </ul>
         </div>
       </div>
@@ -293,6 +293,9 @@
       },
       selected_do(type) {
         switch (type) {
+          case 'change_parent':
+            this.change_parent_edit()
+            break
           case 'resend_results_rmis':
             break
           case 'resend_directions_rmis':
