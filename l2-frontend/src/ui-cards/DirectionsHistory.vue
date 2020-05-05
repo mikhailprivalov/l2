@@ -137,7 +137,7 @@
     <directions-change-parent
       v-if="change_parent_open"
       :card_pk="patient_pk"
-      :direction_checked="direction_checked"
+      :direction_checked="checked"
     />
   </div>
 </template>
@@ -212,7 +212,6 @@
           '2': 'Результаты подтверждены',
         },
         change_parent_open: false,
-        direction_checked: []
       }
     },
     computed: {
@@ -394,11 +393,9 @@
       directions: {
         handler() {
           this.checked = []
-          this.direction_checked = []
           for (let row of this.directions) {
             if (row.checked) {
               this.checked.push(row.pk)
-              this.direction_checked.push(row)
             }
           }
         },
