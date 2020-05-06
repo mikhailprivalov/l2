@@ -118,24 +118,23 @@
             },
             load() {
                 !this.noScroll && $('.scrolldown').scrollDown()
-                let vm = this
                 directions_point.lastResult(this, ['individual', 'research', 'parentIss']).then(data => {
-                    vm.in_load = false
-                    vm.ok = data.ok
+                    this.in_load = false
+                    this.ok = data.ok
                     if (data.ok) {
-                        vm.type = data.type
-                        vm.date = data.data.datetime
+                        this.type = data.type
+                        this.date = data.data.datetime
                         if (data.has_last_result) {
-                            vm.last_result = data.last_result
-                            vm.has_last_result = data.has_last_result
+                            this.last_result = data.last_result
+                            this.has_last_result = data.has_last_result
                         }
-                        vm.is_paraclinic = data.data.is_desc
+                        this.is_paraclinic = data.data.is_desc
                         let m = moment.unix(data.data.ts)
                         let n = moment()
-                        vm.ms = n.diff(m)
-                        vm.days = n.diff(m, 'days')
-                        vm.days_str = moment.duration(vm.ms).locale('ru').humanize()
-                        vm.direction = data.data.direction
+                        this.ms = n.diff(m)
+                        this.days = n.diff(m, 'days')
+                        this.days_str = moment.duration(this.ms).locale('ru').humanize()
+                        this.direction = data.data.direction
                     }
                     !this.noScroll && setTimeout(() => {
                         $('.scrolldown').scrollDown()

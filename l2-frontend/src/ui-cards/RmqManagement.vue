@@ -67,36 +67,33 @@
       loadModelCountMax() {
         if (this.model === '')
           return
-        let vm = this
-        vm.from = 0
-        vm.to = 0
-        vm.csended = 0
-        vm.oksend = false
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        $.ajax({url: '/mainmenu/rmq/count', data: {model: vm.model}}).done(data => {
-          vm.to = data.count
+        this.from = 0
+        this.to = 0
+        this.csended = 0
+        this.oksend = false
+        this.$store.dispatch(action_types.INC_LOADING)
+        $.ajax({url: '/mainmenu/rmq/count', data: {model: this.model}}).done(data => {
+          this.to = data.count
         }).always(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
       do_send() {
         if (this.model === '' || this.insend)
           return
-        let vm = this
-        vm.insend = true
-        vm.oksend = false
-        vm.csended = 0
-        vm.send()
+        this.insend = true
+        this.oksend = false
+        this.csended = 0
+        this.send()
       },
       send() {
-        let vm = this
-        $.ajax({url: '/mainmenu/rmq/send', data: {model: vm.model, pk: vm.csended + vm.from}}).always(() => {
-          if (vm.csended + vm.from >= vm.to) {
-            vm.insend = false
-            vm.oksend = true
+        $.ajax({url: '/mainmenu/rmq/send', data: {model: this.model, pk: this.csended + this.from}}).always(() => {
+          if (this.csended + this.from >= this.to) {
+            this.insend = false
+            this.oksend = true
           } else {
-            vm.csended++
-            vm.send()
+            this.csended++
+            this.send()
           }
         })
       }

@@ -115,41 +115,38 @@
       }
     },
     created() {
-      let vm = this
-
       this.$root.$on('show_results', (pk) => {
-        vm.show_results_pk = pk
+        this.show_results_pk = pk
       })
 
       this.$root.$on('hide_results', () => {
-        vm.show_results_pk = -1
+        this.show_results_pk = -1
       })
 
       this.$root.$on('hide_rmis_directions', () => {
-        vm.show_rmis_directions = false
-        vm.show_rmis_send_directions = false
+        this.show_rmis_directions = false
+        this.show_rmis_send_directions = false
       })
 
       this.$root.$on('update_diagnos', (diagnos) => {
-        vm.diagnos = diagnos
+        this.diagnos = diagnos
       })
 
       this.$root.$on('update_fin', (fin) => {
-        vm.fin = fin
+        this.fin = fin
       })
     },
     mounted() {
-      let vm = this
-      $(document).ready(function () {
-        vm.resize()
-        $(window).resize(function () {
-          vm.resize()
+      $(document).ready(() => {
+        this.resize()
+        $(window).resize(() => {
+          this.resize()
         })
         Split(['#cont_left', '#cont_right'], {
           gutterSize: 5,
           cursor: 'col-resize',
           minSize: 200,
-          onDrag: vm.resize
+          onDrag: this.resize
         })
 
         Split(['#left_top', '#left_bottom'], {
@@ -157,7 +154,7 @@
           gutterSize: 5,
           cursor: 'row-resize',
           minSize: 200,
-          onDrag: vm.resize
+          onDrag: this.resize
         })
 
         Split(['#right_top', '#right_bottom'], {
@@ -165,11 +162,11 @@
           gutterSize: 5,
           cursor: 'row-resize',
           minSize: 200,
-          onDrag: vm.resize
+          onDrag: this.resize
         })
       })
-      $(window).on('beforeunload', function () {
-        if (vm.selected_card.pk === -1 || vm.selected_researches.length <= 0 || document.activeElement && document.activeElement.href && document.activeElement.href.startsWith('sip:')) {
+      $(window).on('beforeunload', () => {
+        if (this.selected_card.pk === -1 || this.selected_researches.length <= 0 || document.activeElement && document.activeElement.href && document.activeElement.href.startsWith('sip:')) {
           if (document.activeElement) {
             $(document.activeElement).blur()
           }

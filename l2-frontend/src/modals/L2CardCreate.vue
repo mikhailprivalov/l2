@@ -740,60 +740,51 @@
       save_hide_modal() {
         this.save(true)
       },
-      save(hide_after = false) {
+      async save(hide_after = false) {
         if (!this.valid) {
           return
         }
-        (async () => {
-          await this.$store.dispatch(action_types.INC_LOADING)
-          const data = await patients_point.sendCard(this.card,
-            ['family', 'name', 'patronymic', 'birthday', 'sex', 'new_individual', 'base_pk',
-              'fact_address', 'main_address', 'work_place', 'main_diagnosis', 'work_position', 'work_place_db',
-              'custom_workplace', 'district', 'phone', 'number_poli', 'harmful'], {
-              card_pk: this.card_pk, individual_pk: this.card.individual, gin_district: this.card.ginekolog_district,
-              base_pk: this.base_pk,
-            })
-          if (data.result !== 'ok') {
-              errmessage('Сохранение прошло не удачно')
-            return
-          }
-          if (Array.isArray(data.messages)) {
-              for (const msg of data.messages) {
-                  wrnmessage('Warning', msg)
-              }
-          }
-          okmessage('Данные сохранены')
-          if (hide_after) {
-            this.hide_modal()
-          }
-          this.$root.$emit('select_card', {
-            card_pk: data.card_pk,
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const data = await patients_point.sendCard(this.card,
+          ['family', 'name', 'patronymic', 'birthday', 'sex', 'new_individual', 'base_pk',
+            'fact_address', 'main_address', 'work_place', 'main_diagnosis', 'work_position', 'work_place_db',
+            'custom_workplace', 'district', 'phone', 'number_poli', 'harmful'], {
+            card_pk: this.card_pk, individual_pk: this.card.individual, gin_district: this.card.ginekolog_district,
             base_pk: this.base_pk,
-            hide: hide_after,
           })
-        })().then().finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+        if (data.result !== 'ok') {
+            errmessage('Сохранение прошло не удачно')
+          return
+        }
+        if (Array.isArray(data.messages)) {
+            for (const msg of data.messages) {
+                wrnmessage('Warning', msg)
+            }
+        }
+        okmessage('Данные сохранены')
+        if (hide_after) {
+          this.hide_modal()
+        }
+        this.$root.$emit('select_card', {
+          card_pk: data.card_pk,
+          base_pk: this.base_pk,
+          hide: hide_after,
         })
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
-      update_cdu(doc) {
-        (async () => {
-          await this.$store.dispatch(action_types.INC_LOADING)
-          await patients_point.updateCdu({card_pk: this.card_pk, doc})
-          this.load_data();
-          okmessage('Изменения сохранены');
-        })().then().finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
-        })
+      async update_cdu(doc) {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        await patients_point.updateCdu({card_pk: this.card_pk, doc})
+        this.load_data();
+        okmessage('Изменения сохранены');
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
-      update_wia(key) {
-        (async () => {
-          await this.$store.dispatch(action_types.INC_LOADING)
-          await patients_point.updateWIA({card_pk: this.card_pk, key})
-          this.load_data();
-          okmessage('Изменения сохранены');
-        })().then().finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
-        })
+      async update_wia(key) {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        await patients_point.updateWIA({card_pk: this.card_pk, key})
+        this.load_data();
+        okmessage('Изменения сохранены');
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       edit_agent(key) {
         this.agent_card_selected = this.card[`${key}_pk`]
@@ -801,14 +792,11 @@
         this.agent_clear = false
         this.agent_to_edit = key;
       },
-      sync_rmis() {
-        (async () => {
-          await this.$store.dispatch(action_types.INC_LOADING)
-          await patients_point.syncRmis(this, 'card_pk')
-          this.load_data();
-        })().then().finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
-        })
+      async sync_rmis() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        await patients_point.syncRmis(this, 'card_pk')
+        this.load_data();
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       getResponse(resp) {
         return [...resp.data.data]
@@ -841,11 +829,11 @@
           return;
         }
         this.loaded = false
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         patients_point.getCard(this, 'card_pk').then(data => {
           this.card = data
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
           this.loaded = true
         })
       },
@@ -894,47 +882,41 @@
         }
         this.agent_to_edit = null;
       },
-      save_doc() {
+      async save_doc() {
         if (!this.valid_doc) {
           return
         }
-        (async () => {
-          await this.$store.dispatch(action_types.INC_LOADING)
-          await patients_point.editDoc(this.document,
-            ['serial', 'number', 'is_active', 'date_start', 'date_end', 'who_give'],
-            {
-              card_pk: this.card_pk,
-              pk: this.document_to_edit,
-              type: this.document.document_type,
-              individual_pk: this.card.individual,
-            })
-          this.load_data();
-          this.document = {
-            number: ''
-          };
-          this.hide_modal_doc_edit();
-        })().then().finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
-        })
+        await this.$store.dispatch(action_types.INC_LOADING)
+        await patients_point.editDoc(this.document,
+          ['serial', 'number', 'is_active', 'date_start', 'date_end', 'who_give'],
+          {
+            card_pk: this.card_pk,
+            pk: this.document_to_edit,
+            type: this.document.document_type,
+            individual_pk: this.card.individual,
+          })
+        this.load_data();
+        this.document = {
+          number: ''
+        };
+        this.hide_modal_doc_edit();
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
-      save_agent() {
+      async save_agent() {
         if (!this.valid_agent) {
           return
         }
-        (async () => {
-          await this.$store.dispatch(action_types.INC_LOADING)
-          await patients_point.editAgent({
-            key: this.agent_to_edit,
-            parent_card_pk: this.card_pk,
-            card_pk: this.agent_card_selected,
-            doc: this.agent_doc,
-            clear: this.agent_clear,
-          })
-          this.load_data();
-          this.hide_modal_agent_edit();
-        })().then().finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+        await this.$store.dispatch(action_types.INC_LOADING)
+        await patients_point.editAgent({
+          key: this.agent_to_edit,
+          parent_card_pk: this.card_pk,
+          card_pk: this.agent_card_selected,
+          doc: this.agent_doc,
+          clear: this.agent_clear,
         })
+        this.load_data();
+        this.hide_modal_agent_edit();
+        await this.$store.dispatch(action_types.DEC_LOADING)
       }
     }
   }

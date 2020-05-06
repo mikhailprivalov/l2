@@ -136,7 +136,7 @@
       }
     },
     created() {
-      this.$store.dispatch(action_types.INC_LOADING).then()
+      this.$store.dispatch(action_types.INC_LOADING)
       directions_point.getResults(this, ['pk'], {
         force: this.no_desc,
       }).then(data => {
@@ -150,7 +150,7 @@
         }
         this.data = data
       }).finally(() => {
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        this.$store.dispatch(action_types.DEC_LOADING)
       })
     },
     methods: {

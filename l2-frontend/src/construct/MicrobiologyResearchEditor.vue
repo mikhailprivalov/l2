@@ -132,7 +132,7 @@
           return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
       })
       this.$root.$on('hide_fte', () => this.f_templates_hide())
-      this.$store.dispatch(action_types.GET_RESEARCHES).then()
+      this.$store.dispatch(action_types.GET_RESEARCHES)
     },
     computed: {
       fte() {
@@ -333,7 +333,7 @@
         this.site_type = null
         this.tube = -1
         if (this.pk >= 0) {
-          this.$store.dispatch(action_types.INC_LOADING).then()
+          this.$store.dispatch(action_types.INC_LOADING)
           construct_point.researchDetails(this, 'pk').then(data => {
             this.title = data.title
             this.short_title = data.short_title
@@ -345,7 +345,7 @@
             this.loaded_pk = this.pk
             this.tube = data.tube
           }).finally(() => {
-            this.$store.dispatch(action_types.DEC_LOADING).then()
+            this.$store.dispatch(action_types.DEC_LOADING)
           })
         } else {
           this.add_group()
@@ -359,7 +359,7 @@
         this.$root.$emit('research-editor:cancel')
       },
       save() {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         construct_point.updateResearch(this, ['pk', 'department', 'title', 'short_title', 'code', 'hide', 'site_type', 'internal_code', 'tube'], {
           info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>')
         }).then(() => {
@@ -367,7 +367,7 @@
           okmessage('Сохранено')
           this.cancel()
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
     }

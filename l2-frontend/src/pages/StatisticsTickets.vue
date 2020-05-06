@@ -56,14 +56,13 @@
       }
     },
     mounted() {
-      let vm = this
-      $(document).ready(function () {
-        vm.resize()
-        $(window).resize(function () {
-          vm.resize()
+      $(document).ready(() => {
+        this.resize()
+        $(window).resize(() => {
+          this.resize()
         })
 
-        Split([vm.$refs.ct, vm.$refs.cb], {
+        Split([this.$refs.ct, this.$refs.cb], {
           direction: 'vertical',
           gutterSize: 5,
           cursor: 'row-resize',
@@ -72,7 +71,7 @@
           onDrag: vm.resize
         })
 
-        Split([vm.$refs.tl, vm.$refs.tr], {
+        Split([this.$refs.tl, this.$refs.tr], {
           gutterSize: 5,
           cursor: 'col-resize',
           minSize: 200,

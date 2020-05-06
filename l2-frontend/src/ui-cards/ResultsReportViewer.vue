@@ -104,9 +104,8 @@
     computed: {},
     mounted() {
       this.is_created = true
-      let vm = this
       this.$root.$on('hide_report-chart-viewer', () => {
-        vm.show_charts = false
+        this.show_charts = false
       })
     },
     methods: {
@@ -145,7 +144,7 @@
           return
         this.$root.$emit('validate-datepickers')
         this.is_created = false
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         directions_point.getResultsReport({
           individual: this.individual_pk,
           params: this.params,
@@ -154,7 +153,7 @@
         }).then(data => {
           this.rows = data.data
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
           this.is_created = true
         })
       },

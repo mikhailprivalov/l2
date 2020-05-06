@@ -293,7 +293,7 @@
         if (!this.query_valid || this.inLoading)
           return
         this.check_base()
-        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'})
         patients_point.searchCard(this, ['query', 'inc_rmis'], {
           type: this.base,
           list_all_cards: false,
@@ -313,7 +313,7 @@
         }).catch((error) => {
           errmessage('Ошибка на сервере', error.message)
         }).finally(() => {
-          this.$store.dispatch(action_types.DISABLE_LOADING).then()
+          this.$store.dispatch(action_types.DISABLE_LOADING)
         })
       }
     }

@@ -188,17 +188,17 @@
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
         await patients_point.saveDreg({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        await this.$store.dispatch(action_types.DEC_LOADING)
         okmessage('Сохранено');
         this.hide_edit()
         this.load_data()
       },
       load_data() {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         patients_point.loadDreg(this, 'card_pk').then(({rows}) => {
           this.rows = rows
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
     }

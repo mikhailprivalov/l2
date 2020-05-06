@@ -235,24 +235,24 @@
       },
       load_data() {
         this.loaded = false
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         this.cancel()
         directions_point.getRmisDirections(this.card, ['pk']).then(data => {
           this.rows = data.rows
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
           this.loaded = true
         })
       },
       select_direction(pk) {
         if (pk === this.selected_direction)
           return
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         directions_point.getRmisDirection({pk}).then(data => {
           this.direction_data = data
           this.selected_direction = pk
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       }
     }

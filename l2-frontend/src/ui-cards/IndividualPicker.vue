@@ -114,7 +114,6 @@
       }
     },
     created() {
-      let vm = this
       let params = new URLSearchParams(window.location.search)
       let individual_pk = params.get('individual_pk')
       let base_pk = params.get('base_pk')
@@ -130,7 +129,7 @@
       }
 
       this.$root.$on('search', () => {
-        vm.search()
+        this.search()
       })
     },
     watch: {
@@ -189,20 +188,19 @@
         $('input').each(function () {
           $(this).trigger('blur')
         })
-        let vm = this
         if (!this.query.includes('individual_pk:')) {
           this.return_base = this.return_card = null
         }
-        vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск пациента...'}).then()
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск пациента...'})
         patients_point.searchIndividual(this, 'query').then((result) => {
-          vm.clear()
+          this.clear()
           if (result.results) {
-            vm.founded_individuals = result.results
-            if (vm.founded_individuals.length > 1) {
-              vm.$refs.modal.$el.style.display = 'flex'
-              vm.showModal = true
-            } else if (vm.founded_individuals.length === 1) {
-              vm.select_individual(0)
+            this.founded_individuals = result.results
+            if (this.founded_individuals.length > 1) {
+              this.$refs.modal.$el.style.display = 'flex'
+              this.showModal = true
+            } else if (this.founded_individuals.length === 1) {
+              this.select_individual(0)
             } else {
               errmessage('Не найдено', 'Пациентов по такому запросу не найдено')
             }
@@ -212,7 +210,7 @@
         }).catch((error) => {
           errmessage('Ошибка на сервере', error.message)
         }).finally(() => {
-          vm.$store.dispatch(action_types.DISABLE_LOADING).then()
+          this.$store.dispatch(action_types.DISABLE_LOADING)
         })
       }
     }

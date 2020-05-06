@@ -76,16 +76,14 @@
       }
     },
     created() {
-      let vm = this
+      this.check_base()
 
-      vm.check_base()
-
-      vm.$store.watch(state => state.bases, (oldValue, newValue) => {
-        vm.check_base()
+      this.$store.watch(state => state.bases, (oldValue, newValue) => {
+        this.check_base()
       })
 
-      vm.$root.$on('search', () => {
-        vm.search()
+      this.$root.$on('search', () => {
+        this.search()
       })
     },
     computed: {
@@ -233,17 +231,16 @@
         $('input').each(function () {
           $(this).trigger('blur')
         })
-        let vm = this
-        vm.clear()
-        vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
+        this.clear()
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'})
         patients_point.searchCard(this.base, this.query, true).then((result) => {
           if (result.results) {
-            vm.founded_cards = result.results
-            if (vm.founded_cards.length > 1) {
-              vm.$refs.modal.$el.style.display = 'flex'
-              vm.showModal = true
-            } else if (vm.founded_cards.length === 1) {
-              vm.select_card(0)
+            this.founded_cards = result.results
+            if (this.founded_cards.length > 1) {
+              this.$refs.modal.$el.style.display = 'flex'
+              this.showModal = true
+            } else if (this.founded_cards.length === 1) {
+              this.select_card(0)
             } else {
               errmessage('Не найдено', 'Карт по такому запросу не найдено')
             }
@@ -253,7 +250,7 @@
         }).catch((error) => {
           errmessage('Ошибка на сервере', error.message)
         }).finally(() => {
-          vm.$store.dispatch(action_types.DISABLE_LOADING).then()
+          this.$store.dispatch(action_types.DISABLE_LOADING)
         })
       }
     }

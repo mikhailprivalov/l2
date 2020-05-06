@@ -96,21 +96,19 @@
         this.loadRows()
       }
     },
-    created() {
-      (async() => {
-        this.$store.dispatch(action_types.INC_LOADING).then()
-        const {types, users} = await users_point.loadJobTypes()
-        this.types = types
-        this.users = users
-        this.type = types[0].pk
-        this.executor = users[0].pk
-        await this.loadRows()
-        this.$store.dispatch(action_types.DEC_LOADING).then()
-      })().then();
+    async created() {
+      await this.$store.dispatch(action_types.INC_LOADING)
+      const {types, users} = await users_point.loadJobTypes()
+      this.types = types
+      this.users = users
+      this.type = types[0].pk
+      this.executor = users[0].pk
+      await this.loadRows()
+      await this.$store.dispatch(action_types.DEC_LOADING)
     },
     methods: {
       async save() {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        await this.$store.dispatch(action_types.INC_LOADING)
         await users_point.saveJob({
             date: this.date,
             type: this.type,
@@ -118,21 +116,21 @@
             count: this.count,
         })
         await this.loadRows()
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async loadRows() {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        await this.$store.dispatch(action_types.INC_LOADING)
         const {list} = await users_point.loadJobs(this, "date")
         this.rows = list;
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async cancel(pk, cancel) {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        await this.$store.dispatch(action_types.INC_LOADING)
         await users_point.jobCancel({
           pk, cancel,
         })
         await this.loadRows()
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
     },
   }

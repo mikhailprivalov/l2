@@ -56,8 +56,8 @@
           this.$refs.modal.$el.style.display = 'none'
         }
       },
-        async updateGroup() {
-        this.$store.dispatch(action_types.INC_LOADING).then();
+      async updateGroup() {
+        await this.$store.dispatch(action_types.INC_LOADING);
         const {ok, message} = await bacteria_point.updateGroup({'TypesObject': this.typesObject ,'typeGroups': this.typesGroups,
         'obj':{'pk': this.group_obj.pk, 'title': this.group_obj.title, 'hide': this.group_obj.hide} });
         if (ok) {
@@ -65,7 +65,7 @@
         } else {
           errmessage('Ошибка', message)
         }
-        this.$store.dispatch(action_types.DEC_LOADING).then();
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       },
     }
