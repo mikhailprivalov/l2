@@ -275,14 +275,16 @@ def update_parent(request):
         Napravleniya.objects.filter(pk__in=slave_dirs).update(parent=parent_iss)
     if parent == -1:
         Napravleniya.objects.filter(pk__in=slave_dirs).update(parent=None)
-    result = {"ok": True, "message": ""}
+
+    dir_parent = ""
+    if parent_iss:
+        dir_parent = parent_iss.napravleniye.pk
 
     for i in slave_dirs:
-        dir_parent = ""
-        if parent_iss:
-            dir_parent = parent_iss.napravleniye.pk
         Log(key=i, type=5003, body=json.dumps({"dir": i, "parent_dir": dir_parent, "parent_iss_id": parent}),
             user=request.user.doctorprofile).save()
+
+    result = {"ok": True, "message": ""}
 
     return JsonResponse(result)
 
