@@ -268,7 +268,7 @@ def hosp_set_parent(request):
 def update_parent(request):
     request_data = json.loads(request.body)
     parent = request_data.get("parent")
-    slave_dirs = request_data.get("slave_dirs")
+    slave_dirs = request_data.get("slave_dirs", [])
     parent_iss = None
     if parent > -1:
         parent_iss = Issledovaniya.objects.get(pk=parent)

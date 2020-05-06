@@ -16,7 +16,7 @@
           <li v-for="value in menuItems">
             <a href="#"
                v-if="(!value.onlyNotForIssledovaniye || !iss_pk)
-                  && (!value.onlyForTypes || value.onlyForTypes.includes(active_type) && can_change_parent)"
+                  && (!value.onlyForTypes || (value.onlyForTypes.includes(active_type) && can_change_parent))"
                @click.prevent="() => callAsThis(value.handler)">
               {{value.title}}
             </a>
@@ -71,7 +71,6 @@
     },
     mounted() {
       this.$root.$on('hide_pe', this.change_parent_hide);
-      console.log(this.v)
     },
     methods: {
       callAsThis(handler) {
