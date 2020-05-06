@@ -39,6 +39,7 @@ const menuItems = [
   {
     title: 'Назначить главное направление',
     onlyForTypes: [3],
+    requiredGroup: 'Врач стационара',
     handler() {
       if (this.checked.length > 3) {
         this.$dialog.alert({

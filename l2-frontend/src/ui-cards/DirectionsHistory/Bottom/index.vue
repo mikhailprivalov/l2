@@ -16,7 +16,8 @@
           <li v-for="value in menuItems">
             <a href="#"
                v-if="(!value.onlyNotForIssledovaniye || !iss_pk)
-                  && (!value.onlyForTypes || (value.onlyForTypes.includes(active_type) && can_change_parent))"
+                  && (!value.onlyForTypes || value.onlyForTypes.includes(active_type))
+                  && (!value.requiredGroup || user_groups.includes(value.requiredGroup))"
                @click.prevent="() => callAsThis(value.handler)">
               {{value.title}}
             </a>
@@ -100,14 +101,9 @@
         }
         return r;
       },
-      can_change_parent() {
-        for (let g of (this.$store.getters.user_data.groups || [])) {
-          if (g === 'Врач стационара') {
-            return true
-          }
-        }
-        return false
-      }
+      user_groups() {
+        return this.$store.getters.user_data.groups || [];
+      },
     },
   }
 </script>
