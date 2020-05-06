@@ -69,7 +69,14 @@
         </tr>
         <tr v-for="row in directions">
           <td class="text-center">{{row.date}}</td>
-          <td>{{row.pk}}</td>
+          <td>
+            <span v-if="!!row.has_hosp">
+              <a :href="`/mainmenu/stationar#{%22pk%22:${row.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`" target="_blank" class="a-under">
+                {{row.pk}}
+              </a>
+            </span>
+            <span v-else>{{row.pk}}</span>
+          </td>
           <td class="researches" :title="row.researches">{{row.researches}}</td>
           <td class="text-center"
               :title="statuses[row.status === 1 && row.has_descriptive ? -2 : row.status] +

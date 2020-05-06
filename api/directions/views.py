@@ -225,10 +225,12 @@ def get_data_parent(parent_id):
 
 
 @login_required
+@group_required("Врач стационара")
 def hosp_set_parent(request):
     # SQL-query
     date_end = utils.current_time()
-    date_start = (date_end + relativedelta(days=-180))
+    days_ago = SettingManager.get("days_before_hosp", default='30', default_type='i')
+    date_start = (date_end + relativedelta(days=-days_ago))
     date_start = datetime.combine(date_start, dtime.min)
     date_end = datetime.combine(date_end, dtime.max)
     request_data = json.loads(request.body)
@@ -261,15 +263,26 @@ def hosp_set_parent(request):
 
 
 @login_required
+@group_required("Врач стационара")
 def update_parent(request):
     request_data = json.loads(request.body)
     parent = request_data.get("parent")
-    slave_dirs = request_data.get("slave_dirs")
+    slave_dirs = request_data.get("slave_dirs", [])
+    parent_iss = None
     if parent > -1:
         parent_iss = Issledovaniya.objects.get(pk=parent)
         Napravleniya.objects.filter(pk__in=slave_dirs).update(parent=parent_iss)
     if parent == -1:
         Napravleniya.objects.filter(pk__in=slave_dirs).update(parent=None)
+
+    dir_parent = ""
+    if parent_iss:
+        dir_parent = parent_iss.napravleniye.pk
+
+    for i in slave_dirs:
+        Log(key=i, type=5003, body=json.dumps({"dir": i, "parent_dir": dir_parent, "parent_iss_id": parent}),
+            user=request.user.doctorprofile).save()
+
     result = {"ok": True, "message": ""}
 
     return JsonResponse(result)
