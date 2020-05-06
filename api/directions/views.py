@@ -209,6 +209,7 @@ def directions_history(request):
     res['directions'] = final_result
     return JsonResponse(res)
 
+
 def get_data_parent(parent_id):
     iss_obj = Issledovaniya.objects.get(pk=parent_id)
     research_title = iss_obj.research.title
@@ -281,7 +282,7 @@ def update_parent(request):
         if parent_iss:
             dir_parent = parent_iss.napravleniye.pk
         Log(key=i, type=5003, body=json.dumps({"dir": i, "parent_dir": dir_parent, "parent_iss_id": parent}),
-             user=request.user.doctorprofile).save()
+            user=request.user.doctorprofile).save()
 
     return JsonResponse(result)
 
