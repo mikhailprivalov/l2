@@ -246,7 +246,7 @@ def hosp_set_parent(request):
     # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs,
     # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid
     res = {"directions": []}
-    final_result = []
+
     for i in result_sql:
         if i[11]:
             if forbidden_edit_dir(i[0]):
@@ -255,9 +255,8 @@ def hosp_set_parent(request):
             dir = i[0]
             iss_id = i[2]
             date_create = i[6]
-            final_result.append({'dir_num': dir, 'iss_id': iss_id, 'researche_titles': researche_title, 'date': date_create})
+            res['directions'].append({'dir_num': dir, 'iss_id': iss_id, 'researche_titles': researche_title, 'date': date_create})
 
-    res['directions'] = final_result
     return JsonResponse(res)
 
 
