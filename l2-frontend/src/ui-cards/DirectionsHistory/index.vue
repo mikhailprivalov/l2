@@ -70,7 +70,7 @@
         <tr v-for="row in directions">
           <td class="text-center">{{row.date}}</td>
           <td>
-            <span v-if="!!row.has_hosp">
+            <span v-if="!!row.has_hosp && can_use_stationar_role">
               <a :href="`/mainmenu/stationar#{%22pk%22:${row.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`" target="_blank" class="a-under">
                 {{row.pk}}
               </a>
@@ -90,8 +90,9 @@
               <a :href="row.pacs" title="Снимок" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.pacs">
                 <i class="fa fa-camera"/>
               </a>
-              <a :href="`/mainmenu/stationar#{%22pk%22:${row.parent.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
-                 :title="'Принадлежит и/б: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.parent.parent_is_hosp">
+              <a @click="role_can_use_stationar ? show_stationar(row.parent.pk) : null"
+                 :title="'Принадлежит и/б: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]" v-tippy target="_blank" class="btn btn-blue-nb"
+                 v-if="!!row.parent.parent_is_hosp">
                 <i class="fa fa-bed"/>
               </a>
               <a @click="row.parent.is_confirm ? show_results(row.parent) : null" :title="'Создано в амбулаторном приеме: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]"
@@ -198,6 +199,14 @@
       }
     },
     computed: {
+      role_can_use_stationar() {
+        for (let g of (this.$store.getters.user_data.groups || [])) {
+          if (g === 'Врач стационара') {
+            return true
+          }
+        }
+        return false
+      },
       active_type_obj() {
         for (let row of this.types) {
           if (row.pk === this.active_type) {
@@ -233,6 +242,9 @@
         setTimeout(() => {
           this.$root.$emit(`update-sp-m-services_options`)
         }, 0)
+      },
+      show_stationar(dir){
+        window.open(`/mainmenu/stationar#{%22pk%22:${dir},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`, "_blank")
       },
       show_results(row) {
         if (row.has_descriptive) {
