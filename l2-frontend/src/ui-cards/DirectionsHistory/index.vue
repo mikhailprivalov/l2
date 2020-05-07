@@ -70,7 +70,7 @@
         <tr v-for="row in directions">
           <td class="text-center">{{row.date}}</td>
           <td>
-            <span v-if="!!row.has_hosp && can_use_stationar_role">
+            <span v-if="!!row.has_hosp && role_can_use_stationar">
               <a :href="`/mainmenu/stationar#{%22pk%22:${row.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`" target="_blank" class="a-under">
                 {{row.pk}}
               </a>
@@ -91,11 +91,11 @@
                 <i class="fa fa-camera"/>
               </a>
               <a href="#" @click.prevent="role_can_use_stationar ? show_stationar(row.parent.pk) : null"
-                 :title="'Принадлежит и/б: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]" v-tippy class="btn btn-blue-nb"
+                 :title="`Принадлежит и/б: ${row.parent.pk}-${row.parent.parent_title}`" v-tippy class="btn btn-blue-nb"
                  v-if="!!row.parent.parent_is_hosp">
                 <i class="fa fa-bed"/>
               </a>
-              <a href="#" @click.prevent="row.parent.is_confirm ? show_results(row.parent) : null" :title="'Создано в амбулаторном приеме: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]"
+              <a href="#" @click.prevent="row.parent.is_confirm ? show_results(row.parent) : null" :title="`Создано в амбулаторном приеме: ${row.parent.pk}-${row.parent.parent_title}`"
                  v-tippy class="btn btn-blue-nb" v-if="!!row.parent.parent_is_doc_refferal" :class="{isDisabled: !row.parent.is_confirm}">
                  <i class="fa fa-user-md"/>
               </a>
