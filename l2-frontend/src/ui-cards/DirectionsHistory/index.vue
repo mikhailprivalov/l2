@@ -90,12 +90,12 @@
               <a :href="row.pacs" title="Снимок" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.pacs">
                 <i class="fa fa-camera"/>
               </a>
-              <a @click="role_can_use_stationar ? show_stationar(row.parent.pk) : null"
-                 :title="'Принадлежит и/б: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]" v-tippy target="_blank" class="btn btn-blue-nb"
+              <a href="#" @click.prevent="role_can_use_stationar ? show_stationar(row.parent.pk) : null"
+                 :title="'Принадлежит и/б: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]" v-tippy class="btn btn-blue-nb"
                  v-if="!!row.parent.parent_is_hosp">
                 <i class="fa fa-bed"/>
               </a>
-              <a @click="row.parent.is_confirm ? show_results(row.parent) : null" :title="'Создано в амбулаторном приеме: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]"
+              <a href="#" @click.prevent="row.parent.is_confirm ? show_results(row.parent) : null" :title="'Создано в амбулаторном приеме: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]"
                  v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.parent.parent_is_doc_refferal" :class="{isDisabled: !row.parent.is_confirm}">
                  <i class="fa fa-user-md"/>
               </a>
