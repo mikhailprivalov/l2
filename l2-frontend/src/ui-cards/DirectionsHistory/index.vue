@@ -96,7 +96,7 @@
                 <i class="fa fa-bed"/>
               </a>
               <a href="#" @click.prevent="row.parent.is_confirm ? show_results(row.parent) : null" :title="'Создано в амбулаторном приеме: ' + [[row.parent.pk]] + '-' + [[row.parent.parent_title]]"
-                 v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.parent.parent_is_doc_refferal" :class="{isDisabled: !row.parent.is_confirm}">
+                 v-tippy class="btn btn-blue-nb" v-if="!!row.parent.parent_is_doc_refferal" :class="{isDisabled: !row.parent.is_confirm}">
                  <i class="fa fa-user-md"/>
               </a>
               <button class="btn btn-blue-nb" title="Штрих-код браслета" v-tippy
