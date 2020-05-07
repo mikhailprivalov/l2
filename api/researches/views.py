@@ -84,7 +84,7 @@ def get_researches(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Врач стационара")
 def researches_by_department(request):
     response = {"researches": []}
     request_data = json.loads(request.body)
