@@ -97,7 +97,7 @@
             <span class="input-group-addon">РМИС пароль</span>
             <input class="form-control" placeholder="Для замены введите значение" v-model="user.rmis_password"/>
           </div>
-          <div class="input-group" style="width: 100%" v-if="l2_user_data.rmis_enabled">
+          <div class="input-group" style="width: 100%"">
             <span class="input-group-addon">Код врача</span>
             <input class="form-control" v-model="user.personal_code"/>
           </div>
