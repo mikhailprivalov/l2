@@ -813,6 +813,8 @@ def user_view(request):
             "rmis_login": '',
             "rmis_password": '',
             "doc_pk": -1,
+            "doc_code": -1,
+
         }
     else:
         doc = users.DoctorProfile.objects.get(pk=pk)
@@ -830,6 +832,7 @@ def user_view(request):
             "rmis_login": doc.rmis_login or '',
             "rmis_password": '',
             "doc_pk": doc.user.pk,
+            "personal_code": doc.personal_code,
         }
 
     return JsonResponse({"user": data})
@@ -847,6 +850,7 @@ def user_save_view(request):
     rmis_location = str(ud["rmis_location"]).strip() or None
     rmis_login = ud["rmis_login"].strip() or None
     rmis_password = ud["rmis_password"].strip() or None
+    personal_code = ud["personal_code"] or 0
     npk = pk
     if pk == -1:
         if not User.objects.filter(username=username).exists():
@@ -892,6 +896,7 @@ def user_save_view(request):
             doc.podrazdeleniye_id = ud['department']
             doc.fio = ud["fio"]
             doc.rmis_location = rmis_location
+            doc.personal_code = personal_code
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:
