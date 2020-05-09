@@ -49,7 +49,7 @@ class DoctorProfile(models.Model):
                                                   help_text='Запрет на выдачу направлений с исследованиями')
     users_services = models.ManyToManyField('directory.Researches', related_name='users_services', blank=True,
                                             help_text='Услуги, оказываемые пользователем')
-    personal_code = models.IntegerField(default=0, blank=True, help_text='Код врача')
+    personal_code = models.IntegerField(default=0, blank=True, help_text='Код врача для ТФОМС внутри МО')
     rmis_location = models.IntegerField(default=None, blank=True, null=True)
     local_location = models.CharField(default='', blank=True, null=True, max_length=20,
                                       help_text='Номера очередей (pk) через запятую', db_index=True)
