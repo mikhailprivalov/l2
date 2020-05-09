@@ -629,8 +629,7 @@ def form_03(request_data):
         Paragraph('16. Доставлен в состоянии опьянения: Алкогольного — 1; Наркотического — 2.', style),
         Paragraph('17. Госпитализирован по поводу данного заболевания в текущем году: {}'.format(hospitalized), style),
         Paragraph('18.Доставлен в стационар от начала заболевания(получения травмы): {}'.format(primary_reception_data['time_start_ill']), style),
-        Paragraph('19. Травма: — производственная: промышленная — 1; транспортная — 2, в т. ч. ДТП — 3; с/хоз — 4; прочие — 5;', style),
-        Paragraph('— непроизводственная: бытовая — 6; уличная — 7; транспортная — 8, в т. ч. ДТП — 9; школьная — 10; спортивная — 11; противоправная травма — 12; прочие — 13.', style),
+        Paragraph('19. Травма: {}'.format(primary_reception_data['type_trauma']), style),
         Paragraph('20. Дата поступления в приемное отделение:______________ Время__________', style),
         Paragraph('21. Название отделения: <u>{}</u>; дата поступления: <u>{}</u>; время: <u>{}</u>'.format(hosp_depart, primary_reception_data['date_entered_value'],
                                                                                                             primary_reception_data['time_entered_value']), style),
