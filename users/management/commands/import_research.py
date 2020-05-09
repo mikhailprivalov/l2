@@ -22,12 +22,11 @@ class Command(BaseCommand):
             title = f"{d}-{data['title']}"
             r = Researches(title=title, code=data['code'], short_title=data['short_title'])
             r.save()
-            print(r.pk)
-            for i in data['ParaclinicInputGroups']:
-                p = ParaclinicInputGroups(research=r, title=i["title"], show_title=i["show_title"], order=i["order"], hide=i["hide"])
-                p.save()
-                for f in i['ParaclinicInputField']:
-                    field = ParaclinicInputField(group=p, title=f['title'], order=f['order'], default_value=f['default_value'], lines=f['lines'], field_type=f['field_type'],
+            for group in data['paraclinic_input_groups']:
+                group_current = ParaclinicInputGroups(research=r, title=group["title"], show_title=group["show_title"], order=group["order"], hide=group["hide"])
+                group_current.save()
+                for f in group['paraclinic_input_field']:
+                    field = ParaclinicInputField(group=group_current, title=f['title'], order=f['order'], default_value=f['default_value'], lines=f['lines'], field_type=f['field_type'],
                                                  for_extract_card=f['for_extract_card'], for_talon=f['for_talon'], helper=f['helper'], input_templates=f['input_templates'],
                                                  required=f['required'], hide=f['hide'])
                     field.save()

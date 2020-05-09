@@ -6,29 +6,26 @@ from appconf.manager import SettingManager
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
-        parser.add_argument('research_pk', type=str)
+        parser.add_argument('research_pk', type=int)
 
     def handle(self, *args, **kwargs):
-        research = kwargs["research_pk"]
-        research_pk = int(research)
-        obj_research = {}
+        research_pk = kwargs["research_pk"]
+        research_data = {}
         r = Researches.objects.get(pk=research_pk)
-        obj_research['title'] = r.title
-        obj_research['code'] = r.code
-        obj_research['short_title'] = r.short_title
+        research_data['title'] = r.title
+        research_data['code'] = r.code
+        research_data['short_title'] = r.short_title
         groups = ParaclinicInputGroups.objects.filter(research=r)
-        t_group = []
-        for i in groups:
-            fieds = ParaclinicInputField.objects.filter(group=i, hide=False)
-            t_field = []
-            order = str(i.order)
-            for f in fieds:
+        groups_to_save = []
+        for group in groups:
+            fields_in_group = []
+            for f in ParaclinicInputField.objects.filter(group=group, hide=False):
                 field_data = {'title': f.title, 'order': f.order, 'default_value': f.default_value, 'lines': f.lines, 'field_type': f.field_type,
                               'for_extract_card': f.for_extract_card, 'for_talon': f.for_talon, 'helper': f.helper, 'input_templates': f.input_templates,
                               'required': f.required, 'hide': f.hide}
-                t_field.append(field_data)
-            t_group.append({'title': i.title, 'show_title': i.show_title, 'order': order, 'hide': i.hide, 'ParaclinicInputField': t_field.copy()})
-        obj_research['ParaclinicInputGroups'] = t_group
+                fields_in_group.append(field_data)
+            groups_to_save.append({'title': group.title, 'show_title': group.show_title, 'order': group.order, 'hide': group.hide, 'paraclinic_input_field': fields_in_group})
+        research_data['paraclinic_input_groups'] = groups_to_save
         dir_tmp = SettingManager.get("dir_param")
-        with open(f'{dir_tmp}/{research}.json', 'w') as fp:
-            json.dump(obj_research, fp)
+        with open(f'{dir_tmp}/{research_pk}.json', 'w') as fp:
+            json.dump(research_data, fp)
