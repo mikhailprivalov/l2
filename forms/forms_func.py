@@ -397,7 +397,8 @@ def primary_reception_get_data(hosp_first_num):
 
     titles_field = ['Дата поступления', 'Время поступления', 'Виды транспортировки', 'Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
                     'Вид госпитализации', 'Время через, которое доставлен после начала заболевания, получения травмы', 'Диагноз направившего учреждения',
-                    'Диагноз при поступлении', 'Госпитализирован по поводу данного заболевания', 'Общее состояние', 'Социальный статус', 'Категория льготности']
+                    'Диагноз при поступлении', 'Госпитализирован по поводу данного заболевания', 'Общее состояние', 'Социальный статус', 'Категория льготности',
+                    'Всего госпитализаций', 'Вид травмы']
     list_values = None
     if titles_field and hosp_primary_receptions:
         list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
@@ -406,6 +407,7 @@ def primary_reception_get_data(hosp_first_num):
     who_directed, plan_hospital, extra_hospital, type_hospital = '', '', '', ''
     time_start_ill, diagnos_who_directed, diagnos_entered = '', '', ''
     what_time_hospitalized, state, social_status, category_privilege = '', '', '', ''
+    all_hospitalized, type_trauma = '', ''
 
     if list_values:
         for i in list_values:
@@ -454,12 +456,18 @@ def primary_reception_get_data(hosp_first_num):
             if i[3] == 'Категория льготности':
                 category_privilege = i[2]
                 continue
+            if i[3] == 'Всего госпитализаций':
+                all_hospitalized = i[2]
+                continue
+            if i[3] == 'Вид травмы':
+                type_trauma = i[2]
+                continue
 
     return {'date_entered_value': date_entered_value, 'time_entered_value': time_entered_value, 'type_transport': type_transport,
             'medicament_allergy': medicament_allergy, 'who_directed': who_directed, 'plan_hospital': plan_hospital, 'extra_hospital': extra_hospital,
             'type_hospital': type_hospital, 'time_start_ill': time_start_ill, 'diagnos_who_directed': diagnos_who_directed,
             'diagnos_entered': diagnos_entered, 'what_time_hospitalized': what_time_hospitalized, 'state': state, 'social_status': social_status,
-            'category_privilege': category_privilege}
+            'category_privilege': category_privilege, 'all_hospitalized': all_hospitalized, 'type_trauma': type_trauma}
 
 
 def hosp_extract_get_data(hosp_last_num):
@@ -503,7 +511,7 @@ def hosp_extract_get_data(hosp_last_num):
             if i[3] == 'Результат госпитализации':
                 result_hospital = i[2]
             if i[3] == 'Основной диагноз по МКБ':
-                final_diagnos_mkb = str(i[2]).split(' ')[0]
+                final_diagnos_mkb = str(i[2])
             if i[3] == 'Осложнение основного диагноза по МКБ':
                 other_diagnos_mkb = str(i[2]).split(' ')[0]
             if i[3] == 'Сопутствующий диагноз по МКБ':
