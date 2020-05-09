@@ -689,7 +689,7 @@ def result_print(request):
                             if iss.doc_confirmation:
                                 tmp.append(Paragraph('<font face="FreeSansBold" size="7">%s</font>' % iss.doc_confirmation.get_fio(), styleSheet["BodyText"]))
                                 tmp.append(Paragraph('<font face="FreeSansBold" size="7">%s</font>' % ("" if not iss.tubes.exists() or not iss.tubes.first().time_get else strdate(
-                                        iss.tubes.first().time_get)), styleSheet["BodyText"]))
+                                    iss.tubes.first().time_get)), styleSheet["BodyText"]))
                                 tmp.append(Paragraph('<font face="FreeSansBold" size="7">%s</font>' % strdate(iss.time_confirmation), styleSheet["BodyText"]))
                             else:
                                 tmp.append("")
@@ -738,7 +738,7 @@ def result_print(request):
                               ('LEFTPADDING', (0, 0), (-1, -1), 4),
                               ('TOPPADDING', (0, 0), (-1, -1), 3),
                               ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                              ('BOTTOMPADDING', (0, 0), (-1, -1), -1),]
+                              ('BOTTOMPADDING', (0, 0), (-1, -1), -1)]
 
                         style_t = TableStyle(ts)
                         j = 0
@@ -788,7 +788,7 @@ def result_print(request):
 
                                 if j - jp > 2:
                                     data.append([Paragraph('<font face="FreeSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>',
-                                        styleSheet["BodyText"])])
+                                                           styleSheet["BodyText"])])
                                     style_t.add('SPAN', (0, j), (-1, j))
                                     style_t.add('BOX', (0, j), (-1, j), 1, colors.white)
                                     j -= 1
@@ -930,7 +930,7 @@ def result_print(request):
                     if has_anti:
                         data = []
                         tmp = [[Paragraph('<font face="FreeSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>',
-                            styleSheet["BodyText"])], "", "", "", "", ""]
+                                          styleSheet["BodyText"])], "", "", "", "", ""]
                         data.append(tmp)
                         cw = [int(tw * 0.23), int(tw * 0.11), int(tw * 0.22), int(tw * 0.11), int(tw * 0.22)]
                         cw = cw + [tw - sum(cw)]
@@ -954,7 +954,8 @@ def result_print(request):
                 if iss.lab_comment and iss.lab_comment != "":
                     data = []
                     tmp = [[Paragraph('<font face="FreeSans" size="8">Комментарий</font>',
-                        styleSheet["BodyText"])], [Paragraph('<font face="FreeSans" size="8">%s</font>' % (iss.lab_comment.replace("\n", "<br/>")), styleSheet["BodyText"])], "", "", "", ""]
+                                      styleSheet["BodyText"])], [Paragraph('<font face="FreeSans" size="8">%s</font>' % (iss.lab_comment.replace("\n", "<br/>")), styleSheet["BodyText"])],
+                           "", "", "", ""]
                     data.append(tmp)
                     cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178)]
                     cw = cw + [tw - sum(cw)]
@@ -1492,6 +1493,7 @@ class TTR(Flowable):
                 canvas.setFont(font, self.fontsize)
             canvas.drawString(mm, (mm + i * 4 * mm) * (-1), s)
             i += 1
+
 
 @login_required
 def result_journal_table_print(request):
