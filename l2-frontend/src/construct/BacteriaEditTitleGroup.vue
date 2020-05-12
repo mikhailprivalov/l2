@@ -2,12 +2,19 @@
   <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" min-width="40%"
          max-width="40%" width="100%" marginLeftRight="auto" margin-top="20%">
     <span slot="header">Настройка группы</span>
-    <div slot="body" style="min-height: 20px" class="directions-manage">
-      <input type="text" v-model="group_obj.title">
-      <p>
-        Скрыть
-        <input type="checkbox" id="checkbox" v-model="group_obj.hide">
-      </p>
+    <div slot="body" style="min-height: 200px" class="manage">
+      <div class="form-group">
+        <label for="change-group-title">
+          Название
+        </label>
+
+        <input id="change-group-title" class="form-control" v-model="group_obj.title">
+      </div>
+      <div class="checkbox">
+        <label>
+          <input type="checkbox" v-model="group_obj.hide"> Скрыть
+        </label>
+      </div>
     </div>
     <div slot="footer">
       <div class="row">
@@ -24,7 +31,6 @@
       </div>
     </div>
   </modal>
-
 </template>
 
 <script>
@@ -68,15 +74,14 @@
           errmessage('Ошибка', message)
         }
         await this.$store.dispatch(action_types.DEC_LOADING)
+        this.hide_modal();
       },
     },
   }
 </script>
 
 <style scoped lang="scss">
-  .directions-manage {
-    width: 100%;
-    height: 60%;
+  .manage {
     display: flex;
     align-items: stretch;
     flex-direction: column;

@@ -8,30 +8,50 @@
       <radio-field v-model="searchTypesGroups" :variants="typesGroups" fullWidth @modified="filteredGroupObject"/>
     </div>
 
-    <div class="lists">
-      <div class="edit-element">
-        <h6><strong>{{searchTypesObject}}</strong> (создание/редактирование)</h6>
-        <div class="content-edit right-top">
-          <strong>Название:</strong>
-          <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="onClearContentEdit">
-            <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Очистить"></i>
-          </button>
-          <input type="text" v-model="editElementTitle" :placeholder="[[searchTypesObject]] + ': введите название' "/>
-          <p><strong>Код ФСЛИ</strong></p>
-          <input type="text" v-model="editElementFsli" placeholder="Введите код ФСЛИ.."/>
-          <p><strong>Скрыть</strong>
-            <input type="checkbox" id="checkbox" v-model="editElementHide">
-          </p>
-          <p><strong>Группа:</strong> {{editElementGroup}}</p>
+    <div class="row lists">
+      <div class="col-xs-4">
+        <div class="edit-element">
+          <h6><strong>{{searchTypesObject}}</strong> (создание/редактирование)</h6>
+
+          <div class="content-edit margin-top">
+            <div class="form-group">
+              <label for="create-title">Название:</label>
+              <div class="input-group">
+                <input class="form-control" v-model="editElementTitle"
+                       id="create-title"
+                       :placeholder="`${searchTypesObject}: введите название`">
+                <span class="input-group-btn">
+                  <button @click="onClearContentEdit" class="btn btn-default btn-primary-nb"
+                          v-tippy="{ placement : 'bottom'}" title="Очистить">
+                    <i class="fa fa-times"/>
+                  </button>
+                </span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="create-fsli">Код ФСЛИ:</label>
+              <input class="form-control" id="create-fsli" v-model="editElementFsli" placeholder="Введите код ФСЛИ.."/>
+            </div>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" v-model="editElementHide"> Скрыть
+              </label>
+            </div>
+            <div class="form-group"><strong>Группа:</strong> {{editElementGroup || 'все' }}</div>
+          </div>
         </div>
+
+        <button class="btn btn-blue-nb sidebar-footer" @click="save_element">
+          Сохранить
+        </button>
       </div>
 
-      <div class="left">
+      <div class="col-xs-4">
         <v-select :clearable="false" label="title" :options="list1" :searchable="true" placeholder="Выберите группу"
-                  v-model="selected1" v-on:change="load_culture_groups(selected1.title, '1')"
+                  v-model="selected1" @change="load_culture_groups(selected1.title, '1')"
                   :class="{background: selected1.hide}"
         />
-        <input type="text" v-model="searchElement" placeholder="Фильтр по названию.."/>
+        <input class="form-control" v-model="searchElement" placeholder="Фильтр по названию.."/>
         <draggable class="list-group" :list="list1Elements" group="some">
           <div class="item" v-for="element in filteredList" :key="element.title">
             <div :class="{background: element.hide}">
@@ -47,17 +67,24 @@
         </draggable>
       </div>
 
-      <div class="right">
+      <div class="col-xs-4">
         <v-select :clearable="false" label="title" :options="list2" :searchable="true"
-                  v-model="selected2" v-on:change="load_culture_groups(selected2.title, '2')"
+                  v-model="selected2" @change="load_culture_groups(selected2.title, '2')"
                   :class="{background: selected2.hide}"
         />
-        <input type="text" v-model="newgroup" style="width: 92%" placeholder="Добавить группу"/>
-        <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px">
-          <i class="fa fa-floppy-o fa-lg" aria-hidden="true" @click="addNewGroup"
-             v-tippy="{ placement : 'bottom'}"
-             :title="`Соханить в &#171;${searchTypesGroups.toUpperCase().trim()}&#187;`"></i>
-        </button>
+
+        <div class="input-group">
+          <input class="form-control" v-model="newgroup"
+                 :placeholder="`Добавить: ${searchTypesGroups}`">
+          <span class="input-group-btn">
+            <button @click="addNewGroup" class="btn btn-default btn-primary-nb"
+                    v-tippy="{ placement : 'bottom' }"
+                    :title="`Соханить в &#171;${searchTypesGroups.toUpperCase().trim()}&#187;`">
+              <i class="fa fa-floppy-o"/>
+            </button>
+          </span>
+        </div>
+
         <draggable v-if="searchTypesGroups === 'Группы'" class="list-group" :list="list2Elements" group="some">
           <div class="item" v-for="element in list2Elements" :key="element.title">
             <div :class="{background: element.hide}">{{ element.title }}</div>
@@ -69,30 +96,19 @@
               {{ element.title }}
               <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px"
                       @click="delFromlistSetsElements(element)">
-                <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Удалть из Набора"></i>
+                <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Удалть из Набора"/>
               </button>
             </div>
           </div>
         </div>
 
-      </div>
-    </div>
-    <div class="buttons">
-      <div class="button-create">
-        <button class="btn btn-blue-nb sidebar-footer" @click="save_element">
-          Сохранить
-        </button>
-      </div>
-      <div class="button-create"></div>
-      <div class="button-create">
         <button class="btn btn-blue-nb sidebar-footer" @click="save_groups">
           Сохранить
         </button>
-        <button class="btn btn-blue-nb sidebar-footer" @click="group_edit">
-          Изменить название
+        <button class="btn btn-blue-nb sidebar-footer" @click="group_edit" v-if="selected2.pk >= 0">
+          Редактировать группу
         </button>
       </div>
-
     </div>
     <bacteria-edit-title-group v-if="group_edit_open"
                                :group_obj="selected2"
@@ -158,11 +174,11 @@
           this.selected1 = {'pk': -1, 'title': 'Все'}
           this.selected2 = {'pk': -1, 'title': 'Все'}
         }
-        if (t.searchTypesGroups === 'Группы') {
+        if (this.searchTypesGroups === 'Группы') {
           bacteria_point.loadCultures({'type': titlegroup, 'searchObj': this.searchTypesObject})
             .then(data => {
                 this.list1 = data.groups
-                this.list2 = [...t.list1]
+                this.list2 = [...this.list1]
                 objList === '1' ? this.list1Elements = data.elements : this.list2Elements = data.elements
               }
             )
@@ -190,7 +206,7 @@
           }
         }
       },
-      onEditElement: function (element) {
+      onEditElement(element) {
         this.editElementPk = element.pk
         this.editElementTitle = element.title
         this.editElementFsli = element.fsli
@@ -266,8 +282,6 @@
         this.onClearContentEdit()
         this.selected1 = ''
         await this.load_culture_groups('Все', '1')
-        pksElements1 = []
-        pksElements2 = []
 
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
@@ -275,10 +289,10 @@
         this.load_culture_groups('Все', '1')
         this.selected1 = ''
         this.selected2 = ''
-        if (this.searchTypesObject === 'Бактерии') {
+        if (this.searchTypesObject === 'Бактериофаги') {
           this.searchTypesGroups = 'Группы'
         }
-        this.searchTypesObject === 'Антибиотики' ? this.typesGroups = ['Группы', 'Наборы'] : this.typesGroups = ['Группы']
+        this.typesGroups = this.searchTypesObject === 'Антибиотики' ? ['Группы', 'Наборы'] : ['Группы']
       },
     },
     mounted() {
@@ -295,10 +309,6 @@
 </script>
 
 <style lang="scss" scoped>
-  input[type="text"] {
-    width: 45vh;
-  }
-
   .radio-button-object {
     width: 70%;
     margin-left: auto;
@@ -317,67 +327,52 @@
   }
 
   .lists {
-    padding-left: 5vw;
-    margin-left: auto;
-    margin-right: auto;
-    display: flex;
-    width: 100%;
-    align-items: flex-start;
+    padding: 0 70px;
+  }
 
-    .content-edit {
-      height: 40vh;
-      width: 45vh;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-      transition: all .2s cubic-bezier(.25, .8, .25, 1);
-      position: relative;
+  .content-edit {
+    height: 330px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    position: relative;
+    border-radius: 4px;
+    padding: 5px;
+  }
+
+  .list-group {
+    height: 330px;
+    overflow-y: scroll;
+
+    .item {
+      background-color: #fff;
+      padding: 1px;
+      margin: 7px;
       border-radius: 4px;
-      padding-right: 50px;
-    }
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+      position: relative;
 
-    .left,
-    .right {
-      padding-left: 40px;
-
-      .list-group {
-        height: 40vh;
-        width: 45vh;
-        overflow-y: scroll;
-
-        .item {
-          background-color: #fff;
-          padding: 1px;
-          margin: 7px;
-          border-radius: 4px;
-          cursor: pointer;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-          transition: all .2s cubic-bezier(.25, .8, .25, 1);
-          position: relative;
-
-          i {
-            cursor: pointer;
-            float: right;
-          }
-        }
+      i {
+        cursor: pointer;
+        float: right;
       }
     }
   }
 
-  .right-top {
-    margin-top: 3.5vh;
+  .margin-top {
+    margin-top: 34px;
+    margin-bottom: 20px;
   }
 
-
   .buttons {
-    padding-left: 5vw;
+    padding: 0 70px;
     margin-right: auto;
     display: flex;
     width: 100%;
     align-items: flex-start;
 
     .button-create {
-      height: 5vh;
-      width: 45vh;
-      margin-right: 40px;
+      width: calc(50% - 5px);
+      margin-right: 10px;
     }
   }
 
@@ -401,14 +396,6 @@
       background-color: rgba(#737373, .01) !important;
       color: #37BC9B;
     }
-  }
-
-  p {
-    padding-top: 15px;
-  }
-
-  input {
-    border-radius: 4px;
   }
 
   .background {

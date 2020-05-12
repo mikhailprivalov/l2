@@ -1595,6 +1595,10 @@ input[type=date].form-control {
   line-height: 1;
 }
 
+.checkbox label {
+  padding-left: 20px!important;
+}
+
 @import "./variables";
 @import "./editor";
 @import "./menubar";
