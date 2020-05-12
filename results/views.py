@@ -1157,7 +1157,7 @@ def result_print(request):
                     if not protocol_plain_text:
                         br = '<br/>'
                     if napr_child:
-                        fwb.append(Paragraph("Направления:".format(t1), styleBold))
+                        fwb.append(Paragraph("Направления:", styleBold))
                         s_napr = ""
                         for n_child in napr_child:
                             iss_research = [s.research.title for s in
@@ -1184,7 +1184,7 @@ def result_print(request):
                     if not protocol_plain_text:
                         br = '<br/>'
                     if napr_child:
-                        fwb.append(Paragraph("Назначено:".format(t1), styleBold))
+                        fwb.append(Paragraph("Назначено:", styleBold))
                         s_napr = ""
                         for n_child in napr_child:
                             iss_research = [s.research.title for s in Issledovaniya.objects.filter(napravleniye=n_child)]
