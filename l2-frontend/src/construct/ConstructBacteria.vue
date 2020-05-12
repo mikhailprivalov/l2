@@ -233,8 +233,8 @@
           'newgroup': this.newgroup
         })
         if (ok) {
-          this.load_culture_groups('Все', '1')
-          okmessage('Сохранено в:', `${this.searchTypesGroups} - ${this.searchTypesObject} – ${this.newgroup}`)
+          await this.load_culture_groups('Все', '1')
+          okmessage('Сохранено', `${this.searchTypesGroups} - ${this.searchTypesObject} – ${this.newgroup}`)
         } else {
           errmessage('Ошибка', message)
         }
@@ -265,11 +265,11 @@
         }
         this.onClearContentEdit()
         this.selected1 = ''
-        this.load_culture_groups('Все', '1')
+        await this.load_culture_groups('Все', '1')
         pksElements1 = []
         pksElements2 = []
 
-        this.$store.dispatch(action_types.DEC_LOADING)
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       filteredGroupObject() {
         this.load_culture_groups('Все', '1')
