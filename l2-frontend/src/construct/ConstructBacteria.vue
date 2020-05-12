@@ -60,7 +60,7 @@
                 <i class="glyphicon glyphicon-pencil" v-if="searchTypesGroups === 'Группы'"
                    @click="onEditElement(element)"/>
                 <i class="glyphicon glyphicon-arrow-right" @click="onAddToSet(element)"
-                   v-tippy="{ placement : 'bottom'}" title="Добавить в набор" v-else/>
+                   v-tippy="{ placement : 'bottom'}" title="Добавить в набор" v-else-if="selected2.title !== 'Все'"/>
               </button>
             </div>
           </div>
@@ -94,9 +94,11 @@
           <div class="item" v-for="element in list2Elements" :key="element.title">
             <div :class="{background: element.hide}">
               {{ element.title }}
-              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px"
+              <button class="btn btn-blue-nb sidebar-btn"
+                      v-if="selected2.title !== 'Все'"
+                      v-tippy="{ placement : 'bottom'}" title="Удалть из Набора"
                       @click="delFromlistSetsElements(element)">
-                <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Удалть из Набора"/>
+                <i class="fa fa-times" />
               </button>
             </div>
           </div>
@@ -249,6 +251,7 @@
           'newgroup': this.newgroup
         })
         if (ok) {
+          this.newgroup = '';
           await this.load_culture_groups('Все', '1')
           okmessage('Сохранено', `${this.searchTypesGroups} - ${this.searchTypesObject} – ${this.newgroup}`)
         } else {
@@ -280,7 +283,6 @@
           errmessage('Ошибка', message)
         }
         this.onClearContentEdit()
-        this.selected1 = ''
         await this.load_culture_groups('Все', '1')
 
         await this.$store.dispatch(action_types.DEC_LOADING)
@@ -289,7 +291,7 @@
         this.load_culture_groups('Все', '1')
         this.selected1 = ''
         this.selected2 = ''
-        if (this.searchTypesObject === 'Бактериофаги') {
+        if (this.searchTypesObject !== 'Антибиотики') {
           this.searchTypesGroups = 'Группы'
         }
         this.typesGroups = this.searchTypesObject === 'Антибиотики' ? ['Группы', 'Наборы'] : ['Группы']
