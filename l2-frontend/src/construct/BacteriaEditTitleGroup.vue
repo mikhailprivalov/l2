@@ -4,10 +4,10 @@
     <span slot="header">Настройка группы</span>
     <div slot="body" style="min-height: 20px" class="directions-manage">
       <input type="text" v-model="group_obj.title">
-       <p>
-         Скрыть
-         <input type="checkbox" id="checkbox" v-model="group_obj.hide">
-       </p>
+      <p>
+        Скрыть
+        <input type="checkbox" id="checkbox" v-model="group_obj.hide">
+      </p>
     </div>
     <div slot="footer">
       <div class="row">
@@ -29,13 +29,13 @@
 
 <script>
   import Modal from '../ui-cards/Modal'
-  import * as action_types from "../store/action-types";
+  import * as action_types from '../store/action-types'
   import bacteria_point from '../api/bacteria-point'
 
-    export default {
-      name: "BacteriaEditTitleGroup",
-      components: {Modal, },
-      props: {
+  export default {
+    name: 'BacteriaEditTitleGroup',
+    components: {Modal},
+    props: {
       typesObject: {
         type: String,
         required: true
@@ -49,17 +49,19 @@
         required: true,
       },
     },
-      methods: {
-       hide_modal() {
-        this.$root.$emit('hide_ge');
+    methods: {
+      hide_modal() {
+        this.$root.$emit('hide_ge')
         if (this.$refs.modal) {
           this.$refs.modal.$el.style.display = 'none'
         }
       },
       async updateGroup() {
-        await this.$store.dispatch(action_types.INC_LOADING);
-        const {ok, message} = await bacteria_point.updateGroup({'TypesObject': this.typesObject ,'typeGroups': this.typesGroups,
-        'obj':{'pk': this.group_obj.pk, 'title': this.group_obj.title, 'hide': this.group_obj.hide} });
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const {ok, message} = await bacteria_point.updateGroup({
+          'TypesObject': this.typesObject, 'typeGroups': this.typesGroups,
+          'obj': {'pk': this.group_obj.pk, 'title': this.group_obj.title, 'hide': this.group_obj.hide}
+        })
         if (ok) {
           okmessage('Группа сохранён', `${this.group_obj.title}`)
         } else {
@@ -67,8 +69,8 @@
         }
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
-      },
-    }
+    },
+  }
 </script>
 
 <style scoped lang="scss">
@@ -80,12 +82,15 @@
     flex-direction: column;
     flex-wrap: nowrap;
     align-content: stretch;
+
     & > div {
       align-self: stretch;
     }
   }
+
   p {
     display: flex;
-    padding-top: 10px }
+    padding-top: 10px
+  }
 
 </style>
