@@ -119,6 +119,16 @@
         </div>
       </div>
     </div>
+      <transition name="fade">
+        <div class="sidebar-anesthesia" v-if="show_anesthesia_menu">
+          <p>Характер анестезии</p>
+          <input type="text" style = "width: 92%; padding: 5px" placeholder="SpO2"/>
+          <input type="text" style = "width: 92%; padding: 5px"   placeholder="CO2"/>
+          <input type="text" style = "width: 92%; padding: 5px"   placeholder="Температура"/>
+          <input type="text" style = "width: 92%"   placeholder="Систолическое давление"/>
+          <input type="text" style = "width: 92%"   placeholder="Диастолическое давление"/>
+        </div>
+      </transition>
     <div class="content">
       <div class="top">
         <div class="top-block title-block" v-if="opened_list_key">
@@ -142,6 +152,9 @@
         <div v-for="row in researches_forms">
           <div class="research-title">
             <div class="research-left">
+              <button class="btn btn-blue-nb" @click="show_anesthesia_menu=!show_anesthesia_menu" title="Добавить значения в наркозную карту" v-tippy v-if="row.research.title.includes('анестез')">
+                <i class="fa fa-heartbeat fa-lg" aria-hidden="true"></i>
+              </button>
               {{row.research.title}}
               <span class="comment" v-if="row.research.comment"> [{{row.research.comment}}]</span>
               <dropdown :visible="research_open_history === row.pk"
@@ -489,6 +502,7 @@
         research_open_history: null,
         research_history: [],
         inited: false,
+        show_anesthesia_menu: false
       }
     },
     watch: {
@@ -1055,6 +1069,29 @@
     display: flex;
     flex-direction: column;
   }
+  .fade-enter-active, .fade-leave-active {
+  transition: opacity .5s;
+  }
+  /*.fade-enter, .fade-leave-to !* .fade-leave-active до версии 2.1.8 *! {*/
+  /*  opacity: 0;*/
+  /*}*/
+  .sidebar-anesthesia {
+    width: 260px; /* 0 width - change this with JavaScript */
+    height: 100%;
+    position: fixed; /* Stay in place */
+    z-index: 1;
+    top: 115px;
+    left: 0;
+    background-color: #5d6671;
+    overflow-x: hidden;
+    transition: 0.5s;
+    border-right: 1px solid #b1b1b1;
+    display: flex;
+    flex-direction: column;
+      input {
+        border-radius: 4px;}
+  }
+
 
   .content {
     display: flex;
@@ -1310,7 +1347,15 @@
     position: relative;
     text-align: left;
     width: calc(100% - 390px);
+    .btn {
+      border-radius: 0;
+      padding: 5px 4px;
+      margin-top: -5px;
+      margin-bottom: -5px;
+      white-space: nowrap;
+    }
   }
+
 
   .research-right {
     text-align: right;

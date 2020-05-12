@@ -748,6 +748,7 @@
                 if (this.has_changed)
                     return 'Возможно имеются несохраненные изменения! Вы уверены, что хотите покинуть страницу?'
             });
+            console.log("stationar")
             this.load_history();
             this.$root.$on('hide_dreg', () => {
                 this.load_dreg_rows();
