@@ -139,13 +139,12 @@
         <input type="text" class="no-outline" placeholder="CO2"/>
 
         <div class="number">
-            <i class="fa fa-minus " aria-hidden="true"></i>
-            <input type="checkbox" id="checkbox" v-model="temerature_enable">
+            <input style="margin-left: 5px" type="checkbox" id="checkbox" v-model="temerature_enable">
             <button class="btn btn-blue-nb sidebar-btn sidebar-btn" @mousedown="minus_temperature_start" @mouseleave="temperature_stop" @mouseup="temperature_stop">
               <i class="fa fa-minus"/>
             </button>
             <input type="text" v-model="temerature_current" class="no-outline" style="width: 190px"  value="36.6" placeholder="Температура"/>
-            <button class="btn btn-blue-nb sidebar-btn" @mousedown="plus_temperature_start" @mouseleave="temperature_stop" @mouseup="temperature_stop">
+            <button class="btn btn-blue-nb sidebar-btn" style="" @mousedown="plus_temperature_start" @mouseleave="temperature_stop" @mouseup="temperature_stop">
               <i class="fa fa-plus"/>
             </button>
         </div>
@@ -454,6 +453,7 @@
   </div>
 </template>
 
+
 <script>
   import {mapGetters} from 'vuex'
   import dropdown from 'vue-my-dropdown'
@@ -541,9 +541,9 @@
           H: '',
           mm : '',
         },
-        temerature: '',
+        temerature: 'Температура',
         interval:false,
-        temerature_enable: false
+        temerature_enable: false,
       }
     },
     watch: {
@@ -587,6 +587,9 @@
     },
     methods: {
       plus_temperature_start(){
+        if (!this.temerature_enable) {
+          return
+        }
         if (typeof this.temerature !== 'number' ) {
           this.temerature = 36.6
         }
@@ -599,11 +602,15 @@
         this.interval = false
       },
       minus_temperature_start(){
+        if (!this.temerature_enable) {
+          return
+        }
         if (typeof this.temerature !== 'number' ) {
           this.temerature = 36.6
         }
         if(!this.interval){
-      	this.interval = setInterval(() => ((this.temerature -=0.1).toFixed(1) ), 100)
+      	this.interval = setInterval(() => (
+      	  (this.temerature -=0.1).toFixed(1) ), 100)
       }
 
     },
@@ -1066,11 +1073,18 @@
       }),
       temerature_current() {
         if (!this.temerature_enable) {
-          return "-"
+          return "Температура"
         }
-        else if (this.temerature > 0) {
+        else if (this.temerature < 34) {
+          return this.temerature = 34
+        }
+        else if (this.temerature > 41) {
+          return this.temerature = 41
+        }
+        else if (this.temerature > 34 && this.temerature < 42) {
           return this.temerature.toFixed(1)
         }
+
       },
       navState() {
         if (!this.direction) {
@@ -1137,6 +1151,7 @@
 </script>
 
 <style scoped lang="scss">
+
   .root {
     display: flex;
     align-items: stretch;
@@ -1155,6 +1170,7 @@
     display: flex;
     flex-direction: column;
   }
+
   .time-control {
     display: flex;
     flex-direction: row;
@@ -1252,7 +1268,6 @@
       }
       input:focus,
       input:active {
-        /*border-color: transparent;*/
         border-bottom: 2px solid #56616c;
       }
       .no-outline:focus {
