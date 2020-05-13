@@ -120,19 +120,44 @@
       </div>
     </div>
       <div class="sidebar-anesthesia" :class="[{show_anesthesia: show_anesthesia_menu}, {hide_anesthesia: !show_anesthesia_menu}  ]">
-        <div class="title-anesthesia"><p style="color: whitesmoke">Течение анестезии</p></div>
-        <vue-timepicker style="margin: 3px" v-model="timeValue" format="H:mm" input-width="100px" input-class="timepicker_attr"
+        <div class="title-anesthesia">
+          <div class="col-xs-10">Течение анестезии</div>
+          <div class="col-xs-2">
+             <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="show_anesthesia_sidebar">
+              <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Закрыть"></i>
+             </button>
+          </div>
+        </div>
+        <div class="time-control">
+          <vue-timepicker style="margin-left: 3px" v-model="timeValue" format="H:mm" input-width="127px" input-class="timepicker_attr"
                         hide-clear-button close-on-complete></vue-timepicker>
+          <button class="btn btn-blue-nb" @click="">
+            Очистить
+          </button>
+        </div>
+
         <input type="text" class="no-outline" placeholder="SpO2"/>
         <input type="text" class="no-outline" placeholder="CO2"/>
-        <input type="text" class="no-outline" placeholder="Температура"/>
+        <div class="number">
+          <button class="btn btn-blue-nb sidebar-btn sidebar-btn" @mouseup="minus_temperature">
+            <i class="fa fa-minus"/>
+          </button>
+          <input type="text" pattern="\d+(\.\d{2})?" v-model="temerature" class="no-outline" style="width: 190px"  value="36.6" placeholder="Температура"/>
+          <button class="btn btn-blue-nb sidebar-btn" @mousedown="plus_temperature">
+            <i class="fa fa-plus"/>
+          </button>
+        </div>
+
         <input type="text" class="no-outline" placeholder="Систолическое давление"/>
         <input type="text" class="no-outline" placeholder="Диастолическое давление"/>
         <br/>
         <br/>
-        <button class="btn btn-blue-nb" @click="close_form">
-          Добавить
-        </button>
+        <div class="control-row side-bottom">
+
+          <button class="btn btn-blue-nb" @click="">
+            Добавить
+          </button>
+        </div>
       </div>
     <div class="content">
       <div class="top">
@@ -157,7 +182,6 @@
         <div v-for="row in researches_forms">
           <div class="research-title">
             <div class="research-left">
-<!--              <button style="margin-right: 5px" class="btn btn-blue-nb" @click="show_anesthesia_menu=!show_anesthesia_menu" title="Добавить значения в наркозную карту" v-tippy v-if="row.research.title.includes('анестез')">-->
               <button style="margin-right: 5px" class="btn btn-blue-nb" @click="show_anesthesia_sidebar" title="Добавить значения в наркозную карту" v-tippy v-if="row.research.title.includes('анестез')">
                 <i class="fa fa-heartbeat fa-lg" aria-hidden="true"></i>
               </button>
@@ -515,6 +539,8 @@
           H: '',
           mm : '',
         },
+        temerature: 36.6,
+        interval:false,
       }
     },
     watch: {
@@ -557,6 +583,18 @@
       this.inited = true
     },
     methods: {
+      plus_temperature(){
+    	if(!this.interval){
+    	  clearInterval(this.interval);
+        this.interval = false;
+      	this.interval = setInterval(() => this.temerature++, 300)
+      }
+    },
+    minus_temperature(){
+    	clearInterval(this.interval)
+      this.interval = false
+      this.interval = setInterval(() => this.temerature--, 300)
+    },
       getCurrentTime() {
         let timeInMs = new Date();
         this.timeValue.H = timeInMs.getHours().toString();
@@ -566,13 +604,11 @@
         this.show_anesthesia_menu = !this.show_anesthesia_menu;
         this.getCurrentTime();
         if (this.show_anesthesia_menu === false) {
-          clearInterval(renewTime)
+          clearInterval(renewTime);
           }
-
         if (this.show_anesthesia_menu === true) {
-          var renewTime = setInterval(()=> this.getCurrentTime(), 1000 * 20);
+          var renewTime = setInterval(this.getCurrentTime, 1000 * 20);
         }
-
       },
 
       is_diary(research) {
@@ -1099,7 +1135,17 @@
     display: flex;
     flex-direction: column;
   }
+  .time-control {
+    display: flex;
+    flex-direction: row;
+    .btn {
+      border-radius: 0;
+      padding: 5px 4px;
+      width: 50%;
+      height: 31px;
+      }
 
+  }
   .show_anesthesia {
     width: 260px;
   }
@@ -1110,7 +1156,7 @@
 
   .sidebar-anesthesia {
     /*width: 260px; !* 0 width - change this with JavaScript *!*/
-    height: 100%;
+    height: 85%;
     position: fixed; /* Stay in place */
     z-index: 1;
     top: 100px;
@@ -1121,15 +1167,58 @@
     display: flex;
     flex-direction: column;
     border-right: 1px solid #56616c ;
-    .btn {
+    border-bottom: 1px solid #56616c ;
+    .side-bottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
       border-radius: 0;
-      padding: 5px 4px;
-      width: 50%;
+      display: flex;
+      flex-direction: row;
+      .btn {
+        border-radius: 0;
+        padding: 5px 4px;
+        width: 100%;
+      }
     }
+
     .title-anesthesia {
       height: 5%;
       width: 260px;
       background-color: #56616c;
+      display: flex;
+      flex-direction: row;
+      color: whitesmoke;
+      padding-top: 5px ;
+      .sidebar-btn{
+        border-bottom: none !important;
+      }
+      }
+    .number {
+      display: flex;
+      flex-direction: row;
+      .sidebar-btn{
+        margin-top: 0px;
+        height: 31px;
+        width: 35px;
+      }
+      input {
+        margin-left: 0px;
+        margin-right: 0px;
+        text-align: center;
+      }
+      .minus, .plus {
+        width: 20px;
+        height: 20px;
+        background: #7f8c9a;
+        border-radius: 4px;
+        padding: 8px 5px 8px 5px;
+        border: 1px solid #ddd;
+        display: inline-block;
+        vertical-align: middle;
+        text-align: center;
+      }
     }
       input {
         border-top-style: hidden;
@@ -1149,11 +1238,7 @@
       .no-outline:focus {
         outline: none;
       }
-      p {
-        padding: 5px;
-        margin-left: 5px;
 
-      }
   }
 
 
@@ -1320,8 +1405,9 @@
       background-color: rgba(#000, .02) !important;
       color: #000;
       border-bottom: 1px solid #b1b1b1 !important;
+      }
     }
-  }
+
 
   .sidebar-btn-wrapper {
     display: flex;
