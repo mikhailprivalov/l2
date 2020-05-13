@@ -119,16 +119,21 @@
         </div>
       </div>
     </div>
-      <transition name="fade">
-        <div class="sidebar-anesthesia" v-if="show_anesthesia_menu">
-          <p>Характер анестезии</p>
-          <input type="text" style = "width: 92%; padding: 5px" placeholder="SpO2"/>
-          <input type="text" style = "width: 92%; padding: 5px"   placeholder="CO2"/>
-          <input type="text" style = "width: 92%; padding: 5px"   placeholder="Температура"/>
-          <input type="text" style = "width: 92%"   placeholder="Систолическое давление"/>
-          <input type="text" style = "width: 92%"   placeholder="Диастолическое давление"/>
-        </div>
-      </transition>
+      <div class="sidebar-anesthesia" :class="[{show_anesthesia: show_anesthesia_menu}, {hide_anesthesia: !show_anesthesia_menu}  ]">
+        <div class="title-anesthesia"><p style="color: whitesmoke">Течение анестезии</p></div>
+        <vue-timepicker style="margin: 3px" v-model="timeValue" format="H:mm" input-width="100px" input-class="timepicker_attr"
+                        hide-clear-button close-on-complete></vue-timepicker>
+        <input type="text" class="no-outline" placeholder="SpO2"/>
+        <input type="text" class="no-outline" placeholder="CO2"/>
+        <input type="text" class="no-outline" placeholder="Температура"/>
+        <input type="text" class="no-outline" placeholder="Систолическое давление"/>
+        <input type="text" class="no-outline" placeholder="Диастолическое давление"/>
+        <br/>
+        <br/>
+        <button class="btn btn-blue-nb" @click="close_form">
+          Добавить
+        </button>
+      </div>
     <div class="content">
       <div class="top">
         <div class="top-block title-block" v-if="opened_list_key">
@@ -152,7 +157,8 @@
         <div v-for="row in researches_forms">
           <div class="research-title">
             <div class="research-left">
-              <button class="btn btn-blue-nb" @click="show_anesthesia_menu=!show_anesthesia_menu" title="Добавить значения в наркозную карту" v-tippy v-if="row.research.title.includes('анестез')">
+<!--              <button style="margin-right: 5px" class="btn btn-blue-nb" @click="show_anesthesia_menu=!show_anesthesia_menu" title="Добавить значения в наркозную карту" v-tippy v-if="row.research.title.includes('анестез')">-->
+              <button style="margin-right: 5px" class="btn btn-blue-nb" @click="show_anesthesia_sidebar" title="Добавить значения в наркозную карту" v-tippy v-if="row.research.title.includes('анестез')">
                 <i class="fa fa-heartbeat fa-lg" aria-hidden="true"></i>
               </button>
               {{row.research.title}}
@@ -449,6 +455,7 @@
   import UrlData from '../../UrlData'
   import AggregateTADP from '../../fields/AggregateTADP'
   import DirectionsHistory from '../../ui-cards/DirectionsHistory'
+  import VueTimepicker from 'vue2-timepicker/src/vue-timepicker.vue'
 
   export default {
     mixins: [menuMixin],
@@ -462,7 +469,8 @@
       ResultsViewer,
       DescriptiveForm,
       SelectPickerM,
-      IssStatus, ResearchPick, SelectedResearches, LastResult, ResearchesPicker, Modal, PatientCard
+      IssStatus, ResearchPick, SelectedResearches, LastResult, ResearchesPicker, Modal, PatientCard,
+      VueTimepicker
     },
     data() {
       return {
@@ -502,7 +510,11 @@
         research_open_history: null,
         research_history: [],
         inited: false,
-        show_anesthesia_menu: false
+        show_anesthesia_menu: false,
+        timeValue: {
+          H: '',
+          mm : '',
+        },
       }
     },
     watch: {
@@ -545,6 +557,24 @@
       this.inited = true
     },
     methods: {
+      getCurrentTime() {
+        let timeInMs = new Date();
+        this.timeValue.H = timeInMs.getHours().toString();
+        this.timeValue.mm = timeInMs.getMinutes().toString();
+      },
+      show_anesthesia_sidebar() {
+        this.show_anesthesia_menu = !this.show_anesthesia_menu;
+        this.getCurrentTime();
+        if (this.show_anesthesia_menu === false) {
+          clearInterval(renewTime)
+          }
+
+        if (this.show_anesthesia_menu === true) {
+          var renewTime = setInterval(()=> this.getCurrentTime(), 1000 * 20);
+        }
+
+      },
+
       is_diary(research) {
         const res_title = research.title.toLowerCase();
         return res_title.includes('осмотр') || res_title.includes('дневник');
@@ -1069,27 +1099,61 @@
     display: flex;
     flex-direction: column;
   }
-  .fade-enter-active, .fade-leave-active {
-  transition: opacity .5s;
+
+  .show_anesthesia {
+    width: 260px;
   }
-  /*.fade-enter, .fade-leave-to !* .fade-leave-active до версии 2.1.8 *! {*/
-  /*  opacity: 0;*/
-  /*}*/
+
+  .hide_anesthesia {
+    width: 0;
+  }
+
   .sidebar-anesthesia {
-    width: 260px; /* 0 width - change this with JavaScript */
+    /*width: 260px; !* 0 width - change this with JavaScript *!*/
     height: 100%;
     position: fixed; /* Stay in place */
     z-index: 1;
-    top: 115px;
+    top: 100px;
     left: 0;
-    background-color: #5d6671;
+    background-color: #eee;
     overflow-x: hidden;
-    transition: 0.5s;
-    border-right: 1px solid #b1b1b1;
+    transition: 0.6s;
     display: flex;
     flex-direction: column;
+    border-right: 1px solid #56616c ;
+    .btn {
+      border-radius: 0;
+      padding: 5px 4px;
+      width: 50%;
+    }
+    .title-anesthesia {
+      height: 5%;
+      width: 260px;
+      background-color: #56616c;
+    }
       input {
-        border-radius: 4px;}
+        border-top-style: hidden;
+        border-right-style: hidden;
+        border-left-style: hidden;
+        border-bottom-style: groove;
+        background-color: #eee;
+        margin-left: 3px;
+        margin-right: 3px;
+        margin-top: 8px;
+      }
+      input:focus,
+      input:active {
+        /*border-color: transparent;*/
+        border-bottom: 2px solid #56616c;
+      }
+      .no-outline:focus {
+        outline: none;
+      }
+      p {
+        padding: 5px;
+        margin-left: 5px;
+
+      }
   }
 
 
