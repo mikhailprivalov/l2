@@ -135,17 +135,19 @@
             Очистить
           </button>
         </div>
-
         <input type="text" class="no-outline" placeholder="SpO2"/>
         <input type="text" class="no-outline" placeholder="CO2"/>
+
         <div class="number">
-          <button class="btn btn-blue-nb sidebar-btn sidebar-btn" @mouseup="minus_temperature">
-            <i class="fa fa-minus"/>
-          </button>
-          <input type="text" pattern="\d+(\.\d{2})?" v-model="temerature" class="no-outline" style="width: 190px"  value="36.6" placeholder="Температура"/>
-          <button class="btn btn-blue-nb sidebar-btn" @mousedown="plus_temperature">
-            <i class="fa fa-plus"/>
-          </button>
+            <i class="fa fa-minus " aria-hidden="true"></i>
+            <input type="checkbox" id="checkbox" v-model="temerature_enable">
+            <button class="btn btn-blue-nb sidebar-btn sidebar-btn" @mousedown="minus_temperature_start" @mouseleave="temperature_stop" @mouseup="temperature_stop">
+              <i class="fa fa-minus"/>
+            </button>
+            <input type="text" v-model="temerature_current" class="no-outline" style="width: 190px"  value="36.6" placeholder="Температура"/>
+            <button class="btn btn-blue-nb sidebar-btn" @mousedown="plus_temperature_start" @mouseleave="temperature_stop" @mouseup="temperature_stop">
+              <i class="fa fa-plus"/>
+            </button>
         </div>
 
         <input type="text" class="no-outline" placeholder="Систолическое давление"/>
@@ -539,8 +541,9 @@
           H: '',
           mm : '',
         },
-        temerature: 36.6,
+        temerature: '',
         interval:false,
+        temerature_enable: false
       }
     },
     watch: {
@@ -583,17 +586,26 @@
       this.inited = true
     },
     methods: {
-      plus_temperature(){
-    	if(!this.interval){
-    	  clearInterval(this.interval);
-        this.interval = false;
-      	this.interval = setInterval(() => this.temerature++, 300)
+      plus_temperature_start(){
+        if (typeof this.temerature !== 'number' ) {
+          this.temerature = 36.6
+        }
+        if(!this.interval){
+      	this.interval = setInterval(() => ((this.temerature +=0.1).toFixed(1)), 100)
       }
     },
-    minus_temperature(){
-    	clearInterval(this.interval)
-      this.interval = false
-      this.interval = setInterval(() => this.temerature--, 300)
+      temperature_stop() {
+        clearInterval(this.interval)
+        this.interval = false
+      },
+      minus_temperature_start(){
+        if (typeof this.temerature !== 'number' ) {
+          this.temerature = 36.6
+        }
+        if(!this.interval){
+      	this.interval = setInterval(() => ((this.temerature -=0.1).toFixed(1) ), 100)
+      }
+
     },
       getCurrentTime() {
         let timeInMs = new Date();
@@ -1052,6 +1064,14 @@
         researches: 'researches',
         bases: 'bases',
       }),
+      temerature_current() {
+        if (!this.temerature_enable) {
+          return "-"
+        }
+        else if (this.temerature > 0) {
+          return this.temerature.toFixed(1)
+        }
+      },
       navState() {
         if (!this.direction) {
           return null
@@ -1166,8 +1186,8 @@
     transition: 0.6s;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #56616c ;
-    border-bottom: 1px solid #56616c ;
+    border-right: 1px solid #56616c;
+    border-bottom: 1px solid #56616c;
     .side-bottom {
       position: absolute;
       bottom: 0;
