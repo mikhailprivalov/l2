@@ -98,7 +98,7 @@
                       v-if="selected2.title !== 'Все'"
                       v-tippy="{ placement : 'bottom'}" title="Удалть из Набора"
                       @click="delFromlistSetsElements(element)">
-                <i class="fa fa-times" />
+                <i class="fa fa-times"/>
               </button>
             </div>
           </div>
@@ -112,10 +112,21 @@
         </button>
       </div>
     </div>
+
+    <div class="sub-buttons">
+      <button class="btn btn-blue-nb" @click="openFcafbg" v-if="searchTypesGroups === 'Группы'">
+        Быстрое создание и заполнение: {{searchTypesObject}} – {{searchTypesGroups}}
+      </button>
+    </div>
+
     <bacteria-edit-title-group v-if="group_edit_open"
                                :group_obj="selected2"
                                :typesObject="searchTypesObject"
                                :typesGroups="searchTypesGroups"/>
+
+    <fast-create-and-fill-bacteria-group v-if="isFcafbgOpen"
+                                         :typesObject="searchTypesObject"
+                                         :typesGroups="searchTypesGroups"/>
   </div>
 </template>
 
@@ -126,10 +137,12 @@
   import RadioField from '../fields/RadioField'
   import BacteriaEditTitleGroup from '../modals/BacteriaEditTitleGroup'
   import * as action_types from '../store/action-types'
+  import FastCreateAndFillBacteriaGroup from "../modals/FastCreateAndFillBacteriaGroup";
 
   export default {
     name: 'ConstructBacteria',
     components: {
+      FastCreateAndFillBacteriaGroup,
       vSelect,
       draggable,
       RadioField,
@@ -160,7 +173,8 @@
         editElementPk: -1,
         editElementGroup: '',
         newgroup: '',
-        group_edit_open: false
+        group_edit_open: false,
+        isFcafbgOpen: false,
       }
     },
     methods: {
@@ -169,6 +183,12 @@
       },
       group_edit_hide() {
         this.group_edit_open = false
+      },
+      openFcafbg() {
+        this.isFcafbgOpen = true
+      },
+      hide_fcafbg() {
+        this.isFcafbgOpen = false
       },
       async load_culture_groups(titlegroup, objList) {
         if (!titlegroup || titlegroup.length === 0) {
@@ -299,6 +319,7 @@
     },
     mounted() {
       this.$root.$on('hide_ge', () => this.group_edit_hide())
+      this.$root.$on('hide_fcafbg', () => this.hide_fcafbg())
     },
     computed: {
       filteredList() {
@@ -404,6 +425,11 @@
     padding: 0;
     background-color: #cacfd2;
     border-radius: 4px;
+  }
+
+  .sub-buttons {
+    text-align: center;
+    margin: 15px;
   }
 
 </style>
