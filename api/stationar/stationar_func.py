@@ -399,7 +399,9 @@ def forbidden_edit_dir(num_dir):
             return False
 
     hosp_nums_obj = hosp_get_hosp_direction(num_dir)
-    hosp_last_num = hosp_nums_obj[-1].get('direction')
+    hosp_last_num = hosp_nums_obj[-1].get('direction') if hosp_nums_obj else None
+    if not hosp_last_num:
+        return False
     hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
     if hosp_extract and hosp_extract[0].get('date_confirm'):
         return True

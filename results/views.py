@@ -1897,7 +1897,7 @@ def result_get(request):
         results = Result.objects.filter(issledovaniye=issledovaniye)
         for v in results:
             result["results"][str(v.fraction_id)] = v.value
-            result["norms"][str(v.fraction_id)] = v.get_is_norm(recalc=True)
+            result["norms"][str(v.fraction_id)] = v.get_is_norm(recalc=True)[0]
             result["refs"][str(v.fraction_id)] = v.get_ref(full=True)
         if issledovaniye.lab_comment:
             result["comment"] = issledovaniye.lab_comment.strip()

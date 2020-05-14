@@ -14,14 +14,14 @@ def load_culture(request):
     if searchObj == 'Бактерии':
         elements = Culture.get_cultures(type)
         groups = GroupCulture.get_all_cultures_groups()
+        groups.insert(0, {"pk": -2, "title": "Без группы"})
         groups.insert(0, {"pk": -1, "title": "Все"})
-        groups.insert(1, {"pk": -2, "title": "Без группы"})
 
     if searchObj == 'Антибиотики':
         elements = Antibiotic.get_antibiotics(type)
         groups = GroupAntibiotic.get_all_antibiotic_groups()
+        groups.insert(0, {"pk": -2, "title": "Без группы"})
         groups.insert(0, {"pk": -1, "title": "Все"})
-        groups.insert(1, {"pk": -2, "title": "Без группы"})
 
     return JsonResponse({"groups": groups, "elements": elements})
 
@@ -145,3 +145,25 @@ def update_group(request):
     return JsonResponse(result)
 
 
+@login_required
+def get_bac_groups(request):
+    groups = GroupCulture.objects.filter(hide=False).order_by('title')
+    return JsonResponse({
+        "groups": [{
+            "pk": x.pk,
+            "title": x.title,
+        } for x in groups]
+    })
+
+
+@login_required
+def get_bac_by_group(request):
+    request_data = json.loads(request.body)
+    group_pk = request_data["groupId"]
+
+    return JsonResponse({
+        "list": [{
+            "pk": x.pk,
+            "title": x.title,
+        } for x in Culture.objects.filter(group_culture_id=group_pk, hide=False).order_by('title')]
+    })

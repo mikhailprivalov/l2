@@ -124,7 +124,7 @@
   import vSelect from 'vue-select'
   import draggable from 'vuedraggable'
   import RadioField from '../fields/RadioField'
-  import BacteriaEditTitleGroup from './BacteriaEditTitleGroup'
+  import BacteriaEditTitleGroup from '../modals/BacteriaEditTitleGroup'
   import * as action_types from '../store/action-types'
 
   export default {
@@ -143,7 +143,7 @@
         list1Elements: [],
         list2Elements: [],
         listSetsElements: [],
-        selected1: {'pk': -1, 'title': 'Все'},
+        selected1: {'pk': -2, 'title': 'Без группы'},
         selected2: {'pk': -1, 'title': 'Все'},
         searchElement: '',
         typesObject: [
@@ -156,7 +156,7 @@
         searchTypesGroups: 'Группы',
         editElementTitle: '',
         editElementFsli: '',
-        editElementHide: '',
+        editElementHide: false,
         editElementPk: -1,
         editElementGroup: '',
         newgroup: '',
@@ -173,7 +173,7 @@
       async load_culture_groups(titlegroup, objList) {
         if (!titlegroup || titlegroup.length === 0) {
           titlegroup = 'Все'
-          this.selected1 = {'pk': -1, 'title': 'Все'}
+          this.selected1 = {'pk': -2, 'title': 'Без группы'}
           this.selected2 = {'pk': -1, 'title': 'Все'}
         }
         if (this.searchTypesGroups === 'Группы') {
@@ -240,7 +240,7 @@
         this.editElementTitle = ''
         this.editElementFsli = ''
         this.editElementPk = -1
-        this.editElementHide = ''
+        this.editElementHide = false
         this.editElementGroup = ''
 
       },
@@ -289,8 +289,8 @@
       },
       filteredGroupObject() {
         this.load_culture_groups('Все', '1')
-        this.selected1 = ''
-        this.selected2 = ''
+        this.selected1 = {'pk': -2, 'title': 'Без группы'}
+        this.selected2 = {'pk': -1, 'title': 'Все'}
         if (this.searchTypesObject !== 'Антибиотики') {
           this.searchTypesGroups = 'Группы'
         }
