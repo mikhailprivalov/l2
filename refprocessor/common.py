@@ -57,8 +57,8 @@ RANGE_NEQ = "!="
 RANGE_LOWER = "<"
 
 RANGE_NOT_IN = {
-    RANGE_OVER: "  ▲",
-    RANGE_LOWER: "  ▼",
+    RANGE_OVER: "  ↑",
+    RANGE_LOWER: "  ↓",
     RANGE_NEQ: "",
 }
 

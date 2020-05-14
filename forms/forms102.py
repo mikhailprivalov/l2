@@ -618,7 +618,7 @@ def form_01(request_data):
                                                                              format(person_data['fio'], person_data['type_doc'], person_data['passport_serial'],
                                                                                     person_data['passport_num'], person_data['main_address']), styleAtr)],
 
-                [Paragraph(''.format(dir_npf), styleAtr),
+                [Paragraph('', styleAtr),
                  Paragraph('', styleAtr),
                  Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(a_npf), styleAtr)
                  ]
@@ -687,7 +687,7 @@ def form_01(request_data):
             # [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
             [Paragraph('', styleAtr),
              Paragraph('', styleAtr),
-             Paragraph(''.format(npf), styleAtr)
+             Paragraph('', styleAtr)
              ],
         ]
         row_count = row_count + len(opinion_patient)

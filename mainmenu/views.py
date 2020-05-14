@@ -733,15 +733,15 @@ def direction_info(request):
                      ["Регистратор", dir.visit_who_mark.fio + ", " + dir.visit_who_mark.podrazdeleniye.title], ]
                 ]}
                 data.append(d)
-            for l in slog.Log.objects.filter(key=str(pk), type__in=(5002,)):
+            for lg in slog.Log.objects.filter(key=str(pk), type__in=(5002,)):
                 data[0]["events"].append([
-                    ["title", "{}, {}".format(strdatetime(l.time), l.get_type_display())],
-                    ["Отмена", "{}, {}".format(l.body, get_userdata(l.user))]
+                    ["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())],
+                    ["Отмена", "{}, {}".format(lg.body, get_userdata(lg.user))]
                 ])
-            for l in slog.Log.objects.filter(key=str(pk), type__in=(60000, 60001)):
+            for lg in slog.Log.objects.filter(key=str(pk), type__in=(60000, 60001)):
                 data[0]["events"].append([
-                    ["title", l.get_type_display()],
-                    ["Дата и время", strdatetime(l.time)]
+                    ["title", lg.get_type_display()],
+                    ["Дата и время", strdatetime(lg.time)]
                 ])
             for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir).distinct():
                 d = {"type": "Ёмкость №%s" % tube.pk, "events": []}
@@ -750,20 +750,20 @@ def direction_info(request):
                         ["title", strdatetime(tube.time_get) + " Забор"],
                         ["Заборщик", get_userdata(tube.doc_get)]
                     ])
-                for l in slog.Log.objects.filter(key=str(tube.pk), type__in=(4000, 12, 11)).distinct():
-                    tdata = [["Приёмщик", get_userdata(l.user)],
-                             ["title", strdatetime(l.time) + " " + l.get_type_display() + " (#%s)" % l.pk]]
-                    if l.body and l.body != "":
-                        tdata.append(["json_data", l.body])
+                for lg in slog.Log.objects.filter(key=str(tube.pk), type__in=(4000, 12, 11)).distinct():
+                    tdata = [["Приёмщик", get_userdata(lg.user)],
+                             ["title", strdatetime(lg.time) + " " + lg.get_type_display() + " (#%s)" % lg.pk]]
+                    if lg.body and lg.body != "":
+                        tdata.append(["json_data", lg.body])
                     d["events"].append(tdata)
                 data.append(d)
             for iss in Issledovaniya.objects.filter(napravleniye=dir):
                 d = {'type': "Исследование: %s (#%s)" % (iss.research.title, iss.pk), 'events': []}
-                for l in slog.Log.objects.filter(key=str(iss.pk), type__in=(13, 14, 24)).distinct():
-                    tdata = [["Исполнитель", get_userdata(l.user)],
-                             ["title", strdatetime(l.time) + " " + l.get_type_display() + " (#%s)" % l.pk]]
-                    if l.body and l.body != "" and l.type != 24:
-                        tdata.append(["json_data", l.body])
+                for lg in slog.Log.objects.filter(key=str(iss.pk), type__in=(13, 14, 24)).distinct():
+                    tdata = [["Исполнитель", get_userdata(lg.user)],
+                             ["title", strdatetime(lg.time) + " " + lg.get_type_display() + " (#%s)" % lg.pk]]
+                    if lg.body and lg.body != "" and lg.type != 24:
+                        tdata.append(["json_data", lg.body])
                     d["events"].append(tdata)
                 data.append(d)
             slog.Log(key=str(pk), type=5000, body="", user=request.user.doctorprofile).save()
