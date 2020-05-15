@@ -26,5 +26,16 @@ export default generator({
   loadSetElements: {
     url: 'bacteria/loadsetelements',
   },
-
+  getBacGroups: {
+    url: 'bacteria/get-bac-groups',
+  },
+  getBacByGroup: {
+    url: 'bacteria/get-bac-by-group',
+  },
+  packageGroupCreate: {
+    url: 'bacteria/package-group-create',
+  },
+  getAntibioticGroups: {
+    url: 'bacteria/get-antibiotic-groups',
+  },
 })

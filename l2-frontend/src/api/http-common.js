@@ -16,7 +16,7 @@ export const creator = ({method = 'post', url = null, urlFmt = null, onReject={}
   async (t = null, pickThis = null, moreData = {}) => {
     let data = t ? (pickThis ? merge(pick(t, Array.isArray(pickThis) ? pickThis : [pickThis]), moreData) : t) : moreData
     try {
-      let response = {}
+      let response
       if (urlFmt) {
         response = await HTTP.get(urlFmt.kwf(data))
       } else {

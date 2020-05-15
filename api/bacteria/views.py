@@ -14,14 +14,14 @@ def load_culture(request):
     if searchObj == 'Бактерии':
         elements = Culture.get_cultures(type)
         groups = GroupCulture.get_all_cultures_groups()
+        groups.insert(0, {"pk": -2, "title": "Без группы"})
         groups.insert(0, {"pk": -1, "title": "Все"})
-        groups.insert(1, {"pk": -2, "title": "Без группы"})
 
     if searchObj == 'Антибиотики':
         elements = Antibiotic.get_antibiotics(type)
         groups = GroupAntibiotic.get_all_antibiotic_groups()
+        groups.insert(0, {"pk": -2, "title": "Без группы"})
         groups.insert(0, {"pk": -1, "title": "Все"})
-        groups.insert(1, {"pk": -2, "title": "Без группы"})
 
     return JsonResponse({"groups": groups, "elements": elements})
 
@@ -83,16 +83,16 @@ def new_group(request):
     result = {"ok": False, "message": "Ошибка"}
 
     if types_object == 'Бактерии':
-        GroupCulture.create_culture_group(title)
-        result = {"ok": True, "message": ""}
+        obj = GroupCulture.create_culture_group(title)
+        result = {"ok": True, "message": "", "obj": obj.as_dict()}
 
     if types_object == 'Антибиотики' and types_group == 'Группы':
-        GroupAntibiotic.create_antibiotic_group(title)
-        result = {"ok": True, "message": ""}
+        obj = GroupAntibiotic.create_antibiotic_group(title)
+        result = {"ok": True, "message": "", "obj": obj.as_dict()}
 
     if types_object == 'Антибиотики' and types_group == 'Наборы':
-        AntibioticSets.create_antibiotic_set(title)
-        result = {"ok": True, "message": ""}
+        obj = AntibioticSets.create_antibiotic_set(title)
+        result = {"ok": True, "message": "", "obj": obj.as_dict()}
 
     return JsonResponse(result)
 
@@ -101,7 +101,7 @@ def load_antibiotic_set(request):
     request_data = json.loads(request.body)
     types_object = request_data['TypesObject']
     types_group = request_data['typeGroups']
-    groups = {"pk": -2, "title": "не найдено"}
+    groups = [{"pk": -2, "title": "не найдено"}]
 
     if types_object == 'Антибиотики' and types_group == 'Наборы':
         groups = AntibioticSets.get_antibiotic_set()
@@ -140,8 +140,89 @@ def update_group(request):
         if 'pk' in obj.keys() and 'title' in obj.keys() and 'hide' in obj.keys():
             AntibioticSets.update_antibiotic_set(obj['pk'], obj['title'], obj['hide'])
 
-    result = {"ok": True, "message": ""}
+    return JsonResponse({"ok": True, "message": ""})
 
+
+@login_required
+def get_bac_groups(request):
+    groups = GroupCulture.objects.filter(hide=False).order_by('title')
+    return JsonResponse({
+        "groups": [{
+            "pk": x.pk,
+            "title": x.title,
+        } for x in groups]
+    })
+
+
+@login_required
+def get_antibiotic_groups(request):
+    groups = GroupAntibiotic.objects.filter(hide=False).order_by('title')
+    result = {
+        "groups": [*[{
+            "pk": x.pk,
+            "title": x.title,
+        } for x in groups], {"pk": -1, "title": "Все антибиотики"}],
+        "groupsObj": {},
+        "antibiotics": {},
+        "sets": [{
+            "pk": x.pk,
+            "title": x.title,
+            "ids": [y.pk for y in x.get_not_hidden_antibiotics()]
+        } for x in AntibioticSets.objects.filter(hide=False).order_by('title')]
+    }
+
+    anti: Antibiotic
+    for anti in Antibiotic.objects.all().order_by('title'):
+        result["antibiotics"][anti.pk] = anti.title
+        if anti.hide:
+            continue
+        if -1 not in result["groupsObj"]:
+            result["groupsObj"][-1] = []
+        result["groupsObj"][-1].append(anti.as_dict())
+
+        if anti.group_antibiotic:
+            if anti.group_antibiotic.pk not in result["groupsObj"]:
+                result["groupsObj"][anti.group_antibiotic.pk] = []
+
+            result["groupsObj"][anti.group_antibiotic.pk].append(anti.as_dict())
     return JsonResponse(result)
 
 
+@login_required
+def get_bac_by_group(request):
+    request_data = json.loads(request.body)
+    group_pk = request_data["groupId"]
+
+    return JsonResponse({
+        "list": [{
+            "pk": x.pk,
+            "title": x.title,
+        } for x in Culture.objects.filter(group_culture_id=group_pk, hide=False).order_by('title')]
+    })
+
+
+@login_required
+def package_group_create(request):
+    request_data = json.loads(request.body)
+    title = request_data["title"]
+    types_object = request_data["typesObject"]
+    elements = request_data["elements"]
+
+    if types_object == 'Бактерии':
+        obj = GroupCulture.create_culture_group(title)
+        pks = []
+        for e in elements:
+            if e["title"]:
+                pks.append(Culture.culture_save(-1, e["title"], e["fsli"]).pk)
+        Culture.culture_update_group(group=obj.pk, elements=pks)
+        return JsonResponse({"ok": True, "obj": obj.as_dict()})
+    elif types_object == 'Антибиотики':
+        obj = GroupAntibiotic.create_antibiotic_group(title)
+        pks = []
+        for e in elements:
+            if e["title"]:
+                pks.append(Antibiotic.antibiotic_save(-1, e["title"], e["fsli"]).pk)
+        Antibiotic.antibiotic_update_group(group=obj.pk, elements=pks)
+        return JsonResponse({"ok": True, "obj": obj.as_dict()})
+
+    return JsonResponse({"ok": False, "message": "Неизвестные параметры"})

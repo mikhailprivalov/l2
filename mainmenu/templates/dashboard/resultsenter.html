@@ -2493,7 +2493,7 @@
                             sl()
                             let fractions_data = data.fractions
                             let result = {issledovaniye: res_pk, fractions: {}}
-                            let isnorm = results_data.norms
+                            let isnorm = Array.isArray(results_data.norms) ? results_data.norms[0] : results_data.norms;
                             results_data = results_data.results
                             for (let fk of Object.keys(fractions_data)) {
                                 let fv = fractions_data[fk]
