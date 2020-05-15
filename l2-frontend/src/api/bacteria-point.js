@@ -35,4 +35,7 @@ export default generator({
   packageGroupCreate: {
     url: 'bacteria/package-group-create',
   },
+  getAntibioticGroups: {
+    url: 'bacteria/get-antibiotic-groups',
+  },
 })

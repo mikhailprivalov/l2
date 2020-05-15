@@ -155,6 +155,40 @@ def get_bac_groups(request):
 
 
 @login_required
+def get_antibiotic_groups(request):
+    groups = GroupAntibiotic.objects.filter(hide=False).order_by('title')
+    result = {
+        "groups": [*[{
+            "pk": x.pk,
+            "title": x.title,
+        } for x in groups], {"pk": -1, "title": "Все антибиотики"}],
+        "groupsObj": {},
+        "antibiotics": {},
+        "sets": [{
+            "pk": x.pk,
+            "title": x.title,
+            "ids": [y.pk for y in x.get_not_hidden_antibiotics()]
+        } for x in AntibioticSets.objects.filter(hide=False).order_by('title')]
+    }
+
+    anti: Antibiotic
+    for anti in Antibiotic.objects.all().order_by('title'):
+        result["antibiotics"][anti.pk] = anti.title
+        if anti.hide:
+            continue
+        if -1 not in result["groupsObj"]:
+            result["groupsObj"][-1] = []
+        result["groupsObj"][-1].append(anti.as_dict())
+
+        if anti.group_antibiotic:
+            if anti.group_antibiotic.pk not in result["groupsObj"]:
+                result["groupsObj"][anti.group_antibiotic.pk] = []
+
+            result["groupsObj"][anti.group_antibiotic.pk].append(anti.as_dict())
+    return JsonResponse(result)
+
+
+@login_required
 def get_bac_by_group(request):
     request_data = json.loads(request.body)
     group_pk = request_data["groupId"]

@@ -3,7 +3,6 @@ from jsonfield import JSONField
 
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
-from django.db.models.functions import Lower
 
 
 class DirectionsGroup(models.Model):
@@ -638,13 +637,13 @@ class Culture(models.Model):
     @staticmethod
     def get_cultures(group):
         if group == "Все" or group == '':
-            culture_obj = Culture.objects.all().order_by('title')
+            culture_obj = Culture.objects.all()
         elif group == "Без группы":
-            culture_obj = Culture.objects.filter(group_culture=None).order_by('title')
+            culture_obj = Culture.objects.filter(group_culture=None)
         else:
-            culture_obj = Culture.objects.filter(group_culture__title=group).order_by('title')
+            culture_obj = Culture.objects.filter(group_culture__title=group)
         elements = []
-        for i in culture_obj:
+        for i in culture_obj.order_by('title'):
             title_group = ""
             if i.group_culture:
                 title_group = i.group_culture.title
@@ -734,16 +733,22 @@ class Antibiotic(models.Model):
         verbose_name = 'Антибиотик'
         verbose_name_plural = 'Антибиотики'
 
+    def as_dict(self):
+        return {
+            "pk": self.pk,
+            "title": self.title,
+        }
+
     @staticmethod
     def get_antibiotics(group):
         if group == "Все" or group == '':
-            antibiotic_obj = Antibiotic.objects.all().order_by(Lower('title'))
+            antibiotic_obj = Antibiotic.objects.all()
         elif group == "Без группы":
-            antibiotic_obj = Antibiotic.objects.filter(group_antibiotic=None).order_by(Lower('title'))
+            antibiotic_obj = Antibiotic.objects.filter(group_antibiotic=None)
         else:
-            antibiotic_obj = Antibiotic.objects.filter(group_antibiotic__title=group).order_by(Lower('title'))
+            antibiotic_obj = Antibiotic.objects.filter(group_antibiotic__title=group)
         elements = []
-        for i in antibiotic_obj:
+        for i in antibiotic_obj.order_by('title'):
             title_group = ""
             if i.group_antibiotic:
                 title_group = i.group_antibiotic.title
@@ -752,21 +757,18 @@ class Antibiotic(models.Model):
 
     @staticmethod
     def antibiotic_save(pk, title='', fsli='', hide=False):
-        """
-        Запись в базу сведений об антибиотике
-        """
         if pk > 0:
-            Antibiotic.objects.filter(pk=pk).update(title=title, fsli=fsli, hide=hide)
-
-        if pk == -1:
+            antibiotic_obj = Antibiotic.objects.get(pk=pk)
+            antibiotic_obj.title = title
+            antibiotic_obj.fsli = fsli
+            antibiotic_obj.hide = hide
+        else:
             antibiotic_obj = Antibiotic(title=title, fsli=fsli, hide=hide, group_antibiotic=None)
-            antibiotic_obj.save()
+        antibiotic_obj.save()
+        return antibiotic_obj
 
     @staticmethod
     def antibiotic_update_group(group, elements):
-        """
-        Запись в базу сведений о культуре
-        """
         if group == "Все":
             return ""
 
@@ -797,6 +799,9 @@ class AntibioticSets(models.Model):
     class Meta:
         verbose_name = 'Антибиотик - Наборы'
         verbose_name_plural = 'Антибиотики - Наборы'
+
+    def get_not_hidden_antibiotics(self):
+        return self.antibiotics.filter(hide=False)
 
     @staticmethod
     def create_antibiotic_set(title):
