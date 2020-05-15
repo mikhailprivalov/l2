@@ -71,7 +71,8 @@
           <tbody>
           <tr v-for="a in bactery.antibiotics">
             <td class="cl-td">
-              <button title="Удалить" class="btn last btn-blue-nb nbr" type="button" v-tippy>
+              <button title="Удалить" class="btn last btn-blue-nb nbr" type="button" v-tippy
+                      @click="deleteAnti(bactery, a.pk)">
                 <i class="fa fa-times"></i>
               </button>
             </td>
@@ -177,6 +178,9 @@
         }
 
         this.bacteriesResult = this.bacteriesResult.filter(br => br.bacteryPk !== pk);
+      },
+      deleteAnti(bactery, pk) {
+        bactery.antibiotics = bactery.antibiotics.filter(a => pk !== pk)
       },
       loadSet(bactery) {
         for (const id of bactery.selectedSet.ids) {
