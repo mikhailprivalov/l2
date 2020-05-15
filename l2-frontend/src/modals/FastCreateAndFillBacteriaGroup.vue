@@ -94,17 +94,17 @@
       },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        // const {ok, message} = await bacteria_point.updateGroup({
-        //   'TypesObject': this.typesObject, 'typeGroups': this.typesGroups,
-        //   'obj': {'pk': this.group_obj.pk, 'title': this.group_obj.title, 'hide': this.group_obj.hide}
-        // })
-        if (true) {
+        const {ok, message, obj} = await bacteria_point.packageGroupCreate(this, [
+          'title', 'elements', 'typesObject',
+        ])
+        if (ok) {
           okmessage('Группа сохранена', `${this.title}`)
+          this.$root.$emit('select2', obj)
+          this.hide_modal();
         } else {
-          // errmessage('Ошибка', message)
+          errmessage('Ошибка', message)
         }
         await this.$store.dispatch(action_types.DEC_LOADING)
-        this.hide_modal();
       },
     },
   }

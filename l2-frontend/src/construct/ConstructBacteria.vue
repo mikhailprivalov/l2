@@ -181,14 +181,18 @@
       group_edit() {
         this.group_edit_open = true
       },
-      group_edit_hide() {
+      async group_edit_hide() {
         this.group_edit_open = false
+        await this.load_culture_groups(this.selected1.title, '1')
+        await this.load_culture_groups(this.selected2.title, '2')
       },
       openFcafbg() {
         this.isFcafbgOpen = true
       },
-      hide_fcafbg() {
+      async hide_fcafbg() {
         this.isFcafbgOpen = false
+        await this.load_culture_groups(this.selected1.title, '1')
+        await this.load_culture_groups(this.selected2.title, '2')
       },
       async load_culture_groups(titlegroup, objList) {
         if (!titlegroup || titlegroup.length === 0) {
@@ -253,7 +257,8 @@
           errmessage('Ошибка', message)
         }
         this.onClearContentEdit()
-        await this.load_culture_groups('Все', '1')
+        await this.load_culture_groups(this.selected1.title, '1')
+        await this.load_culture_groups(this.selected2.title, '2')
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       onClearContentEdit() {
@@ -266,13 +271,14 @@
       },
       async addNewGroup() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const {ok, message} = await bacteria_point.addNewGroup({
+        const {ok, message, obj = this.selected2} = await bacteria_point.addNewGroup({
           'TypesObject': this.searchTypesObject, 'typeGroups': this.searchTypesGroups,
           'newgroup': this.newgroup
         })
         if (ok) {
           this.newgroup = '';
-          await this.load_culture_groups('Все', '1')
+          await this.load_culture_groups(this.selected1.title, '1')
+          this.selected2 = obj;
           okmessage('Сохранено', `${this.searchTypesGroups} - ${this.searchTypesObject} – ${this.newgroup}`)
         } else {
           errmessage('Ошибка', message)
@@ -303,12 +309,12 @@
           errmessage('Ошибка', message)
         }
         this.onClearContentEdit()
-        await this.load_culture_groups('Все', '1')
+        await this.load_culture_groups(this.selected1.title, '1')
 
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       filteredGroupObject() {
-        this.load_culture_groups('Все', '1')
+        this.load_culture_groups(this.selected1.title, '1')
         this.selected1 = {'pk': -2, 'title': 'Без группы'}
         this.selected2 = {'pk': -1, 'title': 'Все'}
         if (this.searchTypesObject !== 'Антибиотики') {
@@ -320,6 +326,10 @@
     mounted() {
       this.$root.$on('hide_ge', () => this.group_edit_hide())
       this.$root.$on('hide_fcafbg', () => this.hide_fcafbg())
+      this.$root.$on('select2', async (obj) => {
+          await this.load_culture_groups(this.selected1.title, '1')
+          this.selected2 = obj;
+      })
     },
     computed: {
       filteredList() {

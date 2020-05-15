@@ -83,16 +83,16 @@ def new_group(request):
     result = {"ok": False, "message": "Ошибка"}
 
     if types_object == 'Бактерии':
-        GroupCulture.create_culture_group(title)
-        result = {"ok": True, "message": ""}
+        obj = GroupCulture.create_culture_group(title)
+        result = {"ok": True, "message": "", "obj": obj.as_dict()}
 
     if types_object == 'Антибиотики' and types_group == 'Группы':
-        GroupAntibiotic.create_antibiotic_group(title)
-        result = {"ok": True, "message": ""}
+        obj = GroupAntibiotic.create_antibiotic_group(title)
+        result = {"ok": True, "message": "", "obj": obj.as_dict()}
 
     if types_object == 'Антибиотики' and types_group == 'Наборы':
-        AntibioticSets.create_antibiotic_set(title)
-        result = {"ok": True, "message": ""}
+        obj = AntibioticSets.create_antibiotic_set(title)
+        result = {"ok": True, "message": "", "obj": obj.as_dict()}
 
     return JsonResponse(result)
 
@@ -140,9 +140,7 @@ def update_group(request):
         if 'pk' in obj.keys() and 'title' in obj.keys() and 'hide' in obj.keys():
             AntibioticSets.update_antibiotic_set(obj['pk'], obj['title'], obj['hide'])
 
-    result = {"ok": True, "message": ""}
-
-    return JsonResponse(result)
+    return JsonResponse({"ok": True, "message": ""})
 
 
 @login_required
@@ -167,3 +165,30 @@ def get_bac_by_group(request):
             "title": x.title,
         } for x in Culture.objects.filter(group_culture_id=group_pk, hide=False).order_by('title')]
     })
+
+
+@login_required
+def package_group_create(request):
+    request_data = json.loads(request.body)
+    title = request_data["title"]
+    types_object = request_data["typesObject"]
+    elements = request_data["elements"]
+
+    if types_object == 'Бактерии':
+        obj = GroupCulture.create_culture_group(title)
+        pks = []
+        for e in elements:
+            if e["title"]:
+                pks.append(Culture.culture_save(-1, e["title"], e["fsli"]).pk)
+        Culture.culture_update_group(group=obj.pk, elements=pks)
+        return JsonResponse({"ok": True, "obj": obj.as_dict()})
+    elif types_object == 'Антибиотики':
+        obj = GroupAntibiotic.create_antibiotic_group(title)
+        pks = []
+        for e in elements:
+            if e["title"]:
+                pks.append(Antibiotic.antibiotic_save(-1, e["title"], e["fsli"]).pk)
+        Antibiotic.antibiotic_update_group(group=obj.pk, elements=pks)
+        return JsonResponse({"ok": True, "obj": obj.as_dict()})
+
+    return JsonResponse({"ok": False, "message": "Неизвестные параметры"})

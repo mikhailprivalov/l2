@@ -32,4 +32,7 @@ export default generator({
   getBacByGroup: {
     url: 'bacteria/get-bac-by-group',
   },
+  packageGroupCreate: {
+    url: 'bacteria/package-group-create',
+  },
 })

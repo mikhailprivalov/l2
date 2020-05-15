@@ -595,6 +595,12 @@ class GroupCulture(models.Model):
         verbose_name = 'Группа для культуры'
         verbose_name_plural = 'Культуры - группы'
 
+    def as_dict(self):
+        return {
+            "pk": self.pk,
+            "title": self.title,
+        }
+
     @staticmethod
     def get_all_cultures_groups():
         group_culture_obj = GroupCulture.objects.all()
@@ -651,25 +657,30 @@ class Culture(models.Model):
         Запись в базу сведений о культуре
         """
         if pk > 0:
-            Culture.objects.filter(pk=pk).update(title=title, fsli=fsli, hide=hide)
-
-        if pk == -1:
+            culture_obj = Culture.objects.get(pk=pk)
+            culture_obj.title = title
+            culture_obj.fsli = fsli
+            culture_obj.hide = hide
+        else:
             culture_obj = Culture(title=title, fsli=fsli, hide=hide, group_culture=None)
-            culture_obj.save()
+
+        culture_obj.save()
+        return culture_obj
 
     @staticmethod
     def culture_update_group(group, elements):
         """
         Запись в базу сведений о культуре
         """
-        if group == "Все":
-            return ""
-        if group == "Без группы":
+        if group in ["Все", "Без группы"]:
             Culture.objects.filter(pk__in=elements).update(group_culture=None)
         else:
-            gr = GroupCulture.objects.get(title=group)
-            if gr.pk > 0:
-                Culture.objects.filter(pk__in=elements).update(group_culture=gr)
+            if isinstance(group, int):
+                gr = GroupCulture.objects.get(pk=group)
+            else:
+                gr = GroupCulture.objects.get(title=group)
+
+            Culture.objects.filter(pk__in=elements).update(group_culture=gr)
 
 
 class GroupAntibiotic(models.Model):
@@ -682,6 +693,12 @@ class GroupAntibiotic(models.Model):
     class Meta:
         verbose_name = 'Группа для антибиотиков'
         verbose_name_plural = 'Антибиотики - группы'
+
+    def as_dict(self):
+        return {
+            "pk": self.pk,
+            "title": self.title,
+        }
 
     @staticmethod
     def get_all_antibiotic_groups():
@@ -756,18 +773,26 @@ class Antibiotic(models.Model):
         if group == "Без группы":
             Antibiotic.objects.filter(pk__in=elements).update(group_antibiotic=None)
         else:
-            gr = GroupAntibiotic.objects.get(title=group)
-            if gr.pk > 0:
-                Antibiotic.objects.filter(pk__in=elements).update(group_antibiotic=gr)
+            if isinstance(group, int):
+                gr = GroupAntibiotic.objects.get(pk=group)
+            else:
+                gr = GroupAntibiotic.objects.get(title=group)
+            Antibiotic.objects.filter(pk__in=elements).update(group_antibiotic=gr)
 
 
 class AntibioticSets(models.Model):
     title = models.CharField(max_length=255, help_text="Название антибиотика")
-    antibiotics = models.ManyToManyField(Antibiotic, )
+    antibiotics = models.ManyToManyField(Antibiotic)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие набора', db_index=True)
 
     def __str__(self):
         return self.title
+
+    def as_dict(self):
+        return {
+            "pk": self.pk,
+            "title": self.title,
+        }
 
     class Meta:
         verbose_name = 'Антибиотик - Наборы'
