@@ -180,7 +180,7 @@
         this.bacteriesResult = this.bacteriesResult.filter(br => br.bacteryPk !== pk);
       },
       deleteAnti(bactery, pk) {
-        bactery.antibiotics = bactery.antibiotics.filter(a => pk !== pk)
+        bactery.antibiotics = bactery.antibiotics.filter(a => a.pk !== pk)
       },
       loadSet(bactery) {
         for (const id of bactery.selectedSet.ids) {
