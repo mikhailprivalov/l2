@@ -115,25 +115,24 @@
       }
     },
     created() {
-      let vm = this
-      vm.$store.dispatch(action_types.INC_LOADING).then()
+      this.$store.dispatch(action_types.INC_LOADING)
       statistics_tickets_point.getTicketsTypes().then(data => {
-        vm.types.visit = data.visit
+        this.types.visit = data.visit
         if (data.visit.length > 0)
-          vm.visit = data.visit[0].pk
-        vm.types.result = data.result
+          this.visit = data.visit[0].pk
+        this.types.result = data.result
         if (data.result.length > 0)
-          vm.result = data.result[0].pk
-        vm.disp = vm.types.disp[0].pk
+          this.result = data.result[0].pk
+        this.disp = this.types.disp[0].pk
 
-        vm.types.outcome = data.outcome
+        this.types.outcome = data.outcome
         if (data.outcome.length > 0)
-          vm.outcome = data.outcome[0].pk
-        vm.types.exclude = data.exclude
+          this.outcome = data.outcome[0].pk
+        this.types.exclude = data.exclude
         if (data.exclude.length > 0)
-          vm.exclude = data.exclude[0].pk
+          this.exclude = data.exclude[0].pk
       }).finally(() => {
-        vm.$store.dispatch(action_types.DEC_LOADING).then()
+        this.$store.dispatch(action_types.DEC_LOADING)
       })
     },
     computed: {
@@ -211,7 +210,7 @@
     },
     methods: {
       create() {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         statistics_tickets_point.sendTicket(this, [
             'card_pk',
             'visit',
@@ -234,7 +233,7 @@
             okmessage('Статталон добавлен')
             this.$root.$emit('create-ticket')
           }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
       clear() {

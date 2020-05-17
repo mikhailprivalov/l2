@@ -903,7 +903,7 @@ def statistic_xls(request):
                             otds[otd_pk] = defaultdict(lambda: 0)
                         otds[otd_pk][obj.pk] += 1
                         otds[pki][obj.pk] += 1
-                        if any([x.get_is_norm() == "normal" for x in researches.result_set.all()]):
+                        if any([x.get_is_norm()[0] == "normal" for x in researches.result_set.all()]):
                             continue
                         if otd_pk not in otds_pat:
                             otds_pat[otd_pk] = defaultdict(lambda: 0)

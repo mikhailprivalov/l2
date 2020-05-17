@@ -23,7 +23,7 @@
           </ul>
         </div>
         <button class="btn btn-blue-nb btn-ell" style="border-radius: 0;width: 50px;flex: 1 50px;" title="Обновить"
-                @click="load_history">
+                @click="load_history_safe">
           <i class="glyphicon glyphicon-refresh"></i>
         </button>
       </div>
@@ -69,7 +69,14 @@
         </tr>
         <tr v-for="row in directions">
           <td class="text-center">{{row.date}}</td>
-          <td>{{row.pk}}</td>
+          <td>
+            <span v-if="!!row.has_hosp && role_can_use_stationar">
+              <a :href="`/mainmenu/stationar#{%22pk%22:${row.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`" target="_blank" class="a-under">
+                {{row.pk}}
+              </a>
+            </span>
+            <span v-else>{{row.pk}}</span>
+          </td>
           <td class="researches" :title="row.researches">{{row.researches}}</td>
           <td class="text-center"
               :title="statuses[row.status === 1 && row.has_descriptive ? -2 : row.status] +
@@ -78,9 +85,19 @@
               :class="['status-' + row.status]">
             <strong>{{row.status}}<span v-if="row.maybe_onco">*О</span></strong></td>
           <td class="button-td">
-            <div class="button-td-inner" :class="{has_pacs: !!row.pacs}">
+            <div class="button-td-inner" :class="[{has_pacs_stationar: !!row.pacs && !!row.parent.parent_is_hosp || !!row.pacs && !!row.parent.parent_is_doc_refferal},
+                 {has_pacs: (!!row.pacs && !row.parent.parent_is_hosp) || (!row.pacs && !!row.parent.parent_is_hosp) || !row.pacs && !!row.parent.parent_is_doc_refferal}]">
               <a :href="row.pacs" title="Снимок" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.pacs">
                 <i class="fa fa-camera"/>
+              </a>
+              <a href="#" @click.prevent="role_can_use_stationar ? show_stationar(row.parent.pk) : null"
+                 :title="`Принадлежит и/б: ${row.parent.pk}-${row.parent.parent_title}`" v-tippy class="btn btn-blue-nb"
+                 v-if="!!row.parent.parent_is_hosp">
+                <i class="fa fa-bed"/>
+              </a>
+              <a href="#" @click.prevent="row.parent.is_confirm ? show_results(row.parent) : null" :title="`Создано в амбулаторном приеме: ${row.parent.pk}-${row.parent.parent_title}`"
+                 v-tippy class="btn btn-blue-nb" v-if="!!row.parent.parent_is_doc_refferal" :class="{isDisabled: !row.parent.is_confirm}">
+                 <i class="fa fa-user-md"/>
               </a>
               <button class="btn btn-blue-nb" title="Штрих-код браслета" v-tippy
                       @click="print_hosp(row.pk)" v-if="row.has_hosp">
@@ -98,41 +115,27 @@
         </tbody>
       </table>
     </div>
-    <div class="bottom-picker" v-if="checked.length > 0 || !iss_pk">
-      <div style="padding-left: 5px;color: #fff"><span v-if="checked.length > 0">Отмечено: {{checked.length}}</span>
-      </div>
-      <div class="bottom-inner">
-        <div class="dropup" style="display: inline-block;max-width: 350px;width: 100%">
-          <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-                  style="text-align: right!important;border-radius: 0;width: 100%">
-            Действие с отмеченными <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu">
-            <li v-for="f in forms" v-if="patient_pk !== -1 && (!f.need_dirs || checked.length > 0)">
-              <a :href="f.url" target="_blank">{{f.title}}</a>
-            </li>
-            <li><a href="#" @click.prevent="selected_do('directions_list')">Создать список назначений</a></li>
-            <li v-if="!iss_pk">
-              <a href="#" @click.prevent="selected_do('copy_researches')">Скопировать исследования для назначения</a>
-            </li>
-            <li><a href="#" @click.prevent="selected_do('print_results')">Печать результатов</a></li>
-            <li><a href="#" @click.prevent="selected_do('print_barcodes')">Печать штрих-кодов</a></li>
-            <li><a href="#" @click.prevent="selected_do('print_directions')">Печать направлений</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
+    <Bottom
+      v-show="checked.length > 0 || !iss_pk"
+      class="bottom-picker"
+      :checked="checked"
+      :directions="directions"
+      :iss_pk="iss_pk"
+      :card_pk="patient_pk"
+      :active_type="active_type"
+      :kk="kk"
+    />
   </div>
 </template>
 
 <script>
-  import SelectPickerM from '../fields/SelectPickerM'
-  import DateRange from './DateRange'
-  import directions_point from '../api/directions-point'
-  import * as action_types from '../store/action-types'
+  import SelectPickerM from '../../fields/SelectPickerM'
+  import DateRange from '../DateRange'
+  import directions_point from '../../api/directions-point'
+  import * as action_types from '../../store/action-types'
   import moment from 'moment'
-  import {forDirs} from '../forms';
   import {mapGetters} from 'vuex'
+  import Bottom from './Bottom';
 
   function truncate(s, n, useWordBoundary) {
     if (s.length <= n) {
@@ -145,7 +148,7 @@
   }
 
   export default {
-    components: {SelectPickerM, DateRange},
+    components: {SelectPickerM, DateRange, Bottom},
     name: 'directions-history',
     props: {
       patient_pk: {
@@ -192,19 +195,17 @@
           '0': 'Направление только выписано',
           '1': 'Материал в лаборатории',
           '2': 'Результаты подтверждены',
-        }
+        },
       }
     },
     computed: {
-      forms() {
-        return forDirs.map(f => {
-          return {
-            ...f, url: f.url.kwf({
-              card: this.patient_pk,
-              dir: JSON.stringify(this.checked),
-            })
+      role_can_use_stationar() {
+        for (let g of (this.$store.getters.user_data.groups || [])) {
+          if (g === 'Врач стационара') {
+            return true
           }
-        });
+        }
+        return false
       },
       active_type_obj() {
         for (let row of this.types) {
@@ -222,8 +223,12 @@
       this.is_created = true
       this.load_history()
       this.$root.$on('researches-picker:directions_created' + this.kk, this.load_history)
+      this.$root.$on('researches-picker:refresh' + this.kk, this.load_history_safe)
     },
     methods: {
+      async load_history_safe() {
+        await this.load_history(true)
+      },
       update_so(researches) {
         const s = [].concat.apply([], Object.values(researches)).map(r => ({
           value: String(r.pk),
@@ -238,6 +243,9 @@
           this.$root.$emit(`update-sp-m-services_options`)
         }, 0)
       },
+      show_stationar(dir){
+        window.open(`/mainmenu/stationar#{%22pk%22:${dir},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`, "_blank")
+      },
       show_results(row) {
         if (row.has_descriptive) {
           this.$root.$emit('print:results', [row.pk])
@@ -251,78 +259,61 @@
       print_hosp(pk) {
         this.$root.$emit('print:hosp', [pk])
       },
-      cancel_direction(pk) {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.cancelDirection({pk}).then((data) => {
-          for (let dir of vm.directions) {
-            if (dir.pk === pk) {
-              dir.cancel = data.cancel
-              if (dir.status === -1 && !dir.cancel) {
-                dir.status = 0
-              } else if (dir.status === 0 && dir.cancel) {
-                dir.status = -1
-              }
-              break
-            }
-          }
-        }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-        })
+      async cancel_direction(pk) {
+        await this.$store.dispatch(action_types.INC_LOADING)
 
-      },
-      selected_do(type) {
-        switch (type) {
-          case 'resend_results_rmis':
-            break
-          case 'resend_directions_rmis':
-            break
-          case 'copy_researches':
-            for (let dir of this.directions) {
-              if (this.in_checked(dir.pk)) {
-                for (let pk of dir.researches_pks) {
-                  this.$root.$emit('researches-picker:add_research', pk)
-                }
-              }
+        const data = await directions_point.cancelDirection({pk});
+
+        for (let dir of this.directions) {
+          if (dir.pk === pk) {
+            dir.cancel = data.cancel
+            if (dir.status === -1 && !dir.cancel) {
+              dir.status = 0
+            } else if (dir.status === 0 && dir.cancel) {
+              dir.status = -1
             }
             break
-          case 'print_results':
-            this.$root.$emit('print:results', this.checked)
-            break
-          case 'print_barcodes':
-            this.$root.$emit('print:barcodes', this.checked)
-            break
-          case 'directions_list':
-            this.$root.$emit('print:directions_list', this.checked)
-            break
-          default:
-            this.$root.$emit('print:directions', this.checked)
-            break
+          }
         }
+
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       select_type(pk) {
         this.active_type = pk
       },
-      load_history() {
+      async load_history(safe) {
         if (!this.is_created)
           return
         this.$root.$emit('validate-datepickers')
         this.is_created = false
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        vm.directions = []
-        vm.all_checked = false
 
-        directions_point.getHistory(this, ['iss_pk', 'services', 'forHospSlave'], {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        this.directions = []
+        if (!safe) {
+          this.all_checked = false
+        }
+
+        const checked = []
+
+        if (safe) {
+          checked.push(...this.checked)
+        }
+
+        await directions_point.getHistory(this, ['iss_pk', 'services', 'forHospSlave'], {
           type: this.active_type,
           patient: this.patient_pk,
           date_from: moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY'),
           date_to: moment(this.date_range[1], 'DD.MM.YY').format('DD.MM.YYYY'),
         }).then((data) => {
-          vm.directions = data.directions
+          this.directions = data.directions
+          for (const d of this.directions) {
+            if (checked.includes(d.pk)) {
+              d.checked = true
+            }
+          }
         }).finally(() => {
-          vm.is_created = true
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.is_created = true
+          return this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
       in_checked(pk) {
@@ -335,7 +326,7 @@
         } else if (!this.in_checked(pk)) {
           this.checked.push(pk)
         }
-      }
+      },
     },
     watch: {
       active_type() {
@@ -377,6 +368,10 @@
 </script>
 
 <style scoped lang="scss">
+  .isDisabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
 
   .top-picker, .bottom-picker {
     height: 34px;
@@ -405,7 +400,7 @@
     }
   }
 
-  .content-picker, .content-none, .bottom-inner {
+  .content-picker, .content-none {
     display: flex;
     flex-wrap: wrap;
     justify-content: stretch;
@@ -459,19 +454,6 @@
     .no_abs & {
       position: relative;
     }
-  }
-
-  .bottom-inner {
-    position: absolute;
-    color: #fff;
-    height: 34px;
-    right: 0;
-    left: 155px;
-    top: 0;
-    justify-content: flex-end;
-    align-content: center;
-    align-items: center;
-    overflow: visible;
   }
 
   th {
@@ -560,6 +542,17 @@
       &:not(.has_pacs) {
         .btn {
           flex: 0 0 50%;
+        }
+      }
+      &.has_pacs_stationar {
+        .btn {
+          flex: 0 0 32%;
+        }
+        .btn:nth-child(1) {
+          flex: 0 0 20%;
+        }
+        .btn:nth-child(2) {
+          flex: 0 0 16%;
         }
       }
 

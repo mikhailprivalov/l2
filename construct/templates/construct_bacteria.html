@@ -1,0 +1,25 @@
+{% extends "dbase.html" %}
+{% block title %}Настройка бактерий и антибиотиков{% endblock %}
+
+{% block container %}container-fluid{% endblock %}
+
+{% load static %}
+
+{% block content %}
+    <construct-bacteria />
+{% endblock %}
+
+{% block head_cn %}
+    <style>
+        .container-fluid {
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+
+        .navbar {
+            margin-bottom: 0;
+            box-shadow: none;
+        }
+    </style>
+{% endblock %}

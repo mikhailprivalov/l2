@@ -549,7 +549,7 @@
                 this.site_type = null
                 this.groups = []
                 if (this.pk >= 0) {
-                    this.$store.dispatch(action_types.INC_LOADING).then()
+                    this.$store.dispatch(action_types.INC_LOADING)
                     construct_point.researchDetails(this, 'pk').then(data => {
                         this.title = data.title
                         this.short_title = data.short_title
@@ -564,7 +564,7 @@
                             this.add_group()
                         }
                     }).finally(() => {
-                        this.$store.dispatch(action_types.DEC_LOADING).then()
+                        this.$store.dispatch(action_types.DEC_LOADING)
                     })
                 } else {
                     this.add_group()
@@ -578,7 +578,7 @@
                 this.$root.$emit('research-editor:cancel')
             },
             save() {
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.$store.dispatch(action_types.INC_LOADING)
                 const props = [
                     'pk',
                     'department',
@@ -602,7 +602,7 @@
                     okmessage('Сохранено')
                     this.cancel()
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.$store.dispatch(action_types.DEC_LOADING)
                 })
             },
         }

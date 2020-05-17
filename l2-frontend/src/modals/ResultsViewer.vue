@@ -18,7 +18,7 @@
         </tbody>
       </table>
       <div ref="rc">
-        <table class="table ct" style="width: 600px; margin-bottom: 5px;">
+        <table class="table ct" style="width: 620px; margin-bottom: 5px;">
           <thead v-if="!data.desc">
           <tr>
             <th
@@ -40,17 +40,23 @@
           </tr>
           </thead>
           <tbody v-for="row of data.results">
-          <tr>
+          <tr v-if="Object.keys(row.fractions).length > 1">
             <th colspan="4"
                 style="color: #000;padding: 2px; border: 1px solid rgb(0, 0, 0);line-height: 1.15; font-size: 12pt; font-family: 'Times New Roman', 'Liberation Serif', Times, serif;margin: 0;">
               {{row.title}}
-              <template v-if="!data.desc">(дата забора б/м: {{row.tube_time_get}})</template>
+              <template v-if="!data.desc && row.tube_time_get">(дата забора б/м: {{row.tube_time_get}})</template>
             </th>
           </tr>
           <tr v-for="fraction of row.fractions">
             <td
               style="color: #000;padding: 2px; border: 1px solid rgb(0, 0, 0);line-height: 1.15; font-size: 12pt; font-family: 'Times New Roman', 'Liberation Serif', Times, serif;margin: 0;">
-              &nbsp;&nbsp;&nbsp;&nbsp;{{fraction.title}}
+                <template v-if="Object.keys(row.fractions).length > 1">
+                  &nbsp;&nbsp;&nbsp;&nbsp;{{fraction.title}}
+                </template>
+                <template v-else>
+                  {{row.title}}
+                  <template v-if="!data.desc && row.tube_time_get">(дата забора б/м: {{row.tube_time_get}})</template>
+                </template>
             </td>
             <td :colspan="need_units_and_refs(fraction)? 1: 3" v-html="fraction.result"
                 style="color: #000;padding: 2px; border: 1px solid rgb(0, 0, 0);line-height: 1.15; font-size: 12pt; font-family: 'Times New Roman', 'Liberation Serif', Times, serif;margin: 0;"></td>
@@ -136,7 +142,7 @@
       }
     },
     created() {
-      this.$store.dispatch(action_types.INC_LOADING).then()
+      this.$store.dispatch(action_types.INC_LOADING)
       directions_point.getResults(this, ['pk'], {
         force: this.no_desc,
       }).then(data => {
@@ -150,7 +156,7 @@
         }
         this.data = data
       }).finally(() => {
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        this.$store.dispatch(action_types.DEC_LOADING)
       })
     },
     methods: {

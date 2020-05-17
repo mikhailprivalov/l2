@@ -263,11 +263,11 @@ def form_01(request_data):
         Paragraph('в) сопутствующий:', style),
         Spacer(1, 19 * mm),
         Paragraph('12. Госпитализирован в данном году по поводу данного заболевания: {}, <br/>'
-                  'всего  - ___раз.:'.format(primary_reception_data['what_time_hospitalized']), styleLead),
+                  'всего  - {} раз.:'.format(primary_reception_data['what_time_hospitalized'], primary_reception_data['all_hospitalized']), styleLead),
         Spacer(1, 1 * mm),
         Paragraph('13. Хирургические операции, методы обезболивания и послеоперационные осложнения:', styleLead),
         Spacer(1, 40 * mm),
-        Paragraph('14. Другие виды лечения:___________________________________________'.format('Из '), styleLead),
+        Paragraph('14. Другие виды лечения:___________________________________________', styleLead),
         Spacer(1, 0.2 * mm),
         Paragraph('для больных злокачественными новообразованиями.', styleLead),
         Spacer(1, 0.2 * mm),

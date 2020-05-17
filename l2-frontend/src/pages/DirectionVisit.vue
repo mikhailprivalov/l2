@@ -352,19 +352,19 @@
                 this.$root.$emit('print:directions', [this.loaded_pk])
             },
             load_journal() {
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.$store.dispatch(action_types.INC_LOADING)
                 directionsPoint.visitJournal({date: this.journal_date}).then(data => {
                     this.journal_data = data.data
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.$store.dispatch(action_types.DEC_LOADING)
                 })
             },
             load_recv_journal() {
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.$store.dispatch(action_types.INC_LOADING)
                 directionsPoint.recvJournal({date: this.journal_recv_date}).then(data => {
                     this.journal_recv_data = data.data
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.$store.dispatch(action_types.DEC_LOADING)
                 })
             },
             load() {
@@ -373,7 +373,7 @@
                 }
                 if (this.in_load)
                     return
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.$store.dispatch(action_types.INC_LOADING)
                 this.in_load = true
                 this.cancel()
                 directionsPoint.getDirectionsServices({pk: this.query_int}).then(data => {
@@ -391,7 +391,7 @@
                         errmessage(data.message)
                     }
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.$store.dispatch(action_types.DEC_LOADING)
                     this.in_load = false
                     this.direction = ''
                 })
@@ -409,7 +409,7 @@
             make_visit(cancel = false) {
                 if (this.loaded_pk === -1 || this.in_load)
                     return
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.$store.dispatch(action_types.INC_LOADING)
                 this.in_load = true
                 directionsPoint.getMarkDirectionVisit({pk: this.loaded_pk, cancel}).then(data => {
                     if (data.ok) {
@@ -421,7 +421,7 @@
                         errmessage(data.message)
                     }
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.$store.dispatch(action_types.DEC_LOADING)
                     this.in_load = false
                     this.load_journal()
                 })
@@ -436,7 +436,7 @@
             make_receive(cancel = false) {
                 if (this.loaded_pk === -1 || this.in_load)
                     return
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.$store.dispatch(action_types.INC_LOADING)
                 this.in_load = true
                 directionsPoint.drectionReceiveMaterial({pk: this.loaded_pk, cancel}).then(data => {
                     if (data.ok) {
@@ -447,7 +447,7 @@
                         errmessage(data.message)
                     }
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.$store.dispatch(action_types.DEC_LOADING)
                     this.in_load = false
                     this.load_recv_journal()
                 })

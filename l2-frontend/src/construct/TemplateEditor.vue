@@ -80,9 +80,8 @@
       }
     },
     mounted() {
-      let vm = this
-      $(window).on('beforeunload', function () {
-        if (vm.has_unsaved && vm.loaded_pk > -2 && !vm.cancel_do)
+      $(window).on('beforeunload', () => {
+        if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do)
           return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
       })
     },
@@ -282,14 +281,13 @@
         this.researches = null
         this.global_template = this.global_template_p === 1
         if (this.pk >= 0) {
-          let vm = this
-          vm.$store.dispatch(action_types.INC_LOADING).then()
+          this.$store.dispatch(action_types.INC_LOADING)
           fetch('/api/get-template?pk=' + this.pk).then(r => r.json()).then(data => {
-            vm.title = data.title
-            vm.researches = data.researches
-            vm.global_template = data.global_template
+            this.title = data.title
+            this.researches = data.researches
+            this.global_template = data.global_template
           }).finally(() => {
-            vm.$store.dispatch(action_types.DEC_LOADING).then()
+            this.$store.dispatch(action_types.DEC_LOADING)
           })
         } else {
           this.researches = []
@@ -303,13 +301,13 @@
         this.$root.$emit('research-editor:cancel')
       },
       save() {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         construct_point.updateTemplate(this, ['pk', 'title', 'researches', 'global_template']).then(() => {
           this.has_unsaved = false
           okmessage('Сохранено')
           this.cancel()
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       }
     }

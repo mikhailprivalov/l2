@@ -59,4 +59,4 @@ class Case(models.Model):
 
     def __str__(self):
         return "Случай №{}. Карта: {}. Открыт: {:%d.%m.%Y %H:%M}, закрыт: {:%d.%m.%Y %H:%M}. " \
-               "Врач: {}. Отмена: ".format(self.pk, self.card, self.opened_local, self.closed_local, self.doctor, self.cancel)
+               "Врач: {}. Отмена: {}".format(self.pk, self.card, self.opened_local, self.closed_local, self.doctor, self.cancel)

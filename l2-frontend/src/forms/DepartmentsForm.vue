@@ -45,12 +45,11 @@
       insert() {
         if (!this.create_valid)
           return
-        let vm = this
-        vm.$store.dispatch(action_types.UPDATE_DEPARTMENTS, {type_update: 'insert', to_update: [{pk: -1, title: vm.create.title, type: vm.create.type}]}).then((ok) => {
+        this.$store.dispatch(action_types.UPDATE_DEPARTMENTS, {type_update: 'insert', to_update: [{pk: -1, title: vm.create.title, type: vm.create.type}]}).then((ok) => {
           if (ok) {
-            vm.create.title = ''
+            this.create.title = ''
           }
-          vm.$store.dispatch(action_types.GET_ALL_DEPARTMENTS).then()
+          return this.$store.dispatch(action_types.GET_ALL_DEPARTMENTS)
         })
       }
     },

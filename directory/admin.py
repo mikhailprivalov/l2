@@ -11,7 +11,7 @@ class ResDispensaryRouteSheet(admin.ModelAdmin):
 
 
 class ResAdmin(admin.ModelAdmin):
-    list_display = ('title', 'internal_code', 'pk', 'podrazdeleniye',)
+    list_display = ('title', 'short_title', 'internal_code', 'pk', 'podrazdeleniye',)
     list_display_links = ('title', 'internal_code', 'pk', 'podrazdeleniye',)
     list_filter = ('podrazdeleniye', 'groups', 'hide', 'is_doc_refferal', 'is_paraclinic', 'is_treatment',)
     search_fields = ('title', 'internal_code', 'pk',)
@@ -85,6 +85,20 @@ class ResHospitalService(admin.ModelAdmin):
     search_fields = ('slave_research__title',)
 
 
+class ResCulture(admin.ModelAdmin):
+    list_display = ('title', 'fsli',)
+    list_display_links = ('title',)
+    list_filter = ('group_culture__title',)
+    search_fields = ('group_culture__title',)
+
+
+class ResAntibioticSets(admin.ModelAdmin):
+    list_display = ('title',)
+    list_display_links = ('title',)
+    list_filter = ('title', 'antibiotics__title',)
+    search_fields = ('antibiotics__title',)
+
+
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
@@ -101,8 +115,11 @@ admin.site.register(models.ParaclinicTemplateName)
 admin.site.register(models.ParaclinicTemplateField)
 admin.site.register(models.DirectionsGroup)
 admin.site.register(models.DispensaryRouteSheet, ResDispensaryRouteSheet)
-admin.site.register(models.Culture, TitleHide)
+admin.site.register(models.Culture, ResCulture)
 admin.site.register(models.Antibiotic, TitleHide)
+admin.site.register(models.GroupCulture)
+admin.site.register(models.GroupAntibiotic)
 admin.site.register(models.Localization, TitleFsli)
 admin.site.register(models.ServiceLocation, TitleHide)
 admin.site.register(models.HospitalService, ResHospitalService)
+admin.site.register(models.AntibioticSets, ResAntibioticSets)

@@ -48,11 +48,9 @@
     created() {
       this.$parent.$on('research-editor:cancel', this.cancel_edit)
 
-      let vm = this
-
-      vm.$store.dispatch(action_types.INC_LOADING).then()
-      this.$store.dispatch(action_types.GET_RESEARCHES).then().finally(() => {
-        vm.$store.dispatch(action_types.DEC_LOADING).then()
+      this.$store.dispatch(action_types.INC_LOADING)
+      this.$store.dispatch(action_types.GET_RESEARCHES).finally(() => {
+        this.$store.dispatch(action_types.DEC_LOADING)
       })
 
       this.$store.watch(state => state.researches, () => {

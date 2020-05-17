@@ -212,17 +212,17 @@
         this.edit_pk = -2
       },
       load_data() {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING)
         patients_point.loadVaccine(this, 'card_pk').then(({rows}) => {
           this.rows = rows
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
         await patients_point.saveVaccine({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        await this.$store.dispatch(action_types.DEC_LOADING)
         okmessage('Сохранено');
         this.hide_edit()
         this.load_data()
