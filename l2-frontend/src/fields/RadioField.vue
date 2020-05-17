@@ -1,6 +1,7 @@
 <template>
   <div class="base" :class="{fullWidth}">
-    <a href="#" @click.prevent="changeValue(v)" :class="{ active: v === val, disabled }"
+<!--    <a href="#" @click.prevent="changeValue(v)" :class="{ active: v === val, disabled }"-->
+    <a href="#" @click.prevent="changeValue(v)"  :style="[v === val ? color_active:disabled ]"
        v-for="v in variants">
       <span>{{ v }}</span>
     </a>
@@ -27,6 +28,10 @@
                 default: false,
                 type: Boolean,
             },
+          colorcurrent: {
+              default: '#049372 !important',
+              type: String
+            }
         },
         watch: {
             value: {
@@ -40,6 +45,14 @@
                 immediate: true,
             }
         },
+        computed: {
+          color_active() {
+            return {
+              'background-color': this.colorcurrent,
+              color: '#fff'
+            }
+          }
+      },
         data() {
             return {
                 val: this.value,
@@ -98,10 +111,10 @@
         background-color: #434a54;
       }
 
-      &.active {
-        background: #049372 !important;
-        color: #fff;
-      }
+      /*&.active {*/
+      /*  background: #049372 !important;*/
+      /*  color: #fff;*/
+      /*}*/
 
       &.disabled {
         cursor: not-allowed;

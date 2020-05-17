@@ -27,7 +27,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.pdfgen.canvas import Canvas
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak, Frame, KeepInFrame
 from transliterate import translit
 
 import directory.models as directory
@@ -40,6 +40,8 @@ from laboratory.utils import strtime, strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
 from utils.dates import try_parse_range
+from copy import deepcopy
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 
 w, h = A4
 
@@ -1516,6 +1518,85 @@ def form38002(c: Canvas, dir: Napravleniya):
 
         c.setFont('PTAstraSerifReg', 12)
         c.drawString(x_coord * mm, y_dir_form[18] * mm, "Отделение: " + Truncator(dir.doc.podrazdeleniye.title).chars(100))
+
+        # QR-code
+        qr_value = translit(dir.client.individual.fio(), 'ru', reversed=True)
+        qr_code = qr.QrCodeWidget(qr_value)
+        qr_code.barWidth = 80
+        qr_code.barHeight = 80
+        qr_code.qrVersion = 1
+        d = Drawing()
+        d.add(qr_code)
+        renderPDF.draw(d, c, 170 * mm, 10 * mm)
+
+    printForm(0)
+
+
+def form38003(c: Canvas, dir: Napravleniya):
+    # Covid-19
+    def printForm(offset):
+        pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+        pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+        c.setStrokeColorRGB(0, 0, 0)
+        c.setLineWidth(0.2 * mm)
+        c.setFont('PTAstraSerifReg', 12)
+
+        styleSheet = getSampleStyleSheet()
+        style = styleSheet["Normal"]
+        style.fontName = "PTAstraSerifReg"
+        style.fontSize = 12
+        style.leading = 15
+        style.spaceAfter = 0.5 * mm
+        styleTB = deepcopy(style)
+        styleTB.fontSize = 8.7
+        styleTB.alignment = TA_CENTER
+        styleTB.leading = 3.5 * mm
+
+        c.drawCentredString((210 / 2) * mm, 280 * mm, "Контактные данные учреждения, направляющего материал")
+
+        opinion = [[Paragraph('N', style), Paragraph('Код отделения', styleTB), Paragraph('Профиль коек', styleTB), Paragraph('Код врача', styleTB), Paragraph('Дата поступления', styleTB),
+                    Paragraph('Дата выписки, перевода', styleTB), Paragraph('Код диагноза по МКБ', styleTB), Paragraph('Код медицинского стандарта', styleTB),
+                    Paragraph('Код прерванного случая', styleTB), Paragraph('Вид оплаты', styleTB)]]
+
+        opinion_oper = [
+            [
+             Paragraph('Название операции', styleTB),
+             Paragraph('Оперировал', styleTB),
+             ]
+        ]
+
+        t_opinion_oper = opinion_oper.copy()
+        tbl_o = Table(t_opinion_oper,
+                      colWidths=(100 * mm,  90 * mm,))
+        tbl_o.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2.1 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        operation_text = [tbl_o]
+        operation_frame = Frame(22 * mm, 123 * mm, 170 * mm, 40 * mm, leftPadding=0, bottomPadding=0,
+                                rightPadding=0, topPadding=0, showBoundary=0)
+        operation_inframe = KeepInFrame(175 * mm, 40 * mm, operation_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
+        operation_frame.addFromList([operation_inframe], c)
+
+
+        # Точки отсчета
+        x_coord, y_coord = 20, 235
+        barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=10 * mm, barWidth=1.25)
+        dir_code = Drawing()
+        dir_code.add(barcode)
+        renderPDF.draw(dir_code, c, (x_coord + 120) * mm, 250 * mm)
+
+        c.setFont('PTAstraSerifReg', 20)
+
+        # Данные пациента
+        y_patient = []
+        y = 0
+        for i in range(0, 9):
+            y_patient.append(y_coord - y)
+            y += 5
+        c.drawString(x_coord * mm, 250 * mm, "№ " + str(dir.pk))  # Номер направления
+
 
         # QR-code
         qr_value = translit(dir.client.individual.fio(), 'ru', reversed=True)

@@ -1,6 +1,6 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative;min-height: 100px;">
-    <div class="input-select">
+    <div class="input-select" style="margin-left: 5px">
       <v-select :clearable="false" label="title" :options="bacteriesGroups" :searchable="true"
                 class="inner-select"
                 placeholder="Выберите группу"
@@ -11,8 +11,9 @@
                 placeholder="Выберите микроорганизм"
                 v-model="selectedBactery"
       />
-      <button class="btn btn-blue-nb" @click="addBactery">
-        Добавить
+      <button class="btn1 btn-blue-nb" @click="addBactery">
+<!--        Добавить-->
+        <i class="fa fa-plus size=2x fa-inverse"></i>
       </button>
     </div>
     <div v-for="bactery in bacteriesResult" class="bactery">
@@ -21,7 +22,8 @@
           <i class="fa fa-times"></i>
         </span>
         <span class="bactery-title-inner">
-          {{bactery.bacteryGroupTitle}} {{bactery.bacteryTitle}}
+<!--          {{bactery.bacteryGroupTitle}} {{bactery.bacteryTitle}}-->
+          {{bactery.bacteryTitle}}
         </span>
       </div>
       <div class="bactery-body">
@@ -38,8 +40,9 @@
                     placeholder="Выберите антибиотик"
                     v-model="bactery.selectedAntibiotic"
           />
-          <button class="btn btn-blue-nb" @click="loadAntibiotic(bactery)">
-            Добавить
+          <button class="btn1 btn-blue-nb" @click="loadAntibiotic(bactery)">
+<!--            Добавить-->
+            <i class="fa fa-plus size=2x fa-inverse"></i>
           </button>
         </div>
         <hr />
@@ -80,8 +83,18 @@
               {{antibiotics.antibiotics[a.pk]}}
             </td>
             <td class="cl-td">
-              <radio-field v-model="a.sri" :variants="sri" />
+<!--              <radio-field v-model="a.sri" :variants="sri" />-->
+              <radio-field v-model="a.sri" :variants="sri"
+               v-if="a.sri==='R'" :colorcurrent="'#FF6666 !important'"
+              />
+              <radio-field v-model="a.sri" :variants="sri"
+               v-if="a.sri==='S'" :colorcurrent="'#049372 !important'"
+              />
+              <radio-field v-model="a.sri" :variants="sri"
+               v-if="a.sri==='I'" :colorcurrent="'#FFCC33 !important'"
+              />
             </td>
+
             <td class="cl-td">
               <input v-model="a.dia" class="form-control" />
             </td>
@@ -137,7 +150,7 @@
           groupsObj: {},
           antibiotics: {},
           sets: [],
-        }
+        },
       }
     },
     async mounted() {
@@ -239,13 +252,15 @@
 
   .bactery {
     margin: 10px 0;
-    border: 1px solid #049372;
+    /*border: 1px solid #049372;*/
+    border: 1px solid #5981B2;
     border-radius: 5px;
     overflow: visible;
 
     &-title {
       color: #fff;
-      background: #049372;
+      /*background: #049372;*/
+      background: #5981B2;
       line-height: 20px;
       border-radius: 4px 4px 0 0;
       overflow: hidden;
