@@ -55,51 +55,58 @@
                 </div>
               </div>
             </div>
-
-            <table class="table table-bordered table-condensed" style="max-width: 665px;margin-top: 15px">
-              <colgroup>
-                <col style="width: 34px"/>
-                <col/>
-                <col style="width: 74px"/>
-                <col style="width: 148px"/>
-                <col style="width: 148px"/>
-              </colgroup>
-              <thead>
-              <tr>
-                <th colspan="2">Название</th>
-                <th>Чувствительность</th>
-                <th>КОЕ</th>
-                <th>Диаметр</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="a in bactery.antibiotics">
-                <td class="cl-td">
-                  <button title="Удалить" class="btn last btn-blue-nb nbr" type="button" v-tippy
-                          @click="deleteAnti(bactery, a.pk)">
-                    <i class="fa fa-times"></i>
-                  </button>
-                </td>
-                <td>
-                  {{antibiotics.antibiotics[a.pk]}}
-                </td>
-                <td class="cl-td">
-                  <radio-field v-model="a.sri" :variants="sri" redesigned/>
-                </td>
-                <td class="cl-td">
-                  <input v-model="a.koe" v-mask="'9 × 10^9[9]'" class="form-control"/>
-                </td>
-                <td class="cl-td">
-                  <input v-model="a.dia" class="form-control"/>
-                </td>
-              </tr>
-              <tr v-if="bactery.antibiotics.length === 0">
-                <td colspan="5" class="text-center">
-                  антибиотики не выбраны
-                </td>
-              </tr>
-              </tbody>
-            </table>
+            <div class="table-row">
+              <div class="left">
+                <table class="table table-bordered table-condensed" style="max-width: 665px;margin-top: 15px">
+                  <colgroup>
+                    <col style="width: 34px"/>
+                    <col/>
+                    <col style="width: 74px"/>
+                    <col style="width: 148px"/>
+                    <col style="width: 148px"/>
+                  </colgroup>
+                  <thead>
+                  <tr>
+                    <th colspan="2">Название</th>
+                    <th>Чувствительность</th>
+                    <th>Диаметр</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr v-for="a in bactery.antibiotics">
+                    <td class="cl-td">
+                      <button title="Удалить" class="btn last btn-blue-nb nbr" type="button" v-tippy
+                              @click="deleteAnti(bactery, a.pk)">
+                        <i class="fa fa-times"></i>
+                      </button>
+                    </td>
+                    <td>
+                      {{antibiotics.antibiotics[a.pk]}}
+                    </td>
+                    <td class="cl-td">
+                      <radio-field v-model="a.sri" :variants="sri" redesigned/>
+                    </td>
+                    <td class="cl-td">
+                      <input v-model="a.dia" class="form-control"/>
+                    </td>
+                  </tr>
+                  <tr v-if="bactery.antibiotics.length === 0">
+                    <td colspan="4" class="text-center">
+                      антибиотики не выбраны
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="right">
+                <div class="right-inner">
+                  <div class="input-group">
+                    <span class="input-group-addon">КОЕ</span>
+                    <input v-model="bactery.koe" v-mask="'9 × 10^9[9]'" class="form-control" style="z-index: 0"/>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div v-if="bacteriesResult.length === 0" class="bactery-msg">
@@ -181,6 +188,7 @@
           selectedAntibiotic: this.antibiotics.groupsObj[this.antibiotics.groups[0].pk][0],
           selectedSet: this.antibiotics.sets[0],
           antibiotics: [],
+          koe: '',
         })
       },
       async deleteBac(pk) {
@@ -214,7 +222,6 @@
           pk,
           sri: 'S',
           dia: '',
-          koe: '',
         })
       },
       updateSelectedAntibiotic(bactery) {
@@ -246,7 +253,7 @@
     margin-bottom: -5px;
     width: 539px;
     display: inline-flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: stretch;
     align-content: stretch;
     align-items: stretch;
@@ -264,6 +271,33 @@
 
       /deep/ .vs__dropdown-toggle {
         border-radius: 0!important;
+      }
+    }
+  }
+
+  .table-row {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: stretch;
+    align-content: stretch;
+    align-items: stretch;
+
+    .left, .right {
+      align-self: stretch;
+    }
+
+    .left {
+      flex: 0 665px;
+    }
+
+    .right {
+      flex: 1;
+      padding-left: 10px;
+      padding-top: 15px;
+
+      &-inner {
+        position: sticky;
+        top: 138px;
       }
     }
   }
