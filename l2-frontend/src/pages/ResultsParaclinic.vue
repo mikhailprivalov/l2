@@ -341,12 +341,7 @@
                 </div>
               </div>
             </div>
-            <div class="group">
-              <div class="group-title">Микроорганизмы</div>
-              <div class="fields">
-                <BacMicroForm :confirmed="row.confirmed" />
-              </div>
-            </div>
+            <BacMicroForm :confirmed="row.confirmed" v-model="row.microbiology.bacteries" />
             <div class="group">
               <div class="group-title">Бактериофаги</div>
               <div class="fields">
@@ -355,7 +350,7 @@
             <div class="group">
               <div class="group-title">Заключение</div>
               <div class="fields">
-                <textarea rows="5" class="form-control" :readonly="row.confirmed"/>
+                <textarea rows="5" class="form-control" :readonly="row.confirmed" v-model="row.microbiology.conclusion"/>
               </div>
             </div>
           </template>

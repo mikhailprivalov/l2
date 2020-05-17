@@ -133,6 +133,7 @@
 <script>
   import bacteria_point from '../api/bacteria-point'
   import vSelect from 'vue-select'
+  import 'vue-select/dist/vue-select.css';
   import draggable from 'vuedraggable'
   import RadioField from '../fields/RadioField'
   import BacteriaEditTitleGroup from '../modals/BacteriaEditTitleGroup'
