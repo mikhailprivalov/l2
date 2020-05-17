@@ -1598,8 +1598,8 @@ def form38003(c: Canvas, dir: Napravleniya):
             [Paragraph('Дата появления симптомов преспираторного заболевания', style), Paragraph('', styleTB)],
             [Paragraph('Дата (день от начала заболевания) обращения за медицинской помощью', style), Paragraph(strdate(dir.data_sozdaniya), styleTB)],
             [Paragraph('Предварительный диагноз', style), Paragraph('', styleTB)],
-            [Paragraph('Состояние (тяжесть заболевания) пр обращении за медицинской помощью', style), Paragraph('',styleTB)],
-            [Paragraph('Сопутствующий диагноз', style), Paragraph('',styleTB)],
+            [Paragraph('Состояние (тяжесть заболевания) пр обращении за медицинской помощью', style), Paragraph('', styleTB)],
+            [Paragraph('Сопутствующий диагноз', style), Paragraph('', styleTB)],
         ]
         tbl_o = Table(patient_data, colWidths=(105 * mm, 95 * mm,))
         tbl_o.setStyle(TableStyle([
@@ -1657,8 +1657,8 @@ def form38003(c: Canvas, dir: Napravleniya):
         c.drawCentredString((210 / 2) * mm, 37 * mm, "Севедения об отправке материала")
         result_data = [
             [Paragraph('Дата и время отправки материала (номер рейса)', style), Paragraph('', style)],
-            [Paragraph('По адресу', style), Paragraph('ФБУЗ "Центр гигиены и эпидимиологии в Иркутской области" Отделение вирусологических исследований '
-                                                         'с ПЦР лабораторией и микробиологической лаборатории', styleTB)],
+            [Paragraph('По адресу', style),
+             Paragraph('ФБУЗ "Центр гигиены и эпидимиологии в Иркутской области" Отделение вирусологических исследований с ПЦР лабораторией и микробиологической лаборатории', styleTB)],
         ]
         tbl_o = Table(result_data, colWidths=(60 * mm, 150 * mm,))
         tbl_o.setStyle(TableStyle([
