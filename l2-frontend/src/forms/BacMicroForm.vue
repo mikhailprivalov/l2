@@ -7,11 +7,13 @@
                   class="inner-select"
                   placeholder="Выберите группу"
                   v-model="selectedGroup"
+                  append-to-body :calculate-position="withPopper"
         />
         <v-select :clearable="false" label="title" :options="bacteries" :searchable="true"
                   class="inner-select"
                   placeholder="Выберите микроорганизм"
                   v-model="selectedBactery"
+                  append-to-body :calculate-position="withPopper"
         />
         <button class="btn btn-blue-nb" @click="addBactery">
           Добавить
@@ -37,6 +39,7 @@
                             class="inner-select"
                             placeholder="Выберите набор"
                             v-model="bactery.selectedSet"
+                            append-to-body :calculate-position="withPopper"
                   />
                   <button class="btn btn-blue-nb" @click="loadSet(bactery)">
                     Загрузить набор
@@ -48,6 +51,7 @@
                             class="inner-select"
                             placeholder="Выберите антибиотик"
                             v-model="bactery.selectedAntibiotic"
+                            append-to-body :calculate-position="withPopper"
                   />
                   <button class="btn btn-blue-nb" @click="loadAntibiotic(bactery)">
                     Добавить
@@ -123,6 +127,7 @@
   import bacteria_point from '../api/bacteria-point'
   import * as action_types from '../store/action-types'
   import RadioField from '../fields/RadioField'
+  import {createPopper} from '@popperjs/core'
 
   const getDefaultElement = () => ({
     pk: -1,
@@ -168,6 +173,14 @@
       await this.$store.dispatch(action_types.DEC_LOADING)
     },
     methods: {
+      withPopper(dropdownList, component, {width}) {
+        dropdownList.style.width = width
+        const popper = createPopper(component.$refs.toggle, dropdownList, {
+          placement: 'bottom',
+        })
+
+        return () => popper.destroy()
+      },
       async load_bac_by_group() {
         await this.$store.dispatch(action_types.INC_LOADING)
         this.bacteries = (await bacteria_point.getBacByGroup({groupId: this.selectedGroup.pk})).list
@@ -259,18 +272,18 @@
     align-items: stretch;
 
     .btn {
-      border-radius: 0!important;
-      height: 30px!important;
+      border-radius: 0 !important;
+      height: 30px !important;
     }
 
     .inner-select {
       align-self: stretch;
       flex: 1;
       margin-right: 5px;
-      height: 30px!important;
+      height: 30px !important;
 
       /deep/ .vs__dropdown-toggle {
-        border-radius: 0!important;
+        border-radius: 0 !important;
       }
     }
   }
@@ -294,6 +307,7 @@
       flex: 1;
       padding-left: 10px;
       padding-top: 15px;
+      padding-bottom: 20px;
 
       &-inner {
         position: sticky;

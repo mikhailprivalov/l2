@@ -1007,6 +1007,11 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
+"@popperjs/core@^2.4.0":
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.4.0.tgz#0e1bdf8d021e7ea58affade33d9d607e11365915"
+  integrity sha512-NMrDy6EWh9TPdSRiHmHH2ye1v5U0gBD7pRYwSwJvomx7Bm4GG04vu63dYiVzebLOx2obPpJugew06xVP0Nk7hA==
+
 "@sentry/browser@^5.12.5":
   version "5.12.5"
   resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-5.12.5.tgz#3764523e7721fe4654e91c8256a3d35a9ae326ff"
