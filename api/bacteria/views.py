@@ -158,10 +158,10 @@ def get_bac_groups(request):
 def get_antibiotic_groups(request):
     groups = GroupAntibiotic.objects.filter(hide=False).order_by('title')
     result = {
-        "groups": [*[{
+        "groups": [{"pk": -1, "title": "Все антибиотики"}, *[{
             "pk": x.pk,
             "title": x.title,
-        } for x in groups], {"pk": -1, "title": "Все антибиотики"}],
+        } for x in groups]],
         "groupsObj": {},
         "antibiotics": {},
         "sets": [{

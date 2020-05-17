@@ -1,6 +1,6 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative;min-height: 100px;">
-    <div class="input-select">
+    <div class="input-select flex-select">
       <v-select :clearable="false" label="title" :options="bacteriesGroups" :searchable="true"
                 class="inner-select"
                 placeholder="Выберите группу"
@@ -25,33 +25,30 @@
         </span>
       </div>
       <div class="bactery-body">
-        <div class="input-select">
-          <v-select :clearable="false" label="title" :options="antibiotics.groups" :searchable="true"
-                    class="inner-select"
-                    placeholder="Выберите группу"
-                    v-model="bactery.selectedGroup"
-                    @input="updateSelectedAntibiotic(bactery)"
-          />
-          <v-select :clearable="false" label="title" :options="antibiotics.groupsObj[bactery.selectedGroup.pk]"
-                    :searchable="true"
-                    class="inner-select"
-                    placeholder="Выберите антибиотик"
-                    v-model="bactery.selectedAntibiotic"
-          />
-          <button class="btn btn-blue-nb" @click="loadAntibiotic(bactery)">
-            Добавить
-          </button>
-        </div>
-        <hr />
-        <div class="input-select">
-          <v-select :clearable="false" label="title" :options="antibiotics.sets" :searchable="true"
-                    class="inner-select"
-                    placeholder="Выберите набор"
-                    v-model="bactery.selectedSet"
-          />
-          <button class="btn btn-blue-nb" @click="loadSet(bactery)">
-            Загрузить набор
-          </button>
+        <div class="bactery-selects">
+          <div class="row">
+            <div class="col-xs-6 two">
+              <v-select :clearable="false" label="title" :options="antibiotics.sets" :searchable="true"
+                        class="inner-select"
+                        placeholder="Выберите набор"
+                        v-model="bactery.selectedSet"
+              />
+              <button class="btn btn-blue-nb" @click="loadSet(bactery)">
+                Загрузить набор
+              </button>
+            </div>
+            <div class="col-xs-6 three">
+              <v-select :clearable="false" label="title" :options="antibiotics.groupsObj[bactery.selectedGroup.pk]"
+                        :searchable="true"
+                        class="inner-select"
+                        placeholder="Выберите антибиотик"
+                        v-model="bactery.selectedAntibiotic"
+              />
+              <button class="btn btn-blue-nb" @click="loadAntibiotic(bactery)">
+                Добавить
+              </button>
+            </div>
+          </div>
         </div>
 
         <table class="table table-bordered table-condensed" style="max-width: 665px;margin-top: 15px">
@@ -80,7 +77,7 @@
               {{antibiotics.antibiotics[a.pk]}}
             </td>
             <td class="cl-td">
-              <radio-field v-model="a.sri" :variants="sri" />
+              <radio-field v-model="a.sri" :variants="sri" redesigned />
             </td>
             <td class="cl-td">
               <input v-model="a.dia" class="form-control" />
@@ -100,6 +97,7 @@
 
 <script>
   import vSelect from 'vue-select'
+  import 'vue-select/dist/vue-select.css';
   import bacteria_point from '../api/bacteria-point'
   import * as action_types from '../store/action-types'
   import RadioField from "../fields/RadioField";
@@ -225,12 +223,76 @@
 </script>
 
 <style scoped lang="scss">
+  .flex-select {
+    padding-left: 11px;
+    width: 670px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: stretch;
+    align-content: stretch;
+    align-items: stretch;
+    .inner-select, .input-select .btn {
+      align-self: stretch;
+      flex: 1;
+    }
+    .inner-select {
+      margin-right: 5px;
+    }
+  }
+
   .inner-select, .input-select .btn {
     display: inline-block;
-    max-width: 330px;
-    width: 30%;
     vertical-align: middle;
+  }
+
+  .inner-select, .input-select .btn {
     height: 32px;
+  }
+
+  .bactery-selects {
+    position: sticky;
+    top: 80px;
+    background: #fff;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    border-bottom: solid 1px lightgray;
+    z-index: 1;
+
+    .row {
+      max-width: 700px;
+    }
+
+    .two, .three {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: stretch;
+      align-content: stretch;
+      align-items: stretch;
+    }
+
+    .two {
+      padding-right: 5px;
+      border-right: 1px solid lightgray;
+    }
+
+    .three {
+      padding-left: 5px;
+    }
+
+    .inner-select, .btn {
+      align-self: stretch;
+      height: 32px;
+      margin: 0 5px;
+      max-width: 100%;
+    }
+
+    .inner-select {
+      flex: 1;
+    }
+
+    .btn {
+      flex: 0;
+    }
   }
 
   .inner-select {
@@ -239,13 +301,16 @@
 
   .bactery {
     margin: 10px 0;
-    border: 1px solid #049372;
+    border: 1px solid #048493;
     border-radius: 5px;
     overflow: visible;
 
     &-title {
+      z-index: 2;
+      position: sticky;
+      top: 60px;
       color: #fff;
-      background: #049372;
+      background: #048493;
       line-height: 20px;
       border-radius: 4px 4px 0 0;
       overflow: hidden;
@@ -260,7 +325,7 @@
       cursor: pointer;
 
       &:hover {
-        background: #03614b;
+        background: #0c7e8b;
       }
     }
   }

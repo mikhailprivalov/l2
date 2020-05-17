@@ -43,7 +43,7 @@ openpyxl==3.0.3
 pdfrw==0.4
 pika==1.1.0
 Pillow==7.0.0
-psycopg2==2.8.5
+psycopg2==2.8.2
 pyaml==20.4.0
 pyasn1==0.4.8
 pycodestyle==2.5.0

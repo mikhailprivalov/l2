@@ -61,6 +61,7 @@
   import Modal from '../ui-cards/Modal'
   import * as action_types from '../store/action-types'
   import vSelect from 'vue-select'
+  import 'vue-select/dist/vue-select.css';
   import patients_point from '../api/patients-point'
   import directions_point from '../api/directions-point'
 
