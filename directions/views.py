@@ -27,7 +27,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.pdfgen.canvas import Canvas
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak, Frame, KeepInFrame
 from transliterate import translit
 
 import directory.models as directory
@@ -40,6 +40,8 @@ from laboratory.utils import strtime, strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
 from utils.dates import try_parse_range
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
+from copy import deepcopy
 
 w, h = A4
 
@@ -1523,5 +1525,131 @@ def form38002(c: Canvas, dir: Napravleniya):
         d = Drawing()
         d.add(qr_code)
         renderPDF.draw(d, c, 170 * mm, 10 * mm)
+
+    printForm(0)
+
+
+def form38003(c: Canvas, dir: Napravleniya):
+    # Covid-19
+    def printForm(offset):
+        pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+        pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+        pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
+
+        c.setStrokeColorRGB(0, 0, 0)
+        c.setLineWidth(0.2 * mm)
+        c.setFont('PTAstraSerifBold', 12)
+
+        styleSheet = getSampleStyleSheet()
+        style = styleSheet["Normal"]
+        style.fontName = "PTAstraSerifBold"
+        style.fontSize = 12
+        style.leading = 3.5 * mm
+        # style.spaceAfter = 0.5 * mm
+
+        styleTB = deepcopy(style)
+        styleTB.fontName = "PTAstraSerifReg"
+        styleTB.fontSize = 10
+        styleTB.alignment = TA_LEFT
+        styleTB.leading = 3.5 * mm
+
+        c.drawString(10 * mm, 287 * mm, "Дата: {}".format(strdate(dir.data_sozdaniya)))
+
+        c.drawCentredString((210 / 2) * mm, 282 * mm, "Контактные данные учреждения, направляющего материал")
+        organization_data = [
+            [Paragraph('Название', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Телефон', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Факс', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('E-mail', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Адрес', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Ф.И.О, должность лица, отправившего материал', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('E-mail', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Цель исследования', style), Paragraph('Коронавирусная инфекция COVID-19 (2019-nCov)', styleTB)],
+            [Paragraph('Указания для исследования', style), Paragraph(
+                'Во исполнении письма Федеральной службы по надзору в сфере защиты прав потребителей и благополучия человека (Роспотребнадзора) '
+                'от 09.01.2020 № 02/107-2020-27 "О дополнительных мерах по недопущению завозов инфекционных заболеваний"',
+                styleTB)],
+        ]
+        tbl_o = Table(organization_data, colWidths=(60 * mm, 150 * mm,))
+        tbl_o.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        organization_text = [tbl_o]
+        organoztion_frame = Frame(10 * mm, 220 * mm, 190 * mm, 60 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
+        organoztion_inframe = KeepInFrame(190 * mm, 60 * mm, organization_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
+        organoztion_frame.addFromList([organoztion_inframe], c)
+
+        c.drawCentredString((210 / 2) * mm, 219 * mm, "Севедения о заболевшем")
+        patient_data = [
+            [Paragraph('ФИО', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Пол', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Возраст', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Место проживани (регистрации)', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Эпидемиологический анамнез, включая место и время пребывания (указывается страна, населенный пункт, провинция)', styleTB), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Дата появления симптомов преспираторного заболевания', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Дата (день от начала заболевания) обращения за медицинской помощью', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Предварительный диагноз', style), Paragraph('Коронавирусная инфекция COVID-19 (2019-nCov)', styleTB)],
+            [Paragraph('Состояние (тяжесть заболевания) пр обращении за медицинской помощью', style), Paragraph('',styleTB)],
+            [Paragraph('Сопутствующий диагноз', style), Paragraph('',styleTB)],
+        ]
+        tbl_o = Table(patient_data, colWidths=(105 * mm, 95 * mm,))
+        tbl_o.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        patient_text = [tbl_o]
+        patient_frame = Frame(10 * mm, 138 * mm, 190 * mm, 80 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
+        patient_inframe = KeepInFrame(190 * mm, 80 * mm, patient_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
+        patient_frame.addFromList([patient_inframe], c)
+
+        c.drawCentredString((210 / 2) * mm, 136 * mm, "Севедения о материале")
+        material_data = [
+            [Paragraph('Сопроводительный номер на контейнере с биоматериалом', style), Paragraph('Вид биологического материала (нужное отметит)', styleTB)],
+            [Paragraph('', style), Paragraph('<font face="Symbola" size=11>\u2713</font> Мазки из носа и зева', styleTB)],
+            [Paragraph('', style), Paragraph('<font face="Symbola" size=10>\u25CB</font> Сыворотка', styleTB)],
+            [Paragraph('', style), Paragraph('<font face="Symbola" size=10>\u25CB</font> Мокрота', styleTB)],
+            [Paragraph('', style), Paragraph('<font face="Symbola" size=10>\u25CB</font> Моча', styleTB)],
+            [Paragraph('', style), Paragraph('<font face="Symbola" size=10>\u25CB</font> Другое указать', styleTB)],
+            [Paragraph('Дата отбора материала', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('ФИО, должность забиравшего материал, телефон', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Дата получения материала в лабораторном подразделении', style), Paragraph('Оперировал', styleTB)],
+        ]
+        tbl_o = Table(material_data, colWidths=(105 * mm, 95 * mm,))
+        tbl_o.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('SPAN', (0, 1), (0, 5))
+        ]))
+        material_text = [tbl_o]
+        material_frame = Frame(10 * mm, 75 * mm, 190 * mm, 60 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
+        material_inframe = KeepInFrame(190 * mm, 60 * mm, material_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
+        material_frame.addFromList([material_inframe], c)
+
+
+
+
+
+
+
+        # Точки отсчета
+        # x_coord, y_coord = 20, 235
+        # barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=10 * mm, barWidth=1.25)
+        # dir_code = Drawing()
+        # dir_code.add(barcode)
+        # renderPDF.draw(dir_code, c, (x_coord + 120) * mm, 250 * mm)
+        #
+        # c.setFont('PTAstraSerifReg', 20)
+        #
+        # # Данные пациента
+        # y_patient = []
+        # y = 0
+        # for i in range(0, 9):
+        #     y_patient.append(y_coord - y)
+        #     y += 5
+        # c.drawString(x_coord * mm, 250 * mm, "№ " + str(dir.pk))  # Номер направления
 
     printForm(0)
