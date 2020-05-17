@@ -1,95 +1,110 @@
 <template>
-  <div style="height: 100%;width: 100%;position: relative;min-height: 100px;">
-    <div class="input-select flex-select">
-      <v-select :clearable="false" label="title" :options="bacteriesGroups" :searchable="true"
-                class="inner-select"
-                placeholder="Выберите группу"
-                v-model="selectedGroup"
-      />
-      <v-select :clearable="false" label="title" :options="bacteries" :searchable="true"
-                class="inner-select"
-                placeholder="Выберите микроорганизм"
-                v-model="selectedBactery"
-      />
-      <button class="btn btn-blue-nb" @click="addBactery">
-        Добавить
-      </button>
-    </div>
-    <div v-for="bactery in bacteriesResult" class="bactery">
-      <div class="bactery-title">
-        <span title="Удалить" class="bactery-delete" @click="deleteBac(bactery.bacteryPk)" v-tippy>
-          <i class="fa fa-times"></i>
-        </span>
-        <span class="bactery-title-inner">
-          {{bactery.bacteryGroupTitle}} {{bactery.bacteryTitle}}
-        </span>
+  <div class="group">
+    <div class="group-title">
+      Микроорганизмы
+      <div class="input-select flex-select">
+        <v-select :clearable="false" label="title" :options="bacteriesGroups" :searchable="true"
+                  class="inner-select"
+                  placeholder="Выберите группу"
+                  v-model="selectedGroup"
+        />
+        <v-select :clearable="false" label="title" :options="bacteries" :searchable="true"
+                  class="inner-select"
+                  placeholder="Выберите микроорганизм"
+                  v-model="selectedBactery"
+        />
+        <button class="btn btn-blue-nb" @click="addBactery">
+          Добавить
+        </button>
       </div>
-      <div class="bactery-body">
-        <div class="bactery-selects">
-          <div class="row">
-            <div class="col-xs-6 two">
-              <v-select :clearable="false" label="title" :options="antibiotics.sets" :searchable="true"
-                        class="inner-select"
-                        placeholder="Выберите набор"
-                        v-model="bactery.selectedSet"
-              />
-              <button class="btn btn-blue-nb" @click="loadSet(bactery)">
-                Загрузить набор
-              </button>
+    </div>
+    <div class="fields">
+      <div style="height: 100%;width: 100%;position: relative;min-height: 100px;">
+        <div v-for="bactery in bacteriesResult" class="bactery">
+          <div class="bactery-title">
+          <span title="Удалить" class="bactery-delete" @click="deleteBac(bactery.bacteryPk)" v-tippy>
+            <i class="fa fa-times"></i>
+          </span>
+            <span class="bactery-title-inner">
+            {{bactery.bacteryGroupTitle}} {{bactery.bacteryTitle}}
+          </span>
+          </div>
+          <div class="bactery-body">
+            <div class="bactery-selects">
+              <div class="row">
+                <div class="col-xs-6 two">
+                  <v-select :clearable="false" label="title" :options="antibiotics.sets" :searchable="true"
+                            class="inner-select"
+                            placeholder="Выберите набор"
+                            v-model="bactery.selectedSet"
+                  />
+                  <button class="btn btn-blue-nb" @click="loadSet(bactery)">
+                    Загрузить набор
+                  </button>
+                </div>
+                <div class="col-xs-6 three">
+                  <v-select :clearable="false" label="title" :options="antibiotics.groupsObj[bactery.selectedGroup.pk]"
+                            :searchable="true"
+                            class="inner-select"
+                            placeholder="Выберите антибиотик"
+                            v-model="bactery.selectedAntibiotic"
+                  />
+                  <button class="btn btn-blue-nb" @click="loadAntibiotic(bactery)">
+                    Добавить
+                  </button>
+                </div>
+              </div>
             </div>
-            <div class="col-xs-6 three">
-              <v-select :clearable="false" label="title" :options="antibiotics.groupsObj[bactery.selectedGroup.pk]"
-                        :searchable="true"
-                        class="inner-select"
-                        placeholder="Выберите антибиотик"
-                        v-model="bactery.selectedAntibiotic"
-              />
-              <button class="btn btn-blue-nb" @click="loadAntibiotic(bactery)">
-                Добавить
-              </button>
-            </div>
+
+            <table class="table table-bordered table-condensed" style="max-width: 665px;margin-top: 15px">
+              <colgroup>
+                <col style="width: 34px"/>
+                <col/>
+                <col style="width: 74px"/>
+                <col style="width: 148px"/>
+                <col style="width: 148px"/>
+              </colgroup>
+              <thead>
+              <tr>
+                <th colspan="2">Название</th>
+                <th>Чувствительность</th>
+                <th>КОЕ</th>
+                <th>Диаметр</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr v-for="a in bactery.antibiotics">
+                <td class="cl-td">
+                  <button title="Удалить" class="btn last btn-blue-nb nbr" type="button" v-tippy
+                          @click="deleteAnti(bactery, a.pk)">
+                    <i class="fa fa-times"></i>
+                  </button>
+                </td>
+                <td>
+                  {{antibiotics.antibiotics[a.pk]}}
+                </td>
+                <td class="cl-td">
+                  <radio-field v-model="a.sri" :variants="sri" redesigned/>
+                </td>
+                <td class="cl-td">
+                  <input v-model="a.koe" v-mask="'9 × 10^9[9]'" class="form-control"/>
+                </td>
+                <td class="cl-td">
+                  <input v-model="a.dia" class="form-control"/>
+                </td>
+              </tr>
+              <tr v-if="bactery.antibiotics.length === 0">
+                <td colspan="5" class="text-center">
+                  антибиотики не выбраны
+                </td>
+              </tr>
+              </tbody>
+            </table>
           </div>
         </div>
-
-        <table class="table table-bordered table-condensed" style="max-width: 665px;margin-top: 15px">
-          <colgroup>
-            <col style="width: 34px" />
-            <col />
-            <col style="width: 148px"  />
-            <col style="width: 148px" />
-          </colgroup>
-          <thead>
-          <tr>
-            <th colspan="2">Название</th>
-            <th>Чувствительность</th>
-            <th>Диаметр</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="a in bactery.antibiotics">
-            <td class="cl-td">
-              <button title="Удалить" class="btn last btn-blue-nb nbr" type="button" v-tippy
-                      @click="deleteAnti(bactery, a.pk)">
-                <i class="fa fa-times"></i>
-              </button>
-            </td>
-            <td>
-              {{antibiotics.antibiotics[a.pk]}}
-            </td>
-            <td class="cl-td">
-              <radio-field v-model="a.sri" :variants="sri" redesigned />
-            </td>
-            <td class="cl-td">
-              <input v-model="a.dia" class="form-control" />
-            </td>
-          </tr>
-          <tr v-if="bactery.antibiotics.length === 0">
-            <td colspan="4" class="text-center">
-              антибиотики не выбраны
-            </td>
-          </tr>
-          </tbody>
-        </table>
+        <div v-if="bacteriesResult.length === 0" class="bactery-msg">
+          Микроорганизмы не выбраны
+        </div>
       </div>
     </div>
   </div>
@@ -97,10 +112,10 @@
 
 <script>
   import vSelect from 'vue-select'
-  import 'vue-select/dist/vue-select.css';
+  import 'vue-select/dist/vue-select.css'
   import bacteria_point from '../api/bacteria-point'
   import * as action_types from '../store/action-types'
-  import RadioField from "../fields/RadioField";
+  import RadioField from '../fields/RadioField'
 
   const getDefaultElement = () => ({
     pk: -1,
@@ -129,7 +144,7 @@
         bacteries: [],
         selectedGroup: getDefaultElement(),
         selectedBactery: getDefaultElement(),
-        bacteriesResult: [],
+        bacteriesResult: this.value,
         antibiotics: {
           groups: [],
           groupsObj: {},
@@ -155,7 +170,7 @@
       addBactery() {
         for (const bactery of this.bacteriesResult) {
           if (bactery.bacteryPk === this.selectedBactery.pk) {
-            return;
+            return
           }
         }
         this.bacteriesResult.push({
@@ -175,7 +190,7 @@
           return
         }
 
-        this.bacteriesResult = this.bacteriesResult.filter(br => br.bacteryPk !== pk);
+        this.bacteriesResult = this.bacteriesResult.filter(br => br.bacteryPk !== pk)
       },
       deleteAnti(bactery, pk) {
         bactery.antibiotics = bactery.antibiotics.filter(a => a.pk !== pk)
@@ -199,6 +214,7 @@
           pk,
           sri: 'S',
           dia: '',
+          koe: '',
         })
       },
       updateSelectedAntibiotic(bactery) {
@@ -206,10 +222,10 @@
       },
     },
     watch: {
-      val: {
+      bacteriesResult: {
         deep: true,
         handler() {
-          this.$emit('input', this.val)
+          this.$emit('input', this.bacteriesResult)
         },
       },
       selectedGroup: {
@@ -224,19 +240,31 @@
 
 <style scoped lang="scss">
   .flex-select {
-    padding-left: 11px;
-    width: 670px;
-    display: flex;
+    font-weight: normal;
+    padding-left: 5px;
+    margin-top: -5px;
+    margin-bottom: -5px;
+    width: 539px;
+    display: inline-flex;
     flex-wrap: wrap;
     justify-content: stretch;
     align-content: stretch;
     align-items: stretch;
-    .inner-select, .input-select .btn {
+
+    .btn {
+      border-radius: 0!important;
+      height: 30px!important;
+    }
+
+    .inner-select {
       align-self: stretch;
       flex: 1;
-    }
-    .inner-select {
       margin-right: 5px;
+      height: 30px!important;
+
+      /deep/ .vs__dropdown-toggle {
+        border-radius: 0!important;
+      }
     }
   }
 
@@ -296,7 +324,7 @@
   }
 
   .inner-select {
-    background: #fff!important;
+    background: #fff !important;
   }
 
   .bactery {
@@ -336,5 +364,10 @@
     hr {
       margin: 5px 0;
     }
+  }
+
+  .bactery-msg {
+    padding: 20px;
+    text-align: center;
   }
 </style>
