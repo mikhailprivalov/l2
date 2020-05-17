@@ -40,7 +40,7 @@ from laboratory.utils import strtime, strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
 from utils.dates import try_parse_range
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
+from reportlab.lib.enums import TA_LEFT
 from copy import deepcopy
 
 w, h = A4
@@ -1545,25 +1545,32 @@ def form38003(c: Canvas, dir: Napravleniya):
         style.fontName = "PTAstraSerifBold"
         style.fontSize = 12
         style.leading = 3.5 * mm
-        # style.spaceAfter = 0.5 * mm
+        style.alignment = TA_LEFT
 
         styleTB = deepcopy(style)
         styleTB.fontName = "PTAstraSerifReg"
         styleTB.fontSize = 10
-        styleTB.alignment = TA_LEFT
-        styleTB.leading = 3.5 * mm
+
+        styleBold = deepcopy(style)
+        styleBold.fontSize = 10
 
         c.drawString(10 * mm, 287 * mm, "Дата: {}".format(strdate(dir.data_sozdaniya)))
 
-        c.drawCentredString((210 / 2) * mm, 282 * mm, "Контактные данные учреждения, направляющего материал")
+        barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
+        dir_code = Drawing()
+        dir_code.add(barcode)
+        renderPDF.draw(dir_code, c, 150 * mm, 285 * mm)
+        c.drawString(100 * mm, 287 * mm, "№ - {}".format(dir.pk))
+
+        c.drawCentredString((210 / 2) * mm, 281 * mm, "Контактные данные учреждения, направляющего материал")
         organization_data = [
-            [Paragraph('Название', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('Телефон', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('Факс', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('E-mail', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('Адрес', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('Ф.И.О, должность лица, отправившего материал', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('E-mail', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Название', style), Paragraph(SettingManager.get("org_title"), styleTB)],
+            [Paragraph('Телефон', style), Paragraph(SettingManager.get("org_phones"), styleTB)],
+            [Paragraph('Факс', style), Paragraph(SettingManager.get("org_phones"), styleTB)],
+            [Paragraph('E-mail', style), Paragraph('imdkb@imdkb.ru ', styleTB)],
+            [Paragraph('Адрес', style), Paragraph(SettingManager.get("org_address"), styleTB)],
+            [Paragraph('Ф.И.О, должность лица, отправившего материал', style), Paragraph('', styleTB)],
+            [Paragraph('E-mail', style), Paragraph('imdkb@imdkb.ru', styleTB)],
             [Paragraph('Цель исследования', style), Paragraph('Коронавирусная инфекция COVID-19 (2019-nCov)', styleTB)],
             [Paragraph('Указания для исследования', style), Paragraph(
                 'Во исполнении письма Федеральной службы по надзору в сфере защиты прав потребителей и благополучия человека (Роспотребнадзора) '
@@ -1583,14 +1590,14 @@ def form38003(c: Canvas, dir: Napravleniya):
 
         c.drawCentredString((210 / 2) * mm, 219 * mm, "Севедения о заболевшем")
         patient_data = [
-            [Paragraph('ФИО', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('Пол', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('Возраст', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('Место проживани (регистрации)', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('Эпидемиологический анамнез, включая место и время пребывания (указывается страна, населенный пункт, провинция)', styleTB), Paragraph('Оперировал', styleTB)],
-            [Paragraph('Дата появления симптомов преспираторного заболевания', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('Дата (день от начала заболевания) обращения за медицинской помощью', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('Предварительный диагноз', style), Paragraph('Коронавирусная инфекция COVID-19 (2019-nCov)', styleTB)],
+            [Paragraph('ФИО', style), Paragraph(dir.client.individual.fio(), styleTB)],
+            [Paragraph('Пол', style), Paragraph(dir.client.individual.sex, styleTB)],
+            [Paragraph('Возраст', style), Paragraph(dir.client.individual.age_s(direction=dir), styleTB)],
+            [Paragraph('Место проживания (регистрации)', style), Paragraph(dir.client.main_address, styleTB)],
+            [Paragraph('Эпидемиологический анамнез, включая место и время пребывания (указывается страна, населенный пункт, провинция)', styleBold), Paragraph('Не выезжал', styleTB)],
+            [Paragraph('Дата появления симптомов преспираторного заболевания', style), Paragraph('', styleTB)],
+            [Paragraph('Дата (день от начала заболевания) обращения за медицинской помощью', style), Paragraph(strdate(dir.data_sozdaniya), styleTB)],
+            [Paragraph('Предварительный диагноз', style), Paragraph('', styleTB)],
             [Paragraph('Состояние (тяжесть заболевания) пр обращении за медицинской помощью', style), Paragraph('',styleTB)],
             [Paragraph('Сопутствующий диагноз', style), Paragraph('',styleTB)],
         ]
@@ -1608,14 +1615,14 @@ def form38003(c: Canvas, dir: Napravleniya):
         c.drawCentredString((210 / 2) * mm, 136 * mm, "Севедения о материале")
         material_data = [
             [Paragraph('Сопроводительный номер на контейнере с биоматериалом', style), Paragraph('Вид биологического материала (нужное отметит)', styleTB)],
-            [Paragraph('', style), Paragraph('<font face="Symbola" size=11>\u2713</font> Мазки из носа и зева', styleTB)],
+            [Paragraph("{}".format(dir.pk), style), Paragraph('<font face="Symbola" size=11>\u2713</font> Мазки из носа и зева', styleTB)],
             [Paragraph('', style), Paragraph('<font face="Symbola" size=10>\u25CB</font> Сыворотка', styleTB)],
             [Paragraph('', style), Paragraph('<font face="Symbola" size=10>\u25CB</font> Мокрота', styleTB)],
             [Paragraph('', style), Paragraph('<font face="Symbola" size=10>\u25CB</font> Моча', styleTB)],
             [Paragraph('', style), Paragraph('<font face="Symbola" size=10>\u25CB</font> Другое указать', styleTB)],
-            [Paragraph('Дата отбора материала', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('ФИО, должность забиравшего материал, телефон', style), Paragraph('Оперировал', styleTB)],
-            [Paragraph('Дата получения материала в лабораторном подразделении', style), Paragraph('Оперировал', styleTB)],
+            [Paragraph('Дата отбора материала', style), Paragraph(strdate(dir.data_sozdaniya), styleTB)],
+            [Paragraph('ФИО, должность забиравшего материал, телефон', style), Paragraph('', styleTB)],
+            [Paragraph('Дата получения материала в лабораторном подразделении', style), Paragraph('', styleTB)],
         ]
         tbl_o = Table(material_data, colWidths=(105 * mm, 95 * mm,))
         tbl_o.setStyle(TableStyle([
@@ -1629,27 +1636,39 @@ def form38003(c: Canvas, dir: Napravleniya):
         material_inframe = KeepInFrame(190 * mm, 60 * mm, material_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
         material_frame.addFromList([material_inframe], c)
 
+        c.drawCentredString((210 / 2) * mm, 74 * mm, "Севедения о проведенных исследованиях")
+        result_data = [
+            [Paragraph('Показатель', style), Paragraph('Результат', style)],
+            [Paragraph('РНК вируса гриппа, респираторно-синициального вируса, метапневмовируса, вирусов парагриппа 1,2,3,3 типов, коронавируа, '
+                       'риновируса, ДНК аденовирусов групп В, С и Е, бокавируса, ДНК Mycoplasma pneumonia и Chlamydophila pneumonia', styleBold), Paragraph('', styleTB)],
+            [Paragraph('2019-nCov', style), Paragraph('', styleTB)],
+        ]
+        tbl_o = Table(result_data, colWidths=(105 * mm, 95 * mm,))
+        tbl_o.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        result_text = [tbl_o]
+        result_frame = Frame(10 * mm, 42 * mm, 190 * mm, 30 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
+        result_inframe = KeepInFrame(190 * mm, 30 * mm, result_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
+        result_frame.addFromList([result_inframe], c)
 
-
-
-
-
-
-        # Точки отсчета
-        # x_coord, y_coord = 20, 235
-        # barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=10 * mm, barWidth=1.25)
-        # dir_code = Drawing()
-        # dir_code.add(barcode)
-        # renderPDF.draw(dir_code, c, (x_coord + 120) * mm, 250 * mm)
-        #
-        # c.setFont('PTAstraSerifReg', 20)
-        #
-        # # Данные пациента
-        # y_patient = []
-        # y = 0
-        # for i in range(0, 9):
-        #     y_patient.append(y_coord - y)
-        #     y += 5
-        # c.drawString(x_coord * mm, 250 * mm, "№ " + str(dir.pk))  # Номер направления
+        c.drawCentredString((210 / 2) * mm, 37 * mm, "Севедения об отправке материала")
+        result_data = [
+            [Paragraph('Дата и время отправки материала (номер рейса)', style), Paragraph('', style)],
+            [Paragraph('По адресу', style), Paragraph('ФБУЗ "Центр гигиены и эпидимиологии в Иркутской области" Отделение вирусологических исследований '
+                                                         'с ПЦР лабораторией и микробиологической лаборатории', styleTB)],
+        ]
+        tbl_o = Table(result_data, colWidths=(60 * mm, 150 * mm,))
+        tbl_o.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        result_text = [tbl_o]
+        result_frame = Frame(10 * mm, 10 * mm, 190 * mm, 25 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
+        result_inframe = KeepInFrame(190 * mm, 25 * mm, result_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
+        result_frame.addFromList([result_inframe], c)
 
     printForm(0)
