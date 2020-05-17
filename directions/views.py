@@ -1567,10 +1567,10 @@ def form38003(c: Canvas, dir: Napravleniya):
             [Paragraph('Название', style), Paragraph(SettingManager.get("org_title"), styleTB)],
             [Paragraph('Телефон', style), Paragraph(SettingManager.get("org_phones"), styleTB)],
             [Paragraph('Факс', style), Paragraph(SettingManager.get("org_phones"), styleTB)],
-            [Paragraph('E-mail', style), Paragraph('imdkb@imdkb.ru ', styleTB)],
+            [Paragraph('E-mail', style), Paragraph(SettingManager.get("mail", default='', default_type='s'), styleTB)],
             [Paragraph('Адрес', style), Paragraph(SettingManager.get("org_address"), styleTB)],
             [Paragraph('Ф.И.О, должность лица, отправившего материал', style), Paragraph('', styleTB)],
-            [Paragraph('E-mail', style), Paragraph('imdkb@imdkb.ru', styleTB)],
+            [Paragraph('E-mail', style), Paragraph('', styleTB)],
             [Paragraph('Цель исследования', style), Paragraph('Коронавирусная инфекция COVID-19 (2019-nCov)', styleTB)],
             [Paragraph('Указания для исследования', style), Paragraph(
                 'Во исполнении письма Федеральной службы по надзору в сфере защиты прав потребителей и благополучия человека (Роспотребнадзора) '
