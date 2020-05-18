@@ -1,13 +1,14 @@
 {% extends "dbase.html" %}
 {% block title %}Предварительный просмотр бланков результатов{% endblock %}
-{% block container %}container-fluid" style="display: flex;flex-direction: column;height: 100%;margin:0;padding:0{% endblock %}
+{% block container %}container-fluid"
+    style="display: flex;flex-direction: column;height:100%;margin:0;padding:0{% endblock %}
 
 {% block nav %}{#  Скрытие шапки #}{% endblock %}
 
 {% block content %}
     <div style="flex: 0 0 48px;background-color: rgb(50, 54, 57);color:#fff;border-bottom: 1px solid #049372;padding-left: 17px;padding-right: 17px">
         <div style="height: 100%;width: 100%;display: flex;flex-direction: row; justify-content: space-between;align-items:center">
-            <div class="logo">L<sup>2</sup></div>
+            <div class="logo-simple">L<sup>2</sup></div>
             <div style="text-align: center;flex-basis: 25%">
                 <label><input id="split" type="checkbox"> На отдельных страницах</label>
             </div>
@@ -36,62 +37,64 @@
     <script>
         const pks = {{ request.GET.pk|safe }};
         {% if 'hosp' in request.GET %}
-        const hosp = {{ request.GET.hosp }};
+            const hosp = {{ request.GET.hosp }};
         {% else %}
-        const hosp = 0;
+            const hosp = 0
         {% endif %}
         $(document).ready(function () {
-            $(window).bind('keydown', function(event) {
+            $(window).bind('keydown', function (event) {
                 if (event.ctrlKey || event.metaKey) {
                     switch (String.fromCharCode(event.which).toLowerCase()) {
                         case 's':
-                            event.preventDefault();
-                            window.open(get_url(false), '_blank');
-                            break;
+                            event.preventDefault()
+                            window.open(get_url(false), '_blank')
+                            break
                     }
                 }
-            });
-            if(!localStorage.getItem("print_results_split")){
-                $("#split").prop("checked", true);
-                localStorage.setItem("print_results_split", "true");
+            })
+            if (!localStorage.getItem('print_results_split')) {
+                $('#split').prop('checked', true)
+                localStorage.setItem('print_results_split', 'true')
             } else {
-                $("#split").prop("checked", JSON.parse(localStorage.getItem("print_results_split")));
+                $('#split').prop('checked', JSON.parse(localStorage.getItem('print_results_split')))
             }
-            if(!localStorage.getItem("print_results_margin")){
-                $("#margin").prop("checked", true);
-                localStorage.setItem("print_results_margin", "true");
+            if (!localStorage.getItem('print_results_margin')) {
+                $('#margin').prop('checked', true)
+                localStorage.setItem('print_results_margin', 'true')
             } else {
-                $("#margin").prop("checked", JSON.parse(localStorage.getItem("print_results_margin")));
+                $('#margin').prop('checked', JSON.parse(localStorage.getItem('print_results_margin')))
             }
-            if(!localStorage.getItem("print_results_protocol_plain_text")){
-                $("#protocol_plain_text").prop("checked", false);
-                localStorage.setItem("print_results_protocol_plain_text", "false");
+            if (!localStorage.getItem('print_results_protocol_plain_text')) {
+                $('#protocol_plain_text').prop('checked', false)
+                localStorage.setItem('print_results_protocol_plain_text', 'false')
             } else {
-                $("#protocol_plain_text").prop("checked", JSON.parse(localStorage.getItem("print_results_protocol_plain_text")));
-            }
-
-            if(!localStorage.getItem("print_results_sick_list")){
-                $("#sick_list").prop("checked", false);
-                localStorage.setItem("print_results_sick_list", "false");
-            } else {
-                $("#sick_list").prop("checked", JSON.parse(localStorage.getItem("print_results_sick_list")));
+                $('#protocol_plain_text').prop('checked', JSON.parse(localStorage.getItem('print_results_protocol_plain_text')))
             }
 
-            updatePreview();
-        });
-        function get_url(inline){
-            let split = $("#split").is(":checked");
-            localStorage.setItem("print_results_split", split + "");
-            let margin = $("#margin").is(":checked");
-            localStorage.setItem("print_results_margin", margin + "");
-            let protocol_plain_text = $("#protocol_plain_text").is(":checked");
-            localStorage.setItem("print_results_protocol_plain_text", protocol_plain_text + "");
-            let sick_list = $("#sick_list").is(":checked");
-            localStorage.setItem("print_results_sick_list", sick_list + "");
+            if (!localStorage.getItem('print_results_sick_list')) {
+                $('#sick_list').prop('checked', false)
+                localStorage.setItem('print_results_sick_list', 'false')
+            } else {
+                $('#sick_list').prop('checked', JSON.parse(localStorage.getItem('print_results_sick_list')))
+            }
 
-            return `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}&inline=${inline? 1: 0}&protocol_plain_text=${protocol_plain_text? 1: 0}&sick_list=${sick_list? 1: 0}&hosp=${hosp}`;
+            updatePreview()
+        })
+
+        function get_url(inline) {
+            let split = $('#split').is(':checked')
+            localStorage.setItem('print_results_split', split + '')
+            let margin = $('#margin').is(':checked')
+            localStorage.setItem('print_results_margin', margin + '')
+            let protocol_plain_text = $('#protocol_plain_text').is(':checked')
+            localStorage.setItem('print_results_protocol_plain_text', protocol_plain_text + '')
+            let sick_list = $('#sick_list').is(':checked')
+            localStorage.setItem('print_results_sick_list', sick_list + '')
+
+            return `/results/pdf?pk=${JSON.stringify(pks)}&split=${split ? 1 : 0}&leftnone=${margin ? 0 : 1}&inline=${inline ? 1 : 0}&protocol_plain_text=${protocol_plain_text ? 1 : 0}&sick_list=${sick_list ? 1 : 0}&hosp=${hosp}`
         }
-        function updatePreview(){
+
+        function updatePreview() {
             PDFObject.embed(get_url(true), '#previewContainer')
         }
     </script>
@@ -99,21 +102,25 @@
         body, html {
             height: 100%;
         }
-        body{
+
+        body {
             padding-bottom: 0;
             overflow: hidden;
         }
+
         .pdfobject-container {
             height: 100%;
             margin-bottom: -3px;
         }
-        .logo{
+
+        .logo-simple {
             font-weight: 500;
             font-style: italic;
             font-size: 32px;
             flex-basis: 15%
         }
-        .logo sup{
+
+        .logo-simple sup {
             font-size: 17px;
             top: -.15em;
         }
