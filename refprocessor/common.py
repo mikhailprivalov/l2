@@ -46,7 +46,7 @@ SIGNS_ORIG_TO_SIGN = (
     (SIGNS_LTE, SIGN_LTE),
 )
 
-RANGE_REGEXP = r"^(от |с )?(-?\d+|-?\d+[.,]\d+)( )?(\w+\.?)*( ?[-–] ?| до | по |)(-?\d+|-?\d+[.,]\d+)( )?(\w+\.?)*$"
+RANGE_REGEXP = r"^(от |с )?(-?\d+|-?\d+[.,]\d+)( )?([a-zA-Zа-яёА-ЯЁ/.]+)*( ?[-–] ?| до | по |)(-?\d+|-?\d+[.,]\d+)( )?([a-zA-Zа-яёА-ЯЁ/.]+)*$"
 
 POINT_STRICT = ")"
 POINT_NON_STRICT = "]"
