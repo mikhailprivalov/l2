@@ -99,7 +99,7 @@ class Value:
 
 
 class ValueRange:
-    def  __init__(self, val_from: Union[Value, int, float, str, Tuple[Union[int, float], str]], val_to: Union[Value, str, int, float, Tuple[Union[int, float], str]]):
+    def __init__(self, val_from: Union[Value, int, float, str, Tuple[Union[int, float], str]], val_to: Union[Value, str, int, float, Tuple[Union[int, float], str]]):
         if isinstance(val_from, Value):
             self.val_from = val_from
         else:
