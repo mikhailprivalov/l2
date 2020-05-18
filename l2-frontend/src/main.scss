@@ -1599,6 +1599,18 @@ input[type=date].form-control {
   padding-left: 20px !important;
 }
 
+.dropdown-toggle, .vs__selected-options, .selected-tag {
+  text-overflow: clip;
+  white-space: nowrap;
+  flex-wrap: nowrap!important;
+  overflow: hidden;
+}
+
+.vs__selected {
+  overflow: hidden;
+  margin-right: -21px!important;
+}
+
 .logo {
   display: inline-block;
   width: 36px;

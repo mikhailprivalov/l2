@@ -1,7 +1,6 @@
 <template>
-  <div class="base" :class="{fullWidth}">
-<!--    <a href="#" @click.prevent="changeValue(v)" :class="{ active: v === val, disabled }"-->
-    <a href="#" @click.prevent="changeValue(v)"  :style="[v === val ? color_active:disabled ]"
+  <div class="base" :class="{fullWidth, redesigned}">
+    <a href="#" @click.prevent="changeValue(v)" :class="{ active: v === val, disabled }"
        v-for="v in variants">
       <span>{{ v }}</span>
     </a>
@@ -23,15 +22,16 @@
                 default: false,
                 type: Boolean,
             },
+            redesigned: {
+                required: false,
+                default: false,
+                type: Boolean,
+            },
             fullWidth: {
                 required: false,
                 default: false,
                 type: Boolean,
             },
-          colorcurrent: {
-              default: '#049372 !important',
-              type: String
-            }
         },
         watch: {
             value: {
@@ -45,14 +45,6 @@
                 immediate: true,
             }
         },
-        computed: {
-          color_active() {
-            return {
-              'background-color': this.colorcurrent,
-              color: '#fff'
-            }
-          }
-      },
         data() {
             return {
                 val: this.value,
@@ -104,17 +96,6 @@
       margin: 0;
       font-size: 12px;
       min-width: 0;
-      background-color: #AAB2BD;
-      color: #fff;
-
-      &:hover:not(.disabled) {
-        background-color: #434a54;
-      }
-
-      /*&.active {*/
-      /*  background: #049372 !important;*/
-      /*  color: #fff;*/
-      /*}*/
 
       &.disabled {
         cursor: not-allowed;
@@ -129,6 +110,68 @@
         max-height: 2.2em;
         line-height: 1.1em;
         margin: 0 auto;
+      }
+    }
+
+
+
+    &:not(.redesigned) a {
+      background-color: #AAB2BD;
+      color: #fff;
+
+      &:hover:not(.disabled) {
+        background-color: #434a54;
+      }
+
+      &.active {
+        background: #049372 !important;
+        color: #fff;
+      }
+    }
+
+    &.redesigned a {
+      color: #000;
+      padding: 0 2px;
+      text-align: center;
+      margin: 3px;
+      display: block;
+      cursor: pointer;
+      border-radius: 3px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+      transition: all 0.2s ease-in-out;
+      border-top: 3px solid #fff;
+      border-bottom: 3px solid #fff;
+
+      &.active {
+        color: #049372 !important;
+        background-color: #ECF0F1;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+      }
+
+      &:nth-of-type(1).active {
+        border-top: 3px solid #049372;
+        border-bottom: 3px solid #049372;
+      }
+
+      &:nth-of-type(2).active {
+        border-top: 3px solid #93046d;
+        border-bottom: 3px solid #93046d;
+      }
+
+      &:nth-of-type(3).active {
+        border-top: 3px solid #932a04;
+        border-bottom: 3px solid #932a04;
+      }
+
+      &:hover {
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+        background-color: #fafafa;
+      }
+
+      span {
+        line-height: 22px;
+        font-size: 16px;
+        font-weight: bold;
       }
     }
   }
