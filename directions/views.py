@@ -40,8 +40,8 @@ from laboratory.utils import strtime, strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
 from utils.dates import try_parse_range
+from reportlab.lib.enums import TA_LEFT
 from copy import deepcopy
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 
 w, h = A4
 
@@ -677,15 +677,12 @@ def get_one_dir(request):
                                              dateformat.format(tmp2.data_sozdaniya.date(), settings.DATE_FORMAT)),
                                          "doc": {"fio": "" if not tmp2.doc else tmp2.doc.get_fio(),
                                                  "otd": "" if not tmp2.doc else tmp2.doc.podrazdeleniye.title},
+                                         "lab": tmp[0].research.get_podrazdeleniye().title,
+                                         "type": tmp[0].research.get_podrazdeleniye().p_type,
                                          "imported_from_rmis": tmp2.imported_from_rmis,
                                          "imported_org": "" if not tmp2.imported_org else tmp2.imported_org.title,
                                          "full_confirm": tmp2.is_all_confirm()
                                          }
-                podr = tmp[0].research.get_podrazdeleniye()
-                if podr:
-                    response["direction"]["lab"] = podr.title
-                    response["direction"]["type"] = podr.p_type
-
                 response["tubes"] = {}
                 tubes_buffer = {}
 
@@ -1537,75 +1534,141 @@ def form38003(c: Canvas, dir: Napravleniya):
     def printForm(offset):
         pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
         pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+        pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
+
         c.setStrokeColorRGB(0, 0, 0)
         c.setLineWidth(0.2 * mm)
-        c.setFont('PTAstraSerifReg', 12)
+        c.setFont('PTAstraSerifBold', 12)
 
         styleSheet = getSampleStyleSheet()
         style = styleSheet["Normal"]
-        style.fontName = "PTAstraSerifReg"
+        style.fontName = "PTAstraSerifBold"
         style.fontSize = 12
-        style.leading = 15
-        style.spaceAfter = 0.5 * mm
+        style.leading = 3.5 * mm
+        style.alignment = TA_LEFT
+
         styleTB = deepcopy(style)
-        styleTB.fontSize = 8.7
-        styleTB.alignment = TA_CENTER
-        styleTB.leading = 3.5 * mm
+        styleTB.fontName = "PTAstraSerifReg"
+        styleTB.fontSize = 10
 
-        c.drawCentredString((210 / 2) * mm, 280 * mm, "Контактные данные учреждения, направляющего материал")
+        styleBold = deepcopy(style)
+        styleBold.fontSize = 10
 
-        opinion = [[Paragraph('N', style), Paragraph('Код отделения', styleTB), Paragraph('Профиль коек', styleTB), Paragraph('Код врача', styleTB), Paragraph('Дата поступления', styleTB),
-                    Paragraph('Дата выписки, перевода', styleTB), Paragraph('Код диагноза по МКБ', styleTB), Paragraph('Код медицинского стандарта', styleTB),
-                    Paragraph('Код прерванного случая', styleTB), Paragraph('Вид оплаты', styleTB)]]
+        c.drawString(10 * mm, 287 * mm, "Дата: {}".format(strdate(dir.data_sozdaniya)))
 
-        opinion_oper = [
-            [
-             Paragraph('Название операции', styleTB),
-             Paragraph('Оперировал', styleTB),
-             ]
-        ]
-
-        t_opinion_oper = opinion_oper.copy()
-        tbl_o = Table(t_opinion_oper,
-                      colWidths=(100 * mm,  90 * mm,))
-        tbl_o.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2.1 * mm),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
-        operation_text = [tbl_o]
-        operation_frame = Frame(22 * mm, 123 * mm, 170 * mm, 40 * mm, leftPadding=0, bottomPadding=0,
-                                rightPadding=0, topPadding=0, showBoundary=0)
-        operation_inframe = KeepInFrame(175 * mm, 40 * mm, operation_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
-        operation_frame.addFromList([operation_inframe], c)
-
-
-        # Точки отсчета
-        x_coord, y_coord = 20, 235
-        barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=10 * mm, barWidth=1.25)
+        barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
         dir_code = Drawing()
         dir_code.add(barcode)
-        renderPDF.draw(dir_code, c, (x_coord + 120) * mm, 250 * mm)
+        renderPDF.draw(dir_code, c, 150 * mm, 285 * mm)
+        c.drawString(100 * mm, 287 * mm, "№ - {}".format(dir.pk))
 
-        c.setFont('PTAstraSerifReg', 20)
+        c.drawCentredString((210 / 2) * mm, 281 * mm, "Контактные данные учреждения, направляющего материал")
+        organization_data = [
+            [Paragraph('Название', style), Paragraph(SettingManager.get("org_title"), styleTB)],
+            [Paragraph('Телефон', style), Paragraph(SettingManager.get("org_phones"), styleTB)],
+            [Paragraph('Факс', style), Paragraph(SettingManager.get("org_phones"), styleTB)],
+            [Paragraph('E-mail', style), Paragraph(SettingManager.get("mail", default='', default_type='s'), styleTB)],
+            [Paragraph('Адрес', style), Paragraph(SettingManager.get("org_address"), styleTB)],
+            [Paragraph('Ф.И.О, должность лица, отправившего материал', style), Paragraph('', styleTB)],
+            [Paragraph('E-mail', style), Paragraph('', styleTB)],
+            [Paragraph('Цель исследования', style), Paragraph('Коронавирусная инфекция COVID-19 (2019-nCov)', styleTB)],
+            [Paragraph('Указания для исследования', style), Paragraph(
+                'Во исполнении письма Федеральной службы по надзору в сфере защиты прав потребителей и благополучия человека (Роспотребнадзора) '
+                'от 09.01.2020 № 02/107-2020-27 "О дополнительных мерах по недопущению завозов инфекционных заболеваний"',
+                styleTB)],
+        ]
+        tbl_o = Table(organization_data, colWidths=(60 * mm, 150 * mm,))
+        tbl_o.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        organization_text = [tbl_o]
+        organoztion_frame = Frame(10 * mm, 220 * mm, 190 * mm, 60 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
+        organoztion_inframe = KeepInFrame(190 * mm, 60 * mm, organization_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
+        organoztion_frame.addFromList([organoztion_inframe], c)
 
-        # Данные пациента
-        y_patient = []
-        y = 0
-        for i in range(0, 9):
-            y_patient.append(y_coord - y)
-            y += 5
-        c.drawString(x_coord * mm, 250 * mm, "№ " + str(dir.pk))  # Номер направления
+        c.drawCentredString((210 / 2) * mm, 219 * mm, "Севедения о заболевшем")
+        patient_data = [
+            [Paragraph('ФИО', style), Paragraph(dir.client.individual.fio(), styleTB)],
+            [Paragraph('Пол', style), Paragraph(dir.client.individual.sex, styleTB)],
+            [Paragraph('Возраст', style), Paragraph(dir.client.individual.age_s(direction=dir), styleTB)],
+            [Paragraph('Место проживания (регистрации)', style), Paragraph(dir.client.main_address, styleTB)],
+            [Paragraph('Эпидемиологический анамнез, включая место и время пребывания (указывается страна, населенный пункт, провинция)', styleBold), Paragraph('Не выезжал', styleTB)],
+            [Paragraph('Дата появления симптомов преспираторного заболевания', style), Paragraph('', styleTB)],
+            [Paragraph('Дата (день от начала заболевания) обращения за медицинской помощью', style), Paragraph(strdate(dir.data_sozdaniya), styleTB)],
+            [Paragraph('Предварительный диагноз', style), Paragraph('', styleTB)],
+            [Paragraph('Состояние (тяжесть заболевания) пр обращении за медицинской помощью', style), Paragraph('', styleTB)],
+            [Paragraph('Сопутствующий диагноз', style), Paragraph('', styleTB)],
+        ]
+        tbl_o = Table(patient_data, colWidths=(105 * mm, 95 * mm,))
+        tbl_o.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        patient_text = [tbl_o]
+        patient_frame = Frame(10 * mm, 138 * mm, 190 * mm, 80 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
+        patient_inframe = KeepInFrame(190 * mm, 80 * mm, patient_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
+        patient_frame.addFromList([patient_inframe], c)
 
+        c.drawCentredString((210 / 2) * mm, 136 * mm, "Севедения о материале")
+        material_data = [
+            [Paragraph('Сопроводительный номер на контейнере с биоматериалом', style), Paragraph('Вид биологического материала (нужное отметит)', styleTB)],
+            [Paragraph("{}".format(dir.pk), style), Paragraph('<font face="Symbola" size=11>\u2713</font> Мазки из носа и зева', styleTB)],
+            [Paragraph('', style), Paragraph('<font face="Symbola" size=10>\u25CB</font> Сыворотка', styleTB)],
+            [Paragraph('', style), Paragraph('<font face="Symbola" size=10>\u25CB</font> Мокрота', styleTB)],
+            [Paragraph('', style), Paragraph('<font face="Symbola" size=10>\u25CB</font> Моча', styleTB)],
+            [Paragraph('', style), Paragraph('<font face="Symbola" size=10>\u25CB</font> Другое указать', styleTB)],
+            [Paragraph('Дата отбора материала', style), Paragraph(strdate(dir.data_sozdaniya), styleTB)],
+            [Paragraph('ФИО, должность забиравшего материал, телефон', style), Paragraph('', styleTB)],
+            [Paragraph('Дата получения материала в лабораторном подразделении', style), Paragraph('', styleTB)],
+        ]
+        tbl_o = Table(material_data, colWidths=(105 * mm, 95 * mm,))
+        tbl_o.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('SPAN', (0, 1), (0, 5))
+        ]))
+        material_text = [tbl_o]
+        material_frame = Frame(10 * mm, 75 * mm, 190 * mm, 60 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
+        material_inframe = KeepInFrame(190 * mm, 60 * mm, material_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
+        material_frame.addFromList([material_inframe], c)
 
-        # QR-code
-        qr_value = translit(dir.client.individual.fio(), 'ru', reversed=True)
-        qr_code = qr.QrCodeWidget(qr_value)
-        qr_code.barWidth = 80
-        qr_code.barHeight = 80
-        qr_code.qrVersion = 1
-        d = Drawing()
-        d.add(qr_code)
-        renderPDF.draw(d, c, 170 * mm, 10 * mm)
+        c.drawCentredString((210 / 2) * mm, 74 * mm, "Севедения о проведенных исследованиях")
+        result_data = [
+            [Paragraph('Показатель', style), Paragraph('Результат', style)],
+            [Paragraph('РНК вируса гриппа, респираторно-синициального вируса, метапневмовируса, вирусов парагриппа 1,2,3,3 типов, коронавируа, '
+                       'риновируса, ДНК аденовирусов групп В, С и Е, бокавируса, ДНК Mycoplasma pneumonia и Chlamydophila pneumonia', styleBold), Paragraph('', styleTB)],
+            [Paragraph('2019-nCov', style), Paragraph('', styleTB)],
+        ]
+        tbl_o = Table(result_data, colWidths=(105 * mm, 95 * mm,))
+        tbl_o.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        result_text = [tbl_o]
+        result_frame = Frame(10 * mm, 42 * mm, 190 * mm, 30 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
+        result_inframe = KeepInFrame(190 * mm, 30 * mm, result_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
+        result_frame.addFromList([result_inframe], c)
+
+        c.drawCentredString((210 / 2) * mm, 37 * mm, "Севедения об отправке материала")
+        result_data = [
+            [Paragraph('Дата и время отправки материала (номер рейса)', style), Paragraph('', style)],
+            [Paragraph('По адресу', style),
+             Paragraph('ФБУЗ "Центр гигиены и эпидимиологии в Иркутской области" Отделение вирусологических исследований с ПЦР лабораторией и микробиологической лаборатории', styleTB)],
+        ]
+        tbl_o = Table(result_data, colWidths=(60 * mm, 150 * mm,))
+        tbl_o.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        result_text = [tbl_o]
+        result_frame = Frame(10 * mm, 10 * mm, 190 * mm, 25 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
+        result_inframe = KeepInFrame(190 * mm, 25 * mm, result_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
+        result_frame.addFromList([result_inframe], c)
 
     printForm(0)
