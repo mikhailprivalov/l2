@@ -468,11 +468,11 @@ span.isloading-wrapper {
   color: #fff !important;
 }
 
-.navbar-inverse a {
+.navbar-inverse a:not(.logo) {
   color: #ECF0F1 !important;
 }
 
-.navbar-inverse a:hover {
+.navbar-inverse a:not(.logo):hover {
   background-color: #049372 !important;
 }
 
@@ -1604,12 +1604,34 @@ input[type=date].form-control {
   white-space: nowrap;
   flex-wrap: nowrap!important;
   overflow: hidden;
-  //z-index: ;
 }
 
 .vs__selected {
   overflow: hidden;
   margin-right: -21px!important;
+}
+
+.logo {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  background: #049372;
+  color: #fff !important;
+  font-weight: 400;
+  font-size: 26px;
+  font-style: italic;
+  text-align: center;
+
+  &:hover {
+    box-shadow: 0 0 5px #0c8b6e;
+    background-color: #0c8b6e !important;
+  }
+
+  sup {
+    position: relative;
+    top: -0.08em;
+    font-size: 70%;
+  }
 }
 
 @import "./variables";

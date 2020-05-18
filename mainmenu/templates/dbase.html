@@ -99,24 +99,25 @@
             <div class="nav-cont">
                 <div class="navbar-header">
                     {% if show_l2_logo %}
-                        <a href="/mainmenu" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"><img
-                                style="height: 36px;width: 36px;"
-                                src="{% static 'img/l2logo2.png' %}"></a>
+                        <a href="/mainmenu" class="navbar-left logo">
+                            L<sup>2</sup>
+                        </a>
                     {% endif %}
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
-                            aria-expanded="false" aria-controls="navbar">
-                        <span class="sr-only">Toggle navigation</span>
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a href="/mainmenu"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
+                    <a href="/mainmenu">
+                        <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>
+                    </a>
                 </div>
                 <div id="navbar" class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
                         <li class="dropdown dropdown-large">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Меню <b
-                                    class="caret"></b></a>
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                Меню <b class="caret"></b>
+                            </a>
                             <div class="dropdown-menu dropdown-menu-large">
                                 <div class="dash-buttons text-center">
                                     {% for item in mainmenu %}
@@ -140,18 +141,15 @@
                             </div>
                         </li>
                     </ul>
-                    <div class="navbar-form navbar-left">
-                        <rmis-location />
-                    </div>
                     {% block extended_header %}{% endblock %}
                 </div>
-                {% block extended_header2 %}{% endblock %}
             </div>
             <div class="nav-loader center">
                 <div class="navbar-header">
                     {% if show_l2_logo %}
-                        <div class="navbar-left" style="height: 36px;width: 36px;display: inline-block"><img style="height: 36px;width: 36px;"
-                                src="{% static 'img/l2logo2.png' %}"></div>
+                        <div class="navbar-left logo">
+                            L<sup>2</sup>
+                        </div>
                     {% endif %}
                     <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>
                 </div>
