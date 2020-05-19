@@ -584,6 +584,7 @@
         }
       }
       this.inited = true
+      this.$root.$on('show_anesthesia', () => this.show_anesthesia_sidebar())
     },
     methods: {
       plus_temperature_start(){

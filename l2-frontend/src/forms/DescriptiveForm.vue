@@ -24,19 +24,24 @@
                   mouseenter: enter_field(field.values_to_input.length > 0),
                   mouseleave: leave_field(field.values_to_input.length > 0),
                  }" class="field">
-              <div class="field-title" v-if="field.title !== '' && !research.wide_headers">
+              <div class="field-title" v-if="(field.title !== '' && !research.wide_headers) || ([21].includes(field.field_type))">
+                <button style=" border-radius: 3px; padding: 4px; width: 90%; align-content: center; height: 70px" class="btn btn-blue-nb" title="Добавить значения в наркозную карту" v-tippy
+                        v-if="[21].includes(field.field_type)" @click="show_anesthesia_menu">
+                  <i class="fa fa-heartbeat fa-lg" aria-hidden="true"></i>
+                  Добавить
+                </button>
                 {{field.title}}
               </div>
               <longpress :confirm-time="0"
                          :duration="400"
                          :on-confirm="clear_val" :value="field"
                          action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19].includes(field.field_type)">
+                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21].includes(field.field_type)">
                 ×
               </longpress>
               <div class="field-inputs"
                    v-if="field.values_to_input.length > 0 && !confirmed &&
-                   ![10, 12, 18, 19].includes(field.field_type)">
+                   ![10, 12, 18, 19, 21].includes(field.field_type)">
                 <div class="input-values-wrap">
                   <div class="input-values">
                     <div class="inner-wrap">
@@ -121,6 +126,10 @@
                 <input :readonly="confirmed" class="form-control" style="width: 110px" type="time"
                        v-model="field.value"/>
               </div>
+              <div class="field-value" v-else-if="field.field_type === 21">
+                <AnesthesiaProcess></AnesthesiaProcess>
+              </div>
+
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
                     placement : 'left',
@@ -153,6 +162,8 @@
   import AggregateDesc from "../fields/AggregateDesc";
   import NumberField from "../fields/NumberField";
   import NumberRangeField from "../fields/NumberRangeField";
+  import AnesthesiaProcess from "../fields/AnesthesiaProcess";
+
 
   export default {
     name: 'DescriptiveForm',
@@ -165,7 +176,8 @@
       SearchFractionValueField,
       SearchFieldValueField,
       RadioField,
-      SelectField, VisibilityGroupWrapper, VisibilityFieldWrapper, Longpress, MKBField, FormulaField
+      SelectField, VisibilityGroupWrapper, VisibilityFieldWrapper, Longpress, MKBField, FormulaField,
+      AnesthesiaProcess
     },
     props: {
       research: {
@@ -239,6 +251,9 @@
       }
     },
     methods: {
+      show_anesthesia_menu() {
+        this.$root.$emit('show_anesthesia')
+      },
       inc_version() {
         this.research.version = (this.research.version || 0) + 1;
       },
@@ -288,3 +303,13 @@
     }
   }
 </script>
+
+<style scoped lang="scss">
+
+.title_anesthesia {
+  flex: 1 0 70px;
+  padding-left: 5px;
+  padding-top: 5px;
+}
+
+</style>
