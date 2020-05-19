@@ -2,7 +2,7 @@
   <div class="group">
     <div class="group-title">
       Микроорганизмы
-      <div class="input-select flex-select">
+      <div class="input-select flex-select" v-if="!confirmed">
         <v-select :clearable="false" label="title" :options="bacteriesGroups" :searchable="true"
                   class="inner-select"
                   placeholder="Выберите группу"
@@ -32,7 +32,7 @@
           </span>
           </div>
           <div class="bactery-body">
-            <div class="bactery-selects">
+            <div class="bactery-selects" v-if="!confirmed">
               <div class="row">
                 <div class="col-xs-6 two">
                   <v-select :clearable="false" label="title" :options="antibiotics.sets" :searchable="true"
@@ -63,7 +63,7 @@
               <div class="left">
                 <table class="table table-bordered table-condensed" style="max-width: 665px;margin-top: 15px">
                   <colgroup>
-                    <col style="width: 34px"/>
+                    <col style="width: 34px" v-if="!confirmed"/>
                     <col/>
                     <col style="width: 74px"/>
                     <col style="width: 148px"/>
@@ -71,14 +71,15 @@
                   </colgroup>
                   <thead>
                   <tr>
-                    <th colspan="2">Название</th>
+                    <th colspan="2"  v-if="!confirmed">Название</th>
+                    <th v-else>Название</th>
                     <th>Чувствительность</th>
                     <th>Диаметр</th>
                   </tr>
                   </thead>
                   <tbody>
                   <tr v-for="a in bactery.antibiotics">
-                    <td class="cl-td">
+                    <td class="cl-td" v-if="!confirmed">
                       <button title="Удалить" class="btn last btn-blue-nb nbr" type="button" v-tippy
                               tabindex="-1"
                               @click="deleteAnti(bactery, a.pk)">
@@ -89,14 +90,17 @@
                       {{antibiotics.antibiotics[a.pk]}}
                     </td>
                     <td class="cl-td">
-                      <radio-field v-model="a.sri" :variants="sri" redesigned/>
+                      <radio-field v-model="a.sri" :variants="sri" redesigned :disabled="confirmed"/>
                     </td>
                     <td class="cl-td">
-                      <input v-model="a.dia" class="form-control" maxlength="64"/>
+                      <input v-model="a.dia" class="form-control" maxlength="64" :readonly="confirmed"/>
                     </td>
                   </tr>
                   <tr v-if="bactery.antibiotics.length === 0">
-                    <td colspan="4" class="text-center">
+                    <td colspan="4" class="text-center" v-if="!confirmed">
+                      антибиотики не выбраны
+                    </td>
+                    <td colspan="3" class="text-center" v-else>
                       антибиотики не выбраны
                     </td>
                   </tr>
@@ -108,7 +112,7 @@
                   <div class="input-group">
                     <span class="input-group-addon">КОЕ</span>
                     <input v-model="bactery.koe" v-mask="'9 × 10^9[9]'" class="form-control" style="z-index: 0"
-                           maxlength="16"/>
+                           maxlength="16" :readonly="confirmed"/>
                   </div>
                 </div>
               </div>
