@@ -897,6 +897,7 @@ class Issledovaniya(models.Model):
                                                                   on_delete=models.SET_NULL)
     aggregate_lab = JSONField(null=True, blank=True, default=None, help_text='ID направлений лаборатории, привязаных к стационарному случаю')
     aggregate_desc = JSONField(null=True, blank=True, default=None, help_text='ID направлений описательных, привязаных к стационарному случаю')
+    microbiology_conclusion = models.TextField(default=None, null=True, blank=True, help_text='Заключение по микробиологии')
 
     @property
     def time_save_local(self):

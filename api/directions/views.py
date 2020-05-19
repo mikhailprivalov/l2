@@ -969,17 +969,16 @@ def directions_paraclinic_form(request):
                     "more": [x.research_id for x in Issledovaniya.objects.filter(parent=i)],
                     "sub_directions": [],
                     "recipe": [],
-                    "microbiology": {
-                        "bacteries": [],
-                        "conclusion": "conclusion",
-                    },
                     "lab_comment": i.lab_comment,
                     "forbidden_edit": forbidden_edit,
                     "maybe_onco": i.maybe_onco,
                 }
 
                 if i.research.is_microbiology:
-                    pass  # TODO: Fill microbiology results
+                    iss["microbiology"] = {
+                        "bacteries": [],
+                        "conclusion": i.microbiology_conclusion,
+                    }
 
                 if not force_form:
                     for sd in Napravleniya.objects.filter(parent=i):
@@ -1196,6 +1195,10 @@ def directions_paraclinic_result(request):
             iss.napravleniye.visit_who_mark = request.user.doctorprofile
             iss.napravleniye.visit_date = timezone.now()
             iss.napravleniye.save()
+        if iss.research.is_microbiology:
+            mb = request_data.get('microbiology', {})
+            if mb:
+                iss.microbiology_conclusion = mb.get('conclusion')
 
         iss.purpose_id = request_data.get("purpose")
         iss.first_time = request_data.get("first_time", False)

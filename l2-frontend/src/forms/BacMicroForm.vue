@@ -312,6 +312,7 @@
       &-inner {
         position: sticky;
         top: 138px;
+        max-width: 300px;
       }
     }
   }
