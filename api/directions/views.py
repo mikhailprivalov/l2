@@ -15,7 +15,8 @@ from api.stationar.stationar_func import forbidden_edit_dir
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
-from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult, Recipe, MethodsOfTaking, ExternalOrganization
+from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult, Recipe, MethodsOfTaking, ExternalOrganization, MicrobiologyResultCulture, \
+    MicrobiologyResultCultureAntibiotic
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
@@ -980,6 +981,29 @@ def directions_paraclinic_form(request):
                         "conclusion": i.microbiology_conclusion,
                     }
 
+                    for br in MicrobiologyResultCulture.objects.filter(issledovaniye=i):
+                        bactery = {
+                            "resultPk": br.pk,
+                            "bacteryPk": br.culture.pk,
+                            "bacteryTitle": br.culture.title,
+                            "bacteryGroupTitle": br.culture.group_culture.title if br.culture.group_culture else '',
+                            "koe": br.koe,
+                            "antibiotics": [],
+                            "selectedGroup": {},
+                            "selectedAntibiotic": {},
+                            "selectedSet": {},
+                        }
+
+                        for ar in MicrobiologyResultCultureAntibiotic.objects.filter(result_culture=br):
+                            bactery["antibiotics"].append({
+                                "pk": ar.antibiotic.pk,
+                                "resultPk": ar.pk,
+                                "sri": ar.sensitivity,
+                                "dia": ar.dia,
+                            })
+
+                        iss["microbiology"]["bacteries"].append(bactery)
+
                 if not force_form:
                     for sd in Napravleniya.objects.filter(parent=i):
                         iss["sub_directions"].append({
@@ -1199,6 +1223,42 @@ def directions_paraclinic_result(request):
             mb = request_data.get('microbiology', {})
             if mb:
                 iss.microbiology_conclusion = mb.get('conclusion')
+
+                has_bacteries = []
+                has_anti = []
+
+                for br in mb.get('bacteries', []):
+                    if br['resultPk'] == -1:
+                        bactery = MicrobiologyResultCulture(
+                            issledovaniye=iss,
+                            culture_id=br['bacteryPk'],
+                            koe=br['koe']
+                        )
+                    else:
+                        bactery = MicrobiologyResultCulture.objects.get(pk=br['resultPk'])
+                        bactery.culture_id = br['bacteryPk']
+                        bactery.koe = br['koe']
+                    bactery.save()
+                    has_bacteries.append(bactery.pk)
+
+                    for ar in br['antibiotics']:
+                        if ar['resultPk'] == -1:
+                            anti = MicrobiologyResultCultureAntibiotic(
+                                result_culture=bactery,
+                                antibiotic_id=ar['pk'],
+                                sensitivity=ar['sri'],
+                                dia=ar['dia']
+                            )
+                        else:
+                            anti = MicrobiologyResultCultureAntibiotic.objects.get(pk=ar['resultPk'])
+                            anti.antibiotic_id = ar['pk']
+                            anti.sensitivity = ar['sri']
+                            anti.dia = ar['dia']
+                        anti.save()
+                        has_anti.append(anti.pk)
+                MicrobiologyResultCulture.objects.filter(issledovaniye=iss).exclude(pk__in=has_bacteries).delete()
+                MicrobiologyResultCultureAntibiotic.objects.filter(result_culture__issledovaniye=iss).exclude(pk__in=has_anti).delete()
+
 
         iss.purpose_id = request_data.get("purpose")
         iss.first_time = request_data.get("first_time", False)

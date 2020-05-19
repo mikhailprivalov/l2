@@ -1078,19 +1078,33 @@ class ParaclinicResult(models.Model):
         return self.field_type if self.issledovaniye.time_confirmation and self.field_type is not None else self.field.field_type
 
 
-class MicrobiologyResult(models.Model):
-    SENSITIVITIES = (
-        (0, 'S'),
-        (1, 'R'),
-        (2, 'I'),
-    )
-
+class MicrobiologyResultCulture(models.Model):
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True,
                                       help_text='Направление на исследование, для которого сохранен результат',
                                       on_delete=models.CASCADE)
     culture = models.ForeignKey(directory.Culture, help_text="Культура", on_delete=models.PROTECT)
+    koe = models.CharField(max_length=16, help_text='КОЕ')
+
+    class Meta:
+        verbose_name = 'Результат-культура'
+        verbose_name_plural = 'Результат-культуры'
+
+
+class MicrobiologyResultCultureAntibiotic(models.Model):
+    SENSITIVITIES = (
+        ('S', 'S'),
+        ('R', 'R'),
+        ('I', 'I'),
+    )
+
+    result_culture = models.ForeignKey(MicrobiologyResultCulture, help_text="Результат-культура", on_delete=models.CASCADE)
     antibiotic = models.ForeignKey(directory.Antibiotic, help_text="Антибиотик", on_delete=models.PROTECT)
-    sensitivity = models.SmallIntegerField(choices=SENSITIVITIES, help_text="Чувствительность")
+    sensitivity = models.CharField(max_length=1, choices=SENSITIVITIES, help_text="Чувствительность")
+    dia = models.CharField(max_length=64, help_text='Диаметр')
+
+    class Meta:
+        verbose_name = 'Результат-культура-антибиотик'
+        verbose_name_plural = 'Результат-культура-антибиотики'
 
 
 class RmisServices(models.Model):

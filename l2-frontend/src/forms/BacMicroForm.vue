@@ -80,6 +80,7 @@
                   <tr v-for="a in bactery.antibiotics">
                     <td class="cl-td">
                       <button title="Удалить" class="btn last btn-blue-nb nbr" type="button" v-tippy
+                              tabindex="-1"
                               @click="deleteAnti(bactery, a.pk)">
                         <i class="fa fa-times"></i>
                       </button>
@@ -91,7 +92,7 @@
                       <radio-field v-model="a.sri" :variants="sri" redesigned/>
                     </td>
                     <td class="cl-td">
-                      <input v-model="a.dia" class="form-control"/>
+                      <input v-model="a.dia" class="form-control" maxlength="64"/>
                     </td>
                   </tr>
                   <tr v-if="bactery.antibiotics.length === 0">
@@ -106,7 +107,8 @@
                 <div class="right-inner">
                   <div class="input-group">
                     <span class="input-group-addon">КОЕ</span>
-                    <input v-model="bactery.koe" v-mask="'9 × 10^9[9]'" class="form-control" style="z-index: 0"/>
+                    <input v-model="bactery.koe" v-mask="'9 × 10^9[9]'" class="form-control" style="z-index: 0"
+                           maxlength="16"/>
                   </div>
                 </div>
               </div>
@@ -171,6 +173,12 @@
       this.antibiotics = await bacteria_point.getAntibioticGroups()
       this.selectedGroup = this.bacteriesGroups[0] || getDefaultElement()
       await this.$store.dispatch(action_types.DEC_LOADING)
+
+      for (const b of this.bacteriesResult) {
+        b.selectedGroup = this.antibiotics.groups[0];
+        b.selectedAntibiotic = this.antibiotics.groupsObj[this.antibiotics.groups[0].pk][0];
+        b.selectedSet = this.antibiotics.sets[0];
+      }
     },
     methods: {
       withPopper(dropdownList, component, {width}) {
@@ -194,6 +202,7 @@
           }
         }
         this.bacteriesResult.push({
+          resultPk: -1,
           bacteryPk: this.selectedBactery.pk,
           bacteryTitle: this.selectedBactery.title,
           bacteryGroupTitle: this.selectedGroup.title,
@@ -233,6 +242,7 @@
 
         bactery.antibiotics.push({
           pk,
+          resultPk: -1,
           sri: 'S',
           dia: '',
         })
