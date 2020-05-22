@@ -209,7 +209,7 @@ class Researches(models.Model):
     def is_extract(self):
         if self.desc:
             return False
-        return 'выписка' in self.title.lower() or 'выписной' in self.title.lower()
+        return 'выписка' in self.title.lower() or 'выписной' in self.title.lower() or 'посметрн' in self.title.lower()
 
     @property
     def r_type(self):

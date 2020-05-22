@@ -24,12 +24,7 @@
                   mouseenter: enter_field(field.values_to_input.length > 0),
                   mouseleave: leave_field(field.values_to_input.length > 0),
                  }" class="field">
-              <div class="field-title" v-if="(field.title !== '' && !research.wide_headers) || ([21].includes(field.field_type))">
-                <button style=" border-radius: 3px; padding: 4px; width: 90%; align-content: center; height: 70px" class="btn btn-blue-nb" title="Добавить значения в наркозную карту" v-tippy
-                        v-if="[21].includes(field.field_type)" @click="show_anesthesia_menu">
-                  <i class="fa fa-heartbeat fa-lg" aria-hidden="true"></i>
-                  Добавить
-                </button>
+              <div class="field-title" v-if="field.title !== '' && !research.wide_headers">
                 {{field.title}}
               </div>
               <longpress :confirm-time="0"
@@ -127,7 +122,7 @@
                        v-model="field.value"/>
               </div>
               <div class="field-value" v-else-if="field.field_type === 21">
-                <AnesthesiaProcess></AnesthesiaProcess>
+                <AnesthesiaProcess/>
               </div>
 
               <div :title="field.helper" class="field-helper" v-if="field.helper"
@@ -163,7 +158,6 @@
   import NumberField from "../fields/NumberField";
   import NumberRangeField from "../fields/NumberRangeField";
   import AnesthesiaProcess from "../fields/AnesthesiaProcess";
-
 
   export default {
     name: 'DescriptiveForm',
@@ -251,9 +245,6 @@
       }
     },
     methods: {
-      show_anesthesia_menu() {
-        this.$root.$emit('show_anesthesia')
-      },
       inc_version() {
         this.research.version = (this.research.version || 0) + 1;
       },
