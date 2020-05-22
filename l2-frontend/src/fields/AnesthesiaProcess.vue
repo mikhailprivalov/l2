@@ -149,7 +149,7 @@
           return this.temerature = 34
         } else if (this.temerature > 41) {
           return this.temerature = 41
-        } else if (this.temerature > 34 && this.temerature < 42) {
+        } else if ((this.temerature > 34) && (this.temerature < 42)) {
           return this.temerature.toFixed(1)
         }
       }
@@ -183,11 +183,11 @@
       show_anesthesia_sidebar() {
         this.$store.dispatch(action_types.CHANGE_STATUS_MENU_ANESTHESIA);
         this.getCurrentTime();
-        if (this.$store.state.showMenuAnesthesiaStatus === false) {
-          clearInterval(renewTime);
-        }
         if (this.$store.state.showMenuAnesthesiaStatus === true) {
           var renewTime = setInterval(this.getCurrentTime, 1000 * 10);
+        }
+        if (this.$store.state.showMenuAnesthesiaStatus === false) {
+          clearInterval(renewTime);
         }
       }
     }

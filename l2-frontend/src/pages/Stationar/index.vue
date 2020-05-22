@@ -440,7 +440,6 @@
   import UrlData from '../../UrlData'
   import AggregateTADP from '../../fields/AggregateTADP'
   import DirectionsHistory from '../../ui-cards/DirectionsHistory'
-  import VueTimepicker from 'vue2-timepicker/src/vue-timepicker.vue'
 
   export default {
     mixins: [menuMixin],
@@ -454,8 +453,7 @@
       ResultsViewer,
       DescriptiveForm,
       SelectPickerM,
-      IssStatus, ResearchPick, SelectedResearches, LastResult, ResearchesPicker, Modal, PatientCard,
-      VueTimepicker
+      IssStatus, ResearchPick, SelectedResearches, LastResult, ResearchesPicker, Modal, PatientCard
     },
     data() {
       return {
