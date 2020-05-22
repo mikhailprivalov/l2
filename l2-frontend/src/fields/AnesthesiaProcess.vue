@@ -149,7 +149,7 @@
           return this.temerature = 34
         } else if (this.temerature > 41) {
           return this.temerature = 41
-        } else if ((this.temerature > 34) && (this.temerature < 42)) {
+        } else if ((this.temerature > 34) && (this.temerature <= 41)) {
           return this.temerature.toFixed(1)
         }
       }
