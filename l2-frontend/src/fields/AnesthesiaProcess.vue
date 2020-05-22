@@ -25,7 +25,7 @@
                 @mouseleave="temperature_stop" @mouseup="temperature_stop">
           <i class="fa fa-minus"/>
         </button>
-        <input type="text" v-model="temerature_current" class="no-outline" style="width: 190px" value="36.6"
+        <input type="text" v-model="temperature_current" class="no-outline" style="width: 190px" value="36.6"
                placeholder="Температура"/>
         <button class="btn btn-blue-nb sidebar-btn" style="" @mousedown="plus_temperature_start"
                 @mouseleave="temperature_stop" @mouseup="temperature_stop">
@@ -139,28 +139,28 @@
           H: '',
           mm: '',
         },
-        temerature: 'Температура',
+        temperature: 'Температура',
         interval: false,
       }
     },
     computed: {
-      temerature_current() {
-        if (this.temerature < 34) {
-          return this.temerature = 34
-        } else if (this.temerature > 41) {
-          return this.temerature = 41
-        } else if ((this.temerature > 34) && (this.temerature <= 41)) {
-          return this.temerature.toFixed(1)
+      temperature_current() {
+        if ((this.temperature > 34) && (this.temperature <= 41)) {
+          return this.temperature.toFixed(1)}
+        else if (this.temperature < 34) {
+          return this.temperature = 34
+        } else if (this.temperature > 41) {
+          return this.temperature = 41
         }
       }
     },
     methods: {
       plus_temperature_start() {
-        if (typeof this.temerature !== 'number') {
-          this.temerature = 36.6
+        if (typeof this.temperature !== 'number') {
+          this.temperature = 36.6
         }
         if (!this.interval) {
-          this.interval = setInterval(() => ((this.temerature += 0.1).toFixed(1)), 100)
+          this.interval = setInterval(() => ((this.temperature += 0.1).toFixed(1)), 100)
         }
       },
       temperature_stop() {
@@ -168,12 +168,12 @@
         this.interval = false
       },
       minus_temperature_start() {
-        if (typeof this.temerature !== 'number') {
-          this.temerature = 36.6
+        if (typeof this.temperature !== 'number') {
+          this.temperature = 36.6
         }
         if (!this.interval) {
           this.interval = setInterval(() => (
-            (this.temerature -= 0.1).toFixed(1)), 100)
+            (this.temperature -= 0.1).toFixed(1)), 100)
         }
       },
       getCurrentTime() {
