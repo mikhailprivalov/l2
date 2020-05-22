@@ -145,7 +145,7 @@
     },
     computed: {
       temperature_current() {
-        if ((this.temperature > 34) && (this.temperature <= 41)) {
+        if (this.temperature > 34 && this.temperature <= 41) {
           return this.temperature.toFixed(1)}
         else if (this.temperature < 34) {
           return this.temperature = 34
