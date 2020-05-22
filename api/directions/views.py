@@ -1262,6 +1262,7 @@ def directions_paraclinic_result(request):
         response["soft_forbidden"] = not forbidden_edit
     return JsonResponse(response)
 
+
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_confirm(request):
     response = {"ok": False, "message": ""}
