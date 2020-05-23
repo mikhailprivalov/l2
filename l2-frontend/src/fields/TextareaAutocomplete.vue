@@ -4,7 +4,6 @@
               @focusout="focusout" @focus="focus" @blur="focusout"
               @keydown.13="chooseItem" @keydown.tab="chooseItem" @keydown.40="moveDown" @keydown.38="moveUp"
               @select="updateSelect"
-              @
               ref="textarea"
               class="form-control"
               :readonly="disabled"
