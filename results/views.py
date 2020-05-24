@@ -494,7 +494,7 @@ def result_print(request):
                 dates[dt] += 1
             if iss.tubes.exists() and iss.tubes.first().time_get:
                 date_t = strdate(iss.tubes.first().time_get)
-            if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment:
+            if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment or iss.research.is_microbiology:
                 has_paraclinic = True
             if directory.HospitalService.objects.filter(slave_research=iss.research).exists():
                 has_paraclinic = True
@@ -980,7 +980,7 @@ def result_print(request):
             for iss in Issledovaniya.objects.filter(napravleniye=direction).order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
                 if not hosp:
-                    if iss.research.is_doc_refferal:
+                    if iss.research.is_doc_refferal or iss.research.is_microbiology:
                         fwb.append(Paragraph(iss.research.title, styleBold))
                     elif iss.doc_confirmation.podrazdeleniye.vaccine:
                         fwb.append(Paragraph("Вакцина: " + iss.research.title, styleBold))
