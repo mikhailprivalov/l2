@@ -1081,7 +1081,7 @@ class ParaclinicResult(models.Model):
 class MicrobiologyResultCulture(models.Model):
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True,
                                       help_text='Направление на исследование, для которого сохранен результат',
-                                      on_delete=models.CASCADE)
+                                      on_delete=models.CASCADE, related_name='culture_results')
     culture = models.ForeignKey(directory.Culture, help_text="Культура", on_delete=models.PROTECT)
     koe = models.CharField(max_length=16, help_text='КОЕ')
 
@@ -1097,7 +1097,7 @@ class MicrobiologyResultCultureAntibiotic(models.Model):
         ('I', 'I'),
     )
 
-    result_culture = models.ForeignKey(MicrobiologyResultCulture, help_text="Результат-культура", on_delete=models.CASCADE)
+    result_culture = models.ForeignKey(MicrobiologyResultCulture, help_text="Результат-культура", on_delete=models.CASCADE, related_name='culture_antibiotic')
     antibiotic = models.ForeignKey(directory.Antibiotic, help_text="Антибиотик", on_delete=models.PROTECT)
     sensitivity = models.CharField(max_length=1, choices=SENSITIVITIES, help_text="Чувствительность")
     dia = models.CharField(max_length=64, help_text='Диаметр')

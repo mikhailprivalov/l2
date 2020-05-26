@@ -1,5 +1,6 @@
 import sys
 from datetime import date, datetime
+from typing import List
 
 import simplejson
 from dateutil.relativedelta import relativedelta
@@ -867,10 +868,13 @@ class Phones(models.Model):
         return n
 
     @staticmethod
+    def phones_to_normalized_list(phones: List['Phones'], more_phone=''):
+        return list(set([y for y in [x.normalize_number() for x in phones] + [Phones.nn(more_phone)] if y and len(y) > 1]))
+
+    @staticmethod
     def nn(n):
-        from string import digits
         n = n.replace("+7", "8")
-        n = ''.join(c for c in n if c in digits)
+        n = ''.join(c for c in n if c in '0123456789')
         if len(n) == 10 and n[0] == "9":
             n = "8" + n
         if len(n) == 11 and n[0] == "7":

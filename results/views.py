@@ -14,7 +14,7 @@ import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Prefetch, Count
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import dateformat
@@ -474,9 +474,16 @@ def result_print(request):
     for i in hosp_nums_obj:
         hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
 
-    for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
-                            key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
-                                issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
+    dirs = Napravleniya.objects\
+        .filter(pk__in=pk)\
+        .select_related('client')\
+        .prefetch_related(
+            Prefetch('issledovaniya_set', queryset=Issledovaniya.objects.filter(time_save__isnull=False).select_related('research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'))
+        )\
+        .annotate(results_count=Count('issledovaniya__result'))\
+        .distinct()
+
+    for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
         dpk = direction.pk
 
         if not direction.is_all_confirm():
@@ -486,7 +493,7 @@ def result_print(request):
         has_paraclinic = False
         link_files = False
         is_extract = False
-        for iss in Issledovaniya.objects.filter(napravleniye=direction, time_save__isnull=False):
+        for iss in direction.issledovaniya_set.all():
             if iss.time_save:
                 dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
                 if dt not in dates.keys():
@@ -565,7 +572,7 @@ def result_print(request):
         if not has_paraclinic:
             tw = pw
 
-            no_units_and_ref = any([x.research.no_units_and_ref for x in Issledovaniya.objects.filter(napravleniye=direction)])
+            no_units_and_ref = any([x.research.no_units_and_ref for x in direction.issledovaniya_set.all()])
 
             data = []
             tmp = [Paragraph('<font face="FreeSansBold" size="8">Исследование</font>', styleSheet["BodyText"]),
@@ -607,14 +614,14 @@ def result_print(request):
             prev_date_conf = ""
 
             has0 = directory.Fractions.objects.filter(
-                research__pk__in=[x.research_id for x in Issledovaniya.objects.filter(napravleniye=direction)],
+                research__pk__in=[x.research_id for x in direction.issledovaniya_set],
                 hide=False,
                 render_type=0).exists()
 
             if has0:
                 fwb.append(t)
 
-            iss_list = Issledovaniya.objects.filter(napravleniye=direction)
+            iss_list = direction.issledovaniya_set.all()
             result_style = styleSheet["BodyText"] if no_units_and_ref else stl
             pks = []
             for iss in iss_list.order_by("research__direction_id", "research__pk", "tubes__id", "research__sort_weight"):
@@ -977,7 +984,7 @@ def result_print(request):
                     t.setStyle(style_t)
                     fwb.append(t)
         else:
-            for iss in Issledovaniya.objects.filter(napravleniye=direction).order_by("research__pk"):
+            for iss in direction.issledovaniya_set.all().order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
                 if not hosp:
                     if iss.research.is_doc_refferal or iss.research.is_microbiology:
@@ -988,8 +995,11 @@ def result_print(request):
                         fwb.append(Paragraph("Услуга: " + iss.research.title, styleBold))
                 if hosp:
                     fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
-
-                if not protocol_plain_text:
+                if iss.research.is_microbiology:
+                    q = iss.culture_results.select_related('culture').prefetch_related('culture_antibiotic').all()
+                    fwb.append(Paragraph(str(q.query), style))
+                    # for culture in
+                elif not protocol_plain_text:
                     sick_result = None
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
                         sick_title = True if group.title == "Сведения ЛН" else False

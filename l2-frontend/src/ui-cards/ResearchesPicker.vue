@@ -191,24 +191,6 @@
       this.$store.watch(state => state.templates, (oldValue, newValue) => {
         this.check_template()
       })
-
-      if (!this.$store.getters.okDep || Object.keys(this.$store.getters.researches).length === 0) {
-        this.$store.dispatch(action_types.INC_LOADING)
-
-        Promise.all([
-          this.$store.dispatch(action_types.GET_TEMPLATES),
-          this.$store.dispatch(action_types.GET_RESEARCHES)
-        ]).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
-      }
-
-      this.checkType()
-      this.check_template()
-
-      if (this.value instanceof Array) {
-        this.checked_researches = this.value
-      }
     },
     async mounted() {
       this.$root.$on('researches-picker:deselect' + this.kk, this.deselect_research_ignore)
@@ -216,10 +198,22 @@
       this.$root.$on('researches-picker:deselect_all' + this.kk, this.clear)
       this.$root.$on('researches-picker:add_research' + this.kk, this.select_research_ignore)
 
-      if (this.templates.length === 0) {
+      if (!this.$store.getters.okDep || Object.keys(this.$store.getters.researches).length === 0) {
         await this.$store.dispatch(action_types.INC_LOADING)
-        await this.$store.dispatch(action_types.GET_TEMPLATES)
+
+        await Promise.all([
+          this.$store.dispatch(action_types.GET_RESEARCHES),
+          this.$store.dispatch(action_types.GET_TEMPLATES),
+        ])
+
         await this.$store.dispatch(action_types.DEC_LOADING)
+      }
+
+      this.checkType()
+      this.check_template()
+
+      if (this.value instanceof Array) {
+        this.checked_researches = this.value
       }
     },
     watch: {
