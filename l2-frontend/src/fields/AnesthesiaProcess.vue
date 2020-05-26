@@ -25,20 +25,23 @@
                 @mouseleave="temperature_stop" @mouseup="temperature_stop">
           <i class="fa fa-minus"/>
         </button>
-        <input type="text" v-model="temperature_current" class="no-outline" style="width: 190px" value="36.6"
+        <input type="text" v-model.number="temperature" class="no-outline" style="width: 190px" value="36.6"
                placeholder="Температура"/>
         <button class="btn btn-blue-nb sidebar-btn" style="" @mousedown="plus_temperature_start"
                 @mouseleave="temperature_stop" @mouseup="temperature_stop">
           <i class="fa fa-plus"/>
         </button>
       </div>
-
       <input type="text" class="no-outline" placeholder="Систолическое давление"/>
       <input type="text" class="no-outline" placeholder="Диастолическое давление"/>
-      <br/>
-      <br/>
+
+      <div class="col-xs-10 title-anesthesia">Сильнодействующие</div>
+      <input type="text" class="no-outline" :value="v" @input="update(potent_drugs_used, k, $event)" v-for="(v, k) in potent_drugs_used" :key="k" :placeholder="`${k}`"/>
+
+      <div class="col-xs-10 title-anesthesia">Наркотические</div>
+      <input type="text" class="no-outline" :value="v" @input="update(narcotic_drugs_used, k, $event)" v-for="(v, k) in narcotic_drugs_used" :key="k" :placeholder="`${k}`"/>
       <div class="control-row side-bottom">
-        <button class="btn btn-blue-nb" @click="show_anesthesia_sidebar">
+        <button class="btn btn-blue-nb" @click="">
           Добавить
         </button>
       </div>
@@ -132,6 +135,20 @@
     components: {
       VueTimepicker
     },
+    props: {
+      fields: {
+        type: Array,
+        required: true
+      },
+      iss: {
+        type: Number,
+        required: false,
+      },
+      field_pk: {
+        type: Number,
+        required: true,
+      }
+    },
     data() {
       return {
         show_anesthesia_menu: false,
@@ -139,22 +156,54 @@
           H: '',
           mm: '',
         },
-        temperature: 'Температура',
+        temperature: 36.6,
         interval: false,
+        potent_drugs_all: {},
+        potent_drugs_used: {},
+        potent_data: {},
+        narcotic_drugs_all: {},
+        narcotic_drugs_used: {},
+        narcotic_data: {},
+
       }
     },
-    computed: {
-      temperature_current() {
-        if (this.temperature > 34 && this.temperature <= 41) {
-          return this.temperature.toFixed(1)}
-        else if (this.temperature < 34) {
-          return this.temperature = 34
-        } else if (this.temperature > 41) {
-          return this.temperature = 41
+    mounted() {
+      for (let f of this.fields) {
+        console.log(typeof f)
+        if (f.includes('*') && f.includes('&') ) {
+          this.narcotic_drugs_used[f.replace('&*','')] = ''
         }
+        else if (f.includes('*')) {
+          this.narcotic_drugs_all[f.replace('*','')] = ''
+        }
+        else if (f.includes('&')) {
+          this.potent_drugs_used[f.replace('&','')] = ''
+        }
+        else {
+          this.potent_drugs_all[f] = ''
+        }
+      }
+      console.log(this.narcotic_drugs_all, this.narcotic_drugs_used, this.potent_drugs_all, this.potent_drugs_used)
+      console.log(this.iss, this.field_pk)
+    },
+    watch: {
+      temperature() {
+        this.temperature = Number(this.temperature) || 36.6
+        if (this.temperature < 34) {
+          this.temperature = 34
+        } else if (this.temperature > 41) {
+          this.temperature = 41
+        }
+        this.temperature = Number(this.temperature.toFixed(1))
       }
     },
     methods: {
+      update(obj, prop, event) {
+    	  this.$set(obj, prop, event.target.value);
+    	  console.log(obj)
+    	  console.log(this.potent_drugs_used)
+    	  console.log(this.narcotic_drugs_used)
+      },
       plus_temperature_start() {
         if (typeof this.temperature !== 'number') {
           this.temperature = 36.6
@@ -179,16 +228,11 @@
       getCurrentTime() {
         this.timeValue.mm = moment().format('mm');
         this.timeValue.H = moment().format('H');
+        console.log('test')
       },
       show_anesthesia_sidebar() {
         this.$store.dispatch(action_types.CHANGE_STATUS_MENU_ANESTHESIA);
         this.getCurrentTime();
-        if (this.$store.state.showMenuAnesthesiaStatus === true) {
-          var renewTime = setInterval(this.getCurrentTime, 1000 * 10);
-        }
-        if (this.$store.state.showMenuAnesthesiaStatus === false) {
-          clearInterval(renewTime);
-        }
       }
     }
   }
@@ -227,6 +271,7 @@
       border-radius: 0;
       display: flex;
       flex-direction: row;
+      height: 30px;
 
       .btn {
         border-radius: 0;
@@ -236,13 +281,14 @@
     }
 
     .title-anesthesia {
-      height: 5%;
+      height: 30px;
       width: 260px;
       background-color: #56616c;
       display: flex;
       flex-direction: row;
       color: whitesmoke;
       padding-top: 5px;
+      margin-top: 8px;
 
       .sidebar-btn {
         border-bottom: none !important;
@@ -287,6 +333,7 @@
       margin-left: 3px;
       margin-right: 3px;
       margin-top: 8px;
+      width: 100%;
     }
 
     input:focus,
