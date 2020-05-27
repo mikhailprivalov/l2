@@ -143,7 +143,7 @@
                   <NumberRangeField :variants="row.values_to_input" v-model="row.default" />
                 </div>
                 <div v-if="row.field_type === 21">
-                  <ConfigureAnesthesiaField/>
+                  <ConfigureAnesthesiaField v-model="row.values_to_input"/>
                 </div>
                 <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19].includes(row.field_type)">
                   <div class="header" v-collapse-toggle>
