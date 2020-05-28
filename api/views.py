@@ -179,7 +179,7 @@ def send(request):
 
 @csrf_exempt
 def endpoint(request):
-    result = {"answer": False, "body": ""}
+    result = {"answer": False, "body": "", "patientData": {}}
     data = json.loads(request.POST.get("result", request.GET.get("result", "{}")))
     api_key = request.POST.get("key", request.GET.get("key", ""))
     message_type = data.get("message_type", "C")
@@ -209,6 +209,11 @@ def endpoint(request):
                     pks = []
                     oks = []
                     if direction:
+                        direction: directions.Napravleniya = direction
+                        result["patientData"] = {
+                            "fio": direction.client.individual.fio(),
+                            "card": direction.client.number_with_type(),
+                        }
                         results = data.get("result", {})
                         for key in results:
                             ok = False
