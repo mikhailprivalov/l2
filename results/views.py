@@ -1002,13 +1002,47 @@ def result_print(request):
                     fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
                 if iss.research.is_microbiology:
                     q = iss.culture_results.select_related('culture').prefetch_related('culture_antibiotic').all()
-
+                    tw = pw * 0.98
                     culture: MicrobiologyResultCulture
                     for culture in q:
                         fwb.append(Spacer(1, 3 * mm))
                         fwb.append(Paragraph("<font face=\"FreeSansBold\">Культура:</font> " + culture.culture.get_full_title(), style))
                         if culture.koe:
                             fwb.append(Paragraph("<font face=\"FreeSansBold\">КОЕ:</font> " + culture.koe, style))
+
+                        data = [
+                            [Paragraph(x, styleBold) for x in ['Антибиотик', 'Диаметр', 'Чувствительность']]
+                        ]
+
+                        for anti in culture.culture_antibiotic.all():
+                            data.append([Paragraph(x, style) for x in [
+                                anti.antibiotic.title,
+                                anti.dia,
+                                anti.sensitivity,
+                            ]])
+
+                        cw = [int(tw * 0.4), int(tw * 0.3)]
+                        cw = cw + [tw - sum(cw)]
+
+                        t = Table(data, colWidths=cw)
+                        style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                                              ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                              ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                                              ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                                              ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                                              ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                                              ('TOPPADDING', (0, 0), (-1, -1), 1),
+                                              ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+                                              ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+                                              ])
+                        style_t.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
+                        style_t.add('TOPPADDING', (0, 0), (-1, 0), 0)
+
+                        t.setStyle(style_t)
+
+                        fwb.append(Spacer(1, 2 * mm))
+                        fwb.append(t)
+                        fwb.append(Spacer(1, 2 * mm))
 
                     if iss.microbiology_conclusion:
                         fwb.append(Spacer(1, 3 * mm))
