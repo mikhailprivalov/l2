@@ -214,7 +214,7 @@ def confirm_reset(request):
             ctime = int(time.time())
             cdid = iss.doc_confirmation_id or -1
             if (ctime - ctp < SettingManager.get("lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) \
-                    or request.user.is_superuser or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]:
+                or request.user.is_superuser or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]:
                 predoc = {"fio": 'не подтверждено' if cdid == -1 else iss.doc_confirmation.get_fio(),
                           "pk": cdid,
                           "direction": iss.napravleniye_id}
@@ -526,32 +526,24 @@ def users_count(request):
 @login_required
 @group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант")
 def results_history_search(request):
-    result = []
     type = request.GET.get("type", "otd")
     day = request.GET.get("date", datetime.datetime.today().strftime('%d.%m.%Y'))
-    try:
-        day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]), int(day.split(".")[0]))
-        day2 = day1 + datetime.timedelta(days=1)
 
-        import directions.models as d
-        if type == "otd":
-            collect = d.Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
-                                                    issledovaniya__time_confirmation__range=(day1, day2),
-                                                    doc__podrazdeleniye=request.user.doctorprofile.podrazdeleniye,
-                                                    issledovaniya__research__is_doc_refferal=False,
-                                                    issledovaniya__research__is_slave_hospital=False)
-        else:
-            collect = d.Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
-                                                    issledovaniya__time_confirmation__range=(day1, day2),
-                                                    doc=request.user.doctorprofile)
+    day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]), int(day.split(".")[0]))
+    day2 = day1 + datetime.timedelta(days=1)
 
-        for dir in collect.order_by("doc", "client"):
-            dpk = dir.pk
-            if all([x.doc_confirmation is not None for x in d.Issledovaniya.objects.filter(napravleniye__pk=dpk)]):
-                if dpk not in result:
-                    result.append(dpk)
-    except IndexError:
-        pass
+    if type == "otd":
+        collect = Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
+                                              issledovaniya__time_confirmation__range=(day1, day2),
+                                              doc__podrazdeleniye=request.user.doctorprofile.podrazdeleniye,
+                                              issledovaniya__research__is_doc_refferal=False,
+                                              issledovaniya__research__is_slave_hospital=False)
+    else:
+        collect = Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
+                                              issledovaniya__time_confirmation__range=(day1, day2),
+                                              doc=request.user.doctorprofile)
+
+    result = list(collect.order_by("doc", "client").exclude(issledovaniya__doc_confirmation__isnull=True).values_list('pk', flat=True))
 
     return JsonResponse(result, safe=False)
 
@@ -630,7 +622,7 @@ def users_dosync(request):
     i = 0
     for ldap_user in resp["entries"]:
         if "uidNumber" not in ldap_user["attributes"].keys() or \
-                "uid" not in ldap_user["attributes"].keys() or "userPassword" not in ldap_user["attributes"].keys() or "displayName" not in ldap_user["attributes"].keys():
+            "uid" not in ldap_user["attributes"].keys() or "userPassword" not in ldap_user["attributes"].keys() or "displayName" not in ldap_user["attributes"].keys():
             continue
 
         if Podrazdeleniya.objects.filter(gid_n=int(ldap_user["attributes"]["gidNumber"])).exists():

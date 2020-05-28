@@ -37,11 +37,12 @@ def get_researches(request):
     res = DResearches.objects\
         .filter(hide=False)\
         .exclude(pk__in=[x.pk for x in request.user.doctorprofile.restricted_to_direct.all()])\
-        .select_related('comment_variants', 'podrazdeleniye')\
-        .prefetch_related('service_location', 'localization', 'a', 'b')\
+        .select_related('podrazdeleniye', 'comment_variants')\
+        .prefetch_related('localization', 'service_location', 'a', 'b')\
         .distinct()\
         .order_by('title')
 
+    r: DResearches
     for r in res:
         autoadd = [x.b_id for x in r.a.all()]
         addto = [x.a_id for x in r.b.all()]
