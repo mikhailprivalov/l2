@@ -43,13 +43,14 @@ from api.stationar.stationar_func import hosp_get_hosp_direction
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, \
-    ParaclinicResult, Recipe
+    ParaclinicResult, Recipe, MicrobiologyResultCulture
 from laboratory.decorators import group_required, logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.common import RANGE_NOT_IN, RANGE_IN
 from utils.dates import try_parse_range
+from utils.flowable import InteractiveTextField
 from utils.pagenum import PageNumCanvas
 from .prepare_data import lab_iss_to_pdf, text_iss_to_pdf, html_to_pdf
 
@@ -984,21 +985,36 @@ def result_print(request):
                     t.setStyle(style_t)
                     fwb.append(t)
         else:
+            iss: Issledovaniya
             for iss in direction.issledovaniya_set.all().order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
                 if not hosp:
+                    fwb.append(InteractiveTextField())
+                    fwb.append(Spacer(1, 2 * mm))
                     if iss.research.is_doc_refferal or iss.research.is_microbiology:
-                        fwb.append(Paragraph(iss.research.title, styleBold))
+                        iss_title = iss.research.title
                     elif iss.doc_confirmation.podrazdeleniye.vaccine:
-                        fwb.append(Paragraph("Вакцина: " + iss.research.title, styleBold))
+                        iss_title = "Вакцина: " + iss.research.title
                     else:
-                        fwb.append(Paragraph("Услуга: " + iss.research.title, styleBold))
-                if hosp:
+                        iss_title = "Услуга: " + iss.research.title
+                    fwb.append(Paragraph(f"<para align='center'><font size='9'>{iss_title}</font></para>", styleBold))
+                else:
                     fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
                 if iss.research.is_microbiology:
                     q = iss.culture_results.select_related('culture').prefetch_related('culture_antibiotic').all()
-                    fwb.append(Paragraph(str(q.query), style))
-                    # for culture in
+
+                    culture: MicrobiologyResultCulture
+                    for culture in q:
+                        fwb.append(Spacer(1, 3 * mm))
+                        fwb.append(Paragraph("<font face=\"FreeSansBold\">Культура:</font> " + culture.culture.get_full_title(), style))
+                        if culture.koe:
+                            fwb.append(Paragraph("<font face=\"FreeSansBold\">КОЕ:</font> " + culture.koe, style))
+
+                    if iss.microbiology_conclusion:
+                        fwb.append(Spacer(1, 3 * mm))
+                        fwb.append(Paragraph('Заключение', styleBold))
+                        fwb.append(Paragraph(iss.microbiology_conclusion, style))
+
                 elif not protocol_plain_text:
                     sick_result = None
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
@@ -1254,11 +1270,12 @@ def result_print(request):
     def first_pages(canvas, document):
         canvas.saveState()
         # вывести интерактивную форму "текст"
-        if not hosp:
-            form = canvas.acroForm
-            form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12, x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
-                           width=470, height=18, textColor=black, forceBorder=False)
-            canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
+        # DEPRECATED BY InteractiveTextField
+        # if not hosp:
+        #     form = canvas.acroForm
+        #     form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12, x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
+        #                    width=470, height=18, textColor=black, forceBorder=False)
+        #     canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.setFont('FreeSansBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
         canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), num_card, number_poliklinika))

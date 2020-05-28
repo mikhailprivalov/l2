@@ -632,6 +632,9 @@ class Culture(models.Model):
     def __str__(self):
         return self.title
 
+    def get_full_title(self):
+        return f'{self.group_culture.title} {self.title}'.strip()
+
     class Meta:
         verbose_name = 'Культура'
         verbose_name_plural = 'Культуры'
