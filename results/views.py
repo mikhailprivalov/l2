@@ -23,7 +23,6 @@ from django.utils.text import Truncator
 from django.views.decorators.csrf import csrf_exempt
 from pdfrw import PdfReader, PdfWriter
 from reportlab.lib import colors
-from reportlab.lib.colors import white, black
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet
