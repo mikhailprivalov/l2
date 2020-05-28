@@ -10,7 +10,7 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="(val, index) in tb_data">
+      <tr class="tr-body" v-for="(val, index) in tb_data">
         <td class="first-column"><input class="no-outline" type="text" style="width:100%" v-model="val['title']"
                                         placeholder="Введите наименование"></td>
         <td class="second-column">
@@ -25,7 +25,7 @@
           <input type="checkbox" v-model="val['default']">
         </td>
         <td>
-          <button class="btn btn-default btn-primary-nb" v-if="tb_data.length > 1" v-on:click="delete_row(index)"
+          <button class="btn btn-default btn-primary-nb" v-if="tb_data.length > 0" v-on:click="delete_row(index)"
                   v-tippy="{ placement : 'bottom'}" title="Удалить строку"><i class="fa fa-times"/></button>
         </td>
       </tr>
@@ -52,13 +52,12 @@
     },
     data() {
       return {
-        tb_data: this.value || [{"title": '', "type": '', "default": false}],
+        tb_data: this.value || [{"header":'', "title": '', "type": '', "default": false}],
       }
     },
     methods: {
       add_new_row() {
-        this.tb_data.push({"title": '', "type": '', "default": false});
-        console.log(this.tb_data)
+        this.tb_data.push({"header":'', "title": '', "type": '', "default": false});
       },
       delete_row: function (index) {
         this.tb_data.splice(index, 1);
@@ -93,6 +92,9 @@
   .first-column {
     width: 535px;
   }
+  .tr-body{
+    height: 10px;
+  }
 
   .second-column {
     width: 230px;
@@ -106,7 +108,8 @@
     border-top-style: hidden;
     border-right-style: hidden;
     border-left-style: hidden;
-    border-bottom-style: groove;
+    /*border-bottom-style: groove;*/
+    border-bottom-style: hidden;
     margin-left: 3px;
     margin-right: 3px;
     /*margin-top: 8px;*/
@@ -115,7 +118,8 @@
 
   input:focus,
   input:active {
-    border-bottom: 2px solid #56616c;
+    /*border-bottom: 2px solid #56616c;*/
+    background-color: #66afe9;
   }
 
   .no-outline:focus {

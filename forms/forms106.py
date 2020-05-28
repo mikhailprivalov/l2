@@ -34,6 +34,7 @@ def form_01(request_data):
     hosp_nums = ''
     for i in hosp_nums_obj:
         hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
+        break
 
     ind_card = direction_obj.client
     patient_data = ind_card.get_data_individual()

@@ -20,6 +20,8 @@
       </div>
       <input type="text" class="no-outline" placeholder="SpO2"/>
       <input type="text" class="no-outline" placeholder="CO2"/>
+      <input type="text" class="no-outline" placeholder="Систолическое давление"/>
+      <input type="text" class="no-outline" placeholder="Диастолическое давление"/>
       <div class="number">
         <button class="btn btn-blue-nb sidebar-btn sidebar-btn" @mousedown="minus_temperature_start"
                 @mouseleave="temperature_stop" @mouseup="temperature_stop">
@@ -32,11 +34,18 @@
           <i class="fa fa-plus"/>
         </button>
       </div>
-      <input type="text" class="no-outline" placeholder="Систолическое давление"/>
-      <input type="text" class="no-outline" placeholder="Диастолическое давление"/>
 
       <div class="col-xs-10 title-anesthesia">Сильнодействующие</div>
-      <input type="text" class="no-outline" :value="v" @input="update(potent_drugs_used, k, $event)" v-for="(v, k) in potent_drugs_used" :key="k" :placeholder="`${k}`"/>
+      <div>
+        <table class="table table-bordered tb-background">
+          <tr v-for="(v, k) in potent_drugs_used">
+<!--          <input type="text" class="no-outline" :value="v" @input="update(potent_drugs_used, k, $event)" v-for="(v, k) in potent_drugs_used" :key="k" :placeholder="`${k}`"/>-->
+          <td class="cl-td first-column">{{k}}</td>
+          <td class="cl-td second-column"><input style="width: 100%" class="no-outline" type="text" :value="v" @input="update(potent_drugs_used, k, $event)"  :key="k" :placeholder="'количество'"/></td>
+          </tr>
+        </table>
+      </div>
+
 
       <div class="col-xs-10 title-anesthesia">Наркотические</div>
       <input type="text" class="no-outline" :value="v" @input="update(narcotic_drugs_used, k, $event)" v-for="(v, k) in narcotic_drugs_used" :key="k" :placeholder="`${k}`"/>
@@ -158,10 +167,10 @@
         },
         temperature: 36.6,
         interval: false,
-        potent_drugs_all: {},
+        potent_drugs_other: {},
         potent_drugs_used: {},
         potent_data: {},
-        narcotic_drugs_all: {},
+        narcotic_drugs_other: {},
         narcotic_drugs_used: {},
         narcotic_data: {},
 
@@ -169,18 +178,11 @@
     },
     mounted() {
       for (let f of this.fields) {
-        console.log(typeof f)
-        if (f.includes('*') && f.includes('&') ) {
-          this.narcotic_drugs_used[f.replace('&*','')] = ''
+        if (f.type === 'Сильнодействующие' && f.default=== true) {
+          this.potent_drugs_used[f.title] = ''
         }
-        else if (f.includes('*')) {
-          this.narcotic_drugs_all[f.replace('*','')] = ''
-        }
-        else if (f.includes('&')) {
-          this.potent_drugs_used[f.replace('&','')] = ''
-        }
-        else {
-          this.potent_drugs_all[f] = ''
+        else if (f.type === 'Наркотические' && f.default=== true) {
+          this.narcotic_drugs_used[f.title] = ''
         }
       }
       console.log(this.narcotic_drugs_all, this.narcotic_drugs_used, this.potent_drugs_all, this.potent_drugs_used)
@@ -239,6 +241,16 @@
 </script>
 
 <style scoped lang="scss">
+  .tb-background{
+    background-color: #eee;
+  }
+  .first-column{
+    width: 160px;
+  }
+  .second-column{
+    width: 100px;
+  }
+
   .show_anesthesia {
     width: 260px;
   }
@@ -288,7 +300,6 @@
       flex-direction: row;
       color: whitesmoke;
       padding-top: 5px;
-      margin-top: 8px;
 
       .sidebar-btn {
         border-bottom: none !important;
@@ -328,23 +339,23 @@
       border-top-style: hidden;
       border-right-style: hidden;
       border-left-style: hidden;
-      border-bottom-style: groove;
+      border-bottom-style: hidden;
       background-color: #eee;
-      margin-left: 3px;
-      margin-right: 3px;
-      margin-top: 8px;
       width: 100%;
+      padding: 5px 1px;
     }
 
     input:focus,
     input:active {
-      border-bottom: 2px solid #56616c;
+      /*background-color: #aab2bd;*/
+      /*background-color: #ec7063;*/
+      background-color: #dc322f;
+      /*color: white;*/
     }
 
     .no-outline:focus {
       outline: none;
     }
-
   }
 
   .time-control {
