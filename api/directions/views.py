@@ -906,8 +906,9 @@ def directions_paraclinic_form(request):
                     ),
                 )
                 .distinct()
+            )
         )
-    )
+
     if dn.exists():
         d = dn[0]
         df = d.issledovaniya_set.all()

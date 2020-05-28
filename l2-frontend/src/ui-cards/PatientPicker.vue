@@ -3,8 +3,7 @@
     <div class="top-picker" :class="{internalType: selected_base.internal_type}">
       <div class="input-group">
         <div class="input-group-btn" v-if="bases.length > 1">
-          <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" type="button" data-toggle="dropdown"
-                  style="width: 200px;text-align: left!important;">
+          <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr base-toggle" type="button" data-toggle="dropdown">
             <span class="caret"></span> {{selected_base.title}}
           </button>
           <ul class="dropdown-menu">
@@ -21,13 +20,12 @@
         <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
                maxlength="255" @keyup.enter="search">
         <span class="rmis-search input-group-btn" v-if="selected_base.internal_type && user_data.rmis_enabled">
-          <label class="btn btn-blue-nb nbr" style="padding: 5px 12px;">
+          <label class="btn btn-blue-nb nbr">
             <input type="checkbox" v-model="inc_rmis"/> Вкл. РМИС
           </label>
         </span>
         <span class="input-group-btn">
-          <button style="margin-right: -2px"
-                  class="btn last btn-blue-nb nbr" type="button" :disabled="!query_valid || inLoading" @click="search">
+          <button class="btn last btn-blue-nb nbr" type="button" :disabled="!query_valid || inLoading" @click="search">
             Поиск
           </button>
         </span>
@@ -1051,10 +1049,6 @@
     }
   }
 
-  .nbr {
-    border-radius: 0;
-  }
-
   .bob {
     border-left: none !important;
     border-top: none !important;
@@ -1144,5 +1138,16 @@
         text-decoration: none;
       }
     }
+  }
+
+  .base-toggle {
+    max-width: 200px;
+    min-width: 60px;
+    text-align: left !important;
+  }
+
+  .dropdown-menu {
+    max-width: 350px;
+    min-width: 1%;
   }
 </style>

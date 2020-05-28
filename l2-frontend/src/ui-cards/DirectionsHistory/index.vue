@@ -1,19 +1,19 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative" :class="[!!iss_pk && 'no_abs']">
     <div class="top-picker" v-if="!iss_pk">
-      <div style="width: 126px;display: inline-block;vertical-align: top" title="Дата направления"
+      <div class="direct-date" title="Дата направления"
            v-tippy="{ placement : 'right', arrow: true }">
         <date-range small v-model="date_range"/>
       </div>
       <div class="top-inner">
-        <div class="top-select" style="width: 180px">
+        <div class="top-select">
           <select-picker-m :options="services_options" actions_box multiple
                            noneText="Все услуги" search
                            uid="services_options" v-model="services"/>
         </div>
-        <div style="flex: 0 calc(100% - 230px);position: relative;">
-          <button class="btn btn-blue-nb btn-ell dropdown-toggle" data-toggle="dropdown"
-                  style="text-align: left!important;border-radius: 0;width: 100%;"
+        <div class="position-relative">
+          <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" data-toggle="dropdown"
+                  style="text-align: left!important;width: 100%;"
                   type="button">
             <span class="caret"></span> {{active_type_obj.title}}
           </button>
@@ -22,8 +22,7 @@
                    v-if="row.pk !== active_type">{{ row.title }}</a></li>
           </ul>
         </div>
-        <button class="btn btn-blue-nb btn-ell" style="border-radius: 0;width: 50px;flex: 1 50px;" title="Обновить"
-                @click="load_history_safe">
+        <button class="btn btn-blue-nb btn-ell nbr" title="Обновить" v-tippy @click="load_history_safe">
           <i class="glyphicon glyphicon-refresh"></i>
         </button>
       </div>
@@ -71,7 +70,9 @@
           <td class="text-center">{{row.date}}</td>
           <td>
             <span v-if="!!row.has_hosp && role_can_use_stationar">
-              <a :href="`/mainmenu/stationar#{%22pk%22:${row.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`" target="_blank" class="a-under">
+              <a
+                :href="`/mainmenu/stationar#{%22pk%22:${row.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
+                target="_blank" class="a-under">
                 {{row.pk}}
               </a>
             </span>
@@ -95,9 +96,11 @@
                  v-if="!!row.parent.parent_is_hosp">
                 <i class="fa fa-bed"/>
               </a>
-              <a href="#" @click.prevent="row.parent.is_confirm ? show_results(row.parent) : null" :title="`Создано в амбулаторном приеме: ${row.parent.pk}-${row.parent.parent_title}`"
-                 v-tippy class="btn btn-blue-nb" v-if="!!row.parent.parent_is_doc_refferal" :class="{isDisabled: !row.parent.is_confirm}">
-                 <i class="fa fa-user-md"/>
+              <a href="#" @click.prevent="row.parent.is_confirm ? show_results(row.parent) : null"
+                 :title="`Создано в амбулаторном приеме: ${row.parent.pk}-${row.parent.parent_title}`"
+                 v-tippy class="btn btn-blue-nb" v-if="!!row.parent.parent_is_doc_refferal"
+                 :class="{isDisabled: !row.parent.is_confirm}">
+                <i class="fa fa-user-md"/>
               </a>
               <button class="btn btn-blue-nb" title="Штрих-код браслета" v-tippy
                       @click="print_hosp(row.pk)" v-if="row.has_hosp">
@@ -243,7 +246,7 @@
           this.$root.$emit(`update-sp-m-services_options`)
         }, 0)
       },
-      show_stationar(dir){
+      show_stationar(dir) {
         window.open(`/mainmenu/stationar#{%22pk%22:${dir},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`, "_blank")
       },
       show_results(row) {
@@ -419,6 +422,14 @@
     justify-content: center;
   }
 
+  .direct-date {
+    width: 126px;
+    display: inline-block;
+    vertical-align: top;
+    position: absolute;
+    left: 0;
+  }
+
   .top-inner {
     position: absolute;
     left: 126px;
@@ -431,6 +442,25 @@
     flex-wrap: nowrap;
     align-items: stretch;
     justify-content: space-between;
+
+    & > :nth-child(1) {
+      width: 100%;
+      max-width: 180px;
+      flex: 0 1 100%;
+    }
+
+    & > :nth-child(2) {
+      width: 100%;
+      min-width: 50px;
+      flex: 0 1 100%;
+    }
+
+    & > :nth-child(3) {
+      min-width: 42px;
+      max-width: 50px;
+      width: 100%;
+      flex: 0 0 42px;
+    }
   }
 
   .content-picker, .content-none {
@@ -544,13 +574,16 @@
           flex: 0 0 50%;
         }
       }
+
       &.has_pacs_stationar {
         .btn {
           flex: 0 0 32%;
         }
+
         .btn:nth-child(1) {
           flex: 0 0 20%;
         }
+
         .btn:nth-child(2) {
           flex: 0 0 16%;
         }

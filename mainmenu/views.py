@@ -214,7 +214,7 @@ def confirm_reset(request):
             ctime = int(time.time())
             cdid = iss.doc_confirmation_id or -1
             if (ctime - ctp < SettingManager.get("lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) \
-                or request.user.is_superuser or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]:
+                    or request.user.is_superuser or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]:
                 predoc = {"fio": 'не подтверждено' if cdid == -1 else iss.doc_confirmation.get_fio(),
                           "pk": cdid,
                           "direction": iss.napravleniye_id}
@@ -621,8 +621,8 @@ def users_dosync(request):
     resp = json.loads(c.response_to_json())
     i = 0
     for ldap_user in resp["entries"]:
-        if "uidNumber" not in ldap_user["attributes"].keys() or \
-            "uid" not in ldap_user["attributes"].keys() or "userPassword" not in ldap_user["attributes"].keys() or "displayName" not in ldap_user["attributes"].keys():
+        if "uidNumber" not in ldap_user["attributes"].keys() or "uid" not in ldap_user["attributes"].keys() or "userPassword" not in ldap_user["attributes"].keys() or "displayName" not in \
+                ldap_user["attributes"].keys():
             continue
 
         if Podrazdeleniya.objects.filter(gid_n=int(ldap_user["attributes"]["gidNumber"])).exists():

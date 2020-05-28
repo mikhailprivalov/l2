@@ -1634,6 +1634,14 @@ input[type=date].form-control {
   }
 }
 
+.position-relative {
+  position: relative;
+}
+
+.nbr {
+  border-radius: 0!important;
+}
+
 @import "./variables";
 @import "./editor";
 @import "./menubar";
