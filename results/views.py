@@ -1041,6 +1041,7 @@ def result_print(request):
 
                         fwb.append(Spacer(1, 2 * mm))
                         fwb.append(t)
+                        fwb.append(Paragraph("<para align='right'><font size='7'>S – чувствителен; R – резистентен; I – промежуточная чувствительность</font></para>", style))
                         fwb.append(Spacer(1, 2 * mm))
 
                     if iss.microbiology_conclusion:
