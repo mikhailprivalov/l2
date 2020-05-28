@@ -1269,13 +1269,6 @@ def result_print(request):
 
     def first_pages(canvas, document):
         canvas.saveState()
-        # вывести интерактивную форму "текст"
-        # DEPRECATED BY InteractiveTextField
-        # if not hosp:
-        #     form = canvas.acroForm
-        #     form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12, x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
-        #                    width=470, height=18, textColor=black, forceBorder=False)
-        #     canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.setFont('FreeSansBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
         canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), num_card, number_poliklinika))
