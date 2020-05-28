@@ -897,6 +897,11 @@
       }
     }
   }
+
+  .dropdown-menu {
+    max-width: 350px;
+    min-width: 1%;
+  }
 </style>
 
 <style lang="scss">
@@ -1144,10 +1149,5 @@
     max-width: 200px;
     min-width: 60px;
     text-align: left !important;
-  }
-
-  .dropdown-menu {
-    max-width: 350px;
-    min-width: 1%;
   }
 </style>
