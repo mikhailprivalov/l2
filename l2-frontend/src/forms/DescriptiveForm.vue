@@ -31,12 +31,12 @@
                          :duration="400"
                          :on-confirm="clear_val" :value="field"
                          action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21].includes(field.field_type)">
+                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19].includes(field.field_type)">
                 ×
               </longpress>
               <div class="field-inputs"
                    v-if="field.values_to_input.length > 0 && !confirmed &&
-                   ![10, 12, 18, 19, 21].includes(field.field_type)">
+                   ![10, 12, 18, 19].includes(field.field_type)">
                 <div class="input-values-wrap">
                   <div class="input-values">
                     <div class="inner-wrap">
@@ -121,6 +121,12 @@
                 <input :readonly="confirmed" class="form-control" style="width: 110px" type="time"
                        v-model="field.value"/>
               </div>
+              <div class="field-value" v-else-if="field.field_type === 22">
+                <TextareaAutocomplete
+                  :disabled="confirmed"
+                  v-model="field.value"
+                />
+              </div>
               <div class="field-value" v-else-if="field.field_type === 21">
                 <AnesthesiaProcess :fields="field.values_to_input" :iss="pk" :field_pk="field.pk"/>
               </div>
@@ -158,10 +164,12 @@
   import NumberField from "../fields/NumberField";
   import NumberRangeField from "../fields/NumberRangeField";
   import AnesthesiaProcess from "../fields/AnesthesiaProcess";
+  import TextareaAutocomplete from "../fields/TextareaAutocomplete";
 
   export default {
     name: 'DescriptiveForm',
     components: {
+      TextareaAutocomplete,
       NumberRangeField,
       NumberField,
       AggregateDesc,
@@ -170,8 +178,7 @@
       SearchFractionValueField,
       SearchFieldValueField,
       RadioField,
-      SelectField, VisibilityGroupWrapper, VisibilityFieldWrapper, Longpress, MKBField, FormulaField,
-      AnesthesiaProcess
+      SelectField, VisibilityGroupWrapper, VisibilityFieldWrapper, Longpress, MKBField, FormulaField
     },
     props: {
       research: {

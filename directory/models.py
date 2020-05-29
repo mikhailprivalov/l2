@@ -209,7 +209,7 @@ class Researches(models.Model):
     def is_extract(self):
         if self.desc:
             return False
-        return 'выписка' in self.title.lower() or 'выписной' in self.title.lower() or 'посметрн' in self.title.lower()
+        return 'выписка' in self.title.lower() or 'выписной' in self.title.lower()
 
     @property
     def r_type(self):
@@ -350,6 +350,7 @@ class ParaclinicInputField(models.Model):
         (19, 'Number range'),
         (20, 'Time HH:MM'),
         (21, 'Anesthesia table'),
+        (22, 'Текст с автозаполнением'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
@@ -631,6 +632,9 @@ class Culture(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_full_title(self):
+        return f'{self.group_culture.title} {self.title}'.strip()
 
     class Meta:
         verbose_name = 'Культура'

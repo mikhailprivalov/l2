@@ -145,7 +145,7 @@
                 <div v-if="row.field_type === 21">
                   <ConfigureAnesthesiaField v-model="row.values_to_input"/>
                 </div>
-                <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19].includes(row.field_type)">
+                <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22].includes(row.field_type)">
                   <div class="header" v-collapse-toggle>
                     <a href="#" class="a-under" @click.prevent v-if="row.field_type === 0">
                       Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
@@ -235,6 +235,7 @@
                     <option value="18">Число</option>
                     <option value="19">Число через range</option>
                     <option value="20">Время ЧЧ:ММ</option>
+                    <option value="22">Текст с автозаполнением</option>
                     <option value="21">Течение анестезии(таблица)</option>
                   </select>
                 </label>
@@ -273,7 +274,7 @@
 
     export default {
         name: 'paraclinic-research-editor',
-        components: {NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor, ConfigureAnesthesiaField},
+        components: {NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor},
         props: {
             pk: {
                 type: Number,

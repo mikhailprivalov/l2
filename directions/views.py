@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.http import HttpResponse, JsonResponse
 from django.utils import dateformat
 from django.utils import timezone
@@ -158,7 +158,6 @@ def gen_pdf_execlist(request):
     return response
 
 
-# @cache_page(60 * 15)
 @logged_in_or_token
 def gen_pdf_dir(request):
     """Генерация PDF направлений"""
@@ -173,19 +172,25 @@ def gen_pdf_dir(request):
     c = canvas.Canvas(buffer, pagesize=A4)  # Создание холста для PDF размера А4
     c.setTitle('Направления {}'.format(', '.join([str(x) for x in direction_id])))
 
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
-    import os.path
-
     pdfmetrics.registerFont(
         TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))  # Загрузка шрифта из файла
     pdfmetrics.registerFont(
         TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))  # Загрузка шрифта из файла
     pdfmetrics.registerFont(
         TTFont('TimesNewRoman', os.path.join(FONTS_FOLDER, 'TimesNewRoman.ttf')))  # Загрузка шрифта из файла
-    dn = Napravleniya.objects.filter(pk__in=direction_id)
+    dn = Napravleniya.objects.filter(pk__in=direction_id).prefetch_related(
+        Prefetch(
+            'issledovaniya_set',
+            queryset=Issledovaniya.objects.all().select_related('research', 'research__podrazdeleniye', 'localization', 'service_location').prefetch_related('research__fractions_set')
+        )
+    ).select_related(
+        'client', 'client__base', 'client__individual',
+        'parent', 'parent__research',
+        'doc_who_create', 'doc_who_create__podrazdeleniye', 'doc', 'doc__podrazdeleniye',
+        'imported_org', 'istochnik_f'
+    ).order_by('pk')
     ddef = dn.filter(issledovaniya__research__direction_form=0).distinct()
-    p = Paginator(list(ddef), 4)  # Деление списка направлений по 4
+    p = Paginator(ddef, 4)  # Деление списка направлений по 4
     instructions = []
     has_def = ddef.count() > 0
     if has_def:
@@ -210,7 +215,7 @@ def gen_pdf_dir(request):
     cntn = donepage.count()
     for d in donepage:
         n += 1
-        iss = Issledovaniya.objects.filter(napravleniye=d)
+        iss = d.issledovaniya_set.all()
         if not iss.exists():
             continue
         form = iss[0].research.direction_form
@@ -425,7 +430,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
             c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 105 - nds) + (h / 2) * yn,
                          "Организация: " + dir.imported_org.title)
 
-    issledovaniya = Issledovaniya.objects.filter(napravleniye=dir)
+    issledovaniya = dir.issledovaniya_set.all()
 
     vid = []
     has_descriptive = False
@@ -465,11 +470,6 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
         c.setFont('OpenSansBold', 8)
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 129) + (h / 2) * yn, ("Стационар-" + str(dir.parent.napravleniye_id)))
     c.setFont('OpenSans', 9)
-
-    from reportlab.platypus import Table, TableStyle
-    from reportlab.lib import colors
-    from reportlab.platypus import Paragraph
-    from reportlab.lib.styles import getSampleStyleSheet
 
     styleSheet = getSampleStyleSheet()
 

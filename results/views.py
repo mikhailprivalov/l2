@@ -14,7 +14,7 @@ import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Prefetch, Count
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import dateformat
@@ -23,7 +23,6 @@ from django.utils.text import Truncator
 from django.views.decorators.csrf import csrf_exempt
 from pdfrw import PdfReader, PdfWriter
 from reportlab.lib import colors
-from reportlab.lib.colors import white, black
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet
@@ -43,13 +42,14 @@ from api.stationar.stationar_func import hosp_get_hosp_direction
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, \
-    ParaclinicResult, Recipe
+    ParaclinicResult, Recipe, MicrobiologyResultCulture
 from laboratory.decorators import group_required, logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.common import RANGE_NOT_IN, RANGE_IN
 from utils.dates import try_parse_range
+from utils.flowable import InteractiveTextField
 from utils.pagenum import PageNumCanvas
 from .prepare_data import lab_iss_to_pdf, text_iss_to_pdf, html_to_pdf
 
@@ -474,9 +474,16 @@ def result_print(request):
     for i in hosp_nums_obj:
         hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
 
-    for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
-                            key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
-                                issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
+    dirs = Napravleniya.objects\
+        .filter(pk__in=pk)\
+        .select_related('client')\
+        .prefetch_related(
+            Prefetch('issledovaniya_set', queryset=Issledovaniya.objects.filter(time_save__isnull=False).select_related('research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'))
+        )\
+        .annotate(results_count=Count('issledovaniya__result'))\
+        .distinct()
+
+    for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
         dpk = direction.pk
 
         if not direction.is_all_confirm():
@@ -486,7 +493,7 @@ def result_print(request):
         has_paraclinic = False
         link_files = False
         is_extract = False
-        for iss in Issledovaniya.objects.filter(napravleniye=direction, time_save__isnull=False):
+        for iss in direction.issledovaniya_set.all():
             if iss.time_save:
                 dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
                 if dt not in dates.keys():
@@ -494,7 +501,7 @@ def result_print(request):
                 dates[dt] += 1
             if iss.tubes.exists() and iss.tubes.first().time_get:
                 date_t = strdate(iss.tubes.first().time_get)
-            if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment:
+            if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment or iss.research.is_microbiology:
                 has_paraclinic = True
             if directory.HospitalService.objects.filter(slave_research=iss.research).exists():
                 has_paraclinic = True
@@ -565,7 +572,7 @@ def result_print(request):
         if not has_paraclinic:
             tw = pw
 
-            no_units_and_ref = any([x.research.no_units_and_ref for x in Issledovaniya.objects.filter(napravleniye=direction)])
+            no_units_and_ref = any([x.research.no_units_and_ref for x in direction.issledovaniya_set.all()])
 
             data = []
             tmp = [Paragraph('<font face="FreeSansBold" size="8">Исследование</font>', styleSheet["BodyText"]),
@@ -607,14 +614,14 @@ def result_print(request):
             prev_date_conf = ""
 
             has0 = directory.Fractions.objects.filter(
-                research__pk__in=[x.research_id for x in Issledovaniya.objects.filter(napravleniye=direction)],
+                research__pk__in=[x.research_id for x in direction.issledovaniya_set],
                 hide=False,
                 render_type=0).exists()
 
             if has0:
                 fwb.append(t)
 
-            iss_list = Issledovaniya.objects.filter(napravleniye=direction)
+            iss_list = direction.issledovaniya_set.all()
             result_style = styleSheet["BodyText"] if no_units_and_ref else stl
             pks = []
             for iss in iss_list.order_by("research__direction_id", "research__pk", "tubes__id", "research__sort_weight"):
@@ -977,19 +984,72 @@ def result_print(request):
                     t.setStyle(style_t)
                     fwb.append(t)
         else:
-            for iss in Issledovaniya.objects.filter(napravleniye=direction).order_by("research__pk"):
+            iss: Issledovaniya
+            for iss in direction.issledovaniya_set.all().order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
                 if not hosp:
-                    if iss.research.is_doc_refferal:
-                        fwb.append(Paragraph(iss.research.title, styleBold))
+                    fwb.append(InteractiveTextField())
+                    fwb.append(Spacer(1, 2 * mm))
+                    if iss.research.is_doc_refferal or iss.research.is_microbiology:
+                        iss_title = iss.research.title
                     elif iss.doc_confirmation.podrazdeleniye.vaccine:
-                        fwb.append(Paragraph("Вакцина: " + iss.research.title, styleBold))
+                        iss_title = "Вакцина: " + iss.research.title
                     else:
-                        fwb.append(Paragraph("Услуга: " + iss.research.title, styleBold))
-                if hosp:
+                        iss_title = "Услуга: " + iss.research.title
+                    fwb.append(Paragraph(f"<para align='center'><font size='9'>{iss_title}</font></para>", styleBold))
+                else:
                     fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
+                if iss.research.is_microbiology:
+                    q = iss.culture_results.select_related('culture').prefetch_related('culture_antibiotic').all()
+                    tw = pw * 0.98
+                    culture: MicrobiologyResultCulture
+                    for culture in q:
+                        fwb.append(Spacer(1, 3 * mm))
+                        fwb.append(Paragraph("<font face=\"FreeSansBold\">Культура:</font> " + culture.culture.get_full_title(), style))
+                        if culture.koe:
+                            fwb.append(Paragraph("<font face=\"FreeSansBold\">КОЕ:</font> " + culture.koe, style))
 
-                if not protocol_plain_text:
+                        data = [
+                            [Paragraph(x, styleBold) for x in ['Антибиотик', 'Диаметр', 'Чувствительность']]
+                        ]
+
+                        for anti in culture.culture_antibiotic.all():
+                            data.append([Paragraph(x, style) for x in [
+                                anti.antibiotic.title,
+                                anti.dia,
+                                anti.sensitivity,
+                            ]])
+
+                        cw = [int(tw * 0.4), int(tw * 0.3)]
+                        cw = cw + [tw - sum(cw)]
+
+                        t = Table(data, colWidths=cw)
+                        style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                                              ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                              ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                                              ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                                              ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                                              ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                                              ('TOPPADDING', (0, 0), (-1, -1), 1),
+                                              ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+                                              ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+                                              ])
+                        style_t.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
+                        style_t.add('TOPPADDING', (0, 0), (-1, 0), 0)
+
+                        t.setStyle(style_t)
+
+                        fwb.append(Spacer(1, 2 * mm))
+                        fwb.append(t)
+                        fwb.append(Paragraph("<para align='right'><font size='7'>S – чувствителен; R – резистентен; I – промежуточная чувствительность</font></para>", style))
+                        fwb.append(Spacer(1, 2 * mm))
+
+                    if iss.microbiology_conclusion:
+                        fwb.append(Spacer(1, 3 * mm))
+                        fwb.append(Paragraph('Заключение', styleBold))
+                        fwb.append(Paragraph(iss.microbiology_conclusion, style))
+
+                elif not protocol_plain_text:
                     sick_result = None
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
                         sick_title = True if group.title == "Сведения ЛН" else False
@@ -1243,12 +1303,6 @@ def result_print(request):
 
     def first_pages(canvas, document):
         canvas.saveState()
-        # вывести интерактивную форму "текст"
-        if not hosp:
-            form = canvas.acroForm
-            form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12, x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
-                           width=470, height=18, textColor=black, forceBorder=False)
-            canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.setFont('FreeSansBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
         canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), num_card, number_poliklinika))
