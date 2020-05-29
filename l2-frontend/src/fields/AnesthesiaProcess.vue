@@ -37,11 +37,13 @@
 
       <div class="col-xs-10 title-anesthesia">Сильнодействующие</div>
       <div>
-        <table class="table table-bordered tb-background">
+<!--        <table class="table table-bordered tb-background">-->
+<!--        <table class="table table-condensed tb-background">-->
+        <table class="table table-hover  tb-background">
           <tr v-for="(v, k) in potent_drugs_used">
 <!--          <input type="text" class="no-outline" :value="v" @input="update(potent_drugs_used, k, $event)" v-for="(v, k) in potent_drugs_used" :key="k" :placeholder="`${k}`"/>-->
           <td class="cl-td first-column">{{k}}</td>
-          <td class="cl-td second-column"><input style="width: 100%" class="no-outline" type="text" :value="v" @input="update(potent_drugs_used, k, $event)"  :key="k" :placeholder="'количество'"/></td>
+          <td class="cl-td second-column"><input style="width: 100%" class="no-outline" type="text" :value="v" @input="update(potent_drugs_used, k, $event)"  :key="k" :placeholder="'значение'"/></td>
           </tr>
         </table>
       </div>
@@ -241,16 +243,6 @@
 </script>
 
 <style scoped lang="scss">
-  .tb-background{
-    background-color: #eee;
-  }
-  .first-column{
-    width: 160px;
-  }
-  .second-column{
-    width: 100px;
-  }
-
   .show_anesthesia {
     width: 260px;
   }
@@ -343,15 +335,17 @@
       background-color: #eee;
       width: 100%;
       padding: 5px 1px;
+      z-index: -1;
     }
-
-    input:focus,
-    input:active {
-      /*background-color: #aab2bd;*/
-      /*background-color: #ec7063;*/
-      background-color: #dc322f;
-      /*color: white;*/
+    ::placeholder{
+      color: #89909b;
     }
+    /*input:focus{*/
+    /*!*input:active {*!*/
+    /*  !*background-color: #55616B;*!*/
+    /*  background-color: #ffa;*/
+    /*  !*color: white;*!*/
+    /*}*/
 
     .no-outline:focus {
       outline: none;
@@ -391,9 +385,9 @@
     }
   }
 
-  table {
-    border-collapse: collapse;
-  }
+  /*table {*/
+  /*  border-collapse: collapse;*/
+  /*}*/
 
   th {
     background: #ccc;
@@ -401,8 +395,27 @@
   }
 
   td, th {
-    border: 1px solid #0f0f0f;
+    border-bottom: 1px solid #0f0f0f;
     padding: 4px;
+  }
+
+  tr:hover {
+    background-color: #55566b;
+    color: whitesmoke;
+  }
+  input:hover{
+    background-color: #55566b;
+    color: whitesmoke;
+  }
+
+  .tb-background{
+    background-color: #eee;
+  }
+  .first-column{
+    width: 160px;
+  }
+  .second-column{
+    width: 100px;
   }
 
 </style>
