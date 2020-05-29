@@ -36,7 +36,7 @@
               </longpress>
               <div class="field-inputs"
                    v-if="field.values_to_input.length > 0 && !confirmed &&
-                   ![10, 12, 18, 19].includes(field.field_type)">
+                   ![10, 12, 18, 19, 21].includes(field.field_type)">
                 <div class="input-values-wrap">
                   <div class="input-values">
                     <div class="inner-wrap">
@@ -121,15 +121,16 @@
                 <input :readonly="confirmed" class="form-control" style="width: 110px" type="time"
                        v-model="field.value"/>
               </div>
+              <div class="field-value" v-else-if="field.field_type === 21">
+                <AnesthesiaProcess :fields="field.values_to_input" :iss="pk" :field_pk="field.pk"/>
+              </div>
               <div class="field-value" v-else-if="field.field_type === 22">
                 <TextareaAutocomplete
                   :disabled="confirmed"
                   v-model="field.value"
                 />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 21">
-                <AnesthesiaProcess :fields="field.values_to_input" :iss="pk" :field_pk="field.pk"/>
-              </div>
+
 
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
@@ -178,7 +179,7 @@
       SearchFractionValueField,
       SearchFieldValueField,
       RadioField,
-      SelectField, VisibilityGroupWrapper, VisibilityFieldWrapper, Longpress, MKBField, FormulaField
+      SelectField, VisibilityGroupWrapper, VisibilityFieldWrapper, Longpress, MKBField, FormulaField, AnesthesiaProcess
     },
     props: {
       research: {
