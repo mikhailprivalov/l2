@@ -19,6 +19,7 @@ urlpatterns = [
     path('results-report', views.directions_results_report),
     path('paraclinic_form', views.directions_paraclinic_form),
     path('paraclinic_result', views.directions_paraclinic_result),
+    path('anesthesia_result', views.directions_anesthesia_result),
     path('paraclinic_result_confirm', views.directions_paraclinic_confirm),
     path('paraclinic_result_confirm_reset', views.directions_paraclinic_confirm_reset),
     path('paraclinic_result_history', views.directions_paraclinic_history),

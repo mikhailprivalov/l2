@@ -37,22 +37,18 @@
 
       <div class="col-xs-10 title-anesthesia">Сильнодействующие</div>
       <div>
-<!--        <table class="table table-bordered tb-background">-->
-<!--        <table class="table table-condensed tb-background">-->
-        <table class="table table-hover  tb-background">
+        <table class="table table-condensed tb-background">
           <tr v-for="(v, k) in potent_drugs_used">
-<!--          <input type="text" class="no-outline" :value="v" @input="update(potent_drugs_used, k, $event)" v-for="(v, k) in potent_drugs_used" :key="k" :placeholder="`${k}`"/>-->
           <td class="cl-td first-column">{{k}}</td>
           <td class="cl-td second-column"><input style="width: 100%" class="no-outline" type="text" :value="v" @input="update(potent_drugs_used, k, $event)"  :key="k" :placeholder="'значение'"/></td>
           </tr>
         </table>
       </div>
 
-
       <div class="col-xs-10 title-anesthesia">Наркотические</div>
       <input type="text" class="no-outline" :value="v" @input="update(narcotic_drugs_used, k, $event)" v-for="(v, k) in narcotic_drugs_used" :key="k" :placeholder="`${k}`"/>
       <div class="control-row side-bottom">
-        <button class="btn btn-blue-nb" @click="">
+        <button class="btn btn-blue-nb" @click="save_data">
           Добавить
         </button>
       </div>
@@ -140,6 +136,7 @@
   import VueTimepicker from 'vue2-timepicker/src/vue-timepicker.vue'
   import moment from 'moment'
   import * as action_types from '../store/action-types'
+  import directions_point from "../api/directions-point";
 
   export default {
     name: "AnesthesiaProcess",
@@ -204,9 +201,17 @@
     methods: {
       update(obj, prop, event) {
     	  this.$set(obj, prop, event.target.value);
-    	  console.log(obj)
-    	  console.log(this.potent_drugs_used)
-    	  console.log(this.narcotic_drugs_used)
+      },
+      async save_data() {
+        await this.$store.dispatch(action_types.INC_LOADING);
+        let temp_result = {'time': '10-00', 'potent_drugs':this.potent_drugs_used, 'narcotic_drugs': this.narcotic_drugs_used}
+        let research_data = {'iss': this.iss, 'field_pk': this.field_pk}
+        const {ok, message} = await directions_point.anesthesiaResultSave({'temp_result': temp_result, 'research_data': research_data});
+        if (ok) {
+        } else {
+          errmessage('Ошибка', message)
+        }
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       plus_temperature_start() {
         if (typeof this.temperature !== 'number') {
@@ -337,15 +342,10 @@
       padding: 5px 1px;
       z-index: -1;
     }
+
     ::placeholder{
       color: #89909b;
     }
-    /*input:focus{*/
-    /*!*input:active {*!*/
-    /*  !*background-color: #55616B;*!*/
-    /*  background-color: #ffa;*/
-    /*  !*color: white;*!*/
-    /*}*/
 
     .no-outline:focus {
       outline: none;
@@ -385,10 +385,6 @@
     }
   }
 
-  /*table {*/
-  /*  border-collapse: collapse;*/
-  /*}*/
-
   th {
     background: #ccc;
     text-align: left;
@@ -399,7 +395,8 @@
     padding: 4px;
   }
 
-  tr:hover {
+  tr:hover,
+  tr:focus {
     background-color: #55566b;
     color: whitesmoke;
   }
@@ -412,10 +409,10 @@
     background-color: #eee;
   }
   .first-column{
-    width: 160px;
+    width: 190px;
   }
   .second-column{
-    width: 100px;
+    width: 70px;
   }
 
 </style>
