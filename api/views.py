@@ -214,6 +214,10 @@ def endpoint(request):
                             "fio": direction.client.individual.fio(),
                             "card": direction.client.number_with_type(),
                         }
+
+                        result["patientData"]["fioTranslit"] = translit(result["patientData"]["fio"])
+                        result["patientData"]["cardTranslit"] = translit(result["patientData"]["card"])
+
                         results = data.get("result", {})
                         for key in results:
                             ok = False
