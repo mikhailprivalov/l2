@@ -24,8 +24,7 @@
                         <input type="password" id="inputPassword" class="form-control input-lg" name='password'
                                placeholder="Пароль">
                         <input name="next" type="hidden"
-                               value="
-                                       {% if request.GET.next %}{{ request.GET.next }}{% else %}{% if next and next != "" %}{{ next }}{% else %}/mainmenu/{% endif %}{% endif %}"/>
+                               value="{% if request.GET.next %}{{ request.GET.next }}{% else %}{% if next and next != "" %}{{ next }}{% else %}/mainmenu/{% endif %}{% endif %}"/>
                         <button class="btn btn-lg btn-primary-nb btn-block" type="submit">Вход</button>
                         <button class="btn btn-reset btn-block" type="reset" onclick="$('#inputEmail').focus()">Очистить
                             форму
