@@ -522,14 +522,14 @@ def result_print(request):
             date_t = maxdate
 
         fwb = []
-        number_poliklinika = f'({direction.client.number_poliklinika})' if direction.client.number_poliklinika else ''
+        number_poliklinika = f' ({direction.client.number_poliklinika})' if direction.client.number_poliklinika else ''
         individual_birthday = f'({strdate(direction.client.individual.birthday)})'
 
         data = [
             ["Номер:", str(dpk)],
             ["Пациент:", Paragraph(direction.client.individual.fio(), styleTableMonoBold)],
             ["Пол:", direction.client.individual.sex],
-            ["Возраст:", direction.client.individual.age_s(direction=direction) + individual_birthday],
+            ["Возраст:", "{} {}".format(direction.client.individual.age_s(direction=direction), individual_birthday)],
         ]
         data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
         data += [[Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
