@@ -17,10 +17,6 @@
             Очистить
           </button>
         </div>
-<!--        <input type="text" placeholder="SpO2"/>-->
-<!--        <input type="text" placeholder="CO2"/>-->
-<!--        <input type="text" placeholder="Систолическое давление"/>-->
-<!--        <input type="text" placeholder="Диастолическое давление"/>-->
         <table class="table table-condensed tb-background">
           <tr v-for="(v, k) in patient_params_used">
             <td class="cl-td first-column">{{k}}</td>
