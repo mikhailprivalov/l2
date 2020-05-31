@@ -2,64 +2,78 @@
   <div>
     <div class="sidebar-anesthesia"
          :class="[{show_anesthesia: this.$store.state.showMenuAnesthesiaStatus}, {hide_anesthesia: !this.$store.state.showMenuAnesthesiaStatus}]">
-      <div class="title-anesthesia">
-        <div class="col-xs-10">Течение анестезии</div>
-        <div class="col-xs-2">
-          <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="show_anesthesia_sidebar">
-            <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Закрыть"></i>
+      <div class="content">
+        <div class="title-anesthesia">
+          <div class="col-xs-10">Течение анестезии</div>
+          <div class="col-xs-2">
+            <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="show_anesthesia_sidebar">
+              <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Закрыть"></i>
+            </button>
+          </div>
+        </div>
+        <div class="time-control">
+          <vue-timepicker v-model="timeValue" format="H:mm" input-width="127px" hide-clear-button close-on-complete/>
+          <button class="btn btn-blue-nb" @click="">
+            Очистить
           </button>
         </div>
-      </div>
-      <div class="time-control">
-        <vue-timepicker style="margin-left: 3px" v-model="timeValue" format="H:mm" input-width="127px"
-                        input-class="timepicker_attr"
-                        hide-clear-button close-on-complete></vue-timepicker>
-        <button class="btn btn-blue-nb" @click="">
-          Очистить
-        </button>
-      </div>
-      <input type="text" class="no-outline" placeholder="SpO2"/>
-      <input type="text" class="no-outline" placeholder="CO2"/>
-      <input type="text" class="no-outline" placeholder="Систолическое давление"/>
-      <input type="text" class="no-outline" placeholder="Диастолическое давление"/>
-      <div class="number">
-        <button class="btn btn-blue-nb sidebar-btn sidebar-btn" @mousedown="minus_temperature_start"
-                @mouseleave="temperature_stop" @mouseup="temperature_stop">
-          <i class="fa fa-minus"/>
-        </button>
-        <input type="text" v-model.number="temperature" class="no-outline" style="width: 190px" value="36.6"
-               placeholder="Температура"/>
-        <button class="btn btn-blue-nb sidebar-btn" style="" @mousedown="plus_temperature_start"
-                @mouseleave="temperature_stop" @mouseup="temperature_stop">
-          <i class="fa fa-plus"/>
-        </button>
-      </div>
+<!--        <input type="text" placeholder="SpO2"/>-->
+<!--        <input type="text" placeholder="CO2"/>-->
+<!--        <input type="text" placeholder="Систолическое давление"/>-->
+<!--        <input type="text" placeholder="Диастолическое давление"/>-->
+        <table class="table table-condensed tb-background">
+          <tr v-for="(v, k) in patient_params_used">
+            <td class="cl-td first-column">{{k}}</td>
+            <td class="cl-td second-column"><input style="width: 100%" class="no-outline" type="text" :value="v"
+                                                   @input="update(patient_params_used, k, $event)" :key="k"
+                                                   :placeholder="'значение'"/></td>
+          </tr>
+        </table>
 
-      <div class="col-xs-10 title-anesthesia">Сильнодействующие</div>
-      <div>
+        <div class="number">
+          <button class="btn btn-blue-nb sidebar-btn" @mousedown="minus_temperature_start"
+                  @mouseleave="temperature_stop" @mouseup="temperature_stop">
+            <i class="fa fa-minus"/>
+          </button>
+          <input type="text" v-model.number="temperature"
+                 placeholder="Температура"/>
+          <button class="btn btn-blue-nb sidebar-btn" style="" @mousedown="plus_temperature_start"
+                  @mouseleave="temperature_stop" @mouseup="temperature_stop">
+            <i class="fa fa-plus"/>
+          </button>
+        </div>
+        <div class="col-xs-10 title-anesthesia">Сильнодействующие</div>
         <table class="table table-condensed tb-background">
           <tr v-for="(v, k) in potent_drugs_used">
-          <td class="cl-td first-column">{{k}}</td>
-          <td class="cl-td second-column"><input style="width: 100%" class="no-outline" type="text" :value="v" @input="update(potent_drugs_used, k, $event)"  :key="k" :placeholder="'значение'"/></td>
+            <td class="cl-td first-column">{{k}}</td>
+            <td class="cl-td second-column"><input style="width: 100%" class="no-outline" type="text" :value="v"
+                                                   @input="update(potent_drugs_used, k, $event)" :key="k"
+                                                   :placeholder="'значение'"/></td>
+          </tr>
+        </table>
+        <div class="col-xs-10 title-anesthesia">Наркотические</div>
+        <table class="table table-condensed tb-background">
+          <tr v-for="(v, k) in narcotic_drugs_used">
+            <td class="cl-td first-column">{{k}}</td>
+            <td class="cl-td second-column"><input style="width: 100%" class="no-outline" type="text" :value="v"
+                                                   @input="update(narcotic_drugs_used, k, $event)" :key="k"
+                                                   :placeholder="'значение'"/></td>
           </tr>
         </table>
       </div>
-
-      <div class="col-xs-10 title-anesthesia">Наркотические</div>
-      <input type="text" class="no-outline" :value="v" @input="update(narcotic_drugs_used, k, $event)" v-for="(v, k) in narcotic_drugs_used" :key="k" :placeholder="`${k}`"/>
-      <div class="control-row side-bottom">
+      <div class="side-bottom">
         <button class="btn btn-blue-nb" @click="save_data">
           Добавить
         </button>
       </div>
     </div>
     <button
-      style=" border-radius: 3px; padding: 4px; width: 10%; align-content: center; height: 30px; margin-bottom: 5px;"
+      style=" border-radius: 3px; padding: 4px; width: 10%; height: 30px; margin-bottom: 5px;"
       class="btn btn-blue-nb" title="Добавить значения в наркозную карту" v-tippy @click="show_anesthesia_sidebar">
-      <i class="fa fa-heartbeat fa-lg" aria-hidden="true"></i>
+      <i class="fa fa-heartbeat fa-lg"></i>
       Добавить
     </button>
-    <table width="100%" cellspacing="0" border="1">
+    <table class="table table-bordered">
       <tr>
         <th>SpO2</th>
         <th>10:05</th>
@@ -165,27 +179,29 @@
           mm: '',
         },
         temperature: 36.6,
-        interval: false,
+        interval: null,
         potent_drugs_other: {},
         potent_drugs_used: {},
         potent_data: {},
         narcotic_drugs_other: {},
         narcotic_drugs_used: {},
         narcotic_data: {},
+        patient_params_used: {},
+        patient_params_other: {}
 
       }
     },
     mounted() {
       for (let f of this.fields) {
-        if (f.type === 'Сильнодействующие' && f.default=== true) {
+        if (f.type === 'Сильнодействующие' && f.default === true) {
           this.potent_drugs_used[f.title] = ''
-        }
-        else if (f.type === 'Наркотические' && f.default=== true) {
+        } else if (f.type === 'Наркотические' && f.default === true) {
           this.narcotic_drugs_used[f.title] = ''
+        } else if (f.type === 'Показатели человека' && f.default === true) {
+          this.patient_params_used[f.title] = ''
         }
       }
-      console.log(this.narcotic_drugs_all, this.narcotic_drugs_used, this.potent_drugs_all, this.potent_drugs_used)
-      console.log(this.iss, this.field_pk)
+      this.getCurrentTime();
     },
     watch: {
       temperature() {
@@ -200,13 +216,20 @@
     },
     methods: {
       update(obj, prop, event) {
-    	  this.$set(obj, prop, event.target.value);
+        this.$set(obj, prop, event.target.value);
       },
       async save_data() {
         await this.$store.dispatch(action_types.INC_LOADING);
-        let temp_result = {'time': '10-00', 'potent_drugs':this.potent_drugs_used, 'narcotic_drugs': this.narcotic_drugs_used}
+        let temp_result = {
+          'time': '10-00',
+          'potent_drugs': this.potent_drugs_used,
+          'narcotic_drugs': this.narcotic_drugs_used
+        }
         let research_data = {'iss': this.iss, 'field_pk': this.field_pk}
-        const {ok, message} = await directions_point.anesthesiaResultSave({'temp_result': temp_result, 'research_data': research_data});
+        const {ok, message} = await directions_point.anesthesiaResultSave({
+          'temp_result': temp_result,
+          'research_data': research_data
+        });
         if (ok) {
         } else {
           errmessage('Ошибка', message)
@@ -223,7 +246,7 @@
       },
       temperature_stop() {
         clearInterval(this.interval);
-        this.interval = false
+        this.interval = null
       },
       minus_temperature_start() {
         if (typeof this.temperature !== 'number') {
@@ -237,7 +260,6 @@
       getCurrentTime() {
         this.timeValue.mm = moment().format('mm');
         this.timeValue.H = moment().format('H');
-        console.log('test')
       },
       show_anesthesia_sidebar() {
         this.$store.dispatch(action_types.CHANGE_STATUS_MENU_ANESTHESIA);
@@ -257,17 +279,13 @@
   }
 
   .sidebar-anesthesia {
-    display: flex;
-    align-items: stretch;
-    flex-direction: column;
-    align-content: stretch;
-    height: 85%;
-    position: fixed; /* Stay in place */
-    z-index: 1;
+    height: 600px;
+    position: fixed;
     top: 100px;
     left: 0;
     background-color: #eee;
     overflow-x: hidden;
+    overflow-y: hidden;
     transition: 0.6s;
     border-right: 1px solid #56616c;
     border-bottom: 1px solid #56616c;
@@ -278,8 +296,6 @@
       left: 0;
       right: 0;
       border-radius: 0;
-      display: flex;
-      flex-direction: row;
       height: 30px;
 
       .btn {
@@ -295,7 +311,7 @@
       background-color: #56616c;
       display: flex;
       flex-direction: row;
-      color: whitesmoke;
+      color: #f5f5f5;
       padding-top: 5px;
 
       .sidebar-btn {
@@ -306,11 +322,12 @@
     .number {
       display: flex;
       flex-direction: row;
+      width: 259px;
 
       .sidebar-btn {
         margin-top: 0px;
         height: 31px;
-        width: 35px;
+        width: 40px;
       }
 
       input {
@@ -318,38 +335,31 @@
         margin-right: 0px;
         text-align: center;
       }
-
-      .minus, .plus {
-        width: 20px;
-        height: 20px;
-        background: #7f8c9a;
-        border-radius: 4px;
-        padding: 8px 5px 8px 5px;
-        border: 1px solid #ddd;
-        display: inline-block;
-        vertical-align: middle;
-        text-align: center;
-      }
     }
 
-    input {
-      border-top-style: hidden;
-      border-right-style: hidden;
-      border-left-style: hidden;
-      border-bottom-style: hidden;
-      background-color: #eee;
-      width: 100%;
-      padding: 5px 1px;
-      z-index: -1;
+    .content {
+      overflow-y: auto;
+      overflow-x: hidden;
+      height: 570px;
     }
+  }
 
-    ::placeholder{
-      color: #89909b;
-    }
+  input {
+    border-top-style: hidden;
+    border-right-style: hidden;
+    border-left-style: hidden;
+    border-bottom-style: hidden;
+    background-color: #eee;
+    width: 100%;
+    padding: 5px 1px;
+  }
 
-    .no-outline:focus {
-      outline: none;
-    }
+  ::placeholder {
+    color: #89909b;
+  }
+
+  :focus {
+    outline: none;
   }
 
   .time-control {
@@ -366,19 +376,13 @@
 
   .sidebar-btn {
     border-radius: 0;
-
-    &:not(.text-center) {
-      text-align: left;
-    }
-
     border-top: none !important;
     border-right: none !important;
     border-left: none !important;
     padding: 0 12px;
     height: 24px;
 
-    &:not(:hover), &.active-btn:hover {
-      cursor: default;
+    &:not(:hover) {
       background-color: rgba(#000, .02) !important;
       color: #000;
       border-bottom: 1px solid #b1b1b1 !important;
@@ -395,23 +399,23 @@
     padding: 4px;
   }
 
-  tr:hover,
-  tr:focus {
-    background-color: #55566b;
-    color: whitesmoke;
-  }
-  input:hover{
-    background-color: #55566b;
-    color: whitesmoke;
+  tr:hover {
+    &, & input {
+      background-color: #55566b;
+      color: #f5f5f5;
+    }
   }
 
-  .tb-background{
+  .tb-background {
     background-color: #eee;
+    margin-bottom: 0;
   }
-  .first-column{
+
+  .first-column {
     width: 190px;
   }
-  .second-column{
+
+  .second-column {
     width: 70px;
   }
 

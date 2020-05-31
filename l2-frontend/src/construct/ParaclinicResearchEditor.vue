@@ -274,7 +274,7 @@
 
     export default {
         name: 'paraclinic-research-editor',
-        components: {NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor},
+        components: {NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor, ConfigureAnesthesiaField},
         props: {
             pk: {
                 type: Number,

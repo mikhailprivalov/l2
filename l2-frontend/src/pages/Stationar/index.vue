@@ -143,7 +143,7 @@
           <div class="research-title">
             <div class="research-left">
               <button style="margin-right: 5px" class="btn btn-blue-nb" @click="show_anesthesia" title="Добавить значения в наркозную карту" v-tippy v-if="row.research.title.includes('анестез')">
-                <i class="fa fa-heartbeat fa-lg" aria-hidden="true"></i>
+                <i class="fa fa-heartbeat fa-lg"></i>
               </button>
               {{row.research.title}}
               <span class="comment" v-if="row.research.comment"> [{{row.research.comment}}]</span>
