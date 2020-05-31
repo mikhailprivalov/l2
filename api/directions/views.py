@@ -1137,20 +1137,9 @@ def directions_anesthesia_result(request):
     rb = json.loads(request.body)
     temp_result = rb.get("temp_result", {})
     research_data = rb.get("temp_result", {})
-
-    print(temp_result)
-    # if not ParaclinicInputField.objects.filter(pk=research_data["field_pk"]).exists():
-    #     continue
-    # f = ParaclinicInputField.objects.get(pk=research_data["field_pk"])
-    # if not ParaclinicResult.objects.filter(issledovaniye=research_data["iss"], field=f).exists():
-    #     f_result = ParaclinicResult(issledovaniye=research_data["iss"], field=f, value="")
-    # else:
-    #     f_result = ParaclinicResult.objects.filter(issledovaniye=iss, field=f)[0]
-    # f_result.value = field["value"]
-    # f_result.field_type = f.field_type
-    # f_result.save()
-
+    print(temp_result, research_data)
     return JsonResponse(response)
+
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_result(request):

@@ -226,10 +226,6 @@
           'temp_result': temp_result,
           'research_data': research_data
         });
-        if (ok) {
-        } else {
-          errmessage('Ошибка', message)
-        }
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       plus_temperature_start() {
