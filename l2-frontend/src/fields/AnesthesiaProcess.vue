@@ -222,7 +222,7 @@
           'narcotic_drugs': this.narcotic_drugs_used
         }
         let research_data = {'iss': this.iss, 'field_pk': this.field_pk}
-        const {ok, message} = await directions_point.anesthesiaResultSave({
+        await directions_point.anesthesiaResultSave({
           'temp_result': temp_result,
           'research_data': research_data
         });
