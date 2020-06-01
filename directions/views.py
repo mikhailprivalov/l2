@@ -677,12 +677,15 @@ def get_one_dir(request):
                                              dateformat.format(tmp2.data_sozdaniya.date(), settings.DATE_FORMAT)),
                                          "doc": {"fio": "" if not tmp2.doc else tmp2.doc.get_fio(),
                                                  "otd": "" if not tmp2.doc else tmp2.doc.podrazdeleniye.title},
-                                         "lab": tmp[0].research.get_podrazdeleniye().title,
-                                         "type": tmp[0].research.get_podrazdeleniye().p_type,
                                          "imported_from_rmis": tmp2.imported_from_rmis,
                                          "imported_org": "" if not tmp2.imported_org else tmp2.imported_org.title,
                                          "full_confirm": tmp2.is_all_confirm()
                                          }
+                podr = tmp[0].research.get_podrazdeleniye()
+                if podr:
+                    response["direction"]["lab"] = podr.title
+                    response["direction"]["type"] = podr.p_type
+
                 response["tubes"] = {}
                 tubes_buffer = {}
 
