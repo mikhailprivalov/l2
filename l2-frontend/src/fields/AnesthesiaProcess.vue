@@ -2,30 +2,34 @@
   <div>
     <div class="sidebar-anesthesia"
          :class="[{show_anesthesia: this.$store.state.showMenuAnesthesiaStatus}, {hide_anesthesia: !this.$store.state.showMenuAnesthesiaStatus}]">
-      <div class="content">
-        <div class="title-anesthesia">
-          <div class="col-xs-10">Течение анестезии</div>
-          <div class="col-xs-2">
-            <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="show_anesthesia_sidebar">
-              <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Закрыть"></i>
-            </button>
-          </div>
-        </div>
-        <div class="time-control">
-          <vue-timepicker v-model="timeValue" format="H:mm" input-width="127px" hide-clear-button close-on-complete/>
-          <button class="btn btn-blue-nb" @click="">
-            Очистить
+      <div class="title-anesthesia">
+        <div class="col-xs-10">Течение анестезии</div>
+        <div class="col-xs-2">
+          <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="show_anesthesia_sidebar">
+            <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Закрыть"></i>
           </button>
         </div>
+      </div>
+      <div class="time-control row">
+        <vue-timepicker class="col-xs-6" v-model="timeValue" format="H:mm" hide-clear-button close-on-complete/>
+        <button class="btn btn-blue-nb col-xs-6" @click="">
+          Очистить
+        </button>
+      </div>
+      <div class="content">
+        <div class="col-xs-12 title-anesthesia">Показатели человека</div>
         <table class="table table-condensed tb-background">
+          <colgroup>
+            <col width='190'/>
+            <col width='70'/>
+          </colgroup>
           <tr v-for="(v, k) in patient_params_used">
-            <td class="cl-td first-column">{{k}}</td>
-            <td class="cl-td second-column"><input style="width: 100%" class="no-outline" type="text" :value="v"
+            <td class="cl-td">{{k}}</td>
+            <td class="cl-td"><input style="width: 100%" class="no-outline" type="text" :value="v"
                                                    @input="update(patient_params_used, k, $event)" :key="k"
                                                    :placeholder="'значение'"/></td>
           </tr>
         </table>
-
         <div class="number">
           <button class="btn btn-blue-nb sidebar-btn" @mousedown="minus_temperature_start"
                   @mouseleave="temperature_stop" @mouseup="temperature_stop">
@@ -38,28 +42,39 @@
             <i class="fa fa-plus"/>
           </button>
         </div>
-        <div class="col-xs-10 title-anesthesia">Сильнодействующие</div>
+        <div class="col-xs-12 title-anesthesia">Сильнодействующие</div>
         <table class="table table-condensed tb-background">
+          <colgroup>
+            <col width='190'/>
+            <col width='70'/>
+          </colgroup>
           <tr v-for="(v, k) in potent_drugs_used">
-            <td class="cl-td first-column">{{k}}</td>
-            <td class="cl-td second-column"><input style="width: 100%" class="no-outline" type="text" :value="v"
+            <td class="cl-td">{{k}}</td>
+            <td class="cl-td"><input style="width: 100%" class="no-outline" type="text" :value="v"
                                                    @input="update(potent_drugs_used, k, $event)" :key="k"
                                                    :placeholder="'значение'"/></td>
           </tr>
         </table>
-        <div class="col-xs-10 title-anesthesia">Наркотические</div>
-        <table class="table table-condensed tb-background">
+        <div class="col-xs-12 title-anesthesia">Наркотические</div>
+        <table class="table table-condensed tb-background col-xs-12">
+          <colgroup>
+            <col width='190'/>
+            <col width='70'/>
+          </colgroup>
           <tr v-for="(v, k) in narcotic_drugs_used">
-            <td class="cl-td first-column">{{k}}</td>
-            <td class="cl-td second-column"><input style="width: 100%" class="no-outline" type="text" :value="v"
+            <td class="cl-td ">{{k}}</td>
+            <td class="cl-td "><input style="width: 100%" class="no-outline" type="text" :value="v"
                                                    @input="update(narcotic_drugs_used, k, $event)" :key="k"
                                                    :placeholder="'значение'"/></td>
           </tr>
         </table>
       </div>
-      <div class="side-bottom">
-        <button class="btn btn-blue-nb" @click="save_data">
+      <div class="side-bottom row">
+        <button class="btn btn-blue-nb col-xs-6" @click="save_data">
           Добавить
+        </button>
+        <button class="btn btn-blue-nb col-xs-6" @click="save_data">
+          Обновить
         </button>
       </div>
     </div>
@@ -289,26 +304,18 @@
       right: 0;
       border-radius: 0;
       height: 30px;
-
       .btn {
         border-radius: 0;
-        padding: 5px 4px;
-        width: 100%;
       }
     }
 
     .title-anesthesia {
       height: 30px;
-      width: 260px;
       background-color: #56616c;
       display: flex;
       flex-direction: row;
       color: #f5f5f5;
       padding-top: 5px;
-
-      .sidebar-btn {
-        border-bottom: none !important;
-      }
     }
 
     .number {
@@ -317,14 +324,14 @@
       width: 259px;
 
       .sidebar-btn {
-        margin-top: 0px;
+        margin-top: 0;
         height: 31px;
         width: 40px;
       }
 
       input {
-        margin-left: 0px;
-        margin-right: 0px;
+        margin-left: 0;
+        margin-right: 0;
         text-align: center;
       }
     }
@@ -332,15 +339,19 @@
     .content {
       overflow-y: auto;
       overflow-x: hidden;
-      height: 570px;
+      height: 510px;
+
+      tr:hover {
+        &, & input {
+          background-color: #55566b;
+          color: #f5f5f5;
+        }
+      }
     }
   }
 
   input {
-    border-top-style: hidden;
-    border-right-style: hidden;
-    border-left-style: hidden;
-    border-bottom-style: hidden;
+    border: none;
     background-color: #eee;
     width: 100%;
     padding: 5px 1px;
@@ -357,27 +368,24 @@
   .time-control {
     display: flex;
     flex-direction: row;
-
     .btn {
       border-radius: 0;
       padding: 5px 4px;
       width: 50%;
       height: 31px;
+      border: none !important;
     }
   }
 
   .sidebar-btn {
     border-radius: 0;
-    border-top: none !important;
-    border-right: none !important;
-    border-left: none !important;
+    border: none !important;
     padding: 0 12px;
-    height: 24px;
+    height: 26px;
 
     &:not(:hover) {
       background-color: rgba(#000, .02) !important;
       color: #000;
-      border-bottom: 1px solid #b1b1b1 !important;
     }
   }
 
@@ -391,24 +399,10 @@
     padding: 4px;
   }
 
-  tr:hover {
-    &, & input {
-      background-color: #55566b;
-      color: #f5f5f5;
-    }
-  }
 
   .tb-background {
     background-color: #eee;
     margin-bottom: 0;
-  }
-
-  .first-column {
-    width: 190px;
-  }
-
-  .second-column {
-    width: 70px;
   }
 
 </style>

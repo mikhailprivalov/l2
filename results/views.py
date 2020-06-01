@@ -1010,14 +1010,14 @@ def result_print(request):
                             fwb.append(Paragraph("<font face=\"FreeSansBold\">КОЕ:</font> " + culture.koe, style))
 
                         data = [
-                            [Paragraph(x, styleBold) for x in ['Антибиотик', 'Диаметр', 'Чувствительность']]
+                            [Paragraph(x, styleBold) for x in ['Антибиотик', 'Чувствительность', 'Диаметр']]
                         ]
 
                         for anti in culture.culture_antibiotic.all():
                             data.append([Paragraph(x, style) for x in [
                                 anti.antibiotic.title,
-                                anti.dia,
                                 anti.sensitivity,
+                                anti.dia
                             ]])
 
                         cw = [int(tw * 0.4), int(tw * 0.3)]
