@@ -5,15 +5,15 @@
       <div class="title-anesthesia">
         <div class="col-xs-10">Течение анестезии</div>
         <div class="col-xs-2">
-          <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" @click="show_anesthesia_sidebar">
+          <button class="btn btn-blue-nb sidebar-btn close-btn" style="font-size: 14px" @click="show_anesthesia_sidebar">
             <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Закрыть"></i>
           </button>
         </div>
       </div>
       <div class="time-control row">
         <vue-timepicker class="col-xs-6" v-model="timeValue" format="H:mm" hide-clear-button close-on-complete/>
-        <button class="btn btn-blue-nb col-xs-6" @click="">
-          Очистить
+        <button class="btn btn-blue-nb col-xs-6" @click="getCurrentTime">
+          <i class="fa fa-clock-o"/> Текущее время
         </button>
       </div>
       <div class="content">
@@ -268,8 +268,14 @@
         this.timeValue.mm = moment().format('mm');
         this.timeValue.H = moment().format('H');
       },
+      clear_data(obj) {
+        Object.entries(obj).forEach(([key, value]) => obj[key] = '');
+      },
       show_anesthesia_sidebar() {
         this.$store.dispatch(action_types.CHANGE_STATUS_MENU_ANESTHESIA);
+        this.clear_data(this.potent_drugs_used)
+        this.clear_data(this.narcotic_drugs_used)
+        this.clear_data(this.patient_params_used)
         this.getCurrentTime();
       }
     }
@@ -316,6 +322,12 @@
       flex-direction: row;
       color: #f5f5f5;
       padding-top: 5px;
+      .sidebar-btn {
+        height: 27px;
+        width: 27px;
+        padding: 0 8px;
+
+      }
     }
 
     .number {
