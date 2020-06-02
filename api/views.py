@@ -6,7 +6,7 @@ import yaml
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -179,7 +179,7 @@ def send(request):
 
 @csrf_exempt
 def endpoint(request):
-    result = {"answer": False, "body": ""}
+    result = {"answer": False, "body": "", "patientData": {}}
     data = json.loads(request.POST.get("result", request.GET.get("result", "{}")))
     api_key = request.POST.get("key", request.GET.get("key", ""))
     message_type = data.get("message_type", "C")
@@ -209,6 +209,15 @@ def endpoint(request):
                     pks = []
                     oks = []
                     if direction:
+                        direction: directions.Napravleniya = direction
+                        result["patientData"] = {
+                            "fio": direction.client.individual.fio(),
+                            "card": direction.client.number_with_type(),
+                        }
+
+                        result["patientData"]["fioTranslit"] = translit(result["patientData"]["fio"])
+                        result["patientData"]["cardTranslit"] = translit(result["patientData"]["card"])
+
                         results = data.get("result", {})
                         for key in results:
                             ok = False
@@ -424,13 +433,16 @@ def current_user_info(request):
 
 @login_required
 def directive_from(request):
-    from users.models import DoctorProfile
     data = []
-    for dep in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by('title'):
+    for dep in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).prefetch_related(
+        Prefetch(
+            'doctorprofile_set', queryset=users.DoctorProfile.objects.filter(user__groups__name="Лечащий врач").order_by("fio")
+        )
+    ).order_by('title'):
         d = {
             "pk": dep.pk,
             "title": dep.title,
-            "docs": [{"pk": x.pk, "fio": x.fio} for x in DoctorProfile.objects.filter(podrazdeleniye=dep, user__groups__name="Лечащий врач").order_by("fio")],
+            "docs": [{"pk": x.pk, "fio": x.fio} for x in dep.doctorprofile_set.all()],
         }
         data.append(d)
 

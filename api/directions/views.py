@@ -1,41 +1,42 @@
 import collections
+import re
 import time
+from datetime import datetime, time as dtime
 from operator import itemgetter
 
 import simplejson as json
+from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, Prefetch
+from django.http import HttpRequest
 from django.http import JsonResponse
 from django.utils import dateformat
+from django.utils import timezone
 
 from api import sql_func
 from api.dicom import search_dicom_study
+from api.patients.views import save_dreg
 from api.sql_func import get_fraction_result, get_field_result
 from api.stationar.stationar_func import forbidden_edit_dir
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
-from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult, Recipe, MethodsOfTaking, ExternalOrganization
+from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult, Recipe, MethodsOfTaking, \
+    ExternalOrganization, MicrobiologyResultCulture, \
+    MicrobiologyResultCultureAntibiotic
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
+from laboratory import utils
 from laboratory.decorators import group_required
+from laboratory.settings import DICOM_SERVER
 from laboratory.utils import strdatetime, strdate, tsdatetime, start_end_year, strfdatetime, current_time
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
-from utils.dates import try_parse_range
-import re
 from utils.dates import normalize_date
-from api.patients.views import save_dreg
-from django.utils import timezone
-from django.http import HttpRequest
-from datetime import datetime, time as dtime
+from utils.dates import try_parse_range
 from .sql_func import get_history_dir
-from laboratory.settings import DICOM_SERVER
-from laboratory import utils
-from dateutil.relativedelta import relativedelta
-
 
 TADP = SettingManager.get("tadp", default='Температура', default_type='s')
 
@@ -878,15 +879,39 @@ def directions_paraclinic_form(request):
     if not request.user.is_superuser:
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
 
-    dn = Napravleniya.objects.filter(pk=pk)
+    dn = Napravleniya.objects \
+        .filter(pk=pk) \
+        .select_related('client', 'client__base', 'client__individual', 'doc', 'doc__podrazdeleniye') \
+        .prefetch_related(
+            Prefetch(
+                'issledovaniya_set',
+                queryset=(
+                    Issledovaniya.objects.all() if force_form else Issledovaniya.objects.filter(Q(research__is_paraclinic=True, **add_fr) | Q(research__is_doc_refferal=True)
+                                                                                                | Q(research__is_treatment=True) | Q(research__is_stom=True) | Q(
+                        research__is_microbiology=True))
+                ).select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')
+                .prefetch_related(
+                    Prefetch(
+                        'research__paraclinicinputgroups_set',
+                        queryset=ParaclinicInputGroups.objects.filter(hide=False).order_by("order").prefetch_related(
+                            Prefetch(
+                                'paraclinicinputfield_set',
+                                queryset=ParaclinicInputField.objects.filter(hide=False).order_by("order")
+                            )
+                        )
+                    ),
+                    Prefetch(
+                        'recipe_set',
+                        queryset=Recipe.objects.all().order_by('pk')
+                    ),
+                )
+                .distinct()
+            )
+        )
+
     if dn.exists():
         d = dn[0]
-        df = Issledovaniya.objects.filter(napravleniye=d)
-        if not force_form:
-            df = df.filter(Q(research__is_paraclinic=True, **add_fr) | Q(research__is_doc_refferal=True)
-                           | Q(research__is_treatment=True) | Q(research__is_stom=True) | Q(
-                research__is_microbiology=True))
-            df = df.distinct()
+        df = d.issledovaniya_set.all()
 
         if df.exists():
             response["ok"] = True
@@ -920,6 +945,7 @@ def directions_paraclinic_form(request):
             }
 
             response["researches"] = []
+            i: Issledovaniya
             for i in df:
                 if i.research.is_doc_refferal:
                     response["has_doc_referral"] = True
@@ -944,6 +970,7 @@ def directions_paraclinic_form(request):
                         "version": i.pk * 10000,
                         "is_paraclinic": i.research.is_paraclinic,
                         "is_doc_refferal": i.research.is_doc_refferal,
+                        "is_microbiology": i.research.is_microbiology,
                         "is_treatment": i.research.is_treatment,
                         "is_stom": i.research.is_stom,
                         "wide_headers": i.research.wide_headers,
@@ -968,14 +995,39 @@ def directions_paraclinic_form(request):
                     "more": [x.research_id for x in Issledovaniya.objects.filter(parent=i)],
                     "sub_directions": [],
                     "recipe": [],
-                    "microbiology": [],
                     "lab_comment": i.lab_comment,
                     "forbidden_edit": forbidden_edit,
                     "maybe_onco": i.maybe_onco,
                 }
 
                 if i.research.is_microbiology:
-                    pass  # TODO: Fill microbiology results
+                    iss["microbiology"] = {
+                        "bacteries": [],
+                        "conclusion": i.microbiology_conclusion,
+                    }
+
+                    for br in MicrobiologyResultCulture.objects.filter(issledovaniye=i):
+                        bactery = {
+                            "resultPk": br.pk,
+                            "bacteryPk": br.culture.pk,
+                            "bacteryTitle": br.culture.title,
+                            "bacteryGroupTitle": br.culture.group_culture.title if br.culture.group_culture else '',
+                            "koe": br.koe,
+                            "antibiotics": [],
+                            "selectedGroup": {},
+                            "selectedAntibiotic": {},
+                            "selectedSet": {},
+                        }
+
+                        for ar in MicrobiologyResultCultureAntibiotic.objects.filter(result_culture=br):
+                            bactery["antibiotics"].append({
+                                "pk": ar.antibiotic.pk,
+                                "resultPk": ar.pk,
+                                "sri": ar.sensitivity,
+                                "dia": ar.dia,
+                            })
+
+                        iss["microbiology"]["bacteries"].append(bactery)
 
                 if not force_form:
                     for sd in Napravleniya.objects.filter(parent=i):
@@ -1005,7 +1057,7 @@ def directions_paraclinic_form(request):
                     }
 
                     if not force_form:
-                        for rp in Recipe.objects.filter(issledovaniye=i).order_by('pk'):
+                        for rp in i.recipe_set.all():
                             iss["recipe"].append({
                                 "pk": rp.pk,
                                 "prescription": rp.drug_prescription,
@@ -1023,12 +1075,11 @@ def directions_paraclinic_form(request):
                         "title": rt.title,
                     })
 
-                for group in ParaclinicInputGroups.objects.filter(research=i.research, hide=False).order_by("order"):
+                for group in i.research.paraclinicinputgroups_set.all():
                     g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
-                         "hide": group.hide, "fields": [], "visibility": group.visibility}
-                    for field in ParaclinicInputField.objects.filter(group=group, hide=False).order_by("order"):
-                        result_field = None if not ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists() \
-                            else ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0]
+                         "hide": group.hide, "display_hidden": False, "fields": [], "visibility": group.visibility}
+                    for field in group.paraclinicinputfield_set.all():
+                        result_field: ParaclinicResult = ParaclinicResult.objects.filter(issledovaniye=i, field=field).first()
                         field_type = field.field_type if not result_field else result_field.get_field_type()
                         g["fields"].append({
                             "pk": field.pk,
@@ -1192,6 +1243,45 @@ def directions_paraclinic_result(request):
             iss.napravleniye.visit_who_mark = request.user.doctorprofile
             iss.napravleniye.visit_date = timezone.now()
             iss.napravleniye.save()
+        if iss.research.is_microbiology:
+            mb = request_data.get('microbiology', {})
+            if mb:
+                iss.microbiology_conclusion = mb.get('conclusion')
+
+                has_bacteries = []
+                has_anti = []
+
+                for br in mb.get('bacteries', []):
+                    if br['resultPk'] == -1:
+                        bactery = MicrobiologyResultCulture(
+                            issledovaniye=iss,
+                            culture_id=br['bacteryPk'],
+                            koe=br['koe']
+                        )
+                    else:
+                        bactery = MicrobiologyResultCulture.objects.get(pk=br['resultPk'])
+                        bactery.culture_id = br['bacteryPk']
+                        bactery.koe = br['koe']
+                    bactery.save()
+                    has_bacteries.append(bactery.pk)
+
+                    for ar in br['antibiotics']:
+                        if ar['resultPk'] == -1:
+                            anti = MicrobiologyResultCultureAntibiotic(
+                                result_culture=bactery,
+                                antibiotic_id=ar['pk'],
+                                sensitivity=ar['sri'],
+                                dia=ar['dia']
+                            )
+                        else:
+                            anti = MicrobiologyResultCultureAntibiotic.objects.get(pk=ar['resultPk'])
+                            anti.antibiotic_id = ar['pk']
+                            anti.sensitivity = ar['sri']
+                            anti.dia = ar['dia']
+                        anti.save()
+                        has_anti.append(anti.pk)
+                MicrobiologyResultCulture.objects.filter(issledovaniye=iss).exclude(pk__in=has_bacteries).delete()
+                MicrobiologyResultCultureAntibiotic.objects.filter(result_culture__issledovaniye=iss).exclude(pk__in=has_anti).delete()
 
         iss.purpose_id = request_data.get("purpose")
         iss.first_time = request_data.get("first_time", False)
@@ -1497,7 +1587,7 @@ def purposes(request):
 
 def external_organizations(request):
     result = [
-        {"pk": "NONE", "title": " – Не выбрано"}
+        {"pk": "NONE", "title": " – Не выбрано"},
     ]
     for e in ExternalOrganization.objects.filter(hide=False).order_by('pk'):
         result.append({

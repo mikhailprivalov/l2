@@ -1,5 +1,7 @@
+import functools
 from datetime import datetime, time
 
+from django.db import reset_queries, connection
 from django.utils import timezone
 from django.utils.timezone import pytz
 
@@ -68,3 +70,26 @@ def start_end_year():
     end_date = datetime.combine(d2, time.max).astimezone(user_timezone)
 
     return start_date, end_date
+
+
+def query_debugger(func):
+    import time
+
+    @functools.wraps(func)
+    def inner_func(*args, **kwargs):
+        reset_queries()
+
+        start_queries = len(connection.queries)
+
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+
+        end_queries = len(connection.queries)
+
+        print(f"Function : {func.__name__}")
+        print(f"Number of Queries : {end_queries - start_queries}")
+        print(f"Finished in : {(end - start):.2f}s")
+        return result
+
+    return inner_func

@@ -3,13 +3,11 @@ from collections import defaultdict
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models import Q
 from django.http import JsonResponse
-from django.utils.decorators import method_decorator
-from django.views import View
-from django.core.cache import cache
 
 import users.models as users
-from directory.models import Researches as DResearches, AutoAdd, ParaclinicInputGroups, Fractions, \
+from directory.models import Researches as DResearches, ParaclinicInputGroups, Fractions, \
     ParaclinicTemplateName, ParaclinicInputField, ParaclinicTemplateField, HospitalService
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
@@ -17,38 +15,37 @@ from researches.models import Tubes
 from slog.models import Log
 
 
-class ResearchesTemplates(View):
-    def get(self, request):
-        from django.db.models import Q
+@login_required
+def get_researches_templates(request):
+    templates = []
+    for t in users.AssignmentTemplates.objects.filter(global_template=True) \
+        .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
+                Q(doc=request.user.doctorprofile) |
+                Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)).prefetch_related('assignmentresearches_set'):
+        templates.append({"values": [x.research_id for x in t.assignmentresearches_set.all()],
+                          "pk": t.pk,
+                          "title": t.title,
+                          "for_current_user": t.doc_id is not None,
+                          "for_users_department": t.podrazdeleniye_id is not None})
 
-        templates = []
-        for t in users.AssignmentTemplates.objects.filter(global_template=True) \
-            .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
-                    Q(doc=request.user.doctorprofile) |
-                    Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
-            templates.append({"values": [x.research_id for x in users.AssignmentResearches.objects.filter(template=t)],
-                              "pk": t.pk,
-                              "title": t.title,
-                              "for_current_user": t.doc is not None,
-                              "for_users_department": t.podrazdeleniye is not None})
-        cache.set('view:ResearchesTemplates', templates, 100)
-
-        return JsonResponse({"templates": templates})
-
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        return super(self.__class__, self).dispatch(request, *args, **kwargs)
+    return JsonResponse({"templates": templates})
 
 
 def get_researches(request):
-    tubes = []
     deps = defaultdict(list)
 
-    res = DResearches.objects.filter(hide=False).exclude(pk__in=[x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]).distinct().order_by('title')
+    res = DResearches.objects\
+        .filter(hide=False)\
+        .exclude(pk__in=[x.pk for x in request.user.doctorprofile.restricted_to_direct.all()])\
+        .select_related('podrazdeleniye', 'comment_variants')\
+        .prefetch_related('localization', 'service_location', 'a', 'b')\
+        .distinct()\
+        .order_by('title')
 
+    r: DResearches
     for r in res:
-        autoadd = [x.b_id for x in AutoAdd.objects.filter(a=r)]
-        addto = [x.a_id for x in AutoAdd.objects.filter(b=r)]
+        autoadd = [x.b_id for x in r.a.all()]
+        addto = [x.a_id for x in r.b.all()]
 
         deps[r.reversed_type].append(
             {"pk": r.pk,
@@ -71,12 +68,7 @@ def get_researches(request):
              "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location.all()],
              })
 
-    for t in Tubes.objects.all():
-        tubes.append({
-            "pk": t.pk,
-            "title": t.title,
-            "color": t.color
-        })
+    tubes = list(Tubes.objects.values('pk', 'title', 'color'))
 
     result = {"researches": deps, "tubes": tubes}
 

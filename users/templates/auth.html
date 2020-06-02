@@ -26,7 +26,9 @@
                         <input name="next" type="hidden"
                                value="{% if request.GET.next %}{{ request.GET.next }}{% else %}{% if next and next != "" %}{{ next }}{% else %}/mainmenu/{% endif %}{% endif %}"/>
                         <button class="btn btn-lg btn-primary-nb btn-block" type="submit">Вход</button>
-                        <button class="btn btn-reset btn-block" type="reset" onclick="$('#inputEmail').focus()">Очистить форму</button>
+                        <button class="btn btn-reset btn-block" type="reset" onclick="$('#inputEmail').focus()">Очистить
+                            форму
+                        </button>
                     </div>
                 </div>
             </form>
@@ -144,5 +146,12 @@
             background: #ccc;
             border-color: #ccc;
         }
+
+        @media (max-width: 450px) {
+            .form-signin {
+                width: 100%;
+            }
+        }
+
     </style>
 {% endblock %}

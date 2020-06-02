@@ -98,7 +98,7 @@
                       v-if="selected2.title !== 'Все'"
                       v-tippy="{ placement : 'bottom'}" title="Удалть из Набора"
                       @click="delFromlistSetsElements(element)">
-                <i class="fa fa-times" />
+                <i class="fa fa-times"/>
               </button>
             </div>
           </div>
@@ -112,24 +112,38 @@
         </button>
       </div>
     </div>
+
+    <div class="sub-buttons">
+      <button class="btn btn-blue-nb" @click="openFcafbg" v-if="searchTypesGroups === 'Группы'">
+        Быстрое создание и заполнение: {{searchTypesObject}} – {{searchTypesGroups}}
+      </button>
+    </div>
+
     <bacteria-edit-title-group v-if="group_edit_open"
                                :group_obj="selected2"
                                :typesObject="searchTypesObject"
                                :typesGroups="searchTypesGroups"/>
+
+    <fast-create-and-fill-bacteria-group v-if="isFcafbgOpen"
+                                         :typesObject="searchTypesObject"
+                                         :typesGroups="searchTypesGroups"/>
   </div>
 </template>
 
 <script>
   import bacteria_point from '../api/bacteria-point'
   import vSelect from 'vue-select'
+  import 'vue-select/dist/vue-select.css';
   import draggable from 'vuedraggable'
   import RadioField from '../fields/RadioField'
-  import BacteriaEditTitleGroup from './BacteriaEditTitleGroup'
+  import BacteriaEditTitleGroup from '../modals/BacteriaEditTitleGroup'
   import * as action_types from '../store/action-types'
+  import FastCreateAndFillBacteriaGroup from "../modals/FastCreateAndFillBacteriaGroup";
 
   export default {
     name: 'ConstructBacteria',
     components: {
+      FastCreateAndFillBacteriaGroup,
       vSelect,
       draggable,
       RadioField,
@@ -143,7 +157,7 @@
         list1Elements: [],
         list2Elements: [],
         listSetsElements: [],
-        selected1: {'pk': -1, 'title': 'Все'},
+        selected1: {'pk': -2, 'title': 'Без группы'},
         selected2: {'pk': -1, 'title': 'Все'},
         searchElement: '',
         typesObject: [
@@ -156,24 +170,35 @@
         searchTypesGroups: 'Группы',
         editElementTitle: '',
         editElementFsli: '',
-        editElementHide: '',
+        editElementHide: false,
         editElementPk: -1,
         editElementGroup: '',
         newgroup: '',
-        group_edit_open: false
+        group_edit_open: false,
+        isFcafbgOpen: false,
       }
     },
     methods: {
       group_edit() {
         this.group_edit_open = true
       },
-      group_edit_hide() {
+      async group_edit_hide() {
         this.group_edit_open = false
+        await this.load_culture_groups(this.selected1.title, '1')
+        await this.load_culture_groups(this.selected2.title, '2')
+      },
+      openFcafbg() {
+        this.isFcafbgOpen = true
+      },
+      async hide_fcafbg() {
+        this.isFcafbgOpen = false
+        await this.load_culture_groups(this.selected1.title, '1')
+        await this.load_culture_groups(this.selected2.title, '2')
       },
       async load_culture_groups(titlegroup, objList) {
         if (!titlegroup || titlegroup.length === 0) {
           titlegroup = 'Все'
-          this.selected1 = {'pk': -1, 'title': 'Все'}
+          this.selected1 = {'pk': -2, 'title': 'Без группы'}
           this.selected2 = {'pk': -1, 'title': 'Все'}
         }
         if (this.searchTypesGroups === 'Группы') {
@@ -233,26 +258,28 @@
           errmessage('Ошибка', message)
         }
         this.onClearContentEdit()
-        await this.load_culture_groups('Все', '1')
+        await this.load_culture_groups(this.selected1.title, '1')
+        await this.load_culture_groups(this.selected2.title, '2')
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       onClearContentEdit() {
         this.editElementTitle = ''
         this.editElementFsli = ''
         this.editElementPk = -1
-        this.editElementHide = ''
+        this.editElementHide = false
         this.editElementGroup = ''
 
       },
       async addNewGroup() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const {ok, message} = await bacteria_point.addNewGroup({
+        const {ok, message, obj = this.selected2} = await bacteria_point.addNewGroup({
           'TypesObject': this.searchTypesObject, 'typeGroups': this.searchTypesGroups,
           'newgroup': this.newgroup
         })
         if (ok) {
           this.newgroup = '';
-          await this.load_culture_groups('Все', '1')
+          await this.load_culture_groups(this.selected1.title, '1')
+          this.selected2 = obj;
           okmessage('Сохранено', `${this.searchTypesGroups} - ${this.searchTypesObject} – ${this.newgroup}`)
         } else {
           errmessage('Ошибка', message)
@@ -283,14 +310,14 @@
           errmessage('Ошибка', message)
         }
         this.onClearContentEdit()
-        await this.load_culture_groups('Все', '1')
+        await this.load_culture_groups(this.selected1.title, '1')
 
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       filteredGroupObject() {
-        this.load_culture_groups('Все', '1')
-        this.selected1 = ''
-        this.selected2 = ''
+        this.load_culture_groups(this.selected1.title, '1')
+        this.selected1 = {'pk': -2, 'title': 'Без группы'}
+        this.selected2 = {'pk': -1, 'title': 'Все'}
         if (this.searchTypesObject !== 'Антибиотики') {
           this.searchTypesGroups = 'Группы'
         }
@@ -299,6 +326,11 @@
     },
     mounted() {
       this.$root.$on('hide_ge', () => this.group_edit_hide())
+      this.$root.$on('hide_fcafbg', () => this.hide_fcafbg())
+      this.$root.$on('select2', async (obj) => {
+          await this.load_culture_groups(this.selected1.title, '1')
+          this.selected2 = obj;
+      })
     },
     computed: {
       filteredList() {
@@ -404,6 +436,11 @@
     padding: 0;
     background-color: #cacfd2;
     border-radius: 4px;
+  }
+
+  .sub-buttons {
+    text-align: center;
+    margin: 15px;
   }
 
 </style>

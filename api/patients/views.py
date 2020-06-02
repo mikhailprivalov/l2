@@ -7,12 +7,13 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Prefetch
 from django.forms import model_to_dict
 from django.http import JsonResponse
 
 from api import sql_func
 from clients.models import CardBase, Individual, Card, Document, DocumentType, District, AnamnesisHistory, \
-    DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg
+    DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones
 from contracts.models import Company
 from laboratory import settings
 from laboratory.utils import strdate, start_end_year
@@ -136,10 +137,12 @@ def patients_search_card(request):
 
     d1, d2 = start_end_year()
 
-    for row in cards.filter(is_archive=False).prefetch_related("individual").distinct():
-        docs = Document.objects.filter(individual__pk=row.individual_id, is_active=True,
-                                       document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС']) \
-            .distinct("pk", "number", "document_type", "serial").order_by('pk')
+    for row in cards.filter(is_archive=False).select_related("individual", "base").prefetch_related(
+        Prefetch(
+            'individual__document_set', queryset=Document.objects.filter(is_active=True, document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС'])
+                    .distinct("pk", "number", "document_type", "serial").select_related('document_type').order_by('pk')
+        ), 'phones_set'
+    ).distinct():
         disp_data = sql_func.dispensarization_research(row.individual.sex, row.individual.age_for_year(), row.pk, d1, d2)
 
         status_disp = 'finished'
@@ -163,9 +166,24 @@ def patients_search_card(request):
                      "sex": row.individual.sex,
                      "individual_pk": row.individual_id,
                      "pk": row.pk,
-                     "phones": row.get_phones(),
+                     "phones": Phones.phones_to_normalized_list(row.phones_set.all(), row.phone),
                      "main_diagnosis": row.main_diagnosis,
-                     "docs": [{**model_to_dict(x), "type_title": x.document_type.title} for x in docs],
+                     "docs": [
+                         {
+                             "pk": x.pk,
+                             "type_title": x.document_type.title,
+                             "document_type_id": x.document_type_id,
+                             "serial": x.serial,
+                             "number": x.number,
+                             "is_active": x.is_active,
+                             "date_start": x.date_start,
+                             "date_end": x.date_end,
+                             "who_give": x.who_give,
+                             "from_rmis": x.from_rmis,
+                             "rmis_uid": x.rmis_uid,
+                         }
+                         for x in row.individual.document_set.all()
+                     ],
                      "status_disp": status_disp,
                      "disp_data": disp_data})
 

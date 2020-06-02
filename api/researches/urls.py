@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('templates', views.ResearchesTemplates.as_view()),
+    path('templates', views.get_researches_templates),
     path('all', views.get_researches),
     path('by-department', views.researches_by_department),
     path('params', views.researches_params),

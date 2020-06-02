@@ -69,7 +69,7 @@
           'obj': {'pk': this.group_obj.pk, 'title': this.group_obj.title, 'hide': this.group_obj.hide}
         })
         if (ok) {
-          okmessage('Группа сохранён', `${this.group_obj.title}`)
+          okmessage('Группа сохранена', `${this.group_obj.title}`)
         } else {
           errmessage('Ошибка', message)
         }

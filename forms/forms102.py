@@ -113,12 +113,10 @@ def form_01(request_data):
         payer_data = p_payer.get_data_individual()
 
     # Получить все источники, у которых title-ПЛАТНО
-    ist_f = []
     ist_f = list(IstochnikiFinansirovaniya.objects.values_list('id').filter(title__exact='Платно'))
-    ist_f_list = []
     ist_f_list = ([int(x[0]) for x in ist_f])
 
-    napr = Napravleniya.objects.filter(id__in=ind_dir)
+    napr = Napravleniya.objects.filter(pk__in=ind_dir)
     dir_temp = []
 
     # Проверить, что все направления принадлежат к одной карте и имеют ист. финансирования "Платно"
