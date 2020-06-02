@@ -177,6 +177,7 @@
   import ResearchDisplay from './ResearchDisplay'
   import Modal from './Modal'
   import vSelect from 'vue-select'
+  import 'vue-select/dist/vue-select.css';
   import TypeAhead from 'vue2-typeahead'
   import MKBField from '../fields/MKBField'
   import SelectFieldTitled from '../fields/SelectFieldTitled'

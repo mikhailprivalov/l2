@@ -121,6 +121,12 @@
                 <input :readonly="confirmed" class="form-control" style="width: 110px" type="time"
                        v-model="field.value"/>
               </div>
+              <div class="field-value" v-else-if="field.field_type === 22">
+                <TextareaAutocomplete
+                  :disabled="confirmed"
+                  v-model="field.value"
+                />
+              </div>
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
                     placement : 'left',
@@ -153,10 +159,12 @@
   import AggregateDesc from "../fields/AggregateDesc";
   import NumberField from "../fields/NumberField";
   import NumberRangeField from "../fields/NumberRangeField";
+  import TextareaAutocomplete from "../fields/TextareaAutocomplete";
 
   export default {
     name: 'DescriptiveForm',
     components: {
+      TextareaAutocomplete,
       NumberRangeField,
       NumberField,
       AggregateDesc,

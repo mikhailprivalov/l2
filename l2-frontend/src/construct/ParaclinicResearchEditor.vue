@@ -67,7 +67,7 @@
         <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
       </div>
       <template v-if="ex_dep !== 7">
-        <div v-for="group in ordered_groups" class="ed-group">
+        <div v-for="group in ordered_groups" class="ed-group" :class="{groupHidden: group.hide}">
           <div class="input-group">
             <span class="input-group-btn">
               <button class="btn btn-blue-nb lob" :disabled="is_first_group(group)" @click="dec_group_order(group)">
@@ -86,160 +86,167 @@
           </div>
           <div class="row">
             <div class="col-xs-6">
-              <label>Отображать название <input type="checkbox" v-model="group.show_title"/></label>
+              <label v-if="!group.hide">Отображать название <input type="checkbox" v-model="group.show_title"/></label>
+              <div v-else>
+                <strong>Группа скрыта.</strong>
+                <label><input type="checkbox" v-model="group.display_hidden" /> отображать поля</label>
+              </div>
             </div>
             <div class="col-xs-6 text-right">
               <label>Скрыть группу <input type="checkbox" v-model="group.hide"/></label>
             </div>
           </div>
-          <div>
-            <strong>Поля ввода</strong>
-          </div>
-          <div v-for="row in ordered_fields(group)" class="ed-field">
-            <div class="ed-field-inner">
-              <div>
-                <button class="btn btn-default btn-sm btn-block" :disabled="is_first_field(group, row)"
-                        @click="dec_order(group, row)">
-                  <i class="glyphicon glyphicon-arrow-up"></i>
-                </button>
-                <button class="btn btn-default btn-sm btn-block" :disabled="is_last_field(group, row)"
-                        @click="inc_order(group, row)">
-                  <i class="glyphicon glyphicon-arrow-down"></i>
-                </button>
-              </div>
-              <div>
-                <div class="input-group">
-                  <span class="input-group-addon">Название поля ({{row.pk === -1 ? 'новое' : row.pk}})</span>
-                  <input type="text" class="form-control" v-model="row.title">
+          <template v-if="!group.hide || group.display_hidden">
+            <div>
+              <strong>Поля ввода</strong>
+            </div>
+            <div v-for="row in ordered_fields(group)" class="ed-field">
+              <div class="ed-field-inner">
+                <div>
+                  <button class="btn btn-default btn-sm btn-block" :disabled="is_first_field(group, row)"
+                          @click="dec_order(group, row)">
+                    <i class="glyphicon glyphicon-arrow-up"></i>
+                  </button>
+                  <button class="btn btn-default btn-sm btn-block" :disabled="is_last_field(group, row)"
+                          @click="inc_order(group, row)">
+                    <i class="glyphicon glyphicon-arrow-down"></i>
+                  </button>
                 </div>
-                <div v-if="row.field_type === 0">
-                  <strong>Значение по умолчанию:</strong>
-                  <textarea v-model="row.default" :rows="row.lines" class="form-control"
-                            v-if="row.lines > 1"></textarea>
-                  <input v-model="row.default" class="form-control" v-else/>
-                </div>
-                <div v-else-if="row.field_type === 3">
-                  <strong>Формула:</strong>
-                  <input v-model="row.default" class="form-control"/>
-                </div>
-                <div v-else-if="row.field_type === 11">
-                  <strong>ID фракции:</strong>
-                  <input v-model="row.default" class="form-control"/>
-                </div>
-                <div v-else-if="row.field_type === 13 || row.field_type === 14">
-                  <strong>ID поля:</strong>
-                  <input v-model="row.default" class="form-control"/>
-                </div>
-                <div v-if="row.field_type === 15">
-                  <strong>Значение по умолчанию:</strong>
-                  <rich-text-editor v-model="row.default" />
-                </div>
-                <div v-if="row.field_type === 18">
-                  <strong>Значение по умолчанию:</strong>
-                  <NumberField v-model="row.default" />
-                </div>
-                <div v-if="row.field_type === 19">
-                  <strong>Значение по умолчанию:</strong>
-                  <NumberRangeField :variants="row.values_to_input" v-model="row.default" />
-                </div>
-                <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19].includes(row.field_type)">
-                  <div class="header" v-collapse-toggle>
-                    <a href="#" class="a-under" @click.prevent v-if="row.field_type === 0">
-                      Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
-                    </a>
-                    <a href="#" class="a-under" @click.prevent v-else-if="row.field_type === 19">
-                      Мин, Макс, Шаг, Единицы измерения
-                    </a>
-                    <a href="#" class="a-under" @click.prevent v-else>
-                      Варианты (кол-во: {{ row.values_to_input.length }})
-                    </a>
+                <div>
+                  <div class="input-group">
+                    <span class="input-group-addon">Название поля ({{row.pk === -1 ? 'новое' : row.pk}})</span>
+                    <input type="text" class="form-control" v-model="row.title">
                   </div>
-                  <div class="my-content" v-collapse-content>
-                    <div class="input-group" style="margin-bottom: 5px">
-                      <input type="text" v-model="row.new_value" class="form-control"
-                             @keyup.enter="add_template_value(row)"
-                             placeholder="Новый шаблон быстрого ввода"/>
-                      <span class="input-group-btn"><button class="btn last btn-blue-nb" type="button"
-                                                            :disabled="row.new_value === ''"
-                                                            @click="add_template_value(row)">Добавить</button></span>
+                  <div v-if="row.field_type === 0">
+                    <strong>Значение по умолчанию:</strong>
+                    <textarea v-model="row.default" :rows="row.lines" class="form-control"
+                              v-if="row.lines > 1"></textarea>
+                    <input v-model="row.default" class="form-control" v-else/>
+                  </div>
+                  <div v-else-if="row.field_type === 3">
+                    <strong>Формула:</strong>
+                    <input v-model="row.default" class="form-control"/>
+                  </div>
+                  <div v-else-if="row.field_type === 11">
+                    <strong>ID фракции:</strong>
+                    <input v-model="row.default" class="form-control"/>
+                  </div>
+                  <div v-else-if="row.field_type === 13 || row.field_type === 14">
+                    <strong>ID поля:</strong>
+                    <input v-model="row.default" class="form-control"/>
+                  </div>
+                  <div v-if="row.field_type === 15">
+                    <strong>Значение по умолчанию:</strong>
+                    <rich-text-editor v-model="row.default" />
+                  </div>
+                  <div v-if="row.field_type === 18">
+                    <strong>Значение по умолчанию:</strong>
+                    <NumberField v-model="row.default" />
+                  </div>
+                  <div v-if="row.field_type === 19">
+                    <strong>Значение по умолчанию:</strong>
+                    <NumberRangeField :variants="row.values_to_input" v-model="row.default" />
+                  </div>
+                  <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22].includes(row.field_type)">
+                    <div class="header" v-collapse-toggle>
+                      <a href="#" class="a-under" @click.prevent v-if="row.field_type === 0">
+                        Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
+                      </a>
+                      <a href="#" class="a-under" @click.prevent v-else-if="row.field_type === 19">
+                        Мин, Макс, Шаг, Единицы измерения
+                      </a>
+                      <a href="#" class="a-under" @click.prevent v-else>
+                        Варианты (кол-во: {{ row.values_to_input.length }})
+                      </a>
                     </div>
-                    <div>
-                      <div class="input-group" v-for="(v, i) in row.values_to_input" style="margin-bottom: 1px">
-                    <span class="input-group-btn">
-                    <button class="btn btn-blue-nb lob" :disabled="is_first_in_template(i)"
-                            @click="up_template(row, i)">
-                      <i class="glyphicon glyphicon-arrow-up"></i>
-                    </button>
-                    </span>
-                        <span class="input-group-btn">
-                    <button class="btn btn-blue-nb nob" :disabled="is_last_in_template(row, i)"
-                            @click="down_template(row, i)">
-                      <i class="glyphicon glyphicon-arrow-down"></i>
-                    </button>
-                    </span>
-                        <input class="form-control" type="text" v-model="row.values_to_input[i]"/>
-                        <span class="input-group-btn">
-                    <button class="btn btn-blue-nb" @click="remove_template(row, i)">
-                      <i class="glyphicon glyphicon-remove"></i>
-                    </button>
-                    </span>
+                    <div class="my-content" v-collapse-content>
+                      <div class="input-group" style="margin-bottom: 5px">
+                        <input type="text" v-model="row.new_value" class="form-control"
+                               @keyup.enter="add_template_value(row)"
+                               placeholder="Новый шаблон быстрого ввода"/>
+                        <span class="input-group-btn"><button class="btn last btn-blue-nb" type="button"
+                                                              :disabled="row.new_value === ''"
+                                                              @click="add_template_value(row)">Добавить</button></span>
+                      </div>
+                      <div>
+                        <div class="input-group" v-for="(v, i) in row.values_to_input" style="margin-bottom: 1px">
+                      <span class="input-group-btn">
+                      <button class="btn btn-blue-nb lob" :disabled="is_first_in_template(i)"
+                              @click="up_template(row, i)">
+                        <i class="glyphicon glyphicon-arrow-up"></i>
+                      </button>
+                      </span>
+                          <span class="input-group-btn">
+                      <button class="btn btn-blue-nb nob" :disabled="is_last_in_template(row, i)"
+                              @click="down_template(row, i)">
+                        <i class="glyphicon glyphicon-arrow-down"></i>
+                      </button>
+                      </span>
+                          <input class="form-control" type="text" v-model="row.values_to_input[i]"/>
+                          <span class="input-group-btn">
+                      <button class="btn btn-blue-nb" @click="remove_template(row, i)">
+                        <i class="glyphicon glyphicon-remove"></i>
+                      </button>
+                      </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </v-collapse-wrapper>
-              </div>
-              <div>
-                <strong>Подсказка:</strong>
-                <textarea class="form-control" v-model="row.helper"></textarea>
-              </div>
-              <div>
-                <strong>Условие видимости:</strong>
-                <textarea class="form-control" v-model="row.visibility"></textarea>
-              </div>
-              <div>
-                <label>
-                  <input type="checkbox" v-model="row.hide"/> скрыть поле
-                </label>
-                <label>
-                  <input type="checkbox" v-model="row.required"/> запрет пустого
-                </label>
-                <label>
-                  <input type="checkbox" v-model="row.for_talon"/> в талон
-                </label>
-                <label>
-                  <input type="checkbox" v-model="row.for_extract_card"/> в выписку
-                </label>
-                <label style="line-height: 1"
-                       v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14">
-                  Число строк:<br/>
-                  <input class="form-control" type="number" min="1" v-model.number="row.lines"/>
-                </label>
-                <label>
-                  Тип поля:<br/>
-                  <select v-model.number="row.field_type" class="form-control">
-                    <option value="0">Строка</option>
-                    <option value="1">Дата</option>
-                    <option value="2">Диагноз по МКБ</option>
-                    <option value="3">Расчётное</option>
-                    <option value="10">Справочник</option>
-                    <option value="11">Фракция</option>
-                    <option value="12">Радио</option>
-                    <option value="13">Поле описательного результата</option>
-                    <option value="14">Поле описательного результата без заголовка</option>
-                    <option value="15">Текст с форматированием</option>
-                    <option value="16">(Стационар) агрегация по лаборатории</option>
-                    <option value="17">(Стационар) агрегация по описательным</option>
-                    <option value="18">Число</option>
-                    <option value="19">Число через range</option>
-                    <option value="20">Время ЧЧ:ММ</option>
-                  </select>
-                </label>
+                  </v-collapse-wrapper>
+                </div>
+                <div>
+                  <strong>Подсказка:</strong>
+                  <textarea class="form-control" v-model="row.helper"></textarea>
+                </div>
+                <div>
+                  <strong>Условие видимости:</strong>
+                  <textarea class="form-control" v-model="row.visibility"></textarea>
+                </div>
+                <div>
+                  <label>
+                    <input type="checkbox" v-model="row.hide"/> скрыть поле
+                  </label>
+                  <label>
+                    <input type="checkbox" v-model="row.required"/> запрет пустого
+                  </label>
+                  <label>
+                    <input type="checkbox" v-model="row.for_talon"/> в талон
+                  </label>
+                  <label>
+                    <input type="checkbox" v-model="row.for_extract_card"/> в выписку
+                  </label>
+                  <label style="line-height: 1"
+                         v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14">
+                    Число строк:<br/>
+                    <input class="form-control" type="number" min="1" v-model.number="row.lines"/>
+                  </label>
+                  <label>
+                    Тип поля:<br/>
+                    <select v-model.number="row.field_type" class="form-control">
+                      <option value="0">Строка</option>
+                      <option value="1">Дата</option>
+                      <option value="2">Диагноз по МКБ</option>
+                      <option value="3">Расчётное</option>
+                      <option value="10">Справочник</option>
+                      <option value="11">Фракция</option>
+                      <option value="12">Радио</option>
+                      <option value="13">Поле описательного результата</option>
+                      <option value="14">Поле описательного результата без заголовка</option>
+                      <option value="15">Текст с форматированием</option>
+                      <option value="16">(Стационар) агрегация по лаборатории</option>
+                      <option value="17">(Стационар) агрегация по описательным</option>
+                      <option value="18">Число</option>
+                      <option value="19">Число через range</option>
+                      <option value="20">Время ЧЧ:ММ</option>
+                      <option value="22">Текст с автозаполнением</option>
+                    </select>
+                  </label>
+                </div>
               </div>
             </div>
-          </div>
-          <div>
-            <button class="btn btn-blue-nb" @click="add_field(group)">Добавить поле</button>
-          </div>
+            <div>
+              <button class="btn btn-blue-nb" @click="add_field(group)">Добавить поле</button>
+            </div>
+          </template>
         </div>
         <div>
           <button class="btn btn-blue-nb" @click="add_group">Добавить группу</button>
@@ -715,6 +722,10 @@
     margin: 5px;
     border-radius: 5px;
     background: #f0f0f0;
+  }
+
+  .groupHidden:not(:hover) {
+    opacity: .6;
   }
 
   .ed-field {
