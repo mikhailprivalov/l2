@@ -19,8 +19,8 @@
         <td>
           <div class="input-group">
             <div class="input-group-btn">
-              <button type="button" class="btn btn-blue-nb"><i class="glyphicon glyphicon-arrow-up"></i></button>
-              <button type="button" class="btn btn-blue-nb"><i class="glyphicon glyphicon-arrow-down"></i></button>
+              <button type="button" class="btn btn-blue-nb" @click="up_row(index)"><i class="glyphicon glyphicon-arrow-up"></i></button>
+              <button type="button" class="btn btn-blue-nb" @click="down_row(index)"><i class="glyphicon glyphicon-arrow-down"></i></button>
             </div>
             <input type="text" class="form-control" v-model="val.title" placeholder="Введите наименование">
           </div>
@@ -69,15 +69,25 @@
     },
     data() {
       return {
-        tb_data: this.value || [{"header":'', "title": '', "type": '', "default": false}],
+        tb_data: this.value || [{"title": '', "type": '', "default": false, "order": 0}],
       }
     },
     methods: {
       add_new_row() {
-        this.tb_data.push({"header":'', "title": '', "type": '', "default": false});
+        this.tb_data.push({"title": '', "type": '', "default": false, "order": 0});
       },
-       delete_row(index) {
-        this.tb_data.splice(index, 1);
+      delete_row(index) {
+         this.tb_data.splice(index, 1);
+       },
+      down_row(i) {
+        let values = [...this.tb_data];
+        [values[i + 1], values[i]] = [values[i], values[i + 1]]
+        this.tb_data = values
+      },
+      up_row(i) {
+        let values = [...this.tb_data];
+        [values[i - 1], values[i]] = [values[i], values[i - 1]]
+        this.tb_data = values
       },
       changeValue(newVal) {
         this.$emit('modified', newVal)
