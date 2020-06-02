@@ -1136,9 +1136,21 @@ def directions_anesthesia_result(request):
     response = {"ok": False, "message": ""}
     rb = json.loads(request.body)
     temp_result = rb.get("temp_result", {})
-    research_data = rb.get("temp_result", {})
-    print(temp_result, research_data)
+    research_data = rb.get("research_data", {})
+    ParaclinicResult.anesthesia_value_save(research_data['iss_pk'], research_data['field_pk'], temp_result)
+
     return JsonResponse(response)
+
+
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
+def directions_anesthesia_load(request):
+    rb = json.loads(request.body)
+    research_data = rb.get("research_data", {})
+    anesthesia_data = ParaclinicResult.anesthesia_value_get(research_data['iss_pk'], research_data["field_pk"])
+    d1 = []
+    if len(anesthesia_data) > 0:
+        d1 = eval(anesthesia_data)
+    return JsonResponse({'data': d1})
 
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
@@ -1254,7 +1266,7 @@ def directions_paraclinic_result(request):
             iss.napravleniye.visit_date = timezone.now()
             iss.napravleniye.save()
         if iss.research.is_microbiology:
-            mb = request_data.get('microbiology', {})
+            mb = request_data.get("microbiology", {})
             if mb:
                 iss.microbiology_conclusion = mb.get('conclusion')
 

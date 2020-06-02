@@ -1077,6 +1077,29 @@ class ParaclinicResult(models.Model):
     def get_field_type(self):
         return self.field_type if self.issledovaniye.time_confirmation and self.field_type is not None else self.field.field_type
 
+    @staticmethod
+    def anesthesia_value_save(iss_pk=-1, field_pk=-1, value_anesthesia=''):
+        times = [int(i['time']) for i in value_anesthesia]
+        print(times)
+        if iss_pk > 0:
+            paraclinic_result_obj = ParaclinicResult.objects.get(issledovaniye__pk=iss_pk, field__pk=field_pk)
+            paraclinic_result_obj.value = value_anesthesia
+        else:
+            iss_obj = Issledovaniya.objects.get(pk=iss_pk)
+            field_obj = directory.ParaclinicInputField.objects.get(pk=field_pk)
+            paraclinic_result_obj = ParaclinicResult(iss=iss_obj, field=field_obj, value=value_anesthesia)
+
+        paraclinic_result_obj.save()
+        return paraclinic_result_obj
+
+    @staticmethod
+    def anesthesia_value_get(iss_pk=-1, field_pk=-1):
+        if iss_pk > 0:
+            paraclinic_result_obj = ParaclinicResult.objects.get(issledovaniye__pk=iss_pk, field__pk=field_pk)
+            return paraclinic_result_obj.value
+        else:
+            return ""
+
 
 class MicrobiologyResultCulture(models.Model):
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True,

@@ -31,6 +31,10 @@ export default generator({
     url: 'directions/anesthesia_result',
     onReject: {ok: false, message: ''}
   },
+  anesthesiaLoadData: {
+    url: 'directions/anesthesia_load',
+    onReject: {ok: false, message: ''}
+  },
   paraclinicResultSave: {
     url: 'directions/paraclinic_result',
     onReject: {ok: false, message: ''}

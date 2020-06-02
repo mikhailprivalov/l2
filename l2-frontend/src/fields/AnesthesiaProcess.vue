@@ -23,7 +23,7 @@
             <col width='190'/>
             <col width='70'/>
           </colgroup>
-          <tr v-for="(v, k) in patient_params_used">
+          <tr v-for="(v, k) in patient_params_used" v-if="k != 'temperature'">
             <td class="cl-td">{{k}}</td>
             <td class="cl-td"><input style="width: 100%" class="no-outline" type="text" :value="v"
                                                    @input="update(patient_params_used, k, $event)" :key="k"
@@ -73,7 +73,7 @@
         <button class="btn btn-blue-nb col-xs-6" @click="save_data">
           Добавить
         </button>
-        <button class="btn btn-blue-nb col-xs-6" @click="save_data">
+        <button class="btn btn-blue-nb col-xs-6" @click="load_data">
           Обновить
         </button>
       </div>
@@ -198,7 +198,8 @@
         narcotic_drugs_used: {},
         narcotic_data: {},
         patient_params_used: {},
-        patient_params_other: {}
+        patient_params_other: {},
+        tb_data: []
 
       }
     },
@@ -213,6 +214,7 @@
         }
       }
       this.getCurrentTime();
+      this.load_data();
     },
     watch: {
       temperature() {
@@ -231,16 +233,31 @@
       },
       async save_data() {
         await this.$store.dispatch(action_types.INC_LOADING);
+        this.patient_params_used['temperature'] = this.temperature
         let temp_result = {
-          'time': '10-00',
+          'time': this.timeValue.H + this.timeValue.mm,
           'potent_drugs': this.potent_drugs_used,
-          'narcotic_drugs': this.narcotic_drugs_used
+          'narcotic_drugs': this.narcotic_drugs_used,
+          'patient_params': this.patient_params_used
         }
-        let research_data = {'iss': this.iss, 'field_pk': this.field_pk}
+        let research_data = {'iss_pk': this.iss, 'field_pk': this.field_pk}
+        this.tb_data.push(temp_result)
         await directions_point.anesthesiaResultSave({
-          'temp_result': temp_result,
+          'temp_result': this.tb_data,
           'research_data': research_data
         });
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      },
+      async load_data() {
+        await this.$store.dispatch(action_types.INC_LOADING);
+        let research_data = {'iss_pk': this.iss, 'field_pk': this.field_pk}
+        const data = await directions_point.anesthesiaLoadData({
+          'research_data': research_data
+        });
+        this.tb_data = [...data.data]
+        console.log(typeof this.tb_data)
+        console.log(this.tb_data)
+
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       plus_temperature_start() {
@@ -269,7 +286,7 @@
         this.timeValue.H = moment().format('H');
       },
       clear_data(obj) {
-        Object.entries(obj).forEach(([key, value]) => obj[key] = '');
+        Object.entries(obj).forEach(([key]) => obj[key] = '');
       },
       show_anesthesia_sidebar() {
         this.$store.dispatch(action_types.CHANGE_STATUS_MENU_ANESTHESIA);

@@ -2,7 +2,8 @@
   <div style="margin-top: 10px">
     <table class="table table-bordered">
       <colgroup>
-        <col width='535'/>
+<!--        <col width='90'/>-->
+        <col width='490'/>
         <col width='230'/>
         <col width='120'/>
       </colgroup>
@@ -11,15 +12,21 @@
         <th>Наименование</th>
         <th>Категория</th>
         <th>Показать по умолчанию</th>
-        <th></th>
+        <th>Удалить строку</th>
       </tr>
       </thead>
       <tbody>
       <tr class="tr-body" v-for="(val, index) in tb_data">
-        <td><input class="no-outline" type="text" style="width:100%" v-model="val.title"
-                                        placeholder="Введите наименование"></td>
         <td>
-          <select v-model="val.type">
+          <div class="input-group">
+            <div class="input-group-btn">
+              <button type="button" class="btn btn-blue-nb"><i class="glyphicon glyphicon-arrow-up"></i></button>
+              <button type="button" class="btn btn-blue-nb"><i class="glyphicon glyphicon-arrow-down"></i></button>
+            </div>
+            <input type="text" class="form-control" v-model="val.title" placeholder="Введите наименование">
+          </div>
+        <td>
+          <select class="form-control" v-model="val.type">
             <option disabled value="">Выберите один из вариантов</option>
             <option>Показатели человека</option>
             <option>Сильнодействующие</option>
@@ -27,10 +34,14 @@
           </select>
         </td>
         <td align="center">
-          <input type="checkbox" v-model="val.default">
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" v-model="val.default">
+              </label>
+            </div>
         </td>
-        <td>
-          <button class="btn btn-default btn-primary-nb btn-delete" @click="delete_row(index)"
+        <td align="center">
+          <button class="btn btn-blue-nb btn-sm" @click="delete_row(index)"
                   v-tippy="{ placement : 'bottom'}" title="Удалить строку">
           <i class="fa fa-minus"/>
           </button>
@@ -89,23 +100,9 @@
 
 <style scoped lang="scss">
 
-  .tr-body {
-    height: 10px;
-  }
-
-  input {
-    border: none;
-    margin-left: 3px;
-    margin-right: 3px;
-    width: 100%;
-  }
-
   .add-row {
     float: right;
   }
 
-  .btn-delete {
-    padding: 0;
-  }
 
 </style>
