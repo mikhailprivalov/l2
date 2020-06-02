@@ -2,7 +2,6 @@
   <div style="margin-top: 10px">
     <table class="table table-bordered">
       <colgroup>
-<!--        <col width='90'/>-->
         <col width='490'/>
         <col width='230'/>
         <col width='120'/>
@@ -16,7 +15,7 @@
       </tr>
       </thead>
       <tbody>
-      <tr class="tr-body" v-for="(val, index) in tb_data">
+      <tr v-for="(val, index) in tb_data">
         <td>
           <div class="input-group">
             <div class="input-group-btn">
