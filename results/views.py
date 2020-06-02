@@ -614,7 +614,7 @@ def result_print(request):
             prev_date_conf = ""
 
             has0 = directory.Fractions.objects.filter(
-                research__pk__in=[x.research_id for x in direction.issledovaniya_set],
+                research__pk__in=[x.research_id for x in direction.issledovaniya_set.all()],
                 hide=False,
                 render_type=0).exists()
 
