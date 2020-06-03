@@ -1599,20 +1599,20 @@ input[type=date].form-control {
   padding-left: 20px !important;
 }
 
-.input-group .typeahead-dropdown-container .dropdown-menu-list.dropdown-menu{
-    top: 2em;
+.input-group .typeahead-dropdown-container .dropdown-menu-list.dropdown-menu {
+  top: 2em;
 }
 
 .dropdown-toggle, .vs__selected-options, .selected-tag {
   text-overflow: clip;
   white-space: nowrap;
-  flex-wrap: nowrap!important;
+  flex-wrap: nowrap !important;
   overflow: hidden;
 }
 
 .vs__selected {
   overflow: hidden;
-  margin-right: -21px!important;
+  margin-right: -21px !important;
 }
 
 .logo {
@@ -1643,7 +1643,7 @@ input[type=date].form-control {
 }
 
 .nbr {
-  border-radius: 0!important;
+  border-radius: 0 !important;
 }
 
 @import "./variables";
