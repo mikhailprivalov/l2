@@ -211,7 +211,7 @@ def endpoint(request):
                     if direction:
                         direction: directions.Napravleniya = direction
                         result["patientData"] = {
-                            "fio": direction.client.individual.fio(),
+                            "fio": direction.client.individual.fio(short=True),
                             "card": direction.client.number_with_type(),
                         }
 
@@ -288,7 +288,7 @@ def endpoint(request):
                     k = row["pk"]
                     i = row["iss"]
                     result["patientData"] = {
-                        "fio": i.napravleniye.client.individual.fio(),
+                        "fio": i.napravleniye.client.individual.fio(short=True),
                         "card": i.napravleniye.client.number_with_type(),
                     }
 
