@@ -544,7 +544,7 @@ def result_print(request):
 
         data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for xi in range(len(data))]
 
-        t = Table(data, colWidths=[doc.width * 0.165, doc.width - 158 - doc.width * 0.165, 158])
+        t = Table(data, colWidths=[doc.width * 0.145, doc.width - 158 - doc.width * 0.145, 158])
         t.setStyle(TableStyle([
             ('ALIGN', (-1, 0), (-1, 0), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -570,6 +570,8 @@ def result_print(request):
             fwb.append(t)
             fwb.append(Spacer(1, 5 * mm))
         if not has_paraclinic:
+            fwb.append(Spacer(1, 4 * mm))
+            fwb.append(InteractiveTextField())
             tw = pw
 
             no_units_and_ref = any([x.research.no_units_and_ref for x in direction.issledovaniya_set.all()])
@@ -614,7 +616,7 @@ def result_print(request):
             prev_date_conf = ""
 
             has0 = directory.Fractions.objects.filter(
-                research__pk__in=[x.research_id for x in direction.issledovaniya_set],
+                research__pk__in=[x.research_id for x in direction.issledovaniya_set.all()],
                 hide=False,
                 render_type=0).exists()
 

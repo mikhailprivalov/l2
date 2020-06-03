@@ -1,13 +1,16 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%" marginLeftRight="auto" margin-top>
+  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%"
+         marginLeftRight="auto" margin-top>
     <span slot="header">Регистратура L2</span>
     <div slot="body" style="min-height: 200px" class="registry-body">
       <form autocomplete="off" class="row" onsubmit.prevent>
+        <input type="hidden" autocomplete="off" />
         <div class="col-xs-6 col-form left">
           <div class="form-row">
             <div class="row-t">Фамилия</div>
             <TypeAhead :delayTime="100" :getResponse="getResponse"
                        :highlighting="highlighting" :limit="10"
+                       name="f"
                        :minChars="1" :onHit="onHit('family')" :selectFirst="true" maxlength="36"
                        ref="f" src="/api/autocomplete?value=:keyword&type=family" v-model="card.family"
             />
@@ -16,6 +19,7 @@
             <div class="row-t">Имя</div>
             <TypeAhead :delayTime="100" :getResponse="getResponse" :highlighting="highlighting"
                        :limit="10"
+                       name="n"
                        :minChars="1" :onHit="onHit('name')" :selectFirst="true" maxlength="36"
                        ref="n" src="/api/autocomplete?value=:keyword&type=name" v-model="card.name"
             />
@@ -24,8 +28,9 @@
             <div class="row-t">Отчество</div>
             <TypeAhead :delayTime="100" :getResponse="getResponse"
                        :highlighting="highlighting" :limit="10"
+                       name="pn"
                        :minChars="1" :onHit="onHit('patronymic')" :selectFirst="true" maxlength="36"
-                       ref="n" src="/api/autocomplete?value=:keyword&type=patronymic" v-model="card.patronymic"
+                       ref="pn" src="/api/autocomplete?value=:keyword&type=patronymic" v-model="card.patronymic"
             />
           </div>
         </div>
@@ -42,7 +47,7 @@
           </div>
           <div class="form-row">
             <div class="row-t">Пол</div>
-            <radio-field v-model="card.sex" :variants="sexes" fullWidth />
+            <radio-field v-model="card.sex" :variants="sexes" fullWidth/>
           </div>
         </div>
       </form>
@@ -104,17 +109,19 @@
         <div class="row" style="margin-bottom: 10px">
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
-                <div class="row-t">Адрес регистрации</div>
-                <TypeAhead :delayTime="400" :getResponse="getResponse"
-                           :highlighting="highlighting" :limit="10"
-                           :minChars="4" :onHit="onHit('main_address', true)" :selectFirst="true" maxlength="110"
-                           ref="ar" :src="`/api/autocomplete?value=:keyword&type=fias`" v-model="card.main_address"
-                />
+              <div class="row-t">Адрес регистрации</div>
+              <TypeAhead :delayTime="400" :getResponse="getResponse"
+                         :highlighting="highlighting" :limit="10"
+                         name="ar"
+                         :minChars="4" :onHit="onHit('main_address', true)" :selectFirst="true" maxlength="110"
+                         ref="ar" :src="`/api/autocomplete?value=:keyword&type=fias`" v-model="card.main_address"
+              />
             </div>
             <div class="form-row sm-f">
               <div class="row-t">Адрес проживания</div>
               <TypeAhead :delayTime="400" :getResponse="getResponse"
                          :highlighting="highlighting" :limit="10"
+                         name="af"
                          :minChars="4" :onHit="onHit('fact_address', true)" :selectFirst="true" maxlength="110"
                          ref="af" :src="`/api/autocomplete?value=:keyword&type=fias`" v-model="card.fact_address"
               />
@@ -143,7 +150,7 @@
                   <div class="row-t" style="display: flex;width: 45%;flex: 0 45%;">
                     <input type="checkbox" v-model="card.custom_workplace" title="Ручной ввод названия"
                            v-tippy="{ placement : 'bottom', arrow: true }"
-                           style="height: auto;flex: 0 23px;" />
+                           style="height: auto;flex: 0 23px;"/>
                     Место работы
                   </div>
                   <TypeAhead v-if="card.custom_workplace"
@@ -166,7 +173,8 @@
                   <TypeAhead :delayTime="100" :getResponse="getResponse"
                              :highlighting="highlighting" :limit="10"
                              :minChars="1" :onHit="onHit('work_position')" :selectFirst="true" maxlength="36"
-                             ref="wp" src="/api/autocomplete?value=:keyword&type=work_position" v-model="card.work_position"
+                             ref="wp" src="/api/autocomplete?value=:keyword&type=work_position"
+                             v-model="card.work_position"
                   />
                 </div>
               </div>
@@ -176,19 +184,20 @@
               <TypeAhead :delayTime="100" :getResponse="getResponse"
                          :highlighting="highlighting" :limit="10"
                          :minChars="1" :onHit="onHit('main_diagnosis')" :selectFirst="true" maxlength="36"
-                         ref="md" src="/api/autocomplete?value=:keyword&type=main_diagnosis" v-model="card.main_diagnosis"
+                         ref="md" src="/api/autocomplete?value=:keyword&type=main_diagnosis"
+                         v-model="card.main_diagnosis"
               />
             </div>
           </div>
         </div>
         <table class="table table-bordered table-condensed table-sm-pd">
           <colgroup>
-            <col width="70" />
-            <col />
-            <col />
-            <col />
-            <col />
-            <col />
+            <col width="70"/>
+            <col/>
+            <col/>
+            <col/>
+            <col/>
+            <col/>
           </colgroup>
           <thead>
           <tr>
@@ -207,7 +216,7 @@
             <td>
               <input type="radio" :name="`card-doc${d.document_type}`"
                      @click="update_cdu(d.id)"
-                     :checked="card.main_docs[d.document_type] === d.id" />
+                     :checked="card.main_docs[d.document_type] === d.id"/>
             </td>
             <td>
               {{d.type_title}}
@@ -235,11 +244,11 @@
         </table>
         <table class="table table-bordered table-condensed table-sm-pd">
           <colgroup>
-            <col width="70" />
-            <col width="120" />
-            <col />
-            <col width="150" />
-            <col width="40" />
+            <col width="70"/>
+            <col width="120"/>
+            <col/>
+            <col width="150"/>
+            <col width="40"/>
           </colgroup>
           <thead>
           <tr>
@@ -256,7 +265,7 @@
             <td>
               <input type="radio" name="agent"
                      @click="update_wia(t.key)" v-if="!card.excluded_types.includes(t.key)"
-                     :checked="card.who_is_agent === t.key" />
+                     :checked="card.who_is_agent === t.key"/>
             </td>
             <td>
               {{t.title}}
@@ -272,7 +281,7 @@
             <td>
               <input type="radio" name="agent"
                      @click="update_wia('')"
-                     :checked="card.who_is_agent === ''" />
+                     :checked="card.who_is_agent === ''"/>
             </td>
             <td colspan="4">НЕ ВЫБРАНО</td>
           </tr>
@@ -293,33 +302,34 @@
         <div class="row" style="margin-bottom: 10px">
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
-                <div class="row-t">Телефон</div>
-                <input class="form-control" v-model="card.phone" v-mask="'8 999 9999999'">
+              <div class="row-t">Телефон</div>
+              <input class="form-control" v-model="card.phone" v-mask="'8 999 9999999'">
             </div>
           </div>
         </div>
         <div class="row" style="margin-bottom: 10px">
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
-                <div class="row-t">Номер карты ТФОМС</div>
-                <input class="form-control" v-model="card.number_poli" maxlength="20">
+              <div class="row-t">Номер карты ТФОМС</div>
+              <input class="form-control" v-model="card.number_poli" maxlength="20">
             </div>
           </div>
         </div>
         <div class="row" style="margin-bottom: 10px">
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
-                <div class="row-t">Фактор вредности</div>
-                <TypeAhead :delayTime="100" :getResponse="getResponse"
-                           :highlighting="highlighting" :limit="10"
-                           :minChars="1" :onHit="onHit('harmful')" :selectFirst="true" maxlength="32"
-                           ref="n" src="/api/autocomplete?value=:keyword&type=harmful" v-model="card.harmful"
-                />
+              <div class="row-t">Фактор вредности</div>
+              <TypeAhead :delayTime="100" :getResponse="getResponse"
+                         :highlighting="highlighting" :limit="10"
+                         :minChars="1" :onHit="onHit('harmful')" :selectFirst="true" maxlength="32"
+                         ref="n" src="/api/autocomplete?value=:keyword&type=harmful" v-model="card.harmful"
+              />
             </div>
           </div>
         </div>
       </div>
-      <modal v-if="document_to_edit > -2" ref="modalDocEdit" @close="hide_modal_doc_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+      <modal v-if="document_to_edit > -2" ref="modalDocEdit" @close="hide_modal_doc_edit" show-footer="true"
+             white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
         <span slot="header">Редактор документов (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
         <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
           <div class="form-group">
@@ -355,7 +365,8 @@
             <TypeAhead :delayTime="100" :getResponse="getResponse"
                        :highlighting="highlighting" :limit="10"
                        :minChars="1" :onHit="onHitDocWhoGive" :selectFirst="true" maxlength="36"
-                       ref="dwg" :src="`/api/autocomplete?value=:keyword&type=who_give:` + document.document_type" v-model="document.who_give"
+                       ref="dwg" :src="`/api/autocomplete?value=:keyword&type=who_give:` + document.document_type"
+                       v-model="document.who_give"
             />
           </div>
           <div class="checkbox" style="padding-left: 15px;">
@@ -379,12 +390,13 @@
           </div>
         </div>
       </modal>
-      <modal v-if="agent_to_edit" ref="modalAgentEdit" @close="hide_modal_agent_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+      <modal v-if="agent_to_edit" ref="modalAgentEdit" @close="hide_modal_agent_edit" show-footer="true" white-bg="true"
+             max-width="710px" width="100%" marginLeftRight="auto" margin-top>
         <span slot="header">Редактор – {{agent_type_by_key(agent_to_edit)}} (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
         <div slot="body" style="min-height: 140px" class="registry-body">
           <div v-show="!agent_clear">
             <div style="height: 110px">
-              <patient-small-picker v-model="agent_card_selected" :base_pk="base_pk" />
+              <patient-small-picker v-model="agent_card_selected" :base_pk="base_pk"/>
             </div>
             <div class="form-group" v-if="agent_need_doc(agent_to_edit)" style="padding: 10px">
               <label for="ae-f2">Документ-основание:</label>
@@ -393,7 +405,8 @@
           </div>
           <div class="checkbox" style="padding-left: 35px;padding-top: 10px" v-if="!!card[agent_to_edit]">
             <label>
-              <input type="checkbox" v-model="agent_clear"> очистить представителя ({{agent_type_by_key(agent_to_edit)}})
+              <input type="checkbox" v-model="agent_clear"> очистить представителя
+              ({{agent_type_by_key(agent_to_edit)}})
             </label>
           </div>
         </div>
@@ -405,7 +418,8 @@
               </button>
             </div>
             <div class="col-xs-4">
-              <button :disabled="!valid_agent" @click="save_agent()" class="btn btn-primary-nb btn-blue-nb" type="button">
+              <button :disabled="!valid_agent" @click="save_agent()" class="btn btn-primary-nb btn-blue-nb"
+                      type="button">
                 Сохранить
               </button>
             </div>
@@ -545,8 +559,8 @@
     data() {
       return {
         sexes: [
-            'м',
-            'ж',
+          'м',
+          'ж',
         ],
         card: {
           number: '',
@@ -610,6 +624,16 @@
         this.load_data()
       })
     },
+    updated() {
+      // Костыль, что бы не вылезал автокомплит полей от браузера
+      const {f, n, pn, ar, af} = this.$refs;
+      setTimeout(() => {
+        for (const r of [f, n, pn, ar, af]) {
+          const inp = $('input', r.$el);
+            inp.attr('autocomplete', 'new-password')
+        }
+      }, 100);
+    },
     computed: {
       doc_edit_type_title() {
         const t = this.document.document_type;
@@ -667,10 +691,12 @@
       },
       forms() {
         return forms.map(f => {
-          return {...f, url: f.url.kwf({
+          return {
+            ...f, url: f.url.kwf({
               card: this.card_pk,
               individual: this.card.individual,
-            })}
+            })
+          }
         });
       },
     },
@@ -753,13 +779,13 @@
             base_pk: this.base_pk,
           })
         if (data.result !== 'ok') {
-            errmessage('Сохранение прошло не удачно')
+          errmessage('Сохранение прошло не удачно')
           return
         }
         if (Array.isArray(data.messages)) {
-            for (const msg of data.messages) {
-                wrnmessage('Warning', msg)
-            }
+          for (const msg of data.messages) {
+            wrnmessage('Warning', msg)
+          }
         }
         okmessage('Данные сохранены')
         if (hide_after) {
@@ -843,10 +869,10 @@
         }
         patients_point.individualsSearch(this.card, ['family', 'name', 'patronymic', 'birthday', 'sex'])
           .then(({result}) => {
-          this.individuals = result
-          this.card.individual = result.length === 0 ? -1 : result[0].pk
-          this.card.new_individual = result.length === 0
-        })
+            this.individuals = result
+            this.card.individual = result.length === 0 ? -1 : result[0].pk
+            this.card.new_individual = result.length === 0
+          })
       },
       individual_sex(t, v) {
         if (this.card_pk >= 0) {
@@ -930,6 +956,7 @@
 
   .nonPrior {
     opacity: .7;
+
     &:hover {
       opacity: 1;
     }
@@ -963,10 +990,13 @@
     width: 100%;
     display: flex;
     border-bottom: 1px solid #434a54;
+
     &:first-child:not(.nbt-i) {
       border-top: 1px solid #434a54;
     }
+
     justify-content: stretch;
+
     .row-t {
       background-color: #AAB2BD;
       padding: 7px 0 0 10px;
@@ -992,6 +1022,7 @@
       .row-t {
         padding: 2px 0 0 10px;
       }
+
       input, .row-v, /deep/ input {
         height: 26px;
       }
@@ -1000,6 +1031,7 @@
     /deep/ input {
       width: 100% !important;
     }
+
     .row-v {
       padding: 7px 0 0 10px;
     }
@@ -1024,9 +1056,10 @@
       }
     }
   }
+
   .col-form {
     &.left {
-      padding-right: 0!important;
+      padding-right: 0 !important;
 
       .row-t, input, .row-v, /deep/ input {
         border-right: 1px solid #434a54 !important;
@@ -1036,13 +1069,16 @@
         width: 65%;
       }
     }
+
     &:not(.left):not(.mid) {
-      padding-left: 0!important;
+      padding-left: 0 !important;
+
       .row-t {
         border-right: 1px solid #434a54;
       }
     }
   }
+
   .info-row {
     padding: 7px;
   }
@@ -1054,6 +1090,7 @@
       background-color: rgba(0, 0, 0, .15);
     }
   }
+
   .str /deep/ .input-group {
     width: 100%;
   }
