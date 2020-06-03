@@ -46,7 +46,7 @@ Pillow==7.0.0
 psycopg2==2.8.2
 pyaml==20.4.0
 pyasn1==0.4.8
-pycodestyle==2.5.0
+pycodestyle==2.6.0
 Pygments==2.6.1
 pymongo==3.10.1
 pymorphy2==0.8
