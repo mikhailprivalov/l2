@@ -2,47 +2,51 @@
   <div style="margin-top: 10px">
     <table class="table table-bordered">
       <colgroup>
-        <col width='490'/>
+        <col/>
         <col width='230'/>
         <col width='120'/>
+        <col width='34'/>
       </colgroup>
       <thead>
       <tr>
         <th>Наименование</th>
         <th>Категория</th>
         <th>Показать по умолчанию</th>
-        <th>Удалить строку</th>
+        <th></th>
       </tr>
       </thead>
       <tbody>
       <tr v-for="(val, index) in tb_data">
-        <td>
+        <td class="cl-td">
           <div class="input-group">
             <div class="input-group-btn">
-              <button type="button" class="btn btn-blue-nb" @click="up_row(index)"><i class="glyphicon glyphicon-arrow-up"></i></button>
-              <button type="button" class="btn btn-blue-nb" @click="down_row(index)"><i class="glyphicon glyphicon-arrow-down"></i></button>
+              <button type="button" class="btn btn-blue-nb nbr" @click="up_row(index)"
+                      :disabled="is_first_in_template(index)">
+                <i class="glyphicon glyphicon-arrow-up"></i>
+              </button>
+              <button type="button" class="btn btn-blue-nb" @click="down_row(index)"
+                      :disabled="is_last_in_template(index)">
+                <i class="glyphicon glyphicon-arrow-down"></i>
+              </button>
             </div>
-            <input type="text" class="form-control" v-model="val.title" placeholder="Введите наименование">
+            <input type="text" class="form-control nbr" v-model="val.title" placeholder="Введите наименование">
           </div>
-        <td>
-          <select class="form-control" v-model="val.type">
-            <option disabled value="">Выберите один из вариантов</option>
+        <td class="cl-td">
+          <select class="form-control nbr" v-model="val.type">
             <option>Показатели человека</option>
             <option>Сильнодействующие</option>
             <option>Наркотические</option>
           </select>
         </td>
-        <td align="center">
-            <div class="checkbox">
-              <label>
-                <input type="checkbox" v-model="val.default">
-              </label>
-            </div>
+        <td class="text-center cl-td">
+          <label>
+            <input type="checkbox" v-model="val.default">
+          </label>
         </td>
-        <td align="center">
-          <button class="btn btn-blue-nb btn-sm" @click="delete_row(index)"
-                  v-tippy="{ placement : 'bottom'}" title="Удалить строку">
-          <i class="fa fa-minus"/>
+        <td class="text-center cl-td">
+          <button class="btn btn-blue-nb" @click="delete_row(index)" v-tippy="{ placement : 'bottom'}"
+                  title="Удалить строку">
+            <i class="fa fa-times"/>
           </button>
         </td>
       </tr>
@@ -55,6 +59,8 @@
 </template>
 
 <script>
+  const makeDefaultRow = () => [{"title": '', "type": 'Показатели человека', "default": false}];
+
   export default {
     name: "ConfigureAnesthesiaField",
     props: {
@@ -69,17 +75,17 @@
     },
     data() {
       return {
-        tb_data: this.value || [{"title": '', "type": '', "default": false}],
+        tb_data: this.value || makeDefaultRow(),
       }
     },
     methods: {
       add_new_row() {
-        this.tb_data.push({"title": '', "type": '', "default": false});
+        this.tb_data.push(makeDefaultRow());
       },
       delete_row(index) {
-         this.tb_data.splice(index, 1);
-       },
-      is_first_in_row(i) {
+        this.tb_data.splice(index, 1);
+      },
+      is_first_in_template(i) {
         return i === 0
       },
       is_last_in_template(i) {
@@ -94,7 +100,7 @@
         this.tb_data = values
       },
       up_row(i) {
-        if (this.is_first_in_row(i)) {
+        if (this.is_first_in_template(i)) {
           return
         }
         let values = [...this.tb_data];
