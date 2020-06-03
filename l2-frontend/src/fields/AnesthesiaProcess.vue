@@ -16,6 +16,8 @@
           <i class="fa fa-clock-o"/> Текущее время
         </button>
       </div>
+
+
       <div class="content">
         <div class="col-xs-12 title-anesthesia">Показатели человека</div>
         <table class="table table-condensed tb-background">
