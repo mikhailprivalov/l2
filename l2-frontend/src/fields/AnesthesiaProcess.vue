@@ -85,6 +85,10 @@
       Добавить
     </button>
     <table class="table table-bordered">
+      <colgroup>
+            <col width='190'/>
+            <col width='70'/>
+      </colgroup>
       <tr>
         <th>SpO2</th>
         <th>10:05</th>
@@ -204,7 +208,6 @@
       }
     },
     mounted() {
-      console.log(this.fields)
       for (let f of this.fields) {
         if (f.type === 'Сильнодействующие' && f.default === true) {
           this.potent_drugs_used[f.title] = ''
@@ -216,6 +219,7 @@
       }
       this.getCurrentTime();
       this.load_data();
+
     },
     watch: {
       temperature() {
@@ -251,13 +255,11 @@
       },
       async load_data() {
         await this.$store.dispatch(action_types.INC_LOADING);
-        let research_data = {'iss_pk': this.iss, 'field_pk': this.field_pk}
+        let research_data = {'iss_pk': this.iss, 'field_pk': this.field_pk};
         const data = await directions_point.anesthesiaLoadData({
           'research_data': research_data
         });
-        this.tb_data = [...data.data]
-        console.log(typeof this.tb_data)
-        console.log(this.tb_data)
+        this.tb_data = [...data.data];
 
         await this.$store.dispatch(action_types.DEC_LOADING)
       },

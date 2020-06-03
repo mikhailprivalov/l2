@@ -1138,7 +1138,6 @@ def directions_anesthesia_result(request):
     temp_result = rb.get("temp_result", {})
     research_data = rb.get("research_data", {})
     ParaclinicResult.anesthesia_value_save(research_data['iss_pk'], research_data['field_pk'], temp_result)
-
     return JsonResponse(response)
 
 

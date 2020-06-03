@@ -1079,16 +1079,30 @@ class ParaclinicResult(models.Model):
 
     @staticmethod
     def anesthesia_value_save(iss_pk=-1, field_pk=-1, value_anesthesia=''):
-        # times = [int(i['time']) for i in value_anesthesia]
+        times = [int(i['time']) for i in value_anesthesia]
+        times = sorted(times)
+        print(times, type(times))
+        sorted_result = ['' for i in range(len(value_anesthesia))]
+        for i in value_anesthesia:
+            print(i)
+
+        for i in value_anesthesia:
+            index = times.index(int(i['time']))
+            print(index)
+            sorted_result[index] =i
+        for i in sorted_result:
+            print(i)
+
+
         paraclinic_result_obj = None
         if iss_pk > 0:
             iss_obj = Issledovaniya.objects.get(pk=iss_pk)
             field_obj = directory.ParaclinicInputField.objects.get(pk=field_pk)
             paraclinic_result_obj = ParaclinicResult.objects.filter(issledovaniye=iss_obj, field=field_obj).first()
             if paraclinic_result_obj:
-                paraclinic_result_obj.value = value_anesthesia
+                paraclinic_result_obj.value = sorted_result
             else:
-                paraclinic_result_obj = ParaclinicResult(issledovaniye=iss_obj, field=field_obj, value=value_anesthesia)
+                paraclinic_result_obj = ParaclinicResult(issledovaniye=iss_obj, field=field_obj, value=sorted_result)
             paraclinic_result_obj.save()
 
         return paraclinic_result_obj
