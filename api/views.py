@@ -287,6 +287,13 @@ def endpoint(request):
                 for row in app.get_issledovaniya(pks):
                     k = row["pk"]
                     i = row["iss"]
+                    result["patientData"] = {
+                        "fio": i.napravleniye.client.individual.fio(),
+                        "card": i.napravleniye.client.number_with_type(),
+                    }
+
+                    result["patientData"]["fioTranslit"] = translit(result["patientData"]["fio"])
+                    result["patientData"]["cardTranslit"] = translit(result["patientData"]["card"])
                     for fraction in Fractions.objects.filter(research=i.research,
                                                              hide=False):
                         rel = models.RelationFractionASTM.objects.filter(fraction=fraction, application_api=app)
