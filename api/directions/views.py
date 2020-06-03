@@ -1146,10 +1146,12 @@ def directions_anesthesia_result(request):
 def directions_anesthesia_load(request):
     rb = json.loads(request.body)
     research_data = rb.get("research_data", {})
+    print(research_data)
     anesthesia_data = ParaclinicResult.anesthesia_value_get(research_data['iss_pk'], research_data["field_pk"])
     d1 = []
-    if len(anesthesia_data) > 0:
-        d1 = eval(anesthesia_data)
+    if anesthesia_data:
+        if len(anesthesia_data) > 0:
+            d1 = eval(anesthesia_data)
     return JsonResponse({'data': d1})
 
 

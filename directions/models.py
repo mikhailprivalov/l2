@@ -1079,24 +1079,26 @@ class ParaclinicResult(models.Model):
 
     @staticmethod
     def anesthesia_value_save(iss_pk=-1, field_pk=-1, value_anesthesia=''):
-        times = [int(i['time']) for i in value_anesthesia]
-        print(times)
+        # times = [int(i['time']) for i in value_anesthesia]
+        paraclinic_result_obj = None
         if iss_pk > 0:
-            paraclinic_result_obj = ParaclinicResult.objects.get(issledovaniye__pk=iss_pk, field__pk=field_pk)
-            paraclinic_result_obj.value = value_anesthesia
-        else:
             iss_obj = Issledovaniya.objects.get(pk=iss_pk)
             field_obj = directory.ParaclinicInputField.objects.get(pk=field_pk)
-            paraclinic_result_obj = ParaclinicResult(iss=iss_obj, field=field_obj, value=value_anesthesia)
+            paraclinic_result_obj = ParaclinicResult.objects.filter(issledovaniye=iss_obj, field=field_obj).first()
+            if paraclinic_result_obj:
+                paraclinic_result_obj.value = value_anesthesia
+            else:
+                paraclinic_result_obj = ParaclinicResult(issledovaniye=iss_obj, field=field_obj, value=value_anesthesia)
+            paraclinic_result_obj.save()
 
-        paraclinic_result_obj.save()
         return paraclinic_result_obj
 
     @staticmethod
     def anesthesia_value_get(iss_pk=-1, field_pk=-1):
         if iss_pk > 0:
-            paraclinic_result_obj = ParaclinicResult.objects.get(issledovaniye__pk=iss_pk, field__pk=field_pk)
-            return paraclinic_result_obj.value
+            paraclinic_result_obj = ParaclinicResult.objects.filter(issledovaniye__pk=iss_pk, field__pk=field_pk).first()
+            if paraclinic_result_obj:
+                return paraclinic_result_obj.value
         else:
             return ""
 

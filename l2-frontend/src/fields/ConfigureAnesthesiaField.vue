@@ -69,22 +69,34 @@
     },
     data() {
       return {
-        tb_data: this.value || [{"title": '', "type": '', "default": false, "order": 0}],
+        tb_data: this.value || [{"title": '', "type": '', "default": false}],
       }
     },
     methods: {
       add_new_row() {
-        this.tb_data.push({"title": '', "type": '', "default": false, "order": 0});
+        this.tb_data.push({"title": '', "type": '', "default": false});
       },
       delete_row(index) {
          this.tb_data.splice(index, 1);
        },
+      is_first_in_row(i) {
+        return i === 0
+      },
+      is_last_in_template(i) {
+        return i === this.tb_data.length - 1
+      },
       down_row(i) {
+        if (this.is_last_in_template(i)) {
+          return
+        }
         let values = [...this.tb_data];
         [values[i + 1], values[i]] = [values[i], values[i + 1]]
         this.tb_data = values
       },
       up_row(i) {
+        if (this.is_first_in_row(i)) {
+          return
+        }
         let values = [...this.tb_data];
         [values[i - 1], values[i]] = [values[i], values[i - 1]]
         this.tb_data = values

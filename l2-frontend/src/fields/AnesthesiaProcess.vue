@@ -204,6 +204,7 @@
       }
     },
     mounted() {
+      console.log(this.fields)
       for (let f of this.fields) {
         if (f.type === 'Сильнодействующие' && f.default === true) {
           this.potent_drugs_used[f.title] = ''
