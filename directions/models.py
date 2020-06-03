@@ -1081,18 +1081,11 @@ class ParaclinicResult(models.Model):
     def anesthesia_value_save(iss_pk=-1, field_pk=-1, value_anesthesia=''):
         times = [int(i['time']) for i in value_anesthesia]
         times = sorted(times)
-        print(times, type(times))
         sorted_result = ['' for i in range(len(value_anesthesia))]
-        for i in value_anesthesia:
-            print(i)
 
         for i in value_anesthesia:
             index = times.index(int(i['time']))
-            print(index)
-            sorted_result[index] =i
-        for i in sorted_result:
-            print(i)
-
+            sorted_result[index] = i
 
         paraclinic_result_obj = None
         if iss_pk > 0:
