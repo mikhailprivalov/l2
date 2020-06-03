@@ -86,7 +86,7 @@
         return forDirs.map(f => {
           return {
             ...f, url: f.url.kwf({
-              card: this.patient_pk,
+              card: this.card_pk,
               dir: JSON.stringify(this.checked),
             })
           }
