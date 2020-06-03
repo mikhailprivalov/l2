@@ -1151,6 +1151,42 @@ def directions_anesthesia_load(request):
     if anesthesia_data:
         if len(anesthesia_data) > 0:
             d1 = eval(anesthesia_data)
+            times_tb = []
+            potent_drugs_tb = {}
+            narcotic_drugs_tb = {}
+            patient_params_tb = {}
+            for i in d1:
+                times_tb.append(i['time'])
+                temp_potent_drugs_tb = i['potent_drugs']
+                for k, v in temp_potent_drugs_tb.items():
+                    if potent_drugs_tb.get(k):
+                        val_potent_drugs_tb = potent_drugs_tb.get(k)
+                        val_potent_drugs_tb.append(v)
+                        potent_drugs_tb[k] = val_potent_drugs_tb
+                    else:
+                        potent_drugs_tb[k] = [v]
+                temp_narcotic_drugs_tb = i['narcotic_drugs']
+                for k, v in temp_narcotic_drugs_tb.items():
+                    if narcotic_drugs_tb.get(k):
+                        val_narcotic_drugs_tb = narcotic_drugs_tb.get(k)
+                        val_narcotic_drugs_tb.append(v)
+                        narcotic_drugs_tb[k] = val_narcotic_drugs_tb
+                    else:
+                        narcotic_drugs_tb[k] = [v]
+                temp_patient_params_tb = i['patient_params']
+                for k, v in temp_patient_params_tb.items():
+                    if patient_params_tb.get(k):
+                        val_patient_params_tb = patient_params_tb.get(k)
+                        val_patient_params_tb.append(v)
+                        patient_params_tb[k] = val_patient_params_tb
+                    else:
+                        patient_params_tb[k] = [v]
+
+                print(i)
+            print(potent_drugs_tb)
+            print(narcotic_drugs_tb)
+            print(patient_params_tb)
+            print(times_tb)
     return JsonResponse({'data': d1})
 
 
