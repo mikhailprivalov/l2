@@ -1,7 +1,7 @@
 <template>
       <TypeAhead src="/api/mkb10?keyword=:keyword" :getResponse="resp => [...resp.data.data]"
                  :onHit="onHit" ref="d" placeholder="Диагноз (МКБ 10)"
-                 v-model="content" maxlength="36" :delayTime="200" :minChars="1"
+                 v-model="content" maxlength="80" :delayTime="200" :minChars="1"
                  :render="items => items.map(i => `${i.code} ${i.title}`)"
                  :limit="11"
                  :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
