@@ -1599,6 +1599,10 @@ input[type=date].form-control {
   padding-left: 20px !important;
 }
 
+.input-group .typeahead-dropdown-container .dropdown-menu-list.dropdown-menu{
+    top: 2em;
+}
+
 .dropdown-toggle, .vs__selected-options, .selected-tag {
   text-overflow: clip;
   white-space: nowrap;
