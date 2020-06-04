@@ -251,7 +251,7 @@
         await this.$store.dispatch(action_types.INC_LOADING);
         this.patient_params_used['temperature'] = this.temperature
         let temp_result = {
-          'time': this.timeValue.H + this.timeValue.mm,
+          'time': this.timeValue,
           'potent_drugs': this.potent_drugs_used,
           'narcotic_drugs': this.narcotic_drugs_used,
           'patient_params': this.patient_params_used
