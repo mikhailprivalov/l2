@@ -14,17 +14,9 @@
           <div class="time-control">
             <input type="datetime-local" class="form-control nbr" v-model="timeValue" :max="maxTimeValue"/>
             <button class="btn btn-blue-nb nbr" @click="setCurrentTime" title="Текущие дата и время" v-tippy>
-              <i class="fa fa-circle"/>
+              <i class="fa fa-clock-o"/>
             </button>
           </div>
-
-          <div class="time-control">
-            <input type="datetime-local" class="form-control nbr" v-model="timeValue" :max="maxTimeValue"/>
-            <button class="btn btn-blue-nb nbr" @click="setCurrentTime" title="Текущие дата и время" v-tippy>
-              <i class="fa fa-circle"/>
-            </button>
-          </div>
-
           <div class="sidebar-content">
             <div class="title-anesthesia">Показатели человека</div>
             <table class="table table-condensed tb-background">
@@ -40,20 +32,20 @@
               </tr>
             </table>
             <div class="number">
-              <button class="btn btn-blue-nb sidebar-btn" @click="minus_temperature_once">
+              <button class="btn btn-blue-nb nbr" @click="minus_temperature_once">
                 -1
               </button>
-              <button class="btn btn-blue-nb sidebar-btn" @mousedown="minus_temperature_start"
+              <button class="btn btn-blue-nb nbr" @mousedown="minus_temperature_start"
                       @mouseleave="temperature_stop" @mouseup="temperature_stop">
                 -0.1
               </button>
               <input type="text" v-model.number="temperature"
                      placeholder="Температура"/>
-              <button class="btn btn-blue-nb sidebar-btn" @mousedown="plus_temperature_start"
+              <button class="btn btn-blue-nb nbr" @mousedown="plus_temperature_start"
                       @mouseleave="temperature_stop" @mouseup="temperature_stop">
                 +0.1
               </button>
-              <button class="btn btn-blue-nb sidebar-btn"  @click="plus_temperature_once">
+              <button class="btn btn-blue-nb nbr"  @click="plus_temperature_once">
                 +1
               </button>
             </div>
@@ -234,7 +226,7 @@
       }, 1000);
       this.setCurrentTime();
       this.setMaxTime();
-      this.load_data();
+      // this.load_data();
     },
     destroyed() {
       clearInterval(this.interval);
@@ -462,7 +454,7 @@
 
       td {
         padding-left: 3px !important;
-        border-left: 1px solid #000;
+        /*border-left: 1px solid #000;*/
       }
 
       tr:hover {
