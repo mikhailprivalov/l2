@@ -1,81 +1,99 @@
 <template>
   <div>
-    <div class="sidebar-anesthesia"
-         :class="[{show_anesthesia: this.$store.state.showMenuAnesthesiaStatus}, {hide_anesthesia: !this.$store.state.showMenuAnesthesiaStatus}]">
-      <div class="title-anesthesia">
-        <div class="col-xs-10">Течение анестезии</div>
-        <div class="col-xs-2">
-          <button class="btn btn-blue-nb sidebar-btn close-btn" style="font-size: 14px" @click="show_anesthesia_sidebar">
-            <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Закрыть"></i>
+    <div class="sidebar-anesthesia-overlay" :class="{showOverlay: this.$store.state.showMenuAnesthesiaStatus}"/>
+    <div class="sidebar-anesthesia" :class="{show: this.$store.state.showMenuAnesthesiaStatus}">
+      <div class="sidebar-anesthesia-inner">
+        <div class="scroll-wrapper">
+          <div class="title-anesthesia">
+            <div>Течение анестезии</div>
+            <button class="btn btn-blue-nb sidebar-btn close-btn"
+                    @click="show_anesthesia_sidebar">
+              <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Закрыть"></i>
+            </button>
+          </div>
+          <div class="time-control">
+            <input type="datetime-local" class="form-control nbr" v-model="timeValue" :max="maxTimeValue"/>
+            <button class="btn btn-blue-nb nbr" @click="setCurrentTime" title="Текущие дата и время" v-tippy>
+              <i class="fa fa-circle"/>
+            </button>
+          </div>
+
+          <div class="time-control">
+            <input type="datetime-local" class="form-control nbr" v-model="timeValue" :max="maxTimeValue"/>
+            <button class="btn btn-blue-nb nbr" @click="setCurrentTime" title="Текущие дата и время" v-tippy>
+              <i class="fa fa-circle"/>
+            </button>
+          </div>
+
+          <div class="sidebar-content">
+            <div class="title-anesthesia">Показатели человека</div>
+            <table class="table table-condensed tb-background">
+              <colgroup>
+                <col/>
+                <col width='80'/>
+              </colgroup>
+              <tr v-for="(v, k) in patient_params_used" v-if="k !== 'temperature'">
+                <td class="cl-td">{{k}}</td>
+                <td class="cl-td"><input style="width: 100%" class="no-outline" type="text" :value="v"
+                                         @input="update(patient_params_used, k, $event)" :key="k"
+                                         :placeholder="'значение'"/></td>
+              </tr>
+            </table>
+            <div class="number">
+              <button class="btn btn-blue-nb sidebar-btn" @click="minus_temperature_once">
+                -1
+              </button>
+              <button class="btn btn-blue-nb sidebar-btn" @mousedown="minus_temperature_start"
+                      @mouseleave="temperature_stop" @mouseup="temperature_stop">
+                -0.1
+              </button>
+              <input type="text" v-model.number="temperature"
+                     placeholder="Температура"/>
+              <button class="btn btn-blue-nb sidebar-btn" @mousedown="plus_temperature_start"
+                      @mouseleave="temperature_stop" @mouseup="temperature_stop">
+                +0.1
+              </button>
+              <button class="btn btn-blue-nb sidebar-btn"  @click="plus_temperature_once">
+                +1
+              </button>
+            </div>
+            <div class="title-anesthesia">Сильнодействующие</div>
+            <table class="table table-condensed tb-background">
+              <colgroup>
+                <col/>
+                <col width='80'/>
+              </colgroup>
+              <tr v-for="(v, k) in potent_drugs_used">
+                <td class="cl-td">{{k}}</td>
+                <td class="cl-td"><input style="width: 100%" class="no-outline" type="text" :value="v"
+                                         @input="update(potent_drugs_used, k, $event)" :key="k"
+                                         :placeholder="'значение'"/></td>
+              </tr>
+            </table>
+            <div class="title-anesthesia">Наркотические</div>
+            <table class="table table-condensed tb-background col-xs-12">
+              <colgroup>
+                <col/>
+                <col width='80'/>
+              </colgroup>
+              <tr v-for="(v, k) in narcotic_drugs_used">
+                <td class="cl-td ">{{k}}</td>
+                <td class="cl-td "><input style="width: 100%" class="no-outline" type="text" :value="v"
+                                          @input="update(narcotic_drugs_used, k, $event)" :key="k"
+                                          :placeholder="'значение'"/></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="side-bottom">
+          <button class="btn btn-blue-nb nbr" @click="save_data">
+            Добавить
+          </button>
+          <button class="btn btn-blue-nb nbr" @click="load_data">
+            Обновить
           </button>
         </div>
-      </div>
-      <div class="time-control row">
-        <vue-timepicker class="col-xs-6" v-model="timeValue" format="H:mm" hide-clear-button close-on-complete/>
-        <button class="btn btn-blue-nb col-xs-6" @click="getCurrentTime">
-          <i class="fa fa-clock-o"/> Текущее время
-        </button>
-      </div>
-      <div class="content">
-        <div class="col-xs-12 title-anesthesia">Показатели человека</div>
-        <table class="table table-condensed tb-background">
-          <colgroup>
-            <col width='190'/>
-            <col width='70'/>
-          </colgroup>
-          <tr v-for="(v, k) in patient_params_used" v-if="k != 'temperature'">
-            <td class="cl-td">{{k}}</td>
-            <td class="cl-td"><input style="width: 100%" class="no-outline" type="text" :value="v"
-                                                   @input="update(patient_params_used, k, $event)" :key="k"
-                                                   :placeholder="'значение'"/></td>
-          </tr>
-        </table>
-        <div class="number">
-          <button class="btn btn-blue-nb sidebar-btn" @mousedown="minus_temperature_start"
-                  @mouseleave="temperature_stop" @mouseup="temperature_stop">
-            <i class="fa fa-minus"/>
-          </button>
-          <input type="text" v-model.number="temperature"
-                 placeholder="Температура"/>
-          <button class="btn btn-blue-nb sidebar-btn" style="" @mousedown="plus_temperature_start"
-                  @mouseleave="temperature_stop" @mouseup="temperature_stop">
-            <i class="fa fa-plus"/>
-          </button>
-        </div>
-        <div class="col-xs-12 title-anesthesia">Сильнодействующие</div>
-        <table class="table table-condensed tb-background">
-          <colgroup>
-            <col width='190'/>
-            <col width='70'/>
-          </colgroup>
-          <tr v-for="(v, k) in potent_drugs_used">
-            <td class="cl-td">{{k}}</td>
-            <td class="cl-td"><input style="width: 100%" class="no-outline" type="text" :value="v"
-                                                   @input="update(potent_drugs_used, k, $event)" :key="k"
-                                                   :placeholder="'значение'"/></td>
-          </tr>
-        </table>
-        <div class="col-xs-12 title-anesthesia">Наркотические</div>
-        <table class="table table-condensed tb-background col-xs-12">
-          <colgroup>
-            <col width='190'/>
-            <col width='70'/>
-          </colgroup>
-          <tr v-for="(v, k) in narcotic_drugs_used">
-            <td class="cl-td ">{{k}}</td>
-            <td class="cl-td "><input style="width: 100%" class="no-outline" type="text" :value="v"
-                                                   @input="update(narcotic_drugs_used, k, $event)" :key="k"
-                                                   :placeholder="'значение'"/></td>
-          </tr>
-        </table>
-      </div>
-      <div class="side-bottom row">
-        <button class="btn btn-blue-nb col-xs-6" @click="save_data">
-          Добавить
-        </button>
-        <button class="btn btn-blue-nb col-xs-6" @click="load_data">
-          Обновить
-        </button>
       </div>
     </div>
     <button
@@ -162,16 +180,12 @@
 </template>
 
 <script>
-  import VueTimepicker from 'vue2-timepicker/src/vue-timepicker.vue'
   import moment from 'moment'
   import * as action_types from '../store/action-types'
   import directions_point from "../api/directions-point";
 
   export default {
     name: "AnesthesiaProcess",
-    components: {
-      VueTimepicker
-    },
     props: {
       fields: {
         type: Array,
@@ -189,12 +203,11 @@
     data() {
       return {
         show_anesthesia_menu: false,
-        timeValue: {
-          H: '',
-          mm: '',
-        },
+        timeValue: moment().format('YYYY-MM-DDTHH:mm'),
+        maxTimeValue: moment().add(1, 'days').format('YYYY-MM-DDTHH:mm'),
         temperature: 36.6,
         interval: null,
+        intervalTime: null,
         potent_drugs_other: {},
         potent_drugs_used: {},
         potent_data: {},
@@ -203,8 +216,7 @@
         narcotic_data: {},
         patient_params_used: {},
         patient_params_other: {},
-        tb_data: []
-
+        tb_data: [],
       }
     },
     mounted() {
@@ -217,9 +229,16 @@
           this.patient_params_used[f.title] = ''
         }
       }
-      this.getCurrentTime();
-      // this.load_data();
-
+      this.intervalTime = setInterval(() => {
+        this.setMaxTime()
+      }, 1000);
+      this.setCurrentTime();
+      this.setMaxTime();
+      this.load_data();
+    },
+    destroyed() {
+      clearInterval(this.interval);
+      clearInterval(this.intervalTime);
     },
     watch: {
       temperature() {
@@ -266,10 +285,18 @@
       plus_temperature_start() {
         if (typeof this.temperature !== 'number') {
           this.temperature = 36.6
+        } else {
+          this.temperature += 0.1
         }
-        if (!this.interval) {
-          this.interval = setInterval(() => ((this.temperature += 0.1).toFixed(1)), 100)
-        }
+
+        clearInterval(this.interval);
+
+        this.interval = setTimeout(() => {
+          clearInterval(this.interval);
+          this.interval = setInterval(() => {
+            this.temperature += 0.1
+          }, 200)
+        }, 400)
       },
       temperature_stop() {
         clearInterval(this.interval);
@@ -278,15 +305,30 @@
       minus_temperature_start() {
         if (typeof this.temperature !== 'number') {
           this.temperature = 36.6
+        } else {
+          this.temperature -= 0.1
         }
-        if (!this.interval) {
-          this.interval = setInterval(() => (
-            (this.temperature -= 0.1).toFixed(1)), 100)
-        }
+
+        clearInterval(this.interval);
+
+        this.interval = setTimeout(() => {
+          clearInterval(this.interval);
+          this.interval = setInterval(() => {
+            this.temperature -= 0.1
+          }, 200)
+        }, 400)
       },
-      getCurrentTime() {
-        this.timeValue.mm = moment().format('mm');
-        this.timeValue.H = moment().format('H');
+      minus_temperature_once() {
+        this.temperature -= 1;
+      },
+      plus_temperature_once() {
+        this.temperature += 1;
+      },
+      setCurrentTime() {
+        this.timeValue = moment().format('YYYY-MM-DDTHH:mm');
+      },
+      setMaxTime() {
+        this.maxTimeValue = moment().add(2, 'days').format('YYYY-MM-DDTHH:mm');
       },
       clear_data(obj) {
         Object.entries(obj).forEach(([key]) => obj[key] = '');
@@ -296,88 +338,154 @@
         this.clear_data(this.potent_drugs_used)
         this.clear_data(this.narcotic_drugs_used)
         this.clear_data(this.patient_params_used)
-        this.getCurrentTime();
+        this.setCurrentTime();
       }
     }
   }
 </script>
 
 <style scoped lang="scss">
-  .show_anesthesia {
-    width: 260px;
-  }
-
-  .hide_anesthesia {
-    width: 0;
-  }
+  $sidebar-anesthesia-width: 300px;
 
   .sidebar-anesthesia {
-    height: 600px;
+    border-top-right-radius: 5px;
     position: fixed;
-    top: 100px;
+    top: 105px;
+    z-index: 1000;
+    bottom: 0;
     left: 0;
-    background-color: #eee;
+    width: 0;
     overflow-x: hidden;
     overflow-y: hidden;
-    transition: 0.6s;
+    transition: 0.4s width ease-in-out, 0.4s box-shadow ease-in-out;
+    background-color: #fff;
     border-right: 1px solid #56616c;
-    border-bottom: 1px solid #56616c;
 
-    .side-bottom {
-      position: absolute;
+    &.show {
+      width: $sidebar-anesthesia-width;
+      box-shadow: 1px 0 8px 2px rgba(0, 0, 0, .3);
+    }
+  }
+
+  .sidebar-anesthesia-overlay {
+    z-index: 998;
+    position: fixed;
+    top: -999px;
+    left: -999px;
+    opacity: 0;
+    background: rgba(#000, .3);
+    transition: 0.4s opacity ease-in-out;
+
+    &.showOverlay {
+      top: 0;
+      right: 0;
       bottom: 0;
       left: 0;
+      opacity: 1;
+    }
+  }
+
+  .zIndex999 {
+    z-index: 998;
+    position: relative;
+  }
+
+  .sidebar-anesthesia-inner {
+    position: relative;
+    height: 100%;
+    width: $sidebar-anesthesia-width;
+    overflow-x: hidden;
+
+    .scroll-wrapper {
+      overflow-x: hidden;
+      overflow-y: auto;
+      position: absolute;
+      top: 0;
       right: 0;
-      border-radius: 0;
-      height: 30px;
-      .btn {
-        border-radius: 0;
-      }
+      left: 0;
+      bottom: 34px;
     }
 
     .title-anesthesia {
+      position: relative;
       height: 30px;
       background-color: #56616c;
       display: flex;
       flex-direction: row;
       color: #f5f5f5;
       padding-top: 5px;
-      .sidebar-btn {
-        height: 27px;
-        width: 27px;
-        padding: 0 8px;
+      padding-left: 5px;
+      padding-right: 30px;
 
+      .sidebar-btn {
+        color: #fff;
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 30px;
+        width: 30px;
+        padding: 0;
       }
     }
 
     .number {
       display: flex;
       flex-direction: row;
-      width: 259px;
 
       .sidebar-btn {
         margin-top: 0;
         height: 31px;
         width: 40px;
+        font-weight: bold;
+        padding: 0;
+
+        &:nth-of-type(1), &:nth-of-type(2) {
+          border-right: 1px solid #000 !important;
+        }
+        &:nth-of-type(3), &:nth-of-type(4) {
+          border-left: 1px solid #000 !important;
+        }
       }
 
       input {
         margin-left: 0;
         margin-right: 0;
         text-align: center;
+        width: calc(100% - 160px);
       }
     }
 
-    .content {
-      overflow-y: auto;
-      overflow-x: hidden;
-      height: 510px;
+    .sidebar-content {
+      th {
+        padding-left: 5px;
+      }
+
+      td {
+        padding-left: 3px !important;
+        border-left: 1px solid #000;
+      }
 
       tr:hover {
         &, & input {
           background-color: #55566b;
           color: #f5f5f5;
         }
+      }
+    }
+
+    .side-bottom {
+      display: flex;
+      flex-direction: row;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 34px;
+
+      .btn {
+        display: inline-block;
+        width: 50%;
+        height: 34px;
       }
     }
   }
@@ -400,12 +508,9 @@
   .time-control {
     display: flex;
     flex-direction: row;
-    .btn {
-      border-radius: 0;
-      padding: 5px 4px;
-      width: 50%;
-      height: 31px;
-      border: none !important;
+
+    input {
+      text-align: center;
     }
   }
 
