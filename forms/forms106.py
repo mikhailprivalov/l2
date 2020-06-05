@@ -161,7 +161,7 @@ def form_01(request_data):
         near_diagnos = hosp_extract_data['near_diagnos']
         days_count = hosp_extract_data['days_count']
         if hosp_extract_data['outcome']:
-            outcome = hosp_extract_data['outcome']
+            outcome = hosp_extract_data['outcome'] + '(' + hosp_extract_data['result_hospital'] + ')'
         doc_fio = hosp_extract_data['doc_fio']
         manager_depart = hosp_extract_data['manager_depart']
 
