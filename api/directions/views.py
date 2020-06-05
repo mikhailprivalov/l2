@@ -1136,59 +1136,43 @@ def directions_anesthesia_result(request):
     response = {"ok": False, "message": ""}
     rb = json.loads(request.body)
     temp_result = rb.get("temp_result", {})
-    print(temp_result)
     research_data = rb.get("research_data", {})
-    ParaclinicResult.anesthesia_value_save(research_data['iss_pk'], research_data['field_pk'], temp_result)
+    result = ParaclinicResult.anesthesia_value_save(research_data['iss_pk'], research_data['field_pk'], temp_result)
+    if result:
+        response = {"ok": True, "message": ""}
     return JsonResponse(response)
 
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_anesthesia_load(request):
     rb = json.loads(request.body)
-    research_data = rb.get("research_data", {})
-    print(research_data)
+    research_data = rb.get("research_data", '')
+    if research_data is None:
+        return JsonResponse({'data': 'Ошибка входных данных'})
     anesthesia_data = ParaclinicResult.anesthesia_value_get(research_data['iss_pk'], research_data["field_pk"])
-    d1 = []
-    if anesthesia_data:
-        if len(anesthesia_data) > 0:
-            d1 = eval(anesthesia_data)
-            times_tb = []
-            potent_drugs_tb = {}
-            narcotic_drugs_tb = {}
-            patient_params_tb = {}
-            for i in d1:
-                times_tb.append(i['time'])
-                temp_potent_drugs_tb = i['potent_drugs']
-                for k, v in temp_potent_drugs_tb.items():
-                    if potent_drugs_tb.get(k):
-                        val_potent_drugs_tb = potent_drugs_tb.get(k)
-                        val_potent_drugs_tb.append(v)
-                        potent_drugs_tb[k] = val_potent_drugs_tb
-                    else:
-                        potent_drugs_tb[k] = [v]
-                temp_narcotic_drugs_tb = i['narcotic_drugs']
-                for k, v in temp_narcotic_drugs_tb.items():
-                    if narcotic_drugs_tb.get(k):
-                        val_narcotic_drugs_tb = narcotic_drugs_tb.get(k)
-                        val_narcotic_drugs_tb.append(v)
-                        narcotic_drugs_tb[k] = val_narcotic_drugs_tb
-                    else:
-                        narcotic_drugs_tb[k] = [v]
-                temp_patient_params_tb = i['patient_params']
-                for k, v in temp_patient_params_tb.items():
-                    if patient_params_tb.get(k):
-                        val_patient_params_tb = patient_params_tb.get(k)
-                        val_patient_params_tb.append(v)
-                        patient_params_tb[k] = val_patient_params_tb
-                    else:
-                        patient_params_tb[k] = [v]
+    if anesthesia_data and len(anesthesia_data) > 0:
+        tb_data = []
+        result = eval(anesthesia_data)
+        cols_template = ['' for i in range(len(result['times']) + 1)]
 
-                print(i)
-            print(potent_drugs_tb)
-            print(narcotic_drugs_tb)
-            print(patient_params_tb)
-            print(times_tb)
-    return JsonResponse({'data': d1})
+        times_row = [' ']
+        times_row.extend(result['times'])
+
+        def made_structure(type):
+            for i in result[type]:
+                current_param = ['' for i in cols_template]
+                current_param[0] = i
+                for k, v in result[i].items():
+                    if k in times_row:
+                        index = times_row.index(k)
+                        current_param[index] = v
+                tb_data.append(current_param)
+        tb_data.append(times_row)
+        made_structure('patient_params')
+        made_structure('potent_drugs')
+        made_structure('narcotic_drugs')
+
+    return JsonResponse({'data': tb_data})
 
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")

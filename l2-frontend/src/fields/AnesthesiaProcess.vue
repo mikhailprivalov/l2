@@ -258,9 +258,7 @@
         }
         let research_data = {'iss_pk': this.iss, 'field_pk': this.field_pk}
         this.tb_data.push(temp_result)
-        console.log(temp_result)
         await directions_point.anesthesiaResultSave({
-          // 'temp_result': this.tb_data,
           'temp_result': temp_result,
           'research_data': research_data
         });
@@ -273,8 +271,6 @@
           'research_data': research_data
         });
         this.tb_data = [...data.data];
-        console.log(this.tb_data)
-
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       plus_temperature_start() {

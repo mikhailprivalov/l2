@@ -1091,47 +1091,30 @@ class ParaclinicResult(models.Model):
         previus_result = ParaclinicResult.anesthesia_value_get(iss_pk, field_pk)
         if len(previus_result) > 0:
             previus_result = eval(previus_result)
-
         if len(previus_result) == 0:
             previus_result = {'patient_params':[], 'potent_drugs': [], 'narcotic_drugs': [], 'times': []}
 
         temp_times = previus_result['times']
-
         current_time = value_anesthesia.get('time')
         if current_time not in temp_times:
             temp_times.append(current_time)
         temp_times = sorted(temp_times)
-
         previus_result['times'] = temp_times
-        for k, v in value_anesthesia.get('patient_params').items():
-            if k not in previus_result['patient_params']:
-                previus_result['patient_params'].append(k)
-            if previus_result.get(k):
-                temp_attr = previus_result[k]
-                temp_attr[current_time] = v
-                previus_result[k] = temp_attr
-            else:
-                previus_result[k] = {current_time: v}
 
-        for k, v in value_anesthesia.get('potent_drugs').items():
-            if k not in previus_result['potent_drugs']:
-                previus_result['potent_drugs'].append(k)
-            if previus_result.get(k):
-                temp_attr = previus_result[k]
-                temp_attr[current_time] = v
-                previus_result[k] = temp_attr
-            else:
-                previus_result[k] = {current_time: v}
+        def made_anesthesia_structure(type):
+            for k, v in value_anesthesia.get(type).items():
+                if k not in previus_result[type]:
+                    previus_result[type].append(k)
+                if previus_result.get(k):
+                    temp_attr = previus_result[k]
+                    temp_attr[current_time] = v
+                    previus_result[k] = temp_attr
+                else:
+                    previus_result[k] = {current_time: v}
 
-        for k, v in value_anesthesia.get('narcotic_drugs').items():
-            if k not in previus_result['narcotic_drugs']:
-                previus_result['narcotic_drugs'].append(k)
-            if previus_result.get(k):
-                temp_attr = previus_result[k]
-                temp_attr[current_time] = v
-                previus_result[k] = temp_attr
-            else:
-                previus_result[k] = {current_time: v}
+        made_anesthesia_structure('patient_params')
+        made_anesthesia_structure('potent_drugs')
+        made_anesthesia_structure('narcotic_drugs')
 
         paraclinic_result_obj = None
         if iss_pk > 0:
@@ -1144,7 +1127,6 @@ class ParaclinicResult(models.Model):
             else:
                 paraclinic_result_obj = ParaclinicResult(issledovaniye=iss_obj, field=field_obj, field_type=21, value=previus_result)
             paraclinic_result_obj.save()
-
         return paraclinic_result_obj
 
 
