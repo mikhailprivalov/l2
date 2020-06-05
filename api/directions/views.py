@@ -1150,8 +1150,8 @@ def directions_anesthesia_load(request):
     if research_data is None:
         return JsonResponse({'data': 'Ошибка входных данных'})
     anesthesia_data = ParaclinicResult.anesthesia_value_get(research_data['iss_pk'], research_data["field_pk"])
+    tb_data = []
     if anesthesia_data and len(anesthesia_data) > 0:
-        tb_data = []
         result = eval(anesthesia_data)
         cols_template = ['' for i in range(len(result['times']) + 1)]
 
