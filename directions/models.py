@@ -1092,7 +1092,7 @@ class ParaclinicResult(models.Model):
         if len(previus_result) > 0:
             previus_result = eval(previus_result)
         if len(previus_result) == 0:
-            previus_result = {'patient_params':[], 'potent_drugs': [], 'narcotic_drugs': [], 'times': []}
+            previus_result = {'patient_params': [], 'potent_drugs': [], 'narcotic_drugs': [], 'times': []}
 
         temp_times = previus_result['times']
         current_time = value_anesthesia.get('time')
