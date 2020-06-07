@@ -3,7 +3,6 @@ import re
 import time
 from datetime import datetime, time as dtime
 from operator import itemgetter
-
 import simplejson as json
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
@@ -12,7 +11,6 @@ from django.http import HttpRequest
 from django.http import JsonResponse
 from django.utils import dateformat
 from django.utils import timezone
-
 from api import sql_func
 from api.dicom import search_dicom_study
 from api.patients.views import save_dreg
@@ -1155,7 +1153,7 @@ def directions_anesthesia_load(request):
         result = eval(anesthesia_data)
         cols_template = ['' for i in range(len(result['times']) + 1)]
 
-        times_row = [' ']
+        times_row = ['Параметр']
         times_row.extend(result['times'])
 
         def made_structure(type):
