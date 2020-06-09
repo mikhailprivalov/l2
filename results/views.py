@@ -958,6 +958,7 @@ def result_print(request):
                     fwb.append(Paragraph(f"<para align='center'><font size='9'>{iss_title}</font></para>", styleBold))
                 else:
                     fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
+
                 if iss.research.is_microbiology:
                     fwb = microbiology_result(iss, fwb, doc)
                 elif not protocol_plain_text:
