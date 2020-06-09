@@ -6,12 +6,18 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from copy import deepcopy
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 import os.path
 from laboratory.settings import FONTS_FOLDER
 from pyvirtualdisplay import Display
 import imgkit
 import sys
+import directory.models as directory
+import collections
+from directions.models import ParaclinicResult, MicrobiologyResultCulture
+import datetime
+from appconf.manager import SettingManager
+import simplejson as json
 
 
 def lab_iss_to_pdf(data1):
@@ -295,3 +301,309 @@ def html_to_pdf(file_tmp, r_value, pw, leftnone=False):
     i.drawWidth = pw
 
     return i
+
+
+def default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col):
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "FreeSans"
+    style.fontSize = 9
+    style.alignment = TA_JUSTIFY
+    style_ml = deepcopy(style)
+    style_ml.leftIndent = 5 * mm
+    styleBold = deepcopy(style)
+    styleBold.fontName = "FreeSansBold"
+    styleTable = deepcopy(style)
+    styleTableMono = deepcopy(styleTable)
+    styleTableMono.fontName = "Consolas"
+    styleTableMono.fontSize = 10
+    styleAb = deepcopy(styleTable)
+    styleAb.fontSize = 7
+    styleAb.leading = 7
+    styleAb.spaceBefore = 0
+    styleAb.spaceAfter = 0
+    styleAb.leftIndent = 0
+    styleAb.rightIndent = 0
+    styleAb.alignment = TA_CENTER
+    styleTableMonoBold = deepcopy(styleTable)
+    styleTableMonoBold.fontName = "Consolas-Bold"
+    styleTableSm = deepcopy(styleTable)
+    styleTableSm.fontSize = 4
+
+    data = [
+        ["Номер:", str(direction.pk)],
+        ["Пациент:", Paragraph(direction.client.individual.fio(), styleTableMonoBold)],
+        ["Пол:", direction.client.individual.sex],
+        ["Возраст:", "{} {}".format(direction.client.individual.age_s(direction=direction), individual_birthday)],
+    ]
+    data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
+    data += [[Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
+             ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:",
+              direction.client.number_with_type() + (
+                  " - архив" if direction.client.is_archive else "") + number_poliklinika]]
+    if not direction.imported_from_rmis:
+        data.append(
+            ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)])
+    elif direction.imported_org:
+        data.append(["<font>Направляющая<br/>организация:</font>", direction.imported_org.title])
+
+    data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for xi in range(len(data))]
+
+    t = Table(data, colWidths=[doc.width * 0.145, doc.width - 158 - doc.width * 0.145, 158])
+    t.setStyle(TableStyle([
+        ('ALIGN', (-1, 0), (-1, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('VALIGN', (-1, 0), (-1, 0), 'BOTTOM'),
+        ('VALIGN', (-1, 5), (-1, 5), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (-1, 0), (-1, -1), 0),
+        ('TOPPADDING', (-1, 0), (-1, -1), 0),
+        ('TOPPADDING', (-1, 5), (-1, 5), 3),
+        ('TOPPADDING', (0, 5), (1, 5), 0),
+        ('TOPPADDING', (0, 6), (1, 6), -6),
+        ('BOTTOMPADDING', (0, 5), (1, 5), 0),
+        ('LEFTPADDING', (0, 5), (1, 5), 0),
+        ('RIGHTPADDING', (0, 5), (1, 5), 0),
+        ('SPAN', (-1, 0), (-1, 4)),
+        ('SPAN', (-1, 5), (-1, -1))
+
+    ]))
+
+    return t
+
+
+def structure_data_for_result(iss, fwb, doc, leftnone):
+    pw = doc.width
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "FreeSans"
+    style.fontSize = 9
+    style.alignment = TA_JUSTIFY
+    style_ml = deepcopy(style)
+    style_ml.leftIndent = 5 * mm
+    styleBold = deepcopy(style)
+    styleBold.fontName = "FreeSansBold"
+
+    sick_result = None
+    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
+        sick_title = True if group.title == "Сведения ЛН" else False
+        if sick_title:
+            sick_result = collections.OrderedDict()
+        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
+        group_title = False
+        if results.exists():
+            fwb.append(Spacer(1, 1 * mm))
+            if group.show_title and group.show_title != "":
+                fwb.append(Paragraph(group.title.replace('<', '&lt;').replace('>', '&gt;'), styleBold))
+                fwb.append(Spacer(1, 0.25 * mm))
+                group_title = True
+            for r in results:
+                field_type = r.get_field_type()
+                if field_type == 15:
+                    date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
+                    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+                    file_tmp = os.path.join(dir_param, f'field_{date_now1}_{r.pk}.png')
+                    img = html_to_pdf(file_tmp, r.value, pw, leftnone)
+                    fwb.append(img)
+                    os.remove(file_tmp)
+                else:
+                    v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
+                    v = v.replace('&lt;sub&gt;', '<sub>')
+                    v = v.replace('&lt;/sub&gt;', '</sub>')
+                    v = v.replace('&lt;sup&gt;', '<sup>')
+                    v = v.replace('&lt;/sup&gt;', '</sup>')
+                    if field_type == 16:
+                        v = json.loads(v)
+                        if not v['directions']:
+                            continue
+                        aggr_lab = lab_iss_to_pdf(v)
+                        if not aggr_lab:
+                            continue
+                        fwb.append(Spacer(1, 2 * mm))
+                        fwb.append(
+                            Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
+                                      style))
+                        fwb.extend(aggr_lab)
+                        continue
+                    if field_type == 17:
+                        if v:
+                            v = json.loads(v)
+                            if not v['directions']:
+                                continue
+                            aggr_text = text_iss_to_pdf(v)
+                            if not aggr_text:
+                                continue
+                            fwb.append(
+                                Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
+                                          style))
+                            fwb.extend(aggr_text)
+                            continue
+                    if field_type == 1:
+                        vv = v.split('-')
+                        if len(vv) == 3:
+                            v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+                    if field_type in [11, 13]:
+                        v = '<font face="FreeSans" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
+                    if r.field.get_title(force_type=field_type) != "":
+                        fwb.append(Paragraph(
+                            "<font face=\"FreeSansBold\">{}:</font> {}".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;'), v),
+                            style_ml if group_title else style))
+                    else:
+                        fwb.append(Paragraph(v, style))
+                    if sick_title:
+                        sick_result[r.field.get_title(force_type=field_type)] = v
+
+    return fwb
+
+
+def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
+    pw = doc.width
+    sick_result = None
+    txt = ""
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "FreeSans"
+    style.fontSize = 9
+    style.alignment = TA_JUSTIFY
+    style_ml = deepcopy(style)
+    style_ml.leftIndent = 5 * mm
+    styleBold = deepcopy(style)
+    styleBold.fontName = "FreeSansBold"
+    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
+        sick_title = group.title == "Сведения ЛН"
+        if sick_title:
+            sick_result = collections.OrderedDict()
+        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
+        if results.exists():
+            if group.show_title and group.title != "":
+                txt += "<font face=\"FreeSansBold\">{}:</font>&nbsp;".format(group.title.replace('<', '&lt;').replace('>', '&gt;'))
+            vals = []
+            for r in results:
+                field_type = r.get_field_type()
+                v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
+                v = v.replace('&lt;sub&gt;', '<sub>')
+                v = v.replace('&lt;/sub&gt;', '</sub>')
+                v = v.replace('&lt;sup&gt;', '<sup>')
+                v = v.replace('&lt;/sup&gt;', '</sup>')
+
+                if field_type == 1:
+                    vv = v.split('-')
+                    if len(vv) == 3:
+                        v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+                if field_type in [11, 13]:
+                    v = '<font face="FreeSans" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
+                if field_type == 15:
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
+                    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+                    file_tmp = os.path.join(dir_param, f'field_{date_now1}_{r.pk}.png')
+                    fwb.append(Spacer(1, 2 * mm))
+                    img = html_to_pdf(file_tmp, r.value, pw, leftnone)
+                    fwb.append(img)
+                    os.remove(file_tmp)
+                    continue
+                if field_type == 16:
+                    v = json.loads(v)
+                    if not v['directions']:
+                        continue
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    fwb.append(Spacer(1, 2 * mm))
+                    fwb.append(Paragraph(r.field.get_title(), styleBold))
+                    aggr_lab = lab_iss_to_pdf(v)
+                    fwb.extend(aggr_lab)
+                    continue
+                if field_type == 17:
+                    if v:
+                        v = json.loads(v)
+                        if not v['directions']:
+                            continue
+                        v = text_iss_to_pdf(v, protocol_plain_text)
+                if r.field.get_title(force_type=field_type) != "":
+                    vals.append("{}:&nbsp;{}".format(r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
+                else:
+                    vals.append(v)
+                if sick_title:
+                    sick_result[r.field.get_title(force_type=field_type)] = v
+
+            txt += "; ".join(vals)
+            txt = txt.strip()
+            if len(txt) > 0 and txt.strip()[-1] != ".":
+                txt += ". "
+            elif len(txt) > 0:
+                txt += " "
+    fwb.append(Paragraph(txt, style))
+    return fwb
+
+
+def microbiology_result(iss, fwb, doc):
+    pw = doc.width
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "FreeSans"
+    style.fontSize = 9
+    style.alignment = TA_JUSTIFY
+    style_ml = deepcopy(style)
+    style_ml.leftIndent = 5 * mm
+    styleBold = deepcopy(style)
+    styleBold.fontName = "FreeSansBold"
+
+    q = iss.culture_results.select_related('culture').prefetch_related('culture_antibiotic').all()
+    tw = pw * 0.98
+    culture: MicrobiologyResultCulture
+    for culture in q:
+        fwb.append(Spacer(1, 3 * mm))
+        fwb.append(Paragraph("<font face=\"FreeSansBold\">Культура:</font> " + culture.culture.get_full_title(), style))
+        if culture.koe:
+            fwb.append(Paragraph("<font face=\"FreeSansBold\">КОЕ:</font> " + culture.koe, style))
+
+        data = [
+            [Paragraph(x, styleBold) for x in ['Антибиотик', 'Диаметр', 'Чувствительность']]
+        ]
+
+        for anti in culture.culture_antibiotic.all():
+            data.append([Paragraph(x, style) for x in [
+                anti.antibiotic.title,
+                anti.dia,
+                anti.sensitivity,
+            ]])
+
+        cw = [int(tw * 0.4), int(tw * 0.3)]
+        cw = cw + [tw - sum(cw)]
+
+        t = Table(data, colWidths=cw)
+        style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                              ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                              ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                              ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                              ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                              ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                              ('TOPPADDING', (0, 0), (-1, -1), 1),
+                              ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+                              ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+                              ])
+        style_t.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
+        style_t.add('TOPPADDING', (0, 0), (-1, 0), 0)
+
+        t.setStyle(style_t)
+
+        fwb.append(Spacer(1, 2 * mm))
+        fwb.append(t)
+        fwb.append(Paragraph("<para align='right'><font size='7'>S – чувствителен; R – резистентен; I – промежуточная чувствительность</font></para>", style))
+        fwb.append(Spacer(1, 2 * mm))
+
+    if iss.microbiology_conclusion:
+        fwb.append(Spacer(1, 3 * mm))
+        fwb.append(Paragraph('Заключение', styleBold))
+        fwb.append(Paragraph(iss.microbiology_conclusion, style))
+
+    return fwb
