@@ -42,7 +42,7 @@ from api.stationar.stationar_func import hosp_get_hosp_direction
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, \
-    ParaclinicResult, Recipe, MicrobiologyResultCulture
+    ParaclinicResult, Recipe
 from laboratory.decorators import group_required, logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
@@ -353,7 +353,6 @@ def result_print(request):
 
     split = request.GET.get("split", "1") == "1"
     protocol_plain_text = request.GET.get("protocol_plain_text", "0") == "1"
-    sick_document = request.GET.get("sick_list", "0") == "1"
     leftnone = request.GET.get("leftnone", "0") == "0"
     hosp = request.GET.get("hosp", "0") == "1"
 
@@ -533,9 +532,7 @@ def result_print(request):
             fwb.append(Spacer(1, 4 * mm))
             fwb.append(InteractiveTextField())
             tw = pw
-
             no_units_and_ref = any([x.research.no_units_and_ref for x in direction.issledovaniya_set.all()])
-
             data = []
             tmp = [Paragraph('<font face="FreeSansBold" size="8">Исследование</font>', styleSheet["BodyText"]),
                    Paragraph('<font face="FreeSansBold" size="8">Результат</font>', styleSheet["BodyText"])]
