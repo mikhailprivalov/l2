@@ -94,79 +94,16 @@
       <i class="fa fa-heartbeat fa-lg"></i>
       Добавить
     </button>
-    <table class="table table-bordered">
-      <colgroup>
-            <col width='190'/>
-            <col width='70'/>
-      </colgroup>
-      <tr>
-        <th>SpO2</th>
-        <th>10:05</th>
-        <th>10:15</th>
-        <th>10:25</th>
-        <th>10:35</th>
-        <th>10:45</th>
-        <th>10:55</th>
-        <th>11:05</th>
-        <th>11:15</th>
-        <th>11:25</th>
-        <th>11:35</th>
-        <th>11:45</th>
-        <th>11:55</th>
-        <th>12:05</th>
-        <th>12:15</th>
-        <th>12:25</th>
-        <th>12:35</th>
-        <th>12:45</th>
-        <th>12:55</th>
-        <th>13:05</th>
-        <th>13:15</th>
-      </tr>
-      <tr>
-        <th>CО2</th>
-        <td>5.5</td>
-        <td>6.0</td>
-        <td>7.0</td>
-        <td>7.0</td>
-        <td>8.0</td>
-        <td>9.0</td>
-        <td>1.0</td>
-        <td>2.0</td>
-      </tr>
-      <tr>
-        <th>Температура</th>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-      </tr>
-      <tr>
-        <th>САД</th>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-      </tr>
-      <tr>
-        <th>ДАД</th>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-        <td>Да</td>
-      </tr>
-    </table>
+
+    <div class="tb-data">
+      <table class="table">
+        <tr v-for="row in tb_data">
+          <td v-for="item in row">
+            {{ item }}
+          </td>
+        </tr>
+      </table>
+    </div>
   </div>
 
 </template>
@@ -226,7 +163,7 @@
       }, 1000);
       this.setCurrentTime();
       this.setMaxTime();
-      // this.load_data();
+      this.load_data();
     },
     destroyed() {
       clearInterval(this.interval);
@@ -262,6 +199,7 @@
           'temp_result': temp_result,
           'research_data': research_data
         });
+        await this.load_data()
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async load_data() {
@@ -271,6 +209,7 @@
           'research_data': research_data
         });
         this.tb_data = [...data.data];
+        console.log(this.tb_data)
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       plus_temperature_start() {
@@ -449,11 +388,17 @@
     .sidebar-content {
       th {
         padding-left: 5px;
+        background: #ccc;
+        text-align: left;
       }
 
       td {
         padding-left: 3px !important;
-        /*border-left: 1px solid #000;*/
+        border-bottom: 1px solid #0f0f0f;
+      }
+
+      td, th {
+        padding: 4px;
       }
 
       tr:hover {
@@ -517,20 +462,19 @@
     }
   }
 
-  th {
-    background: #ccc;
-    text-align: left;
-  }
-
-  td, th {
-    border-bottom: 1px solid #0f0f0f;
-    padding: 4px;
-  }
-
 
   .tb-background {
     background-color: #eee;
     margin-bottom: 0;
+  }
+
+  .tb-data {
+    table {
+      border: 1px solid #4b6075;
+      td, th {
+        border: 1px solid #4b6075;;
+      }
+    }
   }
 
 </style>
