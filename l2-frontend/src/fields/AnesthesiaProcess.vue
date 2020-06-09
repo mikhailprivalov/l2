@@ -1,81 +1,98 @@
 <template>
   <div>
-    <div class="sidebar-anesthesia-overlay" :class="{showOverlay: this.$store.state.showMenuAnesthesiaStatus}"/>
+    <div class="sidebar-anesthesia-overlay" :class="{showOverlay: this.$store.state.showMenuAnesthesiaStatus}"
+         @click="show_anesthesia_sidebar"/>
     <div class="sidebar-anesthesia" :class="{show: this.$store.state.showMenuAnesthesiaStatus}">
       <div class="sidebar-anesthesia-inner">
+        <div class="title-anesthesia">
+          <div>Течение анестезии</div>
+          <button class="btn btn-blue-nb sidebar-btn close-btn"
+                  @click="show_anesthesia_sidebar">
+            <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Закрыть"></i>
+          </button>
+        </div>
+        <div class="time-control">
+          <input type="datetime-local" class="form-control nbr" v-model="timeValue" :max="maxTimeValue"/>
+          <button class="btn btn-blue-nb nbr" @click="setCurrentTime" title="Текущие дата и время" v-tippy>
+            <i class="fa fa-clock-o"/>
+          </button>
+        </div>
+
         <div class="scroll-wrapper">
-          <div class="title-anesthesia">
-            <div>Течение анестезии</div>
-            <button class="btn btn-blue-nb sidebar-btn close-btn"
-                    @click="show_anesthesia_sidebar">
-              <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Закрыть"></i>
+          <div class="title-anesthesia">Показатели человека</div>
+          <table class="table table-condensed tb-background">
+            <colgroup>
+              <col/>
+              <col width='80'/>
+            </colgroup>
+            <tr v-for="(v, k) in patient_params_used" v-if="k !== 'temperature'">
+              <td class="cl-td" @click="focus_next">{{k}}</td>
+              <td class="cl-td">
+                <input class="no-outline anastesia" type="text" v-model="patient_params_used[k]" :key="k"
+                       @focus="focus_input"
+                       @blur="blur_input"
+                       @keyup.enter="move_focus_next"
+                       @keyup.enter.shift="move_focus_prev"
+                       :placeholder="'значение'"/>
+              </td>
+            </tr>
+          </table>
+          <div class="number">
+            <button class="btn btn-blue-nb nbr" @click="minus_temperature_once" tabindex="-1">
+              -1
+            </button>
+            <button class="btn btn-blue-nb nbr" @mousedown="minus_temperature_start"
+                    @mouseleave="temperature_stop" @mouseup="temperature_stop" tabindex="-1">
+              -0.1
+            </button>
+            <input type="text" v-model.number="temperature" class="anastesia"
+                   @keyup.enter="move_focus_next"
+                   @keyup.enter.shift="move_focus_prev"
+                   placeholder="Температура"/>
+            <button class="btn btn-blue-nb nbr" @mousedown="plus_temperature_start"
+                    @mouseleave="temperature_stop" @mouseup="temperature_stop" tabindex="-1">
+              +0.1
+            </button>
+            <button class="btn btn-blue-nb nbr" @click="plus_temperature_once" tabindex="-1">
+              +1
             </button>
           </div>
-          <div class="time-control">
-            <input type="datetime-local" class="form-control nbr" v-model="timeValue" :max="maxTimeValue"/>
-            <button class="btn btn-blue-nb nbr" @click="setCurrentTime" title="Текущие дата и время" v-tippy>
-              <i class="fa fa-clock-o"/>
-            </button>
-          </div>
-          <div class="sidebar-content">
-            <div class="title-anesthesia">Показатели человека</div>
-            <table class="table table-condensed tb-background">
-              <colgroup>
-                <col/>
-                <col width='80'/>
-              </colgroup>
-              <tr v-for="(v, k) in patient_params_used" v-if="k !== 'temperature'">
-                <td class="cl-td">{{k}}</td>
-                <td class="cl-td"><input style="width: 100%" class="no-outline" type="text" :value="v"
-                                         @input="update(patient_params_used, k, $event)" :key="k"
-                                         :placeholder="'значение'"/></td>
-              </tr>
-            </table>
-            <div class="number">
-              <button class="btn btn-blue-nb nbr" @click="minus_temperature_once">
-                -1
-              </button>
-              <button class="btn btn-blue-nb nbr" @mousedown="minus_temperature_start"
-                      @mouseleave="temperature_stop" @mouseup="temperature_stop">
-                -0.1
-              </button>
-              <input type="text" v-model.number="temperature"
-                     placeholder="Температура"/>
-              <button class="btn btn-blue-nb nbr" @mousedown="plus_temperature_start"
-                      @mouseleave="temperature_stop" @mouseup="temperature_stop">
-                +0.1
-              </button>
-              <button class="btn btn-blue-nb nbr"  @click="plus_temperature_once">
-                +1
-              </button>
-            </div>
-            <div class="title-anesthesia">Сильнодействующие</div>
-            <table class="table table-condensed tb-background">
-              <colgroup>
-                <col/>
-                <col width='80'/>
-              </colgroup>
-              <tr v-for="(v, k) in potent_drugs_used">
-                <td class="cl-td">{{k}}</td>
-                <td class="cl-td"><input style="width: 100%" class="no-outline" type="text" :value="v"
-                                         @input="update(potent_drugs_used, k, $event)" :key="k"
-                                         :placeholder="'значение'"/></td>
-              </tr>
-            </table>
-            <div class="title-anesthesia">Наркотические</div>
-            <table class="table table-condensed tb-background col-xs-12">
-              <colgroup>
-                <col/>
-                <col width='80'/>
-              </colgroup>
-              <tr v-for="(v, k) in narcotic_drugs_used">
-                <td class="cl-td ">{{k}}</td>
-                <td class="cl-td "><input style="width: 100%" class="no-outline" type="text" :value="v"
-                                          @input="update(narcotic_drugs_used, k, $event)" :key="k"
-                                          :placeholder="'значение'"/></td>
-              </tr>
-            </table>
-          </div>
+          <div class="title-anesthesia">Сильнодействующие</div>
+          <table class="table table-condensed tb-background">
+            <colgroup>
+              <col/>
+              <col width='80'/>
+            </colgroup>
+            <tr v-for="(v, k) in potent_drugs_used">
+              <td class="cl-td" @click="focus_next">{{k}}</td>
+              <td class="cl-td">
+                <input class="no-outline anastesia" type="text" v-model="potent_drugs_used[k]"
+                       @focus="focus_input"
+                       @blur="blur_input"
+                       @keyup.enter="move_focus_next"
+                       @keyup.enter.shift="move_focus_prev"
+                       :key="k" placeholder="значение"/>
+              </td>
+            </tr>
+          </table>
+          <div class="title-anesthesia">Наркотические</div>
+          <table class="table table-condensed tb-background col-xs-12">
+            <colgroup>
+              <col/>
+              <col width='80'/>
+            </colgroup>
+            <tr v-for="(v, k) in narcotic_drugs_used">
+              <td class="cl-td" @click="focus_next">{{k}}</td>
+              <td class="cl-td">
+                <input class="no-outline anastesia" type="text" v-model="narcotic_drugs_used[k]" :key="k"
+                       @focus="focus_input"
+                       @blur="blur_input"
+                       @keyup.enter="move_focus_next"
+                       @keyup.enter.shift="move_focus_prev"
+                       placeholder="значение"/>
+              </td>
+            </tr>
+          </table>
         </div>
 
         <div class="side-bottom">
@@ -88,9 +105,8 @@
         </div>
       </div>
     </div>
-    <button
-      style=" border-radius: 3px; padding: 4px; width: 10%; height: 30px; margin-bottom: 5px;"
-      class="btn btn-blue-nb" title="Добавить значения в наркозную карту" v-tippy @click="show_anesthesia_sidebar">
+    <button class="btn btn-blue-nb tb-add-btn" title="Добавить значения в наркозную карту" v-tippy
+            @click="show_anesthesia_sidebar">
       <i class="fa fa-heartbeat fa-lg"></i>
       Добавить
     </button>
@@ -101,6 +117,9 @@
           <td v-for="item in row">
             {{ item }}
           </td>
+        </tr>
+        <tr v-if="tb_data.length === 0">
+          <td>нет данных</td>
         </tr>
       </table>
     </div>
@@ -181,8 +200,28 @@
       }
     },
     methods: {
-      update(obj, prop, event) {
-        this.$set(obj, prop, event.target.value);
+      focus_next(e) {
+        $('input', $(e.target).next()).focus();
+      },
+      focus_input(e) {
+        $(e.target).parent().parent().addClass('active');
+      },
+      blur_input(e) {
+        $(e.target).parent().parent().removeClass('active');
+      },
+      move_focus_next(e) {
+        this.move_focus(e)
+      },
+      move_focus_prev(e) {
+        this.move_focus(e, -1)
+      },
+      move_focus(e, n = 1) {
+        const s = 'input.anastesia';
+        const nextI = $(s).index(e.target) + n;
+        const next = $(s).eq(nextI);
+        if (next.length) {
+          next.focus();
+        }
       },
       async save_data() {
         await this.$store.dispatch(action_types.INC_LOADING);
@@ -330,7 +369,7 @@
       overflow-x: hidden;
       overflow-y: auto;
       position: absolute;
-      top: 0;
+      top: 63px;
       right: 0;
       left: 0;
       bottom: 34px;
@@ -372,6 +411,7 @@
         &:nth-of-type(1), &:nth-of-type(2) {
           border-right: 1px solid #000 !important;
         }
+
         &:nth-of-type(3), &:nth-of-type(4) {
           border-left: 1px solid #000 !important;
         }
@@ -385,7 +425,7 @@
       }
     }
 
-    .sidebar-content {
+    .scroll-wrapper {
       th {
         padding-left: 5px;
         background: #ccc;
@@ -401,10 +441,16 @@
         padding: 4px;
       }
 
-      tr:hover {
+      tr.active {
         &, & input {
           background-color: #55566b;
-          color: #f5f5f5;
+          color: #fff;
+        }
+      }
+
+      tr:hover:not(.active) {
+        &, & input {
+          background-color: #d7d8ee;
         }
       }
     }
@@ -469,8 +515,11 @@
   }
 
   .tb-data {
+    margin-top: 5px;
+
     table {
       border: 1px solid #4b6075;
+
       td, th {
         border: 1px solid #4b6075;;
       }

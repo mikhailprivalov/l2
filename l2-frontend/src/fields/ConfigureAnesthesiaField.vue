@@ -33,9 +33,7 @@
           </div>
         <td class="cl-td">
           <select class="form-control nbr" v-model="val.type">
-            <option>Показатели человека</option>
-            <option>Сильнодействующие</option>
-            <option>Наркотические</option>
+            <option :value="t" v-for="t in types">{{t}}</option>
           </select>
         </td>
         <td class="text-center cl-td">
@@ -59,7 +57,13 @@
 </template>
 
 <script>
-  const makeDefaultRow = () => [{"title": '', "type": 'Показатели человека', "default": false}];
+  const types = [
+    'Показатели человека',
+    'Сильнодействующие',
+    'Наркотические',
+  ]
+
+  const makeDefaultRow = (type = null) => ({title: '', type: type || types[0], default: false});
 
   export default {
     name: "ConfigureAnesthesiaField",
@@ -75,12 +79,14 @@
     },
     data() {
       return {
-        tb_data: this.value || makeDefaultRow(),
+        tb_data: this.value || [makeDefaultRow()],
+        types,
       }
     },
     methods: {
       add_new_row() {
-        this.tb_data.push(makeDefaultRow());
+        const tl = this.tb_data.length;
+        this.tb_data.push(makeDefaultRow(tl > 0 ? this.tb_data[tl - 1].type : null));
       },
       delete_row(index) {
         this.tb_data.splice(index, 1);

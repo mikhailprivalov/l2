@@ -6,7 +6,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "cross-env NODE_ENV=development webpack -d",
+    "build": "cross-env NODE_ENV=development webpack -d --progress",
     "build_prod": "cross-env NODE_ENV=production webpack --progress --optimize-max-chunks 10"
   },
   "dependencies": {

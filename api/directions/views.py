@@ -1149,26 +1149,27 @@ def directions_anesthesia_load(request):
         return JsonResponse({'data': 'Ошибка входных данных'})
     anesthesia_data = ParaclinicResult.anesthesia_value_get(research_data['iss_pk'], research_data["field_pk"])
     tb_data = []
-    if anesthesia_data and len(anesthesia_data) > 0:
+    if anesthesia_data:
         result = eval(anesthesia_data)
-        cols_template = ['' for i in range(len(result['times']) + 1)]
+        if isinstance(result, dict):
+            cols_template = [''] * (len(result['times']) + 1)
 
-        times_row = ['Параметр']
-        times_row.extend(result['times'])
+            times_row = ['Параметр']
+            times_row.extend(result['times'])
 
-        def made_structure(type):
-            for i in result[type]:
-                current_param = ['' for i in cols_template]
-                current_param[0] = i
-                for k, v in result[i].items():
-                    if k in times_row:
-                        index = times_row.index(k)
-                        current_param[index] = v
-                tb_data.append(current_param)
-        tb_data.append(times_row)
-        made_structure('patient_params')
-        made_structure('potent_drugs')
-        made_structure('narcotic_drugs')
+            def made_structure(type):
+                for i in result[type]:
+                    current_param = ['' for i in cols_template]
+                    current_param[0] = i
+                    for k, v in result[i].items():
+                        if k in times_row:
+                            index = times_row.index(k)
+                            current_param[index] = v
+                    tb_data.append(current_param)
+            tb_data.append(times_row)
+            made_structure('patient_params')
+            made_structure('potent_drugs')
+            made_structure('narcotic_drugs')
 
     return JsonResponse({'data': tb_data})
 

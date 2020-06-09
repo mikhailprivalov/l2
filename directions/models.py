@@ -1096,6 +1096,9 @@ class ParaclinicResult(models.Model):
         else:
             previus_result = {'patient_params': [], 'potent_drugs': [], 'narcotic_drugs': [], 'times': []}
 
+        if not isinstance(previus_result, dict):
+            previus_result = {'patient_params': [], 'potent_drugs': [], 'narcotic_drugs': [], 'times': []}
+
         temp_times = previus_result['times']
         current_time = value_anesthesia.get('time')
         if current_time not in temp_times:
