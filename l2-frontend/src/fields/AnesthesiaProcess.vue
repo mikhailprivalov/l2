@@ -33,7 +33,7 @@
                        @blur="blur_input"
                        @keyup.enter="move_focus_next"
                        @keyup.enter.shift="move_focus_prev"
-                       :placeholder="'значение'"/>
+                       placeholder="значение"/>
               </td>
             </tr>
           </table>
