@@ -1087,11 +1087,13 @@ class ParaclinicResult(models.Model):
             return ""
 
     @staticmethod
-    def anesthesia_value_save(iss_pk=-1, field_pk=-1, value_anesthesia=''):
+    def anesthesia_value_save(iss_pk=-1, field_pk=-1, value_anesthesia=None):
+        if value_anesthesia is None:
+            value_anesthesia = {}
         previus_result = ParaclinicResult.anesthesia_value_get(iss_pk, field_pk)
         if len(previus_result) > 0:
             previus_result = eval(previus_result)
-        if len(previus_result) == 0:
+        else:
             previus_result = {'patient_params': [], 'potent_drugs': [], 'narcotic_drugs': [], 'times': []}
 
         temp_times = previus_result['times']
