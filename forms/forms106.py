@@ -175,13 +175,16 @@ def form_01(request_data):
     fcaction_avo_id = Fractions.objects.filter(title='Групповая принадлежность крови по системе АВО').first()
     fcaction_rezus_id = Fractions.objects.filter(title='Резус').first()
     group_blood_avo = get_fraction_result(ind_card.pk, fcaction_avo_id.pk, count=1)
-    group_blood_avo_value = ''
     if group_blood_avo:
         group_blood_avo_value = group_blood_avo[0][5]
+    else:
+        group_blood_avo_value = primary_reception_data['blood_group']
     group_blood_rezus = get_fraction_result(ind_card.pk, fcaction_rezus_id.pk, count=1)
-    group_rezus_value = ''
     if group_blood_rezus:
         group_rezus_value = group_blood_rezus[0][5].replace('<br/>', ' ')
+    else:
+        group_rezus_value = primary_reception_data['resus_factor']
+
 
     ###########################################################################################################
     # получение данных клинического диагноза
@@ -222,6 +225,7 @@ def form_01(request_data):
         Paragraph('Виды транспортировки(на каталке, на кресле, может идти): {}'.format(primary_reception_data['type_transport']), style),
         Spacer(1, 0.5 * mm),
         Paragraph('Группа крови: {}. Резус-принадлежность: {}'.format(group_blood_avo_value, group_rezus_value), style),
+        # Paragraph('Группа крови: {}. Резус-принадлежность: {}'.format(primary_reception_data['blood_group'], primary_reception_data['resus_factor']), style),
         Spacer(1, 1 * mm),
         Paragraph('Побочное действие лекарств(непереносимость):', style),
         Spacer(1, 12 * mm),
