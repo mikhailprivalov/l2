@@ -31,9 +31,7 @@ def form_01(request_data):
     num_dir = request_data["dir_pk"]
     direction_obj = Napravleniya.objects.get(pk=num_dir)
     hosp_nums_obj = hosp_get_hosp_direction(num_dir)
-    hosp_nums = ''
-    for i in hosp_nums_obj:
-        hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
+    hosp_nums = f"- {hosp_nums_obj[0].get('direction')}"
 
     ind_card = direction_obj.client
     patient_data = ind_card.get_data_individual()
