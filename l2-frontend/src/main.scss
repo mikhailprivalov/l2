@@ -1669,6 +1669,13 @@ input[type=date].form-control {
   height: 34px;
 }
 
+.GRID-HACK {
+  display: grid;
+  grid-template-columns: 1fr;
+
+  flex-grow: 1;
+}
+
 @import "./variables";
 @import "./editor";
 @import "./menubar";

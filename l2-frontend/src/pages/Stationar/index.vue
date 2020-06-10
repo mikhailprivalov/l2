@@ -421,39 +421,34 @@
   import stationar_point from '../../api/stationar-point'
   import PatientCard from './PatientCard'
   import Patient from '../../types/patient'
-  import Modal from '../../ui-cards/Modal'
-  import ResearchesPicker from '../../ui-cards/ResearchesPicker'
-  import LastResult from '../../ui-cards/LastResult'
-  import SelectedResearches from '../../ui-cards/SelectedResearches'
-  import ResearchPick from '../../ui-cards/ResearchPick'
   import directions_point from '../../api/directions-point'
   import IssStatus from '../../ui-cards/IssStatus'
   import {vField, vGroup} from '../../components/visibility-triggers'
   import researches_point from '../../api/researches-point'
-  import SelectPickerM from '../../fields/SelectPickerM'
   import DescriptiveForm from '../../forms/DescriptiveForm'
-  import ResultsViewer from '../../modals/ResultsViewer'
   import DisplayDirection from './DisplayDirection'
-  import AggregateLaboratory from '../../fields/AggregateLaboratory'
-  import AggregateDesc from '../../fields/AggregateDesc'
   import patients_point from '../../api/patients-point'
   import UrlData from '../../UrlData'
-  import AggregateTADP from '../../fields/AggregateTADP'
-  import DirectionsHistory from '../../ui-cards/DirectionsHistory'
 
   export default {
     mixins: [menuMixin],
     components: {
-      DirectionsHistory,
       dropdown,
-      AggregateTADP,
-      AggregateDesc,
-      AggregateLaboratory,
       DisplayDirection,
-      ResultsViewer,
       DescriptiveForm,
-      SelectPickerM,
-      IssStatus, ResearchPick, SelectedResearches, LastResult, ResearchesPicker, Modal, PatientCard
+      IssStatus,
+      PatientCard,
+      DirectionsHistory: () => import('../../ui-cards/DirectionsHistory'),
+      AggregateTADP: () => import('../../fields/AggregateTADP'),
+      AggregateDesc: () => import('../../fields/AggregateDesc'),
+      AggregateLaboratory: () => import('../../fields/AggregateLaboratory'),
+      ResultsViewer: () => import('../../modals/ResultsViewer'),
+      SelectPickerM: () => import('../../fields/SelectPickerM'),
+      ResearchPick: () => import('../../ui-cards/ResearchPick'),
+      SelectedResearches: () => import('../../ui-cards/SelectedResearches'),
+      LastResult: () => import('../../ui-cards/LastResult'),
+      ResearchesPicker: () => import('../../ui-cards/ResearchesPicker'),
+      Modal: () => import('../../ui-cards/Modal'),
     },
     data() {
       return {

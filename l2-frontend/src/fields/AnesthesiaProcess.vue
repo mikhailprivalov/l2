@@ -110,18 +110,31 @@
       <i class="fa fa-heartbeat fa-lg"></i>
       Добавить
     </button>
-
-    <div class="tb-data">
-      <table class="table">
-        <tr v-for="row in tb_data">
-          <td v-for="item in row">
-            {{ item }}
-          </td>
-        </tr>
-        <tr v-if="tb_data.length === 0">
-          <td>нет данных</td>
-        </tr>
-      </table>
+    <div class="GRID-HACK">
+      <div class="tb-data" ref="tbData">
+        <table v-if="tb_data.length > 0">
+            <tr v-for="(row, i) in tb_data">
+              <td>
+                {{row[0]}}
+              </td>
+            </tr>
+        </table>
+        <table>
+          <tr v-for="(row, i) in tb_data">
+            <td v-for="(item, j) in row" v-if="j > 0">
+              <div v-if="i === 0 && j > 0">
+                <DisplayDateTime :value="item"/>
+              </div>
+              <div v-else>
+                {{ item }}
+              </div>
+            </td>
+          </tr>
+          <tr v-if="tb_data.length === 0">
+            <td>нет данных</td>
+          </tr>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -131,9 +144,11 @@
   import moment from 'moment'
   import * as action_types from '../store/action-types'
   import directions_point from "../api/directions-point";
+  import DisplayDateTime from "../ui-cards/DisplayDateTime";
 
   export default {
     name: "AnesthesiaProcess",
+    components: {DisplayDateTime},
     props: {
       fields: {
         type: Array,
@@ -400,6 +415,7 @@
     .number {
       display: flex;
       flex-direction: row;
+      position: relative;
 
       .sidebar-btn {
         margin-top: 0;
@@ -422,6 +438,15 @@
         margin-right: 0;
         text-align: center;
         width: calc(100% - 160px);
+      }
+
+      &::before {
+        content: "t ______ Cº";
+        position: absolute;
+        color: #7a7878;
+        top: 0;
+        line-height: 34.5px;
+        left: 119px;
       }
     }
 
@@ -516,12 +541,46 @@
 
   .tb-data {
     margin-top: 5px;
+    overflow-x: auto;
+    display: flex;
 
     table {
       border: 1px solid #4b6075;
+      table-layout: fixed;
+      white-space: nowrap;
 
       td, th {
-        border: 1px solid #4b6075;;
+        border: 1px solid #4b6075;
+        padding: 2px;
+      }
+    }
+
+    table:first-child {
+      position: sticky;
+      left: 0;
+
+      div {
+        width: 110px;
+      }
+
+      td {
+        font-weight: bold;
+      }
+    }
+
+    table:nth-child(2) {
+      border-left: 0;
+
+      tr:first-child{
+        font-weight: bold;
+      }
+
+      div {
+        width: 82px;
+      }
+
+      tr > td:first-child {
+        border-left: 0;
       }
     }
   }

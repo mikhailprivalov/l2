@@ -153,33 +153,26 @@
   import Longpress from 'vue-longpress'
   import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper'
   import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper'
-  import MKBField from '../fields/MKBField'
-  import FormulaField from '../fields/FormulaField'
-  import SelectField from '../fields/SelectField'
-  import RadioField from '../fields/RadioField'
-  import SearchFieldValueField from '../fields/SearchFieldValueField'
-  import SearchFractionValueField from '../fields/SearchFractionValueField'
-  import RichTextEditor from '../fields/RichTextEditor'
-  import AggregateLaboratory from '../fields/AggregateLaboratory'
-  import AggregateDesc from "../fields/AggregateDesc";
-  import NumberField from "../fields/NumberField";
-  import NumberRangeField from "../fields/NumberRangeField";
-  import AnesthesiaProcess from "../fields/AnesthesiaProcess";
-  import TextareaAutocomplete from "../fields/TextareaAutocomplete";
 
   export default {
     name: 'DescriptiveForm',
     components: {
-      TextareaAutocomplete,
-      NumberRangeField,
-      NumberField,
-      AggregateDesc,
-      AggregateLaboratory,
-      RichTextEditor,
-      SearchFractionValueField,
-      SearchFieldValueField,
-      RadioField,
-      SelectField, VisibilityGroupWrapper, VisibilityFieldWrapper, Longpress, MKBField, FormulaField, AnesthesiaProcess
+      VisibilityGroupWrapper,
+      VisibilityFieldWrapper,
+      Longpress,
+      TextareaAutocomplete: () => import('../fields/TextareaAutocomplete'),
+      NumberRangeField: () => import('../fields/NumberRangeField'),
+      NumberField: () => import('../fields/NumberField'),
+      AggregateDesc: () => import('../fields/AggregateDesc'),
+      AggregateLaboratory: () => import('../fields/AggregateLaboratory'),
+      RichTextEditor: () => import('../fields/RichTextEditor'),
+      SearchFractionValueField: () => import('../fields/SearchFractionValueField'),
+      SearchFieldValueField: () => import('../fields/SearchFieldValueField'),
+      RadioField: () => import('../fields/RadioField'),
+      SelectField: () => import('../fields/SelectField'),
+      AnesthesiaProcess: () => import('../fields/AnesthesiaProcess'),
+      MKBField: () => import('../fields/MKBField'),
+      FormulaField: () => import('../fields/FormulaField'),
     },
     props: {
       research: {
