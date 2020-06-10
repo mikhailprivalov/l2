@@ -115,7 +115,9 @@
         <table v-if="tb_data.length > 0">
             <tr v-for="(row, i) in tb_data">
               <td>
-                {{row[0]}}
+                <div>
+                  {{row[0]}}
+                </div>
               </td>
             </tr>
         </table>
