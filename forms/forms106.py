@@ -185,7 +185,6 @@ def form_01(request_data):
     else:
         group_rezus_value = primary_reception_data['resus_factor']
 
-
     ###########################################################################################################
     # получение данных клинического диагноза
     clinical_diagnos = hosp_get_clinical_diagnos(hosp_nums_obj)
