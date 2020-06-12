@@ -1141,8 +1141,6 @@ def directions_anesthesia_result(request):
     return JsonResponse(response)
 
 
-
-
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_anesthesia_load(request):
     rb = json.loads(request.body)
