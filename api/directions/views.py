@@ -1141,6 +1141,8 @@ def directions_anesthesia_result(request):
     return JsonResponse(response)
 
 
+
+
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_anesthesia_load(request):
     rb = json.loads(request.body)
@@ -1149,29 +1151,38 @@ def directions_anesthesia_load(request):
         return JsonResponse({'data': 'Ошибка входных данных'})
     anesthesia_data = ParaclinicResult.anesthesia_value_get(research_data['iss_pk'], research_data["field_pk"])
     tb_data = []
+    row_category = {}
     if anesthesia_data:
         result = eval(anesthesia_data)
         if isinstance(result, dict):
             cols_template = [''] * (len(result['times']) + 1)
-
             times_row = ['Параметр']
             times_row.extend(result['times'])
+            times_row.append('Сумма')
 
             def made_structure(type):
                 for i in result[type]:
+                    sum = ''
                     current_param = ['' for i in cols_template]
                     current_param[0] = i
                     for k, v in result[i].items():
                         if k in times_row:
                             index = times_row.index(k)
                             current_param[index] = v
+                            if type in ['potent_drugs', 'narcotic_drugs'] and v:
+                                if sum == '':
+                                    sum = 0
+                                sum += int(v)
+                    current_param.append(sum)
                     tb_data.append(current_param)
+                    row_category[len(tb_data) - 1] = type
+
             tb_data.append(times_row)
             made_structure('patient_params')
             made_structure('potent_drugs')
             made_structure('narcotic_drugs')
 
-    return JsonResponse({'data': tb_data})
+    return JsonResponse({'data': tb_data, 'row_category': row_category})
 
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
@@ -1193,7 +1204,6 @@ def directions_paraclinic_result(request):
                             | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
                             | Q(research__is_stom=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
-
         g = [str(x) for x in request.user.groups.all()]
         tadp = TADP in iss.research.title
         more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g

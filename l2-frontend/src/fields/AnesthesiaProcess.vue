@@ -182,6 +182,7 @@
         patient_params_used: {},
         patient_params_other: {},
         tb_data: [],
+        row_category: {},
       }
     },
     mounted() {
@@ -265,7 +266,7 @@
           'research_data': research_data
         });
         this.tb_data = [...data.data];
-        console.log(this.tb_data)
+        this.row_category = {...data.row_category}
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       plus_temperature_start() {
