@@ -52,6 +52,7 @@ from utils.dates import try_parse_range
 from utils.flowable import InteractiveTextField
 from utils.pagenum import PageNumCanvas
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result
+from django.utils.module_loading import import_string
 
 
 pdfmetrics.registerFont(TTFont('FreeSans', os.path.join(FONTS_FOLDER, 'FreeSans.ttf')))
@@ -958,9 +959,14 @@ def result_print(request):
                     fwb.append(Paragraph(f"<para align='center'><font size='9'>{iss_title}</font></para>", styleBold))
                 else:
                     fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
+
                 if iss.research.is_microbiology:
                     fwb = microbiology_result(iss, fwb, doc)
                 elif not protocol_plain_text:
+                    type_form = iss.research.result_form
+                    if type_form != 0:
+                        current_type_form = str(type_form)
+                        form_result = import_string('results.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
                     fwb = structure_data_for_result(iss, fwb, doc, leftnone)
                 else:
                     fwb = plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text)
