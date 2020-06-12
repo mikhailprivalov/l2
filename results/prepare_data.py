@@ -607,6 +607,3 @@ def microbiology_result(iss, fwb, doc):
         fwb.append(Paragraph(iss.microbiology_conclusion, style))
 
     return fwb
-
-
-
