@@ -43,6 +43,8 @@ def form_01(iss, fwb, doc, leftnone):
                 if field_type == 20 and r.field.get_title(force_type=field_type) == 'Время осмотра':
                     time = r.value
                     continue
+                if field_type == 21:
+                    continue
                 v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
                 column_result = column_result + "<font face=\"FreeSans\">{}:</font>{}".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;'), v)
                 column_result = column_result + '; '
