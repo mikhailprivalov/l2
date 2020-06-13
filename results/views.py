@@ -474,6 +474,7 @@ def result_print(request):
     hosp_nums = ''
     for i in hosp_nums_obj:
         hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
+        break
 
     dirs = Napravleniya.objects\
         .filter(pk__in=pk)\
@@ -969,7 +970,7 @@ def result_print(request):
                     else:
                         current_type_form = str(type_form)
                         form_result = import_string('results.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
-                        fwb = form_result(iss, fwb, doc, leftnone)
+                        fwb = form_result(direction, iss, fwb, doc, leftnone)
                 else:
                     fwb = plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text)
 

@@ -7,9 +7,10 @@ from reportlab.lib.enums import TA_JUSTIFY
 import directory.models as directory
 from directions.models import ParaclinicResult
 from utils.dates import normalize_date
+from api.stationar.stationar_func import hosp_get_curent_hosp_dir
 
 
-def form_01(iss, fwb, doc, leftnone):
+def form_01(direction, iss, fwb, doc, leftnone):
     # Форма для печати дневников в 3 колонки
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -22,6 +23,7 @@ def form_01(iss, fwb, doc, leftnone):
     styleBold.fontName = "FreeSansBold"
 
     date, time = '', ''
+    patient_fio = direction.client.individual.fio()
 
     i = 0
     title_opinion = []
@@ -64,7 +66,10 @@ def form_01(iss, fwb, doc, leftnone):
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
 
+    hosp_dir = hosp_get_curent_hosp_dir(iss.pk)
+
     fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph('Пациент: {}. (№:{})'.format(patient_fio, hosp_dir), style))
     fwb.append(Paragraph('Дата-время осмотра: {} в {}'.format(date, time), style))
     fwb.append(Spacer(1, 0.5 * mm))
     fwb.append(tbl)
