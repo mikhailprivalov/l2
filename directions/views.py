@@ -616,7 +616,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
         qr_code.qrVersion = 1
         d = Drawing()
         d.add(qr_code)
-        renderPDF.draw(d, c, paddingx + (w / 2 * xn) + 200, 5 + (h / 2) * yn)
+        renderPDF.draw(d, c, paddingx + (w / 2 * xn) + 200, 32 + (h / 2) * yn)
 
     nn = 0
     if not dir.imported_from_rmis:
