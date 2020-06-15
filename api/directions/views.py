@@ -1536,20 +1536,21 @@ def last_field_result(request):
     field_pks = request_data["fieldPk"].split('|')
     result = None
     for field_pk in field_pks:
-        rows = get_field_result(client_pk, int(field_pk))
-        if rows:
-            row = rows[0]
-            value = row[5]
-            match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
-            if match:
-                value = normalize_date(value)
-            result = {
-                "direction": row[1],
-                "date": row[4],
-                "value": value
-            }
-            if value:
-                break
+        if field_pk.isDigit():
+            rows = get_field_result(client_pk, int(field_pk))
+            if rows:
+                row = rows[0]
+                value = row[5]
+                match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
+                if match:
+                    value = normalize_date(value)
+                result = {
+                    "direction": row[1],
+                    "date": row[4],
+                    "value": value
+                }
+                if value:
+                    break
     return JsonResponse({"result": result})
 
 
