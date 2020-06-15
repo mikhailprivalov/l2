@@ -112,6 +112,14 @@ class Researches(models.Model):
         (38003, '38003. ИО - Направление на COVID-19'),
     )
 
+    RESULT_FORMS = (
+        (0, 'По умолчанию'),
+
+        (10001, '100.01 - Наркозная карта - анестезия'),
+        (10002, '100.02 - Реанимационная карта - 1 день'),
+        (10101, '101.01 - Дневник в 3 колонки'),
+    )
+
     CO_EXECUTOR_MODES = (
         (0, 'Нет'),
         (1, '1 со-исполнитель'),
@@ -151,6 +159,7 @@ class Researches(models.Model):
     instructions = models.TextField(blank=True, default="", help_text="Памятка для направления")
     not_grouping = models.BooleanField(default=False, blank=True, help_text="Нельзя группировать в направления?")
     direction_form = models.IntegerField(default=0, blank=True, choices=DIRECTION_FORMS, help_text="Форма направления")
+    result_form = models.IntegerField(default=0, blank=True, choices=RESULT_FORMS, help_text="Форма результат")
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
     is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием")
