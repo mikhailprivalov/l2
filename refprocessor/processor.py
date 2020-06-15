@@ -1,5 +1,6 @@
 from typing import Tuple, Union, List
 
+from appconf.manager import SettingManager
 from refprocessor.age_parser import AgeRight
 from refprocessor.common import ValueRange, RANGE_IN
 from refprocessor.result_parser import ResultRight
@@ -21,8 +22,18 @@ class RefProcessor:
 
         return None, None, None
 
-    def get_active_ref(self, raw_ref=True):
+    def get_active_ref(self, raw_ref=True, single=False):
         if raw_ref:
+            if single:
+                show_only_needed_ref = SettingManager.get("show_only_needed_ref", default='True', default_type='b')
+                if not show_only_needed_ref or not self.raw_ref:
+                    return None
+
+                show_full_needed_ref = SettingManager.get("show_full_needed_ref", default='False', default_type='b')
+                if show_full_needed_ref:
+                    return {self.key: self.raw_ref}
+
+                return {'Все': self.raw_ref}
             return self.raw_ref
         if isinstance(self.ref, ResultRight):
             return self.ref

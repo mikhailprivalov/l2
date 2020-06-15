@@ -1246,7 +1246,7 @@ class Result(models.Model):
         self.ref_sign = ref_sign
         super(Result, self).save(*args, **kw)
 
-    def get_is_norm(self, recalc=False):
+    def get_is_norm(self, recalc=False, with_ref=False):
         if self.is_normal == "" or recalc:
             norm, ref_sign = self.calc_normal()
             if self.is_normal != norm or self.ref_sign != ref_sign:
@@ -1256,9 +1256,11 @@ class Result(models.Model):
         else:
             norm = self.is_normal
             ref_sign = self.ref_sign
+        if with_ref:
+            return norm, ref_sign, self.calc_normal(only_ref=True, fromsave=True, raw_ref=True, single=True)
         return norm, ref_sign
 
-    def calc_normal(self, fromsave=False, only_ref=False, raw_ref=True):
+    def calc_normal(self, fromsave=False, only_ref=False, raw_ref=True, single=False):
         value = self.value
         ref = self.get_ref(fromsave=fromsave)
         age = self.issledovaniye.napravleniye.client.individual.age(iss=self.issledovaniye, days_monthes_years=True)
@@ -1266,7 +1268,7 @@ class Result(models.Model):
         ref_processor = RefProcessor(ref, age)
 
         if only_ref:
-            return ref_processor.get_active_ref(raw_ref=raw_ref)
+            return ref_processor.get_active_ref(raw_ref=raw_ref, single=single)
 
         return ref_processor.calc(value)
 

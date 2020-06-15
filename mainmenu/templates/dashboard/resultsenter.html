@@ -1683,59 +1683,28 @@
         }
 
         function sort_refs(r) {
+            if (typeof r === 'string') {
+                try {
+                    r = JSON.parse(r);
+                } catch (e) {
+                    r = {
+                        m: {},
+                        f: {},
+                    };
+                }
+            }
             for (let mf of ['m', 'f']) {
                 if (r.hasOwnProperty(mf)) {
-                    let keys = [], k, i, len, tmp = r[mf]
-                    for (k in tmp) {
-                        if (tmp.hasOwnProperty(k)) {
-                            keys.push(k)
+                    if (typeof r[mf] === 'string') {
+                        try {
+                            r[mf] = JSON.parse(r[mf]);
+                        } catch (e) {
+                            r[mf] = {};
                         }
-                    }
-                    keys.sort(
-                        function (x, y) {
-                            let xx = 0
-                            let yy = 0
-                            try {
-                                if (x.toLowerCase().indexOf('все') >= 0) {
-                                    xx = -1
-                                } else if (x.indexOf('-') >= 0) {
-                                    xx = x.split('-').last()
-                                } else {
-                                    xx = x.replace(/[^\d.]/g, '')
-                                }
-
-                                if (y.toLowerCase().indexOf('все') >= 0) {
-                                    yy = -1
-                                } else if (y.indexOf('-') >= 0) {
-                                    yy = y.split('-').last()
-                                } else {
-                                    yy = y.replace(/[^\d.]/g, '')
-                                }
-
-                                xx = parseInt(xx)
-                                yy = parseInt(yy)
-
-                                if (x.indexOf('старше') >= 0) {
-                                    xx++
-                                }
-                                if (y.indexOf('старше') >= 0) {
-                                    yy++
-                                }
-
-                            } catch (err) {
-                            }
-                            return xx - yy
-                        }
-                    )
-                    len = keys.length
-                    r[mf] = {}
-                    for (i = 0; i < len; i++) {
-                        k = keys[i]
-                        r[mf][k] = fix_signs(tmp[k])
                     }
                 }
             }
-            return r
+            return r;
         }
 
         function load_form(research_pk, id, templateid) {
