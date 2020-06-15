@@ -1585,7 +1585,7 @@ def last_field_result(request):
     field_pks = request_data["fieldPk"].split('|')
     result = None
     for field_pk in field_pks:
-        if field_pk.isDigit():
+        if field_pk.isdigit():
             rows = get_field_result(client_pk, int(field_pk))
             if rows:
                 row = rows[0]

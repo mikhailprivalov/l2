@@ -73,7 +73,9 @@
           }, 200)
         })
       }
-      this.loadLast()
+      else {
+        this.loadLast()
+      }
     },
     watch: {
       val() {
