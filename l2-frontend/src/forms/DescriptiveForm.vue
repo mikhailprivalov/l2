@@ -31,12 +31,12 @@
                          :duration="400"
                          :on-confirm="clear_val" :value="field"
                          action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19].includes(field.field_type)">
+                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21].includes(field.field_type)">
                 ×
               </longpress>
               <div class="field-inputs"
                    v-if="field.values_to_input.length > 0 && !confirmed &&
-                   ![10, 12, 18, 19].includes(field.field_type)">
+                   ![10, 12, 18, 19, 21].includes(field.field_type)">
                 <div class="input-values-wrap">
                   <div class="input-values">
                     <div class="inner-wrap">
@@ -121,12 +121,17 @@
                 <input :readonly="confirmed" class="form-control" style="width: 110px" type="time"
                        v-model="field.value"/>
               </div>
+              <div class="field-value" v-else-if="field.field_type === 21">
+                <AnesthesiaProcess :fields="field.values_to_input" :iss="pk" :field_pk="field.pk"/>
+              </div>
               <div class="field-value" v-else-if="field.field_type === 22">
                 <TextareaAutocomplete
                   :disabled="confirmed"
                   v-model="field.value"
                 />
               </div>
+
+
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
                     placement : 'left',
@@ -148,32 +153,26 @@
   import Longpress from 'vue-longpress'
   import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper'
   import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper'
-  import MKBField from '../fields/MKBField'
-  import FormulaField from '../fields/FormulaField'
-  import SelectField from '../fields/SelectField'
-  import RadioField from '../fields/RadioField'
-  import SearchFieldValueField from '../fields/SearchFieldValueField'
-  import SearchFractionValueField from '../fields/SearchFractionValueField'
-  import RichTextEditor from '../fields/RichTextEditor'
-  import AggregateLaboratory from '../fields/AggregateLaboratory'
-  import AggregateDesc from "../fields/AggregateDesc";
-  import NumberField from "../fields/NumberField";
-  import NumberRangeField from "../fields/NumberRangeField";
-  import TextareaAutocomplete from "../fields/TextareaAutocomplete";
 
   export default {
     name: 'DescriptiveForm',
     components: {
-      TextareaAutocomplete,
-      NumberRangeField,
-      NumberField,
-      AggregateDesc,
-      AggregateLaboratory,
-      RichTextEditor,
-      SearchFractionValueField,
-      SearchFieldValueField,
-      RadioField,
-      SelectField, VisibilityGroupWrapper, VisibilityFieldWrapper, Longpress, MKBField, FormulaField
+      VisibilityGroupWrapper,
+      VisibilityFieldWrapper,
+      Longpress,
+      TextareaAutocomplete: () => import('../fields/TextareaAutocomplete'),
+      NumberRangeField: () => import('../fields/NumberRangeField'),
+      NumberField: () => import('../fields/NumberField'),
+      AggregateDesc: () => import('../fields/AggregateDesc'),
+      AggregateLaboratory: () => import('../fields/AggregateLaboratory'),
+      RichTextEditor: () => import('../fields/RichTextEditor'),
+      SearchFractionValueField: () => import('../fields/SearchFractionValueField'),
+      SearchFieldValueField: () => import('../fields/SearchFieldValueField'),
+      RadioField: () => import('../fields/RadioField'),
+      SelectField: () => import('../fields/SelectField'),
+      AnesthesiaProcess: () => import('../fields/AnesthesiaProcess'),
+      MKBField: () => import('../fields/MKBField'),
+      FormulaField: () => import('../fields/FormulaField'),
     },
     props: {
       research: {
@@ -296,3 +295,13 @@
     }
   }
 </script>
+
+<style scoped lang="scss">
+
+.title_anesthesia {
+  flex: 1 0 70px;
+  padding-left: 5px;
+  padding-top: 5px;
+}
+
+</style>

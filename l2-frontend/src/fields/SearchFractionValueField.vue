@@ -84,7 +84,7 @@
                     'clientPk',
                 ])
                 if (result) {
-                    this.val = `${result.value}${this.units === '' ? '' : ' ' + this.units} (${result.date}, направление ${result.direction})`
+                    this.val = `${result.value}`.replace('<br/>','')
                 } else {
                     errmessage(`Результат не найден (${this.title})!`)
                 }

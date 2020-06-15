@@ -20,7 +20,7 @@
         <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
                maxlength="255" @keyup.enter="search">
         <span class="rmis-search input-group-btn" v-if="selected_base.internal_type && user_data.rmis_enabled">
-          <label class="btn btn-blue-nb nbr">
+          <label class="btn btn-blue-nb nbr height34" style="padding: 5px 12px;">
             <input type="checkbox" v-model="inc_rmis"/> Вкл. РМИС
           </label>
         </span>

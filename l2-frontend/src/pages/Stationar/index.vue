@@ -142,6 +142,9 @@
         <div v-for="row in researches_forms">
           <div class="research-title">
             <div class="research-left">
+              <button style="margin-right: 5px" class="btn btn-blue-nb" @click="show_anesthesia" title="Добавить значения в наркозную карту" v-tippy v-if="row.research.title.includes('анестез')">
+                <i class="fa fa-heartbeat fa-lg"></i>
+              </button>
               {{row.research.title}}
               <span class="comment" v-if="row.research.comment"> [{{row.research.comment}}]</span>
               <dropdown :visible="research_open_history === row.pk"
@@ -409,6 +412,7 @@
   </div>
 </template>
 
+
 <script>
   import {mapGetters} from 'vuex'
   import dropdown from 'vue-my-dropdown'
@@ -417,39 +421,34 @@
   import stationar_point from '../../api/stationar-point'
   import PatientCard from './PatientCard'
   import Patient from '../../types/patient'
-  import Modal from '../../ui-cards/Modal'
-  import ResearchesPicker from '../../ui-cards/ResearchesPicker'
-  import LastResult from '../../ui-cards/LastResult'
-  import SelectedResearches from '../../ui-cards/SelectedResearches'
-  import ResearchPick from '../../ui-cards/ResearchPick'
   import directions_point from '../../api/directions-point'
   import IssStatus from '../../ui-cards/IssStatus'
   import {vField, vGroup} from '../../components/visibility-triggers'
   import researches_point from '../../api/researches-point'
-  import SelectPickerM from '../../fields/SelectPickerM'
   import DescriptiveForm from '../../forms/DescriptiveForm'
-  import ResultsViewer from '../../modals/ResultsViewer'
   import DisplayDirection from './DisplayDirection'
-  import AggregateLaboratory from '../../fields/AggregateLaboratory'
-  import AggregateDesc from '../../fields/AggregateDesc'
   import patients_point from '../../api/patients-point'
   import UrlData from '../../UrlData'
-  import AggregateTADP from '../../fields/AggregateTADP'
-  import DirectionsHistory from '../../ui-cards/DirectionsHistory'
 
   export default {
     mixins: [menuMixin],
     components: {
-      DirectionsHistory,
       dropdown,
-      AggregateTADP,
-      AggregateDesc,
-      AggregateLaboratory,
       DisplayDirection,
-      ResultsViewer,
       DescriptiveForm,
-      SelectPickerM,
-      IssStatus, ResearchPick, SelectedResearches, LastResult, ResearchesPicker, Modal, PatientCard
+      IssStatus,
+      PatientCard,
+      DirectionsHistory: () => import('../../ui-cards/DirectionsHistory'),
+      AggregateTADP: () => import('../../fields/AggregateTADP'),
+      AggregateDesc: () => import('../../fields/AggregateDesc'),
+      AggregateLaboratory: () => import('../../fields/AggregateLaboratory'),
+      ResultsViewer: () => import('../../modals/ResultsViewer'),
+      SelectPickerM: () => import('../../fields/SelectPickerM'),
+      ResearchPick: () => import('../../ui-cards/ResearchPick'),
+      SelectedResearches: () => import('../../ui-cards/SelectedResearches'),
+      LastResult: () => import('../../ui-cards/LastResult'),
+      ResearchesPicker: () => import('../../ui-cards/ResearchesPicker'),
+      Modal: () => import('../../ui-cards/Modal'),
     },
     data() {
       return {
@@ -531,6 +530,9 @@
       this.inited = true
     },
     methods: {
+      show_anesthesia() {
+        this.$store.dispatch(action_types.CHANGE_STATUS_MENU_ANESTHESIA)
+      },
       is_diary(research) {
         const res_title = research.title.toLowerCase();
         return res_title.includes('осмотр') || res_title.includes('дневник');
@@ -1037,6 +1039,7 @@
 </script>
 
 <style scoped lang="scss">
+
   .root {
     display: flex;
     align-items: stretch;
@@ -1219,8 +1222,9 @@
       background-color: rgba(#000, .02) !important;
       color: #000;
       border-bottom: 1px solid #b1b1b1 !important;
+      }
     }
-  }
+
 
   .sidebar-btn-wrapper {
     display: flex;
@@ -1310,7 +1314,15 @@
     position: relative;
     text-align: left;
     width: calc(100% - 390px);
+    .btn {
+      border-radius: 0;
+      padding: 5px 4px;
+      margin-top: -5px;
+      margin-bottom: -5px;
+      white-space: nowrap;
+    }
   }
+
 
   .research-right {
     text-align: right;
