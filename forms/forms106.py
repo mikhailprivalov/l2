@@ -31,9 +31,7 @@ def form_01(request_data):
     num_dir = request_data["dir_pk"]
     direction_obj = Napravleniya.objects.get(pk=num_dir)
     hosp_nums_obj = hosp_get_hosp_direction(num_dir)
-    hosp_nums = ''
-    for i in hosp_nums_obj:
-        hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
+    hosp_nums = f"- {hosp_nums_obj[0].get('direction')}"
 
     ind_card = direction_obj.client
     patient_data = ind_card.get_data_individual()
@@ -160,7 +158,7 @@ def form_01(request_data):
         near_diagnos = hosp_extract_data['near_diagnos']
         days_count = hosp_extract_data['days_count']
         if hosp_extract_data['outcome']:
-            outcome = hosp_extract_data['outcome']
+            outcome = hosp_extract_data['outcome'] + ' (' + hosp_extract_data['result_hospital'] + ')'
         doc_fio = hosp_extract_data['doc_fio']
         manager_depart = hosp_extract_data['manager_depart']
 
@@ -177,13 +175,15 @@ def form_01(request_data):
     fcaction_avo_id = Fractions.objects.filter(title='Групповая принадлежность крови по системе АВО').first()
     fcaction_rezus_id = Fractions.objects.filter(title='Резус').first()
     group_blood_avo = get_fraction_result(ind_card.pk, fcaction_avo_id.pk, count=1)
-    group_blood_avo_value = ''
     if group_blood_avo:
         group_blood_avo_value = group_blood_avo[0][5]
+    else:
+        group_blood_avo_value = primary_reception_data['blood_group']
     group_blood_rezus = get_fraction_result(ind_card.pk, fcaction_rezus_id.pk, count=1)
-    group_rezus_value = ''
     if group_blood_rezus:
         group_rezus_value = group_blood_rezus[0][5].replace('<br/>', ' ')
+    else:
+        group_rezus_value = primary_reception_data['resus_factor']
 
     ###########################################################################################################
     # получение данных клинического диагноза

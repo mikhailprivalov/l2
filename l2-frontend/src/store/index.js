@@ -19,7 +19,8 @@ export default new Vuex.Store({
   state: {
     inLoading: false,
     loadingCounter: 0,
-    loadingLabel: ''
+    loadingLabel: '',
+    showMenuAnesthesiaStatus: false
   },
   actions: {
     async [action_types.ENABLE_LOADING]({commit}, {loadingLabel}) {
@@ -34,6 +35,9 @@ export default new Vuex.Store({
     async [action_types.DEC_LOADING]({commit, state}) {
       commit(mutation_types.SET_LOADING_COUNTER, {loadingCounter: state.loadingCounter - 1})
     },
+    async [action_types.CHANGE_STATUS_MENU_ANESTHESIA]({commit}){
+      commit(mutation_types.TOGGLE_ANESTHESIA_MENU_SHOW)
+    }
   },
   mutations: {
     [mutation_types.SET_LOADING](state, {inLoading, loadingLabel}) {
@@ -51,6 +55,9 @@ export default new Vuex.Store({
         state.loadingLabel = 'Загрузка...'
       }
     },
+    [mutation_types.TOGGLE_ANESTHESIA_MENU_SHOW](state){
+      state.showMenuAnesthesiaStatus = !state.showMenuAnesthesiaStatus
+    }
   },
   getters: {
     inLoading: state => state.inLoading,

@@ -15,10 +15,10 @@ module.exports = {
     filename: '[name]-[hash].js'
   },
   plugins: [
-    new BundleTracker({filename: '../webpack-stats.json'}),
     new CleanWebpackPlugin(['../assets/webpack_bundles/*.*', '../static/webpack_bundles/*.*'], {allowExternal: true}),
     new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /ru/),
     new ExtractTextPlugin({filename: '[name]-[hash].css', allChunks: true,}),
+    new BundleTracker({filename: '../webpack-stats.json'}),
   ],
   module: {
     rules: [

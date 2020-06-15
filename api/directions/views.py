@@ -3,7 +3,6 @@ import re
 import time
 from datetime import datetime, time as dtime
 from operator import itemgetter
-
 import simplejson as json
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
@@ -12,7 +11,6 @@ from django.http import HttpRequest
 from django.http import JsonResponse
 from django.utils import dateformat
 from django.utils import timezone
-
 from api import sql_func
 from api.dicom import search_dicom_study
 from api.patients.views import save_dreg
@@ -1132,6 +1130,58 @@ def get_default_for_field(field_type):
 
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
+def directions_anesthesia_result(request):
+    response = {"ok": False, "message": ""}
+    rb = json.loads(request.body)
+    temp_result = rb.get("temp_result", {})
+    research_data = rb.get("research_data", {})
+    result = ParaclinicResult.anesthesia_value_save(research_data['iss_pk'], research_data['field_pk'], temp_result)
+    if result:
+        response = {"ok": True, "message": ""}
+    return JsonResponse(response)
+
+
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
+def directions_anesthesia_load(request):
+    rb = json.loads(request.body)
+    research_data = rb.get("research_data", '')
+    if research_data is None:
+        return JsonResponse({'data': 'Ошибка входных данных'})
+    anesthesia_data = ParaclinicResult.anesthesia_value_get(research_data['iss_pk'], research_data["field_pk"])
+    tb_data = []
+    row_category = {}
+    if anesthesia_data:
+        result = eval(anesthesia_data)
+        if isinstance(result, dict):
+            cols_template = [''] * (len(result['times']) + 1)
+            times_row = ['Параметр']
+            times_row.extend(result['times'])
+            times_row.append('Сумма')
+
+            def made_structure(type):
+                for i in result[type]:
+                    sum = 0
+                    current_param = ['' for i in cols_template]
+                    current_param[0] = i
+                    for k, v in result[i].items():
+                        if k in times_row:
+                            index = times_row.index(k)
+                            current_param[index] = v
+                            if type in ['potent_drugs', 'narcotic_drugs'] and v:
+                                sum += int(v)
+                    current_param.append(sum or '')
+                    tb_data.append(current_param)
+                    row_category[len(tb_data) - 1] = type
+
+            tb_data.append(times_row)
+            made_structure('patient_params')
+            made_structure('potent_drugs')
+            made_structure('narcotic_drugs')
+
+    return JsonResponse({'data': tb_data, 'row_category': row_category})
+
+
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_result(request):
     response = {"ok": False, "message": ""}
     rb = json.loads(request.body)
@@ -1150,7 +1200,6 @@ def directions_paraclinic_result(request):
                             | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
                             | Q(research__is_stom=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
-
         g = [str(x) for x in request.user.groups.all()]
         tadp = TADP in iss.research.title
         more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
@@ -1244,7 +1293,7 @@ def directions_paraclinic_result(request):
             iss.napravleniye.visit_date = timezone.now()
             iss.napravleniye.save()
         if iss.research.is_microbiology:
-            mb = request_data.get('microbiology', {})
+            mb = request_data.get("microbiology", {})
             if mb:
                 iss.microbiology_conclusion = mb.get('conclusion')
 
@@ -1533,20 +1582,24 @@ def last_fraction_result(request):
 def last_field_result(request):
     request_data = json.loads(request.body)
     client_pk = request_data["clientPk"]
-    field_pk = int(request_data["fieldPk"])
-    rows = get_field_result(client_pk, field_pk)
+    field_pks = request_data["fieldPk"].split('|')
     result = None
-    if rows:
-        row = rows[0]
-        value = row[5]
-        match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
-        if match:
-            value = normalize_date(value)
-        result = {
-            "direction": row[1],
-            "date": row[4],
-            "value": value
-        }
+    for field_pk in field_pks:
+        if field_pk.isdigit():
+            rows = get_field_result(client_pk, int(field_pk))
+            if rows:
+                row = rows[0]
+                value = row[5]
+                match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
+                if match:
+                    value = normalize_date(value)
+                result = {
+                    "direction": row[1],
+                    "date": row[4],
+                    "value": value
+                }
+                if value:
+                    break
     return JsonResponse({"result": result})
 
 
