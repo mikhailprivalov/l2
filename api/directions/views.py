@@ -1533,20 +1533,23 @@ def last_fraction_result(request):
 def last_field_result(request):
     request_data = json.loads(request.body)
     client_pk = request_data["clientPk"]
-    field_pk = int(request_data["fieldPk"])
-    rows = get_field_result(client_pk, field_pk)
+    field_pks = request_data["fieldPk"].split('|')
     result = None
-    if rows:
-        row = rows[0]
-        value = row[5]
-        match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
-        if match:
-            value = normalize_date(value)
-        result = {
-            "direction": row[1],
-            "date": row[4],
-            "value": value
-        }
+    for field_pk in field_pks:
+        rows = get_field_result(client_pk, int(field_pk))
+        if rows:
+            row = rows[0]
+            value = row[5]
+            match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
+            if match:
+                value = normalize_date(value)
+            result = {
+                "direction": row[1],
+                "date": row[4],
+                "value": value
+            }
+            if value:
+                break
     return JsonResponse({"result": result})
 
 
