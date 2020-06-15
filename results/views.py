@@ -1690,6 +1690,7 @@ def result_journal_print(request):
 
 
 def get_r(ref) -> str:
+    print(ref)
     if isinstance(ref, str):
         r = json.loads(ref)
     else:
@@ -1707,10 +1708,11 @@ def get_r(ref) -> str:
             t2.append(ttt)
         else:
             t2.append(ttt)
-    t2.sort()
+
     s = "<br/>".join(t2)
     if s == " : ":
         s = ""
+    print(s)
     return s
 
 
