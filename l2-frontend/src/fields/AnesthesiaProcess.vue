@@ -112,23 +112,25 @@
     </button>
     <div class="GRID-HACK">
       <div class="tb-data" ref="tbData">
-        <table v-if="tb_data.length > 0">
-            <tr v-for="(row, i) in tb_data" :class="`row-${row_category[i] || 'default'}`">
-              <td>
-                <div>
-                  {{row[0]}}
-                </div>
-              </td>
-            </tr>
+        <table v-if="tb_data.length > 0" ref="firstTable">
+          <tr v-for="(row, i) in tb_data" :class="`row-${row_category[i] || 'default'}`">
+            <td>
+              <div>
+                {{row[0]}}
+              </div>
+            </td>
+          </tr>
         </table>
         <table>
           <tr v-for="(row, i) in tb_data" :class="`row-${row_category[i] || 'default'}`">
             <td v-for="(item, j) in row" v-if="j > 0">
-              <div v-if="i === 0 && j > 0 && item !== 'Сумма'">
-                <DisplayDateTime :value="item"/>
-              </div>
-              <div v-else>
-                {{ item }}
+              <div :style="{height: `${tb_heights[i]}px`}">
+                <template v-if="i === 0 && j > 0 && item !== 'Сумма'">
+                  <DisplayDateTime :value="item"/>
+                </template>
+                <template v-else>
+                  {{ item }}
+                </template>
               </div>
             </td>
           </tr>
@@ -182,6 +184,7 @@
         patient_params_used: {},
         patient_params_other: {},
         tb_data: [],
+        tb_heights: [],
         row_category: {},
       }
     },
@@ -218,6 +221,15 @@
       }
     },
     methods: {
+      sync_heights() {
+        const tb_heights = [];
+        if (this.$refs.firstTable) {
+          $(this.$refs.firstTable).find('tr td div').each(function () {
+            tb_heights.push($(this).height())
+          });
+        }
+        this.tb_heights = tb_heights;
+      },
       focus_next(e) {
         $('input', $(e.target).next()).focus();
       },
@@ -256,6 +268,7 @@
           'temp_result': temp_result,
           'research_data': research_data
         });
+        setTimeout(() => this.sync_heights(), 10);
         await this.load_data()
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
@@ -267,6 +280,7 @@
         });
         this.tb_data = [...data.data];
         this.row_category = data.row_category
+        setTimeout(() => this.sync_heights(), 10);
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       plus_temperature_start() {
@@ -547,6 +561,11 @@
     overflow-x: auto;
     display: flex;
 
+    tr {
+      white-space: normal;
+      word-break: break-word;
+    }
+
     table {
       border: 1px solid #4b6075;
       table-layout: fixed;
@@ -574,7 +593,7 @@
     table:nth-child(2) {
       border-left: 0;
 
-      tr:first-child{
+      tr:first-child {
         font-weight: bold;
       }
 
@@ -592,9 +611,11 @@
     &-patient_params {
       background-color: #ffe0e0;
     }
+
     &-potent_drugs {
       background-color: #e0ffe4;
     }
+
     &-narcotic_drugs {
       background-color: #e3e0ff;
     }
