@@ -158,7 +158,7 @@ def form_01(request_data):
         near_diagnos = hosp_extract_data['near_diagnos']
         days_count = hosp_extract_data['days_count']
         if hosp_extract_data['outcome']:
-            outcome = hosp_extract_data['outcome'] + '(' + hosp_extract_data['result_hospital'] + ')'
+            outcome = hosp_extract_data['outcome'] + ' (' + hosp_extract_data['result_hospital'] + ')'
         doc_fio = hosp_extract_data['doc_fio']
         manager_depart = hosp_extract_data['manager_depart']
 
@@ -224,7 +224,6 @@ def form_01(request_data):
         Paragraph('Виды транспортировки(на каталке, на кресле, может идти): {}'.format(primary_reception_data['type_transport']), style),
         Spacer(1, 0.5 * mm),
         Paragraph('Группа крови: {}. Резус-принадлежность: {}'.format(group_blood_avo_value, group_rezus_value), style),
-        # Paragraph('Группа крови: {}. Резус-принадлежность: {}'.format(primary_reception_data['blood_group'], primary_reception_data['resus_factor']), style),
         Spacer(1, 1 * mm),
         Paragraph('Побочное действие лекарств(непереносимость):', style),
         Spacer(1, 12 * mm),
