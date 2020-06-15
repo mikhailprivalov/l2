@@ -266,7 +266,7 @@
           'research_data': research_data
         });
         this.tb_data = [...data.data];
-        this.row_category = {...data.row_category}
+        this.row_category = data.row_category
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       plus_temperature_start() {

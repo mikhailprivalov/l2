@@ -1160,7 +1160,7 @@ def directions_anesthesia_load(request):
 
             def made_structure(type):
                 for i in result[type]:
-                    sum = ''
+                    sum = 0
                     current_param = ['' for i in cols_template]
                     current_param[0] = i
                     for k, v in result[i].items():
@@ -1168,10 +1168,8 @@ def directions_anesthesia_load(request):
                             index = times_row.index(k)
                             current_param[index] = v
                             if type in ['potent_drugs', 'narcotic_drugs'] and v:
-                                if sum == '':
-                                    sum = 0
                                 sum += int(v)
-                    current_param.append(sum)
+                    current_param.append(sum or '')
                     tb_data.append(current_param)
                     row_category[len(tb_data) - 1] = type
 
