@@ -464,11 +464,9 @@ def primary_reception_get_data(hosp_first_num):
                 continue
             if i[3] == 'Группа крови':
                 blood_group = i[2]
-                print(blood_group)
                 continue
             if i[3] == 'Резус принадлежность':
                 resus_factor = i[2]
-                print(resus_factor)
                 continue
 
     return {'date_entered_value': date_entered_value, 'time_entered_value': time_entered_value, 'type_transport': type_transport,
