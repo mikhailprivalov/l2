@@ -113,7 +113,7 @@
     <div class="GRID-HACK">
       <div class="tb-data" ref="tbData">
         <table v-if="tb_data.length > 0">
-            <tr v-for="(row, i) in tb_data">
+            <tr v-for="(row, i) in tb_data" :class="`row-${row_category[i] || 'default'}`">
               <td>
                 <div>
                   {{row[0]}}
@@ -122,9 +122,9 @@
             </tr>
         </table>
         <table>
-          <tr v-for="(row, i) in tb_data">
+          <tr v-for="(row, i) in tb_data" :class="`row-${row_category[i] || 'default'}`">
             <td v-for="(item, j) in row" v-if="j > 0">
-              <div v-if="i === 0 && j > 0">
+              <div v-if="i === 0 && j > 0 && item !== 'Сумма'">
                 <DisplayDateTime :value="item"/>
               </div>
               <div v-else>
@@ -585,6 +585,18 @@
       tr > td:first-child {
         border-left: 0;
       }
+    }
+  }
+
+  .row {
+    &-patient_params {
+      background-color: #ffe0e0;
+    }
+    &-potent_drugs {
+      background-color: #e0ffe4;
+    }
+    &-narcotic_drugs {
+      background-color: #e3e0ff;
     }
   }
 
