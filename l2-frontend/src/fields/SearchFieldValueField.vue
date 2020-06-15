@@ -60,17 +60,22 @@
       }
     },
     mounted() {
-      researches_point.fieldTitle({pk: this.fieldPk}).then(data => {
-        const titles = new Set([data.research, data.group, data.field])
-        this.title = [...titles].filter(t => !!t).join(' – ')
-        this.checkDirection()
+      if (!this.raw) {
+        researches_point.fieldTitle({pk: this.fieldPk}).then(data => {
+          const titles = new Set([data.research, data.group, data.field])
+          this.title = [...titles].filter(t => !!t).join(' – ')
+          this.checkDirection()
 
-        setTimeout(() => {
-          if (!this.val) {
-            this.loadLast()
-          }
-        }, 200)
-      })
+          setTimeout(() => {
+            if (!this.val) {
+              this.loadLast()
+            }
+          }, 200)
+        })
+      }
+      else {
+        this.loadLast()
+      }
     },
     watch: {
       val() {

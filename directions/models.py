@@ -1077,6 +1077,63 @@ class ParaclinicResult(models.Model):
     def get_field_type(self):
         return self.field_type if self.issledovaniye.time_confirmation and self.field_type is not None else self.field.field_type
 
+    @staticmethod
+    def anesthesia_value_get(iss_pk=-1, field_pk=-1):
+        if iss_pk > 0:
+            paraclinic_result_obj = ParaclinicResult.objects.filter(issledovaniye__pk=iss_pk, field__pk=field_pk).first()
+            if paraclinic_result_obj:
+                return paraclinic_result_obj.value
+        else:
+            return ""
+
+    @staticmethod
+    def anesthesia_value_save(iss_pk=-1, field_pk=-1, value_anesthesia=None):
+        if value_anesthesia is None:
+            value_anesthesia = {}
+        previus_result = ParaclinicResult.anesthesia_value_get(iss_pk, field_pk)
+        if len(previus_result) > 0:
+            previus_result = eval(previus_result)
+        else:
+            previus_result = {'patient_params': [], 'potent_drugs': [], 'narcotic_drugs': [], 'times': []}
+
+        if not isinstance(previus_result, dict):
+            previus_result = {'patient_params': [], 'potent_drugs': [], 'narcotic_drugs': [], 'times': []}
+
+        temp_times = previus_result['times']
+        current_time = value_anesthesia.get('time')
+        if current_time not in temp_times:
+            temp_times.append(current_time)
+        temp_times = sorted(temp_times)
+        previus_result['times'] = temp_times
+
+        def made_anesthesia_structure(type):
+            for k, v in value_anesthesia.get(type).items():
+                if k not in previus_result[type]:
+                    previus_result[type].append(k)
+                if previus_result.get(k):
+                    temp_attr = previus_result[k]
+                    temp_attr[current_time] = v
+                    previus_result[k] = temp_attr
+                else:
+                    previus_result[k] = {current_time: v}
+
+        made_anesthesia_structure('patient_params')
+        made_anesthesia_structure('potent_drugs')
+        made_anesthesia_structure('narcotic_drugs')
+
+        paraclinic_result_obj = None
+        if iss_pk > 0:
+            iss_obj = Issledovaniya.objects.get(pk=iss_pk)
+            field_obj = directory.ParaclinicInputField.objects.get(pk=field_pk)
+            paraclinic_result_obj = ParaclinicResult.objects.filter(issledovaniye=iss_obj, field=field_obj).first()
+            if paraclinic_result_obj:
+                paraclinic_result_obj.value = previus_result
+                paraclinic_result_obj.field_type = 21
+            else:
+                paraclinic_result_obj = ParaclinicResult(issledovaniye=iss_obj, field=field_obj, field_type=21, value=previus_result)
+            paraclinic_result_obj.save()
+        return paraclinic_result_obj
+
 
 class MicrobiologyResultCulture(models.Model):
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True,

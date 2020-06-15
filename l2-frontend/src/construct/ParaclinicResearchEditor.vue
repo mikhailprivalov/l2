@@ -67,7 +67,7 @@
         <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
       </div>
       <template v-if="ex_dep !== 7">
-        <div v-for="group in ordered_groups" class="ed-group" :class="{groupHidden: group.hide}">
+        <div v-for="group in orderBy(groups, 'order')" class="ed-group">
           <div class="input-group">
             <span class="input-group-btn">
               <button class="btn btn-blue-nb lob" :disabled="is_first_group(group)" @click="dec_group_order(group)">
@@ -100,7 +100,7 @@
             <div>
               <strong>Поля ввода</strong>
             </div>
-            <div v-for="row in ordered_fields(group)" class="ed-field">
+            <div v-for="row in orderBy(group.fields, 'order')" class="ed-field">
               <div class="ed-field-inner">
                 <div>
                   <button class="btn btn-default btn-sm btn-block" :disabled="is_first_field(group, row)"
@@ -146,6 +146,9 @@
                   <div v-if="row.field_type === 19">
                     <strong>Значение по умолчанию:</strong>
                     <NumberRangeField :variants="row.values_to_input" v-model="row.default" />
+                  </div>
+                  <div v-if="row.field_type === 21">
+                    <ConfigureAnesthesiaField v-model="row.values_to_input"/>
                   </div>
                   <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22].includes(row.field_type)">
                     <div class="header" v-collapse-toggle>
@@ -237,6 +240,7 @@
                       <option value="18">Число</option>
                       <option value="19">Число через range</option>
                       <option value="20">Время ЧЧ:ММ</option>
+                      <option value="21">Течение анестезии (таблица)</option>
                       <option value="22">Текст с автозаполнением</option>
                     </select>
                   </label>
@@ -272,10 +276,16 @@
     import RichTextEditor from '../fields/RichTextEditor'
     import NumberField from "../fields/NumberField";
     import NumberRangeField from "../fields/NumberRangeField";
+    import ConfigureAnesthesiaField from "../fields/ConfigureAnesthesiaField";
+    import Vue from 'vue'
+    import Vue2Filters from 'vue2-filters'
+
+    Vue.use(Vue2Filters)
 
     export default {
         name: 'paraclinic-research-editor',
-        components: {NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor},
+        components: {NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor, ConfigureAnesthesiaField},
+        mixins: [Vue2Filters.mixin],
         props: {
             pk: {
                 type: Number,
@@ -367,11 +377,6 @@
             norm_title() {
                 return this.title.trim()
             },
-            ordered_groups() {
-                return this.groups.slice().sort(function (a, b) {
-                    return a.order === b.order ? 0 : +(a.order > b.order) || -1
-                })
-            },
             min_max_order_groups() {
                 let min = 0
                 let max = 0
@@ -451,11 +456,6 @@
                     max = Math.max(max, row.order)
                 }
                 return {min, max}
-            },
-            ordered_fields(group) {
-                return group.fields.slice().sort(function (a, b) {
-                    return a.order === b.order ? 0 : +(a.order > b.order) || -1
-                })
             },
             inc_group_order(row) {
                 if (row.order === this.min_max_order_groups.max)

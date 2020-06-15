@@ -227,3 +227,4 @@ static/*
 venv*
 
 newrelic.ini
+make-*.sh
