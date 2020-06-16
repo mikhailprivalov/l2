@@ -1451,7 +1451,7 @@ def form38002(c: Canvas, dir: Napravleniya):
         elif additional_num and len(additional_num) > 0:
             c.drawString((x_coord + 125) * mm, y_patient[0] * mm, "доп.№: " + additional_num)
         elif dir.client.number_poliklinika and len(dir.client.number_poliklinika) > 0:
-            c.drawString((x_coord + 125) * mm, y_patient[0] * mm, "доп.№: " + dir.client.number_poliklinika )
+            c.drawString((x_coord + 125) * mm, y_patient[0] * mm, "доп.№: " + dir.client.number_poliklinika)
 
         c.drawString(x_coord * mm, y_patient[1] * mm, "ФИО: " + dir.client.individual.fio())
         c.drawString(x_coord * mm, y_patient[2] * mm, "Пол: " + dir.client.individual.sex)
