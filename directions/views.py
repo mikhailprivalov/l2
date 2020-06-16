@@ -392,6 +392,15 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     c.setFont('OpenSans', 9)
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 70) + (h / 2) * yn,
                  "Создано: " + strdate(dir.data_sozdaniya) + " " + strtime(dir.data_sozdaniya)[:5])
+    history_num = dir.history_num
+    additional_num = dir.additional_num
+    if history_num and len(history_num) > 0:
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "№ истории: " + history_num)
+    elif additional_num and len(additional_num) > 0:
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "(" + additional_num + ")")
+    elif dir.client.number_poliklinika and len(dir.client.number_poliklinika) > 0:
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "(" + dir.client.number_poliklinika + ")")
+
     if dir.history_num and len(dir.history_num) > 0:
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn,
                           "№ истории: " + dir.history_num)
@@ -1435,8 +1444,15 @@ def form38002(c: Canvas, dir: Napravleniya):
 
         c.setFont('PTAstraSerifReg', 12)
         c.drawString(x_coord * mm, y_patient[0] * mm, "Дата: " + strdate(dir.data_sozdaniya))
-        if dir.history_num and len(dir.history_num) > 0:
-            c.drawString((x_coord + 125) * mm, y_patient[0] * mm, "№ истории: " + dir.history_num)
+        additional_num = dir.additional_num
+        history_num = dir.history_num
+        if history_num and len(history_num) > 0:
+            c.drawString((x_coord + 125) * mm, y_patient[0] * mm, "№ истории: " + history_num)
+        elif additional_num and len(additional_num) > 0:
+            c.drawString((x_coord + 125) * mm, y_patient[0] * mm, "доп.№: " + additional_num)
+        elif dir.client.number_poliklinika and len(dir.client.number_poliklinika) > 0:
+            c.drawString((x_coord + 125) * mm, y_patient[0] * mm, "доп.№: " + dir.client.number_poliklinika )
+
         c.drawString(x_coord * mm, y_patient[1] * mm, "ФИО: " + dir.client.individual.fio())
         c.drawString(x_coord * mm, y_patient[2] * mm, "Пол: " + dir.client.individual.sex)
         c.drawString(x_coord * mm, y_patient[3] * mm,

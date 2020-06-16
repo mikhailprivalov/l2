@@ -337,6 +337,8 @@ class Napravleniya(models.Model):
     istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True,
                                     help_text='Источник финансирования', on_delete=models.CASCADE)
     history_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Номер истории')
+    additional_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Дополнительный номер')
+    microbiology_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Микробиология номер')
     rmis_case_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: Номер случая')
     rmis_hosp_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: ЗОГ')
     rmis_resend_services = models.BooleanField(default=False, blank=True, help_text='Переотправить услуги?',
@@ -483,6 +485,7 @@ class Napravleniya(models.Model):
                            data_sozdaniya=timezone.now(),
                            diagnos=diagnos, cancel=False, parent_id=parent_id, parent_auto_gen_id=parent_auto_gen_id, parent_slave_hosp_id=parent_slave_hosp_id,
                            rmis_slot_id=rmis_slot)
+        dir.additional_num = client.number_poliklinika
         dir.harmful_factor = dir.client.harmful_factor
         dir.workplace = client.work_place_db.title if client.work_place_db else client.work_place
         if for_rmis:
