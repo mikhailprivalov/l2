@@ -1676,6 +1676,12 @@ input[type=date].form-control {
   flex-grow: 1;
 }
 
+@media (min-width: 768px) {
+  .navbar-header {
+    display: flex;
+  }
+}
+
 @import "./variables";
 @import "./editor";
 @import "./menubar";
