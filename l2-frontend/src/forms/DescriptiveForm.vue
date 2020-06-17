@@ -92,6 +92,8 @@
                                        :field-pk="field.default_value"
                                        :client-pk="patient.card_pk"
                                        :lines="field.lines"
+                                       :iss="pk"
+                                       :current_field_pk="field.pk"
                                        :raw="field.field_type === 14"
                                        v-model="field.value"/>
               </div>
