@@ -51,6 +51,14 @@
         required: false,
         default: false,
       },
+      iss: {
+        type: Number,
+        required: false,
+      },
+      current_field_pk: {
+        type: Number,
+        required: true,
+      },
     },
     data() {
       return {
@@ -73,8 +81,11 @@
           }, 200)
         })
       }
-      else {
-        this.loadLast()
+      else if (!this.readonly) {
+        this.checkEmptyFieldResult()
+        if (!this.val) {
+          this.loadLast()
+        }
       }
     },
     watch: {
@@ -95,6 +106,15 @@
       },
       changeValue(newVal) {
         this.$emit('modified', newVal)
+      },
+       async checkEmptyFieldResult() {
+        const prev_result = await directions_point.checkEmptyFieldResult(this, [
+          'iss',
+          'current_field_pk',
+        ])
+        if (prev_result && this.raw ) {
+          this.val = prev_result.value;
+        }
       },
       async loadLast() {
         this.direction = null;

@@ -1603,6 +1603,20 @@ def last_field_result(request):
     return JsonResponse({"result": result})
 
 
+@login_required
+def check_empty_field_result(request):
+    request_data = json.loads(request.body)
+    iss_pk = request_data["iss"]
+    field_pk = request_data["current_field_pk"]
+    value = ''
+    if ParaclinicResult.objects.filter(issledovaniye__pk=iss_pk, field__pk=field_pk).exists():
+        result = ParaclinicResult.objects.filter(issledovaniye__pk=iss_pk, field__pk=field_pk).first()
+        if len(result.value) > 0:
+            value = result.value
+
+    return JsonResponse({"value": value})
+
+
 @group_required("Врач параклиники", "Врач консультаций")
 def send_amd(request):
     request_data = json.loads(request.body)

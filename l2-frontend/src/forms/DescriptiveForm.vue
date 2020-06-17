@@ -93,6 +93,8 @@
                                        :client-pk="patient.card_pk"
                                        :lines="field.lines"
                                        :raw="field.field_type === 14"
+                                       :iss="pk"
+                                       :current_field_pk="field.pk"
                                        v-model="field.value"/>
               </div>
               <div class="field-value" v-else-if="field.field_type === 15">

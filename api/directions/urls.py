@@ -32,4 +32,5 @@ urlpatterns = [
     path('reset-amd', views.reset_amd),
     path('purposes', views.purposes),
     path('external-organizations', views.external_organizations),
+    path('check-empty-field-result', views.check_empty_field_result),
 ]

@@ -110,4 +110,7 @@ export default generator({
   getExternalOrgranizations: {
     url: 'directions/external-organizations',
   },
+  checkEmptyFieldResult: {
+    url: 'directions/check-empty-field-result',
+  },
 })
