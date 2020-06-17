@@ -723,7 +723,7 @@ def result_print(request):
                                 sign = RANGE_IN
                                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists() and not f.print_title:
                                     r = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0]
-                                    ref = r.get_ref(only_age=True)
+                                    ref = r.get_ref()
                                     if show_norm:
                                         norm, sign, ref_res = r.get_is_norm(recalc=True, with_ref=True)
                                         ref = ref_res or ref
@@ -1226,7 +1226,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
             f_units = fractions[0].units
             if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                 r = Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).order_by("-pk")[0]
-                ref = r.get_ref(only_age=True)
+                ref = r.get_ref()
                 result = r.value
                 f_units = r.get_units()
             if not iss.doc_confirmation and iss.deferred:
@@ -1274,7 +1274,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                 f_units = f.units
                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                     r = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0]
-                    ref = r.get_ref(only_age=True)
+                    ref = r.get_ref()
                     result = r.value
                     f_units = r.get_units()
                 if not iss.doc_confirmation and iss.deferred:
