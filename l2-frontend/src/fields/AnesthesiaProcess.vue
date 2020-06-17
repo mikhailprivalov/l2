@@ -110,17 +110,17 @@
       <i class="fa fa-heartbeat fa-lg"></i>
       Добавить
     </button>
-    <div class="GRID-HACK">
+    <div class="GRID-HACK table-root">
+      <table v-if="tb_data.length > 0" ref="firstTable">
+        <tr v-for="(row, i) in tb_data" :class="`row-${row_category[i] || 'default'}`">
+          <td>
+            <div>
+              {{row[0]}}
+            </div>
+          </td>
+        </tr>
+      </table>
       <div class="tb-data" ref="tbData">
-        <table v-if="tb_data.length > 0" ref="firstTable">
-          <tr v-for="(row, i) in tb_data" :class="`row-${row_category[i] || 'default'}`">
-            <td>
-              <div>
-                {{row[0]}}
-              </div>
-            </td>
-          </tr>
-        </table>
         <table>
           <tr v-for="(row, i) in tb_data" :class="`row-${row_category[i] || 'default'}`">
             <td v-for="(item, j) in row" v-if="j > 0">
@@ -271,6 +271,7 @@
         setTimeout(() => this.sync_heights(), 10);
         await this.load_data()
         await this.$store.dispatch(action_types.DEC_LOADING)
+        okmessage('Сохранено');
       },
       async load_data() {
         await this.$store.dispatch(action_types.INC_LOADING);
@@ -530,11 +531,13 @@
   }
 
   .time-control {
+    width: 100%;
     display: flex;
     flex-direction: row;
 
     input {
       text-align: center;
+      flex: 0 calc(100% - 38px);
     }
   }
 
@@ -557,9 +560,12 @@
   }
 
   .tb-data {
-    margin-top: 5px;
     overflow-x: auto;
     display: flex;
+  }
+
+  .table-root {
+    margin-top: 5px;
 
     tr {
       white-space: normal;
@@ -577,10 +583,7 @@
       }
     }
 
-    table:first-child {
-      position: sticky;
-      left: 0;
-
+    & > table:first-child {
       div {
         width: 110px;
       }
@@ -590,34 +593,40 @@
       }
     }
 
-    table:nth-child(2) {
-      border-left: 0;
+    .tb-data {
+      table {
+        border-left: 0 !important;
 
-      tr:first-child {
-        font-weight: bold;
-      }
+        tr:first-child, tr td:last-child {
+          font-weight: bold;
+        }
 
-      div {
-        width: 82px;
-      }
+        div {
+          width: 82px;
+        }
 
-      tr > td:first-child {
-        border-left: 0;
+        tr td:first-of-type {
+          border-left: 0 !important;
+        }
       }
     }
   }
 
+  .GRID-HACK.table-root {
+    grid-template-columns: 116px 1fr;
+  }
+
   .row {
     &-patient_params {
-      background-color: #ffe0e0;
+      background-color: #e7e7e7;
     }
 
     &-potent_drugs {
-      background-color: #e0ffe4;
+      background-color: #e7d3bd;
     }
 
     &-narcotic_drugs {
-      background-color: #e3e0ff;
+      background-color: #bdd1e7;
     }
   }
 
