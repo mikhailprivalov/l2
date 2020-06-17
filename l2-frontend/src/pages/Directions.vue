@@ -256,10 +256,13 @@
     right: 0;
     bottom: 0;
 
-    display: grid;
-    grid-template-columns: 1fr 5px 1fr;
-    grid-template-rows: 1fr 5px 1fr;
-    gap: 0;
+    &.hasGrid {
+      display: grid;
+      grid-template-columns: 1fr 5px 1fr;
+      grid-template-rows: 1fr 5px 1fr;
+      gap: 0;
+      height: calc(calc(100vh - calc(100vh - 100%)) - 36px);
+    }
 
     .a {
       grid-area: 1 / 1 / 2 / 2;
@@ -267,6 +270,7 @@
       padding-right: 0;
       padding-bottom: 0;
       text-align: left;
+      background: #fff;
     }
 
     .b {
@@ -280,6 +284,7 @@
       padding-left: 0;
       padding-bottom: 0;
       text-align: left;
+      background: #fff;
     }
 
     .d {
@@ -293,6 +298,7 @@
       padding-top: 0;
       padding-right: 0;
       text-align: left;
+      background: #fff;
     }
 
     .f {
@@ -306,6 +312,7 @@
       padding-top: 0;
       padding-left: 0;
       text-align: left;
+      background: #fff;
     }
 
     @media (max-width: 760px) {
