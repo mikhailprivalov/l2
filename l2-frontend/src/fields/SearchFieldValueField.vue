@@ -67,7 +67,7 @@
         direction: null,
       }
     },
-    mounted() {
+    async mounted() {
       if (!this.raw) {
         researches_point.fieldTitle({pk: this.fieldPk}).then(data => {
           const titles = new Set([data.research, data.group, data.field])
@@ -82,7 +82,7 @@
         })
       }
       else if (!this.readonly) {
-        this.checkEmptyFieldResult()
+        await this.checkEmptyFieldResult()
         if (!this.val) {
           this.loadLast()
         }
