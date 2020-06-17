@@ -160,7 +160,7 @@
         type: Number,
         required: false,
       },
-      current_field_pk: {
+      field_pk: {
         type: Number,
         required: true,
       }
