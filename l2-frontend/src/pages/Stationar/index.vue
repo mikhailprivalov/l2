@@ -59,7 +59,11 @@
                    style="padding: 5px;text-align: left;white-space: pre-wrap;word-break: keep-all;max-width:600px"
               >{{anamnesis_data.text || 'нет данных'}}</pre>
             </div>
+            <a href="#"
+               class="a-under" style="float: right"
+               @click.prevent="open_ambulatory_data">112-ф</a>
           </div>
+          <ambulatory-data :card_pk="patient.cardId" v-if="ambulatory_data"/>
           <div class="sidebar-btn-wrapper"
                v-for="(title, key) in menuItems"
                :key="key">
@@ -293,6 +297,7 @@
         </div>
       </div>
     </div>
+    <ambulatory-data v-if="ambulatory_data"/>
     <modal @close="closePlus" marginLeftRight="auto"
            margin-top="60px"
            max-width="1400px" ref="modalStationar" show-footer="true"
@@ -449,6 +454,8 @@
       LastResult: () => import('../../ui-cards/LastResult'),
       ResearchesPicker: () => import('../../ui-cards/ResearchesPicker'),
       Modal: () => import('../../ui-cards/Modal'),
+      AmbulatoryData: () => import('../../modals/AmbulatoryData'),
+
     },
     data() {
       return {
@@ -488,6 +495,7 @@
         research_open_history: null,
         research_history: [],
         inited: false,
+        ambulatory_data: false,
       }
     },
     watch: {
@@ -501,6 +509,11 @@
 
         UrlData.title(this.every ? null : this.direction);
       },
+    },
+    created() {
+      this.$root.$on('ambulatory_data', () => {
+        this.ambulatory_data = false
+      })
     },
     async mounted() {
       await this.$store.dispatch(action_types.INC_LOADING)
@@ -530,6 +543,9 @@
       this.inited = true
     },
     methods: {
+      open_ambulatory_data() {
+        this.ambulatory_data = true
+      },
       show_anesthesia() {
         this.$store.dispatch(action_types.CHANGE_STATUS_MENU_ANESTHESIA)
       },

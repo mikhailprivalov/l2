@@ -1,4 +1,4 @@
-<template>
+ <template>
   <modal @close="hide_modal" margin-top marginLeftRight="auto" max-width="680px" ref="modal" show-footer="true"
          white-bg="true" width="100%">
     <span slot="header">Льготы пациента
