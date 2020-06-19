@@ -1,28 +1,47 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%"
+    <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%"
          marginLeftRight="auto" margin-top>
-      <span slot="header">Изменить родителя</span>
-    <div slot="body" style="min-height: 340px">
-      <h6><strong>Пациент: </strong>{{patientFio}}</h6>
-      <div class="row" id="row-box">
-        <div class="col-xs-6">
-          <h6><strong>Изменить принадлежность:</strong></h6>
-        </div>
-        <div class="col-xs-6" id="box-right">
-          <h6><strong>Главное направление:</strong></h6>
-        </div>
+    <span slot="header">Вакцинация пациента
+    </span>
+    <div slot="body" style="min-height: 200px" class="registry-body">
+      <table class="table table-bordered table-condensed table-sm-pd"
+             style="table-layout: fixed; font-size: 12px">
+        <colgroup>
+          <col width="70" />
+          <col/>
+          <col/>
+          <col/>
+          <col/>
+          <col/>
+          <col/>
+          <col width="45" />
+        </colgroup>
+        <thead>
+        <tr>
+          <th>Дата</th>
+          <th>Название</th>
+          <th>Серия</th>
+          <th>Доза</th>
+          <th>Способ</th>
+          <th>Этап</th>
+          <th>Отвод</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+      <div style="margin: 0 auto; width: 200px">
+        <button class="btn btn-primary-nb btn-blue-nb"
+                type="button"><i class="fa fa-plus"></i> Создать запись</button>
       </div>
     </div>
-
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-4">
-          <button type="button"class="btn btn-primary-nb btn-blue-nb">
-            Сохранить
-          </button>
+        <div class="col-xs-10">
         </div>
-        <div class="col-xs-4">
-          <button type="button" @click="hide_modal" class="btn btn-primary-nb btn-blue-nb">
+        <div class="col-xs-2">
+          <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">
             Закрыть
           </button>
         </div>
