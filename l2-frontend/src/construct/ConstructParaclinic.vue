@@ -72,6 +72,9 @@
         })
       },
       open_editor(pk) {
+        if (pk === -9998) {
+          return;
+        }
         this.opened_id = pk
       },
       cancel_edit() {
@@ -106,10 +109,6 @@
             d.push({value: -4, label: 'Стоматология'})
           }
 
-          if (this.modules.l2_microbiology) {
-            d.push({value: -6, label: 'Микробиология'})
-          }
-
           if (this.modules.l2_hosp && this.can_edit_stationar) {
             d.push({value: -5, label: 'Стационар'});
             d.push({value: -500, label: '– Первичный прием'});
@@ -122,6 +121,19 @@
             d.push({value: -507, label: '– Выписка'});
             d.push({value: -508, label: '– Больничный лист'});
             d.push({value: -509, label: '– t, ad, p – лист'})
+          }
+
+          if (this.modules.morfology) {
+            d.push({value: -9998, label: 'Морфология'});
+            if (this.modules.l2_microbiology) {
+              d.push({value: -6, label: '– Микробиология'})
+            }
+            if (this.modules.l2_citology) {
+              d.push({value: -7, label: '– Цитология'})
+            }
+            if (this.modules.l2_gistology) {
+              d.push({value: -8, label: '– Гистология'})
+            }
           }
         }
 
@@ -154,7 +166,7 @@
     watch: {
       department: {
         handler() {
-          if (this.department === '-1')
+          if (['-1', '-9998'].includes(this.department))
             return;
           this.load_researches()
         },

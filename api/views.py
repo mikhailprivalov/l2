@@ -452,6 +452,22 @@ def current_user_info(request):
                     "extended": True,
                     "e": Podrazdeleniya.MORFOLOGY,
                 })
+            if en.get(9):
+                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append({
+                    "pk": Podrazdeleniya.MORFOLOGY + 2,
+                    "title": "Цитология",
+                    "type": Podrazdeleniya.MORFOLOGY,
+                    "extended": True,
+                    "e": Podrazdeleniya.MORFOLOGY,
+                })
+            if en.get(10):
+                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append({
+                    "pk": Podrazdeleniya.MORFOLOGY + 3,
+                    "title": "Гистология",
+                    "type": Podrazdeleniya.MORFOLOGY,
+                    "extended": True,
+                    "e": Podrazdeleniya.MORFOLOGY,
+                })
     return JsonResponse(ret)
 
 

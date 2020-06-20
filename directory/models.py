@@ -152,6 +152,8 @@ class Researches(models.Model):
     is_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационар")
     is_slave_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационарный протокол")
     is_microbiology = models.BooleanField(default=False, blank=True, help_text="Это микробиологическое исследование")
+    is_citology = models.BooleanField(default=False, blank=True, help_text="Это цитологическое исследование")
+    is_gistology = models.BooleanField(default=False, blank=True, help_text="Это гистологическое исследование")
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
 
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
@@ -185,6 +187,8 @@ class Researches(models.Model):
             7: dict(is_stom=True),
             8: dict(is_hospital=True),
             9: dict(is_microbiology=True),
+            10: dict(is_citology=True),
+            11: dict(is_gistology=True),
         }
         return ts.get(t, {})
 
@@ -200,13 +204,13 @@ class Researches(models.Model):
             return -4
         if self.is_hospital:
             return -5
-        if self.is_microbiology:
+        if self.is_microbiology or self.is_citology or self.is_gistology:
             return 2 - Podrazdeleniya.MORFOLOGY
         return self.podrazdeleniye_id or -2
 
     @property
     def desc(self):
-        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology or self.is_hospital
+        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology or self.is_hospital or self.is_citology or self.is_gistology
 
     @property
     def can_transfer(self):
@@ -262,6 +266,10 @@ class Researches(models.Model):
     def get_site_type_id(self):
         if self.is_microbiology:
             return Podrazdeleniya.MORFOLOGY + 1
+        if self.is_citology:
+            return Podrazdeleniya.MORFOLOGY + 2
+        if self.is_gistology:
+            return Podrazdeleniya.MORFOLOGY + 3
         return self.site_type_id
 
 

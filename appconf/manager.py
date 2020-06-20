@@ -26,21 +26,27 @@ class SettingManager:
 
     @staticmethod
     def l2_modules():
-        return {**{'l2_{}'.format(x): SettingManager.l2(x) for x in [
-            "cards_module",
-            "fast_templates",
-            "stat_btn",
-            "treatment",
-            "stom",
-            "hosp",
-            "rmis_queue",
-            "benefit",
-            "microbiology",
-            "amd",
-            "direction_purpose",
-            "external_organizations",
-            "vaccine",
-        ]}, "consults_module": SettingManager.get("consults_module", default='false', default_type='b')}
+        return {
+            **{'l2_{}'.format(x): SettingManager.l2(x) for x in [
+                "cards_module",
+                "fast_templates",
+                "stat_btn",
+                "treatment",
+                "stom",
+                "hosp",
+                "rmis_queue",
+                "benefit",
+                "microbiology",
+                "citology",
+                "gistology",
+                "amd",
+                "direction_purpose",
+                "external_organizations",
+                "vaccine",
+            ]},
+            "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
+            "morfology": SettingManager.is_morfology_enabled(SettingManager.en())
+        }
 
     @staticmethod
     def en():
@@ -51,8 +57,10 @@ class SettingManager:
             6: SettingManager.l2('stom'),
             7: SettingManager.l2('hosp'),
             8: SettingManager.l2('microbiology'),
+            9: SettingManager.l2('citology'),
+            10: SettingManager.l2('gistology'),
         }
 
     @staticmethod
     def is_morfology_enabled(en: dict):
-        return bool(en.get(8))
+        return bool(en.get(8)) or bool(en.get(9)) or bool(en.get(10))
