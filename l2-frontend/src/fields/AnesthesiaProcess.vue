@@ -5,15 +5,18 @@
     <div class="sidebar-anesthesia" :class="{show: this.$store.state.showMenuAnesthesiaStatus}">
       <div class="sidebar-anesthesia-inner">
         <div class="title-anesthesia">
-          <div>Течение анестезии</div>
+          <div>Течение анестезии<template v-if="isEdit"> (редактирование)</template></div>
           <button class="btn btn-blue-nb sidebar-btn close-btn"
                   @click="show_anesthesia_sidebar">
             <i class="glyphicon glyphicon-remove" v-tippy="{ placement : 'bottom'}" title="Закрыть"></i>
           </button>
         </div>
         <div class="time-control">
-          <input type="datetime-local" class="form-control nbr" v-model="timeValue" :max="maxTimeValue"/>
-          <button class="btn btn-blue-nb nbr" @click="setCurrentTime" title="Текущие дата и время" v-tippy>
+          <input type="datetime-local" class="form-control nbr" v-model="timeValue" :max="maxTimeValue"
+                  :readonly="isEdit" />
+          <button class="btn btn-blue-nb nbr"
+                  :disabled="isEdit"
+                  @click="setCurrentTime" title="Текущие дата и время" v-tippy>
             <i class="fa fa-clock-o"/>
           </button>
         </div>
@@ -96,16 +99,17 @@
         </div>
 
         <div class="side-bottom">
-          <button class="btn btn-blue-nb nbr" @click="save_data">
+          <button class="btn btn-blue-nb nbr" @click="save_data" v-if="!isEdit">
             Добавить
           </button>
-          <button class="btn btn-blue-nb nbr" @click="load_data">
-            Обновить
+          <button class="btn btn-blue-nb nbr" @click="save_data" v-else>
+            Сохранить изменения
           </button>
         </div>
       </div>
     </div>
     <button class="btn btn-blue-nb tb-add-btn" title="Добавить значения в наркозную карту" v-tippy
+            v-if="!disabled"
             @click="show_anesthesia_sidebar">
       <i class="fa fa-heartbeat fa-lg"></i>
       Добавить
@@ -121,19 +125,26 @@
         </tr>
       </table>
       <div class="tb-data" ref="tbData">
-        <table>
-          <tr v-for="(row, i) in tb_data" :class="`row-${row_category[i] || 'default'}`">
-            <td v-for="(item, j) in row" v-if="j > 0">
-              <div :style="{height: `${tb_heights[i]}px`}">
-                <template v-if="i === 0 && j > 0 && item !== 'Сумма'">
-                  <DisplayDateTime :value="item"/>
-                </template>
-                <template v-else>
-                  {{ item }}
-                </template>
-              </div>
-            </td>
-          </tr>
+        <table :class="!disabled && 'all-hover'">
+          <colgroup v-for="_ in tb_data[0] || []" />
+          <tbody>
+            <tr v-for="(row, i) in tb_data" :class="`row-${row_category[i] || 'default'}`">
+              <td
+                v-for="(item, j) in row" v-if="j > 0"
+                :class="j + 1 === row.length && 'no-hover'"
+                @click="editColumn(j)"
+              >
+                <div :style="{height: `${tb_heights[i]}px`}">
+                  <template v-if="i === 0 && j > 0 && item !== 'Сумма'">
+                    <DisplayDateTime :value="item"/><i class="display-only-hover fa fa-pencil"></i>
+                  </template>
+                  <template v-else>
+                    {{ item }}
+                  </template>
+                </div>
+              </td>
+            </tr>
+          </tbody>
           <tr v-if="tb_data.length === 0">
             <td>нет данных</td>
           </tr>
@@ -165,6 +176,11 @@
       field_pk: {
         type: Number,
         required: true,
+      },
+      disabled: {
+        type: Boolean,
+        required: false,
+        default: false,
       }
     },
     data() {
@@ -183,6 +199,7 @@
         narcotic_data: {},
         patient_params_used: {},
         patient_params_other: {},
+        isEdit: false,
         tb_data: [],
         tb_heights: [],
         row_category: {},
@@ -221,6 +238,35 @@
       }
     },
     methods: {
+      editColumn(j) {
+        if (this.disabled || j + 1 === this.tb_data[0].length) {
+          return
+        }
+        this.show_anesthesia_sidebar();
+        this.isEdit = true;
+        const data = {
+          patient_params: {...this.patient_params_used},
+          potent_drugs: {...this.potent_drugs_used},
+          narcotic_drugs: {...this.narcotic_drugs_used},
+        };
+        for (let i = 0; i < this.tb_data.length; i++) {
+          const cat = this.row_category[i];
+          const paramName = this.tb_data[i][0];
+          const val = this.tb_data[i][j];
+          if (paramName && val) {
+             if (paramName === 'temperature') {
+              this.temperature = Number(val) || 36.6;
+            } else if (data[cat]) {
+              data[cat][paramName] = val;
+            } else if (paramName === 'Параметр') {
+              this.timeValue = val;
+            }
+          }
+        }
+        this.patient_params_used = data.patient_params;
+        this.potent_drugs_used = data.potent_drugs;
+        this.narcotic_drugs_used = data.narcotic_drugs;
+      },
       sync_heights() {
         const tb_heights = [];
         if (this.$refs.firstTable) {
@@ -272,6 +318,7 @@
         await this.load_data()
         await this.$store.dispatch(action_types.DEC_LOADING)
         okmessage('Сохранено');
+        this.show_anesthesia_sidebar();
       },
       async load_data() {
         await this.$store.dispatch(action_types.INC_LOADING);
@@ -335,12 +382,16 @@
       clear_data(obj) {
         Object.entries(obj).forEach(([key]) => obj[key] = '');
       },
-      show_anesthesia_sidebar() {
-        this.$store.dispatch(action_types.CHANGE_STATUS_MENU_ANESTHESIA);
+      clearAll() {
         this.clear_data(this.potent_drugs_used)
         this.clear_data(this.narcotic_drugs_used)
         this.clear_data(this.patient_params_used)
+        this.isEdit = false;
         this.setCurrentTime();
+      },
+      show_anesthesia_sidebar() {
+        this.$store.dispatch(action_types.CHANGE_STATUS_MENU_ANESTHESIA);
+        this.clearAll();
       }
     }
   }
@@ -509,7 +560,7 @@
 
       .btn {
         display: inline-block;
-        width: 50%;
+        width: 100%;
         height: 34px;
       }
     }
@@ -597,12 +648,22 @@
       table {
         border-left: 0 !important;
 
-        tr:first-child, tr td:last-child {
+        tr:first-of-type, tr td:last-of-type {
           font-weight: bold;
         }
 
         div {
-          width: 82px;
+          width: 88px;
+
+          i {
+            font-size: 80%;
+
+            vertical-align: middle;
+          }
+        }
+
+        tr:first-of-type div {
+          white-space: nowrap;
         }
 
         tr td:first-of-type {

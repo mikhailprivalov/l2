@@ -57,13 +57,16 @@
             font-weight: 700;
             src: local('Open Sans Bold'), local('OpenSans-Bold'), url('/static/fonts/OpenSans/OpenSans-Bold.ttf')
         }
+
         body, html {
             min-height: 100%;
         }
+
         body {
             background: #f2f2f2;
-            {#background: linear-gradient(to bottom, #fff, rgba(108, 122, 137, 0.04) 75%, rgba(108, 122, 137, 0.1) 100%);#}
+        {#background: linear-gradient(to bottom, #fff, rgba(108, 122, 137, 0.04) 75%, rgba(108, 122, 137, 0.1) 100%);#}
         }
+
         table {
             background: #fff;
         }
@@ -225,634 +228,647 @@
 </ul>
 <script src="{% static 'js/bootstrap.min.js' %}"></script>
 {% block base_s %}
-<script src="{% static 'js/jquery.hotkeys.js' %}"></script>
-<script src="{% static 'js/typeahead.bundle.min.js' %}"></script>
-<script src="{% static 'js/bootstrap-select.js' %}"></script>
-<script src="{% static 'js/bootbox.min.js' %}"></script>
-<script src="{% static 'js/lang.ru.js' %}"></script>
-<script src="{% static 'perfect-scrollbar/js/perfect-scrollbar.jquery.min.js' %}"></script>
-<script src="{% static 'js/jquery-ui.min.js' %}"></script>
-<script src="{% static 'js/jquery.isloading.min.js' %}"></script>
-<script src="{% static 'js/jquery.scrollTo.js' %}"></script>
-<script src="{% static 'bootflat/js/jquery.fs.selecter.min.js' %}"></script>
-<script src="{% static 'bootflat/js/jquery.fs.stepper.min.js' %}"></script>
-<script src="{% static 'bootflat/js/icheck.min.js' %}"></script>
-<script src="{% static 'js/jquery.amaran.min.js' %}"></script>
-<script src="{% static 'js/jquery.tooltipster.min.js' %}"></script>
-<script src="{% static 'js/jquery.floatThead.min.js' %}"></script>
-<script src="{% static 'js/context.jq.bs.js' %}"></script>
-<script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
-<script src="{% static 'locales/bootstrap-datepicker.ru.min.js' %}"></script>
-<script src="{% static 'js/underscore-min.js' %}"></script>
-<script>
-    let ajax_cache_token = (new Date()) + ''
-    let $body = $('body')
-    let $loader = {}
-    const today = new Date()
+    <script src="{% static 'js/jquery.hotkeys.js' %}"></script>
+    <script src="{% static 'js/typeahead.bundle.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap-select.js' %}"></script>
+    <script src="{% static 'js/bootbox.min.js' %}"></script>
+    <script src="{% static 'js/lang.ru.js' %}"></script>
+    <script src="{% static 'perfect-scrollbar/js/perfect-scrollbar.jquery.min.js' %}"></script>
+    <script src="{% static 'js/jquery-ui.min.js' %}"></script>
+    <script src="{% static 'js/jquery.isloading.min.js' %}"></script>
+    <script src="{% static 'js/jquery.scrollTo.js' %}"></script>
+    <script src="{% static 'bootflat/js/jquery.fs.selecter.min.js' %}"></script>
+    <script src="{% static 'bootflat/js/jquery.fs.stepper.min.js' %}"></script>
+    <script src="{% static 'bootflat/js/icheck.min.js' %}"></script>
+    <script src="{% static 'js/jquery.amaran.min.js' %}"></script>
+    <script src="{% static 'js/jquery.tooltipster.min.js' %}"></script>
+    <script src="{% static 'js/jquery.floatThead.min.js' %}"></script>
+    <script src="{% static 'js/context.jq.bs.js' %}"></script>
+    <script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
+    <script src="{% static 'locales/bootstrap-datepicker.ru.min.js' %}"></script>
+    <script src="{% static 'js/underscore-min.js' %}"></script>
+    <script>
+        let ajax_cache_token = (new Date()) + ''
+        let $body = $('body')
+        let $loader = {}
+        const today = new Date()
 
-    const card_bases = {{ card_bases|safe }};
+        const card_bases = {{ card_bases|safe }};
 
-    function get_base(title) {
-        return card_bases.filter(function (obj) {
-            return obj.title === title
-        })[0]
-    }
-
-    $loader.Particle = function (opt) {
-        this.radius = 7
-        this.x = opt.x
-        this.y = opt.y
-        this.angle = opt.angle
-        this.speed = opt.speed
-        this.accel = opt.accel
-        this.decay = 0.01
-        this.life = 1
-    }
-
-    $loader.Particle.prototype.step = function (i) {
-        this.speed += this.accel
-        this.x += Math.cos(this.angle) * this.speed
-        this.y += Math.sin(this.angle) * this.speed
-        this.angle += $loader.PI / 64
-        this.accel *= 1.01
-        this.life -= this.decay
-
-        if (this.life <= 0) {
-            $loader.particles.splice(i, 1)
-        }
-    }
-
-    $loader.Particle.prototype.draw = function (i) {
-        $loader.ctx.fillStyle = $loader.ctx.strokeStyle = 'hsla(' + ($loader.tick + (this.life * 120)) + ', 100%, 60%, ' + this.life + ')'
-        $loader.ctx.beginPath()
-        if ($loader.particles[i - 1]) {
-            $loader.ctx.moveTo(this.x, this.y)
-            $loader.ctx.lineTo($loader.particles[i - 1].x, $loader.particles[i - 1].y)
-        }
-        $loader.ctx.stroke()
-
-        $loader.ctx.beginPath()
-        $loader.ctx.arc(this.x, this.y, Math.max(0.001, this.life * this.radius), 0, $loader.TWO_PI)
-        $loader.ctx.fill()
-
-        let size = Math.random() * 1.25
-        $loader.ctx.fillRect(~~(this.x + ((Math.random() - 0.5) * 35) * this.life), ~~(this.y + ((Math.random() - 0.5) * 35) * this.life), size, size)
-    }
-
-    $loader.step = function () {
-        $loader.particles.push(new $loader.Particle({
-            x: $loader.width / 2 + Math.cos($loader.tick / 20) * $loader.min / 2,
-            y: $loader.height / 2 + Math.sin($loader.tick / 20) * $loader.min / 2,
-            angle: $loader.globalRotation + $loader.globalAngle,
-            speed: 0,
-            accel: 0.01
-        }))
-
-        $loader.particles.forEach(function (elem, index) {
-            elem.step(index)
-        })
-
-        $loader.globalRotation += $loader.PI / 6
-        $loader.globalAngle += $loader.PI / 6
-    }
-
-    $loader.draw = function () {
-        $loader.ctx.clearRect(0, 0, $loader.width, $loader.height)
-
-        $loader.particles.forEach(function (elem, index) {
-            elem.draw(index)
-        })
-    }
-
-    $loader.init = function () {
-        $loader.canvas = document.getElementById('loader-canvas')
-        $loader.ctx = $loader.canvas.getContext('2d')
-        $loader.width = $loader.canvas.width = 150
-        $loader.height = $loader.canvas.height = 150
-        $loader.min = $loader.width * 0.5
-        $loader.particles = []
-        $loader.globalAngle = 0
-        $loader.globalRotation = 0
-        $loader.tick = 0
-        $loader.PI = Math.PI
-        $loader.TWO_PI = $loader.PI * 2
-        $loader.ctx.globalCompositeOperation = 'lighter'
-        $loader.loop()
-    }
-    let exitLoop = false
-    $loader.loop = function () {
-        if (exitLoop) {
-            exitLoop = false
-            return
-        }
-        requestAnimationFrame($loader.loop)
-        $loader.step()
-        $loader.draw()
-        $loader.tick++
-    }
-    String.prototype.replaceAll = function (search, replacement) {
-        let target = this
-        return target.split(search).join(replacement)
-    }
-    String.prototype.capitalize = function () {
-        return this.charAt(0).toUpperCase() + this.slice(1)
-    }
-    String.prototype.capitalizeAll = function () {
-        let r
-        r = this
-        for (let s of this.split(' ')) {
-            r = r.replace(s, s.capitalize())
-        }
-        return r
-    }
-
-    String.prototype.format = String.prototype.f = function () {
-        let s = this,
-            i = arguments.length
-
-        while (i--) {
-            s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i])
-        }
-        return s
-    }
-
-    String.prototype.kwf = function(kw = {}) {
-        let s = this;
-        for (let k in kw) {
-            s = s.replace(new RegExp('\\{' + k + '\\}', 'gm'), kw[k]);
-        }
-        return s;
-    }
-
-    Array.prototype.reversedCopy = function () {
-        let arr = []
-        for (let i = this.length; i--;) {
-            arr.push(this[i])
-        }
-        return arr
-    }
-
-    if (!Element.prototype.closest) {
-        Element.prototype.closest = function(css) {
-            let node = this;
-
-            while (node) {
-                if (node.matches(css)) return node;
-                else node = node.parentElement;
-            }
-
-            return null;
-        };
-    }
-
-    if (!Array.prototype.last) {
-        Array.prototype.last = function () {
-            return this[this.length - 1]
-        }
-    }
-
-    function checkTime(i) {
-        if (i < 10) {
-            i = '0' + i
-        }
-        return i
-    }
-
-    function uHash() {
-        let indx = document.URL.indexOf('#')
-        if (indx === -1)
-            return ''
-        return document.URL.substr(indx + 1)
-    }
-
-    function setUHash(hash) {
-        if (hash === '' || hash === {} || hash === null) {
-            history.pushState('', document.title, window.location.pathname + window.location.search)
-            return
-        }
-        if (typeof hash === 'object') {
-            hash = JSON.stringify(hash)
+        function get_base(title) {
+            return card_bases.filter(function (obj) {
+                return obj.title === title
+            })[0]
         }
 
-        history.pushState('', document.title, window.location.pathname + window.location.search + '#' + hash)
-    }
-
-    function sTitle(title) {
-        document.title = title
-    }
-
-    let stopped = true
-    let inload = false
-    let callback_loader = null
-
-    function sl(no_sloader, cb) {
-        if (!inload) {
-            document.title = lang.loading + document.title
+        $loader.Particle = function (opt) {
+            this.radius = 7
+            this.x = opt.x
+            this.y = opt.y
+            this.angle = opt.angle
+            this.speed = opt.speed
+            this.accel = opt.accel
+            this.decay = 0.01
+            this.life = 1
         }
-        inload = true
-        $(() => {
-            const $preloader = $('#page-preloader')
-            $preloader.css({opacity: 0})
-            if (!no_sloader) {
-                $('.navbar').addClass('sloader')
-                stopped = false
-                setTimeout(function () {
-                    if (stopped) return
-                    $preloader.animate({opacity: 1}, 7000)
-                }, 1500)
-            }
-            $preloader.show()
-        })
 
-        callback_loader = cb
-    }
+        $loader.Particle.prototype.step = function (i) {
+            this.speed += this.accel
+            this.x += Math.cos(this.angle) * this.speed
+            this.y += Math.sin(this.angle) * this.speed
+            this.angle += $loader.PI / 64
+            this.accel *= 1.01
+            this.life -= this.decay
 
-    function hl() {
-        document.title = document.title.replace(lang.loading, '')
-        inload = false
-        $('.navbar').removeClass('sloader')
-        const $preloader = $('#page-preloader')
-        $preloader.hide()
-        exitLoop = true
-        stopped = true
-        $preloader.stop(true, true)
-        if(_.isFunction(callback_loader)) {
-            callback_loader()
-        }
-    }
-
-    function update_select(base) {
-        base = base || ''
-        $(`${base} .select-b`).selectpicker({
-            deselectAllText: 'Снять выбор',
-            selectAllText: 'Выбрать всё',
-            noneSelectedText: 'Ничего не выбрано'
-        })
-    }
-
-    Object.getKeys = function (obj, add) {
-        if (obj === undefined || obj === null) {
-            return undefined
-        }
-        let keys = []
-        if (add !== undefined) {
-            keys = jQuery.merge(keys, add)
-        }
-        for (let key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                keys.push(key)
-            }
-        }
-        return keys
-    }
-
-    Object.compare = function (obj1, obj2) {
-        for (let p in obj1) {
-            if (obj1.hasOwnProperty(p) !== obj2.hasOwnProperty(p)) return false
-
-            switch (typeof (obj1[p])) {
-                case 'object':
-                    if (!Object.compare(obj1[p], obj2[p])) return false
-                    break
-                case 'function':
-                    if (typeof (obj2[p]) === 'undefined' || (p !== 'compare' && obj1[p].toString() !== obj2[p].toString())) return false
-                    break
-                default:
-                    if (obj1[p] !== obj2[p]) return false
+            if (this.life <= 0) {
+                $loader.particles.splice(i, 1)
             }
         }
 
-        for (let p in obj2) {
-            if (typeof (obj1[p]) === 'undefined') return false
+        $loader.Particle.prototype.draw = function (i) {
+            $loader.ctx.fillStyle = $loader.ctx.strokeStyle = 'hsla(' + ($loader.tick + (this.life * 120)) + ', 100%, 60%, ' + this.life + ')'
+            $loader.ctx.beginPath()
+            if ($loader.particles[i - 1]) {
+                $loader.ctx.moveTo(this.x, this.y)
+                $loader.ctx.lineTo($loader.particles[i - 1].x, $loader.particles[i - 1].y)
+            }
+            $loader.ctx.stroke()
+
+            $loader.ctx.beginPath()
+            $loader.ctx.arc(this.x, this.y, Math.max(0.001, this.life * this.radius), 0, $loader.TWO_PI)
+            $loader.ctx.fill()
+
+            let size = Math.random() * 1.25
+            $loader.ctx.fillRect(~~(this.x + ((Math.random() - 0.5) * 35) * this.life), ~~(this.y + ((Math.random() - 0.5) * 35) * this.life), size, size)
         }
-        return true
-    }
 
-    $(document).ready(function () {
-        $('#page-preloader').hide()
-        update_select()
-        $body.addClass('showloader')
-        alive()
-        $('.context-st').hide()
+        $loader.step = function () {
+            $loader.particles.push(new $loader.Particle({
+                x: $loader.width / 2 + Math.cos($loader.tick / 20) * $loader.min / 2,
+                y: $loader.height / 2 + Math.sin($loader.tick / 20) * $loader.min / 2,
+                angle: $loader.globalRotation + $loader.globalAngle,
+                speed: 0,
+                accel: 0.01
+            }))
 
-        const $contextNumber = $('#contextNumber')
-        const $contextSt = $('#contextSt')
-        const $recalcValue = $('#recalcValue')
-        $.contextMenu({
-            elementSelector: 'input.form-control:not(.tt-hint):not(.no-context)[data-pk],textarea:not(.no-context)[data-pk]',
-            menuSelector: '#contextMenu',
-            menuSelected: function (invokedOn, selectedMenu) {
-                let val
-                switch (selectedMenu.attr('action')) {
-                    case 'clear':
-                        invokedOn.val('').typeahead('val', '')
-                        break
-                    case 'addnum':
-                        val = invokedOn.val() + $contextNumber.val() + '<sup>' + $contextSt.val() + '</sup>'
-                        $(invokedOn).val(val)
-                        $(invokedOn).typeahead('val', val)
-                        $contextNumber.val(10)
-                        $contextSt.val(1)
-                        break
-                    case 'addrecalc':
-                        let r = $recalcValue.val()
-                        if (r !== '') {
-                            r = ' ' + r
-                        }
-                        val = `${invokedOn.val()} (пересчитано${r})`
-                        $(invokedOn).val(val)
-                        $(invokedOn).typeahead('val', val)
-                        $recalcValue.val('')
-                        break
-                    case 'addleic':
-                        val = `${invokedOn.val()}п${$('#leicP').val()}\\с${$('#leicS').val()}\\э${$('#leicE').val()}\\м${$('#leicM').val()}\\л${$('#leicL').val()}\\ю${$('#leicY').val()}\\б${$('#leicB').val()}\\п.кл${$('#leicPK').val()}`
-                        $(invokedOn).val(val)
-                        $(invokedOn).typeahead('val', val)
-                        $('#leicP,#leicE,#leicL,#leicM,#leicS,#leicY,#leicB,#leicPK').val('')
-                        break
+            $loader.particles.forEach(function (elem, index) {
+                elem.step(index)
+            })
+
+            $loader.globalRotation += $loader.PI / 6
+            $loader.globalAngle += $loader.PI / 6
+        }
+
+        $loader.draw = function () {
+            $loader.ctx.clearRect(0, 0, $loader.width, $loader.height)
+
+            $loader.particles.forEach(function (elem, index) {
+                elem.draw(index)
+            })
+        }
+
+        $loader.init = function () {
+            $loader.canvas = document.getElementById('loader-canvas')
+            $loader.ctx = $loader.canvas.getContext('2d')
+            $loader.width = $loader.canvas.width = 150
+            $loader.height = $loader.canvas.height = 150
+            $loader.min = $loader.width * 0.5
+            $loader.particles = []
+            $loader.globalAngle = 0
+            $loader.globalRotation = 0
+            $loader.tick = 0
+            $loader.PI = Math.PI
+            $loader.TWO_PI = $loader.PI * 2
+            $loader.ctx.globalCompositeOperation = 'lighter'
+            $loader.loop()
+        }
+        let exitLoop = false
+        $loader.loop = function () {
+            if (exitLoop) {
+                exitLoop = false
+                return
+            }
+            requestAnimationFrame($loader.loop)
+            $loader.step()
+            $loader.draw()
+            $loader.tick++
+        }
+        String.prototype.replaceAll = function (search, replacement) {
+            let target = this
+            return target.split(search).join(replacement)
+        }
+        String.prototype.capitalize = function () {
+            return this.charAt(0).toUpperCase() + this.slice(1)
+        }
+        String.prototype.capitalizeAll = function () {
+            let r
+            r = this
+            for (let s of this.split(' ')) {
+                r = r.replace(s, s.capitalize())
+            }
+            return r
+        }
+
+        String.prototype.format = String.prototype.f = function () {
+            let s = this,
+                i = arguments.length
+
+            while (i--) {
+                s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i])
+            }
+            return s
+        }
+
+        String.prototype.kwf = function (kw = {}) {
+            let s = this;
+            for (let k in kw) {
+                s = s.replace(new RegExp('\\{' + k + '\\}', 'gm'), kw[k]);
+            }
+            return s;
+        }
+
+        Array.prototype.reversedCopy = function () {
+            let arr = []
+            for (let i = this.length; i--;) {
+                arr.push(this[i])
+            }
+            return arr
+        }
+
+        if (!Element.prototype.closest) {
+            Element.prototype.closest = function (css) {
+                let node = this;
+
+                while (node) {
+                    if (node.matches(css)) return node;
+                    else node = node.parentElement;
                 }
-                invokedOn.focus()
+
+                return null;
+            };
+        }
+
+        if (!Array.prototype.last) {
+            Array.prototype.last = function () {
+                return this[this.length - 1]
             }
-        })
-    })
-    let willbe_error = false
+        }
 
-    function blurall() {
-        $(function () {
-            $('input').blur()
-        })
-    }
+        function checkTime(i) {
+            if (i < 10) {
+                i = '0' + i
+            }
+            return i
+        }
 
-    function alive() {
-        $.ajax({
-            method: 'GET', url: '/mainmenu/', cache: false, statusCode: {
-                500: function () {
+        function uHash() {
+            let indx = document.URL.indexOf('#')
+            if (indx === -1)
+                return ''
+            return document.URL.substr(indx + 1)
+        }
+
+        function setUHash(hash) {
+            if (hash === '' || hash === {} || hash === null) {
+                history.pushState('', document.title, window.location.pathname + window.location.search)
+                return
+            }
+            if (typeof hash === 'object') {
+                hash = JSON.stringify(hash)
+            }
+
+            history.pushState('', document.title, window.location.pathname + window.location.search + '#' + hash)
+        }
+
+        function sTitle(title) {
+            document.title = title
+        }
+
+        let stopped = true
+        let inload = false
+        let callback_loader = null
+
+        function sl(no_sloader, cb) {
+            if (!inload) {
+                document.title = lang.loading + document.title
+            }
+            inload = true
+            $(() => {
+                const $preloader = $('#page-preloader')
+                $preloader.css({opacity: 0})
+                if (!no_sloader) {
+                    $('.navbar').addClass('sloader')
+                    stopped = false
+                    setTimeout(function () {
+                        if (stopped) return
+                        $preloader.animate({opacity: 1}, 7000)
+                    }, 1500)
+                }
+                $preloader.show()
+            })
+
+            callback_loader = cb
+        }
+
+        function hl() {
+            document.title = document.title.replace(lang.loading, '')
+            inload = false
+            $('.navbar').removeClass('sloader')
+            const $preloader = $('#page-preloader')
+            $preloader.hide()
+            exitLoop = true
+            stopped = true
+            $preloader.stop(true, true)
+            if (_.isFunction(callback_loader)) {
+                callback_loader()
+            }
+        }
+
+        function update_select(base) {
+            base = base || ''
+            $(`${base} .select-b`).selectpicker({
+                deselectAllText: 'Снять выбор',
+                selectAllText: 'Выбрать всё',
+                noneSelectedText: 'Ничего не выбрано'
+            })
+        }
+
+        Object.getKeys = function (obj, add) {
+            if (obj === undefined || obj === null) {
+                return undefined
+            }
+            let keys = []
+            if (add !== undefined) {
+                keys = jQuery.merge(keys, add)
+            }
+            for (let key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    keys.push(key)
+                }
+            }
+            return keys
+        }
+
+        Object.compare = function (obj1, obj2) {
+            for (let p in obj1) {
+                if (obj1.hasOwnProperty(p) !== obj2.hasOwnProperty(p)) return false
+
+                switch (typeof (obj1[p])) {
+                    case 'object':
+                        if (!Object.compare(obj1[p], obj2[p])) return false
+                        break
+                    case 'function':
+                        if (typeof (obj2[p]) === 'undefined' || (p !== 'compare' && obj1[p].toString() !== obj2[p].toString())) return false
+                        break
+                    default:
+                        if (obj1[p] !== obj2[p]) return false
+                }
+            }
+
+            for (let p in obj2) {
+                if (typeof (obj1[p]) === 'undefined') return false
+            }
+            return true
+        }
+
+        $(document).ready(function () {
+            $('#page-preloader').hide()
+            update_select()
+            $body.addClass('showloader')
+            alive()
+            $('.context-st').hide()
+
+            const $contextNumber = $('#contextNumber')
+            const $contextSt = $('#contextSt')
+            const $recalcValue = $('#recalcValue')
+            $.contextMenu({
+                elementSelector: 'input.form-control:not(.tt-hint):not(.no-context)[data-pk],textarea:not(.no-context)[data-pk]',
+                menuSelector: '#contextMenu',
+                menuSelected: function (invokedOn, selectedMenu) {
+                    let val
+                    switch (selectedMenu.attr('action')) {
+                        case 'clear':
+                            invokedOn.val('').typeahead('val', '')
+                            break
+                        case 'addnum':
+                            val = invokedOn.val() + $contextNumber.val() + '<sup>' + $contextSt.val() + '</sup>'
+                            $(invokedOn).val(val)
+                            $(invokedOn).typeahead('val', val)
+                            $contextNumber.val(10)
+                            $contextSt.val(1)
+                            break
+                        case 'addrecalc':
+                            let r = $recalcValue.val()
+                            if (r !== '') {
+                                r = ' ' + r
+                            }
+                            val = `${invokedOn.val()} (пересчитано${r})`
+                            $(invokedOn).val(val)
+                            $(invokedOn).typeahead('val', val)
+                            $recalcValue.val('')
+                            break
+                        case 'addleic':
+                            val = `${invokedOn.val()}п${$('#leicP').val()}\\с${$('#leicS').val()}\\э${$('#leicE').val()}\\м${$('#leicM').val()}\\л${$('#leicL').val()}\\ю${$('#leicY').val()}\\б${$('#leicB').val()}\\п.кл${$('#leicPK').val()}`
+                            $(invokedOn).val(val)
+                            $(invokedOn).typeahead('val', val)
+                            $('#leicP,#leicE,#leicL,#leicM,#leicS,#leicY,#leicB,#leicPK').val('')
+                            break
+                    }
+                    invokedOn.focus()
+                }
+            })
+
+            $(document).on("mouseenter", "table.all-hover td:not(.no-hover)", function () {
+                {#$(this).parent().addClass("cell-hover");#}
+                const i = $(this).index();
+                $(this).closest('table').find(`tr td:nth-child(${(i + 1)}):not(.no-hover)`).addClass("cell-hover");
+                {#$(this).closest('table').find('colgroup').eq(i).addClass("cell-hover");#}
+            });
+
+            $(document).on("mouseleave", "table.all-hover td:not(.no-hover)", function () {
+                const i = $(this).index();
+                $(this).closest('table').find(`tr td:nth-child(${(i + 1)}):not(.no-hover)`).removeClass("cell-hover");
+                {#$(this).closest('table').find('colgroup').eq(i).removeClass("cell-hover");#}
+            });
+        })
+        let willbe_error = false
+
+        function blurall() {
+            $(function () {
+                $('input').blur()
+            })
+        }
+
+        function alive() {
+            $.ajax({
+                method: 'GET', url: '/mainmenu/', cache: false, statusCode: {
+                    500: function () {
+                        $.amaran({
+                            'theme': 'awesome no',
+                            'content': {
+                                title: 'Сервер недоступен',
+                                message: 'Ошибка 500. Ожидайте доступность сервера.',
+                                info: '',
+                                icon: 'fa fa-exclamation'
+                            },
+                            'position': 'bottom right',
+                            delay: 13000
+                        })
+                        willbe_error = true
+                        sl(true)
+                        blurall()
+                    },
+                    502: function () {
+                        $.amaran({
+                            'theme': 'awesome no',
+                            'content': {
+                                title: 'Сервер недоступен',
+                                message: 'Ошибка 502. Ожидайте доступность сервера.',
+                                info: '',
+                                icon: 'fa fa-exclamation'
+                            },
+                            'position': 'bottom right',
+                            delay: 13000
+                        })
+                        willbe_error = true
+                        sl(true)
+                        blurall()
+                    },
+                    302: function () {
+                        document.location.href = '/'
+                    }
+                }
+            }).fail(jqXHR => {
+                if (jqXHR.status === 502 || jqXHR.status === 500)
+                    return
+                $.amaran({
+                    'theme': 'awesome no',
+                    'content': {
+                        title: 'Сервер недоступен',
+                        message: 'Ошибка связи с сервером. Сообщите администратору о проблеме',
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 13000
+                })
+                willbe_error = true
+                sl(true)
+                blurall()
+            }).done(function () {
+                if (willbe_error) {
+                    willbe_error = false
                     $.amaran({
-                        'theme': 'awesome no',
+                        'theme': 'awesome ok',
                         'content': {
-                            title: 'Сервер недоступен',
-                            message: 'Ошибка 500. Ожидайте доступность сервера.',
+                            title: 'Сервер доступен',
+                            message: 'ОК',
                             info: '',
-                            icon: 'fa fa-exclamation'
+                            icon: 'glyphicon glyphicon-ok'
                         },
                         'position': 'bottom right',
-                        delay: 13000
+                        delay: 30000
                     })
-                    willbe_error = true
-                    sl(true)
-                    blurall()
-                },
-                502: function () {
-                    $.amaran({
-                        'theme': 'awesome no',
-                        'content': {
-                            title: 'Сервер недоступен',
-                            message: 'Ошибка 502. Ожидайте доступность сервера.',
-                            info: '',
-                            icon: 'fa fa-exclamation'
-                        },
-                        'position': 'bottom right',
-                        delay: 13000
-                    })
-                    willbe_error = true
-                    sl(true)
-                    blurall()
-                },
-                302: function () {
+                    hl()
+                }
+            }).always(function () {
+                setTimeout(alive, 13000)
+            })
+        }
+
+        $(document).ajaxComplete(checkSession)
+
+        function checkSession(event, xhr, ajaxOptions) {
+            if (xhr.readyState === 4) {
+                if (xhr.getResponseHeader('Login-Screen') !== null && xhr.getResponseHeader('Login-Screen').length) {
                     document.location.href = '/'
                 }
             }
-        }).fail(jqXHR => {
-            if (jqXHR.status === 502 || jqXHR.status === 500)
-                return
+        }
+
+        $.extend($.expr[':'], {
+            textboxEmpty: function (el) {
+                return $(el).val() === ''
+            }
+        })
+        $.fn.refresh = function () {
+            let elems = $(this.selector)
+            this.splice(0, this.length)
+            this.push.apply(this, elems)
+            return this
+        }
+        $.fn.scrollDown = function () {
+            let el = $(this)
+            el.scrollTop(el[0].scrollHeight)
+        }
+
+        function convertArrayOfObjectsToCSV(args) {
+            let result, ctr, keys, columnDelimiter, lineDelimiter, data
+
+            data = args.data || null
+            if (data === null || !data.length) {
+                return null
+            }
+
+            columnDelimiter = args.columnDelimiter || ';'
+            lineDelimiter = args.lineDelimiter || '\n'
+
+            keys = Object.keys(data[0])
+
+            result = ''
+            result += keys.join(columnDelimiter)
+            result += lineDelimiter
+
+            data.forEach(function (item) {
+                ctr = 0
+                keys.forEach(function (key) {
+                    if (ctr > 0) result += columnDelimiter
+
+                    result += item[key]
+                    ctr++
+                })
+                result += lineDelimiter
+            })
+
+            return result
+        }
+
+        function downloadCSV(args) {
+            let data, filename, link
+
+            let csv = convertArrayOfObjectsToCSV({
+                data: args.data || {}
+            })
+            if (csv === null) return
+
+            filename = args.filename || 'export.csv'
+
+            if (!csv.match(/^data:text\/csv/i)) {
+                csv = 'data:text/csv;charset=utf-8,' + csv
+            }
+            data = encodeURI(csv)
+
+            link = document.createElement('a')
+            link.setAttribute('href', data)
+            link.setAttribute('download', filename)
+            link.click()
+        }
+
+        let mess_pos = false
+
+        function okmessage(title, body, delay) {
             $.amaran({
-                'theme': 'awesome no',
+                'theme': 'awesome ok',
                 'content': {
-                    title: 'Сервер недоступен',
-                    message: 'Ошибка связи с сервером. Сообщите администратору о проблеме',
+                    title: title,
+                    message: body || '',
                     info: '',
                     icon: 'fa fa-exclamation'
                 },
-                'position': 'bottom right',
-                delay: 13000
+                'position': mess_pos || 'bottom right',
+                delay: delay || 5000
             })
-            willbe_error = true
-            sl(true)
-            blurall()
-        }).done(function () {
-            if (willbe_error) {
-                willbe_error = false
-                $.amaran({
-                    'theme': 'awesome ok',
-                    'content': {
-                        title: 'Сервер доступен',
-                        message: 'ОК',
-                        info: '',
-                        icon: 'glyphicon glyphicon-ok'
-                    },
-                    'position': 'bottom right',
-                    delay: 30000
-                })
-                hl()
-            }
-        }).always(function () {
-            setTimeout(alive, 13000)
-        })
-    }
-
-    $(document).ajaxComplete(checkSession)
-
-    function checkSession(event, xhr, ajaxOptions) {
-        if (xhr.readyState === 4) {
-            if (xhr.getResponseHeader('Login-Screen') !== null && xhr.getResponseHeader('Login-Screen').length) {
-                document.location.href = '/'
-            }
-        }
-    }
-
-    $.extend($.expr[':'], {
-        textboxEmpty: function (el) {
-            return $(el).val() === ''
-        }
-    })
-    $.fn.refresh = function () {
-        let elems = $(this.selector)
-        this.splice(0, this.length)
-        this.push.apply(this, elems)
-        return this
-    }
-    $.fn.scrollDown = function () {
-        let el = $(this)
-        el.scrollTop(el[0].scrollHeight)
-    }
-
-    function convertArrayOfObjectsToCSV(args) {
-        let result, ctr, keys, columnDelimiter, lineDelimiter, data
-
-        data = args.data || null
-        if (data === null || !data.length) {
-            return null
         }
 
-        columnDelimiter = args.columnDelimiter || ';'
-        lineDelimiter = args.lineDelimiter || '\n'
-
-        keys = Object.keys(data[0])
-
-        result = ''
-        result += keys.join(columnDelimiter)
-        result += lineDelimiter
-
-        data.forEach(function (item) {
-            ctr = 0
-            keys.forEach(function (key) {
-                if (ctr > 0) result += columnDelimiter
-
-                result += item[key]
-                ctr++
+        function wrnmessage(title, body, delay) {
+            $.amaran({
+                'theme': 'awesome wrn',
+                'content': {
+                    title: title,
+                    message: body || '',
+                    info: '',
+                    icon: 'fa fa-exclamation'
+                },
+                'position': mess_pos || 'bottom right',
+                delay: delay || 5000
             })
-            result += lineDelimiter
-        })
-
-        return result
-    }
-
-    function downloadCSV(args) {
-        let data, filename, link
-
-        let csv = convertArrayOfObjectsToCSV({
-            data: args.data || {}
-        })
-        if (csv === null) return
-
-        filename = args.filename || 'export.csv'
-
-        if (!csv.match(/^data:text\/csv/i)) {
-            csv = 'data:text/csv;charset=utf-8,' + csv
+            mess_pos = false
         }
-        data = encodeURI(csv)
 
-        link = document.createElement('a')
-        link.setAttribute('href', data)
-        link.setAttribute('download', filename)
-        link.click()
-    }
+        function errmessage(title, body, delay) {
+            $.amaran({
+                'theme': 'awesome no',
+                'content': {
+                    title: title,
+                    message: body || '',
+                    info: '',
+                    icon: 'fa fa-exclamation'
+                },
+                'position': mess_pos || 'bottom right',
+                delay: delay || 5000
+            })
+        }
 
-    let mess_pos = false
+        let blink_animated = {}
 
-    function okmessage(title, body, delay) {
-        $.amaran({
-            'theme': 'awesome ok',
-            'content': {
-                title: title,
-                message: body || '',
-                info: '',
-                icon: 'fa fa-exclamation'
-            },
-            'position': mess_pos || 'bottom right',
-            delay: delay || 5000
-        })
-    }
-
-    function wrnmessage(title, body, delay) {
-        $.amaran({
-            'theme': 'awesome wrn',
-            'content': {
-                title: title,
-                message: body || '',
-                info: '',
-                icon: 'fa fa-exclamation'
-            },
-            'position': mess_pos || 'bottom right',
-            delay: delay || 5000
-        })
-        mess_pos = false
-    }
-
-    function errmessage(title, body, delay) {
-        $.amaran({
-            'theme': 'awesome no',
-            'content': {
-                title: title,
-                message: body || '',
-                info: '',
-                icon: 'fa fa-exclamation'
-            },
-            'position': mess_pos || 'bottom right',
-            delay: delay || 5000
-        })
-    }
-
-    let blink_animated = {}
-
-    function okblink(selector, effect) {
-        if (blink_animated[selector]) return
-        let e = effect || 'fadeIn'
-        $(selector).removeClass(e).removeClass('animated fast')
-        $(selector).addClass(e).addClass('animated fast')
-        blink_animated[selector] = true
-        setTimeout(function (s) {
+        function okblink(selector, effect) {
+            if (blink_animated[selector]) return
+            let e = effect || 'fadeIn'
             $(selector).removeClass(e).removeClass('animated fast')
-            blink_animated[s] = false
-        }.bind(this, selector), 334)
-    }
-
-
-    function selectTextEl(element) {
-        let doc = document
-        let text = element
-
-        if (doc.body.createTextRange) { // ms
-            let range = doc.body.createTextRange()
-            range.moveToElementText(text)
-            range.select()
-        } else if (window.getSelection) { // moz, opera, webkit
-            let selection = window.getSelection()
-            let range = doc.createRange()
-            range.selectNodeContents(text)
-            selection.removeAllRanges()
-            selection.addRange(range)
+            $(selector).addClass(e).addClass('animated fast')
+            blink_animated[selector] = true
+            setTimeout(function (s) {
+                $(selector).removeClass(e).removeClass('animated fast')
+                blink_animated[s] = false
+            }.bind(this, selector), 334)
         }
-    }
 
-    function clearselection() {
-        if (window.getSelection) {
-            if (window.getSelection().empty) {  // Chrome
-                window.getSelection().empty()
-            } else if (window.getSelection().removeAllRanges) {  // Firefox
-                window.getSelection().removeAllRanges()
+
+        function selectTextEl(element) {
+            let doc = document
+            let text = element
+
+            if (doc.body.createTextRange) { // ms
+                let range = doc.body.createTextRange()
+                range.moveToElementText(text)
+                range.select()
+            } else if (window.getSelection) { // moz, opera, webkit
+                let selection = window.getSelection()
+                let range = doc.createRange()
+                range.selectNodeContents(text)
+                selection.removeAllRanges()
+                selection.addRange(range)
             }
-        } else if (document.selection) {  // IE?
-            document.selection.empty()
         }
-    }
 
-    function printResults(ids) {
-        let pk_param = '[]'
-        if (Array.isArray(ids) && ids.length > 0) {
-            pk_param = JSON.stringify(ids)
-        } else if (ids != '' && ids) {
-            pk_param = JSON.stringify([ids])
+        function clearselection() {
+            if (window.getSelection) {
+                if (window.getSelection().empty) {  // Chrome
+                    window.getSelection().empty()
+                } else if (window.getSelection().removeAllRanges) {  // Firefox
+                    window.getSelection().removeAllRanges()
+                }
+            } else if (document.selection) {  // IE?
+                document.selection.empty()
+            }
         }
-        window.open('/results/preview?pk=' + pk_param, '_blank')
-    }
 
-    function vue_cb(t) {
-        let $t = $(t)
-        let instance_id = $t.attr('instance_id')
-        let func = $t.attr('func')
-        let val = $t.attr('val')
-        instances[instance_id][func](val)
-    }
+        function printResults(ids) {
+            let pk_param = '[]'
+            if (Array.isArray(ids) && ids.length > 0) {
+                pk_param = JSON.stringify(ids)
+            } else if (ids != '' && ids) {
+                pk_param = JSON.stringify([ids])
+            }
+            window.open('/results/preview?pk=' + pk_param, '_blank')
+        }
 
-    let instances = {}
+        function vue_cb(t) {
+            let $t = $(t)
+            let instance_id = $t.attr('instance_id')
+            let func = $t.attr('func')
+            let val = $t.attr('val')
+            instances[instance_id][func](val)
+        }
 
-    function set_instance(vm) {
-        instances[vm.uuid] = vm
-    }
-</script>
-<div id="page-preloader"></div>
-{% render_bundle 'main' 'js' %}
+        let instances = {}
+
+        function set_instance(vm) {
+            instances[vm.uuid] = vm
+        }
+    </script>
+    <div id="page-preloader"></div>
+    {% render_bundle 'main' 'js' %}
 {% endblock %}
 {% block scripts %}{% endblock %}
 </body>

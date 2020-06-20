@@ -122,7 +122,7 @@
                        v-model="field.value"/>
               </div>
               <div class="field-value" v-else-if="field.field_type === 21">
-                <AnesthesiaProcess :fields="field.values_to_input" :iss="pk" :field_pk="field.pk"/>
+                <AnesthesiaProcess :fields="field.values_to_input" :iss="pk" :field_pk="field.pk" :disabled="confirmed"/>
               </div>
               <div class="field-value" v-else-if="field.field_type === 22">
                 <TextareaAutocomplete
