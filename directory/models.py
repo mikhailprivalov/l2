@@ -201,7 +201,7 @@ class Researches(models.Model):
         if self.is_hospital:
             return -5
         if self.is_microbiology:
-            return -6
+            return 2 - Podrazdeleniya.MORFOLOGY
         return self.podrazdeleniye_id or -2
 
     @property
@@ -258,6 +258,11 @@ class Researches(models.Model):
     class Meta:
         verbose_name = 'Вид исследования'
         verbose_name_plural = 'Виды исследований'
+
+    def get_site_type_id(self):
+        if self.is_microbiology:
+            return Podrazdeleniya.MORFOLOGY + 1
+        return self.site_type_id
 
 
 class HospitalService(models.Model):

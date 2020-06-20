@@ -325,10 +325,16 @@ def departments(request):
         deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "updated": False} for
                 x in Podrazdeleniya.objects.all().order_by("pk")]
         en = SettingManager.en()
+        more_types = []
+        if SettingManager.is_morfology_enabled(en):
+            more_types.append({"pk": str(Podrazdeleniya.MORFOLOGY), "title": "Морфология"})
         return JsonResponse(
             {"departments": deps,
              "can_edit": can_edit,
-             "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if en.get(x[0], True)]})
+             "types": [
+                 *[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] != 8 and en.get(x[0], True)],
+                 *more_types,
+             ]})
     elif can_edit:
         ok = False
         message = ""
@@ -435,6 +441,17 @@ def current_user_info(request):
                     'e': e,
                 } for x in st_base.filter(site_type=t)]
             ]
+
+        if SettingManager.is_morfology_enabled(en):
+            ret["extended_departments"][Podrazdeleniya.MORFOLOGY] = []
+            if en.get(8):
+                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append({
+                    "pk": Podrazdeleniya.MORFOLOGY + 1,
+                    "title": "Микробиология",
+                    "type": Podrazdeleniya.MORFOLOGY,
+                    "extended": True,
+                    "e": Podrazdeleniya.MORFOLOGY,
+                })
     return JsonResponse(ret)
 
 

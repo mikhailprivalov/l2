@@ -52,3 +52,7 @@ class SettingManager:
             7: SettingManager.l2('hosp'),
             8: SettingManager.l2('microbiology'),
         }
+
+    @staticmethod
+    def is_morfology_enabled(en: dict):
+        return bool(en.get(8))
