@@ -176,7 +176,7 @@
     },
     data() {
       return {
-        date_range: [moment().subtract(3, 'month').format('DD.MM.YY'), moment().format('DD.MM.YY')],
+        date_range: [moment().subtract(6, 'month').format('DD.MM.YY'), moment().format('DD.MM.YY')],
         types: [
           {pk: 3, title: 'Направления пациента'},
           {pk: 0, title: 'Только выписанные'},
