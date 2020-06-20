@@ -109,6 +109,7 @@
       </div>
     </div>
     <button class="btn btn-blue-nb tb-add-btn" title="Добавить значения в наркозную карту" v-tippy
+            v-if="!disabled"
             @click="show_anesthesia_sidebar">
       <i class="fa fa-heartbeat fa-lg"></i>
       Добавить
@@ -124,7 +125,7 @@
         </tr>
       </table>
       <div class="tb-data" ref="tbData">
-        <table class="all-hover">
+        <table :class="!disabled && 'all-hover'">
           <colgroup v-for="_ in tb_data[0] || []" />
           <tbody>
             <tr v-for="(row, i) in tb_data" :class="`row-${row_category[i] || 'default'}`">
@@ -175,6 +176,11 @@
       field_pk: {
         type: Number,
         required: true,
+      },
+      disabled: {
+        type: Boolean,
+        required: false,
+        default: false,
       }
     },
     data() {
@@ -233,7 +239,7 @@
     },
     methods: {
       editColumn(j) {
-        if (j + 1 === this.tb_data[0].length) {
+        if (this.disabled || j + 1 === this.tb_data[0].length) {
           return
         }
         this.show_anesthesia_sidebar();
