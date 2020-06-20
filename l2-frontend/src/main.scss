@@ -1682,6 +1682,19 @@ input[type=date].form-control {
   }
 }
 
+.display-only-hover {
+  display: none;
+}
+
+.cell-hover {
+  cursor: pointer;
+  background-color: yellow!important;
+
+  .display-only-hover {
+    display: inline;
+  }
+}
+
 @import "./variables";
 @import "./editor";
 @import "./menubar";
