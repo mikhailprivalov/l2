@@ -228,4 +228,4 @@ venv*
 
 newrelic.ini
 make-*.sh
-forms/contract.txt
+forms/contract.json

@@ -275,18 +275,17 @@ def form_01(request_data):
     document_base = SettingManager.get("document_base")
 
     contract_from_file = SettingManager.get("contract_from_file", default='False', default_type='b')
-    contract_file = os.path.join(BASE_DIR, 'forms', 'contract.txt')
+    contract_file = os.path.join(BASE_DIR, 'forms', 'contract.json')
 
     with open(contract_file) as json_file:
         data = json.load(json_file)
-        org = data['org']
-        text = data['text']
-        hospital_name_file = data['hospital_short_name']
-        hospital_address_file = data['hospital_addresse']
+        contract_header = data['contract_header']
+        body_paragraphs = data['body_paragraphs']
+        org_contacts = data['org_contacts']
         executor = data['executor']
 
     if contract_from_file:
-        objs.append(Paragraph('{}'.format(org), style))
+        objs.append(Paragraph('{}'.format(contract_header), style))
     else:
         objs.append(Paragraph(
             '<font fontname ="PTAstraSerifBold"> Исполнитель:  </font>  {}, в лице {} {}, действующего(ей) на основании {} с одной стороны, и'.format(hospital_name, post_contract,
@@ -457,7 +456,7 @@ def form_01(request_data):
         Paragraph('Сроки оплаты: в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(end_date1),
                   style))
     if contract_from_file:
-        for section in text:
+        for section in body_paragraphs:
             if section.get('is_price', ''):
                 objs.append(Paragraph('{} <font fontname = "PTAstraSerifBold"> <u> {} </u></font>'.format(section['title'], s.capitalize()), vars()[section['style']]))
             elif section.get('time_pay', ''):
@@ -616,9 +615,7 @@ def form_01(request_data):
     # Если есть отдельный заказчик
     row_count = 0
     if contract_from_file:
-        hospital_name = hospital_name_file
-        hospital_address = hospital_address_file
-        hospital_short_name = hospital_name
+        hospital_address = org_contacts
     if is_payer:
         row_count = 0
         opinion = [
