@@ -29,7 +29,7 @@ from appconf.manager import SettingManager
 from clients.models import Card
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, PersonContract
 from laboratory import utils
-from laboratory.settings import FONTS_FOLDER, CONTRACT_FOLDER
+from laboratory.settings import FONTS_FOLDER, BASE_DIR
 from . import forms_func
 
 
@@ -274,7 +274,7 @@ def form_01(request_data):
     document_base = SettingManager.get("document_base")
 
     contract_from_file = SettingManager.get("contract_from_file", default='False', default_type='b')
-    contract_file = os.path.join(CONTRACT_FOLDER, 'contract.txt')
+    contract_file = os.path.join(BASE_DIR, 'forms', 'contract.txt')
 
     with open(contract_file) as json_file:
         data = json.load(json_file)
