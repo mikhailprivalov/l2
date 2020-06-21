@@ -150,6 +150,7 @@ STATICFILES_FINDERS = [
 ]
 
 FONTS_FOLDER = os.path.join(BASE_DIR, 'assets', 'fonts')
+CONTRACT_FOLDER = os.path.join(BASE_DIR, 'forms')
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'

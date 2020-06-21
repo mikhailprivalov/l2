@@ -411,47 +411,47 @@
         </div>
       </div>
     </modal>
-    <modal v-if="ambulatory_data" ref="modalAmbulatoryData" @close="hide_modal_ambulatory_data" show-footer="true"
-           white-bg="true" max-width="680px" width="100%"
-           marginLeftRight="auto" margin-top>
-    <span slot="header">Сведения из амбулаторной карты</span>
-      <div slot="body" style="min-height: 200px" class="registry-body">
-        <table class="table table-bordered table-condensed table-sm-pd"
-               style="table-layout: fixed; font-size: 12px">
-          <colgroup>
-            <col width="70"/>
-            <col width="60" />
-            <col />
-          </colgroup>
-          <thead>
-          <tr>
-            <th>Год</th>
-            <th>Месяц</th>
-            <th>Сведения</th>
-          </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-        <div style="margin: 0 auto; width: 200px">
-          <button class="btn btn-primary-nb btn-blue-nb"
-                  @click="edit_ambulatory(-1)"
-                  type="button"><i class="fa fa-plus"></i> Создать запись
-          </button>
-        </div>
-      </div>
-      <div slot="footer">
-        <div class="row">
-          <div class="col-xs-10">
-          </div>
-          <div class="col-xs-2">
-            <button @click="hide_modal_ambulatory_data" class="btn btn-primary-nb btn-blue-nb" type="button">
-              Закрыть
-            </button>
-          </div>
-        </div>
-      </div>
-    </modal>
+<!--    <modal v-if="ambulatory_data" ref="modalAmbulatoryData" @close="hide_modal_ambulatory_data" show-footer="true"-->
+<!--           white-bg="true" max-width="680px" width="100%"-->
+<!--           marginLeftRight="auto" margin-top>-->
+<!--    <span slot="header">Сведения из амбулаторной карты</span>-->
+<!--      <div slot="body" style="min-height: 200px" class="registry-body">-->
+<!--        <table class="table table-bordered table-condensed table-sm-pd"-->
+<!--               style="table-layout: fixed; font-size: 12px">-->
+<!--          <colgroup>-->
+<!--            <col width="70"/>-->
+<!--            <col width="60" />-->
+<!--            <col />-->
+<!--          </colgroup>-->
+<!--          <thead>-->
+<!--          <tr>-->
+<!--            <th>Год</th>-->
+<!--            <th>Месяц</th>-->
+<!--            <th>Сведения</th>-->
+<!--          </tr>-->
+<!--          </thead>-->
+<!--          <tbody>-->
+<!--          </tbody>-->
+<!--        </table>-->
+<!--        <div style="margin: 0 auto; width: 200px">-->
+<!--          <button class="btn btn-primary-nb btn-blue-nb"-->
+<!--                  @click="edit_ambulatory(-1)"-->
+<!--                  type="button"><i class="fa fa-plus"></i> Создать запись-->
+<!--          </button>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--      <div slot="footer">-->
+<!--        <div class="row">-->
+<!--          <div class="col-xs-10">-->
+<!--          </div>-->
+<!--          <div class="col-xs-2">-->
+<!--            <button @click="hide_modal_ambulatory_data" class="btn btn-primary-nb btn-blue-nb" type="button">-->
+<!--              Закрыть-->
+<!--            </button>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </modal>-->
     <modal v-if="edit_pk > -2" ref="modalEditAmbulatory" @close="hide_edit_ambulatory" show-footer="true" white-bg="true" max-width="710px"
              width="100%" marginLeftRight="auto" margin-top>
           <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
@@ -478,6 +478,8 @@
         </div>
       </modal>
     <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1" no_desc/>
+    <ambulatory-data :card_pk="patient.cardId" :card_data="patient.card" v-if="ambulatory_data"/>
+<!--    <vaccine :card_pk="patient.cardId" :card_data="patient.card" v-if="ambulatory_data"/>-->
   </div>
 </template>
 
@@ -498,6 +500,8 @@
   import DisplayDirection from './DisplayDirection'
   import patients_point from '../../api/patients-point'
   import UrlData from '../../UrlData'
+  import Vaccine from '../../modals/Vaccine'
+  import AmbulatoryData from '../../modals/AmbulatoryData'
 
   export default {
     mixins: [menuMixin],
@@ -507,6 +511,8 @@
       DescriptiveForm,
       IssStatus,
       PatientCard,
+      Vaccine,
+      AmbulatoryData,
       DirectionsHistory: () => import('../../ui-cards/DirectionsHistory'),
       AggregateTADP: () => import('../../fields/AggregateTADP'),
       AggregateDesc: () => import('../../fields/AggregateDesc'),
@@ -518,8 +524,6 @@
       LastResult: () => import('../../ui-cards/LastResult'),
       ResearchesPicker: () => import('../../ui-cards/ResearchesPicker'),
       Modal: () => import('../../ui-cards/Modal'),
-      // AmbulatoryData: () => import('../../modals/AmbulatoryData'),
-
     },
     data() {
       return {
