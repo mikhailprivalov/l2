@@ -285,12 +285,12 @@ def form_01(request_data):
         hospital_address_file = data['hospital_addresse']
         executor = data['executor']
 
-
     if contract_from_file:
         objs.append(Paragraph('{}'.format(org), style))
     else:
-        objs.append(Paragraph('<font fontname ="PTAstraSerifBold"> Исполнитель:  </font>  {}, в лице {} {}, действующего(ей) на основании {} с '
-                          'одной стороны, и'.format(hospital_name, post_contract, exec_person, document_base), style))
+        objs.append(Paragraph(
+            '<font fontname ="PTAstraSerifBold"> Исполнитель:  </font>  {}, в лице {} {}, действующего(ей) на основании {} с одной стороны, и'.format(hospital_name, post_contract,
+                                                                                                                                                      exec_person, document_base), style))
 
     them_contract = 'настоящий договор о нижеследующем:'
     client_who = 'Заказчик'
@@ -461,7 +461,10 @@ def form_01(request_data):
             if section.get('is_price', ''):
                 objs.append(Paragraph('{} <font fontname = "PTAstraSerifBold"> <u> {} </u></font>'.format(section['title'], s.capitalize()), vars()[section['style']]))
             elif section.get('time_pay', ''):
-                objs.append(Paragraph('{} в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(section['title'], end_date1), vars()[section['style']]))
+                objs.append(Paragraph(
+                    '{} в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(section['title'],
+                                                                                                                                                                         end_date1),
+                    vars()[section['style']]))
             else:
                 objs.append(Paragraph(section['title'], vars()[section['style']]))
     else:
@@ -476,7 +479,8 @@ def form_01(request_data):
         objs.append(
             Paragraph('б) данных о конкретном медицинском работнике, предоставляющем соответствующую платную медицинскую услугу (его профессиональном образовании и квалификации);', style))
         objs.append(Paragraph(
-            'в) данных о методах оказания медицинской помощи, связанных с ними рисках, возможных видах медицинского вмешательства, их последствиях и ожидаемых результатах оказания медицинской помощи;',  # noqa: E501
+            'в) данных о методах оказания медицинской помощи, связанных с ними рисках, возможных видах медицинского вмешательства, их последствиях и ожидаемых результатах оказания медицинской помощи;',
+            # noqa: E501
             style))
         objs.append(Paragraph('г) других сведениях, относящихся к предмету настоящего Договора.', style))
         objs.append(Paragraph('2.1.2.Оказывать Пациенту услуги, предусмотренные п. 1.1 настоящего Договора, а при необходимости и дополнительные услуги.', style))
@@ -524,8 +528,9 @@ def form_01(request_data):
         end_date = (date.today() + relativedelta(days=+10))
         end_date1 = datetime.datetime.strftime(end_date, "%d.%m.%Y")
         objs.append(
-            Paragraph('Сроки оплаты: в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(end_date1),
-                      style))
+            Paragraph(
+                'Сроки оплаты: в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(end_date1),
+                style))
         objs.append(Paragraph('Предоплата 100%.', style))
         objs.append(Paragraph('4.2. Оплата услуг производится путем перечисления суммы на расчетный счет Исполнителя или путем внесения в кассу Исполнителя.', style))
         objs.append(Paragraph('Заказчику в соответствии с законодательством Российской Федерации выдается документ; '
@@ -769,7 +774,6 @@ def form_01(request_data):
         ('BOTTOMPADDING', (0, -1), (0, -1), 1 * mm),
         ('BOTTOMPADDING', (-1, -1), (-1, -1), 4.2 * mm),
     ]))
-
 
     objs.append(Spacer(1, 2 * mm))
 
