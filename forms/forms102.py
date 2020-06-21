@@ -149,7 +149,7 @@ def form_01(request_data):
     bstr = (qr_napr + protect_val).encode()
     protect_code = str(zlib.crc32(bstr))
 
-    today = utils.timezone.now()
+    today = utils.current_time()
     date_now1 = datetime.datetime.strftime(today, '%y%m%d%H%M%S%f')[:-3]
     date_now_str = str(ind_card.pk) + str(date_now1)
 
@@ -158,7 +158,6 @@ def form_01(request_data):
     # а также разные контрольные суммы, все перезаписать.
     num_contract_set = set()
     protect_code_set = set()
-    napr_end = []
     napr_end = Napravleniya.objects.filter(id__in=result_data[3])
     for n in napr_end:
         num_contract_set.add(n.num_contract)
@@ -275,19 +274,16 @@ def form_01(request_data):
     document_base = SettingManager.get("document_base")
 
     contract_from_file = SettingManager.get("contract_from_file", default='False', default_type='b')
-    contract_file = os.path.join(CONTRACT_FOLDER, 'contract2.txt')
+    contract_file = os.path.join(CONTRACT_FOLDER, 'contract.txt')
 
     with open(contract_file) as json_file:
         data = json.load(json_file)
         org = data['org']
-        # section1_2 = data['1_2']
-        # section7_1 = data['7.1']
-        # section7_2 = data['7.2']
-        # section7_3 = data['7.3']
-        # section7_4 = data['7.4']
-        hospital_name_file = ''
-        hospital_address_file = ''
         text = data['text']
+        hospital_name_file = data['hospital_short_name']
+        hospital_address_file = data['hospital_addresse']
+        executor = data['executor']
+
 
     if contract_from_file:
         objs.append(Paragraph('{}'.format(org), style))
@@ -587,6 +583,8 @@ def form_01(request_data):
     dir_n = fio_director_list[1]
     dir_p = fio_director_list[2]
     dir_npf = dir_n[0:1] + '.' + ' ' + dir_p[0:1] + '.' + ' ' + dir_f
+    if executor:
+        dir_npf = executor
 
     space_symbol = '&nbsp;'
 
@@ -612,6 +610,7 @@ def form_01(request_data):
     if contract_from_file:
         hospital_name = hospital_name_file
         hospital_address = hospital_address_file
+        hospital_short_name = hospital_name
     if is_payer:
         row_count = 0
         opinion = [
@@ -852,7 +851,6 @@ def form_01(request_data):
         canvas.setFillColor(HexColor(0x4f4b4b))
         canvas.setFont('PTAstraSerifReg', 5.2)
         canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
-
         canvas.restoreState()
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
