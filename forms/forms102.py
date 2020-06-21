@@ -298,6 +298,7 @@ def form_01(request_data):
     # Добавдяем представителя (мать, отец, опекун или др. не дееспособный)
     is_pagent = False
     # представитель==Заказчик ()
+    payer_fio = None
     if (p_payer is None) or (p_payer == p_agent) or (p_agent and p_payer is None):
         payer_fio = person_data['fio']
         is_pagent = True
@@ -590,11 +591,13 @@ def form_01(request_data):
     space_symbol = '&nbsp;'
 
     # Данные плательщика в Договоре
-    fio_list = payer_fio.split(' ')
-    f = fio_list[0]
-    n = fio_list[1][0:1] + '.'
-    p = fio_list[2][0:1] + '.' if len(fio_list) > 2 else ''
-    npf = n + ' ' + p + ' ' + f
+    npf = ''
+    if payer_fio:
+        fio_list = payer_fio.split(' ')
+        f = fio_list[0]
+        n = fio_list[1][0:1] + '.'
+        p = fio_list[2][0:1] + '.' if len(fio_list) > 2 else ''
+        npf = n + ' ' + p + ' ' + f
 
     # Данные пациента в Договоре
     patient_list = patient_data['fio'].split(' ')
