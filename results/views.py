@@ -954,7 +954,8 @@ def result_print(request):
                 if not hosp:
                     fwb.append(InteractiveTextField())
                     fwb.append(Spacer(1, 2 * mm))
-                    if iss.research.is_doc_refferal or iss.research.is_microbiology or iss.research.is_treatment or iss.research.is_microbiology:
+                    if iss.research.is_doc_refferal or iss.research.is_microbiology or iss.research.is_treatment or iss.research.is_microbiology\
+                            or iss.research.is_citology or iss.research.is_gistology:
                         iss_title = iss.research.title
                     elif iss.doc_confirmation.podrazdeleniye.vaccine:
                         iss_title = "Вакцина: " + iss.research.title
