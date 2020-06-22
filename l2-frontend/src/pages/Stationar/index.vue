@@ -1008,7 +1008,7 @@
           return [3]
         }
         if (this.openPlusId === 'morfology') {
-          return [6]
+          return [10000]
         }
         if (this.openPlusId === 'consultation') {
           return [4]
