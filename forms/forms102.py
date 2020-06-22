@@ -246,6 +246,8 @@ def form_01(request_data):
     styleTBold.fontSize = 10
     styleTBold.alignment = TA_LEFT
 
+    styles_obj = {'style': style, 'styleCenter': styleCenter}
+
     date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
 
     styleTR = deepcopy(style)
@@ -277,12 +279,13 @@ def form_01(request_data):
     contract_from_file = SettingManager.get("contract_from_file", default='False', default_type='b')
     contract_file = os.path.join(BASE_DIR, 'forms', 'contract.json')
 
-    with open(contract_file) as json_file:
-        data = json.load(json_file)
-        contract_header = data['contract_header']
-        body_paragraphs = data['body_paragraphs']
-        org_contacts = data['org_contacts']
-        executor = data['executor']
+    if contract_from_file:
+        with open(contract_file) as json_file:
+            data = json.load(json_file)
+            contract_header = data['contract_header']
+            body_paragraphs = data['body_paragraphs']
+            org_contacts = data['org_contacts']
+            executor = data['executor']
 
     if contract_from_file:
         objs.append(Paragraph('{}'.format(contract_header), style))
@@ -457,15 +460,15 @@ def form_01(request_data):
                   style))
     if contract_from_file:
         for section in body_paragraphs:
-            if section.get('is_price', ''):
-                objs.append(Paragraph('{} <font fontname = "PTAstraSerifBold"> <u> {} </u></font>'.format(section['title'], s.capitalize()), vars()[section['style']]))
-            elif section.get('time_pay', ''):
+            if section.get('is_price'):
+                objs.append(Paragraph('{} <font fontname = "PTAstraSerifBold"> <u> {} </u></font>'.format(section['text'], s.capitalize()), styles_obj[section['style']]))
+            elif section.get('time_pay'):
                 objs.append(Paragraph(
-                    '{} в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(section['title'],
+                    '{} в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(section['text'],
                                                                                                                                                                          end_date1),
-                    vars()[section['style']]))
+                    styles_obj[section['style']]))
             else:
-                objs.append(Paragraph(section['title'], vars()[section['style']]))
+                objs.append(Paragraph(section['text'], styles_obj[section['style']]))
     else:
         objs.append(Paragraph('1.2. Исполнитель оказывает услуги по месту своего нахождения по адресу: '
                               'г. Иркутск, Байкальская, 201, в соответствии с установленными Правилами предоставления платных медицинских услуг.', style))
