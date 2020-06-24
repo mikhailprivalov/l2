@@ -47,12 +47,12 @@
         <span slot="header" v-else>Создание записи</span>
         <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
           <div class="form-group">
-            <label for="de-f3">Дата:</label>
-            <input class="form-control" type="month" id="de-f3" v-model="edit_data.date" :max="td" required>
+            <label for="de-f1">Дата:</label>
+            <input class="form-control month-with" type="month" id="de-f1" v-model="edit_data.date" :max="td" required>
           </div>
           <div class="form-group">
-            <label for="de-f11">Данные:</label>
-            <textarea class="form-control" id="de-f11" rows="10" v-model="edit_data.data"/>
+            <label for="de-f2">Данные:</label>
+            <textarea class="form-control" id="de-f2" rows="10" v-model="edit_data.data"/>
           </div>
         </div>
         <div slot="footer">
@@ -173,11 +173,9 @@
 </script>
 
 <style scoped lang="scss">
-  select.form-control {
-    padding: 0;
-    overflow: visible;
+  .month-with{
+    width: 180px;
   }
-
   .nonPrior {
     opacity: .7;
 

@@ -411,31 +411,6 @@
         </div>
       </div>
     </modal>
-    <modal v-if="edit_pk > -2" ref="modalEditAmbulatory" @close="hide_edit_ambulatory" show-footer="true" white-bg="true" max-width="710px"
-             width="100%" marginLeftRight="auto" margin-top>
-          <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
-            <div class="form-group">
-              <label for="start">Год и месяц:</label>
-              <input type="month" id="start" name="start">
-              <label for="de-f11">Сведения:</label>
-              <textarea class="form-control" id="de-f11"/>
-            </div>
-        </div>
-        <div slot="footer">
-          <div class="row">
-            <div class="col-xs-4">
-              <button class="btn btn-primary-nb btn-blue-nb" type="button">
-                Отмена
-              </button>
-            </div>
-            <div class="col-xs-4">
-              <button class="btn btn-primary-nb btn-blue-nb" type="button">
-                Сохранить
-              </button>
-            </div>
-          </div>
-        </div>
-      </modal>
     <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1" no_desc/>
     <ambulatory-data :card_pk="patient.cardId" :card_data="patient" v-if="ambulatory_data"/>
   </div>
@@ -522,7 +497,6 @@
         research_history: [],
         inited: false,
         ambulatory_data: false,
-        edit_pk: -2,
       }
     },
     watch: {
@@ -1004,21 +978,6 @@
           this.$refs.modalAnamnesisEdit.$el.style.display = 'none'
         }
         this.anamnesis_edit = false
-      },
-      hide_modal_ambulatory_data(){
-        if (this.$refs.modalAmbulatoryData) {
-          this.$refs.modalAmbulatoryData.$el.style.display = 'none'
-        }
-        this.ambulatory_data = false
-      },
-      hide_edit_ambulatory(){
-        if (this.$refs.modalEditAmbulatory) {
-          this.$refs.modalEditAmbulatory.$el.style.display = 'none'
-        }
-        this.edit_pk = -2
-      },
-      edit_ambulatory(pk){
-        this.edit_pk = pk
       },
       open_ambulatory_data() {
         this.ambulatory_data = true
