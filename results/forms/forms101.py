@@ -52,6 +52,7 @@ def form_01(direction, iss, fwb, doc, leftnone):
                 column_result = column_result + '; '
 
             column_data.append(Paragraph(column_result, style))
+    column_data += [''] * (3 - len(column_data))
 
     opinion = [
         title_opinion,

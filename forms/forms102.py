@@ -279,6 +279,7 @@ def form_01(request_data):
     contract_from_file = SettingManager.get("contract_from_file", default='False', default_type='b')
     contract_file = os.path.join(BASE_DIR, 'forms', 'contract.json')
 
+    executor = None
     if contract_from_file:
         with open(contract_file) as json_file:
             data = json.load(json_file)
