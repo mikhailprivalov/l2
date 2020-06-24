@@ -817,7 +817,6 @@ def save_ambulatory_data(request):
     if pk == -1:
         a = AmbulatoryData.objects.create(card_id=rd["card_pk"])
         pk = a.pk
-        n = True
     else:
         pk = rd["pk"]
         a = AmbulatoryData.objects.get(pk=pk)
