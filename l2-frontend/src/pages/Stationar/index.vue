@@ -433,7 +433,6 @@
   import DisplayDirection from './DisplayDirection'
   import patients_point from '../../api/patients-point'
   import UrlData from '../../UrlData'
-  import Vaccine from '../../modals/Vaccine'
   import AmbulatoryData from '../../modals/AmbulatoryData'
 
   export default {
@@ -444,7 +443,6 @@
       DescriptiveForm,
       IssStatus,
       PatientCard,
-      Vaccine,
       AmbulatoryData,
       DirectionsHistory: () => import('../../ui-cards/DirectionsHistory'),
       AggregateTADP: () => import('../../fields/AggregateTADP'),
