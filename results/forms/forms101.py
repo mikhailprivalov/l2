@@ -52,7 +52,7 @@ def form_01(direction, iss, fwb, doc, leftnone):
                 column_result = column_result + '; '
 
             column_data.append(Paragraph(column_result, style))
-    column_data = check_len_result(column_data)
+    column_data += [''] * (3 - len(column_data))
 
     opinion = [
         title_opinion,
@@ -76,14 +76,3 @@ def form_01(direction, iss, fwb, doc, leftnone):
     fwb.append(tbl)
 
     return fwb
-
-
-def check_len_result(column_result):
-    if len(column_result) >= 3:
-        return column_result
-    else:
-        column_result.append('')
-        check_len_result(column_result)
-
-
-
