@@ -24,8 +24,8 @@
         <tbody>
           <tr v-for="r in rows">
             <td>{{r.date}}</td>
-            <td>{{r.title}}</td>
-            <td>9999 we1111111we1111111we111111 1we1111111we1111111we1  111111we1111111we1111111we1111111we1111111we111111 1we1111111we1111111we1111111we1111111we11111 11we1111111we1111111we1111111we 1111111we1111111w e1111111we1111111we1111111we1111111we1111111we1111111we1111 111we1111111we1111111we1111111we1111111</td>
+            <td>{{r.date}}</td>
+            <td>{{r.data}}</td>
             <td>
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
@@ -43,46 +43,16 @@
       </div>
       <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
              width="100%" marginLeftRight="auto" margin-top>
-        <span slot="header" v-if="edit_pk > -1">Редактор вакцинации</span>
-        <span slot="header" v-else>Создание записи вакцинации</span>
+        <span slot="header" v-if="edit_pk > -1">Редактор сведений</span>
+        <span slot="header" v-else>Создание записи</span>
         <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
           <div class="form-group">
             <label for="de-f3">Дата:</label>
             <input class="form-control" type="month" id="de-f3" v-model="edit_data.date" :max="td" required>
           </div>
-          <div class="form-group" v-if="edit_data.direction !== ''">
-            <label for="de-f5">Направление:</label>
-            <input class="form-control" id="de-f5" v-model="edit_data.direction" readonly>
-          </div>
           <div class="form-group">
-            <label for="de-f6">Название:</label>
-            <input class="form-control" id="de-f6" v-model="edit_data.title">
-          </div>
-          <div class="form-group">
-            <label for="de-f7">Серия:</label>
-            <input class="form-control" id="de-f7" v-model="edit_data.series">
-          </div>
-          <div class="form-group">
-            <label for="de-f8">Доза:</label>
-            <input class="form-control" id="de-f8" v-model="edit_data.amount">
-          </div>
-          <div class="form-group">
-            <label for="de-f81">Способ:</label>
-            <input class="form-control" id="de-f81" v-model="edit_data.method">
-          </div>
-          <div class="form-group">
-            <label for="de-f9">Этап:</label>
-            <select v-model="edit_data.step" id="de-f9" class="form-control">
-              <option v-for="s in steps" :value="s">{{s}}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="de-f10">Отвод:</label>
-            <input class="form-control" id="de-f10" v-model="edit_data.tap">
-          </div>
-          <div class="form-group">
-            <label for="de-f11">Примечание:</label>
-            <textarea class="form-control" id="de-f11" v-model="edit_data.comment"/>
+            <label for="de-f11">Данные:</label>
+            <textarea class="form-control" id="de-f11" rows="10" v-model="edit_data.data"/>
           </div>
         </div>
         <div slot="footer">
@@ -138,52 +108,35 @@
       return {
         rows: [],
         edit_pk: -2,
-        td: moment().format('YYYY-MM-DD'),
+        td: moment().format('YYYY-MM'),
         edit_data: {
           date: '',
-          direction: '',
-          title: '',
-          series: '',
-          amount: '',
-          method: '',
-          step: 'V',
-          tap: '',
-          comment: '',
+          data: '',
         },
-        steps: ['V', 'V1', 'V2', 'V3', 'V4', 'R', 'R1', 'R2', 'R3'],
       }
     },
     created() {
       this.load_data();
-      console.log(this.card_pk)
-      console.log(this.card_data)
     },
     computed: {
       valid() {
-        return this.edit_data.date !== '' && this.edit_data.title !== '';
+        return this.edit_data.date !== '' && this.edit_data.data !== '';
       },
     },
     methods: {
       async edit(pk) {
-        this.td = moment().format('YYYY-MM-DD')
+        this.td = moment().format('YYYY-MM')
         if (pk === -1) {
           this.edit_data = {
-            date: moment().format('YYYY-MM-DD'),
-            direction: '',
-            title: '',
-            series: '',
-            amount: '',
-            method: '',
-            step: 'V',
-            tap: '',
-            comment: '',
+            date: moment().format('YYYY-MM'),
+            data: '',
           }
         } else {
-          const d = await patients_point.loadVaccineDetail({pk})
-          this.edit_data = {
-            ...this.edit_data,
-            ...d,
-          };
+          const d = await patients_point.loadAmbulatoryDataDetail({pk})
+          console.log(d.date, typeof d)
+          console.log((d.date).format('YYYY-MM'))
+          this.edit_data.date = d.date.format('YYYY-MM')
+          this.edit_data.data = d.data
         }
         this.edit_pk = pk
       },
@@ -201,7 +154,7 @@
       },
       load_data() {
         this.$store.dispatch(action_types.INC_LOADING)
-        patients_point.loadVaccine(this, 'card_pk').then(({rows}) => {
+        patients_point.loadAmbulatoryData(this, 'card_pk').then(({rows}) => {
           this.rows = rows
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING)
@@ -209,7 +162,7 @@
       },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        await patients_point.saveVaccine({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
+        await patients_point.saveAmbulatoryData({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
         await this.$store.dispatch(action_types.DEC_LOADING)
         okmessage('Сохранено');
         this.hide_edit()

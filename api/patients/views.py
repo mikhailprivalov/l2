@@ -13,7 +13,7 @@ from django.http import JsonResponse
 
 from api import sql_func
 from clients.models import CardBase, Individual, Card, Document, DocumentType, District, AnamnesisHistory, \
-    DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones
+    DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones, AmbulatoryData, AmbulatoryDataHistory
 from contracts.models import Company
 from laboratory import settings
 from laboratory.utils import strdate, start_end_year
@@ -568,6 +568,18 @@ def load_vaccine(request):
     return JsonResponse({"rows": data})
 
 
+def load_ambulatory_data(request):
+    request_data = json.loads(request.body)
+    data = []
+    for a in AmbulatoryData.objects.filter(card__pk=request_data["card_pk"]).order_by('date', 'pk'):
+        data.append({
+            "pk": a.pk,
+            "date": strdate(a.date) if a.date else '',
+            "data": a.data,
+        })
+    return JsonResponse({"rows": data})
+
+
 def load_benefit(request):
     request_data = json.loads(request.body)
     data = []
@@ -610,6 +622,15 @@ def load_vaccine_detail(request):
         "step": a.step,
         "tap": a.tap,
         "comment": a.comment,
+    }
+    return JsonResponse(data)
+
+
+def load_ambulatory_data_detail(request):
+    a = AmbulatoryData.objects.get(pk=json.loads(request.body)["pk"])
+    data = {
+        "date": a.date,
+        "data": a.data,
     }
     return JsonResponse(data)
 
@@ -773,6 +794,53 @@ def save_vaccine(request):
 
     if a.method != d["method"]:
         a.method = d["method"]
+        c = True
+
+    if not a.doc:
+        a.doc = request.user.doctorprofile
+        c = True
+
+    if c:
+        a.save()
+
+    return JsonResponse({"ok": True, "pk": pk, "c": c})
+
+
+@transaction.atomic
+def save_ambulatory_data(request):
+    rd = json.loads(request.body)
+    d = rd["data"]
+    pk = rd["pk"]
+    print(d)
+    print(pk)
+    print(rd["card_pk"])
+    date_request = f"{d['date']}-01"
+    print(date_request)
+    n = False
+    if pk == -1:
+        a = AmbulatoryData.objects.create(card_id=rd["card_pk"])
+        pk = a.pk
+        n = True
+    else:
+        pk = rd["pk"]
+        a = AmbulatoryData.objects.get(pk=pk)
+
+    Log.log(pk, 70000 if n else 70001, request.user.doctorprofile, rd)
+
+    c = False
+
+    def fd(s):
+        if '.' in s:
+            s = s.split('.')
+            s = '{}-{}-{}'.format(s[2], s[1], s[0])
+        return s
+
+    if str(a.date) != fd(date_request):
+        a.date = fd(date_request)
+        c = True
+
+    if a.data != d["data"]:
+        a.data = d["data"]
         c = True
 
     if not a.doc:
