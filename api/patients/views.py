@@ -628,8 +628,9 @@ def load_vaccine_detail(request):
 
 def load_ambulatory_data_detail(request):
     a = AmbulatoryData.objects.get(pk=json.loads(request.body)["pk"])
+    str_adate = str(a.date)[0:7]
     data = {
-        "date": a.date,
+        "date": str_adate,
         "data": a.data,
     }
     return JsonResponse(data)
@@ -811,11 +812,7 @@ def save_ambulatory_data(request):
     rd = json.loads(request.body)
     d = rd["data"]
     pk = rd["pk"]
-    print(d)
-    print(pk)
-    print(rd["card_pk"])
     date_request = f"{d['date']}-01"
-    print(date_request)
     n = False
     if pk == -1:
         a = AmbulatoryData.objects.create(card_id=rd["card_pk"])

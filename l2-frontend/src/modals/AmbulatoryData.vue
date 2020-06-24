@@ -23,8 +23,8 @@
         </thead>
         <tbody>
           <tr v-for="r in rows">
-            <td>{{r.date}}</td>
-            <td>{{r.date}}</td>
+            <td>{{r.date.slice(6)}}</td>
+            <td>{{r.date.slice(3,5)}}</td>
             <td>{{r.data}}</td>
             <td>
                 <button class="btn last btn-blue-nb nbr" type="button"
@@ -133,10 +133,10 @@
           }
         } else {
           const d = await patients_point.loadAmbulatoryDataDetail({pk})
-          console.log(d.date, typeof d)
-          console.log((d.date).format('YYYY-MM'))
-          this.edit_data.date = d.date.format('YYYY-MM')
-          this.edit_data.data = d.data
+         this.edit_data = {
+            ...this.edit_data,
+            ...d,
+          };
         }
         this.edit_pk = pk
       },
