@@ -13,7 +13,7 @@ from django.http import JsonResponse
 
 from api import sql_func
 from clients.models import CardBase, Individual, Card, Document, DocumentType, District, AnamnesisHistory, \
-    DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones, AmbulatoryData, AmbulatoryDataHistory
+    DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones, AmbulatoryData
 from contracts.models import Company
 from laboratory import settings
 from laboratory.utils import strdate, start_end_year
