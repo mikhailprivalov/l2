@@ -953,7 +953,7 @@ class VaccineReg(models.Model):
 class AmbulatoryData(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     date = models.DateField(help_text='Дата', db_index=True, null=True, default=None, blank=True)
-    data = models.TextField(default='', blank=True, help_text='Сведения из амбудаторной карты')
+    data = models.TextField(default='', blank=True, help_text='Сведения из амбулаторной карты')
     doc = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Кто создал запись', on_delete=models.SET_NULL)
 
 

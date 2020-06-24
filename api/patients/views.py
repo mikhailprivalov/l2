@@ -822,8 +822,6 @@ def save_ambulatory_data(request):
         pk = rd["pk"]
         a = AmbulatoryData.objects.get(pk=pk)
 
-    Log.log(pk, 70000 if n else 70001, request.user.doctorprofile, rd)
-
     c = False
 
     def fd(s):

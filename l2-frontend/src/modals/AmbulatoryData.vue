@@ -7,8 +7,7 @@
       <span v-else>{{card_data.fio_age}}</span>
     </span>
     <div slot="body" style="min-height: 200px" class="registry-body">
-      <table class="table table-bordered table-condensed table-sm-pd"
-             style="table-layout: fixed; font-size: 12px">
+      <table class="table table-bordered table-condensed table-sm-pd layout">
         <colgroup>
           <col width="100"/>
           <col width="100"/>
@@ -174,7 +173,11 @@
 </script>
 
 <style scoped lang="scss">
-  .date{
+  .layout {
+    table-layout: fixed;
+    font-size: 12px
+  }
+  .date {
     width: 180px;
   }
 
