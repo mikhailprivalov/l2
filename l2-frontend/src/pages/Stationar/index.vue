@@ -59,6 +59,9 @@
                    style="padding: 5px;text-align: left;white-space: pre-wrap;word-break: keep-all;max-width:600px"
               >{{anamnesis_data.text || 'нет данных'}}</pre>
             </div>
+            <a href="#"
+               class="a-under" style="float: right"
+               @click.prevent="open_ambulatory_data">112-ф</a>
           </div>
           <div class="sidebar-btn-wrapper"
                v-for="(title, key) in menuItems"
@@ -409,6 +412,7 @@
       </div>
     </modal>
     <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1" no_desc/>
+    <ambulatory-data :card_pk="patient.cardId" :card_data="patient" v-if="ambulatory_data"/>
   </div>
 </template>
 
@@ -429,6 +433,8 @@
   import DisplayDirection from './DisplayDirection'
   import patients_point from '../../api/patients-point'
   import UrlData from '../../UrlData'
+  import Vaccine from '../../modals/Vaccine'
+  import AmbulatoryData from '../../modals/AmbulatoryData'
 
   export default {
     mixins: [menuMixin],
@@ -438,6 +444,8 @@
       DescriptiveForm,
       IssStatus,
       PatientCard,
+      Vaccine,
+      AmbulatoryData,
       DirectionsHistory: () => import('../../ui-cards/DirectionsHistory'),
       AggregateTADP: () => import('../../fields/AggregateTADP'),
       AggregateDesc: () => import('../../fields/AggregateDesc'),
@@ -488,6 +496,7 @@
         research_open_history: null,
         research_history: [],
         inited: false,
+        ambulatory_data: false,
       }
     },
     watch: {
@@ -509,6 +518,9 @@
       await this.$store.dispatch(action_types.DEC_LOADING)
       this.$root.$on('hide_results', () => {
         this.show_results_pk = -1
+      })
+      this.$root.$on('hide_ambulatory_data', () => {
+        this.ambulatory_data = false
       })
       const storedData = UrlData.get();
       if (storedData && typeof storedData === 'object') {
@@ -966,6 +978,9 @@
           this.$refs.modalAnamnesisEdit.$el.style.display = 'none'
         }
         this.anamnesis_edit = false
+      },
+      open_ambulatory_data() {
+        this.ambulatory_data = true
       },
     },
     computed: {

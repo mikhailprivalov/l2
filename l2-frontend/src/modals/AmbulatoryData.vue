@@ -1,81 +1,58 @@
- <template>
-  <modal @close="hide_modal" margin-top marginLeftRight="auto" max-width="680px" ref="modal" show-footer="true"
-         white-bg="true" width="100%">
-    <span slot="header">Льготы пациента
+<template>
+  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%"
+         marginLeftRight="auto" margin-top>
+    <span slot="header">Сведения из амбулаторной карты
       <span v-if="!card_data.fio_age">{{card_data.family}} {{card_data.name}} {{card_data.twoname}},
       {{card_data.age}}, карта {{card_data.num}}</span>
       <span v-else>{{card_data.fio_age}}</span>
     </span>
-    <div class="registry-body" slot="body" style="min-height: 200px">
+    <div slot="body" style="min-height: 200px" class="registry-body">
       <table class="table table-bordered table-condensed table-sm-pd"
              style="table-layout: fixed; font-size: 12px">
         <colgroup>
-          <col width="130"/>
-          <col/>
-          <col/>
-          <col/>
-          <col width="45" v-if="!readonly"/>
+          <col width="100" />
+          <col width="100"/>
+          <col width="430" />
         </colgroup>
         <thead>
         <tr>
-          <th>Вид льготы</th>
-          <th>Основание</th>
-          <th>Постановка на льготу</th>
-          <th>Снятие со льготы</th>
-          <th v-if="!readonly"></th>
+          <th>Год</th>
+          <th>Месяц</th>
+          <th>Сведения</th>
         </tr>
         </thead>
         <tbody>
-        <tr :class="{stop: !!r.date_end}" v-for="r in rows">
-          <td>{{r.benefit}}</td>
-          <td>{{r.registration_basis}}</td>
-          <td>{{r.doc_start_reg}}<br/>{{r.date_start}}</td>
-          <td>{{r.doc_end_reg}}<br v-if="!!r.date_end"/>{{r.date_end}}</td>
-          <td v-if="!readonly">
-            <button @click="edit(r.pk)" class="btn last btn-blue-nb nbr"
-                    style="margin-left: -1px"
-                    title="Редактирование" type="button" v-tippy="{ placement : 'bottom', arrow: true }">
-              <i class="glyphicon glyphicon-pencil"></i>
-            </button>
-          </td>
+          <tr v-for="r in rows">
+            <td>{{r.date.slice(6)}}</td>
+            <td>{{r.date.slice(3,5)}}</td>
+            <td>{{r.data}}</td>
+            <td>
+                <button class="btn last btn-blue-nb nbr" type="button"
+                        v-tippy="{ placement : 'bottom', arrow: true }"
+                        title="Редактирование" style="margin-left: -1px" @click="edit(r.pk)">
+                  <i class="glyphicon glyphicon-pencil"></i>
+                </button>
+            </td>
         </tr>
         </tbody>
       </table>
-      <div style="margin: 0 auto; width: 200px" v-if="!readonly">
-        <button @click="edit(-1)"
-                class="btn btn-primary-nb btn-blue-nb"
-                type="button"><i class="fa fa-plus"></i> Создать запись
-        </button>
+      <div style="margin: 0 auto; width: 200px">
+        <button class="btn btn-primary-nb btn-blue-nb"
+                @click="edit(-1)"
+                type="button"><i class="fa fa-plus"></i> Создать запись</button>
       </div>
-      <modal @close="hide_edit" margin-top marginLeftRight="auto" max-width="710px" ref="modalEdit" show-footer="true"
-             v-if="edit_pk > -2" white-bg="true" width="100%">
-        <span slot="header" v-if="edit_pk > -1">Редактор льготы</span>
-        <span slot="header" v-else>Создание льготы</span>
-        <div class="registry-body" slot="body" style="min-height: 200px;padding: 10px">
+      <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
+             width="100%" marginLeftRight="auto" margin-top>
+        <span slot="header" v-if="edit_pk > -1">Редактор сведений</span>
+        <span slot="header" v-else>Создание записи</span>
+        <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
           <div class="form-group">
-            <label>Вид льготы:</label>
-            <select :readonly="edit_data.close" class="form-control" v-model="edit_data.benefit_id">
-              <option :value="x.pk" v-for="x in edit_data.types">{{x.title}}</option>
-            </select>
+            <label for="de-f1">Дата:</label>
+            <input class="form-control month-with" type="month" id="de-f1" v-model="edit_data.date" :max="td" required>
           </div>
           <div class="form-group">
-            <label for="de-f3">Дата постановки на льготу:</label>
-            <input :max="td" :readonly="edit_data.close" class="form-control" id="de-f3" type="date"
-                   v-model="edit_data.date_start">
-          </div>
-          <div class="form-group">
-            <label for="de-f6">Основание:</label>
-            <textarea class="form-control" id="de-f6" :readonly="edit_data.close"
-                      v-model="edit_data.registration_basis"></textarea>
-          </div>
-          <div class="checkbox" style="padding-left: 15px;">
-            <label>
-              <input type="checkbox" v-model="edit_data.close"> снят с льготы
-            </label>
-          </div>
-          <div class="form-group" v-if="edit_data.close">
-            <label for="de-f5">Дата снятия:</label>
-            <input :min="td" class="form-control" id="de-f5" type="date" v-model="edit_data.date_end">
+            <label for="de-f2">Данные:</label>
+            <textarea class="form-control" id="de-f2" rows="10" v-model="edit_data.data"/>
           </div>
         </div>
         <div slot="footer">
@@ -86,7 +63,7 @@
               </button>
             </div>
             <div class="col-xs-4">
-              <button :disabled="!valid_reg" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">
+              <button :disabled="!valid" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">
                 Сохранить
               </button>
             </div>
@@ -115,7 +92,7 @@
   import moment from 'moment'
 
   export default {
-    name: 'benefit',
+    name: 'AmbulatoryData',
     components: {Modal},
     props: {
       card_pk: {
@@ -126,41 +103,48 @@
         type: Object,
         required: true,
       },
-      readonly: {
-        type: Boolean,
-        required: false,
-        default: false,
-      },
     },
     data() {
       return {
-        td: moment().format('YYYY-MM-DD'),
         rows: [],
-        edit_data: {},
         edit_pk: -2,
+        td: moment().format('YYYY-MM'),
+        edit_data: {
+          date: '',
+          data: '',
+        },
       }
     },
     created() {
-      this.load_data()
+      this.load_data();
     },
     computed: {
-      valid_reg() {
-        return this.edit_pk > -2 &&
-          this.edit_data.date_start !== '' &&
-          this.edit_data.registration_basis !== '' &&
-          (!this.edit_data.close || this.edit_data.date_end !== '')
-      }
+      valid() {
+        return this.edit_data.date !== '' && this.edit_data.data !== '';
+      },
     },
     methods: {
       async edit(pk) {
-        const d = await patients_point.loadBenefitDetail({pk})
-        this.edit_data = {
-          ...this.edit_data,
-          ...d,
-          date_start: d.date_start || this.td,
-          date_end: d.date_end || this.td,
+        this.td = moment().format('YYYY-MM')
+        if (pk === -1) {
+          this.edit_data = {
+            date: moment().format('YYYY-MM'),
+            data: '',
+          }
+        } else {
+          const d = await patients_point.loadAmbulatoryDataDetail({pk})
+         this.edit_data = {
+            ...this.edit_data,
+            ...d,
+          };
         }
         this.edit_pk = pk
+      },
+      hide_modal() {
+        if (this.$refs.modal) {
+          this.$refs.modal.$el.style.display = 'none'
+        }
+        this.$root.$emit('hide_ambulatory_data')
       },
       hide_edit() {
         if (this.$refs.modalEdit) {
@@ -168,38 +152,30 @@
         }
         this.edit_pk = -2
       },
-      hide_modal() {
-        if (this.$refs.modal) {
-          this.$refs.modal.$el.style.display = 'none'
-        }
-        this.$root.$emit('hide_benefit')
-      },
-      async save() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await patients_point.saveBenefit({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
-        await this.$store.dispatch(action_types.DEC_LOADING)
-        okmessage('Сохранено')
-        this.hide_edit()
-        this.load_data()
-      },
       load_data() {
         this.$store.dispatch(action_types.INC_LOADING)
-        patients_point.loadBenefit(this, 'card_pk').then(({rows}) => {
+        patients_point.loadAmbulatoryData(this, 'card_pk').then(({rows}) => {
           this.rows = rows
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
+      async save() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        await patients_point.saveAmbulatoryData({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
+        await this.$store.dispatch(action_types.DEC_LOADING)
+        okmessage('Сохранено');
+        this.hide_edit()
+        this.load_data()
+      },
     }
   }
 </script>
 
-<style lang="scss" scoped>
-  select.form-control {
-    padding: 0;
-    overflow: visible;
+<style scoped lang="scss">
+  .month-with{
+    width: 180px;
   }
-
   .nonPrior {
     opacity: .7;
 
