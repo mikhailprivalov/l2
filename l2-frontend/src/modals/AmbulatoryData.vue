@@ -128,7 +128,7 @@
         this.td = moment().format('YYYY-MM')
         if (pk === -1) {
           this.edit_data = {
-            date: moment().format('YYYY-MM'),
+            date: this.td,
             data: '',
           }
         } else {
@@ -178,7 +178,7 @@
     font-size: 12px
   }
   .date {
-    width: 180px;
+    width: 200px;
   }
 
   .modal-mask {
