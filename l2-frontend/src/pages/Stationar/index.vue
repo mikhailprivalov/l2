@@ -411,47 +411,6 @@
         </div>
       </div>
     </modal>
-<!--    <modal v-if="ambulatory_data" ref="modalAmbulatoryData" @close="hide_modal_ambulatory_data" show-footer="true"-->
-<!--           white-bg="true" max-width="680px" width="100%"-->
-<!--           marginLeftRight="auto" margin-top>-->
-<!--    <span slot="header">Сведения из амбулаторной карты</span>-->
-<!--      <div slot="body" style="min-height: 200px" class="registry-body">-->
-<!--        <table class="table table-bordered table-condensed table-sm-pd"-->
-<!--               style="table-layout: fixed; font-size: 12px">-->
-<!--          <colgroup>-->
-<!--            <col width="70"/>-->
-<!--            <col width="60" />-->
-<!--            <col />-->
-<!--          </colgroup>-->
-<!--          <thead>-->
-<!--          <tr>-->
-<!--            <th>Год</th>-->
-<!--            <th>Месяц</th>-->
-<!--            <th>Сведения</th>-->
-<!--          </tr>-->
-<!--          </thead>-->
-<!--          <tbody>-->
-<!--          </tbody>-->
-<!--        </table>-->
-<!--        <div style="margin: 0 auto; width: 200px">-->
-<!--          <button class="btn btn-primary-nb btn-blue-nb"-->
-<!--                  @click="edit_ambulatory(-1)"-->
-<!--                  type="button"><i class="fa fa-plus"></i> Создать запись-->
-<!--          </button>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--      <div slot="footer">-->
-<!--        <div class="row">-->
-<!--          <div class="col-xs-10">-->
-<!--          </div>-->
-<!--          <div class="col-xs-2">-->
-<!--            <button @click="hide_modal_ambulatory_data" class="btn btn-primary-nb btn-blue-nb" type="button">-->
-<!--              Закрыть-->
-<!--            </button>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </modal>-->
     <modal v-if="edit_pk > -2" ref="modalEditAmbulatory" @close="hide_edit_ambulatory" show-footer="true" white-bg="true" max-width="710px"
              width="100%" marginLeftRight="auto" margin-top>
           <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
@@ -478,8 +437,7 @@
         </div>
       </modal>
     <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1" no_desc/>
-    <ambulatory-data :card_pk="patient.cardId" :card_data="patient.card" v-if="ambulatory_data"/>
-<!--    <vaccine :card_pk="patient.cardId" :card_data="patient.card" v-if="ambulatory_data"/>-->
+    <ambulatory-data :card_pk="patient.cardId" :card_data="patient" v-if="ambulatory_data"/>
   </div>
 </template>
 
@@ -586,6 +544,9 @@
       await this.$store.dispatch(action_types.DEC_LOADING)
       this.$root.$on('hide_results', () => {
         this.show_results_pk = -1
+      })
+      this.$root.$on('hide_ambulatory_data', () => {
+        this.ambulatory_data = false
       })
       const storedData = UrlData.get();
       if (storedData && typeof storedData === 'object') {

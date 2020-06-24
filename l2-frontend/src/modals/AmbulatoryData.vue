@@ -25,7 +25,7 @@
           <tr v-for="r in rows">
             <td>{{r.date}}</td>
             <td>{{r.title}}</td>
-            <td>we1111111we1111111we111111 1we1111111we1111111we1  111111we1111111we1111111we1111111we1111111we111111 1we1111111we1111111we1111111we1111111we11111 11we1111111we1111111we1111111we 1111111we1111111w e1111111we1111111we1111111we1111111we1111111we1111111we1111 111we1111111we1111111we1111111we1111111</td>
+            <td>9999 we1111111we1111111we111111 1we1111111we1111111we1  111111we1111111we1111111we1111111we1111111we111111 1we1111111we1111111we1111111we1111111we11111 11we1111111we1111111we1111111we 1111111we1111111w e1111111we1111111we1111111we1111111we1111111we1111111we1111 111we1111111we1111111we1111111we1111111</td>
             <td>
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
@@ -48,7 +48,7 @@
         <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
           <div class="form-group">
             <label for="de-f3">Дата:</label>
-            <input class="form-control" type="date" id="de-f3" v-model="edit_data.date" :max="td" required>
+            <input class="form-control" type="month" id="de-f3" v-model="edit_data.date" :max="td" required>
           </div>
           <div class="form-group" v-if="edit_data.direction !== ''">
             <label for="de-f5">Направление:</label>
@@ -154,7 +154,9 @@
       }
     },
     created() {
-      this.load_data()
+      this.load_data();
+      console.log(this.card_pk)
+      console.log(this.card_data)
     },
     computed: {
       valid() {
@@ -189,7 +191,7 @@
         if (this.$refs.modal) {
           this.$refs.modal.$el.style.display = 'none'
         }
-        this.$root.$emit('hide_vaccine')
+        this.$root.$emit('hide_ambulatory_data')
       },
       hide_edit() {
         if (this.$refs.modalEdit) {
