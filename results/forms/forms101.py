@@ -58,7 +58,7 @@ def form_01(direction, iss, fwb, doc, leftnone):
         title_opinion,
         column_data
     ]
-    tbl = Table(opinion, colWidths=(43 * mm, 90 * mm, 50 * mm))
+    tbl = Table(opinion, colWidths=(33 * mm, 100 * mm, 50 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),

@@ -13,7 +13,7 @@ from django.http import JsonResponse
 
 from api import sql_func
 from clients.models import CardBase, Individual, Card, Document, DocumentType, District, AnamnesisHistory, \
-    DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones, AmbulatoryData
+    DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones, AmbulatoryData, AmbulatoryDataHistory
 from contracts.models import Company
 from laboratory import settings
 from laboratory.utils import strdate, start_end_year
@@ -843,6 +843,7 @@ def save_ambulatory_data(request):
 
     if c:
         a.save()
+        AmbulatoryDataHistory.save_ambulatory_history(rd["card_pk"], request.user.doctorprofile)
 
     return JsonResponse({"ok": True, "pk": pk, "c": c})
 

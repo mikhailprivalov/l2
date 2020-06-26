@@ -966,3 +966,14 @@ class AmbulatoryDataHistory(models.Model):
     @property
     def created_at_local(self):
         return localtime(self.created_at)
+
+    @staticmethod
+    def save_ambulatory_history(card_pk, doc):
+        ambulatory_data = AmbulatoryData.objects.filter(card__pk=card_pk).order_by('date')
+        data = ''
+        for i in ambulatory_data:
+            data = f"{data} {str(i.date)[0:7]}: {i.data};"
+        a = AmbulatoryDataHistory.objects.create(card_id=card_pk)
+        a.text = data
+        a.who_save = doc
+        a.save()
