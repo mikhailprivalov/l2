@@ -70,21 +70,56 @@
           </div>
         </div>
       </modal>
+      <modal v-if="show_history_ambulatory" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
+             width="100%" marginLeftRight="auto" margin-top>
+        <span slot="header">История изменений</span>
+        <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
+          <table class="table table-bordered table-condensed table-sm-pd layout">
+        <colgroup>
+          <col width="100"/>
+          <col width="530"/>
+        </colgroup>
+        <thead>
+        <tr>
+          <th>Дата</th>
+          <th>Сводные данные</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="r in rows_history">
+          <td>{{r.date}}</td>
+          <td>{{r.data}}</td>
+        </tr>
+        </tbody>
+      </table>
+        </div>
+        <div slot="footer">
+          <div class="row">
+            <div class="col-xs-4">
+              <button @click="hide_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      </modal>
     </div>
     <div slot="footer">
       <div class="row">
-<!--        <div class="col-xs-10">-->
-<!--        </div>-->
-        <div class="col-xs-2">
-          <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">
-            История
-          </button>
+        <div class="col-xs-12">
+          <div class="col-xs-4">
+            <button @click="show_history_ambulatory_data" class="btn btn-primary-nb btn-blue-nb" type="button">
+             История изменений
+            </button>
         </div>
-        <div class="col-xs-2">
+        <div class="col-xs-4">
           <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">
             Закрыть
           </button>
         </div>
+
+        </div>
+
       </div>
     </div>
   </modal>
@@ -118,6 +153,8 @@
           date: '',
           data: '',
         },
+        show_history_ambulatory: false,
+        rows_history: []
       }
     },
     created() {
@@ -129,6 +166,16 @@
       },
     },
     methods: {
+      show_history_ambulatory_data(){
+        this.show_history_ambulatory = true
+        this.$store.dispatch(action_types.INC_LOADING)
+        patients_point.loadAmbulatoryHistory(this, 'card_pk').then(({rows}) => {
+          this.rows_history = rows
+        }).finally(() => {
+          this.$store.dispatch(action_types.DEC_LOADING)
+        })
+
+      },
       async edit(pk) {
         this.td = moment().format('YYYY-MM')
         if (pk === -1) {
@@ -156,6 +203,7 @@
           this.$refs.modalEdit.$el.style.display = 'none'
         }
         this.edit_pk = -2
+        this.show_history_ambulatory = false
       },
       load_data() {
         this.$store.dispatch(action_types.INC_LOADING)
@@ -178,6 +226,9 @@
 </script>
 
 <style scoped lang="scss">
+  .align-button{
+    float: right;
+  }
   .layout {
     table-layout: fixed;
     font-size: 12px
