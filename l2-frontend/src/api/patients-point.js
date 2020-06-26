@@ -30,6 +30,8 @@ const loadVaccine = creator({url: 'patients/individuals/load-vaccine'}, {})
 
 const loadAmbulatoryData = creator({url: 'patients/individuals/load-ambulatory-data'}, {})
 
+const loadAmbulatoryHistory = creator({url: 'patients/individuals/load-ambulatory-history'}, {})
+
 const loadBenefit = creator({url: 'patients/individuals/load-benefit'}, {})
 
 const loadDregDetail = creator({url: 'patients/individuals/load-dreg-detail'}, {})
@@ -56,5 +58,5 @@ export default {
   searchCard, searchIndividual, searchL2Card, syncRmis,
   getCard, sendCard, individualsSearch, individualSex, editDoc, updateCdu, updateWIA,
   editAgent, loadAnamnesis, saveAnamnesis, loadDreg, loadVaccine, saveDreg, saveVaccine, loadDregDetail, loadVaccineDetail,
-  loadBenefit, loadBenefitDetail, saveBenefit, saveAmbulatoryData, loadAmbulatoryData, loadAmbulatoryDataDetail
+  loadBenefit, loadBenefitDetail, saveBenefit, saveAmbulatoryData, loadAmbulatoryData, loadAmbulatoryDataDetail, loadAmbulatoryHistory
 }

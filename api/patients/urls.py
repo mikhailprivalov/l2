@@ -22,6 +22,7 @@ urlpatterns = [
     path('individuals/load-dreg-detail', views.load_dreg_detail),
     path('individuals/load-vaccine-detail', views.load_vaccine_detail),
     path('individuals/load-ambulatorydata-detail', views.load_ambulatory_data_detail),
+    path('individuals/load-ambulatory-history', views.load_ambulatory_history),
     path('individuals/load-benefit-detail', views.load_benefit_detail),
     path('individuals/save-dreg', views.save_dreg),
     path('individuals/save-vaccine', views.save_vaccine),

@@ -13,7 +13,7 @@ from django.http import JsonResponse
 
 from api import sql_func
 from clients.models import CardBase, Individual, Card, Document, DocumentType, District, AnamnesisHistory, \
-    DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones, AmbulatoryData
+    DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones, AmbulatoryData, AmbulatoryDataHistory
 from contracts.models import Company
 from laboratory import settings
 from laboratory.utils import strdate, start_end_year
@@ -636,6 +636,14 @@ def load_ambulatory_data_detail(request):
     return JsonResponse(data)
 
 
+def load_ambulatory_history(request):
+    request_data = json.loads(request.body)
+    result = AmbulatoryDataHistory.objects.filter(card__pk=request_data["card_pk"]).order_by('-created_at')
+    rows = [{'date': strdate(i.created_at), 'data': i.text} for i in result]
+
+    return JsonResponse({"rows": rows})
+
+
 def load_benefit_detail(request):
     pk = json.loads(request.body)["card_pk"]
     if pk > -1:
@@ -813,7 +821,6 @@ def save_ambulatory_data(request):
     d = rd["data"]
     pk = rd["pk"]
     date_request = f"{d['date']}-01"
-    n = False
     if pk == -1:
         a = AmbulatoryData.objects.create(card_id=rd["card_pk"])
         pk = a.pk
@@ -843,6 +850,7 @@ def save_ambulatory_data(request):
 
     if c:
         a.save()
+        AmbulatoryDataHistory.save_ambulatory_history(rd["card_pk"], request.user.doctorprofile)
 
     return JsonResponse({"ok": True, "pk": pk, "c": c})
 
