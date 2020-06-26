@@ -16,7 +16,7 @@ from clients.models import CardBase, Individual, Card, Document, DocumentType, D
     DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones, AmbulatoryData, AmbulatoryDataHistory
 from contracts.models import Company
 from laboratory import settings
-from laboratory.utils import strdate, start_end_year, strtime
+from laboratory.utils import strdate, start_end_year
 from rmis_integration.client import Client
 from slog.models import Log
 
@@ -639,7 +639,7 @@ def load_ambulatory_data_detail(request):
 def load_ambulatory_history(request):
     request_data = json.loads(request.body)
     result = AmbulatoryDataHistory.objects.filter(card__pk=request_data["card_pk"]).order_by('-created_at')
-    rows = [{'date': strdate(i.created_at), 'data': i.text} for i in result ]
+    rows = [{'date': strdate(i.created_at), 'data': i.text} for i in result]
 
     return JsonResponse({"rows": rows})
 
@@ -821,7 +821,6 @@ def save_ambulatory_data(request):
     d = rd["data"]
     pk = rd["pk"]
     date_request = f"{d['date']}-01"
-    n = False
     if pk == -1:
         a = AmbulatoryData.objects.create(card_id=rd["card_pk"])
         pk = a.pk
