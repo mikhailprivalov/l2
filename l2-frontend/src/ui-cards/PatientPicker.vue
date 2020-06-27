@@ -19,6 +19,11 @@
         </div>
         <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
                maxlength="255" @keyup.enter="search">
+        <span class="rmis-search input-group-btn" v-if="tfoms_query">
+          <label class="btn btn-blue-nb nbr height34" style="padding: 5px 12px;">
+            <input type="checkbox" v-model="inc_tfoms"/> ТФОМС
+          </label>
+        </span>
         <span class="rmis-search input-group-btn" v-if="selected_base.internal_type && user_data.rmis_enabled">
           <label class="btn btn-blue-nb nbr height34" style="padding: 5px 12px;">
             <input type="checkbox" v-model="inc_rmis"/> Вкл. РМИС
@@ -255,6 +260,8 @@
   import {mapGetters} from 'vuex'
   import Vaccine from '../modals/Vaccine'
 
+  const tfoms_re = /^([А-яЁё\-]+) ([А-яЁё\-]+)( ([А-яЁё\-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
+
   export default {
     name: 'patient-picker',
     components: {Vaccine, SelectPickerB, Modal, L2CardCreate, DReg, Benefit},
@@ -295,6 +302,7 @@
         search_after_loading: false,
         editor_pk: -2,
         inc_rmis: false,
+        inc_tfoms: false,
         anamnesis: false,
         anamnesis_data: {},
         an_state: {
@@ -375,6 +383,11 @@
           this.search()
         }
       },
+      tfoms_query(nv) {
+        if (nv) {
+          this.inc_tfoms = true;
+        }
+      },
     },
     computed: {
       bases() {
@@ -398,11 +411,17 @@
       normalized_query() {
         return this.query.trim()
       },
+      tfoms_query() {
+        return this.selected_base.internal_type && this.l2_tfoms && this.normalized_query.match(tfoms_re);
+      },
       query_valid() {
         return this.normalized_query.length > 0
       },
       l2_cards() {
         return this.$store.getters.modules.l2_cards_module
+      },
+      l2_tfoms() {
+        return this.$store.getters.modules.l2_tfoms
       },
       l2_benefit() {
         return this.$store.getters.modules.l2_benefit
@@ -753,7 +772,8 @@
           type: this.base,
           query: q,
           list_all_cards: false,
-          inc_rmis: this.inc_rmis || this.search_after_loading
+          inc_rmis: this.inc_rmis || this.search_after_loading,
+          inc_tfoms: this.inc_tfoms && this.tfoms_query,
         }).then((result) => {
           this.clear()
           if (result.results) {

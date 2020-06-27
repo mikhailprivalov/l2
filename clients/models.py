@@ -444,7 +444,7 @@ class Individual(models.Model):
         return ""
 
     @staticmethod
-    def import_from_tfoms(data: dict):
+    def import_from_tfoms(data: dict, individual: ['Individual', None] = None, no_update=False):
         idp = data.get('idp')
 
         if idp:
@@ -459,10 +459,13 @@ class Individual(models.Model):
             passport_seria = data.get('passport_seria', '')
             snils = data.get('snils', '')
 
-            indv = Individual.objects.filter(
-                Q(tfoms_idp=idp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)) \
-                if snils else \
-                Individual.objects.filter(Q(tfoms_idp=idp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
+            if not individual:
+                indv = Individual.objects.filter(
+                    Q(tfoms_idp=idp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)) \
+                    if snils else \
+                    Individual.objects.filter(Q(tfoms_idp=idp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
+            else:
+                indv = Individual.objects.filter(pk=individual.pk)
 
             if not indv.exists():
                 i = Individual(
@@ -475,6 +478,9 @@ class Individual(models.Model):
                 )
                 i.save()
             else:
+                if no_update:
+                    print('No update')
+                    # return
                 print('Update patient data')
                 i = indv[0]
                 updated = []
@@ -532,12 +538,16 @@ class Individual(models.Model):
             print(Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True))
 
     def add_or_update_doc(self, doc_type: 'DocumentType', serial: str, number: str):
-        d = Document.objects.filter(individual=self, document_type=doc_type).first()
-        if not d:
+        ds = Document.objects.filter(individual=self, document_type=doc_type)
+        if ds.count() > 1:
+            ds.delete()
+
+        ds = Document.objects.filter(individual=self, document_type=doc_type)
+        if ds.count() == 0:
             d = Document(individual=self, document_type=doc_type, serial=serial, number=number)
             d.save()
         else:
-            d: Document = d
+            d: Document = ds.first()
             updated = []
 
             if d.serial != serial:

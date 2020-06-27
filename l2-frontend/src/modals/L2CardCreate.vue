@@ -232,7 +232,7 @@
             </td>
             <td>
               <a @click.prevent="edit_document(d.id)" href="#" v-if="!d.from_rmis"><i class="fa fa-pencil"></i></a>
-              <span v-else>РМИС</span>
+              <span v-else>импорт</span>
             </td>
           </tr>
           <tr>
@@ -514,8 +514,12 @@
   }
 
   function capitalizeFirstLetter(string) {
-    string = SwapLayouts(string)
-    return (string.charAt(0).toUpperCase() + string.slice(1)).trim()
+    string = SwapLayouts(string).replace(/  +/g, ' ');
+    let r = []
+    for (const s of string.split(' ')) {
+      r.push((s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).trim())
+    }
+    return r.join(' ');
   }
 
   function SwapLayouts(str) {
@@ -629,8 +633,10 @@
       const {f, n, pn, ar, af} = this.$refs;
       setTimeout(() => {
         for (const r of [f, n, pn, ar, af]) {
-          const inp = $('input', r.$el);
+          if (r) {
+            const inp = $('input', r.$el);
             inp.attr('autocomplete', 'new-password')
+          }
         }
       }, 100);
     },

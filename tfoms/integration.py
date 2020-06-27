@@ -1,3 +1,4 @@
+from typing import List
 from urllib.parse import urljoin, urlencode
 
 import requests
@@ -23,11 +24,11 @@ def make_request(path, query=None):
     return requests.post(url, headers=headers).json()
 
 
-def match_patient(family, name, patronymic, birthday):
+def match_patient(family, name, patronymic, birthday) -> List[dict]:
     q = {
         "family": family,
         "name": name,
-        "birthday": birthday,
+        "birthdate": birthday,
     }
 
     if patronymic:
@@ -36,5 +37,5 @@ def match_patient(family, name, patronymic, birthday):
     return make_request("match-patient", q)
 
 
-def match_enp(enp):
+def match_enp(enp) -> dict:
     return make_request("match-patient-by-enp", {"enp": enp})
