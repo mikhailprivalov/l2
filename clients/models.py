@@ -48,7 +48,7 @@ class Individual(models.Model):
 
     def sync_with_rmis(self, out: OutputWrapper = None, c=None):
         if not SettingManager.get("rmis_enabled", default='false', default_type='b') or \
-            not CardBase.objects.filter(is_rmis=True).exists():
+                not CardBase.objects.filter(is_rmis=True).exists():
             return
         if self.primary_for_rmis:
             self.reverse_sync()
@@ -157,7 +157,7 @@ class Individual(models.Model):
                     rowss = Document.objects.filter(document_type=data['document_type'], individual=self,
                                                     from_rmis=True)
                     if rowss.exclude(serial=data["serial"]).exclude(number=data["number"]).filter(
-                        card__isnull=True).exists():
+                            card__isnull=True).exists():
                         Document.objects.filter(document_type=data['document_type'], individual=self,
                                                 from_rmis=True).delete()
                     docs = Document.objects.filter(document_type=data['document_type'],
@@ -267,10 +267,10 @@ class Individual(models.Model):
             p = pat_data["patient"]
             g = {"ж": "2"}.get(self.sex.lower(), "1")
             if self.family != p["lastName"] or \
-                self.name != p["firstName"] or \
-                self.patronymic != p["middleName"] or \
-                self.sex != g or \
-                self.birthday != self.birthday:
+                    self.name != p["firstName"] or \
+                    self.patronymic != p["middleName"] or \
+                    self.sex != g or \
+                    self.birthday != self.birthday:
                 c.patients.edit_patient(self)
 
     def bd(self):
@@ -292,8 +292,7 @@ class Individual(models.Model):
             ((not iss.tubes.exists() or not iss.tubes.filter(
                 time_recive__isnull=False).exists()) and not iss.research.is_paraclinic and not iss.research.is_doc_refferal):
             today = date.today()
-        elif iss.time_confirmation and (
-            iss.research.is_paraclinic or iss.research.is_doc_refferal) or not iss.tubes.exists():
+        elif iss.time_confirmation and (iss.research.is_paraclinic or iss.research.is_doc_refferal) or not iss.tubes.exists():
             today = iss.time_confirmation.date()
         else:
             today = iss.tubes.filter(time_recive__isnull=False).order_by("-time_recive")[0].time_recive.date()
