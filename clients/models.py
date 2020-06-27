@@ -47,8 +47,7 @@ class Individual(models.Model):
         b.delete()
 
     def sync_with_rmis(self, out: OutputWrapper = None, c=None):
-        if not SettingManager.get("rmis_enabled", default='false', default_type='b') or \
-                not CardBase.objects.filter(is_rmis=True).exists():
+        if not SettingManager.get("rmis_enabled", default='false', default_type='b') or not CardBase.objects.filter(is_rmis=True).exists():
             return
         if self.primary_for_rmis:
             self.reverse_sync()
@@ -156,8 +155,7 @@ class Individual(models.Model):
                                 is_active=True)
                     rowss = Document.objects.filter(document_type=data['document_type'], individual=self,
                                                     from_rmis=True)
-                    if rowss.exclude(serial=data["serial"]).exclude(number=data["number"]).filter(
-                            card__isnull=True).exists():
+                    if rowss.exclude(serial=data["serial"]).exclude(number=data["number"]).filter(card__isnull=True).exists():
                         Document.objects.filter(document_type=data['document_type'], individual=self,
                                                 from_rmis=True).delete()
                     docs = Document.objects.filter(document_type=data['document_type'],
