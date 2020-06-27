@@ -17,7 +17,7 @@ from clients.models import CardBase, Individual, Card, Document, DocumentType, D
     DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones, AmbulatoryData, AmbulatoryDataHistory
 from contracts.models import Company
 from laboratory import settings
-from laboratory.utils import strdate, start_end_year
+from laboratory.utils import strdate, start_end_year, strfdatetime
 from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient
@@ -441,7 +441,26 @@ def patients_card_save(request):
 def individual_search(request):
     result = []
     request_data = json.loads(request.body)
-    for i in Individual.objects.filter(**request_data):
+    tfoms_module = SettingManager.l2('tfoms')
+    family = request_data["family"]
+    name = request_data["name"]
+    patronymic = request_data["patronymic"]
+    birthday = request_data["birthday"]
+    sex = request_data["sex"]
+
+    if tfoms_module and family and name and birthday:
+        from_tfoms = match_patient(family, name, patronymic, birthday)
+
+        for row in from_tfoms:
+            Individual.import_from_tfoms(row, no_update=True)
+
+    for i in Individual.objects.filter(
+        family=family,
+        name=name,
+        patronymic=patronymic,
+        birthday=birthday,
+        sex=sex,
+    ):
         result.append({
             "pk": i.pk,
             "fio": i.fio(full=True),
@@ -450,7 +469,7 @@ def individual_search(request):
                 for x in Document.objects.filter(individual=i, is_active=True).distinct("number", "document_type", "serial", "date_end", "date_start")
             ],
             "l2_cards": [
-                x.number for x in Card.objects.filter(individual=i, base__internal_type=True, is_archive=False)
+                {"number": x.number, "pk": x.pk} for x in Card.objects.filter(individual=i, base__internal_type=True, is_archive=False)
             ],
         })
     return JsonResponse({"result": result})

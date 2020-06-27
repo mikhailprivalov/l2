@@ -7,6 +7,7 @@ from dateutil.relativedelta import relativedelta
 from django.core.management.base import OutputWrapper
 from django.db import models, transaction
 from django.db.models import Q
+from django.utils import timezone
 
 import slog.models as slog
 from appconf.manager import SettingManager
@@ -34,6 +35,8 @@ class Individual(models.Model):
     primary_for_rmis = models.BooleanField(default=False, blank=True)
     rmis_uid = models.CharField(max_length=64, default=None, null=True, blank=True)
     tfoms_idp = models.CharField(max_length=64, default=None, null=True, blank=True)
+
+    time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
     def join_individual(self, b: 'Individual', out: OutputWrapper = None):
         if out:
@@ -480,7 +483,7 @@ class Individual(models.Model):
             else:
                 if no_update:
                     print('No update')
-                    # return
+                    return
                 print('Update patient data')
                 i = indv[0]
                 updated = []
@@ -788,6 +791,8 @@ class Card(models.Model):
                                           help_text="Идетификатор карты поликлиника", db_index=True)
     phone = models.CharField(max_length=20, blank=True, default='')
     harmful_factor = models.CharField(max_length=32, blank=True, default='')
+
+    time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)

@@ -60,11 +60,19 @@
         </div>
         <div class="col-xs-6">
           <div class="info-row">
-            Найдено физлиц: {{individuals.length}}
+            Найдено физлиц в L2<template v-if="l2_tfoms"> и ТФОМС</template>: {{individuals.length}}
+          </div>
+        </div>
+        <div class="col-xs-12"
+             v-if="!card.new_individual && individuals.map(i => i.l2_cards.length).reduce((a, b) => a + b, 0) > 0">
+          <div class="alert-warning" style="padding: 10px">
+            <strong>Внимание:</strong> найдены существующие карты или созданы автоматически.<br />
+            Выберите подходящую, нажав на номер карты или продолжайте создание новой при необходимости
+            или не совпадении физ. лиц
           </div>
         </div>
         <div class="col-xs-12" v-if="!card.new_individual && individuals.length > 0">
-          <div @click="select_individual(card.individual)" class="info-row individual" v-for="i in individuals">
+          <div @click="select_individual(i.pk)" class="info-row individual" v-for="i in individuals">
             <input :checked="i.pk === card.individual" type="checkbox"/> {{i.fio}}<br/>
             <table class="table table-bordered table-condensed">
               <thead>
@@ -83,7 +91,12 @@
               <tr v-if="i.l2_cards.length > 0">
                 <th>Активные карты L2</th>
                 <td colspan="2">
-                  <div v-for="c in i.l2_cards"><strong>{{c}}</strong></div>
+                  <div v-for="c in i.l2_cards">
+                    <a :href="`/mainmenu/directions?card_pk=${c.pk}&base_pk=${base_pk}&open_edit=true`" class="a-under c-pointer"
+                        title="Открыть существующую карту" v-tippy>
+                      <strong>{{c.number}}</strong>
+                    </a>
+                  </div>
                 </td>
               </tr>
               </tbody>
@@ -641,6 +654,9 @@
       }, 100);
     },
     computed: {
+      l2_tfoms() {
+        return this.$store.getters.modules.l2_tfoms
+      },
       doc_edit_type_title() {
         const t = this.document.document_type;
         if (!t)
@@ -870,7 +886,7 @@
         })
       },
       individuals_search() {
-        if (!this.valid) {
+        if (!this.valid || this.card_pk !== -1) {
           return
         }
         patients_point.individualsSearch(this.card, ['family', 'name', 'patronymic', 'birthday', 'sex'])
@@ -1104,5 +1120,11 @@
   .lst {
     margin: 0;
     line-height: 1;
+  }
+
+  .c-pointer {
+    &, & strong, &:hover {
+      cursor: pointer!important;
+    }
   }
 </style>

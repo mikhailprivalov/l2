@@ -300,6 +300,7 @@
         loaded: false,
         history_num: '',
         search_after_loading: false,
+        open_edit_after_loading: false,
         editor_pk: -2,
         inc_rmis: false,
         inc_tfoms: false,
@@ -647,6 +648,7 @@
           let rmis_uid = params.get('rmis_uid')
           let base_pk = params.get('base_pk')
           let card_pk = params.get('card_pk')
+          let open_edit = params.get('open_edit') === 'true'
           let ofname = params.get('ofname')
           let ofname_dep = params.get('ofname_dep')
           if (rmis_uid) {
@@ -694,6 +696,7 @@
             if (card_pk) {
               this.query = `card_pk:${card_pk}`
               this.search_after_loading = true
+              this.open_edit_after_loading = open_edit
             }
           } else {
             this.base = this.bases[0].pk
@@ -782,6 +785,9 @@
               this.showModal = true
             } else if (this.founded_cards.length === 1) {
               this.select_card(0)
+              if (this.open_edit_after_loading) {
+                this.open_editor()
+              }
             } else {
               errmessage('Не найдено', 'Карт по такому запросу не найдено')
             }
@@ -795,6 +801,7 @@
         }).catch((error) => {
           errmessage('Ошибка на сервере', error.message)
         }).finally(() => {
+          this.open_edit_after_loading = false;
           this.$store.dispatch(action_types.DISABLE_LOADING)
         })
       },
