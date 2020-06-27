@@ -17,7 +17,7 @@ from clients.models import CardBase, Individual, Card, Document, DocumentType, D
     DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones, AmbulatoryData, AmbulatoryDataHistory
 from contracts.models import Company
 from laboratory import settings
-from laboratory.utils import strdate, start_end_year, strfdatetime
+from laboratory.utils import strdate, start_end_year
 from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient
