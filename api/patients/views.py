@@ -12,6 +12,7 @@ from django.forms import model_to_dict
 from django.http import JsonResponse
 
 from api import sql_func
+from appconf.manager import SettingManager
 from clients.models import CardBase, Individual, Card, Document, DocumentType, District, AnamnesisHistory, \
     DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones, AmbulatoryData, AmbulatoryDataHistory
 from contracts.models import Company
@@ -19,6 +20,7 @@ from laboratory import settings
 from laboratory.utils import strdate, start_end_year
 from rmis_integration.client import Client
 from slog.models import Log
+from tfoms.integration import match_enp
 
 
 def full_patient_search_data(p, query):
@@ -54,11 +56,24 @@ def patients_search_card(request):
     p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
     p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
     p3 = re.compile(r'^[0-9]{1,15}$')
+    p_enp_re = re.compile(r'^[0-9]{16}$')
+    p_enp = bool(re.search(p_enp_re, query))
     p4 = re.compile(r'card_pk:\d+', flags=re.IGNORECASE)
     p4i = bool(re.search(p4, query.lower()))
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     c = None
-    if not p4i:
+    if p_enp:
+        if SettingManager.l2('tfoms'):
+            from_tfoms = match_enp(query)
+
+            if from_tfoms:
+                Individual.import_from_tfoms(from_tfoms)
+
+        objects = Individual.objects.filter(
+            document__number=query,
+            document__document_type__title='Полис ОМС'
+        )
+    elif not p4i:
         if re.search(p, query.lower()):
             initials = query[0:3].upper()
             btday = query[7:11] + "-" + query[5:7] + "-" + query[3:5]
@@ -94,7 +109,8 @@ def patients_search_card(request):
                 except ConnectionError:
                     pass
 
-        if (re.search(p3, query) and not card_type.is_rmis) or (len(list(objects)) == 0 and len(query) == 16 and card_type.internal_type) or (card_type.is_rmis and not re.search(p3, query)):
+        if (re.search(p3, query) and not card_type.is_rmis) or (len(list(objects)) == 0 and len(query) == 16 and not p_enp and card_type.internal_type)\
+                or (card_type.is_rmis and not re.search(p3, query)):
             resync = True
             if len(list(objects)) == 0:
                 resync = False
@@ -135,8 +151,12 @@ def patients_search_card(request):
         if re.match(p3, query):
             cards = cards.filter(number=query)
 
+    if p_enp and cards:
+        cards = cards.filter(polis__number=query)
+
     d1, d2 = start_end_year()
 
+    row: Card
     for row in cards.filter(is_archive=False).select_related("individual", "base").prefetch_related(
         Prefetch(
             'individual__document_set', queryset=Document.objects.filter(is_active=True, document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС'])

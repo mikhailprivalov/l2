@@ -6,6 +6,7 @@ import simplejson
 from dateutil.relativedelta import relativedelta
 from django.core.management.base import OutputWrapper
 from django.db import models, transaction
+from django.db.models import Q
 
 import slog.models as slog
 from appconf.manager import SettingManager
@@ -32,6 +33,7 @@ class Individual(models.Model):
     sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
     primary_for_rmis = models.BooleanField(default=False, blank=True)
     rmis_uid = models.CharField(max_length=64, default=None, null=True, blank=True)
+    tfoms_idp = models.CharField(max_length=64, default=None, null=True, blank=True)
 
     def join_individual(self, b: 'Individual', out: OutputWrapper = None):
         if out:
@@ -46,7 +48,7 @@ class Individual(models.Model):
 
     def sync_with_rmis(self, out: OutputWrapper = None, c=None):
         if not SettingManager.get("rmis_enabled", default='false', default_type='b') or \
-                not CardBase.objects.filter(is_rmis=True).exists():
+            not CardBase.objects.filter(is_rmis=True).exists():
             return
         if self.primary_for_rmis:
             self.reverse_sync()
@@ -155,7 +157,7 @@ class Individual(models.Model):
                     rowss = Document.objects.filter(document_type=data['document_type'], individual=self,
                                                     from_rmis=True)
                     if rowss.exclude(serial=data["serial"]).exclude(number=data["number"]).filter(
-                            card__isnull=True).exists():
+                        card__isnull=True).exists():
                         Document.objects.filter(document_type=data['document_type'], individual=self,
                                                 from_rmis=True).delete()
                     docs = Document.objects.filter(document_type=data['document_type'],
@@ -265,10 +267,10 @@ class Individual(models.Model):
             p = pat_data["patient"]
             g = {"ж": "2"}.get(self.sex.lower(), "1")
             if self.family != p["lastName"] or \
-                    self.name != p["firstName"] or \
-                    self.patronymic != p["middleName"] or \
-                    self.sex != g or \
-                    self.birthday != self.birthday:
+                self.name != p["firstName"] or \
+                self.patronymic != p["middleName"] or \
+                self.sex != g or \
+                self.birthday != self.birthday:
                 c.patients.edit_patient(self)
 
     def bd(self):
@@ -287,11 +289,11 @@ class Individual(models.Model):
         """
 
         if iss is None or (not iss.tubes.exists() and not iss.time_confirmation) or \
-                ((not iss.tubes.exists() or not iss.tubes.filter(
-                    time_recive__isnull=False).exists()) and not iss.research.is_paraclinic and not iss.research.is_doc_refferal):
+            ((not iss.tubes.exists() or not iss.tubes.filter(
+                time_recive__isnull=False).exists()) and not iss.research.is_paraclinic and not iss.research.is_doc_refferal):
             today = date.today()
         elif iss.time_confirmation and (
-                iss.research.is_paraclinic or iss.research.is_doc_refferal) or not iss.tubes.exists():
+            iss.research.is_paraclinic or iss.research.is_doc_refferal) or not iss.tubes.exists():
             today = iss.time_confirmation.date()
         else:
             today = iss.tubes.filter(time_recive__isnull=False).order_by("-time_recive")[0].time_recive.date()
@@ -444,6 +446,132 @@ class Individual(models.Model):
             return Card.objects.filter(base__is_rmis=True, is_archive=False, individual=self)[0].number
         return ""
 
+    @staticmethod
+    def import_from_tfoms(data: dict):
+        idp = data.get('idp')
+
+        if idp:
+
+            """          
+                "family": "Петров",
+                "given": "Иван",
+                "patronymic": "НИКОЛАЕВИЧ",
+                "gender": "М",
+                "birthdate": "1984-05-20 00:00:00",
+                "country": "RUS",
+                "address": "ИРКУТСК,ИВАНА ФРАНКО УЛ., 8 -25",
+                "insurer": "014",
+                "enp": "3854510829000220",
+                "snils": "09168114069",
+                "passport_number": "421798",
+                "passport_seria": "25 04",
+                "unit_code": "380003"
+            """
+
+            family = data.get('family', '').title()
+            name = data.get('given', '').title()
+            patronymic = data.get('patronymic', '').title()
+            gender = data.get('gender', '').lower()
+            birthday = datetime.strptime(data.get('birthdate', '').split(' ')[0], "%Y-%m-%d").date()
+            address = data.get('birthdate', '').title().replace('Ул.', 'ул.').replace('Д.', 'д.').replace('Кв.', 'кв.')
+            enp = data.get('enp', '')
+            passport_number = data.get('passport_number', '')
+            passport_seria = data.get('passport_seria', '')
+            snils = data.get('snils', '')
+
+            indv = Individual.objects.filter(
+                Q(tfoms_idp=idp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)) \
+                if snils else \
+                Individual.objects.filter(Q(tfoms_idp=idp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
+
+            if not indv.exists():
+                i = Individual(
+                    family=family,
+                    name=name,
+                    patronymic=patronymic,
+                    birthday=birthday,
+                    sex=gender,
+                    tfoms_idp=idp,
+                )
+                i.save()
+            else:
+                print('Update patient data')
+                i = indv[0]
+                updated = []
+
+                if i.family != family:
+                    i.family = family
+                    updated.append('family')
+
+                if i.name != name:
+                    i.name = name
+                    updated.append('name')
+
+                if i.patronymic != patronymic:
+                    i.patronymic = patronymic
+                    updated.append('patronymic')
+
+                if i.sex != gender:
+                    i.sex = gender
+                    updated.append('gender')
+
+                if i.birthday != birthday:
+                    i.birthday = birthday
+                    updated.append('birthday')
+
+                if i.tfoms_idp != idp:
+                    i.tfoms_idp = idp
+                    updated.append('tfoms_idp')
+
+                if updated:
+                    print('Updated:', updated)
+                    i.save(update_fields=updated)
+
+            print(i)
+
+            print('Sync documents')
+
+            enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
+            snils_type = DocumentType.objects.filter(title__startswith="СНИЛС").first()
+            passport_type = DocumentType.objects.filter(title__startswith="Паспорт гражданина РФ").first()
+
+            if snils_type and snils:
+                print('Sync SNILS')
+                i.add_or_update_doc(snils_type, '', snils)
+
+            if passport_type and passport_seria and passport_number:
+                print('Sync PASSPORT')
+                i.add_or_update_doc(passport_type, passport_seria, passport_number)
+
+            enp_doc = None
+            if enp_type and enp:
+                print('Sync ENP')
+                enp_doc = i.add_or_update_doc(enp_type, '', enp)
+
+            print('Sync L2 card')
+            print(Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True))
+
+    def add_or_update_doc(self, doc_type: 'DocumentType', serial: str, number: str):
+        d = Document.objects.filter(individual=self, document_type=doc_type).first()
+        if not d:
+            d = Document(individual=self, document_type=doc_type, serial=serial, number=number)
+            d.save()
+        else:
+            d: Document = d
+            updated = []
+
+            if d.serial != serial:
+                d.serial = serial
+                updated.append('serial')
+
+            if d.number != number:
+                d.number = number
+                updated.append('number')
+
+            if updated:
+                d.save(update_fields=updated)
+        return d
+
     class Meta:
         verbose_name = 'Физическое лицо'
         verbose_name_plural = 'Физические лица'
@@ -534,11 +662,11 @@ class Document(models.Model):
             if self.rmis_uid:
                 d = c.individuals.client.getDocument(self.rmis_uid)
                 if d["series"] != self.serial or \
-                        d['number'] != self.number or \
-                        d['issuerText'] != self.who_give or \
-                        d['issueDate'] != self.date_start or \
-                        d['expireDate'] != self.date_end or \
-                        d['active'] != self.is_active:
+                    d['number'] != self.number or \
+                    d['issuerText'] != self.who_give or \
+                    d['issueDate'] != self.date_start or \
+                    d['expireDate'] != self.date_end or \
+                    d['active'] != self.is_active:
                     data = {
                         "documentId": self.rmis_uid,
                         "documentData": {
@@ -798,10 +926,28 @@ class Card(models.Model):
         return n + 1
 
     @staticmethod
-    def add_l2_card(individual: [Individual, None] = None, card_orig: ['Card', None] = None, distinct=True):
+    def add_l2_card(individual: [Individual, None] = None, card_orig: ['Card', None] = None, distinct=True, polis: ['Document', None] = None, address: [str, None] = None, force=False):
         if distinct and card_orig \
-                and Card.objects.filter(individual=card_orig.individual, base__internal_type=True).exists():
+                and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True).exists():
             return None
+
+        if force and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True).exists():
+            c = Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True)[0]
+            updated = []
+
+            if c.main_address != address:
+                c.main_address = address
+                updated.append('main_address')
+
+            if polis and c.polis != polis:
+                c.polis = polis
+                updated.append('polis')
+
+            if updated:
+                print('Updated:', updated)
+                c.save(update_fields=updated)
+
+            return c
 
         with transaction.atomic():
             cb = CardBase.objects.select_for_update().filter(internal_type=True).first()
@@ -809,11 +955,12 @@ class Card(models.Model):
                 return
             c = Card(number=Card.next_l2_n(), base=cb,
                      individual=individual if individual else card_orig.individual,
-                     polis=None if not card_orig else card_orig.polis,
+                     polis=polis or (None if not card_orig else card_orig.polis),
                      main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
-                     main_address='' if not card_orig else card_orig.main_address,
-                     fact_address='' if not card_orig else card_orig.fact_address)
+                     main_address=address or ('' if not card_orig else card_orig.main_address),
+                     fact_address=address or ('' if not card_orig else card_orig.fact_address))
             c.save()
+            print('Created card')
             return c
 
     class Meta:

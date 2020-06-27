@@ -18,7 +18,9 @@ def get_headers():
 def make_request(path, query=None):
     if query is None:
         query = {}
-    return requests.post(get_url(path, query=query), get_headers())
+    url = get_url(path, query=query)
+    headers = get_headers()
+    return requests.post(url, headers=headers).json()
 
 
 def match_patient(family, name, patronymic, birthday):
