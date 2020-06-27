@@ -642,11 +642,11 @@ class Document(models.Model):
             if self.rmis_uid:
                 d = c.individuals.client.getDocument(self.rmis_uid)
                 if d["series"] != self.serial or \
-                    d['number'] != self.number or \
-                    d['issuerText'] != self.who_give or \
-                    d['issueDate'] != self.date_start or \
-                    d['expireDate'] != self.date_end or \
-                    d['active'] != self.is_active:
+                        d['number'] != self.number or \
+                        d['issuerText'] != self.who_give or \
+                        d['issueDate'] != self.date_start or \
+                        d['expireDate'] != self.date_end or \
+                        d['active'] != self.is_active:
                     data = {
                         "documentId": self.rmis_uid,
                         "documentData": {
