@@ -451,29 +451,12 @@ class Individual(models.Model):
         idp = data.get('idp')
 
         if idp:
-
-            """          
-                "family": "Петров",
-                "given": "Иван",
-                "patronymic": "НИКОЛАЕВИЧ",
-                "gender": "М",
-                "birthdate": "1984-05-20 00:00:00",
-                "country": "RUS",
-                "address": "ИРКУТСК,ИВАНА ФРАНКО УЛ., 8 -25",
-                "insurer": "014",
-                "enp": "3854510829000220",
-                "snils": "09168114069",
-                "passport_number": "421798",
-                "passport_seria": "25 04",
-                "unit_code": "380003"
-            """
-
             family = data.get('family', '').title()
             name = data.get('given', '').title()
             patronymic = data.get('patronymic', '').title()
             gender = data.get('gender', '').lower()
             birthday = datetime.strptime(data.get('birthdate', '').split(' ')[0], "%Y-%m-%d").date()
-            address = data.get('birthdate', '').title().replace('Ул.', 'ул.').replace('Д.', 'д.').replace('Кв.', 'кв.')
+            address = data.get('address', '').title().replace('Ул.', 'ул.').replace('Д.', 'д.').replace('Кв.', 'кв.')
             enp = data.get('enp', '')
             passport_number = data.get('passport_number', '')
             passport_seria = data.get('passport_seria', '')
@@ -958,7 +941,7 @@ class Card(models.Model):
                      polis=polis or (None if not card_orig else card_orig.polis),
                      main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
                      main_address=address or ('' if not card_orig else card_orig.main_address),
-                     fact_address=address or ('' if not card_orig else card_orig.fact_address))
+                     fact_address='' if not card_orig else card_orig.fact_address)
             c.save()
             print('Created card')
             return c
