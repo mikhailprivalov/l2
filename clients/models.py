@@ -11,7 +11,7 @@ from django.utils import timezone
 
 import slog.models as slog
 from appconf.manager import SettingManager
-from laboratory.utils import localtime, current_year
+from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
@@ -35,6 +35,7 @@ class Individual(models.Model):
     primary_for_rmis = models.BooleanField(default=False, blank=True)
     rmis_uid = models.CharField(max_length=64, default=None, null=True, blank=True)
     tfoms_idp = models.CharField(max_length=64, default=None, null=True, blank=True)
+    time_tfoms_last_sync = models.DateTimeField(default=None, null=True, blank=True)
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
@@ -446,9 +447,32 @@ class Individual(models.Model):
             return Card.objects.filter(base__is_rmis=True, is_archive=False, individual=self)[0].number
         return ""
 
+    def sync_with_tfoms(self):
+        is_new = False
+        updated = []
+
+        enp_doc: [Document, None] = Document.objects.filter(document_type__title__startswith="Полис ОМС", individual=self).first()
+
+        tfoms_data = None
+        if enp_doc and enp_doc.number:
+            from tfoms.integration import match_enp
+            tfoms_data = match_enp(enp_doc.number)
+
+        if not tfoms_data:
+            from tfoms.integration import match_patient
+            tfoms_data = match_patient(self.family, self.name, self.patronymic, strfdatetime(self.birthday, '%Y-%m-%d'))
+
+        if tfoms_data:
+            is_new = bool(self.tfoms_idp)
+            updated = Individual.import_from_tfoms(tfoms_data, self)
+
+        return is_new, updated
+
+
     @staticmethod
     def import_from_tfoms(data: dict, individual: ['Individual', None] = None, no_update=False):
         idp = data.get('idp')
+        updated_data = []
 
         if idp:
             family = data.get('family', '').title()
@@ -491,22 +515,27 @@ class Individual(models.Model):
                 if i.family != family:
                     i.family = family
                     updated.append('family')
+                    updated_data.append('Фамилия')
 
                 if i.name != name:
                     i.name = name
                     updated.append('name')
+                    updated_data.append('Имя')
 
                 if i.patronymic != patronymic:
                     i.patronymic = patronymic
                     updated.append('patronymic')
+                    updated_data.append('Отчество')
 
                 if i.sex != gender:
                     i.sex = gender
-                    updated.append('gender')
+                    updated.append('sex')
+                    updated_data.append('Пол')
 
                 if i.birthday != birthday:
                     i.birthday = birthday
                     updated.append('birthday')
+                    updated_data.append('Дата рождения')
 
                 if i.tfoms_idp != idp:
                     i.tfoms_idp = idp
@@ -538,7 +567,12 @@ class Individual(models.Model):
                 enp_doc = i.add_or_update_doc(enp_type, '', enp)
 
             print('Sync L2 card')
-            print(Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True))
+            print(Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True, updated_data=updated_data))
+
+            i.time_tfoms_last_sync = timezone.now()
+            i.save(update_fields=['time_tfoms_last_sync'])
+
+        return updated_data
 
     def add_or_update_doc(self, doc_type: 'DocumentType', serial: str, number: str):
         ds = Document.objects.filter(individual=self, document_type=doc_type)
@@ -921,7 +955,8 @@ class Card(models.Model):
         return n + 1
 
     @staticmethod
-    def add_l2_card(individual: [Individual, None] = None, card_orig: ['Card', None] = None, distinct=True, polis: ['Document', None] = None, address: [str, None] = None, force=False):
+    def add_l2_card(individual: [Individual, None] = None, card_orig: ['Card', None] = None, distinct=True, polis: ['Document', None] = None, address: [str, None] = None, force=False,
+                    updated_data=None):
         if distinct and card_orig \
                 and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True).exists():
             return None
@@ -933,10 +968,14 @@ class Card(models.Model):
             if c.main_address != address:
                 c.main_address = address
                 updated.append('main_address')
+                if updated_data:
+                    updated_data.append('Адрес регистрации')
 
             if polis and c.polis != polis:
                 c.polis = polis
                 updated.append('polis')
+                if updated_data:
+                    updated_data.append('Основной полис')
 
             if updated:
                 print('Updated:', updated)

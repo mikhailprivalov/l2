@@ -59,7 +59,10 @@
           </label>
         </div>
         <div class="col-xs-6">
-          <div class="info-row">
+          <div class="info-row" v-if="loading">
+            Поиск пациентов в L2<template v-if="l2_tfoms"> и в ТФОМС</template>...
+          </div>
+          <div class="info-row" v-else>
             Найдено физлиц в L2<template v-if="l2_tfoms"> и ТФОМС</template>: {{individuals.length}}
           </div>
         </div>
@@ -105,7 +108,15 @@
         </div>
       </div>
       <div class="row" v-else>
-        <div class="col-xs-12">
+        <div class="col-xs-6" v-if="l2_tfoms">
+          <div class="info-row">
+            <template v-if="card.tfoms_idp">Есть связь с ТФОМС</template>
+            <template v-else>Не связано с ТФОМС</template>
+            <template v-if="time_tfoms_last_sync">({{time_tfoms_last_sync}})</template>
+            <a href="#" class="a-under" @click.prevent="sync_tfoms" tabindex="-1">сверка</a>
+          </div>
+        </div>
+        <div class="col-xs-6 text-right">
           <div class="info-row">
             Связь с РМИС – {{card.has_rmis_card ? 'ЕСТЬ' : 'НЕТ'}}
             <strong v-if="card.has_rmis_card">{{card.rmis_uid}}</strong>
@@ -528,11 +539,17 @@
 
   function capitalizeFirstLetter(string) {
     string = SwapLayouts(string).replace(/  +/g, ' ');
-    let r = []
+    const r = []
     for (const s of string.split(' ')) {
-      r.push((s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).trim())
+      let v = [];
+
+      for (const si of s.split('-')) {
+        v.push(si.charAt(0).toUpperCase() + si.slice(1).toLowerCase())
+      }
+
+      r.push(v.join('-'))
     }
-    return r.join(' ');
+    return r.join(' ').trim();
   }
 
   function SwapLayouts(str) {
@@ -623,6 +640,8 @@
           agent_pk: null,
           phone: '',
           harmful: '',
+          tfoms_idp: null,
+          time_tfoms_last_sync: null,
         },
         individuals: [],
         document_to_edit: -2,
@@ -633,6 +652,7 @@
         agent_card_selected: null,
         agent_doc: '',
         agent_clear: false,
+        loading: false,
       }
     },
     created() {
@@ -689,6 +709,12 @@
       },
       sex() {
         return this.card.sex
+      },
+      new_individual() {
+        return this.card.new_individual
+      },
+      time_tfoms_last_sync() {
+        return this.card.time_tfoms_last_sync && moment(this.card.time_tfoms_last_sync).format('HH:mm DD.MM.YY');
       },
       valid() {
         if (!this.card.family || !this.card.name || !this.card.birthday) {
@@ -750,6 +776,9 @@
         this.individual_sex('patronymic', this.card.patronymic)
       },
       birthday() {
+        this.individuals_search()
+      },
+      new_individual() {
         this.individuals_search()
       },
       individuals: {
@@ -846,6 +875,16 @@
         this.load_data();
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
+      async sync_tfoms() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const {updated} = await patients_point.syncTfoms(this, 'card_pk')
+        this.load_data();
+        okmessage('Сверка проведена');
+        if (updated && updated.length > 0) {
+          okmessage('Обновлены данные', updated.join(', '));
+        }
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      },
       getResponse(resp) {
         return [...resp.data.data]
       },
@@ -885,16 +924,27 @@
           this.loaded = true
         })
       },
-      individuals_search() {
-        if (!this.valid || this.card_pk !== -1) {
+      individuals_search: _.debounce(function() { this.individuals_search_main() }, 500),
+      async individuals_search_main() {
+        if (!this.valid || this.card_pk !== -1 ||
+            this.card.family === '' || this.card.name === '' || this.card.new_individual) {
           return
         }
-        patients_point.individualsSearch(this.card, ['family', 'name', 'patronymic', 'birthday', 'sex'])
-          .then(({result}) => {
-            this.individuals = result
-            this.card.individual = result.length === 0 ? -1 : result[0].pk
-            this.card.new_individual = result.length === 0
-          })
+
+        this.loading = true;
+
+        const {
+          result, forced_gender
+        } = await patients_point.individualsSearch(this.card, ['family', 'name', 'patronymic', 'birthday'])
+
+        this.individuals = result
+        this.card.individual = result.length === 0 ? -1 : result[0].pk
+        this.card.new_individual = result.length === 0
+        if (forced_gender) {
+          this.card.sex = forced_gender;
+        }
+
+        this.loading = false;
       },
       individual_sex(t, v) {
         if (this.card_pk >= 0) {

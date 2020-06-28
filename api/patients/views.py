@@ -446,20 +446,20 @@ def individual_search(request):
     name = request_data["name"]
     patronymic = request_data["patronymic"]
     birthday = request_data["birthday"]
-    sex = request_data["sex"]
+    forced_gender = []
 
     if tfoms_module and family and name and birthday:
         from_tfoms = match_patient(family, name, patronymic, birthday)
 
         for row in from_tfoms:
             Individual.import_from_tfoms(row, no_update=True)
+            forced_gender.append(row['gender'].lower())
 
     for i in Individual.objects.filter(
         family=family,
         name=name,
         patronymic=patronymic,
         birthday=birthday,
-        sex=sex,
     ):
         result.append({
             "pk": i.pk,
@@ -472,7 +472,11 @@ def individual_search(request):
                 {"number": x.number, "pk": x.pk} for x in Card.objects.filter(individual=i, base__internal_type=True, is_archive=False)
             ],
         })
-    return JsonResponse({"result": result})
+        forced_gender.append(i.sex)
+
+    forced_gender = None if not forced_gender or forced_gender.count(forced_gender[0]) != len(forced_gender) else forced_gender[0]
+
+    return JsonResponse({"result": result, 'forced_gender': forced_gender})
 
 
 def get_sex_by_param(request):
@@ -547,6 +551,13 @@ def sync_rmis(request):
     card = Card.objects.get(pk=request_data["card_pk"])
     card.individual.sync_with_rmis()
     return JsonResponse({"ok": True})
+
+
+def sync_tfoms(request):
+    request_data = json.loads(request.body)
+    card = Card.objects.get(pk=request_data["card_pk"])
+    is_new, updated = card.individual.sync_with_tfoms()
+    return JsonResponse({"ok": True, "is_new": is_new, "updated": updated})
 
 
 def update_wia(request):

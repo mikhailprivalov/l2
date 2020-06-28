@@ -24,6 +24,8 @@ const updateWIA = creator({url: 'patients/individuals/update-wia'}, {})
 
 const syncRmis = creator({url: 'patients/individuals/sync-rmis'}, {})
 
+const syncTfoms = creator({url: 'patients/individuals/sync-tfoms'}, {})
+
 const loadDreg = creator({url: 'patients/individuals/load-dreg'}, {})
 
 const loadVaccine = creator({url: 'patients/individuals/load-vaccine'}, {})
@@ -55,7 +57,7 @@ const saveAmbulatoryData = creator({url: 'patients/individuals/save-ambulatory-d
 const saveBenefit = creator({url: 'patients/individuals/save-benefit'}, {})
 
 export default {
-  searchCard, searchIndividual, searchL2Card, syncRmis,
+  searchCard, searchIndividual, searchL2Card, syncRmis, syncTfoms,
   getCard, sendCard, individualsSearch, individualSex, editDoc, updateCdu, updateWIA,
   editAgent, loadAnamnesis, saveAnamnesis, loadDreg, loadVaccine, saveDreg, saveVaccine, loadDregDetail, loadVaccineDetail,
   loadBenefit, loadBenefitDetail, saveBenefit, saveAmbulatoryData, loadAmbulatoryData, loadAmbulatoryDataDetail, loadAmbulatoryHistory
