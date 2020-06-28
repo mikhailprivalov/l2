@@ -468,7 +468,6 @@ class Individual(models.Model):
 
         return is_new, updated
 
-
     @staticmethod
     def import_from_tfoms(data: dict, individual: ['Individual', None] = None, no_update=False):
         idp = data.get('idp')
