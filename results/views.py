@@ -32,7 +32,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Image
-from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable
+from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable, Frame, PageTemplate, NextPageTemplate
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.platypus.flowables import HRFlowable
 
@@ -363,6 +363,14 @@ def result_print(request):
                             bottomMargin=16 * mm, allowSplitting=1,
                             title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
 
+    # frame = Frame(15 * mm, 0 * mm, doc.width, doc.height, id='frame')
+    # frame_landscape = Frame(15 * mm, 0 * mm, 270 * mm, 200 * mm, id='frame_landscape')
+    #
+    # portrait_template = PageTemplate(id='portrait', frames=[frame], pagesize=A4)
+    # landscape_template = PageTemplate(id='landscape', frames=[frame_landscape], pagesize=landscape(A4))
+    # doc.addPageTemplates([portrait_template, landscape_template])
+    size_form = {0: 'portrait', 1: 'landscape'}
+
     naprs = []
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -485,7 +493,9 @@ def result_print(request):
         .annotate(results_count=Count('issledovaniya__result'))\
         .distinct()
 
+    count_direction = 0
     for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
+        count_direction += 1
         dpk = direction.pk
 
         if not direction.is_all_confirm():
@@ -512,6 +522,8 @@ def result_print(request):
                 link_files = True
             if 'выпис' in iss.research.title.lower():
                 is_extract = True
+            if count_direction == 1 and iss.research.size_form == 1:
+                doc.pagesize = landscape(A4)
 
         if link_files:
             continue
@@ -963,16 +975,18 @@ def result_print(request):
                 else:
                     fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
 
+                type_form = iss.research.result_form
+                form_result = None
+                if type_form != 0:
+                    current_type_form = str(type_form)
+                    form_result = import_string('results.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
+
                 if iss.research.is_microbiology:
                     fwb = microbiology_result(iss, fwb, doc)
+                elif form_result:
+                    fwb = form_result(direction, iss, fwb, doc, leftnone)
                 elif not protocol_plain_text:
-                    type_form = iss.research.result_form
-                    if type_form == 0:
-                        fwb = structure_data_for_result(iss, fwb, doc, leftnone)
-                    else:
-                        current_type_form = str(type_form)
-                        form_result = import_string('results.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
-                        fwb = form_result(direction, iss, fwb, doc, leftnone)
+                    fwb = structure_data_for_result(iss, fwb, doc, leftnone)
                 else:
                     fwb = plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text)
 
