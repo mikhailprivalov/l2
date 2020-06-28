@@ -7,24 +7,32 @@ import directory.models as directory
 from directions.models import ParaclinicResult
 from utils.dates import normalize_date
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, Image
-from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable, Frame, PageTemplate, NextPageTemplate, SimpleDocTemplate
-from reportlab.lib.pagesizes import A4, landscape
+from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable, Frame, PageTemplate, NextPageTemplate, SimpleDocTemplate, FrameBreak
+from reportlab.lib.pagesizes import A4, landscape, portrait
 import datetime
 from appconf.manager import SettingManager
 import simplejson as json
 from io import BytesIO
 
 
-def form_01(direction, iss, fwb, doc, leftnone):
+def form_01(direction, iss, fwb, doc, leftnone, count_direction, is_different_form):
     # Форма для печати наркозной карты - течения Анестези при операции
 
-    # frame = Frame(15 * mm, 0 * mm, doc.width, doc.height, id='frame')
-    # frame_landscape = Frame(15 * mm, 0 * mm, 270 * mm, 200 * mm, id='frame_landscape')
+    # p_frame = Frame(5 * mm, 30 * mm, 200 * mm, 277 * mm, leftPadding=10 * mm, rightPadding=10 * mm, topPadding=10 * mm, bottomPadding=10 * mm, id='portrait_frame', showBoundary=1)
     #
-    # portrait_template = PageTemplate(id='portrait', frames=[frame], pagesize=A4)
-    # landscape_template = PageTemplate(id='landscape', frames=[frame_landscape], pagesize=landscape(A4))
-    # doc.addPageTemplates([portrait_template, landscape_template])
-    size_form = {0: 'portrait', 1: 'landscape'}
+    # l_frame = Frame(0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=20 * mm, rightPadding=10 * mm, topPadding=10 * mm, bottomPadding=10 * mm, id='landscape_frame', showBoundary=1)
+    #
+    # portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4))
+    # landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4))
+    #
+    # # if is_different_form and count_direction > 1:
+    # doc.addPageTemplates(landscape_tmpl)
+    # fwb.append(NextPageTemplate('landscape_tmpl'))
+    # fwb.append(PageBreak())
+
+
+    # size_form = {0: portrait(A4), 1: landscape(A4)}
+    # page_templates = {0: portrait_tmpl, 1: landscape_tmpl}
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -77,6 +85,9 @@ def form_01(direction, iss, fwb, doc, leftnone):
 
     fwb.append(Paragraph(txt, style))
 
+    # doc.addPageTemplates(portrait_tmpl)
+    # fwb.append(NextPageTemplate('portrait_tmpl'))
+    # fwb.append(FrameBreak())
 
     return fwb
 
