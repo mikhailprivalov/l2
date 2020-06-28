@@ -842,24 +842,30 @@
         if (hide_after) {
           this.hide_modal()
         }
+        this.update_card(hide_after, data);
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      },
+      update_card(hide_after=false, data=null) {
+        if (this.card_pk < 0) {
+          return
+        }
         this.$root.$emit('select_card', {
-          card_pk: data.card_pk,
+          card_pk: data ? data.card_pk : this.card_pk,
           base_pk: this.base_pk,
           hide: hide_after,
         })
-        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async update_cdu(doc) {
         await this.$store.dispatch(action_types.INC_LOADING)
         await patients_point.updateCdu({card_pk: this.card_pk, doc})
-        this.load_data();
+        await this.load_data();
         okmessage('Изменения сохранены');
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async update_wia(key) {
         await this.$store.dispatch(action_types.INC_LOADING)
         await patients_point.updateWIA({card_pk: this.card_pk, key})
-        this.load_data();
+        await this.load_data();
         okmessage('Изменения сохранены');
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
@@ -872,13 +878,15 @@
       async sync_rmis() {
         await this.$store.dispatch(action_types.INC_LOADING)
         await patients_point.syncRmis(this, 'card_pk')
-        this.load_data();
+        await this.load_data();
+        this.update_card();
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async sync_tfoms() {
         await this.$store.dispatch(action_types.INC_LOADING)
         const {updated} = await patients_point.syncTfoms(this, 'card_pk')
-        this.load_data();
+        await this.load_data();
+        this.update_card();
         okmessage('Сверка проведена');
         if (updated && updated.length > 0) {
           okmessage('Обновлены данные', updated.join(', '));
@@ -913,11 +921,11 @@
       highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
       load_data() {
         if (this.card_pk === -1) {
-          return;
+          return Promise.resolve({});
         }
         this.loaded = false
         this.$store.dispatch(action_types.INC_LOADING)
-        patients_point.getCard(this, 'card_pk').then(data => {
+        return patients_point.getCard(this, 'card_pk').then(data => {
           this.card = data
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING)
@@ -993,7 +1001,7 @@
             type: this.document.document_type,
             individual_pk: this.card.individual,
           })
-        this.load_data();
+        await this.load_data();
         this.document = {
           number: ''
         };
@@ -1012,7 +1020,7 @@
           doc: this.agent_doc,
           clear: this.agent_clear,
         })
-        this.load_data();
+        await this.load_data();
         this.hide_modal_agent_edit();
         await this.$store.dispatch(action_types.DEC_LOADING)
       }
