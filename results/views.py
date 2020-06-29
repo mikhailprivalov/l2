@@ -33,7 +33,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Image
 from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable, Frame, PageTemplate, NextPageTemplate, BaseDocTemplate
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreakIfNotEmpty
 from reportlab.platypus.flowables import HRFlowable
 
 import directory.models as directory
@@ -360,6 +360,7 @@ def result_print(request):
     doc = BaseDocTemplate(buffer, leftMargin=(27 if leftnone else 15) * mm,
                             rightMargin=12 * mm, topMargin=5 * mm,
                             bottomMargin=16 * mm, allowSplitting=1,
+                            _pageBreakQuick=1,
                             title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
     p_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=16 * mm, id='portrait_frame', showBoundary=0)
     l_frame = Frame(0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=10 * mm, rightPadding=15 * mm, topPadding=(27 if leftnone else 15) * mm , bottomPadding=16 * mm, id='landscape_frame', showBoundary=0)
@@ -558,10 +559,12 @@ def result_print(request):
         if is_different_form and count_direction > 1:
             if temp_iss.research.size_form == 1:
                 fwb.append(NextPageTemplate('landscape_tmpl'))
-                fwb.append(PageBreak())
+                # fwb.append(PageBreak())
+                fwb.append(PageBreakIfNotEmpty())
             elif temp_iss.research.size_form == 0:
                 fwb.append(NextPageTemplate('portrait_tmpl'))
-                fwb.append(PageBreak())
+                # fwb.append(PageBreak())
+                fwb.append(PageBreakIfNotEmpty())
 
         maxdate = ""
         if dates != {}:
