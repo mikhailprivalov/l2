@@ -52,10 +52,19 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                     step = 0
                     opinion = []
                     for record in res_json['data']:
-                        print(record)
                         step += 1
                         if step == 1:
-                            temp_record = [Paragraph('{}'.format(el), styleBold) for el in record]
+                            temp_record = []
+                            count_el = 0
+                            for el in record:
+                                count_el += 1
+                                if count_el > 1:
+                                    date = el[0:10]
+                                    date = normalize_date(date)[0:5]
+                                    time = el[11:16]
+                                    temp_record.append(Paragraph('{} {}'.format(time, date), styleBold))
+                                else:
+                                    temp_record.append(Paragraph('{}'.format(el), styleBold))
                         else:
                             temp_record = [Paragraph('{}'.format(el), style) for el in record]
                         opinion.append(temp_record)
