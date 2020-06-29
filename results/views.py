@@ -32,7 +32,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Image
-from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable, Frame, PageTemplate, NextPageTemplate, FrameBreak
+from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable, Frame, PageTemplate, NextPageTemplate, BaseDocTemplate
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.platypus.flowables import HRFlowable
 
@@ -357,19 +357,18 @@ def result_print(request):
     leftnone = request.GET.get("leftnone", "0") == "0"
     hosp = request.GET.get("hosp", "0") == "1"
 
-    doc = SimpleDocTemplate(buffer,
-                            leftMargin=(27 if leftnone else 15) * mm,
+    # doc = SimpleDocTemplate(buffer, pagesize=A4,
+    #                         leftMargin=(27 if leftnone else 15) * mm,
+    #                         rightMargin=12 * mm, topMargin=5 * mm,
+    #                         bottomMargin=16 * mm, allowSplitting=1,
+    #                         title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
+
+    doc = BaseDocTemplate(buffer, leftMargin=(27 if leftnone else 15) * mm,
                             rightMargin=12 * mm, topMargin=5 * mm,
                             bottomMargin=16 * mm, allowSplitting=1,
                             title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
-
-
-
-    p_frame = Frame(10 * mm, 10 * mm, 180 * mm, 280 * mm, leftPadding=10 * mm, rightPadding=10 * mm, topPadding=10 * mm, bottomPadding=10 * mm, id='portrait_frame', showBoundary=1)
-
-    l_frame = Frame(10 * mm, 10 * mm, 280 * mm, 180 * mm, leftPadding=20 * mm, rightPadding=10 * mm, topPadding=10 * mm, bottomPadding=10 * mm, id='landscape_frame', showBoundary=1)
-
-
+    p_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=16 * mm, id='portrait_frame', showBoundary=1)
+    l_frame = Frame(0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=16 * mm, id='landscape_frame', showBoundary=1)
 
     naprs = []
     styleSheet = getSampleStyleSheet()
@@ -495,8 +494,7 @@ def result_print(request):
 
     count_direction = 0
     previous_size_form = None
-    l_tmpl = False
-    p_tmpl = False
+    add_tmpl = False
     for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
         dpk = direction.pk
 
@@ -508,11 +506,9 @@ def result_print(request):
         link_files = False
         is_extract = False
         current_size_form = None
-        is_different_form = False
         temp_iss = None
-        confirm = False
 
-        def first_pages(canvas, doc):
+        def mark_pages(canvas, doc):
             canvas.saveState()
             canvas.setFont('FreeSansBold', 8)
             canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
@@ -521,9 +517,8 @@ def result_print(request):
             canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
             canvas.restoreState()
 
-        portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=first_pages)
-        landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=first_pages)
-        #
+        portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=mark_pages)
+        landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=mark_pages)
 
         for iss in direction.issledovaniya_set.all():
             if iss.time_save:
@@ -543,50 +538,36 @@ def result_print(request):
             if 'выпис' in iss.research.title.lower():
                 is_extract = True
             current_size_form = iss.research.size_form
-            if iss.doc_confirmation:
-                print('yes')
-                confirm = True
             temp_iss = iss
-
-
-        if previous_size_form != current_size_form:
-            is_different_form = True
-        previous_size_form = current_size_form
-
 
         if link_files:
             continue
 
-        if not confirm:
-            continue
+        count_direction += 1
+
+        if previous_size_form == current_size_form:
+            is_different_form = False
+        else:
+            is_different_form = True
+        previous_size_form = current_size_form
 
         fwb = []
-        count_direction = count_direction + 1
-        first_page = ''
         if count_direction == 1 and temp_iss.research.size_form == 1:
             doc.pagesize = landscape(A4)
-            first_page = 'landscape'
-            # if not l_tmpl:
-        #     #     doc.addPageTemplates([landscape_tmpl, portrait_tmpl])
-        #     #     l_tmpl = True
+            if not add_tmpl:
+                doc.addPageTemplates([landscape_tmpl, portrait_tmpl])
+                add_tmpl = True
         elif count_direction == 1 and temp_iss.research.size_form == 0:
             doc.pagesize = portrait(A4)
-            first_page = 'portrait'
-        # #     # if not p_tmpl:
-        #         # doc.addPageTemplates(portrait_tmpl)
-        #         # p_tmpl = True
+            if not add_tmpl:
+                doc.addPageTemplates([portrait_tmpl, landscape_tmpl])
+                add_tmpl = True
 
         if is_different_form and count_direction > 1:
             if temp_iss.research.size_form == 1:
-                if not l_tmpl and first_page == 'portrait':
-                    doc.addPageTemplates(landscape_tmpl)
-                    l_tmpl = True
                 fwb.append(NextPageTemplate('landscape_tmpl'))
                 fwb.append(PageBreak())
             elif temp_iss.research.size_form == 0:
-                if not p_tmpl and first_page == 'portrait':
-                    doc.addPageTemplates(portrait_tmpl)
-                    p_tmpl = True
                 fwb.append(NextPageTemplate('portrait_tmpl'))
                 fwb.append(PageBreak())
 
@@ -1153,37 +1134,12 @@ def result_print(request):
     if not hosp:
         num_card = pk[0]
 
-    def first_pages(canvas, document):
-        canvas.saveState()
-        canvas.setFont('FreeSansBold', 8)
-        canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), num_card, number_poliklinika))
-        canvas.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-        canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
-        canvas.restoreState()
-
-    def later_pages(canvas, document):
-        canvas.saveState()
-        # вывести атрибуты пациента: № карты, № направления, ФИО. И Организацию
-        canvas.setFont('FreeSansBold', 8)
-        canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(), num_card))
-        canvas.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-        if not hosp:
-            canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
-        canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
-        canvas.restoreState()
-
-    doc.addPageTemplates([landscape_tmpl, portrait_tmpl])
     if len(pk) == 1 and not link_result and not hosp:
-        # doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
-        doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
+        doc.build(fwb, canvasmaker=PageNumCanvas)
     elif len(pk) == 1 and not link_result and hosp:
-        # doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages)
-        doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
+        doc.build(fwb)
     else:
-        # doc.build(naprs, onFirstPage=first_pages, onLaterPages=later_pages)
-        doc.build(naprs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
+        doc.build(naprs)
 
     if len(link_result) > 0:
         date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
