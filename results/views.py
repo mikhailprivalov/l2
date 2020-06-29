@@ -362,7 +362,7 @@ def result_print(request):
                             bottomMargin=16 * mm, allowSplitting=1,
                             title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
     p_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=16 * mm, id='portrait_frame', showBoundary=1)
-    l_frame = Frame(0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=16 * mm, id='landscape_frame', showBoundary=1)
+    l_frame = Frame(0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=10 * mm, rightPadding=15 * mm, topPadding=(27 if leftnone else 15) * mm , bottomPadding=16 * mm, id='landscape_frame', showBoundary=1)
 
     naprs = []
     styleSheet = getSampleStyleSheet()
@@ -547,12 +547,10 @@ def result_print(request):
 
         fwb = []
         if count_direction == 1 and temp_iss.research.size_form == 1:
-            doc.pagesize = landscape(A4)
             if not add_tmpl:
                 doc.addPageTemplates([landscape_tmpl, portrait_tmpl])
                 add_tmpl = True
         elif count_direction == 1 and temp_iss.research.size_form == 0:
-            doc.pagesize = portrait(A4)
             if not add_tmpl:
                 doc.addPageTemplates([portrait_tmpl, landscape_tmpl])
                 add_tmpl = True
@@ -572,7 +570,6 @@ def result_print(request):
         if not has_paraclinic and date_t == "":
             date_t = maxdate
 
-        # fwb = []
         number_poliklinika = f' ({direction.client.number_poliklinika})' if direction.client.number_poliklinika else ''
         individual_birthday = f'({strdate(direction.client.individual.birthday)})'
         t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col)

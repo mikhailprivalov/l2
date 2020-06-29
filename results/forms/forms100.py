@@ -18,22 +18,6 @@ from io import BytesIO
 def form_01(direction, iss, fwb, doc, leftnone, count_direction, is_different_form):
     # Форма для печати наркозной карты - течения Анестези при операции
 
-    # p_frame = Frame(5 * mm, 30 * mm, 200 * mm, 277 * mm, leftPadding=10 * mm, rightPadding=10 * mm, topPadding=10 * mm, bottomPadding=10 * mm, id='portrait_frame', showBoundary=1)
-    #
-    # l_frame = Frame(0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=20 * mm, rightPadding=10 * mm, topPadding=10 * mm, bottomPadding=10 * mm, id='landscape_frame', showBoundary=1)
-    #
-    # portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4))
-    # landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4))
-    #
-    # # if is_different_form and count_direction > 1:
-    # doc.addPageTemplates(landscape_tmpl)
-    # fwb.append(NextPageTemplate('landscape_tmpl'))
-    # fwb.append(PageBreak())
-
-
-    # size_form = {0: portrait(A4), 1: landscape(A4)}
-    # page_templates = {0: portrait_tmpl, 1: landscape_tmpl}
-
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "FreeSans"
@@ -43,12 +27,6 @@ def form_01(direction, iss, fwb, doc, leftnone, count_direction, is_different_fo
     style_ml.leftIndent = 5 * mm
     styleBold = deepcopy(style)
     styleBold.fontName = "FreeSansBold"
-
-    date, time = '', ''
-    patient_fio = direction.client.individual.fio()
-
-    fwb.append(Paragraph('Наркозная карта', style))
-    fwb.append(Spacer(1, 10 * mm))
 
     txt = ''
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
