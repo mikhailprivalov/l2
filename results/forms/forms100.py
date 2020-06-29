@@ -65,11 +65,14 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                                     temp_record.append(Paragraph('{} {}'.format(time, date), styleBold))
                                 else:
                                     temp_record.append(Paragraph('{}'.format(el), styleBold))
+                            cols_count = len(temp_record)
                         else:
                             temp_record = [Paragraph('{}'.format(el), style) for el in record]
                         opinion.append(temp_record)
+                    cols_width = [15 * mm for i in range(cols_count)]
+                    cols_width[0] = 35 * mm
 
-                    tbl = Table(opinion)
+                    tbl = Table(opinion, repeatRows=1, colWidths=cols_width)
 
                     tbl.setStyle(TableStyle([
                         ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
