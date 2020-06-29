@@ -361,8 +361,8 @@ def result_print(request):
                             rightMargin=12 * mm, topMargin=5 * mm,
                             bottomMargin=16 * mm, allowSplitting=1,
                             title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
-    p_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=16 * mm, id='portrait_frame', showBoundary=1)
-    l_frame = Frame(0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=10 * mm, rightPadding=15 * mm, topPadding=(27 if leftnone else 15) * mm , bottomPadding=16 * mm, id='landscape_frame', showBoundary=1)
+    p_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=16 * mm, id='portrait_frame', showBoundary=0)
+    l_frame = Frame(0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=10 * mm, rightPadding=15 * mm, topPadding=(27 if leftnone else 15) * mm , bottomPadding=16 * mm, id='landscape_frame', showBoundary=0)
 
     naprs = []
     styleSheet = getSampleStyleSheet()
