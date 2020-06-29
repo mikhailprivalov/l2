@@ -357,12 +357,6 @@ def result_print(request):
     leftnone = request.GET.get("leftnone", "0") == "0"
     hosp = request.GET.get("hosp", "0") == "1"
 
-    # doc = SimpleDocTemplate(buffer, pagesize=A4,
-    #                         leftMargin=(27 if leftnone else 15) * mm,
-    #                         rightMargin=12 * mm, topMargin=5 * mm,
-    #                         bottomMargin=16 * mm, allowSplitting=1,
-    #                         title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
-
     doc = BaseDocTemplate(buffer, leftMargin=(27 if leftnone else 15) * mm,
                             rightMargin=12 * mm, topMargin=5 * mm,
                             bottomMargin=16 * mm, allowSplitting=1,
