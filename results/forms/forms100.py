@@ -41,12 +41,36 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                 v = v.replace('&lt;/sup&gt;', '</sup>')
 
                 if field_type == 21:
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
                     query_anesthesia = json.dumps({"research_data":{"iss_pk": iss.pk, "field_pk":r.field.pk}})
                     query_obj = HttpRequest()
                     query_obj._body = query_anesthesia
                     query_obj.user = user
                     results = directions_anesthesia_load(query_obj)
-                    res_a = json.loads(results.content.decode('utf-8'))
+                    res_json = json.loads(results.content.decode('utf-8'))
+                    step = 0
+                    opinion = []
+                    for record in res_json['data']:
+                        print(record)
+                        step += 1
+                        if step == 1:
+                            temp_record = [Paragraph('{}'.format(el), styleBold) for el in record]
+                        else:
+                            temp_record = [Paragraph('{}'.format(el), style) for el in record]
+                        opinion.append(temp_record)
+
+                    tbl = Table(opinion)
+
+                    tbl.setStyle(TableStyle([
+                        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ]))
+
+                    fwb.append(tbl)
+                    fwb.append(Spacer(1, 1 * mm))
+                    continue
 
                 if field_type == 1:
                     vv = v.split('-')
