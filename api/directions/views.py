@@ -1177,6 +1177,8 @@ def directions_anesthesia_load(request):
             made_structure('patient_params')
             made_structure('potent_drugs')
             made_structure('narcotic_drugs')
+            for i in tb_data:
+                print(i)
 
     return JsonResponse({'data': tb_data, 'row_category': row_category})
 
