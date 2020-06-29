@@ -1018,7 +1018,7 @@ def result_print(request):
                 if iss.research.is_microbiology:
                     fwb = microbiology_result(iss, fwb, doc)
                 elif form_result:
-                    fwb = form_result(direction, iss, fwb, doc, leftnone, count_direction, is_different_form)
+                    fwb = form_result(direction, iss, fwb, doc, leftnone, request.user)
                 elif not protocol_plain_text:
                     fwb = structure_data_for_result(iss, fwb, doc, leftnone)
                 else:

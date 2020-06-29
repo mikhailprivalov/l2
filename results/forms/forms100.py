@@ -2,20 +2,17 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from copy import deepcopy
-from reportlab.lib.enums import TA_JUSTIFY
+from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER
 import directory.models as directory
 from directions.models import ParaclinicResult
 from utils.dates import normalize_date
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, Image
-from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable, Frame, PageTemplate, NextPageTemplate, SimpleDocTemplate, FrameBreak
-from reportlab.lib.pagesizes import A4, landscape, portrait
-import datetime
-from appconf.manager import SettingManager
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
+from api.directions.views import directions_anesthesia_load
 import simplejson as json
-from io import BytesIO
+from django.http import HttpRequest
 
 
-def form_01(direction, iss, fwb, doc, leftnone, count_direction, is_different_form):
+def form_01(direction, iss, fwb, doc, leftnone, user=None):
     # Форма для печати наркозной карты - течения Анестези при операции
 
     styleSheet = getSampleStyleSheet()
@@ -43,6 +40,14 @@ def form_01(direction, iss, fwb, doc, leftnone, count_direction, is_different_fo
                 v = v.replace('&lt;sup&gt;', '<sup>')
                 v = v.replace('&lt;/sup&gt;', '</sup>')
 
+                if field_type == 21:
+                    query_anesthesia = json.dumps({"research_data":{"iss_pk": iss.pk, "field_pk":r.field.pk}})
+                    query_obj = HttpRequest()
+                    query_obj._body = query_anesthesia
+                    query_obj.user = user
+                    results = directions_anesthesia_load(query_obj)
+                    res_a = json.loads(results.content.decode('utf-8'))
+
                 if field_type == 1:
                     vv = v.split('-')
                     if len(vv) == 3:
@@ -62,10 +67,6 @@ def form_01(direction, iss, fwb, doc, leftnone, count_direction, is_different_fo
                 txt += " "
 
     fwb.append(Paragraph(txt, style))
-
-    # doc.addPageTemplates(portrait_tmpl)
-    # fwb.append(NextPageTemplate('portrait_tmpl'))
-    # fwb.append(FrameBreak())
 
     return fwb
 
