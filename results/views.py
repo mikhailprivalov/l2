@@ -515,14 +515,14 @@ def result_print(request):
         current_size_form = None
         temp_iss = None
 
-        def mark_pages(canvas, doc):
-            canvas.saveState()
-            canvas.setFont('FreeSansBold', 8)
-            canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-            canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), num_card, number_poliklinika))
-            canvas.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-            canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
-            canvas.restoreState()
+        def mark_pages(canvas_mark, doc, ):
+            canvas_mark.saveState()
+            canvas_mark.setFont('FreeSansBold', 8)
+            canvas_mark.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
+            canvas_mark.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), num_card, number_poliklinika))
+            canvas_mark.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
+            canvas_mark.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
+            canvas_mark.restoreState()
 
         portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=mark_pages)
         landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=mark_pages)
