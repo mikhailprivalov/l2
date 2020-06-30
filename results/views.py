@@ -567,7 +567,8 @@ def result_print(request):
                 doc.addPageTemplates([portrait_tmpl, landscape_tmpl])
                 add_tmpl = True
 
-        if is_different_form and count_direction > 1:
+        # if is_different_form and count_direction > 1:
+        if count_direction > 1 and change_page_format:
             if temp_iss.research.size_form == 1:
                 fwb.append(NextPageTemplate('landscape_tmpl'))
                 fwb.append(PageBreak())
