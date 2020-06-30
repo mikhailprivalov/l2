@@ -478,14 +478,11 @@ def result_print(request):
         hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
         break
 
-    dirs = Napravleniya.objects \
-        .filter(pk__in=pk) \
-        .select_related('client') \
-        .prefetch_related(
-        Prefetch('issledovaniya_set', queryset=Issledovaniya.objects.filter(time_save__isnull=False).select_related('research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'))
-    ) \
-        .annotate(results_count=Count('issledovaniya__result')) \
-        .distinct()
+    dirs = Napravleniya.objects.filter(pk__in=pk).\
+        select_related('client').\
+        prefetch_related(Prefetch('issledovaniya_set', queryset=Issledovaniya.objects.filter(time_save__isnull=False).
+                                  select_related('research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'))).\
+        annotate(results_count=Count('issledovaniya__result')).distinct()
 
     count_direction = 0
     previous_size_form = None
