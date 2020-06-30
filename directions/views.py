@@ -455,6 +455,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
                 -4: 'Стоматология',
                 -5: 'Стационар',
                 -6: 'Микробиология',
+                -9998: 'Морфология',
             }[rtp]
             # if rtp == -6:
             #     has_micro = True

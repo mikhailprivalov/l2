@@ -518,7 +518,9 @@ def directions_services(request):
         n = dn[0]
         if Issledovaniya.objects.filter(
             Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True) | Q(
-                research__is_microbiology=True)).exists():
+                research__is_microbiology=True) | Q(
+                research__is_citology=True) | Q(
+                research__is_gistology=True)).exists():
             cdid, ctime, ctp, rt = get_reset_time_vars(n)
 
             response["ok"] = True
@@ -528,7 +530,9 @@ def directions_services(request):
             receive_datetime = None
             for i in Issledovaniya.objects.filter(napravleniye=n).filter(
                 Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True) | Q(
-                    research__is_microbiology=True)).distinct():
+                    research__is_microbiology=True) | Q(
+                    research__is_citology=True) | Q(
+                    research__is_gistology=True)).distinct():
                 researches.append({"title": i.research.title,
                                    "department": ""
                                    if not i.research.podrazdeleniye
@@ -886,7 +890,7 @@ def directions_paraclinic_form(request):
                 queryset=(
                     Issledovaniya.objects.all() if force_form else Issledovaniya.objects.filter(Q(research__is_paraclinic=True, **add_fr) | Q(research__is_doc_refferal=True)
                                                                                                 | Q(research__is_treatment=True) | Q(research__is_stom=True) | Q(
-                        research__is_microbiology=True))
+                        research__is_microbiology=True) | Q(research__is_citology=True) | Q(research__is_gistology=True))
                 ).select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')
                 .prefetch_related(
                     Prefetch(
@@ -947,7 +951,7 @@ def directions_paraclinic_form(request):
             for i in df:
                 if i.research.is_doc_refferal:
                     response["has_doc_referral"] = True
-                if i.research.is_paraclinic:
+                if i.research.is_paraclinic or i.research.is_citology or i.research.is_gistology:
                     response["has_paraclinic"] = True
                 if i.research.is_microbiology and not response["has_microbiology"]:
                     response["has_microbiology"] = True
@@ -966,7 +970,7 @@ def directions_paraclinic_form(request):
                     "research": {
                         "title": i.research.title,
                         "version": i.pk * 10000,
-                        "is_paraclinic": i.research.is_paraclinic,
+                        "is_paraclinic": i.research.is_paraclinic or i.research.is_citology or i.research.is_gistology,
                         "is_doc_refferal": i.research.is_doc_refferal,
                         "is_microbiology": i.research.is_microbiology,
                         "is_treatment": i.research.is_treatment,

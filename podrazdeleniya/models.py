@@ -11,6 +11,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     STOM = 6
     HOSP = 7
     MICROBIOLOGY = 8
+    MORFOLOGY = 10000  # Не добавлять в типы
 
     TYPES = (
         (HIDDEN, "Скрыто"),
