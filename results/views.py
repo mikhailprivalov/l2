@@ -54,7 +54,6 @@ from utils.pagenum import PageNumCanvas
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result
 from django.utils.module_loading import import_string
 
-
 pdfmetrics.registerFont(TTFont('FreeSans', os.path.join(FONTS_FOLDER, 'FreeSans.ttf')))
 pdfmetrics.registerFont(TTFont('FreeSansBold', os.path.join(FONTS_FOLDER, 'FreeSansBold.ttf')))
 pdfmetrics.registerFont(TTFont('OpenSansItalic', os.path.join(FONTS_FOLDER, 'OpenSans-Italic.ttf')))
@@ -358,12 +357,14 @@ def result_print(request):
     hosp = request.GET.get("hosp", "0") == "1"
 
     doc = BaseDocTemplate(buffer, leftMargin=(27 if leftnone else 15) * mm,
-                            rightMargin=12 * mm, topMargin=5 * mm,
-                            bottomMargin=16 * mm, allowSplitting=1,
-                            _pageBreakQuick=1,
-                            title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
-    p_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=16 * mm, id='portrait_frame', showBoundary=0)
-    l_frame = Frame(0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=10 * mm, rightPadding=15 * mm, topPadding=(27 if leftnone else 15) * mm , bottomPadding=16 * mm, id='landscape_frame', showBoundary=0)
+                          rightMargin=12 * mm, topMargin=5 * mm,
+                          bottomMargin=16 * mm, allowSplitting=1,
+                          _pageBreakQuick=1,
+                          title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
+    p_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=16 * mm, id='portrait_frame',
+                    showBoundary=0)
+    l_frame = Frame(0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=10 * mm, rightPadding=15 * mm, topPadding=(27 if leftnone else 15) * mm, bottomPadding=16 * mm, id='landscape_frame',
+                    showBoundary=0)
 
     naprs = []
     styleSheet = getSampleStyleSheet()
@@ -478,13 +479,13 @@ def result_print(request):
         hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
         break
 
-    dirs = Napravleniya.objects\
-        .filter(pk__in=pk)\
-        .select_related('client')\
+    dirs = Napravleniya.objects \
+        .filter(pk__in=pk) \
+        .select_related('client') \
         .prefetch_related(
-            Prefetch('issledovaniya_set', queryset=Issledovaniya.objects.filter(time_save__isnull=False).select_related('research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'))
-        )\
-        .annotate(results_count=Count('issledovaniya__result'))\
+        Prefetch('issledovaniya_set', queryset=Issledovaniya.objects.filter(time_save__isnull=False).select_related('research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'))
+    ) \
+        .annotate(results_count=Count('issledovaniya__result')) \
         .distinct()
 
     count_direction = 0
@@ -513,7 +514,8 @@ def result_print(request):
         current_size_form = None
         temp_iss = None
 
-        local_mark_pages = lambda c, _: mark_pages(c, direction)
+        def local_mark_pages(c, _):
+            mark_pages(c, direction)
 
         portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
         landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)
