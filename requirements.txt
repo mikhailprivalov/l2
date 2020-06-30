@@ -2,7 +2,7 @@ appdirs==1.4.3
 astm==0.5.0
 attrs==19.3.0
 autopep8==1.5
-bleach==3.1.4
+bleach==3.1.5
 cached-property==1.5.1
 certifi==2019.11.28
 chardet==3.0.4
