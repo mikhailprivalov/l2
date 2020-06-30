@@ -30,7 +30,7 @@
     "tiptap-extensions": "^1.28.6",
     "transform-runtime": "0.0.0",
     "v-tooltip": "^2.0.3",
-    "vue": "^2.5.16",
+    "vue": "^2.6.11",
     "vue-apexcharts": "^1.5.2",
     "vue-autosize": "^1.0.2",
     "vue-full-loading": "^1.2.1",
@@ -86,7 +86,7 @@
     "node-sass": "^4.13.1",
     "sass-loader": "^7.3.1",
     "vue-loader": "^13.7.1",
-    "vue-template-compiler": "^2.5.16",
+    "vue-template-compiler": "^2.6.11",
     "webpack": "^3.12.0",
     "webpack-bundle-analyzer": "^3.7.0",
     "webpack-dev-server": "^3.11.0"
