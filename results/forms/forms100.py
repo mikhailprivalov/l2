@@ -2,7 +2,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from copy import deepcopy
-from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER
+from reportlab.lib.enums import TA_JUSTIFY
 import directory.models as directory
 from directions.models import ParaclinicResult
 from utils.dates import normalize_date
@@ -46,7 +46,7 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                 if field_type == 21:
                     fwb.append(Paragraph(txt, style))
                     txt = ''
-                    query_anesthesia = json.dumps({"research_data":{"iss_pk": iss.pk, "field_pk":r.field.pk}})
+                    query_anesthesia = json.dumps({"research_data": {"iss_pk": iss.pk, "field_pk": r.field.pk}})
                     query_obj = HttpRequest()
                     query_obj._body = query_anesthesia
                     query_obj.user = user
@@ -67,7 +67,6 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                     cols_width = [13 * mm for i in range(cols_count)]
                     cols_width[0] = 35 * mm
                     cols_width[-1] = 15 * mm
-
 
                     tbl = Table(opinion, repeatRows=1, colWidths=cols_width, hAlign='LEFT')
 
