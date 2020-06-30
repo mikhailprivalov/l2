@@ -1177,8 +1177,6 @@ def directions_anesthesia_load(request):
             made_structure('patient_params')
             made_structure('potent_drugs')
             made_structure('narcotic_drugs')
-            for i in tb_data:
-                print(i)
 
     return JsonResponse({'data': tb_data, 'row_category': row_category})
 
@@ -1247,6 +1245,8 @@ def directions_paraclinic_result(request):
                 if not ParaclinicInputField.objects.filter(pk=field["pk"]).exists():
                     continue
                 f = ParaclinicInputField.objects.get(pk=field["pk"])
+                if f.field_type == 21:
+                    continue
                 if not ParaclinicResult.objects.filter(issledovaniye=iss, field=f).exists():
                     f_result = ParaclinicResult(issledovaniye=iss, field=f, value="")
                 else:
