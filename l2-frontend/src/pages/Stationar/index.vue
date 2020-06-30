@@ -28,6 +28,9 @@
               форма 003/у
             </a>
           </div>
+          <div class="inner-card" v-if="!every">
+            <Favorite :direction="direction" />
+          </div>
           <div class="inner-card" v-else>
             {{issTitle}}
           </div>
@@ -434,10 +437,12 @@
   import patients_point from '../../api/patients-point'
   import UrlData from '../../UrlData'
   import AmbulatoryData from '../../modals/AmbulatoryData'
+  import Favorite from "./Favorite";
 
   export default {
     mixins: [menuMixin],
     components: {
+      Favorite,
       dropdown,
       DisplayDirection,
       DescriptiveForm,

@@ -21,7 +21,7 @@ from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
 from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult, Recipe, MethodsOfTaking, \
     ExternalOrganization, MicrobiologyResultCulture, \
-    MicrobiologyResultCultureAntibiotic
+    MicrobiologyResultCultureAntibiotic, DirectionToUserWatch
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
 from laboratory import utils
@@ -32,6 +32,7 @@ from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
+from users.models import DoctorProfile
 from utils.dates import normalize_date
 from utils.dates import try_parse_range
 from .sql_func import get_history_dir
@@ -1654,3 +1655,22 @@ def external_organizations(request):
             "title": e.title,
         })
     return JsonResponse({"organizations": result})
+
+
+@login_required
+def direction_in_favorites(request):
+    request_data = json.loads(request.body)
+    pk = request_data['pk']
+    doc: DoctorProfile = request.user.doctorprofile
+
+    is_update = request_data.get("update", False)
+    if is_update and 'status' in request_data:
+        new_status = request_data.get("status", False)
+        if not new_status:
+            DirectionToUserWatch.objects.filter(doc=doc, direction_id=pk).delete()
+        else:
+            DirectionToUserWatch(doc=doc, direction_id=pk).save()
+        return JsonResponse({"ok": True})
+
+    dtuw = DirectionToUserWatch.objects.filter(doc=doc, direction_id=pk)
+    return JsonResponse({"status": dtuw.exists()})
