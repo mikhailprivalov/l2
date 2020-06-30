@@ -471,7 +471,6 @@ def result_print(request):
 
     client_prev = -1
     link_result = []
-    fwb = []
     hosp_nums_obj = hosp_get_hosp_direction(pk[0])
     hosp_nums = ''
     for i in hosp_nums_obj:
@@ -485,7 +484,6 @@ def result_print(request):
         annotate(results_count=Count('issledovaniya__result')).distinct()
 
     count_direction = 0
-    previous_size_form = None
     add_tmpl = False
     change_page_format = False
     sets_for_size_form = set()
@@ -509,7 +507,6 @@ def result_print(request):
         has_paraclinic = False
         link_files = False
         is_extract = False
-        current_size_form = None
         temp_iss = None
 
         def mark_pages(canvas_mark, doc, ):
@@ -541,20 +538,12 @@ def result_print(request):
                 link_files = True
             if 'выпис' in iss.research.title.lower():
                 is_extract = True
-            current_size_form = iss.research.size_form
             temp_iss = iss
 
         if link_files:
             continue
 
         count_direction += 1
-
-        if previous_size_form == current_size_form:
-            is_different_form = False
-        else:
-            is_different_form = True
-        previous_size_form = current_size_form
-
         if not change_page_format:
             fwb = []
 
@@ -567,7 +556,6 @@ def result_print(request):
                 doc.addPageTemplates([portrait_tmpl, landscape_tmpl])
                 add_tmpl = True
 
-        # if is_different_form and count_direction > 1:
         if count_direction > 1 and change_page_format:
             if temp_iss.research.size_form == 1:
                 fwb.append(NextPageTemplate('landscape_tmpl'))
