@@ -201,7 +201,7 @@ def text_iss_to_pdf(data, solid_text=False):
                 tmp_fields = ''
                 for field in fields:
                     title_field = field['title_field']
-                    value_field = field['value']
+                    value_field = field['value'].replace('<', '&lt;').replace('>', '&gt;')
                     tmp_fields = f'{tmp_fields} {title_field}: {value_field}'
                 group_titles = f'{group_titles} - {tmp_fields}'
             result_dates = f'{result_dates} {group_titles}'

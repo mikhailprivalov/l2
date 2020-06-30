@@ -406,18 +406,18 @@ def forbidden_edit_dir(num_dir):
     if hosp_extract and hosp_extract[0].get('date_confirm'):
         return True
 
-    if not hosp_extract or not hosp_extract[0].get('date_confirm'):
-        # Проверить подтверждение переводного эпикриза
-        # Получить hosp_dir для текужего направления
-        current_iss = Issledovaniya.objects.get(napravleniye_id=num_dir)
-        current_dir_hosp_dir = num_dir
-        if not current_iss.research.is_hospital:
-            current_dir_hosp_dir = hosp_get_curent_hosp_dir(current_iss.pk)
-        # получить для текущего hosp_dir эпикриз с title - перевод.....
-        epicrisis_data = hosp_get_data_direction(current_dir_hosp_dir, site_type=6, type_service='None', level=2)
-        if epicrisis_data:
-            result_check = check_transfer_epicrisis(epicrisis_data)
-            return result_check['is_transfer']
+    # if not hosp_extract or not hosp_extract[0].get('date_confirm'):
+    #     # Проверить подтверждение переводного эпикриза
+    #     # Получить hosp_dir для текужего направления
+    #     current_iss = Issledovaniya.objects.get(napravleniye_id=num_dir)
+    #     current_dir_hosp_dir = num_dir
+    #     if not current_iss.research.is_hospital:
+    #         current_dir_hosp_dir = hosp_get_curent_hosp_dir(current_iss.pk)
+    #     # получить для текущего hosp_dir эпикриз с title - перевод.....
+    #     epicrisis_data = hosp_get_data_direction(current_dir_hosp_dir, site_type=6, type_service='None', level=2)
+    #     if epicrisis_data:
+    #         result_check = check_transfer_epicrisis(epicrisis_data)
+    #         return result_check['is_transfer']
     return False
 
 

@@ -126,6 +126,11 @@ class Researches(models.Model):
         (2, '2 со-исполнителя'),
     )
 
+    TYPE_SIZE_FORM = (
+        (0, 'По умолчанию'),
+        (1, 'Альбомный А4'),
+    )
+
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления', on_delete=models.SET_NULL)
     title = models.CharField(max_length=255, default="", help_text='Название исследования')
     short_title = models.CharField(max_length=255, default='', blank=True)
@@ -162,6 +167,7 @@ class Researches(models.Model):
     not_grouping = models.BooleanField(default=False, blank=True, help_text="Нельзя группировать в направления?")
     direction_form = models.IntegerField(default=0, blank=True, choices=DIRECTION_FORMS, help_text="Форма направления")
     result_form = models.IntegerField(default=0, blank=True, choices=RESULT_FORMS, help_text="Форма результат")
+    size_form = models.IntegerField(default=0, blank=True, choices=TYPE_SIZE_FORM, help_text="Размеры формы результат")
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
     is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием")

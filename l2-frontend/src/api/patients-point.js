@@ -24,15 +24,23 @@ const updateWIA = creator({url: 'patients/individuals/update-wia'}, {})
 
 const syncRmis = creator({url: 'patients/individuals/sync-rmis'}, {})
 
+const syncTfoms = creator({url: 'patients/individuals/sync-tfoms'}, {})
+
 const loadDreg = creator({url: 'patients/individuals/load-dreg'}, {})
 
 const loadVaccine = creator({url: 'patients/individuals/load-vaccine'}, {})
+
+const loadAmbulatoryData = creator({url: 'patients/individuals/load-ambulatory-data'}, {})
+
+const loadAmbulatoryHistory = creator({url: 'patients/individuals/load-ambulatory-history'}, {})
 
 const loadBenefit = creator({url: 'patients/individuals/load-benefit'}, {})
 
 const loadDregDetail = creator({url: 'patients/individuals/load-dreg-detail'}, {})
 
 const loadVaccineDetail = creator({url: 'patients/individuals/load-vaccine-detail'}, {})
+
+const loadAmbulatoryDataDetail = creator({url: 'patients/individuals/load-ambulatorydata-detail'}, {})
 
 const loadBenefitDetail = creator({url: 'patients/individuals/load-benefit-detail'}, {})
 
@@ -44,11 +52,13 @@ const saveDreg = creator({url: 'patients/individuals/save-dreg'}, {})
 
 const saveVaccine = creator({url: 'patients/individuals/save-vaccine'}, {})
 
+const saveAmbulatoryData = creator({url: 'patients/individuals/save-ambulatory-data'}, {})
+
 const saveBenefit = creator({url: 'patients/individuals/save-benefit'}, {})
 
 export default {
-  searchCard, searchIndividual, searchL2Card, syncRmis,
+  searchCard, searchIndividual, searchL2Card, syncRmis, syncTfoms,
   getCard, sendCard, individualsSearch, individualSex, editDoc, updateCdu, updateWIA,
   editAgent, loadAnamnesis, saveAnamnesis, loadDreg, loadVaccine, saveDreg, saveVaccine, loadDregDetail, loadVaccineDetail,
-  loadBenefit, loadBenefitDetail, saveBenefit,
+  loadBenefit, loadBenefitDetail, saveBenefit, saveAmbulatoryData, loadAmbulatoryData, loadAmbulatoryDataDetail, loadAmbulatoryHistory
 }

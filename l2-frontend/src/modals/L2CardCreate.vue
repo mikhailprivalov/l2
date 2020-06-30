@@ -59,12 +59,23 @@
           </label>
         </div>
         <div class="col-xs-6">
-          <div class="info-row">
-            Найдено физлиц: {{individuals.length}}
+          <div class="info-row" v-if="loading">
+            Поиск пациентов в L2<template v-if="l2_tfoms"> и в ТФОМС</template>...
+          </div>
+          <div class="info-row" v-else>
+            Найдено физлиц в L2<template v-if="l2_tfoms"> и ТФОМС</template>: {{individuals.length}}
+          </div>
+        </div>
+        <div class="col-xs-12"
+             v-if="!card.new_individual && individuals.map(i => i.l2_cards.length).reduce((a, b) => a + b, 0) > 0">
+          <div class="alert-warning" style="padding: 10px">
+            <strong>Внимание:</strong> найдены существующие карты или созданы автоматически.<br />
+            Выберите подходящую, нажав на номер карты или продолжайте создание новой при необходимости
+            или не совпадении физ. лиц
           </div>
         </div>
         <div class="col-xs-12" v-if="!card.new_individual && individuals.length > 0">
-          <div @click="select_individual(card.individual)" class="info-row individual" v-for="i in individuals">
+          <div @click="select_individual(i.pk)" class="info-row individual" v-for="i in individuals">
             <input :checked="i.pk === card.individual" type="checkbox"/> {{i.fio}}<br/>
             <table class="table table-bordered table-condensed">
               <thead>
@@ -83,7 +94,12 @@
               <tr v-if="i.l2_cards.length > 0">
                 <th>Активные карты L2</th>
                 <td colspan="2">
-                  <div v-for="c in i.l2_cards"><strong>{{c}}</strong></div>
+                  <div v-for="c in i.l2_cards">
+                    <a :href="`/mainmenu/directions?card_pk=${c.pk}&base_pk=${base_pk}&open_edit=true`" class="a-under c-pointer"
+                        title="Открыть существующую карту" v-tippy>
+                      <strong>{{c.number}}</strong>
+                    </a>
+                  </div>
                 </td>
               </tr>
               </tbody>
@@ -92,7 +108,15 @@
         </div>
       </div>
       <div class="row" v-else>
-        <div class="col-xs-12">
+        <div class="col-xs-6" v-if="l2_tfoms">
+          <div class="info-row">
+            <template v-if="card.tfoms_idp">Есть связь с ТФОМС</template>
+            <template v-else>Не связано с ТФОМС</template>
+            <template v-if="time_tfoms_last_sync">({{time_tfoms_last_sync}})</template>
+            <a href="#" class="a-under" @click.prevent="sync_tfoms" tabindex="-1">сверка</a>
+          </div>
+        </div>
+        <div class="col-xs-6 text-right">
           <div class="info-row">
             Связь с РМИС – {{card.has_rmis_card ? 'ЕСТЬ' : 'НЕТ'}}
             <strong v-if="card.has_rmis_card">{{card.rmis_uid}}</strong>
@@ -232,7 +256,7 @@
             </td>
             <td>
               <a @click.prevent="edit_document(d.id)" href="#" v-if="!d.from_rmis"><i class="fa fa-pencil"></i></a>
-              <span v-else>РМИС</span>
+              <span v-else>импорт</span>
             </td>
           </tr>
           <tr>
@@ -514,8 +538,18 @@
   }
 
   function capitalizeFirstLetter(string) {
-    string = SwapLayouts(string)
-    return (string.charAt(0).toUpperCase() + string.slice(1)).trim()
+    string = SwapLayouts(string).replace(/  +/g, ' ');
+    const r = []
+    for (const s of string.split(' ')) {
+      let v = [];
+
+      for (const si of s.split('-')) {
+        v.push(si.charAt(0).toUpperCase() + si.slice(1).toLowerCase())
+      }
+
+      r.push(v.join('-'))
+    }
+    return r.join(' ').trim();
   }
 
   function SwapLayouts(str) {
@@ -606,6 +640,8 @@
           agent_pk: null,
           phone: '',
           harmful: '',
+          tfoms_idp: null,
+          time_tfoms_last_sync: null,
         },
         individuals: [],
         document_to_edit: -2,
@@ -616,6 +652,7 @@
         agent_card_selected: null,
         agent_doc: '',
         agent_clear: false,
+        loading: false,
       }
     },
     created() {
@@ -629,12 +666,17 @@
       const {f, n, pn, ar, af} = this.$refs;
       setTimeout(() => {
         for (const r of [f, n, pn, ar, af]) {
-          const inp = $('input', r.$el);
+          if (r) {
+            const inp = $('input', r.$el);
             inp.attr('autocomplete', 'new-password')
+          }
         }
       }, 100);
     },
     computed: {
+      l2_tfoms() {
+        return this.$store.getters.modules.l2_tfoms
+      },
       doc_edit_type_title() {
         const t = this.document.document_type;
         if (!t)
@@ -667,6 +709,12 @@
       },
       sex() {
         return this.card.sex
+      },
+      new_individual() {
+        return this.card.new_individual
+      },
+      time_tfoms_last_sync() {
+        return this.card.time_tfoms_last_sync && moment(this.card.time_tfoms_last_sync).format('HH:mm DD.MM.YY');
       },
       valid() {
         if (!this.card.family || !this.card.name || !this.card.birthday) {
@@ -730,6 +778,9 @@
       birthday() {
         this.individuals_search()
       },
+      new_individual() {
+        this.individuals_search()
+      },
       individuals: {
         deep: true,
         handler(nv) {
@@ -791,24 +842,30 @@
         if (hide_after) {
           this.hide_modal()
         }
+        this.update_card(hide_after, data);
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      },
+      update_card(hide_after=false, data=null) {
+        if (this.card_pk < 0) {
+          return
+        }
         this.$root.$emit('select_card', {
-          card_pk: data.card_pk,
+          card_pk: data ? data.card_pk : this.card_pk,
           base_pk: this.base_pk,
           hide: hide_after,
         })
-        await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async update_cdu(doc) {
         await this.$store.dispatch(action_types.INC_LOADING)
         await patients_point.updateCdu({card_pk: this.card_pk, doc})
-        this.load_data();
+        await this.load_data();
         okmessage('Изменения сохранены');
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async update_wia(key) {
         await this.$store.dispatch(action_types.INC_LOADING)
         await patients_point.updateWIA({card_pk: this.card_pk, key})
-        this.load_data();
+        await this.load_data();
         okmessage('Изменения сохранены');
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
@@ -821,7 +878,19 @@
       async sync_rmis() {
         await this.$store.dispatch(action_types.INC_LOADING)
         await patients_point.syncRmis(this, 'card_pk')
-        this.load_data();
+        await this.load_data();
+        this.update_card();
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      },
+      async sync_tfoms() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const {updated} = await patients_point.syncTfoms(this, 'card_pk')
+        await this.load_data();
+        this.update_card();
+        okmessage('Сверка проведена');
+        if (updated && updated.length > 0) {
+          okmessage('Обновлены данные', updated.join(', '));
+        }
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       getResponse(resp) {
@@ -852,27 +921,38 @@
       highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
       load_data() {
         if (this.card_pk === -1) {
-          return;
+          return Promise.resolve({});
         }
         this.loaded = false
         this.$store.dispatch(action_types.INC_LOADING)
-        patients_point.getCard(this, 'card_pk').then(data => {
+        return patients_point.getCard(this, 'card_pk').then(data => {
           this.card = data
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING)
           this.loaded = true
         })
       },
-      individuals_search() {
-        if (!this.valid) {
+      individuals_search: _.debounce(function() { this.individuals_search_main() }, 500),
+      async individuals_search_main() {
+        if (!this.valid || this.card_pk !== -1 ||
+            this.card.family === '' || this.card.name === '' || this.card.new_individual) {
           return
         }
-        patients_point.individualsSearch(this.card, ['family', 'name', 'patronymic', 'birthday', 'sex'])
-          .then(({result}) => {
-            this.individuals = result
-            this.card.individual = result.length === 0 ? -1 : result[0].pk
-            this.card.new_individual = result.length === 0
-          })
+
+        this.loading = true;
+
+        const {
+          result, forced_gender
+        } = await patients_point.individualsSearch(this.card, ['family', 'name', 'patronymic', 'birthday'])
+
+        this.individuals = result
+        this.card.individual = result.length === 0 ? -1 : result[0].pk
+        this.card.new_individual = result.length === 0
+        if (forced_gender) {
+          this.card.sex = forced_gender;
+        }
+
+        this.loading = false;
       },
       individual_sex(t, v) {
         if (this.card_pk >= 0) {
@@ -921,7 +1001,7 @@
             type: this.document.document_type,
             individual_pk: this.card.individual,
           })
-        this.load_data();
+        await this.load_data();
         this.document = {
           number: ''
         };
@@ -940,7 +1020,7 @@
           doc: this.agent_doc,
           clear: this.agent_clear,
         })
-        this.load_data();
+        await this.load_data();
         this.hide_modal_agent_edit();
         await this.$store.dispatch(action_types.DEC_LOADING)
       }
@@ -1098,5 +1178,11 @@
   .lst {
     margin: 0;
     line-height: 1;
+  }
+
+  .c-pointer {
+    &, & strong, &:hover {
+      cursor: pointer!important;
+    }
   }
 </style>

@@ -1249,6 +1249,8 @@ def directions_paraclinic_result(request):
                 if not ParaclinicInputField.objects.filter(pk=field["pk"]).exists():
                     continue
                 f = ParaclinicInputField.objects.get(pk=field["pk"])
+                if f.field_type == 21:
+                    continue
                 if not ParaclinicResult.objects.filter(issledovaniye=iss, field=f).exists():
                     f_result = ParaclinicResult(issledovaniye=iss, field=f, value="")
                 else:
