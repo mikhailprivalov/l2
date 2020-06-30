@@ -549,12 +549,11 @@ def result_print(request):
         previous_size_form = current_size_form
 
         fwb = []
-        if count_direction == 1 and temp_iss.research.size_form == 1:
-            if not add_tmpl:
+        if not add_tmpl:
+            if count_direction == 1 and temp_iss.research.size_form == 1:
                 doc.addPageTemplates([landscape_tmpl, portrait_tmpl])
                 add_tmpl = True
-        elif count_direction == 1 and temp_iss.research.size_form == 0:
-            if not add_tmpl:
+            elif count_direction == 1 and temp_iss.research.size_form == 0:
                 doc.addPageTemplates([portrait_tmpl, landscape_tmpl])
                 add_tmpl = True
 
