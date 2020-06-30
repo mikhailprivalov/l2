@@ -487,7 +487,7 @@ def result_print(request):
 
     count_direction = 0
     previous_size_form = None
-    add_tmpl = False
+    is_page_template_set = False
 
     def mark_pages(canvas_mark, direction: Napravleniya):
         canvas_mark.saveState()
@@ -549,13 +549,13 @@ def result_print(request):
         previous_size_form = current_size_form
 
         fwb = []
-        if not add_tmpl:
+        if not is_page_template_set:
             if count_direction == 1 and temp_iss.research.size_form == 1:
                 doc.addPageTemplates([landscape_tmpl, portrait_tmpl])
-                add_tmpl = True
+                is_page_template_set = True
             elif count_direction == 1 and temp_iss.research.size_form == 0:
                 doc.addPageTemplates([portrait_tmpl, landscape_tmpl])
-                add_tmpl = True
+                is_page_template_set = True
 
         if is_different_form:
             if temp_iss.research.size_form == 1:
