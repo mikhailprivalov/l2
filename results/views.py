@@ -490,6 +490,16 @@ def result_print(request):
     count_direction = 0
     previous_size_form = None
     add_tmpl = False
+
+    def mark_pages(canvas_mark, direction: Napravleniya):
+        canvas_mark.saveState()
+        canvas_mark.setFont('FreeSansBold', 8)
+        canvas_mark.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
+        canvas_mark.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
+        canvas_mark.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
+        canvas_mark.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
+        canvas_mark.restoreState()
+
     for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
         dpk = direction.pk
 
@@ -503,17 +513,10 @@ def result_print(request):
         current_size_form = None
         temp_iss = None
 
-        def mark_pages(canvas, doc):
-            canvas.saveState()
-            canvas.setFont('FreeSansBold', 8)
-            canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-            canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), num_card, number_poliklinika))
-            canvas.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-            canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
-            canvas.restoreState()
+        local_mark_pages = lambda c, _: mark_pages(c, direction)
 
-        portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=mark_pages)
-        landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=mark_pages)
+        portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
+        landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)
 
         for iss in direction.issledovaniya_set.all():
             if iss.time_save:
@@ -1109,7 +1112,7 @@ def result_print(request):
 
                     fwb.append(Spacer(1, 2.5 * mm))
 
-        if client_prev == direction.client.individual_id and not split:
+        if client_prev == direction.client.individual_id and not split and not is_different_form:
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
         elif client_prev > -1:
             naprs.append(PageBreak())
