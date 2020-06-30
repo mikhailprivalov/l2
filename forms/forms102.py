@@ -287,6 +287,8 @@ def form_01(request_data):
             body_paragraphs = data['body_paragraphs']
             org_contacts = data['org_contacts']
             executor = data['executor']
+    else:
+        executor = None
 
     if contract_from_file:
         objs.append(Paragraph('{}'.format(contract_header), style))
