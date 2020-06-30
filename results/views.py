@@ -558,7 +558,6 @@ def result_print(request):
         previous_size_form = current_size_form
 
         if not change_page_format:
-            print('not not')
             fwb = []
 
         if count_direction == 1 and temp_iss.research.size_form == 1:
@@ -1133,7 +1132,6 @@ def result_print(request):
             continue
 
         if not change_page_format:
-            print('keep')
             naprs.append(KeepTogether(fwb))
 
         client_prev = direction.client.individual_id
