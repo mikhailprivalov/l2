@@ -33,7 +33,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Image
 from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable, Frame, PageTemplate, NextPageTemplate, BaseDocTemplate
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreakIfNotEmpty
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.platypus.flowables import HRFlowable
 
 import directory.models as directory
@@ -556,15 +556,13 @@ def result_print(request):
                 doc.addPageTemplates([portrait_tmpl, landscape_tmpl])
                 add_tmpl = True
 
-        if is_different_form and count_direction > 1:
+        if is_different_form:
             if temp_iss.research.size_form == 1:
-                fwb.append(NextPageTemplate('landscape_tmpl'))
-                # fwb.append(PageBreak())
-                fwb.append(PageBreakIfNotEmpty())
-            elif temp_iss.research.size_form == 0:
-                fwb.append(NextPageTemplate('portrait_tmpl'))
-                # fwb.append(PageBreak())
-                fwb.append(PageBreakIfNotEmpty())
+                next_tpl = 'landscape_tmpl'
+            else:
+                next_tpl = 'portrait_tmpl'
+
+            naprs.append(NextPageTemplate(next_tpl))
 
         maxdate = ""
         if dates != {}:
@@ -1115,7 +1113,6 @@ def result_print(request):
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
         elif client_prev > -1:
             naprs.append(PageBreak())
-
 
         if len(pk) == 1:
             naprs.append(fwb)
