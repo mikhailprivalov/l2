@@ -471,7 +471,6 @@ def result_print(request):
     client_prev = -1
     link_result = []
     fwb = []
-    document_naprs = []
     hosp_nums_obj = hosp_get_hosp_direction(pk[0])
     hosp_nums = ''
     for i in hosp_nums_obj:
@@ -490,6 +489,18 @@ def result_print(request):
     count_direction = 0
     previous_size_form = None
     add_tmpl = False
+    change_page_format = False
+    sets_for_size_form = set()
+    fwb = []
+    for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
+        if not direction.is_all_confirm():
+            continue
+        for iss in direction.issledovaniya_set.all():
+            sets_for_size_form.add(iss.research.size_form)
+
+    if len(sets_for_size_form) > 1:
+        change_page_format = True
+
     for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
         dpk = direction.pk
 
@@ -512,8 +523,8 @@ def result_print(request):
             canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
             canvas.restoreState()
 
-        portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4))
-        landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4))
+        portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=mark_pages)
+        landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=mark_pages)
 
         for iss in direction.issledovaniya_set.all():
             if iss.time_save:
@@ -546,7 +557,10 @@ def result_print(request):
             is_different_form = True
         previous_size_form = current_size_form
 
-        fwb = []
+        if not change_page_format:
+            print('not not')
+            fwb = []
+
         if count_direction == 1 and temp_iss.research.size_form == 1:
             if not add_tmpl:
                 doc.addPageTemplates([landscape_tmpl, portrait_tmpl])
@@ -563,7 +577,6 @@ def result_print(request):
             elif temp_iss.research.size_form == 0:
                 fwb.append(NextPageTemplate('portrait_tmpl'))
                 fwb.append(PageBreak())
-
 
         maxdate = ""
         if dates != {}:
@@ -1118,8 +1131,11 @@ def result_print(request):
             naprs.append(fwb)
             client_prev = direction.client.individual_id
             continue
-        naprs.append(KeepTogether(fwb))
-        # naprs.append(fwb)
+
+        if not change_page_format:
+            print('keep')
+            naprs.append(KeepTogether(fwb))
+
         client_prev = direction.client.individual_id
 
     num_card = hosp_nums
@@ -1130,8 +1146,10 @@ def result_print(request):
         doc.build(fwb, canvasmaker=PageNumCanvas)
     elif len(pk) == 1 and not link_result and hosp:
         doc.build(fwb)
-    else:
+    elif not change_page_format:
         doc.build(naprs)
+    else:
+        doc.build(fwb)
 
     if len(link_result) > 0:
         date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
