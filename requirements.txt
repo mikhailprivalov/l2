@@ -38,7 +38,7 @@ ldap3==2.6.1
 lxml==4.4.2
 Markdown==3.2.2
 MarkupSafe==1.1.0
-numpy==1.18.2
+numpy==1.19.0
 openpyxl==3.0.3
 pdfrw==0.4
 pika==1.1.0
