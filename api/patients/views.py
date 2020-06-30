@@ -12,6 +12,7 @@ from django.forms import model_to_dict
 from django.http import JsonResponse
 
 from api import sql_func
+from appconf.manager import SettingManager
 from clients.models import CardBase, Individual, Card, Document, DocumentType, District, AnamnesisHistory, \
     DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones, AmbulatoryData, AmbulatoryDataHistory
 from contracts.models import Company
@@ -19,6 +20,7 @@ from laboratory import settings
 from laboratory.utils import strdate, start_end_year
 from rmis_integration.client import Client
 from slog.models import Log
+from tfoms.integration import match_enp, match_patient
 
 
 def full_patient_search_data(p, query):
@@ -49,16 +51,41 @@ def patients_search_card(request):
     data = []
     d = json.loads(request.body)
     inc_rmis = d.get('inc_rmis')
+    tfoms_module = SettingManager.l2('tfoms')
+    inc_tfoms = d.get('inc_tfoms') and tfoms_module
     card_type = CardBase.objects.get(pk=d['type'])
     query = d['query'].strip()
     p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
-    p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
+    p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.?[0-9]{2}\.?[0-9]{4}))?)?)?$')
+    p_tfoms = re.compile(r'^([А-яЁё\-]+) ([А-яЁё\-]+)( ([А-яЁё\-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$')
     p3 = re.compile(r'^[0-9]{1,15}$')
+    p_enp_re = re.compile(r'^[0-9]{16}$')
+    p_enp = bool(re.search(p_enp_re, query))
     p4 = re.compile(r'card_pk:\d+', flags=re.IGNORECASE)
     p4i = bool(re.search(p4, query.lower()))
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     c = None
-    if not p4i:
+    if p_enp:
+        if tfoms_module:
+            from_tfoms = match_enp(query)
+
+            if from_tfoms:
+                Individual.import_from_tfoms(from_tfoms)
+
+        objects = Individual.objects.filter(
+            document__number=query,
+            document__document_type__title='Полис ОМС'
+        )
+    elif not p4i:
+        if inc_tfoms:
+            t_parts = re.search(p_tfoms, query.lower()).groups()
+            t_bd = "{}-{}-{}".format(t_parts[7], t_parts[6], t_parts[5])
+
+            from_tfoms = match_patient(t_parts[0], t_parts[1], t_parts[2], t_bd)
+
+            for t_row in from_tfoms:
+                Individual.import_from_tfoms(t_row, no_update=True)
+
         if re.search(p, query.lower()):
             initials = query[0:3].upper()
             btday = query[7:11] + "-" + query[5:7] + "-" + query[3:5]
@@ -78,12 +105,22 @@ def patients_search_card(request):
                 objects = []
         elif re.search(p2, query):
             f, n, p, rmis_req, split = full_patient_search_data(p, query)
-            objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
-                                                patronymic__istartswith=p, card__base=card_type)[:10]
-            if len(split) > 3:
+
+            if len(split) > 3 or (len(split) == 3 and split[-1].isdigit()):
+                sbd = split[-1]
+                if len(sbd) == 8:
+                    sbd = "{}.{}.{}".format(sbd[0:2], sbd[2:4], sbd[4:8])
+
+                objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n, card__base=card_type,
+                                                    birthday=datetime.datetime.strptime(sbd, "%d.%m.%Y").date())
+
+                if len(split) > 3:
+                    objects.filter(patronymic__istartswith=p)
+
+                objects = objects[:10]
+            else:
                 objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
-                                                    patronymic__istartswith=p, card__base=card_type,
-                                                    birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())[:10]
+                                                    patronymic__istartswith=p, card__base=card_type)[:10]
 
             if (card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10))) or (card_type.internal_type and inc_rmis):
                 objects = list(objects)
@@ -94,7 +131,8 @@ def patients_search_card(request):
                 except ConnectionError:
                     pass
 
-        if (re.search(p3, query) and not card_type.is_rmis) or (len(list(objects)) == 0 and len(query) == 16 and card_type.internal_type) or (card_type.is_rmis and not re.search(p3, query)):
+        if (re.search(p3, query) and not card_type.is_rmis) or (len(list(objects)) == 0 and len(query) == 16 and not p_enp and card_type.internal_type)\
+                or (card_type.is_rmis and not re.search(p3, query)):
             resync = True
             if len(list(objects)) == 0:
                 resync = False
@@ -135,8 +173,12 @@ def patients_search_card(request):
         if re.match(p3, query):
             cards = cards.filter(number=query)
 
+    if p_enp and cards:
+        cards = cards.filter(polis__number=query)
+
     d1, d2 = start_end_year()
 
+    row: Card
     for row in cards.filter(is_archive=False).select_related("individual", "base").prefetch_related(
         Prefetch(
             'individual__document_set', queryset=Document.objects.filter(is_active=True, document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС'])
@@ -399,7 +441,26 @@ def patients_card_save(request):
 def individual_search(request):
     result = []
     request_data = json.loads(request.body)
-    for i in Individual.objects.filter(**request_data):
+    tfoms_module = SettingManager.l2('tfoms')
+    family = request_data["family"]
+    name = request_data["name"]
+    patronymic = request_data["patronymic"]
+    birthday = request_data["birthday"]
+    forced_gender = []
+
+    if tfoms_module and family and name and birthday:
+        from_tfoms = match_patient(family, name, patronymic, birthday)
+
+        for row in from_tfoms:
+            Individual.import_from_tfoms(row, no_update=True)
+            forced_gender.append(row['gender'].lower())
+
+    for i in Individual.objects.filter(
+        family=family,
+        name=name,
+        patronymic=patronymic,
+        birthday=birthday,
+    ):
         result.append({
             "pk": i.pk,
             "fio": i.fio(full=True),
@@ -408,10 +469,14 @@ def individual_search(request):
                 for x in Document.objects.filter(individual=i, is_active=True).distinct("number", "document_type", "serial", "date_end", "date_start")
             ],
             "l2_cards": [
-                x.number for x in Card.objects.filter(individual=i, base__internal_type=True, is_archive=False)
+                {"number": x.number, "pk": x.pk} for x in Card.objects.filter(individual=i, base__internal_type=True, is_archive=False)
             ],
         })
-    return JsonResponse({"result": result})
+        forced_gender.append(i.sex)
+
+    forced_gender = None if not forced_gender or forced_gender.count(forced_gender[0]) != len(forced_gender) else forced_gender[0]
+
+    return JsonResponse({"result": result, 'forced_gender': forced_gender})
 
 
 def get_sex_by_param(request):
@@ -486,6 +551,13 @@ def sync_rmis(request):
     card = Card.objects.get(pk=request_data["card_pk"])
     card.individual.sync_with_rmis()
     return JsonResponse({"ok": True})
+
+
+def sync_tfoms(request):
+    request_data = json.loads(request.body)
+    card = Card.objects.get(pk=request_data["card_pk"])
+    is_new, updated = card.individual.sync_with_tfoms()
+    return JsonResponse({"ok": True, "is_new": is_new, "updated": updated})
 
 
 def update_wia(request):

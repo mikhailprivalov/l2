@@ -14,6 +14,7 @@ urlpatterns = [
     path('individuals/update-cdu', views.update_cdu),
     path('individuals/update-wia', views.update_wia),
     path('individuals/sync-rmis', views.sync_rmis),
+    path('individuals/sync-tfoms', views.sync_tfoms),
     path('individuals/load-anamnesis', views.load_anamnesis),
     path('individuals/load-dreg', views.load_dreg),
     path('individuals/load-vaccine', views.load_vaccine),

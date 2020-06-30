@@ -19,6 +19,11 @@
         </div>
         <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
                maxlength="255" @keyup.enter="search">
+        <span class="rmis-search input-group-btn" v-if="tfoms_query">
+          <label class="btn btn-blue-nb nbr height34" style="padding: 5px 12px;">
+            <input type="checkbox" v-model="inc_tfoms"/> ТФОМС
+          </label>
+        </span>
         <span class="rmis-search input-group-btn" v-if="selected_base.internal_type && user_data.rmis_enabled">
           <label class="btn btn-blue-nb nbr height34" style="padding: 5px 12px;">
             <input type="checkbox" v-model="inc_rmis"/> Вкл. РМИС
@@ -255,6 +260,8 @@
   import {mapGetters} from 'vuex'
   import Vaccine from '../modals/Vaccine'
 
+  const tfoms_re = /^([А-яЁё\-]+) ([А-яЁё\-]+)( ([А-яЁё\-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
+
   export default {
     name: 'patient-picker',
     components: {Vaccine, SelectPickerB, Modal, L2CardCreate, DReg, Benefit},
@@ -293,8 +300,10 @@
         loaded: false,
         history_num: '',
         search_after_loading: false,
+        open_edit_after_loading: false,
         editor_pk: -2,
         inc_rmis: false,
+        inc_tfoms: false,
         anamnesis: false,
         anamnesis_data: {},
         an_state: {
@@ -375,6 +384,11 @@
           this.search()
         }
       },
+      tfoms_query(nv) {
+        if (nv) {
+          this.inc_tfoms = true;
+        }
+      },
     },
     computed: {
       bases() {
@@ -398,11 +412,17 @@
       normalized_query() {
         return this.query.trim()
       },
+      tfoms_query() {
+        return this.selected_base.internal_type && this.l2_tfoms && this.normalized_query.match(tfoms_re);
+      },
       query_valid() {
         return this.normalized_query.length > 0
       },
       l2_cards() {
         return this.$store.getters.modules.l2_cards_module
+      },
+      l2_tfoms() {
+        return this.$store.getters.modules.l2_tfoms
       },
       l2_benefit() {
         return this.$store.getters.modules.l2_benefit
@@ -628,6 +648,7 @@
           let rmis_uid = params.get('rmis_uid')
           let base_pk = params.get('base_pk')
           let card_pk = params.get('card_pk')
+          let open_edit = params.get('open_edit') === 'true'
           let ofname = params.get('ofname')
           let ofname_dep = params.get('ofname_dep')
           if (rmis_uid) {
@@ -675,6 +696,7 @@
             if (card_pk) {
               this.query = `card_pk:${card_pk}`
               this.search_after_loading = true
+              this.open_edit_after_loading = open_edit
             }
           } else {
             this.base = this.bases[0].pk
@@ -753,7 +775,8 @@
           type: this.base,
           query: q,
           list_all_cards: false,
-          inc_rmis: this.inc_rmis || this.search_after_loading
+          inc_rmis: this.inc_rmis || this.search_after_loading,
+          inc_tfoms: this.inc_tfoms && this.tfoms_query,
         }).then((result) => {
           this.clear()
           if (result.results) {
@@ -762,6 +785,9 @@
               this.showModal = true
             } else if (this.founded_cards.length === 1) {
               this.select_card(0)
+              if (this.open_edit_after_loading) {
+                this.open_editor()
+              }
             } else {
               errmessage('Не найдено', 'Карт по такому запросу не найдено')
             }
@@ -775,6 +801,7 @@
         }).catch((error) => {
           errmessage('Ошибка на сервере', error.message)
         }).finally(() => {
+          this.open_edit_after_loading = false;
           this.$store.dispatch(action_types.DISABLE_LOADING)
         })
       },
