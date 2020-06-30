@@ -126,6 +126,11 @@ class Researches(models.Model):
         (2, '2 со-исполнителя'),
     )
 
+    TYPE_SIZE_FORM = (
+        (0, 'По умолчанию'),
+        (1, 'Альбомный А4'),
+    )
+
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления', on_delete=models.SET_NULL)
     title = models.CharField(max_length=255, default="", help_text='Название исследования')
     short_title = models.CharField(max_length=255, default='', blank=True)
@@ -152,6 +157,8 @@ class Researches(models.Model):
     is_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационар")
     is_slave_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационарный протокол")
     is_microbiology = models.BooleanField(default=False, blank=True, help_text="Это микробиологическое исследование")
+    is_citology = models.BooleanField(default=False, blank=True, help_text="Это цитологическое исследование")
+    is_gistology = models.BooleanField(default=False, blank=True, help_text="Это гистологическое исследование")
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
 
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
@@ -160,6 +167,7 @@ class Researches(models.Model):
     not_grouping = models.BooleanField(default=False, blank=True, help_text="Нельзя группировать в направления?")
     direction_form = models.IntegerField(default=0, blank=True, choices=DIRECTION_FORMS, help_text="Форма направления")
     result_form = models.IntegerField(default=0, blank=True, choices=RESULT_FORMS, help_text="Форма результат")
+    size_form = models.IntegerField(default=0, blank=True, choices=TYPE_SIZE_FORM, help_text="Размеры формы результат")
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
     is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием")
@@ -185,6 +193,8 @@ class Researches(models.Model):
             7: dict(is_stom=True),
             8: dict(is_hospital=True),
             9: dict(is_microbiology=True),
+            10: dict(is_citology=True),
+            11: dict(is_gistology=True),
         }
         return ts.get(t, {})
 
@@ -200,13 +210,13 @@ class Researches(models.Model):
             return -4
         if self.is_hospital:
             return -5
-        if self.is_microbiology:
-            return -6
+        if self.is_microbiology or self.is_citology or self.is_gistology:
+            return 2 - Podrazdeleniya.MORFOLOGY
         return self.podrazdeleniye_id or -2
 
     @property
     def desc(self):
-        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology or self.is_hospital
+        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology or self.is_hospital or self.is_citology or self.is_gistology
 
     @property
     def can_transfer(self):
@@ -258,6 +268,15 @@ class Researches(models.Model):
     class Meta:
         verbose_name = 'Вид исследования'
         verbose_name_plural = 'Виды исследований'
+
+    def get_site_type_id(self):
+        if self.is_microbiology:
+            return Podrazdeleniya.MORFOLOGY + 1
+        if self.is_citology:
+            return Podrazdeleniya.MORFOLOGY + 2
+        if self.is_gistology:
+            return Podrazdeleniya.MORFOLOGY + 3
+        return self.site_type_id
 
 
 class HospitalService(models.Model):

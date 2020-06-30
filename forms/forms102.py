@@ -279,6 +279,7 @@ def form_01(request_data):
     contract_from_file = SettingManager.get("contract_from_file", default='False', default_type='b')
     contract_file = os.path.join(BASE_DIR, 'forms', 'contract.json')
 
+    executor = None
     if contract_from_file:
         with open(contract_file) as json_file:
             data = json.load(json_file)
@@ -286,6 +287,8 @@ def form_01(request_data):
             body_paragraphs = data['body_paragraphs']
             org_contacts = data['org_contacts']
             executor = data['executor']
+    else:
+        executor = None
 
     if contract_from_file:
         objs.append(Paragraph('{}'.format(contract_header), style))

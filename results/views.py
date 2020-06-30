@@ -24,7 +24,7 @@ from django.views.decorators.csrf import csrf_exempt
 from pdfrw import PdfReader, PdfWriter
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
-from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.pagesizes import A4, landscape, portrait
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfdoc
@@ -32,7 +32,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Image
-from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable
+from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable, Frame, PageTemplate, NextPageTemplate, BaseDocTemplate
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.platypus.flowables import HRFlowable
 
@@ -53,7 +53,6 @@ from utils.flowable import InteractiveTextField
 from utils.pagenum import PageNumCanvas
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result
 from django.utils.module_loading import import_string
-
 
 pdfmetrics.registerFont(TTFont('FreeSans', os.path.join(FONTS_FOLDER, 'FreeSans.ttf')))
 pdfmetrics.registerFont(TTFont('FreeSansBold', os.path.join(FONTS_FOLDER, 'FreeSansBold.ttf')))
@@ -357,11 +356,15 @@ def result_print(request):
     leftnone = request.GET.get("leftnone", "0") == "0"
     hosp = request.GET.get("hosp", "0") == "1"
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=(27 if leftnone else 15) * mm,
-                            rightMargin=12 * mm, topMargin=5 * mm,
-                            bottomMargin=16 * mm, allowSplitting=1,
-                            title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
+    doc = BaseDocTemplate(buffer, leftMargin=(27 if leftnone else 15) * mm,
+                          rightMargin=12 * mm, topMargin=5 * mm,
+                          bottomMargin=16 * mm, allowSplitting=1,
+                          _pageBreakQuick=1,
+                          title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
+    p_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=16 * mm, id='portrait_frame',
+                    showBoundary=0)
+    l_frame = Frame(0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=10 * mm, rightPadding=15 * mm, topPadding=(27 if leftnone else 15) * mm, bottomPadding=16 * mm, id='landscape_frame',
+                    showBoundary=0)
 
     naprs = []
     styleSheet = getSampleStyleSheet()
@@ -476,14 +479,24 @@ def result_print(request):
         hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
         break
 
-    dirs = Napravleniya.objects\
-        .filter(pk__in=pk)\
-        .select_related('client')\
-        .prefetch_related(
-            Prefetch('issledovaniya_set', queryset=Issledovaniya.objects.filter(time_save__isnull=False).select_related('research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'))
-        )\
-        .annotate(results_count=Count('issledovaniya__result'))\
-        .distinct()
+    dirs = Napravleniya.objects.filter(pk__in=pk).\
+        select_related('client').\
+        prefetch_related(Prefetch('issledovaniya_set', queryset=Issledovaniya.objects.filter(time_save__isnull=False).
+                                  select_related('research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'))).\
+        annotate(results_count=Count('issledovaniya__result')).distinct()
+
+    count_direction = 0
+    previous_size_form = None
+    is_page_template_set = False
+
+    def mark_pages(canvas_mark, direction: Napravleniya):
+        canvas_mark.saveState()
+        canvas_mark.setFont('FreeSansBold', 8)
+        canvas_mark.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
+        canvas_mark.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
+        canvas_mark.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
+        canvas_mark.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
+        canvas_mark.restoreState()
 
     for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
         dpk = direction.pk
@@ -495,6 +508,15 @@ def result_print(request):
         has_paraclinic = False
         link_files = False
         is_extract = False
+        current_size_form = None
+        temp_iss = None
+
+        def local_mark_pages(c, _):
+            mark_pages(c, direction)
+
+        portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
+        landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)
+
         for iss in direction.issledovaniya_set.all():
             if iss.time_save:
                 dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
@@ -503,7 +525,8 @@ def result_print(request):
                 dates[dt] += 1
             if iss.tubes.exists() and iss.tubes.first().time_get:
                 date_t = strdate(iss.tubes.first().time_get)
-            if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment or iss.research.is_microbiology:
+            if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment or iss.research.is_microbiology\
+                    or iss.research.is_citology or iss.research.is_gistology:
                 has_paraclinic = True
             if directory.HospitalService.objects.filter(slave_research=iss.research).exists():
                 has_paraclinic = True
@@ -512,9 +535,36 @@ def result_print(request):
                 link_files = True
             if 'выпис' in iss.research.title.lower():
                 is_extract = True
+            current_size_form = iss.research.size_form
+            temp_iss = iss
 
         if link_files:
             continue
+
+        count_direction += 1
+
+        if previous_size_form == current_size_form:
+            is_different_form = False
+        else:
+            is_different_form = True
+        previous_size_form = current_size_form
+
+        fwb = []
+        if not is_page_template_set:
+            if count_direction == 1 and temp_iss.research.size_form == 1:
+                doc.addPageTemplates([landscape_tmpl, portrait_tmpl])
+                is_page_template_set = True
+            elif count_direction == 1 and temp_iss.research.size_form == 0:
+                doc.addPageTemplates([portrait_tmpl, landscape_tmpl])
+                is_page_template_set = True
+
+        if is_different_form:
+            if temp_iss.research.size_form == 1:
+                next_tpl = 'landscape_tmpl'
+            else:
+                next_tpl = 'portrait_tmpl'
+
+            naprs.append(NextPageTemplate(next_tpl))
 
         maxdate = ""
         if dates != {}:
@@ -523,7 +573,6 @@ def result_print(request):
         if not has_paraclinic and date_t == "":
             date_t = maxdate
 
-        fwb = []
         number_poliklinika = f' ({direction.client.number_poliklinika})' if direction.client.number_poliklinika else ''
         individual_birthday = f'({strdate(direction.client.individual.birthday)})'
         t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col)
@@ -953,7 +1002,8 @@ def result_print(request):
                 if not hosp:
                     fwb.append(InteractiveTextField())
                     fwb.append(Spacer(1, 2 * mm))
-                    if iss.research.is_doc_refferal or iss.research.is_microbiology:
+                    if iss.research.is_doc_refferal or iss.research.is_microbiology or iss.research.is_treatment or iss.research.is_microbiology\
+                            or iss.research.is_citology or iss.research.is_gistology:
                         iss_title = iss.research.title
                     elif iss.doc_confirmation.podrazdeleniye.vaccine:
                         iss_title = "Вакцина: " + iss.research.title
@@ -963,16 +1013,18 @@ def result_print(request):
                 else:
                     fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
 
+                type_form = iss.research.result_form
+                form_result = None
+                if type_form != 0:
+                    current_type_form = str(type_form)
+                    form_result = import_string('results.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
+
                 if iss.research.is_microbiology:
                     fwb = microbiology_result(iss, fwb, doc)
+                elif form_result:
+                    fwb = form_result(direction, iss, fwb, doc, leftnone, request.user)
                 elif not protocol_plain_text:
-                    type_form = iss.research.result_form
-                    if type_form == 0:
-                        fwb = structure_data_for_result(iss, fwb, doc, leftnone)
-                    else:
-                        current_type_form = str(type_form)
-                        form_result = import_string('results.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
-                        fwb = form_result(direction, iss, fwb, doc, leftnone)
+                    fwb = structure_data_for_result(iss, fwb, doc, leftnone)
                 else:
                     fwb = plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text)
 
@@ -1060,7 +1112,7 @@ def result_print(request):
 
                     fwb.append(Spacer(1, 2.5 * mm))
 
-        if client_prev == direction.client.individual_id and not split:
+        if client_prev == direction.client.individual_id and not split and not is_different_form:
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
         elif client_prev > -1:
             naprs.append(PageBreak())
@@ -1076,32 +1128,12 @@ def result_print(request):
     if not hosp:
         num_card = pk[0]
 
-    def first_pages(canvas, document):
-        canvas.saveState()
-        canvas.setFont('FreeSansBold', 8)
-        canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), num_card, number_poliklinika))
-        canvas.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-        canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
-        canvas.restoreState()
-
-    def later_pages(canvas, document):
-        canvas.saveState()
-        # вывести атрибуты пациента: № карты, № направления, ФИО. И Организацию
-        canvas.setFont('FreeSansBold', 8)
-        canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(), num_card))
-        canvas.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-        if not hosp:
-            canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
-        canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
-
     if len(pk) == 1 and not link_result and not hosp:
-        doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
+        doc.build(fwb, canvasmaker=PageNumCanvas)
     elif len(pk) == 1 and not link_result and hosp:
-        doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages)
+        doc.build(fwb)
     else:
-        doc.build(naprs, onFirstPage=first_pages, onLaterPages=later_pages)
+        doc.build(naprs)
 
     if len(link_result) > 0:
         date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")

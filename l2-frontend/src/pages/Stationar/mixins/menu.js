@@ -2,6 +2,7 @@ const menuItems = Object.freeze({
   'primary receptions': 'Первичные приёмы',
   'laboratory': 'Лабораторные',
   'paraclinical': 'Параклинические',
+  'morfology': 'Морфология',
   'consultation': 'Консультации',
   'diaries': 'Дневники',
   'vc': 'Врачебная комиссия',
@@ -23,6 +24,7 @@ export default {
         'primary receptions': true,
         laboratory: true,
         paraclinical: true,
+        morfology: true,
         consultation: true,
         diaries: true,
         vc: true,
@@ -37,6 +39,7 @@ export default {
       plusDirectionsMode: {
         laboratory: true,
         paraclinical: true,
+        morfology: true,
         consultation: true,
       },
       allowedOnlyOneEntry: {
