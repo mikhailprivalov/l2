@@ -166,7 +166,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             t_podrazdeleniye AS (SELECT podrazdeleniya_podrazdeleniya.id, title, p_type FROM podrazdeleniya_podrazdeleniya),
             
             t_research AS (SELECT directory_researches.id as research_iddir, podrazdeleniye_id, is_paraclinic, is_doc_refferal, 
-            is_stom, is_hospital, is_microbiology, is_slave_hospital, t_podrazdeleniye.title as podr_title, 
+            is_stom, is_hospital, is_microbiology, is_slave_hospital, is_citology, is_gistology, t_podrazdeleniye.title as podr_title, 
             t_podrazdeleniye.p_type FROM directory_researches
                 LEFT JOIN t_podrazdeleniye ON t_podrazdeleniye.id = directory_researches.podrazdeleniye_id),
 
@@ -192,7 +192,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             when %(hosp_is_doc_refferal)s = TRUE THEN
             is_doc_refferal = true and site_type is NULL
             when %(hosp_morfology)s = TRUE THEN
-            is_microbiology = true and site_type is NULL
+            (is_microbiology = true or is_citology = true or is_gistology = true) and site_type is NULL
             when %(hosp_is_lab)s = TRUE THEN
             is_paraclinic = FALSE and is_doc_refferal = FALSE and is_stom = FALSE and is_hospital = FALSE and is_microbiology = FALSE and site_type is NULL AND is_slave_hospital = FALSE
             when %(hosp_site_type)s = -1 and %(hosp_is_all)s = TRUE THEN
@@ -203,7 +203,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
 
             SELECT DISTINCT "id", date_create, time_create, parent_id, napravleniye_id, iss, date_confirm, time_confirm, research_id, title,
             diagnos, "level", research_iddir, podrazdeleniye_id, is_paraclinic, is_doc_refferal, is_stom, is_hospital, 
-            is_microbiology, podr_title, p_type, site_type, slave_research_id, short_title, is_slave_hospital, cancel FROM t_all WHERE 
+            is_microbiology, podr_title, p_type, site_type, slave_research_id, short_title, is_slave_hospital, cancel, is_citology, is_gistology FROM t_all WHERE 
                 CASE 
                 WHEN %(hosp_level)s > -1 THEN 
                     level = %(hosp_level)s

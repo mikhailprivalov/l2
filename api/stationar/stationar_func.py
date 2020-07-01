@@ -46,8 +46,7 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
                          'time_confirm': i[7], 'research_id': i[8], 'research_title': i[9], 'podrazdeleniye_id': i[13],
                          'is_paraclinic': i[14], 'is_doc_refferal': i[15], 'is_stom': i[16], 'is_hospital': i[17],
                          'is_microbiology': i[18], 'podrazdeleniye_title': i[19], 'site_type': i[21],
-                         'research_short_title': i[23], 'is_slave_hospital': i[24]})
-    print(data)
+                         'research_short_title': i[23], 'is_slave_hospital': i[24], 'is_cancel': i[25], "is_citology": i[26] , "is_gistology": i[27]})
 
     return data
 
