@@ -11,6 +11,7 @@ from directions.models import Issledovaniya, Napravleniya
 from directory.models import HospitalService
 from laboratory.decorators import group_required
 from appconf.manager import SettingManager
+from django.db.models import Q
 
 
 TADP = SettingManager.get("tadp", default='Температура', default_type='s')
@@ -104,6 +105,10 @@ def counts(request):
                                                               issledovaniya__research__is_paraclinic=True).distinct().count()
         result["consultation"] += Napravleniya.objects.filter(parent=i,
                                                               issledovaniya__research__is_doc_refferal=True).distinct().count()
+        result["morfology"] += Napravleniya.objects.filter(parent=i).filter(
+            Q(issledovaniya__research__is_microbiology=True) |
+            Q(issledovaniya__research__is_citology=True) |
+            Q(issledovaniya__research__is_gistology=True)).distinct().count()
         result["all"] += Napravleniya.objects.filter(parent=i).count()
     return JsonResponse(dict(result))
 
