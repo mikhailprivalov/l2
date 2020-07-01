@@ -10,7 +10,7 @@
                 duration: 0,
                 theme: 'light',
                 placement: 'bottom',
-                trigger: 'click mouseenter focus',
+                trigger: 'click mouseenter',
                 popperOptions: {
                   modifiers: {
                     preventOverflow: {
