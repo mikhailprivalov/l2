@@ -1139,7 +1139,7 @@ def directions_anesthesia_result(request):
     rb = json.loads(request.body)
     temp_result = rb.get("temp_result", {})
     research_data = rb.get("research_data", {})
-    action = rb.get("action", "add")
+    action = rb.get("action", "del")
     result = ParaclinicResult.anesthesia_value_save(research_data['iss_pk'], research_data['field_pk'], temp_result, action)
     if result:
         response = {"ok": True, "message": ""}

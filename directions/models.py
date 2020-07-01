@@ -1126,7 +1126,7 @@ class ParaclinicResult(models.Model):
                 elif action == 'del':
                     if previus_result.get(k):
                         temp_attr = previus_result[k]
-                        temp_attr.pop(current_time, None)
+                        del temp_attr[current_time]
 
 
         made_anesthesia_structure('patient_params')
