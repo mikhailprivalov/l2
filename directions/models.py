@@ -1094,7 +1094,7 @@ class ParaclinicResult(models.Model):
         if value_anesthesia is None:
             value_anesthesia = {}
         previus_result = ParaclinicResult.anesthesia_value_get(iss_pk, field_pk)
-        if len(previus_result) > 0:
+        if previus_result:
             previus_result = eval(previus_result)
         else:
             previus_result = {'patient_params': [], 'potent_drugs': [], 'narcotic_drugs': [], 'times': []}
@@ -1144,6 +1144,7 @@ class ParaclinicResult(models.Model):
             else:
                 paraclinic_result_obj = ParaclinicResult(issledovaniye=iss_obj, field=field_obj, field_type=21, value=previus_result)
             paraclinic_result_obj.save()
+
         return paraclinic_result_obj
 
 
