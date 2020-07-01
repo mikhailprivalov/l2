@@ -157,7 +157,6 @@ def make_service(request):
 @login_required
 def directions_by_key(request):
     data = json.loads(request.body)
-    print(data)
     base_direction_pk = int(data["direction"])
     r_type = data["r_type"]
     every = data.get("every", False)
