@@ -21,9 +21,6 @@
         inFavorite: false,
       }
     },
-    mounted() {
-      this.load();
-    },
     watch: {
       direction: {
         immediate: true,
@@ -38,6 +35,7 @@
         this.inFavorite = !this.inFavorite;
         await directions_point.directionInFavorites({pk: this.direction, update: true, status: this.inFavorite})
         await this.$store.dispatch(action_types.DEC_LOADING)
+        this.$root.$emit('add-to-favorites');
       },
       async load() {
         await this.$store.dispatch(action_types.INC_LOADING)

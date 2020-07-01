@@ -4,6 +4,14 @@
 
 {% block navbar_classes %}fluid-nav-cont{% endblock %}
 
+{% block extended_header %}
+    <ul class="nav navbar-nav">
+        <li class="dropdown">
+            <favorites />
+        </li>
+    </ul>
+{% endblock %}
+
 {% load static %}
 
 {% block content %}

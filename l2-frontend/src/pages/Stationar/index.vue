@@ -543,6 +543,9 @@
         }
       }
       this.inited = true
+      this.$root.$on('open-history', (d) => {
+        this.load_pk(d, false);
+      });
     },
     methods: {
       show_anesthesia() {

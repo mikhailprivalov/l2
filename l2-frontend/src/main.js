@@ -12,6 +12,7 @@ import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
 import RmisLocation from './ui-cards/RmisLocation'
 import * as Sentry from '@sentry/browser';
 import * as Integrations from '@sentry/integrations';
+import Fragment from 'vue-fragment'
 
 
 const VueInputMask = require('vue-inputmask').default;
@@ -26,6 +27,7 @@ Vue.use(VueTippy)
 Vue.use(VueInputMask)
 Vue.use(VueCollapse)
 Vue.use(Tippy)
+Vue.use(Fragment.Plugin)
 
 const promiseFinally = require('promise.prototype.finally');
 Vue.dialog.registerComponent('replace-append-modal', ReplaceAppendModal);
@@ -55,6 +57,7 @@ new Vue({
     'ResultsReport': () => import('./pages/ResultsReport'),
     'RmqManagement': () => import('./ui-cards/RmqManagement'),
     'DirectionSteps': () => import('./ui-cards/DirectionSteps'),
+    'Favorites': () => import('./ui-cards/Favorites'),
     'RmisConfirm': () => import('./pages/RmisConfirm'),
     'Profiles': () => import('./pages/Profiles'),
     'EmployeeJobs': () => import('./pages/EmployeeJobs'),

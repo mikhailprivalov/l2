@@ -1674,3 +1674,17 @@ def direction_in_favorites(request):
 
     dtuw = DirectionToUserWatch.objects.filter(doc=doc, direction_id=pk)
     return JsonResponse({"status": dtuw.exists()})
+
+
+@login_required
+def all_directions_in_favorites(request):
+    doc: DoctorProfile = request.user.doctorprofile
+
+    data = [{
+        "pk": x.pk,
+        "direction": x.direction_id,
+        "card": x.direction.client.number_with_type(),
+        "client": x.direction.client.individual.fio(full=True),
+    } for x in DirectionToUserWatch.objects.filter(doc=doc).order_by('pk')]
+
+    return JsonResponse({"data": data})

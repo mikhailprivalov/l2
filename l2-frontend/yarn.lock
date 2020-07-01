@@ -7110,6 +7110,11 @@ vue-autosize@^1.0.2:
     autosize "^4.0.0"
     autosize-input "^0.4.0"
 
+vue-fragment@^1.5.1:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/vue-fragment/-/vue-fragment-1.5.1.tgz#44c070d55ed1e9a6c698ef57a5c83f64bb06feeb"
+  integrity sha512-ig6eES6TcMBbANW71ylB+AJgRN+Zksb3f50AxjGpAk6hMzqmeuD80qeh4LJP0jVw2dMBMjgRUfIkrvxygoRgtQ==
+
 vue-full-loading@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/vue-full-loading/-/vue-full-loading-1.2.1.tgz#14371ba7b4c858a75c6d8f72f2d1aeeaf02f95a8"
