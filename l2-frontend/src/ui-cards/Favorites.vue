@@ -37,21 +37,27 @@
           <td>
             {{row.card}}
           </td>
+          <td>
+            <Favorite :direction="row.direction" in-list />
+          </td>
         </tr>
         </tbody>
       </table>
+      <div v-if="data.length === 0">
+        Нет избранных историй
+      </div>
     </div>
   </fragment>
 </template>
 
 <script>
-  import * as action_types from "../store/action-types";
   import directions_point from "../api/directions-point";
   import LinkToHistory from "../pages/Stationar/LinkToHistory";
+  import Favorite from "../pages/Stationar/Favorite";
 
   export default {
     name: "Favorites",
-    components: {LinkToHistory},
+    components: {Favorite, LinkToHistory},
     data() {
       return {
         inFavorite: false,
@@ -65,10 +71,8 @@
     },
     methods: {
       async load() {
-        await this.$store.dispatch(action_types.INC_LOADING)
         const {data} = await directions_point.allDirectionsInFavorites()
         this.data = data;
-        await this.$store.dispatch(action_types.DEC_LOADING)
       },
     }
   }

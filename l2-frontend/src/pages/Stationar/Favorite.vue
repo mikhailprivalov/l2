@@ -1,11 +1,10 @@
 <template>
-  <div class="fv" :class="{inFavorite}" @click="click">
+  <div class="fv" :class="{inFavorite}" @click="click()">
     <i class="fa fa-star"></i> <span>{{inFavorite ? 'в избранном' : 'не в избранном'}}</span>
   </div>
 </template>
 
 <script>
-  import * as action_types from "../../store/action-types";
   import directions_point from "../../api/directions-point";
 
   export default {
@@ -14,11 +13,20 @@
       direction: {
         type: Number,
         required: true,
+      },
+      inList: {
+        type: Boolean,
+        default: false,
       }
     },
     data() {
       return {
         inFavorite: false,
+      }
+    },
+    mounted() {
+      if (!this.inList) {
+        this.$root.$on('remove-from-favorites', () => this.load());
       }
     },
     watch: {
@@ -30,18 +38,17 @@
       }
     },
     methods: {
-      async click() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        this.inFavorite = !this.inFavorite;
+      async click(forced, val) {
+        this.inFavorite = forced ? Boolean(val) : !this.inFavorite;
         await directions_point.directionInFavorites({pk: this.direction, update: true, status: this.inFavorite})
-        await this.$store.dispatch(action_types.DEC_LOADING)
+        if (this.inList) {
+          this.$root.$emit('remove-from-favorites');
+        }
         this.$root.$emit('add-to-favorites');
       },
       async load() {
-        await this.$store.dispatch(action_types.INC_LOADING)
         const {status} = await directions_point.directionInFavorites({pk: this.direction, update: false})
         this.inFavorite = status;
-        await this.$store.dispatch(action_types.DEC_LOADING)
       },
     }
   }
