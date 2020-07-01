@@ -33,6 +33,7 @@
     "vue": "^2.6.11",
     "vue-apexcharts": "^1.5.2",
     "vue-autosize": "^1.0.2",
+    "vue-fragment": "^1.5.1",
     "vue-full-loading": "^1.2.1",
     "vue-input-tag": "^1.0.3",
     "vue-inputmask": "^0.2.1",

@@ -110,4 +110,10 @@ export default generator({
   getExternalOrgranizations: {
     url: 'directions/external-organizations',
   },
+  directionInFavorites: {
+    url: 'directions/direction-in-favorites',
+  },
+  allDirectionsInFavorites: {
+    url: 'directions/all-directions-in-favorites',
+  },
 })

@@ -1525,3 +1525,8 @@ class Result(models.Model):
         b = b.strip()
 
         return self.canonical_caseless(a) == self.canonical_caseless(b)
+
+
+class DirectionToUserWatch(models.Model):
+    direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE)
+    doc = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE)
