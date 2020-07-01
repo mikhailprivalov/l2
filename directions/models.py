@@ -1128,7 +1128,6 @@ class ParaclinicResult(models.Model):
                         temp_attr = previus_result[k]
                         del temp_attr[current_time]
 
-
         made_anesthesia_structure('patient_params')
         made_anesthesia_structure('potent_drugs')
         made_anesthesia_structure('narcotic_drugs')
