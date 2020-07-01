@@ -32,6 +32,7 @@
               <td class="cl-td" @click="focus_next">{{k}}</td>
               <td class="cl-td">
                 <input class="no-outline anastesia" type="text" v-model="patient_params_used[k]" :key="k"
+                       :readonly="actionDelete"
                        @focus="focus_input"
                        @blur="blur_input"
                        @keyup.enter="move_focus_next"
@@ -41,22 +42,23 @@
             </tr>
           </table>
           <div class="number">
-            <button class="btn btn-blue-nb nbr" @click="minus_temperature_once" tabindex="-1">
+            <button class="btn btn-blue-nb nbr" @click="minus_temperature_once" :disabled="actionDelete" tabindex="-1">
               -1
             </button>
             <button class="btn btn-blue-nb nbr" @mousedown="minus_temperature_start"
-                    @mouseleave="temperature_stop" @mouseup="temperature_stop" tabindex="-1">
+                    @mouseleave="temperature_stop" @mouseup="temperature_stop" :disabled="actionDelete" tabindex="-1">
               -0.1
             </button>
             <input type="text" v-model.number="temperature" class="anastesia"
                    @keyup.enter="move_focus_next"
                    @keyup.enter.shift="move_focus_prev"
+                   :readonly="actionDelete"
                    placeholder="Температура"/>
             <button class="btn btn-blue-nb nbr" @mousedown="plus_temperature_start"
-                    @mouseleave="temperature_stop" @mouseup="temperature_stop" tabindex="-1">
+                    @mouseleave="temperature_stop" @mouseup="temperature_stop" :disabled="actionDelete" tabindex="-1">
               +0.1
             </button>
-            <button class="btn btn-blue-nb nbr" @click="plus_temperature_once" tabindex="-1">
+            <button class="btn btn-blue-nb nbr" @click="plus_temperature_once" :disabled="actionDelete" tabindex="-1">
               +1
             </button>
           </div>
@@ -70,6 +72,7 @@
               <td class="cl-td" @click="focus_next">{{k}}</td>
               <td class="cl-td">
                 <input class="no-outline anastesia" type="text" v-model="potent_drugs_used[k]"
+                       :readonly="actionDelete"
                        @focus="focus_input"
                        @blur="blur_input"
                        @keyup.enter="move_focus_next"
@@ -88,6 +91,7 @@
               <td class="cl-td" @click="focus_next">{{k}}</td>
               <td class="cl-td">
                 <input class="no-outline anastesia" type="text" v-model="narcotic_drugs_used[k]" :key="k"
+                       :readonly="actionDelete"
                        @focus="focus_input"
                        @blur="blur_input"
                        @keyup.enter="move_focus_next"
@@ -96,14 +100,25 @@
               </td>
             </tr>
           </table>
+
+          <div v-if="isEdit">
+            <label style="margin: 5px 5px 5px 10px;">
+              <input type="checkbox" v-model="actionDelete" />
+              удалить запись
+            </label>
+            <br/>
+          </div>
         </div>
 
         <div class="side-bottom">
           <button class="btn btn-blue-nb nbr" @click="save_data" v-if="!isEdit">
             Добавить
           </button>
-          <button class="btn btn-blue-nb nbr" @click="save_data" v-else>
+          <button class="btn btn-blue-nb nbr" @click="save_data" v-else-if="!actionDelete">
             Сохранить изменения
+          </button>
+          <button class="btn btn-blue-nb nbr" @click="delete_data" v-else>
+            Удалить запись
           </button>
         </div>
       </div>
@@ -199,6 +214,7 @@
         narcotic_data: {},
         patient_params_used: {},
         patient_params_other: {},
+        actionDelete: false,
         isEdit: false,
         tb_data: [],
         tb_heights: [],
@@ -320,6 +336,31 @@
         okmessage('Сохранено');
         this.show_anesthesia_sidebar();
       },
+      async delete_data() {
+        try {
+          await this.$dialog.confirm('Подтвердите удаление')
+        } catch (_) {
+          return
+        }
+        await this.$store.dispatch(action_types.INC_LOADING);
+        let research_data = {'iss_pk': this.iss, 'field_pk': this.field_pk}
+        let temp_result = {
+          'time': this.timeValue,
+          'potent_drugs': this.potent_drugs_used,
+          'narcotic_drugs': this.narcotic_drugs_used,
+          'patient_params': this.patient_params_used
+        }
+        await directions_point.anesthesiaResultSave({
+          'temp_result': temp_result,
+          'research_data': research_data,
+          action: 'del'
+        });
+        setTimeout(() => this.sync_heights(), 10);
+        await this.load_data()
+        await this.$store.dispatch(action_types.DEC_LOADING)
+        okmessage('Запись удалена');
+        this.show_anesthesia_sidebar();
+      },
       async load_data() {
         await this.$store.dispatch(action_types.INC_LOADING);
         let research_data = {'iss_pk': this.iss, 'field_pk': this.field_pk};
@@ -387,6 +428,7 @@
         this.clear_data(this.narcotic_drugs_used)
         this.clear_data(this.patient_params_used)
         this.isEdit = false;
+        this.actionDelete = false;
         this.setCurrentTime();
       },
       show_anesthesia_sidebar() {
@@ -566,11 +608,15 @@
     }
   }
 
-  input {
+  input:not([type=checkbox]) {
     border: none;
     background-color: #eee;
     width: 100%;
     padding: 5px 1px;
+  }
+
+  input[type=checkbox] {
+    vertical-align: sub;
   }
 
   ::placeholder {
