@@ -34,7 +34,7 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import Image
 from reportlab.platypus import PageBreak, Spacer, KeepTogether, Flowable, Frame, PageTemplate, NextPageTemplate, BaseDocTemplate
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from reportlab.platypus.flowables import HRFlowable
+from reportlab.platypus.flowables import HRFlowable, Macro
 
 import directory.models as directory
 import slog.models as slog
@@ -50,7 +50,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.common import RANGE_NOT_IN, RANGE_IN
 from utils.dates import try_parse_range
 from utils.flowable import InteractiveTextField
-from utils.pagenum import PageNumCanvas
+from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result
 from django.utils.module_loading import import_string
 
@@ -498,6 +498,8 @@ def result_print(request):
         canvas_mark.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
         canvas_mark.restoreState()
 
+    count_pages = 0
+    has_page_break = False
     for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
         dpk = direction.pk
 
@@ -542,6 +544,7 @@ def result_print(request):
             continue
 
         count_direction += 1
+        count_pages += 1
 
         if previous_size_form == current_size_form:
             is_different_form = False
@@ -1116,6 +1119,9 @@ def result_print(request):
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
         elif client_prev > -1:
             naprs.append(PageBreak())
+            has_page_break = True
+            naprs.append(Macro("canvas._pageNumber=1"))
+            count_pages = 0
 
         if len(pk) == 1:
             naprs.append(fwb)
@@ -1131,7 +1137,9 @@ def result_print(request):
     if len(pk) == 1 and not link_result and not hosp:
         doc.build(fwb, canvasmaker=PageNumCanvas)
     elif len(pk) == 1 and not link_result and hosp:
-        doc.build(fwb)
+        doc.build(fwb, canvasmaker=PageNumCanvasPartitionAll)
+    elif has_page_break:
+        doc.build(naprs, canvasmaker=PageNumCanvasPartitionAll)
     else:
         doc.build(naprs)
 
