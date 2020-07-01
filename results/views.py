@@ -499,7 +499,7 @@ def result_print(request):
         canvas_mark.restoreState()
 
     count_pages = 0
-    is_PageBreak = False
+    has_PageBreak = False
     for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
         dpk = direction.pk
 
@@ -1119,7 +1119,7 @@ def result_print(request):
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
         elif client_prev > -1:
             naprs.append(PageBreak())
-            is_PageBreak = True
+            has_PageBreak = True
             naprs.append(Macro("canvas._pageNumber=1"))
             count_pages = 0
 
@@ -1138,7 +1138,7 @@ def result_print(request):
         doc.build(fwb, canvasmaker=PageNumCanvas)
     elif len(pk) == 1 and not link_result and hosp:
         doc.build(fwb, canvasmaker=PageNumCanvasPartitionAll)
-    elif is_PageBreak:
+    elif has_PageBreak:
         doc.build(naprs, canvasmaker=PageNumCanvasPartitionAll)
     else:
         doc.build(naprs)
