@@ -91,6 +91,6 @@ class PageNumCanvasPartitionAll(canvas.Canvas):
         Add the page number
         """
         pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
-        page = "Лист {}".format(self._pageNumber, '')
+        page = "Лист {}".format(self._pageNumber)
         self.setFont("PTAstraSerifReg", 9)
         self.drawRightString(200 * mm, 8 * mm, page)
