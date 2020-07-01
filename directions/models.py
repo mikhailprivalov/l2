@@ -1090,7 +1090,7 @@ class ParaclinicResult(models.Model):
             return ""
 
     @staticmethod
-    def anesthesia_value_save(iss_pk=-1, field_pk=-1, value_anesthesia=None):
+    def anesthesia_value_save(iss_pk=-1, field_pk=-1, value_anesthesia=None, action='add'):
         if value_anesthesia is None:
             value_anesthesia = {}
         previus_result = ParaclinicResult.anesthesia_value_get(iss_pk, field_pk)
@@ -1104,21 +1104,30 @@ class ParaclinicResult(models.Model):
 
         temp_times = previus_result['times']
         current_time = value_anesthesia.get('time')
-        if current_time not in temp_times:
+        if current_time not in temp_times and action == 'add':
             temp_times.append(current_time)
+        elif action == 'del':
+            temp_times.remove(current_time)
         temp_times = sorted(temp_times)
         previus_result['times'] = temp_times
 
         def made_anesthesia_structure(type):
             for k, v in value_anesthesia.get(type).items():
-                if k not in previus_result[type]:
-                    previus_result[type].append(k)
-                if previus_result.get(k):
-                    temp_attr = previus_result[k]
-                    temp_attr[current_time] = v
-                    previus_result[k] = temp_attr
-                else:
-                    previus_result[k] = {current_time: v}
+                if action == 'add':
+                    if k not in previus_result[type]:
+                        previus_result[type].append(k)
+                    if previus_result.get(k):
+                        temp_attr = previus_result[k]
+                        temp_attr[current_time] = v
+                        previus_result[k] = temp_attr
+                    else:
+                        previus_result[k] = {current_time: v}
+
+                elif action == 'del':
+                    if previus_result.get(k):
+                        temp_attr = previus_result[k]
+                        temp_attr.pop(current_time, None)
+
 
         made_anesthesia_structure('patient_params')
         made_anesthesia_structure('potent_drugs')
