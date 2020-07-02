@@ -1,5 +1,4 @@
 import time
-import random
 from collections import defaultdict
 
 import simplejson as json
