@@ -473,23 +473,27 @@ class Individual(models.Model):
         idp = data.get('idp')
         updated_data = []
 
-        if idp:
-            family = data.get('family', '').title()
-            name = data.get('given', '').title()
-            patronymic = data.get('patronymic', '').title()
-            gender = data.get('gender', '').lower()
-            birthday = datetime.strptime(data.get('birthdate', '').split(' ')[0], "%Y-%m-%d").date()
-            address = data.get('address', '').title().replace('Ул.', 'ул.').replace('Д.', 'д.').replace('Кв.', 'кв.')
+        family = data.get('family', '').title()
+        name = data.get('given', '').title()
+        patronymic = data.get('patronymic', '').title()
+        gender = data.get('gender', '').lower()
+        bdate = data.get('birthdate', '').split(' ')[0]
+
+        if family and name and gender and bdate:
             enp = data.get('enp', '')
+            birthday = datetime.strptime(bdate, "%d.%m.%Y" if '.' in bdate else "%Y-%m-%d").date()
+            address = data.get('address', '').title().replace('Ул.', 'ул.').replace('Д.', 'д.').replace('Кв.', 'кв.')
             passport_number = data.get('passport_number', '')
             passport_seria = data.get('passport_seria', '')
             snils = data.get('snils', '')
 
+            q_idp = dict(tfoms_idp=idp or '##fakeidp##')
+
             if not individual:
                 indv = Individual.objects.filter(
-                    Q(tfoms_idp=idp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)) \
+                    Q(**q_idp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)) \
                     if snils else \
-                    Individual.objects.filter(Q(tfoms_idp=idp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
+                    Individual.objects.filter(Q(**q_idp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
             else:
                 indv = Individual.objects.filter(pk=individual.pk)
 
@@ -536,7 +540,7 @@ class Individual(models.Model):
                     updated.append('birthday')
                     updated_data.append('Дата рождения')
 
-                if i.tfoms_idp != idp:
+                if idp and i.tfoms_idp != idp:
                     i.tfoms_idp = idp
                     updated.append('tfoms_idp')
 
@@ -964,7 +968,7 @@ class Card(models.Model):
             c = Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True)[0]
             updated = []
 
-            if c.main_address != address:
+            if address and c.main_address != address:
                 c.main_address = address
                 updated.append('main_address')
                 if updated_data:

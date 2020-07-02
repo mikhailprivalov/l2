@@ -1011,3 +1011,28 @@ def save_anamnesis(request):
         card.save()
         AnamnesisHistory(card=card, text=request_data["text"], who_save=request.user.doctorprofile).save()
     return JsonResponse({"ok": True})
+
+
+def create_l2_individual_from_card(request):
+    request_data = json.loads(request.body)
+    polis = request_data['polis']
+
+    has_tfoms_data = False
+    if SettingManager.l2('tfoms'):
+        from_tfoms = match_enp(polis)
+
+        if from_tfoms:
+            has_tfoms_data = True
+            Individual.import_from_tfoms(from_tfoms, no_update=True)
+
+    if not has_tfoms_data:
+        Individual.import_from_tfoms({
+            "enp": polis,
+            "family": request_data['family'],
+            "given": request_data['name'],
+            "patronymic": request_data['patronymic'],
+            "gender": request_data['sex'],
+            "birthdate": request_data['bdate'],
+        }, no_update=True)
+
+    return JsonResponse({"ok": True})
