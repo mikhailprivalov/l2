@@ -321,6 +321,10 @@
       this.$root.$on('search', () => {
         this.search()
       })
+      this.$root.$on('search-value', value => {
+        this.query = value;
+        this.search()
+      })
       this.$root.$on('select_card', data => {
         this.base = data.base_pk
         this.query = `card_pk:${data.card_pk}`

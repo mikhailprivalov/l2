@@ -42,4 +42,7 @@ export default generator({
   jobCancel: {
     url: 'job-cancel',
   },
+  loadReaderStatus: {
+    url: 'reader-status',
+  }
 });
