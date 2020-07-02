@@ -150,8 +150,8 @@ def form_01(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph(f'19. Фамилия, инициалы врача: {dir.doc.get_fio()} {space_symbol * 5} подпись _________', style))
         objs.append(Paragraph(f'20. Дата направления:  {strdate(dir.data_sozdaniya)}', style))
 
-        organoztion_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
-        organoztion_inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
-        organoztion_frame.addFromList([organoztion_inframe], c)
+        gistology_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+        gistology_inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
+        gistology_frame.addFromList([gistology_inframe], c)
 
     printForm()
