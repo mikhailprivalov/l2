@@ -42,6 +42,7 @@ from utils import xh
 from utils.dates import try_parse_range
 from reportlab.lib.enums import TA_LEFT
 from copy import deepcopy
+from django.utils.module_loading import import_string
 
 w, h = A4
 
@@ -210,7 +211,6 @@ def gen_pdf_dir(request):
     if donepage.count() > 0 and has_def:
         c.showPage()
 
-    thismodule = sys.modules[__name__]
     n = 0
     cntn = donepage.count()
     for d in donepage:
@@ -219,8 +219,10 @@ def gen_pdf_dir(request):
         if not iss.exists():
             continue
         form = iss[0].research.direction_form
-        if hasattr(thismodule, 'form%s' % form):
-            f = getattr(thismodule, 'form%s' % form)
+
+        if form != 0:
+            current_type_form = str(form)
+            f = import_string('directions.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
             f(c, d)
         if n != cntn:
             c.showPage()
