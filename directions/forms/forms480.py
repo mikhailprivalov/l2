@@ -3,8 +3,8 @@ from copy import deepcopy
 
 from django.core.exceptions import ObjectDoesNotExist
 from reportlab.graphics import renderPDF
-from reportlab.graphics.barcode import eanbc, qr
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from reportlab.graphics.barcode import eanbc
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
