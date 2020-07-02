@@ -1100,7 +1100,7 @@ def reader_status(request):
     data = json.loads(request.body)
     reader_id = data.get('readerId', 'null')
     data = json.loads(cache.get(f'reader-status:{reader_id}', '{"status": "none"}'))
-    return JsonResponse({"status": data.get('status'), "polis": data.get('polis'), "fio": data.get('fio')})
+    return JsonResponse({"status": data.get('status'), "polis": data.get('polis'), "fio": data.get('fio'), 'details': data.get('details', {})})
 
 
 def reader_status_update(request):
@@ -1119,6 +1119,7 @@ def reader_status_update(request):
             "status": 'inserted',
             "polis": polis,
             "fio": fio,
+            "details": data['details'],
         }), 10)
     else:
         cache.set(f'reader-status:{reader_id}', '{"status": "wait"}', 10)
