@@ -78,7 +78,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         if dir.parent and dir.parent.research.is_hospital:
             history_num = f"(cтационар-{str(dir.parent.napravleniye_id)})"
         objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk} {history_num} ', styleCenterBold))
-        objs.append(Paragraph(f'НА ПРИЖИЗНЕННОЕ ПАТОЛОГО-АНАТОМИЧЕСКОЕ<br/> ИССЛЕДОВАНИЕ БИОПСИЙНОГО (ОПЕРАЦИОННОГО) МАТЕРИАЛА', styleCenterBold))
+        objs.append(Paragraph('НА ПРИЖИЗНЕННОЕ ПАТОЛОГО-АНАТОМИЧЕСКОЕ<br/> ИССЛЕДОВАНИЕ БИОПСИЙНОГО (ОПЕРАЦИОННОГО) МАТЕРИАЛА', styleCenterBold))
         objs.append(Spacer(1, 10 * mm))
         space_symbol = '&nbsp;'
         objs.append(Paragraph(f'1. Отделение, направившее биопсийный (операционный) материал: {dir.doc.podrazdeleniye.title}', style))
@@ -104,38 +104,38 @@ def form_01(c: Canvas, dir: Napravleniya):
         address = ind_data['main_address']
         objs.append(Paragraph(f'7. Место регистрации: {address}', style))
         objs.append(Paragraph(f'8. Местность: городская — 1, сельская — 2.', style))
-        objs.append(Paragraph(f'9. Диагноз основного заболевания (состояния)_______________________________________________________________', style))
-        objs.append(Paragraph(f'_______________________________________________________________________________________________________', style))
-        objs.append(Paragraph(f'_______________________________________________________________________________________________________', style))
+        objs.append(Paragraph('9. Диагноз основного заболевания (состояния)_______________________________________________________________', style))
+        objs.append(Paragraph('_______________________________________________________________________________________________________', style))
+        objs.append(Paragraph('_______________________________________________________________________________________________________', style))
         diagnosis = ''
         if dir.diagnos.strip():
             diagnosis = dir.diagnos.strip()
         objs.append(Paragraph(f'10. Код по МКБ: {diagnosis}', style))
-        objs.append(Paragraph(f'11. Задача прижизненного патолого-анатомического исследования биопсийного (операционного) материала', style))
-        objs.append(Paragraph(f'_______________________________________________________________________________________________________', style))
-        objs.append(Paragraph(f'12. Дополнительные клинические сведения (основные симптомы, оперативное или гормональное, или лучевое лечение,', style))
-        objs.append(Paragraph(f'результаты инструментальных и лабораторных исследований)__________________________________________________', style))
-        objs.append(Paragraph(f'_______________________________________________________________________________________________________', style))
-        objs.append(Paragraph(f'14. Проведенное предоперационное лечение (вид лечения, его сроки, дозировка лекарственного препарата, доза облучения)', style))
-        objs.append(Paragraph(f'_______________________________________________________________________________________________________', style))
-        objs.append(Paragraph(f'_______________________________________________________________________________________________________', style))
-        objs.append(Paragraph(f'15. Способ получения биопсийного (операционного) материала: эндоскопическая биопсия—1, пункционная биопсия—2,', style))
-        objs.append(Paragraph(f'аспирационная биопсия—3, инцизионная биопсия—4, операционная биопсия—5, операционный материал—6,', style))
-        objs.append(Paragraph(f'самопроизвольно отделившиеся фрагменты тканей—7.', style))
-        objs.append(Paragraph(f'16. Дата забора материала_________________________ время ______________', style))
-        objs.append(Paragraph(f'17. Материал помещен в 10%-ный раствор нейтрального формалина (да/нет)___________', style))
-        objs.append(Paragraph(f'18. Маркировка биопсийного (операционного) материала (расшифровка маркировки флаконов):', style))
+        objs.append(Paragraph('11. Задача прижизненного патолого-анатомического исследования биопсийного (операционного) материала', style))
+        objs.append(Paragraph('_______________________________________________________________________________________________________', style))
+        objs.append(Paragraph('12. Дополнительные клинические сведения (основные симптомы, оперативное или гормональное, или лучевое лечение,', style))
+        objs.append(Paragraph('результаты инструментальных и лабораторных исследований)__________________________________________________', style))
+        objs.append(Paragraph('_______________________________________________________________________________________________________', style))
+        objs.append(Paragraph('14. Проведенное предоперационное лечение (вид лечения, его сроки, дозировка лекарственного препарата, доза облучения)', style))
+        objs.append(Paragraph('_______________________________________________________________________________________________________', style))
+        objs.append(Paragraph('_______________________________________________________________________________________________________', style))
+        objs.append(Paragraph('15. Способ получения биопсийного (операционного) материала: эндоскопическая биопсия—1, пункционная биопсия—2,', style))
+        objs.append(Paragraph('аспирационная биопсия—3, инцизионная биопсия—4, операционная биопсия—5, операционный материал—6,', style))
+        objs.append(Paragraph('самопроизвольно отделившиеся фрагменты тканей—7.', style))
+        objs.append(Paragraph('16. Дата забора материала_________________________ время ______________', style))
+        objs.append(Paragraph('17. Материал помещен в 10%-ный раствор нейтрального формалина (да/нет)___________', style))
+        objs.append(Paragraph('18. Маркировка биопсийного (операционного) материала (расшифровка маркировки флаконов):', style))
 
         opinion = [
-            [Paragraph(f'Номер флакона', styleT),
+            [Paragraph('Номер флакона', styleT),
              Paragraph('Локализация патологического процесса (орган, топография)', styleT),
              Paragraph('Характер патологического процесса (эрозия, язва, полип, пятно, узел, внешне не измененная ткань, отношение к окружающим тканям)', styleT),
              Paragraph('Количество объектов', styleT)],
-            [Paragraph(f'1', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
-            [Paragraph(f'2', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
-            [Paragraph(f'3', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
-            [Paragraph(f'4', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
-            [Paragraph(f'5', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
+            [Paragraph('1', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
+            [Paragraph('2', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
+            [Paragraph('3', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
+            [Paragraph('4', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
+            [Paragraph('5', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
         ]
 
         cols_width = [20 * mm, 50 * mm, 100 * mm, 30 * mm]
