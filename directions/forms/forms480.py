@@ -1,5 +1,7 @@
 import os
 from copy import deepcopy
+
+from django.core.exceptions import ObjectDoesNotExist
 from reportlab.graphics import renderPDF
 from reportlab.graphics.barcode import eanbc, qr
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
@@ -10,7 +12,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
 from appconf.manager import SettingManager
-from directions.models import Napravleniya
+from directions.models import Napravleniya, Issledovaniya
 from reportlab.platypus import Table, TableStyle, Paragraph, Frame, KeepInFrame, Spacer
 from reportlab.pdfgen.canvas import Canvas
 from laboratory.settings import FONTS_FOLDER
@@ -75,10 +77,16 @@ def form_01(c: Canvas, dir: Napravleniya):
         objs.append(tbl)
         objs.append(Spacer(1, 5 * mm))
         history_num = ''
+        try:
+            issledovaniye = Issledovaniya.objects.get(napravleniye=dir.pk)
+        except ObjectDoesNotExist:
+            issledovaniye = None
+        short_title = issledovaniye.research.short_title
         if dir.parent and dir.parent.research.is_hospital:
             history_num = f"(cтационар-{str(dir.parent.napravleniye_id)})"
         objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk} {history_num} ', styleCenterBold))
         objs.append(Paragraph('НА ПРИЖИЗНЕННОЕ ПАТОЛОГО-АНАТОМИЧЕСКОЕ<br/> ИССЛЕДОВАНИЕ БИОПСИЙНОГО (ОПЕРАЦИОННОГО) МАТЕРИАЛА', styleCenterBold))
+        objs.append(Paragraph(f'{short_title.upper()}', styleCenterBold))
         objs.append(Spacer(1, 10 * mm))
         space_symbol = '&nbsp;'
         objs.append(Paragraph(f'1. Отделение, направившее биопсийный (операционный) материал: {dir.doc.podrazdeleniye.title}', style))
