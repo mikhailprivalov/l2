@@ -1,4 +1,5 @@
 import time
+import random
 from collections import defaultdict
 
 import simplejson as json
@@ -1093,4 +1094,34 @@ def job_cancel(request):
         else:
             j.canceled_at = j.who_do_cancel = None
         j.save()
+    return JsonResponse({"ok": True})
+
+
+def reader_status(request):
+    data = json.loads(request.body)
+    reader_id = data.get('readerId', 'null')
+    data = json.loads(cache.get(f'reader-status:{reader_id}', '{"status": "none"}'))
+    return JsonResponse({"status": data.get('status'), "polis": data.get('polis'), "fio": data.get('fio')})
+
+
+def reader_status_update(request):
+    data = json.loads(request.body)
+    reader_id = data.get('readerId')
+
+    if not reader_id:
+        return JsonResponse({"ok": True})
+
+    status = data['status']
+
+    if status == 'inserted':
+        polis = data['polis']
+        fio = data['fio']
+        cache.set(f'reader-status:{reader_id}', json.dumps({
+            "status": 'inserted',
+            "polis": polis,
+            "fio": fio,
+        }), 10)
+    else:
+        cache.set(f'reader-status:{reader_id}', '{"status": "wait"}', 10)
+
     return JsonResponse({"ok": True})

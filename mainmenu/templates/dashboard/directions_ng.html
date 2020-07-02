@@ -3,6 +3,14 @@
 {% block container %}container-fluid{% endblock %}
 {% block navbar_classes %}fluid-nav-cont{% endblock %}
 
+{% block extended_header %}
+    <ul class="nav navbar-nav">
+        <li>
+            <card-reader />
+        </li>
+    </ul>
+{% endblock %}
+
 {% load static %}
 
 {% block content %}

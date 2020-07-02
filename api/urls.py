@@ -35,6 +35,8 @@ urlpatterns = [
     path('job-save', views.job_save),
     path('job-list', views.job_list),
     path('job-cancel', views.job_cancel),
+    path('reader-status', views.reader_status),
+    path('reader-status-update', views.reader_status_update),
     path('researches/', include('api.researches.urls')),
     path('patients/', include('api.patients.urls')),
     path('directions/', include('api.directions.urls')),
