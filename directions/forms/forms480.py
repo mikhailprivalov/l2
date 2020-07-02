@@ -111,7 +111,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph(f'6. СНИЛС: {snils}', style))
         address = ind_data['main_address']
         objs.append(Paragraph(f'7. Место регистрации: {address}', style))
-        objs.append(Paragraph(f'8. Местность: городская — 1, сельская — 2.', style))
+        objs.append(Paragraph('8. Местность: городская — 1, сельская — 2.', style))
         objs.append(Paragraph('9. Диагноз основного заболевания (состояния)_______________________________________________________________', style))
         objs.append(Paragraph('_______________________________________________________________________________________________________', style))
         objs.append(Paragraph('_______________________________________________________________________________________________________', style))
