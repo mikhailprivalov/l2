@@ -984,6 +984,13 @@ class Card(models.Model):
                 print('Updated:', updated)
                 c.save(update_fields=updated)
 
+            if polis:
+                cdu = CardDocUsage.objects.filter(card=c, document__document_type=polis.document_type)
+                if not cdu.exists():
+                    CardDocUsage(card=c, document=polis).save()
+                else:
+                    cdu.update(document=polis)
+
             return c
 
         with transaction.atomic():

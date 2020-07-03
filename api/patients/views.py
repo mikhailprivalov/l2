@@ -535,7 +535,7 @@ def edit_doc(request):
 def update_cdu(request):
     request_data = json.loads(request.body)
     card = Card.objects.get(pk=request_data["card_pk"])
-    doc = Document.objects.get(pk=request_data["doc_pk"])
+    doc = Document.objects.get(pk=request_data["doc"])
     cdu = CardDocUsage.objects.filter(card=card, document__document_type=doc.document_type)
     if not cdu.exists():
         CardDocUsage(card=card, document=doc).save()
