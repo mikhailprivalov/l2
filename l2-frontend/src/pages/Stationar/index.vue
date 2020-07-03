@@ -287,7 +287,7 @@
         <div style="padding: 5px" v-if="!opened_form_pk">
           <AggregateLaboratory v-if="opened_list_key === 'laboratory'" :pk="iss" disabled />
           <AggregateDesc
-            v-if="['paraclinical', 'consultation', 'diaries'].includes(opened_list_key)"
+            v-if="['paraclinical', 'consultation', 'diaries', 'morfology'].includes(opened_list_key)"
             :pk="iss"
             :r_type="opened_list_key"
             disabled
