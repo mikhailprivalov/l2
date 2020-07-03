@@ -5,16 +5,6 @@
         <i class="fa fa-circle status" :class="`status-${status}`"></i> {{textStatus}}
       </a>
     </li>
-<!--    <li v-if="status === 'inserted'" v-tippy="{ placement : 'bottom', arrow: true }" title="Найти пациента">
-      <a href="#" @click.prevent="click">
-          <i class="fa fa-search"></i>
-      </a>
-    </li>
-    <li v-if="status === 'inserted'" v-tippy="{ placement : 'bottom', arrow: true }" title="Создать карту, если не существует">
-      <a href="#" @click.prevent="clickPlus">
-          <i class="fa fa-plus"></i>
-      </a>
-    </li>-->
   </fragment>
 </template>
 

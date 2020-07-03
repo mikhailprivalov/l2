@@ -174,7 +174,7 @@ def patients_search_card(request):
             cards = cards.filter(number=query)
 
     if p_enp and cards:
-        cards = cards.filter(polis__number=query)
+        cards = cards.filter(carddocusage__document__number=query, carddocusage__document__document_type__title='Полис ОМС')
 
     d1, d2 = start_end_year()
 
