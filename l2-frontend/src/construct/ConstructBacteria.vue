@@ -325,6 +325,8 @@
       },
     },
     mounted() {
+      this.load_culture_groups(this.selected1.title, '1')
+      this.load_culture_groups(this.selected2.title, '2')
       this.$root.$on('hide_ge', () => this.group_edit_hide())
       this.$root.$on('hide_fcafbg', () => this.hide_fcafbg())
       this.$root.$on('select2', async (obj) => {
@@ -338,9 +340,23 @@
           return element.title.toLowerCase().includes(this.searchElement.toLowerCase())
         })
       },
-    }
+    },
+    watch: {
+      selected1() {
+        this.load_culture_groups(this.selected1.title, '1')
+      },
+      selected2() {
+        this.load_culture_groups(this.selected2.title, '2')
+      },
+    },
   }
 </script>
+
+<style lang="scss">
+  body {
+    background: #fff;
+  }
+</style>
 
 <style lang="scss" scoped>
   .radio-button-object {
@@ -372,9 +388,14 @@
     padding: 5px;
   }
 
+  .edit-element {
+    background: #fff;
+  }
+
   .list-group {
     height: 330px;
     overflow-y: scroll;
+    background: #fff;
 
     .item {
       background-color: #fff;
