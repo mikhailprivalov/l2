@@ -298,7 +298,7 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=None):
         if not extract:
             hosp_dirs = [i for i in hosp_dirs if i["direction"] <= current_dir]
 
-        # получить по каждому hosp_dirs Дочерние направления по типу is_paraclinic, is_doc_refferal
+        # получить по каждому hosp_dirs Дочерние направления по типу is_paraclinic, is_doc_refferal, is_morfology
         num_paraclinic_dirs = set()
         for h in hosp_dirs:
             obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service=mode, level=2)
@@ -374,6 +374,7 @@ def hosp_get_text_iss(current_iss, is_extract, mode):
         modes = [
             'is_paraclinic',
             'is_doc_refferal',
+            'is_morfology'
         ]
     else:
         modes = [mode]
