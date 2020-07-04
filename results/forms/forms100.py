@@ -10,6 +10,7 @@ from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
 from api.directions.views import directions_anesthesia_load
 import simplejson as json
 from django.http import HttpRequest
+from math import ceil
 
 
 def form_01(direction, iss, fwb, doc, leftnone, user=None):
@@ -55,6 +56,16 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                     step = 0
                     opinion = []
                     cols_count = 0
+                    ######
+                    if len(results_json['data'][0]) > 18:
+                        count_table = ceil(len(results_json['data'][0]) / 18)
+                        if count_table > 1:
+                            tables_obj = {}
+                            for i in range(count_table):
+                                tables_obj[i] = []
+                        print(count_table)
+                        print(tables_obj)
+                    #######
                     for record in results_json['data']:
                         if step == 0:
                             temp_record = [Paragraph('{} {}'.format(el[11:16], normalize_date(el[0:10])[0:5]), styleBold) for el in record]
@@ -64,6 +75,7 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                             temp_record = [Paragraph('{}'.format(el), styleTC) for el in record]
                         opinion.append(temp_record)
                         step += 1
+
                     cols_width = [13 * mm for i in range(cols_count)]
                     cols_width[0] = 35 * mm
                     cols_width[-1] = 15 * mm
