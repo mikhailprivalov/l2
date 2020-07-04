@@ -53,43 +53,45 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                     query_obj.user = user
                     results = directions_anesthesia_load(query_obj)
                     results_json = json.loads(results.content.decode('utf-8'))
-                    step = 0
-                    opinion = []
-                    cols_count = 0
-                    ######
+
+                    count_table = 1
                     if len(results_json['data'][0]) > 18:
                         count_table = ceil(len(results_json['data'][0]) / 18)
-                        if count_table > 1:
-                            tables_obj = {}
-                            for i in range(count_table):
-                                tables_obj[i] = []
-                        print(count_table)
-                        print(tables_obj)
-                    #######
-                    for record in results_json['data']:
-                        if step == 0:
-                            temp_record = [Paragraph('{} {}'.format(el[11:16], normalize_date(el[0:10])[0:5]), styleBold) for el in record]
-                            temp_record[0] = Paragraph('{}'.format(record[0]), styleBold)
-                            cols_count = len(temp_record)
-                        else:
-                            temp_record = [Paragraph('{}'.format(el), styleTC) for el in record]
-                        opinion.append(temp_record)
-                        step += 1
+                    tables_obj = {}
+                    for i in range(count_table):
+                        tables_obj[i] = []
 
-                    cols_width = [13 * mm for i in range(cols_count)]
-                    cols_width[0] = 35 * mm
-                    cols_width[-1] = 15 * mm
+                    slice_count = 18
+                    start = 1
+                    temp_record = []
+                    temp_count_table = 0
+                    for k_table, v_table in tables_obj.items():
+                        temp_count_table += 1
+                        end = start + slice_count
+                        step = 1
+                        for record in results_json['data']:
+                            if step == 1:
+                                temp_record = [Paragraph('{} {}'.format(el[11:16], normalize_date(el[0:10])[0:5]), styleBold) for el in record[start: end]]
+                            else:
+                                temp_record = [Paragraph('{}'.format(el), styleTC) for el in record[start: end]]
+                            temp_record.insert(0, Paragraph('{}'.format(record[0]), styleBold))
+                            v_table.append(temp_record)
+                            step += 1
+                        cols_width = [13 * mm for i in range(len(temp_record))]
+                        cols_width[0] = 35 * mm
+                        if temp_count_table == count_table:
+                            cols_width[-1] = 15 * mm
+                        tbl = Table(v_table, repeatRows=1, colWidths=cols_width, hAlign='LEFT')
+                        tbl.setStyle(TableStyle([
+                            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+                            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ]))
 
-                    tbl = Table(opinion, repeatRows=1, colWidths=cols_width, hAlign='LEFT')
-
-                    tbl.setStyle(TableStyle([
-                        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-                        ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
-                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                    ]))
-
-                    fwb.append(tbl)
-                    fwb.append(Spacer(1, 1 * mm))
+                        fwb.append(tbl)
+                        fwb.append(Spacer(1, 2 * mm))
+                        start = end
+                        end += slice_count
                     continue
 
                 if field_type == 1:
