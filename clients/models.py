@@ -497,6 +497,8 @@ class Individual(models.Model):
             else:
                 indv = Individual.objects.filter(pk=individual.pk)
 
+            enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
+
             if not indv.exists():
                 i = Individual(
                     family=family,
@@ -508,11 +510,19 @@ class Individual(models.Model):
                 )
                 i.save()
             else:
-                if no_update:
+                i = indv[0]
+                ce = Card.objects.filter(individual=i, base__internal_type=True).first()
+                if no_update and ce:
                     print('No update')
+                    polis = i.add_or_update_doc(enp_type, '', enp)
+                    if polis:
+                        cdu = CardDocUsage.objects.filter(card=ce, document__document_type=polis.document_type)
+                        if not cdu.exists():
+                            CardDocUsage(card=ce, document=polis).save()
+                        else:
+                            cdu.update(document=polis)
                     return
                 print('Update patient data')
-                i = indv[0]
                 updated = []
 
                 if i.family != family:
@@ -578,11 +588,11 @@ class Individual(models.Model):
         return updated_data
 
     def add_or_update_doc(self, doc_type: 'DocumentType', serial: str, number: str):
-        ds = Document.objects.filter(individual=self, document_type=doc_type)
+        ds = Document.objects.filter(individual=self, document_type=doc_type, is_active=True)
         if ds.count() > 1:
             ds.delete()
 
-        ds = Document.objects.filter(individual=self, document_type=doc_type)
+        ds = Document.objects.filter(individual=self, document_type=doc_type, is_active=True)
         if ds.count() == 0:
             d = Document(individual=self, document_type=doc_type, serial=serial, number=number)
             d.save()
