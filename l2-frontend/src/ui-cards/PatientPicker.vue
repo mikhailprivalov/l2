@@ -17,8 +17,8 @@
                   style="max-width: 200px;text-align: left!important;">{{selected_base.title}}
           </button>
         </div>
-        <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
-               maxlength="255" @keyup.enter="search">
+        <textarea class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
+                  maxlength="255" @keyup.enter.prevent="search" rows="1" resizable="no"/>
         <span class="rmis-search input-group-btn" v-if="tfoms_query">
           <label class="btn btn-blue-nb nbr height34" style="padding: 5px 12px;">
             <input type="checkbox" v-model="inc_tfoms"/> ТФОМС
@@ -262,6 +262,31 @@
 
   const tfoms_re = /^([А-яЁё\-]+) ([А-яЁё\-]+)( ([А-яЁё\-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
 
+
+  const decodeENPFromPDF417 = s => {
+    s = s.replace('\n', '\r');
+    let r = '';
+
+    for (let i = 2; i < 9; i++) {
+      let c = s.charCodeAt(i);
+      r += c.toString(16);
+    }
+
+    r = parseInt(r, 16)
+    r = r.toString(10)
+    r = r.padStart(16, '0');
+
+    return r;
+  };
+
+  const checkIsPDF417Code = s => {
+    if (s.length < 130) {
+      return false;
+    }
+
+    return [1, 2].includes(s.charCodeAt(0));
+  };
+
   export default {
     name: 'patient-picker',
     components: {Vaccine, SelectPickerB, Modal, L2CardCreate, DReg, Benefit},
@@ -361,7 +386,17 @@
     },
     watch: {
       query() {
-        this.query = this.query.split(' ')
+        if (checkIsPDF417Code(this.query)) {
+          this.query = decodeENPFromPDF417(this.query);
+          this.search();
+          return;
+        }
+
+        if (this.query.length > 0 && [1, 2].includes(this.query.charCodeAt(0))) {
+          return;
+        }
+
+        this.query = this.query.replace(/\n/g, '').split(' ')
           .map((s) => s.split('-').map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
           .join(' ')
       },
@@ -743,6 +778,8 @@
         this.founded_cards = []
         if (this.query.toLowerCase().includes('card_pk:')) {
           this.query = ''
+        } else if (this.query.match(/\d{16}/)) {
+          this.query = '';
         }
         this.emit_input()
       },
@@ -767,7 +804,7 @@
         })
       },
       search() {
-        if (!this.query_valid || this.inLoading)
+        if (!this.query_valid || this.inLoading || checkIsPDF417Code(this.query))
           return
         const q = this.query
         this.check_base()
@@ -1089,6 +1126,13 @@
     border-left: none !important;
     border-top: none !important;
     border-right: none !important;
+  }
+
+  textarea.bob {
+    height: 34px;
+    resize: none;
+    white-space: pre-wrap;
+    overflow: hidden;
   }
 
   .internal_type {
