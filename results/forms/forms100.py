@@ -46,6 +46,7 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
 
                 if field_type == 21:
                     fwb.append(Paragraph(txt, style))
+                    fwb.append(Spacer(1, 4 * mm))
                     txt = ''
                     query_anesthesia = json.dumps({"research_data": {"iss_pk": iss.pk, "field_pk": r.field.pk}})
                     query_obj = HttpRequest()
@@ -57,15 +58,15 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                     count_table = 1
                     if len(results_json['data'][0]) > 18:
                         count_table = ceil(len(results_json['data'][0]) / 18)
-                    tables_obj = {}
+                    tables_obj = []
                     for i in range(count_table):
-                        tables_obj[i] = []
+                        tables_obj.append([])
 
                     slice_count = 18
                     start = 1
                     temp_record = []
                     temp_count_table = 0
-                    for k_table, v_table in tables_obj.items():
+                    for v_table in tables_obj:
                         temp_count_table += 1
                         end = start + slice_count
                         step = 1
