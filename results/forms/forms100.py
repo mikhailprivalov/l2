@@ -27,7 +27,6 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
     styleBold = deepcopy(style)
     styleBold.fontName = "FreeSansBold"
 
-
     styleTC = deepcopy(style)
     styleTC.fontSize = 8
     styleTCBold = deepcopy(style)
