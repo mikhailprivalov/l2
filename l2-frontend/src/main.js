@@ -54,6 +54,7 @@ new Vue({
     'ResultsParaclinic': () => import('./pages/ResultsParaclinic'),
     'StatisticsTickets': () => import('./pages/StatisticsTickets'),
     'DirectionVisit': () => import('./pages/DirectionVisit'),
+    'PlanOperations': () => import('./pages/PlanOperations'),
     'ResultsReport': () => import('./pages/ResultsReport'),
     'RmqManagement': () => import('./ui-cards/RmqManagement'),
     'DirectionSteps': () => import('./ui-cards/DirectionSteps'),

@@ -1531,3 +1531,14 @@ class Result(models.Model):
 class DirectionToUserWatch(models.Model):
     direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE)
     doc = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE)
+
+
+class PlanOperation(models.Model):
+    date = models.DateTimeField(null=True, blank=True, help_text='Время на операцию', db_index=True)
+    direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE)
+    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True,related_name="doc_create_plan", help_text='Создатель планирвоания', on_delete=models.SET_NULL)
+    patient_card = models.ForeignKey(Clients.Card, null=True, help_text='Карта пациента', db_index=True, on_delete=models.SET_NULL)
+    type_operation = models.TextField(default=None, blank=True, null=True, help_text="Вид операции")
+    doc_operate = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_operate", help_text='Кто опрерирует', on_delete=models.SET_NULL)
+    doc_anesthetist = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_anesthetist", help_text='Кто опрерирует', on_delete=models.SET_NULL)
+
