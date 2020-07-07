@@ -24,7 +24,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, PageBreak, Macro
 
 from appconf.manager import SettingManager
 from clients.models import Card
@@ -32,49 +32,7 @@ from directions.models import Napravleniya, IstochnikiFinansirovaniya, PersonCon
 from laboratory import utils
 from laboratory.settings import FONTS_FOLDER, BASE_DIR
 from . import forms_func
-
-
-class PageNumCanvas(canvas.Canvas):
-    """
-    Adding a Page Number of Total
-    """
-
-    # ----------------------------------------------------------------------
-    def __init__(self, *args, **kwargs):
-        """Constructor"""
-        canvas.Canvas.__init__(self, *args, **kwargs)
-        self.pages = []
-
-    # ----------------------------------------------------------------------
-    def showPage(self):
-        """
-        On a page break, add information to the list
-        """
-        self.pages.append(dict(self.__dict__))
-        self._startPage()
-
-    # ----------------------------------------------------------------------
-    def save(self):
-        """
-        Add the page number to each page (page x of y)
-        """
-        page_count = len(self.pages)
-
-        for page in self.pages:
-            self.__dict__.update(page)
-            self.draw_page_number(page_count)
-            canvas.Canvas.showPage(self)
-
-        canvas.Canvas.save(self)
-
-    # ----------------------------------------------------------------------
-    def draw_page_number(self, page_count):
-        """
-        Add the page number
-        """
-        page = "Лист {} из {}".format(self._pageNumber, page_count)
-        self.setFont("PTAstraSerifReg", 9)
-        self.drawRightString(31 * mm, 10 * mm, page)
+from utils.pagenum import PageNumCanvasPartitionAll
 
 
 def form_01(request_data):
@@ -207,12 +165,19 @@ def form_01(request_data):
     style.alignment = TA_JUSTIFY
     style.firstLineIndent = 15
 
+    styleAppendix = deepcopy(style)
+    styleAppendix.fontSize = 9
+    styleAppendix.firstLineIndent = 8
+    styleAppendix.leading = 9
+
     styleFL = deepcopy(style)
     styleFL.firstLineIndent = 0
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
-    styleCenter = deepcopy(style)
+    styleBoldCenter = deepcopy(styleBold)
+    styleBoldCenter.alignment = TA_CENTER
 
+    styleCenter = deepcopy(style)
     styleCenter.alignment = TA_CENTER
     styleCenter.fontSize = 9
     styleCenter.leading = 10
@@ -246,7 +211,7 @@ def form_01(request_data):
     styleTBold.fontSize = 10
     styleTBold.alignment = TA_LEFT
 
-    styles_obj = {'style': style, 'styleCenter': styleCenter}
+    styles_obj = {'style': style, 'styleCenter': styleCenter, 'styleAppendix': styleAppendix, "styleBoldCenter": styleBoldCenter}
 
     date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
 
@@ -287,6 +252,7 @@ def form_01(request_data):
             body_paragraphs = data['body_paragraphs']
             org_contacts = data['org_contacts']
             executor = data['executor']
+            appendix_paragraphs = data.get('appendix_paragraphs', None)
     else:
         executor = None
 
@@ -863,7 +829,23 @@ def form_01(request_data):
         canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
         canvas.restoreState()
 
-    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
+    if contract_from_file and appendix_paragraphs:
+        objs.append(PageBreak())
+        objs.append(Macro("canvas._pageNumber=1"))
+        for section in appendix_paragraphs:
+            if section.get('patient_fio'):
+                objs.append(Paragraph(f"{section['text']} {patient_data['fio']} ({patient_data['born']})", styles_obj[section['style']]))
+            elif section.get('patient_addresses'):
+                objs.append(Paragraph(f"{section['text']} {patient_data['main_address']}", styles_obj[section['style']]))
+            elif section.get('patient_document'):
+                objs.append(Paragraph(f"{section['text']} {patient_data['type_doc']} {p_doc_serial} {p_doc_num}", styles_obj[section['style']]))
+            elif section.get('executor_l2'):
+                objs.append(Paragraph(f"{section['text']} {exec_person}", styles_obj[section['style']]))
+            else:
+                objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
+
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvasPartitionAll)
 
     pdf = buffer.getvalue()
 
