@@ -23,7 +23,6 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen import canvas
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, PageBreak, Macro
 
 from appconf.manager import SettingManager
@@ -843,7 +842,6 @@ def form_01(request_data):
                 objs.append(Paragraph(f"{section['text']} {exec_person}", styles_obj[section['style']]))
             else:
                 objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
-
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvasPartitionAll)
 
