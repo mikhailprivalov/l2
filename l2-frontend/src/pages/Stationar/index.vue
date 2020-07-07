@@ -243,7 +243,7 @@
               </div>
             </div>
           </div>
-          <div class="group" v-if="is_diary(row.research)">
+          <div class="group" v-if="is_diary(row.research) || is_extra">
             <div class="group-title">Направления в рамках приёма</div>
             <div class="row">
               <div class="col-xs-12">
@@ -553,7 +553,7 @@
       },
       is_diary(research) {
         const res_title = research.title.toLowerCase();
-        return res_title.includes('осмотр') || res_title.includes('дневник');
+        return res_title.includes('осмотр') || res_title.includes('дневник') || res_title.includes('диагностич');
       },
       create_directions(iss) {
         this.create_directions_diagnosis = iss.diagnos;

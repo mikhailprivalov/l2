@@ -22,59 +22,41 @@
         <th>Анестезиолог</th>
       </tr>
       </thead>
-      <tbody>
-<!--      <tr v-for="(val, index) in tb_data">-->
-<!--        <td class="cl-td">-->
-<!--          <div class="input-group">-->
-<!--            <div class="input-group-btn">-->
-<!--              <button type="button" class="btn btn-blue-nb nbr" @click="up_row(index)"-->
-<!--                      :disabled="is_first_in_template(index)">-->
-<!--                <i class="glyphicon glyphicon-arrow-up"></i>-->
-<!--              </button>-->
-<!--              <button type="button" class="btn btn-blue-nb" @click="down_row(index)"-->
-<!--                      :disabled="is_last_in_template(index)">-->
-<!--                <i class="glyphicon glyphicon-arrow-down"></i>-->
-<!--              </button>-->
-<!--            </div>-->
-<!--            <input type="text" class="form-control nbr" v-model="val.title" placeholder="Введите наименование">-->
-<!--          </div>-->
-<!--        <td class="cl-td">-->
-<!--          <select class="form-control nbr" v-model="val.type">-->
-<!--            <option :value="t" v-for="t in types">{{t}}</option>-->
-<!--          </select>-->
-<!--        </td>-->
-<!--        <td class="text-center cl-td">-->
-<!--          <label>-->
-<!--            <input type="checkbox" v-model="val.default">-->
-<!--          </label>-->
-<!--        </td>-->
-<!--        <td class="text-center cl-td">-->
-<!--          <button class="btn btn-blue-nb" @click="delete_row(index)" v-tippy="{ placement : 'bottom'}"-->
-<!--                  title="Удалить строку">-->
-<!--            <i class="fa fa-times"/>-->
-<!--          </button>-->
-<!--        </td>-->
-<!--      </tr>-->
-      </tbody>
     </table>
     <button class="btn btn-blue-nb add-row" @click="add_data">
       Добавить
     </button>
+    <plan-operation-edit v-if="edit_plan_operations"></plan-operation-edit>
   </div>
 
 </template>
 
+
 <script>
+
+  import PlanOperationEdit from '../modals/PlanOperationEdit'
+  import L2CardCreate from '../modals/L2CardCreate'
+
   export default {
+    components: {
+      PlanOperationEdit,
+      L2CardCreate
+    },
     name: "PlanOperations",
     data() {
       return {
         title: 'План операций',
+        edit_plan_operations: false
       }
+    },
+    mounted() {
+      this.$root.$on('hide_plan_operations', () => {
+        this.edit_plan_operations = false
+      })
     },
     methods:{
       add_data() {
-        return ''
+        this.edit_plan_operations = true
       }
     }
   }
