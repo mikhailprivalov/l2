@@ -1014,6 +1014,8 @@ class Card(models.Model):
                      main_address=address or ('' if not card_orig else card_orig.main_address),
                      fact_address='' if not card_orig else card_orig.fact_address)
             c.save()
+            if polis:
+                CardDocUsage(card=c, document=polis).save()
             print('Created card')
             return c
 
