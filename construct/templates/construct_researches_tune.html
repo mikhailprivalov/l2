@@ -50,13 +50,22 @@
         </div>
         <h5>Настройка фракций</h5>
         <table id="table-fractions" class="table table-bordered table-responsive">
+            <colgroup>
+                <col width="300" />
+                <col width="160" />
+                <col width="300" />
+                <col width="160" />
+                <col width="380" />
+                <col />
+            </colgroup>
             <thead>
             <tr>
-                <th class="col-xs-2">Фракция (id)</th>
-                <th class="col-xs-2">Формула</th>
-                <th class="col-xs-1">Скрытие</th>
+                <th>Фракция (id)</th>
+                <th>Код ФСЛИ</th>
+                <th>Формула</th>
+                <th>Скрытие</th>
                 <th>Тип поля</th>
-                <th class="col-xs-3">Варианты</th>
+                <th>Варианты</th>
             </tr>
             </thead>
             <tbody>
@@ -208,6 +217,7 @@
                 $.each(data.fractions, function (k, v) {
                     $("#table-fractions tbody").append(`<tr pk='${v.pk}'>
                             <td>&nbsp;${v.title} (${v.pk})<br/>&nbsp;<small><a href='#' onclick='return ref_settings(${v.pk}, "${v.title}");'>Референсы</a></small></td>
+                            <td class='cl-td'><input type='text' class='form-control w100' name='fsli-${v.pk}' value='${v.fsli}' /></td>
                             <td><textarea class='form-control w100' rows='1' id='formula-${v.pk}'>${v.formula}</textarea></td>
                             <td><label class='c'><input type='checkbox' name='hide-${v.pk}' /></label></td>
                             ${radios.f(v.pk)}
@@ -253,7 +263,8 @@
                     hide: $("[name=hide-{0}]".f(tpk)).prop("checked"),
                     render_type: parseInt($("[name=fraction-type-{0}]:checked".f(tpk)).val()),
                     options: $("[data-role='tagsinput']", v).val(),
-                    formula: $("#formula-" + tpk).val()
+                    formula: $("#formula-" + tpk).val(),
+                    fsli: $("[name=fsli-{0}]".f(tpk)).val(),
                 });
             });
             $.ajax({
