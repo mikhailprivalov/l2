@@ -887,7 +887,7 @@ class Card(models.Model):
                 docs[t] = None
         return docs
 
-    def get_data_individual(self, empty=False, full_empty=False):
+    def get_data_individual(self, empty=False, full_empty=False, only_json_serializable=False):
         if not empty and full_empty:
             empty = full_empty
         """
@@ -916,7 +916,8 @@ class Card(models.Model):
         ind_data['number_poliklinika'] = self.number_poliklinika
         ind_data['phone'] = self.get_phones()
         ind_data['work_place'] = self.work_place
-        ind_data['work_place_db'] = self.work_place_db
+        if not only_json_serializable:
+            ind_data['work_place_db'] = self.work_place_db
         ind_data['work_position'] = self.work_position
         ind_data['sex'] = self.individual.sex
 

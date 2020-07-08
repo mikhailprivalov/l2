@@ -35,11 +35,20 @@ def next_result_direction(request):
 def get_dir_amd(request):
     next_n = int(request.GET.get("nextN", 5))
     dirs = sql_if.direction_resend_amd(next_n)
-    naprs = []
-    result = {"ok": False, "next": naprs}
+    result = {"ok": False, "next": []}
     if dirs:
-        naprs = [i[0] for i in dirs]
-        result = {"ok": True, "next": naprs}
+        result = {"ok": True, "next": [i[0] for i in dirs]}
+
+    return Response(result)
+
+
+@api_view()
+def get_dir_n3(request):
+    next_n = int(request.GET.get("nextN", 5))
+    dirs = sql_if.direction_resend_n3(next_n)
+    result = {"ok": False, "next": []}
+    if dirs:
+        result = {"ok": True, "next": [i[0] for i in dirs]}
 
     return Response(result)
 
@@ -88,7 +97,7 @@ def direction_data(request):
         "pk": pk,
         "createdAt": direction.data_sozdaniya,
         "patient": {
-            **card.get_data_individual(full_empty=True),
+            **card.get_data_individual(full_empty=True, only_json_serializable=True),
             "family": individual.family,
             "name": individual.name,
             "patronymic": individual.patronymic,
@@ -114,12 +123,13 @@ def direction_data(request):
 @api_view()
 def issledovaniye_data(request):
     pk = request.GET.get("pk")
+    ignore_sample = request.GET.get("ignoreSample") == 'true'
     i = directions.Issledovaniya.objects.get(pk=pk)
 
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
     results = directions.Result.objects.filter(issledovaniye=i, fraction__fsli__isnull=False)
 
-    if not sample or not results.exists():
+    if (not ignore_sample and not sample) or not results.exists():
         return Response({
             "ok": False,
         })
@@ -132,17 +142,14 @@ def issledovaniye_data(request):
             "fsli": r.fraction.fsli,
             "value": r.value.replace(',', '.'),
             "units": r.get_units(),
-            "ref": list(map(lambda rf: rf if '.' in rf else rf + '.0', map(lambda f: f.replace(',', '.'),
-                                                                           r.calc_normal(only_ref=True).get("r",
-                                                                                                            r.value).split(
-                                                                               "-"))))
+            "ref": list(map(lambda rf: rf if '.' in rf else rf + '.0', map(lambda f: f.replace(',', '.'), (r.calc_normal(only_ref=True) or '').split("-"))))
         })
 
     return Response({
         "ok": True,
         "pk": pk,
         "sample": {
-            "date": sample.time_get.date()
+            "date": sample.time_get.date() if sample else i.time_confirmation.date(),
         },
         "date": i.time_confirmation.date(),
         "results": results_data,
@@ -153,9 +160,11 @@ def issledovaniye_data(request):
 @api_view()
 def make_log(request):
     key = request.GET.get("key")
+    keys = request.GET.get("keys", key).split(",")
     t = int(request.GET.get("type"))
-    if t in (60000, 60001):
-        Log.log(key=key, type=t)
+    for k in keys:
+        if t in (60000, 60001, 60002, 60003) and k:
+            Log.log(key=k, type=t, body='')
     return Response({
         "ok": True,
     })
