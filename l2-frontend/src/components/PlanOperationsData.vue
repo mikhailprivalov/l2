@@ -11,18 +11,27 @@
       </div>
       <div class="form-row">
         <div class="row-t">Врач-хирург</div>
+<!--        <select v-model="selected" class="row-v">-->
+<!--        </select>-->
+        <div class="row-v">
+          <treeselect class="vue-treeselect__control_my"
+            :multiple="false"
+            :options="options"
+            placeholder="Select "
+          />
+        </div>
       </div>
       <div class="form-row">
         <div class="row-t">Вид операции</div>
       </div>
       <div class="row color-bottom">
         <div style="float: right; margin-right: 10px; padding-right: 10px" >
-              <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px">
-                Сохранить в план
-              </button>
-              <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px">
-                Удалить из плана
-              </button>
+          <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px">
+            Сохранить в план
+          </button>
+          <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px">
+            Удалить из плана
+          </button>
           </div>
       </div>
     </div>
@@ -30,9 +39,65 @@
 </template>
 
 <script>
-    export default {
-        name: "PlanOperationsData"
+  import Treeselect from '@riophae/vue-treeselect'
+  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+
+  import vSelect from 'vue-select'
+  import 'vue-select/dist/vue-select.css';
+
+  export default {
+    name: "PlanOperationsData",
+    components: {Treeselect, vSelect},
+    data() {
+      return {
+        types: ['Иванов', 'Петров', 'Сидоров'],
+        docs_hirurg: '',
+        options: [{
+          id: 'Лор',
+          label: 'Лор',
+          children: [{
+            id: 'Борисенко',
+            label: 'Борисенко',
+            isNew: true,
+          }, {
+            id: 'Шгрушев',
+            label: 'Шгрушев 🍇',
+            children: [{
+            id: 'Борисенко',
+            label: 'Борисенко',
+            isNew: true,
+          }]
+          },
+           {
+            id: 'Хлюздин',
+            label: 'Хлюздин 🍐',
+          }, {
+            id: 'Другой',
+            label: 'Другой 🍓',
+          }, {
+            id: 'watermelon',
+            label: 'Watermelon 🍉',
+          }],
+        }, {
+          id: 'Хирургия',
+          label: 'Хирургия',
+          children: [{
+            id: 'Иванов',
+            label: 'Иванов',
+          }, {
+            id: 'Петров',
+            label: 'Петров',
+          }, {
+            id: 'Сидоров',
+            label: 'Сидоров',
+          }, {
+            id: 'Киткин',
+            label: 'Киткин',
+          }],
+        }],
+      }
     }
+  }
 </script>
 
 <style scoped lang="scss">
@@ -104,9 +169,9 @@
       background: #fff;
       border: none;
       border-radius: 0 !important;
-      width: 65%;
+      width: 60%;
       flex: 0 65%;
-      height: 34px;
+      height: 36px;
     }
 
     &.sm-f {
@@ -124,7 +189,7 @@
     }
 
     .row-v {
-      padding: 7px 0 0 10px;
+      padding: 0px 0 0 0px;
     }
 
     /deep/ .input-group {
@@ -148,39 +213,6 @@
     }
   }
 
-  .col-form {
-    &.left {
-      padding-right: 0 !important;
-
-      .row-t, input, .row-v, /deep/ input {
-        border-right: 1px solid #434a54 !important;
-      }
-
-      .form-row .input-group {
-        width: 65%;
-      }
-    }
-
-    &:not(.left):not(.mid) {
-      padding-left: 0 !important;
-
-      .row-t {
-        border-right: 1px solid #434a54;
-      }
-    }
-  }
-
-  .info-row {
-    padding: 7px;
-  }
-
-  .individual {
-    cursor: pointer;
-
-    &:hover {
-      background-color: rgba(0, 0, 0, .15);
-    }
-  }
 
   .str /deep/ .input-group {
     width: 100%;
@@ -196,4 +228,9 @@
       cursor: pointer!important;
     }
   }
+  .vue-treeselect__control_my /deep/ .vue-treeselect__control{
+    border: 0px solid #ddd;
+    border-radius: 0px;
+  }
 </style>
+

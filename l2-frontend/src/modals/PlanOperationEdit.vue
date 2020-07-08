@@ -5,6 +5,7 @@
     <div slot="body" style="min-height: 200px" class="registry-body">
       <plan-operations-data/>
       <select-hospital-directions/>
+
     </div>
     <div slot="footer">
       <div class="row">

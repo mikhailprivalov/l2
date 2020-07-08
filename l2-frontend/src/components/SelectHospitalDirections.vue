@@ -13,14 +13,54 @@
   import vSelect from 'vue-select'
   import 'vue-select/dist/vue-select.css';
   // import directions_point from '../api/directions-point'
+
+    import Treeselect from '@riophae/vue-treeselect'
+  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   export default {
     name: "SelectHospitalDirections",
-    components: {vSelect},
+    components: {vSelect, Treeselect},
     data() {
       return {
         cards: [],
         individuals: [],
-        dirs_options: ['члх', 'нейрохирургия', 'ОПН', 'травматология', 'Пульмунология',]
+        dirs_options: ['члх', 'нейрохирургия', 'ОПН', 'травматология', 'Пульмунология',],
+                options: [{
+          id: 'fruits',
+          label: 'Fruits',
+          children: [{
+            id: 'apple',
+            label: 'Apple 🍎',
+            isNew: true,
+          }, {
+            id: 'grapes',
+            label: 'Grapes 🍇',
+          }, {
+            id: 'pear',
+            label: 'Pear 🍐',
+          }, {
+            id: 'strawberry',
+            label: 'Strawberry 🍓',
+          }, {
+            id: 'watermelon',
+            label: 'Watermelon 🍉',
+          }],
+        }, {
+          id: 'vegetables',
+          label: 'Vegetables',
+          children: [{
+            id: 'corn',
+            label: 'Corn 🌽',
+          }, {
+            id: 'carrot',
+            label: 'Carrot 🥕',
+          }, {
+            id: 'eggplant',
+            label: 'Eggplant 🍆',
+          }, {
+            id: 'tomato',
+            label: 'Tomato 🍅',
+          }],
+        }],
       }
     }
   }
