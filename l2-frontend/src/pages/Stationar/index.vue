@@ -553,7 +553,7 @@
       },
       is_diary(research) {
         const res_title = research.title.toLowerCase();
-        return res_title.includes('осмотр') || res_title.includes('дневник');
+        return res_title.includes('осмотр') || res_title.includes('дневник') || res_title.includes('диагностический');
       },
       create_directions(iss) {
         this.create_directions_diagnosis = iss.diagnos;
