@@ -33,14 +33,11 @@
 
 
 <script>
-
   import PlanOperationEdit from '../modals/PlanOperationEdit'
-  import L2CardCreate from '../modals/L2CardCreate'
 
   export default {
     components: {
       PlanOperationEdit,
-      L2CardCreate
     },
     name: "PlanOperations",
     data() {
@@ -63,12 +60,5 @@
 </script>
 
 <style scoped>
-  .content-edit {
-    height: 330px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-    position: relative;
-    border-radius: 4px;
-    padding: 5px;
-  }
 
 </style>
