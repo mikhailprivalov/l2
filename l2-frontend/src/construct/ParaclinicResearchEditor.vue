@@ -610,7 +610,6 @@
                     'groups',
                     'site_type',
                     'internal_code'
-
                 ]
                 const moreData = {
                     info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
