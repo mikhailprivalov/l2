@@ -866,6 +866,8 @@ def user_view(request):
             "rmis_password": '',
             "doc_pk": -1,
             "doc_code": -1,
+            "is_anesthetist": False,
+            "is_operate": False
 
         }
     else:
@@ -885,6 +887,8 @@ def user_view(request):
             "rmis_password": '',
             "doc_pk": doc.user.pk,
             "personal_code": doc.personal_code,
+            "is_anesthetist": doc.is_anesthetist,
+            "is_operate": doc.is_operate
         }
 
     return JsonResponse({"user": data})
@@ -903,6 +907,8 @@ def user_save_view(request):
     rmis_login = ud["rmis_login"].strip() or None
     rmis_password = ud["rmis_password"].strip() or None
     personal_code = ud["personal_code"] or 0
+    is_operate = ud["is_operate"] or False
+    is_anesthetist = ud["is_anesthetist"] or False
     npk = pk
     if pk == -1:
         if not User.objects.filter(username=username).exists():
@@ -949,6 +955,8 @@ def user_save_view(request):
             doc.fio = ud["fio"]
             doc.rmis_location = rmis_location
             doc.personal_code = personal_code
+            doc.is_anesthetist = is_anesthetist
+            doc.is_operate = is_operate
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:
