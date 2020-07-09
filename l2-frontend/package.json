@@ -27,7 +27,7 @@
     "style-loader": "^0.23.1",
     "textarea-caret": "^3.1.0",
     "tiptap": "^1.26.6",
-    "tiptap-extensions": "^1.28.6",
+    "tiptap-extensions": "^1.31.0",
     "transform-runtime": "0.0.0",
     "v-tooltip": "^2.0.3",
     "vue": "^2.6.11",
