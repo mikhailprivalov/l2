@@ -365,7 +365,7 @@ def researches_get_details(request):
             return_result["fractions"].append(
                 {"pk": fraction.pk, "title": fraction.title, "hide": fraction.hide, "render_type": fraction.render_type,
                  "formula": fraction.formula,
-                 "sw": fraction.sort_weight, "options": fraction.options})
+                 "sw": fraction.sort_weight, "options": fraction.options, "fsli": fraction.fsli or ''})
     else:
         data = json.loads(request.POST["data"])
         for row in data:
@@ -375,6 +375,7 @@ def researches_get_details(request):
                 temp_fraction.render_type = row["render_type"]
                 temp_fraction.options = row["options"]
                 temp_fraction.formula = row["formula"].strip()
+                temp_fraction.fsli = row["fsli"].strip() or None
                 temp_fraction.save()
         return_result["ok"] = True
     return JsonResponse(return_result)
