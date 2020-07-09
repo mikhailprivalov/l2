@@ -44,6 +44,12 @@
           <input type="text" class="form-control f-code" v-model="code">
           <span class="input-group-addon">Код (внутр)</span>
           <input type="text" class="form-control f-code" v-model="internal_code">
+          <span class="input-group-addon"> Ф.направления </span>
+          <select class="form-control" v-model="direction_current_form">
+            <option :value="d[0]" v-for="d in direction_forms">
+              {{d[1]}}
+            </option>
+          </select>
         </div>
         <div class="input-group">
           <label class="input-group-addon" style="height: 34px;text-align: left;">
@@ -325,6 +331,8 @@
                 short_title: '',
                 code: '',
                 internal_code: '',
+                direction_current_form: '',
+                direction_forms: '',
                 info: '',
                 hide: false,
                 cancel_do: false,
@@ -555,6 +563,8 @@
                 this.hide = false
                 this.site_type = null
                 this.groups = []
+                this.direction_current_form = ''
+                this.direction_forms = ''
                 if (this.pk >= 0) {
                     this.$store.dispatch(action_types.INC_LOADING)
                     construct_point.researchDetails(this, 'pk').then(data => {
@@ -562,6 +572,8 @@
                         this.short_title = data.short_title
                         this.code = data.code
                         this.internal_code = data.internal_code
+                        this.direction_current_form = data.direction_current_form
+                        this.direction_forms = data.direction_forms
                         this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
                         this.hide = data.hide
                         this.site_type = data.site_type
@@ -595,7 +607,8 @@
                     'hide',
                     'groups',
                     'site_type',
-                    'internal_code'
+                    'internal_code',
+                    'direction_current_form',
                 ]
                 const moreData = {
                     info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
