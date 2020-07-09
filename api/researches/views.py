@@ -147,6 +147,7 @@ def researches_params(request):
 def researches_update(request):
     response = {"ok": False}
     request_data = json.loads(request.body)
+    print(request_data)
     pk = request_data.get("pk", -2)
     if pk > -2:
         department_pk = request_data.get("department")
@@ -154,6 +155,8 @@ def researches_update(request):
         short_title = request_data.get("short_title", "").strip()
         code = request_data.get("code", "").strip()
         internal_code = request_data.get("internal_code", "").strip()
+        direction_current_form = request_data.get("direction_current_form", "")
+        print(direction_current_form)
         info = request_data.get("info", "").strip()
         hide = request_data.get("hide")
         site_type = request_data.get("site_type", None)
@@ -183,7 +186,7 @@ def researches_update(request):
                                   is_gistology=department_pk == -8,
                                   is_slave_hospital=stationar_slave,
                                   microbiology_tube_id=tube if department_pk == -6 else None,
-                                  site_type_id=site_type, internal_code=internal_code)
+                                  site_type_id=site_type, internal_code=internal_code, direction_form=direction_current_form)
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
                 res.title = title
@@ -204,6 +207,7 @@ def researches_update(request):
                 res.hide = hide
                 res.site_type_id = site_type
                 res.internal_code = internal_code
+                res.direction_form = direction_current_form
             if res:
                 res.save()
                 if main_service_pk != 1 and stationar_slave:
@@ -307,6 +311,9 @@ def researches_details(request):
         response["tube"] = res.microbiology_tube_id or -1
         response["site_type"] = res.site_type_id
         response["internal_code"] = res.internal_code
+        response["direction_current_form"] = res.direction_form
+        response["direction_forms"] = res.DIRECTION_FORMS
+
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
                  "hide": group.hide, "fields": [], "visibility": group.visibility}

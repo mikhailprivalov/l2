@@ -100,8 +100,12 @@
           <div class="input-group" style="width: 100%">
             <span class="input-group-addon">Код врача</span>
             <input class="form-control" v-model="user.personal_code"/>
-            <span class="input-group-addon">Оперирует <input type="checkbox" v-model="user.is_operate"></span>
-            <span class="input-group-addon">Анестезист  <input type="checkbox" v-model="user.is_anesthetist"></span>
+            <label class="input-group-addon">
+              <input type="checkbox" v-model="user.is_operate"/> Оперирует
+            </label>
+            <label class="input-group-addon">
+              <input type="checkbox" v-model="user.is_anesthetist"/> Анестезист
+            </label>
           </div>
           <div class="input-group" style="width: 100%">
             <span class="input-group-addon">Группы</span>
