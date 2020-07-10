@@ -154,7 +154,9 @@ def researches_update(request):
         short_title = request_data.get("short_title", "").strip()
         code = request_data.get("code", "").strip()
         internal_code = request_data.get("internal_code", "").strip()
-        direction_current_form = request_data.get("direction_current_form", "")
+        direction_current_form = request_data.get("direction_current_form", 0)
+        if not direction_current_form:
+            direction_current_form = 0
         info = request_data.get("info", "").strip()
         hide = request_data.get("hide")
         site_type = request_data.get("site_type", None)
