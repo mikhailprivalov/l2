@@ -78,7 +78,8 @@ def get_researches(request):
 @login_required
 @group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Врач стационара")
 def researches_by_department(request):
-    response = {"researches": []}
+    direction_form = DResearches.DIRECTION_FORMS
+    response = {"researches": [], "direction_forms": direction_form}
     request_data = json.loads(request.body)
     department_pk = int(request_data["department"])
     if -500 >= department_pk > -600:
@@ -312,7 +313,6 @@ def researches_details(request):
         response["site_type"] = res.site_type_id
         response["internal_code"] = res.internal_code
         response["direction_current_form"] = res.direction_form
-        response["direction_forms"] = res.DIRECTION_FORMS
 
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
