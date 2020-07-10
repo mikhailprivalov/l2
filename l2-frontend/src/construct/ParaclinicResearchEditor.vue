@@ -320,7 +320,12 @@
                 type: Boolean,
                 required: false,
                 default: false,
-            }
+            },
+          direction_forms: {
+              type: Array,
+              required: false,
+              default: [],
+          }
         },
         created() {
             this.load()
@@ -332,7 +337,6 @@
                 code: '',
                 internal_code: '',
                 direction_current_form: '',
-                direction_forms: '',
                 info: '',
                 hide: false,
                 cancel_do: false,
@@ -564,7 +568,6 @@
                 this.site_type = null
                 this.groups = []
                 this.direction_current_form = ''
-                this.direction_forms = ''
                 if (this.pk >= 0) {
                     this.$store.dispatch(action_types.INC_LOADING)
                     construct_point.researchDetails(this, 'pk').then(data => {
@@ -573,7 +576,6 @@
                         this.code = data.code
                         this.internal_code = data.internal_code
                         this.direction_current_form = data.direction_current_form
-                        this.direction_forms = data.direction_forms
                         this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
                         this.hide = data.hide
                         this.site_type = data.site_type
