@@ -78,7 +78,8 @@ def get_researches(request):
 @login_required
 @group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Врач стационара")
 def researches_by_department(request):
-    response = {"researches": []}
+    direction_form = DResearches.DIRECTION_FORMS
+    response = {"researches": [], "direction_forms": direction_form}
     request_data = json.loads(request.body)
     department_pk = int(request_data["department"])
     if -500 >= department_pk > -600:
@@ -154,7 +155,9 @@ def researches_update(request):
         short_title = request_data.get("short_title", "").strip()
         code = request_data.get("code", "").strip()
         internal_code = request_data.get("internal_code", "").strip()
-        direction_current_form = request_data.get("direction_current_form", "")
+        direction_current_form = request_data.get("direction_current_form", 0)
+        if not direction_current_form:
+            direction_current_form = 0
         info = request_data.get("info", "").strip()
         hide = request_data.get("hide")
         site_type = request_data.get("site_type", None)
@@ -310,7 +313,6 @@ def researches_details(request):
         response["site_type"] = res.site_type_id
         response["internal_code"] = res.internal_code
         response["direction_current_form"] = res.direction_form
-        response["direction_forms"] = res.DIRECTION_FORMS
 
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
