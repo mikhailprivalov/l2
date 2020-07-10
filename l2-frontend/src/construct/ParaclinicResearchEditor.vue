@@ -44,14 +44,14 @@
           <input type="text" class="form-control f-code" v-model="code">
           <span class="input-group-addon">Код (внутр)</span>
           <input type="text" class="form-control f-code" v-model="internal_code">
+        </div>
+        <div class="input-group">
           <span class="input-group-addon"> Ф.направления </span>
           <select class="form-control" v-model="direction_current_form">
             <option :value="d[0]" v-for="d in direction_forms">
               {{d[1]}}
             </option>
           </select>
-        </div>
-        <div class="input-group">
           <label class="input-group-addon" style="height: 34px;text-align: left;">
             <input type="checkbox" v-model="hide"/> Скрытие исследования
           </label>
