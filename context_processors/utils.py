@@ -79,6 +79,8 @@ def menu(request):
              "module": "paraclinic_module"},
             {"url": '/mainmenu/hosp', "title": "Госпитализация", "nt": True, "access": ["Госпитализация"], "module": "hosp_module"},
             {"url": '/mainmenu/stationar', "title": "Стационар", "nt": False, "access": ["Врач стационара", "t, ad, p"], "module": "l2_hosp"},
+            {"url": '/mainmenu/plan_operations', "title": "План операций", "nt": False,
+             "access": ["Врач стационара", "Лечащий врач", "Оператор лечащего врача", "Врач консультаций" ], "module": "l2_hosp"},
             {"url": '/mainmenu/rmis_confirm', "title": "Подтверждение отправки результатов в РМИС", "nt": False, "access": ["Подтверждение отправки результатов в РМИС"]},
             # {"url": '/cases/', "title": "Случаи обслуживания", "nt": False, "access": []},
         ]

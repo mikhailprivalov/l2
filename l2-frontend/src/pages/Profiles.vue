@@ -100,6 +100,12 @@
           <div class="input-group" style="width: 100%">
             <span class="input-group-addon">Код врача</span>
             <input class="form-control" v-model="user.personal_code"/>
+            <label class="input-group-addon">
+              <input type="checkbox" v-model="user.is_operate"/> Оперирует
+            </label>
+            <label class="input-group-addon">
+              <input type="checkbox" v-model="user.is_anesthetist"/> Анестезист
+            </label>
           </div>
           <div class="input-group" style="width: 100%">
             <span class="input-group-addon">Группы</span>
@@ -193,6 +199,8 @@
           rmis_password: '',
           doc_pk: -1,
           personal_code: -1,
+          is_anesthetist: false,
+          is_operate: false
         },
         open_pk: -2,
       }

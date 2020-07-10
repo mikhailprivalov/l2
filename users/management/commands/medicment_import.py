@@ -7,7 +7,7 @@ from directions.models import KeyValue
 class Command(BaseCommand):
     def add_arguments(self, parser):
         """
-        :param path - файл с кодами МКБ10.2019 + расшифровка
+        :param path - файл с кодами МНН
         """
         parser.add_argument('path', type=str)
 
