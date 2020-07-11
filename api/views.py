@@ -28,6 +28,7 @@ from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, \
     ExcludePurposes
 from utils.dates import try_parse_range, try_strptime
+from .sql_func import users_by_group
 
 
 def translit(locallangstring):
@@ -829,6 +830,20 @@ def laborants(request):
 
 
 @login_required
+def load_hirurgs(request):
+    users = users_by_group(['Оперирует'])
+    podr = ''
+    for i in users:
+        if podr != i[2]:
+            users_in_podr = {'id': i[2]}
+        print(i)
+    hirurgs = [{'id': 'pk', 'label': 'лор', 'children': [{'id': 'id-doc', 'label': 'fio'}, {'id': 'id-doc', 'label': 'fio'}]},
+               {'id': 'pk', 'label': 'хир', 'children': [{'id': 'id-doc', 'label': 'fio'}, {'id': 'id-doc', 'label': 'fio'}]}]
+    data = "hir others"
+    return JsonResponse({"hirurgs": data})
+
+
+@login_required
 @group_required("Создание и редактирование пользователей")
 def users_view(request):
     data = []
@@ -866,9 +881,6 @@ def user_view(request):
             "rmis_password": '',
             "doc_pk": -1,
             "doc_code": -1,
-            "is_anesthetist": False,
-            "is_operate": False
-
         }
     else:
         doc = users.DoctorProfile.objects.get(pk=pk)
@@ -886,9 +898,7 @@ def user_view(request):
             "rmis_login": doc.rmis_login or '',
             "rmis_password": '',
             "doc_pk": doc.user.pk,
-            "personal_code": doc.personal_code,
-            "is_anesthetist": doc.is_anesthetist,
-            "is_operate": doc.is_operate
+            "personal_code": doc.personal_code
         }
 
     return JsonResponse({"user": data})
@@ -907,8 +917,6 @@ def user_save_view(request):
     rmis_login = ud["rmis_login"].strip() or None
     rmis_password = ud["rmis_password"].strip() or None
     personal_code = ud["personal_code"] or 0
-    is_operate = ud["is_operate"] or False
-    is_anesthetist = ud["is_anesthetist"] or False
     npk = pk
     if pk == -1:
         if not User.objects.filter(username=username).exists():
@@ -955,8 +963,6 @@ def user_save_view(request):
             doc.fio = ud["fio"]
             doc.rmis_location = rmis_location
             doc.personal_code = personal_code
-            doc.is_anesthetist = is_anesthetist
-            doc.is_operate = is_operate
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:

@@ -44,5 +44,9 @@ export default generator({
   },
   loadReaderStatus: {
     url: 'reader-status',
-  }
+  },
+  loadHirurgs: {
+    url: 'load-hirurgs',
+  },
+
 });

@@ -11,8 +11,6 @@
       </div>
       <div class="form-row">
         <div class="row-t">Врач-хирург</div>
-<!--        <select v-model="selected" class="row-v">-->
-<!--        </select>-->
         <div class="row-v">
           <treeselect class="vue-treeselect__control_my"
             :multiple="false"
@@ -41,13 +39,13 @@
 <script>
   import Treeselect from '@riophae/vue-treeselect'
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+  import * as action_types from "../store/action-types";
+  import users_point from '../api/user-point'
 
-  import vSelect from 'vue-select'
-  import 'vue-select/dist/vue-select.css';
 
   export default {
     name: "PlanOperationsData",
-    components: {Treeselect, vSelect},
+    components: {Treeselect},
     data() {
       return {
         types: ['Иванов', 'Петров', 'Сидоров'],
@@ -62,11 +60,6 @@
           }, {
             id: 'Шгрушев',
             label: 'Шгрушев 🍇',
-            children: [{
-            id: 'Борисенко',
-            label: 'Борисенко',
-            isNew: true,
-          }]
           },
            {
             id: 'Хлюздин',
@@ -96,6 +89,17 @@
           }],
         }],
       }
+    },
+    created() {
+      this.load_hirurgs()
+    },
+    methods: {
+      async load_hirurgs() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const {hirurgs} = await users_point.loadHirurgs()
+        console.log(hirurgs)
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      },
     }
   }
 </script>

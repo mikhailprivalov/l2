@@ -56,8 +56,6 @@ class DoctorProfile(models.Model):
                                       help_text='Номера очередей (pk) через запятую', db_index=True)
     rmis_login = models.CharField(default='', blank=True, null=True, max_length=50, help_text='РМИС логин')
     rmis_password = models.CharField(default='', blank=True, null=True, max_length=50, help_text='РМИС пароль')
-    is_operate = models.BooleanField(default=False, blank=True, help_text='Оперирует')
-    is_anesthetist = models.BooleanField(default=False, blank=True, help_text='Анестезиолог')
 
     def get_login_id(self):
         if not self.login_id:
