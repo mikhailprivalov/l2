@@ -833,14 +833,27 @@ def laborants(request):
 def load_hirurgs(request):
     users = users_by_group(['Оперирует'])
     podr = ''
+    hirurgs = []
+    users_in_podr = {}
     for i in users:
         if podr != i[2]:
-            users_in_podr = {'id': i[2]}
-        print(i)
-    hirurgs = [{'id': 'pk', 'label': 'лор', 'children': [{'id': 'id-doc', 'label': 'fio'}, {'id': 'id-doc', 'label': 'fio'}]},
-               {'id': 'pk', 'label': 'хир', 'children': [{'id': 'id-doc', 'label': 'fio'}, {'id': 'id-doc', 'label': 'fio'}]}]
+            if users_in_podr:
+                hirurgs.append(users_in_podr)
+            title_podr = i[3]
+            podr = i[2]
+            if i[4]:
+                title_podr = i[4]
+            users_in_podr = {'id': i[2], 'label': title_podr, 'children': []}
+        children = users_in_podr.get('children')
+        children.append({'id': i[0], 'label': i[1]})
+        users_in_podr['children'] = children
+
+    hirurgs.append(users_in_podr)
+    print(hirurgs)
+    # hirurgs = [{'id': 'pk', 'label': 'лор', 'children': [{'id': 'id-doc', 'label': 'fio'}, {'id': 'id-doc', 'label': 'fio'}]},
+    #            {'id': 'pk', 'label': 'хир', 'children': [{'id': 'id-doc', 'label': 'fio'}, {'id': 'id-doc', 'label': 'fio'}]}]
     data = "hir others"
-    return JsonResponse({"hirurgs": data})
+    return JsonResponse({"hirurgs": hirurgs})
 
 
 @login_required

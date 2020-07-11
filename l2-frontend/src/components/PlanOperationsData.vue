@@ -14,7 +14,7 @@
         <div class="row-v">
           <treeselect class="vue-treeselect__control_my"
             :multiple="false"
-            :options="options"
+            :options="hirurgs"
             placeholder="Select "
           />
         </div>
@@ -50,6 +50,7 @@
       return {
         types: ['Иванов', 'Петров', 'Сидоров'],
         docs_hirurg: '',
+        hirurgs: '',
         options: [{
           id: 'Лор',
           label: 'Лор',
@@ -97,7 +98,8 @@
       async load_hirurgs() {
         await this.$store.dispatch(action_types.INC_LOADING)
         const {hirurgs} = await users_point.loadHirurgs()
-        console.log(hirurgs)
+        this.hirurgs = hirurgs
+        console.log(this.hirurgs)
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
     }
