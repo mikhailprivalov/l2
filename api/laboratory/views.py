@@ -30,7 +30,7 @@ def save_fsli(request):
     fractions = request_data['fractions']
     for fd in fractions:
         f = Fractions.objects.get(pk=fd['pk'])
-        nf = fd['fsli'] or None
+        nf = fd['fsli'].strip() or None
         if f != f.get_fsli_code():
             f.fsli = nf
             f.save(update_fields=['fsli'])
