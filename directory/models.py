@@ -557,7 +557,7 @@ class Fractions(models.Model):
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
 
     def get_fsli_code(self):
-        return self.fsli
+        return (self.fsli or '').strip()
 
     def __str__(self):
         return self.research.title + " | " + self.title
