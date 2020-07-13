@@ -139,7 +139,7 @@ def issledovaniye_data(request):
     for r in results:
         results_data.append({
             "pk": r.pk,
-            "fsli": r.fraction.fsli,
+            "fsli": r.fraction.get_fsli_code(),
             "value": r.value.replace(',', '.'),
             "units": r.get_units(),
             "ref": list(map(lambda rf: rf if '.' in rf else rf + '.0', map(lambda f: f.replace(',', '.'), (r.calc_normal(only_ref=True) or '').split("-"))))

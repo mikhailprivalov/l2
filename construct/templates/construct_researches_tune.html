@@ -52,7 +52,6 @@
         <table id="table-fractions" class="table table-bordered table-responsive">
             <colgroup>
                 <col width="300" />
-                <col width="160" />
                 <col width="300" />
                 <col width="160" />
                 <col width="380" />
@@ -61,7 +60,6 @@
             <thead>
             <tr>
                 <th>Фракция (id)</th>
-                <th>Код ФСЛИ</th>
                 <th>Формула</th>
                 <th>Скрытие</th>
                 <th>Тип поля</th>
@@ -217,7 +215,6 @@
                 $.each(data.fractions, function (k, v) {
                     $("#table-fractions tbody").append(`<tr pk='${v.pk}'>
                             <td>&nbsp;${v.title} (${v.pk})<br/>&nbsp;<small><a href='#' onclick='return ref_settings(${v.pk}, "${v.title}");'>Референсы</a></small></td>
-                            <td class='cl-td'><input type='text' class='form-control w100' name='fsli-${v.pk}' value='${v.fsli}' /></td>
                             <td><textarea class='form-control w100' rows='1' id='formula-${v.pk}'>${v.formula}</textarea></td>
                             <td><label class='c'><input type='checkbox' name='hide-${v.pk}' /></label></td>
                             ${radios.f(v.pk)}

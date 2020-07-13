@@ -47,6 +47,7 @@ new Vue({
     'StatisticsTicketsPrintModal': () => import('./modals/StatisticsTicketsPrintModal'),
     'StatisticsResearchesPrintModal': () => import('./modals/StatisticsResearchesPrintModal'),
     'DepartmentsForm': () => import('./forms/DepartmentsForm'),
+    'LaboratoryTune': () => import('./forms/LaboratoryTune'),
     'Directions': () => import('./pages/Directions'),
     'Cases': () => import('./pages/Cases'),
     'ConstructParaclinic': () => import('./construct/ConstructParaclinic'),

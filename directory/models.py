@@ -1,6 +1,7 @@
 from django.db import models, transaction
 from jsonfield import JSONField
 
+from external_system.models import FsliRefbookTest
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 
@@ -554,6 +555,9 @@ class Fractions(models.Model):
     readonly_title = models.BooleanField(default=False, blank=True,
                                          help_text='Только для чтения-суррогатная группа для фракций', db_index=True)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+
+    def get_fsli_code(self):
+        return self.fsli
 
     def __str__(self):
         return self.research.title + " | " + self.title
