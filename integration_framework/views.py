@@ -169,6 +169,8 @@ def make_log(request):
 
     for k in keys:
         if t in (60000, 60001, 60002, 60003) and k:
+            directions.Napravleniya.objects.filter(pk=k).update(need_resend_n3=False)
+
             Log.log(key=k, type=t, body=json.dumps(body.get(k, {})))
     return Response({
         "ok": True,
