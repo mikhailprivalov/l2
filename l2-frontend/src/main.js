@@ -59,6 +59,7 @@ new Vue({
     'RmqManagement': () => import('./ui-cards/RmqManagement'),
     'DirectionSteps': () => import('./ui-cards/DirectionSteps'),
     'Favorites': () => import('./ui-cards/Favorites'),
+    'OperationPlans': () => import('./ui-cards/OperationPlans'),
     'CardReader': () => import('./ui-cards/CardReader'),
     'RmisConfirm': () => import('./pages/RmisConfirm'),
     'Profiles': () => import('./pages/Profiles'),

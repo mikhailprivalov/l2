@@ -282,8 +282,10 @@ def patients_search_individual(request):
 def patients_search_l2_card(request):
     data = []
     request_data = json.loads(request.body)
+    print(request_data)
 
     cards = Card.objects.filter(pk=request_data.get('card_pk', -1))
+    print(cards)
     if cards.exists():
         card_orig = cards[0]
         Card.add_l2_card(card_orig=card_orig)
@@ -308,6 +310,7 @@ def patients_search_l2_card(request):
                          "phones": row.get_phones(),
                          "docs": [{**model_to_dict(x), "type_title": x.document_type.title} for x in docs],
                          "main_diagnosis": row.main_diagnosis})
+    print(data)
     return JsonResponse({"results": data})
 
 

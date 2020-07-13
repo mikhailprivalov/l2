@@ -1,13 +1,20 @@
 <template>
     <div>
-     <div class="form-row">
-        <div class="row-t">Пациент (карта)</div>
+      <div class="form-row">
+        <div class="row-t">Пациент (карта)
+          <a @click.prevent="open_patient_picker" href="#" style="float: right; padding-right: 5px; color: #ffffff">Найти</a>
+        </div>
+        <div class="row-v">
+          <input class="form-control" v-model="patient_data" readonly>
+        </div>
       </div>
       <div class="form-row">
-        <div class="row-t">История</div>
+        <div class="row-t">№ Истории</div>
+        <input class="form-control" v-model="current_direction">
       </div>
       <div class="form-row">
         <div class="row-t">Дата операции</div>
+          <input class="form-control" type="date">
       </div>
       <div class="form-row">
         <div class="row-t">Врач-хирург</div>
@@ -21,6 +28,9 @@
       </div>
       <div class="form-row">
         <div class="row-t">Вид операции</div>
+        <div class="row-v">
+          <input class="form-control">
+        </div>
       </div>
       <div class="row color-bottom">
         <div style="float: right; margin-right: 10px; padding-right: 10px" >
@@ -28,79 +38,109 @@
             Сохранить в план
           </button>
           <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px">
-            Удалить из плана
+            Отменить
           </button>
           </div>
       </div>
+      <modal v-if="patient_to_edit" ref="modalPatientEdit" @close="hide_modal_patient_edit" show-footer="true" white-bg="true"
+             max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+        <span slot="header">Поиск пациента</span>
+        <div slot="body" style="min-height: 140px" class="registry-body">
+          <div style="height: 110px">
+            <patient-small-picker v-model="patient_card_selected" :base_pk="5"/>
+          </div>
+        </div>
+        <div slot="footer">
+          <div class="row">
+            <div class="col-xs-4">
+              <button @click="hide_modal_patient_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+                ОК
+              </button>
+            </div>
+          </div>
+        </div>
+      </modal>
+
     </div>
 
 </template>
 
 <script>
+  import Modal from '../ui-cards/Modal'
   import Treeselect from '@riophae/vue-treeselect'
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   import * as action_types from "../store/action-types";
   import users_point from '../api/user-point'
-
+  import PatientSmallPicker from '../ui-cards/PatientSmallPicker'
+  import patients_point from "../api/patients-point";
 
   export default {
     name: "PlanOperationsData",
-    components: {Treeselect},
+    components: {Treeselect, PatientSmallPicker, Modal},
+     props: {
+      card_pk: {
+        type: Number,
+        required: false
+      },
+      base_pk: {
+        type: Number,
+        required: false
+      },
+      patient_fio: {
+        type: String,
+        required: false
+      },
+      direction: {
+        type: Number,
+        required: false
+      }
+    },
     data() {
       return {
-        types: ['Иванов', 'Петров', 'Сидоров'],
-        docs_hirurg: '',
-        hirurgs: '',
-        options: [{
-          id: 'Лор',
-          label: 'Лор',
-          children: [{
-            id: 'Борисенко',
-            label: 'Борисенко',
-            isNew: true,
-          }, {
-            id: 'Шгрушев',
-            label: 'Шгрушев 🍇',
-          },
-           {
-            id: 'Хлюздин',
-            label: 'Хлюздин 🍐',
-          }, {
-            id: 'Другой',
-            label: 'Другой 🍓',
-          }, {
-            id: 'watermelon',
-            label: 'Watermelon 🍉',
-          }],
-        }, {
-          id: 'Хирургия',
-          label: 'Хирургия',
-          children: [{
-            id: 'Иванов',
-            label: 'Иванов',
-          }, {
-            id: 'Петров',
-            label: 'Петров',
-          }, {
-            id: 'Сидоров',
-            label: 'Сидоров',
-          }, {
-            id: 'Киткин',
-            label: 'Киткин',
-          }],
-        }],
+        hirurgs: [],
+        patient_to_edit: false,
+        patient_card_selected: null,
+        patient_data: '',
+        current_direction:''
       }
     },
     created() {
-      this.load_hirurgs()
+      this.load_hirurgs();
+      this.patient_card_selected = this.card_pk;
+      this.load_patient()
+      this.current_direction = this.direction
+    },
+    watch: {
+
     },
     methods: {
       async load_hirurgs() {
         await this.$store.dispatch(action_types.INC_LOADING)
         const {hirurgs} = await users_point.loadHirurgs()
         this.hirurgs = hirurgs
-        console.log(this.hirurgs)
         await this.$store.dispatch(action_types.DEC_LOADING)
+      },
+      open_patient_picker() {
+        this.patient_card_selected = null
+        this.patient_to_edit = true
+      },
+      hide_modal_patient_edit() {
+        if (this.$refs.modalPatientEdit) {
+          this.load_patient()
+          this.$refs.modalPatientEdit.$el.style.display = 'none';
+          this.patient_to_edit = false
+        }
+      },
+      async load_patient() {
+          if (!this.patient_card_selected) {
+            this.patient_data = ''
+          }
+          else {
+            const l2Card = await patients_point.searchL2Card({'card_pk': this.patient_card_selected})
+            console.log(l2Card)
+            console.log(l2Card.results[0].name)
+            this.patient_data = l2Card.results[0].family + ' ' + l2Card.results[0].name + ' ' + l2Card.results[0].twoname + ' (' + l2Card.results[0].num + ')'
+          }
       },
     }
   }

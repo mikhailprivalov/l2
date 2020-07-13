@@ -1204,7 +1204,8 @@ def directions_paraclinic_result(request):
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if force or diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
                             | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
-                            | Q(research__is_stom=True)).exists() or request.user.is_staff:
+                            | Q(research__is_stom=True)
+                            | Q(research__is_gistology=True)).exists()  or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
         g = [str(x) for x in request.user.groups.all()]
         tadp = TADP in iss.research.title

@@ -26,7 +26,6 @@
                    target="_blank">
                   <span :class="[{invalid: dir.parent.is_confirm}, {isDisabled: !dir.parent.is_confirm}]"> (Создано в амбулаторном приеме: {{dir.parent.pk}} - {{dir.parent.parent_title}})</span>
                 </a>
-
               </div>
               <div v-else><strong>{{dir.pk}}</strong> - {{dir.researches}}</div>
             </li>

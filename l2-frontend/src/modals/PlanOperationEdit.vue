@@ -3,9 +3,7 @@
          marginLeftRight="auto" margin-top>
     <span slot="header">Планирование операции</span>
     <div slot="body" style="min-height: 200px" class="registry-body">
-      <plan-operations-data/>
-      <select-hospital-directions/>
-
+      <plan-operations-data :card_pk="card_pk" :patient_fio="patient_fio"  :direction="direction"/>
     </div>
     <div slot="footer">
       <div class="row">
@@ -32,17 +30,30 @@
     props: {
       card_pk: {
         type: Number,
-        required: true
+        required: false
       },
       base_pk: {
         type: Number,
-        required: true
+        required: false
       },
+      patient_fio: {
+        type: String,
+        required: false
+      },
+      direction: {
+        type: Number,
+        required: false
+      }
     },
     data() {
       return {
         cards: [],
       }
+    },
+    mounted() {
+      console.log('modal', this.patient_fio)
+      console.log('modal-1',this.card_pk)
+      console.log('modal-1',this.direction)
     },
     methods: {
       hide_plan_operations() {
