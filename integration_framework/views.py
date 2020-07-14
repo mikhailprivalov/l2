@@ -162,9 +162,16 @@ def make_log(request):
     key = request.GET.get("key")
     keys = request.GET.get("keys", key).split(",")
     t = int(request.GET.get("type"))
+    body = {}
+
+    if request.method == "POST":
+        body = json.loads(request.body)
+
     for k in keys:
         if t in (60000, 60001, 60002, 60003) and k:
-            Log.log(key=k, type=t, body='')
+            directions.Napravleniya.objects.filter(pk=k).update(need_resend_n3=False)
+
+            Log.log(key=k, type=t, body=json.dumps(body.get(k, {})))
     return Response({
         "ok": True,
     })
