@@ -835,7 +835,7 @@ def autocomplete(request):
                     Q(synonym__istartswith=v)
                 )
 
-            p = p.filter(active=True).distinct('code_fsli').order_by('code_fsli')[:limit]
+            p = p.filter(active=True).distinct('code_fsli').order_by('code_fsli', 'ordering')[:limit]
             if p.exists():
                 data = [{"code_fsli": x.code_fsli, "short_title": x.short_title, "title": x.title, "sample": x.sample, "synonym": x.synonym, "nmu": x.code_nmu} for x in p]
     return JsonResponse({"data": data})

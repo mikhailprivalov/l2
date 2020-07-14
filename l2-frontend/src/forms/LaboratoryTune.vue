@@ -25,7 +25,7 @@
                      SearchingText="Поиск..."
                      :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
                      :limit="10" :minChars="1"
-                     :render="items => items.map(i => `${i.code_fsli} – ${i.title} – ${i.sample}${i.synonym ? ' – ' + i.synonym : ''}${i.nmu ? ' – ' + i.nmu : ''}`)"
+                     :render="items => items.map(i => `${i.code_fsli} – ${i.short_title} – ${i.sample}${i.synonym ? ' – ' + i.synonym : ''}${i.nmu ? ' – ' + i.nmu : ''}`)"
                      :onHit="onHit(f)"
                      :selectFirst="true"
                      maxlength="128"
@@ -80,7 +80,7 @@
       },
       onHit(f) {
         return item => {
-          f.fsli = item.split('–')[0];
+          f.fsli = item.split('–')[0].trim();
         }
       },
     },
@@ -108,8 +108,17 @@
       }
     }
 
-    /deep/ input.form-control {
-      width: 100%!important;
+    /deep/ input {
+      background: #fff;
+      border: none;
+      border-radius: 0 !important;
+      width: 100%;
+      flex: 0 100%;
+    }
+
+    /deep/ .input-group {
+      border-radius: 0;
+      width: 100%;
     }
   }
 </style>

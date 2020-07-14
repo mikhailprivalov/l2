@@ -23,7 +23,7 @@ class FsliRefbookTest(models.Model):
     active = models.BooleanField(default=True, help_text='Единица измерения')
     test_group = models.CharField(max_length=100, help_text='Группа тестов')
     code_nmu = models.CharField(max_length=100, help_text='Код НМУ')
-    sort_num = models.CharField(max_length=100, help_text='Порядок сортировки')
+    ordering = models.IntegerField(help_text='Порядок сортировки', blank=True, default=None, null=True)
 
     def __str__(self):
         return f"{self.code_fsli} – {self.title}"

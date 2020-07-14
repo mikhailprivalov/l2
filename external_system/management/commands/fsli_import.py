@@ -70,13 +70,33 @@ class Command(BaseCommand):
                     FsliRefbookTest(code_fsli=cells[code_fsli], code_loinc=cells[code_loinc], title=cells[title], english_title=cells[english_title], short_title=cells[short_title],
                                     synonym=cells[synonym], analit=cells[analit], analit_props=cells[analit_props], dimension=cells[dimension], unit=cells[unit], sample=cells[sample],
                                     time_characteristic_sample=cells[time_characteristic_sample], method_type=cells[method_type], scale_type=cells[scale_type], actual=cells[actual],
-                                    test_group=cells[test_group], code_nmu=cells[code_nmu], sort_num=cells[sort_num], active=active).save()
+                                    test_group=cells[test_group], code_nmu=cells[code_nmu], ordering=cells[sort_num], active=active).save()
                     print('сохранено', cells[code_fsli])
                 elif r.exists():
-                    r[0].code_loinc = cells[code_loinc]
-                    r[0].title = cells[title]
-                    r[0].english_title = cells[english_title]
-                    r[0].actual = cells[actual]
-                    r[0].active = active
-                    r[0].save()
-                    print('обновлено', cells[code_fsli])
+                    r = r[0]
+                    updated = []
+                    if r.code_loinc != cells[code_loinc]:
+                        r.code_loinc = cells[code_loinc]
+                        updated.append('code_loinc')
+                    if r.title != cells[title]:
+                        r.title = cells[title]
+                        updated.append('title')
+                    if r.english_title != cells[english_title]:
+                        r.english_title = cells[english_title]
+                        updated.append('english_title')
+                    if r.actual != cells[actual]:
+                        r.actual = cells[actual]
+                        updated.append('actual')
+                    if r.active != active:
+                        r.active = active
+                        updated.append('active')
+                    ordering = cells[sort_num] or None
+                    ordering = None if ordering == 'None' else ordering
+                    if r.ordering != ordering:
+                        r.ordering = ordering
+                        updated.append('ordering')
+                    if updated:
+                        r.save(update_fields=updated)
+                        print('обновлено', cells[code_fsli])
+                    else:
+                        print('не обновлено', cells[code_fsli])

@@ -1,7 +1,6 @@
 from django.db import models, transaction
 from jsonfield import JSONField
 
-from external_system.models import FsliRefbookTest
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 
