@@ -437,7 +437,7 @@
     "@babel/helper-wrap-function" "^7.7.0"
     "@babel/plugin-syntax-function-sent" "^7.2.0"
 
-"@babel/plugin-proposal-json-strings@^7.10.1", "@babel/plugin-proposal-json-strings@^7.8.3":
+"@babel/plugin-proposal-json-strings@^7.8.3":
   version "7.10.1"
   resolved "https://registry.yarnpkg.com/@babel/plugin-proposal-json-strings/-/plugin-proposal-json-strings-7.10.1.tgz#b1e691ee24c651b5a5e32213222b2379734aff09"
   integrity sha512-m8r5BmV+ZLpWPtMY2mOKN7wre6HIO4gfIiV+eOmsnZABNenrt/kzYBwrh+KOfgumSWpnlGs5F70J8afYMSJMBg==
@@ -7097,10 +7097,10 @@ vm-browserify@0.0.4:
   dependencies:
     indexof "0.0.1"
 
-vue-apexcharts@^1.5.2:
-  version "1.5.2"
-  resolved "https://registry.yarnpkg.com/vue-apexcharts/-/vue-apexcharts-1.5.2.tgz#d1f55b889718aa9e1c753e267c8cb59055ff89f3"
-  integrity sha512-m7IIyql4yU6cLTu5RODx3DcdxCekmNRzUh7lEoybq2MXcgabmBPhUn8qgXNx1HucWiMNOdXfwq/L6TfCbKnfMw==
+vue-apexcharts@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/vue-apexcharts/-/vue-apexcharts-1.6.0.tgz#c7d3afd93f712433d404e5ceeb4e3aa65f422af2"
+  integrity sha512-sT6tuVTLBwfH3TA7azecDNS/W70bmz14ZJI7aE7QIqcG9I6OywyH7x3hcOeY1v1DxttI8Svc5RuYj4Dd+A5F4g==
 
 vue-autosize@^1.0.2:
   version "1.0.2"
