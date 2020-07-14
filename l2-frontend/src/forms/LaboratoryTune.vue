@@ -24,12 +24,12 @@
                      placeholder="Код ФСЛИ"
                      SearchingText="Поиск..."
                      :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
-                     :limit="10" :minChars="1"
-                     :render="items => items.map(i => `${i.code_fsli} – ${i.short_title} – ${i.sample}${i.synonym ? ' – ' + i.synonym : ''}${i.nmu ? ' – ' + i.nmu : ''}`)"
+                     :limit="14" :minChars="1"
+                     :render="items => items.map(i => `${i.code_fsli} – ${i.title} – ${i.sample}${i.synonym ? ' – ' + i.synonym : ''}${i.nmu ? ' – ' + i.nmu : ''}`)"
                      :onHit="onHit(f)"
                      :selectFirst="true"
                      maxlength="128"
-                     src="/api/autocomplete?value=:keyword&type=fsli&limit=10" v-model="f.fsli"
+                     src="/api/autocomplete?value=:keyword&type=fsli&limit=14" v-model="f.fsli"
           />
         </td>
       </tr>
@@ -90,7 +90,6 @@
 <style scoped lang="scss">
   .root {
     max-width: 650px;
-    margin: 0 auto;
 
     /deep/ ul {
       width: auto;
