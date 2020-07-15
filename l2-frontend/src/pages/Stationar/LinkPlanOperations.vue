@@ -11,7 +11,7 @@
     name: "LinkPlanOperations",
     props: {
       direction: {
-        type: Number,
+        type: String,
         required: true,
       },
     },

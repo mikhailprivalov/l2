@@ -28,19 +28,28 @@
 
     <div id="favorites-view" class="tp">
       <table class="table table-condensed table-bordered">
+        <thead>
+        <tr>
+          <th>История</th>
+          <th>Дата</th>
+          <th>Врач-хирург</th>
+          <th>Операция</th>
+          <th></th>
+        </tr>
+        </thead>
         <tbody>
         <tr v-for="row in data">
           <td>
             <LinkPlanOperations :direction="row.direction" />
           </td>
           <td>
-            20.07.2020
+            {{row.date}}
           </td>
           <td>
-            Удаление грыж межпозвонночной
+             {{row.hirurg}}
           </td>
           <td>
-            Козлов Ю.А.
+             {{row.type_operation}}
           </td>
           <td>
             <a href="#"><i class="fa fa-pencil"></i></a>
@@ -65,29 +74,30 @@
     components: {LinkPlanOperations, PlanOperationEdit},
     data() {
       return {
-        inFavorite: false,
         data: [],
         edit_plan_operations: false,
         patient_fio: '',
         card_pk: '',
         current_direction: '',
         pk_plan: ''
-
       }
     },
     mounted() {
       this.$root.$on('hide_plan_operations', () => {
         this.edit_plan_operations = false
+        this.load();
       });
       this.$root.$on('current_history_direction', (data) => {
         this.current_direction = data.history_num
         this.card_pk = data.patient.card_pk
         this.patient_fio = data.patient.fio_age.split('+')[0]
-      })
+        this.load();
+      });
     },
+
     methods: {
       async load() {
-        const {data} = await directions_point.allDirectionsInFavorites()
+        const {data} = await directions_point.getPlanExaminationPatient({'card_pk': this.card_pk})
         this.data = data;
       },
       add_data() {

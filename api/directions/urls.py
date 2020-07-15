@@ -35,4 +35,5 @@ urlpatterns = [
     path('direction-in-favorites', views.direction_in_favorites),
     path('all-directions-in-favorites', views.all_directions_in_favorites),
     path('plan-examinations', views.plan_examinations),
+    path('get-plan-examinations_by_patient', views.get_plan_examinations_by_patient),
 ]

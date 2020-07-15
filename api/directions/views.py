@@ -1695,16 +1695,20 @@ def all_directions_in_favorites(request):
 @login_required
 def plan_examinations(request):
     request_data = json.loads(request.body)
-    print(request_data)
-    # date = request_data['date']
-    # pk_plan = request_data['pk_plan']
-    # type_examination = request_data['type_examination']
-    # patient_card = request_data['card_pk']
-    # direction = request_data['direction']
-    # type_operation = request_data['type_operation']
-    # doc_who_create = request.user.doctorprofile,
-    # doc_operate = request_data['hirurg']
-    # doc_anesthetist = request_data.get('doc_anesthetist', None)
-    a = PlanExamination.save_data(request_data, request.user.doctorprofile)
+    PlanExamination.save_data(request_data, request.user.doctorprofile)
 
-    return JsonResponse({"data": '1'})
+    return JsonResponse({"data": ''})
+
+
+@login_required
+def get_plan_examinations_by_patient(request):
+    request_data = json.loads(request.body)
+    start_date = datetime.combine(current_time(), dtime.min)
+    patient_card = Card.objects.filter(pk=request_data['card_pk'])[0]
+    result = PlanExamination.objects.filter(patient_card=patient_card, date__gte=start_date, type_examinations=0).order_by('date')
+    data = [{'direction': i.direction, 'hirurg': i.doc_operate.get_fio(), 'date': strdate(i.date), 'type_operation': i.type_operation} for i in result]
+    print(data)
+
+
+    return JsonResponse({"data": data})
+
