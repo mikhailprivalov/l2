@@ -116,4 +116,8 @@ export default generator({
   allDirectionsInFavorites: {
     url: 'directions/all-directions-in-favorites',
   },
+  planExamination: {
+    url: 'directions/plan-examinations',
+  },
+
 })

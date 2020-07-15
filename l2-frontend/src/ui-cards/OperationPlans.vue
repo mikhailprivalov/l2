@@ -51,7 +51,7 @@
       <br/>
       <a href="#" style="float: right"  @click.prevent="add_data">Добавить</a>
     </div>
-    <plan-operation-edit v-if="edit_plan_operations" :card_pk="card_pk" :patient_fio="patient_fio"  :direction="current_direction" />
+    <plan-operation-edit v-if="edit_plan_operations" :card_pk="card_pk" :patient_fio="patient_fio"  :direction="current_direction" :pk_plan="pk_plan"/>
   </fragment>
 </template>
 
@@ -70,7 +70,8 @@
         edit_plan_operations: false,
         patient_fio: '',
         card_pk: '',
-        current_direction: ''
+        current_direction: '',
+        pk_plan: ''
 
       }
     },
@@ -91,6 +92,7 @@
       },
       add_data() {
         this.edit_plan_operations = true
+        this.pk_plan = -1
       }
     }
   }

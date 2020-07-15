@@ -850,9 +850,6 @@ def load_hirurgs(request):
 
     hirurgs.append(users_in_podr)
     print(hirurgs)
-    # hirurgs = [{'id': 'pk', 'label': 'лор', 'children': [{'id': 'id-doc', 'label': 'fio'}, {'id': 'id-doc', 'label': 'fio'}]},
-    #            {'id': 'pk', 'label': 'хир', 'children': [{'id': 'id-doc', 'label': 'fio'}, {'id': 'id-doc', 'label': 'fio'}]}]
-    data = "hir others"
     return JsonResponse({"hirurgs": hirurgs})
 
 

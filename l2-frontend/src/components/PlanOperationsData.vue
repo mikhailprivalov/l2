@@ -2,7 +2,7 @@
     <div>
       <div class="form-row">
         <div class="row-t">Пациент (карта)
-          <a @click.prevent="open_patient_picker" href="#" style="float: right; padding-right: 5px; color: #ffffff">Найти</a>
+          <a @click.prevent="open_patient_picker" :class="{unvisible: patient_fio}" href="#" style="float: right; padding-right: 5px; color: #ffffff;">Найти</a>
         </div>
         <div class="row-v">
           <input class="form-control" v-model="patient_data" readonly>
@@ -14,31 +14,30 @@
       </div>
       <div class="form-row">
         <div class="row-t">Дата операции</div>
-          <input class="form-control" type="date">
+          <input class="form-control" type="date" :min="timeValue" v-model="current_time">
       </div>
       <div class="form-row">
         <div class="row-t">Врач-хирург</div>
         <div class="row-v">
-          <treeselect class="vue-treeselect__control_my"
-            :multiple="false"
-            :options="hirurgs"
-            placeholder="Select "
+          <treeselect class="vue-treeselect__control_my" :multiple="false" :options="hirurgs" placeholder="Select"
+                      v-model="current_hirurg"
           />
         </div>
       </div>
       <div class="form-row">
         <div class="row-t">Вид операции</div>
         <div class="row-v">
-          <input class="form-control">
+          <input class="form-control" v-model="type_operation">
         </div>
       </div>
       <div class="row color-bottom">
         <div style="float: right; margin-right: 10px; padding-right: 10px" >
-          <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px">
+          <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px" @click="save_to_plan"
+                  :class="[{btndisable: !current_hirurg || !current_direction || !card_pk || !current_time}]">
             Сохранить в план
           </button>
           <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px">
-            Отменить
+            Отменить операцию
           </button>
           </div>
       </div>
@@ -47,7 +46,7 @@
         <span slot="header">Поиск пациента</span>
         <div slot="body" style="min-height: 140px" class="registry-body">
           <div style="height: 110px">
-            <patient-small-picker v-model="patient_card_selected" :base_pk="5"/>
+            <patient-small-picker v-model="card_pk" :base_pk="5"/>
           </div>
         </div>
         <div slot="footer">
@@ -73,6 +72,8 @@
   import users_point from '../api/user-point'
   import PatientSmallPicker from '../ui-cards/PatientSmallPicker'
   import patients_point from "../api/patients-point";
+  import directions_point from '../api/directions-point'
+  import moment from "moment";
 
   export default {
     name: "PlanOperationsData",
@@ -93,25 +94,30 @@
       direction: {
         type: Number,
         required: false
-      }
+      },
+       pk_plan: {
+         type: Number,
+         required: false
+       },
     },
     data() {
       return {
         hirurgs: [],
         patient_to_edit: false,
-        patient_card_selected: null,
         patient_data: '',
-        current_direction:''
+        current_direction: '',
+        timeValue: moment().format('YYYY-MM-DD'),
+        current_hirurg: null,
+        current_time: '',
+        type_operation: ''
       }
     },
     created() {
       this.load_hirurgs();
-      this.patient_card_selected = this.card_pk;
-      this.load_patient()
-      this.current_direction = this.direction
-    },
-    watch: {
-
+      if (this.patient_fio && this.card_pk) {
+        this.patient_data = this.patient_fio
+      }
+      this.current_direction = this.direction;
     },
     methods: {
       async load_hirurgs() {
@@ -121,7 +127,7 @@
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       open_patient_picker() {
-        this.patient_card_selected = null
+        this.card_pk = null
         this.patient_to_edit = true
       },
       hide_modal_patient_edit() {
@@ -132,60 +138,51 @@
         }
       },
       async load_patient() {
-          if (!this.patient_card_selected) {
+          if (!this.card_pk) {
             this.patient_data = ''
           }
           else {
-            const l2Card = await patients_point.searchL2Card({'card_pk': this.patient_card_selected})
-            console.log(l2Card)
-            console.log(l2Card.results[0].name)
+            const l2Card = await patients_point.searchL2Card({'card_pk': this.card_pk})
             this.patient_data = l2Card.results[0].family + ' ' + l2Card.results[0].name + ' ' + l2Card.results[0].twoname + ' (' + l2Card.results[0].num + ')'
           }
+      },
+      async save_to_plan(){
+        await this.$store.dispatch(action_types.INC_LOADING)
+        await directions_point.planExamination({
+          'pk_plan': this.pk_plan,
+          'card_pk': this.card_pk,
+          'direction': this.direction,
+          'hirurg': this.current_hirurg,
+          'date': this.current_time,
+          'type_operation': this.type_operation,
+          'type_examination': 0
+        })
+        this.current_hirurg = null;
+        this.current_time = '';
+        this.type_operation = '';
+        await this.$store.dispatch(action_types.DEC_LOADING)
+        okmessage('Сохранено');
       },
     }
   }
 </script>
 
 <style scoped lang="scss">
+   .btndisable {
+     cursor: not-allowed;
+     pointer-events: none;
+
+     /*Button disabled - CSS color class*/
+     color: #c0c0c0;
+     background-color: #ffffff;
+   }
+
+  .unvisible{
+    visibility: hidden;
+  }
+
   .color-bottom {
     border-bottom: 1px solid #434a54;
-  }
-
-  select.form-control {
-    padding: 0;
-    overflow: visible;
-  }
-
-  .nonPrior {
-    opacity: .7;
-
-    &:hover {
-      opacity: 1;
-    }
-  }
-
-  .prior {
-    background-color: rgba(#000, .05);
-  }
-
-  .modal-mask {
-    align-items: stretch !important;
-    justify-content: stretch !important;
-  }
-
-  /deep/ .panel-flt {
-    margin: 41px;
-    align-self: stretch !important;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /deep/ .panel-body {
-    flex: 1;
-    padding: 0;
-    height: calc(100% - 91px);
-    min-height: 200px;
   }
 
   .form-row {
@@ -241,39 +238,8 @@
     /deep/ .input-group {
       border-radius: 0;
     }
-
-    /deep/ ul {
-      width: auto;
-      font-size: 13px;
-    }
-
-    /deep/ ul li {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      padding: 2px .25rem;
-      margin: 0 .2rem;
-
-      a {
-        padding: 2px 10px;
-      }
-    }
   }
 
-
-  .str /deep/ .input-group {
-    width: 100%;
-  }
-
-  .lst {
-    margin: 0;
-    line-height: 1;
-  }
-
-  .c-pointer {
-    &, & strong, &:hover {
-      cursor: pointer!important;
-    }
-  }
   .vue-treeselect__control_my /deep/ .vue-treeselect__control{
     border: 0px solid #ddd;
     border-radius: 0px;

@@ -3,7 +3,7 @@
          marginLeftRight="auto" margin-top>
     <span slot="header">Планирование операции</span>
     <div slot="body" style="min-height: 200px" class="registry-body">
-      <plan-operations-data :card_pk="card_pk" :patient_fio="patient_fio"  :direction="direction"/>
+      <plan-operations-data :card_pk="card_pk" :patient_fio="patient_fio"  :direction="direction" :pk_plan="pk_plan"/>
     </div>
     <div slot="footer">
       <div class="row">
@@ -43,7 +43,11 @@
       direction: {
         type: Number,
         required: false
-      }
+      },
+      pk_plan: {
+        type: Number,
+        required: false
+      },
     },
     data() {
       return {

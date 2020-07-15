@@ -21,7 +21,7 @@ from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
 from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult, Recipe, MethodsOfTaking, \
     ExternalOrganization, MicrobiologyResultCulture, \
-    MicrobiologyResultCultureAntibiotic, DirectionToUserWatch
+    MicrobiologyResultCultureAntibiotic, DirectionToUserWatch, PlanExamination
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
 from laboratory import utils
@@ -1690,3 +1690,21 @@ def all_directions_in_favorites(request):
     } for x in DirectionToUserWatch.objects.filter(doc=doc).order_by('pk')]
 
     return JsonResponse({"data": data})
+
+
+@login_required
+def plan_examinations(request):
+    request_data = json.loads(request.body)
+    print(request_data)
+    # date = request_data['date']
+    # pk_plan = request_data['pk_plan']
+    # type_examination = request_data['type_examination']
+    # patient_card = request_data['card_pk']
+    # direction = request_data['direction']
+    # type_operation = request_data['type_operation']
+    # doc_who_create = request.user.doctorprofile,
+    # doc_operate = request_data['hirurg']
+    # doc_anesthetist = request_data.get('doc_anesthetist', None)
+    a = PlanExamination.save_data(request_data, request.user.doctorprofile)
+
+    return JsonResponse({"data": '1'})
