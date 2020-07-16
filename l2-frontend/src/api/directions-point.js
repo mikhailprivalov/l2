@@ -120,6 +120,6 @@ export default generator({
     url: 'directions/plan-examinations',
   },
   getPlanExaminationPatient: {
-    url: 'directions/get-plan-examinations_by_patient',
+    url: 'directions/get-plan-operation-by-patient',
   },
 })

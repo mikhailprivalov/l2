@@ -54,11 +54,6 @@
         cards: [],
       }
     },
-    mounted() {
-      console.log('modal', this.patient_fio)
-      console.log('modal-1',this.card_pk)
-      console.log('modal-1',this.direction)
-    },
     methods: {
       hide_plan_operations() {
         this.$root.$emit('hide_plan_operations')

@@ -44,7 +44,7 @@
       </tr>
       </thead>
     </table>
-    <plan-operation-edit v-if="edit_plan_operations"></plan-operation-edit>
+    <plan-operation-edit v-if="edit_plan_operations" :pk_plan="pk_plan"/>
   </div>
 
 </template>
@@ -61,7 +61,8 @@
     data() {
       return {
         title: 'План операций',
-        edit_plan_operations: false
+        edit_plan_operations: false,
+        pk_plan: ''
       }
     },
     mounted() {
@@ -72,6 +73,7 @@
     methods:{
       add_data() {
         this.edit_plan_operations = true
+        this.pk_plan = -1
       }
     }
   }

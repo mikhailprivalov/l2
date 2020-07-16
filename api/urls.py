@@ -43,4 +43,5 @@ urlpatterns = [
     path('directions/', include('api.directions.urls')),
     path('stationar/', include('api.stationar.urls')),
     path('bacteria/', include('api.bacteria.urls')),
+    path('plans/', include('api.plans.urls')),
 ]

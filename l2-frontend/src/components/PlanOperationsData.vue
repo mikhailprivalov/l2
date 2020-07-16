@@ -74,6 +74,7 @@
   import patients_point from "../api/patients-point";
   import directions_point from '../api/directions-point'
   import moment from "moment";
+  import plans_point from "../api/plans-point";
 
   export default {
     name: "PlanOperationsData",
@@ -148,10 +149,10 @@
       },
       async save_to_plan(){
         await this.$store.dispatch(action_types.INC_LOADING)
-        await directions_point.planExamination({
+        await plans_point.planOperationsSave({
           'pk_plan': this.pk_plan,
           'card_pk': this.card_pk,
-          'direction': this.direction,
+          'direction': this.current_direction,
           'hirurg': this.current_hirurg,
           'date': this.current_time,
           'type_operation': this.type_operation,

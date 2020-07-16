@@ -21,7 +21,7 @@ from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
 from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult, Recipe, MethodsOfTaking, \
     ExternalOrganization, MicrobiologyResultCulture, \
-    MicrobiologyResultCultureAntibiotic, DirectionToUserWatch, PlanExamination
+    MicrobiologyResultCultureAntibiotic, DirectionToUserWatch
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
 from laboratory import utils
@@ -1695,20 +1695,19 @@ def all_directions_in_favorites(request):
 @login_required
 def plan_examinations(request):
     request_data = json.loads(request.body)
+    print(request_data)
     PlanExamination.save_data(request_data, request.user.doctorprofile)
 
     return JsonResponse({"data": ''})
 
 
 @login_required
-def get_plan_examinations_by_patient(request):
+def get_plan_operation_by_patient(request):
     request_data = json.loads(request.body)
     start_date = datetime.combine(current_time(), dtime.min)
     patient_card = Card.objects.filter(pk=request_data['card_pk'])[0]
-    result = PlanExamination.objects.filter(patient_card=patient_card, date__gte=start_date, type_examinations=0).order_by('date')
+    result = PlanExamination.objects.filter(patient_card=patient_card, date__gte=start_date, type_examinations=PlanExamination.IS_OPERATION).order_by('date')
     data = [{'direction': i.direction, 'hirurg': i.doc_operate.get_fio(), 'date': strdate(i.date), 'type_operation': i.type_operation} for i in result]
-    print(data)
-
 
     return JsonResponse({"data": data})
 

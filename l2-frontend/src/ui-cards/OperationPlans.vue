@@ -11,7 +11,7 @@
                 theme: 'light',
                 placement: 'bottom',
                 trigger: 'click mouseenter',
-                show : !edit_plan_operations,
+                zIndex: 4999,
                 popperOptions: {
                   modifiers: {
                     preventOverflow: {
@@ -23,7 +23,7 @@
                   }
                 },
              }">
-      План операций <span class="badge badge-light">{{data.length}}</span>
+      План операций пациента <span class="badge badge-light">{{data.length}}</span>
     </a>
 
     <div id="favorites-view" class="tp">
@@ -65,9 +65,9 @@
 </template>
 
 <script>
-  import directions_point from "../api/directions-point";
+  import plans_point from "../api/plans-point";
   import LinkPlanOperations from "../pages/Stationar/LinkPlanOperations";
-  import PlanOperationEdit from '../modals/PlanOperationEdit'
+  import PlanOperationEdit from '../modals/PlanOperationEdit';
 
   export default {
     name: "OperationPlans",
@@ -77,9 +77,9 @@
         data: [],
         edit_plan_operations: false,
         patient_fio: '',
-        card_pk: '',
+        card_pk: null,
         current_direction: '',
-        pk_plan: ''
+        pk_plan: null
       }
     },
     mounted() {
@@ -97,7 +97,7 @@
 
     methods: {
       async load() {
-        const {data} = await directions_point.getPlanExaminationPatient({'card_pk': this.card_pk})
+        const {data} = await plans_point.getPlanOperastionsPatient({'card_pk': this.card_pk})
         this.data = data;
       },
       add_data() {
