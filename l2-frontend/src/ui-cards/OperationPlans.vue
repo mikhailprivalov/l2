@@ -52,7 +52,7 @@
              {{row.type_operation}}
           </td>
           <td>
-            <a href="#"><i class="fa fa-pencil"></i></a>
+            <a href="#" @click.prevent="edit_data(row)"><i class="fa fa-pencil"></i></a>
           </td>
         </tr>
         </tbody>
@@ -61,6 +61,7 @@
       <a href="#" style="float: right"  @click.prevent="add_data">Добавить</a>
     </div>
     <plan-operation-edit v-if="edit_plan_operations" :card_pk="card_pk" :patient_fio="patient_fio"  :direction="current_direction" :pk_plan="pk_plan"/>
+    <plan-operation-edit v-if="edit_plan_operations_old" :card_pk="card_pk" :patient_fio="patient_fio"  :direction="current_direction" :pk_plan="pk_plan"/>
   </fragment>
 </template>
 
@@ -76,6 +77,7 @@
       return {
         data: [],
         edit_plan_operations: false,
+        edit_plan_operations_old: false,
         patient_fio: '',
         card_pk: null,
         current_direction: '',
@@ -85,6 +87,7 @@
     mounted() {
       this.$root.$on('hide_plan_operations', () => {
         this.edit_plan_operations = false
+        this.edit_plan_operations_old = false
         this.load();
       });
       this.$root.$on('current_history_direction', (data) => {
@@ -103,6 +106,10 @@
       add_data() {
         this.edit_plan_operations = true
         this.pk_plan = -1
+      },
+      edit_data(row) {
+        this.current_direction = row.direction.toString()
+        this.edit_plan_operations_old = true
       }
     }
   }

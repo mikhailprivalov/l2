@@ -93,7 +93,7 @@
         required: false
       },
       direction: {
-        type: Number,
+        type: String,
         required: false
       },
        pk_plan: {
@@ -110,7 +110,7 @@
         timeValue: moment().format('YYYY-MM-DD'),
         current_hirurg: null,
         current_time: '',
-        type_operation: ''
+        type_operation: '',
       }
     },
     created() {
@@ -128,11 +128,11 @@
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       open_patient_picker() {
-        this.card_pk = null
         this.patient_to_edit = true
       },
       hide_modal_patient_edit() {
         if (this.$refs.modalPatientEdit) {
+          this.card_pk =
           this.load_patient()
           this.$refs.modalPatientEdit.$el.style.display = 'none';
           this.patient_to_edit = false
@@ -156,7 +156,6 @@
           'hirurg': this.current_hirurg,
           'date': this.current_time,
           'type_operation': this.type_operation,
-          'type_examination': 0
         })
         this.current_hirurg = null;
         this.current_time = '';

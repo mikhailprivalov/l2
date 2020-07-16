@@ -19,11 +19,10 @@ def plan_operations_save(request):
 @login_required
 def get_plan_operations_by_patient(request):
     request_data = json.loads(request.body)
-    print(request_data)
     start_date = datetime.combine(current_time(), dtime.min)
     patient_card = Card.objects.filter(pk=request_data['card_pk'])[0]
     result = PlanOperations.objects.filter(patient_card=patient_card, date__gte=start_date).order_by('date')
-    data = [{'direction': i.direction, 'hirurg': i.doc_operate.get_fio(), 'date': strdate(i.date), 'type_operation': i.type_operation} for i in result]
+    data = [{'direction': i.direction, 'hirurg': i.doc_operate.get_fio(), 'date': strdate(i.date), 'type_operation': i.type_operation, 'pk_plan': i.pk} for i in result]
 
     return JsonResponse({"data": data})
 

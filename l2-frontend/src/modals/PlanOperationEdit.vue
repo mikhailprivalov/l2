@@ -41,7 +41,7 @@
         required: false
       },
       direction: {
-        type: Number,
+        type: String,
         required: false
       },
       pk_plan: {
