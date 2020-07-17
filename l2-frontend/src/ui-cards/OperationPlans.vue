@@ -61,7 +61,8 @@
       <a href="#" style="float: right"  @click.prevent="add_data">Добавить</a>
     </div>
     <plan-operation-edit v-if="edit_plan_operations" :card_pk="card_pk" :patient_fio="patient_fio"  :direction="current_direction" :pk_plan="pk_plan"/>
-    <plan-operation-edit v-if="edit_plan_operations_old" :card_pk="card_pk" :patient_fio="patient_fio"  :direction="current_direction" :pk_plan="pk_plan"/>
+    <plan-operation-edit v-if="edit_plan_operations_old" :card_pk="card_pk" :patient_fio="patient_fio"
+                         :direction="current_direction" :pk_plan="pk_plan" :pk_hirurg="pk_hirurg" :date="date" :operation="operation"/>
   </fragment>
 </template>
 
@@ -81,7 +82,11 @@
         patient_fio: '',
         card_pk: null,
         current_direction: '',
-        pk_plan: null
+        pk_plan: null,
+        pk_hirurg: null,
+        date: null,
+        operation: ''
+
       }
     },
     mounted() {
@@ -108,7 +113,12 @@
         this.pk_plan = -1
       },
       edit_data(row) {
+        this.pk_hirurg = row.hirurg_pk
+        const date_array = row.date.split('.')
+        this.date = date_array[2] + '-' + date_array[1] + '-' + date_array[0]
         this.current_direction = row.direction.toString()
+        this.operation = row.type_operation
+        this.pk_plan = row.pk_plan
         this.edit_plan_operations_old = true
       }
     }

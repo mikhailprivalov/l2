@@ -3,7 +3,8 @@
          marginLeftRight="auto" margin-top>
     <span slot="header">Планирование операции</span>
     <div slot="body" style="min-height: 200px" class="registry-body">
-      <plan-operations-data :card_pk="card_pk" :patient_fio="patient_fio"  :direction="direction" :pk_plan="pk_plan"/>
+      <plan-operations-data :card_pk="card_pk" :patient_fio="patient_fio" :direction="direction" :pk_plan="pk_plan"
+                            :pk_hirurg="pk_hirurg" :date="date" :operation="operation"/>
     </div>
     <div slot="footer">
       <div class="row">
@@ -19,8 +20,6 @@
 
 <script>
   import Modal from '../ui-cards/Modal'
-  import * as action_types from '../store/action-types'
-  import moment from 'moment'
   import PlanOperationsData from '../components/PlanOperationsData'
   import SelectHospitalDirections from '../components/SelectHospitalDirections'
 
@@ -46,6 +45,18 @@
       },
       pk_plan: {
         type: Number,
+        required: false
+      },
+      pk_hirurg: {
+        type: Number,
+        required: false
+      },
+      date: {
+        type: String,
+        required: false
+      },
+      operation: {
+        type: String,
         required: false
       },
     },

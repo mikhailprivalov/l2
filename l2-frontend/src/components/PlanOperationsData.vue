@@ -100,6 +100,18 @@
          type: Number,
          required: false
        },
+       pk_hirurg: {
+         type: Number,
+         required: false
+       },
+       date: {
+         type: String,
+         required: false
+       },
+       operation: {
+         type: String,
+         required: false
+       },
     },
     data() {
       return {
@@ -108,9 +120,9 @@
         patient_data: '',
         current_direction: '',
         timeValue: moment().format('YYYY-MM-DD'),
-        current_hirurg: null,
-        current_time: '',
-        type_operation: '',
+        current_hirurg: this.pk_hirurg,
+        current_time: this.date,
+        type_operation: this.operation,
       }
     },
     created() {
@@ -132,7 +144,6 @@
       },
       hide_modal_patient_edit() {
         if (this.$refs.modalPatientEdit) {
-          this.card_pk =
           this.load_patient()
           this.$refs.modalPatientEdit.$el.style.display = 'none';
           this.patient_to_edit = false

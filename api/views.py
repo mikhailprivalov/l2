@@ -849,7 +849,6 @@ def load_hirurgs(request):
         users_in_podr['children'] = children
 
     hirurgs.append(users_in_podr)
-    print(hirurgs)
     return JsonResponse({"hirurgs": hirurgs})
 
 
