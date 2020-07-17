@@ -830,8 +830,9 @@ def laborants(request):
 
 
 @login_required
-def load_hirurgs(request):
-    users = users_by_group(['Оперирует'])
+def load_docprofile_by_group(request):
+    request_data = json.loads(request.body)
+    users = users_by_group(request_data['group'])
     podr = ''
     hirurgs = []
     users_in_podr = {}

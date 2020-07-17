@@ -5,6 +5,8 @@ from django.http import JsonResponse
 from clients.models import Card
 from laboratory.utils import strdate, current_time
 from plans.models import PlanOperations
+from django.http import HttpRequest
+from api.views import load_docprofile_by_group
 
 
 @login_required
@@ -24,3 +26,25 @@ def get_plan_operations_by_patient(request):
     data = [{'direction': i.direction, 'hirurg': i.doc_operate.get_fio(), 'hirurg_pk': i.doc_operate.pk, 'date': strdate(i.date), 'type_operation': i.type_operation, 'pk_plan': i.pk} for i in result]
 
     return JsonResponse({"data": data})
+
+
+@login_required
+def get_plan_operations_by_params(request):
+    request_data = json.loads(request.body)
+    start_date = datetime.combine(request_data['start'], dtime.min)
+    end_date = datetime.combine(request_data['end'], dtime.max)
+    # doc_operate =
+    docs = json.dumps({'group': ['Оперирует']})
+    docs_obj = HttpRequest()
+    docs_obj._body = docs
+    docs_obj.user = request.user
+    docs_can_operate = load_docprofile_by_group(docs_obj)
+
+    # doc_anesthetist =
+    docs = json.dumps({'group': ['Анестезиолог']})
+    docs_obj = HttpRequest()
+    docs_obj._body = docs
+    docs_obj.user = request.user
+    docs_can_anesthetist = load_docprofile_by_group(docs_obj)
+
+    return JsonResponse({"data": True})

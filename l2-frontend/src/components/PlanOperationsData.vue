@@ -135,7 +135,7 @@
     methods: {
       async load_hirurgs() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const {hirurgs} = await users_point.loadHirurgs()
+        const {hirurgs} = await users_point.loadHirurgs({'group': ['Оперирует']})
         this.hirurgs = hirurgs
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
