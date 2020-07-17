@@ -45,5 +45,4 @@ class PlanOperations(models.Model):
             plan_obj.patient_card=patient_card
             plan_obj.save()
 
-
         return True

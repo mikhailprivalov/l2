@@ -60,8 +60,7 @@
       <br/>
       <a href="#" style="float: right"  @click.prevent="add_data">Добавить</a>
     </div>
-    <plan-operation-edit v-if="edit_plan_operations" :card_pk="card_pk" :patient_fio="patient_fio"  :direction="current_direction" :pk_plan="pk_plan"/>
-    <plan-operation-edit v-if="edit_plan_operations_old" :card_pk="card_pk" :patient_fio="patient_fio"
+    <plan-operation-edit v-if="edit_plan_operations_old || edit_plan_operations " :card_pk="card_pk" :patient_fio="patient_fio"
                          :direction="current_direction" :pk_plan="pk_plan" :pk_hirurg="pk_hirurg" :date="date" :operation="operation"/>
   </fragment>
 </template>
@@ -82,6 +81,7 @@
         patient_fio: '',
         card_pk: null,
         current_direction: '',
+        current_direction_history_open: '',
         pk_plan: null,
         pk_hirurg: null,
         date: null,
@@ -96,7 +96,7 @@
         this.load();
       });
       this.$root.$on('current_history_direction', (data) => {
-        this.current_direction = data.history_num
+        this.current_direction_history_open = data.history_num
         this.card_pk = data.patient.card_pk
         this.patient_fio = data.patient.fio_age.split('+')[0]
         this.load();
@@ -111,6 +111,9 @@
       add_data() {
         this.edit_plan_operations = true
         this.pk_plan = -1
+        this.date = ''
+        this.operation = ''
+        this.current_direction = this.current_direction_history_open.toString()
       },
       edit_data(row) {
         this.pk_hirurg = row.hirurg_pk
