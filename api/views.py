@@ -20,6 +20,7 @@ from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document
 from directory.models import Fractions, ParaclinicInputField, ResearchSite
 from directory.models import Researches as DResearches
+from external_system.models import FsliRefbookTest
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from podrazdeleniya.models import Podrazdeleniya
@@ -778,44 +779,66 @@ def modules_view(request):
 def autocomplete(request):
     t = request.GET.get("type")
     v = request.GET.get("value", "")
-    limit = request.GET.get("limit", 10)
+    limit = int(request.GET.get("limit", 10))
     data = []
     if v != "" and limit > 0:
         if t == "harmful":
             p = Card.objects.filter(harmful_factor__istartswith=v).distinct('harmful_factor')[:limit]
             if p.exists():
                 data = [x.harmful_factor for x in p]
-        if t == "fias":
+        elif t == "fias":
             data = fias.suggest(v)
-        if t == "name":
+        elif t == "name":
             p = Individual.objects.filter(name__istartswith=v).distinct('name')[:limit]
             if p.exists():
                 data = [x.name for x in p]
-        if t == "family":
+        elif t == "family":
             p = Individual.objects.filter(family__istartswith=v).distinct('family')[:limit]
             if p.exists():
                 data = [x.family for x in p]
-        if t == "patronymic":
+        elif t == "patronymic":
             p = Individual.objects.filter(patronymic__istartswith=v).distinct('patronymic')[:limit]
             if p.exists():
                 data = [x.patronymic for x in p]
-        if t == "work_place":
+        elif t == "work_place":
             p = Card.objects.filter(work_place__istartswith=v).distinct('work_place')[:limit]
             if p.exists():
                 data = [x.work_place for x in p]
-        if t == "main_diagnosis":
+        elif t == "main_diagnosis":
             p = Card.objects.filter(main_diagnosis__istartswith=v).distinct('main_diagnosis')[:limit]
             if p.exists():
                 data = [x.main_diagnosis for x in p]
-        if t == "work_position":
+        elif t == "work_position":
             p = Card.objects.filter(work_position__istartswith=v).distinct('work_position')[:limit]
             if p.exists():
                 data = [x.work_position for x in p]
-        if "who_give:" in t:
+        elif "who_give:" in t:
             tpk = t.split(":")[1]
             p = Document.objects.filter(document_type__pk=tpk, who_give__istartswith=v).distinct('who_give')[:limit]
             if p.exists():
                 data = [x.who_give for x in p]
+        elif t == "fsli":
+            if v == "HGB":
+                p = FsliRefbookTest.objects.filter(
+                    Q(code_fsli__startswith=v) |
+                    Q(title__icontains=v) |
+                    Q(english_title__icontains=v) |
+                    Q(short_title__icontains=v) |
+                    Q(synonym__istartswith=v) |
+                    Q(synonym='Hb')
+                )
+            else:
+                p = FsliRefbookTest.objects.filter(
+                    Q(code_fsli__startswith=v) |
+                    Q(title__icontains=v) |
+                    Q(english_title__icontains=v) |
+                    Q(short_title__icontains=v) |
+                    Q(synonym__istartswith=v)
+                )
+
+            p = p.filter(active=True).distinct('code_fsli').order_by('code_fsli', 'ordering')[:limit]
+            if p.exists():
+                data = [{"code_fsli": x.code_fsli, "short_title": x.short_title, "title": x.title, "sample": x.sample, "synonym": x.synonym, "nmu": x.code_nmu} for x in p]
     return JsonResponse({"data": data})
 
 
