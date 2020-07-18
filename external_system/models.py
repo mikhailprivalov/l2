@@ -8,8 +8,8 @@ class FsliRefbookTest(models.Model):
     code_fsli = models.CharField(max_length=20, db_index=True, help_text='Уникальный код ФСЛИ')
     code_loinc = models.CharField(max_length=20, help_text='Код LOINC')
     title = models.CharField(max_length=1000, db_index=True, help_text='Полное наименование')
-    english_title = models.CharField(max_length=1000, help_text='Английское наименование')
-    short_title = models.CharField(max_length=1000, help_text='Краткое наименование')
+    english_title = models.CharField(max_length=1000, db_index=True, help_text='Английское наименование')
+    short_title = models.CharField(max_length=1000, db_index=True, help_text='Краткое наименование')
     synonym = models.CharField(max_length=255, help_text='Синоним')
     analit = models.CharField(max_length=255, help_text='Аналит')
     analit_props = models.CharField(max_length=255, help_text='Свойства аналита')
@@ -23,4 +23,7 @@ class FsliRefbookTest(models.Model):
     active = models.BooleanField(default=True, help_text='Единица измерения')
     test_group = models.CharField(max_length=100, help_text='Группа тестов')
     code_nmu = models.CharField(max_length=100, help_text='Код НМУ')
-    sort_num = models.CharField(max_length=100, help_text='Порядок сортировки')
+    ordering = models.IntegerField(help_text='Порядок сортировки', blank=True, default=None, null=True)
+
+    def __str__(self):
+        return f"{self.code_fsli} – {self.title}"

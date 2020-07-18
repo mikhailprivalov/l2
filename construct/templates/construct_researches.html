@@ -62,7 +62,7 @@
                     <h4 class="modal-title" id="tune-modal-title">Настройка анализа</h4>
                 </div>
                 <div class="modal-body" style="position: initial;"></div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="position: absolute;bottom: -10px;left: 0;">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
                 </div>
             </div>
@@ -516,7 +516,8 @@
             group = $("<div class=\"input-group\"></div>").appendTo($(cloumn3));
             $('<span class="input-group-addon">Подготовка</span>').appendTo($(group));
             $('<textarea class="form-control" id="preparation" rows="3"></textarea>').appendTo($(group));
-            $(form).append('<span style="float: right;padding-top:15px;margin-left:10px"><a href="#" id="tunebtn" onclick="tune_research(' + resid + '); return false;" class="btn btn-default btn-blue2-nb"><i class="glyphicon glyphicon-cog"></i> Настройка дополнительных параметров</a></span>');
+            $(form).append('<span style="float: right;padding-top:15px;margin-left:10px"><a href="#" id="tunebtn" onclick="tune_research(' + resid + '); return false;" class="btn btn-default btn-blue2-nb"><i class="glyphicon glyphicon-cog"></i> Видимость фракций, референсы и доп. параметры</a></span>');
+            $(form).append('<span style="float: right;padding-top:15px;margin-left:10px"><a href="#" id="tunebtn-ng" onclick="tune_research(' + resid + ', true); return false;" class="btn btn-default btn-blue2-nb"><i class="fa fa-wrench"></i> Коды ФСЛИ</a></span>');
             $(form).append('<span style="float: right;padding-top:15px"><a href="#" onclick="showref(); return false;" class="btn btn-default btn-blue2-nb" id="refhidden">Развернуть референсы</a><a href="#" onclick="hideref(); return false;" class="btn btn-default btn-blue2-nb" id="refshowed">Свернуть референсы</a></span>');
             $("<h5></h5>").text("Фракции, сгруппированые по ёмкостям").appendTo($(form));
             //$("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
@@ -545,6 +546,7 @@
             resize();
             let lab_r = $("#select-lab option:selected").text()
             $("#tunebtn").attr("disabled", 1);
+            $("#tunebtn-ng").attr("disabled", 1);
             rdl = false;
             if (resid > -1) {
                 $.ajax({url: "/directory/research?id=" + id, method: "GET"}).done(function (data) {
@@ -554,6 +556,7 @@
                     $("#preparation").val(data.preparation);
                     fractiontubes = data.fractiontubes;
                     $("#tunebtn").removeAttr("disabled");
+                    $("#tunebtn-ng").removeAttr("disabled");
                     showtubes();
                     if (data.readonly === true) {
                         rdl = true;
@@ -1123,9 +1126,16 @@
             return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
         }
 
-        function tune_research(id) {
+        function tune_research(id, isng) {
             $('#tune-modal').modal('show');
-            $("#tune-modal .modal-body").html('<iframe width="100%" style="height: calc(100% - 100px); width: 100%; display: block;position: absolute;padding-right:30px" frameborder="0" scrolling="yes" allowtransparency="true" src="/construct/researches/tune?pk={0}"></iframe>'.f(id));
+            $("#tune-modal .modal-body").html(`<iframe
+width="100%"
+style="height: calc(100% - 100px); width: 100%; display: block;position: absolute;padding-right:30px"
+frameborder="0"
+scrolling="yes"
+allowtransparency="true"
+src="/construct/researches/tune${isng ? '-ng' : ''}?pk=${id}"
+></iframe>`);
             console.log("ID: {0}".f(id));
         }
 
