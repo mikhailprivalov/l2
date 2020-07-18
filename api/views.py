@@ -850,7 +850,6 @@ def load_docprofile_by_group(request):
         users_in_podr['children'] = children
 
     hirurgs.append(users_in_podr)
-    print(hirurgs)
 
     return JsonResponse({"hirurgs": hirurgs})
 
