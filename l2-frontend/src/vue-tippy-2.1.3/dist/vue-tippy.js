@@ -312,7 +312,7 @@ var plugin = {
                     default: false
                 },
                 popperOptions: {
-                    default: {}
+                    default: () => {}
                 }
             },
             watch: {
@@ -4921,7 +4921,7 @@ var stylesInDom = {},
 	isOldIE = memoize(function() {
 		// Test for IE <= 9 as proposed by Browserhacks
 		// @see http://browserhacks.com/#hack-e71d8692f65334173fee715c222cb805
-		// Tests for existence of standard globals is to allow style-loader 
+		// Tests for existence of standard globals is to allow style-loader
 		// to operate correctly into non-standard environments
 		// @see https://github.com/webpack-contrib/style-loader/issues/177
 		return window && document && document.all && !window.atob;
@@ -5087,13 +5087,13 @@ function addStyle(obj, options) {
 	// If a transform function was defined, run it on the css
 	if (options.transform && obj.css) {
 	    transformResult = options.transform(obj.css);
-	    
+
 	    if (transformResult) {
 	    	// If transform returns a value, use that instead of the original css.
 	    	// This allows running runtime transformations on the css.
 	    	obj.css = transformResult;
 	    } else {
-	    	// If the transform function returns a falsy value, don't add this css. 
+	    	// If the transform function returns a falsy value, don't add this css.
 	    	// This allows conditional loading of css
 	    	return function() {
 	    		// noop

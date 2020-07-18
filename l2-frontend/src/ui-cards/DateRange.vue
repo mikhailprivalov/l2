@@ -16,7 +16,7 @@
     props: {
       value: {
         type: Array,
-        default: [getFormattedDate(today), getFormattedDate(today)]
+        default: () => [getFormattedDate(today), getFormattedDate(today)]
       },
       small: {
         type: Boolean,
