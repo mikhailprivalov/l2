@@ -21,11 +21,10 @@
 <script>
   import Modal from '../ui-cards/Modal'
   import PlanOperationsData from '../components/PlanOperationsData'
-  import SelectHospitalDirections from '../components/SelectHospitalDirections'
 
   export default {
     name: 'plan-operation-edit',
-    components: {SelectHospitalDirections, Modal, PlanOperationsData},
+    components: {Modal, PlanOperationsData},
     props: {
       card_pk: {
         type: Number,

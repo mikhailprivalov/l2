@@ -72,7 +72,6 @@
   import users_point from '../api/user-point'
   import PatientSmallPicker from '../ui-cards/PatientSmallPicker'
   import patients_point from "../api/patients-point";
-  import directions_point from '../api/directions-point'
   import moment from "moment";
   import plans_point from "../api/plans-point";
 
