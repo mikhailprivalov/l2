@@ -1205,7 +1205,7 @@ def directions_paraclinic_result(request):
     if force or diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
                             | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
                             | Q(research__is_stom=True)
-                            | Q(research__is_gistology=True)).exists()  or request.user.is_staff:
+                            | Q(research__is_gistology=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
         g = [str(x) for x in request.user.groups.all()]
         tadp = TADP in iss.research.title
@@ -1690,24 +1690,3 @@ def all_directions_in_favorites(request):
     } for x in DirectionToUserWatch.objects.filter(doc=doc).order_by('pk')]
 
     return JsonResponse({"data": data})
-
-
-@login_required
-def plan_examinations(request):
-    request_data = json.loads(request.body)
-    print(request_data)
-    PlanExamination.save_data(request_data, request.user.doctorprofile)
-
-    return JsonResponse({"data": ''})
-
-
-@login_required
-def get_plan_operation_by_patient(request):
-    request_data = json.loads(request.body)
-    start_date = datetime.combine(current_time(), dtime.min)
-    patient_card = Card.objects.filter(pk=request_data['card_pk'])[0]
-    result = PlanExamination.objects.filter(patient_card=patient_card, date__gte=start_date, type_examinations=PlanExamination.IS_OPERATION).order_by('date')
-    data = [{'direction': i.direction, 'hirurg': i.doc_operate.get_fio(), 'date': strdate(i.date), 'type_operation': i.type_operation} for i in result]
-
-    return JsonResponse({"data": data})
-

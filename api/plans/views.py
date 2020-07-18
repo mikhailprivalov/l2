@@ -24,7 +24,8 @@ def get_plan_operations_by_patient(request):
     start_date = datetime.combine(current_time(), dtime.min)
     patient_card = Card.objects.filter(pk=request_data['card_pk'])[0]
     result = PlanOperations.objects.filter(patient_card=patient_card, date__gte=start_date).order_by('date')
-    data = [{'direction': i.direction, 'hirurg': i.doc_operate.get_fio(), 'hirurg_pk': i.doc_operate.pk, 'date': strdate(i.date), 'type_operation': i.type_operation, 'pk_plan': i.pk} for i in result]
+    data = [{'direction': i.direction, 'hirurg': i.doc_operate.get_fio(), 'hirurg_pk': i.doc_operate.pk, 'date': strdate(i.date),
+             'type_operation': i.type_operation, 'pk_plan': i.pk} for i in result]
 
     return JsonResponse({"data": data})
 
@@ -49,8 +50,7 @@ def get_plan_operations_by_params(request):
     for i in result:
         fio_patient = f"{i[8]} {i[9][0:1]}.{i[10][0:1]}."
         data.append({"pk_plan": i[0], "patient_card": i[1], "direction": i[2], "date": i[3], "type_operation": i[4], "doc_operate_id": i[5],
-         "doc_anesthetist_id": i[6], "canceled": i[7], "fio_patient": fio_patient, "birthday": i[11]})
-    print(data)
+                     "doc_anesthetist_id": i[6], "canceled": i[7], "fio_patient": fio_patient, "birthday": i[11]})
 
     return JsonResponse({"result": data})
 

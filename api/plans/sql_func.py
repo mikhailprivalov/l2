@@ -1,6 +1,7 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE
 
+
 def get_plans_by_params_sql(d_s, d_e, doc_operate_id, doc_anesthetist_id, department):
     """
     парам: d_s - date-start, d_e - date-end, doc_operate, doc_anesthetist, deparment
@@ -35,9 +36,8 @@ def get_plans_by_params_sql(d_s, d_e, doc_operate_id, doc_anesthetist_id, depart
         SELECT pk_plan, patient_card_id, direction, date, type_operation, doc_operate_id, doc_anesthetist_id, canceled,
                ind_family, ind_name, ind_twoname, birthday FROM t_plans
         LEFT JOIN t_patient ON t_plans.patient_card_id = t_patient.card_id
-
-        """, params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'doc_operate_id': doc_operate_id,
-                                       'doc_anesthetist_id': doc_anesthetist_id, 'department_id': department})
+        """, params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'doc_operate_id': doc_operate_id, 'doc_anesthetist_id': doc_anesthetist_id,
+                     'department_id': department})
 
         row = cursor.fetchall()
     return row

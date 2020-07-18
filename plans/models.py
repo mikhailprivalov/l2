@@ -5,7 +5,6 @@ from datetime import datetime
 
 
 class PlanOperations(models.Model):
-
     patient_card = models.ForeignKey(Card, null=True, help_text='Карта пациента', db_index=True, on_delete=models.SET_NULL)
     direction = models.CharField(max_length=128, default=None, blank=True, null=True, help_text="Номер истории")
     date = models.DateTimeField(null=True, blank=True, help_text='Время на операцию', db_index=True)
@@ -28,21 +27,21 @@ class PlanOperations(models.Model):
 
         if data['pk_plan'] == -1:
             PlanOperations(patient_card=patient_card,
-                            direction=direction_obj,
-                            date=datetime.strptime(data['date'], '%Y-%m-%d'),
-                            doc_operate=doc_operate_obj,
-                            type_operation=type_operation,
-                            doc_anesthetist=doc_anesthetist_obj,
-                            doc_who_create=doc_who_create).save()
+                           direction=direction_obj,
+                           date=datetime.strptime(data['date'], '%Y-%m-%d'),
+                           doc_operate=doc_operate_obj,
+                           type_operation=type_operation,
+                           doc_anesthetist=doc_anesthetist_obj,
+                           doc_who_create=doc_who_create).save()
         elif data['pk_plan'] > -1:
             plan_obj = PlanOperations.objects.filter(pk=data['pk_plan'])[0]
-            plan_obj.doc_operate=doc_operate_obj
-            plan_obj.type_operation=type_operation
-            plan_obj.doc_anesthetist=doc_anesthetist_obj
-            plan_obj.doc_who_create=doc_who_create
-            plan_obj.date=datetime.strptime(data['date'], '%Y-%m-%d')
-            plan_obj.direction=direction_obj
-            plan_obj.patient_card=patient_card
+            plan_obj.doc_operate = doc_operate_obj
+            plan_obj.type_operation = type_operation
+            plan_obj.doc_anesthetist = doc_anesthetist_obj
+            plan_obj.doc_who_create = doc_who_create
+            plan_obj.date = datetime.strptime(data['date'], '%Y-%m-%d')
+            plan_obj.direction = direction_obj
+            plan_obj.patient_card = patient_card
             plan_obj.save()
 
         return True

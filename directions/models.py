@@ -1,14 +1,12 @@
 import re
 import time
 import unicodedata
-from datetime import date, datetime
-
+from datetime import date
 import simplejson as json
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 from jsonfield import JSONField
-
 import clients.models as Clients
 import directory.models as directory
 import slog.models as slog
