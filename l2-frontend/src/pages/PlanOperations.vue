@@ -22,6 +22,9 @@
     <button class="btn btn-blue-nb add-row" @click="add_data">
       Добавить
     </button>
+    <button class="btn btn-blue-nb add-row" @click="load_data">
+      Обновить
+    </button>
     <table class="table table-bordered">
       <colgroup>
         <col width='30'/>
@@ -52,6 +55,7 @@
 
 <script>
   import PlanOperationEdit from '../modals/PlanOperationEdit'
+  import plans_point from '../api/plans-point'
 
   export default {
     components: {
@@ -62,7 +66,8 @@
       return {
         title: 'План операций',
         edit_plan_operations: false,
-        pk_plan: ''
+        pk_plan: '',
+        data_plans: ''
       }
     },
     mounted() {
@@ -74,6 +79,16 @@
       add_data() {
         this.edit_plan_operations = true
         this.pk_plan = -1
+      },
+      async load_data(){
+        const {result} = await plans_point.getPlansByParams({
+          'start_date': '2020-07-17',
+          'end_date': '2020-07-19',
+          'doc_operate_pk': 1940,
+          'doc_anesthetist_pk': -1,
+          'department': -1
+        })
+        this.data_plans = result
       }
     }
   }
