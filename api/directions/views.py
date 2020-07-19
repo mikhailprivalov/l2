@@ -37,6 +37,7 @@ from utils.dates import normalize_date
 from utils.dates import try_parse_range
 from .sql_func import get_history_dir
 
+
 @login_required
 @group_required("Лечащий врач", "Оператор лечащего врача")
 def directions_generate(request):
