@@ -3,16 +3,37 @@
 
 name: Python application
 
+env:
+  DB_HOST: localhost
+  DB_USERNAME: postgres
+  DB_PASSWORD: 123456
+
 on:
   push:
     branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
-jobs:
+jobs: 
   build:
 
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_DB: l2        
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: 123456
+        ports:
+          - 5432:5432
+
+      options: >-
+        --health-cmd pg_isready
+        --health-interval 10s
+        --health-timeout 5s
+        --health-retries 5
 
     steps:
     - uses: actions/checkout@v2
