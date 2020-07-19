@@ -38,4 +38,4 @@ jobs:
         pip install -r requirements-tests.txt
     - name: Testing
       run: |
-        python manage.py test
+        python3.8 manage.py test
