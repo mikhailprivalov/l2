@@ -6,5 +6,5 @@ frontend:
   - '**/*.vue'
 
 backend:
-  - any: ['**/*.py']
-    all: ['!**/test.py']
+- any: ['**/*.py']
+  all: ['!**/test.py']
