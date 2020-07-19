@@ -24,6 +24,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, PageBreak, Macro
+from reportlab.platypus.flowables import HRFlowable
 
 from appconf.manager import SettingManager
 from clients.models import Card
@@ -829,10 +830,16 @@ def form_01(request_data):
         canvas.restoreState()
 
     if contract_from_file and appendix_paragraphs:
-        objs.append(PageBreak())
-        objs.append(Macro("canvas._pageNumber=1"))
         for section in appendix_paragraphs:
-            if section.get('patient_fio'):
+            if section.get('page_break'):
+                objs.append(PageBreak())
+                objs.append(Macro("canvas._pageNumber=1"))
+            elif section.get('Spacer'):
+                height_spacer = section.get('spacer_data')
+                objs.append(Spacer(1, height_spacer * mm))
+            elif section.get('HRFlowable'):
+                objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+            elif section.get('patient_fio'):
                 objs.append(Paragraph(f"{section['text']} {patient_data['fio']} ({patient_data['born']})", styles_obj[section['style']]))
             elif section.get('patient_addresses'):
                 objs.append(Paragraph(f"{section['text']} {patient_data['main_address']}", styles_obj[section['style']]))
