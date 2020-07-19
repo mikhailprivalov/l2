@@ -1,0 +1,10 @@
+test:
+  - ./**/test.py
+
+frontend:
+  - ./**/*.js
+  - ./**/*.vue
+
+backend:
+  - any: ['./**/*.py']
+    all: ['!./**/test.py']
