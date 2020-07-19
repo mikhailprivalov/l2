@@ -1,6 +1,5 @@
 frontend:
-  - '**/*.js'
-  - '**/*.vue'
+  - 'l2-frontend/**'
 
 backend:
 - any: ['**/*.py']
