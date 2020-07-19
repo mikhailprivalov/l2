@@ -32,7 +32,7 @@ jobs:
       with:
         python-version: 3.7
     - name: psycopg2 prerequisites
-      run: apt-get install python-dev libpq-dev
+      run: apt-get install libpq-dev
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
