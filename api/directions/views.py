@@ -37,9 +37,6 @@ from utils.dates import normalize_date
 from utils.dates import try_parse_range
 from .sql_func import get_history_dir
 
-TADP = SettingManager.get("tadp", default='Температура', default_type='s')
-
-
 @login_required
 @group_required("Лечащий врач", "Оператор лечащего врача")
 def directions_generate(request):
@@ -869,6 +866,7 @@ def directions_results_report(request):
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_form(request):
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1) or -1
@@ -1189,6 +1187,7 @@ def directions_anesthesia_load(request):
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_result(request):
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
     rb = json.loads(request.body)
     request_data = rb.get("data", {})
@@ -1409,6 +1408,7 @@ def directions_paraclinic_result(request):
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_confirm(request):
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("iss_pk", -1)
@@ -1448,6 +1448,7 @@ def directions_paraclinic_confirm(request):
 @group_required("Врач параклиники", "Сброс подтверждений результатов", "Врач консультаций",
                 "Врач стационара", "Сброс подтверждения переводного эпикриза", "Сброс подтверждения выписки", "t, ad, p")
 def directions_paraclinic_confirm_reset(request):
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("iss_pk", -1)

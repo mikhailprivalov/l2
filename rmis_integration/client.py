@@ -120,9 +120,13 @@ class DjangoCache(Base):
 
 class Client(object):
     def __init__(self,
-                 login=Settings.get("login"),
-                 password=Settings.get("password"),
+                 login=None,
+                 password=None,
                  modules=None):
+        if login is None:
+            login = Settings.get("login")
+        if password is None:
+            password = Settings.get("password")
         if modules is None:
             modules = ["patients",
                        "services",
