@@ -10,7 +10,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    container: python:3.8
+    container: python:3.6
 
     services:
       postgres:
