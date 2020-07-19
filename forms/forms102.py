@@ -387,7 +387,6 @@ def form_01(request_data):
     #
 
     example_template = result_data[0]
-    print(example_template)
 
     list_g = []
     route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB)]]
@@ -868,7 +867,6 @@ def form_01(request_data):
                 objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
 
         tbl = Table(route_list, colWidths=(30 * mm, 100 * mm), hAlign='LEFT')
-
         tbl.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
