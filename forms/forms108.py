@@ -79,7 +79,8 @@ def form_01(request_data):
     ]
 
     for a in AmbulatoryData.objects.filter(card__pk=request_data["card_pk"]).order_by('date', 'pk'):
-        opinion.append([Paragraph(f"{strdate(a.date)[6:10]}", styleCenter), Paragraph(f"{strdate(a.date)[3:5]}", styleCenter), Paragraph(f"{a.data}", styleTC)])
+        opinion.append([Paragraph(f"{strdate(a.date)[6:10]}", styleCenter), Paragraph(f"{strdate(a.date)[3:5]}", styleCenter),
+                        Paragraph(f"{a.data}".replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>"), styleTC)])
 
     tbl = Table(opinion, colWidths=(20 * mm, 20 * mm, 140 * mm), splitByRow=1, repeatRows=1)
 
