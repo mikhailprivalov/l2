@@ -3,7 +3,7 @@
          marginLeftRight="auto" margin-top>
     <span slot="header">Сведения из амбулаторной карты
       <span v-if="!card_data.fio_age">{{card_data.family}} {{card_data.name}} {{card_data.twoname}},
-      {{card_data.age}}, карта {{card_data.num}} </span>
+      {{card_data.age}}, карта {{card_data.num}}</span>
       <span v-else>{{card_data.fio_age}}</span>
     </span>
     <div slot="body" style="min-height: 200px" class="registry-body">
@@ -120,7 +120,7 @@
           </div>
           <div class="col-xs-4">
             <button @click="open_form_112" class="btn btn-primary-nb btn-blue-nb" type="button">
-               Печать
+              Печать
             </button>
           </div>
         </div>
@@ -181,7 +181,7 @@
       },
     },
     methods: {
-      open_form_112(){
+      open_form_112() {
         window.open(this.forms[0].url)
       },
       show_history_ambulatory_data() {

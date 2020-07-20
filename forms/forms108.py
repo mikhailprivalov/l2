@@ -100,11 +100,9 @@ def form_01(request_data):
 
     def later_pages(canvas, document):
         canvas.saveState()
-
         canvas.setFont('PTAstraSerifReg', 10)
         canvas.drawString(115 * mm, 8 * mm, 'Пациент: {}, {}'.format(patient_data['fio'], patient_data['born']))
         canvas.setFont('PTAstraSerifReg', 8)
-
         canvas.restoreState()
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvasPartitionAll)
