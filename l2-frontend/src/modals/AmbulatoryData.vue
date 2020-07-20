@@ -3,7 +3,7 @@
          marginLeftRight="auto" margin-top>
     <span slot="header">Сведения из амбулаторной карты
       <span v-if="!card_data.fio_age">{{card_data.family}} {{card_data.name}} {{card_data.twoname}},
-      {{card_data.age}}, карта {{card_data.num}}</span>
+      {{card_data.age}}, карта {{card_data.num}} </span>
       <span v-else>{{card_data.fio_age}}</span>
     </span>
     <div slot="body" style="min-height: 200px" class="registry-body">
@@ -118,7 +118,11 @@
               Закрыть
             </button>
           </div>
-
+          <div class="col-xs-4">
+            <button @click="open_form_112" class="btn btn-primary-nb btn-blue-nb" type="button">
+               Печать
+            </button>
+          </div>
         </div>
 
       </div>
@@ -130,6 +134,7 @@
   import Modal from '../ui-cards/Modal'
   import patients_point from '../api/patients-point'
   import * as action_types from '../store/action-types'
+  import {form112} from '../forms'
   import moment from 'moment'
 
   export default {
@@ -162,11 +167,23 @@
       this.load_data();
     },
     computed: {
+      forms() {
+        return form112.map(f => {
+          return {
+            ...f, url: f.url.kwf({
+              card: this.card_pk,
+            })
+          }
+        })
+      },
       valid() {
         return this.edit_data.date !== '' && this.edit_data.data !== '';
       },
     },
     methods: {
+      open_form_112(){
+        window.open(this.forms[0].url)
+      },
       show_history_ambulatory_data() {
         this.show_history_ambulatory = true
         this.$store.dispatch(action_types.INC_LOADING)

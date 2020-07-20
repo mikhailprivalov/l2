@@ -649,6 +649,7 @@ def load_ambulatory_data(request):
             "date": strdate(a.date) if a.date else '',
             "data": a.data,
         })
+
     return JsonResponse({"rows": data})
 
 
