@@ -24,7 +24,7 @@
         <tr v-for="r in rows">
           <td>{{r.date.slice(6)}}</td>
           <td>{{r.date.slice(3,5)}}</td>
-          <td>{{r.data}}</td>
+          <td><span v-html="r.data.replace(/\n/g, '<br/>')"></span></td>
           <td>
             <button class="btn last btn-blue-nb nbr" type="button"
                     v-tippy="{ placement : 'bottom', arrow: true }"

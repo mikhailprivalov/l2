@@ -647,7 +647,7 @@ def load_ambulatory_data(request):
         data.append({
             "pk": a.pk,
             "date": strdate(a.date) if a.date else '',
-            "data": a.data,
+            "data": a.data
         })
 
     return JsonResponse({"rows": data})
