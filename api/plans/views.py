@@ -37,14 +37,11 @@ def get_plan_operations_by_params(request):
     start_date = datetime.combine(start_date, dtime.min)
     end_date = datetime.strptime(request_data['start_date'], '%Y-%m-%d')
     end_date = datetime.combine(end_date, dtime.max)
-    doc_operate_pk = request_data['doc_operate_pk']
-    doc_anesthetist_pk = request_data['doc_anesthetist_pk']
-    department = request_data['department']
+    doc_operate_pk = request_data.get('doc_operate_pk', -1)
+    doc_anesthetist_pk = request_data.get('doc_anesthetist_pk', -1)
+    department_pk = request_data.get('department_pk', -1)
 
-    doc_operate_pk = 1940
-    doc_anesthetist_pk = -1
-    department = -1
-    result = get_plans_by_params_sql(start_date, end_date, doc_operate_pk, doc_anesthetist_pk, department)
+    result = get_plans_by_params_sql(start_date, end_date, doc_operate_pk, doc_anesthetist_pk, department_pk)
 
     data = []
     for i in result:
