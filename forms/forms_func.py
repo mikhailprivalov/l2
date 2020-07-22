@@ -653,7 +653,7 @@ def hosp_get_operation_data(num_dir):
                 operation_iss_research.append({'iss': i['iss'], 'research': i['research_id']})
 
     titles_field = ['Название операции', 'Дата проведения', 'Время начала', 'Время окончания', 'Метод обезболивания', 'Осложнения', 'Код операции',
-                    'Код манипуляции', 'Оперативное вмешательство', 'Код анестезиолога']
+                    'Код манипуляции', 'Оперативное вмешательство', 'Код анестезиолога', 'Категория сложности']
     list_values = []
 
     operation_result = []
@@ -673,6 +673,7 @@ def hosp_get_operation_data(num_dir):
             operation_data['doc_code'] = Issledovaniya.objects.get(pk=pk_iss_operation).doc_confirmation.personal_code
             if operation_data['doc_code'] == 0:
                 operation_data['doc_code'] = ''
+            category_difficult = ''
             for field in fields_operation:
                 if field[3] == 'Название операции':
                     operation_data['name_operation'] = field[2]
@@ -704,6 +705,10 @@ def hosp_get_operation_data(num_dir):
                 if field[3] == 'Оперативное вмешательство':
                     operation_data['plan_operation'] = field[2]
                     continue
+                if field[3] == 'Категория сложности':
+                    category_difficult =  f"<br/><font face=\"PTAstraSerifBold\" size=8.7>(Сложность - {field[2]})</font>"
+                    continue
+            operation_data['name_operation'] = f"{operation_data['name_operation']} {category_difficult}"
             operation_result.append(operation_data.copy())
 
     return operation_result
