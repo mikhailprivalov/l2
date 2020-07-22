@@ -19,6 +19,7 @@ from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
 import sys
 import locale
+from forms.forms_func import hosp_get_operation_data
 
 
 def form_01(c: Canvas, dir: Napravleniya):
@@ -112,15 +113,24 @@ def form_01(c: Canvas, dir: Napravleniya):
         address = ind_data['main_address']
         objs.append(Paragraph(f'7. Место регистрации: {address}', style))
         objs.append(Paragraph('8. Местность: городская — 1, сельская — 2.', style))
-        objs.append(Paragraph('9. Диагноз основного заболевания (состояния)_______________________________________________________________', style))
+
+        hosp_operation = hosp_get_operation_data(dir.parent.napravleniye_id)[-1]
+        diagnos_after_operation = ''
+        mkb10 = ''
+        if hosp_operation:
+            diagnos_after_operation = hosp_operation['diagnos_after_operation']
+            mkb10 = hosp_operation['mkb10']
+        objs.append(Paragraph(f"9. Диагноз основного заболевания (состояния):  <font face=\"PTAstraSerifBold\">{diagnos_after_operation}</font>", style))
         objs.append(Paragraph('_______________________________________________________________________________________________________', style))
-        objs.append(Paragraph('_______________________________________________________________________________________________________', style))
+
         diagnosis = ''
-        if dir.diagnos.strip():
+        if mkb10.strip():
+            diagnosis = mkb10.strip().split(' ')[0]
+        elif dir.diagnos.strip():
             diagnosis = dir.diagnos.strip()
         objs.append(Paragraph(f'10. Код по МКБ: {diagnosis}', style))
         objs.append(Paragraph('11. Задача прижизненного патолого-анатомического исследования биопсийного (операционного) материала', style))
-        objs.append(Paragraph('_______________________________________________________________________________________________________', style))
+        objs.append(Paragraph('<u>Уточнение диагноза</u>', style))
         objs.append(Paragraph('12. Дополнительные клинические сведения (основные симптомы, оперативное или гормональное, или лучевое лечение,', style))
         objs.append(Paragraph('результаты инструментальных и лабораторных исследований)__________________________________________________', style))
         objs.append(Paragraph('_______________________________________________________________________________________________________', style))
