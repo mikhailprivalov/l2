@@ -653,7 +653,8 @@ def hosp_get_operation_data(num_dir):
                 operation_iss_research.append({'iss': i['iss'], 'research': i['research_id']})
 
     titles_field = ['Название операции', 'Дата проведения', 'Время начала', 'Время окончания', 'Метод обезболивания', 'Осложнения', 'Код операции',
-                    'Код манипуляции', 'Оперативное вмешательство', 'Код анестезиолога', 'Категория сложности', 'Диагноз после оперативного лечения']
+                    'Код манипуляции', 'Оперативное вмешательство', 'Код анестезиолога', 'Категория сложности', 'Диагноз после оперативного лечения',
+                    'МКБ 10']
     list_values = []
 
     operation_result = []
@@ -665,7 +666,7 @@ def hosp_get_operation_data(num_dir):
         for fields_operation in list_values:
             pk_iss_operation = fields_operation[0][1]
             operation_data = {'name_operation': '', 'date': '', 'time_start': '', 'time_end': '', 'anesthesia method': '', 'complications': '', 'doc_fio': '',
-                              'code_operation': '', 'code_doc_anesthesia': '', 'plan_operation': '', 'diagnos_after_operation': ''}
+                              'code_operation': '', 'code_doc_anesthesia': '', 'plan_operation': '', 'diagnos_after_operation': '', 'mkb10': ''}
             iss_obj = Issledovaniya.objects.filter(pk=pk_iss_operation).first()
             if not iss_obj.doc_confirmation:
                 continue
@@ -710,6 +711,9 @@ def hosp_get_operation_data(num_dir):
                     continue
                 if field[3] == 'Диагноз после оперативного лечения':
                     operation_data['diagnos_after_operation'] = field[2]
+                    continue
+                if field[3] == 'МКБ 10':
+                    operation_data['mkb10'] = field[2]
                     continue
 
             operation_data['name_operation'] = f"{operation_data['name_operation']} {category_difficult}"

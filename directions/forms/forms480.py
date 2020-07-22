@@ -116,13 +116,18 @@ def form_01(c: Canvas, dir: Napravleniya):
 
         hosp_operation = hosp_get_operation_data(dir.parent.napravleniye_id)[-1]
         diagnos_after_operation = ''
+        mkb10 = ''
         if hosp_operation:
             diagnos_after_operation = hosp_operation['diagnos_after_operation']
+            mkb10 = hosp_operation['mkb10']
         objs.append(Paragraph(f"9. Диагноз основного заболевания (состояния):  <font face=\"PTAstraSerifBold\">{diagnos_after_operation}</font>", style))
         objs.append(Paragraph('_______________________________________________________________________________________________________', style))
         objs.append(Paragraph('_______________________________________________________________________________________________________', style))
+
         diagnosis = ''
-        if dir.diagnos.strip():
+        if mkb10.strip():
+            diagnosis = mkb10.strip()
+        elif dir.diagnos.strip():
             diagnosis = dir.diagnos.strip()
         objs.append(Paragraph(f'10. Код по МКБ: {diagnosis}', style))
         objs.append(Paragraph('11. Задача прижизненного патолого-анатомического исследования биопсийного (операционного) материала', style))
