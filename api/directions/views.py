@@ -231,7 +231,6 @@ def hosp_set_parent(request):
     date_start = (date_end + relativedelta(days=-days_ago))
     date_start = datetime.combine(date_start, dtime.min)
     date_end = datetime.combine(date_end, dtime.max)
-    print(date_start, date_end)
     request_data = json.loads(request.body)
     patient_card = request_data.get("patient", -1)
     user_creater = -1
