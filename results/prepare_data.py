@@ -303,7 +303,7 @@ def html_to_pdf(file_tmp, r_value, pw, leftnone=False):
     return i
 
 
-def default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col):
+def default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "FreeSans"
@@ -341,7 +341,7 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
              ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:",
               direction.client.number_with_type() + (
                   " - архив" if direction.client.is_archive else "") + number_poliklinika]]
-    if not direction.imported_from_rmis:
+    if not direction.imported_from_rmis and not is_extract:
         data.append(
             ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)])
     elif direction.imported_org:
