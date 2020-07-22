@@ -19,6 +19,7 @@ from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
 import sys
 import locale
+from forms.forms_func import hosp_get_operation_data
 
 
 def form_01(c: Canvas, dir: Napravleniya):
@@ -112,7 +113,12 @@ def form_01(c: Canvas, dir: Napravleniya):
         address = ind_data['main_address']
         objs.append(Paragraph(f'7. Место регистрации: {address}', style))
         objs.append(Paragraph('8. Местность: городская — 1, сельская — 2.', style))
-        objs.append(Paragraph('9. Диагноз основного заболевания (состояния)_______________________________________________________________', style))
+
+        hosp_operation = hosp_get_operation_data(dir.parent.napravleniye_id)[-1]
+        diagnos_after_operation = ''
+        if hosp_operation:
+            diagnos_after_operation = hosp_operation['diagnos_after_operation']
+        objs.append(Paragraph(f"9. Диагноз основного заболевания (состояния):  <font face=\"PTAstraSerifBold\">{diagnos_after_operation}</font>", style))
         objs.append(Paragraph('_______________________________________________________________________________________________________', style))
         objs.append(Paragraph('_______________________________________________________________________________________________________', style))
         diagnosis = ''
