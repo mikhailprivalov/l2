@@ -125,7 +125,7 @@ def form_01(c: Canvas, dir: Napravleniya):
 
         diagnosis = ''
         if mkb10.strip():
-            diagnosis = mkb10.strip()
+            diagnosis = mkb10.strip().split(' ')[0]
         elif dir.diagnos.strip():
             diagnosis = dir.diagnos.strip()
         objs.append(Paragraph(f'10. Код по МКБ: {diagnosis}', style))
