@@ -706,7 +706,7 @@ def hosp_get_operation_data(num_dir):
                     operation_data['plan_operation'] = field[2]
                     continue
                 if field[3] == 'Категория сложности':
-                    category_difficult =  f"<br/><font face=\"PTAstraSerifBold\" size=8.7>(Сложность - {field[2]})</font>"
+                    category_difficult = f"<br/><font face=\"PTAstraSerifBold\" size=8.7>(Сложность - {field[2]})</font>"
                     continue
             operation_data['name_operation'] = f"{operation_data['name_operation']} {category_difficult}"
             operation_result.append(operation_data.copy())
