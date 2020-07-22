@@ -122,7 +122,6 @@ def form_01(c: Canvas, dir: Napravleniya):
             mkb10 = hosp_operation['mkb10']
         objs.append(Paragraph(f"9. Диагноз основного заболевания (состояния):  <font face=\"PTAstraSerifBold\">{diagnos_after_operation}</font>", style))
         objs.append(Paragraph('_______________________________________________________________________________________________________', style))
-        objs.append(Paragraph('_______________________________________________________________________________________________________', style))
 
         diagnosis = ''
         if mkb10.strip():
