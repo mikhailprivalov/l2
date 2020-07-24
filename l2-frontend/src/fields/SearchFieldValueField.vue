@@ -2,7 +2,7 @@
   <div>
     <div class="input-group" style="width: 100%;">
       <span class="input-group-btn" style="vertical-align: top;" v-if="!readonly">
-        <button class="btn btn-block" style="white-space: normal;text-align: left;"
+        <button class="btn btn-block" :class="{btn_color: not_autoload_result}" style="white-space: normal;text-align: left;"
                 title="Загрузить последний результат"
                 @click="loadLast"
                 v-tippy="{ placement : 'bottom', arrow: true }">
@@ -51,6 +51,11 @@
         required: false,
         default: false,
       },
+      not_autoload_result: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
     },
     data() {
       return {
@@ -67,14 +72,14 @@
           this.checkDirection()
 
           setTimeout(() => {
-            if (!this.val) {
+            if (!this.val && !this.not_autoload_result) {
               this.loadLast()
             }
           }, 200)
         })
       }
       else {
-        if (!this.val) {
+        if (!this.val && !this.not_autoload_result) {
           this.loadLast()
         }
       }
@@ -129,5 +134,9 @@
 
   div.btn:hover {
     cursor: default;
+  }
+
+  .btn_color {
+    color: #049372;
   }
 </style>
