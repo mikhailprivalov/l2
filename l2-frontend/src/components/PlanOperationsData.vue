@@ -1,66 +1,68 @@
 <template>
-    <div>
-      <div class="form-row">
-        <div class="row-t">Пациент (карта)
-          <a @click.prevent="open_patient_picker" :class="{unvisible: patient_fio}" href="#" style="float: right; padding-right: 5px; color: #ffffff;">Найти</a>
-        </div>
-        <div class="row-v">
-          <input class="form-control" v-model="patient_data" readonly>
-        </div>
+  <div>
+    <div class="form-row">
+      <div class="row-t">Пациент (карта)
+        <a @click.prevent="open_patient_picker" :class="{unvisible: patient_fio}" href="#"
+           style="float: right; padding-right: 5px; color: #ffffff;">Найти</a>
       </div>
-      <div class="form-row">
-        <div class="row-t">№ Истории</div>
-        <input class="form-control" v-model="current_direction">
+      <div class="row-v">
+        <input class="form-control" v-model="patient_data" readonly>
       </div>
-      <div class="form-row">
-        <div class="row-t">Дата операции</div>
-          <input class="form-control" type="date" :min="timeValue" v-model="current_time">
-      </div>
-      <div class="form-row">
-        <div class="row-t">Врач-хирург</div>
-        <div class="row-v">
-          <treeselect class="vue-treeselect__control_my" :multiple="false" :options="hirurgs" placeholder="Select"
-                      v-model="current_hirurg"
-          />
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="row-t">Вид операции</div>
-        <div class="row-v">
-          <input class="form-control" v-model="type_operation">
-        </div>
-      </div>
-      <div class="row color-bottom">
-        <div style="float: right; margin-right: 10px; padding-right: 10px" >
-          <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px" @click="save_to_plan"
-                  :class="[{btndisable: !current_hirurg || !current_direction || !card_pk || !current_time}]">
-            Сохранить в план
-          </button>
-          <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px">
-            Отменить операцию
-          </button>
-          </div>
-      </div>
-      <modal v-if="patient_to_edit" ref="modalPatientEdit" @close="hide_modal_patient_edit" show-footer="true" white-bg="true"
-             max-width="710px" width="100%" marginLeftRight="auto" margin-top>
-        <span slot="header">Поиск пациента</span>
-        <div slot="body" style="min-height: 140px" class="registry-body">
-          <div style="height: 110px">
-            <patient-small-picker v-model="card_pk" :base_pk="5"/>
-          </div>
-        </div>
-        <div slot="footer">
-          <div class="row">
-            <div class="col-xs-4">
-              <button @click="hide_modal_patient_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
-                ОК
-              </button>
-            </div>
-          </div>
-        </div>
-      </modal>
-
     </div>
+    <div class="form-row">
+      <div class="row-t">№ Истории</div>
+      <input class="form-control" v-model="current_direction">
+    </div>
+    <div class="form-row">
+      <div class="row-t">Дата операции</div>
+      <input class="form-control" type="date" :min="timeValue" v-model="current_time">
+    </div>
+    <div class="form-row">
+      <div class="row-t">Врач-хирург</div>
+      <div class="row-v">
+        <treeselect class="vue-treeselect__control_my" :multiple="false" :options="hirurgs" placeholder="Select"
+                    v-model="current_hirurg"
+        />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="row-t">Вид операции</div>
+      <div class="row-v">
+        <input class="form-control" v-model="type_operation">
+      </div>
+    </div>
+    <div class="row color-bottom">
+      <div style="float: right; margin-right: 10px; padding-right: 10px">
+        <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px" @click="save_to_plan"
+                :class="[{btndisable: !current_hirurg || !current_direction || !card_pk || !current_time}]">
+          Сохранить в план
+        </button>
+        <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px">
+          Отменить операцию
+        </button>
+      </div>
+    </div>
+    <modal v-if="patient_to_edit" ref="modalPatientEdit" @close="hide_modal_patient_edit" show-footer="true"
+           white-bg="true"
+           max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+      <span slot="header">Поиск пациента</span>
+      <div slot="body" style="min-height: 140px" class="registry-body">
+        <div style="height: 110px">
+          <patient-small-picker v-model="card_pk" :base_pk="base_pk"/>
+        </div>
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-4">
+            <button @click="hide_modal_patient_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+              ОК
+            </button>
+          </div>
+        </div>
+      </div>
+    </modal>
+
+  </div>
 
 </template>
 
@@ -78,12 +80,8 @@
   export default {
     name: "PlanOperationsData",
     components: {Treeselect, PatientSmallPicker, Modal},
-     props: {
+    props: {
       card_pk: {
-        type: Number,
-        required: false
-      },
-      base_pk: {
         type: Number,
         required: false
       },
@@ -95,22 +93,22 @@
         type: String,
         required: false
       },
-       pk_plan: {
-         type: Number,
-         required: false
-       },
-       pk_hirurg: {
-         type: Number,
-         required: false
-       },
-       date: {
-         type: String,
-         required: false
-       },
-       operation: {
-         type: String,
-         required: false
-       },
+      pk_plan: {
+        type: Number,
+        required: false
+      },
+      pk_hirurg: {
+        type: Number,
+        required: false
+      },
+      date: {
+        type: String,
+        required: false
+      },
+      operation: {
+        type: String,
+        required: false
+      },
     },
     data() {
       return {
@@ -122,16 +120,36 @@
         current_hirurg: this.pk_hirurg,
         current_time: this.date,
         type_operation: this.operation,
+        base_pk: -1,
       }
     },
     created() {
+      this.$store.watch(state => state.bases, () => {
+        this.check_base()
+      })
+      this.check_base()
       this.load_hirurgs();
       if (this.patient_fio && this.card_pk) {
         this.patient_data = this.patient_fio
       }
       this.current_direction = this.direction;
     },
+    computed: {
+      bases() {
+        return this.$store.getters.bases.filter(b => !b.hide)
+      },
+    },
     methods: {
+      check_base() {
+        if (this.base_pk === -1 && this.bases.length > 0) {
+          for (let row of this.bases) {
+            if (row.internal_type) {
+              this.base_pk = row.pk
+              break
+            }
+          }
+        }
+      },
       async load_hirurgs() {
         await this.$store.dispatch(action_types.INC_LOADING)
         const {hirurgs} = await users_point.loadHirurgs({'group': ['Оперирует']})
@@ -149,15 +167,14 @@
         }
       },
       async load_patient() {
-          if (!this.card_pk) {
-            this.patient_data = ''
-          }
-          else {
-            const l2Card = await patients_point.searchL2Card({'card_pk': this.card_pk})
-            this.patient_data = l2Card.results[0].family + ' ' + l2Card.results[0].name + ' ' + l2Card.results[0].twoname + ' (' + l2Card.results[0].num + ')'
-          }
+        if (!this.card_pk) {
+          this.patient_data = ''
+        } else {
+          const l2Card = await patients_point.searchL2Card({'card_pk': this.card_pk})
+          this.patient_data = `${l2Card.results[0].family} ${l2Card.results[0].name} ${l2Card.results[0].twoname} (${l2Card.results[0].num})`
+        }
       },
-      async save_to_plan(){
+      async save_to_plan() {
         await this.$store.dispatch(action_types.INC_LOADING)
         await plans_point.planOperationsSave({
           'pk_plan': this.pk_plan,
@@ -178,16 +195,16 @@
 </script>
 
 <style scoped lang="scss">
-   .btndisable {
-     cursor: not-allowed;
-     pointer-events: none;
+  .btndisable {
+    cursor: not-allowed;
+    pointer-events: none;
 
-     /*Button disabled - CSS color class*/
-     color: #c0c0c0;
-     background-color: #ffffff;
-   }
+    /*Button disabled - CSS color class*/
+    color: #c0c0c0;
+    background-color: #ffffff;
+  }
 
-  .unvisible{
+  .unvisible {
     visibility: hidden;
   }
 
@@ -242,7 +259,7 @@
     }
 
     .row-v {
-      padding: 0px 0 0 0px;
+      padding: 0 0 0 0;
     }
 
     /deep/ .input-group {
@@ -250,9 +267,9 @@
     }
   }
 
-  .vue-treeselect__control_my /deep/ .vue-treeselect__control{
-    border: 0px solid #ddd;
-    border-radius: 0px;
+  .vue-treeselect__control_my /deep/ .vue-treeselect__control {
+    border: 0 solid #ddd;
+    border-radius: 0;
   }
 </style>
 

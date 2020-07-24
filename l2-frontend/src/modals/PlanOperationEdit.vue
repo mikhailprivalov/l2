@@ -30,10 +30,6 @@
         type: Number,
         required: false
       },
-      base_pk: {
-        type: Number,
-        required: false
-      },
       patient_fio: {
         type: String,
         required: false

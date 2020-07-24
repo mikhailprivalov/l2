@@ -1,49 +1,38 @@
 <template>
   <div>
     <h3>{{title}}</h3>
-    <table class="table" style="table-layout: fixed">
-      <colgroup>
-        <col width='201'/>
-        <col />
-        <col width='180'/>
-        <col width='180'/>
-      </colgroup>
-      <thead>
-      <tr>
-        <th><date-range v-model="filter_date"/></th>
-        <th></th>
-        <th>Отделение</th>
-        <th>Анестезиолог</th>
-      </tr>
-      </thead>
-    </table>
+    <Filters :filters="filters"/>
     <button class="btn btn-blue-nb add-row" @click="add_data">
       Добавить
     </button>
     <button class="btn btn-blue-nb add-row" @click="load_data">
       Обновить
     </button>
-    <table class="table table-bordered">
+    <table class="table table-bordered" style="table-layout: fixed">
       <colgroup>
-        <col width='30'/>
-        <col width='70'/>
+        <col width='85'/>
         <col width='100'/>
+        <col/>
         <col width='170'/>
-        <col width='100'/>
-        <col width='100'/>
-        <col width='100'/>
+        <col width='180'/>
+        <col width='180'/>
+        <col width='180'/>
       </colgroup>
       <thead>
       <tr>
         <th>Дата</th>
         <th>№ истории</th>
-        <th>ФИО пациента</th>
+        <th>Пациент</th>
         <th>Вид операции</th>
         <th>Врач-хирург</th>
         <th>Отделение</th>
         <th>Анестезиолог</th>
       </tr>
       </thead>
+      <tbody>
+      <Row :data="row" :key="row.pk_plan" v-for="row in data" />
+      <tr v-if="data.length === 0"><td colspan="7" style="text-align: center">нет данных</td></tr>
+      </tbody>
     </table>
     <plan-operation-edit v-if="edit_plan_operations" :pk_plan="pk_plan"/>
   </div>
@@ -52,15 +41,18 @@
 
 
 <script>
-  import DateRange from "../ui-cards/DateRange";
-  import PlanOperationEdit from '../modals/PlanOperationEdit'
-  import plans_point from '../api/plans-point'
+  import PlanOperationEdit from '../../modals/PlanOperationEdit'
+  import plans_point from '../../api/plans-point'
   import moment from "moment";
+  import Filters from "./components/Filters";
+  import Row from "./components/Row";
+  import * as action_types from "../../store/action-types";
 
   export default {
     components: {
+      Filters,
       PlanOperationEdit,
-      DateRange,
+      Row,
     },
     name: "PlanOperations",
     data() {
@@ -68,8 +60,10 @@
         title: 'План операций',
         edit_plan_operations: false,
         pk_plan: '',
-        data_plans: '',
-        filter_date: [moment().format('DD.MM.YYYY'), moment().add(7, 'days').format('DD.MM.YYYY')],
+        data: [],
+        filters: {
+          date: [moment().format('DD.MM.YYYY'), moment().add(7, 'days').format('DD.MM.YYYY')]
+        },
       }
     },
     mounted() {
@@ -77,17 +71,33 @@
         this.edit_plan_operations = false
       });
     },
-    methods:{
-      add_data() {
-        this.edit_plan_operations = true
-        this.pk_plan = -1
-      },
-      async load_data(){
-        let [d1, d2] = this.filter_date;
+    computed: {
+      dateRange() {
+        let [d1, d2] = this.filters.date;
         d1 = d1.split('.');
         d1 = `${d1[2]}-${d1[1]}-${d1[0]}`;
         d2 = d2.split('.');
         d2 = `${d2[2]}-${d2[1]}-${d2[0]}`;
+
+        return [d1, d2];
+      },
+    },
+    watch: {
+      dateRange: {
+        handler() {
+          this.load_data();
+        },
+        immediate: true,
+      }
+    },
+    methods: {
+      add_data() {
+        this.edit_plan_operations = true
+        this.pk_plan = -1
+      },
+      async load_data() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const [d1, d2] = this.dateRange;
         const {result} = await plans_point.getPlansByParams({
           'start_date': d1,
           'end_date': d2,
@@ -95,12 +105,10 @@
           'doc_anesthetist_pk': -1,
           'department': -1
         })
-        this.data_plans = result
+        this.data = result
+        await this.$store.dispatch(action_types.DEC_LOADING)
       }
     }
   }
 </script>
 
-<style scoped>
-
-</style>
