@@ -1603,7 +1603,7 @@ def last_field_result(request):
     else:
         field_pks = [request_data["fieldPk"]]
         logical_or = True
-    result = {"direction": "", "date": "", "value": ""}
+    result = None
     for field_pk in field_pks:
         if field_pk.isdigit():
             rows = get_field_result(client_pk, int(field_pk))
@@ -1614,24 +1614,18 @@ def last_field_result(request):
                 if match:
                     value = normalize_date(value)
                 if logical_or:
-                    result["direction"] = row[1],
-                    result["date"] = row[4]
-                    result["value"] = value
+                    result = {"direction": row[1], "date": row[4], "value": value}
                     if value:
                         break
                 if logical_and:
                     r = ParaclinicInputField.objects.get(pk=field_pk)
                     titles = r.get_title()
-                    result["direction"] = row[1],
-                    result["date"] = row[4]
-                    temp_value = result.get('value', ' ')
-                    result["value"] = f"{temp_value} {titles} - {value};"
-            else:
-                result = None
-        else:
-            result = None
-    if result:
-        result["direction"] = result["direction"][0]
+                    if result is None:
+                        result = {"direction": row[1], "date": row[4], "value": value}
+                    else:
+                        temp_value = result.get('value', ' ')
+                        result["value"] = f"{temp_value} {titles} - {value};"
+
     return JsonResponse({"result": result})
 
 

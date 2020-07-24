@@ -1194,7 +1194,7 @@
             okmessage('Очищено')
             for (const g of row.research.groups) {
               for (const f of g.fields) {
-                if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type)) {
+                if (![1, 3, 16, 17, 20, 13, 14, 11, 23].includes(f.field_type)) {
                   this.clear_val(f)
                 }
               }
