@@ -17,8 +17,35 @@
                   style="max-width: 200px;text-align: left!important;">{{selected_base.title}}
           </button>
         </div>
-        <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
-               maxlength="255" @keyup.enter="search">
+        <div>
+          <div class="autocomplete">
+            <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
+                   maxlength="255" @keyup.enter="search" @keypress="keypress" @keydown="keypress_arrow"
+                   @click="loadSuggests" @blur="unblur"
+                   @keyup.esc="suggests.open = false"
+                   @focus="suggests.open = true; suggests.focused = -1">
+            <div class="suggestions" v-if="(suggests.open && normalized_query.length > 0) || suggests.loading">
+              <div class="item" v-if="suggests.loading && suggests.data.length === 0">поиск...</div>
+              <div class="item" v-else-if="suggests.data.length === 0">не найдено карт в L2, попробуйте произвести поиск по ТФОМС или РМИС</div>
+              <template v-else>
+                <div class="item item-selectable" :class="{'item-selectable-focused': i === suggests.focused}"
+                     v-for="(row, i) in suggests.data"
+                     @mouseover="suggests.focused = i"
+                     @click="select_suggest(i)">
+                  {{row.family}} {{row.name}} {{row.twoname}}, {{row.sex}}, {{row.birthday}} ({{row.age}})
+                  <div>
+                    <span class="b" style="display: inline-block;margin-right: 4px;">
+                      {{row.type_title}} {{row.num}}
+                    </span>
+                    <span class="item-doc" v-for="d in row.docs">
+                      {{d.type_title}}: {{d.serial}} {{d.number}};
+                    </span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
         <span class="rmis-search input-group-btn" v-if="tfoms_query">
           <label class="btn btn-blue-nb nbr height34" style="padding: 5px 12px;">
             <input type="checkbox" v-model="inc_tfoms"/> ТФОМС
@@ -259,6 +286,7 @@
   import patients_point from '../api/patients-point'
   import {mapGetters} from 'vuex'
   import Vaccine from '../modals/Vaccine'
+  import {debounce} from "lodash-es";
 
   const tfoms_re = /^([А-яЁё\-]+) ([А-яЁё\-]+)( ([А-яЁё\-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
 
@@ -312,6 +340,12 @@
         dreg: false,
         benefit: false,
         vaccine: false,
+        suggests: {
+          focused: -1,
+          open: false,
+          loading: false,
+          data: [],
+        },
       }
     },
     created() {
@@ -498,6 +532,79 @@
       },
     },
     methods: {
+      keypress(e) {
+        if(!this.keypress_arrow(e)) {
+          this.keypress_other(e);
+        }
+      },
+      keypress_arrow(e) {
+        if (e.keyCode === 38) {
+          this.move_focus(-1);
+          e.preventDefault();
+          e.stopPropagation();
+          e.cancelBubble = true;
+          return true
+        } else if (e.keyCode === 40) {
+          this.move_focus(1);
+          e.preventDefault();
+          e.stopPropagation();
+          e.cancelBubble = true;
+          return true
+        }
+        return false
+      },
+      keypress_other: debounce(function(e) {
+        if (e.keyCode !== 27 && e.keyCode !== 13) {
+          this.loadSuggests();
+        }
+      }, 200),
+      unblur() {
+        setTimeout(() => {
+          this.suggests.open = false
+        }, 100)
+      },
+      move_focus(d) {
+        this.suggests.focused += d
+        if (this.suggests.focused < -1) {
+          this.suggests.focused = this.suggests.data.length - 1
+        } else if (this.suggests.focused > this.suggests.data.length - 1) {
+          this.suggests.focused = -1
+        }
+      },
+      async loadSuggests() {
+        if (this.normalized_query.length === 0) {
+          this.suggests.open = false
+          this.suggests.loading = false
+          this.suggests.data = []
+          return
+        }
+        this.suggests.loading = true
+        this.suggests.open = true
+
+        this.suggests.data = (await patients_point.searchCard({
+          type: this.base,
+          query: this.normalized_query,
+          list_all_cards: false,
+          inc_rmis: false,
+          inc_tfoms: false,
+          suggests: true,
+        })).results
+
+        if (this.suggests.data.length === 0) {
+          this.suggests.focused = -1
+        }
+
+        this.move_focus(0);
+
+        this.suggests.loading = false
+      },
+      select_suggest(i) {
+        this.founded_cards = this.suggests.data
+        $('input').each(function () {
+          $(this).trigger('blur')
+        })
+        this.select_card(i)
+      },
       async inited() {
         await this.$store.dispatch(action_types.INC_LOADING)
         await this.$store.dispatch(action_types.GET_DIRECTIVE_FROM)
@@ -630,6 +737,9 @@
       },
       select_card(index) {
         this.hide_modal()
+        this.suggests.open = false
+        this.suggests.loading = false
+        this.suggests.data = []
         this.selected_card = this.founded_cards[index]
         if (this.selected_card.base_pk) {
           if (this.base && this.base !== this.selected_card.base_pk) {
@@ -769,6 +879,13 @@
       search() {
         if (!this.query_valid || this.inLoading)
           return
+        this.suggests.open = false
+        this.suggests.loading = false
+        if (this.suggests.focused > -1 && this.suggests.data.length > 0) {
+          this.select_suggest(this.suggests.focused);
+          return
+        }
+        this.suggests.data = []
         const q = this.query
         this.check_base()
         $('input').each(function () {
@@ -1180,5 +1297,49 @@
     max-width: 200px;
     min-width: 60px;
     text-align: left !important;
+  }
+
+  .autocomplete {
+    position: relative;
+    overflow: visible;
+    height: 34px;
+
+    input {
+      border-radius: 0;
+    }
+
+    .suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-radius: 0 0 5px 5px;
+      border: 1px solid #3bafda;
+      border-top: none;
+      box-shadow: 0 10px 20px rgba(#3bafda, 0.19), 0 6px 6px rgba(#3bafda, 0.23);
+      overflow: hidden;
+      z-index: 1000;
+
+      .item {
+        padding: 3px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        word-break: keep-all;
+
+        &-doc {
+          color: #888;
+          font-size: 85%;
+        }
+
+        &-selectable {
+          cursor: pointer;
+          &-focused {
+            background: rgba(#3bafda, .1);
+          }
+        }
+      }
+    }
   }
 </style>
