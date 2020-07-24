@@ -38,7 +38,7 @@ def statistic_page(request):
                                                                                     'Лечащий врач', 'Лаборант',
                                                                                     'Врач-лаборант']).distinct()
     statistics_tickets_deps = Podrazdeleniya.objects.all().order_by('title')
-    statistics_researches_res = Researches.objects.all().filter(hide=False).order_by('title')
+    statistics_researches_res = Researches.objects.all().filter(hide=False, is_slave_hospital=False, is_hospital=False).order_by('title')
 
     return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs,
                                               "getters_material": json.dumps(
