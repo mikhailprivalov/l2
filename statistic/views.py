@@ -49,7 +49,6 @@ def statistic_page(request):
     if extract_research:
         extract_data = [{"pk": str(x.slave_research.pk), "title": f"{x.main_research.title} - {x.slave_research.title}"} for x in extract_research]
 
-
     type_by_epicris = HospitalService.TYPES_BY_KEYS.get('epicrisis', -1)
     epicris_transfer_research = None
     if type_by_epicris > -1:
@@ -74,8 +73,7 @@ def statistic_page(request):
                                                   [{"pk": -1, "title": 'Услуга не выбрана'},
                                                    *[{"pk": str(x.pk), "title": x.title} for x in
                                                      statistics_researches_res],
-                                                  *extract_data, *epicris_transfer_data
-                                                   ])
+                                                   *extract_data, *epicris_transfer_data])
                                               })
 
 
