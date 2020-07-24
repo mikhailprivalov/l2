@@ -47,7 +47,7 @@ def statistic_page(request):
         extract_research = HospitalService.objects.filter(site_type=type_by_key_extract, hide=False)
     extract_data = [{"pk": -1, "title": 'Стационар-выписок нет'}]
     if extract_research:
-        extract_data = [{"pk": str(x.slave_research.pk), "title": x.main_research.title + x.slave_research.title} for x in extract_research]
+        extract_data = [{"pk": str(x.slave_research.pk), "title": f"{x.main_research.title} - {x.slave_research.title}"} for x in extract_research]
 
 
     type_by_epicris = HospitalService.TYPES_BY_KEYS.get('epicrisis', -1)
@@ -56,7 +56,7 @@ def statistic_page(request):
         epicris_transfer_research = HospitalService.objects.filter(site_type=type_by_epicris, hide=False)
     epicris_transfer_data = [{"pk": -1, "title": 'Стационар-переводов нет'}]
     if epicris_transfer_research:
-        epicris_transfer_data = [{"pk": str(x.slave_research.pk), "title": x.main_research.title + x.slave_research.title} for x in epicris_transfer_research if
+        epicris_transfer_data = [{"pk": str(x.slave_research.pk), "title": f"{x.main_research.title} - {x.slave_research.title}"} for x in epicris_transfer_research if
                                  x.slave_research.title.lower().find('перевод') != -1]
 
     return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs,
