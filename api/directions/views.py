@@ -1592,24 +1592,59 @@ def last_fraction_result(request):
 def last_field_result(request):
     request_data = json.loads(request.body)
     client_pk = request_data["clientPk"]
-    field_pks = request_data["fieldPk"].split('|')
+    logical_or = False
+    logical_and = False
+    if request_data["fieldPk"].find("|") > -1:
+        logical_or = True
+        field_pks = request_data["fieldPk"].split('|')
+    elif request_data["fieldPk"].find("&") > -1:
+        logical_and = True
+        field_pks = request_data["fieldPk"].split('&')
+    else:
+        field_pks = request_data["fieldPk"].split()
+        logical_or = True
     result = None
+    print('NEW')
+    print(field_pks)
+    print(logical_and)
+    print(logical_or)
+    result = {
+        "direction": "",
+        "date": "",
+        "value": ""
+    }
     for field_pk in field_pks:
         if field_pk.isdigit():
+            print(field_pk)
             rows = get_field_result(client_pk, int(field_pk))
+            print(rows)
             if rows:
                 row = rows[0]
                 value = row[5]
                 match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
                 if match:
                     value = normalize_date(value)
-                result = {
-                    "direction": row[1],
-                    "date": row[4],
-                    "value": value
-                }
-                if value:
-                    break
+                if logical_or:
+                    print(type(row[1]), row[1])
+                    result["direction"] = row[1],
+                    result["date"] = row[4]
+                    result["value"] = value
+                    if value:
+                        break
+                if logical_and:
+                    r = ParaclinicInputField.objects.get(pk=field_pk)
+                    titles = r.get_title()
+                    print(type(row[1]))
+                    result["direction"] = row[1],
+                    result["date"] = row[4]
+                    temp_value = result.get('value', ' ')
+                    print(temp_value)
+                    result["value"] = f"{temp_value} {titles} - {value};"
+                    print(value)
+                    print(titles)
+                    print(result)
+    print(type(result["direction"]))
+    result["direction"] = result["direction"][0]
     return JsonResponse({"result": result})
 
 

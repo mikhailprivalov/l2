@@ -109,11 +109,16 @@
           'fieldPk',
           'clientPk',
         ])
+        let logicalAnd = false
+        if (this.fieldPk.indexOf('&') > -1) {
+          logicalAnd = true
+        }
         if (result) {
           this.direction = result.direction;
-          if (this.raw) {
+          if (this.raw || logicalAnd) {
             this.val = result.value;
-          } else {
+          }
+          else {
             this.val = `${result.value} (${result.date}, направление ${result.direction})`;
           }
         } else {
