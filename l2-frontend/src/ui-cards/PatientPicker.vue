@@ -399,6 +399,9 @@
           .map((s) => s.split('-').map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
           .join(' ')
       },
+      normalized_query() {
+        this.keypress_other({keyCode: -1});
+      },
       bases() {
         this.check_base()
       },
