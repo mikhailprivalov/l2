@@ -1601,23 +1601,12 @@ def last_field_result(request):
         logical_and = True
         field_pks = request_data["fieldPk"].split('&')
     else:
-        field_pks = request_data["fieldPk"].split()
+        field_pks = [request_data["fieldPk"]]
         logical_or = True
-    result = None
-    print('NEW')
-    print(field_pks)
-    print(logical_and)
-    print(logical_or)
-    result = {
-        "direction": "",
-        "date": "",
-        "value": ""
-    }
+    result = {"direction": "", "date": "", "value": ""}
     for field_pk in field_pks:
         if field_pk.isdigit():
-            print(field_pk)
             rows = get_field_result(client_pk, int(field_pk))
-            print(rows)
             if rows:
                 row = rows[0]
                 value = row[5]
@@ -1625,7 +1614,6 @@ def last_field_result(request):
                 if match:
                     value = normalize_date(value)
                 if logical_or:
-                    print(type(row[1]), row[1])
                     result["direction"] = row[1],
                     result["date"] = row[4]
                     result["value"] = value
@@ -1634,17 +1622,16 @@ def last_field_result(request):
                 if logical_and:
                     r = ParaclinicInputField.objects.get(pk=field_pk)
                     titles = r.get_title()
-                    print(type(row[1]))
                     result["direction"] = row[1],
                     result["date"] = row[4]
                     temp_value = result.get('value', ' ')
-                    print(temp_value)
                     result["value"] = f"{temp_value} {titles} - {value};"
-                    print(value)
-                    print(titles)
-                    print(result)
-    print(type(result["direction"]))
-    result["direction"] = result["direction"][0]
+            else:
+                result = None
+        else:
+            result = None
+    if result:
+        result["direction"] = result["direction"][0]
     return JsonResponse({"result": result})
 
 
