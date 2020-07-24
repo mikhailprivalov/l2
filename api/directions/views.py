@@ -1203,7 +1203,7 @@ def directions_paraclinic_result(request):
     force = rb.get("force", False)
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if force or diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
-                            | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
+                            | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True) | Q(research__is_gistology=True)
                             | Q(research__is_stom=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
         g = [str(x) for x in request.user.groups.all()]
@@ -1592,7 +1592,17 @@ def last_fraction_result(request):
 def last_field_result(request):
     request_data = json.loads(request.body)
     client_pk = request_data["clientPk"]
-    field_pks = request_data["fieldPk"].split('|')
+    logical_or = False
+    logical_and = False
+    if request_data["fieldPk"].find("|") > -1:
+        logical_or = True
+        field_pks = request_data["fieldPk"].split('|')
+    elif request_data["fieldPk"].find("&") > -1:
+        logical_and = True
+        field_pks = request_data["fieldPk"].split('&')
+    else:
+        field_pks = [request_data["fieldPk"]]
+        logical_or = True
     result = None
     for field_pk in field_pks:
         if field_pk.isdigit():
@@ -1603,13 +1613,19 @@ def last_field_result(request):
                 match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
                 if match:
                     value = normalize_date(value)
-                result = {
-                    "direction": row[1],
-                    "date": row[4],
-                    "value": value
-                }
-                if value:
-                    break
+                if logical_or:
+                    result = {"direction": row[1], "date": row[4], "value": value}
+                    if value:
+                        break
+                if logical_and:
+                    r = ParaclinicInputField.objects.get(pk=field_pk)
+                    titles = r.get_title()
+                    if result is None:
+                        result = {"direction": row[1], "date": row[4], "value": value}
+                    else:
+                        temp_value = result.get('value', ' ')
+                        result["value"] = f"{temp_value} {titles} - {value};"
+
     return JsonResponse({"result": result})
 
 
