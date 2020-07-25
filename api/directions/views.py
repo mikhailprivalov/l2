@@ -1609,10 +1609,8 @@ def last_field_result(request):
 
     result = None
     value = None
-    print(field_pks)
     for current_field_pk in field_pks:
         group_fields = [current_field_pk]
-        is_new_group = False
         if current_field_pk.find('@') > -1:
             group_fields = get_input_fields_by_group(current_field_pk)
             logical_and = True
