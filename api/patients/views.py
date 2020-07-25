@@ -192,7 +192,7 @@ def patients_search_card(request):
             'individual__document_set', queryset=Document.objects.filter(is_active=True, document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС'])
                     .distinct("pk", "number", "document_type", "serial").select_related('document_type').order_by('pk')
         ), 'phones_set'
-    ).distinct()[:10 if not suggests else 5]:
+    ).distinct()[:10]:
         disp_data = sql_func.dispensarization_research(row.individual.sex, row.individual.age_for_year(), row.pk, d1, d2)
 
         status_disp = 'finished'
