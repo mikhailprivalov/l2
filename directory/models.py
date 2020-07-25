@@ -382,6 +382,7 @@ class ParaclinicInputField(models.Model):
         (20, 'Time HH:MM'),
         (21, 'Anesthesia table'),
         (22, 'Текст с автозаполнением'),
+        (23, 'Raw field without autoload'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')

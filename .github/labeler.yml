@@ -1,0 +1,6 @@
+frontend:
+  - 'l2-frontend/**'
+
+backend:
+- any: ['**/*.py']
+  all: ['!**/test.py']

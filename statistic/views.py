@@ -24,6 +24,7 @@ from users.models import Podrazdeleniya
 from utils.dates import try_parse_range
 from . import sql_func
 from . import structure_sheet
+from directory.models import HospitalService
 
 
 @csrf_exempt
@@ -38,7 +39,24 @@ def statistic_page(request):
                                                                                     'Лечащий врач', 'Лаборант',
                                                                                     'Врач-лаборант']).distinct()
     statistics_tickets_deps = Podrazdeleniya.objects.all().order_by('title')
-    statistics_researches_res = Researches.objects.all().filter(hide=False).order_by('title')
+    statistics_researches_res = Researches.objects.all().filter(hide=False, is_slave_hospital=False, is_hospital=False).order_by('title')
+
+    type_by_key_extract = HospitalService.TYPES_BY_KEYS.get('extracts', -1)
+    extract_research = None
+    if type_by_key_extract > -1:
+        extract_research = HospitalService.objects.filter(site_type=type_by_key_extract, hide=False)
+    extract_data = [{"pk": -1, "title": 'Стационар-выписок нет'}]
+    if extract_research:
+        extract_data = [{"pk": str(x.slave_research.pk), "title": f"{x.main_research.title} - {x.slave_research.title}"} for x in extract_research]
+
+    type_by_epicris = HospitalService.TYPES_BY_KEYS.get('epicrisis', -1)
+    epicris_transfer_research = None
+    if type_by_epicris > -1:
+        epicris_transfer_research = HospitalService.objects.filter(site_type=type_by_epicris, hide=False)
+    epicris_transfer_data = [{"pk": -1, "title": 'Стационар-переводов нет'}]
+    if epicris_transfer_research:
+        epicris_transfer_data = [{"pk": str(x.slave_research.pk), "title": f"{x.main_research.title} - {x.slave_research.title}"} for x in epicris_transfer_research if
+                                 x.slave_research.title.lower().find('перевод') != -1]
 
     return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs,
                                               "getters_material": json.dumps(
@@ -54,7 +72,8 @@ def statistic_page(request):
                                               "statistics_researches_res": json.dumps(
                                                   [{"pk": -1, "title": 'Услуга не выбрана'},
                                                    *[{"pk": str(x.pk), "title": x.title} for x in
-                                                     statistics_researches_res]])
+                                                     statistics_researches_res],
+                                                   *extract_data, *epicris_transfer_data])
                                               })
 
 

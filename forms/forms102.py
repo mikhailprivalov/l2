@@ -24,6 +24,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, PageBreak, Macro
+from reportlab.platypus.flowables import HRFlowable
 
 from appconf.manager import SettingManager
 from clients.models import Card
@@ -252,6 +253,8 @@ def form_01(request_data):
             org_contacts = data['org_contacts']
             executor = data['executor']
             appendix_paragraphs = data.get('appendix_paragraphs', None)
+            appendix_route_list = data.get('appendix_route_list', None)
+
     else:
         executor = None
 
@@ -386,7 +389,7 @@ def form_01(request_data):
     example_template = result_data[0]
 
     list_g = []
-
+    route_list = [[Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB)]]
     # используется range(len()) - к определенной колонке (по номеру) применяется свое свойство
     for i in range(len(example_template)):
         list_t = []
@@ -399,6 +402,7 @@ def form_01(request_data):
                 s = styleTC
             list_t.append(Paragraph(example_template[i][j], s))
         list_g.append(list_t)
+        route_list.append([Paragraph(example_template[i][1], styleTC), Paragraph(example_template[i][2], styleTC)])
 
     opinion.extend(list_g)
 
@@ -829,10 +833,16 @@ def form_01(request_data):
         canvas.restoreState()
 
     if contract_from_file and appendix_paragraphs:
-        objs.append(PageBreak())
-        objs.append(Macro("canvas._pageNumber=1"))
         for section in appendix_paragraphs:
-            if section.get('patient_fio'):
+            if section.get('page_break'):
+                objs.append(PageBreak())
+                objs.append(Macro("canvas._pageNumber=1"))
+            elif section.get('Spacer'):
+                height_spacer = section.get('spacer_data')
+                objs.append(Spacer(1, height_spacer * mm))
+            elif section.get('HRFlowable'):
+                objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+            elif section.get('patient_fio'):
                 objs.append(Paragraph(f"{section['text']} {patient_data['fio']} ({patient_data['born']})", styles_obj[section['style']]))
             elif section.get('patient_addresses'):
                 objs.append(Paragraph(f"{section['text']} {patient_data['main_address']}", styles_obj[section['style']]))
@@ -842,6 +852,29 @@ def form_01(request_data):
                 objs.append(Paragraph(f"{section['text']} {exec_person}", styles_obj[section['style']]))
             else:
                 objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
+
+    if contract_from_file and appendix_route_list:
+        for section in appendix_route_list:
+            if section.get('page_break'):
+                objs.append(PageBreak())
+                objs.append(Macro("canvas._pageNumber=1"))
+            elif section.get('Spacer'):
+                height_spacer = section.get('spacer_data')
+                objs.append(Spacer(1, height_spacer * mm))
+            elif section.get('patient_fio'):
+                objs.append(Paragraph(f"{section['text']} {patient_data['fio']} ({patient_data['born']})", styles_obj[section['style']]))
+            else:
+                objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
+
+        tbl = Table(route_list, colWidths=(30 * mm, 100 * mm), hAlign='LEFT')
+        tbl.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+
+        objs.append(Spacer(1, 5 * mm))
+        objs.append(tbl)
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvasPartitionAll)
 

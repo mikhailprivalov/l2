@@ -37,8 +37,6 @@ from utils.dates import normalize_date
 from utils.dates import try_parse_range
 from .sql_func import get_history_dir
 
-TADP = SettingManager.get("tadp", default='Температура', default_type='s')
-
 
 @login_required
 @group_required("Лечащий врач", "Оператор лечащего врача")
@@ -869,6 +867,7 @@ def directions_results_report(request):
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_form(request):
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1) or -1
@@ -1189,6 +1188,7 @@ def directions_anesthesia_load(request):
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_result(request):
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
     rb = json.loads(request.body)
     request_data = rb.get("data", {})
@@ -1204,6 +1204,7 @@ def directions_paraclinic_result(request):
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if force or diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
                             | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
+                            | Q(research__is_gistology=True)
                             | Q(research__is_stom=True)
                             | Q(research__is_gistology=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
@@ -1409,6 +1410,7 @@ def directions_paraclinic_result(request):
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_confirm(request):
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("iss_pk", -1)
@@ -1448,6 +1450,7 @@ def directions_paraclinic_confirm(request):
 @group_required("Врач параклиники", "Сброс подтверждений результатов", "Врач консультаций",
                 "Врач стационара", "Сброс подтверждения переводного эпикриза", "Сброс подтверждения выписки", "t, ad, p")
 def directions_paraclinic_confirm_reset(request):
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("iss_pk", -1)
@@ -1591,7 +1594,17 @@ def last_fraction_result(request):
 def last_field_result(request):
     request_data = json.loads(request.body)
     client_pk = request_data["clientPk"]
-    field_pks = request_data["fieldPk"].split('|')
+    logical_or = False
+    logical_and = False
+    if request_data["fieldPk"].find("|") > -1:
+        logical_or = True
+        field_pks = request_data["fieldPk"].split('|')
+    elif request_data["fieldPk"].find("&") > -1:
+        logical_and = True
+        field_pks = request_data["fieldPk"].split('&')
+    else:
+        field_pks = [request_data["fieldPk"]]
+        logical_or = True
     result = None
     for field_pk in field_pks:
         if field_pk.isdigit():
@@ -1602,13 +1615,19 @@ def last_field_result(request):
                 match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
                 if match:
                     value = normalize_date(value)
-                result = {
-                    "direction": row[1],
-                    "date": row[4],
-                    "value": value
-                }
-                if value:
-                    break
+                if logical_or:
+                    result = {"direction": row[1], "date": row[4], "value": value}
+                    if value:
+                        break
+                if logical_and:
+                    r = ParaclinicInputField.objects.get(pk=field_pk)
+                    titles = r.get_title()
+                    if result is None:
+                        result = {"direction": row[1], "date": row[4], "value": value}
+                    else:
+                        temp_value = result.get('value', ' ')
+                        result["value"] = f"{temp_value} {titles} - {value};"
+
     return JsonResponse({"result": result})
 
 

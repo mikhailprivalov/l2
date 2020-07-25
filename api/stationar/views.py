@@ -14,9 +14,6 @@ from appconf.manager import SettingManager
 from django.db.models import Q
 
 
-TADP = SettingManager.get("tadp", default='Температура', default_type='s')
-
-
 @login_required
 @group_required("Врач стационара", "t, ad, p")
 def load(request):
@@ -139,6 +136,7 @@ def make_service(request):
     main_direction = Napravleniya.objects.get(pk=data["main_direction"])
     parent_iss = Issledovaniya.objects.filter(napravleniye=main_direction, research__is_hospital=True).first()
     service = HospitalService.objects.get(pk=data["service"])
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     if "Врач стационара" not in [str(x) for x in request.user.groups.all()] and TADP not in service.slave_research.title:
         return JsonResponse({"pk": None})
     result = Napravleniya.gen_napravleniya_by_issledovaniya(main_direction.client_id,

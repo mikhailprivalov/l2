@@ -45,6 +45,7 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
             WHERE (%(d_confirms)s in (directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.co_executor_id,
             directions_issledovaniya.co_executor2_id)) 
             AND time_confirmation BETWEEN %(d_start)s AND %(d_end)s
+            AND directory_researches.is_slave_hospital=FALSE AND directory_researches.is_hospital=FALSE
             AND 
             CASE when %(can_null)s = 1 THEN 
             directions_napravleniya.istochnik_f_id = %(ist_fin)s or directions_napravleniya.istochnik_f_id is NULL
