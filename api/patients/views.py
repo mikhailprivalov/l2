@@ -55,6 +55,7 @@ def patients_search_card(request):
     d = json.loads(request.body)
     inc_rmis = d.get('inc_rmis')
     tfoms_module = SettingManager.l2('tfoms')
+    birthday_order = SettingManager.l2('birthday_order')
     inc_tfoms = d.get('inc_tfoms') and tfoms_module
     card_type = CardBase.objects.get(pk=d['type'])
     query = d['query'].strip()
@@ -181,6 +182,9 @@ def patients_search_card(request):
         cards = cards.filter(carddocusage__document__number=query, carddocusage__document__document_type__title='Полис ОМС')
 
     d1, d2 = start_end_year()
+
+    if birthday_order:
+        cards = cards.order_by('-individual__birthday')
 
     row: Card
     for row in cards.filter(is_archive=False).select_related("individual", "base").prefetch_related(
