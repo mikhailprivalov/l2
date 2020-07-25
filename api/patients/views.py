@@ -39,7 +39,10 @@ def full_patient_search_data(p, query):
             p = split[2]
             rmis_req["patrName"] = p + "%"
     if len(split) > 3:
-        btday = split[3].split(".")
+        if '.' in split[3]:
+            btday = split[3].split(".")
+        else:
+            btday = [query[0:2], query[2:5], query[5:9]]
         btday = btday[2] + "-" + btday[1] + "-" + btday[0]
         rmis_req["birthDate"] = btday
     return f, n, p, rmis_req, split
@@ -52,10 +55,12 @@ def patients_search_card(request):
     d = json.loads(request.body)
     inc_rmis = d.get('inc_rmis')
     tfoms_module = SettingManager.l2('tfoms')
+    birthday_order = SettingManager.l2('birthday_order')
     inc_tfoms = d.get('inc_tfoms') and tfoms_module
     card_type = CardBase.objects.get(pk=d['type'])
     query = d['query'].strip()
-    p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
+    suggests = d.get('suggests', False)
+    p = re.compile(r'^[а-яё]{3}[0-9]{8}$', re.IGNORECASE)
     p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.?[0-9]{2}\.?[0-9]{4}))?)?)?$')
     p_tfoms = re.compile(r'^([А-яЁё\-]+) ([А-яЁё\-]+)( ([А-яЁё\-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$')
     p3 = re.compile(r'^[0-9]{1,15}$')
@@ -66,7 +71,7 @@ def patients_search_card(request):
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     c = None
     if p_enp:
-        if tfoms_module:
+        if tfoms_module and not suggests:
             from_tfoms = match_enp(query)
 
             if from_tfoms:
@@ -95,7 +100,7 @@ def patients_search_card(request):
                 objects = Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1],
                                                     patronymic__startswith=initials[2], birthday=btday,
                                                     card__base=card_type)
-                if (card_type.is_rmis and len(objects) == 0) or (card_type.internal_type and inc_rmis):
+                if ((card_type.is_rmis and len(objects) == 0) or (card_type.internal_type and inc_rmis)) and not suggests:
                     c = Client(modules="patients")
                     objects = c.patients.import_individual_to_base(
                         {"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%",
@@ -122,7 +127,7 @@ def patients_search_card(request):
                 objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
                                                     patronymic__istartswith=p, card__base=card_type)[:10]
 
-            if (card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10))) or (card_type.internal_type and inc_rmis):
+            if ((card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10))) or (card_type.internal_type and inc_rmis)) and not suggests:
                 objects = list(objects)
                 try:
                     if not c:
@@ -141,13 +146,13 @@ def patients_search_card(request):
                                                         card__base=card_type)
                 except ValueError:
                     pass
-                if (card_type.is_rmis or card_type.internal_type) and len(list(objects)) == 0 and len(query) == 16:
+                if (card_type.is_rmis or card_type.internal_type) and len(list(objects)) == 0 and len(query) == 16 and not suggests:
                     if not c:
                         c = Client(modules="patients")
                     objects = c.patients.import_individual_to_base(query)
-                else:
+                elif not suggests:
                     resync = True
-            if resync and card_type.is_rmis:
+            if resync and card_type.is_rmis and not suggests:
                 if not c:
                     c = Client(modules="patients")
 
@@ -178,13 +183,16 @@ def patients_search_card(request):
 
     d1, d2 = start_end_year()
 
+    if birthday_order:
+        cards = cards.order_by('-individual__birthday')
+
     row: Card
     for row in cards.filter(is_archive=False).select_related("individual", "base").prefetch_related(
         Prefetch(
             'individual__document_set', queryset=Document.objects.filter(is_active=True, document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС'])
                     .distinct("pk", "number", "document_type", "serial").select_related('document_type').order_by('pk')
         ), 'phones_set'
-    ).distinct():
+    ).distinct()[:10]:
         disp_data = sql_func.dispensarization_research(row.individual.sex, row.individual.age_for_year(), row.pk, d1, d2)
 
         status_disp = 'finished'
@@ -652,6 +660,7 @@ def load_ambulatory_data(request):
             "date": strdate(a.date) if a.date else '',
             "data": a.data,
         })
+
     return JsonResponse({"rows": data})
 
 

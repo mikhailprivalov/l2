@@ -85,7 +85,7 @@
                 <i class="glyphicon glyphicon-arrow-down"></i>
               </button>
             </span>
-            <span class="input-group-addon">Название группы</span>
+            <span class="input-group-addon">Название группы ({{group.pk === -1 ? 'новое' : group.pk}})</span>
             <input type="text" class="form-control" placeholder="Название" v-model="group.title">
             <span class="input-group-addon">Условие видимости</span>
             <input type="text" class="form-control" placeholder="Условие" v-model="group.visibility">
@@ -137,7 +137,7 @@
                     <strong>ID фракции:</strong>
                     <input v-model="row.default" class="form-control"/>
                   </div>
-                  <div v-else-if="row.field_type === 13 || row.field_type === 14">
+                  <div v-else-if="row.field_type === 13 || row.field_type === 14 || row.field_type === 23">
                     <strong>ID поля:</strong>
                     <input v-model="row.default" class="form-control"/>
                   </div>
@@ -156,7 +156,7 @@
                   <div v-if="row.field_type === 21">
                     <ConfigureAnesthesiaField v-model="row.values_to_input"/>
                   </div>
-                  <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22].includes(row.field_type)">
+                  <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23].includes(row.field_type)">
                     <div class="header" v-collapse-toggle>
                       <a href="#" class="a-under" @click.prevent v-if="row.field_type === 0">
                         Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
@@ -224,7 +224,7 @@
                     <input type="checkbox" v-model="row.for_extract_card"/> в выписку
                   </label>
                   <label style="line-height: 1"
-                         v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14">
+                         v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14 || row.field_type === 23">
                     Число строк:<br/>
                     <input class="form-control" type="number" min="1" v-model.number="row.lines"/>
                   </label>
@@ -248,6 +248,7 @@
                       <option value="20">Время ЧЧ:ММ</option>
                       <option value="21">Течение анестезии (таблица)</option>
                       <option value="22">Текст с автозаполнением</option>
+                      <option value="23">Ссылка без автозагрузки</option>
                     </select>
                   </label>
                 </div>

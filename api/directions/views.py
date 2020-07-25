@@ -1203,7 +1203,7 @@ def directions_paraclinic_result(request):
     force = rb.get("force", False)
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if force or diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
-                            | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
+                            | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True) | Q(research__is_gistology=True)
                             | Q(research__is_stom=True)
                             | Q(research__is_gistology=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
@@ -1593,25 +1593,62 @@ def last_fraction_result(request):
 def last_field_result(request):
     request_data = json.loads(request.body)
     client_pk = request_data["clientPk"]
-    field_pks = request_data["fieldPk"].split('|')
+    logical_or = False
+    logical_and = False
+    logical_group_or = False
+    if request_data["fieldPk"].find("|") > -1:
+        logical_or = True
+        field_pks = request_data["fieldPk"].split('|')
+        if request_data["fieldPk"].find('@') > -1:
+            logical_group_or = True
+    elif request_data["fieldPk"].find("&") > -1:
+        logical_and = True
+        field_pks = request_data["fieldPk"].split('&')
+    else:
+        field_pks = [request_data["fieldPk"]]
+        logical_or = True
+
     result = None
-    for field_pk in field_pks:
-        if field_pk.isdigit():
-            rows = get_field_result(client_pk, int(field_pk))
-            if rows:
-                row = rows[0]
-                value = row[5]
-                match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
-                if match:
-                    value = normalize_date(value)
-                result = {
-                    "direction": row[1],
-                    "date": row[4],
-                    "value": value
-                }
-                if value:
-                    break
+    value = None
+    for current_field_pk in field_pks:
+        group_fields = [current_field_pk]
+        if current_field_pk.find('@') > -1:
+            group_fields = get_input_fields_by_group(current_field_pk)
+            logical_and = True
+            logical_or = False
+        for field_pk in group_fields:
+            if field_pk.isdigit():
+                rows = get_field_result(client_pk, int(field_pk))
+                if rows:
+                    row = rows[0]
+                    value = row[5]
+                    match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
+                    if match:
+                        value = normalize_date(value)
+                    if logical_or:
+                        result = {"direction": row[1], "date": row[4], "value": value}
+                        if value:
+                            break
+                    if logical_and:
+                        r = ParaclinicInputField.objects.get(pk=field_pk)
+                        titles = r.get_title()
+                        if result is None:
+                            result = {"direction": row[1], "date": row[4], "value": value}
+                        else:
+                            temp_value = result.get('value', ' ')
+                            result["value"] = f"{temp_value} {titles} - {value};"
+
+        if logical_group_or and value:
+            break
+
     return JsonResponse({"result": result})
+
+
+def get_input_fields_by_group(group_pk):
+    group_pk = group_pk[0:-1]
+    fields_group = ParaclinicInputField.objects.values_list('id').filter(group__pk=group_pk).order_by('order')
+    field_result = [str(i[0]) for i in fields_group]
+    return field_result
 
 
 @group_required("Врач параклиники", "Врач консультаций")

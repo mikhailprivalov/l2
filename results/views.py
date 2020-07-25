@@ -578,7 +578,7 @@ def result_print(request):
 
         number_poliklinika = f' ({direction.client.number_poliklinika})' if direction.client.number_poliklinika else ''
         individual_birthday = f'({strdate(direction.client.individual.birthday)})'
-        t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col)
+        t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
         if not hosp or is_extract:
             fwb.append(t)
             fwb.append(Spacer(1, 5 * mm))

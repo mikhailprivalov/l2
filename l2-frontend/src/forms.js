@@ -9,3 +9,7 @@ export default [
 export const forDirs = [
   {url: '/forms/pdf?type=102.01&card_pk={card}&napr_id={dir}', title: 'Договор', need_dirs: true},
 ];
+
+export const form112 = [
+  {url: '/forms/pdf?type=108.01&card_pk={card}', title: ' Ф.112'}
+];
