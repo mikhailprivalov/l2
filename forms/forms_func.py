@@ -5,7 +5,7 @@ from decimal import Decimal
 from django.db.models import Q
 
 from clients.models import Document, DispensaryReg
-from directions.models import Napravleniya, Issledovaniya
+from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
 from directory.models import Researches
 from laboratory import utils
 from laboratory.utils import strdate
@@ -727,10 +727,34 @@ def closed_bl(hosp_num_dir):
     Подтверждены больничные-протоколы со словом закрытие среди Б/Л?
     """
     result_bl = hosp_get_data_direction(hosp_num_dir, site_type=8, type_service='None', level=-1)
+    num, who_get, who_care, start_date, end_date = '', '', '', '', ''
     for i in result_bl:
         if i['date_confirm'] is None:
             continue
         if i["research_title"].lower().find('закрыт') != -1:
-            return True
+            print(i)
+            data_closed_bl = ParaclinicResult.objects.filter(issledovaniye=i['iss'])
+            for b in data_closed_bl:
+                if b.field.title == "Лист нетрудоспособности №":
+                    num = b.value
+                    continue
+                if b.field.title == "Выдан кому":
+                    who_get = b.value
+                    continue
+                if b.field.title == "по уходу за":
+                    who_care = b.value
+                    continue
+                if b.field.title == "выдан с":
+                    start_date = b.value
+                    if start_date.find('-') != -1:
+                        start_date = normalize_date(start_date)
+                    continue
+                if b.field.title == "по":
+                    end_date = b.value
+                    if end_date.find('-') != -1:
+                        end_date = normalize_date(end_date)
+                    continue
+
+            return {'is_closed': True, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date}
 
     return False

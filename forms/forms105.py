@@ -26,7 +26,9 @@ from laboratory import utils
 from laboratory.settings import FONTS_FOLDER
 from utils import tree_directions
 from .forms_func import get_doc_results, get_finaldata_talon, primary_reception_get_data, hosp_extract_get_data, hosp_patient_movement, hosp_get_operation_data
+from .forms_func import closed_bl
 from api.stationar.stationar_func import hosp_get_hosp_direction
+
 
 
 def form_01(request_data):
@@ -636,10 +638,16 @@ def form_03(request_data):
         Paragraph('23. Продолжительность госпитализации (койко - дней): {}'.format(days_count), style),
         Paragraph('24. Исход госпитализации: {}'.format(outcome), style),
         Paragraph('24.1. Результат госпитализации: {}'.format(result_hospital), style),
-        Paragraph('25. Листок нетрудоспособности: открыт _ _._ _._ _ _ _ закрыт:_ _._ _._ _ _ _', style),
-        Paragraph('25.1. По уходу за больным Полных лет: _____ Пол: {}'.format(sex), style),
-        Paragraph('26. Движение пациента по отделениям:', style),
     ]
+
+    closed_bl_result = closed_bl(hosp_nums_obj[0].get('direction'))
+
+    title_page.append(Paragraph(f"25. Листок нетрудоспособности: открыт <u>{closed_bl_result['start_date']}</u>  закрыт: <u>{closed_bl_result['end_date']}</u>", style))
+    title_page.append(Paragraph(f"25.1. Номере ЛН : <u>{closed_bl_result['num']}</u>", style))
+    title_page.append(Paragraph(f"25.2. Выдан кому : {closed_bl_result['who_get']}", style))
+    title_page.append(Paragraph('25.3. По уходу за больным Полных лет: _____ Пол: {}'.format(sex), style))
+    title_page.append(Paragraph('26. Движение пациента по отделениям:', style))
+
     objs.extend(title_page)
 
     styleTB = deepcopy(style)

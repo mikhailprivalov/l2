@@ -304,7 +304,7 @@ def form_01(request_data):
 
     def first_pages(canvas, document):
         canvas.saveState()
-        if closed_bl_result:
+        if closed_bl_result.get('is_closed', None):
             canvas.setFont('PTAstraSerifBold', 12)
             canvas.drawString(7 * mm, 290 * mm, 'ЛН')
         # Переведен
