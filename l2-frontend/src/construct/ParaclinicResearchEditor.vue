@@ -85,7 +85,7 @@
                 <i class="glyphicon glyphicon-arrow-down"></i>
               </button>
             </span>
-            <span class="input-group-addon">Название группы</span>
+            <span class="input-group-addon">Название группы ({{group.pk === -1 ? 'новое' : group.pk}})</span>
             <input type="text" class="form-control" placeholder="Название" v-model="group.title">
             <span class="input-group-addon">Условие видимости</span>
             <input type="text" class="form-control" placeholder="Условие" v-model="group.visibility">
