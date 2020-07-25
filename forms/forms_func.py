@@ -489,17 +489,18 @@ def hosp_extract_get_data(hosp_last_num):
         if not doc_confirm:
             return {}
         extract_research_id = hosp_extract[0].get('research_id')
+
     titles_field = ['Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Основной диагноз по МКБ',
                     'Осложнение основного диагноза (описание)', 'Осложнение основного диагноза по МКБ',
                     'Сопутствующий диагноз (описание)', 'Сопутствующий диагноз по МКБ',
-                    'Исход госпитализации', 'Результат госпитализации', 'Проведено койко-дней', 'Заведующий отделением'
+                    'Исход госпитализации', 'Результат госпитализации', 'Проведено койко-дней', 'Заведующий отделением', 'Палата №'
                     ]
     list_values = None
     if titles_field and hosp_extract:
         list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
     date_value, time_value = '', ''
     final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', '', ''
-    days_count, result_hospital, manager_depart = '', '', ''
+    days_count, result_hospital, manager_depart, room_num = '', '', '', ''
 
     if list_values:
         for i in list_values:
@@ -527,11 +528,14 @@ def hosp_extract_get_data(hosp_last_num):
                 days_count = str(i[2])
             if i[3] == 'Заведующий отделением':
                 manager_depart = str(i[2])
+            if i[3] == 'Палата №':
+                room_num = str(i[2])
 
     doc_fio = doc_confirm.get_fio()
     return {'date_value': date_value, 'time_value': time_value, 'final_diagnos': final_diagnos, 'other_diagnos': other_diagnos, 'near_diagnos': near_diagnos,
             'outcome': outcome, 'final_diagnos_mkb': final_diagnos_mkb, 'other_diagnos_mkb': other_diagnos_mkb, 'near_diagnos_mkb': near_diagnos_mkb,
-            'extract_iss': hosp_extract_iss, 'days_count': days_count, 'result_hospital': result_hospital, 'doc_fio': doc_fio, 'manager_depart': manager_depart
+            'extract_iss': hosp_extract_iss, 'days_count': days_count, 'result_hospital': result_hospital, 'doc_fio': doc_fio, 'manager_depart': manager_depart,
+            'room_num': room_num
             }
 
 
@@ -732,7 +736,6 @@ def closed_bl(hosp_num_dir):
         if i['date_confirm'] is None:
             continue
         if i["research_title"].lower().find('закрыт') != -1:
-            print(i)
             data_closed_bl = ParaclinicResult.objects.filter(issledovaniye=i['iss'])
             for b in data_closed_bl:
                 if b.field.title == "Лист нетрудоспособности №":
