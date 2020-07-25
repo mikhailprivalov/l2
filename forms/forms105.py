@@ -30,7 +30,6 @@ from .forms_func import closed_bl
 from api.stationar.stationar_func import hosp_get_hosp_direction
 
 
-
 def form_01(request_data):
     """
     Ведомость статталонов по амбулаторным приемам. Входные параметры врач, дата.
