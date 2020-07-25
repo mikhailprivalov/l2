@@ -21,9 +21,12 @@
           <div class="autocomplete">
             <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
                    maxlength="255" @keyup.enter="search" @keypress="keypress" @keydown="keypress_arrow"
-                   @click="loadSuggests" @blur="unblur"
+                   @click="click_input" @blur="unblur"
                    @keyup.esc="suggests.open = false"
                    @focus="suggests.open = true; suggests.focused = -1">
+            <div class="clear-input" :class="{display: query.length > 0}" @click="clear_input">
+              <i class="fa fa-times"></i>
+            </div>
             <div class="suggestions" v-if="(suggests.open && normalized_query.length > 0) || suggests.loading">
               <div class="item" v-if="suggests.loading && suggests.data.length === 0">поиск...</div>
               <div class="item" v-else-if="suggests.data.length === 0">не найдено карт в L2, попробуйте произвести поиск по ТФОМС или РМИС</div>
@@ -607,6 +610,16 @@
           $(this).trigger('blur')
         })
         this.select_card(i)
+      },
+      clear_input() {
+        this.query = ''
+        $(this.$refs.q).focus()
+      },
+      click_input() {
+        if (this.selected_card.pk) {
+          this.$refs.q.setSelectionRange(0, this.query.length)
+        }
+        this.loadSuggests()
       },
       async inited() {
         await this.$store.dispatch(action_types.INC_LOADING)
@@ -1342,6 +1355,27 @@
             background: rgba(#3bafda, .1);
           }
         }
+      }
+    }
+
+    .clear-input {
+      display: none;
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      right: 0;
+      width: 34px;
+      height: 34px;
+
+      &:hover {
+        background: rgba(0, 0, 0, .15);
+      }
+
+      &.display {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
       }
     }
   }
