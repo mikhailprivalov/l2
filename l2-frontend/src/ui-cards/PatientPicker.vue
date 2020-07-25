@@ -1366,9 +1366,11 @@
       right: 0;
       width: 34px;
       height: 34px;
+      opacity: .6;
 
       &:hover {
         background: rgba(0, 0, 0, .15);
+        opacity: 1;
       }
 
       &.display {
