@@ -31,7 +31,7 @@
                 <div class="item item-selectable" :class="{'item-selectable-focused': i === suggests.focused}"
                      v-for="(row, i) in suggests.data"
                      @mouseover="suggests.focused = i"
-                     @click="select_suggest(i)">
+                     @click.stop="select_suggest(i)">
                   {{row.family}} {{row.name}} {{row.twoname}}, {{row.sex}}, {{row.birthday}} ({{row.age}})
                   <div>
                     <span class="b" style="display: inline-block;margin-right: 4px;">
@@ -564,7 +564,7 @@
       unblur() {
         setTimeout(() => {
           this.suggests.open = false
-        }, 100)
+        }, 200)
       },
       move_focus(d) {
         this.suggests.focused += d
