@@ -5,7 +5,7 @@ from decimal import Decimal
 from django.db.models import Q
 
 from clients.models import Document, DispensaryReg
-from directions.models import Napravleniya, Issledovaniya
+from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
 from directory.models import Researches
 from laboratory import utils
 from laboratory.utils import strdate
@@ -489,17 +489,18 @@ def hosp_extract_get_data(hosp_last_num):
         if not doc_confirm:
             return {}
         extract_research_id = hosp_extract[0].get('research_id')
+
     titles_field = ['Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Основной диагноз по МКБ',
                     'Осложнение основного диагноза (описание)', 'Осложнение основного диагноза по МКБ',
                     'Сопутствующий диагноз (описание)', 'Сопутствующий диагноз по МКБ',
-                    'Исход госпитализации', 'Результат госпитализации', 'Проведено койко-дней', 'Заведующий отделением'
+                    'Исход госпитализации', 'Результат госпитализации', 'Проведено койко-дней', 'Заведующий отделением', 'Палата №'
                     ]
     list_values = None
     if titles_field and hosp_extract:
         list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
     date_value, time_value = '', ''
     final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb = '', '', '', '', '', '', ''
-    days_count, result_hospital, manager_depart = '', '', ''
+    days_count, result_hospital, manager_depart, room_num = '', '', '', ''
 
     if list_values:
         for i in list_values:
@@ -527,11 +528,14 @@ def hosp_extract_get_data(hosp_last_num):
                 days_count = str(i[2])
             if i[3] == 'Заведующий отделением':
                 manager_depart = str(i[2])
+            if i[3] == 'Палата №':
+                room_num = str(i[2])
 
     doc_fio = doc_confirm.get_fio()
     return {'date_value': date_value, 'time_value': time_value, 'final_diagnos': final_diagnos, 'other_diagnos': other_diagnos, 'near_diagnos': near_diagnos,
             'outcome': outcome, 'final_diagnos_mkb': final_diagnos_mkb, 'other_diagnos_mkb': other_diagnos_mkb, 'near_diagnos_mkb': near_diagnos_mkb,
-            'extract_iss': hosp_extract_iss, 'days_count': days_count, 'result_hospital': result_hospital, 'doc_fio': doc_fio, 'manager_depart': manager_depart
+            'extract_iss': hosp_extract_iss, 'days_count': days_count, 'result_hospital': result_hospital, 'doc_fio': doc_fio, 'manager_depart': manager_depart,
+            'room_num': room_num
             }
 
 
@@ -727,10 +731,33 @@ def closed_bl(hosp_num_dir):
     Подтверждены больничные-протоколы со словом закрытие среди Б/Л?
     """
     result_bl = hosp_get_data_direction(hosp_num_dir, site_type=8, type_service='None', level=-1)
+    num, who_get, who_care, start_date, end_date = '', '', '', '', ''
     for i in result_bl:
         if i['date_confirm'] is None:
             continue
         if i["research_title"].lower().find('закрыт') != -1:
-            return True
+            data_closed_bl = ParaclinicResult.objects.filter(issledovaniye=i['iss'])
+            for b in data_closed_bl:
+                if b.field.title == "Лист нетрудоспособности №":
+                    num = b.value
+                    continue
+                if b.field.title == "Выдан кому":
+                    who_get = b.value
+                    continue
+                if b.field.title == "по уходу за":
+                    who_care = b.value
+                    continue
+                if b.field.title == "выдан с":
+                    start_date = b.value
+                    if start_date.find('-') != -1:
+                        start_date = normalize_date(start_date)
+                    continue
+                if b.field.title == "по":
+                    end_date = b.value
+                    if end_date.find('-') != -1:
+                        end_date = normalize_date(end_date)
+                    continue
+
+            return {'is_closed': True, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date}
 
     return False
