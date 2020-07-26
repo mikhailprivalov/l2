@@ -773,8 +773,6 @@
       } else {
         this.inited = true
       }
-      console.log('11111')
-      console.log(this.data.direction.pk)
     },
     methods: {
       async load_location() {

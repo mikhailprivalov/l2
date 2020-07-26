@@ -711,7 +711,6 @@ def hosp_get_operation_data(num_dir):
                     operation_data['plan_operation'] = field[2]
                     continue
                 if field[3] == 'Категория сложности':
-                    # category_difficult = f"<br/><font face=\"PTAstraSerifBold\" size=\"8.7\">(Сложность - {field[2]})</font>"
                     operation_data['category_difficult'] = f"Сложность - {field[2]}"
                     continue
                 if field[3] == 'Диагноз после оперативного лечения':
