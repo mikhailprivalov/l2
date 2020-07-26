@@ -20,8 +20,8 @@
     <div class="form-row">
       <div class="row-t">Врач-хирург</div>
       <div class="row-v">
-        <treeselect class="vue-treeselect__control_my" :multiple="false" :options="hirurgs" placeholder="Select"
-                    v-model="current_hirurg"
+        <treeselect class="treeselect" :multiple="false" :disable-branch-nodes="true" :options="hirurgs"
+                    placeholder="Хирург не выбран" v-model="current_hirurg"
         />
       </div>
     </div>
@@ -33,11 +33,11 @@
     </div>
     <div class="row color-bottom">
       <div style="float: right; margin-right: 10px; padding-right: 10px">
-        <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px" @click="save_to_plan"
+        <button class="btn btn-blue-nb btn-sm" style="border-radius: 0" @click="save_to_plan"
                 :class="[{btndisable: !current_hirurg || !current_direction || !card_pk || !current_time}]">
           Сохранить в план
         </button>
-        <button class="btn btn-blue-nb btn-sm" style="border-radius: 0px">
+        <button class="btn btn-blue-nb btn-sm" style="border-radius: 0">
           Отменить операцию
         </button>
       </div>
@@ -152,8 +152,8 @@
       },
       async load_hirurgs() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const {hirurgs} = await users_point.loadHirurgs({'group': ['Оперирует']})
-        this.hirurgs = hirurgs
+        const {users} = await users_point.loadUsersByGroup({'group': ['Оперирует']})
+        this.hirurgs = users
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       open_patient_picker() {
@@ -199,7 +199,6 @@
     cursor: not-allowed;
     pointer-events: none;
 
-    /*Button disabled - CSS color class*/
     color: #c0c0c0;
     background-color: #ffffff;
   }
@@ -267,8 +266,8 @@
     }
   }
 
-  .vue-treeselect__control_my /deep/ .vue-treeselect__control {
-    border: 0 solid #ddd;
+  .treeselect /deep/ .vue-treeselect__control {
+    border: none;
     border-radius: 0;
   }
 </style>

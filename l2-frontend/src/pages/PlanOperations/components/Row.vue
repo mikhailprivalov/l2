@@ -25,7 +25,15 @@
       data: {
         type: Object,
         required: true,
-      }
+      },
+      hirurgs: {
+        type: Array,
+        required: true,
+      },
+      anestesiologs: {
+        type: Array,
+        required: true,
+      },
     }
   }
 </script>

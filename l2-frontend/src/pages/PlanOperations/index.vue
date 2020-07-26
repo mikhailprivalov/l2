@@ -30,7 +30,7 @@
       </tr>
       </thead>
       <tbody>
-      <Row :data="row" :key="row.pk_plan" v-for="row in data" />
+      <Row :data="row" :key="row.pk_plan" v-for="row in data" :hirurgs="hirurgs" :anestesiologs="anestesiologs" />
       <tr v-if="data.length === 0"><td colspan="7" style="text-align: center">нет данных</td></tr>
       </tbody>
     </table>
@@ -47,6 +47,7 @@
   import Filters from "./components/Filters";
   import Row from "./components/Row";
   import * as action_types from "../../store/action-types";
+  import users_point from "../../api/user-point";
 
   export default {
     components: {
@@ -61,6 +62,8 @@
         edit_plan_operations: false,
         pk_plan: '',
         data: [],
+        hirurgs: [],
+        anestesiologs: [],
         filters: {
           date: [moment().format('DD.MM.YYYY'), moment().add(7, 'days').format('DD.MM.YYYY')]
         },
@@ -79,7 +82,7 @@
         d2 = d2.split('.');
         d2 = `${d2[2]}-${d2[1]}-${d2[0]}`;
 
-        return [d1, d2];
+        return `${d1}x${d2}`;
       },
     },
     watch: {
@@ -97,7 +100,15 @@
       },
       async load_data() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const [d1, d2] = this.dateRange;
+        const [d1, d2] = this.dateRange.split('x');
+        if (this.hirurgs.length === 0) {
+          const {users} = await users_point.loadUsersByGroup({'group': ['Оперирует']})
+          this.hirurgs = users
+        }
+        if (this.anestesiologs.length === 0) {
+          const {users} = await users_point.loadUsersByGroup({'group': ['Анестезиолог']})
+          this.anestesiologs = users
+        }
         const {result} = await plans_point.getPlansByParams({
           'start_date': d1,
           'end_date': d2,

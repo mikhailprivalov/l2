@@ -856,25 +856,13 @@ def laborants(request):
 def load_docprofile_by_group(request):
     request_data = json.loads(request.body)
     users = users_by_group(request_data['group'])
-    podr = ''
-    hirurgs = []
-    users_in_podr = {}
-    for i in users:
-        if podr != i[2]:
-            if users_in_podr:
-                hirurgs.append(users_in_podr)
-            title_podr = i[3]
-            podr = i[2]
-            if i[4]:
-                title_podr = i[4]
-            users_in_podr = {'id': i[2], 'label': title_podr, 'children': []}
-        children = users_in_podr.get('children')
-        children.append({'id': i[0], 'label': i[1]})
-        users_in_podr['children'] = children
+    users_grouped = {}
+    for row in users:
+        if row[2] not in users_grouped:
+            users_grouped[row[2]] = {'id': row[2], 'label': row[4] or row[3], 'children': []}
+        users_grouped[row[2]]['children'].append({'id': row[0], 'label': row[1], 'podr': row[4] or row[3]})
 
-    hirurgs.append(users_in_podr)
-
-    return JsonResponse({"hirurgs": hirurgs})
+    return JsonResponse({"users": list(users_grouped.values())})
 
 
 @login_required

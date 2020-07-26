@@ -7,7 +7,6 @@ from laboratory.utils import strdate, current_time
 from plans.models import PlanOperations
 from django.http import HttpRequest
 from api.views import load_docprofile_by_group
-from utils.dates import try_parse_range
 from .sql_func import get_plans_by_params_sql
 
 
