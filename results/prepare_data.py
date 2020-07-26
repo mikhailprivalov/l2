@@ -415,8 +415,7 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                     v = v.replace('&lt;/sub&gt;', '</sub>')
                     v = v.replace('&lt;sup&gt;', '<sup>')
                     v = v.replace('&lt;/sup&gt;', '</sup>')
-                    v = v.replace('[', '<font face=\"FreeSansBold\">')
-                    v = v.replace(']', '</font>')
+                    v = text_to_bold(v)
                     if field_type == 16:
                         v = json.loads(v)
                         if not v['directions']:
@@ -491,9 +490,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                 v = v.replace('&lt;/sub&gt;', '</sub>')
                 v = v.replace('&lt;sup&gt;', '<sup>')
                 v = v.replace('&lt;/sup&gt;', '</sup>')
-                v = v.replace('[', '<font face=\"FreeSansBold\">')
-                v = v.replace(']', '</font>')
-
+                v = text_to_bold(v)
                 if field_type == 1:
                     vv = v.split('-')
                     if len(vv) == 3:
@@ -611,3 +608,9 @@ def microbiology_result(iss, fwb, doc):
         fwb.append(Paragraph(iss.microbiology_conclusion, style))
 
     return fwb
+
+
+def text_to_bold(v):
+    v = v.replace('[', '<font face=\"FreeSansBold\">')
+    v = v.replace(']', '</font>')
+    return v
