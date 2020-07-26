@@ -640,6 +640,7 @@ def form_03(request_data):
     ]
 
     closed_bl_result = closed_bl(hosp_nums_obj[0].get('direction'))
+    print(closed_bl_result)
     title_page.append(Paragraph(f"25. Листок нетрудоспособности: открыт <u>{closed_bl_result['start_date']}</u>  закрыт: <u>{closed_bl_result['end_date']}</u>", style))
     title_page.append(Paragraph(f"25.1. Номере ЛН : <u>{closed_bl_result['num']}</u>", style))
     title_page.append(Paragraph(f"25.2. Выдан кому : {closed_bl_result['who_get']}", style))
@@ -704,7 +705,7 @@ def form_03(request_data):
         operation_template = [''] * 12
         operation_template[0] = Paragraph(i['date'] + '<br/>' + i['time_start'] + '-' + i['time_end'], styleTB)
         operation_template[1] = Paragraph(str(i['doc_code']), styleTB)
-        operation_template[3] = Paragraph(i['name_operation'], styleTB)
+        operation_template[3] = Paragraph(f"{i['name_operation']} <br/><font face=\"PTAstraSerifBold\" size=\"8.7\">({i['category_difficult']})</font>", styleTB)
         operation_template[4] = Paragraph('{}'.format(i['code_operation'] + '<br/>' + i['plan_operation']), styleTB)
         operation_template[7] = Paragraph('{}'.format(i['anesthesia method'] + '<br/> (' + i['code_doc_anesthesia'] + ')'), styleTB)
         operation_template[5] = Paragraph(i['complications'], styleTB)

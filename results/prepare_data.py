@@ -415,6 +415,8 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                     v = v.replace('&lt;/sub&gt;', '</sub>')
                     v = v.replace('&lt;sup&gt;', '<sup>')
                     v = v.replace('&lt;/sup&gt;', '</sup>')
+                    v = v.replace('[', '<font face=\"FreeSansBold\">')
+                    v = v.replace(']', '</font>')
                     if field_type == 16:
                         v = json.loads(v)
                         if not v['directions']:
@@ -463,7 +465,6 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
     pw = doc.width
     sick_result = None
     txt = ""
-
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "FreeSans"
@@ -473,6 +474,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
     style_ml.leftIndent = 5 * mm
     styleBold = deepcopy(style)
     styleBold.fontName = "FreeSansBold"
+
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
         sick_title = group.title == "Сведения ЛН"
         if sick_title:
@@ -489,6 +491,8 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                 v = v.replace('&lt;/sub&gt;', '</sub>')
                 v = v.replace('&lt;sup&gt;', '<sup>')
                 v = v.replace('&lt;/sup&gt;', '</sup>')
+                v = v.replace('[', '<font face=\"FreeSansBold\">')
+                v = v.replace(']', '</font>')
 
                 if field_type == 1:
                     vv = v.split('-')

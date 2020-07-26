@@ -36,6 +36,9 @@ from users.models import DoctorProfile
 from utils.dates import normalize_date
 from utils.dates import try_parse_range
 from .sql_func import get_history_dir
+from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
+from api.stationar.views import aggregate_desc as get_aggregate_desc_data
+from forms.forms_func import hosp_get_operation_data
 
 
 @login_required
@@ -1592,21 +1595,85 @@ def last_fraction_result(request):
 def last_field_result(request):
     request_data = json.loads(request.body)
     client_pk = request_data["clientPk"]
-    logical_or = False
-    logical_and = False
-    logical_group_or = False
-    if request_data["fieldPk"].find("|") > -1:
+
+    logical_or, logical_and, logical_group_or = False, False, False
+    field_is_link, field_is_aggregate_operation, field_is_aggregate_proto_description = False, False, False
+    field_pks, operations_data, aggregate_data  = None, None, None
+
+    if request_data["fieldPk"].find('%proto_operation') != -1:
+        current_iss = request_data["iss_pk"]
+        num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+        # получить все направления в истории по типу hosp
+        main_hosp_dir = hosp_get_hosp_direction(num_dir)[0]
+        operations_data = hosp_get_operation_data(main_hosp_dir['direction'])
+        field_is_aggregate_operation = True
+    elif request_data["fieldPk"].find('%proto_description') != -1:
+        # aggregate_req = json.dumps({'pk': request_data["iss_pk"], 'extract': True, 'r_type': 'desc'})
+        # aggregate_obj = HttpRequest()
+        # aggregate_obj._body = aggregate_req
+        # aggregate_obj.user = request.user
+        # aggregate_data = get_aggregate_desc_data(aggregate_obj)
+        aggregate_data = hosp_get_text_iss(request_data['iss_pk'], True, 'desc' )
+        field_is_aggregate_proto_description = True
+        # print(aggregate_data)
+    elif request_data["fieldPk"].find("|") > -1:
+        field_is_link = True
         logical_or = True
         field_pks = request_data["fieldPk"].split('|')
         if request_data["fieldPk"].find('@') > -1:
             logical_group_or = True
     elif request_data["fieldPk"].find("&") > -1:
+        field_is_link = True
         logical_and = True
         field_pks = request_data["fieldPk"].split('&')
     else:
         field_pks = [request_data["fieldPk"]]
         logical_or = True
+        field_is_link = True
 
+    result = None
+    if field_is_link:
+        result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or)
+    elif field_is_aggregate_operation:
+        result = field_get_aggregate_operation_data(operations_data)
+    elif field_is_aggregate_proto_description:
+        result = field_get_aggregate_text_protocol_data(aggregate_data)
+
+    # for current_field_pk in field_pks:
+    #     group_fields = [current_field_pk]
+    #     if current_field_pk.find('@') > -1:
+    #         group_fields = get_input_fields_by_group(current_field_pk)
+    #         logical_and = True
+    #         logical_or = False
+    #     for field_pk in group_fields:
+    #         if field_pk.isdigit():
+    #             rows = get_field_result(client_pk, int(field_pk))
+    #             if rows:
+    #                 row = rows[0]
+    #                 value = row[5]
+    #                 match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
+    #                 if match:
+    #                     value = normalize_date(value)
+    #                 if logical_or:
+    #                     result = {"direction": row[1], "date": row[4], "value": value}
+    #                     if value:
+    #                         break
+    #                 if logical_and:
+    #                     r = ParaclinicInputField.objects.get(pk=field_pk)
+    #                     titles = r.get_title()
+    #                     if result is None:
+    #                         result = {"direction": row[1], "date": row[4], "value": value}
+    #                     else:
+    #                         temp_value = result.get('value', ' ')
+    #                         result["value"] = f"{temp_value} {titles} - {value};"
+    #
+    #     if logical_group_or and value:
+    #         break
+
+    return JsonResponse({"result": result})
+
+
+def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or):
     result = None
     value = None
     for current_field_pk in field_pks:
@@ -1639,8 +1706,41 @@ def last_field_result(request):
 
         if logical_group_or and value:
             break
+    return result
 
-    return JsonResponse({"result": result})
+
+def field_get_aggregate_operation_data(operations_data):
+    result = None
+    count = 0
+    if len(operations_data) > 0:
+        for i in operations_data:
+            count += 1
+            value = f"{count}) Название операции: {i['name_operation']}, Проведена: {i['date']} {i['time_start']}-{i['time_end']}, Метод обезболивания: {i['anesthesia method']}, Осложнения: {i['complications']}, Оперировал: {i['doc_fio']}"
+            if result is None:
+                result = {"direction": '', "date": '', "value": value}
+            else:
+                temp_value = result.get('value', ' ')
+                result["value"] = f"{temp_value}\n{value};"
+
+    return result
+
+
+def field_get_aggregate_text_protocol_data(data):
+    value = ''
+    for research in data:
+        value = f"{value}[{research['title_research']}]"
+        for res in research['result']:
+            value = f"{value}\n[{res['date']}]\n"
+            for g in res['data']:
+                value = f"{value}{g.get('group_title', '')}"
+                group_fields = g.get('fields', '')
+                if group_fields:
+                    for fied_data in group_fields:
+                        value = f"{value}{fied_data['title_field']}: {fied_data['value']}"
+        value = f"{value}\n"
+
+    result = {"direction": '', "date": '', "value": value}
+    return result
 
 
 def get_input_fields_by_group(group_pk):
