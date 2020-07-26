@@ -325,7 +325,7 @@ def form_03(c: Canvas, dir: Napravleniya):
         organoztion_inframe = KeepInFrame(190 * mm, 60 * mm, organization_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
         organoztion_frame.addFromList([organoztion_inframe], c)
 
-        c.drawCentredString((210 / 2) * mm, 219 * mm, f"Севедения о заболевшем")
+        c.drawCentredString((210 / 2) * mm, 219 * mm, "Севедения о заболевшем")
         issledovaniye = Issledovaniya.objects.get(napravleniye=dir.pk)
         localization = "" if not issledovaniye.localization else issledovaniye.localization.title
         patient_data = [

@@ -1677,7 +1677,8 @@ def field_get_aggregate_operation_data(operations_data):
     if len(operations_data) > 0:
         for i in operations_data:
             count += 1
-            value = f"{count}) Название операции: {i['name_operation']}, Проведена: {i['date']} {i['time_start']}-{i['time_end']}, Метод обезболивания: {i['anesthesia method']}, Осложнения: {i['complications']}, Оперировал: {i['doc_fio']}"
+            value = f"{count}) Название операции: {i['name_operation']}, Проведена: {i['date']} {i['time_start']}-{i['time_end']}, Метод обезболивания: {i['anesthesia method']}, " \
+                    f"Осложнения: {i['complications']}, Оперировал: {i['doc_fio']}"
             if result is None:
                 result = {"direction": '', "date": '', "value": value}
             else:
