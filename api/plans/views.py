@@ -13,9 +13,9 @@ from .sql_func import get_plans_by_params_sql
 @login_required
 def plan_operations_save(request):
     request_data = json.loads(request.body)
-    PlanOperations.save_data(request_data, request.user.doctorprofile)
+    ppk = PlanOperations.save_data(request_data, request.user.doctorprofile)
 
-    return JsonResponse({"data": ''})
+    return JsonResponse({"plan_pk": ppk})
 
 
 @login_required

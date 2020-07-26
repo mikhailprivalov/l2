@@ -103,7 +103,7 @@
           'end_date': d2,
           'doc_operate_pk': -1,
           'doc_anesthetist_pk': -1,
-          'department': -1
+          'department_pk': -1
         })
         this.data = result
         await this.$store.dispatch(action_types.DEC_LOADING)

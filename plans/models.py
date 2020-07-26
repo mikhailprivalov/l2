@@ -26,14 +26,15 @@ class PlanOperations(models.Model):
             doc_anesthetist_obj = DoctorProfile.objects.filter(pk=doc_anesthetist)[0]
 
         if data['pk_plan'] == -1:
-            PlanOperations(patient_card=patient_card,
-                           direction=direction_obj,
-                           date=datetime.strptime(data['date'], '%Y-%m-%d'),
-                           doc_operate=doc_operate_obj,
-                           type_operation=type_operation,
-                           doc_anesthetist=doc_anesthetist_obj,
-                           doc_who_create=doc_who_create).save()
-        elif data['pk_plan'] > -1:
+            plan_obj = PlanOperations(patient_card=patient_card,
+                                      direction=direction_obj,
+                                      date=datetime.strptime(data['date'], '%Y-%m-%d'),
+                                      doc_operate=doc_operate_obj,
+                                      type_operation=type_operation,
+                                      doc_anesthetist=doc_anesthetist_obj,
+                                      doc_who_create=doc_who_create)
+            plan_obj.save()
+        else:
             plan_obj = PlanOperations.objects.filter(pk=data['pk_plan'])[0]
             plan_obj.doc_operate = doc_operate_obj
             plan_obj.type_operation = type_operation
@@ -44,4 +45,4 @@ class PlanOperations(models.Model):
             plan_obj.patient_card = patient_card
             plan_obj.save()
 
-        return True
+        return plan_obj.pk
