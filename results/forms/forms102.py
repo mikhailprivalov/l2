@@ -1,14 +1,10 @@
 from utils.dates import normalize_date
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
-import os.path
-from laboratory.settings import FONTS_FOLDER
 import directory.models as directory
 from directions.models import ParaclinicResult
 from appconf.manager import SettingManager
@@ -16,7 +12,6 @@ from results.prepare_data import text_to_bold
 
 
 def form_01(direction, iss, fwb, doc, leftnone, user=None):
-    pw = doc.width
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "FreeSans"
