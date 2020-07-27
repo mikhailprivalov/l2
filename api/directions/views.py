@@ -1693,13 +1693,14 @@ def field_get_aggregate_text_protocol_data(data):
     for research in data:
         value = f"{value}[{research['title_research']}]"
         for res in research['result']:
-            value = f"{value}\n[{res['date']}]\n"
-            for g in res['data']:
-                value = f"{value}{g.get('group_title', '')}"
-                group_fields = g.get('fields', '')
-                if group_fields:
-                    for fied_data in group_fields:
-                        value = f"{value}{fied_data['title_field']}: {fied_data['value']}"
+            value = f"{value}\n[{res.get('date', '')}]\n"
+            if res.get('data', ''):
+                for g in res['data']:
+                    value = f"{value}{g.get('group_title', '')}"
+                    group_fields = g.get('fields', '')
+                    if group_fields:
+                        for fied_data in group_fields:
+                            value = f"{value}{fied_data['title_field']}: {fied_data['value']}"
         value = f"{value}\n"
 
     result = {"direction": '', "date": '', "value": value}

@@ -18,6 +18,7 @@ from directions.models import ParaclinicResult, MicrobiologyResultCulture
 import datetime
 from appconf.manager import SettingManager
 import simplejson as json
+from utils.xh import check_valid_square_brackets
 
 
 def lab_iss_to_pdf(data1):
@@ -611,6 +612,9 @@ def microbiology_result(iss, fwb, doc):
 
 
 def text_to_bold(v):
-    v = v.replace('[', '<font face=\"FreeSansBold\">')
-    v = v.replace(']', '</font>')
+    valid = check_valid_square_brackets(v)
+    if valid:
+        v = v.replace('[', '<font face=\"FreeSansBold\">')
+        v = v.replace(']', '</font>')
+
     return v
