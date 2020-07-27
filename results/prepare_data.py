@@ -611,6 +611,24 @@ def microbiology_result(iss, fwb, doc):
 
 
 def text_to_bold(v):
-    v = v.replace('[', '<font face=\"FreeSansBold\">')
-    v = v.replace(']', '</font>')
+    open_symbol, close_symbol = False, False
+    count, step_block = 0, 0
+    for symbol in v:
+        if (symbol == '[' and not close_symbol and step_block == 0) or (symbol == '[' and close_symbol and step_block > 0):
+            open_symbol = True
+            close_symbol = False
+            count -= 1
+        elif symbol == ']' and open_symbol:
+            close_symbol = True
+            open_symbol = False
+            count += 1
+            step_block += 1
+        elif symbol == ']' and not open_symbol:
+            return v
+
+    if count != 0:
+        return v
+    else:
+        v = v.replace('[', '<font face=\"FreeSansBold\">')
+        v = v.replace(']', '</font>')
     return v
