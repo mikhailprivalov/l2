@@ -16,13 +16,11 @@ from results.prepare_data import text_to_bold
 
 
 def form_01(direction, iss, fwb, doc, leftnone, user=None):
-    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
-    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
     pw = doc.width
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
-    style.fontName = "PTAstraSerifReg"
-    style.fontSize = 11
+    style.fontName = "FreeSans"
+    style.fontSize = 10
     style.alignment = TA_JUSTIFY
 
     style_ml = deepcopy(style)
@@ -30,7 +28,7 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
     style_ml.spaceAfter = 0.5 * mm
 
     styleBold = deepcopy(style)
-    styleBold.fontName = "PTAstraSerifBold"
+    styleBold.fontName = "FreeSansBold"
 
     hospital_name = SettingManager.get("org_title")
     hospital_address = SettingManager.get("org_address")
@@ -51,7 +49,7 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
     tbl = Table(opinion, 2 * [100 * mm])
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
-        ('LEFTPADDING', (1, 0), (-1, -1), 40 * mm),
+        ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
         ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
@@ -65,16 +63,16 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
 
     styleCenterBold = deepcopy(style)
     styleCenterBold.alignment = TA_CENTER
-    styleCenterBold.fontSize = 12
+    styleCenterBold.fontSize = 11.5
     styleCenterBold.leading = 15
-    styleCenterBold.fontName = 'PTAstraSerifBold'
+    styleCenterBold.fontName = 'FreeSansBold'
 
     fwb.append(Paragraph(f'ПРОТОКОЛ № {direction.pk} {history_num} ', styleCenterBold))
     fwb.append(Paragraph('ПРИЖИЗНЕННОГО ПАТОЛОГО-АНАТОМИЧЕСКОГО<br/> ИССЛЕДОВАНИЯ БИОПСИЙНОГО (ОПЕРАЦИОННОГО) МАТЕРИАЛА', styleCenterBold))
     short_title = iss.research.short_title
     fwb.append(Paragraph(f'{short_title.upper()}', styleCenterBold))
 
-    open_bold_tag = "<font face =\"PTAstraSerifBold\">"
+    open_bold_tag = "<font face =\"FreeSansBold\">"
     close_tag_bold = "</font>"
 
     fwb.append(Spacer(1, 4 * mm))
@@ -129,10 +127,10 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                     if field_type == 1:
                         v = normalize_date(v)
                     if field_type in [11, 13]:
-                        v = '<font face="PTAstraSerifReg" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
+                        v = '<font face="FreeSans" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
                     if r.field.get_title(force_type=field_type) != "":
                         fwb.append(Paragraph(
-                            "<font face=\"PTAstraSerifBold\">{}:</font>{}".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;'), v),
+                            "<font face=\"FreeSansBold\">{}:</font>{}".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;'), v),
                             style_ml if group_title else style))
                     else:
                         fwb.append(Paragraph(v, style))
