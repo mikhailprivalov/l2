@@ -256,8 +256,6 @@ def form_01(request_data):
         data_bl = f" открыт <u>{closed_bl_result['start_date']}</u> {5 * space_symbol} закрыт: <u>{closed_bl_result['end_date']}</u> " \
                   f"<br/>Номер ЛН: <u>{closed_bl_result['num']}</u> Выдан кому: {closed_bl_result['who_get']}"
 
-
-
     second_page = [
         Spacer(1, 2 * mm),
         Paragraph('11. Диагноз заключительный клинический:', style),
