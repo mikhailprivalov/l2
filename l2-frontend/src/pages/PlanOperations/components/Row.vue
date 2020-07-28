@@ -21,6 +21,7 @@
     <td>
       <treeselect :multiple="false" :disable-branch-nodes="true" :options="anestesiologs"
                   placeholder="Анестезиолог не выбран" v-model="data.doc_anesthetist_id"
+                  :append-to-body="true"
       />
     </td>
     <td>

@@ -15,11 +15,13 @@
       <td>
         <treeselect :multiple="false" :disable-branch-nodes="true" :options="departments"
                     placeholder="Отделение не выбрано" v-model="filters.department_pk"
+                    :append-to-body="true"
         />
       </td>
       <td>
         <treeselect :multiple="false" :disable-branch-nodes="true" :options="anestesiologs"
                     placeholder="Анестезиолог не выбран" v-model="filters.doc_anesthetist_pk"
+                    :append-to-body="true"
         />
       </td>
     </tr>
