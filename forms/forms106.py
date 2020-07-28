@@ -415,7 +415,7 @@ def form_01(request_data):
         operation_template = [''] * 6
         x += 1
         operation_template[0] = Paragraph(str(x), styleTO)
-        operation_template[1] = Paragraph(i['name_operation'], styleTO)
+        operation_template[1] = Paragraph(f"{i['name_operation']} <br/><font face=\"PTAstraSerifBold\" size=\"8.7\">({i['category_difficult']})</font>", styleTO)
         operation_template[2] = Paragraph(i['date'] + '<br/>' + i['time_start'] + '-' + i['time_end'], styleTO)
         operation_template[3] = Paragraph(i['anesthesia method'], styleTO)
         operation_template[4] = Paragraph(i['complications'], styleTO)

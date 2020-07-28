@@ -18,6 +18,7 @@ from directions.models import ParaclinicResult, MicrobiologyResultCulture
 import datetime
 from appconf.manager import SettingManager
 import simplejson as json
+from utils.xh import check_valid_square_brackets
 
 
 def lab_iss_to_pdf(data1):
@@ -415,6 +416,7 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                     v = v.replace('&lt;/sub&gt;', '</sub>')
                     v = v.replace('&lt;sup&gt;', '<sup>')
                     v = v.replace('&lt;/sup&gt;', '</sup>')
+                    v = text_to_bold(v)
                     if field_type == 16:
                         v = json.loads(v)
                         if not v['directions']:
@@ -463,7 +465,6 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
     pw = doc.width
     sick_result = None
     txt = ""
-
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "FreeSans"
@@ -473,6 +474,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
     style_ml.leftIndent = 5 * mm
     styleBold = deepcopy(style)
     styleBold.fontName = "FreeSansBold"
+
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
         sick_title = group.title == "Сведения ЛН"
         if sick_title:
@@ -489,7 +491,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                 v = v.replace('&lt;/sub&gt;', '</sub>')
                 v = v.replace('&lt;sup&gt;', '<sup>')
                 v = v.replace('&lt;/sup&gt;', '</sup>')
-
+                v = text_to_bold(v)
                 if field_type == 1:
                     vv = v.split('-')
                     if len(vv) == 3:
@@ -607,3 +609,12 @@ def microbiology_result(iss, fwb, doc):
         fwb.append(Paragraph(iss.microbiology_conclusion, style))
 
     return fwb
+
+
+def text_to_bold(v):
+    valid = check_valid_square_brackets(v)
+    if valid:
+        v = v.replace('[', '<font face=\"FreeSansBold\">')
+        v = v.replace(']', '</font>')
+
+    return v

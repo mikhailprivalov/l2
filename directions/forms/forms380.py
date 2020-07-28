@@ -326,7 +326,10 @@ def form_03(c: Canvas, dir: Napravleniya):
         organoztion_frame.addFromList([organoztion_inframe], c)
 
         c.drawCentredString((210 / 2) * mm, 219 * mm, "Севедения о заболевшем")
+        issledovaniye = Issledovaniya.objects.get(napravleniye=dir.pk)
+        localization = "" if not issledovaniye.localization else issledovaniye.localization.title
         patient_data = [
+            [Paragraph('Категория', style), Paragraph(localization, styleTB)],
             [Paragraph('ФИО', style), Paragraph(dir.client.individual.fio(), styleTB)],
             [Paragraph('Пол', style), Paragraph(dir.client.individual.sex, styleTB)],
             [Paragraph('Возраст', style), Paragraph(dir.client.individual.age_s(direction=dir), styleTB)],

@@ -56,6 +56,10 @@
         required: false,
         default: false,
       },
+      iss_pk: {
+        type: Number,
+        required: false,
+      },
     },
     data() {
       return {
@@ -108,6 +112,7 @@
         const {result} = await directions_point.lastFieldResult(this, [
           'fieldPk',
           'clientPk',
+          'iss_pk'
         ])
         let logicalAnd = false
         if (this.fieldPk.indexOf('&') > -1) {
