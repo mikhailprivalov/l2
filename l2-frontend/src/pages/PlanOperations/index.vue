@@ -16,10 +16,11 @@
         <col width='85'/>
         <col width='90'/>
         <col/>
-        <col width='160'/>
-        <col width='160'/>
-        <col width='160'/>
+        <col width='155'/>
+        <col width='155'/>
+        <col width='155'/>
         <col width='320'/>
+        <col width='55'/>
       </colgroup>
       <thead>
       <tr>
@@ -30,12 +31,13 @@
         <th>Врач-хирург</th>
         <th>Отделение</th>
         <th>Анестезиолог</th>
+        <th></th>
       </tr>
       </thead>
       <tbody>
       <Row :data="row" :key="row.pk_plan" v-for="row in data" :hirurgs="hirurgsReversed"
            :anestesiologs="anestesiologsWithEmpty" />
-      <tr v-if="data.length === 0"><td colspan="7" style="text-align: center">нет данных</td></tr>
+      <tr v-if="data.length === 0"><td colspan="8" style="text-align: center">нет данных</td></tr>
       </tbody>
     </table>
     <plan-operation-edit v-if="edit_plan_operations" :pk_plan="pk_plan"/>

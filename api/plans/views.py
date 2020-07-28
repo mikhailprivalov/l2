@@ -47,7 +47,9 @@ def get_plan_operations_by_params(request):
     data = []
     for i in result:
         fio_patient = f"{i[8]} {i[9][0:1]}.{i[10][0:1]}."
-        data.append({"pk_plan": i[0], "patient_card": i[1], "direction": i[2], "date": i[3], "type_operation": i[4], "doc_operate_id": i[5],
+        date_raw = i[3].split('.')
+        date_raw = f"{date_raw[2]}-{date_raw[1]}-{date_raw[0]}"
+        data.append({"pk_plan": i[0], "patient_card": i[1], "direction": i[2], "date": i[3], "date_raw": date_raw, "type_operation": i[4], "doc_operate_id": i[5],
                      "doc_anesthetist_id": i[6] or -1, "canceled": i[7], "fio_patient": fio_patient, "birthday": i[11]})
 
     return JsonResponse({"result": data})

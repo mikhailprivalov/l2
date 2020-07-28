@@ -189,6 +189,7 @@
         this.type_operation = '';
         await this.$store.dispatch(action_types.DEC_LOADING)
         okmessage('Сохранено');
+        this.$root.$emit('hide_plan_operations');
         this.$root.$emit('reload-plans');
       },
     }

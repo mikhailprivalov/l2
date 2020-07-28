@@ -38,9 +38,10 @@ class PlanOperations(models.Model):
             plan_obj = PlanOperations.objects.filter(pk=data['pk_plan'])[0]
             plan_obj.doc_operate = doc_operate_obj
             plan_obj.type_operation = type_operation
-            plan_obj.doc_anesthetist = doc_anesthetist_obj
+            if 'doc_anesthetist' in data:
+                plan_obj.doc_anesthetist = doc_anesthetist_obj
             plan_obj.doc_who_create = doc_who_create
-            plan_obj.date = datetime.strptime(data['date'], '%Y-%m-%d')
+            plan_obj.date = datetime.strptime(data['date'], '%Y-%m-%d') if '-' in data['date'] else datetime.strptime(data['date'], '%d.%m.%Y')
             plan_obj.direction = direction_obj
             plan_obj.patient_card = patient_card
             plan_obj.save()
