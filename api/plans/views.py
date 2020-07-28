@@ -8,6 +8,7 @@ from plans.models import PlanOperations
 from django.http import HttpRequest
 from api.views import load_docprofile_by_group
 from .sql_func import get_plans_by_params_sql
+from ..sql_func import users_by_group
 
 
 @login_required
@@ -47,7 +48,7 @@ def get_plan_operations_by_params(request):
     for i in result:
         fio_patient = f"{i[8]} {i[9][0:1]}.{i[10][0:1]}."
         data.append({"pk_plan": i[0], "patient_card": i[1], "direction": i[2], "date": i[3], "type_operation": i[4], "doc_operate_id": i[5],
-                     "doc_anesthetist_id": i[6], "canceled": i[7], "fio_patient": fio_patient, "birthday": i[11]})
+                     "doc_anesthetist_id": i[6] or -1, "canceled": i[7], "fio_patient": fio_patient, "birthday": i[11]})
 
     return JsonResponse({"result": data})
 
@@ -63,6 +64,20 @@ def get_docs_can_operate():
 
 
 @login_required
+def get_departments_can_operate(request):
+    users = users_by_group(['Оперирует'])
+
+    departments = {}
+
+    for row in users:
+        if row[2] in departments:
+            continue
+        departments[row[2]] = {'id': row[2], 'label': row[4] or row[3]}
+
+    return JsonResponse({"data": list(departments.values())})
+
+
+@login_required
 def docs_can_anesthetist():
     docs = json.dumps({'group': ['Анестезиолог']})
     docs_obj = HttpRequest()
@@ -70,3 +85,14 @@ def docs_can_anesthetist():
     docs_can_anesthetist = load_docprofile_by_group(docs_obj)
 
     return JsonResponse({"data": docs_can_anesthetist})
+
+
+@login_required
+def change_anestesiolog(request):
+    request_data = json.loads(request.body)
+    plan_pk = request_data['plan_pk']
+    doc_anesthetist_id = request_data['doc_anesthetist_pk']
+    plan = PlanOperations.objects.get(pk=plan_pk)
+    plan.doc_anesthetist_id = None if doc_anesthetist_id == -1 else doc_anesthetist_id
+    plan.save()
+    return JsonResponse({"ok": True})

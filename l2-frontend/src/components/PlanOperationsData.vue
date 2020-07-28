@@ -20,7 +20,7 @@
     <div class="form-row">
       <div class="row-t">Врач-хирург</div>
       <div class="row-v">
-        <treeselect class="treeselect" :multiple="false" :disable-branch-nodes="true" :options="hirurgs"
+        <treeselect class="treeselect-noborder" :multiple="false" :disable-branch-nodes="true" :options="hirurgs"
                     placeholder="Хирург не выбран" v-model="current_hirurg"
         />
       </div>
@@ -189,6 +189,7 @@
         this.type_operation = '';
         await this.$store.dispatch(action_types.DEC_LOADING)
         okmessage('Сохранено');
+        this.$root.$emit('reload-plans');
       },
     }
   }
@@ -264,11 +265,6 @@
     /deep/ .input-group {
       border-radius: 0;
     }
-  }
-
-  .treeselect /deep/ .vue-treeselect__control {
-    border: none;
-    border-radius: 0;
   }
 </style>
 

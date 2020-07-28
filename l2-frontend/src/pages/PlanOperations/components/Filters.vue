@@ -3,32 +3,50 @@
     <colgroup>
       <col width='201'/>
       <col/>
-      <col width='180'/>
-      <col width='180'/>
+      <col width='320'/>
+      <col width='320'/>
     </colgroup>
-    <thead>
+    <tbody>
     <tr>
-      <th>
+      <td>
         <date-range v-model="filters.date"/>
-      </th>
-      <th></th>
-      <th>Отделение</th>
-      <th>Анестезиолог</th>
+      </td>
+      <td></td>
+      <td>
+        <treeselect :multiple="false" :disable-branch-nodes="true" :options="departments"
+                    placeholder="Отделение не выбрано" v-model="filters.department_pk"
+        />
+      </td>
+      <td>
+        <treeselect :multiple="false" :disable-branch-nodes="true" :options="anestesiologs"
+                    placeholder="Анестезиолог не выбран" v-model="filters.doc_anesthetist_pk"
+        />
+      </td>
     </tr>
-    </thead>
+    </tbody>
   </table>
 </template>
 <script>
+  import Treeselect from "@riophae/vue-treeselect";
+  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   import DateRange from "../../../ui-cards/DateRange"
 
   export default {
     name: 'Filters',
-    components: {DateRange},
+    components: {DateRange, Treeselect},
     props: {
       filters: {
         type: Object,
         required: true,
-      }
+      },
+      anestesiologs: {
+        type: Array,
+        required: true,
+      },
+      departments: {
+        type: Array,
+        required: true,
+      },
     }
   }
 </script>

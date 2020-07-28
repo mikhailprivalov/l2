@@ -18,7 +18,7 @@ class PlanOperations(models.Model):
     def save_data(data, doc_who_create):
         patient_card = Card.objects.filter(pk=data['card_pk'])[0]
         direction_obj = data['direction']
-        type_operation = data['type_operation']
+        type_operation = data.get('type_operation', '')
         doc_operate_obj = DoctorProfile.objects.filter(pk=data['hirurg'])[0]
         doc_anesthetist = data.get('doc_anesthetist', None)
         doc_anesthetist_obj = None

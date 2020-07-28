@@ -1,27 +1,30 @@
 <template>
   <div>
     <h3>{{title}}</h3>
-    <Filters :filters="filters"/>
-    <button class="btn btn-blue-nb add-row" @click="add_data">
-      Добавить
-    </button>
-    <button class="btn btn-blue-nb add-row" @click="load_data">
-      Обновить
-    </button>
+    <Filters :filters="filters" :hirurgs="hirurgsWithEmpty" :anestesiologs="anestesiologsWithEmpty"
+             :departments="departments"/>
+    <div class="buttons">
+      <button class="btn btn-blue-nb" @click="add_data">
+        Добавить запись
+      </button>
+      <button class="btn btn-blue-nb" @click="load_data">
+        Обновить
+      </button>
+    </div>
     <table class="table table-bordered" style="table-layout: fixed">
       <colgroup>
         <col width='85'/>
-        <col width='100'/>
+        <col width='90'/>
         <col/>
-        <col width='170'/>
-        <col width='180'/>
-        <col width='180'/>
-        <col width='180'/>
+        <col width='160'/>
+        <col width='160'/>
+        <col width='160'/>
+        <col width='320'/>
       </colgroup>
       <thead>
       <tr>
         <th>Дата</th>
-        <th>№ истории</th>
+        <th>История</th>
         <th>Пациент</th>
         <th>Вид операции</th>
         <th>Врач-хирург</th>
@@ -30,7 +33,8 @@
       </tr>
       </thead>
       <tbody>
-      <Row :data="row" :key="row.pk_plan" v-for="row in data" :hirurgs="hirurgs" :anestesiologs="anestesiologs" />
+      <Row :data="row" :key="row.pk_plan" v-for="row in data" :hirurgs="hirurgsReversed"
+           :anestesiologs="anestesiologsWithEmpty" />
       <tr v-if="data.length === 0"><td colspan="7" style="text-align: center">нет данных</td></tr>
       </tbody>
     </table>
@@ -48,6 +52,7 @@
   import Row from "./components/Row";
   import * as action_types from "../../store/action-types";
   import users_point from "../../api/user-point";
+  import flatten from 'lodash/flatten';
 
   export default {
     components: {
@@ -64,14 +69,24 @@
         data: [],
         hirurgs: [],
         anestesiologs: [],
+        departments: [],
         filters: {
-          date: [moment().format('DD.MM.YYYY'), moment().add(7, 'days').format('DD.MM.YYYY')]
+          date: [moment().format('DD.MM.YYYY'), moment().add(7, 'days').format('DD.MM.YYYY')],
+          doc_anesthetist_pk: -1,
+          department_pk: -1,
         },
       }
     },
     mounted() {
       this.$root.$on('hide_plan_operations', () => {
         this.edit_plan_operations = false
+      });
+      this.$root.$on('reload-plans', () => {
+        this.load_data();
+      });
+      plans_point.getDepartmentsOperate().then(({data}) => {
+        this.departments = [{id: -1, label: 'Отделение не выбрано'}, ...data];
+        this.load_data();
       });
     },
     computed: {
@@ -84,13 +99,25 @@
 
         return `${d1}x${d2}`;
       },
+      hirurgsWithEmpty() {
+        return [{id: -1, label: 'Хирург не выбран'}, ...this.hirurgs]
+      },
+      anestesiologsWithEmpty() {
+        return [{id: -1, label: 'Анестезиолог не выбран'}, ...this.anestesiologs]
+      },
+      hirurgsReversed() {
+        return flatten(this.hirurgsWithEmpty.map(x => x.children).filter(Boolean))
+          .reduce((a, b) => ({...a, [b.id]: b}), {});
+      },
     },
     watch: {
-      dateRange: {
+      filters: {
         handler() {
-          this.load_data();
+          if (this.departments.length > 0) {
+            this.load_data();
+          }
         },
-        immediate: true,
+        deep: true,
       }
     },
     methods: {
@@ -113,8 +140,8 @@
           'start_date': d1,
           'end_date': d2,
           'doc_operate_pk': -1,
-          'doc_anesthetist_pk': -1,
-          'department_pk': -1
+          'doc_anesthetist_pk': this.filters.doc_anesthetist_pk || -1,
+          'department_pk': this.filters.department_pk || -1,
         })
         this.data = result
         await this.$store.dispatch(action_types.DEC_LOADING)
@@ -122,4 +149,10 @@
     }
   }
 </script>
+
+<style scoped lang="scss">
+  .buttons {
+    margin-bottom: 5px;
+  }
+</style>
 
