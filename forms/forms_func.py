@@ -670,7 +670,7 @@ def hosp_get_operation_data(num_dir):
         for fields_operation in list_values:
             pk_iss_operation = fields_operation[0][1]
             operation_data = {'name_operation': '', 'date': '', 'time_start': '', 'time_end': '', 'anesthesia method': '', 'complications': '', 'doc_fio': '',
-                              'code_operation': '', 'code_doc_anesthesia': '', 'plan_operation': '', 'diagnos_after_operation': '', 'mkb10': ''}
+                              'code_operation': '', 'code_doc_anesthesia': '', 'plan_operation': '', 'diagnos_after_operation': '', 'mkb10': '', 'category_difficult': ''}
             iss_obj = Issledovaniya.objects.filter(pk=pk_iss_operation).first()
             if not iss_obj.doc_confirmation:
                 continue
@@ -711,7 +711,7 @@ def hosp_get_operation_data(num_dir):
                     operation_data['plan_operation'] = field[2]
                     continue
                 if field[3] == 'Категория сложности':
-                    category_difficult = f"<br/><font face=\"PTAstraSerifBold\" size=\"8.7\">(Сложность - {field[2]})</font>"
+                    operation_data['category_difficult'] = f"Сложность - {field[2]}"
                     continue
                 if field[3] == 'Диагноз после оперативного лечения':
                     operation_data['diagnos_after_operation'] = field[2]
@@ -731,7 +731,7 @@ def closed_bl(hosp_num_dir):
     Подтверждены больничные-протоколы со словом закрытие среди Б/Л?
     """
     result_bl = hosp_get_data_direction(hosp_num_dir, site_type=8, type_service='None', level=-1)
-    num, who_get, who_care, start_date, end_date = '', '', '', '', ''
+    num, who_get, who_care, start_date, end_date = ' ', ' ', ' ', ' ', ' '
     for i in result_bl:
         if i['date_confirm'] is None:
             continue
@@ -760,4 +760,4 @@ def closed_bl(hosp_num_dir):
 
             return {'is_closed': True, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date}
 
-    return False
+    return {'is_closed': False, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date}

@@ -94,6 +94,7 @@
                                        :lines="field.lines"
                                        :raw="field.field_type === 14 || field.field_type === 23"
                                        :not_autoload_result="field.field_type === 23"
+                                       :iss_pk="pk"
                                        v-model="field.value"/>
               </div>
               <div class="field-value" v-else-if="field.field_type === 15">
@@ -131,8 +132,6 @@
                   v-model="field.value"
                 />
               </div>
-
-
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
                     placement : 'left',

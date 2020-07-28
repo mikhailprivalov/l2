@@ -510,6 +510,7 @@ def result_print(request):
         has_paraclinic = False
         link_files = False
         is_extract = False
+        is_gistology = False
         current_size_form = None
         temp_iss = None
 
@@ -537,6 +538,8 @@ def result_print(request):
                 link_files = True
             if 'выпис' in iss.research.title.lower():
                 is_extract = True
+            if iss.research.is_gistology:
+                is_gistology = True
             current_size_form = iss.research.size_form
             temp_iss = iss
 
@@ -579,7 +582,7 @@ def result_print(request):
         number_poliklinika = f' ({direction.client.number_poliklinika})' if direction.client.number_poliklinika else ''
         individual_birthday = f'({strdate(direction.client.individual.birthday)})'
         t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
-        if not hosp or is_extract:
+        if not hosp and not is_gistology or is_extract:
             fwb.append(t)
             fwb.append(Spacer(1, 5 * mm))
         if not has_paraclinic:
@@ -1002,7 +1005,7 @@ def result_print(request):
             iss: Issledovaniya
             for iss in direction.issledovaniya_set.all().order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
-                if not hosp:
+                if not hosp and not is_gistology:
                     fwb.append(InteractiveTextField())
                     fwb.append(Spacer(1, 2 * mm))
                     if iss.research.is_doc_refferal or iss.research.is_microbiology or iss.research.is_treatment or iss.research.is_microbiology\
@@ -1014,7 +1017,8 @@ def result_print(request):
                         iss_title = "Услуга: " + iss.research.title
                     fwb.append(Paragraph(f"<para align='center'><font size='9'>{iss_title}</font></para>", styleBold))
                 else:
-                    fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
+                    if not is_gistology:
+                        fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
 
                 type_form = iss.research.result_form
                 form_result = None
@@ -1099,7 +1103,8 @@ def result_print(request):
                     if iss.research.is_doc_refferal:
                         fwb.append(Paragraph("Дата осмотра: {}".format(strdate(iss.get_medical_examination())), styleBold))
                     else:
-                        fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
+                        if not is_gistology:
+                            fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                     fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
 
                 if iss.doc_confirmation.podrazdeleniye.vaccine:
