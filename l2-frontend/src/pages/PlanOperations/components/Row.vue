@@ -1,47 +1,45 @@
 <template>
-  <fragment>
-    <tr>
-      <td>
-        {{data.date}}
-      </td>
-      <td>
-        {{data.direction}}
-      </td>
-      <td>
-        {{data.fio_patient}} {{data.birthday}}
-      </td>
-      <td>
-        {{data.type_operation}}
-      </td>
-      <td>
-        {{hirurgs[data.doc_operate_id].label}}
-      </td>
-      <td>
-        {{hirurgs[data.doc_operate_id].podr}}
-      </td>
-      <td>
-        <treeselect :multiple="false" :disable-branch-nodes="true" :options="anestesiologs"
-                    placeholder="Анестезиолог не выбран" v-model="data.doc_anesthetist_id"
-        />
-      </td>
-      <td>
-        <button title="Редактирование" class="btn btn-blue-nb" type="button" v-tippy
-                tabindex="-1"
-                @click="edit_plan_operation = true">
-          <i class="fa fa-pencil"></i>
-        </button>
-      </td>
-    </tr>
-    <plan-operation-edit
-      v-if="edit_plan_operation" :pk_plan="data.pk_plan"
-      :pk_hirurg="data.doc_operate_id"
-      :date="data.date_raw"
-      :operation="data.type_operation"
-      :direction="data.direction"
-      :patient_fio="`${data.fio_patient}, ${data.birthday}`"
-      :card_pk="data.patient_card"
-    />
-  </fragment>
+  <tr>
+    <td>
+      {{data.date}}
+    </td>
+    <td>
+      {{data.direction}}
+    </td>
+    <td>
+      {{data.fio_patient}} {{data.birthday}}
+    </td>
+    <td>
+      {{data.type_operation}}
+    </td>
+    <td>
+      {{hirurgs[data.doc_operate_id].label}}
+    </td>
+    <td>
+      {{hirurgs[data.doc_operate_id].podr}}
+    </td>
+    <td>
+      <treeselect :multiple="false" :disable-branch-nodes="true" :options="anestesiologs"
+                  placeholder="Анестезиолог не выбран" v-model="data.doc_anesthetist_id"
+      />
+    </td>
+    <td>
+      <button title="Редактирование" class="btn btn-blue-nb" type="button" v-tippy
+              tabindex="-1"
+              @click="edit_plan_operation = true">
+        <i class="fa fa-pencil"></i>
+      </button>
+      <plan-operation-edit
+        v-if="edit_plan_operation" :pk_plan="data.pk_plan"
+        :pk_hirurg="data.doc_operate_id"
+        :date="data.date_raw"
+        :operation="data.type_operation"
+        :direction="data.direction"
+        :patient_fio="`${data.fio_patient}, ${data.birthday}`"
+        :card_pk="data.patient_card"
+      />
+    </td>
+  </tr>
 </template>
 
 <script>

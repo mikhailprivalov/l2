@@ -80,14 +80,11 @@
       }
     },
     mounted() {
+      this.init();
       this.$root.$on('hide_plan_operations', () => {
         this.edit_plan_operations = false
       });
       this.$root.$on('reload-plans', () => {
-        this.load_data();
-      });
-      plans_point.getDepartmentsOperate().then(({data}) => {
-        this.departments = [{id: -1, label: 'Отделение не выбрано'}, ...data];
         this.load_data();
       });
     },
@@ -127,9 +124,7 @@
         this.edit_plan_operations = true
         this.pk_plan = -1
       },
-      async load_data() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const [d1, d2] = this.dateRange.split('x');
+      async init() {
         if (this.hirurgs.length === 0) {
           const {users} = await users_point.loadUsersByGroup({'group': ['Оперирует']})
           this.hirurgs = users
@@ -138,6 +133,13 @@
           const {users} = await users_point.loadUsersByGroup({'group': ['Анестезиолог']})
           this.anestesiologs = users
         }
+        const {data} = await plans_point.getDepartmentsOperate()
+        this.departments = [{id: -1, label: 'Отделение не выбрано'}, ...data];
+        await this.load_data();
+      },
+      async load_data() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const [d1, d2] = this.dateRange.split('x');
         const {result} = await plans_point.getPlansByParams({
           'start_date': d1,
           'end_date': d2,
