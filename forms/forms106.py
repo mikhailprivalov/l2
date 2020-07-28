@@ -250,6 +250,7 @@ def form_01(request_data):
         Paragraph('10. Диагноз клинический:', style),
         PageBreak()]
 
+    closed_bl_result = closed_bl(hosp_nums_obj[0].get('direction'))
     second_page = [
         Spacer(1, 2 * mm),
         Paragraph('11. Диагноз заключительный клинический:', style),
@@ -278,7 +279,9 @@ def form_01(request_data):
         Spacer(1, 0.2 * mm),
         Paragraph('3. Симптоматическое лечение.', styleLead),
         Spacer(1, 0.2 * mm),
-        Paragraph('15. Отметка о выдаче листка нетрудоспособности: {}'.format(''), styleLead),
+        Paragraph(f"15. Отметка о выдаче листка нетрудоспособности:открыт <u>{closed_bl_result['start_date']}</u> "
+                  f"закрыт: <u>{closed_bl_result['end_date']}</u> Номере ЛН : <u>{closed_bl_result['num']}</u> Выдан кому : {closed_bl_result['who_get']}",
+                  styleLead),
         Spacer(1, 1 * mm),
         Paragraph('16. Исход заболевания: {}'.format(outcome), styleLead),
         Spacer(1, 1 * mm),
