@@ -763,7 +763,6 @@ def closed_bl(hosp_num_dir):
                         start_work = normalize_date(end_date)
                     continue
 
-
             return {'is_closed': True, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date, 'start_work': start_work}
 
     return {'is_closed': False, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date, 'start_work': start_work}
