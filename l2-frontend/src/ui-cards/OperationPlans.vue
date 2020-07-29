@@ -40,28 +40,30 @@
         <tbody>
         <tr v-for="row in data">
           <td>
-            <LinkPlanOperations :direction="row.direction" />
+            <LinkPlanOperations :direction="row.direction"/>
           </td>
           <td>
             {{row.date}}
           </td>
           <td>
-             {{row.hirurg}}
+            {{row.hirurg}}
           </td>
           <td>
-             {{row.type_operation}}
+            {{row.type_operation}}
           </td>
           <td>
-            <a href="#" @click.prevent="edit_data(row)"><i class="fa fa-pencil"></i></a>
+            <a href="#" @click.prevent="edit_data(row)" v-if="can_edit_operations"><i class="fa fa-pencil"></i></a>
           </td>
         </tr>
         </tbody>
       </table>
       <br/>
-      <a href="#" style="float: right"  @click.prevent="add_data">Добавить</a>
+      <a href="#" style="float: right" @click.prevent="add_data" v-if="can_edit_operations">Добавить</a>
     </div>
-    <plan-operation-edit v-if="edit_plan_operations_old || edit_plan_operations " :card_pk="card_pk" :patient_fio="patient_fio"
-                         :direction="current_direction" :pk_plan="pk_plan" :pk_hirurg="pk_hirurg" :date="date" :operation="operation"/>
+    <plan-operation-edit v-if="edit_plan_operations_old || edit_plan_operations " :card_pk="card_pk"
+                         :patient_fio="patient_fio"
+                         :direction="current_direction" :pk_plan="pk_plan" :pk_hirurg="pk_hirurg" :date="date"
+                         :operation="operation"/>
   </fragment>
 </template>
 
@@ -102,7 +104,6 @@
         this.load();
       });
     },
-
     methods: {
       async load() {
         const {data} = await plans_point.getPlanOperastionsPatient({'card_pk': this.card_pk})
@@ -124,6 +125,11 @@
         this.pk_plan = row.pk_plan
         this.edit_plan_operations_old = true
       }
+    },
+    computed: {
+      can_edit_operations() {
+        return (this.$store.getters.user_data.groups || []).includes('Управление планами операций')
+      },
     }
   }
 </script>
@@ -132,6 +138,7 @@
   .size-btn {
     width: 50px;
   }
+
   .fv {
     cursor: pointer;
 
