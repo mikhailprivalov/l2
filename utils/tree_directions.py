@@ -71,7 +71,7 @@ def tree_direction(iss):
             to_char(ii.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm, 
             to_char(ii.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') as time_confirm, 
             ii.research_id, ddrr.title,
-            ii.diagnos, 1 AS level
+            ii.diagnos, 1 AS level, ddrr.short_title
             FROM directions_issledovaniya ii 
             LEFT JOIN directions_napravleniya nn 
             ON ii.napravleniye_id=nn.id
@@ -92,7 +92,7 @@ def tree_direction(iss):
                   to_char(i.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') as time_confirm,
                   i.research_id, dr.title,
                   i.diagnos, 
-                  r.level + 1 AS level
+                  r.level + 1 AS level, dr.short_title
             FROM directions_issledovaniya i 
             LEFT JOIN directions_napravleniya n 
             ON i.napravleniye_id=n.id

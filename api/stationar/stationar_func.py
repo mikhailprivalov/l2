@@ -9,6 +9,7 @@ from utils import tree_directions
 from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, get_result_text_research, get_result_temperature_list
 from api.dicom import search_dicom_study
 from utils.dates import normalize_date
+from anytree import Node, RenderTree
 
 
 def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', level=-1):
@@ -107,9 +108,36 @@ def hosp_get_hosp_direction(num_dir):
                                                        hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level,
                                                        hosp_is_all, hosp_morfology)
 
+    #отсортировать по подчинениям - построить бинарное дерево
+    tree_dir = tree_directions.tree_direction(num_iss)
+    final_tree = {}
+    # pattern = re.compile('<font face=\"Symbola\" size=10>\u2713</font>')
+
+    node_dir = Node({'order': '-1', 'direction': '', 'research_title': ''})
+    for j in tree_dir:
+        if not Researches.objects.get(pk=j[8]).is_hospital:
+            continue
+        research_title = j[12] if j[12] else j[9]
+        temp_s = {'order': '-1', 'direction': j[0], 'research_title': research_title}
+        if not j[3]:
+            final_tree[j[5]] = Node(temp_s, parent=node_dir)
+        else:
+            final_tree[j[5]] = Node(temp_s, parent=final_tree.get(j[3]))
+
+    data_sort = []
+    for row in RenderTree(node_dir):
+        order = int(len(row.pre) / 4)
+        row.node.name['order'] = order
+        data_sort.append(row.node.name)
+
+    data_sort.pop(0)
+    for i in data_sort:
+        print(i)
+
+
     data = [{'direction': i[0], 'research_title': i[9]} for i in hosp_dirs if not i[25]]
 
-    return data
+    return data_sort
 
 
 def hosp_get_curent_hosp_dir(current_iss):
