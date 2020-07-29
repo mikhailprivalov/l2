@@ -56,16 +56,6 @@ def get_plan_operations_by_params(request):
 
 
 @login_required
-def get_docs_can_operate():
-    docs = json.dumps({'group': ['Оперирует']})
-    docs_obj = HttpRequest()
-    docs_obj._body = docs
-    docs_can_operate = load_docprofile_by_group(docs_obj)
-
-    return JsonResponse({"data": docs_can_operate})
-
-
-@login_required
 def get_departments_can_operate(request):
     users = users_by_group(['Оперирует'])
 
@@ -77,16 +67,6 @@ def get_departments_can_operate(request):
         departments[row[2]] = {'id': row[2], 'label': row[4] or row[3]}
 
     return JsonResponse({"data": list(departments.values())})
-
-
-@login_required
-def docs_can_anesthetist():
-    docs = json.dumps({'group': ['Анестезиолог']})
-    docs_obj = HttpRequest()
-    docs_obj._body = docs
-    docs_can_anesthetist = load_docprofile_by_group(docs_obj)
-
-    return JsonResponse({"data": docs_can_anesthetist})
 
 
 @login_required
