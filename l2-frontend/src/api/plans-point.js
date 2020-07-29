@@ -7,8 +7,13 @@ export default generator({
   getPlanOperastionsPatient: {
     url: 'plans/get-plan-operations-by-patient',
   },
-
   getPlansByParams: {
     url: 'plans/get-plan-by-params',
-  }
+  },
+  getDepartmentsOperate: {
+    url: 'plans/departments-can-operate',
+  },
+  changeAnestesiolog: {
+    url: 'plans/change-anestesiolog',
+  },
 })

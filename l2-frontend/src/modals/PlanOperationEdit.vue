@@ -10,7 +10,7 @@
       <div class="row">
         <div class="col-xs-5" style="float: right">
           <button @click="hide_plan_operations" class="btn btn-primary-nb btn-blue-nb" type="button">
-            Выйти
+            Отмена
           </button>
         </div>
       </div>
@@ -27,10 +27,6 @@
     components: {Modal, PlanOperationsData},
     props: {
       card_pk: {
-        type: Number,
-        required: false
-      },
-      base_pk: {
         type: Number,
         required: false
       },
@@ -64,17 +60,18 @@
         cards: [],
       }
     },
-    methods: {
-      hide_plan_operations() {
-        this.$root.$emit('hide_plan_operations')
+    mounted() {
+      this.$root.$on('hide_plan_operations', () => {
         if (this.$refs.modal) {
           this.$refs.modal.$el.style.display = 'none'
         }
+      })
+    },
+    methods: {
+      hide_plan_operations() {
+        this.$root.$emit('hide_plan_operations')
       }
     },
-    load_stationar_research() {
-      return ''
-    }
   }
 </script>
 

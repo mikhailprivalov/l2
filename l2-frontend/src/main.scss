@@ -1699,3 +1699,8 @@ input[type=date].form-control {
 @import "./editor";
 @import "./menubar";
 @import "./menububble";
+
+.treeselect-noborder .vue-treeselect__control {
+  border: none!important;
+  border-radius: 0!important;
+}
