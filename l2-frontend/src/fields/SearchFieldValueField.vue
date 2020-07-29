@@ -87,7 +87,7 @@
           this.loadLast()
         }
         else if (this.not_autoload_result){
-          this.val = ' '
+          this.val = ''
         }
       }
     },
