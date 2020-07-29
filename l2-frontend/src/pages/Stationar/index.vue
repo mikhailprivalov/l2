@@ -86,7 +86,7 @@
           </div>
           <template v-for="(dir, index) in tree">
             <div class="sidebar-btn-wrapper" v-if="!every && dir.isCurrent" :key="dir.direction">
-              <button class="btn btn-blue-nb sidebar-btn active-btn" style="font-size: 12px">
+              <button class="btn btn-blue-nb sidebar-btn active-btn" style="font-size: 12px" :class="{colorBad: !dir.correct_level}">
                 <i class="fa fa-arrow-down" v-if="index < tree.length - 1"/>
                 <i class="fa fa-dot-circle-o" v-else/>
                 №{{dir.direction}} {{dir.research_title}}
@@ -95,7 +95,7 @@
             </div>
             <div class="sidebar-btn-wrapper" v-else :key="dir.direction">
               <button class="btn btn-blue-nb sidebar-btn"
-                      style="font-size: 12px"
+                      style="font-size: 12px" :class="{colorBad: !dir.correct_level}"
                       @click="load_pk(dir.direction)"
               >
                 <i class="fa fa-arrow-down" v-if="index < tree.length - 1"/>
@@ -646,6 +646,7 @@
           this.forbidden_edit = data.forbidden_edit
           this.soft_forbidden = !!data.soft_forbidden
           this.tree = data.tree
+          console.log(this.tree)
           this.patient = new Patient(data.patient)
           this.counts = await stationar_point.counts(this, ['direction'], {every})
           if (message && message.length > 0) {
@@ -1063,6 +1064,9 @@
 </script>
 
 <style scoped lang="scss">
+  .colorBad {
+    background-color: lightblue!important;
+  }
 
   .root {
     display: flex;
@@ -1241,7 +1245,7 @@
     padding: 0 12px;
     height: 24px;
 
-    &:not(:hover), &.active-btn:hover {
+    &:not(:hover):not(.colorBad), &.active-btn:hover:not(.colorBad) {
       cursor: default;
       background-color: rgba(#000, .02) !important;
       color: #000;

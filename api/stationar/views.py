@@ -33,8 +33,8 @@ def load(request):
         forbidden_edit = forbidden_edit_dir(direction.pk)
         result["data"] = {
             "direction": direction.pk,
-            # "cancel": direction.cancel,
-            "cancel": False,
+            "cancel": direction.cancel,
+            # "cancel": False,
             "fin_pk": direction.istochnik_f_id,
             "iss": i.pk,
             "iss_title": i.research.title,
@@ -48,14 +48,15 @@ def load(request):
                 "individual_pk": card.individual_id,
             },
             "tree": list(filter(
-                lambda d: not d["cancel"],
+                lambda d: True,
                 map(
                     lambda dirc: {
                         **dirc,
                         "research_title": dirc["research_title"].replace("отделение", "отд.").replace("Отделение", "Отд."),
                         "isCurrent": int(dirc["direction"]) == pk,
-                        # "cancel": Napravleniya.objects.get(pk=dirc["direction"]).cancel,
-                        "cancel": False,
+                        "cancel": Napravleniya.objects.get(pk=dirc["direction"]).cancel,
+                        "correct_level": dirc["correct_level"],
+                        "color": dirc["color"]
                     },
                     hosp_get_hosp_direction(pk)
                 )
