@@ -253,8 +253,8 @@ def form_01(request_data):
     closed_bl_result = closed_bl(hosp_nums_obj[0].get('direction'))
     data_bl = ''
     if closed_bl_result['start_date'] and closed_bl_result['end_date'] and closed_bl_result['num']:
-        data_bl = f" открыт <u>{closed_bl_result['start_date']}</u> {5 * space_symbol} закрыт: <u>{closed_bl_result['end_date']}</u> " \
-                  f"<br/>Номер ЛН: <u>{closed_bl_result['num']}</u> Выдан кому: {closed_bl_result['who_get']}"
+        data_bl = f"<br/>открыт <u>{closed_bl_result['start_date']}</u>{5 * space_symbol}закрыт: <u>{closed_bl_result['end_date']}</u> {3 * space_symbol}" \
+                  f"к труду: <u>{closed_bl_result['start_work']}</u> <br/>Номер ЛН: <u>{closed_bl_result['num']}</u> Выдан кому: {closed_bl_result['who_get']} "
 
     second_page = [
         Spacer(1, 2 * mm),
