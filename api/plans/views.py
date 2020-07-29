@@ -5,8 +5,6 @@ from django.http import JsonResponse
 from clients.models import Card
 from laboratory.utils import strdate, current_time
 from plans.models import PlanOperations
-from django.http import HttpRequest
-from api.views import load_docprofile_by_group
 from .sql_func import get_plans_by_params_sql
 from ..sql_func import users_by_group
 
