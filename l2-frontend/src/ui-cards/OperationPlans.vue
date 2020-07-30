@@ -38,7 +38,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="row in data">
+        <tr v-for="row in data" :class="{'cancel-row': row.cancel}">
           <td>
             <LinkPlanOperations :direction="row.direction"/>
           </td>
@@ -48,7 +48,7 @@
           <td>
             {{row.hirurg}}
           </td>
-          <td :class="{delRow: row.cancel}">
+          <td>
             {{row.type_operation}}
           </td>
           <td>
@@ -138,9 +138,18 @@
 </script>
 
 <style scoped lang="scss">
-  .delRow {
-    color: red;
-	  text-decoration: line-through;
+  .cancel-row {
+    td, th {
+      opacity: .6;
+      text-decoration: line-through;
+    }
+
+    &:hover {
+      td, th {
+        opacity: 1;
+        text-decoration: none;
+      }
+    }
   }
 
   .size-btn {
