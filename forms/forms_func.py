@@ -731,7 +731,7 @@ def closed_bl(hosp_num_dir):
     Подтверждены больничные-протоколы со словом закрытие среди Б/Л?
     """
     result_bl = hosp_get_data_direction(hosp_num_dir, site_type=8, type_service='None', level=-1)
-    num, who_get, who_care, start_date, end_date = ' ', ' ', ' ', ' ', ' '
+    num, who_get, who_care, start_date, end_date, start_work = '', '', '', '', '', ''
     for i in result_bl:
         if i['date_confirm'] is None:
             continue
@@ -757,7 +757,12 @@ def closed_bl(hosp_num_dir):
                     if end_date.find('-') != -1:
                         end_date = normalize_date(end_date)
                     continue
+                if b.field.title == "к труду":
+                    start_work = b.value
+                    if start_work.find('-') != -1:
+                        start_work = normalize_date(end_date)
+                    continue
 
-            return {'is_closed': True, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date}
+            return {'is_closed': True, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date, 'start_work': start_work}
 
-    return {'is_closed': False, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date}
+    return {'is_closed': False, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date, 'start_work': start_work}

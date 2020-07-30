@@ -640,7 +640,8 @@ def form_03(request_data):
     ]
 
     closed_bl_result = closed_bl(hosp_nums_obj[0].get('direction'))
-    title_page.append(Paragraph(f"25. Листок нетрудоспособности: открыт <u>{closed_bl_result['start_date']}</u>  закрыт: <u>{closed_bl_result['end_date']}</u>", style))
+    title_page.append(Paragraph(f"25. Листок нетрудоспособности: открыт <u>{closed_bl_result['start_date']}</u> закрыт: <u>{closed_bl_result['end_date']}</u>"
+                                f" к труду: <u>{closed_bl_result['start_work']}</u>", style))
     title_page.append(Paragraph(f"25.1. Номере ЛН : <u>{closed_bl_result['num']}</u>", style))
     title_page.append(Paragraph(f"25.2. Выдан кому : {closed_bl_result['who_get']}", style))
     title_page.append(Paragraph('25.3. По уходу за больным Полных лет: _____ Пол: {}'.format(sex), style))
