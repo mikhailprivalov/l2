@@ -416,7 +416,6 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                     v = v.replace('&lt;/sub&gt;', '</sub>')
                     v = v.replace('&lt;sup&gt;', '<sup>')
                     v = v.replace('&lt;/sup&gt;', '</sup>')
-                    v = text_to_bold(v)
                     if field_type == 16:
                         v = json.loads(v)
                         if not v['directions']:
@@ -443,6 +442,7 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                                           style))
                             fwb.extend(aggr_text)
                             continue
+                    v = text_to_bold(v)
                     if field_type == 1:
                         vv = v.split('-')
                         if len(vv) == 3:
@@ -491,7 +491,6 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                 v = v.replace('&lt;/sub&gt;', '</sub>')
                 v = v.replace('&lt;sup&gt;', '<sup>')
                 v = v.replace('&lt;/sup&gt;', '</sup>')
-                v = text_to_bold(v)
                 if field_type == 1:
                     vv = v.split('-')
                     if len(vv) == 3:
@@ -530,6 +529,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                         if not v['directions']:
                             continue
                         v = text_iss_to_pdf(v, protocol_plain_text)
+                v = text_to_bold(v)
                 if r.field.get_title(force_type=field_type) != "":
                     vals.append("{}:&nbsp;{}".format(r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
                 else:

@@ -4,7 +4,7 @@
     <Filters :filters="filters" :hirurgs="hirurgsWithEmpty" :anestesiologs="anestesiologsWithEmpty"
              :departments="departments"/>
     <div class="buttons">
-      <button class="btn btn-blue-nb" @click="add_data">
+      <button class="btn btn-blue-nb" @click="add_data" v-if="can_edit_operations">
         Добавить запись
       </button>
       <button class="btn btn-blue-nb" @click="load_data">
@@ -111,6 +111,9 @@
       hirurgsReversed() {
         return flatten(this.hirurgsWithEmpty.map(x => x.children).filter(Boolean))
           .reduce((a, b) => ({...a, [b.id]: b}), {});
+      },
+      can_edit_operations() {
+        return (this.$store.getters.user_data.groups || []).includes('Управление планами операций')
       },
       forms() {
         return planOperations.map(f => {

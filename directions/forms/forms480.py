@@ -114,7 +114,9 @@ def form_01(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph(f'7. Место регистрации: {address}', style))
         objs.append(Paragraph('8. Местность: городская — 1, сельская — 2.', style))
 
-        hosp_operation = hosp_get_operation_data(dir.parent.napravleniye_id)[-1]
+        hosp_operation = None
+        if len(hosp_get_operation_data(dir.parent.napravleniye_id)) > 0:
+            hosp_operation = hosp_get_operation_data(dir.parent.napravleniye_id)[-1]
         diagnos_after_operation = ''
         mkb10 = ''
         if hosp_operation:
