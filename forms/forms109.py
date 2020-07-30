@@ -4,6 +4,7 @@ import sys
 from copy import deepcopy
 from io import BytesIO
 from reportlab.lib import colors
+from reportlab.lib.colors import HexColor
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet
@@ -13,6 +14,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from laboratory.settings import FONTS_FOLDER
 from api.plans.sql_func import get_plans_by_pk
+
 
 
 def form_01(request_data):
@@ -30,22 +32,19 @@ def form_01(request_data):
                             leftMargin=20 * mm,
                             rightMargin=12 * mm, topMargin=6 * mm,
                             bottomMargin=4 * mm, allowSplitting=1,
-                            title="Форма {}".format("003/у"))
+                            title="Форма {}".format("План операций"))
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
-    style.fontSize = 12
+    style.fontSize = 10.5
     style.leading = 12
     style.spaceAfter = 0 * mm
-    style.alignment = TA_JUSTIFY
+    style.alignment = TA_LEFT
     style.firstLineIndent = 0
     style.spaceAfter = 1.5 * mm
 
-    styleBold = deepcopy(style)
-    styleBold.fontName = "PTAstraSerifBold"
-
-    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold = deepcopy(style)
     styleCenterBold.alignment = TA_CENTER
     styleCenterBold.fontSize = 16
     styleCenterBold.leading = 15
@@ -53,16 +52,11 @@ def form_01(request_data):
 
     styleTB = deepcopy(style)
     styleTB.firstLineIndent = 0
-    styleTB.fontSize = 10
     styleTB.alignment = TA_CENTER
     styleTB.fontName = "PTAstraSerifBold"
 
-    styleTC = deepcopy(style)
-    styleTC.firstLineIndent = 0
-    styleTC.fontSize = 10
-    styleTC.alignment = TA_LEFT
-
-    styleCenter = deepcopy(styleTC)
+    styleCenter = deepcopy(style)
+    styleCenter.firstLineIndent = 0
     styleCenter.alignment = TA_CENTER
 
     data = request_data["pks_plan"]
@@ -74,24 +68,51 @@ def form_01(request_data):
     objs.append(Spacer(1, 5 * mm))
 
     opinion = [
-        [Paragraph('Год', styleTB), Paragraph('Месяц', styleTB), Paragraph('Сведения', styleTB)],
+        [Paragraph('Дата операции', styleTB),
+         Paragraph('№ Истории', styleTB),
+         Paragraph('Пациент', styleTB),
+         Paragraph('Вид операции', styleTB),
+         Paragraph('Врач - хирург', styleTB),
+         Paragraph('Отделение', styleTB),
+         Paragraph('Анестезиолог', styleTB)
+         ],
     ]
 
     for i in plans:
-        opinion.append([Paragraph(f"{i[0]}", styleCenter), Paragraph(f"{i[1]}", styleCenter),
-                        Paragraph(f"{i[2]}", styleTC)])
+        doc_fio = ''
+        if i[6]:
+            doc_fio = i[6].split(' ')
+            doc_fio = f"{doc_fio[0]} {doc_fio[1][0]}.{doc_fio[2][0]}."
+        anesthetist_fio = ''
+        if i[9]:
+            anesthetist_fio = i[9].split(' ')
+            anesthetist_fio = f"{anesthetist_fio[0]} {anesthetist_fio[1][0]}.{anesthetist_fio[2][0]}."
+        strike_o = ""
+        strike_cl = ""
+        if i[10]:
+            strike_o = "<strike>"
+            strike_cl = "</strike>"
 
-    tbl = Table(opinion, colWidths=(20 * mm, 20 * mm, 140 * mm), splitByRow=1, repeatRows=1)
+        opinion.append([Paragraph(f"{strike_o}{i[3]}{strike_cl}", styleCenter),
+                        Paragraph(f"{strike_o}{i[2]}{strike_cl}", styleCenter),
+                        Paragraph(f"{strike_o}{i[11]} {i[12]} {i[13]}, {i[14]}{strike_cl}", style),
+                        Paragraph(f"{strike_o}{i[4]}{strike_cl}", style),
+                        Paragraph(f"{strike_o}{doc_fio}{strike_cl}", style),
+                        Paragraph(f"{strike_o}{i[7]}{strike_cl}", style),
+                        Paragraph(f"{strike_o}{anesthetist_fio}{strike_cl}", style)]
+                       )
+
+    tbl = Table(opinion, colWidths=(30 * mm, 27 * mm, 50 * mm, 50 * mm, 40 * mm, 30 * mm, 40 * mm), splitByRow=1, repeatRows=1)
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
-    #
+
     objs.append(tbl)
     doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
-    print('111', request_data['pks_plan'])
+
     return pdf

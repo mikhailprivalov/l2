@@ -180,6 +180,8 @@
 <style scoped lang="scss">
   .buttons {
     margin-bottom: 5px;
+    color: #cacfd2;
   }
+
 </style>
 

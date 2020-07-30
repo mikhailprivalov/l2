@@ -55,11 +55,13 @@ def get_plans_by_pk(pks_plan):
             (SELECT id as pk_plan, 
             patient_card_id, 
             direction,
-            to_char(date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date, 
+            to_char(date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_char, 
             type_operation, 
             doc_operate_id, 
             doc_anesthetist_id, 
-            canceled FROM plans_planoperations
+            canceled,
+            date 
+            FROM plans_planoperations
             WHERE id = ANY(ARRAY[%(pks_plan)s]) 
             ORDER BY date),
 
@@ -87,11 +89,12 @@ def get_plans_by_pk(pks_plan):
           LEFT JOIN t_podrazdeleniye ON users_doctorprofile.podrazdeleniye_id = t_podrazdeleniye.id
           )
         
-        SELECT pk_plan, patient_card_id, direction, date, type_operation, doc_operate_id, t_users_doc.fio, t_users_doc.short_podr_title,
-        doc_anesthetist_id, t_users_anesthetist.fio canceled, ind_family, ind_name, ind_twoname, birthday FROM t_plans
+        SELECT pk_plan, patient_card_id, direction, date_char, type_operation, doc_operate_id, t_users_doc.fio, t_users_doc.short_podr_title,
+        doc_anesthetist_id, t_users_anesthetist.fio, canceled, ind_family, ind_name, ind_twoname, birthday, date FROM t_plans
         LEFT JOIN t_patient ON t_plans.patient_card_id = t_patient.card_id
         LEFT JOIN t_users_doc ON t_users_doc.doc_id = t_plans.doc_operate_id
         LEFT JOIN t_users_anesthetist ON t_users_anesthetist.doc_id = t_plans.doc_anesthetist_id
+        ORDER BY date
         """, params={'pks_plan': pks_plan, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
