@@ -4,7 +4,7 @@
     <span slot="header">Планирование операции</span>
     <div slot="body" style="min-height: 200px" class="registry-body">
       <plan-operations-data :card_pk="card_pk" :patient_fio="patient_fio" :direction="direction" :pk_plan="pk_plan"
-                            :pk_hirurg="pk_hirurg" :date="date" :operation="operation"/>
+                            :pk_hirurg="pk_hirurg" :date="date" :operation="operation" :cancel_operation="cancel_operation"/>
     </div>
     <div slot="footer">
       <div class="row">
@@ -54,6 +54,10 @@
         type: String,
         required: false
       },
+      cancel_operation: {
+        type: Boolean,
+        required: true
+      },
     },
     data() {
       return {
@@ -66,6 +70,7 @@
           this.$refs.modal.$el.style.display = 'none'
         }
       })
+
     },
     methods: {
       hide_plan_operations() {

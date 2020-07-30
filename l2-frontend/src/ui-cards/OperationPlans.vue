@@ -38,7 +38,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="row in data">
+        <tr v-for="row in data" >
           <td>
             <LinkPlanOperations :direction="row.direction" />
           </td>
@@ -48,7 +48,7 @@
           <td>
              {{row.hirurg}}
           </td>
-          <td>
+          <td :class="{delRow: row.cancel}">
              {{row.type_operation}}
           </td>
           <td>
@@ -60,8 +60,9 @@
       <br/>
       <a href="#" style="float: right"  @click.prevent="add_data">Добавить</a>
     </div>
-    <plan-operation-edit v-if="edit_plan_operations_old || edit_plan_operations " :card_pk="card_pk" :patient_fio="patient_fio"
-                         :direction="current_direction" :pk_plan="pk_plan" :pk_hirurg="pk_hirurg" :date="date" :operation="operation"/>
+    <plan-operation-edit v-if="edit_plan_operations_old || edit_plan_operations " :card_pk="card_pk"
+                         :patient_fio="patient_fio" :direction="current_direction" :pk_plan="pk_plan"
+                         :pk_hirurg="pk_hirurg" :date="date" :operation="operation" :cancel_operation="cancel"/>
   </fragment>
 </template>
 
@@ -85,7 +86,8 @@
         pk_plan: null,
         pk_hirurg: null,
         date: null,
-        operation: ''
+        operation: '',
+        cancel: null
 
       }
     },
@@ -122,6 +124,7 @@
         this.current_direction = row.direction.toString()
         this.operation = row.type_operation
         this.pk_plan = row.pk_plan
+        this.cancel = row.cancel
         this.edit_plan_operations_old = true
       }
     }
@@ -129,6 +132,12 @@
 </script>
 
 <style scoped lang="scss">
+  .delRow{
+    color: red;
+	  text-decoration: line-through;
+  }
+
+
   .size-btn {
     width: 50px;
   }

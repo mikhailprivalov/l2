@@ -16,4 +16,7 @@ export default generator({
   changeAnestesiolog: {
     url: 'plans/change-anestesiolog',
   },
+  planOperationsCancel: {
+    url: 'plans/plan-operations-cancel',
+  },
 })

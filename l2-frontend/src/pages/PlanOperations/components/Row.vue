@@ -38,6 +38,7 @@
         :direction="data.direction"
         :patient_fio="`${data.fio_patient}, ${data.birthday}`"
         :card_pk="data.patient_card"
+        :cancel_operation="data.cancel"
       />
     </td>
   </tr>

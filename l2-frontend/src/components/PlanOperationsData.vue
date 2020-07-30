@@ -32,12 +32,13 @@
       </div>
     </div>
     <div class="row color-bottom">
+      <span v-if="cancel_operation" style="color: #dc322f; font-size: 14px; margin-left: 25px; margin-top: 5px; font-weight: bold; float: left">Операция отменена</span>
       <div style="float: right; margin-right: 10px; padding-right: 10px">
         <button class="btn btn-blue-nb btn-sm" style="border-radius: 0" @click="save_to_plan"
                 :class="[{btndisable: !current_hirurg || !current_direction || !card_pk || !current_time}]">
           Сохранить в план
         </button>
-        <button class="btn btn-blue-nb btn-sm" style="border-radius: 0">
+        <button class="btn btn-blue-nb btn-sm" style="border-radius: 0" @click="cancel_from_plan">
           Отменить операцию
         </button>
       </div>
@@ -108,6 +109,10 @@
       operation: {
         type: String,
         required: false
+      },
+      cancel_operation: {
+        type: Boolean,
+        required: true
       },
     },
     data() {
@@ -192,6 +197,27 @@
         this.$root.$emit('hide_plan_operations');
         this.$root.$emit('reload-plans');
       },
+      async cancel_from_plan() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+
+        const data = await plans_point.planOperationsCancel({
+          'pk_plan': this.pk_plan,
+        })
+        this.current_hirurg = null;
+        this.current_time = '';
+        this.type_operation = '';
+        await this.$store.dispatch(action_types.DEC_LOADING)
+        console.log(data)
+        if (data.result){
+          okmessage('Операция отменена');
+          this.$root.$emit('hide_plan_operations');
+          this.$root.$emit('reload-plans');
+        }
+        else
+          {errmessage('ошибка отмены');}
+
+
+      }
     }
   }
 </script>

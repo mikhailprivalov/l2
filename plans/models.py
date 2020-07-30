@@ -10,7 +10,7 @@ class PlanOperations(models.Model):
     date = models.DateTimeField(null=True, blank=True, help_text='Время на операцию', db_index=True)
     doc_operate = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_operate", help_text='Кто опрерирует', on_delete=models.SET_NULL)
     type_operation = models.TextField(default=None, blank=True, null=True, help_text="Вид операции")
-    canceled = models.BooleanField(default=True, help_text='Операция отменена')
+    canceled = models.BooleanField(default=False, help_text='Операция отменена')
     doc_anesthetist = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_anesthetist", help_text='Кто опрерирует', on_delete=models.SET_NULL)
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_create_plan", help_text='Создатель планирвоания', on_delete=models.SET_NULL)
 
@@ -32,7 +32,8 @@ class PlanOperations(models.Model):
                                       doc_operate=doc_operate_obj,
                                       type_operation=type_operation,
                                       doc_anesthetist=doc_anesthetist_obj,
-                                      doc_who_create=doc_who_create)
+                                      doc_who_create=doc_who_create,
+                                      canceled=False)
             plan_obj.save()
         else:
             plan_obj = PlanOperations.objects.filter(pk=data['pk_plan'])[0]
@@ -44,6 +45,19 @@ class PlanOperations(models.Model):
             plan_obj.date = datetime.strptime(data['date'], '%Y-%m-%d') if '-' in data['date'] else datetime.strptime(data['date'], '%d.%m.%Y')
             plan_obj.direction = direction_obj
             plan_obj.patient_card = patient_card
+            plan_obj.canceled = False
             plan_obj.save()
 
         return plan_obj.pk
+
+    @staticmethod
+    def cancel_operation(data, doc_who_create):
+        is_cancel = False
+        if PlanOperations.objects.filter(pk=data['pk_plan']).exists():
+            plan_obj = PlanOperations.objects.filter(pk=data['pk_plan'])[0]
+            plan_obj.doc_who_create = doc_who_create
+            plan_obj.canceled = True
+            plan_obj.save()
+            is_cancel = True
+
+        return is_cancel
