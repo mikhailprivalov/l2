@@ -10,6 +10,9 @@
       <button class="btn btn-blue-nb" @click="load_data">
         Обновить
       </button>
+      <button @click="open_form_planOperations" class="btn btn-blue-nb" type="button">
+        Печать
+      </button>
     </div>
     <table class="table table-bordered" style="table-layout: fixed">
       <colgroup>
@@ -55,6 +58,7 @@
   import * as action_types from "../../store/action-types";
   import users_point from "../../api/user-point";
   import flatten from 'lodash/flatten';
+  import {planOperations} from '../../forms'
 
   export default {
     components: {
@@ -111,6 +115,22 @@
       can_edit_operations() {
         return (this.$store.getters.user_data.groups || []).includes('Управление планами операций')
       },
+      forms() {
+        return planOperations.map(f => {
+          return {
+            ...f, url: f.url.kwf({
+              pks_plan: this.pks_plan,
+            })
+          }
+        })
+      },
+      pks_plan() {
+        let pksPlanData = [];
+        for (let i of this.data) {
+          pksPlanData.push(i.pk_plan)
+        }
+        return pksPlanData
+      },
     },
     watch: {
       filters: {
@@ -123,6 +143,9 @@
       }
     },
     methods: {
+      async open_form_planOperations() {
+        window.open(this.forms[0].url)
+      },
       add_data() {
         this.edit_plan_operations = true
         this.pk_plan = -1
@@ -160,6 +183,8 @@
 <style scoped lang="scss">
   .buttons {
     margin-bottom: 5px;
+    color: #cacfd2;
   }
+
 </style>
 

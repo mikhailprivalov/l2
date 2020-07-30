@@ -8,4 +8,5 @@ urlpatterns = [
     path('get-plan-by-params', views.get_plan_operations_by_params),
     path('departments-can-operate', views.get_departments_can_operate),
     path('change-anestesiolog', views.change_anestesiolog),
+    path('plan-operations-cancel', views.plan_operations_cancel),
 ]

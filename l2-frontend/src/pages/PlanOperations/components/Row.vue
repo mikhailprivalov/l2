@@ -1,5 +1,5 @@
 <template>
-  <tr>
+  <tr :class="{'cancel-row': data.canceled && !edit_plan_operation}">
     <td>
       {{data.date}}
     </td>
@@ -40,6 +40,7 @@
         :direction="data.direction"
         :patient_fio="`${data.fio_patient}, ${data.birthday}`"
         :card_pk="data.patient_card"
+        :cancel_operation="data.canceled"
       />
     </td>
   </tr>
@@ -102,6 +103,18 @@
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  .cancel-row {
+    td, th {
+      opacity: .6;
+      text-decoration: line-through;
+    }
 
+    &:hover {
+      td, th {
+        opacity: 1;
+        text-decoration: none;
+      }
+    }
+  }
 </style>

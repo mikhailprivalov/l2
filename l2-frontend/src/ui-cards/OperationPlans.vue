@@ -38,7 +38,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="row in data">
+        <tr v-for="row in data" :class="{'cancel-row': row.cancel}">
           <td>
             <LinkPlanOperations :direction="row.direction"/>
           </td>
@@ -63,7 +63,9 @@
     <plan-operation-edit v-if="edit_plan_operations_old || edit_plan_operations " :card_pk="card_pk"
                          :patient_fio="patient_fio"
                          :direction="current_direction" :pk_plan="pk_plan" :pk_hirurg="pk_hirurg" :date="date"
-                         :operation="operation"/>
+                         :operation="operation"
+                         :cancel_operation="cancel"
+    />
   </fragment>
 </template>
 
@@ -87,8 +89,8 @@
         pk_plan: null,
         pk_hirurg: null,
         date: null,
-        operation: ''
-
+        operation: '',
+        cancel: null
       }
     },
     mounted() {
@@ -123,6 +125,7 @@
         this.current_direction = row.direction.toString()
         this.operation = row.type_operation
         this.pk_plan = row.pk_plan
+        this.cancel = row.cancel
         this.edit_plan_operations_old = true
       }
     },
@@ -135,6 +138,20 @@
 </script>
 
 <style scoped lang="scss">
+  .cancel-row {
+    td, th {
+      opacity: .6;
+      text-decoration: line-through;
+    }
+
+    &:hover {
+      td, th {
+        opacity: 1;
+        text-decoration: none;
+      }
+    }
+  }
+
   .size-btn {
     width: 50px;
   }
