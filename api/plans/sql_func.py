@@ -12,8 +12,8 @@ def get_plans_by_params_sql(d_s, d_e, doc_operate_id, doc_anesthetist_id, depart
         cursor.execute("""WITH 
         t_plans AS 
             (SELECT id as pk_plan, patient_card_id, direction,
-            to_char(date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date, 
-            type_operation, doc_operate_id, doc_anesthetist_id, canceled FROM plans_planoperations
+            to_char(date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_char, 
+            type_operation, doc_operate_id, doc_anesthetist_id, canceled, date  FROM plans_planoperations
             WHERE 
             CASE when %(doc_operate_id)s > -1 THEN 
             doc_operate_id = %(doc_operate_id)s AND date BETWEEN %(d_start)s AND %(d_end)s
@@ -33,9 +33,9 @@ def get_plans_by_params_sql(d_s, d_e, doc_operate_id, doc_anesthetist_id, depart
              WHERE clients_card.id in (SELECT patient_card_id FROM t_plans))
         
         
-        SELECT pk_plan, patient_card_id, direction, date, type_operation, doc_operate_id, doc_anesthetist_id, canceled,
-               ind_family, ind_name, ind_twoname, birthday FROM t_plans
-        LEFT JOIN t_patient ON t_plans.patient_card_id = t_patient.card_id
+        SELECT pk_plan, patient_card_id, direction, date_char, type_operation, doc_operate_id, doc_anesthetist_id, canceled,
+               ind_family, ind_name, ind_twoname, birthday, date FROM t_plans
+        LEFT JOIN t_patient ON t_plans.patient_card_id = t_patient.card_id ORDER BY date
         """, params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'doc_operate_id': doc_operate_id, 'doc_anesthetist_id': doc_anesthetist_id,
                      'department_id': department})
 
