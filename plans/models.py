@@ -52,12 +52,8 @@ class PlanOperations(models.Model):
 
     @staticmethod
     def cancel_operation(data, doc_who_create):
-        is_cancel = False
-        if PlanOperations.objects.filter(pk=data['pk_plan']).exists():
-            plan_obj = PlanOperations.objects.filter(pk=data['pk_plan'])[0]
-            plan_obj.doc_who_create = doc_who_create
-            plan_obj.canceled = True
-            plan_obj.save()
-            is_cancel = True
-
-        return is_cancel
+        plan_obj = PlanOperations.objects.get(pk=data['pk_plan'])
+        plan_obj.doc_who_create = doc_who_create
+        plan_obj.canceled = not plan_obj.canceled
+        plan_obj.save()
+        return plan_obj.canceled

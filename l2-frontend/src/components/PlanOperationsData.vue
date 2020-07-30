@@ -31,17 +31,18 @@
         <input class="form-control" v-model="type_operation">
       </div>
     </div>
-    <div class="row color-bottom">
-      <span v-if="cancel_operation" style="color: #dc322f; font-size: 14px; margin-left: 25px; margin-top: 5px; font-weight: bold; float: left">Операция отменена</span>
-      <div style="float: right; margin-right: 10px; padding-right: 10px">
-        <button class="btn btn-blue-nb btn-sm" style="border-radius: 0" @click="save_to_plan"
-                :class="[{btndisable: !current_hirurg || !current_direction || !card_pk || !current_time}]">
-          Сохранить в план
-        </button>
-        <button class="btn btn-blue-nb btn-sm" style="border-radius: 0" @click="cancel_from_plan">
-          Отменить операцию
-        </button>
-      </div>
+
+    <div class="buttons">
+      <div class="cancel-message" v-if="cancel_operation">Операция отменена</div>
+
+      <button class="btn btn-blue-nb btn-sm" @click="save_to_plan"
+              :class="[{btndisable: !current_hirurg || !current_direction || !card_pk || !current_time}]">
+        {{pk_plan && pk_plan > -1 ? 'Сохранить изменения' : 'Добавить новую запись в план' }}
+      </button>
+
+      <button class="btn btn-blue-nb btn-sm" @click="cancel_from_plan" v-if="pk_plan && pk_plan > -1">
+        {{cancel_operation ? 'Убрать отмену' : 'Отменить операцию' }}
+      </button>
     </div>
     <modal v-if="patient_to_edit" ref="modalPatientEdit" @close="hide_modal_patient_edit" show-footer="true"
            white-bg="true"
@@ -56,7 +57,7 @@
         <div class="row">
           <div class="col-xs-4">
             <button @click="hide_modal_patient_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
-              ОК
+              Подтвердить
             </button>
           </div>
         </div>
@@ -189,9 +190,6 @@
           'date': this.current_time,
           'type_operation': this.type_operation,
         })
-        this.current_hirurg = null;
-        this.current_time = '';
-        this.type_operation = '';
         await this.$store.dispatch(action_types.DEC_LOADING)
         okmessage('Сохранено');
         this.$root.$emit('hide_plan_operations');
@@ -203,20 +201,16 @@
         const data = await plans_point.planOperationsCancel({
           'pk_plan': this.pk_plan,
         })
-        this.current_hirurg = null;
-        this.current_time = '';
-        this.type_operation = '';
+
         await this.$store.dispatch(action_types.DEC_LOADING)
-        console.log(data)
-        if (data.result){
+
+        if (data.result) {
           okmessage('Операция отменена');
-          this.$root.$emit('hide_plan_operations');
-          this.$root.$emit('reload-plans');
+        } else {
+          okmessage('Отмена убрана');
         }
-        else
-          {errmessage('ошибка отмены');}
 
-
+        this.$root.$emit('reload-plans');
       }
     }
   }
@@ -292,6 +286,18 @@
     /deep/ .input-group {
       border-radius: 0;
     }
+  }
+
+  .buttons {
+    padding: 10px;
+    text-align: center;
+  }
+
+  .cancel-message {
+    font-size: 16px;
+    font-weight: bold;
+    color: #f00;
+    margin: 10px;
   }
 </style>
 
