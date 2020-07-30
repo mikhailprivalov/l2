@@ -4,8 +4,7 @@ import sys
 from copy import deepcopy
 from io import BytesIO
 from reportlab.lib import colors
-from reportlab.lib.colors import HexColor
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
@@ -14,7 +13,6 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from laboratory.settings import FONTS_FOLDER
 from api.plans.sql_func import get_plans_by_pk
-
 
 
 def form_01(request_data):
