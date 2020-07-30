@@ -10,6 +10,7 @@ urlpatterns = [
     path('laborants', views.laborants),
     path('current-user-info', views.current_user_info),
     path('directive-from', views.directive_from),
+    path('load-users-by-group', views.load_docprofile_by_group),
     path('users', views.users_view),
     path('user', views.user_view),
     path('user-save', views.user_save_view),
@@ -43,4 +44,5 @@ urlpatterns = [
     path('stationar/', include('api.stationar.urls')),
     path('bacteria/', include('api.bacteria.urls')),
     path('laboratory/', include('api.laboratory.urls')),
+    path('plans/', include('api.plans.urls')),
 ]

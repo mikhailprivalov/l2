@@ -213,7 +213,7 @@ const plugin = {
                     default: false
                 },
                 popperOptions: {
-                    default: {},
+                    default: () => {},
                 },
             },
             watch: {

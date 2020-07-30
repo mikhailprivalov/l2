@@ -44,5 +44,8 @@ export default generator({
   },
   loadReaderStatus: {
     url: 'reader-status',
-  }
+  },
+  loadUsersByGroup: {
+    url: 'load-users-by-group',
+  },
 });

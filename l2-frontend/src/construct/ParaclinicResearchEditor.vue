@@ -325,7 +325,7 @@
           direction_forms: {
               type: Array,
               required: false,
-              default: [],
+              default: () => [],
           }
         },
         created() {
