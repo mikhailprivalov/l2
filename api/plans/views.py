@@ -1,7 +1,7 @@
 from datetime import datetime, time as dtime
 import simplejson as json
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from clients.models import Card
 from laboratory.utils import strdate, current_time
 from plans.models import PlanOperations

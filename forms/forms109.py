@@ -67,31 +67,29 @@ def form_01(request_data):
 
     data = request_data["pks_plan"]
     pks_plan = [int(i) for i in data.split(',')]
-
     plans = get_plans_by_pk(pks_plan)
-
 
     objs = []
     objs.append(Paragraph("План операций", styleCenterBold))
     objs.append(Spacer(1, 5 * mm))
 
-    # opinion = [
-    #     [Paragraph('Год', styleTB), Paragraph('Месяц', styleTB), Paragraph('Сведения', styleTB)],
-    # ]
+    opinion = [
+        [Paragraph('Год', styleTB), Paragraph('Месяц', styleTB), Paragraph('Сведения', styleTB)],
+    ]
 
-    # for a in AmbulatoryData.objects.filter(card__pk=request_data["card_pk"]).order_by('date', 'pk'):
-    #     opinion.append([Paragraph(f"{strdate(a.date)[6:10]}", styleCenter), Paragraph(f"{strdate(a.date)[3:5]}", styleCenter),
-    #                     Paragraph(f"{a.data}".replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>"), styleTC)])
+    for i in plans:
+        opinion.append([Paragraph(f"{i[0]}", styleCenter), Paragraph(f"{i[1]}", styleCenter),
+                        Paragraph(f"{i[2]}", styleTC)])
 
-    # tbl = Table(opinion, colWidths=(20 * mm, 20 * mm, 140 * mm), splitByRow=1, repeatRows=1)
+    tbl = Table(opinion, colWidths=(20 * mm, 20 * mm, 140 * mm), splitByRow=1, repeatRows=1)
+
+    tbl.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
     #
-    # tbl.setStyle(TableStyle([
-    #     ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-    #     ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-    #     ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    # ]))
-    #
-    # objs.append(tbl)
+    objs.append(tbl)
     doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
