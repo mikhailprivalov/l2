@@ -13,3 +13,7 @@ export const forDirs = [
 export const form112 = [
   {url: '/forms/pdf?type=108.01&card_pk={card}', title: ' Ф.112'}
 ];
+
+export const planOperations = [
+  {url: '/forms/pdf?type=109.01&pks_plan={pks_plan}', title: ' План операций'}
+];
