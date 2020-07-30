@@ -5,6 +5,7 @@
       <col/>
       <col width='320'/>
       <col width='320'/>
+      <col width='320'/>
     </colgroup>
     <tbody>
     <tr>
@@ -12,6 +13,12 @@
         <date-range v-model="filters.date"/>
       </td>
       <td></td>
+      <td>
+        <treeselect :multiple="false" :disable-branch-nodes="true" :options="hirurgs"
+                    placeholder="Хирург не выбран" v-model="filters.doc_operate_pk"
+                    :append-to-body="true"
+        />
+      </td>
       <td>
         <treeselect :multiple="false" :disable-branch-nodes="true" :options="departments"
                     placeholder="Отделение не выбрано" v-model="filters.department_pk"
@@ -43,6 +50,10 @@
       },
       anestesiologs: {
         type: Array,
+        required: true,
+      },
+      hirurgs: {
+        type: Object,
         required: true,
       },
       departments: {

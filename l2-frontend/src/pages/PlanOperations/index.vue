@@ -79,6 +79,7 @@
         filters: {
           date: [moment().format('DD.MM.YYYY'), moment().add(7, 'days').format('DD.MM.YYYY')],
           doc_anesthetist_pk: -1,
+          doc_operate_pk: -1,
           department_pk: -1,
         },
       }
@@ -169,7 +170,7 @@
         const {result} = await plans_point.getPlansByParams({
           'start_date': d1,
           'end_date': d2,
-          'doc_operate_pk': -1,
+          'doc_operate_pk': this.filters.doc_operate_pk || -1,
           'doc_anesthetist_pk': this.filters.doc_anesthetist_pk || -1,
           'department_pk': this.filters.department_pk || -1,
         })
