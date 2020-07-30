@@ -137,7 +137,6 @@
 	  text-decoration: line-through;
   }
 
-
   .size-btn {
     width: 50px;
   }

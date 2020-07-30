@@ -9,7 +9,7 @@
     <td>
       {{data.fio_patient}} {{data.birthday}}
     </td>
-    <td>
+    <td :class="{delRow: data.canceled}">
       {{data.type_operation}}
     </td>
     <td>
@@ -38,7 +38,7 @@
         :direction="data.direction"
         :patient_fio="`${data.fio_patient}, ${data.birthday}`"
         :card_pk="data.patient_card"
-        :cancel_operation="data.cancel"
+        :cancel_operation="data.canceled"
       />
     </td>
   </tr>
@@ -96,5 +96,9 @@
 </script>
 
 <style scoped>
+  .delRow{
+    color: red;
+	  text-decoration: line-through;
+  }
 
 </style>
