@@ -3,9 +3,9 @@
     <colgroup>
       <col width='201'/>
       <col/>
-      <col width='320'/>
-      <col width='320'/>
-      <col width='320'/>
+      <col width='310'/>
+      <col width='310'/>
+      <col width='310'/>
     </colgroup>
     <tbody>
     <tr>
