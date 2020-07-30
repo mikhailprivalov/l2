@@ -21,12 +21,14 @@
     <td>
       <treeselect :multiple="false" :disable-branch-nodes="true" :options="anestesiologs"
                   placeholder="Анестезиолог не выбран" v-model="data.doc_anesthetist_id"
+                  :disabled="!can_edit_anestesiologs"
                   :append-to-body="true"
       />
     </td>
     <td>
       <button title="Редактирование" class="btn btn-blue-nb" type="button" v-tippy
               tabindex="-1"
+              :disabled="!can_edit_operations"
               @click="edit_plan_operation = true">
         <i class="fa fa-pencil"></i>
       </button>
@@ -75,6 +77,12 @@
     computed: {
       anestesiologId() {
         return this.data.doc_anesthetist_id;
+      },
+      can_edit_operations() {
+        return (this.$store.getters.user_data.groups || []).includes('Управление планами операций')
+      },
+      can_edit_anestesiologs() {
+        return (this.$store.getters.user_data.groups || []).includes('Управление анестезиологами')
       },
     },
     mounted() {
