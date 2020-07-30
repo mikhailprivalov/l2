@@ -19,7 +19,7 @@ from clients.models import AmbulatoryData
 
 
 def form_01(request_data):
-    #112 форма
+    # 112 форма
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:

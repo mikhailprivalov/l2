@@ -25,7 +25,6 @@ def plan_operations_cancel(request):
     return JsonResponse({"result": is_cancel})
 
 
-
 @login_required
 def get_plan_operations_by_patient(request):
     request_data = json.loads(request.body)
