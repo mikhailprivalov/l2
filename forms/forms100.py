@@ -21,10 +21,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, Page
 from appconf.manager import SettingManager
 from clients.models import Card
 from laboratory.settings import FONTS_FOLDER
-
-
-# def form_100_01(**kwargs):
-from utils.flowable import InteractiveListBoxField, InteractiveTextFieldAmbulatoryCard
+from utils.flowable import InteractiveListBoxField, InteractiveTextField
 
 
 def form_01(request_data):
@@ -610,7 +607,7 @@ def form_03(request_data):
 
     opinion = [
         [Paragraph('14. Прикрепление', style),
-         InteractiveTextFieldAmbulatoryCard()],
+         InteractiveTextField(width=140 * mm, fontsize=10, height=5 * mm)],
     ]
     tbl = Table(opinion, colWidths=(40 * mm, 140 * mm), spaceBefore=0 * mm)
     tbl.setStyle(TableStyle([

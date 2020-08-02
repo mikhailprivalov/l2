@@ -5,9 +5,11 @@ from reportlab.lib.units import mm
 
 
 class InteractiveTextField(Flowable):
-    def __init__(self, width=470):
+    def __init__(self, width=470, fontsize=12, height=18):
         Flowable.__init__(self)
         self.width = width
+        self.fontSize = fontsize
+        self.height = height
 
     def draw(self):
         self.canv.saveState()
@@ -15,22 +17,6 @@ class InteractiveTextField(Flowable):
         form.textfieldRelative(tooltip='Комментарий', fontName='Times-Bold',
                                fontSize=12, borderStyle='underlined', borderColor=white,
                                height=18, width=self.width,
-                               fillColor=white, textColor=black, forceBorder=False)
-        self.canv.restoreState()
-
-
-class InteractiveTextFieldAmbulatoryCard(Flowable):
-    def __init__(self, width=140 * mm):
-        Flowable.__init__(self)
-        self.width = width
-
-    def draw(self):
-        self.canv.saveState()
-        self.canv.setFont("PTAstraSerifBold", 14)
-        form: AcroForm = self.canv.acroForm
-        form.textfieldRelative(tooltip='Комментарий', fontName='Times-Bold',
-                               fontSize=10, borderStyle='underlined', borderColor=white,
-                               height=5 * mm, width=self.width,
                                fillColor=white, textColor=black, forceBorder=False)
         self.canv.restoreState()
 
