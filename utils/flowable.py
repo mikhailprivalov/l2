@@ -2,13 +2,7 @@ from reportlab.lib.colors import white, black
 from reportlab.pdfbase.acroform import AcroForm
 from reportlab.platypus import Flowable
 from reportlab.lib.units import mm
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-import os
-from laboratory.settings import FONTS_FOLDER
 
-pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
-pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
 class InteractiveTextField(Flowable):
     def __init__(self, width=470):
@@ -40,6 +34,7 @@ class InteractiveTextFieldAmbulatoryCard(Flowable):
                                fillColor=white, textColor=black, forceBorder=False)
         self.canv.restoreState()
 
+
 class InteractiveListBoxField(Flowable):
     def __init__(self):
         Flowable.__init__(self)
@@ -51,13 +46,11 @@ class InteractiveListBoxField(Flowable):
                    'Вид медосмотра: периодический',
                    'Вид медосмотра: первичный',
                    'Вид медосмотра: водительская справка',
-                   'Вид медосмотра: периодический',
-                   'Вид медосмотра: первичный',
-                   'Вид медосмотра: водительская справка'
+                   'Вид медосмотра: на оружие',
                    ]
         form.choice(name='choice2', tooltip='Field choice2',
                     value=' ', height= 7 * mm, width=178 * mm,
-                    options=options, borderColor=black, fillColor=white,
+                    options=options, borderColor=black, fillColor=white, fieldFlags='edit',
                     borderStyle='solid', borderWidth=1, relative=True, forceBorder=False, dashLen=1)
 
         self.canv.restoreState()
