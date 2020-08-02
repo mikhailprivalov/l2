@@ -48,8 +48,8 @@ class InteractiveListBoxField(Flowable):
                    'Вид медосмотра: водительская справка',
                    'Вид медосмотра: на оружие',
                    ]
-        form.choice(name='choice2', tooltip='Field choice2',
-                    value=' ', height= 7 * mm, width=178 * mm,
+        form.choice(name='choice1', tooltip='choice1',
+                    value=' ', height=7 * mm, width=178 * mm,
                     options=options, borderColor=black, fillColor=white, fieldFlags='edit',
                     borderStyle='solid', borderWidth=1, relative=True, forceBorder=False, dashLen=1)
 
