@@ -299,6 +299,8 @@ def gen_pdf_dir(request):
                     save(fc_buf, filename=file_contract)
                     pdf_all = BytesIO()
                     inputs = [file_dir, file_contract]
+                    if SettingManager.get("only_contract", default='False', default_type='b'):
+                        inputs = [file_contract]
                     writer = PdfWriter()
                     for inpfn in inputs:
                         writer.addpages(PdfReader(inpfn).pages)

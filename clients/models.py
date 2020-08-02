@@ -914,6 +914,7 @@ class Card(models.Model):
             else self.fact_address
         ind_data['card_num'] = self.number_with_type()
         ind_data['number_poliklinika'] = self.number_poliklinika
+        ind_data['harmful_factor'] = self.harmful_factor
         ind_data['phone'] = self.get_phones()
         ind_data['work_place'] = self.work_place
         if not only_json_serializable:
