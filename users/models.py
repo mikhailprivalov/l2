@@ -9,6 +9,7 @@ from podrazdeleniya.models import Podrazdeleniya
 class Speciality(models.Model):
     SPEC_TYPES = (
         (0, 'Консультации'),
+        (1, 'Анестезиолог'),
     )
 
     title = models.CharField(max_length=255, help_text='Название')

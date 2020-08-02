@@ -37,6 +37,12 @@
           <input class="form-control f-code" type="text" v-model="internal_code">
         </div>
         <div class="input-group">
+          <span class="input-group-addon"> Ф.направления </span>
+          <select class="form-control" v-model="direction_current_form">
+            <option :value="d[0]" v-for="d in direction_forms">
+              {{d[1]}}
+            </option>
+          </select>
           <label class="input-group-addon" style="height: 34px;text-align: left;">
             <input type="checkbox" v-model="hide"/> Скрытие исследования
           </label>
@@ -90,6 +96,8 @@
         short_title: '',
         code: '',
         internal_code: '',
+        direction_current_form: '',
+        direction_forms: '',
         info: '',
         hide: false,
         cancel_do: false,
@@ -332,6 +340,8 @@
         this.hide = false
         this.site_type = null
         this.tube = -1
+        this.direction_current_form = ''
+        this.direction_forms = ''
         if (this.pk >= 0) {
           this.$store.dispatch(action_types.INC_LOADING)
           construct_point.researchDetails(this, 'pk').then(data => {
@@ -339,6 +349,8 @@
             this.short_title = data.short_title
             this.code = data.code
             this.internal_code = data.internal_code
+            this.direction_current_form = data.direction_current_form
+            this.direction_forms = data.direction_forms
             this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
             this.hide = data.hide
             this.site_type = data.site_type
@@ -360,7 +372,7 @@
       },
       save() {
         this.$store.dispatch(action_types.INC_LOADING)
-        construct_point.updateResearch(this, ['pk', 'department', 'title', 'short_title', 'code', 'hide', 'site_type', 'internal_code', 'tube'], {
+        construct_point.updateResearch(this, ['pk', 'department', 'title', 'short_title', 'code', 'hide', 'site_type', 'internal_code', 'tube', 'direction_current_form'], {
           info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>')
         }).then(() => {
           this.has_unsaved = false

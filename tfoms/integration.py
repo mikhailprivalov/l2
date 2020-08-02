@@ -23,7 +23,8 @@ def make_request(path, query=None):
         url = get_url(path, query=query)
         headers = get_headers()
         return requests.post(url, headers=headers).json()
-    except:
+    except Exception as e:
+        print(e)
         return {}
 
 

@@ -57,6 +57,8 @@ INSTALLED_APPS = (
     'contracts',
     'lq',
     'treatment',
+    'external_system',
+    'plans'
 )
 
 MIDDLEWARE = [

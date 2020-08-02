@@ -110,4 +110,16 @@ export default generator({
   getExternalOrgranizations: {
     url: 'directions/external-organizations',
   },
+  directionInFavorites: {
+    url: 'directions/direction-in-favorites',
+  },
+  allDirectionsInFavorites: {
+    url: 'directions/all-directions-in-favorites',
+  },
+  planExamination: {
+    url: 'directions/plan-examinations',
+  },
+  getPlanExaminationPatient: {
+    url: 'directions/get-plan-operation-by-patient',
+  },
 })

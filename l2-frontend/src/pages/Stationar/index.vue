@@ -28,6 +28,9 @@
               форма 003/у
             </a>
           </div>
+          <div class="inner-card" v-if="!every">
+            <Favorite :direction="direction" />
+          </div>
           <div class="inner-card" v-else>
             {{issTitle}}
           </div>
@@ -284,7 +287,7 @@
         <div style="padding: 5px" v-if="!opened_form_pk">
           <AggregateLaboratory v-if="opened_list_key === 'laboratory'" :pk="iss" disabled />
           <AggregateDesc
-            v-if="['paraclinical', 'consultation', 'diaries'].includes(opened_list_key)"
+            v-if="['paraclinical', 'consultation', 'diaries', 'morfology'].includes(opened_list_key)"
             :pk="iss"
             :r_type="opened_list_key"
             disabled
@@ -434,10 +437,12 @@
   import patients_point from '../../api/patients-point'
   import UrlData from '../../UrlData'
   import AmbulatoryData from '../../modals/AmbulatoryData'
+  import Favorite from "./Favorite";
 
   export default {
     mixins: [menuMixin],
     components: {
+      Favorite,
       dropdown,
       DisplayDirection,
       DescriptiveForm,
@@ -538,6 +543,9 @@
         }
       }
       this.inited = true
+      this.$root.$on('open-history', (d) => {
+        this.load_pk(d, false);
+      });
     },
     methods: {
       show_anesthesia() {
@@ -545,7 +553,7 @@
       },
       is_diary(research) {
         const res_title = research.title.toLowerCase();
-        return res_title.includes('осмотр') || res_title.includes('дневник');
+        return res_title.includes('осмотр') || res_title.includes('дневник') || res_title.includes('диагностический');
       },
       create_directions(iss) {
         this.create_directions_diagnosis = iss.diagnos;
@@ -646,6 +654,7 @@
         } else {
           errmessage(message)
         }
+        this.$root.$emit('current_history_direction', {'history_num': this.direction, 'patient': this.patient})
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       print_all_list() {

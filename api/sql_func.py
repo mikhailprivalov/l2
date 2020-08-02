@@ -100,3 +100,34 @@ def get_field_result(client_id, field_id, count=1):
 
         row = cursor.fetchall()
     return row
+
+
+def users_by_group(title_groups):
+
+    with connection.cursor() as cursor:
+        cursor.execute("""
+        WITH 
+          t_group AS (
+          SELECT id as group_id FROM auth_group
+          WHERE name = ANY(ARRAY[%(title_groups)s])),
+            
+        t_users_id AS(
+          SELECT user_id FROM auth_user_groups
+          WHERE group_id in (SELECT group_id from t_group)),
+            
+        t_podrazdeleniye AS (
+          SELECT id as id, title as title_podr, short_title FROM podrazdeleniya_podrazdeleniya),
+            
+        t_users AS (
+          SELECT users_doctorprofile.id as doc_id, fio, user_id, podrazdeleniye_id, title_podr, short_title
+          FROM users_doctorprofile
+          LEFT JOIN
+          t_podrazdeleniye ON users_doctorprofile.podrazdeleniye_id = t_podrazdeleniye.id
+          WHERE user_id in (SELECT user_id FROM t_users_id))
+            
+        SELECT doc_id, fio, podrazdeleniye_id, title_podr, short_title FROM t_users
+        ORDER BY podrazdeleniye_id                    
+        """, params={'title_groups': title_groups})
+
+        row = cursor.fetchall()
+    return row

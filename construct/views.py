@@ -61,6 +61,14 @@ def researches_tune(request):
 
 
 @login_required
+@group_required("Оператор", "Конструктор: Лабораторные исследования")
+def researches_tune_ng(request):
+    """ Настройка исследований """
+    pk = request.GET["pk"]
+    return render(request, 'construct_researches_tune_ng.html', {"pk": pk})
+
+
+@login_required
 @group_required("Оператор", "Конструктор: Ёмкости для биоматериала")
 def tubes(request):
     """ Создание и редактирование ёмкостей """

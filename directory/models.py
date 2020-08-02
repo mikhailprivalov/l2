@@ -110,6 +110,8 @@ class Researches(models.Model):
         (38001, '38001. ИО - Направление на ВИЧ'),
         (38002, '38002. ИО - Направление на МСКТ'),
         (38003, '38003. ИО - Направление на COVID-19'),
+
+        (48001, '48001. ИО - Направление на Гистологию'),
     )
 
     RESULT_FORMS = (
@@ -118,6 +120,7 @@ class Researches(models.Model):
         (10001, '100.01 - Наркозная карта - анестезия'),
         (10002, '100.02 - Реанимационная карта - 1 день'),
         (10101, '101.01 - Дневник в 3 колонки'),
+        (10201, '102.01 - Гистология'),
     )
 
     CO_EXECUTOR_MODES = (
@@ -324,6 +327,7 @@ class HospitalService(models.Model):
         "laboratory": "is_lab",
         "consultation": "is_doc_refferal",
         "diaries": "diaries",
+        "morfology": "is_morfology",
         "all": "None",
     }
 
@@ -379,6 +383,7 @@ class ParaclinicInputField(models.Model):
         (20, 'Time HH:MM'),
         (21, 'Anesthesia table'),
         (22, 'Текст с автозаполнением'),
+        (23, 'Raw field without autoload'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
@@ -551,6 +556,9 @@ class Fractions(models.Model):
     readonly_title = models.BooleanField(default=False, blank=True,
                                          help_text='Только для чтения-суррогатная группа для фракций', db_index=True)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+
+    def get_fsli_code(self):
+        return (self.fsli or '').strip()
 
     def __str__(self):
         return self.research.title + " | " + self.title

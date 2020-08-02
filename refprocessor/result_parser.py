@@ -23,18 +23,18 @@ class ResultRight:
 
         orig_str = replace_pow(re.sub(' +', ' ', orig_str))
 
-        simple_range = ResultRight.check_is_range(orig_str)
-
-        if simple_range:
-            self.mode = simple_range[0]
-            self.range = ValueRange(simple_range[1], simple_range[2])
-            return
-
         const_range = ResultRight.check_is_constant_with_sign(orig_str)
 
         if const_range:
             self.mode = const_range[0]
             self.range = ValueRange(const_range[1], const_range[2])
+            return
+
+        simple_range = ResultRight.check_is_range(orig_str)
+
+        if simple_range:
+            self.mode = simple_range[0]
+            self.range = ValueRange(simple_range[1], simple_range[2])
             return
 
         self.mode = ResultRight.MODE_CONSTANT

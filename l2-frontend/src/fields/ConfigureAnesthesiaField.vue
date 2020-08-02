@@ -132,10 +132,7 @@
 </script>
 
 <style scoped lang="scss">
-
   .add-row {
     float: right;
   }
-
-
 </style>

@@ -46,6 +46,12 @@
           <input type="text" class="form-control f-code" v-model="internal_code">
         </div>
         <div class="input-group">
+          <span class="input-group-addon"> Ф.направления </span>
+          <select class="form-control" v-model="direction_current_form">
+            <option :value="d[0]" v-for="d in direction_forms">
+              {{d[1]}}
+            </option>
+          </select>
           <label class="input-group-addon" style="height: 34px;text-align: left;">
             <input type="checkbox" v-model="hide"/> Скрытие исследования
           </label>
@@ -79,7 +85,7 @@
                 <i class="glyphicon glyphicon-arrow-down"></i>
               </button>
             </span>
-            <span class="input-group-addon">Название группы</span>
+            <span class="input-group-addon">Название группы ({{group.pk === -1 ? 'новое' : group.pk}})</span>
             <input type="text" class="form-control" placeholder="Название" v-model="group.title">
             <span class="input-group-addon">Условие видимости</span>
             <input type="text" class="form-control" placeholder="Условие" v-model="group.visibility">
@@ -131,7 +137,7 @@
                     <strong>ID фракции:</strong>
                     <input v-model="row.default" class="form-control"/>
                   </div>
-                  <div v-else-if="row.field_type === 13 || row.field_type === 14">
+                  <div v-else-if="row.field_type === 13 || row.field_type === 14 || row.field_type === 23">
                     <strong>ID поля:</strong>
                     <input v-model="row.default" class="form-control"/>
                   </div>
@@ -150,7 +156,7 @@
                   <div v-if="row.field_type === 21">
                     <ConfigureAnesthesiaField v-model="row.values_to_input"/>
                   </div>
-                  <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22].includes(row.field_type)">
+                  <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23].includes(row.field_type)">
                     <div class="header" v-collapse-toggle>
                       <a href="#" class="a-under" @click.prevent v-if="row.field_type === 0">
                         Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
@@ -218,7 +224,7 @@
                     <input type="checkbox" v-model="row.for_extract_card"/> в выписку
                   </label>
                   <label style="line-height: 1"
-                         v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14">
+                         v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14 || row.field_type === 23">
                     Число строк:<br/>
                     <input class="form-control" type="number" min="1" v-model.number="row.lines"/>
                   </label>
@@ -242,6 +248,7 @@
                       <option value="20">Время ЧЧ:ММ</option>
                       <option value="21">Течение анестезии (таблица)</option>
                       <option value="22">Текст с автозаполнением</option>
+                      <option value="23">Ссылка без автозагрузки</option>
                     </select>
                   </label>
                 </div>
@@ -314,7 +321,12 @@
                 type: Boolean,
                 required: false,
                 default: false,
-            }
+            },
+          direction_forms: {
+              type: Array,
+              required: false,
+              default: () => [],
+          }
         },
         created() {
             this.load()
@@ -325,6 +337,7 @@
                 short_title: '',
                 code: '',
                 internal_code: '',
+                direction_current_form: '',
                 info: '',
                 hide: false,
                 cancel_do: false,
@@ -555,6 +568,7 @@
                 this.hide = false
                 this.site_type = null
                 this.groups = []
+                this.direction_current_form = ''
                 if (this.pk >= 0) {
                     this.$store.dispatch(action_types.INC_LOADING)
                     construct_point.researchDetails(this, 'pk').then(data => {
@@ -562,6 +576,7 @@
                         this.short_title = data.short_title
                         this.code = data.code
                         this.internal_code = data.internal_code
+                        this.direction_current_form = data.direction_current_form
                         this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
                         this.hide = data.hide
                         this.site_type = data.site_type
@@ -595,7 +610,8 @@
                     'hide',
                     'groups',
                     'site_type',
-                    'internal_code'
+                    'internal_code',
+                    'direction_current_form',
                 ]
                 const moreData = {
                     info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),

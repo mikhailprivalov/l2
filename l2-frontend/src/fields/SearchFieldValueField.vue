@@ -2,7 +2,7 @@
   <div>
     <div class="input-group" style="width: 100%;">
       <span class="input-group-btn" style="vertical-align: top;" v-if="!readonly">
-        <button class="btn btn-block" style="white-space: normal;text-align: left;"
+        <button class="btn btn-block" :class="{btn_color: not_autoload_result}" style="white-space: normal;text-align: left;"
                 title="Загрузить последний результат"
                 @click="loadLast"
                 v-tippy="{ placement : 'bottom', arrow: true }">
@@ -51,6 +51,15 @@
         required: false,
         default: false,
       },
+      not_autoload_result: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
+      iss_pk: {
+        type: Number,
+        required: false,
+      },
     },
     data() {
       return {
@@ -67,15 +76,18 @@
           this.checkDirection()
 
           setTimeout(() => {
-            if (!this.val) {
+            if (!this.val && !this.not_autoload_result) {
               this.loadLast()
             }
           }, 200)
         })
       }
       else {
-        if (!this.val) {
+        if (!this.val && !this.not_autoload_result) {
           this.loadLast()
+        }
+        else if (this.not_autoload_result){
+          this.val = ''
         }
       }
     },
@@ -103,12 +115,18 @@
         const {result} = await directions_point.lastFieldResult(this, [
           'fieldPk',
           'clientPk',
+          'iss_pk'
         ])
+        let logicalAnd = false
+        if (this.fieldPk.indexOf('&') > -1) {
+          logicalAnd = true
+        }
         if (result) {
           this.direction = result.direction;
-          if (this.raw) {
+          if (this.raw || logicalAnd) {
             this.val = result.value;
-          } else {
+          }
+          else {
             this.val = `${result.value} (${result.date}, направление ${result.direction})`;
           }
         } else {
@@ -129,5 +147,9 @@
 
   div.btn:hover {
     cursor: default;
+  }
+
+  .btn_color {
+    color: #049372;
   }
 </style>

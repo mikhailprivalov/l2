@@ -50,13 +50,20 @@
         </div>
         <h5>Настройка фракций</h5>
         <table id="table-fractions" class="table table-bordered table-responsive">
+            <colgroup>
+                <col width="300" />
+                <col width="300" />
+                <col width="160" />
+                <col width="380" />
+                <col />
+            </colgroup>
             <thead>
             <tr>
-                <th class="col-xs-2">Фракция (id)</th>
-                <th class="col-xs-2">Формула</th>
-                <th class="col-xs-1">Скрытие</th>
+                <th>Фракция (id)</th>
+                <th>Формула</th>
+                <th>Скрытие</th>
                 <th>Тип поля</th>
-                <th class="col-xs-3">Варианты</th>
+                <th>Варианты</th>
             </tr>
             </thead>
             <tbody>
@@ -253,7 +260,8 @@
                     hide: $("[name=hide-{0}]".f(tpk)).prop("checked"),
                     render_type: parseInt($("[name=fraction-type-{0}]:checked".f(tpk)).val()),
                     options: $("[data-role='tagsinput']", v).val(),
-                    formula: $("#formula-" + tpk).val()
+                    formula: $("#formula-" + tpk).val(),
+                    fsli: $("[name=fsli-{0}]".f(tpk)).val(),
                 });
             });
             $.ajax({

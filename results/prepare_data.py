@@ -18,6 +18,7 @@ from directions.models import ParaclinicResult, MicrobiologyResultCulture
 import datetime
 from appconf.manager import SettingManager
 import simplejson as json
+from utils.xh import check_valid_square_brackets
 
 
 def lab_iss_to_pdf(data1):
@@ -303,7 +304,7 @@ def html_to_pdf(file_tmp, r_value, pw, leftnone=False):
     return i
 
 
-def default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col):
+def default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "FreeSans"
@@ -341,7 +342,7 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
              ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:",
               direction.client.number_with_type() + (
                   " - архив" if direction.client.is_archive else "") + number_poliklinika]]
-    if not direction.imported_from_rmis:
+    if not direction.imported_from_rmis and not is_extract:
         data.append(
             ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)])
     elif direction.imported_org:
@@ -441,6 +442,7 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                                           style))
                             fwb.extend(aggr_text)
                             continue
+                    v = text_to_bold(v)
                     if field_type == 1:
                         vv = v.split('-')
                         if len(vv) == 3:
@@ -463,7 +465,6 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
     pw = doc.width
     sick_result = None
     txt = ""
-
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "FreeSans"
@@ -473,6 +474,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
     style_ml.leftIndent = 5 * mm
     styleBold = deepcopy(style)
     styleBold.fontName = "FreeSansBold"
+
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
         sick_title = group.title == "Сведения ЛН"
         if sick_title:
@@ -489,7 +491,6 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                 v = v.replace('&lt;/sub&gt;', '</sub>')
                 v = v.replace('&lt;sup&gt;', '<sup>')
                 v = v.replace('&lt;/sup&gt;', '</sup>')
-
                 if field_type == 1:
                     vv = v.split('-')
                     if len(vv) == 3:
@@ -528,6 +529,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                         if not v['directions']:
                             continue
                         v = text_iss_to_pdf(v, protocol_plain_text)
+                v = text_to_bold(v)
                 if r.field.get_title(force_type=field_type) != "":
                     vals.append("{}:&nbsp;{}".format(r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
                 else:
@@ -607,3 +609,12 @@ def microbiology_result(iss, fwb, doc):
         fwb.append(Paragraph(iss.microbiology_conclusion, style))
 
     return fwb
+
+
+def text_to_bold(v):
+    valid = check_valid_square_brackets(v)
+    if valid:
+        v = v.replace('[', '<font face=\"FreeSansBold\">')
+        v = v.replace(']', '</font>')
+
+    return v

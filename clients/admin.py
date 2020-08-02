@@ -4,7 +4,8 @@ from django.contrib import admin
 
 @admin.register(models.Individual)
 class IndividualAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('family', 'name', 'patronymic', 'birthday',)
+    search_fields = ('family',)
 
 
 @admin.register(models.DocumentType)

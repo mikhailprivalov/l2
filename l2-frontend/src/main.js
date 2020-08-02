@@ -12,6 +12,7 @@ import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
 import RmisLocation from './ui-cards/RmisLocation'
 import * as Sentry from '@sentry/browser';
 import * as Integrations from '@sentry/integrations';
+import Fragment from 'vue-fragment'
 
 
 const VueInputMask = require('vue-inputmask').default;
@@ -26,6 +27,7 @@ Vue.use(VueTippy)
 Vue.use(VueInputMask)
 Vue.use(VueCollapse)
 Vue.use(Tippy)
+Vue.use(Fragment.Plugin)
 
 const promiseFinally = require('promise.prototype.finally');
 Vue.dialog.registerComponent('replace-append-modal', ReplaceAppendModal);
@@ -45,6 +47,7 @@ new Vue({
     'StatisticsTicketsPrintModal': () => import('./modals/StatisticsTicketsPrintModal'),
     'StatisticsResearchesPrintModal': () => import('./modals/StatisticsResearchesPrintModal'),
     'DepartmentsForm': () => import('./forms/DepartmentsForm'),
+    'LaboratoryTune': () => import('./forms/LaboratoryTune'),
     'Directions': () => import('./pages/Directions'),
     'Cases': () => import('./pages/Cases'),
     'ConstructParaclinic': () => import('./construct/ConstructParaclinic'),
@@ -52,9 +55,13 @@ new Vue({
     'ResultsParaclinic': () => import('./pages/ResultsParaclinic'),
     'StatisticsTickets': () => import('./pages/StatisticsTickets'),
     'DirectionVisit': () => import('./pages/DirectionVisit'),
+    'PlanOperations': () => import('./pages/PlanOperations'),
     'ResultsReport': () => import('./pages/ResultsReport'),
     'RmqManagement': () => import('./ui-cards/RmqManagement'),
     'DirectionSteps': () => import('./ui-cards/DirectionSteps'),
+    'Favorites': () => import('./ui-cards/Favorites'),
+    'OperationPlans': () => import('./ui-cards/OperationPlans'),
+    'CardReader': () => import('./ui-cards/CardReader'),
     'RmisConfirm': () => import('./pages/RmisConfirm'),
     'Profiles': () => import('./pages/Profiles'),
     'EmployeeJobs': () => import('./pages/EmployeeJobs'),

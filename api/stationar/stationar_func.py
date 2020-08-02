@@ -21,19 +21,21 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
 
     hosp_site_type = site_type
     hosp_level = level
-    hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_is_all = False, False, False, False, False
+    hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_is_all, hosp_morfology = False, False, False, False, False, False
     if type_service == 'is_paraclinic':
         hosp_is_paraclinic = True
     elif type_service == 'is_doc_refferal':
         hosp_is_doc_refferal = True
     elif type_service == 'is_lab':
         hosp_is_lab = True
+    elif type_service == 'is_morfology':
+        hosp_morfology = True
     if site_type == -1 and type_service == 'None':
         hosp_is_all = True
 
     hosp_dirs = tree_directions.hospital_get_direction(num_iss, main_research, hosp_site_type, hosp_is_paraclinic,
                                                        hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level,
-                                                       hosp_is_all)
+                                                       hosp_is_all, hosp_morfology)
 
     data = []
     if hosp_dirs:
@@ -44,7 +46,7 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
                          'time_confirm': i[7], 'research_id': i[8], 'research_title': i[9], 'podrazdeleniye_id': i[13],
                          'is_paraclinic': i[14], 'is_doc_refferal': i[15], 'is_stom': i[16], 'is_hospital': i[17],
                          'is_microbiology': i[18], 'podrazdeleniye_title': i[19], 'site_type': i[21],
-                         'research_short_title': i[23], 'is_slave_hospital': i[24]})
+                         'research_short_title': i[23], 'is_slave_hospital': i[24], 'is_cancel': i[25], "is_citology": i[26], "is_gistology": i[27]})
 
     return data
 
@@ -98,12 +100,12 @@ def hosp_get_hosp_direction(num_dir):
     num_iss = result[0][0]
     main_research = result[0][1]
     hosp_site_type = -1
-    hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_all = False, False, False, False
+    hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_all, hosp_morfology = False, False, False, False, False
     hosp_is_hosp = True
     hosp_level = -1
     hosp_dirs = tree_directions.hospital_get_direction(num_iss, main_research, hosp_site_type, hosp_is_paraclinic,
                                                        hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level,
-                                                       hosp_is_all)
+                                                       hosp_is_all, hosp_morfology)
 
     data = [{'direction': i[0], 'research_title': i[9]} for i in hosp_dirs if not i[25]]
 
@@ -296,7 +298,7 @@ def hosp_get_text(current_iss, extract=False, mode=None, directions=None):
         if not extract:
             hosp_dirs = [i for i in hosp_dirs if i["direction"] <= current_dir]
 
-        # получить по каждому hosp_dirs Дочерние направления по типу is_paraclinic, is_doc_refferal
+        # получить по каждому hosp_dirs Дочерние направления по типу is_paraclinic, is_doc_refferal, is_morfology
         num_paraclinic_dirs = set()
         for h in hosp_dirs:
             obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service=mode, level=2)
@@ -372,6 +374,7 @@ def hosp_get_text_iss(current_iss, is_extract, mode):
         modes = [
             'is_paraclinic',
             'is_doc_refferal',
+            'is_morfology'
         ]
     else:
         modes = [mode]
@@ -389,6 +392,8 @@ def forbidden_edit_dir(num_dir):
     """
     # (если услуга имеет тип is_doc_refferal, или is_paraclinic) и направление не имеет parent услугу типа hosp вернуть False
     obj_iss = Issledovaniya.objects.filter(napravleniye_id=num_dir).first()
+    if obj_iss.research.is_gistology:
+        return False
     parent = Napravleniya.objects.get(pk=num_dir).parent
     if not parent and (obj_iss.research.is_doc_refferal or obj_iss.research.is_paraclinic):
         return False

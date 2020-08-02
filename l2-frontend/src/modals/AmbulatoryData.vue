@@ -24,7 +24,7 @@
         <tr v-for="r in rows">
           <td>{{r.date.slice(6)}}</td>
           <td>{{r.date.slice(3,5)}}</td>
-          <td>{{r.data}}</td>
+          <td><span v-html="r.data.replace(/\n/g, '<br/>')"></span></td>
           <td>
             <button class="btn last btn-blue-nb nbr" type="button"
                     v-tippy="{ placement : 'bottom', arrow: true }"
@@ -118,7 +118,11 @@
               Закрыть
             </button>
           </div>
-
+          <div class="col-xs-4">
+            <button @click="open_form_112" class="btn btn-primary-nb btn-blue-nb" type="button">
+              Печать
+            </button>
+          </div>
         </div>
 
       </div>
@@ -130,6 +134,7 @@
   import Modal from '../ui-cards/Modal'
   import patients_point from '../api/patients-point'
   import * as action_types from '../store/action-types'
+  import {form112} from '../forms'
   import moment from 'moment'
 
   export default {
@@ -162,11 +167,23 @@
       this.load_data();
     },
     computed: {
+      forms() {
+        return form112.map(f => {
+          return {
+            ...f, url: f.url.kwf({
+              card: this.card_pk,
+            })
+          }
+        })
+      },
       valid() {
         return this.edit_data.date !== '' && this.edit_data.data !== '';
       },
     },
     methods: {
+      open_form_112() {
+        window.open(this.forms[0].url)
+      },
       show_history_ambulatory_data() {
         this.show_history_ambulatory = true
         this.$store.dispatch(action_types.INC_LOADING)

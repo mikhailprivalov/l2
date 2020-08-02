@@ -21,14 +21,14 @@
     </div>
     <div class="construct-content" v-if="parseInt(department) <= -500 && parseInt(department) > -600">
       <stationar-form-editor style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;" v-if="opened_id > -2"
-                             :pk="opened_id" :department="department_int"/>
+                             :pk="opened_id" :department="department_int" :direction_forms="direction_forms"/>
     </div>
     <div class="construct-content" v-else-if="department !== '-6'">
       <paraclinic-research-editor style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;" v-if="opened_id > -2"
-                                  :pk="opened_id" :department="department_int"/>
+                                  :pk="opened_id" :department="department_int" :direction_forms="direction_forms"/>
     </div>
     <div class="construct-content" v-else>
-      <microbiology-research-editor :department="department_int" :pk="opened_id"
+      <microbiology-research-editor :department="department_int" :pk="opened_id" :direction_forms="direction_forms"
                                     style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;"
                                     v-if="opened_id > -2"/>
     </div>
@@ -59,7 +59,8 @@
         researches_list: [],
         departments_of_type: [],
         opened_id: -2,
-        title_filter: ''
+        title_filter: '',
+        direction_forms: []
       }
     },
     methods: {
@@ -67,6 +68,7 @@
         this.$store.dispatch(action_types.INC_LOADING)
         researches_point.getResearchesByDepartment(this, 'department').then(data => {
           this.researches_list = data.researches
+          this.direction_forms = data.direction_forms
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING)
         })

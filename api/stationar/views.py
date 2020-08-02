@@ -11,9 +11,7 @@ from directions.models import Issledovaniya, Napravleniya
 from directory.models import HospitalService
 from laboratory.decorators import group_required
 from appconf.manager import SettingManager
-
-
-TADP = SettingManager.get("tadp", default='Температура', default_type='s')
+from django.db.models import Q
 
 
 @login_required
@@ -104,6 +102,10 @@ def counts(request):
                                                               issledovaniya__research__is_paraclinic=True).distinct().count()
         result["consultation"] += Napravleniya.objects.filter(parent=i,
                                                               issledovaniya__research__is_doc_refferal=True).distinct().count()
+        result["morfology"] += Napravleniya.objects.filter(parent=i).filter(
+            Q(issledovaniya__research__is_microbiology=True) |
+            Q(issledovaniya__research__is_citology=True) |
+            Q(issledovaniya__research__is_gistology=True)).distinct().count()
         result["all"] += Napravleniya.objects.filter(parent=i).count()
     return JsonResponse(dict(result))
 
@@ -134,6 +136,7 @@ def make_service(request):
     main_direction = Napravleniya.objects.get(pk=data["main_direction"])
     parent_iss = Issledovaniya.objects.filter(napravleniye=main_direction, research__is_hospital=True).first()
     service = HospitalService.objects.get(pk=data["service"])
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     if "Врач стационара" not in [str(x) for x in request.user.groups.all()] and TADP not in service.slave_research.title:
         return JsonResponse({"pk": None})
     result = Napravleniya.gen_napravleniya_by_issledovaniya(main_direction.client_id,

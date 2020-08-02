@@ -388,7 +388,7 @@
             <label>Выдал:</label>
             <TypeAhead :delayTime="100" :getResponse="getResponse"
                        :highlighting="highlighting" :limit="10"
-                       :minChars="1" :onHit="onHitDocWhoGive" :selectFirst="true" maxlength="36"
+                       :minChars="1" :onHit="onHitDocWhoGive" :selectFirst="true" maxlength="128"
                        ref="dwg" :src="`/api/autocomplete?value=:keyword&type=who_give:` + document.document_type"
                        v-model="document.who_give"
             />

@@ -32,4 +32,6 @@ urlpatterns = [
     path('reset-amd', views.reset_amd),
     path('purposes', views.purposes),
     path('external-organizations', views.external_organizations),
+    path('direction-in-favorites', views.direction_in_favorites),
+    path('all-directions-in-favorites', views.all_directions_in_favorites),
 ]

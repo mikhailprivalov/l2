@@ -20,6 +20,7 @@ from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document
 from directory.models import Fractions, ParaclinicInputField, ResearchSite
 from directory.models import Researches as DResearches
+from external_system.models import FsliRefbookTest
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from podrazdeleniya.models import Podrazdeleniya
@@ -28,6 +29,7 @@ from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, \
     ExcludePurposes
 from utils.dates import try_parse_range, try_strptime
+from .sql_func import users_by_group
 
 
 def translit(locallangstring):
@@ -777,44 +779,66 @@ def modules_view(request):
 def autocomplete(request):
     t = request.GET.get("type")
     v = request.GET.get("value", "")
-    limit = request.GET.get("limit", 10)
+    limit = int(request.GET.get("limit", 10))
     data = []
     if v != "" and limit > 0:
         if t == "harmful":
             p = Card.objects.filter(harmful_factor__istartswith=v).distinct('harmful_factor')[:limit]
             if p.exists():
                 data = [x.harmful_factor for x in p]
-        if t == "fias":
+        elif t == "fias":
             data = fias.suggest(v)
-        if t == "name":
+        elif t == "name":
             p = Individual.objects.filter(name__istartswith=v).distinct('name')[:limit]
             if p.exists():
                 data = [x.name for x in p]
-        if t == "family":
+        elif t == "family":
             p = Individual.objects.filter(family__istartswith=v).distinct('family')[:limit]
             if p.exists():
                 data = [x.family for x in p]
-        if t == "patronymic":
+        elif t == "patronymic":
             p = Individual.objects.filter(patronymic__istartswith=v).distinct('patronymic')[:limit]
             if p.exists():
                 data = [x.patronymic for x in p]
-        if t == "work_place":
+        elif t == "work_place":
             p = Card.objects.filter(work_place__istartswith=v).distinct('work_place')[:limit]
             if p.exists():
                 data = [x.work_place for x in p]
-        if t == "main_diagnosis":
+        elif t == "main_diagnosis":
             p = Card.objects.filter(main_diagnosis__istartswith=v).distinct('main_diagnosis')[:limit]
             if p.exists():
                 data = [x.main_diagnosis for x in p]
-        if t == "work_position":
+        elif t == "work_position":
             p = Card.objects.filter(work_position__istartswith=v).distinct('work_position')[:limit]
             if p.exists():
                 data = [x.work_position for x in p]
-        if "who_give:" in t:
+        elif "who_give:" in t:
             tpk = t.split(":")[1]
             p = Document.objects.filter(document_type__pk=tpk, who_give__istartswith=v).distinct('who_give')[:limit]
             if p.exists():
                 data = [x.who_give for x in p]
+        elif t == "fsli":
+            if v == "HGB":
+                p = FsliRefbookTest.objects.filter(
+                    Q(code_fsli__startswith=v) |
+                    Q(title__icontains=v) |
+                    Q(english_title__icontains=v) |
+                    Q(short_title__icontains=v) |
+                    Q(synonym__istartswith=v) |
+                    Q(synonym='Hb')
+                )
+            else:
+                p = FsliRefbookTest.objects.filter(
+                    Q(code_fsli__startswith=v) |
+                    Q(title__icontains=v) |
+                    Q(english_title__icontains=v) |
+                    Q(short_title__icontains=v) |
+                    Q(synonym__istartswith=v)
+                )
+
+            p = p.filter(active=True).distinct('code_fsli').order_by('code_fsli', 'ordering')[:limit]
+            if p.exists():
+                data = [{"code_fsli": x.code_fsli, "short_title": x.short_title, "title": x.title, "sample": x.sample, "synonym": x.synonym, "nmu": x.code_nmu} for x in p]
     return JsonResponse({"data": data})
 
 
@@ -826,6 +850,19 @@ def laborants(request):
             data.append({"pk": str(d.pk), "fio": d.fio})
     return JsonResponse({"data": data,
                          "doc": request.user.doctorprofile.has_group("Врач-лаборант")})
+
+
+@login_required
+def load_docprofile_by_group(request):
+    request_data = json.loads(request.body)
+    users = users_by_group(request_data['group'])
+    users_grouped = {}
+    for row in users:
+        if row[2] not in users_grouped:
+            users_grouped[row[2]] = {'id': f"pord-{row[2]}", 'label': row[4] or row[3], 'children': []}
+        users_grouped[row[2]]['children'].append({'id': str(row[0]), 'label': row[1], 'podr': row[4] or row[3]})
+
+    return JsonResponse({"users": list(users_grouped.values())})
 
 
 @login_required
@@ -866,7 +903,6 @@ def user_view(request):
             "rmis_password": '',
             "doc_pk": -1,
             "doc_code": -1,
-
         }
     else:
         doc = users.DoctorProfile.objects.get(pk=pk)
@@ -884,7 +920,7 @@ def user_view(request):
             "rmis_login": doc.rmis_login or '',
             "rmis_password": '',
             "doc_pk": doc.user.pk,
-            "personal_code": doc.personal_code,
+            "personal_code": doc.personal_code
         }
 
     return JsonResponse({"user": data})
@@ -1093,4 +1129,35 @@ def job_cancel(request):
         else:
             j.canceled_at = j.who_do_cancel = None
         j.save()
+    return JsonResponse({"ok": True})
+
+
+def reader_status(request):
+    data = json.loads(request.body)
+    reader_id = data.get('readerId', 'null')
+    data = json.loads(cache.get(f'reader-status:{reader_id}', '{"status": "none"}'))
+    return JsonResponse({"status": data.get('status'), "polis": data.get('polis'), "fio": data.get('fio'), 'details': data.get('details', {})})
+
+
+def reader_status_update(request):
+    data = json.loads(request.body)
+    reader_id = data.get('readerId')
+
+    if not reader_id:
+        return JsonResponse({"ok": True})
+
+    status = data['status']
+
+    if status == 'inserted':
+        polis = data['polis']
+        fio = data['fio']
+        cache.set(f'reader-status:{reader_id}', json.dumps({
+            "status": 'inserted',
+            "polis": polis,
+            "fio": fio,
+            "details": data['details'],
+        }), 10)
+    else:
+        cache.set(f'reader-status:{reader_id}', '{"status": "wait"}', 10)
+
     return JsonResponse({"ok": True})

@@ -11,7 +11,7 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.colors import black
 
 from appconf.manager import SettingManager
-from directions.models import Napravleniya
+from directions.models import Napravleniya, Issledovaniya
 from directory.models import Fractions
 from laboratory.settings import FONTS_FOLDER
 import locale
@@ -141,15 +141,10 @@ def form_01(request_data):
     # Получение данных из выписки
     # Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
-    extrac_date = ''
-    extract_time = ''
-    final_diagnos = ''
-    other_diagnos = ''
-    near_diagnos = ''
+
+    extrac_date, extract_time, final_diagnos, other_diagnos, near_diagnos, outcome, doc_fio, manager_depart, room_num, depart_extract = '', '', '', '', '', '', '', '', '', ''
     days_count = '__________________________'
-    outcome = ''
-    doc_fio = ''
-    manager_depart = ''
+
     if hosp_extract_data:
         extrac_date = hosp_extract_data['date_value']
         extract_time = hosp_extract_data['time_value']
@@ -161,6 +156,9 @@ def form_01(request_data):
             outcome = hosp_extract_data['outcome'] + ' (' + hosp_extract_data['result_hospital'] + ')'
         doc_fio = hosp_extract_data['doc_fio']
         manager_depart = hosp_extract_data['manager_depart']
+        room_num = hosp_extract_data['room_num']
+        iss_last_hosp = Issledovaniya.objects.filter(napravleniye__pk=hosp_last_num)[0]
+        depart_extract = iss_last_hosp.research.title
 
     # Получить отделение - из названия услуги или самого главного направления
     hosp_depart = hosp_nums_obj[0].get('research_title')
@@ -215,7 +213,7 @@ def form_01(request_data):
         Spacer(1, 0.5 * mm),
         Paragraph('Отделение: {}'.format(hosp_depart), style),
         Spacer(1, 0.5 * mm),
-        Paragraph('Палата №: {}'.format('_________________________'), style),
+        Paragraph(f"Палата №: {room_num} {depart_extract}", style),
         Spacer(1, 0.5 * mm),
         Paragraph('Переведен в отделение:', style),
         Spacer(1, 8 * mm),
@@ -252,6 +250,12 @@ def form_01(request_data):
         Paragraph('10. Диагноз клинический:', style),
         PageBreak()]
 
+    closed_bl_result = closed_bl(hosp_nums_obj[0].get('direction'))
+    data_bl = ''
+    if closed_bl_result['start_date'] and closed_bl_result['end_date'] and closed_bl_result['num']:
+        data_bl = f"<br/>открыт <u>{closed_bl_result['start_date']}</u>{5 * space_symbol}закрыт: <u>{closed_bl_result['end_date']}</u> {3 * space_symbol}" \
+                  f"к труду: <u>{closed_bl_result['start_work']}</u> <br/>Номер ЛН: <u>{closed_bl_result['num']}</u> Выдан кому: {closed_bl_result['who_get']} "
+
     second_page = [
         Spacer(1, 2 * mm),
         Paragraph('11. Диагноз заключительный клинический:', style),
@@ -280,7 +284,7 @@ def form_01(request_data):
         Spacer(1, 0.2 * mm),
         Paragraph('3. Симптоматическое лечение.', styleLead),
         Spacer(1, 0.2 * mm),
-        Paragraph('15. Отметка о выдаче листка нетрудоспособности: {}'.format(''), styleLead),
+        Paragraph(f"15. Отметка о выдаче листка нетрудоспособности:{data_bl}", styleLead),
         Spacer(1, 1 * mm),
         Paragraph('16. Исход заболевания: {}'.format(outcome), styleLead),
         Spacer(1, 1 * mm),
@@ -304,7 +308,7 @@ def form_01(request_data):
 
     def first_pages(canvas, document):
         canvas.saveState()
-        if closed_bl_result:
+        if closed_bl_result.get('is_closed', None):
             canvas.setFont('PTAstraSerifBold', 12)
             canvas.drawString(7 * mm, 290 * mm, 'ЛН')
         # Переведен
@@ -417,7 +421,7 @@ def form_01(request_data):
         operation_template = [''] * 6
         x += 1
         operation_template[0] = Paragraph(str(x), styleTO)
-        operation_template[1] = Paragraph(i['name_operation'], styleTO)
+        operation_template[1] = Paragraph(f"{i['name_operation']} <br/><font face=\"PTAstraSerifBold\" size=\"8.7\">({i['category_difficult']})</font>", styleTO)
         operation_template[2] = Paragraph(i['date'] + '<br/>' + i['time_start'] + '-' + i['time_end'], styleTO)
         operation_template[3] = Paragraph(i['anesthesia method'], styleTO)
         operation_template[4] = Paragraph(i['complications'], styleTO)

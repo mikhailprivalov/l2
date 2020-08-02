@@ -56,9 +56,12 @@ const saveAmbulatoryData = creator({url: 'patients/individuals/save-ambulatory-d
 
 const saveBenefit = creator({url: 'patients/individuals/save-benefit'}, {})
 
+const createIndividualFromCard = creator({url: 'patients/create-l2-individual-from-card'}, {})
+
 export default {
   searchCard, searchIndividual, searchL2Card, syncRmis, syncTfoms,
   getCard, sendCard, individualsSearch, individualSex, editDoc, updateCdu, updateWIA,
   editAgent, loadAnamnesis, saveAnamnesis, loadDreg, loadVaccine, saveDreg, saveVaccine, loadDregDetail, loadVaccineDetail,
-  loadBenefit, loadBenefitDetail, saveBenefit, saveAmbulatoryData, loadAmbulatoryData, loadAmbulatoryDataDetail, loadAmbulatoryHistory
+  loadBenefit, loadBenefitDetail, saveBenefit, saveAmbulatoryData, loadAmbulatoryData, loadAmbulatoryDataDetail, loadAmbulatoryHistory,
+  createIndividualFromCard,
 }

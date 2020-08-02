@@ -473,25 +473,31 @@ class Individual(models.Model):
         idp = data.get('idp')
         updated_data = []
 
-        if idp:
-            family = data.get('family', '').title()
-            name = data.get('given', '').title()
-            patronymic = data.get('patronymic', '').title()
-            gender = data.get('gender', '').lower()
-            birthday = datetime.strptime(data.get('birthdate', '').split(' ')[0], "%Y-%m-%d").date()
-            address = data.get('address', '').title().replace('Ул.', 'ул.').replace('Д.', 'д.').replace('Кв.', 'кв.')
+        family = data.get('family', '').title()
+        name = data.get('given', '').title()
+        patronymic = data.get('patronymic', '').title()
+        gender = data.get('gender', '').lower()
+        bdate = data.get('birthdate', '').split(' ')[0]
+
+        if family and name and gender and bdate:
             enp = data.get('enp', '')
+            birthday = datetime.strptime(bdate, "%d.%m.%Y" if '.' in bdate else "%Y-%m-%d").date()
+            address = data.get('address', '').title().replace('Ул.', 'ул.').replace('Д.', 'д.').replace('Кв.', 'кв.')
             passport_number = data.get('passport_number', '')
             passport_seria = data.get('passport_seria', '')
             snils = data.get('snils', '')
 
+            q_idp = dict(tfoms_idp=idp or '##fakeidp##')
+
             if not individual:
                 indv = Individual.objects.filter(
-                    Q(tfoms_idp=idp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)) \
+                    Q(**q_idp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)) \
                     if snils else \
-                    Individual.objects.filter(Q(tfoms_idp=idp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
+                    Individual.objects.filter(Q(**q_idp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
             else:
                 indv = Individual.objects.filter(pk=individual.pk)
+
+            enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
 
             if not indv.exists():
                 i = Individual(
@@ -504,11 +510,19 @@ class Individual(models.Model):
                 )
                 i.save()
             else:
-                if no_update:
+                i = indv[0]
+                ce = Card.objects.filter(individual=i, base__internal_type=True).first()
+                if no_update and ce:
                     print('No update')
+                    polis = i.add_or_update_doc(enp_type, '', enp)
+                    if polis:
+                        cdu = CardDocUsage.objects.filter(card=ce, document__document_type=polis.document_type)
+                        if not cdu.exists():
+                            CardDocUsage(card=ce, document=polis).save()
+                        else:
+                            cdu.update(document=polis)
                     return
                 print('Update patient data')
-                i = indv[0]
                 updated = []
 
                 if i.family != family:
@@ -536,7 +550,7 @@ class Individual(models.Model):
                     updated.append('birthday')
                     updated_data.append('Дата рождения')
 
-                if i.tfoms_idp != idp:
+                if idp and i.tfoms_idp != idp:
                     i.tfoms_idp = idp
                     updated.append('tfoms_idp')
 
@@ -574,11 +588,11 @@ class Individual(models.Model):
         return updated_data
 
     def add_or_update_doc(self, doc_type: 'DocumentType', serial: str, number: str):
-        ds = Document.objects.filter(individual=self, document_type=doc_type)
+        ds = Document.objects.filter(individual=self, document_type=doc_type, is_active=True)
         if ds.count() > 1:
             ds.delete()
 
-        ds = Document.objects.filter(individual=self, document_type=doc_type)
+        ds = Document.objects.filter(individual=self, document_type=doc_type, is_active=True)
         if ds.count() == 0:
             d = Document(individual=self, document_type=doc_type, serial=serial, number=number)
             d.save()
@@ -873,7 +887,7 @@ class Card(models.Model):
                 docs[t] = None
         return docs
 
-    def get_data_individual(self, empty=False, full_empty=False):
+    def get_data_individual(self, empty=False, full_empty=False, only_json_serializable=False):
         if not empty and full_empty:
             empty = full_empty
         """
@@ -900,9 +914,11 @@ class Card(models.Model):
             else self.fact_address
         ind_data['card_num'] = self.number_with_type()
         ind_data['number_poliklinika'] = self.number_poliklinika
+        ind_data['harmful_factor'] = self.harmful_factor
         ind_data['phone'] = self.get_phones()
         ind_data['work_place'] = self.work_place
-        ind_data['work_place_db'] = self.work_place_db
+        if not only_json_serializable:
+            ind_data['work_place_db'] = self.work_place_db
         ind_data['work_position'] = self.work_position
         ind_data['sex'] = self.individual.sex
 
@@ -964,7 +980,7 @@ class Card(models.Model):
             c = Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True)[0]
             updated = []
 
-            if c.main_address != address:
+            if address and c.main_address != address:
                 c.main_address = address
                 updated.append('main_address')
                 if updated_data:
@@ -980,6 +996,13 @@ class Card(models.Model):
                 print('Updated:', updated)
                 c.save(update_fields=updated)
 
+            if polis:
+                cdu = CardDocUsage.objects.filter(card=c, document__document_type=polis.document_type)
+                if not cdu.exists():
+                    CardDocUsage(card=c, document=polis).save()
+                else:
+                    cdu.update(document=polis)
+
             return c
 
         with transaction.atomic():
@@ -993,6 +1016,8 @@ class Card(models.Model):
                      main_address=address or ('' if not card_orig else card_orig.main_address),
                      fact_address='' if not card_orig else card_orig.fact_address)
             c.save()
+            if polis:
+                CardDocUsage(card=c, document=polis).save()
             print('Created card')
             return c
 

@@ -21,7 +21,7 @@ from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
 from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult, Recipe, MethodsOfTaking, \
     ExternalOrganization, MicrobiologyResultCulture, \
-    MicrobiologyResultCultureAntibiotic
+    MicrobiologyResultCultureAntibiotic, DirectionToUserWatch
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
 from laboratory import utils
@@ -32,11 +32,12 @@ from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
+from users.models import DoctorProfile
 from utils.dates import normalize_date
 from utils.dates import try_parse_range
 from .sql_func import get_history_dir
-
-TADP = SettingManager.get("tadp", default='Температура', default_type='s')
+from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
+from forms.forms_func import hosp_get_operation_data
 
 
 @login_required
@@ -868,6 +869,7 @@ def directions_results_report(request):
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_form(request):
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1) or -1
@@ -1139,7 +1141,8 @@ def directions_anesthesia_result(request):
     rb = json.loads(request.body)
     temp_result = rb.get("temp_result", {})
     research_data = rb.get("research_data", {})
-    result = ParaclinicResult.anesthesia_value_save(research_data['iss_pk'], research_data['field_pk'], temp_result)
+    action = rb.get("action", "add")
+    result = ParaclinicResult.anesthesia_value_save(research_data['iss_pk'], research_data['field_pk'], temp_result, action)
     if result:
         response = {"ok": True, "message": ""}
     return JsonResponse(response)
@@ -1187,6 +1190,7 @@ def directions_anesthesia_load(request):
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_result(request):
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
     rb = json.loads(request.body)
     request_data = rb.get("data", {})
@@ -1202,7 +1206,9 @@ def directions_paraclinic_result(request):
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if force or diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
                             | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
-                            | Q(research__is_stom=True)).exists() or request.user.is_staff:
+                            | Q(research__is_gistology=True)
+                            | Q(research__is_stom=True)
+                            | Q(research__is_gistology=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
         g = [str(x) for x in request.user.groups.all()]
         tadp = TADP in iss.research.title
@@ -1406,6 +1412,7 @@ def directions_paraclinic_result(request):
 
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
 def directions_paraclinic_confirm(request):
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("iss_pk", -1)
@@ -1445,6 +1452,7 @@ def directions_paraclinic_confirm(request):
 @group_required("Врач параклиники", "Сброс подтверждений результатов", "Врач консультаций",
                 "Врач стационара", "Сброс подтверждения переводного эпикриза", "Сброс подтверждения выписки", "t, ad, p")
 def directions_paraclinic_confirm_reset(request):
+    TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("iss_pk", -1)
@@ -1588,25 +1596,124 @@ def last_fraction_result(request):
 def last_field_result(request):
     request_data = json.loads(request.body)
     client_pk = request_data["clientPk"]
-    field_pks = request_data["fieldPk"].split('|')
+
+    logical_or, logical_and, logical_group_or = False, False, False
+    field_is_link, field_is_aggregate_operation, field_is_aggregate_proto_description = False, False, False
+    field_pks, operations_data, aggregate_data = None, None, None
+
+    if request_data["fieldPk"].find('%proto_operation') != -1:
+        current_iss = request_data["iss_pk"]
+        num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+        # получить все направления в истории по типу hosp
+        main_hosp_dir = hosp_get_hosp_direction(num_dir)[0]
+        operations_data = hosp_get_operation_data(main_hosp_dir['direction'])
+        field_is_aggregate_operation = True
+    elif request_data["fieldPk"].find('%proto_description') != -1:
+        aggregate_data = hosp_get_text_iss(request_data['iss_pk'], True, 'desc')
+        field_is_aggregate_proto_description = True
+    elif request_data["fieldPk"].find("|") > -1:
+        field_is_link = True
+        logical_or = True
+        field_pks = request_data["fieldPk"].split('|')
+        if request_data["fieldPk"].find('@') > -1:
+            logical_group_or = True
+    elif request_data["fieldPk"].find("&") > -1:
+        field_is_link = True
+        logical_and = True
+        field_pks = request_data["fieldPk"].split('&')
+    else:
+        field_pks = [request_data["fieldPk"]]
+        logical_or = True
+        field_is_link = True
+
     result = None
-    for field_pk in field_pks:
-        if field_pk.isdigit():
-            rows = get_field_result(client_pk, int(field_pk))
-            if rows:
-                row = rows[0]
-                value = row[5]
-                match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
-                if match:
-                    value = normalize_date(value)
-                result = {
-                    "direction": row[1],
-                    "date": row[4],
-                    "value": value
-                }
-                if value:
-                    break
+    if field_is_link:
+        result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or)
+    elif field_is_aggregate_operation:
+        result = field_get_aggregate_operation_data(operations_data)
+    elif field_is_aggregate_proto_description:
+        result = field_get_aggregate_text_protocol_data(aggregate_data)
+
     return JsonResponse({"result": result})
+
+
+def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or):
+    result = None
+    value = None
+    for current_field_pk in field_pks:
+        group_fields = [current_field_pk]
+        if current_field_pk.find('@') > -1:
+            group_fields = get_input_fields_by_group(current_field_pk)
+            logical_and = True
+            logical_or = False
+        for field_pk in group_fields:
+            if field_pk.isdigit():
+                rows = get_field_result(client_pk, int(field_pk))
+                if rows:
+                    row = rows[0]
+                    value = row[5]
+                    match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
+                    if match:
+                        value = normalize_date(value)
+                    if logical_or:
+                        result = {"direction": row[1], "date": row[4], "value": value}
+                        if value:
+                            break
+                    if logical_and:
+                        r = ParaclinicInputField.objects.get(pk=field_pk)
+                        titles = r.get_title()
+                        if result is None:
+                            result = {"direction": row[1], "date": row[4], "value": value}
+                        else:
+                            temp_value = result.get('value', ' ')
+                            result["value"] = f"{temp_value} {titles} - {value};"
+
+        if logical_group_or and value:
+            break
+    return result
+
+
+def field_get_aggregate_operation_data(operations_data):
+    result = None
+    count = 0
+    if len(operations_data) > 0:
+        for i in operations_data:
+            count += 1
+            value = f"{count}) Название операции: {i['name_operation']}, Проведена: {i['date']} {i['time_start']}-{i['time_end']}, Метод обезболивания: {i['anesthesia method']}, " \
+                    f"Осложнения: {i['complications']}, Оперировал: {i['doc_fio']}"
+            if result is None:
+                result = {"direction": '', "date": '', "value": value}
+            else:
+                temp_value = result.get('value', ' ')
+                result["value"] = f"{temp_value}\n{value};"
+
+    return result
+
+
+def field_get_aggregate_text_protocol_data(data):
+    value = ''
+    for research in data:
+        value = f"{value}[{research['title_research']}]"
+        for res in research['result']:
+            value = f"{value}\n[{res.get('date', '')}]\n"
+            if res.get('data', ''):
+                for g in res['data']:
+                    value = f"{value}{g.get('group_title', '')}"
+                    group_fields = g.get('fields', '')
+                    if group_fields:
+                        for fied_data in group_fields:
+                            value = f"{value}{fied_data['title_field']}: {fied_data['value']}"
+        value = f"{value}\n"
+
+    result = {"direction": '', "date": '', "value": value}
+    return result
+
+
+def get_input_fields_by_group(group_pk):
+    group_pk = group_pk[0:-1]
+    fields_group = ParaclinicInputField.objects.values_list('id').filter(group__pk=group_pk).order_by('order')
+    field_result = [str(i[0]) for i in fields_group]
+    return field_result
 
 
 @group_required("Врач параклиники", "Врач консультаций")
@@ -1654,3 +1761,36 @@ def external_organizations(request):
             "title": e.title,
         })
     return JsonResponse({"organizations": result})
+
+
+@login_required
+def direction_in_favorites(request):
+    request_data = json.loads(request.body)
+    pk = request_data['pk']
+    doc: DoctorProfile = request.user.doctorprofile
+
+    is_update = request_data.get("update", False)
+    if is_update and 'status' in request_data:
+        new_status = request_data.get("status", False)
+        if not new_status:
+            DirectionToUserWatch.objects.filter(doc=doc, direction_id=pk).delete()
+        else:
+            DirectionToUserWatch(doc=doc, direction_id=pk).save()
+        return JsonResponse({"ok": True})
+
+    dtuw = DirectionToUserWatch.objects.filter(doc=doc, direction_id=pk)
+    return JsonResponse({"status": dtuw.exists()})
+
+
+@login_required
+def all_directions_in_favorites(request):
+    doc: DoctorProfile = request.user.doctorprofile
+
+    data = [{
+        "pk": x.pk,
+        "direction": x.direction_id,
+        "card": x.direction.client.number_with_type(),
+        "client": x.direction.client.individual.fio(full=True),
+    } for x in DirectionToUserWatch.objects.filter(doc=doc).order_by('pk')]
+
+    return JsonResponse({"data": data})
