@@ -10,9 +10,6 @@
       <button @click="open_form_planOperations" class="btn btn-blue-nb" type="button">
         Печать
       </button>
-      <button class="btn btn-blue-nb" @click="add_data" v-if="can_edit_operations" style="visibility: hidden">
-        Добавить запись
-      </button>
     </div>
     <table class="table table-bordered" style="table-layout: fixed">
       <colgroup>
@@ -43,7 +40,6 @@
       <tr v-if="data.length === 0"><td colspan="8" style="text-align: center">нет данных</td></tr>
       </tbody>
     </table>
-    <plan-operation-edit v-if="edit_plan_operations" :pk_plan="pk_plan"/>
   </div>
 
 </template>
@@ -70,7 +66,6 @@
     data() {
       return {
         title: 'План операций',
-        edit_plan_operations: false,
         pk_plan: '',
         data: [],
         hirurgs: [],
@@ -86,9 +81,6 @@
     },
     mounted() {
       this.init();
-      this.$root.$on('hide_plan_operations', () => {
-        this.edit_plan_operations = false
-      });
       this.$root.$on('reload-plans', () => {
         this.load_data();
       });
@@ -112,9 +104,6 @@
       hirurgsReversed() {
         return flatten(this.hirurgsWithEmpty.map(x => x.children).filter(Boolean))
           .reduce((a, b) => ({...a, [b.id]: b}), {});
-      },
-      can_edit_operations() {
-        return (this.$store.getters.user_data.groups || []).includes('Управление планами операций')
       },
       forms() {
         return planOperations.map(f => {
@@ -146,10 +135,6 @@
     methods: {
       async open_form_planOperations() {
         window.open(this.forms[0].url)
-      },
-      add_data() {
-        this.edit_plan_operations = true
-        this.pk_plan = -1
       },
       async init() {
         if (this.hirurgs.length === 0) {
