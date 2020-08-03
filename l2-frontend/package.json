@@ -41,7 +41,7 @@
     "vue-longpress": "git+https://github.com/moodpulse/vuelongpress.git",
     "vue-my-dropdown": "^2.1.0",
     "vue-select": "^3.10.3",
-    "vue-tippy": "^2.1.3",
+    "vue-tippy": "^4.5.1",
     "vue2-collapse": "^1.0.11",
     "vue2-filters": "^0.11.0",
     "vue2-timepicker": "^1.1.2",
