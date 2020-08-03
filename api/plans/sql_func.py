@@ -16,12 +16,12 @@ def get_plans_by_params_sql(d_s, d_e, doc_operate_id, doc_anesthetist_id, depart
             type_operation, doc_operate_id, doc_anesthetist_id, canceled, date  FROM plans_planoperations
             WHERE 
             CASE when %(doc_operate_id)s > -1 THEN 
-            doc_operate_id = %(doc_operate_id)s AND date BETWEEN %(d_start)s AND %(d_end)s
+            doc_operate_id = %(doc_operate_id)s AND date AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
             when %(doc_anesthetist_id)s > -1  THEN
-            doc_anesthetist_id = %(doc_anesthetist_id)s AND date BETWEEN %(d_start)s AND %(d_end)s
+            doc_anesthetist_id = %(doc_anesthetist_id)s AND date AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
             when %(department_id)s > -1 THEN
-            date BETWEEN %(d_start)s AND %(d_end)s AND doc_operate_id in (SELECT id FROM users_doctorprofile where podrazdeleniye_id=%(department_id)s)
-            ELSE date BETWEEN %(d_start)s AND %(d_end)s
+            date AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s AND doc_operate_id in (SELECT id FROM users_doctorprofile where podrazdeleniye_id=%(department_id)s)
+            ELSE date AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
             END
             ORDER BY date),
         

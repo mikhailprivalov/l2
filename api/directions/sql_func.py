@@ -34,7 +34,7 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
         ON directions_issledovaniya.research_id = directory_researches.Id
         LEFT JOIN directions_napravleniya
         ON directions_issledovaniya.napravleniye_id =directions_napravleniya.id
-        WHERE directions_napravleniya.data_sozdaniya BETWEEN %(d_start)s AND %(d_end)s
+        WHERE directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
         AND
         CASE
         WHEN %(is_parent)s = TRUE AND %(for_slave_hosp)s = FALSE THEN 
