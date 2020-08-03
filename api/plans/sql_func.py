@@ -90,7 +90,7 @@ def get_plans_by_pk(pks_plan):
           )
         
         SELECT pk_plan, patient_card_id, direction, date_char, type_operation, doc_operate_id, t_users_doc.fio, t_users_doc.short_podr_title,
-        doc_anesthetist_id, t_users_anesthetist.fio, canceled, ind_family, ind_name, ind_twoname, birthday, date FROM t_plans
+        doc_anesthetist_id, t_users_anesthetist.fio, canceled, ind_family, ind_name, ind_twoname, birthday, date, t_users_doc.podr_title  FROM t_plans
         LEFT JOIN t_patient ON t_plans.patient_card_id = t_patient.card_id
         LEFT JOIN t_users_doc ON t_users_doc.doc_id = t_plans.doc_operate_id
         LEFT JOIN t_users_anesthetist ON t_users_anesthetist.doc_id = t_plans.doc_anesthetist_id

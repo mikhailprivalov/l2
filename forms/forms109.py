@@ -90,13 +90,14 @@ def form_01(request_data):
         if i[10]:
             strike_o = "<strike>"
             strike_cl = "</strike>"
+        department = i[7] if i[7] else i[16]
 
         opinion.append([Paragraph(f"{strike_o}{i[3]}{strike_cl}", styleCenter),
                         Paragraph(f"{strike_o}{i[2]}{strike_cl}", styleCenter),
                         Paragraph(f"{strike_o}{i[11]} {i[12]} {i[13]}, {i[14]}{strike_cl}", style),
                         Paragraph(f"{strike_o}{i[4]}{strike_cl}", style),
                         Paragraph(f"{strike_o}{doc_fio}{strike_cl}", style),
-                        Paragraph(f"{strike_o}{i[7]}{strike_cl}", style),
+                        Paragraph(f"{strike_o}{department}{strike_cl}", style),
                         Paragraph(f"{strike_o}{anesthetist_fio}{strike_cl}", style)]
                        )
 
