@@ -46,7 +46,6 @@
 
 
 <script>
-  import PlanOperationEdit from '../../modals/PlanOperationEdit'
   import plans_point from '../../api/plans-point'
   import moment from "moment";
   import Filters from "./components/Filters";
@@ -59,7 +58,6 @@
   export default {
     components: {
       Filters,
-      PlanOperationEdit,
       Row,
     },
     name: "PlanOperations",
