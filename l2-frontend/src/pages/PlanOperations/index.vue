@@ -4,14 +4,14 @@
     <Filters :filters="filters" :hirurgs="hirurgsWithEmpty" :anestesiologs="anestesiologsWithEmpty"
              :departments="departments"/>
     <div class="buttons">
-      <button class="btn btn-blue-nb" @click="add_data" v-if="can_edit_operations">
-        Добавить запись
-      </button>
       <button class="btn btn-blue-nb" @click="load_data">
         Обновить
       </button>
       <button @click="open_form_planOperations" class="btn btn-blue-nb" type="button">
         Печать
+      </button>
+      <button class="btn btn-blue-nb" @click="add_data" v-if="can_edit_operations" style="visibility: hidden">
+        Добавить запись
       </button>
     </div>
     <table class="table table-bordered" style="table-layout: fixed">
