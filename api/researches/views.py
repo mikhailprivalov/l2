@@ -475,7 +475,7 @@ def fields_and_groups_titles(request):
             if i.endswith('@'):
                 g: ParaclinicInputGroups = ParaclinicInputGroups.objects.filter(pk=ii).first()
                 if g:
-                    titles[i] = g.title or 'группа без названия'
+                    titles[i] = ' – '.join([g.research.get_title(), g.title or 'группа без названия'])
                 else:
                     titles[i] = None
             else:
