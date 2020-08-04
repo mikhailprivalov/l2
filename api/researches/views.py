@@ -462,3 +462,35 @@ def hospital_service_details(request):
         "main_service_pk": hs.main_research_id,
         "slave_service_pk": hs.slave_research_id,
     })
+
+
+def fields_and_groups_titles(request):
+    request_data = json.loads(request.body)
+    ids = request_data.get('ids', [])
+    titles = {}
+    i: str
+    for i in ids:
+        ii = i.replace('@', '')
+        if ii.isdigit():
+            if i.endswith('@'):
+                g: ParaclinicInputGroups = ParaclinicInputGroups.objects.filter(pk=ii).first()
+                if g:
+                    titles[i] = g.title or 'группа без названия'
+                else:
+                    titles[i] = None
+            else:
+                f: ParaclinicInputField = ParaclinicInputField.objects.filter(pk=i).first()
+                if f:
+                    t = [
+                        f.group.research.get_title(),
+                        f.group.title or 'группа без названия',
+                        f.title or 'поле без названия',
+                    ]
+                    titles[i] = ' – '.join(t)
+                else:
+                    titles[i] = None
+        else:
+            titles[i] = None
+    return JsonResponse({
+        "titles": titles,
+    })

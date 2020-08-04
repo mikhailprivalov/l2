@@ -15,4 +15,5 @@ urlpatterns = [
     path('fast-template-save', views.fast_template_save),
     path('fraction-title', views.fraction_title),
     path('field-title', views.field_title),
+    path('fields-and-groups-titles', views.fields_and_groups_titles),
 ]

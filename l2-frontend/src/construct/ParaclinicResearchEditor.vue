@@ -201,7 +201,7 @@
                       </div>
                     </div>
                   </v-collapse-wrapper>
-                  <FieldHelper :fieldType="row.field_type" :value="row.default" />
+                  <FieldHelper :fieldType="row.field_type" :value="row.default" :groups="groups" />
                 </div>
                 <div>
                   <strong>Подсказка:</strong>
