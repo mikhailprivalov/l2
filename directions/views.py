@@ -211,7 +211,6 @@ def gen_pdf_dir(request):
             c.showPage()  # Создание новой страницы
             framePage(c)  # Рисование разделительных линий для страницы
 
-
     if donepage.count() > 0 and has_def:
         c.showPage()
     n = 0
