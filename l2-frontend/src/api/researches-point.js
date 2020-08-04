@@ -33,4 +33,7 @@ export default generator({
   fieldTitle: {
     url: 'researches/field-title'
   },
+  getFieldsAndGroups: {
+    url: 'researches/fields-and-groups-titles'
+  },
 })

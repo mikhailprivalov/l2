@@ -35,3 +35,15 @@ def save_fsli(request):
             f.fsli = nf
             f.save(update_fields=['fsli'])
     return JsonResponse({"ok": True})
+
+
+def fraction(request):
+    request_data = json.loads(request.body)
+    pk = request_data['pk'] or -1
+    if Fractions.objects.filter(pk=pk).exists():
+        f = Fractions.objects.get(pk=pk)
+        ft = f.title
+        rt = f.research.get_title()
+        return JsonResponse({"title": f"{rt} – {ft}" if ft != rt and ft else rt})
+
+    return JsonResponse({"title": None})
