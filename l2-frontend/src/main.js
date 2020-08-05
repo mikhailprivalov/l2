@@ -10,8 +10,8 @@ import VueCollapse from 'vue2-collapse'
 import 'vuejs-dialog/dist/vuejs-dialog.min.css';
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
 import RmisLocation from './ui-cards/RmisLocation'
-import * as Sentry from '@sentry/browser';
-import * as Integrations from '@sentry/integrations';
+// import * as Sentry from '@sentry/browser';
+// import * as Integrations from '@sentry/integrations';
 import Fragment from 'vue-fragment'
 
 
@@ -33,38 +33,40 @@ const promiseFinally = require('promise.prototype.finally');
 Vue.dialog.registerComponent('replace-append-modal', ReplaceAppendModal);
 promiseFinally.shim()
 
-Sentry.init({
-  dsn: 'https://dab77c771228499a902ea3843f187be9@sentry.io/3083627',
-  integrations: [new Integrations.Vue({Vue, attachProps: true, logErrors: true})],
-  environment: window.org_title || "Default L2",
-});
+// Sentry.init({
+//   dsn: 'https://dab77c771228499a902ea3843f187be9@sentry.io/3083627',
+//   integrations: [new Integrations.Vue({Vue, attachProps: true, logErrors: true})],
+//   environment: window.org_title || "Default L2",
+// });
 
 new Vue({
   el: '#app',
   store,
   components: {
-    'JournalGetMaterialModal': () => import('./modals/JournalGetMaterialModal'),
-    'StatisticsTicketsPrintModal': () => import('./modals/StatisticsTicketsPrintModal'),
-    'StatisticsResearchesPrintModal': () => import('./modals/StatisticsResearchesPrintModal'),
-    'DepartmentsForm': () => import('./forms/DepartmentsForm'),
-    'LaboratoryTune': () => import('./forms/LaboratoryTune'),
-    'Directions': () => import('./pages/Directions'),
-    'Cases': () => import('./pages/Cases'),
-    'ConstructParaclinic': () => import('./construct/ConstructParaclinic'),
-    'ConstructTemplates': () => import('./construct/ConstructTemplates'),
-    'ResultsParaclinic': () => import('./pages/ResultsParaclinic'),
-    'StatisticsTickets': () => import('./pages/StatisticsTickets'),
-    'DirectionVisit': () => import('./pages/DirectionVisit'),
-    'ResultsReport': () => import('./pages/ResultsReport'),
-    'RmqManagement': () => import('./ui-cards/RmqManagement'),
-    'DirectionSteps': () => import('./ui-cards/DirectionSteps'),
-    'Favorites': () => import('./ui-cards/Favorites'),
-    'CardReader': () => import('./ui-cards/CardReader'),
-    'RmisConfirm': () => import('./pages/RmisConfirm'),
-    'Profiles': () => import('./pages/Profiles'),
-    'EmployeeJobs': () => import('./pages/EmployeeJobs'),
-    'Stationar': () => import('./pages/Stationar'),
-    'ConstructBacteria': () => import('./construct/ConstructBacteria'),
+    'JournalGetMaterialModal': () => import('@/modals/JournalGetMaterialModal'),
+    'StatisticsTicketsPrintModal': () => import('@/modals/StatisticsTicketsPrintModal'),
+    'StatisticsResearchesPrintModal': () => import('@/modals/StatisticsResearchesPrintModal'),
+    'DepartmentsForm': () => import('@/forms/DepartmentsForm'),
+    'LaboratoryTune': () => import('@/forms/LaboratoryTune'),
+    'Directions': () => import('@/pages/Directions'),
+    'Cases': () => import('@/pages/Cases'),
+    'ConstructParaclinic': () => import('@/construct/ConstructParaclinic'),
+    'ConstructTemplates': () => import('@/construct/ConstructTemplates'),
+    'ConstructBacteria': () => import('@/construct/ConstructBacteria'),
+    'ResultsParaclinic': () => import('@/pages/ResultsParaclinic'),
+    'StatisticsTickets': () => import('@/pages/StatisticsTickets'),
+    'DirectionVisit': () => import('@/pages/DirectionVisit'),
+    'PlanOperations': () => import('@/pages/PlanOperations'),
+    'ResultsReport': () => import('@/pages/ResultsReport'),
+    // 'RmqManagement': () => import('@/ui-cards/RmqManagement'),
+    'DirectionSteps': () => import('@/ui-cards/DirectionSteps'),
+    'Favorites': () => import('@/ui-cards/Favorites'),
+    'OperationPlans': () => import('@/ui-cards/OperationPlans'),
+    'CardReader': () => import('@/ui-cards/CardReader'),
+    'RmisConfirm': () => import('@/pages/RmisConfirm'),
+    'Profiles': () => import('@/pages/Profiles'),
+    'EmployeeJobs': () => import('@/pages/EmployeeJobs'),
+    'Stationar': () => import('@/pages/Stationar'),
     RmisLocation,
   },
   data: {

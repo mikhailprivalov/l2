@@ -44,7 +44,7 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
             ON directions_issledovaniya.outcome_illness_id=statistics_tickets_outcomes.id
             WHERE (%(d_confirms)s in (directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.co_executor_id,
             directions_issledovaniya.co_executor2_id)) 
-            AND time_confirmation BETWEEN %(d_start)s AND %(d_end)s
+            AND time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
             AND directory_researches.is_slave_hospital=FALSE AND directory_researches.is_hospital=FALSE
             AND 
             CASE when %(can_null)s = 1 THEN 
@@ -95,7 +95,7 @@ def indirect_job_sql(d_conf, d_s, d_e):
             (ej.count*tj.value) as total
             FROM public.directions_employeejob ej
             LEFT JOIN public.directions_typejob tj ON ej.type_job_id=tj.id
-            WHERE ej.doc_execute_id=%(d_confirms)s AND ej.date_job BETWEEN %(d_start)s AND %(d_end)s
+            WHERE ej.doc_execute_id=%(d_confirms)s AND ej.date_job AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
             ORDER BY ej.date_job, ej.type_job_id)
 
         SELECT date_job, title, SUM(total) FROM t_j
@@ -123,7 +123,7 @@ def total_report_sql(d_conf, d_s, d_e, fin):
            ON d_iss.napravleniye_id=directions_napravleniya.id
            WHERE 
            (%(d_confirms)s IN (d_iss.doc_confirmation_id, d_iss.co_executor_id, d_iss.co_executor2_id)) 
-           AND d_iss.time_confirmation BETWEEN  %(d_start)s AND %(d_end)s AND directions_napravleniya.istochnik_f_id=%(ist_fin)s
+           AND d_iss.time_confirmation AT TIME ZONE %(tz)s BETWEEN  %(d_start)s AND %(d_end)s AND directions_napravleniya.istochnik_f_id=%(ist_fin)s
            ORDER BY date_confirm),  
         t_res AS 
            (SELECT d_res.id, d_res.title, co_executor_2_title
@@ -159,7 +159,7 @@ def passed_research(d_s, d_e):
                 ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
             LEFT JOIN statistics_tickets_resultoftreatment 
                 ON directions_issledovaniya.result_reception_id=statistics_tickets_resultoftreatment.id
-            WHERE directions_napravleniya.data_sozdaniya BETWEEN %(d_start)s AND %(d_end)s 
+            WHERE directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
             AND directions_issledovaniya.time_confirmation IS NOT NULL
             AND TRUE IN (directory_researches.is_paraclinic, directory_researches.is_doc_refferal, 
             directory_researches.is_stom, directory_researches.is_hospital)
@@ -217,7 +217,7 @@ def statistics_research(research_id, d_s, d_e):
            ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
         LEFT JOIN directions_istochnikifinansirovaniya
         ON directions_napravleniya.istochnik_f_id=directions_istochnikifinansirovaniya.id 
-        WHERE directions_issledovaniya.time_confirmation BETWEEN %(d_start)s AND %(d_end)s
+        WHERE directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
         AND directions_issledovaniya.research_id=%(research_id)s),
     t_card AS
        (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number AS num_card, 
@@ -246,8 +246,8 @@ def disp_diagnos(diagnos, d_s, d_e):
             SELECT id, diagnos, illnes, date_start, date_end, why_stop, card_id, 
                         doc_end_reg_id, doc_start_reg_id, spec_reg_id 
             FROM public.clients_dispensaryreg
-            WHERE diagnos = 'U999' and (date_start
-            BETWEEN %(d_start)s AND %(d_end)s OR date_end BETWEEN %(d_start)s AND %(d_end)s)
+            WHERE diagnos = 'U999' and (date_start AT TIME ZONE %(tz)s
+            BETWEEN %(d_start)s AND %(d_end)s OR date_end AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
             ORDER BY date_start DESC),
             t_card AS (SELECT id as card_id, individual_id, number as num_card from clients_card WHERE id in (SELECT card_id from t_iss)),
             

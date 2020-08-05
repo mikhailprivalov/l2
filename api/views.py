@@ -29,6 +29,7 @@ from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, \
     ExcludePurposes
 from utils.dates import try_parse_range, try_strptime
+from .sql_func import users_by_group
 
 
 def translit(locallangstring):
@@ -852,6 +853,19 @@ def laborants(request):
 
 
 @login_required
+def load_docprofile_by_group(request):
+    request_data = json.loads(request.body)
+    users = users_by_group(request_data['group'])
+    users_grouped = {}
+    for row in users:
+        if row[2] not in users_grouped:
+            users_grouped[row[2]] = {'id': f"pord-{row[2]}", 'label': row[4] or row[3], 'children': []}
+        users_grouped[row[2]]['children'].append({'id': str(row[0]), 'label': row[1], 'podr': row[4] or row[3]})
+
+    return JsonResponse({"users": list(users_grouped.values())})
+
+
+@login_required
 @group_required("Создание и редактирование пользователей")
 def users_view(request):
     data = []
@@ -889,7 +903,6 @@ def user_view(request):
             "rmis_password": '',
             "doc_pk": -1,
             "doc_code": -1,
-
         }
     else:
         doc = users.DoctorProfile.objects.get(pk=pk)
@@ -907,7 +920,7 @@ def user_view(request):
             "rmis_login": doc.rmis_login or '',
             "rmis_password": '',
             "doc_pk": doc.user.pk,
-            "personal_code": doc.personal_code,
+            "personal_code": doc.personal_code
         }
 
     return JsonResponse({"user": data})

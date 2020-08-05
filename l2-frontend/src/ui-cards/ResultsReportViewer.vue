@@ -86,11 +86,11 @@
       },
       params: {
         type: Array,
-        default: []
+        default: () => [],
       },
       params_directory: {
         type: Object,
-        default: {}
+        default: () => {},
       },
     },
     data() {

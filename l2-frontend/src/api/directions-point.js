@@ -116,4 +116,10 @@ export default generator({
   allDirectionsInFavorites: {
     url: 'directions/all-directions-in-favorites',
   },
+  planExamination: {
+    url: 'directions/plan-examinations',
+  },
+  getPlanExaminationPatient: {
+    url: 'directions/get-plan-operation-by-patient',
+  },
 })

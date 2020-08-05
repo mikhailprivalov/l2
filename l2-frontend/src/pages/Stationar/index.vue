@@ -655,6 +655,7 @@
         } else {
           errmessage(message)
         }
+        this.$root.$emit('current_history_direction', {'history_num': this.direction, 'patient': this.patient})
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       print_all_list() {

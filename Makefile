@@ -1,14 +1,15 @@
-all: front mm
-all_prod: front_prod mm
+all: install front mm
+all_prod: install front_prod mm
 mm: makemigrations migrate
 front: build collect
 front_prod: build_prod collect
+install: pip_install_upgrade npm_install
 
 build:
-	npm run --prefix l2-frontend build
+	yarn --cwd l2-frontend build
 
 build_prod:
-	npm run --prefix l2-frontend build_prod
+	yarn --cwd l2-frontend build_prod
 
 collect:
 	python3 manage.py collectstatic --no-input
@@ -21,3 +22,9 @@ migrate:
 
 up:
 	/bin/bash update-version.sh
+
+npm_install:
+	yarn --cwd l2-frontend
+
+pip_install_upgrade:
+	pip3 install --upgrade -r requirements.txt
