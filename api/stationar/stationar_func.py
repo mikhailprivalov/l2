@@ -141,11 +141,6 @@ def hosp_get_hosp_direction(num_dir):
         data_sort.append(row.node.name)
 
     data_sort.pop(0)
-    for i in data_sort:
-        print(i)
-
-
-    # data = [{'direction': i[0], 'research_title': i[9]} for i in hosp_dirs if not i[25]]
 
     return data_sort
 

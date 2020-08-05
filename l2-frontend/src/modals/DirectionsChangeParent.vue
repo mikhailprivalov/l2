@@ -124,9 +124,9 @@
         })
         this.slave_dirs = []
         for (const dir of this.directions_checked) {
-          if (!dir.has_hosp) {
+          // if (!dir.has_hosp) {
             this.slave_dirs.push(dir.pk)
-          }
+          // }
         }
         await this.$store.dispatch(action_types.DEC_LOADING)
       },

@@ -266,6 +266,7 @@ def hosp_set_parent(request):
 @group_required("Врач стационара")
 def update_parent(request):
     request_data = json.loads(request.body)
+    print(request_data)
     parent = request_data.get("parent")
     slave_dirs = request_data.get("slave_dirs", [])
     parent_iss = None
