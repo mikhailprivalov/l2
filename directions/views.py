@@ -187,11 +187,9 @@ def gen_pdf_dir(request):
 
     buffer = BytesIO()  # Буфер
     count_direction = len(direction_id)
-    format_A6 = False
-    if SettingManager.get("format_A6", default='False', default_type='b') and count_direction == 1 and donepage.count() == 0:
-        format_A6 = True
+    format_A6 = SettingManager.get("format_A6", default='False', default_type='b') and count_direction == 1 and donepage.count() == 0
     page_size = A6 if format_A6 else A4
-    c = canvas.Canvas(buffer, pagesize=page_size)  # Создание холста для PDF размера А4
+    c = canvas.Canvas(buffer, pagesize=page_size)
     c.setTitle('Направления {}'.format(', '.join([str(x) for x in direction_id])))
 
     ddef = dn.filter(issledovaniya__research__direction_form=0).distinct()
@@ -334,15 +332,14 @@ def framePage(canvas):
     canvas.line(0, h / 2, w, h / 2)
 
 
-def printDirection(c: Canvas, n, dir: Napravleniya, format_A6):
-    xn = 0
-    if n % 2 != 0:
-        xn = 1
-    yn = 0
-    if n > 2:
-        yn = 1
-    if format_A6:
-        xn, yn = 0, 0
+def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
+    xn, yn = 0, 0
+    if not format_A6:
+        if n % 2 != 0:
+            xn = 1
+        if n > 2:
+            yn = 1
+
     barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=17)
     bounds = barcode.getBounds()
     width = bounds[2] - bounds[0]
