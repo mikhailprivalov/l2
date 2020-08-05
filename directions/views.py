@@ -17,7 +17,7 @@ from reportlab.graphics import renderPDF
 from reportlab.graphics.barcode import eanbc, qr
 from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, A6
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfdoc
@@ -165,10 +165,6 @@ def gen_pdf_dir(request):
     response = HttpResponse(content_type='application/pdf')  # Формирование ответа типа PDF
     response['Content-Disposition'] = 'inline; filename="directions.pdf"'  # Включение режима вывода PDF в браузер
 
-    buffer = BytesIO()  # Буфер
-    c = canvas.Canvas(buffer, pagesize=A4)  # Создание холста для PDF размера А4
-    c.setTitle('Направления {}'.format(', '.join([str(x) for x in direction_id])))
-
     pdfmetrics.registerFont(
         TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))  # Загрузка шрифта из файла
     pdfmetrics.registerFont(
@@ -186,27 +182,35 @@ def gen_pdf_dir(request):
         'doc_who_create', 'doc_who_create__podrazdeleniye', 'doc', 'doc__podrazdeleniye',
         'imported_org', 'istochnik_f'
     ).order_by('pk')
+
+    donepage = dn.exclude(issledovaniya__research__direction_form=0)
+
+    buffer = BytesIO()  # Буфер
+    count_direction = len(direction_id)
+    format_A6 = SettingManager.get("format_A6", default='False', default_type='b') and count_direction == 1 and donepage.count() == 0
+    page_size = A6 if format_A6 else A4
+    c = canvas.Canvas(buffer, pagesize=page_size)
+    c.setTitle('Направления {}'.format(', '.join([str(x) for x in direction_id])))
+
     ddef = dn.filter(issledovaniya__research__direction_form=0).distinct()
     p = Paginator(ddef, 4)  # Деление списка направлений по 4
     instructions = []
     has_def = ddef.count() > 0
-    if has_def:
+    if has_def and not format_A6:
         framePage(c)
     for pg_num in p.page_range:
         pg = p.page(pg_num)
         i = 4  # Номер позиции направления на странице (4..1)
         for n_ob in pg.object_list:  # Перебор номеров направлений на странице
-            printDirection(c, i, n_ob)  # Вызов функции печати направления на указанную позицию
+            printDirection(c, i, n_ob, format_A6)  # Вызов функции печати направления на указанную позицию
             instructions += n_ob.get_instructions()
             i -= 1
         if pg.has_next():  # Если есть следующая страница
             c.showPage()  # Создание новой страницы
             framePage(c)  # Рисование разделительных линий для страницы
 
-    donepage = dn.exclude(issledovaniya__research__direction_form=0)
     if donepage.count() > 0 and has_def:
         c.showPage()
-
     n = 0
     cntn = donepage.count()
     for d in donepage:
@@ -328,13 +332,14 @@ def framePage(canvas):
     canvas.line(0, h / 2, w, h / 2)
 
 
-def printDirection(c: Canvas, n, dir: Napravleniya):
-    xn = 0
-    if n % 2 != 0:
-        xn = 1
-    yn = 0
-    if n > 2:
-        yn = 1
+def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
+    xn, yn = 0, 0
+    if not format_A6:
+        if n % 2 != 0:
+            xn = 1
+        if n > 2:
+            yn = 1
+
     barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=17)
     bounds = barcode.getBounds()
     width = bounds[2] - bounds[0]
@@ -371,16 +376,13 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
         c.restoreState()
 
     c.setFont('OpenSans', 10)
-    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 5) + (h / 2) * yn,
-                        SettingManager.get("org_title"))
+    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 5) + (h / 2) * yn, SettingManager.get("org_title"))
 
     c.setFont('OpenSans', 8)
-    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 15) + (h / 2) * yn,
-                        "(%s. %s)" % (SettingManager.get("org_address"), SettingManager.get("org_phones"),))
+    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 15) + (h / 2) * yn, "(%s. %s)" % (SettingManager.get("org_address"), SettingManager.get("org_phones"),))
 
     c.setFont('OpenSans', 14)
-    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 30) + (h / 2) * yn,
-                        "Направление" + ("" if not dir.imported_from_rmis else " из РМИС"))
+    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 30) + (h / 2) * yn, "Направление" + ("" if not dir.imported_from_rmis else " из РМИС"))
 
     renderPDF.draw(d, c, w / 2 - width + (w / 2 * xn) - paddingx / 3 - 5 * mm, (h / 2 - height - 57) + (h / 2) * yn)
 
