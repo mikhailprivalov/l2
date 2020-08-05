@@ -86,21 +86,22 @@
           </div>
           <template v-for="(dir, index) in tree">
             <div class="sidebar-btn-wrapper" v-if="!every && dir.isCurrent" :key="dir.direction">
-              <button class="btn btn-blue-nb sidebar-btn active-btn" style="font-size: 12px" :class="{colorBad: !dir.correct_level}">
+              <button class="btn btn-blue-nb sidebar-btn active-btn" style="font-size: 12px" :style="{color: dir.color}">
                 <i class="fa fa-arrow-down" v-if="index < tree.length - 1"/>
                 <i class="fa fa-dot-circle-o" v-else/>
-                №{{dir.direction}} {{dir.research_title}}
+                <del v-if="dir.cancel">№{{dir.direction}} {{dir.research_title}}</del>
+                <span v-else>№{{dir.direction}} {{dir.research_title}}</span>
                 <i class="fa fa-check"/>
               </button>
             </div>
             <div class="sidebar-btn-wrapper" v-else :key="dir.direction">
-              <button class="btn btn-blue-nb sidebar-btn"
-                      style="font-size: 12px" :class="{colorBad: !dir.correct_level}"
+              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" :style="{color: dir.color}"
                       @click="load_pk(dir.direction)"
               >
                 <i class="fa fa-arrow-down" v-if="index < tree.length - 1"/>
                 <i class="fa fa-dot-circle-o" v-else/>
-                №{{dir.direction}} {{dir.research_title}}
+                 <del v-if="dir.cancel">№{{dir.direction}} {{dir.research_title}}</del>
+                <span v-else>№{{dir.direction}} {{dir.research_title}}</span>
               </button>
             </div>
           </template>
@@ -1067,6 +1068,7 @@
 <style scoped lang="scss">
   .colorBad {
     background-color: lightblue!important;
+    color: #d35400;
   }
 
   .root {

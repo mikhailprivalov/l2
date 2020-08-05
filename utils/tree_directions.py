@@ -134,7 +134,8 @@ def hosp_tree_direction(iss):
             ddrr.title,
             ii.diagnos, 1 AS level, 
             ddrr.short_title,
-            ddrr.is_hospital
+            ddrr.is_hospital,
+            nn.cancel
             FROM directions_issledovaniya ii 
             LEFT JOIN directions_napravleniya nn 
             ON ii.napravleniye_id=nn.id
@@ -158,7 +159,8 @@ def hosp_tree_direction(iss):
                   i.diagnos, 
                   r.level + 1 AS level, 
                   dr.short_title,
-                  dr.is_hospital
+                  dr.is_hospital,
+                  n.cancel
             FROM directions_issledovaniya i 
             LEFT JOIN directions_napravleniya n 
             ON i.napravleniye_id=n.id
