@@ -298,6 +298,7 @@ class ParseResultRights(unittest.TestCase):
             ["test", "1", (ResultRight.RESULT_MODE_MAYBE, RANGE_NEQ)],
             [">= 10<sup>2</sup>", "10<sup>2</sup>", (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
             ["> 10<sup>2</sup>", "10<sup>2</sup>", (ResultRight.RESULT_MODE_NOT_NORMAL, RANGE_LOWER)],
+            ["до 5", "сплошь", (ResultRight.RESULT_MODE_NOT_NORMAL, RANGE_OVER)],
         ]
 
         for r in rs:
