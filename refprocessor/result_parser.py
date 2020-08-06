@@ -58,7 +58,7 @@ class ResultRight:
                 (ResultRight.RESULT_MODE_MAYBE, RANGE_NEQ)
 
         if "сплошь" in value.lower() or "++" in value or "+ +" in value or "++++" in value or "+" == value.strip() or "оксал ед" in value:
-            value = float("inf")
+            value = "inf"
 
         numbers = re.findall(r"-?\d*[.,]\d+|-?\d+|inf", value)
 
