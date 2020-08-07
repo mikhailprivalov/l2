@@ -112,11 +112,12 @@ def hosp_get_hosp_direction(num_dir):
     tree_dir = tree_directions.hosp_tree_direction(num_iss)
     final_tree = {}
 
-    node_dir = Node({'order': '-1', 'direction': '', 'research_title': '', 'correct_level': True, 'color': '', 'cancel': False})
+    node_dir = Node({'order': '-1', 'direction': '', 'research_title': '', 'correct_level': True, 'color': '', 'cancel': False, 'issledovaniye': '', 'parent_iss': ''})
     for j in tree_dir:
         print(j)
         research_title = j[12] if j[12] else j[9]
-        temp_s = {'order': '-1', 'direction': j[0], 'research_title': research_title, 'correct_level': True, 'color': '', 'cancel': j[14]}
+        temp_s = {'order': '-1', 'direction': j[0], 'research_title': research_title, 'correct_level': True, 'color': '',
+                  'cancel': j[14], 'issledovaniye': j[5], 'parent_iss': j[3]}
         if not j[3]:
             final_tree[j[5]] = Node(temp_s, parent=node_dir)
         else:
@@ -141,6 +142,7 @@ def hosp_get_hosp_direction(num_dir):
         data_sort.append(row.node.name)
 
     data_sort.pop(0)
+    print(data_sort)
 
     return data_sort
 

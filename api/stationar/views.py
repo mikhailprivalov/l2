@@ -19,6 +19,7 @@ from django.db.models import Q
 def load(request):
     data = json.loads(request.body)
     pk = int(data["pk"])
+    tree_direction = hosp_get_hosp_direction(pk)
     if pk >= 4600000000000:
         pk -= 4600000000000
         pk //= 10
@@ -31,12 +32,18 @@ def load(request):
         if direction.cancel:
             result["message"] = "Направление было отменено"
         forbidden_edit = forbidden_edit_dir(direction.pk)
+        child_issledovaniye = ''
+        for iss in tree_direction:
+            if i.pk == iss['parent_iss']:
+                child_issledovaniye = iss['issledovaniye']
+                break
         result["data"] = {
             "direction": direction.pk,
             "cancel": direction.cancel,
-            # "cancel": False,
             "fin_pk": direction.istochnik_f_id,
             "iss": i.pk,
+            "parent_issledovaniye": direction.parent.pk if direction.parent else '-1',
+            "child_issledovaniye": child_issledovaniye if child_issledovaniye else '-1',
             "iss_title": i.research.title,
             "forbidden_edit": forbidden_edit or "Врач стационара" not in [str(x) for x in request.user.groups.all()],
             "soft_forbidden": not forbidden_edit,
@@ -56,9 +63,11 @@ def load(request):
                         "isCurrent": int(dirc["direction"]) == pk,
                         "cancel": Napravleniya.objects.get(pk=dirc["direction"]).cancel,
                         "correct_level": dirc["correct_level"],
-                        "color": dirc["color"]
+                        "color": dirc["color"],
+                        "issledovaniye": dirc["issledovaniye"],
+                        "order": dirc["order"],
                     },
-                    hosp_get_hosp_direction(pk)
+                    tree_direction
                 )
             ))
         }

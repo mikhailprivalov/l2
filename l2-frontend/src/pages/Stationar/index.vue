@@ -215,9 +215,14 @@
             :hospital_r_type="'desc'"
           />
           <div class="group" v-if="r_is_transfer(row)">
-            <div class="group-title">Отделение перевода</div>
+            <div class="radio-button-object radio-button-groups" v-if="!row.confirmed">
+              <radio-field v-model="typeTransfer" :variants="variantTypeTransfer" fullWidth
+                           style="width: 100%"/>
+            </div>
+            <div class="group-title" v-if="newTransfer">Отделение перевода</div>
+            <div class="group-title" v-else>Схема движения по отделениям</div>
             <div class="fields">
-              <div class="content-picker" v-if="!row.confirmed">
+              <div class="content-picker" v-if="!row.confirmed && newTransfer">
                 <research-pick :class="{ active: r.pk === stationar_research }" :research="r"
                                @click.native="stationar_research = r.pk"
                                class="research-select"
@@ -225,6 +230,31 @@
                                force_tippy
                                :key="r.pk"/>
               </div>
+              <div v-else-if="!newTransfer && !row.confirmed">
+                <div class="row" id="row-box">
+                  <div class="col-xs-3">
+                    <h6><strong>Поступил ИЗ (предыдущее отделение)</strong></h6>
+                    <treeselect :multiple="false" :disable-branch-nodes="true"
+                                :options="directions_parent_select" placeholder="Откуда поступил" v-model="parent_issledovaniye"/>
+                  </div>
+                  <div class="col-xs-1">
+                    <i class="fa fa-arrow-right fa-2x fa-fw" style="padding-top: 40px; opacity: 0.5;"></i>
+                  </div>
+                  <div class="col-xs-3">
+                    <h6><strong>Текущее отделение</strong></h6>
+                      <div style="padding-top: 10px">{{direction}} - {{issTitle}}</div>
+                  </div>
+                  <div class="col-xs-1">
+                    <i class="fa fa-arrow-right fa-2x fa-fw" style="padding-top: 40px; opacity: 0.5;"></i>
+                  </div>
+                  <div class="col-xs-3">
+                    <h6><strong>Переведен В (следующее отделение)</strong></h6>
+                    <treeselect :multiple="false" :disable-branch-nodes="true"
+                                :options="directions_child_select" placeholder="Куда переведен" v-model="child_issledovaniye"/>
+                  </div>
+                </div>
+              </div>
+
               <div v-else-if="row.research.transfer_direction">
                 История болезни №{{row.research.transfer_direction}}
                 <br/>
@@ -438,11 +468,15 @@
   import patients_point from '../../api/patients-point'
   import UrlData from '../../UrlData'
   import AmbulatoryData from '../../modals/AmbulatoryData'
+  import RadioField from '@/fields/RadioField'
   import Favorite from "./Favorite";
+  import Treeselect from '@riophae/vue-treeselect'
 
   export default {
     mixins: [menuMixin],
     components: {
+      RadioField,
+      Treeselect,
       Favorite,
       dropdown,
       DisplayDirection,
@@ -501,6 +535,13 @@
         research_history: [],
         inited: false,
         ambulatory_data: false,
+        variantTypeTransfer: ["Новый перевод", "Выбрать из предыдущих"],
+        typeTransfer: 'Новый перевод',
+        selectStationarDir: '',
+        directions_parent_select: [],
+        directions_child_select: [],
+        parent_issledovaniye: null,
+        child_issledovaniye: null,
       }
     },
     watch: {
@@ -619,6 +660,7 @@
         this.direction = null
         this.cancel = false
         this.iss = null
+        this.parent_iss = null
         this.issTitle = null
         this.finId = null
         this.counts = {}
@@ -642,12 +684,23 @@
           this.direction = data.direction
           this.cancel = data.cancel
           this.iss = data.iss
+          this.parent_issledovaniye = data.parent_issledovaniye
+          this.child_issledovaniye = data.child_issledovaniye
           this.issTitle = data.iss_title
           this.finId = data.fin_pk
           this.forbidden_edit = data.forbidden_edit
           this.soft_forbidden = !!data.soft_forbidden
           this.tree = data.tree
-          console.log(this.tree)
+          this.directions_parent_select = []
+          this.directions_child_select = []
+          for (const direction_obj of this.tree) {
+            this.directions_parent_select.push({'label': direction_obj.direction + '-' + direction_obj.research_title,
+              'id': direction_obj.issledovaniye})
+          }
+          this.directions_child_select = [...this.directions_parent_select]
+          this.directions_parent_select.push({'label': 'Назначить головным текущее', 'id': -1})
+          this.directions_child_select.push({'label': 'Очистить', 'id': -1})
+
           this.patient = new Patient(data.patient)
           this.counts = await stationar_point.counts(this, ['direction'], {every})
           if (message && message.length > 0) {
@@ -758,6 +811,7 @@
       },
       save_and_confirm(iss) {
         this.hide_results();
+        console.log(this.child_issledovaniye)
         this.$store.dispatch(action_types.INC_LOADING)
         directions_point.paraclinicResultSave({
           force: true,
@@ -769,7 +823,9 @@
             stationar_research: this.stationar_research,
           },
           with_confirm: true,
-          visibility_state: this.visibility_state(iss)
+          visibility_state: this.visibility_state(iss),
+          parent_child_data: {"parent_iss": this.parent_issledovaniye, "current_direction": this.direction, "current_iss": this.iss,
+            "child_iss": this.child_issledovaniye}
         }).then(data => {
           if (data.ok) {
             okmessage('Сохранено')
@@ -863,7 +919,7 @@
             }
           }
         }
-        if (this.r_is_transfer(research) && this.stationar_research === -1) {
+        if (this.r_is_transfer(research) && this.stationar_research === -1 && this.typeTransfer === "Новый перевод") {
           l.push('Отделение перевода')
         }
         return l.slice(0, 2)
@@ -998,6 +1054,12 @@
         researches: 'researches',
         bases: 'bases',
       }),
+      newTransfer() {
+        if (this.typeTransfer == "Новый перевод") {
+          return true
+        }
+        return false
+      },
       navState() {
         if (!this.direction) {
           return null
