@@ -542,6 +542,7 @@
         directions_child_select: [],
         parent_issledovaniye: null,
         child_issledovaniye: null,
+        direcions_order: {},
       }
     },
     watch: {
@@ -694,8 +695,10 @@
           this.directions_parent_select = []
           this.directions_child_select = []
           for (const direction_obj of this.tree) {
-            this.directions_parent_select.push({'label': direction_obj.direction + '-' + direction_obj.research_title,
+            this.directions_parent_select.push({'label': direction_obj.direction + '-' +
+                direction_obj.research_title + '(' + direction_obj.order + ')',
               'id': direction_obj.issledovaniye})
+            this.direcions_order[direction_obj.issledovaniye] = direction_obj.order
           }
           this.directions_child_select = [...this.directions_parent_select]
           this.directions_parent_select.push({'label': 'Назначить головным текущее', 'id': -1})
@@ -811,7 +814,12 @@
       },
       save_and_confirm(iss) {
         this.hide_results();
-        console.log(this.child_issledovaniye)
+        console.log(this.direcions_order[this.parent_issledovaniye])
+        console.log(this.direcions_order[this.iss])
+        console.log(this.direcions_order[this.child_issledovaniye])
+        if (this.direcions_order[this.parent_issledovaniye] >= this.direcions_order[this.iss]) {
+          return
+        }
         this.$store.dispatch(action_types.INC_LOADING)
         directions_point.paraclinicResultSave({
           force: true,

@@ -266,7 +266,6 @@ def hosp_set_parent(request):
 @group_required("Врач стационара")
 def update_parent(request):
     request_data = json.loads(request.body)
-    print(request_data)
     parent = request_data.get("parent")
     slave_dirs = request_data.get("slave_dirs", [])
     parent_iss = None
@@ -1419,7 +1418,6 @@ def directions_paraclinic_result(request):
                     parent_iss = Issledovaniya.objects.get(pk=parent)
                     child_iss = Issledovaniya.objects.values_list('napravleniye_id').get(pk=child)
                     child_direction = Napravleniya.objects.get(pk=child_iss[0])
-                    print(child_direction)
                     if child_direction.parent:
                         Napravleniya.objects.filter(pk=child_iss[0]).update(parent=parent_iss, cancel=False)
 
