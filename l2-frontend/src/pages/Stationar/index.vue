@@ -814,9 +814,6 @@
       },
       save_and_confirm(iss) {
         this.hide_results();
-        console.log(this.direcions_order[this.parent_issledovaniye])
-        console.log(this.direcions_order[this.iss])
-        console.log(this.direcions_order[this.child_issledovaniye])
         if (this.direcions_order[this.parent_issledovaniye] >= this.direcions_order[this.iss]) {
           return
         }

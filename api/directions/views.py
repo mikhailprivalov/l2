@@ -1194,6 +1194,7 @@ def directions_paraclinic_result(request):
     response = {"ok": False, "message": ""}
     rb = json.loads(request.body)
     request_data = rb.get("data", {})
+    print(request_data)
     pk = request_data.get("pk", -1)
     stationar_research = request_data.get("stationar_research", -1)
     with_confirm = rb.get("with_confirm", False)
@@ -1357,6 +1358,7 @@ def directions_paraclinic_result(request):
 
         iss.save()
         more = request_data.get("more", [])
+        print('more-', more)
         h = []
         for m in more:
             if not Issledovaniya.objects.filter(parent=iss, doc_save=request.user.doctorprofile, research_id=m):
@@ -1404,22 +1406,22 @@ def directions_paraclinic_result(request):
                 save_dreg(dispensery_obj)
 
             parent_child_data = rb.get('parent_child_data', None)
-            if parent_child_data:
-                parent = int(parent_child_data['parent_iss'])
-                if parent > -1:
-                    parent_iss = Issledovaniya.objects.get(pk=parent)
-                    Napravleniya.objects.filter(pk=parent_child_data['current_direction']).update(parent=parent_iss, cancel=False)
-                if parent == -1:
-                    Napravleniya.objects.filter(pk=parent_child_data['current_direction']).update(parent=None)
-
-                parent = int(parent_child_data['current_iss'])
-                child = int(parent_child_data['child_iss'])
-                if parent > -1 and child > -1:
-                    parent_iss = Issledovaniya.objects.get(pk=parent)
-                    child_iss = Issledovaniya.objects.values_list('napravleniye_id').get(pk=child)
-                    child_direction = Napravleniya.objects.get(pk=child_iss[0])
-                    if child_direction.parent:
-                        Napravleniya.objects.filter(pk=child_iss[0]).update(parent=parent_iss, cancel=False)
+            # if parent_child_data:
+            #     parent = int(parent_child_data['parent_iss'])
+            #     if parent > -1:
+            #         parent_iss = Issledovaniya.objects.get(pk=parent)
+            #         Napravleniya.objects.filter(pk=parent_child_data['current_direction']).update(parent=parent_iss, cancel=False)
+            #     if parent == -1:
+            #         Napravleniya.objects.filter(pk=parent_child_data['current_direction']).update(parent=None)
+            #
+            #     parent = int(parent_child_data['current_iss'])
+            #     child = int(parent_child_data['child_iss'])
+            #     if parent > -1 and child > -1:
+            #         parent_iss = Issledovaniya.objects.get(pk=parent)
+            #         child_iss = Issledovaniya.objects.values_list('napravleniye_id').get(pk=child)
+            #         child_direction = Napravleniya.objects.get(pk=child_iss[0])
+            #         if child_direction.parent:
+            #             Napravleniya.objects.filter(pk=child_iss[0]).update(parent=parent_iss, cancel=False)
 
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
         forbidden_edit = forbidden_edit_dir(iss.napravleniye_id)
