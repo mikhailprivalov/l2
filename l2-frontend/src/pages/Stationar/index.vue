@@ -11,13 +11,17 @@
           <div class="inner-card">
             <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" class="a-under"
                target="_blank" v-if="!every" style="float: right">
-              форма 003/у
+              003/у
             </a>
             <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" class="a-under" target="_blank" v-if="every">
               №{{tree.map(d => d.direction).join('-')}}
             </a>
             <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" class="a-under" target="_blank" v-else>
-              История/б №{{direction}}
+              И/б {{direction}}
+            </a>
+            &nbsp;&nbsp;
+            <a href="#" @click.prevent="cancel_direction(direction)">
+              Отменить
             </a>
           </div>
           <div class="inner-card" v-if="every">
@@ -25,11 +29,11 @@
           </div>
           <div class="inner-card" v-if="every">
             <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" class="a-under" target="_blank">
-              форма 003/у
+              003/у
             </a>
           </div>
           <div class="inner-card" v-if="!every">
-            <Favorite :direction="direction" />
+            <Favorite :direction="direction" style="display: inline-block"/>
           </div>
           <div class="inner-card" v-else>
             {{issTitle}}
@@ -254,21 +258,20 @@
                   </div>
                 </div>
               </div>
-
-              <div v-else-if="row.research.transfer_direction">
-                История болезни №{{row.research.transfer_direction}}
+              <div v-else-if="row.confirmed">
+                История болезни №{{child_direction}}
                 <br/>
-                {{row.research.transfer_direction_iss[0]}}
+                {{child_research_title}}
                 <br/>
-                <a class="a-under" href="#" @click.prevent="print_hosp(row.research.transfer_direction)">
+                <a class="a-under" href="#" @click.prevent="print_hosp(child_direction)">
                   Печать ш/к браслета
                 </a>
                 <br/>
-                <a class="a-under" href="#" @click.prevent="print_direction(row.research.transfer_direction)">
+                <a class="a-under" href="#" @click.prevent="print_direction(child_direction)">
                   Печать направления
                 </a>
                 <br/>
-                <a class="a-under" href="#" @click.prevent="load_pk(row.research.transfer_direction)">
+                <a class="a-under" href="#" @click.prevent="load_pk(child_direction)">
                   Открыть историю
                 </a>
               </div>
@@ -542,7 +545,10 @@
         directions_child_select: [],
         parent_issledovaniye: null,
         child_issledovaniye: null,
+        child_direction: null,
+        child_research_title: null,
         direcions_order: {},
+
       }
     },
     watch: {
@@ -591,6 +597,13 @@
       });
     },
     methods: {
+      async cancel_direction(pk) {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const data = await directions_point.cancelDirection({pk});
+        this.pk = pk
+        this.load();
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      },
       show_anesthesia() {
         this.$store.dispatch(action_types.CHANGE_STATUS_MENU_ANESTHESIA)
       },
@@ -687,6 +700,8 @@
           this.iss = data.iss
           this.parent_issledovaniye = data.parent_issledovaniye
           this.child_issledovaniye = data.child_issledovaniye
+          this.child_direction = data.child_direction
+          this.child_research_title = data.child_research_title
           this.issTitle = data.iss_title
           this.finId = data.fin_pk
           this.forbidden_edit = data.forbidden_edit
@@ -814,9 +829,13 @@
       },
       save_and_confirm(iss) {
         this.hide_results();
-        if (this.direcions_order[this.parent_issledovaniye] >= this.direcions_order[this.iss]) {
+        if (this.direcions_order[this.parent_issledovaniye] > this.direcions_order[this.iss]) {
           return
         }
+        if (this.direcions_order[this.parent_issledovaniye] > this.direcions_order[this.child_issledovaniye]) {
+          return
+        }
+
         this.$store.dispatch(action_types.INC_LOADING)
         directions_point.paraclinicResultSave({
           force: true,
@@ -849,6 +868,8 @@
             errmessage(data.message)
           }
         }).finally(() => {
+          this.pk = this.direction
+          this.load()
           this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
@@ -1322,6 +1343,25 @@
       border-bottom: 1px solid #b1b1b1 !important;
       }
     }
+
+  .cancel-btn {
+    border-radius: 0;
+
+    &:not(.text-center) {
+      text-align: left;
+    }
+    border: none;
+    padding-left: 5px;
+    padding-right: 5px;
+    height: 24px;
+    margin-right: 0;
+
+    &:not(:hover):not(.colorBad), &.active-btn:hover:not(.colorBad) {
+      cursor: default;
+      background-color: rgba(#000, .02) !important;
+      color: #000;
+      }
+  }
 
 
   .sidebar-btn-wrapper {
