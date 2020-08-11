@@ -108,7 +108,7 @@ def hosp_get_hosp_direction(num_dir):
     #                                                    hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level,
     #                                                    hosp_is_all, hosp_morfology)
 
-    #отсортировать по подчинениям - построить бинарное дерево
+    # отсортировать по подчинениям - построить бинарное дерево
     tree_dir = tree_directions.hosp_tree_direction(num_iss)
     final_tree = {}
 

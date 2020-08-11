@@ -32,7 +32,7 @@ def load(request):
         if direction.cancel:
             result["message"] = "Направление было отменено"
         forbidden_edit = forbidden_edit_dir(direction.pk)
-        child_issledovaniye, child_research_title, child_direction  = '', '', ''
+        child_issledovaniye, child_research_title, child_direction = '', '', ''
         for iss in tree_direction:
             if i.pk == iss['parent_iss']:
                 child_issledovaniye = iss['issledovaniye']

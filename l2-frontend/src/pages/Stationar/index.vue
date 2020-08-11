@@ -599,7 +599,7 @@
     methods: {
       async cancel_direction(pk) {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const data = await directions_point.cancelDirection({pk});
+        await directions_point.cancelDirection({pk});
         this.pk = pk
         this.load();
         await this.$store.dispatch(action_types.DEC_LOADING)
