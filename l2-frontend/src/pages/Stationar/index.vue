@@ -17,11 +17,15 @@
               №{{tree.map(d => d.direction).join('-')}}
             </a>
             <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" class="a-under" target="_blank" v-else>
-              И/б {{direction}}
+              <del v-if="cancel">И/б {{direction}}</del>
+              <span v-else>И/б {{direction}}</span>
             </a>
-            &nbsp;&nbsp;
-            <a href="#" @click.prevent="cancel_direction(direction)">
+            &nbsp;&nbsp;&nbsp;
+            <a v-if="!cancel" href="#" @click.prevent="cancel_direction(direction)" :class="{cancel_color: !cancel}" class="a-under">
               Отменить
+            </a>
+            <a v-if="cancel" href="#" @click.prevent="cancel_direction(direction)" :class="{active_color: cancel}" class="a-under">
+              Вернуть
             </a>
           </div>
           <div class="inner-card" v-if="every">
@@ -830,10 +834,10 @@
       save_and_confirm(iss) {
         this.hide_results();
         if (this.direcions_order[this.parent_issledovaniye] > this.direcions_order[this.iss]) {
-          return
+          return errmessage("Порядок отделений меняется снизу вверх")
         }
         if (this.direcions_order[this.parent_issledovaniye] > this.direcions_order[this.child_issledovaniye]) {
-          return
+          return errmessage("Порядок отделений меняется снизу вверх")
         }
 
         this.$store.dispatch(action_types.INC_LOADING)
@@ -1154,6 +1158,15 @@
 </script>
 
 <style scoped lang="scss">
+  .cancel_color {
+    color: #93046d
+  }
+
+  .active_color {
+    color: #1a6451;
+    font-weight: bold;
+  }
+
   .colorBad {
     background-color: lightblue!important;
     color: #d35400;
@@ -1343,26 +1356,6 @@
       border-bottom: 1px solid #b1b1b1 !important;
       }
     }
-
-  .cancel-btn {
-    border-radius: 0;
-
-    &:not(.text-center) {
-      text-align: left;
-    }
-    border: none;
-    padding-left: 5px;
-    padding-right: 5px;
-    height: 24px;
-    margin-right: 0;
-
-    &:not(:hover):not(.colorBad), &.active-btn:hover:not(.colorBad) {
-      cursor: default;
-      background-color: rgba(#000, .02) !important;
-      color: #000;
-      }
-  }
-
 
   .sidebar-btn-wrapper {
     display: flex;
