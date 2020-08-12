@@ -269,7 +269,7 @@ def update_parent(request):
     parent = request_data.get("parent")
     slave_dirs = request_data.get("slave_dirs", [])
     g = [str(x) for x in request.user.groups.all()]
-    forbidden = "Смена подчинений стационра" not in g
+    forbidden = "Управление иерархией истории" not in g
 
     iss = Issledovaniya.objects.filter(napravleniye__in=slave_dirs)
     for r in iss:
