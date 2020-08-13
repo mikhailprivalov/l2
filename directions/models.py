@@ -915,8 +915,6 @@ class Issledovaniya(models.Model):
     def gen_after_confirm(self, user: User):
         if not self.time_confirmation or not self.gen_direction_with_research_after_confirm:
             return
-        if Napravleniya.objects.filter(parent_auto_gen=self, cancel=False).exists():
-            return
         Napravleniya.gen_napravleniya_by_issledovaniya(self.napravleniye.client_id,
                                                        "",
                                                        self.napravleniye.parent.napravleniye.istochnik_f_id
@@ -933,7 +931,7 @@ class Issledovaniya(models.Model):
                                                        count=1,
                                                        discount=0,
                                                        parent_iss=self.napravleniye.parent_id or self.pk,
-                                                       parent_auto_gen=self.pk)
+                                                       parent_auto_gen=None)
 
     def __str__(self):
         return "%s %s" % (str(self.napravleniye), self.research.title)

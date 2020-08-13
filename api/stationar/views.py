@@ -19,6 +19,7 @@ from django.db.models import Q
 def load(request):
     data = json.loads(request.body)
     pk = int(data["pk"])
+    tree_direction = hosp_get_hosp_direction(pk)
     if pk >= 4600000000000:
         pk -= 4600000000000
         pk //= 10
@@ -31,11 +32,24 @@ def load(request):
         if direction.cancel:
             result["message"] = "Направление было отменено"
         forbidden_edit = forbidden_edit_dir(direction.pk)
+        child_issledovaniye, child_research_title, child_direction = '', '', ''
+        for iss in tree_direction:
+            if i.pk == iss['parent_iss']:
+                child_issledovaniye = iss['issledovaniye']
+                iss_obj = Issledovaniya.objects.filter(pk=child_issledovaniye).first()
+                if iss_obj:
+                    child_direction = iss_obj.napravleniye.pk
+                    child_research_title = iss_obj.research.title
+                break
         result["data"] = {
             "direction": direction.pk,
             "cancel": direction.cancel,
             "fin_pk": direction.istochnik_f_id,
             "iss": i.pk,
+            "parent_issledovaniye": direction.parent.pk if direction.parent else '-1',
+            "child_issledovaniye": child_issledovaniye if child_issledovaniye else '-1',
+            "child_direction": child_direction if child_direction else '-1',
+            "child_research_title": child_research_title if child_research_title else '-1',
             "iss_title": i.research.title,
             "forbidden_edit": forbidden_edit or "Врач стационара" not in [str(x) for x in request.user.groups.all()],
             "soft_forbidden": not forbidden_edit,
@@ -46,18 +60,20 @@ def load(request):
                 "card_pk": card.pk,
                 "individual_pk": card.individual_id,
             },
-            "tree": list(filter(
-                lambda d: not d["cancel"],
-                map(
-                    lambda dirc: {
-                        **dirc,
-                        "research_title": dirc["research_title"].replace("отделение", "отд.").replace("Отделение", "Отд."),
-                        "isCurrent": int(dirc["direction"]) == pk,
-                        "cancel": Napravleniya.objects.get(pk=dirc["direction"]).cancel,
-                    },
-                    hosp_get_hosp_direction(pk)
-                )
-            ))
+            "tree": list(map(
+                lambda dirc: {
+                    **dirc,
+                    "research_title": dirc["research_title"].replace("отделение", "отд.").replace("Отделение", "Отд."),
+                    "isCurrent": int(dirc["direction"]) == pk,
+                    "cancel": Napravleniya.objects.get(pk=dirc["direction"]).cancel,
+                    "correct_level": dirc["correct_level"],
+                    "color": dirc["color"],
+                    "issledovaniye": dirc["issledovaniye"],
+                    "order": dirc["order"],
+                },
+                tree_direction
+            )
+            )
         }
         break
     return JsonResponse(result)

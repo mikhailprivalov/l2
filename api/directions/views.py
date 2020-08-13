@@ -268,6 +268,14 @@ def update_parent(request):
     request_data = json.loads(request.body)
     parent = request_data.get("parent")
     slave_dirs = request_data.get("slave_dirs", [])
+    g = [str(x) for x in request.user.groups.all()]
+    forbidden = "Управление иерархией истории" not in g
+
+    iss = Issledovaniya.objects.filter(napravleniye__in=slave_dirs)
+    for r in iss:
+        if r.research.is_hospital and forbidden:
+            return JsonResponse({"ok": False, "message": "Нет прав для стационарного изменения"})
+
     parent_iss = None
     if parent > -1:
         parent_iss = Issledovaniya.objects.get(pk=parent)
@@ -283,9 +291,7 @@ def update_parent(request):
         Log(key=i, type=5003, body=json.dumps({"dir": i, "parent_dir": dir_parent, "parent_iss_id": parent}),
             user=request.user.doctorprofile).save()
 
-    result = {"ok": True, "message": ""}
-
-    return JsonResponse(result)
+    return JsonResponse({"ok": True, "message": ""})
 
 
 @login_required
@@ -1403,6 +1409,24 @@ def directions_paraclinic_result(request):
                 dispensery_obj.user = request.user
                 save_dreg(dispensery_obj)
 
+            parent_child_data = rb.get('parent_child_data', None)
+            if parent_child_data:
+                parent = int(parent_child_data['parent_iss'])
+                if parent > -1:
+                    parent_iss = Issledovaniya.objects.get(pk=parent)
+                    Napravleniya.objects.filter(pk=parent_child_data['current_direction']).update(parent=parent_iss, cancel=False)
+                if parent == -1:
+                    Napravleniya.objects.filter(pk=parent_child_data['current_direction']).update(parent=None)
+
+                parent = int(parent_child_data['current_iss'])
+                child = int(parent_child_data['child_iss'])
+                if parent > -1 and child > -1:
+                    parent_iss = Issledovaniya.objects.get(pk=parent)
+                    child_iss = Issledovaniya.objects.values_list('napravleniye_id').get(pk=child)
+                    child_direction = Napravleniya.objects.get(pk=child_iss[0])
+                    if child_direction.parent:
+                        Napravleniya.objects.filter(pk=child_iss[0]).update(parent=parent_iss, cancel=False)
+
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
         forbidden_edit = forbidden_edit_dir(iss.napravleniye_id)
         response["forbidden_edit"] = forbidden_edit or more_forbidden
@@ -1479,7 +1503,7 @@ def directions_paraclinic_confirm_reset(request):
             iss.save()
             transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
             if transfer_d:
-                transfer_d.cancel = True
+                # transfer_d.cancel = True
                 transfer_d.save()
             if iss.napravleniye.result_rmis_send:
                 c = Client()

@@ -22,6 +22,7 @@ from reportlab.platypus.flowables import HRFlowable
 
 from appconf.manager import SettingManager
 from directions.models import Issledovaniya, Napravleniya, ParaclinicResult
+from directory.models import Researches
 from laboratory import utils
 from laboratory.settings import FONTS_FOLDER
 from utils import tree_directions
@@ -415,6 +416,8 @@ def form_02(request_data):
 
         node_dir = Node("Структура направлений")
         for j in tree_dir:
+            if not Researches.objects.get(pk=j[8]).is_hospital:
+                continue
             if len(j[9]) > 47:
                 research = j[9][:47] + '...'
             else:
