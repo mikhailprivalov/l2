@@ -567,16 +567,15 @@ def form_03(request_data):
     hosp_first_num = hosp_nums_obj[0].get('direction')
     primary_reception_data = primary_reception_get_data(hosp_first_num)
 
-    # hospitalized = 'первично — 1; повторно — 2; по экстренным показаниям — 3; в плановом порядке — 4.'
     hospitalized = ''
     if primary_reception_data['what_time_hospitalized'] and primary_reception_data['plan_hospital']:
-        if primary_reception_data['what_time_hospitalized'].lower().replace(' ','') == 'впервые':
+        if primary_reception_data['what_time_hospitalized'].lower().replace(' ', '') == 'впервые':
             hospitalized = "первично - 1"
-        if primary_reception_data['what_time_hospitalized'].lower().replace(' ','') == 'повторно':
+        if primary_reception_data['what_time_hospitalized'].lower().replace(' ', '') == 'повторно':
             hospitalized = "повторно - 2"
-        if primary_reception_data['plan_hospital'].lower().replace(' ','') == 'да':
+        if primary_reception_data['plan_hospital'].lower().replace(' ', '') == 'да':
             hospitalized = f"{hospitalized}; в плановом порядке -4"
-        if primary_reception_data['extra_hospital'].lower().replace(' ','') == 'да':
+        if primary_reception_data['extra_hospital'].lower().replace(' ', '') == 'да':
             hospitalized = f"{hospitalized}; по экстренным показаниям - 3"
 
     # Получить отделение - из названия услуги или самого главного направления
