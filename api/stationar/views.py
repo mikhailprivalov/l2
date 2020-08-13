@@ -60,22 +60,20 @@ def load(request):
                 "card_pk": card.pk,
                 "individual_pk": card.individual_id,
             },
-            "tree": list(filter(
-                lambda d: True,
-                map(
-                    lambda dirc: {
-                        **dirc,
-                        "research_title": dirc["research_title"].replace("отделение", "отд.").replace("Отделение", "Отд."),
-                        "isCurrent": int(dirc["direction"]) == pk,
-                        "cancel": Napravleniya.objects.get(pk=dirc["direction"]).cancel,
-                        "correct_level": dirc["correct_level"],
-                        "color": dirc["color"],
-                        "issledovaniye": dirc["issledovaniye"],
-                        "order": dirc["order"],
-                    },
-                    tree_direction
-                )
-            ))
+            "tree": list(map(
+                lambda dirc: {
+                    **dirc,
+                    "research_title": dirc["research_title"].replace("отделение", "отд.").replace("Отделение", "Отд."),
+                    "isCurrent": int(dirc["direction"]) == pk,
+                    "cancel": Napravleniya.objects.get(pk=dirc["direction"]).cancel,
+                    "correct_level": dirc["correct_level"],
+                    "color": dirc["color"],
+                    "issledovaniye": dirc["issledovaniye"],
+                    "order": dirc["order"],
+                },
+                tree_direction
+            )
+            )
         }
         break
     return JsonResponse(result)

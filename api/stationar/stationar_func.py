@@ -99,14 +99,6 @@ def hosp_get_hosp_direction(num_dir):
     num_root_dir = root_dir[-1][-3]
     result = tree_directions.get_research_by_dir(num_root_dir)
     num_iss = result[0][0]
-    # main_research = result[0][1]
-    # hosp_site_type = -1
-    # hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_all, hosp_morfology = False, False, False, False, False
-    # hosp_is_hosp = True
-    # hosp_level = -1
-    # hosp_dirs = tree_directions.hospital_get_direction(num_iss, main_research, hosp_site_type, hosp_is_paraclinic,
-    #                                                    hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level,
-    #                                                    hosp_is_all, hosp_morfology)
 
     # отсортировать по подчинениям - построить бинарное дерево
     tree_dir = tree_directions.hosp_tree_direction(num_iss)

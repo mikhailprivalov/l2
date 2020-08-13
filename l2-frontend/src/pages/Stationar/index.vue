@@ -37,7 +37,7 @@
             </a>
           </div>
           <div class="inner-card" v-if="!every">
-            <Favorite :direction="direction" style="display: inline-block"/>
+            <Favorite :direction="direction"/>
           </div>
           <div class="inner-card" v-else>
             {{issTitle}}
@@ -59,7 +59,7 @@
                       }
                     }
                   },
-                  interactive : true, html: '#template-anamnesis' }"
+                  interactive : true, html: '#template-anamnesis'}"
                @show="load_anamnesis"
                class="a-under"
                @click.prevent="edit_anamnesis">Анамнез жизни</a>
@@ -246,14 +246,14 @@
                                 :options="directions_parent_select" placeholder="Откуда поступил" v-model="parent_issledovaniye"/>
                   </div>
                   <div class="col-xs-1">
-                    <i class="fa fa-arrow-right fa-2x fa-fw" style="padding-top: 40px; opacity: 0.5;"></i>
+                    <i class="fa fa-arrow-right fa-2x fa-fw transferArrow"></i>
                   </div>
                   <div class="col-xs-3">
                     <h6><strong>Текущее отделение</strong></h6>
                       <div style="padding-top: 10px">{{direction}} - {{issTitle}}</div>
                   </div>
                   <div class="col-xs-1">
-                    <i class="fa fa-arrow-right fa-2x fa-fw" style="padding-top: 40px; opacity: 0.5;"></i>
+                    <i class="fa fa-arrow-right fa-2x fa-fw transferArrow"></i>
                   </div>
                   <div class="col-xs-3">
                     <h6><strong>Переведен В (следующее отделение)</strong></h6>
@@ -605,7 +605,7 @@
         await this.$store.dispatch(action_types.INC_LOADING)
         await directions_point.cancelDirection({pk});
         this.pk = pk
-        this.load();
+        await this.load();
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       show_anesthesia() {
@@ -1158,6 +1158,11 @@
 </script>
 
 <style scoped lang="scss">
+  .transferArrow {
+    padding-top: 40px;
+    opacity: 0.5
+  }
+
   .cancel_color {
     color: #93046d
   }
