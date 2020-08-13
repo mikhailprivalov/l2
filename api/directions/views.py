@@ -1662,14 +1662,15 @@ def last_field_result(request):
 
 
 def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or):
-    result = None
-    value = None
+    result, value, temp_value = None, None, None
     for current_field_pk in field_pks:
         group_fields = [current_field_pk]
+        logical_and_inside = logical_and
+        logical_or_inside = logical_or
         if current_field_pk.find('@') > -1:
             group_fields = get_input_fields_by_group(current_field_pk)
-            logical_and = True
-            logical_or = False
+            logical_and_inside = True
+            logical_or_inside = False
         for field_pk in group_fields:
             if field_pk.isdigit():
                 rows = get_field_result(client_pk, int(field_pk))
@@ -1679,11 +1680,11 @@ def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_g
                     match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
                     if match:
                         value = normalize_date(value)
-                    if logical_or:
+                    if logical_or_inside:
                         result = {"direction": row[1], "date": row[4], "value": value}
                         if value:
                             break
-                    if logical_and:
+                    if logical_and_inside:
                         r = ParaclinicInputField.objects.get(pk=field_pk)
                         titles = r.get_title()
                         if result is None:
@@ -1693,7 +1694,7 @@ def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_g
                             if value:
                                 result["value"] = f"{temp_value} {titles} - {value};"
 
-        if logical_group_or and value:
+        if logical_group_or and temp_value or logical_or_inside and value:
             break
     return result
 
