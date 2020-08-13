@@ -1690,7 +1690,8 @@ def field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_g
                             result = {"direction": row[1], "date": row[4], "value": value}
                         else:
                             temp_value = result.get('value', ' ')
-                            result["value"] = f"{temp_value} {titles} - {value};"
+                            if value:
+                                result["value"] = f"{temp_value} {titles} - {value};"
 
         if logical_group_or and value:
             break
