@@ -877,7 +877,7 @@
         }).finally(() => {
           this.pk = this.direction
           this.load()
-          this.typeTransfer == "Новый перевод"
+          this.newTransfer = true
           this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
