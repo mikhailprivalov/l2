@@ -22,7 +22,6 @@ urlpatterns = [
     path('confirm_reset', views.confirm_reset),
     path('view_logs', views.load_logs),
     path('users/count', views.users_count),
-    path('users/ldap/dosync', views.users_dosync),
     path('results_history', views.results_history),  # TemplateView.as_view(template_name="dashboard/results_history.html")),
     path('results_report', views.results_report),
     path('results_fastprint', TemplateView.as_view(template_name="dashboard/results_fastprint.html")),
