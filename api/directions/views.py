@@ -1392,7 +1392,8 @@ def directions_paraclinic_result(request):
         response["amd_number"] = iss.napravleniye.amd_number
         Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
         if with_confirm:
-            iss.gen_after_confirm(request.user)
+            if stationar_research != -1:
+                iss.gen_after_confirm(request.user)
             transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
             response["transfer_direction"] = None if not transfer_d else transfer_d.pk
             response["transfer_direction_iss"] = [] if not transfer_d else [r.research.title for r in

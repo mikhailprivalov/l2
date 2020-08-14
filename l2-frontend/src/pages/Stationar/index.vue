@@ -841,6 +841,9 @@
         }
 
         this.$store.dispatch(action_types.INC_LOADING)
+        if (!this.newTransfer) {
+          this.stationar_research = -1
+        }
         directions_point.paraclinicResultSave({
           force: true,
           data: {
