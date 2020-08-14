@@ -36,7 +36,6 @@ def home(request):
             else:
                 return render(request, 'auth.html', {'error': True, 'username': username, 'message': 'Ошибка'})
         else:
-
             return render(request, 'auth.html', {'error': True, 'username': username})  # Сообщение об ошибке
     if request.user.is_authenticated:  # Проверка статуса автоизации
         return HttpResponseRedirect(next)  # Редирект в п/у
