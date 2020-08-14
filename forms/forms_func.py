@@ -760,7 +760,7 @@ def closed_bl(hosp_num_dir):
                 if b.field.title == "к труду":
                     start_work = b.value
                     if start_work.find('-') != -1:
-                        start_work = normalize_date(end_date)
+                        start_work = normalize_date(start_work)
                     continue
 
             return {'is_closed': True, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date, 'start_work': start_work}
