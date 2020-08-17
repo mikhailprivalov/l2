@@ -876,7 +876,6 @@
           }
         }).finally(() => {
           this.pk = this.direction
-          this.load()
           this.newTransfer = true
           this.$store.dispatch(action_types.DEC_LOADING)
         })
