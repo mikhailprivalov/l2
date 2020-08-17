@@ -457,7 +457,7 @@ def form_01(request_data):
         other_diagnos_frame.addFromList([other_diagnos_inframe], canvas)
 
         # Сопутствующие основного заключительного диагноза
-        near_diagnos_text = [Paragraph('{}'.format(near_diagnos), styleJustified)]
+        near_diagnos_text = [Paragraph('{}'.format(near_diagnos.replace('<', '&lt;').replace('>', '&gt;')), styleJustified)]
         near_diagnos_frame = Frame(27 * mm, 181 * mm, 175 * mm, 20 * mm, leftPadding=0, bottomPadding=0,
                                    rightPadding=0, topPadding=0, showBoundary=0)
         near_diagnos_inframe = KeepInFrame(175 * mm, 20 * mm, near_diagnos_text, vAlign='TOP', )
