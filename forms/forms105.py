@@ -740,7 +740,7 @@ def form_03(request_data):
     if hosp_extract_data:
         opinion_diagnos = [[Paragraph('', styleTB), Paragraph(hosp_extract_data['final_diagnos'], styleTB), Paragraph(hosp_extract_data['final_diagnos_mkb'], styleTB),
                             Paragraph(hosp_extract_data['other_diagnos'], styleTB), Paragraph(hosp_extract_data['other_diagnos_mkb'], styleTB),
-                            Paragraph(hosp_extract_data['near_diagnos'], styleTB), Paragraph(hosp_extract_data['near_diagnos_mkb'], styleTB)]]
+                            Paragraph(hosp_extract_data['near_diagnos'].replace('<', '&lt;').replace('>', '&gt;'), styleTB), Paragraph(hosp_extract_data['near_diagnos_mkb'], styleTB)]]
 
     opinion.extend(opinion_diagnos)
     opinion_pathologist = [[Paragraph('Патологоанатомический	', styleTB), Paragraph('', styleTB), Paragraph('', styleTB), Paragraph('', styleTB),
