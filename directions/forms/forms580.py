@@ -20,7 +20,7 @@ from reportlab.platypus import Image
 from laboratory.utils import strdate
 import sys
 import locale
-from reportlab.lib.colors import white, black
+from reportlab.lib.colors import white, black, HexColor
 from laboratory.settings import FONTS_FOLDER
 
 
@@ -44,7 +44,6 @@ def form_01(c: Canvas, dir: Napravleniya):
         style.fontName = "PTAstraSerifReg"
         style.fontSize = 10
         style.leading = 14
-        # style.spaceAfter = 1 * mm
         style.borderColor = black
         style.alignment = TA_CENTER
 
@@ -62,19 +61,18 @@ def form_01(c: Canvas, dir: Napravleniya):
         styleBoldItalic.fontSize = 12
 
         # ширина ячеек
+        frame_left_padding = 11.7 * mm
         even, odd = 4.07 * mm, 1.09 * mm
         thick_dashed_for_symbol = 0.7
         distance_dashed_for_symbol = (1, 1, 1)
-
-        frame_left_padding = 11.7 * mm
-
         step_round_dash = (0.03 * mm, 1 * mm)
         step_square_dash = (1, 1, 1)
         square_dash = 'square'
         round_dash = 'round'
 
-        type_dash = None
-        step_dash = step_square_dash
+        type_dash = 'round'
+        step_dash = step_round_dash
+        color_dash_for_symbol = HexColor('#5b5e5c')
 
         objs = []
         space_symbol = '&nbsp;'
@@ -112,7 +110,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         col_width = tuple(col_width)
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
 
-        a = [('OUTLINE', (i, 0), (i, 0), thick_dashed_for_symbol, colors.black, type_dash, step_dash) for i in range(0, count) if i %2 == 0]
+        a = [('OUTLINE', (i, 0), (i, 0), thick_dashed_for_symbol, color_dash_for_symbol, type_dash, step_dash) for i in range(0, count) if i %2 == 0]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
         tbl.setStyle(TableStyle(a))
         objs.append(Spacer(1, 1 * mm))
@@ -132,7 +130,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         col_width = create_dot_table(count, odd, even)
         col_width = tuple(col_width)
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
-        a = [('OUTLINE', (i, 0), (i, 0), thick_dashed_for_symbol, colors.black, type_dash, step_dash) for i in range(0, count) if i %2 == 0]
+        a = [('OUTLINE', (i, 0), (i, 0), thick_dashed_for_symbol, color_dash_for_symbol, type_dash, step_dash) for i in range(0, count) if i %2 == 0]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
         tbl.setStyle(TableStyle(a))
         objs.append(tbl)
@@ -150,7 +148,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         col_width = create_dot_table(count, odd, even)
         col_width = tuple(col_width)
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
-        a = [('OUTLINE', (i, 0), (i, 0), thick_dashed_for_symbol, colors.black, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
+        a = [('OUTLINE', (i, 0), (i, 0), thick_dashed_for_symbol, color_dash_for_symbol, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
         tbl.setStyle(TableStyle(a))
         objs.append(tbl)
@@ -181,7 +179,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion_family = [opinion_family]
         col_width = tuple(col_width)
         tbl_family = Table(opinion_family, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
-        a = [('OUTLINE', (i, 0), (i, 0), thick_dashed_for_symbol, colors.black, type_dash, step_dash) for i in range(2, count) if i % 2 == 0]
+        a = [('OUTLINE', (i, 0), (i, 0), thick_dashed_for_symbol, color_dash_for_symbol, type_dash, step_dash) for i in range(2, count) if i % 2 == 0]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
         tbl_family.setStyle(TableStyle(a))
         patient_fio.append(tbl_family)
@@ -225,7 +223,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [[Paragraph(' ', style) for i in range(0, count)]]
         col_width = tuple(col_width)
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
-        a = [('OUTLINE', (i, 0), (i, 0), 0.7, colors.black, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
+        a = [('OUTLINE', (i, 0), (i, 0), 0.7, color_dash_for_symbol, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
         tbl.setStyle(TableStyle(a))
         polis_data.append(tbl)
@@ -245,7 +243,7 @@ def form_01(c: Canvas, dir: Napravleniya):
             x += 2
         opinion = [opinion]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
-        a = [('OUTLINE', (i, 0), (i, 0), 0.7, colors.black, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
+        a = [('OUTLINE', (i, 0), (i, 0), 0.7, color_dash_for_symbol, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
         tbl.setStyle(TableStyle(a))
         polis_data.append(tbl)
@@ -264,7 +262,7 @@ def form_01(c: Canvas, dir: Napravleniya):
             x += 2
         opinion = [opinion]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
-        a = [('OUTLINE', (i, 0), (i, 0), 0.7, colors.black, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
+        a = [('OUTLINE', (i, 0), (i, 0), 0.7, color_dash_for_symbol, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
         a.pop(2)
         a.pop(4)
@@ -326,7 +324,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         col_width = tuple(col_width)
         opinion = [opinion]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
-        a = [('OUTLINE', (i, 0), (i, 0), 0.7, colors.black, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
+        a = [('OUTLINE', (i, 0), (i, 0), 0.7, color_dash_for_symbol, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
         tbl.setStyle(TableStyle(a))
         contact_data.append(Paragraph('Контактный телефон', styleLeft))
@@ -354,9 +352,9 @@ def form_01(c: Canvas, dir: Napravleniya):
                   ('SPAN', (1, 1), (2, 1)),
                   ('SPAN', (0, 2), (1, 2)),
                   ('GRID', (0, 0), (-1, -1), 1, colors.white),
-                  ('LINEBELOW', (1, 0), (-1, 0), 0.5, colors.black, 'round', (0.5, 1.5)),
-                  ('LINEBELOW', (1, 1), (-1, 1), 0.5, colors.black, 'round', (0.5, 1.5)),
-                  ('LINEBELOW', (2, 2), (2, -1), 0.5, colors.black, 'round', (0.5, 1.5)),
+                  ('LINEBELOW', (1, 0), (-1, 0), 0.5, color_dash_for_symbol, 'round', (0.5, 1.5)),
+                  ('LINEBELOW', (1, 1), (-1, 1), 0.5, color_dash_for_symbol, 'round', (0.5, 1.5)),
+                  ('LINEBELOW', (2, 2), (2, -1), 0.5, color_dash_for_symbol, 'round', (0.5, 1.5)),
                   ])
         tbl.setStyle(TableStyle(a))
         address_data.append(tbl)
@@ -367,7 +365,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [[Paragraph('', styleLeft)]]
         col_width = [189 * mm]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=14 * mm, colWidths=col_width)
-        a = [('GRID', (0,0), (-1, -1), 1.2, colors.black, None, (1.5, 1.5, 1.5))]
+        a = [('GRID', (0,0), (-1, -1), 1.2, color_dash_for_symbol, None, (1.5, 1.5, 1.5))]
         tbl.setStyle(TableStyle(a))
         diagnos_data_t.append(tbl)
         diagnos_t_frame = Frame(0 * mm, 148.5 * mm, 210 * mm, 15 * mm, leftPadding=10 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
@@ -380,7 +378,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
         a =[('BOTTOMPADDING', (0, 0), (-1, -1), 0.05 * mm),
                   ('LEFTPADDING', (0, 0), (-1, -1), 0.1 * mm),
-                  ('LINEBELOW', (1, 0), (1, 0), 0.5, colors.black, None, (1, 1, 1)),
+                  ('LINEBELOW', (1, 0), (1, 0), 0.5, color_dash_for_symbol, None, (1, 1, 1)),
                   ]
         tbl.setStyle(TableStyle(a))
         diagnos_data.append(tbl)
@@ -396,7 +394,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [Paragraph(' ', style) for i in range(0, count + 2)]
         opinion= opinion.copy()
         opinion[0] = Paragraph('Дата заболевания:', styleRight)
-        start_ill = ""
+        start_ill = "25.08.2020"
         x = 2
         if start_ill:
             for i in start_ill:
@@ -404,7 +402,7 @@ def form_01(c: Canvas, dir: Napravleniya):
                 x += 2
         opinion = [opinion]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
-        a = [('OUTLINE', (i, 0), (i, 0), 0.7, colors.black, round_dash, step_round_dash) for i in range(2, count + 2) if i % 2 == 0]
+        a = [('OUTLINE', (i, 0), (i, 0), 0.7, color_dash_for_symbol, round_dash, step_round_dash) for i in range(2, count + 2) if i % 2 == 0]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
         a.pop(2)
         a.pop(4)
@@ -430,7 +428,7 @@ def form_01(c: Canvas, dir: Napravleniya):
                 x += 2
         opinion = [opinion]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
-        a = [('OUTLINE', (i, 0), (i, 0), 0.7, colors.black, 'round', (0.03 * mm, 1 * mm)) for i in range(2, count + 2) if i % 2 == 0]
+        a = [('OUTLINE', (i, 0), (i, 0), 0.7, color_dash_for_symbol, 'round', (0.03 * mm, 1 * mm)) for i in range(2, count + 2) if i % 2 == 0]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
         tbl.setStyle(TableStyle(a))
         kod_mkb_data.append(tbl)
@@ -454,11 +452,11 @@ def form_01(c: Canvas, dir: Napravleniya):
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
         a = [('BOTTOMPADDING', (0, 0), (-1, -1), 0.05 * mm),
              ('LEFTPADDING', (0, 0), (-1, -1), 0.1 * mm),
-             ('LINEBELOW', (1, 0), (1, 0), 0.5, colors.black, None, (1, 1, 1)),
+             ('LINEBELOW', (1, 0), (1, 0), 0.5, color_dash_for_symbol, None, (1, 1, 1)),
              ]
         tbl.setStyle(TableStyle(a))
         country_data.append(tbl)
-        country_data.append(HRFlowable(width=184.5 * mm, lineCap='round', thickness=0.5, spaceAfter=0.1 * mm, spaceBefore=4 * mm, color=colors.black, dash=(0.5, 1.5)))
+        country_data.append(HRFlowable(width=184.5 * mm, lineCap='round', thickness=0.5, spaceAfter=0.1 * mm, spaceBefore=4 * mm, color=color_dash_for_symbol, dash=(0.5, 1.5)))
         country_data.append(Paragraph(f"{space_symbol * 15}Дата прибывания{space_symbol * 35}Время взятия образца{space_symbol * 35}Время отправки образца", styleLeft))
         country_data.append(Spacer(1, 5.2 * mm))
         country_data.append(Paragraph(f"{space_symbol * 81}день{space_symbol * 26}час{space_symbol * 32}день{space_symbol * 26}час", styleLeft))
@@ -474,7 +472,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion[10] = Paragraph('.', style)
         opinion = [opinion]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
-        a = [('OUTLINE', (i, 0), (i, 0), 0.7, colors.black, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
+        a = [('OUTLINE', (i, 0), (i, 0), 0.7, color_dash_for_symbol, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
         a.pop(2)
         a.pop(4)
@@ -483,19 +481,19 @@ def form_01(c: Canvas, dir: Napravleniya):
         date_arrive_data_frame = Frame(16 * mm, 127 * mm, 52 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         date_arrive_data_frame.addFromList(date_arrive_data, c)
 
-        day_get_material = [four_obj_date(odd, even, style, type_dash, step_dash)]
+        day_get_material = [four_obj_date(odd, even, style, type_dash, step_dash, "25.08", color_dash_for_symbol)]
         day_get_material_frame = Frame(75.4 * mm, 127 * mm, 25 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         day_get_material_frame.addFromList(day_get_material, c)
 
-        time_get_material = [four_obj_date(odd, even, style, type_dash, step_dash)]
+        time_get_material = [four_obj_date(odd, even, style, type_dash, step_dash, "07.00", color_dash_for_symbol)]
         time_get_material_frame = Frame(105.1 * mm, 127 * mm, 25 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         time_get_material_frame.addFromList(time_get_material, c)
 
-        day_out_material = [four_obj_date(odd, even, style, type_dash, step_dash)]
+        day_out_material = [four_obj_date(odd, even, style, type_dash, step_dash, "25.08", color_dash_for_symbol)]
         day_out_material_frame = Frame(139.1 * mm, 127 * mm, 25 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         day_out_material_frame.addFromList(day_out_material, c)
 
-        time_out_material = [four_obj_date(odd, even, style, type_dash, step_dash)]
+        time_out_material = [four_obj_date(odd, even, style, type_dash, step_dash, "09.00", color_dash_for_symbol)]
         time_out_material_frame = Frame(168.1 * mm, 127 * mm, 25 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         time_out_material_frame.addFromList(time_out_material, c)
 
@@ -513,10 +511,11 @@ def form_01(c: Canvas, dir: Napravleniya):
         type_material.append(Spacer(1, 0.5 * mm))
         type_material.append(Paragraph('Вид материала:', styleLeft))
         count = 6
+        type_material_ischeck = '<font face="Symbola" size=10>\u2713</font>'
         col_width = [2.5 * mm, 81 * mm, 2.5 * mm, 53.5 * mm, 2.5 * mm, 35 * mm]
         col_width = tuple(col_width)
         opinion = [Paragraph(' ', style) for i in range(0, count)]
-        opinion[0] = [Paragraph('<font face="Symbola" size=10>\u2713</font>', styleLeft)]
+        opinion[0] = [Paragraph('', styleLeft)]
         opinion[1] = [Paragraph('Мазок/отделяемое из носоглотки и ротоглотки', styleLeft)]
         opinion[3] = [Paragraph('Мокрота', styleLeft)]
         opinion[5] = [Paragraph('Аспират из трахеи', styleLeft)]
@@ -531,9 +530,10 @@ def form_01(c: Canvas, dir: Napravleniya):
         type_material.append(tbl)
         type_material.append(Spacer(1, 1.7 * mm))
         opinion_second = opinion.copy()
-        opinion_second[0] = [Paragraph(' ', styleLeft)]
+        opinion_second[0] = [Paragraph('', styleLeft)]
         opinion_second[1] = [Paragraph('Биопсийный (аутопсийный) материал', styleLeft)]
         opinion_second[3] = [Paragraph('Бронхоальвеолярный лаваж', styleLeft)]
+        opinion_second[4] = [Paragraph(type_material_ischeck, styleLeft)]
         opinion_second[5] = [Paragraph('Кровь (сыворотка)', styleLeft)]
         opinion_t = [opinion_second]
         tbl = Table(opinion_t, hAlign='LEFT', rowHeights=2.5 * mm, colWidths=col_width)
@@ -745,15 +745,20 @@ def split_fio(fio):
     return [fio_split[0], fio_split[1], fio_split[2]]
 
 
-def four_obj_date(odd, even, style, type_dash, step_dash):
+def four_obj_date(odd, even, style, type_dash, step_dash, data="", color_dash_for_symbol=colors.gray):
     count = 5 * 2
     col_width = create_dot_table(count, odd, even)
     col_width = tuple(col_width)
     opinion = [Paragraph(' ', style) for i in range(0, count)]
     opinion[4] = Paragraph('.', style)
+    x = 0
+    if data:
+        for i in list(data):
+            opinion[x] = Paragraph(f"{i}", style)
+            x += 2
     opinion = [opinion]
     tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
-    a = [('OUTLINE', (i, 0), (i, 0), 0.7, colors.black, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
+    a = [('OUTLINE', (i, 0), (i, 0), 0.7, color_dash_for_symbol, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
     a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
     a.pop(2)
     tbl.setStyle(TableStyle(a))
@@ -762,7 +767,8 @@ def four_obj_date(odd, even, style, type_dash, step_dash):
 
 def draw_rectangle(x, y):
     rectangle = Rect(x, y, 5 * mm, 5 * mm)
-    rectangle.fillColor = colors.black
+    rectangle.strokeColor = HexColor('#5b5e5c')
+    rectangle.fillColor = HexColor('#5b5e5c')
     rect_draw = Drawing()
     rect_draw.add(rectangle)
     return rect_draw
