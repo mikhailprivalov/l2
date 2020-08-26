@@ -541,6 +541,7 @@ def hosp_extract_get_data(hosp_last_num):
 
 def hosp_get_clinical_diagnos(hosp_obj):
     clinic_diagnos = ''
+    tmp_clinic_diagnos = []
     for i in hosp_obj:
         hosp_diagnostic_epicris = hosp_get_data_direction(i['direction'], site_type=6, type_service='None', level=2)
         day_entries_iss = []
@@ -552,24 +553,37 @@ def hosp_get_clinical_diagnos(hosp_obj):
                     day_entries_iss.append(i.get('iss'))
                     if not day_entries_research_id:
                         day_entries_research_id = i.get('research_id')
-        titles_field = ['Диагноз клинический', 'Дата установления диагноза']
+        titles_field = ['Диагноз клинический', 'Дата установления диагноза', 'Основной', 'Осложнение', 'Сопутствующий']
         list_values = []
         if titles_field and day_entries_iss:
             for i in day_entries_iss:
                 list_values.append(get_result_value_iss(i, day_entries_research_id, titles_field))
 
         if list_values:
-            for i in list_values:
-                if not i:
-                    continue
-                if (i[1][3]).find('Дата установления диагноза') != -1:
-                    date_diag = normalize_date(i[1][2])
-                    if date_diag and i[0][2]:
-                        clinic_diagnos = f'{clinic_diagnos}{i[0][2]}; дата: {str(date_diag)} <br/>'
-                elif (i[0][3]).find('Дата установления диагноза') != -1:
-                    date_diag = normalize_date(i[0][2])
-                    if date_diag and i[1][2]:
-                        clinic_diagnos = f'{clinic_diagnos}{i[1][2]}; дата: {str(date_diag)} <br/>'
+            for fields in list_values:
+                clinical_data = {'clinic_diagnos': '', 'main_diagnos': '', 'other_diagnos': '', 'near_diagnos': '', 'date': ''}
+                for i in fields:
+                    if i[3] == 'Дата установления диагноза':
+                        clinical_data['date'] = normalize_date(i[2])
+                        continue
+                    if i[3] == 'Диагноз клинический':
+                        clinical_data['clinic_diagnos'] = i[2]
+                        continue
+                    if i[3] == 'Основной':
+                        clinical_data['main_diagnos'] = f"Основной: {i[2]}"
+                        continue
+                    if i[3] == 'Осложнение':
+                        clinical_data['other_diagnos'] = f"; Осложнение: {i[2]}"
+                        continue
+                    if i[3] == 'Сопутствующий':
+                        clinical_data['near_diagnos'] = f"; Сопутствующий: {i[2]}"
+                        continue
+                if clinical_data['date'] and (clinical_data['clinic_diagnos'] or clinical_data['main_diagnos']):
+                    tmp_clinic_diagnos.append(clinical_data.copy())
+
+    for i in tmp_clinic_diagnos:
+        clinic_diagnos = f"{clinic_diagnos}{i['clinic_diagnos']} <u>{i['main_diagnos']}</u>{i['other_diagnos']}{i['near_diagnos']}; дата: {i['date']}<br/>"
+
     return clinic_diagnos
 
 
@@ -658,7 +672,7 @@ def hosp_get_operation_data(num_dir):
 
     titles_field = ['Название операции', 'Дата проведения', 'Время начала', 'Время окончания', 'Метод обезболивания', 'Осложнения', 'Код операции',
                     'Код манипуляции', 'Оперативное вмешательство', 'Код анестезиолога', 'Категория сложности', 'Диагноз после оперативного лечения',
-                    'МКБ 10']
+                    'МКБ 10', 'Оперировал']
     list_values = []
 
     operation_result = []
@@ -718,6 +732,10 @@ def hosp_get_operation_data(num_dir):
                     continue
                 if field[3] == 'МКБ 10':
                     operation_data['mkb10'] = field[2]
+                    continue
+                if field[3] == 'Оперировал':
+                    if field[2]:
+                        operation_data['doc_fio'] = field[2]
                     continue
 
             operation_data['name_operation'] = f"{operation_data['name_operation']} {category_difficult}"
