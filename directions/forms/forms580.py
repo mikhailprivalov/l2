@@ -70,7 +70,8 @@ def form_01(c: Canvas, dir: Napravleniya):
 
         type_dash = 'round'
         step_dash = step_round_dash
-        color_dash_for_symbol = HexColor('#5b5e5c')
+        # color_dash_for_symbol = HexColor('#5b5e5c')
+        color_dash_for_symbol = HexColor('#b3b3b3')
 
         objs = []
         space_symbol = '&nbsp;'
@@ -84,8 +85,8 @@ def form_01(c: Canvas, dir: Napravleniya):
         ]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=27 * mm, colWidths=(63 * mm, 51 * mm, 13 * mm, 50 * mm))
         tbl.setStyle(TableStyle([
-            ('INNERGRID', (1, 0), (1, 0), 1.5, colors.black, None, step_square_dash),
-            ('OUTLINE', (1, 0), (1, 0), 1.5, colors.black, None, step_square_dash),
+            ('INNERGRID', (1, 0), (1, 0), 1.5, colors.black, 'round', step_round_dash),
+            ('OUTLINE', (1, 0), (1, 0), 1.5, colors.black, 'round', step_round_dash),
             ('INNERGRID', (3, 0), (3, 0), 1.5, colors.black),
             ('OUTLINE', (3, 0), (3, 0), 1.5, colors.black),
             ('BOTTOMPADDING', (1, 0), (1, 0), 5 * mm),
@@ -343,7 +344,7 @@ def form_01(c: Canvas, dir: Napravleniya):
 
         col_width = [32 * mm, 20 * mm, 137 * mm]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=4.4 * mm, colWidths=col_width)
-        a = [('GRID', (0,0), (-1, -1), 0.2, colors.black)]
+        a = [('GRID', (0,0), (-1, -1), 0.2, color_dash_for_symbol)]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), -0.65 * mm),
                   ('LEFTPADDING', (0, 0), (-1, -1), 0.1 * mm),
                   ('SPAN', (1, 0), (2, 0)),
@@ -437,7 +438,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [[Paragraph('', styleLeft)]]
         col_width = [189 * mm]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=25 * mm, colWidths=col_width)
-        a = [('GRID', (0, 0), (-1, -1), 1.2, colors.black, None, (1.5, 1.5, 1.5))]
+        a = [('GRID', (0, 0), (-1, -1), 1.2, color_dash_for_symbol, None, (1.5, 1.5, 1.5))]
         tbl.setStyle(TableStyle(a))
         country_data_t.append(tbl)
         country_t_frame = Frame(0 * mm, 121.5 * mm, 210 * mm, 25.5 * mm, leftPadding=10 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
@@ -499,7 +500,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [[Paragraph('', styleLeft)]]
         col_width = [189 * mm]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=14 * mm, colWidths=col_width)
-        a = [('GRID', (0, 0), (-1, -1), 1.2, colors.black, None, (1.5, 1.5, 1.5))]
+        a = [('GRID', (0, 0), (-1, -1), 1.2, color_dash_for_symbol, None, (1.5, 1.5, 1.5))]
         tbl.setStyle(TableStyle(a))
         type_material_t.append(tbl)
         type_material_t_frame = Frame(0 * mm, 105 * mm, 210 * mm, 14 * mm, leftPadding=10 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
@@ -547,7 +548,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [[Paragraph('', styleLeft)]]
         col_width = [189 * mm]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=23 * mm, colWidths=col_width)
-        a = [('GRID', (0, 0), (-1, -1), 1.2, colors.black, None, (1.5, 1.5, 1.5))]
+        a = [('GRID', (0, 0), (-1, -1), 1.2, color_dash_for_symbol, None, (1.5, 1.5, 1.5))]
         tbl.setStyle(TableStyle(a))
         category_patient_t.append(tbl)
         category_patient_t_frame = Frame(0 * mm, 79 * mm, 210 * mm, 23 * mm, leftPadding=10 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
@@ -657,7 +658,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [[Paragraph('', styleLeft)]]
         col_width = [189 * mm]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=15 * mm, colWidths=col_width)
-        a = [('GRID', (0, 0), (-1, -1), 1.2, colors.black, None, (1.5, 1.5, 1.5))]
+        a = [('GRID', (0, 0), (-1, -1), 1.2, color_dash_for_symbol, None, (1.5, 1.5, 1.5))]
         tbl.setStyle(TableStyle(a))
         previous_t.append(tbl)
         previous_t_frame = Frame(0 * mm, 43.5 * mm, 210 * mm, 15 * mm, leftPadding=10 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
@@ -765,8 +766,8 @@ def four_obj_date(odd, even, style, type_dash, step_dash, data="", color_dash_fo
 
 def draw_rectangle(x, y):
     rectangle = Rect(x, y, 5 * mm, 5 * mm)
-    rectangle.strokeColor = HexColor('#5b5e5c')
-    rectangle.fillColor = HexColor('#5b5e5c')
+    rectangle.strokeColor = HexColor('#000000')
+    rectangle.fillColor = HexColor('#000000')
     rect_draw = Drawing()
     rect_draw.add(rectangle)
     return rect_draw
