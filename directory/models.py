@@ -664,6 +664,7 @@ class Culture(models.Model):
     title = models.CharField(max_length=255, help_text="Название культуры")
     group_culture = models.ForeignKey(GroupCulture, db_index=True, null=True, blank=True, help_text='Группа для культуры', on_delete=models.SET_NULL)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+    lis = models.CharField(max_length=12, default=None, null=True, blank=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие культуры', db_index=True)
 
     def __str__(self):
@@ -766,6 +767,7 @@ class Antibiotic(models.Model):
     title = models.CharField(max_length=255, help_text="Название антибиотика")
     group_antibiotic = models.ForeignKey(GroupAntibiotic, db_index=True, null=True, blank=True, help_text='Группа антибиотиков', on_delete=models.SET_NULL)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+    lis = models.CharField(max_length=12, default=None, null=True, blank=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие антибиотика', db_index=True)
 
     def __str__(self):

@@ -27,13 +27,12 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
             directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s AS datetime_confirm,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI:SS') as time_confirm,
-            
             directions_issledovaniya.maybe_onco, statistics_tickets_visitpurpose.title AS purpose,
             directions_issledovaniya.diagnos, statistics_tickets_resultoftreatment.title AS iss_result,
             statistics_tickets_outcomes.title AS outcome
             FROM directions_issledovaniya 
             LEFT JOIN directory_researches
-            ON directions_issledovaniya.research_id = directory_researches.Id
+            ON directions_issledovaniya.research_id = directory_researches.id
             LEFT JOIN directions_napravleniya 
             ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
             LEFT JOIN statistics_tickets_visitpurpose
@@ -57,12 +56,9 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
         t_card AS 
             (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number AS card_number, 
             clients_individual.family AS client_family, clients_individual.name AS client_name,
-            clients_individual.patronymic AS client_patronymic, to_char(clients_individual.birthday, 'DD.MM.YYYY') as birthday, 
-            clients_document.number, clients_document.serial, clients_document.who_give 
+            clients_individual.patronymic AS client_patronymic, to_char(clients_individual.birthday, 'DD.MM.YYYY') as birthday 
             FROM clients_individual
             LEFT JOIN clients_card ON clients_individual.id = clients_card.individual_id
-            LEFT JOIN clients_document ON clients_card.individual_id = clients_document.individual_id          
-            WHERE clients_document.document_type_id=(SELECT id AS polis_id FROM clients_documenttype  WHERE title = 'Полис ОМС')
             ORDER BY clients_card.id)
         
         SELECT title, code, is_first_reception, polis_n, polis_who_give, first_time, napravleniye_id, doc_confirmation_id, 
@@ -134,7 +130,7 @@ def total_report_sql(d_conf, d_s, d_e, fin):
         t_res.id, t_res.title, t_res.co_executor_2_title
         FROM iss_doc
         LEFT JOIN t_res ON iss_doc.research_id = t_res.id
-        ORDER BY iss_doc.date_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin': fin})
+        ORDER BY iss_doc.date_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin': fin, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
     return row
@@ -271,6 +267,6 @@ def disp_diagnos(diagnos, d_s, d_e):
             LEFT JOIN t_doc_start ON t_iss.doc_start_reg_id = t_doc_start.docstart_id
             LEFT JOIN t_doc_end ON t_iss.doc_end_reg_id = t_doc_end.docend_id
             ORDER by patient
-            """, params={'diagnos': diagnos, 'd_start': d_s, 'd_end': d_e})
+            """, params={'diagnos': diagnos, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE})
         row = cursor.fetchall()
     return row
