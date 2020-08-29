@@ -32,6 +32,10 @@
               <label for="create-fsli">Код ФСЛИ:</label>
               <input class="form-control" id="create-fsli" v-model="editElementFsli" placeholder="Введите код ФСЛИ.."/>
             </div>
+            <div class="form-group">
+              <label for="create-code-lis">Код LIS:</label>
+              <input class="form-control" id="create-code-lis" v-model="editElementLis" placeholder="Введите код LIS"/>
+            </div>
             <div class="checkbox">
               <label>
                 <input type="checkbox" v-model="editElementHide"> Скрыть
@@ -170,6 +174,7 @@
         searchTypesGroups: 'Группы',
         editElementTitle: '',
         editElementFsli: '',
+        editElementLis: '',
         editElementHide: false,
         editElementPk: -1,
         editElementGroup: '',
@@ -237,6 +242,7 @@
         this.editElementPk = element.pk
         this.editElementTitle = element.title
         this.editElementFsli = element.fsli
+        this.editElementLis = element.lis
         this.editElementHide = element.hide
         this.editElementGroup = element.group
       },
@@ -250,7 +256,7 @@
         await this.$store.dispatch(action_types.INC_LOADING)
         const {ok, message} = await bacteria_point.saveElement({
           'TypesObject': this.searchTypesObject, 'title': this.editElementTitle, 'fsli': this.editElementFsli,
-          'pk': this.editElementPk, 'hide': this.editElementHide
+          'pk': this.editElementPk, 'hide': this.editElementHide, 'lis': this.editElementLis
         })
         if (ok) {
           okmessage('Элемент сохранён', `${this.searchTypesObject} – ${this.editElementTitle}`)
@@ -265,6 +271,7 @@
       onClearContentEdit() {
         this.editElementTitle = ''
         this.editElementFsli = ''
+        this.editElementLis= ''
         this.editElementPk = -1
         this.editElementHide = false
         this.editElementGroup = ''
