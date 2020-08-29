@@ -197,8 +197,8 @@ def endpoint(request):
         if app.active:
             data["app_name"] = app.name
             if message_type == "R_BAC":
-                phen = data.get('phen', {})
-
+                # phen = data.get('phen', {})
+                pass
             elif message_type == "R" or data.get("result"):
                 if pk != -1:
                     dw = app.direction_work
