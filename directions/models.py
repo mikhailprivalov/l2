@@ -1152,6 +1152,7 @@ class MicrobiologyResultCulture(models.Model):
                                       on_delete=models.CASCADE, related_name='culture_results')
     culture = models.ForeignKey(directory.Culture, help_text="Культура", on_delete=models.PROTECT)
     koe = models.CharField(max_length=16, help_text='КОЕ')
+    comments = models.TextField(default='')
 
     class Meta:
         verbose_name = 'Результат-культура'
@@ -1167,6 +1168,7 @@ class MicrobiologyResultCultureAntibiotic(models.Model):
 
     result_culture = models.ForeignKey(MicrobiologyResultCulture, help_text="Результат-культура", on_delete=models.CASCADE, related_name='culture_antibiotic')
     antibiotic = models.ForeignKey(directory.Antibiotic, help_text="Антибиотик", on_delete=models.PROTECT)
+    antibiotic_amount = models.CharField(max_length=30, help_text='Дозировка антибиотика', default='', blank=True)
     sensitivity = models.CharField(max_length=1, choices=SENSITIVITIES, help_text="Чувствительность")
     dia = models.CharField(max_length=64, help_text='Диаметр')
 

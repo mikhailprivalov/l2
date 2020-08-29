@@ -1023,6 +1023,7 @@ def directions_paraclinic_form(request):
                             "bacteryTitle": br.culture.title,
                             "bacteryGroupTitle": br.culture.group_culture.title if br.culture.group_culture else '',
                             "koe": br.koe,
+                            "comments": br.comments,
                             "antibiotics": [],
                             "selectedGroup": {},
                             "selectedAntibiotic": {},
@@ -1032,6 +1033,7 @@ def directions_paraclinic_form(request):
                         for ar in MicrobiologyResultCultureAntibiotic.objects.filter(result_culture=br):
                             bactery["antibiotics"].append({
                                 "pk": ar.antibiotic.pk,
+                                "amount": ar.antibiotic_amount,
                                 "resultPk": ar.pk,
                                 "sri": ar.sensitivity,
                                 "dia": ar.dia,
@@ -1329,6 +1331,7 @@ def directions_paraclinic_result(request):
                         bactery = MicrobiologyResultCulture.objects.get(pk=br['resultPk'])
                         bactery.culture_id = br['bacteryPk']
                         bactery.koe = br['koe']
+                        bactery.comments = br.get('comments', '')
                     bactery.save()
                     has_bacteries.append(bactery.pk)
 
@@ -1338,13 +1341,15 @@ def directions_paraclinic_result(request):
                                 result_culture=bactery,
                                 antibiotic_id=ar['pk'],
                                 sensitivity=ar['sri'],
-                                dia=ar['dia']
+                                dia=ar['dia'],
+                                antibiotic_amount=ar.get('amount', ''),
                             )
                         else:
                             anti = MicrobiologyResultCultureAntibiotic.objects.get(pk=ar['resultPk'])
                             anti.antibiotic_id = ar['pk']
                             anti.sensitivity = ar['sri']
                             anti.dia = ar['dia']
+                            anti.antibiotic_amount = ar.get('amount', '')
                         anti.save()
                         has_anti.append(anti.pk)
                 MicrobiologyResultCulture.objects.filter(issledovaniye=iss).exclude(pk__in=has_bacteries).delete()

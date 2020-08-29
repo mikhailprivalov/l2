@@ -38,4 +38,4 @@ class Command(BaseCommand):
                 if not culture.exists():
                     group_culture = GroupCulture.objects.filter(title=cells[group]).first()
                     Culture(title=cells[title], group_culture=group_culture, lis=cells[lis]).save()
-                    print('культура созранена', cells[group])
+                    print('культура сохранена', cells[group])

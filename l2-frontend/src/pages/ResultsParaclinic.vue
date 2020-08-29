@@ -342,11 +342,11 @@
               </div>
             </div>
             <BacMicroForm :confirmed="row.confirmed" v-model="row.microbiology.bacteries" />
-            <div class="group">
+            <!--<div class="group">
               <div class="group-title">Бактериофаги</div>
               <div class="fields">
               </div>
-            </div>
+            </div>-->
             <div class="group">
               <div class="group-title">Заключение</div>
               <div class="fields">
