@@ -378,7 +378,7 @@
       researches_sub_categories(sc_id) {
         let r = []
         for (const row of (this.$store.getters.researches[this.rev_t] || [])) {
-          if (row.site_type_raw === sc_id) {
+          if (row.site_type_raw === sc_id && row.site_type === this.dep) {
             r.push(row)
           }
         }
