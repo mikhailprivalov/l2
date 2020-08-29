@@ -665,6 +665,7 @@ class Culture(models.Model):
     title = models.CharField(max_length=255, help_text="Название культуры")
     group_culture = models.ForeignKey(GroupCulture, db_index=True, null=True, blank=True, help_text='Группа для культуры', on_delete=models.SET_NULL)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+    lis = models.CharField(max_length=32, default=None, null=True, blank=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие культуры', db_index=True)
 
     def __str__(self):
@@ -690,11 +691,11 @@ class Culture(models.Model):
             title_group = ""
             if i.group_culture:
                 title_group = i.group_culture.title
-            elements.append({"pk": i.pk, "title": i.title, "fsli": i.fsli, "hide": i.hide, "group": title_group})
+            elements.append({"pk": i.pk, "title": i.title, "fsli": i.fsli, "hide": i.hide, "group": title_group, "lis": i.lis})
         return elements
 
     @staticmethod
-    def culture_save(pk, title='', fsli='', hide=False):
+    def culture_save(pk, title='', fsli='', hide=False, lis=''):
         """
         Запись в базу сведений о культуре
         """
@@ -703,8 +704,9 @@ class Culture(models.Model):
             culture_obj.title = title
             culture_obj.fsli = fsli
             culture_obj.hide = hide
+            culture_obj.lis = lis
         else:
-            culture_obj = Culture(title=title, fsli=fsli, hide=hide, group_culture=None)
+            culture_obj = Culture(title=title, fsli=fsli, hide=hide, group_culture=None, lis=lis)
 
         culture_obj.save()
         return culture_obj
@@ -767,6 +769,7 @@ class Antibiotic(models.Model):
     title = models.CharField(max_length=255, help_text="Название антибиотика")
     group_antibiotic = models.ForeignKey(GroupAntibiotic, db_index=True, null=True, blank=True, help_text='Группа антибиотиков', on_delete=models.SET_NULL)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+    lis = models.CharField(max_length=32, default=None, null=True, blank=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие антибиотика', db_index=True)
 
     def __str__(self):
@@ -795,18 +798,19 @@ class Antibiotic(models.Model):
             title_group = ""
             if i.group_antibiotic:
                 title_group = i.group_antibiotic.title
-            elements.append({"pk": i.pk, "title": i.title, "fsli": i.fsli, "hide": i.hide, "group": title_group})
+            elements.append({"pk": i.pk, "title": i.title, "fsli": i.fsli, "hide": i.hide, "group": title_group, "lis": i.lis})
         return elements
 
     @staticmethod
-    def antibiotic_save(pk, title='', fsli='', hide=False):
+    def antibiotic_save(pk, title='', fsli='', hide=False, lis=''):
         if pk > 0:
             antibiotic_obj = Antibiotic.objects.get(pk=pk)
             antibiotic_obj.title = title
             antibiotic_obj.fsli = fsli
             antibiotic_obj.hide = hide
+            antibiotic_obj.lis = lis
         else:
-            antibiotic_obj = Antibiotic(title=title, fsli=fsli, hide=hide, group_antibiotic=None)
+            antibiotic_obj = Antibiotic(title=title, fsli=fsli, hide=hide, group_antibiotic=None, lis=lis)
         antibiotic_obj.save()
         return antibiotic_obj
 
