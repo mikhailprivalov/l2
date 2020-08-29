@@ -30,10 +30,30 @@
     </div>
     <div class="content-picker" :class="{hidetemplates: hidetemplates && !just_search}"
          v-if="researches_display.length > 0">
-      <research-pick @click.native="select_research(row.pk)" class="research-select"
-                     :key="row.pk"
-                     :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
-                     v-for="row in researches_display" :research="row"/>
+      <template v-if="work_as_subcategory">
+        <template v-if="selectedSubcategory === -1">
+          <div class="category-title">Категории</div>
+          <category-pick @click.native="selectedSubcategory = row.pk" class="research-select" :key="row.pk"
+                         v-for="row in subcategories" :category="row" />
+        </template>
+        <template v-else>
+          <div class="category-title">
+            <a href="#" @click.prevent="selectedSubcategory = -1" class="a-under">
+              <i class="fa fa-arrow-left"></i> Назад</a>&nbsp;&nbsp;{{selectedSubcategoryObj.title}}
+          </div>
+
+          <research-pick @click.native="select_research(row.pk)" class="research-select"
+                         :key="row.pk"
+                         :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
+                         v-for="row in selectedSubcategoryObj.researches || []" :research="row"/>
+        </template>
+      </template>
+      <template v-else>
+        <research-pick @click.native="select_research(row.pk)" class="research-select"
+                       :key="row.pk"
+                       :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
+                       v-for="row in researches_display" :research="row"/>
+      </template>
     </div>
     <div class="content-none" v-else>
       Нет данных
@@ -116,10 +136,11 @@
   import * as action_types from '../store/action-types'
   import ResearchPick from './ResearchPick'
   import {debounce} from 'lodash-es/function'
+  import CategoryPick from "@/ui-cards/CategoryPick";
 
   export default {
     name: 'researches-picker',
-    components: {ResearchPick},
+    components: {CategoryPick, ResearchPick},
     props: {
       value: {},
       autoselect: {
@@ -173,6 +194,7 @@
         type: '-1',
         dep: -1,
         template: -1,
+        selectedSubcategory: -1,
         checked_researches: [],
         search: '',
         search_template: '',
@@ -240,7 +262,12 @@
       },
       search_template: debounce(function (nv) {
         this.do_search_template(nv)
-      }, 80)
+      }, 80),
+      subcategories() {
+        if (this.subcategories.length === 0) {
+          this.selectedSubcategory = -1
+        }
+      },
     },
     computed: {
       types() {
@@ -261,6 +288,30 @@
           }
         }
         return {title: 'Не выбран тип', pk: '-1'}
+      },
+      selectedSubcategoryObj() {
+        return this.subcategories.find(c => c.pk === this.selectedSubcategory) || {};
+      },
+      subcategory_base() {
+        if (this.dep === 10001) {
+          return 9;
+        }
+        return null;
+      },
+      work_as_subcategory() {
+        return this.subcategory_base !== null;
+      },
+      subcategories() {
+        if (!this.work_as_subcategory) {
+          return [];
+        }
+        let sc = this.$store.getters.ex_dep[this.subcategory_base];
+        sc = sc.map(c => {
+          const researches = this.researches_sub_categories(c.pk);
+          const selected = researches.filter(({pk}) => this.checked_researches.includes(pk)).length;
+          return {...c, researches, selected};
+        });
+        return sc.filter(c => c.researches.length > 0);
       },
       selected_type_i() {
         let i = 0
@@ -324,8 +375,14 @@
       },
     },
     methods: {
-      load_templates() {
-
+      researches_sub_categories(sc_id) {
+        let r = []
+        for (const row of (this.$store.getters.researches[this.rev_t] || [])) {
+          if (row.site_type_raw === sc_id) {
+            r.push(row)
+          }
+        }
+        return r.filter(x => !this.filter_researches.includes(x.pk))
       },
       researches_dep_display(dep = this.dep) {
         let r = []
@@ -678,6 +735,17 @@
   .top-inner-select {
     background-color: #AAB2BD;
     color: #fff;
+  }
+
+  .category-title {
+    flex: 0 1 100%;
+    width: 100%;
+    height: 34px;
+    border: 1px solid #6C7A89 !important;
+    margin-bottom: 5px;
+    padding: 8px;
+    text-align: left;
+    font-weight: bold;
   }
 
   .research-select {
