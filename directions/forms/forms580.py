@@ -516,7 +516,9 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [Paragraph(' ', style) for i in range(0, count)]
         opinion[0] = [Paragraph('', styleLeft)]
         opinion[1] = [Paragraph('Мазок/отделяемое из носоглотки и ротоглотки', styleLeft)]
+        opinion[2] = [Paragraph('', styleLeft)]
         opinion[3] = [Paragraph('Мокрота', styleLeft)]
+        opinion[4] = [Paragraph('', styleLeft)]
         opinion[5] = [Paragraph('Аспират из трахеи', styleLeft)]
         opinion_t = [opinion]
         tbl = Table(opinion_t, hAlign='LEFT', rowHeights=2.5 * mm, colWidths=col_width)
@@ -531,6 +533,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion_second = opinion.copy()
         opinion_second[0] = [Paragraph('', styleLeft)]
         opinion_second[1] = [Paragraph('Биопсийный (аутопсийный) материал', styleLeft)]
+        opinion[2] = [Paragraph('', styleLeft)]
         opinion_second[3] = [Paragraph('Бронхоальвеолярный лаваж', styleLeft)]
         opinion_second[4] = [Paragraph(type_material_ischeck, styleLeft)]
         opinion_second[5] = [Paragraph('Кровь (сыворотка)', styleLeft)]
