@@ -34,12 +34,13 @@ def save_culture(request):
     fsli = request_data['fsli']
     pk = request_data['pk']
     hide = request_data['hide']
+    lis = request_data['lis']
 
     if types_object == 'Бактерии':
-        Culture.culture_save(pk, title, fsli, hide)
+        Culture.culture_save(pk, title, fsli, hide, lis)
 
     if types_object == 'Антибиотики':
-        Antibiotic.antibiotic_save(pk, title, fsli, hide)
+        Antibiotic.antibiotic_save(pk, title, fsli, hide, lis)
 
     result = {"ok": True, "message": ""}
 
