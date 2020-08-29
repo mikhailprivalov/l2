@@ -3,6 +3,7 @@
        :title="`${title}, ${count} шт.`" v-tippy="{ placement : 'bottom', arrow: true }"
        @click.right.prevent="update_comment">
     <div class="root-in">
+      <span class="category" v-if="category">[{{category}}]</span>
       {{title}}
       <span class="count" v-if="count > 1">(x{{count}})</span>
       <span class="comment" v-if="comment !== '' && !simple">[{{comment}}]</span>
@@ -47,7 +48,10 @@
       count: {
         type: Number,
         default: 1,
-      }
+      },
+      category: {
+        type: String,
+      },
     },
     methods: {
       remove() {
@@ -111,6 +115,12 @@
   .service_location {
     margin-left: 3px;
     color: #93046d;
+    font-weight: 600;
+  }
+
+  .category {
+    margin-right: 3px;
+    color: #042693;
     font-weight: 600;
   }
 </style>
