@@ -61,7 +61,6 @@ class ResearchSite(models.Model):
         (2, 'Стоматалогия'),
         (3, 'Стационар'),
         (4, 'Микробиология'),
-        (5, 'Морфология – Микробиология'),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
@@ -202,7 +201,7 @@ class Researches(models.Model):
             10: dict(is_citology=True),
             11: dict(is_gistology=True),
         }
-        return ts.get(t, {})
+        return ts.get(t + 1, {})
 
     @property
     def is_doc_referral(self):

@@ -180,7 +180,7 @@
           '-3': 5,
           '-4': 6,
           '-5': 7,
-          '-6': 9,
+          '-6': 8,
         }[this.department] || this.department
       },
       ex_deps() {

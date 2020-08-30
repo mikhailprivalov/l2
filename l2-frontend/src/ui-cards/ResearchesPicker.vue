@@ -294,7 +294,7 @@
       },
       subcategory_base() {
         if (this.dep === 10001) {
-          return 9;
+          return 8;
         }
         return null;
       },
