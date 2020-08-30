@@ -17,11 +17,12 @@ from reportlab.platypus.flowables import HRFlowable
 from reportlab.pdfgen.canvas import Canvas
 from laboratory.settings import FONTS_FOLDER
 from reportlab.platypus import Image
-from laboratory.utils import strdate
+from laboratory.utils import strdate, strtime
 import sys
 import locale
 from reportlab.lib.colors import white, black, HexColor
 from laboratory.settings import FONTS_FOLDER
+from directions.models import Issledovaniya
 
 
 def form_01(c: Canvas, dir: Napravleniya):
@@ -393,7 +394,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [Paragraph(' ', style) for i in range(0, count + 2)]
         opinion= opinion.copy()
         opinion[0] = Paragraph('Дата заболевания:', styleRight)
-        start_ill = "25.08.2020"
+        start_ill = strdate(dir.data_sozdaniya)
         x = 2
         if start_ill:
             for i in start_ill:
@@ -480,15 +481,21 @@ def form_01(c: Canvas, dir: Napravleniya):
         date_arrive_data_frame = Frame(16 * mm, 127 * mm, 52 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         date_arrive_data_frame.addFromList(date_arrive_data, c)
 
-        day_get_material = [four_obj_date(odd, even, style, type_dash, step_dash, "25.08", color_dash_for_symbol)]
+        day_get_date = ""
+        if start_ill:
+            day_get_date = start_ill[0:5]
+        day_get_material = [four_obj_date(odd, even, style, type_dash, step_dash, day_get_date, color_dash_for_symbol)]
         day_get_material_frame = Frame(75.4 * mm, 127 * mm, 25 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         day_get_material_frame.addFromList(day_get_material, c)
 
-        time_get_material = [four_obj_date(odd, even, style, type_dash, step_dash, "07.00", color_dash_for_symbol)]
+        time_get_date = ""
+        if start_ill:
+            time_get_date = strtime(dir.data_sozdaniya)[:5].replace(':','.')
+        time_get_material = [four_obj_date(odd, even, style, type_dash, step_dash, time_get_date, color_dash_for_symbol)]
         time_get_material_frame = Frame(105.1 * mm, 127 * mm, 25 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         time_get_material_frame.addFromList(time_get_material, c)
 
-        day_out_material = [four_obj_date(odd, even, style, type_dash, step_dash, "25.08", color_dash_for_symbol)]
+        day_out_material = [four_obj_date(odd, even, style, type_dash, step_dash, day_get_date, color_dash_for_symbol)]
         day_out_material_frame = Frame(139.1 * mm, 127 * mm, 25 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         day_out_material_frame.addFromList(day_out_material, c)
 
@@ -510,15 +517,32 @@ def form_01(c: Canvas, dir: Napravleniya):
         type_material.append(Spacer(1, 0.5 * mm))
         type_material.append(Paragraph('Вид материала:', styleLeft))
         count = 6
-        type_material_ischeck = '<font face="Symbola" size=10>\u2713</font>'
         col_width = [2.5 * mm, 81 * mm, 2.5 * mm, 53.5 * mm, 2.5 * mm, 35 * mm]
         col_width = tuple(col_width)
         opinion = [Paragraph(' ', style) for i in range(0, count)]
-        opinion[0] = [Paragraph('', styleLeft)]
+
+        iss = Issledovaniya.objects.get(napravleniye=dir.pk)
+        service_location_title = "" if not iss.service_location else iss.research.service_location.title
+        localization0, localization1, localization2, localization3, localization4, localization5 = '', '', '', '', '', ''
+        type_ischeck = '<font face="Symbola" size=10>\u2713</font>'
+        if service_location_title:
+            if service_location_title == "Мазок/отделяемое из носоглотки и ротоглотки":
+                localization0 = type_ischeck
+            elif service_location_title == "Мокрота":
+                localization1 = type_ischeck
+            elif service_location_title == "Аспират из трахеи":
+                localization2 = type_ischeck
+            elif service_location_title == "Биопсийный (аутопсийный) материал":
+                localization3 = type_ischeck
+            elif service_location_title == "Бронхоальвеолярный лаваж":
+                localization4 = type_ischeck
+            elif service_location_title == "Кровь (сыворотка)":
+                localization5 = type_ischeck
+        opinion[0] = [Paragraph(localization0, styleLeft)]
         opinion[1] = [Paragraph('Мазок/отделяемое из носоглотки и ротоглотки', styleLeft)]
-        opinion[2] = [Paragraph('', styleLeft)]
+        opinion[2] = [Paragraph(localization1, styleLeft)]
         opinion[3] = [Paragraph('Мокрота', styleLeft)]
-        opinion[4] = [Paragraph('', styleLeft)]
+        opinion[4] = [Paragraph(localization2, styleLeft)]
         opinion[5] = [Paragraph('Аспират из трахеи', styleLeft)]
         opinion_t = [opinion]
         tbl = Table(opinion_t, hAlign='LEFT', rowHeights=2.5 * mm, colWidths=col_width)
@@ -531,11 +555,11 @@ def form_01(c: Canvas, dir: Napravleniya):
         type_material.append(tbl)
         type_material.append(Spacer(1, 1.7 * mm))
         opinion_second = opinion.copy()
-        opinion_second[0] = [Paragraph('', styleLeft)]
+        opinion_second[0] = [Paragraph(localization3, styleLeft)]
         opinion_second[1] = [Paragraph('Биопсийный (аутопсийный) материал', styleLeft)]
-        opinion[2] = [Paragraph('', styleLeft)]
+        opinion_second[2] = [Paragraph(localization4, styleLeft)]
         opinion_second[3] = [Paragraph('Бронхоальвеолярный лаваж', styleLeft)]
-        opinion_second[4] = [Paragraph(type_material_ischeck, styleLeft)]
+        opinion_second[4] = [Paragraph(localization5, styleLeft)]
         opinion_second[5] = [Paragraph('Кровь (сыворотка)', styleLeft)]
         opinion_t = [opinion_second]
         tbl = Table(opinion_t, hAlign='LEFT', rowHeights=2.5 * mm, colWidths=col_width)
@@ -563,10 +587,38 @@ def form_01(c: Canvas, dir: Napravleniya):
         col_width = [2.5 * mm, 77.6 * mm, 2.5 * mm, 58 * mm, 2.5 * mm, 40 * mm]
         col_width = tuple(col_width)
         opinion = [Paragraph(' ', style) for i in range(0, count)]
+        category_patient_data = iss.localization.title if iss.localization else iss.comment
+        category_patient0, category_patient1, category_patient2, category_patient3, category_patient4, category_patient5 = '', '', '', '', '', ''
+        category_patient6, category_patient7, category_patient8, category_patient9, category_patient10 = '', '', '', '', ''
+        if category_patient_data == "Диагноз COVID-2019 (10 и 12 день)":
+            category_patient0 = type_ischeck
+        elif category_patient_data == "Прибывшие с признаками ОРВИ":
+            category_patient1 = type_ischeck
+        elif category_patient_data == "Медицинские работники":
+            category_patient2 = type_ischeck
+        elif category_patient_data == "Внебольничная пневмония":
+            category_patient3 = type_ischeck
+        elif category_patient_data == "Больные с тяжелым течением ОРВИ":
+            category_patient4 = type_ischeck
+        elif category_patient_data == "Прибывшие (10, 12 день)":
+            category_patient5 = type_ischeck
+        elif category_patient_data == "Контакт с больными COVID-2019":
+            category_patient6 = type_ischeck
+        elif category_patient_data == "Старше 65 лет с признаками ОРВИ":
+            category_patient7 = type_ischeck
+        elif category_patient_data == "Обсерватор":
+            category_patient8 = type_ischeck
+        elif category_patient_data == "Прочие":
+            category_patient9 = type_ischeck
+        elif category_patient_data == "Больные с ОРВИ, в учреждении пост. пребывания":
+            category_patient10 = type_ischeck
+
+        opinion[0] = [Paragraph(category_patient0, styleLeft)]
         opinion[1] = [Paragraph('Диагноз COVID-2019 (10 и 12 день)', styleLeft)]
+        opinion[2] = [Paragraph(category_patient1, styleLeft)]
         opinion[3] = [Paragraph('Прибывшие с признаками ОРВИ', styleLeft)]
+        opinion[4] = [Paragraph(category_patient2, styleLeft)]
         opinion[5] = [Paragraph('Медицинские работники', styleLeft)]
-        opinion[4] = [Paragraph('<font face="Symbola" size=10>\u2713</font>', styleLeft)]
         opinion_t = [opinion]
         tbl = Table(opinion_t, hAlign='LEFT', rowHeights=2.5 * mm, colWidths=col_width)
         a = [('OUTLINE', (i, 0), (i, 0), 1, colors.black) for i in range(0, count) if i % 2 == 0]
@@ -578,8 +630,11 @@ def form_01(c: Canvas, dir: Napravleniya):
         category_patient.append(tbl)
         category_patient.append(Spacer(1, 1.5 * mm))
         opinion_second = [Paragraph(' ', style) for i in range(0, count)]
+        opinion_second[0] = [Paragraph(category_patient3, styleLeft)]
         opinion_second[1] = [Paragraph('Внебольничная пневмония', styleLeft)]
+        opinion_second[2] = [Paragraph(category_patient4, styleLeft)]
         opinion_second[3] = [Paragraph('Больные с тяжелым течением ОРВИ', styleLeft)]
+        opinion_second[4] = [Paragraph(category_patient5, styleLeft)]
         opinion_second[5] = [Paragraph('Прибывшие (10, 12 день)', styleLeft)]
         opinion_t = [opinion_second]
         tbl = Table(opinion_t, hAlign='LEFT', rowHeights=2.5 * mm, colWidths=col_width)
@@ -590,8 +645,11 @@ def form_01(c: Canvas, dir: Napravleniya):
         category_patient.append(tbl)
         category_patient.append(Spacer(1, 1.5 * mm))
         opinion_third = [Paragraph(' ', style) for i in range(0, count)]
+        opinion_third[0] = [Paragraph(category_patient6, styleLeft)]
         opinion_third[1] = [Paragraph('Контакт с больными COVID-2019', styleLeft)]
+        opinion_third[2] = [Paragraph(category_patient7, styleLeft)]
         opinion_third[3] = [Paragraph('Старше 65 лет с признаками ОРВИ', styleLeft)]
+        opinion_third[4] = [Paragraph(category_patient8, styleLeft)]
         opinion_third[5] = [Paragraph('Обсерватор ___________', styleLeft)]
         opinion_t = [opinion_third]
         tbl = Table(opinion_t, hAlign='LEFT', rowHeights=2.5 * mm, colWidths=col_width)
@@ -605,7 +663,9 @@ def form_01(c: Canvas, dir: Napravleniya):
         col_width = [2.5 * mm, 77.6 * mm, 2.5 * mm, 98 * mm]
         col_width = tuple(col_width)
         opinion_four = [Paragraph(' ', style) for i in range(0, count)]
+        opinion_four[0] = [Paragraph(category_patient9, styleLeft)]
         opinion_four[1] = [Paragraph('Прочие', styleLeft)]
+        opinion_four[2] = [Paragraph(category_patient10, styleLeft)]
         opinion_four[3] = [Paragraph('Больные с ОРВИ, в учреждении пост. пребывания', styleLeft)]
         opinion_t = [opinion_four]
         tbl = Table(opinion_t, hAlign='LEFT', rowHeights=2.5 * mm, colWidths=col_width)
@@ -717,9 +777,6 @@ def form_01(c: Canvas, dir: Napravleniya):
         renderPDF.draw(draw_rectangle(195 * mm, 281 * mm), c, 0 * mm, 0 * mm)
 
         c.showPage()
-
-
-
     printForm()
 
 def create_dot_table(count, odd, even):
