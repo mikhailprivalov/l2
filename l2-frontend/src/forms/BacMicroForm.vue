@@ -65,14 +65,16 @@
                   <colgroup>
                     <col style="width: 34px" v-if="!confirmed"/>
                     <col/>
+                    <col style="width: 90px"/>
                     <col style="width: 74px"/>
                     <col style="width: 148px"/>
-                    <col style="width: 148px"/>
+                    <col style="width: 100px"/>
                   </colgroup>
                   <thead>
                   <tr>
                     <th colspan="2"  v-if="!confirmed">Название</th>
                     <th v-else>Название</th>
+                    <th></th>
                     <th>Чувствительность</th>
                     <th>Диаметр</th>
                   </tr>
@@ -90,6 +92,10 @@
                       {{antibiotics.antibiotics[a.pk]}}
                     </td>
                     <td class="cl-td">
+                      <input v-model="a.amount" class="form-control" maxlength="30" :readonly="confirmed"
+                             placeholder="Дозировка"/>
+                    </td>
+                    <td class="cl-td">
                       <radio-field v-model="a.sri" :variants="sri" redesigned :disabled="confirmed"/>
                     </td>
                     <td class="cl-td">
@@ -97,10 +103,10 @@
                     </td>
                   </tr>
                   <tr v-if="bactery.antibiotics.length === 0">
-                    <td colspan="4" class="text-center" v-if="!confirmed">
+                    <td colspan="5" class="text-center" v-if="!confirmed">
                       антибиотики не выбраны
                     </td>
-                    <td colspan="3" class="text-center" v-else>
+                    <td colspan="4" class="text-center" v-else>
                       антибиотики не выбраны
                     </td>
                   </tr>
@@ -114,6 +120,8 @@
                     <input v-model="bactery.koe" v-mask="'9 × 10^9[9]'" class="form-control" style="z-index: 0"
                            maxlength="16" :readonly="confirmed"/>
                   </div>
+                  <textarea v-model="bactery.comments" placeholder="Комментарии" rows="6" class="form-control"
+                            :readonly="confirmed" />
                 </div>
               </div>
             </div>
@@ -215,6 +223,7 @@
           selectedSet: this.antibiotics.sets[0],
           antibiotics: [],
           koe: '',
+          comments: '',
         })
       },
       async deleteBac(pk) {
@@ -249,6 +258,7 @@
           resultPk: -1,
           sri: 'S',
           dia: '',
+          amount: '',
         })
       },
       updateSelectedAntibiotic(bactery) {
@@ -314,11 +324,12 @@
     }
 
     .left {
-      flex: 0 665px;
+      flex: 1 60%;
+      max-width: 665px;
     }
 
     .right {
-      flex: 1;
+      flex: 0 40%;
       padding-left: 10px;
       padding-top: 15px;
       padding-bottom: 20px;
@@ -326,7 +337,11 @@
       &-inner {
         position: sticky;
         top: 138px;
-        max-width: 300px;
+        width: 100%;
+
+        textarea {
+          margin-top: 5px;
+        }
       }
     }
   }

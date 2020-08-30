@@ -574,7 +574,7 @@ def microbiology_result(iss, fwb, doc):
 
         for anti in culture.culture_antibiotic.all():
             data.append([Paragraph(x, style) for x in [
-                anti.antibiotic.title,
+                anti.antibiotic.title + ' ' + anti.antibiotic_amount,
                 anti.dia,
                 anti.sensitivity,
             ]])
@@ -602,6 +602,9 @@ def microbiology_result(iss, fwb, doc):
         fwb.append(t)
         fwb.append(Paragraph("<para align='right'><font size='7'>S – чувствителен; R – резистентен; I – промежуточная чувствительность</font></para>", style))
         fwb.append(Spacer(1, 2 * mm))
+        if culture.comments:
+            fwb.append(Paragraph("<font size='8'>{}</font>".format(culture.comments.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")), style))
+            fwb.append(Spacer(1, 2 * mm))
 
     if iss.microbiology_conclusion:
         fwb.append(Spacer(1, 3 * mm))

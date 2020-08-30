@@ -18,7 +18,7 @@ from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document
-from directory.models import Fractions, ParaclinicInputField, ResearchSite
+from directory.models import Fractions, ParaclinicInputField, ResearchSite, Culture, Antibiotic
 from directory.models import Researches as DResearches
 from external_system.models import FsliRefbookTest
 from laboratory.decorators import group_required
@@ -196,12 +196,9 @@ def endpoint(request):
         app = models.Application.objects.get(key=api_key)
         if app.active:
             data["app_name"] = app.name
-            if message_type == "R_BAC":
-                # phen = data.get('phen', {})
-                pass
-            elif message_type == "R" or data.get("result"):
+            if message_type == "R" or data.get("result") or message_type == "R_BAC":
                 if pk != -1:
-                    dw = app.direction_work
+                    dw = app.direction_work or message_type == "R_BAC"
                     if pk >= 4600000000000:
                         pk -= 4600000000000
                         pk //= 10
@@ -215,73 +212,113 @@ def endpoint(request):
                     oks = []
                     if direction:
                         direction: directions.Napravleniya = direction
-                        result["patientData"] = {
-                            "fio": direction.client.individual.fio(short=True),
-                            "card": direction.client.number_with_type(),
-                        }
 
-                        result["patientData"]["fioTranslit"] = translit(result["patientData"]["fio"])
-                        result["patientData"]["cardTranslit"] = translit(result["patientData"]["card"])
+                        if message_type == "R":
+                            result["patientData"] = {
+                                "fio": direction.client.individual.fio(short=True),
+                                "card": direction.client.number_with_type(),
+                            }
 
-                        results = data.get("result", {})
-                        for key in results:
-                            ok = False
-                            q = models.RelationFractionASTM.objects.filter(astm_field=key)
-                            if q.filter(application_api=app).exists():
-                                q = q.filter(application_api=app)
-                                ok = True
-                            elif q.filter(application_api__isnull=True).exists():
-                                q = q.filter(application_api__isnull=True)
-                                ok = True
-                            if ok:
-                                for fraction_rel in q:
-                                    save_state = []
-                                    issleds = []
-                                    for issled in directions.Issledovaniya.objects.filter(napravleniye=direction,
-                                                                                          research=fraction_rel.fraction.research,
-                                                                                          doc_confirmation__isnull=True):
-                                        if directions.Result.objects.filter(issledovaniye=issled,
-                                                                            fraction=fraction_rel.fraction).exists():
-                                            fraction_result = directions.Result.objects.filter(issledovaniye=issled,
-                                                                                               fraction=fraction_rel.fraction).order_by(
-                                                "-pk")[0]
-                                        else:
-                                            fraction_result = directions.Result(issledovaniye=issled,
-                                                                                fraction=fraction_rel.fraction)
-                                        fraction_result.value = str(results[key]).strip()
-                                        import re
-                                        find = re.findall(r"\d+.\d+", fraction_result.value)
-                                        if len(find) > 0:
-                                            val_str = fraction_result.value
-                                            for f in find:
-                                                val = float(f) * fraction_rel.get_multiplier_display()
-                                                val = app.auto_set_places(fraction_rel, val)
-                                                val_str = val_str.replace(f, str(val))
-                                            fraction_result.value = val_str
+                            result["patientData"]["fioTranslit"] = translit(result["patientData"]["fio"])
+                            result["patientData"]["cardTranslit"] = translit(result["patientData"]["card"])
 
-                                        fraction_result.iteration = 1
-                                        ref = fraction_rel.default_ref
-                                        if ref:
-                                            fraction_result.ref_title = ref.title
-                                            fraction_result.ref_about = ref.about
-                                            fraction_result.ref_m = ref.m
-                                            fraction_result.ref_f = ref.f
-                                        fraction_result.save()
-                                        issled.api_app = app
-                                        issled.save()
-                                        fraction_result.get_ref(re_save=True)
-                                        fraction_result.issledovaniye.doc_save = astm_user
-                                        fraction_result.issledovaniye.time_save = timezone.now()
-                                        fraction_result.issledovaniye.save()
-                                        save_state.append({"fraction": fraction_result.fraction.title,
-                                                           "value": fraction_result.value})
-                                        issleds.append({"pk": issled.pk, "title": issled.research.title})
+                            results = data.get("result", {})
+                            for key in results:
+                                ok = False
+                                q = models.RelationFractionASTM.objects.filter(astm_field=key)
+                                if q.filter(application_api=app).exists():
+                                    q = q.filter(application_api=app)
+                                    ok = True
+                                elif q.filter(application_api__isnull=True).exists():
+                                    q = q.filter(application_api__isnull=True)
+                                    ok = True
+                                if ok:
+                                    for fraction_rel in q:
+                                        save_state = []
+                                        issleds = []
+                                        for issled in directions.Issledovaniya.objects.filter(napravleniye=direction,
+                                                                                              research=fraction_rel.fraction.research,
+                                                                                              doc_confirmation__isnull=True):
+                                            if directions.Result.objects.filter(issledovaniye=issled,
+                                                                                fraction=fraction_rel.fraction).exists():
+                                                fraction_result = directions.Result.objects.filter(issledovaniye=issled,
+                                                                                                   fraction=fraction_rel.fraction).order_by(
+                                                    "-pk")[0]
+                                            else:
+                                                fraction_result = directions.Result(issledovaniye=issled,
+                                                                                    fraction=fraction_rel.fraction)
+                                            fraction_result.value = str(results[key]).strip()
+                                            import re
+                                            find = re.findall(r"\d+.\d+", fraction_result.value)
+                                            if len(find) > 0:
+                                                val_str = fraction_result.value
+                                                for f in find:
+                                                    val = float(f) * fraction_rel.get_multiplier_display()
+                                                    val = app.auto_set_places(fraction_rel, val)
+                                                    val_str = val_str.replace(f, str(val))
+                                                fraction_result.value = val_str
 
-                                        if issled not in pks:
-                                            pks.append(issled)
-                                    # slog.Log(key=json.dumps({"direction": direction.pk, "issleds": str(issleds)}),
-                                    #          type=22, body=json.dumps(save_state), user=None).save()
-                            oks.append(ok)
+                                            fraction_result.iteration = 1
+                                            ref = fraction_rel.default_ref
+                                            if ref:
+                                                fraction_result.ref_title = ref.title
+                                                fraction_result.ref_about = ref.about
+                                                fraction_result.ref_m = ref.m
+                                                fraction_result.ref_f = ref.f
+                                            fraction_result.save()
+                                            issled.api_app = app
+                                            issled.save()
+                                            fraction_result.get_ref(re_save=True)
+                                            fraction_result.issledovaniye.doc_save = astm_user
+                                            fraction_result.issledovaniye.time_save = timezone.now()
+                                            fraction_result.issledovaniye.save()
+                                            save_state.append({"fraction": fraction_result.fraction.title,
+                                                               "value": fraction_result.value})
+                                            issleds.append({"pk": issled.pk, "title": issled.research.title})
+
+                                            if issled not in pks:
+                                                pks.append(issled)
+                                        # slog.Log(key=json.dumps({"direction": direction.pk, "issleds": str(issleds)}),
+                                        #          type=22, body=json.dumps(save_state), user=None).save()
+                                oks.append(ok)
+                        elif message_type == "R_BAC":
+                            mo = data.get('mo')
+                            if mo:
+                                code = mo.get('code')
+                                name = mo.get('name')
+                                anti = data.get('anti', {})
+                                comments = data.get('comments', [])
+                                if code:
+                                    culture = Culture.objects.filter(lis=code).first()
+                                    iss = directions.Issledovaniya.objects.filter(napravleniye=direction)[0]
+                                    if not culture:
+                                        print('NO CULTURE', code, name)
+                                    elif iss.research.is_microbiology and not iss.time_confirmation:
+                                        directions.MicrobiologyResultCulture.objects.filter(issledovaniye=iss, culture=culture).delete()
+
+                                        comments = '\n'.join([
+                                            c["text"]
+                                            for c in comments
+                                            if not c["text"].startswith('S:') and not c["text"].startswith('R:') and not c["text"].startswith('I:')
+                                        ])
+                                        culture_result = directions.MicrobiologyResultCulture(issledovaniye=iss, culture=culture, comments=comments)
+                                        culture_result.save()
+
+                                        for a in anti:
+                                            anti_r = anti[a]
+                                            anti_obj = Antibiotic.objects.filter(lis=a).first()
+                                            if anti_obj and anti_r.get('RSI'):
+                                                a_name = anti_r.get('name', '').replace('µg', 'мг')
+                                                a_name_parts = a_name.split()
+                                                a_name = a_name_parts[-2] + ' ' + a_name_parts[-1]
+                                                anti_result = directions.MicrobiologyResultCultureAntibiotic(
+                                                    result_culture=culture_result,
+                                                    antibiotic=anti_obj,
+                                                    sensitivity=anti_r.get('RSI'),
+                                                    dia=anti_r.get('dia', ''),
+                                                    antibiotic_amount=a_name,
+                                                )
+                                                anti_result.save()
                     result["body"] = "{} {} {} {}".format(dw, pk, json.dumps(oks), direction is not None)
                 else:
                     result["body"] = "pk '{}' is not exists".format(pk_s)
