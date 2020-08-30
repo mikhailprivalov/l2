@@ -522,7 +522,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [Paragraph(' ', style) for i in range(0, count)]
 
         iss = Issledovaniya.objects.get(napravleniye=dir.pk)
-        service_location_title = "" if not iss.service_location else iss.research.service_location.title
+        service_location_title = "" if not iss.service_location else iss.service_location.title
         localization0, localization1, localization2, localization3, localization4, localization5 = '', '', '', '', '', ''
         type_ischeck = '<font face="Symbola" size=10>\u2713</font>'
         if service_location_title:
