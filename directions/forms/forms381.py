@@ -579,10 +579,8 @@ def form_01(c: Canvas, dir: Napravleniya):
         category_patient_t.append(tbl)
         category_patient_t_frame = Frame(0 * mm, 79 * mm, 210 * mm, 23 * mm, leftPadding=10 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         category_patient_t_frame.addFromList(category_patient_t, c)
-
         category_patient = []
         category_patient_data = iss.localization.title if iss.localization else iss.comment
-
         count = 6
         col_width = [2.5 * mm, 77.6 * mm, 2.5 * mm, 58 * mm, 2.5 * mm, 40 * mm]
         col_width = tuple(col_width)
