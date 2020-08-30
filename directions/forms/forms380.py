@@ -541,6 +541,8 @@ def form_04(c: Canvas, dir: Napravleniya):
 
         objs.append(Spacer(1, 5 * mm))
         objs.append(Paragraph(f'Врач: {dir.doc.get_fio()} {space_symbol * 5} подпись _________', style))
+        if dir.doc_who_create and dir.doc_who_create != dir.doc:
+            objs.append(Paragraph(f'Выписал: {dir.doc_who_create.get_fio()}', style))
         objs.append(Paragraph(f'Дата направления:  {strdate(dir.data_sozdaniya)}', style))
 
         gistology_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
