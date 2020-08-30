@@ -502,7 +502,7 @@ def form_04(c: Canvas, dir: Napravleniya):
             polis_issue = ind_data['oms']['polis_issued']
         objs.append(Paragraph(f'Полис ОМС: {polis_num} с/к: {polis_issue}', style))
         address = ind_data['main_address']
-        objs.append(Paragraph(f'Медицинская карта N : {dir.client.number_with_type()}', style))
+        objs.append(Paragraph(f'Карта: {dir.client.number_with_type()}', style))
         objs.append(Paragraph(f'Отделение: {dir.doc.podrazdeleniye.title} {space_symbol * 7} палата _______ ', style))
         objs.append(Paragraph(f'Адрес постоянного места жительства: {address}', style))
         objs.append(Paragraph(f'Место работы, учебы (наименование детского учреждения, школы): {dir.workplace}', style))
