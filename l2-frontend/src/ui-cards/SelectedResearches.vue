@@ -39,6 +39,7 @@
                               :comment="(localizations[res.pk] || {}).label || comments[res.pk]"
                               :count="counts[res.pk]"
                               :service_location="(service_locations[res.pk] || {}).label"
+                              :category="categories[res.site_type_raw]"
                               :nof="row.researches.length"/>
           </td>
           <td v-if="!readonly" class="cl-td">
@@ -132,7 +133,7 @@
           <tr>
             <th>Назначение</th>
             <th>Комментарий</th>
-            <th>Место оказания</th>
+            <th>Место</th>
             <th>Количество</th>
           </tr>
           </thead>
@@ -602,10 +603,14 @@
                 researches: []
               }
             }
-            r[d].researches.push({pk: pk, title: res.title})
+            r[d].researches.push({pk: pk, title: res.title, site_type_raw: res.site_type_raw})
           }
         }
         return r
+      },
+      categories() {
+        const sc = this.$store.getters.ex_dep[9] || [];
+        return sc.reduce((a, b) => ({...a, [b.pk]: b.title}), {});
       },
       need_vich_code() {
         for (let pk of this.researches) {

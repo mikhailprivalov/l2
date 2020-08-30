@@ -176,6 +176,7 @@
           '-3': 5,
           '-4': 6,
           '-5': 7,
+          '-6': 9,
         }[this.department] || this.department
       },
       ex_deps() {
