@@ -13,7 +13,7 @@ class ResDispensaryRouteSheet(admin.ModelAdmin):
 class ResAdmin(admin.ModelAdmin):
     list_display = ('title', 'short_title', 'internal_code', 'pk', 'podrazdeleniye',)
     list_display_links = ('title', 'internal_code', 'pk', 'podrazdeleniye',)
-    list_filter = ('podrazdeleniye', 'groups', 'hide', 'is_doc_refferal', 'is_paraclinic', 'is_treatment',)
+    list_filter = ('podrazdeleniye', 'groups', 'hide', 'is_doc_refferal', 'is_paraclinic', 'is_treatment', 'is_microbiology')
     search_fields = ('title', 'internal_code', 'pk',)
 
 
