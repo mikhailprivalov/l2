@@ -579,16 +579,15 @@ def form_01(c: Canvas, dir: Napravleniya):
         category_patient_t.append(tbl)
         category_patient_t_frame = Frame(0 * mm, 79 * mm, 210 * mm, 23 * mm, leftPadding=10 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         category_patient_t_frame.addFromList(category_patient_t, c)
-
         category_patient = []
-        category_patient.append(Paragraph('Категория обследуемого:', styleLeft))
+        category_patient_data = iss.localization.title if iss.localization else iss.comment
         count = 6
         col_width = [2.5 * mm, 77.6 * mm, 2.5 * mm, 58 * mm, 2.5 * mm, 40 * mm]
         col_width = tuple(col_width)
         opinion = [Paragraph(' ', style) for i in range(0, count)]
-        category_patient_data = iss.localization.title if iss.localization else iss.comment
         category_patient0, category_patient1, category_patient2, category_patient3, category_patient4, category_patient5 = '', '', '', '', '', ''
         category_patient6, category_patient7, category_patient8, category_patient9, category_patient10 = '', '', '', '', ''
+        own_category = ''
         if category_patient_data == "Диагноз COVID-2019 (10 и 12 день)":
             category_patient0 = type_ischeck
         elif category_patient_data == "Прибывшие с признаками ОРВИ":
@@ -611,7 +610,11 @@ def form_01(c: Canvas, dir: Napravleniya):
             category_patient9 = type_ischeck
         elif category_patient_data == "Больные с ОРВИ, в учреждении пост. пребывания":
             category_patient10 = type_ischeck
+        else:
+            category_patient9 = type_ischeck
+            own_category = category_patient_data
 
+        category_patient.append(Paragraph(f'Категория обследуемого: <u>{own_category}</u>', styleLeft))
         opinion[0] = [Paragraph(category_patient0, styleLeft)]
         opinion[1] = [Paragraph('Диагноз COVID-2019 (10 и 12 день)', styleLeft)]
         opinion[2] = [Paragraph(category_patient1, styleLeft)]

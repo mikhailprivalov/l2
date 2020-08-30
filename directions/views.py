@@ -608,7 +608,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
         n = 0 if has_descriptive or has_doc_refferal else 1
         if one_sl:
             c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10,
-                         "Место оказания: " + list(service_locations)[0])
+                         "Место: " + list(service_locations)[0])
         else:
             c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10,
                          "Места оказания услуг:")
