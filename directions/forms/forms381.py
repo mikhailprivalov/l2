@@ -15,12 +15,11 @@ from directions.models import Napravleniya
 from reportlab.platypus import Table, TableStyle, Paragraph, Frame, Spacer
 from reportlab.platypus.flowables import HRFlowable
 from reportlab.pdfgen.canvas import Canvas
-from laboratory.settings import FONTS_FOLDER
 from reportlab.platypus import Image
 from laboratory.utils import strdate, strtime
 import sys
 import locale
-from reportlab.lib.colors import white, black, HexColor
+from reportlab.lib.colors import black, HexColor
 from laboratory.settings import FONTS_FOLDER
 from directions.models import Issledovaniya
 
