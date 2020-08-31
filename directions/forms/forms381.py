@@ -109,7 +109,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         col_width = tuple(col_width)
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
 
-        a = [('OUTLINE', (i, 0), (i, 0), thick_dashed_for_symbol, color_dash_for_symbol, type_dash, step_dash) for i in range(0, count) if i %2 == 0]
+        a = [('OUTLINE', (i, 0), (i, 0), thick_dashed_for_symbol, color_dash_for_symbol, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
         tbl.setStyle(TableStyle(a))
         objs.append(Spacer(1, 1 * mm))
@@ -129,7 +129,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         col_width = create_dot_table(count, odd, even)
         col_width = tuple(col_width)
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
-        a = [('OUTLINE', (i, 0), (i, 0), thick_dashed_for_symbol, color_dash_for_symbol, type_dash, step_dash) for i in range(0, count) if i %2 == 0]
+        a = [('OUTLINE', (i, 0), (i, 0), thick_dashed_for_symbol, color_dash_for_symbol, type_dash, step_dash) for i in range(0, count) if i % 2 == 0]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm), ('LEFTPADDING', (0, 0), (-1, -1), 0.2 * mm), ('RIGHTPADDING', (0, 0), (-1, -1), 0.2 * mm)])
         tbl.setStyle(TableStyle(a))
         objs.append(tbl)
@@ -184,7 +184,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         patient_fio.append(tbl_family)
         opinion_name = opinion.copy()
         opinion_name[0] = Paragraph('Имя', styleRight)
-        name_individual =  ""
+        name_individual = ""
         if len(full_name_individual) > 1:
             name_individual = full_name_individual[1]
             name_individual = list(name_individual.upper())[0:17]
@@ -266,7 +266,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         a.pop(2)
         a.pop(4)
         tbl.setStyle(TableStyle(a))
-        born_data.append(Paragraph(f"Число {space_symbol*4} Месяц {space_symbol*5} Год рождения", styleLeft))
+        born_data.append(Paragraph(f"Число {space_symbol * 4} Месяц {space_symbol * 5} Год рождения", styleLeft))
         born_data.append(Spacer(1, 0.6 * mm))
         born_data.append(tbl)
         born_data_frame = Frame(0 * mm, 179 * mm, 65 * mm, 11 * mm, leftPadding=10 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
@@ -344,7 +344,7 @@ def form_01(c: Canvas, dir: Napravleniya):
 
         col_width = [32 * mm, 20 * mm, 137 * mm]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=4.4 * mm, colWidths=col_width)
-        a = [('GRID', (0,0), (-1, -1), 0.2, color_dash_for_symbol)]
+        a = [('GRID', (0, 0), (-1, -1), 0.2, color_dash_for_symbol)]
         a.extend([('BOTTOMPADDING', (0, 0), (-1, -1), -0.65 * mm),
                   ('LEFTPADDING', (0, 0), (-1, -1), 0.1 * mm),
                   ('SPAN', (1, 0), (2, 0)),
@@ -364,7 +364,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [[Paragraph('', styleLeft)]]
         col_width = [189 * mm]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=14 * mm, colWidths=col_width)
-        a = [('GRID', (0,0), (-1, -1), 1.2, color_dash_for_symbol, None, (1.5, 1.5, 1.5))]
+        a = [('GRID', (0, 0), (-1, -1), 1.2, color_dash_for_symbol, None, (1.5, 1.5, 1.5))]
         tbl.setStyle(TableStyle(a))
         diagnos_data_t.append(tbl)
         diagnos_t_frame = Frame(0 * mm, 148.5 * mm, 210 * mm, 15 * mm, leftPadding=10 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
@@ -375,10 +375,10 @@ def form_01(c: Canvas, dir: Napravleniya):
         col_width = [42 * mm, 144 * mm]
         opinion = [opinion]
         tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=col_width)
-        a =[('BOTTOMPADDING', (0, 0), (-1, -1), 0.05 * mm),
-                  ('LEFTPADDING', (0, 0), (-1, -1), 0.1 * mm),
-                  ('LINEBELOW', (1, 0), (1, 0), 0.5, color_dash_for_symbol, None, (1, 1, 1)),
-                  ]
+        a = [('BOTTOMPADDING', (0, 0), (-1, -1), 0.05 * mm),
+             ('LEFTPADDING', (0, 0), (-1, -1), 0.1 * mm),
+             ('LINEBELOW', (1, 0), (1, 0), 0.5, color_dash_for_symbol, None, (1, 1, 1)),
+             ]
         tbl.setStyle(TableStyle(a))
         diagnos_data.append(tbl)
         diagnos_frame = Frame(14 * mm, 149 * mm, 187 * mm, 15 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
@@ -391,7 +391,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         col_width.insert(0, 28 * mm)
         col_width = tuple(col_width)
         opinion = [Paragraph(' ', style) for i in range(0, count + 2)]
-        opinion= opinion.copy()
+        opinion = opinion.copy()
         opinion[0] = Paragraph('Дата заболевания:', styleRight)
         start_ill = "  .  .    "
         create_date = strdate(dir.data_sozdaniya)
@@ -490,7 +490,7 @@ def form_01(c: Canvas, dir: Napravleniya):
 
         time_get_date = ""
         if create_date:
-            time_get_date =strtime(dir.data_sozdaniya)[:5].replace(':', '.')
+            time_get_date = strtime(dir.data_sozdaniya)[:5].replace(':', '.')
         time_get_material = [four_obj_date(odd, even, style, type_dash, step_dash, time_get_date, color_dash_for_symbol)]
         time_get_material_frame = Frame(105.1 * mm, 127 * mm, 25 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         time_get_material_frame.addFromList(time_get_material, c)
@@ -780,7 +780,9 @@ def form_01(c: Canvas, dir: Napravleniya):
         renderPDF.draw(draw_rectangle(195 * mm, 281 * mm), c, 0 * mm, 0 * mm)
 
         c.showPage()
+
     printForm()
+
 
 def create_dot_table(count, odd, even):
     col_width = []
