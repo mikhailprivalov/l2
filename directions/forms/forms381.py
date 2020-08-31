@@ -65,7 +65,6 @@ def form_01(c: Canvas, dir: Napravleniya):
         even, odd = 4.07 * mm, 1.09 * mm
         thick_dashed_for_symbol = 0.7
         step_round_dash = (0.03 * mm, 1 * mm)
-        step_square_dash = (1, 1, 1)
         round_dash = 'round'
 
         type_dash = 'round'

@@ -378,7 +378,7 @@ def departments(request):
         if SettingManager.is_morfology_enabled(en):
             more_types.append({"pk": str(Podrazdeleniya.MORFOLOGY), "title": "Морфология"})
         return JsonResponse(
-            {"departments": deps, "can_edit": can_edit, "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] != 8 and en.get(x[0], True)], *more_types,]}
+            {"departments": deps, "can_edit": can_edit, "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] != 8 and en.get(x[0], True)], *more_types]}
         )
     elif can_edit:
         ok = False
@@ -474,25 +474,25 @@ def current_user_info(request):
             has_def = DResearches.objects.filter(hide=False, site_type__isnull=True, **DResearches.filter_type(e)).exists()
 
             if has_def:
-                d = [{"pk": None, "title": 'Общие', 'type': t, "extended": True,}]
+                d = [{"pk": None, "title": 'Общие', 'type': t, "extended": True}]
             else:
                 d = []
 
-            ret["extended_departments"][e] = [*d, *[{"pk": x.pk, "title": x.title, "type": t, "extended": True, 'e': e,} for x in st_base.filter(site_type=t)]]
+            ret["extended_departments"][e] = [*d, *[{"pk": x.pk, "title": x.title, "type": t, "extended": True, 'e': e} for x in st_base.filter(site_type=t)]]
 
         if SettingManager.is_morfology_enabled(en):
             ret["extended_departments"][Podrazdeleniya.MORFOLOGY] = []
             if en.get(8):
                 ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
-                    {"pk": Podrazdeleniya.MORFOLOGY + 1, "title": "Микробиология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY,}
+                    {"pk": Podrazdeleniya.MORFOLOGY + 1, "title": "Микробиология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
                 )
             if en.get(9):
                 ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
-                    {"pk": Podrazdeleniya.MORFOLOGY + 2, "title": "Цитология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY,}
+                    {"pk": Podrazdeleniya.MORFOLOGY + 2, "title": "Цитология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
                 )
             if en.get(10):
                 ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
-                    {"pk": Podrazdeleniya.MORFOLOGY + 3, "title": "Гистология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY,}
+                    {"pk": Podrazdeleniya.MORFOLOGY + 3, "title": "Гистология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
                 )
     return JsonResponse(ret)
 
@@ -1042,7 +1042,7 @@ def user_get_reserve(request):
         ds = directions.Issledovaniya.objects.filter(napravleniye=n, napravleniye__isnull=False).first()
         d['direction_service'] = ds.research_id if ds else -1
         if d:
-            return JsonResponse({**d, "datetime": d["datetime"].strftime('%d.%m.%Y %H:%M'), "patient_uid": patient_uid, "pk": int(str(pk)[1:]),})
+            return JsonResponse({**d, "datetime": d["datetime"].strftime('%d.%m.%Y %H:%M'), "patient_uid": patient_uid, "pk": int(str(pk)[1:])})
     return JsonResponse({})
 
 
@@ -1107,7 +1107,7 @@ def job_list(request):
     result = []
     for j in directions.EmployeeJob.objects.filter(doc_execute__in=users_list, date_job=date).order_by("doc_execute", "-time_save"):
         result.append(
-            {"pk": j.pk, "executor": j.doc_execute.get_fio(), "type": j.type_job.title, "count": j.count, "saved": strdatetime(j.time_save), "canceled": bool(j.who_do_cancel),}
+            {"pk": j.pk, "executor": j.doc_execute.get_fio(), "type": j.type_job.title, "count": j.count, "saved": strdatetime(j.time_save), "canceled": bool(j.who_do_cancel)}
         )
     return JsonResponse({"list": result})
 
@@ -1147,7 +1147,7 @@ def reader_status_update(request):
     if status == 'inserted':
         polis = data['polis']
         fio = data['fio']
-        cache.set(f'reader-status:{reader_id}', json.dumps({"status": 'inserted', "polis": polis, "fio": fio, "details": data['details'],}), 10)
+        cache.set(f'reader-status:{reader_id}', json.dumps({"status": 'inserted', "polis": polis, "fio": fio, "details": data['details']}), 10)
     else:
         cache.set(f'reader-status:{reader_id}', '{"status": "wait"}', 10)
 
