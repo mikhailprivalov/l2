@@ -320,7 +320,7 @@ def form_03(c: Canvas, dir: Napravleniya):
             ],
         ]
         tbl_o = Table(organization_data, colWidths=(60 * mm, 150 * mm,))
-        tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+        tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ]))
         organization_text = [tbl_o]
         organoztion_frame = Frame(10 * mm, 220 * mm, 190 * mm, 60 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
         organoztion_inframe = KeepInFrame(190 * mm, 60 * mm, organization_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
@@ -343,7 +343,7 @@ def form_03(c: Canvas, dir: Napravleniya):
             [Paragraph('Сопутствующий диагноз', style), Paragraph('', styleTB)],
         ]
         tbl_o = Table(patient_data, colWidths=(105 * mm, 95 * mm,))
-        tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+        tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ]))
         patient_text = [tbl_o]
         patient_frame = Frame(10 * mm, 138 * mm, 190 * mm, 80 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
         patient_inframe = KeepInFrame(190 * mm, 80 * mm, patient_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
@@ -384,7 +384,7 @@ def form_03(c: Canvas, dir: Napravleniya):
             [Paragraph('2019-nCov', style), Paragraph('', styleTB)],
         ]
         tbl_o = Table(result_data, colWidths=(105 * mm, 95 * mm,))
-        tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+        tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ]))
         result_text = [tbl_o]
         result_frame = Frame(10 * mm, 42 * mm, 190 * mm, 30 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
         result_inframe = KeepInFrame(190 * mm, 30 * mm, result_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
@@ -399,7 +399,7 @@ def form_03(c: Canvas, dir: Napravleniya):
             ],
         ]
         tbl_o = Table(result_data, colWidths=(60 * mm, 150 * mm,))
-        tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+        tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ]))
         result_text = [tbl_o]
         result_frame = Frame(10 * mm, 10 * mm, 190 * mm, 25 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
         result_inframe = KeepInFrame(190 * mm, 25 * mm, result_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
@@ -456,7 +456,7 @@ def form_04(c: Canvas, dir: Napravleniya):
         ]
 
         tbl = Table(opinion, 2 * [100 * mm])
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP'), ]))
 
         objs.append(tbl)
         objs.append(Spacer(1, 3 * mm))
@@ -501,7 +501,7 @@ def form_04(c: Canvas, dir: Napravleniya):
 
         issledovaniya = dir.issledovaniya_set.all()
         opinion = [
-            [Paragraph('Цель и наименование исследования', styleT), Paragraph('Материал - место взятия', styleT), Paragraph('Показания   к    обследованию', styleT),],
+            [Paragraph('Цель и наименование исследования', styleT), Paragraph('Материал - место взятия', styleT), Paragraph('Показания   к    обследованию', styleT), ],
         ]
 
         for v in issledovaniya:
@@ -516,7 +516,7 @@ def form_04(c: Canvas, dir: Napravleniya):
 
         cols_width = [105 * mm, 45 * mm, 47 * mm]
         tbl = Table(opinion, colWidths=cols_width, hAlign='LEFT')
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.black), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.black), ('VALIGN', (0, 0), (-1, -1), 'TOP'), ]))
         objs.append(Spacer(1, 5 * mm))
         objs.append(tbl)
 

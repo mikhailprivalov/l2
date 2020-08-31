@@ -753,10 +753,10 @@ def form_01(c: Canvas, dir: Napravleniya):
         picture_t = []
         img_path = os.path.join(FONTS_FOLDER, '..', 'img')
         footer_picture = os.path.join(img_path, 'idc_covid_footer.png')
-        I = Image(footer_picture)
-        I.drawHeight = 13 * mm
-        I.drawWidth = 137 * mm
-        picture_t.append(I)
+        alphabet_image = Image(footer_picture)
+        alphabet_image.drawHeight = 13 * mm
+        alphabet_image.drawWidth = 137 * mm
+        picture_t.append(alphabet_image)
         picture_t_frame = Frame(14.5 * mm, 10 * mm, 138 * mm, 13.5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0.3 * mm, showBoundary=1)
         picture_t_frame.addFromList(picture_t, c)
 
