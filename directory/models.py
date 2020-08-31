@@ -9,6 +9,7 @@ class DirectionsGroup(models.Model):
     """
     Группы направлений
     """
+
     pass
 
     class Meta:
@@ -20,6 +21,7 @@ class ReleationsFT(models.Model):
     """
     (многие-ко-многим) фракции к пробиркам
     """
+
     tube = models.ForeignKey(Tubes, help_text='Ёмкость', db_index=True, on_delete=models.CASCADE)
     receive_in_lab = models.BooleanField(default=False, blank=True, help_text="Приём пробирки в лаборатории разрешён без подтверждения забора")
 
@@ -35,6 +37,7 @@ class ResearchGroup(models.Model):
     """
     Группы исследований
     """
+
     title = models.CharField(max_length=63, help_text='Название группы')
     lab = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Лаборатория', db_index=True, on_delete=models.CASCADE)
 
@@ -55,6 +58,7 @@ class ResearchSite(models.Model):
     в Физиотерапевт: ЛФК, ФИЗИО, др.
     если в модели Research отсутствует ссылка на ResearchSite. То услуги выводить в корне
     """
+
     TYPES = (
         (0, 'Консультация врача'),
         (1, 'Лечение'),
@@ -104,21 +108,19 @@ class Researches(models.Model):
     """
     Вид исследования
     """
+
     DIRECTION_FORMS = (
         (0, 'По умолчанию'),
-
         (38001, '38001. ИО - Направление на ВИЧ'),
         (38002, '38002. ИО - Направление на МСКТ'),
         (38003, '38003. ИО - Направление на COVID-19'),
         (38004, '38004. ИО - Направление на Микробиологию'),
         (48001, '48001. ИО - Направление на Гистологию'),
         (38101, '38101. ИО - Направление в ИДЦ Ковид'),
-
     )
 
     RESULT_FORMS = (
         (0, 'По умолчанию'),
-
         (10001, '100.01 - Наркозная карта - анестезия'),
         (10002, '100.02 - Реанимационная карта - 1 день'),
         (10101, '101.01 - Дневник в 3 колонки'),
@@ -144,10 +146,8 @@ class Researches(models.Model):
     preparation = models.CharField(max_length=2047, default="", help_text='Подготовка к исследованию', blank=True)
     edit_mode = models.IntegerField(default=0, help_text='0 - Лаборант может сохранять и подтверждать. 1 - Лаборант сохраняет, врач должен подтвердить')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие исследования', db_index=True)
-    no_units_and_ref = models.BooleanField(default=False, blank=True,
-                                           help_text='На бланке результата скрытие единиц измерения и референсов')
-    no_attach = models.IntegerField(default=0, null=True, blank=True,
-                                    help_text='Группа исследований, которые не могут быть назначены вместе')
+    no_units_and_ref = models.BooleanField(default=False, blank=True, help_text='На бланке результата скрытие единиц измерения и референсов')
+    no_attach = models.IntegerField(default=0, null=True, blank=True, help_text='Группа исследований, которые не могут быть назначены вместе')
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
     template = models.IntegerField(default=0, blank=True, help_text='Шаблон формы')
     comment_variants = models.ForeignKey("directory.MaterialVariants", default=None, null=True, blank=True, help_text='Варианты комментариев к материалу', on_delete=models.SET_NULL)
@@ -179,14 +179,13 @@ class Researches(models.Model):
     internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True)
     co_executor_mode = models.SmallIntegerField(default=0, choices=CO_EXECUTOR_MODES, blank=True)
     co_executor_2_title = models.CharField(max_length=40, default='Со-исполнитель', blank=True)
-    microbiology_tube = models.ForeignKey(Tubes, blank=True, default=None, null=True,
-                                          help_text="Пробирка для микробиологического исследования",
-                                          on_delete=models.SET_NULL)
+    microbiology_tube = models.ForeignKey(Tubes, blank=True, default=None, null=True, help_text="Пробирка для микробиологического исследования", on_delete=models.SET_NULL)
     localization = models.ManyToManyField(Localization, blank=True, default=None, help_text="Возможная локализация")
     service_location = models.ManyToManyField(ServiceLocation, blank=True, default=None, help_text="Возможные места оказаний")
     wide_headers = models.BooleanField(blank=True, default=False, help_text="Заголовки полей ввода на всю страницу")
-    auto_add_hidden = models.ManyToManyField('directory.Researches', related_name="res_auto_add_hidden", default=None, blank=True,
-                                             help_text="Автоматически добавляемые назначения (не отображается в интерфейсе)")
+    auto_add_hidden = models.ManyToManyField(
+        'directory.Researches', related_name="res_auto_add_hidden", default=None, blank=True, help_text="Автоматически добавляемые назначения (не отображается в интерфейсе)"
+    )
     vertical_result_display = models.BooleanField(blank=True, default=False, help_text="Отображение дат лабораторных тестов вертикально")
 
     @staticmethod
@@ -333,11 +332,9 @@ class HospitalService(models.Model):
         "all": "None",
     }
 
-    main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE,
-                                      db_index=True)
+    main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE, db_index=True)
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип подраздела в стационарной карте", db_index=True)
-    slave_research = models.ForeignKey(Researches, related_name='research_protocol',
-                                       help_text="Протокол для вида услуги", on_delete=models.CASCADE)
+    slave_research = models.ForeignKey(Researches, related_name='research_protocol', help_text="Протокол для вида услуги", on_delete=models.CASCADE)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие услуги', db_index=True)
 
     def get_title(self):
@@ -438,16 +435,13 @@ class ParaclinicTemplateName(models.Model):
 
     @staticmethod
     def make_default(research: Researches) -> 'ParaclinicTemplateName':
-        if not ParaclinicTemplateName.objects.filter(research=research,
-                                                     title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE).exists():
+        if not ParaclinicTemplateName.objects.filter(research=research, title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE).exists():
             with transaction.atomic():
-                p = ParaclinicTemplateName(research=research,
-                                           title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE)
+                p = ParaclinicTemplateName(research=research, title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE)
                 p.save()
                 for f in ParaclinicInputField.objects.filter(group__research=research):
                     ParaclinicTemplateField(template_name=p, input_field=f, value=f.default_value).save()
-        return ParaclinicTemplateName.objects.get(research=research,
-                                                  title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE)
+        return ParaclinicTemplateName.objects.get(research=research, title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE)
 
 
 class ParaclinicTemplateField(models.Model):
@@ -463,6 +457,7 @@ class AutoAdd(models.Model):
     """
     Перечисление связей исследований, которые могут быть назначены только вместе (A только с B)
     """
+
     a = models.ForeignKey(Researches, help_text="Исследование, для которого устанавливается связь", db_index=True, related_name="a", on_delete=models.CASCADE)
     b = models.ForeignKey(Researches, help_text="Исследование, которое должно быть назначено вместе", related_name="b", on_delete=models.CASCADE)
 
@@ -478,6 +473,7 @@ class References(models.Model):
     """
     Справочник референсов
     """
+
     title = models.CharField(max_length=255, help_text='Название')
     about = models.TextField(help_text='Описание', blank=True)
     ref_m = JSONField(help_text='М')
@@ -493,8 +489,7 @@ class References(models.Model):
 
 
 class ResultVariants(models.Model):
-    values = models.TextField(
-        help_text='Варианты подсказок результатов, перечисленные через вертикальную черту без пробела "|"')
+    values = models.TextField(help_text='Варианты подсказок результатов, перечисленные через вертикальную черту без пробела "|"')
 
     def get_variants(self):
         return self.values.split('|')
@@ -508,8 +503,7 @@ class ResultVariants(models.Model):
 
 
 class MaterialVariants(models.Model):
-    values = models.TextField(
-        help_text='Варианты комментариев для материала, перечисленные через вертикальную черту без пробела "|"')
+    values = models.TextField(help_text='Варианты комментариев для материала, перечисленные через вертикальную черту без пробела "|"')
 
     def get_variants(self):
         return self.values.split('|')
@@ -535,6 +529,7 @@ class Fractions(models.Model):
     """
     Фракции для исследований
     """
+
     title = models.CharField(max_length=255, help_text='Название фракции')
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование, к которому относится фракция', on_delete=models.CASCADE)
     units = models.CharField(max_length=255, help_text='Еденицы измерения', blank=True, default='')
@@ -555,8 +550,7 @@ class Fractions(models.Model):
     formula = models.TextField(default="", blank=True, help_text="Формула для автоматического вычисления значения")
     code = models.CharField(max_length=16, default='', blank=True, help_text='Код фракции')
     print_title = models.BooleanField(default=False, blank=True, help_text='Печатать название(Группировка)', db_index=True)
-    readonly_title = models.BooleanField(default=False, blank=True,
-                                         help_text='Только для чтения-суррогатная группа для фракций', db_index=True)
+    readonly_title = models.BooleanField(default=False, blank=True, help_text='Только для чтения-суррогатная группа для фракций', db_index=True)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
 
     def get_fsli_code(self):
@@ -574,6 +568,7 @@ class Absorption(models.Model):
     """
     Поглощение
     """
+
     fupper = models.ForeignKey(Fractions, related_name="fupper", help_text='Какая фракция главнее', db_index=True, on_delete=models.CASCADE)
     flower = models.ForeignKey(Fractions, related_name="flower", help_text='Какая фракция поглащяется главной', on_delete=models.CASCADE)
 
@@ -589,6 +584,7 @@ class NameRouteSheet(models.Model):
     """
     Route list for research. Маршрутный лист для исследований
     """
+
     title = models.CharField(max_length=255, unique=True, help_text='Название маршрутного листа')
     static_text = models.TextField(default="", help_text='Текст перед списком')
 
@@ -611,8 +607,7 @@ class DispensaryRouteSheet(models.Model):
 
     age_client = models.PositiveSmallIntegerField(db_index=True, help_text='Возраст', null=False, blank=False)
     sex_client = models.CharField(max_length=1, choices=SEX, help_text="Пол", db_index=True)
-    research = models.ForeignKey(Researches, db_index=True, help_text='Исследование включенное в список',
-                                 on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, db_index=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
     sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес соритировки')
 
     def __str__(self):

@@ -20,9 +20,7 @@ def strfdatetime(d, format: str):
     try:
         return timezone.localtime(d).strftime(format)
     except:
-        d = datetime(year=d.year,
-                     month=d.month,
-                     day=d.day)
+        d = datetime(year=d.year, month=d.month, day=d.day)
         return d.strftime(format)
 
 

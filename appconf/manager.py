@@ -5,7 +5,6 @@ import appconf.models as appconf
 
 
 class SettingManager:
-
     @staticmethod
     def get(key, default=None, default_type='s'):
         k = 'setting_manager_' + key
@@ -14,8 +13,7 @@ class SettingManager:
             return simplejson.loads(cv)
         row = appconf.Setting.objects.filter(name=key).first()
         if not row:
-            row = appconf.Setting.objects.create(name=key, value=key if default is None else default,
-                                                 value_type=default_type)
+            row = appconf.Setting.objects.create(name=key, value=key if default is None else default, value_type=default_type)
         value = row.get_value()
         cache.set(k, simplejson.dumps(value), 20)
         return value
@@ -27,26 +25,29 @@ class SettingManager:
     @staticmethod
     def l2_modules():
         return {
-            **{'l2_{}'.format(x): SettingManager.l2(x) for x in [
-                "cards_module",
-                "fast_templates",
-                "stat_btn",
-                "treatment",
-                "stom",
-                "hosp",
-                "rmis_queue",
-                "benefit",
-                "microbiology",
-                "citology",
-                "gistology",
-                "amd",
-                "direction_purpose",
-                "external_organizations",
-                "vaccine",
-                "tfoms",
-            ]},
+            **{
+                'l2_{}'.format(x): SettingManager.l2(x)
+                for x in [
+                    "cards_module",
+                    "fast_templates",
+                    "stat_btn",
+                    "treatment",
+                    "stom",
+                    "hosp",
+                    "rmis_queue",
+                    "benefit",
+                    "microbiology",
+                    "citology",
+                    "gistology",
+                    "amd",
+                    "direction_purpose",
+                    "external_organizations",
+                    "vaccine",
+                    "tfoms",
+                ]
+            },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
-            "morfology": SettingManager.is_morfology_enabled(SettingManager.en())
+            "morfology": SettingManager.is_morfology_enabled(SettingManager.en()),
         }
 
     @staticmethod

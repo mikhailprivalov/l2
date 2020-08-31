@@ -4,7 +4,12 @@ from django.contrib import admin
 
 @admin.register(models.Individual)
 class IndividualAdmin(admin.ModelAdmin):
-    list_display = ('family', 'name', 'patronymic', 'birthday',)
+    list_display = (
+        'family',
+        'name',
+        'patronymic',
+        'birthday',
+    )
     search_fields = ('family',)
 
 
@@ -25,7 +30,10 @@ class CardBaseAdmin(admin.ModelAdmin):
 
 @admin.register(models.Card)
 class CardAdmin(admin.ModelAdmin):
-    raw_id_fields = ('individual', 'polis',)
+    raw_id_fields = (
+        'individual',
+        'polis',
+    )
     search_fields = ('individual__family',)
 
 
@@ -41,7 +49,11 @@ class AgeCacheAdmin(admin.ModelAdmin):
 
 @admin.register(models.District)
 class DistrictAdmin(admin.ModelAdmin):
-    list_display = ('title', 'is_ginekolog', 'code_poliklinika',)
+    list_display = (
+        'title',
+        'is_ginekolog',
+        'code_poliklinika',
+    )
 
 
 @admin.register(models.DispensaryReg)

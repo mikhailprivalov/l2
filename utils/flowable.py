@@ -14,10 +14,18 @@ class InteractiveTextField(Flowable):
     def draw(self):
         self.canv.saveState()
         form: AcroForm = self.canv.acroForm
-        form.textfieldRelative(tooltip='Комментарий', fontName='Times-Bold',
-                               fontSize=12, borderStyle='underlined', borderColor=white,
-                               height=18, width=self.width,
-                               fillColor=white, textColor=black, forceBorder=False)
+        form.textfieldRelative(
+            tooltip='Комментарий',
+            fontName='Times-Bold',
+            fontSize=12,
+            borderStyle='underlined',
+            borderColor=white,
+            height=18,
+            width=self.width,
+            fillColor=white,
+            textColor=black,
+            forceBorder=False,
+        )
         self.canv.restoreState()
 
 
@@ -28,15 +36,28 @@ class InteractiveListBoxField(Flowable):
     def draw(self):
         self.canv.saveState()
         form: AcroForm = self.canv.acroForm
-        options = [' ',
-                   'Вид медосмотра: периодический',
-                   'Вид медосмотра: первичный',
-                   'Вид медосмотра: водительская справка',
-                   'Вид медосмотра: на оружие',
-                   ]
-        form.choice(name='choice1', tooltip='choice1',
-                    value=' ', height=7 * mm, width=178 * mm,
-                    options=options, borderColor=black, fillColor=white, fieldFlags='edit',
-                    borderStyle='solid', borderWidth=1, relative=True, forceBorder=False, dashLen=1)
+        options = [
+            ' ',
+            'Вид медосмотра: периодический',
+            'Вид медосмотра: первичный',
+            'Вид медосмотра: водительская справка',
+            'Вид медосмотра: на оружие',
+        ]
+        form.choice(
+            name='choice1',
+            tooltip='choice1',
+            value=' ',
+            height=7 * mm,
+            width=178 * mm,
+            options=options,
+            borderColor=black,
+            fillColor=white,
+            fieldFlags='edit',
+            borderStyle='solid',
+            borderWidth=1,
+            relative=True,
+            forceBorder=False,
+            dashLen=1,
+        )
 
         self.canv.restoreState()

@@ -62,8 +62,7 @@ class Command(BaseCommand):
 
         user_timezone = pytz.timezone(TIME_ZONE)
         datetime_object = datetime.strptime(AFTER_DATE_HOLTER, '%Y-%m-%d %H:%M:%S').astimezone(user_timezone)
-        holter_obj, created = TempData.objects.get_or_create(key='holter',
-                                                             defaults={"holter_protocol_date": datetime_object})
+        holter_obj, created = TempData.objects.get_or_create(key='holter', defaults={"holter_protocol_date": datetime_object})
 
         if created:
             date_proto = TempData.objects.values_list('holter_protocol_date').get(key='holter')
@@ -102,8 +101,7 @@ class Command(BaseCommand):
                                     obj_iss = Issledovaniya.objects.filter(napravleniye=num_dir, research=pk_research).first()
                                     if obj_iss:
                                         time_confirm = obj_iss.time_confirmation
-                                        file_modify = datetime.fromtimestamp(stat_info.st_mtime).astimezone(
-                                            user_timezone)
+                                        file_modify = datetime.fromtimestamp(stat_info.st_mtime).astimezone(user_timezone)
                                         if obj_iss.time_confirmation:
                                             delta_confirm = file_modify - time_confirm
                                             if delta_confirm.seconds // 60 > SettingManager.get("holter_reset_confirm"):

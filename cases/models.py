@@ -40,8 +40,7 @@ class Case(models.Model):
 
     card = models.ForeignKey(clients.Card, on_delete=models.CASCADE, help_text='Карта пациента')
     doctor = models.ForeignKey(users.DoctorProfile, on_delete=models.CASCADE, help_text='Врач', related_name='case_doc')
-    creator = models.ForeignKey(users.DoctorProfile, on_delete=models.CASCADE, help_text='Создатель случая',
-                                related_name='case_creator')
+    creator = models.ForeignKey(users.DoctorProfile, on_delete=models.CASCADE, help_text='Создатель случая', related_name='case_creator')
     opened = models.DateTimeField(help_text='Дата и время открытия случая')
     closed = models.DateTimeField(blank=True, null=True, default=None, help_text='Дата и время закрытия случая')
     cancel = models.BooleanField(blank=True, default=False, help_text='Отмена случая')
@@ -58,5 +57,6 @@ class Case(models.Model):
         return localtime(self.closed)
 
     def __str__(self):
-        return "Случай №{}. Карта: {}. Открыт: {:%d.%m.%Y %H:%M}, закрыт: {:%d.%m.%Y %H:%M}. " \
-               "Врач: {}. Отмена: {}".format(self.pk, self.card, self.opened_local, self.closed_local, self.doctor, self.cancel)
+        return "Случай №{}. Карта: {}. Открыт: {:%d.%m.%Y %H:%M}, закрыт: {:%d.%m.%Y %H:%M}. " "Врач: {}. Отмена: {}".format(
+            self.pk, self.card, self.opened_local, self.closed_local, self.doctor, self.cancel
+        )

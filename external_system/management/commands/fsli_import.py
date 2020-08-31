@@ -5,7 +5,6 @@ from external_system.models import FsliRefbookTest
 
 
 class Command(BaseCommand):
-
     def add_arguments(self, parser):
         parser.add_argument('path', type=str)
 
@@ -67,10 +66,27 @@ class Command(BaseCommand):
                     active = False
                 r = FsliRefbookTest.objects.filter(code_fsli=cells[code_fsli])
                 if not r.exists():
-                    FsliRefbookTest(code_fsli=cells[code_fsli], code_loinc=cells[code_loinc], title=cells[title], english_title=cells[english_title], short_title=cells[short_title],
-                                    synonym=cells[synonym], analit=cells[analit], analit_props=cells[analit_props], dimension=cells[dimension], unit=cells[unit], sample=cells[sample],
-                                    time_characteristic_sample=cells[time_characteristic_sample], method_type=cells[method_type], scale_type=cells[scale_type], actual=cells[actual],
-                                    test_group=cells[test_group], code_nmu=cells[code_nmu], ordering=cells[sort_num], active=active).save()
+                    FsliRefbookTest(
+                        code_fsli=cells[code_fsli],
+                        code_loinc=cells[code_loinc],
+                        title=cells[title],
+                        english_title=cells[english_title],
+                        short_title=cells[short_title],
+                        synonym=cells[synonym],
+                        analit=cells[analit],
+                        analit_props=cells[analit_props],
+                        dimension=cells[dimension],
+                        unit=cells[unit],
+                        sample=cells[sample],
+                        time_characteristic_sample=cells[time_characteristic_sample],
+                        method_type=cells[method_type],
+                        scale_type=cells[scale_type],
+                        actual=cells[actual],
+                        test_group=cells[test_group],
+                        code_nmu=cells[code_nmu],
+                        ordering=cells[sort_num],
+                        active=active,
+                    ).save()
                     print('сохранено', cells[code_fsli])
                 elif r.exists():
                     r = r[0]

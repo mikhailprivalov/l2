@@ -1106,9 +1106,7 @@ def job_list(request):
             users_list.append(user)
     result = []
     for j in directions.EmployeeJob.objects.filter(doc_execute__in=users_list, date_job=date).order_by("doc_execute", "-time_save"):
-        result.append(
-            {"pk": j.pk, "executor": j.doc_execute.get_fio(), "type": j.type_job.title, "count": j.count, "saved": strdatetime(j.time_save), "canceled": bool(j.who_do_cancel)}
-        )
+        result.append({"pk": j.pk, "executor": j.doc_execute.get_fio(), "type": j.type_job.title, "count": j.count, "saved": strdatetime(j.time_save), "canceled": bool(j.who_do_cancel)})
     return JsonResponse({"list": result})
 
 

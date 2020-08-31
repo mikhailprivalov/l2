@@ -63,19 +63,17 @@ class OperationWriter:
                                 props["max_length"] = i.get("max_length", None)
                                 props["verbose_name"] = i.get("verbose_name", None)
                                 if "default" in i:
-                                    props["default"] = str(i["default"]) if type(i["default"]) not in [set, list, dict,
-                                                                                                       int, float, bool, type(None)] else \
-                                        i["default"]
+                                    props["default"] = str(i["default"]) if type(i["default"]) not in [set, list, dict, int, float, bool, type(None)] else i["default"]
                                 else:
                                     props["default"] = None
 
                                 f.append({'name': str(item[0]), 'props': props})
                             else:
                                 f.append(list(item))
-                        elif any([isinstance(item, str), isinstance(item, list),
-                                  isinstance(item, dict), isinstance(item, bool),
-                                  isinstance(item, float),
-                                  isinstance(item, int)]) or item is None:
+                        elif (
+                            any([isinstance(item, str), isinstance(item, list), isinstance(item, dict), isinstance(item, bool), isinstance(item, float), isinstance(item, int)])
+                            or item is None
+                        ):
                             f.append(item)
                         else:
                             f.append(str(item))
@@ -102,8 +100,19 @@ class OperationWriter:
                 }
                 d[_arg_name] = ab
                 d["related"] = True
-            elif any([isinstance(_arg_value, str), isinstance(_arg_value, list), isinstance(_arg_value, dict), isinstance(_arg_value, bool), isinstance(_arg_value, float),
-                      isinstance(_arg_value, int)]) or _arg_value is None:
+            elif (
+                any(
+                    [
+                        isinstance(_arg_value, str),
+                        isinstance(_arg_value, list),
+                        isinstance(_arg_value, dict),
+                        isinstance(_arg_value, bool),
+                        isinstance(_arg_value, float),
+                        isinstance(_arg_value, int),
+                    ]
+                )
+                or _arg_value is None
+            ):
                 d[_arg_name] = _arg_value
             else:
                 d[_arg_name] = str(_arg_value)
@@ -147,11 +156,7 @@ class MigrationWriter:
         migrations_package_name, _ = MigrationLoader.migrations_module(self.migration.app_label)
 
         if migrations_package_name is None:
-            raise ValueError(
-                "Django can't create migrations for app '%s' because "
-                "migrations have been disabled via the MIGRATION_MODULES "
-                "setting." % self.migration.app_label
-            )
+            raise ValueError("Django can't create migrations for app '%s' because " "migrations have been disabled via the MIGRATION_MODULES " "setting." % self.migration.app_label)
 
         # See if we can import the migrations module directly
         try:
@@ -188,10 +193,8 @@ class MigrationWriter:
                     break
         else:
             raise ValueError(
-                "Could not locate an appropriate location to create "
-                "migrations package %s. Make sure the toplevel "
-                "package exists and can be imported." %
-                migrations_package_name)
+                "Could not locate an appropriate location to create " "migrations package %s. Make sure the toplevel " "package exists and can be imported." % migrations_package_name
+            )
 
         final_dir = os.path.join(base_dir, *missing_dirs)
         if not os.path.isdir(final_dir):

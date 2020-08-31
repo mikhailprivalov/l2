@@ -60,6 +60,7 @@ def gen_pdf_execlist(request):
     xsize = 8
     ysize = 8
     from reportlab.lib.pagesizes import landscape
+
     lw, lh = landscape(A4)
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="execlist.pdf"'
@@ -71,18 +72,16 @@ def gen_pdf_execlist(request):
     from reportlab.pdfbase.ttfonts import TTFont
     import os.path
     from django.utils.text import Truncator
-    pdfmetrics.registerFont(
-        TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
+
+    pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
     elements = []
     for res in directory.Researches.objects.filter(pk__in=researches):
         if type != 2:
-            iss_list = Issledovaniya.objects.filter(tubes__doc_recive_id__isnull=False,
-                                                    tubes__time_recive__range=(date_start, date_end),
-                                                    doc_confirmation_id__isnull=True, research__pk=res.pk,
-                                                    deferred=False).order_by('tubes__time_recive')
+            iss_list = Issledovaniya.objects.filter(
+                tubes__doc_recive_id__isnull=False, tubes__time_recive__range=(date_start, date_end), doc_confirmation_id__isnull=True, research__pk=res.pk, deferred=False
+            ).order_by('tubes__time_recive')
         else:
-            iss_list = Issledovaniya.objects.filter(research__pk=res.pk, deferred=True, doc_confirmation__isnull=True,
-                                                    tubes__doc_recive__isnull=False).order_by('tubes__time_recive')
+            iss_list = Issledovaniya.objects.filter(research__pk=res.pk, deferred=True, doc_confirmation__isnull=True, tubes__doc_recive__isnull=False).order_by('tubes__time_recive')
 
         if iss_list.count() == 0:
             # if not hb:
@@ -111,13 +110,19 @@ def gen_pdf_execlist(request):
                 inpg_o = inpg.page(inpg_num)
                 data.append([])
                 for inobj in inpg_o.object_list:
-                    data[-1].append(inobj.issledovaniya_set.first().napravleniye.client.individual.fio(short=True,
-                                                                                                       dots=True) + ", " +
-                                    inobj.issledovaniya_set.first().napravleniye.client.individual.age_s(
-                                        iss=inobj.issledovaniya_set.first()) + "<br/>№ напр.: " + str(
-                        inobj.issledovaniya_set.first().napravleniye_id) + "<br/>" + "№ ёмкости: " + str(
-                        inobj.pk) + "<br/>" + Truncator(
-                        inobj.issledovaniya_set.first().napravleniye.doc.podrazdeleniye.title).chars(19) + "<br/><br/>")
+                    data[-1].append(
+                        inobj.issledovaniya_set.first().napravleniye.client.individual.fio(short=True, dots=True)
+                        + ", "
+                        + inobj.issledovaniya_set.first().napravleniye.client.individual.age_s(iss=inobj.issledovaniya_set.first())
+                        + "<br/>№ напр.: "
+                        + str(inobj.issledovaniya_set.first().napravleniye_id)
+                        + "<br/>"
+                        + "№ ёмкости: "
+                        + str(inobj.pk)
+                        + "<br/>"
+                        + Truncator(inobj.issledovaniya_set.first().napravleniye.doc.podrazdeleniye.title).chars(19)
+                        + "<br/><br/>"
+                    )
             if len(data) < ysize:
                 for i in range(len(data), ysize):
                     data.append([])
@@ -125,26 +130,20 @@ def gen_pdf_execlist(request):
                 if len(data[y]) < xsize:
                     for i in range(len(data[y]), xsize):
                         data[y].append("<br/><br/><br/><br/><br/>")
-            style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                                ('INNERGRID', (0, 0), (-1, -1), 0.3, colors.black),
-                                ('BOX', (0, 0), (-1, -1), 0.3, colors.black),
-                                ])
+            style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'), ('INNERGRID', (0, 0), (-1, -1), 0.3, colors.black), ('BOX', (0, 0), (-1, -1), 0.3, colors.black),])
 
             s = getSampleStyleSheet()
             s = s["BodyText"]
             s.wordWrap = 'LTR'
             data = np.array(data).T
-            data2 = [[Paragraph('<font face="OpenSans" size="7">' + cell + "</font>", s) for cell in row] for row in
-                     data]
+            data2 = [[Paragraph('<font face="OpenSans" size="7">' + cell + "</font>", s) for cell in row] for row in data]
             tw = lw - 90
-            t = Table(data2, colWidths=[int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8),
-                                        int(tw / 8), int(tw / 8)])
+            t = Table(data2, colWidths=[int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8)])
             t.setStyle(style)
             st = ""
             if type == 2:
                 st = ", отложенные"
-            elements.append(Paragraph(
-                '<font face="OpenSans" size="10">' + res.title + st + ", " + str(pg_num) + " стр<br/><br/></font>", s))
+            elements.append(Paragraph('<font face="OpenSans" size="10">' + res.title + st + ", " + str(pg_num) + " стр<br/><br/></font>", s))
             elements.append(t)
             elements.append(PageBreak())
 
@@ -165,23 +164,32 @@ def gen_pdf_dir(request):
     response = HttpResponse(content_type='application/pdf')  # Формирование ответа типа PDF
     response['Content-Disposition'] = 'inline; filename="directions.pdf"'  # Включение режима вывода PDF в браузер
 
-    pdfmetrics.registerFont(
-        TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))  # Загрузка шрифта из файла
-    pdfmetrics.registerFont(
-        TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))  # Загрузка шрифта из файла
-    pdfmetrics.registerFont(
-        TTFont('TimesNewRoman', os.path.join(FONTS_FOLDER, 'TimesNewRoman.ttf')))  # Загрузка шрифта из файла
-    dn = Napravleniya.objects.filter(pk__in=direction_id).prefetch_related(
-        Prefetch(
-            'issledovaniya_set',
-            queryset=Issledovaniya.objects.all().select_related('research', 'research__podrazdeleniye', 'localization', 'service_location').prefetch_related('research__fractions_set')
+    pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))  # Загрузка шрифта из файла
+    pdfmetrics.registerFont(TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))  # Загрузка шрифта из файла
+    pdfmetrics.registerFont(TTFont('TimesNewRoman', os.path.join(FONTS_FOLDER, 'TimesNewRoman.ttf')))  # Загрузка шрифта из файла
+    dn = (
+        Napravleniya.objects.filter(pk__in=direction_id)
+        .prefetch_related(
+            Prefetch(
+                'issledovaniya_set',
+                queryset=Issledovaniya.objects.all().select_related('research', 'research__podrazdeleniye', 'localization', 'service_location').prefetch_related('research__fractions_set'),
+            )
         )
-    ).select_related(
-        'client', 'client__base', 'client__individual',
-        'parent', 'parent__research',
-        'doc_who_create', 'doc_who_create__podrazdeleniye', 'doc', 'doc__podrazdeleniye',
-        'imported_org', 'istochnik_f'
-    ).order_by('pk')
+        .select_related(
+            'client',
+            'client__base',
+            'client__individual',
+            'parent',
+            'parent__research',
+            'doc_who_create',
+            'doc_who_create__podrazdeleniye',
+            'doc',
+            'doc__podrazdeleniye',
+            'imported_org',
+            'istochnik_f',
+        )
+        .order_by('pk')
+    )
 
     donepage = dn.exclude(issledovaniya__research__direction_form=0)
 
@@ -242,20 +250,26 @@ def gen_pdf_dir(request):
         tx = '<font face="OpenSansBold" size="10">Памятка пациенту по проведению исследований</font>\n'
         for i in instructions_filtered:
             tx += '--------------------------------------------------------------------------------------\n<font face="OpenSansBold" size="10">{}</font>\n<font face="OpenSans" size="10">&nbsp;&nbsp;&nbsp;&nbsp;{}\n</font>'.format(  # noqa: E501
-                i["title"], i["text"])
+                i["title"], i["text"]
+            )
         data = [[Paragraph(tx.replace("\n", "<br/>"), s)]]
 
         t = Table(data, colWidths=[w - 30 * mm])
-        t.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                               ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                               ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                               ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.white),
-                               ('BOX', (0, 0), (-1, -1), 0.25, colors.white),
-                               ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                               ('TOPPADDING', (0, 0), (-1, -1), 0.5),
-                               ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                               ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-                               ]))
+        t.setStyle(
+            TableStyle(
+                [
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                    ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.white),
+                    ('BOX', (0, 0), (-1, -1), 0.25, colors.white),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                    ('TOPPADDING', (0, 0), (-1, -1), 0.5),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+                ]
+            )
+        )
         t.canv = c
         wt, ht = t.wrap(0, 0)
         t.drawOn(c, 15 * mm, h - 15 * mm - ht)
@@ -286,6 +300,7 @@ def gen_pdf_dir(request):
         if request.GET["contract"] == '1' and SettingManager.get("direction_contract", default='False', default_type='b'):
             if len(card_pk_set) == 1 and fin_status:
                 from forms.forms102 import form_01 as f_contract
+
                 fc = f_contract(request_data={**dict(request.GET.items()), "user": request.user, "card_pk": card_pk_set.pop()})
                 if fc:
                     fc_buf = BytesIO()
@@ -293,6 +308,7 @@ def gen_pdf_dir(request):
                     fc_buf.seek(0)
                     buffer.seek(0)
                     from pdfrw import PdfReader, PdfWriter
+
                     today = datetime.now()
                     date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
                     date_now_str = str(n.client_id) + str(date_now1)
@@ -390,8 +406,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height) + (h / 2) * yn - 57, "№ " + str(dir.pk))  # Номер направления
 
     c.setFont('OpenSans', 9)
-    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 70) + (h / 2) * yn,
-                 "Создано: " + strdate(dir.data_sozdaniya) + " " + strtime(dir.data_sozdaniya)[:5])
+    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 70) + (h / 2) * yn, "Создано: " + strdate(dir.data_sozdaniya) + " " + strtime(dir.data_sozdaniya)[:5])
     history_num = dir.history_num
     additional_num = dir.additional_num
     if history_num and len(history_num) > 0:
@@ -402,42 +417,36 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "(" + dir.client.number_poliklinika + ")")
 
     if dir.history_num and len(dir.history_num) > 0:
-        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn,
-                          "№ истории: " + dir.history_num)
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "№ истории: " + dir.history_num)
 
-    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 80) + (h / 2) * yn,
-                 "ФИО: " + dir.client.individual.fio())
+    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 80) + (h / 2) * yn, "ФИО: " + dir.client.individual.fio())
 
-    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 80) + (h / 2) * yn,
-                      "Пол: " + dir.client.individual.sex)
+    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 80) + (h / 2) * yn, "Пол: " + dir.client.individual.sex)
 
-    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn,
-                      "Д/р: {} ({})".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir)))
+    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn, "Д/р: {} ({})".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir)))
 
-    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn,
-                 "{}: {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type()))
+    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "{}: {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type()))
     diagnosis = dir.diagnos.strip()
     if not dir.imported_from_rmis:
         if diagnosis != "":
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn,
-                         ("" if dir.vich_code == "" else ("Код: " + dir.vich_code + "  ")) + "Диагноз (МКБ 10): " + ("не указан" if diagnosis == "-" else diagnosis))
+            c.drawString(
+                paddingx + (w / 2 * xn),
+                (h / 2 - height - 100) + (h / 2) * yn,
+                ("" if dir.vich_code == "" else ("Код: " + dir.vich_code + "  ")) + "Диагноз (МКБ 10): " + ("не указан" if diagnosis == "-" else diagnosis),
+            )
         elif dir.vich_code != "":
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn,
-                         "Код: " + dir.vich_code)
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn, "Код: " + dir.vich_code)
         if dir.istochnik_f:
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn,
-                         "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.title)
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn, "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.title)
         else:
             c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn, "Источник финансирования: ")
     else:
         nds = 0
         if diagnosis != "":
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn,
-                         "Диагноз (МКБ 10): " + diagnosis)
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn, "Диагноз (МКБ 10): " + diagnosis)
             nds = 5
         if dir.imported_org:
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 105 - nds) + (h / 2) * yn,
-                         "Организация: " + dir.imported_org.title)
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 105 - nds) + (h / 2) * yn, "Организация: " + dir.imported_org.title)
 
     issledovaniya = dir.issledovaniya_set.all()
 
@@ -449,14 +458,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
         rtp = i.research.reversed_type
         if rtp < -1:
             has_doc_refferal = True
-            rt = {
-                -2: 'Консультации',
-                -3: 'Лечение',
-                -4: 'Стоматология',
-                -5: 'Стационар',
-                -6: 'Микробиология',
-                -9998: 'Морфология',
-            }[rtp]
+            rt = {-2: 'Консультации', -3: 'Лечение', -4: 'Стоматология', -5: 'Стационар', -6: 'Микробиология', -9998: 'Морфология',}[rtp]
             # if rtp == -6:
             #     has_micro = True
         else:
@@ -506,12 +508,18 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
             if service_location_title not in service_locations:
                 service_locations[service_location_title] = []
             service_locations[service_location_title].append(n)
-        values.append({"title": v.research.get_title(), "full_title": v.research.title, "sw": v.research.sort_weight,
-                       "count": v.how_many,
-                       "comment": v.localization.title if v.localization else v.comment,
-                       "n": n,
-                       "g": -1 if not v.research.fractions_set.exists() else v.research.fractions_set.first().relation_id,
-                       "info": v.research.paraclinic_info})
+        values.append(
+            {
+                "title": v.research.get_title(),
+                "full_title": v.research.title,
+                "sw": v.research.sort_weight,
+                "count": v.how_many,
+                "comment": v.localization.title if v.localization else v.comment,
+                "n": n,
+                "g": -1 if not v.research.fractions_set.exists() else v.research.fractions_set.first().relation_id,
+                "info": v.research.paraclinic_info,
+            }
+        )
 
     one_sl = len(service_locations) <= 1
 
@@ -519,26 +527,27 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
     m = 0
     ns = {}
     if has_descriptive or has_doc_refferal:
-        tmp = [Paragraph(
-            '<font face="OpenSansBold" size="8">%s</font>' % ("Исследование" if not has_doc_refferal else "Назначение"),
-            styleSheet["BodyText"]),
-            Paragraph('<font face="OpenSansBold" size="8">Информация</font>',
-                      styleSheet["BodyText"])]
+        tmp = [
+            Paragraph('<font face="OpenSansBold" size="8">%s</font>' % ("Исследование" if not has_doc_refferal else "Назначение"), styleSheet["BodyText"]),
+            Paragraph('<font face="OpenSansBold" size="8">Информация</font>', styleSheet["BodyText"]),
+        ]
         data.append(tmp)
         colWidths = [int(tw * 0.5), int(tw * 0.5)]
         values.sort(key=lambda l: l["full_title"])
 
         for v in values:
             ns[v["n"]] = v["n"]
-            tmp = [Paragraph('<font face="OpenSans" size="8">'
-                             + ("" if one_sl else "№{}: ".format(v["n"])) +
-                             xh.fix(v["full_title"]) +
-                             ("" if not v["comment"] else
-                              " <font face=\"OpenSans\" size=\"" + str(font_size * 0.8) +
-                              "\">[{}]</font>".format(v["comment"]))
-                             + "</font>",
-                             styleSheet["BodyText"]),
-                   Paragraph('<font face="OpenSans" size="8">' + xh.fix(v["info"]) + "</font>", styleSheet["BodyText"])]
+            tmp = [
+                Paragraph(
+                    '<font face="OpenSans" size="8">'
+                    + ("" if one_sl else "№{}: ".format(v["n"]))
+                    + xh.fix(v["full_title"])
+                    + ("" if not v["comment"] else " <font face=\"OpenSans\" size=\"" + str(font_size * 0.8) + "\">[{}]</font>".format(v["comment"]))
+                    + "</font>",
+                    styleSheet["BodyText"],
+                ),
+                Paragraph('<font face="OpenSans" size="8">' + xh.fix(v["info"]) + "</font>", styleSheet["BodyText"]),
+            ]
             data.append(tmp)
         m = 8
     else:
@@ -568,55 +577,61 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
             tmp = []
             for obj in pg.object_list:
                 ns[obj["n"]] = n
-                tmp.append(Paragraph('<font face="OpenSans" size="' + str(font_size) + '">'
-                                     + ("" if one_sl else "№{}: ".format(n)) +
-                                     obj["title"]
-                                     + ("" if not obj["count"] or obj["count"] == 1
-                                        else " ({}шт.)".format(str(obj["count"]))) +
-                                     ("" if not obj["comment"]
-                                      else " <font face=\"OpenSans\" size=\"" + str(font_size * 0.8) +
-                                           "\">[{}]</font>".format(obj["comment"]))
-                                     + "</font>",
-                                     styleSheet["BodyText"]))
+                tmp.append(
+                    Paragraph(
+                        '<font face="OpenSans" size="'
+                        + str(font_size)
+                        + '">'
+                        + ("" if one_sl else "№{}: ".format(n))
+                        + obj["title"]
+                        + ("" if not obj["count"] or obj["count"] == 1 else " ({}шт.)".format(str(obj["count"])))
+                        + ("" if not obj["comment"] else " <font face=\"OpenSans\" size=\"" + str(font_size * 0.8) + "\">[{}]</font>".format(obj["comment"]))
+                        + "</font>",
+                        styleSheet["BodyText"],
+                    )
+                )
                 n += 1
             if len(pg.object_list) < 2:
-                tmp.append(
-                    Paragraph('<font face="OpenSans" size="' + str(font_size) + '"></font>', styleSheet["BodyText"]))
+                tmp.append(Paragraph('<font face="OpenSans" size="' + str(font_size) + '"></font>', styleSheet["BodyText"]))
             data.append(tmp)
 
     t = Table(data, colWidths=colWidths)
-    t.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                           ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                           ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                           ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-                           ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
-                           ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                           ('TOPPADDING', (0, 0), (-1, -1), 0.5),
-                           ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                           ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-                           ]))
+    t.setStyle(
+        TableStyle(
+            [
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+                ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING', (0, 0), (-1, -1), 0.5),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+            ]
+        )
+    )
     t.canv = c
     wt, ht = t.wrap(0, 0)
     t.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht))
 
     c.setFont('OpenSans', 8)
     if not has_descriptive and not has_doc_refferal:
-        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 10,
-                     "Всего назначено: " + str(len(issledovaniya)))
+        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 10, "Всего назначено: " + str(len(issledovaniya)))
 
     if service_locations:
         n = 0 if has_descriptive or has_doc_refferal else 1
         if one_sl:
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10,
-                         "Место: " + list(service_locations)[0])
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10, "Место: " + list(service_locations)[0])
         else:
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10,
-                         "Места оказания услуг:")
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10, "Места оказания услуг:")
             for title in service_locations:
                 n += 1
-                c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10,
-                             title +
-                             " – услуги " + ', '.join(map(lambda x: "№{}".format(ns[x]), service_locations[title])))
+                c.drawString(
+                    paddingx + (w / 2 * xn),
+                    (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10,
+                    title + " – услуги " + ', '.join(map(lambda x: "№{}".format(ns[x]), service_locations[title])),
+                )
 
     if need_qr_code:
         qr_value = translit(dir.client.individual.fio(), 'ru', reversed=True)
@@ -632,16 +647,12 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
     if not dir.imported_from_rmis:
         if dir.doc_who_create and dir.doc_who_create != dir.doc:
             nn = 9
-            c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn,
-                         Truncator("Выписал: %s, %s" % (
-                             dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title)).chars(63))
-        c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn,
-                     "Отделение: " + Truncator(dir.doc.podrazdeleniye.title).chars(50))
+            c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn, Truncator("Выписал: %s, %s" % (dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title)).chars(63))
+        c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Отделение: " + Truncator(dir.doc.podrazdeleniye.title).chars(50))
         c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, "Л/врач: " + dir.doc.get_fio())
     else:
         c.drawString(paddingx + (w / 2 * xn), 31 + (h / 2) * yn + nn, "РМИС#" + dir.rmis_number)
-        c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn,
-                     "Создал направление: " + dir.doc_who_create.get_fio())
+        c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Создал направление: " + dir.doc_who_create.get_fio())
         c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, dir.doc_who_create.podrazdeleniye.title)
 
     c.setFont('OpenSans', 7)
@@ -681,16 +692,15 @@ def get_one_dir(request):
             if "check" not in request.GET.keys():
                 tmp2 = Napravleniya.objects.get(pk=direction_pk)
                 tmp = Issledovaniya.objects.filter(napravleniye=tmp2).order_by("research__title")
-                response["direction"] = {"pk": tmp2.pk,
-                                         "cancel": tmp2.cancel,
-                                         "date": str(
-                                             dateformat.format(tmp2.data_sozdaniya.date(), settings.DATE_FORMAT)),
-                                         "doc": {"fio": "" if not tmp2.doc else tmp2.doc.get_fio(),
-                                                 "otd": "" if not tmp2.doc else tmp2.doc.podrazdeleniye.title},
-                                         "imported_from_rmis": tmp2.imported_from_rmis,
-                                         "imported_org": "" if not tmp2.imported_org else tmp2.imported_org.title,
-                                         "full_confirm": tmp2.is_all_confirm()
-                                         }
+                response["direction"] = {
+                    "pk": tmp2.pk,
+                    "cancel": tmp2.cancel,
+                    "date": str(dateformat.format(tmp2.data_sozdaniya.date(), settings.DATE_FORMAT)),
+                    "doc": {"fio": "" if not tmp2.doc else tmp2.doc.get_fio(), "otd": "" if not tmp2.doc else tmp2.doc.podrazdeleniye.title},
+                    "imported_from_rmis": tmp2.imported_from_rmis,
+                    "imported_org": "" if not tmp2.imported_org else tmp2.imported_org.title,
+                    "full_confirm": tmp2.is_all_confirm(),
+                }
                 podr = tmp[0].research.get_podrazdeleniye()
                 if podr:
                     response["direction"]["lab"] = podr.title
@@ -747,16 +757,18 @@ def get_one_dir(request):
                     if tube.barcode:  # Проверка штрих кода пробирки
                         barcode = tube.barcode
                     if tube.id not in response["tubes"].keys():  # Если пробирки нет в словаре
-                        response["tubes"][tube.id] = {"researches": v["researches"], "status": True,
-                                                      "color": tube.type.tube.color,
-                                                      "title": tube.type.tube.title, "id": tube.id,
-                                                      "barcode": barcode}  # Добавление пробирки в словарь
+                        response["tubes"][tube.id] = {
+                            "researches": v["researches"],
+                            "status": True,
+                            "color": tube.type.tube.color,
+                            "title": tube.type.tube.title,
+                            "id": tube.id,
+                            "barcode": barcode,
+                        }  # Добавление пробирки в словарь
                     s = tube.getstatus()  # Статус взятия материала для исследований
                     response["tubes"][tube.id]["status"] = s  # Установка статуса в объект пробирки
 
-                response["client"] = {"fio": tmp2.client.individual.fio(),
-                                      "sx": tmp2.client.individual.sex,
-                                      "bth": tmp2.client.individual.bd()}  # Добавление информации о пациенте в вывод
+                response["client"] = {"fio": tmp2.client.individual.fio(), "sx": tmp2.client.individual.sex, "bth": tmp2.client.individual.bd()}  # Добавление информации о пациенте в вывод
             response["ok"] = True
     return JsonResponse(response)
 
@@ -855,18 +867,16 @@ def group_confirm_get(request):
 def load_history(request):
     """Получение истории заборов материала за текущий день"""
     res = {"rows": []}
-    tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(
-        time_get__lt=datetime.now().date())
+    tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(time_get__lt=datetime.now().date())
 
     for v in tubes:  # Перебор пробирки
         iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Выборка исследований по пробирке
         iss_list = []
         for val in iss:  # Перебор выбранных исследований
             iss_list.append(val.research.title)  # Добавление в список исследований по пробирке
-        res["rows"].append({"type": v.type.tube.title, "researches": ', '.join(str(x) for x in iss_list),
-                            "time": strtime(v.time_get),
-                            "dir_id": iss[0].napravleniye_id,
-                            "tube_id": v.id})  # Добавление пробирки с исследованиями в вывод
+        res["rows"].append(
+            {"type": v.type.tube.title, "researches": ', '.join(str(x) for x in iss_list), "time": strtime(v.time_get), "dir_id": iss[0].napravleniye_id, "tube_id": v.id}
+        )  # Добавление пробирки с исследованиями в вывод
     return JsonResponse(res)
 
 
@@ -876,19 +886,19 @@ def get_worklist(request):
     tmprows = {}
     res = {"rows": []}
     from datetime import timedelta
+
     date_start = datetime.now() - timedelta(days=6)
     date_end = datetime.now()
     # if date_start.weekday() == 6: date_start -= timedelta(days=2)
     # if date_start.weekday() == 5: date_start -= timedelta(days=1)
     naps = Napravleniya.objects.filter(
         Q(data_sozdaniya__range=(date_start, date_end), doc_who_create=request.user.doctorprofile, cancel=False)
-        | Q(data_sozdaniya__range=(date_start, date_end), doc=request.user.doctorprofile, cancel=False))
+        | Q(data_sozdaniya__range=(date_start, date_end), doc=request.user.doctorprofile, cancel=False)
+    )
     for n in naps:
         for i in Issledovaniya.objects.filter(napravleniye=n):
             for t in i.tubes.filter(doc_get__isnull=True):
-                tmprows[t.pk] = {"direction": n.pk, "patient": n.client.individual.fio(short=True, dots=True),
-                                 "title": t.type.tube.title,
-                                 "pk": t.pk, "color": t.type.tube.color}
+                tmprows[t.pk] = {"direction": n.pk, "patient": n.client.individual.fio(short=True, dots=True), "title": t.type.tube.title, "pk": t.pk, "color": t.type.tube.color}
     for pk in tmprows.keys():
         res["rows"].append(tmprows[pk])
     res["rows"] = sorted(res["rows"], key=lambda k: k['pk'])
@@ -920,8 +930,7 @@ def print_history(request):
     pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))  # Загрузка шрифта
 
     response = HttpResponse(content_type='application/pdf')  # Формирование ответа
-    response[
-        'Content-Disposition'] = 'inline; filename="napr.pdf"'  # Content-Disposition inline для показа PDF в браузере
+    response['Content-Disposition'] = 'inline; filename="napr.pdf"'  # Content-Disposition inline для показа PDF в браузере
     buffer = BytesIO()  # Буфер
     c = canvas.Canvas(buffer, pagesize=A4)  # Холст
     tubes = []
@@ -941,23 +950,25 @@ def print_history(request):
             labs[k] = []
         for value in iss_list:  # Перебор списка исследований
             labs[k].append(
-                {"type": v.type.tube.title, "researches": value,
-                 "client-type": iss[0].napravleniye.client.base.short_title,
-                 "lab_title": iss[0].research.get_podrazdeleniye().title,
-                 "time": strtime(v.time_get),
-                 "dir_id": iss[0].napravleniye_id,
-                 "podr": v.doc_get.podrazdeleniye.title,
-                 "reciver": None,
-                 "tube_id": str(v.id),
-                 "history_num": iss[0].napravleniye.history_num,
-                 "fio": iss[
-                     0].napravleniye.client.individual.fio(short=True, dots=True)})  # Добавление в список исследований и пробирок по ключу k в словарь labs
+                {
+                    "type": v.type.tube.title,
+                    "researches": value,
+                    "client-type": iss[0].napravleniye.client.base.short_title,
+                    "lab_title": iss[0].research.get_podrazdeleniye().title,
+                    "time": strtime(v.time_get),
+                    "dir_id": iss[0].napravleniye_id,
+                    "podr": v.doc_get.podrazdeleniye.title,
+                    "reciver": None,
+                    "tube_id": str(v.id),
+                    "history_num": iss[0].napravleniye.history_num,
+                    "fio": iss[0].napravleniye.client.individual.fio(short=True, dots=True),
+                }
+            )  # Добавление в список исследований и пробирок по ключу k в словарь labs
     labs = collections.OrderedDict(sorted(labs.items()))  # Сортировка словаря
     c.setFont('OpenSans', 20)
 
     paddingx = 17
-    data_header = ["№", "ФИО, № истории", "№ емкости", "Тип емкости", "Наименования исследований",
-                   "Емкость не принята (замечания)"]
+    data_header = ["№", "ФИО, № истории", "№ емкости", "Тип емкости", "Наименования исследований", "Емкость не принята (замечания)"]
     tw = w - paddingx * 4.5
     tx = paddingx * 3
     ty = 90
@@ -1013,32 +1024,30 @@ def print_history(request):
                     tmp.append("")
                 research_tmp = obj["researches"]
                 if len(research_tmp) > 38:
-                    research_tmp = research_tmp[0:-(len(research_tmp) - 38)] + "..."
+                    research_tmp = research_tmp[0 : -(len(research_tmp) - 38)] + "..."
                 tmp.append(Paragraph(research_tmp, styleSheet["BodyText"]))
                 tmp.append(Paragraph("", styleSheet["BodyText"]))
 
                 data.append(tmp)
                 num += 1
 
-            style = TableStyle([
-                ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-                ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
-                ('VALIGN', (0, 0), (-1, -1), "MIDDLE"),
-                ('LEFTPADDING', (0, 0), (-1, -1), 1),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-                ('TOPPADDING', (0, 0), (-1, -1), 1),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 1)
-            ])
+            style = TableStyle(
+                [
+                    ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                    ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('VALIGN', (0, 0), (-1, -1), "MIDDLE"),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 1),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+                    ('TOPPADDING', (0, 0), (-1, -1), 1),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+                ]
+            )
             for span in merge_list:  # Цикл объединения ячеек
                 for pos in range(0, 6):
-                    style.add('INNERGRID', (pos, merge_list[span][0]),
-                              (pos, merge_list[span][0] + len(merge_list[span])), 0.28, colors.white)
-                    style.add('BOX', (pos, merge_list[span][0]), (pos, merge_list[span][0] + len(merge_list[span])),
-                              0.2, colors.black)
-            t = Table(data, colWidths=[int(tw * 0.03), int(tw * 0.23), int(tw * 0.08), int(tw * 0.23), int(tw * 0.31),
-                                       int(tw * 0.14)],
-                      style=style)
+                    style.add('INNERGRID', (pos, merge_list[span][0]), (pos, merge_list[span][0] + len(merge_list[span])), 0.28, colors.white)
+                    style.add('BOX', (pos, merge_list[span][0]), (pos, merge_list[span][0] + len(merge_list[span])), 0.2, colors.black)
+            t = Table(data, colWidths=[int(tw * 0.03), int(tw * 0.23), int(tw * 0.08), int(tw * 0.23), int(tw * 0.31), int(tw * 0.14)], style=style)
 
             t.canv = c
             wt, ht = t.wrap(0, 0)
@@ -1067,8 +1076,7 @@ def drawTituls(c, pages, page, paddingx, obj):
 
     c.setFont('OpenSans', 10)
     # c.drawString(paddingx * 3, h - 70, "№ " + str(doc_num))
-    c.drawRightString(w - paddingx, h - 70,
-                      "Дата: " + str(dateformat.format(date.today(), settings.DATE_FORMAT)))
+    c.drawRightString(w - paddingx, h - 70, "Дата: " + str(dateformat.format(date.today(), settings.DATE_FORMAT)))
 
     c.drawString(paddingx * 3, h - 70, "Отделение (от кого): " + str(obj["podr"]))
     c.drawString(paddingx * 3, h - 80, "Лаборатория (кому): " + str(obj["lab_title"]))
@@ -1087,6 +1095,7 @@ def drawTituls(c, pages, page, paddingx, obj):
 def get_issledovaniya(request):
     """ Получение списка исследований и направления для ввода результатов"""
     import time
+
     res = {"issledovaniya": [], "ok": False, "labs": [], "labs_objects": [], "msg": None}
     if request.method == "GET":
         iss = []
@@ -1136,9 +1145,7 @@ def get_issledovaniya(request):
                     groups = {}
                     cnt = 0
                     researches_chk = []
-                    for issledovaniye in iss.order_by("deferred", "-doc_save",
-                                                      "-doc_confirmation", "tubes__pk",
-                                                      "research__sort_weight"):
+                    for issledovaniye in iss.order_by("deferred", "-doc_save", "-doc_confirmation", "tubes__pk", "research__sort_weight"):
                         if True:  # issledovaniye.research.hide == 0:
                             if issledovaniye.pk in researches_chk:
                                 continue
@@ -1151,13 +1158,9 @@ def get_issledovaniya(request):
                                 tubes.append(tube_o.pk)
                                 titles.append(tube_o.type.tube.title)
 
-                            not_received_tubes_list = [str(x.pk) for x in
-                                                       issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by(
-                                                           "pk")]
+                            not_received_tubes_list = [str(x.pk) for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk")]
 
-                            not_received_why = [x.notice for x in
-                                                issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk")
-                                                if x.notice]
+                            not_received_why = [x.notice for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk") if x.notice]
 
                             saved = True
                             confirmed = True
@@ -1191,51 +1194,56 @@ def get_issledovaniya(request):
                             if tb not in groups.keys():
                                 cnt += 1
                                 groups[tb] = cnt
-                            ctp = int(0 if not issledovaniye.time_confirmation else int(
-                                time.mktime(timezone.localtime(issledovaniye.time_confirmation).timetuple())))
+                            ctp = int(0 if not issledovaniye.time_confirmation else int(time.mktime(timezone.localtime(issledovaniye.time_confirmation).timetuple())))
                             ctime = int(time.time())
                             cdid = issledovaniye.doc_confirmation_id or -1
                             rt = SettingManager.get("lab_reset_confirm_time_min") * 60
-                            res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
-                                                         "research_pk": issledovaniye.research_id,
-                                                         "sort": issledovaniye.research.sort_weight,
-                                                         "saved": saved,
-                                                         "is_norm": isnorm,
-                                                         "confirmed": confirmed,
-                                                         "status_key": str(saved) + str(confirmed) + str(
-                                                             issledovaniye.deferred and not confirmed),
-                                                         "not_received_tubes": ", ".join(not_received_tubes_list),
-                                                         "not_received_why": ", ".join(not_received_why),
-                                                         "tube": {"pk": tb,
-                                                                  "title": ' | '.join(titles)},
-                                                         "template": str(issledovaniye.research.template),
-                                                         "deff": issledovaniye.deferred and not confirmed,
-                                                         "doc_save_fio": doc_save_fio,
-                                                         "doc_save_id": doc_save_id,
-                                                         "current_doc_save": current_doc_save,
-                                                         "allow_disable_confirm": ((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or
-                                                                                   request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                                                                   str(x) for x in request.user.groups.all()]) and confirmed,
-                                                         "ctp": ctp,
-                                                         "ctime": ctime,
-                                                         "ctime_ctp": ctime - ctp,
-                                                         "ctime_ctp_t": ctime - ctp < rt,
-                                                         "period_sec": rt,
-                                                         "group": groups[tb]
-                                                         })
+                            res["issledovaniya"].append(
+                                {
+                                    "pk": issledovaniye.pk,
+                                    "title": issledovaniye.research.title,
+                                    "research_pk": issledovaniye.research_id,
+                                    "sort": issledovaniye.research.sort_weight,
+                                    "saved": saved,
+                                    "is_norm": isnorm,
+                                    "confirmed": confirmed,
+                                    "status_key": str(saved) + str(confirmed) + str(issledovaniye.deferred and not confirmed),
+                                    "not_received_tubes": ", ".join(not_received_tubes_list),
+                                    "not_received_why": ", ".join(not_received_why),
+                                    "tube": {"pk": tb, "title": ' | '.join(titles)},
+                                    "template": str(issledovaniye.research.template),
+                                    "deff": issledovaniye.deferred and not confirmed,
+                                    "doc_save_fio": doc_save_fio,
+                                    "doc_save_id": doc_save_id,
+                                    "current_doc_save": current_doc_save,
+                                    "allow_disable_confirm": (
+                                        (ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
+                                        or request.user.is_superuser
+                                        or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
+                                    )
+                                    and confirmed,
+                                    "ctp": ctp,
+                                    "ctime": ctime,
+                                    "ctime_ctp": ctime - ctp,
+                                    "ctime_ctp_t": ctime - ctp < rt,
+                                    "period_sec": rt,
+                                    "group": groups[tb],
+                                }
+                            )
                     import collections
+
                     result = collections.defaultdict(lambda: collections.defaultdict(list))
 
                     for d in res["issledovaniya"]:
                         result[d['status_key']][d['group']].append(d)
-                        result[d['status_key']][d['group']] = sorted(result[d['status_key']][d['group']],
-                                                                     key=lambda k: k['sort'])
+                        result[d['status_key']][d['group']] = sorted(result[d['status_key']][d['group']], key=lambda k: k['sort'])
 
                     res["issledovaniya"] = []
 
                     def concat(dic):
                         t = [dic[x] for x in dic.keys()]
                         import itertools
+
                         return itertools.chain(*t)
 
                     if "FalseFalseFalse" in result.keys():
@@ -1278,14 +1286,14 @@ def get_issledovaniya(request):
 @login_required
 def order_researches(request):
     from directions.models import CustomResearchOrdering
+
     if request.method == "POST":
         order = json.loads(request.POST.get("order", "[]"))
         lab = request.POST.get("lab")
         CustomResearchOrdering.objects.filter(research__podrazdeleniye_id=lab).delete()
         for i in range(len(order)):
             w = len(order) - i
-            CustomResearchOrdering(research=directory.Researches.objects.get(pk=order[i]),
-                                   user=request.user.doctorprofile, weight=w).save()
+            CustomResearchOrdering(research=directory.Researches.objects.get(pk=order[i]), user=request.user.doctorprofile, weight=w).save()
 
     return JsonResponse(1, safe=False)
 
@@ -1295,6 +1303,7 @@ def resend(request):
     t = request.GET.get("type", "directions")
     pks = json.loads(request.GET.get("pks", "[]"))
     from rmis_integration.client import Client
+
     c = Client()
     d = []
     r = []

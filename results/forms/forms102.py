@@ -35,19 +35,18 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
     styleT.leading = 4.5 * mm
 
     opinion = [
-        [Paragraph(f'<font size=10>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
-         Paragraph(
-             '<font size=9 >Медицинская документация <br/> Учетная форма № 014/1-у<br/>Утверждена приказом Минздрава России<br/>от 24 марта 2016г. № 179н</font>',
-             styleT)],
+        [
+            Paragraph(f'<font size=10>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
+            Paragraph('<font size=9 >Медицинская документация <br/> Учетная форма № 014/1-у<br/>Утверждена приказом Минздрава России<br/>от 24 марта 2016г. № 179н</font>', styleT),
+        ],
     ]
 
     tbl = Table(opinion, 2 * [100 * mm])
-    tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
-        ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
-        ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    ]))
+    tbl.setStyle(
+        TableStyle(
+            [('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm), ('LEFTPADDING', (0, 0), (0, -1), 15 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]
+        )
+    )
 
     fwb.append(tbl)
     fwb.append(Spacer(1, 5 * mm))
@@ -124,9 +123,12 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                     if field_type in [11, 13]:
                         v = '<font face="FreeSans" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
                     if r.field.get_title(force_type=field_type) != "":
-                        fwb.append(Paragraph(
-                            "<font face=\"FreeSansBold\">{}:</font>{}".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;'), v),
-                            style_ml if group_title else style))
+                        fwb.append(
+                            Paragraph(
+                                "<font face=\"FreeSansBold\">{}:</font>{}".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;'), v),
+                                style_ml if group_title else style,
+                            )
+                        )
                     else:
                         fwb.append(Paragraph(v, style))
 

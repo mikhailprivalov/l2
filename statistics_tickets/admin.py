@@ -1,14 +1,10 @@
 from django.contrib import admin
 
-from statistics_tickets.models import ResultOfTreatment, VisitPurpose, StatisticsTicket, Outcomes, \
-    ExcludePurposes
+from statistics_tickets.models import ResultOfTreatment, VisitPurpose, StatisticsTicket, Outcomes, ExcludePurposes
 
 
 class StatisticsTicketAdmin(admin.ModelAdmin):
-    list_display = (
-        'card', 'date', 'invalid_ticket', 'purpose__title', 'result__title', 'first_time', 'primary_visit',
-        'dispensary_registration',
-        'doctor')
+    list_display = ('card', 'date', 'invalid_ticket', 'purpose__title', 'result__title', 'first_time', 'primary_visit', 'dispensary_registration', 'doctor')
 
     exclude = ("card ",)
     readonly_fields = ('card',)

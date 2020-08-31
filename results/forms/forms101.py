@@ -63,17 +63,18 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
         if i > 3:
             if not append_table:
                 column_data += [''] * (3 - len(column_data))
-                opinion = [
-                    title_opinion,
-                    column_data
-                ]
+                opinion = [title_opinion, column_data]
                 tbl = Table(opinion, colWidths=(33 * mm, 100 * mm, 50 * mm))
-                tbl.setStyle(TableStyle([
-                    ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-                    ('RIGHTPADDING', (0, 0), (-1, -1), 5 * mm),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ]))
+                tbl.setStyle(
+                    TableStyle(
+                        [
+                            ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
+                            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                            ('RIGHTPADDING', (0, 0), (-1, -1), 5 * mm),
+                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                        ]
+                    )
+                )
                 hosp_dir = hosp_get_curent_hosp_dir(iss.pk)
                 fwb.append(Spacer(1, 2 * mm))
                 fwb.append(Paragraph('Пациент: {}. (№:{})'.format(patient_fio, hosp_dir), style))
@@ -148,18 +149,19 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
     if i <= 3:
         column_data += [''] * (3 - len(column_data))
 
-        opinion = [
-            title_opinion,
-            column_data
-        ]
+        opinion = [title_opinion, column_data]
         tbl = Table(opinion, colWidths=(33 * mm, 100 * mm, 50 * mm))
 
-        tbl.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 5 * mm),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 5 * mm),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ]
+            )
+        )
 
         hosp_dir = hosp_get_curent_hosp_dir(iss.pk)
 

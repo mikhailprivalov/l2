@@ -143,16 +143,20 @@ def gen_table(data, const_width, row_count, type_disposition):
     else:
         row_widths.insert(0, 13 * mm)
     tbl = Table(data, repeatRows=2, colWidths=row_widths)
-    tbl.setStyle(TableStyle([
-        ('SPAN', (0, 0), (-1, 0)),
-        ('GRID', (0, 1), (-1, -1), 1.0, colors.black),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 1),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-        ('TOPPADDING', (0, 0), (-1, -1), 1),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
-    ]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('SPAN', (0, 0), (-1, 0)),
+                ('GRID', (0, 1), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('LEFTPADDING', (0, 0), (-1, -1), 1),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+                ('TOPPADDING', (0, 0), (-1, -1), 1),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+            ]
+        )
+    )
 
     return tbl
 
@@ -277,7 +281,8 @@ def html_to_pdf(file_tmp, r_value, pw, leftnone=False):
     if linux:
         display = Display(visible=0, size=(800, 600))
         display.start()
-    imgkit.from_string(f"""
+    imgkit.from_string(
+        f"""
     <html>
         <head>
             <meta name="imgkit-format" content="png"/>
@@ -293,7 +298,9 @@ def html_to_pdf(file_tmp, r_value, pw, leftnone=False):
             {r_value}
         </body>
     </html>
-                                        """, file_tmp)
+                                        """,
+        file_tmp,
+    )
     if linux:
         display.stop()
 
@@ -338,40 +345,42 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
         ["Возраст:", "{} {}".format(direction.client.individual.age_s(direction=direction), individual_birthday)],
     ]
     data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
-    data += [[Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
-             ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:",
-              direction.client.number_with_type() + (
-                  " - архив" if direction.client.is_archive else "") + number_poliklinika]]
+    data += [
+        [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
+        ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:", direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "") + number_poliklinika],
+    ]
     if not direction.imported_from_rmis and not is_extract:
-        data.append(
-            ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)])
+        data.append(["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)])
     elif direction.imported_org:
         data.append(["<font>Направляющая<br/>организация:</font>", direction.imported_org.title])
 
     data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for xi in range(len(data))]
 
     t = Table(data, colWidths=[doc.width * 0.145, doc.width - 158 - doc.width * 0.145, 158])
-    t.setStyle(TableStyle([
-        ('ALIGN', (-1, 0), (-1, 0), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('VALIGN', (-1, 0), (-1, 0), 'BOTTOM'),
-        ('VALIGN', (-1, 5), (-1, 5), 'TOP'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 0),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-        ('TOPPADDING', (0, 0), (-1, -1), 0),
-        ('BOTTOMPADDING', (-1, 0), (-1, -1), 0),
-        ('TOPPADDING', (-1, 0), (-1, -1), 0),
-        ('TOPPADDING', (-1, 5), (-1, 5), 3),
-        ('TOPPADDING', (0, 5), (1, 5), 0),
-        ('TOPPADDING', (0, 6), (1, 6), -6),
-        ('BOTTOMPADDING', (0, 5), (1, 5), 0),
-        ('LEFTPADDING', (0, 5), (1, 5), 0),
-        ('RIGHTPADDING', (0, 5), (1, 5), 0),
-        ('SPAN', (-1, 0), (-1, 4)),
-        ('SPAN', (-1, 5), (-1, -1))
-
-    ]))
+    t.setStyle(
+        TableStyle(
+            [
+                ('ALIGN', (-1, 0), (-1, 0), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('VALIGN', (-1, 0), (-1, 0), 'BOTTOM'),
+                ('VALIGN', (-1, 5), (-1, 5), 'TOP'),
+                ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+                ('TOPPADDING', (0, 0), (-1, -1), 0),
+                ('BOTTOMPADDING', (-1, 0), (-1, -1), 0),
+                ('TOPPADDING', (-1, 0), (-1, -1), 0),
+                ('TOPPADDING', (-1, 5), (-1, 5), 3),
+                ('TOPPADDING', (0, 5), (1, 5), 0),
+                ('TOPPADDING', (0, 6), (1, 6), -6),
+                ('BOTTOMPADDING', (0, 5), (1, 5), 0),
+                ('LEFTPADDING', (0, 5), (1, 5), 0),
+                ('RIGHTPADDING', (0, 5), (1, 5), 0),
+                ('SPAN', (-1, 0), (-1, 4)),
+                ('SPAN', (-1, 5), (-1, -1)),
+            ]
+        )
+    )
 
     return t
 
@@ -424,9 +433,7 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                         if not aggr_lab:
                             continue
                         fwb.append(Spacer(1, 2 * mm))
-                        fwb.append(
-                            Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
-                                      style))
+                        fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
                         fwb.extend(aggr_lab)
                         continue
                     if field_type == 17:
@@ -437,9 +444,7 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                             aggr_text = text_iss_to_pdf(v)
                             if not aggr_text:
                                 continue
-                            fwb.append(
-                                Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')),
-                                          style))
+                            fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
                             fwb.extend(aggr_text)
                             continue
                     v = text_to_bold(v)
@@ -450,9 +455,12 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                     if field_type in [11, 13]:
                         v = '<font face="FreeSans" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
                     if r.field.get_title(force_type=field_type) != "":
-                        fwb.append(Paragraph(
-                            "<font face=\"FreeSansBold\">{}:</font> {}".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;'), v),
-                            style_ml if group_title else style))
+                        fwb.append(
+                            Paragraph(
+                                "<font face=\"FreeSansBold\">{}:</font> {}".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;'), v),
+                                style_ml if group_title else style,
+                            )
+                        )
                     else:
                         fwb.append(Paragraph(v, style))
                     if sick_title:
@@ -568,31 +576,28 @@ def microbiology_result(iss, fwb, doc):
         if culture.koe:
             fwb.append(Paragraph("<font face=\"FreeSansBold\">КОЕ:</font> " + culture.koe, style))
 
-        data = [
-            [Paragraph(x, styleBold) for x in ['Антибиотик', 'Диаметр', 'Чувствительность']]
-        ]
+        data = [[Paragraph(x, styleBold) for x in ['Антибиотик', 'Диаметр', 'Чувствительность']]]
 
         for anti in culture.culture_antibiotic.all():
-            data.append([Paragraph(x, style) for x in [
-                anti.antibiotic.title + ' ' + anti.antibiotic_amount,
-                anti.dia,
-                anti.sensitivity,
-            ]])
+            data.append([Paragraph(x, style) for x in [anti.antibiotic.title + ' ' + anti.antibiotic_amount, anti.dia, anti.sensitivity,]])
 
         cw = [int(tw * 0.4), int(tw * 0.3)]
         cw = cw + [tw - sum(cw)]
 
         t = Table(data, colWidths=cw)
-        style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                              ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                              ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                              ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                              ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                              ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                              ('TOPPADDING', (0, 0), (-1, -1), 1),
-                              ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-                              ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
-                              ])
+        style_t = TableStyle(
+            [
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING', (0, 0), (-1, -1), 1),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+            ]
+        )
         style_t.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
         style_t.add('TOPPADDING', (0, 0), (-1, 0), 0)
 

@@ -73,9 +73,9 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                         step = 1
                         for record in results_json['data']:
                             if step == 1:
-                                temp_record = [Paragraph('{} {}'.format(el[11:16], normalize_date(el[0:10])[0:5]), styleTCBold) for el in record[start: end]]
+                                temp_record = [Paragraph('{} {}'.format(el[11:16], normalize_date(el[0:10])[0:5]), styleTCBold) for el in record[start:end]]
                             else:
-                                temp_record = [Paragraph('{}'.format(el), styleTC) for el in record[start: end]]
+                                temp_record = [Paragraph('{}'.format(el), styleTC) for el in record[start:end]]
                             temp_record.insert(0, Paragraph('{}'.format(record[0]), styleTCBold))
                             v_table.append(temp_record)
                             step += 1
@@ -84,11 +84,7 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                         if temp_count_table == count_table:
                             cols_width[-1] = 15 * mm
                         tbl = Table(v_table, repeatRows=1, colWidths=cols_width, hAlign='LEFT')
-                        tbl.setStyle(TableStyle([
-                            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-                            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
-                            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                        ]))
+                        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
 
                         fwb.append(tbl)
                         fwb.append(Spacer(1, 1 * mm))

@@ -49,11 +49,9 @@ def form_01(request_data):
     pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4),
-                            leftMargin=12 * mm,
-                            rightMargin=5 * mm, topMargin=25 * mm,
-                            bottomMargin=28 * mm, allowSplitting=1,
-                            title="Форма {}".format("Ведомость по статталонам"))
+    doc = SimpleDocTemplate(
+        buffer, pagesize=landscape(A4), leftMargin=12 * mm, rightMargin=5 * mm, topMargin=25 * mm, bottomMargin=28 * mm, allowSplitting=1, title="Форма {}".format("Ведомость по статталонам")
+    )
 
     styleSheet = getSampleStyleSheet()
     styleSheet = getSampleStyleSheet()
@@ -104,23 +102,37 @@ def form_01(request_data):
     if param:
         title = 'Ведомость статистических талонов по услугам пациентов'
         opinion = [
-            [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, дата рождени', styleT),
-             Paragraph('Дата осмотра, &nbsp №', styleT),
-             Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT),
-             Paragraph('Код услуги', styleT),
-             Paragraph('Наименование услуги', styleT), ]
+            [
+                Paragraph('№ п.п.', styleT),
+                Paragraph('ФИО пациента, дата рождени', styleT),
+                Paragraph('Дата осмотра, &nbsp №', styleT),
+                Paragraph('№ карты', styleT),
+                Paragraph('Данные полиса', styleT),
+                Paragraph('Код услуги', styleT),
+                Paragraph('Наименование услуги', styleT),
+            ]
         ]
     else:
         title = 'Ведомость статистических талонов по посещениям пациентов'
         opinion = [
-            [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, дата рождения ', styleT), Paragraph('Дата осмотра, &nbsp №', styleT),
-             Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT), Paragraph('Цель посещения (код)', styleT),
-             Paragraph('Первичный прием', styleT), Paragraph('Диагноз МКБ', styleT), Paragraph('Впервые', styleT),
-             Paragraph('Результат обращения (код)', styleT), Paragraph('Исход (код)', styleT),
-             Paragraph('Д-учет<br/>Стоит', styleT),
-             Paragraph('Д-учет<br/>Взят', styleT), Paragraph('Д-учет<br/>Снят', styleT),
-             Paragraph('Причина снятия', styleT),
-             Paragraph('Онко<br/> подозрение', styleT), ]
+            [
+                Paragraph('№ п.п.', styleT),
+                Paragraph('ФИО пациента, дата рождения ', styleT),
+                Paragraph('Дата осмотра, &nbsp №', styleT),
+                Paragraph('№ карты', styleT),
+                Paragraph('Данные полиса', styleT),
+                Paragraph('Цель посещения (код)', styleT),
+                Paragraph('Первичный прием', styleT),
+                Paragraph('Диагноз МКБ', styleT),
+                Paragraph('Впервые', styleT),
+                Paragraph('Результат обращения (код)', styleT),
+                Paragraph('Исход (код)', styleT),
+                Paragraph('Д-учет<br/>Стоит', styleT),
+                Paragraph('Д-учет<br/>Взят', styleT),
+                Paragraph('Д-учет<br/>Снят', styleT),
+                Paragraph('Причина снятия', styleT),
+                Paragraph('Онко<br/> подозрение', styleT),
+            ]
         ]
 
     new_page = False
@@ -147,17 +159,11 @@ def form_01(request_data):
         t_opinion.extend(list_g)
 
         if param:
-            tbl = Table(t_opinion,
-                        colWidths=(10 * mm, 60 * mm, 19 * mm, 15 * mm, 75 * mm, 30 * mm, 70 * mm,))
+            tbl = Table(t_opinion, colWidths=(10 * mm, 60 * mm, 19 * mm, 15 * mm, 75 * mm, 30 * mm, 70 * mm,))
         else:
-            tbl = Table(t_opinion,
-                        colWidths=(10 * mm, 30 * mm, 19 * mm, 15 * mm, 46 * mm, 20 * mm, 10 * mm, 13 * mm, 11 * mm,
-                                   20 * mm, 20 * mm, 14 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
+            tbl = Table(t_opinion, colWidths=(10 * mm, 30 * mm, 19 * mm, 15 * mm, 46 * mm, 20 * mm, 10 * mm, 13 * mm, 11 * mm, 20 * mm, 20 * mm, 14 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
 
-        tbl.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
-        ]))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),]))
 
         objs.append(tbl)
         new_page = True
@@ -169,10 +175,8 @@ def form_01(request_data):
     styleTatr.fontSize = 11
 
     opinion = [
-        [Paragraph('ФИО врача:', styleTatr), Paragraph('{}'.format(doc_confirm.fio), styleTatr),
-         Paragraph('{}'.format(date_confirm.strftime('%d.%m.%Y')), styleTatr)],
-        [Paragraph('Специальность:', styleTatr), Paragraph('{}'.format(doc_confirm.specialities), styleTatr),
-         Paragraph('', styleTatr)],
+        [Paragraph('ФИО врача:', styleTatr), Paragraph('{}'.format(doc_confirm.fio), styleTatr), Paragraph('{}'.format(date_confirm.strftime('%d.%m.%Y')), styleTatr)],
+        [Paragraph('Специальность:', styleTatr), Paragraph('{}'.format(doc_confirm.specialities), styleTatr), Paragraph('', styleTatr)],
     ]
 
     def later_pages(canvas, document):
@@ -183,15 +187,14 @@ def form_01(request_data):
         canvas.drawString(99 * mm, 200 * mm, '{}'.format(title))
 
         tbl = Table(opinion, colWidths=(35 * mm, 220 * mm, 25 * mm), rowHeights=(5 * mm))
-        tbl.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
-        ]))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.white), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),]))
         tbl.wrapOn(canvas, width, height)
         tbl.drawOn(canvas, 30, 530)
         canvas.restoreState()
 
-    doc.build(objs, onFirstPage=later_pages, onLaterPages=later_pages, )
+    doc.build(
+        objs, onFirstPage=later_pages, onLaterPages=later_pages,
+    )
 
     pdf = buffer.getvalue()
 
@@ -230,11 +233,9 @@ def form_02(request_data):
     pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=18 * mm,
-                            rightMargin=5 * mm, topMargin=6 * mm,
-                            bottomMargin=6 * mm, allowSplitting=1,
-                            title="Форма {}".format("Статталон пациента"))
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4, leftMargin=18 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("Статталон пациента")
+    )
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -301,21 +302,19 @@ def form_02(request_data):
             Paragraph('{}'.format(hospital_name), styleCenterBold),
             Spacer(1, 2 * mm),
             Paragraph('<u>Статистический талон пациента</u>', styleCenter),
-            Paragraph('{}<font size=10>Карта № </font><font fontname="PTAstraSerifBold" size=10>{}</font><font size=10> из {}</font>'.format(
-                3 * space_symbol, p_card_num, p_card_type), styleCenter),
+            Paragraph(
+                '{}<font size=10>Карта № </font><font fontname="PTAstraSerifBold" size=10>{}</font><font size=10> из {}</font>'.format(3 * space_symbol, p_card_num, p_card_type), styleCenter
+            ),
             Spacer(1, 2 * mm),
             Paragraph('<font size=11>Данные пациента:</font>', styleBold),
-            Paragraph("1. Фамилия, имя, отчество:&nbsp;  <font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(
-                patient_data['fio']), style),
-            Paragraph(
-                '2. Пол: {} {} 3. Дата рождения: {}'.format(patient_data['sex'], 3 * space_symbol, patient_data['born']),
-                style),
+            Paragraph("1. Фамилия, имя, отчество:&nbsp;  <font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(patient_data['fio']), style),
+            Paragraph('2. Пол: {} {} 3. Дата рождения: {}'.format(patient_data['sex'], 3 * space_symbol, patient_data['born']), style),
             Paragraph('4. Место регистрации: {}'.format(patient_data['main_address']), style),
-            Paragraph('5. Полис ОМС: серия {} №: {} {}'
-                      '6. СНИЛС: {}'.format(patient_data['oms']['polis_serial'], patient_data['oms']['polis_num'],
-                                            13 * space_symbol, patient_data['snils']), style),
-            Paragraph('7. Наименование страховой медицинской организации: {}'.format(patient_data['oms']['polis_issued']),
-                      style),
+            Paragraph(
+                '5. Полис ОМС: серия {} №: {} {}' '6. СНИЛС: {}'.format(patient_data['oms']['polis_serial'], patient_data['oms']['polis_num'], 13 * space_symbol, patient_data['snils']),
+                style,
+            ),
+            Paragraph('7. Наименование страховой медицинской организации: {}'.format(patient_data['oms']['polis_issued']), style),
         ]
 
         objs.extend(content_title)
@@ -329,9 +328,10 @@ def form_02(request_data):
         date_proto = utils.strfdatetime(obj_iss.time_confirmation, "%d.%m.%Y")
 
         opinion = [
-            [Paragraph('Основная услуга', styleT), Paragraph(
-                '<font fontname="PTAstraSerifBold">{}</font> <font face="Symbola">\u2013</font> {}'.format(
-                    obj_iss.research.code, obj_iss.research.title), styleT)],
+            [
+                Paragraph('Основная услуга', styleT),
+                Paragraph('<font fontname="PTAstraSerifBold">{}</font> <font face="Symbola">\u2013</font> {}'.format(obj_iss.research.code, obj_iss.research.title), styleT),
+            ],
             [Paragraph('Направление №', styleT), Paragraph('{}'.format(dir), styleT)],
             [Paragraph('Дата протокола', styleT), Paragraph('{}'.format(date_proto), styleT)],
         ]
@@ -350,10 +350,7 @@ def form_02(request_data):
             opinion.extend(list_f)
 
         tbl = Table(opinion, colWidths=(60 * mm, 123 * mm))
-        tbl.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
-        ]))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),]))
 
         objs.append(tbl)
 
@@ -375,10 +372,7 @@ def form_02(request_data):
         ]
 
         tbl = Table(opinion, colWidths=(60 * mm, 123 * mm))
-        tbl.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
-        ]))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),]))
         objs.append(tbl)
 
         # Добавить Дополнительные услуги
@@ -391,8 +385,7 @@ def form_02(request_data):
                 objs.append(Paragraph('{} <font face="Symbola">\u2013</font> {}'.format(i.research.code, i.research.title), style))
 
         objs.append(Spacer(1, 5 * mm))
-        objs.append(
-            HRFlowable(width=185 * mm, thickness=0.7 * mm, spaceAfter=1.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+        objs.append(HRFlowable(width=185 * mm, thickness=0.7 * mm, spaceAfter=1.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
         objs.append(Paragraph('<font size=11>Лечащий врач:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
 
@@ -402,14 +395,13 @@ def form_02(request_data):
             personal_code = empty if not obj_iss.doc_confirmation.personal_code else obj_iss.doc_confirmation.personal_code
             doc_fio = obj_iss.doc_confirmation.get_fio()
 
-        objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '.format(doc_fio,
-                                                                                    42 * space_symbol, personal_code), style))
+        objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '.format(doc_fio, 42 * space_symbol, personal_code), style))
 
         objs.append(Spacer(1, 5 * mm))
 
         # Получить структуру Направлений если, направление в Дереве не важно в корне в середине или в начале
         root_dir = tree_directions.root_direction(dir)
-        num_iss = (root_dir[-1][-2])
+        num_iss = root_dir[-1][-2]
         tree_dir = tree_directions.tree_direction(num_iss)
         final_tree = {}
         pattern = re.compile('<font face=\"Symbola\" size=10>\u2713</font>')
@@ -442,10 +434,7 @@ def form_02(request_data):
             opinion.append(para)
 
         tbl = Table(opinion, colWidths=(190 * mm))
-        tbl.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
-        ]))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.white), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),]))
         objs.append(tbl)
 
         objs.append(PageBreak())
@@ -483,11 +472,7 @@ def form_03(request_data):
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=25 * mm,
-                            rightMargin=5 * mm, topMargin=6 * mm,
-                            bottomMargin=10 * mm, allowSplitting=1,
-                            title="Форма {}".format("066/у-02"))
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=10 * mm, allowSplitting=1, title="Форма {}".format("066/у-02"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -528,18 +513,14 @@ def form_03(request_data):
             print_district = 'Уч: {}'.format(ind_card.district.title)
 
     opinion = [
-        [Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} <br/><u>{}</u> </font>'.format(
-            hospital_name, hospital_address, hospital_kod_ogrn, print_district), styleT),
-            Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: 31348613<br/>'
-                      'Медицинская документация<br/>форма № 066/у-02</font>', styleT)],
+        [
+            Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} <br/><u>{}</u> </font>'.format(hospital_name, hospital_address, hospital_kod_ogrn, print_district), styleT),
+            Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: 31348613<br/>' 'Медицинская документация<br/>форма № 066/у-02</font>', styleT),
+        ],
     ]
 
     tbl = Table(opinion, 2 * [90 * mm])
-    tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
-        ('LEFTPADDING', (1, 0), (-1, -1), 80),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    ]))
+    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 80), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
 
     objs.append(tbl)
     space_symbol = '&nbsp;'
@@ -607,15 +588,15 @@ def form_03(request_data):
             '<font fontname="PTAstraSerifBold" size=13>СТАТИСТИЧЕСКАЯ КАРТА ВЫБЫВШЕГО ИЗ СТАЦИОНАРА<br/> '
             'круглосуточного пребывания, дневного стационара при больничном<br/> учреждении, дневного стационара при'
             ' амбулаторно-поликлиническом<br/> учреждении, стационара на дому<br/>'
-            'N медицинской карты {} {}</font>'.format(p_card_num, hosp_nums), styleCenter),
+            'N медицинской карты {} {}</font>'.format(p_card_num, hosp_nums),
+            styleCenter,
+        ),
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
-
         Paragraph('1. Код пациента: ________  2. Ф.И.О.: {}'.format(patient_data['fio']), style),
         Paragraph('3. Пол: {} {}4. Дата рождения {}'.format(sex, space_symbol * 24, patient_data['born']), style),
-        Paragraph('5. Документ, удостов. личность: (название, серия, номер) {} {}'.
-                  format(space_symbol * 2, doc_patient), style),
+        Paragraph('5. Документ, удостов. личность: (название, серия, номер) {} {}'.format(space_symbol * 2, doc_patient), style),
         Paragraph('6. Адрес: регистрация по месту жительства: {}'.format(patient_data['main_address']), style),
         Paragraph('7. Код территории проживания: ___ Житель: город - 1; село - 2.', style),
         Paragraph('8. Страховой полис (серия, номер):{}'.format(polis_data), style),
@@ -633,8 +614,12 @@ def form_03(request_data):
         Paragraph('18.Доставлен в стационар от начала заболевания(получения травмы): {}'.format(primary_reception_data['time_start_ill']), style),
         Paragraph('19. Травма: {}'.format(primary_reception_data['type_trauma']), style),
         Paragraph('20. Дата поступления в приемное отделение:______________ Время__________', style),
-        Paragraph('21. Название отделения: <u>{}</u>; дата поступления: <u>{}</u>; время: <u>{}</u>'.format(hosp_depart, primary_reception_data['date_entered_value'],
-                                                                                                            primary_reception_data['time_entered_value']), style),
+        Paragraph(
+            '21. Название отделения: <u>{}</u>; дата поступления: <u>{}</u>; время: <u>{}</u>'.format(
+                hosp_depart, primary_reception_data['date_entered_value'], primary_reception_data['time_entered_value']
+            ),
+            style,
+        ),
         Paragraph('Подпись врача приемного отделения ______________ Код __________', style),
         Paragraph('22. Дата выписки (смерти): {}; Время {}'.format(date_value, time_value), style),
         Paragraph('23. Продолжительность госпитализации (койко - дней): {}'.format(days_count), style),
@@ -643,8 +628,13 @@ def form_03(request_data):
     ]
 
     closed_bl_result = closed_bl(hosp_nums_obj[0].get('direction'))
-    title_page.append(Paragraph(f"25. Листок нетрудоспособности: открыт <u>{closed_bl_result['start_date']}</u> закрыт: <u>{closed_bl_result['end_date']}</u>"
-                                f" к труду: <u>{closed_bl_result['start_work']}</u>", style))
+    title_page.append(
+        Paragraph(
+            f"25. Листок нетрудоспособности: открыт <u>{closed_bl_result['start_date']}</u> закрыт: <u>{closed_bl_result['end_date']}</u>"
+            f" к труду: <u>{closed_bl_result['start_work']}</u>",
+            style,
+        )
+    )
     title_page.append(Paragraph(f"25.1. Номере ЛН : <u>{closed_bl_result['num']}</u>", style))
     title_page.append(Paragraph(f"25.2. Выдан кому : {closed_bl_result['who_get']}", style))
     title_page.append(Paragraph('25.3. По уходу за больным Полных лет: _____ Пол: {}'.format(sex), style))
@@ -667,9 +657,20 @@ def form_03(request_data):
     styleTCcenter = deepcopy(styleTC)
     styleTCcenter.alignment = TA_CENTER
 
-    opinion = [[Paragraph('N', styleTB), Paragraph('Код отделения', styleTB), Paragraph('Профиль коек', styleTB), Paragraph('Код врача', styleTB), Paragraph('Дата поступления', styleTB),
-                Paragraph('Дата выписки, перевода', styleTB), Paragraph('Код диагноза по МКБ', styleTB), Paragraph('Код медицинского стандарта', styleTB),
-                Paragraph('Код прерванного случая', styleTB), Paragraph('Вид оплаты', styleTB)]]
+    opinion = [
+        [
+            Paragraph('N', styleTB),
+            Paragraph('Код отделения', styleTB),
+            Paragraph('Профиль коек', styleTB),
+            Paragraph('Код врача', styleTB),
+            Paragraph('Дата поступления', styleTB),
+            Paragraph('Дата выписки, перевода', styleTB),
+            Paragraph('Код диагноза по МКБ', styleTB),
+            Paragraph('Код медицинского стандарта', styleTB),
+            Paragraph('Код прерванного случая', styleTB),
+            Paragraph('Вид оплаты', styleTB),
+        ]
+    ]
 
     patient_movement = hosp_patient_movement(hosp_nums_obj)
     x = 0
@@ -678,29 +679,47 @@ def form_03(request_data):
         doc_code = ''
         if i['doc_confirm_code']:
             doc_code = str(i['doc_confirm_code'])
-        tmp_data = [[Paragraph(str(x), styleTB), Paragraph('', styleTB), Paragraph(i['bed_profile_research_title'], styleTB),
-                     Paragraph(doc_code, styleTB), Paragraph(i['date_entered_value'], styleTB),
-                     Paragraph(i['date_oute'], styleTB), Paragraph(i['diagnos_mkb'], styleTB), Paragraph('', styleTB),
-                     Paragraph('', styleTB), Paragraph('ОМС', styleTB),
-                     ], ]
+        tmp_data = [
+            [
+                Paragraph(str(x), styleTB),
+                Paragraph('', styleTB),
+                Paragraph(i['bed_profile_research_title'], styleTB),
+                Paragraph(doc_code, styleTB),
+                Paragraph(i['date_entered_value'], styleTB),
+                Paragraph(i['date_oute'], styleTB),
+                Paragraph(i['diagnos_mkb'], styleTB),
+                Paragraph('', styleTB),
+                Paragraph('', styleTB),
+                Paragraph('ОМС', styleTB),
+            ],
+        ]
 
         opinion.extend(tmp_data.copy())
 
     # получить структуру данных для таблицы
     tbl_act = Table(opinion, repeatRows=1, colWidths=(7 * mm, 15 * mm, 30 * mm, 20 * mm, 21 * mm, 21 * mm, 20 * mm, 14 * mm, 14 * mm, 20 * mm))
 
-    tbl_act.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
+    tbl_act.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
     objs.append(tbl_act)
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('27. Хирургические операции(обозначить: основную операцию, использование спец.аппаратуры):', style), )
+    objs.append(Paragraph('27. Хирургические операции(обозначить: основную операцию, использование спец.аппаратуры):', style),)
 
-    opinion = [[Paragraph('Дата, Час', styleTB), Paragraph('Код <br/>хирурга', styleTB), Paragraph('Код отделения', styleTB), Paragraph('наименование операции', styleTB),
-                Paragraph('код операции', styleTB), Paragraph('наименование осложнения', styleTB), Paragraph('Код ослонения', styleTB), Paragraph('Анестезия (код врача)', styleTB),
-                Paragraph('энд.', styleTB), Paragraph('лазер.', styleTB), Paragraph('криог.', styleTB), Paragraph('Вид оплаты', styleTB)]]
+    opinion = [
+        [
+            Paragraph('Дата, Час', styleTB),
+            Paragraph('Код <br/>хирурга', styleTB),
+            Paragraph('Код отделения', styleTB),
+            Paragraph('наименование операции', styleTB),
+            Paragraph('код операции', styleTB),
+            Paragraph('наименование осложнения', styleTB),
+            Paragraph('Код ослонения', styleTB),
+            Paragraph('Анестезия (код врача)', styleTB),
+            Paragraph('энд.', styleTB),
+            Paragraph('лазер.', styleTB),
+            Paragraph('криог.', styleTB),
+            Paragraph('Вид оплаты', styleTB),
+        ]
+    ]
 
     patient_operation = hosp_get_operation_data(num_dir)
     operation_result = []
@@ -717,56 +736,78 @@ def form_03(request_data):
 
     opinion.extend(operation_result)
     tbl_act = Table(opinion, repeatRows=1, colWidths=(22 * mm, 12 * mm, 11 * mm, 26 * mm, 26 * mm, 20 * mm, 10 * mm, 15 * mm, 7 * mm, 7 * mm, 7 * mm, 16 * mm))
-    tbl_act.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
+    tbl_act.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
     objs.append(tbl_act)
     objs.append(Spacer(1, 2 * mm))
     space_symbol = '&nbsp;'
 
-    objs.append(Paragraph('28. Обследован: RW {}  AIDS '.format(space_symbol * 10), style), )
+    objs.append(Paragraph('28. Обследован: RW {}  AIDS '.format(space_symbol * 10), style),)
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('29. Диагноз стационара(при выписке):', style), )
+    objs.append(Paragraph('29. Диагноз стационара(при выписке):', style),)
 
-    opinion = [[Paragraph('Клинический заключительный', styleTB), Paragraph('Основное заболевание', styleTB), Paragraph('Код МКБ', styleTB), Paragraph('Осложнение', styleTB),
-                Paragraph('Код МКБ', styleTB), Paragraph('Сопутствующее заболевание', styleTB), Paragraph('Код МКБ', styleTB)]]
+    opinion = [
+        [
+            Paragraph('Клинический заключительный', styleTB),
+            Paragraph('Основное заболевание', styleTB),
+            Paragraph('Код МКБ', styleTB),
+            Paragraph('Осложнение', styleTB),
+            Paragraph('Код МКБ', styleTB),
+            Paragraph('Сопутствующее заболевание', styleTB),
+            Paragraph('Код МКБ', styleTB),
+        ]
+    ]
 
     hosp_last_num = hosp_nums_obj[-1].get('direction')
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
 
     opinion_diagnos = []
     if hosp_extract_data:
-        opinion_diagnos = [[Paragraph('', styleTB), Paragraph(hosp_extract_data['final_diagnos'], styleTB), Paragraph(hosp_extract_data['final_diagnos_mkb'], styleTB),
-                            Paragraph(hosp_extract_data['other_diagnos'], styleTB), Paragraph(hosp_extract_data['other_diagnos_mkb'], styleTB),
-                            Paragraph(hosp_extract_data['near_diagnos'].replace('<', '&lt;').replace('>', '&gt;'), styleTB), Paragraph(hosp_extract_data['near_diagnos_mkb'], styleTB)]]
+        opinion_diagnos = [
+            [
+                Paragraph('', styleTB),
+                Paragraph(hosp_extract_data['final_diagnos'], styleTB),
+                Paragraph(hosp_extract_data['final_diagnos_mkb'], styleTB),
+                Paragraph(hosp_extract_data['other_diagnos'], styleTB),
+                Paragraph(hosp_extract_data['other_diagnos_mkb'], styleTB),
+                Paragraph(hosp_extract_data['near_diagnos'].replace('<', '&lt;').replace('>', '&gt;'), styleTB),
+                Paragraph(hosp_extract_data['near_diagnos_mkb'], styleTB),
+            ]
+        ]
 
     opinion.extend(opinion_diagnos)
-    opinion_pathologist = [[Paragraph('Патологоанатомический	', styleTB), Paragraph('', styleTB), Paragraph('', styleTB), Paragraph('', styleTB),
-                            Paragraph('', styleTB), Paragraph('', styleTB), Paragraph('', styleTB)]]
+    opinion_pathologist = [
+        [
+            Paragraph('Патологоанатомический	', styleTB),
+            Paragraph('', styleTB),
+            Paragraph('', styleTB),
+            Paragraph('', styleTB),
+            Paragraph('', styleTB),
+            Paragraph('', styleTB),
+            Paragraph('', styleTB),
+        ]
+    ]
 
     opinion.extend(opinion_pathologist)
     tbl_act = Table(opinion, repeatRows=1, colWidths=(28 * mm, 45 * mm, 15 * mm, 30 * mm, 15 * mm, 30 * mm, 15 * mm))
-    tbl_act.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('SPAN', (0, 0), (0, 1)),
-    ]))
+    tbl_act.setStyle(
+        TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('SPAN', (0, 0), (0, 1)),])
+    )
 
     objs.append(tbl_act)
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('30.В случае смерти указать основную причину:______________________________________________________________'
-                          'Код МКБ', style), )
+    objs.append(Paragraph('30.В случае смерти указать основную причину:______________________________________________________________' 'Код МКБ', style),)
     objs.append(Spacer(1, 20 * mm))
-    objs.append(Paragraph(
-        '31. Дефекты догоспитального этапа: несвоевременность госпитализации - 1; недостаточный объем клинико - диагностического обследования - 2; '
-        'неправильная тактика лечения - 3; несовпадение диагноза - 4.', style), )
+    objs.append(
+        Paragraph(
+            '31. Дефекты догоспитального этапа: несвоевременность госпитализации - 1; недостаточный объем клинико - диагностического обследования - 2; '
+            'неправильная тактика лечения - 3; несовпадение диагноза - 4.',
+            style,
+        ),
+    )
     objs.append(Spacer(1, 7 * mm))
-    objs.append(Paragraph('Подпись лечащего врача ({}) ____________________________'. format(doc_fio), style), )
+    objs.append(Paragraph('Подпись лечащего врача ({}) ____________________________'.format(doc_fio), style),)
     objs.append(Spacer(1, 7 * mm))
-    objs.append(Paragraph('Подпись заведующего отделением', style), )
+    objs.append(Paragraph('Подпись заведующего отделением', style),)
 
     def first_pages(canvas, document):
         canvas.saveState()

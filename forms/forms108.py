@@ -29,11 +29,7 @@ def form_01(request_data):
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=portrait(A4),
-                            leftMargin=20 * mm,
-                            rightMargin=12 * mm, topMargin=6 * mm,
-                            bottomMargin=4 * mm, allowSplitting=1,
-                            title="Форма {}".format("003/у"))
+    doc = SimpleDocTemplate(buffer, pagesize=portrait(A4), leftMargin=20 * mm, rightMargin=12 * mm, topMargin=6 * mm, bottomMargin=4 * mm, allowSplitting=1, title="Форма {}".format("003/у"))
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -80,16 +76,17 @@ def form_01(request_data):
     ]
 
     for a in AmbulatoryData.objects.filter(card__pk=request_data["card_pk"]).order_by('date', 'pk'):
-        opinion.append([Paragraph(f"{strdate(a.date)[6:10]}", styleCenter), Paragraph(f"{strdate(a.date)[3:5]}", styleCenter),
-                        Paragraph(f"{a.data}".replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>"), styleTC)])
+        opinion.append(
+            [
+                Paragraph(f"{strdate(a.date)[6:10]}", styleCenter),
+                Paragraph(f"{strdate(a.date)[3:5]}", styleCenter),
+                Paragraph(f"{a.data}".replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>"), styleTC),
+            ]
+        )
 
     tbl = Table(opinion, colWidths=(20 * mm, 20 * mm, 140 * mm), splitByRow=1, repeatRows=1)
 
-    tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
+    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
 
     objs.append(tbl)
 

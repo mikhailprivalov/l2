@@ -9,7 +9,4 @@ router = routers.DefaultRouter()
 # router.register(r'doctorprofiles', DoctorSerializer)
 # router.register(r'podrazdeleniyas', PodrazdeleniyaSerializer)
 
-urlpatterns = [
-    path('', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
-]
+urlpatterns = [path('', include(router.urls)), path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))]

@@ -34,20 +34,40 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
     if site_type == -1 and type_service == 'None':
         hosp_is_all = True
 
-    hosp_dirs = tree_directions.hospital_get_direction(num_iss, main_research, hosp_site_type, hosp_is_paraclinic,
-                                                       hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level,
-                                                       hosp_is_all, hosp_morfology)
+    hosp_dirs = tree_directions.hospital_get_direction(
+        num_iss, main_research, hosp_site_type, hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all, hosp_morfology
+    )
 
     data = []
     if hosp_dirs:
         for i in hosp_dirs:
             if hosp_is_all and i[21] == 9:
                 continue
-            data.append({'direction': i[0], 'date_create': i[1], 'time_create': i[2], 'iss': i[5], 'date_confirm': i[6],
-                         'time_confirm': i[7], 'research_id': i[8], 'research_title': i[9], 'podrazdeleniye_id': i[13],
-                         'is_paraclinic': i[14], 'is_doc_refferal': i[15], 'is_stom': i[16], 'is_hospital': i[17],
-                         'is_microbiology': i[18], 'podrazdeleniye_title': i[19], 'site_type': i[21],
-                         'research_short_title': i[23], 'is_slave_hospital': i[24], 'is_cancel': i[25], "is_citology": i[26], "is_gistology": i[27]})
+            data.append(
+                {
+                    'direction': i[0],
+                    'date_create': i[1],
+                    'time_create': i[2],
+                    'iss': i[5],
+                    'date_confirm': i[6],
+                    'time_confirm': i[7],
+                    'research_id': i[8],
+                    'research_title': i[9],
+                    'podrazdeleniye_id': i[13],
+                    'is_paraclinic': i[14],
+                    'is_doc_refferal': i[15],
+                    'is_stom': i[16],
+                    'is_hospital': i[17],
+                    'is_microbiology': i[18],
+                    'podrazdeleniye_title': i[19],
+                    'site_type': i[21],
+                    'research_short_title': i[23],
+                    'is_slave_hospital': i[24],
+                    'is_cancel': i[25],
+                    "is_citology": i[26],
+                    "is_gistology": i[27],
+                }
+            )
 
     return data
 
@@ -60,8 +80,7 @@ def get_direction_attrs(direction, site_type=-1, type_service='None', level=-1):
     type_serv = type_service
     site_type_num = site_type
     level_get = level
-    data_direction = hosp_get_data_direction(main_direction, site_type=site_type_num, type_service=type_serv,
-                                             level=level_get)
+    data_direction = hosp_get_data_direction(main_direction, site_type=site_type_num, type_service=type_serv, level=level_get)
     dict_temp = {}
 
     for dir_attr in data_direction:
@@ -76,17 +95,25 @@ def get_direction_attrs(direction, site_type=-1, type_service='None', level=-1):
             confirm = bool(dir_attr.get('date_confirm'))
             if dir_attr.get('is_slave_hospital'):
                 type_dir = 'stationar'
-            dict_temp[num_dir] = {'type': type_dir,
-                                  'date_create': dir_attr.get('date_create'),
-                                  'confirm': confirm,
-                                  'researches': [dir_attr.get('research_title')],
-                                  'researches_short': [dir_attr.get('research_short_title')],
-                                  'podrazdeleniye': dir_attr.get('podrazdeleniye_title'), }
+            dict_temp[num_dir] = {
+                'type': type_dir,
+                'date_create': dir_attr.get('date_create'),
+                'confirm': confirm,
+                'researches': [dir_attr.get('research_title')],
+                'researches_short': [dir_attr.get('research_short_title')],
+                'podrazdeleniye': dir_attr.get('podrazdeleniye_title'),
+            }
 
     for k, v in dict_temp.items():
-        dict_result = {'type': v['type'], 'pk': k, 'date_create': v['date_create'], 'confirm': v['confirm'],
-                       'researches': v['researches'],
-                       'researches_short': v['researches_short'], 'podrazdeleniye': v['podrazdeleniye']}
+        dict_result = {
+            'type': v['type'],
+            'pk': k,
+            'date_create': v['date_create'],
+            'confirm': v['confirm'],
+            'researches': v['researches'],
+            'researches_short': v['researches_short'],
+            'podrazdeleniye': v['podrazdeleniye'],
+        }
         data.append(dict_result)
 
     return data
@@ -107,8 +134,7 @@ def hosp_get_hosp_direction(num_dir):
     node_dir = Node({'order': '-1', 'direction': '', 'research_title': '', 'correct_level': True, 'color': '', 'cancel': False, 'issledovaniye': '', 'parent_iss': ''})
     for j in tree_dir:
         research_title = j[12] if j[12] else j[9]
-        temp_s = {'order': '-1', 'direction': j[0], 'research_title': research_title, 'correct_level': True, 'color': '',
-                  'cancel': j[14], 'issledovaniye': j[5], 'parent_iss': j[3]}
+        temp_s = {'order': '-1', 'direction': j[0], 'research_title': research_title, 'correct_level': True, 'color': '', 'cancel': j[14], 'issledovaniye': j[5], 'parent_iss': j[3]}
         if not j[3]:
             final_tree[j[5]] = Node(temp_s, parent=node_dir)
         else:
@@ -396,11 +422,7 @@ def hosp_get_text_iss(current_iss, is_extract, mode):
     if mode is None:
         return []
     if mode == 'desc':
-        modes = [
-            'is_paraclinic',
-            'is_doc_refferal',
-            'is_morfology'
-        ]
+        modes = ['is_paraclinic', 'is_doc_refferal', 'is_morfology']
     else:
         modes = [mode]
 
@@ -529,8 +551,3 @@ def get_date_time_tl(dict_data):
 
 def force_to_number(val):
     return float(''.join(c for c in val if c.isdigit() or c == '.') or 0)
-
-
-
-
-

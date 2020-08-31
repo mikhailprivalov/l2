@@ -4,7 +4,8 @@ from laboratory.settings import TIME_ZONE
 
 def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk, is_parent, for_slave_hosp):
     with connection.cursor() as cursor:
-        cursor.execute("""WITH 
+        cursor.execute(
+            """WITH 
         t_iss AS (SELECT 
             directions_issledovaniya.id as iss_id, 
             directions_napravleniya.client_id, 
@@ -79,8 +80,20 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             EXISTS (SELECT res_id FROM t_iss)
         END
         
-        ORDER BY napravleniye_id DESC""", params={'d_start': d_s, 'd_end': d_e, 'card_id': card_id, 'who_create': who_create_dir,
-                                                  'services_p': services, 'is_serv': is_serv, 'tz': TIME_ZONE, 'iss_pk': iss_pk, 'is_parent': is_parent, 'for_slave_hosp': for_slave_hosp})
+        ORDER BY napravleniye_id DESC""",
+            params={
+                'd_start': d_s,
+                'd_end': d_e,
+                'card_id': card_id,
+                'who_create': who_create_dir,
+                'services_p': services,
+                'is_serv': is_serv,
+                'tz': TIME_ZONE,
+                'iss_pk': iss_pk,
+                'is_parent': is_parent,
+                'for_slave_hosp': for_slave_hosp,
+            },
+        )
 
         row = cursor.fetchall()
     return row

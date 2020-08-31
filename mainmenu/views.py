@@ -33,12 +33,16 @@ from utils.dates import try_parse_range
 @login_required
 def dashboard(request):
     if not request.is_ajax():
-        return render(request, 'dashboard.html',
-                      {"rmis": SettingManager.get("rmis_enabled", default='false', default_type='b'),
-                       "mis_module": SettingManager.get("mis_module", default='false', default_type='b'),
-                       "paraclinic": SettingManager.get("paraclinic_module", default='false', default_type='b'),
-                       "region": SettingManager.get("region", default='38', default_type='s'),
-                       })
+        return render(
+            request,
+            'dashboard.html',
+            {
+                "rmis": SettingManager.get("rmis_enabled", default='false', default_type='b'),
+                "mis_module": SettingManager.get("mis_module", default='false', default_type='b'),
+                "paraclinic": SettingManager.get("paraclinic_module", default='false', default_type='b'),
+                "region": SettingManager.get("region", default='38', default_type='s'),
+            },
+        )
     return HttpResponse("OK")
 
 
@@ -46,11 +50,11 @@ def dashboard(request):
 @group_required("Просмотр журнала")
 def view_log(request):
     import slog.models as slog
+
     types = []
     for t in slog.Log.TYPES:
         types.append({"pk": t[0], "val": t[1]})
-    return render(request, 'dashboard/manage_view_log.html',
-                  {"users": DoctorProfile.objects.all().order_by("fio"), "types": types})
+    return render(request, 'dashboard/manage_view_log.html', {"users": DoctorProfile.objects.all().order_by("fio"), "types": types})
 
 
 @login_required
@@ -92,9 +96,7 @@ def change_password(request):
     if request.is_ajax():
         doc = DoctorProfile.objects.get(pk=request.GET["pk"])
         groups = [{"pk": str(x.pk), "title": x.name} for x in doc.user.groups.all()]
-        return HttpResponse(
-            json.dumps({"groups": groups, "fio": doc.fio, "username": doc.user.username, "user_pk": doc.user_id}),
-            content_type="application/json")
+        return HttpResponse(json.dumps({"groups": groups, "fio": doc.fio, "username": doc.user.username, "user_pk": doc.user_id}), content_type="application/json")
     otds = {}
     podr = Podrazdeleniya.objects.all().order_by("title")
     for x in podr:
@@ -103,8 +105,7 @@ def change_password(request):
         if not request.user.is_superuser:
             docs = docs.filter(user__is_superuser=False)
         for y in docs:
-            otds[x.title].append(
-                {"pk": y.pk, "fio": y.get_fio(), "username": y.user.username, "podr": y.podrazdeleniye_id})
+            otds[x.title].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username, "podr": y.podrazdeleniye_id})
     return render(request, 'dashboard/change_password.html', {"otds": otds, "podrs": podr, "g": Group.objects.all()})
 
 
@@ -127,6 +128,7 @@ def update_pass(request):
 @group_required("Просмотр журнала")
 def load_logs(request):
     import slog.models as slog
+
     result = {"data": []}
 
     if request.method == "POST":
@@ -150,16 +152,20 @@ def load_logs(request):
     if check_new == 0:
         offset = int(request.POST.get("offset", request.GET.get("offset", 0)))
         size = int(request.POST.get("size", request.GET.get("size", 0)))
-        rows = obj.order_by("-pk")[offset:size + offset]
+        rows = obj.order_by("-pk")[offset : size + offset]
     else:
         pkgt = int(request.POST.get("last_n", request.GET.get("last_n", 0)))
         rows = obj.filter(pk__gt=pkgt).order_by("pk")
     for row in rows:
-        tmp_object = {"id": row.pk,
-                      "user_fio": "Система" if not row.user else (row.user.get_fio() + ", " + row.user.user.username),
-                      "user_pk": row.user_id or "", "key": row.key, "body": row.body,
-                      "type": row.get_type_display(),
-                      "time": strdatetime(row.time)}
+        tmp_object = {
+            "id": row.pk,
+            "user_fio": "Система" if not row.user else (row.user.get_fio() + ", " + row.user.user.username),
+            "user_pk": row.user_id or "",
+            "key": row.key,
+            "body": row.body,
+            "type": row.get_type_display(),
+            "time": strdatetime(row.time),
+        }
         result["data"].append(tmp_object)
 
     result["s"] = states
@@ -182,14 +188,12 @@ def receive_journal_form(request):
         lab = Podrazdeleniya.objects.get(pk=p or request.user.doctorprofile.podrazdeleniye_id)
     else:
         lab = None
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(
-        title="Внешние организации").order_by("title")
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
     if not lab or lab.p_type != Podrazdeleniya.LABORATORY:
         lab = labs[0]
     groups = directory.ResearchGroup.objects.filter(lab=lab)
     podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
-    return render(request, 'dashboard/receive_journal.html',
-                  {"groups": groups, "podrazdeleniya": podrazdeleniya, "labs": labs, "lab": lab})
+    return render(request, 'dashboard/receive_journal.html', {"groups": groups, "podrazdeleniya": podrazdeleniya, "labs": labs, "lab": lab})
 
 
 @csrf_exempt
@@ -208,16 +212,16 @@ def confirm_reset(request):
             iss = Issledovaniya.objects.get(pk=pk)
 
             import time
-            ctp = int(
-                0 if not iss.time_confirmation else int(
-                    time.mktime(timezone.localtime(iss.time_confirmation).timetuple())))
+
+            ctp = int(0 if not iss.time_confirmation else int(time.mktime(timezone.localtime(iss.time_confirmation).timetuple())))
             ctime = int(time.time())
             cdid = iss.doc_confirmation_id or -1
-            if (ctime - ctp < SettingManager.get("lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) \
-                    or request.user.is_superuser or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]:
-                predoc = {"fio": 'не подтверждено' if cdid == -1 else iss.doc_confirmation.get_fio(),
-                          "pk": cdid,
-                          "direction": iss.napravleniye_id}
+            if (
+                (ctime - ctp < SettingManager.get("lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk)
+                or request.user.is_superuser
+                or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
+            ):
+                predoc = {"fio": 'не подтверждено' if cdid == -1 else iss.doc_confirmation.get_fio(), "pk": cdid, "direction": iss.napravleniye_id}
                 iss.doc_confirmation = iss.time_confirmation = None
                 iss.save()
                 if iss.napravleniye.result_rmis_send:
@@ -226,8 +230,7 @@ def confirm_reset(request):
                 result = {"ok": True}
                 slog.Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
             else:
-                result["msg"] = "Сброс подтверждения разрешен в течении %s минут" % (
-                    str(SettingManager.get("lab_reset_confirm_time_min")))
+                result["msg"] = "Сброс подтверждения разрешен в течении %s минут" % (str(SettingManager.get("lab_reset_confirm_time_min")))
     return JsonResponse(result)
 
 
@@ -261,21 +264,30 @@ def create_user(request):  # Страница создания пользова�
                 profile.isLDAP_user = False
                 profile.save()  # Сохранение профиля
                 registered = True
-                slog.Log(key=str(profile.pk), user=request.user.doctorprofile, type=16, body=json.dumps(
-                    {"username": username, "password": "(скрыт)", "podr": podrpost, "fio": fio})).save()
+                slog.Log(key=str(profile.pk), user=request.user.doctorprofile, type=16, body=json.dumps({"username": username, "password": "(скрыт)", "podr": podrpost, "fio": fio})).save()
             else:
-                return render(request, 'dashboard/create_user.html',
-                              {'error': True, 'mess': 'Пользователь с таким именем пользователя уже существует',
-                               'uname': username, 'fio': fio, 'status': registered, 'podr': podr, 'podrpost': podrpost,
-                               'g': groups})  # Вывод
+                return render(
+                    request,
+                    'dashboard/create_user.html',
+                    {
+                        'error': True,
+                        'mess': 'Пользователь с таким именем пользователя уже существует',
+                        'uname': username,
+                        'fio': fio,
+                        'status': registered,
+                        'podr': podr,
+                        'podrpost': podrpost,
+                        'g': groups,
+                    },
+                )  # Вывод
         else:
-            return render(request, 'dashboard/create_user.html',
-                          {'error': True, 'mess': 'Данные введены неверно', 'uname': username, 'fio': fio,
-                           'status': registered, 'podr': podr, 'podrpost': podrpost, 'g': groups})  # Вывод
+            return render(
+                request,
+                'dashboard/create_user.html',
+                {'error': True, 'mess': 'Данные введены неверно', 'uname': username, 'fio': fio, 'status': registered, 'podr': podr, 'podrpost': podrpost, 'g': groups},
+            )  # Вывод
 
-    return render(request, 'dashboard/create_user.html',
-                  {'error': False, 'mess': '', 'uname': '', 'fio': '', 'status': registered, 'podr': podr,
-                   'podrpost': podrpost, 'g': groups})  # Вывод
+    return render(request, 'dashboard/create_user.html', {'error': False, 'mess': '', 'uname': '', 'fio': '', 'status': registered, 'podr': podr, 'podrpost': podrpost, 'g': groups})  # Вывод
 
 
 @csrf_exempt
@@ -306,16 +318,14 @@ def create_pod(request):
                 pd.save()  # Сохранение подразделения
                 p = True
                 e = False
-                slog.Log(key=str(pd.pk), user=request.user.doctorprofile, type=17,
-                         body=json.dumps({"title": title})).save()
+                slog.Log(key=str(pd.pk), user=request.user.doctorprofile, type=17, body=json.dumps({"title": title})).save()
             else:
                 mess = "Такое подразделение уже есть"
         else:
             mess = "Название заполнено некорректно"
     else:
         e = False
-    return render(request, 'dashboard/create_podr.html',
-                  {'error': e, 'mess': mess, 'title': '', 'status': p, 'podr': podr, 'types': Podrazdeleniya.TYPES})
+    return render(request, 'dashboard/create_podr.html', {'error': e, 'mess': mess, 'title': '', 'status': p, 'podr': podr, 'types': Podrazdeleniya.TYPES})
 
 
 @login_required
@@ -338,35 +348,31 @@ def get_fin():
 @login_required
 @group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники", "Врач консультаций")
 def results_history(request):
-    podr = Podrazdeleniya.objects.filter(p_type__in=[Podrazdeleniya.LABORATORY, Podrazdeleniya.PARACLINIC]).order_by(
-        "title")
+    podr = Podrazdeleniya.objects.filter(p_type__in=[Podrazdeleniya.LABORATORY, Podrazdeleniya.PARACLINIC]).order_by("title")
 
     podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
     users = []
     for p in podrazdeleniya:
         pd = {"pk": p.pk, "title": p.title, "docs": []}
-        for d in DoctorProfile.objects.filter(podrazdeleniye=p,
-                                              user__groups__name="Лечащий врач"):
+        for d in DoctorProfile.objects.filter(podrazdeleniye=p, user__groups__name="Лечащий врач"):
             pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
         users.append(pd)
-    return render(request, 'dashboard/results_history.html', {'fin': get_fin(),
-                                                              "notlabs": podrazdeleniya,
-                                                              "users": json.dumps(users),
-                                                              "labs":
-                                                                  [
-                                                                      {
-                                                                          "title": x.get_title(),
-                                                                          "researches": [
-                                                                              {"pk": y.pk,
-                                                                               "title": y.get_full_short_title()}
-                                                                              for y in
-                                                                              directory.Researches.objects.filter(
-                                                                                  hide=False,
-                                                                                  podrazdeleniye=x).order_by("title")
-                                                                          ]
-                                                                      }
-                                                                      for x in podr]
-                                                              })
+    return render(
+        request,
+        'dashboard/results_history.html',
+        {
+            'fin': get_fin(),
+            "notlabs": podrazdeleniya,
+            "users": json.dumps(users),
+            "labs": [
+                {
+                    "title": x.get_title(),
+                    "researches": [{"pk": y.pk, "title": y.get_full_short_title()} for y in directory.Researches.objects.filter(hide=False, podrazdeleniye=x).order_by("title")],
+                }
+                for x in podr
+            ],
+        },
+    )
 
 
 @login_required
@@ -378,17 +384,22 @@ def discharge(request):
     users = []
     for p in podrazdeleniya:
         pd = {"pk": p.pk, "title": p.title, "docs": []}
-        for d in DoctorProfile.objects.filter(podrazdeleniye=p,
-                                              user__groups__name="Лечащий врач"):
+        for d in DoctorProfile.objects.filter(podrazdeleniye=p, user__groups__name="Лечащий врач"):
             pd["docs"].append({"pk": d.pk, "fio": d.fio})
         users.append(pd)
-    return render(request, 'dashboard/discharge.html', {'labs': podr,
-                                                        'fin_poli': [],
-                                                        # IstochnikiFinansirovaniya.objects.filter(istype="poli"),
-                                                        'fin_stat': [],
-                                                        # IstochnikiFinansirovaniya.objects.filter(istype="stat"),
-                                                        "notlabs": podrazdeleniya,
-                                                        "users": json.dumps(users)})
+    return render(
+        request,
+        'dashboard/discharge.html',
+        {
+            'labs': podr,
+            'fin_poli': [],
+            # IstochnikiFinansirovaniya.objects.filter(istype="poli"),
+            'fin_stat': [],
+            # IstochnikiFinansirovaniya.objects.filter(istype="stat"),
+            "notlabs": podrazdeleniya,
+            "users": json.dumps(users),
+        },
+    )
 
 
 @csrf_exempt
@@ -398,6 +409,7 @@ def discharge_add(request):
     r = {"ok": True}
     if request.method == "POST":
         import discharge.models as discharge
+
         client_surname = request.POST.get("client_surname", "").strip()
         client_name = request.POST.get("client_name", "").strip()
         client_patronymic = request.POST.get("client_patronymic", "").strip()
@@ -410,29 +422,39 @@ def discharge_add(request):
         doc_fio = request.POST.get("doc_fio", "").strip()
 
         if "" not in [client_surname, client_name, client_patronymic] and request.FILES.get('file', "") != "":
-            obj = discharge.Discharge(client_surname=client_surname,
-                                      client_name=client_name,
-                                      client_patronymic=client_patronymic,
-                                      client_birthday=client_birthday,
-                                      client_sex=client_sex,
-                                      client_cardnum=client_cardnum,
-                                      client_historynum=client_historynum,
-                                      otd=otd,
-                                      doc_fio=doc_fio,
-                                      creator=request.user.doctorprofile,
-                                      file=request.FILES["file"])
+            obj = discharge.Discharge(
+                client_surname=client_surname,
+                client_name=client_name,
+                client_patronymic=client_patronymic,
+                client_birthday=client_birthday,
+                client_sex=client_sex,
+                client_cardnum=client_cardnum,
+                client_historynum=client_historynum,
+                otd=otd,
+                doc_fio=doc_fio,
+                creator=request.user.doctorprofile,
+                file=request.FILES["file"],
+            )
             obj.save()
-            slog.Log(key=obj.pk, type=1000, body=json.dumps({"client_surname": client_surname,
-                                                             "client_name": client_name,
-                                                             "client_patronymic": client_patronymic,
-                                                             "client_birthday": client_birthday,
-                                                             "client_sex": client_sex,
-                                                             "client_cardnum": client_cardnum,
-                                                             "client_historynum": client_historynum,
-                                                             "otd": otd.title + ", " + str(otd.pk),
-                                                             "doc_fio": doc_fio,
-                                                             "file": obj.file.name}),
-                     user=request.user.doctorprofile).save()
+            slog.Log(
+                key=obj.pk,
+                type=1000,
+                body=json.dumps(
+                    {
+                        "client_surname": client_surname,
+                        "client_name": client_name,
+                        "client_patronymic": client_patronymic,
+                        "client_birthday": client_birthday,
+                        "client_sex": client_sex,
+                        "client_cardnum": client_cardnum,
+                        "client_historynum": client_historynum,
+                        "otd": otd.title + ", " + str(otd.pk),
+                        "doc_fio": doc_fio,
+                        "file": obj.file.name,
+                    }
+                ),
+                user=request.user.doctorprofile,
+            ).save()
     return JsonResponse(r)
 
 
@@ -443,6 +465,7 @@ def discharge_search(request):
     r = {"rows": []}
     if request.method == "GET":
         import discharge.models as discharge
+
         date_start = request.GET["date_start"]
         date_end = request.GET["date_end"]
         date_start, date_end = try_parse_range(date_start, date_end)
@@ -450,11 +473,12 @@ def discharge_search(request):
         otd_pk = int(request.GET.get("otd", "-1"))
         doc_fio = request.GET.get("doc_fio", "")
 
-        slog.Log(key=query, type=1001, body=json.dumps({"date_start": request.GET["date_start"],
-                                                        "date_end": request.GET["date_end"],
-                                                        "otd_pk": otd_pk,
-                                                        "doc_fio": doc_fio}),
-                 user=request.user.doctorprofile).save()
+        slog.Log(
+            key=query,
+            type=1001,
+            body=json.dumps({"date_start": request.GET["date_start"], "date_end": request.GET["date_end"], "otd_pk": otd_pk, "doc_fio": doc_fio}),
+            user=request.user.doctorprofile,
+        ).save()
 
         filter_type = "any"
         family = ""
@@ -479,37 +503,31 @@ def discharge_search(request):
                 spq = split[3]
                 bdate = "%s-%s-%s" % (spq[4:8], spq[2:4], spq[0:2])
 
-        rows = discharge.Discharge.objects.filter(created_at__range=(date_start, date_end,),
-                                                  doc_fio__icontains=doc_fio)
+        rows = discharge.Discharge.objects.filter(created_at__range=(date_start, date_end,), doc_fio__icontains=doc_fio)
 
         if otd_pk > -1:
             rows = rows.filter(otd__pk=otd_pk)
 
         if filter_type == "fio":
-            rows = rows.filter(client_surname__contains=family,
-                               client_name__contains=name,
-                               client_patronymic__contains=twoname)
+            rows = rows.filter(client_surname__contains=family, client_name__contains=name, client_patronymic__contains=twoname)
             if bdate != "":
                 rows = rows.filter(client_birthday=bdate)
 
         if filter_type == "card_number":
             rows = rows.filter(client_cardnum=int(query))
         import os
+
         for row in rows.order_by("-created_at"):
-            r["rows"].append({
-                "date": str(dateformat.format(row.created_at.date(), settings.DATE_FORMAT)),
-                "client": {
-                    "surname": row.client_surname,
-                    "name": row.client_name,
-                    "patronymic": row.client_patronymic,
-                    "sex": row.client_sex,
-                    "birthday": row.client_birthday
-                },
-                "otd": row.otd.title,
-                "doc_fio": row.doc_fio,
-                "filename": os.path.basename(row.file.name),
-                "fileurl": row.file.url,
-            })
+            r["rows"].append(
+                {
+                    "date": str(dateformat.format(row.created_at.date(), settings.DATE_FORMAT)),
+                    "client": {"surname": row.client_surname, "name": row.client_name, "patronymic": row.client_patronymic, "sex": row.client_sex, "birthday": row.client_birthday},
+                    "otd": row.otd.title,
+                    "doc_fio": row.doc_fio,
+                    "filename": os.path.basename(row.file.name),
+                    "fileurl": row.file.url,
+                }
+            )
 
     return JsonResponse(r)
 
@@ -533,15 +551,15 @@ def results_history_search(request):
     day2 = day1 + datetime.timedelta(days=1)
 
     if type == "otd":
-        collect = Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
-                                              issledovaniya__time_confirmation__range=(day1, day2),
-                                              doc__podrazdeleniye=request.user.doctorprofile.podrazdeleniye,
-                                              issledovaniya__research__is_doc_refferal=False,
-                                              issledovaniya__research__is_slave_hospital=False)
+        collect = Napravleniya.objects.filter(
+            issledovaniya__doc_confirmation__isnull=False,
+            issledovaniya__time_confirmation__range=(day1, day2),
+            doc__podrazdeleniye=request.user.doctorprofile.podrazdeleniye,
+            issledovaniya__research__is_doc_refferal=False,
+            issledovaniya__research__is_slave_hospital=False,
+        )
     else:
-        collect = Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
-                                              issledovaniya__time_confirmation__range=(day1, day2),
-                                              doc=request.user.doctorprofile)
+        collect = Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False, issledovaniya__time_confirmation__range=(day1, day2), doc=request.user.doctorprofile)
 
     result = list(collect.order_by("doc", "client").exclude(issledovaniya__doc_confirmation__isnull=True).values_list('pk', flat=True))
 
@@ -560,9 +578,9 @@ def dashboard_from(request):
         date_start, date_end = try_parse_range(date_start, date_end)
         if request.GET.get("get_labs", "false") == "true":
             for lab in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации"):
-                tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye__p_type=Podrazdeleniya.DEPARTMENT,
-                                                              time_get__range=(date_start, date_end),
-                                                              issledovaniya__research__podrazdeleniye=lab)
+                tubes_list = TubesRegistration.objects.filter(
+                    doc_get__podrazdeleniye__p_type=Podrazdeleniya.DEPARTMENT, time_get__range=(date_start, date_end), issledovaniya__research__podrazdeleniye=lab
+                )
                 if filter_type == "not_received":
                     tubes_list = tubes_list.filter(doc_recive__isnull=True).exclude(notice="")
                 elif filter_type == "received":
@@ -578,8 +596,7 @@ def dashboard_from(request):
         for podrazledeniye in podrazdeleniya:
             i += 1
             tubes_list = get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye)
-            result[i] = {"tubes": tubes_list.distinct().count(),
-                         "title": podrazledeniye.title, "pk": podrazledeniye.pk}
+            result[i] = {"tubes": tubes_list.distinct().count(), "title": podrazledeniye.title, "pk": podrazledeniye.pk}
     except ValueError:
         pass
 
@@ -587,9 +604,7 @@ def dashboard_from(request):
 
 
 def get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye):
-    tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye=podrazledeniye,
-                                                  time_get__range=(date_start, date_end),
-                                                  issledovaniya__research__podrazdeleniye=lab)
+    tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye=podrazledeniye, time_get__range=(date_start, date_end), issledovaniya__research__podrazdeleniye=lab)
     if filter_type == "not_received":
         tubes_list = tubes_list.filter(doc_recive__isnull=True).exclude(notice="")
     elif filter_type == "received":
@@ -628,56 +643,48 @@ def direction_info(request):
 
         if pk != -1 and Napravleniya.objects.filter(pk=pk).exists():
             dir = Napravleniya.objects.get(pk=pk)
-            data.append({'type': "Направление №%s" % pk, 'events': [
-                [
-                    ["title", strdatetime(dir.data_sozdaniya) + " Направление создано"],
-                    ["Создатель", get_userdata(dir.doc_who_create)],
-                    ["От имени", "" if not dir.doc else get_userdata(dir.doc)],
-                    ["Пациент", "%s, %s, Пол: %s" % (
-                        dir.client.individual.fio(), dir.client.individual.bd(), dir.client.individual.sex)],
-                    ["Карта", "%s %s" % (dir.client.number, dir.client.base.title)],
-                    ["Архив", yesno[dir.client.is_archive]],
-                    ["Источник финансирования", dir.fin_title],
-                    ["Диагноз", dir.diagnos],
-                    ["Направление создано на основе направления из РМИС", yesno[dir.imported_from_rmis]],
-                    ["Направивляющая организация из РМИС", "" if not dir.imported_org else dir.imported_org.title],
-                    ["Направление отправлено в РМИС", yesno[
-                        dir.imported_directions_rmis_send if dir.imported_from_rmis else dir.rmis_number not in ["",
-                                                                                                                 None,
-                                                                                                                 "NONERMIS"]]],
-                    ["Номер РМИС направления", dir.rmis_number if dir.rmis_number not in [None, "NONERMIS"] else ""],
-                    ["Направление привязано к случаю РМИС", yesno[dir.rmis_case_id not in ["", None, "NONERMIS"]]],
-                    ["Направление привязано к записи отделения госпитализации РМИС",
-                     yesno[dir.rmis_hosp_id not in ["", None, "NONERMIS"]]],
-                    ["Результат отправлен в РМИС", yesno[dir.result_rmis_send]]
-                ]
-            ]})
+            data.append(
+                {
+                    'type': "Направление №%s" % pk,
+                    'events': [
+                        [
+                            ["title", strdatetime(dir.data_sozdaniya) + " Направление создано"],
+                            ["Создатель", get_userdata(dir.doc_who_create)],
+                            ["От имени", "" if not dir.doc else get_userdata(dir.doc)],
+                            ["Пациент", "%s, %s, Пол: %s" % (dir.client.individual.fio(), dir.client.individual.bd(), dir.client.individual.sex)],
+                            ["Карта", "%s %s" % (dir.client.number, dir.client.base.title)],
+                            ["Архив", yesno[dir.client.is_archive]],
+                            ["Источник финансирования", dir.fin_title],
+                            ["Диагноз", dir.diagnos],
+                            ["Направление создано на основе направления из РМИС", yesno[dir.imported_from_rmis]],
+                            ["Направивляющая организация из РМИС", "" if not dir.imported_org else dir.imported_org.title],
+                            ["Направление отправлено в РМИС", yesno[dir.imported_directions_rmis_send if dir.imported_from_rmis else dir.rmis_number not in ["", None, "NONERMIS"]]],
+                            ["Номер РМИС направления", dir.rmis_number if dir.rmis_number not in [None, "NONERMIS"] else ""],
+                            ["Направление привязано к случаю РМИС", yesno[dir.rmis_case_id not in ["", None, "NONERMIS"]]],
+                            ["Направление привязано к записи отделения госпитализации РМИС", yesno[dir.rmis_hosp_id not in ["", None, "NONERMIS"]]],
+                            ["Результат отправлен в РМИС", yesno[dir.result_rmis_send]],
+                        ]
+                    ],
+                }
+            )
             if dir.visit_date and dir.visit_who_mark:
-                d = {"type": "Посещение по направлению", "events": [
-                    [["title", strdatetime(dir.visit_date) + " Регистрация посещения"],
-                     ["Регистратор", dir.visit_who_mark.fio + ", " + dir.visit_who_mark.podrazdeleniye.title], ]
-                ]}
+                d = {
+                    "type": "Посещение по направлению",
+                    "events": [
+                        [["title", strdatetime(dir.visit_date) + " Регистрация посещения"], ["Регистратор", dir.visit_who_mark.fio + ", " + dir.visit_who_mark.podrazdeleniye.title],]
+                    ],
+                }
                 data.append(d)
             for lg in slog.Log.objects.filter(key=str(pk), type__in=(5002,)):
-                data[0]["events"].append([
-                    ["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())],
-                    ["Отмена", "{}, {}".format(lg.body, get_userdata(lg.user))]
-                ])
+                data[0]["events"].append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], ["Отмена", "{}, {}".format(lg.body, get_userdata(lg.user))]])
             for lg in slog.Log.objects.filter(key=str(pk), type__in=(60000, 60001, 60002, 60003)):
-                data[0]["events"].append([
-                    ["title", lg.get_type_display()],
-                    ["Дата и время", strdatetime(lg.time)]
-                ])
+                data[0]["events"].append([["title", lg.get_type_display()], ["Дата и время", strdatetime(lg.time)]])
             for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir).distinct():
                 d = {"type": "Ёмкость №%s" % tube.pk, "events": []}
                 if tube.time_get is not None:
-                    d["events"].append([
-                        ["title", strdatetime(tube.time_get) + " Забор"],
-                        ["Заборщик", get_userdata(tube.doc_get)]
-                    ])
+                    d["events"].append([["title", strdatetime(tube.time_get) + " Забор"], ["Заборщик", get_userdata(tube.doc_get)]])
                 for lg in slog.Log.objects.filter(key=str(tube.pk), type__in=(4000, 12, 11)).distinct():
-                    tdata = [["Приёмщик", get_userdata(lg.user)],
-                             ["title", strdatetime(lg.time) + " " + lg.get_type_display() + " (#%s)" % lg.pk]]
+                    tdata = [["Приёмщик", get_userdata(lg.user)], ["title", strdatetime(lg.time) + " " + lg.get_type_display() + " (#%s)" % lg.pk]]
                     if lg.body and lg.body != "":
                         tdata.append(["json_data", lg.body])
                     d["events"].append(tdata)
@@ -685,8 +692,7 @@ def direction_info(request):
             for iss in Issledovaniya.objects.filter(napravleniye=dir):
                 d = {'type': "Исследование: %s (#%s)" % (iss.research.title, iss.pk), 'events': []}
                 for lg in slog.Log.objects.filter(key=str(iss.pk), type__in=(13, 14, 24)).distinct():
-                    tdata = [["Исполнитель", get_userdata(lg.user)],
-                             ["title", strdatetime(lg.time) + " " + lg.get_type_display() + " (#%s)" % lg.pk]]
+                    tdata = [["Исполнитель", get_userdata(lg.user)], ["title", strdatetime(lg.time) + " " + lg.get_type_display() + " (#%s)" % lg.pk]]
                     if lg.body and lg.body != "" and lg.type != 24:
                         tdata.append(["json_data", lg.body])
                     d["events"].append(tdata)
@@ -703,27 +709,24 @@ def get_userdata(doc: DoctorProfile):
 
 
 def ratelimited(request, e):
-    return render(request, 'dashboard/error.html',
-                  {"message": "Запрос выполняется слишком часто, попробуйте позднее", "update": True})
+    return render(request, 'dashboard/error.html', {"message": "Запрос выполняется слишком часто, попробуйте позднее", "update": True})
 
 
 def cards(request):
     if not SettingManager.get("mis_module", default='false', default_type='b'):
         from django.http import Http404
+
         raise Http404()
     return render(request, 'dashboard/cards.html')
 
 
 def v404(request, exception=None):
     capture_message("Page not found!", level="error")
-    return render(request, 'dashboard/error.html',
-                  {"message": "Ошибка 404 - страница не найдена", "update": False, "to_home": True}, status=404)
+    return render(request, 'dashboard/error.html', {"message": "Ошибка 404 - страница не найдена", "update": False, "to_home": True}, status=404)
 
 
 def v500(request, exception=None):
-    return render(request, 'dashboard/error.html',
-                  {"message": "Ошибка 500 - проблемы на сервере. Сообщите администратору или попробуйте позднее",
-                   "update": True, "no_nt": True}, status=500)
+    return render(request, 'dashboard/error.html', {"message": "Ошибка 500 - проблемы на сервере. Сообщите администратору или попробуйте позднее", "update": True, "no_nt": True}, status=500)
 
 
 @login_required
@@ -753,15 +756,14 @@ def results_report(request):
 @login_required
 @group_required("Врач параклиники", "Врач консультаций")
 def results_paraclinic_blanks(request):
-    researches = directory.Researches.objects.filter(hide=False, is_paraclinic=True,
-                                                     podrazdeleniye=request.user.doctorprofile.podrazdeleniye).order_by(
-        "title")
+    researches = directory.Researches.objects.filter(hide=False, is_paraclinic=True, podrazdeleniye=request.user.doctorprofile.podrazdeleniye).order_by("title")
     return render(request, 'dashboard/results_paraclinic_blanks.html', {"researches": researches})
 
 
 @staff_member_required
 def rmq_messages(request):
     from mq.publisher import get_queue_messages_count
+
     data = {"count": get_queue_messages_count()}
     return JsonResponse(data)
 
@@ -770,6 +772,7 @@ def rmq_messages(request):
 def rmq_count(request):
     model = request.GET["model"].split(".")
     from django.apps import apps
+
     m = apps.get_model(app_label=model[0], model_name=model[1])
     i = m.objects.all().order_by("-pk").first()
     return JsonResponse({"count": 0 if not i else i.pk})
@@ -779,6 +782,7 @@ def rmq_count(request):
 def rmq_send(request):
     model = request.GET["model"].split(".")
     from mq.publisher import mq_send
+
     mq_send("updated", "{}.models.{}".format(model[0], model[1]), str(request.GET["pk"]))
     return JsonResponse({"ok": True})
 

@@ -8,6 +8,7 @@ TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
 class Tubes(models.Model):
     """Таблица типов пробирок"""
+
     id = models.AutoField(primary_key=True, db_index=True)
     color = models.CharField(max_length=7)  # Цвет в CSS формате (#1122FF)
     title = models.CharField(max_length=255)  # Название
@@ -19,9 +20,26 @@ class Tubes(models.Model):
     def get_short_title(self):
         pr = self.short_title
         if pr == "":
-            types = ["фиолет", "красн", "стекло", "черн", "белая", "серая", "фильтро", "чашка", "голубая", "зеленая",
-                     "желтая", "жёлтая",
-                     "зелёная", "контейнер", "зонд", "п ф", "л ф", "синяя"]
+            types = [
+                "фиолет",
+                "красн",
+                "стекло",
+                "черн",
+                "белая",
+                "серая",
+                "фильтро",
+                "чашка",
+                "голубая",
+                "зеленая",
+                "желтая",
+                "жёлтая",
+                "зелёная",
+                "контейнер",
+                "зонд",
+                "п ф",
+                "л ф",
+                "синяя",
+            ]
             tb_t = self.title.lower()
             pr = ""
             for s in types:

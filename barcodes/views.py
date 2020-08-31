@@ -22,10 +22,8 @@ from laboratory.utils import strdate
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics import renderPDF
 
-pdfmetrics.registerFont(
-    TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
-pdfmetrics.registerFont(
-    TTFont('clacon', os.path.join(FONTS_FOLDER, 'clacon.ttf')))
+pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
+pdfmetrics.registerFont(TTFont('clacon', os.path.join(FONTS_FOLDER, 'clacon.ttf')))
 
 
 @login_required
@@ -58,10 +56,8 @@ def tubes(request, direction_implict_id=None):
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Type'] = 'application/pdf'
-    symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
-               u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")
-    response['Content-Disposition'] = str.translate('inline; filename="%s.pdf"' % doctitle,
-                                                    {ord(a): ord(b) for a, b in zip(*symbols)})
+    symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")
+    response['Content-Disposition'] = str.translate('inline; filename="%s.pdf"' % doctitle, {ord(a): ord(b) for a, b in zip(*symbols)})
 
     buffer = BytesIO()
     pdfdoc.PDFInfo.title = doctitle
@@ -88,10 +84,13 @@ def tubes(request, direction_implict_id=None):
                 has_microbiology = True
                 tpk = int(d) * 10 + 4600000000000
                 tubes_id.add(tpk)
-                tubet = {"pk": tpk, "researches": {iss.research.title},
-                         "title": iss.research.microbiology_tube.title,
-                         "microbiology": True,
-                         "short_title": iss.research.microbiology_tube.get_short_title()}
+                tubet = {
+                    "pk": tpk,
+                    "researches": {iss.research.title},
+                    "title": iss.research.microbiology_tube.title,
+                    "microbiology": True,
+                    "short_title": iss.research.microbiology_tube.get_short_title(),
+                }
             for fr in iss.research.fractions_set.all():
                 absor = directory.Absorption.objects.filter(fupper=fr)
                 if absor.exists():
@@ -119,9 +118,7 @@ def tubes(request, direction_implict_id=None):
                             v.tubes.add(ntube)
                         else:
                             ntube = v.tubes.filter(type=rel).first()
-                        tubes_buffer[vrpk] = {"pk": ntube.pk, "researches": set(),
-                                              "title": ntube.type.tube.title,
-                                              "short_title": ntube.type.tube.get_short_title()}
+                        tubes_buffer[vrpk] = {"pk": ntube.pk, "researches": set(), "title": ntube.type.tube.title, "short_title": ntube.type.tube.get_short_title()}
                         if not istubes:
                             tubes_id.add(ntube.pk)
                     else:

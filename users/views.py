@@ -20,8 +20,7 @@ def home(request):
         if user:  # Проверка на правильность введенных данных
             if user.is_active:  # Проверка активности профиля
                 login(request, user)  # Установка статуса авторизации в положительный
-                log = slog.Log(key="", type=18, body="IP: {0}".format(slog.Log.get_client_ip(request)),
-                               user=request.user.doctorprofile)
+                log = slog.Log(key="", type=18, body="IP: {0}".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile)
                 log.save()
             else:
                 return HttpResponse("Ваш аккаунт отключен")  # Сообщение об ошибке
@@ -31,14 +30,13 @@ def home(request):
             if u and u.get_login_id() == username and u.user.is_active:
                 user = u.user
                 login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-                slog.Log(key='По штрих-коду', type=18, body="IP: {0}".format(slog.Log.get_client_ip(request)),
-                         user=request.user.doctorprofile).save()
+                slog.Log(key='По штрих-коду', type=18, body="IP: {0}".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile).save()
             else:
                 return render(request, 'auth.html', {'error': True, 'username': username, 'message': 'Ошибка'})
         else:
             return render(request, 'auth.html', {'error': True, 'username': username})  # Сообщение об ошибке
     if request.user.is_authenticated:  # Проверка статуса автоизации
         return HttpResponseRedirect(next)  # Редирект в п/у
-    response = render(request, 'auth.html', {'error': False, 'username': ''}, )  # Вывод формы авторизации
+    response = render(request, 'auth.html', {'error': False, 'username': ''},)  # Вывод формы авторизации
     response["Login-Screen"] = 1
     return response

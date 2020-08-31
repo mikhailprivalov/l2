@@ -20,6 +20,7 @@ class Command(BaseCommand):
             t = int(r[1])
         else:
             from django.apps import apps
+
             na = n.split(".")
             m = apps.get_model(app_label=na[0], model_name=na[2])
             t = 0

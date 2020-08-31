@@ -5,7 +5,6 @@ from directory.models import Culture, GroupCulture
 
 
 class Command(BaseCommand):
-
     def add_arguments(self, parser):
         parser.add_argument('path', type=str)
 

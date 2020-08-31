@@ -73,7 +73,7 @@ def form_01(request_data):
 
     # Получить все источники, у которых title-ПЛАТНО
     ist_f = list(IstochnikiFinansirovaniya.objects.values_list('id').filter(title__exact='Платно'))
-    ist_f_list = ([int(x[0]) for x in ist_f])
+    ist_f_list = [int(x[0]) for x in ist_f]
 
     napr = Napravleniya.objects.filter(pk__in=ind_dir)
     dir_temp = []
@@ -150,11 +150,9 @@ def form_01(request_data):
     pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=12 * mm,
-                            rightMargin=5 * mm, topMargin=6 * mm,
-                            bottomMargin=28 * mm, allowSplitting=1,
-                            title="Форма {}".format("Договор на оплату"))
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4, leftMargin=12 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=28 * mm, allowSplitting=1, title="Форма {}".format("Договор на оплату")
+    )
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -219,16 +217,12 @@ def form_01(request_data):
     styleTR.alignment = TA_RIGHT
 
     opinion = [
-        [Paragraph('г. Иркутск', style),
-         Paragraph('{} года'.format(date_now), styleTR)],
+        [Paragraph('г. Иркутск', style), Paragraph('{} года'.format(date_now), styleTR)],
     ]
 
     tbl = Table(opinion, colWidths=(95 * mm, 95 * mm))
 
-    tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-    ]))
+    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.white), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),]))
 
     objs.append(Spacer(1, 5 * mm))
     objs.append(tbl)
@@ -261,9 +255,14 @@ def form_01(request_data):
     if contract_from_file:
         objs.append(Paragraph('{}'.format(contract_header), style))
     else:
-        objs.append(Paragraph(
-            '<font fontname ="PTAstraSerifBold"> Исполнитель:  </font>  {}, в лице {} {}, действующего(ей) на основании {} с одной стороны, и'.format(hospital_name, post_contract,
-                                                                                                                                                      exec_person, document_base), style))
+        objs.append(
+            Paragraph(
+                '<font fontname ="PTAstraSerifBold"> Исполнитель:  </font>  {}, в лице {} {}, действующего(ей) на основании {} с одной стороны, и'.format(
+                    hospital_name, post_contract, exec_person, document_base
+                ),
+                style,
+            )
+        )
 
     them_contract = 'настоящий договор о нижеследующем:'
     client_who = 'Заказчик'
@@ -286,31 +285,55 @@ def form_01(request_data):
             client_side = ', с другой стороны, заключили в интересах Пациента (Потребителя)'
         is_payer = True
         payer_fio = payer_data['fio']
-        objs.append(Paragraph('<font fontname ="PTAstraSerifBold">{}: </font> {}, дата рождения {} г., '
-                              'паспорт: {}-{} '
-                              'выдан {} г. '
-                              'кем: {} '
-                              'адрес регистрации: {}, '
-                              'адрес проживания: {} {}'.format(client_who, payer_data['fio'], payer_data['born'],
-                                                               payer_data['passport_serial'],
-                                                               payer_data['passport_num'],
-                                                               payer_data['passport_date_start'],
-                                                               payer_data['passport_issued'],
-                                                               payer_data['main_address'], payer_data['fact_address'],
-                                                               client_side
-                                                               ), style))
+        objs.append(
+            Paragraph(
+                '<font fontname ="PTAstraSerifBold">{}: </font> {}, дата рождения {} г., '
+                'паспорт: {}-{} '
+                'выдан {} г. '
+                'кем: {} '
+                'адрес регистрации: {}, '
+                'адрес проживания: {} {}'.format(
+                    client_who,
+                    payer_data['fio'],
+                    payer_data['born'],
+                    payer_data['passport_serial'],
+                    payer_data['passport_num'],
+                    payer_data['passport_date_start'],
+                    payer_data['passport_issued'],
+                    payer_data['main_address'],
+                    payer_data['fact_address'],
+                    client_side,
+                ),
+                style,
+            )
+        )
 
     if p_agent:
         client_side = ', с другой стороны, заключили в интересах Пациента (Потребителя)'
-        objs.append(Paragraph('<font fontname ="PTAstraSerifBold"> {}: </font> {} ({} {}), дата рождения {} г., '
-                              'паспорт: {}-{} '
-                              'выдан {} г. '
-                              'кем: {} '
-                              'адрес регистрации: {}, '
-                              'адрес проживания: {} {}'.format(p_agent_who, person_data['fio'], ind_card.get_who_is_agent_display(), who_patient, person_data['born'],
-                                                               person_data['passport_serial'], person_data['passport_num'], person_data['passport_date_start'],
-                                                               person_data['passport_issued'], person_data['main_address'], person_data['fact_address'], client_side
-                                                               ), style))
+        objs.append(
+            Paragraph(
+                '<font fontname ="PTAstraSerifBold"> {}: </font> {} ({} {}), дата рождения {} г., '
+                'паспорт: {}-{} '
+                'выдан {} г. '
+                'кем: {} '
+                'адрес регистрации: {}, '
+                'адрес проживания: {} {}'.format(
+                    p_agent_who,
+                    person_data['fio'],
+                    ind_card.get_who_is_agent_display(),
+                    who_patient,
+                    person_data['born'],
+                    person_data['passport_serial'],
+                    person_data['passport_num'],
+                    person_data['passport_date_start'],
+                    person_data['passport_issued'],
+                    person_data['main_address'],
+                    person_data['fact_address'],
+                    client_side,
+                ),
+                style,
+            )
+        )
 
     # Добавдяем потребителя услуги (пациента)
     if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
@@ -329,14 +352,29 @@ def form_01(request_data):
         p_who = "Пациент (потребитель)"
         client_side = ''
 
-    objs.append(Paragraph('<font fontname ="PTAstraSerifBold"> {}:</font> {}, дата рождения {} г.,'
-                          '{}: {}-{} '
-                          'выдан {} г. '
-                          'кем: {} '
-                          'адрес регистрации: {}, '
-                          'адрес проживания: {} {} '.format(p_who, patient_data['fio'], patient_data['born'], patient_data['type_doc'],
-                                                            p_doc_serial, p_doc_num, p_doc_start, p_doc_issued,
-                                                            patient_data['main_address'], patient_data['fact_address'], client_side), style))
+    objs.append(
+        Paragraph(
+            '<font fontname ="PTAstraSerifBold"> {}:</font> {}, дата рождения {} г.,'
+            '{}: {}-{} '
+            'выдан {} г. '
+            'кем: {} '
+            'адрес регистрации: {}, '
+            'адрес проживания: {} {} '.format(
+                p_who,
+                patient_data['fio'],
+                patient_data['born'],
+                patient_data['type_doc'],
+                p_doc_serial,
+                p_doc_num,
+                p_doc_start,
+                p_doc_issued,
+                patient_data['main_address'],
+                patient_data['fact_address'],
+                client_side,
+            ),
+            style,
+        )
+    )
 
     objs.append(Paragraph('{}'.format(them_contract), styleFL))
     objs.append(Spacer(1, 2 * mm))
@@ -372,10 +410,16 @@ def form_01(request_data):
 
     # Всегда заголовки одинаково со скидкой
     opinion = [
-        [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
-         Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Скидка<br/>Наценка<br/>%', styleTB),
-         Paragraph('Цена со<br/> скидкой,<br/>руб.', styleTB),
-         Paragraph('Кол-во, усл.', styleTB), Paragraph('Сумма, руб.', styleTB), ],
+        [
+            Paragraph('Код услуги', styleTB),
+            Paragraph('Направление', styleTB),
+            Paragraph('Услуга', styleTB),
+            Paragraph('Цена,<br/>руб.', styleTB),
+            Paragraph('Скидка<br/>Наценка<br/>%', styleTB),
+            Paragraph('Цена со<br/> скидкой,<br/>руб.', styleTB),
+            Paragraph('Кол-во, усл.', styleTB),
+            Paragraph('Сумма, руб.', styleTB),
+        ],
     ]
 
     # example_template = [
@@ -410,61 +454,79 @@ def form_01(request_data):
 
     tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 52 * mm, 22 * mm, 21 * mm, 22 * mm, 13 * mm, 25 * mm))
 
-    tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
+    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
 
     objs.append(tbl)
     objs.append(Spacer(1, 1 * mm))
     objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
     objs.append(Spacer(1, 2 * mm))
     objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph('(далее - "медицинские услуги"), а Заказчик уплачивает Исполнителю вознаграждение в размере, '
-                          'порядке и сроки, которые установлены настоящим Договором.', style))
+    objs.append(Paragraph('(далее - "медицинские услуги"), а Заказчик уплачивает Исполнителю вознаграждение в размере, ' 'порядке и сроки, которые установлены настоящим Договором.', style))
 
     s = pytils.numeral.rubles(float(sum_research_decimal))
-    end_date = (date.today() + relativedelta(days=+10))
+    end_date = date.today() + relativedelta(days=+10)
     end_date1 = datetime.datetime.strftime(end_date, "%d.%m.%Y")
     objs.append(
-        Paragraph('Сроки оплаты: в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(end_date1),
-                  style))
+        Paragraph(
+            'Сроки оплаты: в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(end_date1), style
+        )
+    )
     if contract_from_file:
         for section in body_paragraphs:
             if section.get('is_price'):
                 objs.append(Paragraph('{} <font fontname = "PTAstraSerifBold"> <u> {} </u></font>'.format(section['text'], s.capitalize()), styles_obj[section['style']]))
             elif section.get('time_pay'):
-                objs.append(Paragraph(
-                    '{} в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(section['text'],
-                                                                                                                                                                         end_date1),
-                    styles_obj[section['style']]))
+                objs.append(
+                    Paragraph(
+                        '{} в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(
+                            section['text'], end_date1
+                        ),
+                        styles_obj[section['style']],
+                    )
+                )
             else:
                 objs.append(Paragraph(section['text'], styles_obj[section['style']]))
     else:
-        objs.append(Paragraph('1.2. Исполнитель оказывает услуги по месту своего нахождения по адресу: '
-                              'г. Иркутск, Байкальская, 201, в соответствии с установленными Правилами предоставления платных медицинских услуг.', style))
+        objs.append(
+            Paragraph(
+                '1.2. Исполнитель оказывает услуги по месту своего нахождения по адресу: '
+                'г. Иркутск, Байкальская, 201, в соответствии с установленными Правилами предоставления платных медицинских услуг.',
+                style,
+            )
+        )
         objs.append(Spacer(1, 2 * mm))
         objs.append(Paragraph('2. ПРАВА И ОБЯЗАННОСТИ СТОРОН', styleCenter))
         objs.append(Paragraph('<u>2.1. Исполнитель обязуется:</u>', style))
-        objs.append(Paragraph('2.1.1. Обеспечить Пациента бесплатной, доступной и достоверной информацией о платных медицинских услугах, '
-                              'содержащей следующие сведения о:', style))
+        objs.append(Paragraph('2.1.1. Обеспечить Пациента бесплатной, доступной и достоверной информацией о платных медицинских услугах, ' 'содержащей следующие сведения о:', style))
         objs.append(Paragraph('а) порядках оказания медицинской помощи и стандартах медицинской помощи, применяемых при предоставлении платных медицинских услуг;', style))
         objs.append(
-            Paragraph('б) данных о конкретном медицинском работнике, предоставляющем соответствующую платную медицинскую услугу (его профессиональном образовании и квалификации);', style))
-        objs.append(Paragraph(
-            'в) данных о методах оказания медицинской помощи, связанных с ними рисках, возможных видах медицинского вмешательства, их последствиях и '
-            'ожидаемых результатах оказания медицинской помощи;', style))
+            Paragraph('б) данных о конкретном медицинском работнике, предоставляющем соответствующую платную медицинскую услугу (его профессиональном образовании и квалификации);', style)
+        )
+        objs.append(
+            Paragraph(
+                'в) данных о методах оказания медицинской помощи, связанных с ними рисках, возможных видах медицинского вмешательства, их последствиях и '
+                'ожидаемых результатах оказания медицинской помощи;',
+                style,
+            )
+        )
         objs.append(Paragraph('г) других сведениях, относящихся к предмету настоящего Договора.', style))
         objs.append(Paragraph('2.1.2.Оказывать Пациенту услуги, предусмотренные п. 1.1 настоящего Договора, а при необходимости и дополнительные услуги.', style))
-        objs.append(Paragraph('2.1.3.Давать при необходимости по просьбе Пациента разъяснения о ходе оказания услуг ему и '
-                              'предоставлять по требованию Пациента необходимую медицинскую документацию.', style))
-        objs.append(Paragraph('2.1.4.Предоставить в доступной форме информацию о возможности получения соответствующих видов '
-                              'и объемов медицинской помощи без взимания платы в рамках Программы государственных гарантий '
-                              'бесплатного оказания гражданам медицинской помощи и территориальной программы государственных гарантий '
-                              'бесплатного оказания гражданам медицинской помощи.', style))
-        objs.append(Paragraph('2.15. Соблюдать порядки оказания медицинской помощи, утвержденные Министерством здравоохранения '
-                              'Российской Федерации.', style))
+        objs.append(
+            Paragraph(
+                '2.1.3.Давать при необходимости по просьбе Пациента разъяснения о ходе оказания услуг ему и ' 'предоставлять по требованию Пациента необходимую медицинскую документацию.',
+                style,
+            )
+        )
+        objs.append(
+            Paragraph(
+                '2.1.4.Предоставить в доступной форме информацию о возможности получения соответствующих видов '
+                'и объемов медицинской помощи без взимания платы в рамках Программы государственных гарантий '
+                'бесплатного оказания гражданам медицинской помощи и территориальной программы государственных гарантий '
+                'бесплатного оказания гражданам медицинской помощи.',
+                style,
+            )
+        )
+        objs.append(Paragraph('2.15. Соблюдать порядки оказания медицинской помощи, утвержденные Министерством здравоохранения ' 'Российской Федерации.', style))
         objs.append(Paragraph('<u>2.2. Заказчик обязуется:</u>', style))
         objs.append(Paragraph('2.2.1. Соблюдать назначение и рекомендации лечащих врачей.', style))
         objs.append(Paragraph('2.2.3. Оплачивать услуги Исполнителя в порядке, сроки и на условиях, которые установлены настоящим Договором.', style))
@@ -472,87 +534,153 @@ def form_01(request_data):
         objs.append(Paragraph('2.2.5. Кроме того Пациент обязан:', style))
         objs.append(Paragraph('- информировать врача о перенесенных заболеваниях, известных ему аллергических реакциях, противопоказаниях;', style))
         objs.append(Paragraph('- соблюдать правила поведения пациентов в медицинском учреждении, режим работы медицинского учреждения;', style))
-        objs.append(Paragraph('- выполнять все рекомендации медицинского персонала и третьих лиц, оказывающих ему по настоящему Договору'
-                              'медицинские услуги, по лечению, в том числе соблюдать указания медицинского учреждения, предписанные на период после оказания услуг.', style))
+        objs.append(
+            Paragraph(
+                '- выполнять все рекомендации медицинского персонала и третьих лиц, оказывающих ему по настоящему Договору'
+                'медицинские услуги, по лечению, в том числе соблюдать указания медицинского учреждения, предписанные на период после оказания услуг.',
+                style,
+            )
+        )
         objs.append(Paragraph('2.3. Предоставление Исполнителем дополнительных услуг оформляется дополнительным соглашением Сторон и оплачивается дополнительно.', style))
-        objs.append(Paragraph('2.4. Стороны обязуются хранить в тайне лечебную, финансовую и иную конфиденциальную информацию, '
-                              'полученную от другой Стороны при исполнении настоящего Договора.', style))
+        objs.append(
+            Paragraph(
+                '2.4. Стороны обязуются хранить в тайне лечебную, финансовую и иную конфиденциальную информацию, ' 'полученную от другой Стороны при исполнении настоящего Договора.', style
+            )
+        )
         objs.append(Spacer(1, 2 * mm))
         objs.append(Paragraph('3. ПОРЯДОК ИСПОЛНЕНИЯ ДОГОВОРА', styleCenter))
-        objs.append(Paragraph('3.1. Условия получения Пациентом медицинских услуг: (вне медицинской организации; амбулаторно; '
-                              'в дневном стационаре; стационарно; указать,организационные моменты, связанные с оказанием медицинских услуг)', style))
-        objs.append(Paragraph('3.2. В случае если при предоставлении платных медицинских услуг требуется предоставление '
-                              'на возмездной основе дополнительных медицинских услуг, не предусмотренных настоящим Договором, '
-                              'Исполнитель обязан предупредить об этом Пациента.', style))
+        objs.append(
+            Paragraph(
+                '3.1. Условия получения Пациентом медицинских услуг: (вне медицинской организации; амбулаторно; '
+                'в дневном стационаре; стационарно; указать,организационные моменты, связанные с оказанием медицинских услуг)',
+                style,
+            )
+        )
+        objs.append(
+            Paragraph(
+                '3.2. В случае если при предоставлении платных медицинских услуг требуется предоставление '
+                'на возмездной основе дополнительных медицинских услуг, не предусмотренных настоящим Договором, '
+                'Исполнитель обязан предупредить об этом Пациента.',
+                style,
+            )
+        )
         objs.append(Paragraph('Без согласия Пациента Исполнитель не вправе предоставлять дополнительные медицинские услуги на возмездной основе.', style))
-        objs.append(Paragraph('3.3. В случае, если при предоставлении платных медицинских услуг потребуется предоставление '
-                              'дополнительных медицинских услуг по экстренным показаниям для устранения угрозы жизни Пациента'
-                              ' при внезапных острых заболеваниях, состояниях, обострениях хронических заболеваний, такие '
-                              'медицинские услуги оказываются без взимания платы в соответствии с Федеральным загоном '
-                              'от 21.11.2011N 323-ФЗ "Об основах охраны здоровья граждан в Российской Федерации".', style))
-        objs.append(Paragraph('3.4. В случае отказа Пациента после заключения Договора от получения медицинских услуг Договор '
-                              'расторгается. При этом Пациент оплачивает Исполнителю фактически понесенные Исполнителем расходы,'
-                              'связанные с исполнением обязательств по Договору. ', style))
-        objs.append(Paragraph('3.5. К отношениям, связанным с исполнением настоящего Договора, применяются положения Закона '
-                              'Российской Федерации от 7 февраля 1992 г. N 2300-1 "О защите прав потребителей".', style))
+        objs.append(
+            Paragraph(
+                '3.3. В случае, если при предоставлении платных медицинских услуг потребуется предоставление '
+                'дополнительных медицинских услуг по экстренным показаниям для устранения угрозы жизни Пациента'
+                ' при внезапных острых заболеваниях, состояниях, обострениях хронических заболеваний, такие '
+                'медицинские услуги оказываются без взимания платы в соответствии с Федеральным загоном '
+                'от 21.11.2011N 323-ФЗ "Об основах охраны здоровья граждан в Российской Федерации".',
+                style,
+            )
+        )
+        objs.append(
+            Paragraph(
+                '3.4. В случае отказа Пациента после заключения Договора от получения медицинских услуг Договор '
+                'расторгается. При этом Пациент оплачивает Исполнителю фактически понесенные Исполнителем расходы,'
+                'связанные с исполнением обязательств по Договору. ',
+                style,
+            )
+        )
+        objs.append(
+            Paragraph(
+                '3.5. К отношениям, связанным с исполнением настоящего Договора, применяются положения Закона '
+                'Российской Федерации от 7 февраля 1992 г. N 2300-1 "О защите прав потребителей".',
+                style,
+            )
+        )
         objs.append(Spacer(1, 2 * mm))
         objs.append(Paragraph('4. ПОРЯДОК ОПЛАТЫ', styleCenter))
         objs.append(Paragraph('4.1. Стоимость медицинских услуг составляет:<font fontname ="PTAstraSerifBold"> <u>{}</u> </font> '.format(s.capitalize()), style))
-        end_date = (date.today() + relativedelta(days=+10))
+        end_date = date.today() + relativedelta(days=+10)
         end_date1 = datetime.datetime.strftime(end_date, "%d.%m.%Y")
         objs.append(
             Paragraph(
                 'Сроки оплаты: в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(end_date1),
-                style))
+                style,
+            )
+        )
         objs.append(Paragraph('Предоплата 100%.', style))
         objs.append(Paragraph('4.2. Оплата услуг производится путем перечисления суммы на расчетный счет Исполнителя или путем внесения в кассу Исполнителя.', style))
-        objs.append(Paragraph('Заказчику в соответствии с законодательством Российской Федерации выдается документ; '
-                              'подтверждающий произведенную оплату предоставленных медицинских услуг (кассовый чек, квитанция '
-                              'или иные документы).', style))
+        objs.append(
+            Paragraph(
+                'Заказчику в соответствии с законодательством Российской Федерации выдается документ; '
+                'подтверждающий произведенную оплату предоставленных медицинских услуг (кассовый чек, квитанция '
+                'или иные документы).',
+                style,
+            )
+        )
         objs.append(Paragraph('4.3. Дополнительные услуги оплачиваются на основании акта об оказанных услугах, подписанного Сторонами.', style))
         objs.append(Spacer(1, 2 * mm))
         objs.append(Paragraph('5. ОТВЕТСТВЕННОСТЬ СТОРОН', styleCenter))
-        objs.append(Paragraph('5.1. Исполнитель несет ответственность перед Пациентом за неисполнение или ненадлежащее '
-                              'исполнение условий настоящего Договора, несоблюдение требований, предъявляемых к методам '
-                              'диагностики, профилактики и лечения, разрешенным на территории Российской Федерации, а также '
-                              'в случае причинения вреда здоровью и жизни Пациента.', style))
+        objs.append(
+            Paragraph(
+                '5.1. Исполнитель несет ответственность перед Пациентом за неисполнение или ненадлежащее '
+                'исполнение условий настоящего Договора, несоблюдение требований, предъявляемых к методам '
+                'диагностики, профилактики и лечения, разрешенным на территории Российской Федерации, а также '
+                'в случае причинения вреда здоровью и жизни Пациента.',
+                style,
+            )
+        )
         objs.append(Paragraph('5.2. При несоблюдении Исполнителем обязательств по срокам исполнения услуг Заказчик вправе по своему выбору:', style))
         objs.append(Paragraph('- назначить новый срок оказания услуги;', style))
         objs.append(Paragraph('- потребовать уменьшения стоимости предоставленной услуги;', style))
         objs.append(Paragraph('- потребовать исполнения услуги другим специалистом;', style))
         objs.append(Paragraph('- расторгнуть настоящий Договор и потребовать возмещения убытков.', style))
-        objs.append(Paragraph('5.3. Ни одна из Сторон не будет нести ответственности за полное или частичное неисполнение другой '
-                              'Стороной своих обязанностей, если, неисполнение будет являться следствием обстоятельств непреодолимой '
-                              'силы, таких как, пожар, наводнение, землетрясение, забастовки и другие стихийные бедствия; '
-                              'война и военные действия или другие обстоятельства, находящиеся вне контроля Сторон, '
-                              'препятствующие выполнению настоящего Договора, возникшие после заключения Договора, а также по '
-                              'иным основаниям, предусмотренным законом', style))
-        objs.append(Paragraph('Если любое из таких обстоятельств непосредственно повлияло на неисполнение обязательства в '
-                              'срок, указанный в Договоре, то этот срок соразмерно отодвигается на время действия соответствующего '
-                              'обстоятельства.', style))
-        objs.append(Paragraph('5.4. Вред, причиненный жизни или здоровью Пациента в результате предоставления некачественной '
-                              'платной медицинской услуги, подлежит возмещению Исполнителем в соответствии с законодательством '
-                              'Российской Федерации.', style))
+        objs.append(
+            Paragraph(
+                '5.3. Ни одна из Сторон не будет нести ответственности за полное или частичное неисполнение другой '
+                'Стороной своих обязанностей, если, неисполнение будет являться следствием обстоятельств непреодолимой '
+                'силы, таких как, пожар, наводнение, землетрясение, забастовки и другие стихийные бедствия; '
+                'война и военные действия или другие обстоятельства, находящиеся вне контроля Сторон, '
+                'препятствующие выполнению настоящего Договора, возникшие после заключения Договора, а также по '
+                'иным основаниям, предусмотренным законом',
+                style,
+            )
+        )
+        objs.append(
+            Paragraph(
+                'Если любое из таких обстоятельств непосредственно повлияло на неисполнение обязательства в '
+                'срок, указанный в Договоре, то этот срок соразмерно отодвигается на время действия соответствующего '
+                'обстоятельства.',
+                style,
+            )
+        )
+        objs.append(
+            Paragraph(
+                '5.4. Вред, причиненный жизни или здоровью Пациента в результате предоставления некачественной '
+                'платной медицинской услуги, подлежит возмещению Исполнителем в соответствии с законодательством '
+                'Российской Федерации.',
+                style,
+            )
+        )
         objs.append(Spacer(1, 2 * mm))
         objs.append(Paragraph('6. ПОРЯДОК РАССМОТРЕНИЯ СПОРОВ', styleCenter))
-        objs.append(Paragraph('6.1. Все споры, претензии и разногласия, которые могут возникнуть между Сторонами, будут '
-                              'разрешаться путем переговоров.', style))
-        objs.append(Paragraph('6.2. При не урегулировании в процессе переговоров спорных вопросов споры подлежат рассмотрению '
-                              'в судебном порядке.', style))
+        objs.append(Paragraph('6.1. Все споры, претензии и разногласия, которые могут возникнуть между Сторонами, будут ' 'разрешаться путем переговоров.', style))
+        objs.append(Paragraph('6.2. При не урегулировании в процессе переговоров спорных вопросов споры подлежат рассмотрению ' 'в судебном порядке.', style))
         objs.append(Spacer(1, 2 * mm))
         objs.append(Paragraph('7. СРОК ДЕЙСТВИЯ ДОГОВОРА', styleCenter))
         objs.append(Paragraph('7.1. Срок действия настоящего Договора: с «  »    201  г. по «  »    201  г.', style))
-        objs.append(Paragraph('7.2. Настоящий Договор, может быть, расторгнут по обоюдному согласию Сторон или в порядке, '
-                              'предусмотренном действующим законодательством.', style))
-        objs.append(Paragraph('7.3. Все изменения и дополнения к настоящему Договору, а также его расторжение считаются '
-                              'действительными при условии, если они совершены в письменной форме и подписаны уполномоченными'
-                              ' на то представителями обеих Сторон.', style))
+        objs.append(Paragraph('7.2. Настоящий Договор, может быть, расторгнут по обоюдному согласию Сторон или в порядке, ' 'предусмотренном действующим законодательством.', style))
+        objs.append(
+            Paragraph(
+                '7.3. Все изменения и дополнения к настоящему Договору, а также его расторжение считаются '
+                'действительными при условии, если они совершены в письменной форме и подписаны уполномоченными'
+                ' на то представителями обеих Сторон.',
+                style,
+            )
+        )
         objs.append(Spacer(1, 2 * mm))
         objs.append(Paragraph('8. ИНЫЕ УСЛОВИЯ', styleCenter))
-        objs.append(Paragraph('8.1. Все дополнительные соглашения Сторон, акты и иные приложения к настоящему Договору, '
-                              'подписываемые Сторонами при исполнении настоящего Договора, являются его неотъемлемой частью.', style))
-        objs.append(Paragraph('8.2. Настоящий Договор составлен в 2 (двух) экземплярах, имеющих одинаковую юридическую силу, '
-                              'по одному для каждой из Сторон', style))
+        objs.append(
+            Paragraph(
+                '8.1. Все дополнительные соглашения Сторон, акты и иные приложения к настоящему Договору, '
+                'подписываемые Сторонами при исполнении настоящего Договора, являются его неотъемлемой частью.',
+                style,
+            )
+        )
+        objs.append(Paragraph('8.2. Настоящий Договор составлен в 2 (двух) экземплярах, имеющих одинаковую юридическую силу, ' 'по одному для каждой из Сторон', style))
 
     styleAtr = deepcopy(style)
     styleAtr.firstLineIndent = 0
@@ -594,22 +722,23 @@ def form_01(request_data):
     if is_payer:
         row_count = 0
         opinion = [
-            [Paragraph('<font fontname ="PTAstraSerifBold">Исполнитель</font>', styleAtr),
-             Paragraph('', styleAtr),
-             Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(client_who), styleAtr)],
-            [Paragraph('{} <br/>{}'.format(hospital_name, hospital_address), styleAtr),
-             Paragraph('', styleAtr),
-             Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(payer_data['fio'], payer_data['passport_serial'],
-                                                                   payer_data['passport_num'],
-                                                                   payer_data['main_address']), styleAtr)],
+            [
+                Paragraph('<font fontname ="PTAstraSerifBold">Исполнитель</font>', styleAtr),
+                Paragraph('', styleAtr),
+                Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(client_who), styleAtr),
+            ],
+            [
+                Paragraph('{} <br/>{}'.format(hospital_name, hospital_address), styleAtr),
+                Paragraph('', styleAtr),
+                Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(payer_data['fio'], payer_data['passport_serial'], payer_data['passport_num'], payer_data['main_address']), styleAtr),
+            ],
             [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
-            [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr),
-             Paragraph('', styleAtr),
-             Paragraph('', styleAtr)],
-            [Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
-             Paragraph('', styleAtr),
-             Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(npf), styleAtr)
-             ],
+            [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
+            [
+                Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
+                Paragraph('', styleAtr),
+                Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(npf), styleAtr),
+            ],
         ]
         row_count = row_count + len(opinion)
 
@@ -624,16 +753,18 @@ def form_01(request_data):
             opinion_agent = [
                 [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
                 [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
-                [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.
-                                                                             format(p_agent_who), styleAtr)],
-                [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('{}<br/>{}: {}-{}<br/>Адрес:{}'.
-                                                                             format(person_data['fio'], person_data['type_doc'], person_data['passport_serial'],
-                                                                                    person_data['passport_num'], person_data['main_address']), styleAtr)],
-
-                [Paragraph('', styleAtr),
-                 Paragraph('', styleAtr),
-                 Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(a_npf), styleAtr)
-                 ]
+                [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(p_agent_who), styleAtr)],
+                [
+                    Paragraph('', styleAtr),
+                    Paragraph('', styleAtr),
+                    Paragraph(
+                        '{}<br/>{}: {}-{}<br/>Адрес:{}'.format(
+                            person_data['fio'], person_data['type_doc'], person_data['passport_serial'], person_data['passport_num'], person_data['main_address']
+                        ),
+                        styleAtr,
+                    ),
+                ],
+                [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(a_npf), styleAtr)],
             ]
             opinion.extend(opinion_agent)
             row_count = row_count + len(opinion_agent)
@@ -642,16 +773,17 @@ def form_01(request_data):
         opinion_patient = [
             [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
             [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
-            [Paragraph('', styleAtr), Paragraph('', styleAtr),
-             Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.
-                       format(p_who), styleAtr)],
-            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('{}<br/>{}: {}-{}<br/>Адрес:{}'.
-                                                                         format(patient_data['fio'], patient_data['type_doc'], p_doc_serial, p_doc_num, patient_data['main_address']),
-                                                                         styleAtr)],
+            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(p_who), styleAtr)],
+            [
+                Paragraph('', styleAtr),
+                Paragraph('', styleAtr),
+                Paragraph('{}<br/>{}: {}-{}<br/>Адрес:{}'.format(patient_data['fio'], patient_data['type_doc'], p_doc_serial, p_doc_num, patient_data['main_address']), styleAtr),
+            ],
         ]
 
-        parient_sign = [[Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(p_npf), styleAtr)
-                         ], ]
+        parient_sign = [
+            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(p_npf), styleAtr)],
+        ]
 
         if not p_agent:
             opinion_patient.extend(parient_sign)
@@ -668,21 +800,25 @@ def form_01(request_data):
     if is_pagent and not is_payer:
         row_count = 0
         opinion = [
-            [Paragraph('<font fontname ="PTAstraSerifBold">Исполнитель</font>', styleAtr),
-             Paragraph('', styleAtr),
-             Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(p_agent_who), styleAtr)],
-            [Paragraph('{} <br/>{}'.format(hospital_name, hospital_address), styleAtr),
-             Paragraph('', styleAtr),
-             Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(person_data['fio'], person_data['passport_serial'],
-                                                                   person_data['passport_num'], person_data['main_address']), styleAtr)],
+            [
+                Paragraph('<font fontname ="PTAstraSerifBold">Исполнитель</font>', styleAtr),
+                Paragraph('', styleAtr),
+                Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(p_agent_who), styleAtr),
+            ],
+            [
+                Paragraph('{} <br/>{}'.format(hospital_name, hospital_address), styleAtr),
+                Paragraph('', styleAtr),
+                Paragraph(
+                    '{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(person_data['fio'], person_data['passport_serial'], person_data['passport_num'], person_data['main_address']), styleAtr
+                ),
+            ],
             [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
-            [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr),
-             Paragraph('', styleAtr),
-             Paragraph('', styleAtr)],
-            [Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
-             Paragraph('', styleAtr),
-             Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(npf), styleAtr)
-             ],
+            [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
+            [
+                Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
+                Paragraph('', styleAtr),
+                Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(npf), styleAtr),
+            ],
         ]
         row_count = row_count + len(opinion)
 
@@ -690,17 +826,14 @@ def form_01(request_data):
         opinion_patient = [
             [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
             [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
-            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.
-                                                                         format(p_who), styleAtr)],
-            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('{}<br/>{}: {}-{}<br/>Адрес:{}'.
-                                                                         format(patient_data['fio'], patient_data['type_doc'], p_doc_serial,
-                                                                                p_doc_num, patient_data['main_address']), styleAtr)],
-
+            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(p_who), styleAtr)],
+            [
+                Paragraph('', styleAtr),
+                Paragraph('', styleAtr),
+                Paragraph('{}<br/>{}: {}-{}<br/>Адрес:{}'.format(patient_data['fio'], patient_data['type_doc'], p_doc_serial, p_doc_num, patient_data['main_address']), styleAtr),
+            ],
             # [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
-            [Paragraph('', styleAtr),
-             Paragraph('', styleAtr),
-             Paragraph('', styleAtr)
-             ],
+            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
         ]
         row_count = row_count + len(opinion_patient)
 
@@ -713,21 +846,25 @@ def form_01(request_data):
     if (not p_payer) and (not p_agent):
         row_count = 0
         opinion = [
-            [Paragraph('<font fontname ="PTAstraSerifBold">Исполнитель</font>', styleAtr),
-             Paragraph('', styleAtr),
-             Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(p_who), styleAtr)],
-            [Paragraph('{} <br/>{}'.format(hospital_name, hospital_address), styleAtr),
-             Paragraph('', styleAtr),
-             Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(patient_data['fio'], patient_data['passport_serial'],
-                                                                   patient_data['passport_num'], patient_data['main_address']), styleAtr)],
+            [
+                Paragraph('<font fontname ="PTAstraSerifBold">Исполнитель</font>', styleAtr),
+                Paragraph('', styleAtr),
+                Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(p_who), styleAtr),
+            ],
+            [
+                Paragraph('{} <br/>{}'.format(hospital_name, hospital_address), styleAtr),
+                Paragraph('', styleAtr),
+                Paragraph(
+                    '{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(patient_data['fio'], patient_data['passport_serial'], patient_data['passport_num'], patient_data['main_address']), styleAtr
+                ),
+            ],
             [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
-            [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr),
-             Paragraph('', styleAtr),
-             Paragraph('', styleAtr)],
-            [Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
-             Paragraph('', styleAtr),
-             Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(npf), styleAtr)
-             ],
+            [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
+            [
+                Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
+                Paragraph('', styleAtr),
+                Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(npf), styleAtr),
+            ],
         ]
         row_count = row_count + 5
         rowHeights = row_count * [None]
@@ -735,16 +872,20 @@ def form_01(request_data):
 
     # Строим необходимую таблицу
     tbl = Table(opinion, colWidths=(90 * mm, 10 * mm, 90 * mm), rowHeights=rowHeights)
-    tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-        ('TOPPADDING', (0, 0), (-1, -1), 1.5 * mm),
-        ('VALIGN', (0, 0), (-1, -2), 'TOP'),
-        ('VALIGN', (0, 4), (-1, 4), 'BOTTOM'),
-        # ('VALIGN', (1, 4), (-1, -1), 'BOTTOM'),
-        ('BOTTOMPADDING', (-1, 4), (-1, 4), 4.2 * mm),
-        ('BOTTOMPADDING', (0, -1), (0, -1), 1 * mm),
-        ('BOTTOMPADDING', (-1, -1), (-1, -1), 4.2 * mm),
-    ]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
+                ('TOPPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (-1, -2), 'TOP'),
+                ('VALIGN', (0, 4), (-1, 4), 'BOTTOM'),
+                # ('VALIGN', (1, 4), (-1, -1), 'BOTTOM'),
+                ('BOTTOMPADDING', (-1, 4), (-1, 4), 4.2 * mm),
+                ('BOTTOMPADDING', (0, -1), (0, -1), 1 * mm),
+                ('BOTTOMPADDING', (-1, -1), (-1, -1), 4.2 * mm),
+            ]
+        )
+    )
 
     objs.append(Spacer(1, 2 * mm))
 
@@ -771,9 +912,21 @@ def form_01(request_data):
         # вывести интерактивную форму "текст"
         form = canvas.acroForm
         # canvas.drawString(25, 780, '')
-        form.textfield(name='comment', tooltip='comment', fontName='Times-Roman', fontSize=10,
-                       x=57, y=750, borderStyle='underlined', borderColor=black, fillColor=white,
-                       width=515, height=13, textColor=black, forceBorder=False)
+        form.textfield(
+            name='comment',
+            tooltip='comment',
+            fontName='Times-Roman',
+            fontSize=10,
+            x=57,
+            y=750,
+            borderStyle='underlined',
+            borderColor=black,
+            fillColor=white,
+            width=515,
+            height=13,
+            textColor=black,
+            forceBorder=False,
+        )
 
         # Вывести на первой странице код-номер договора
         barcode128.drawOn(canvas, 120 * mm, 283 * mm)
@@ -799,7 +952,7 @@ def form_01(request_data):
 
         # вывестии защитны вертикальный мелкий текст
         canvas.rotate(90)
-        canvas.setFillColor(HexColor(0x4f4b4b))
+        canvas.setFillColor(HexColor(0x4F4B4B))
         canvas.setFont('PTAstraSerifReg', 5.2)
         canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
 
@@ -827,7 +980,7 @@ def form_01(request_data):
         canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
         canvas.drawString(160 * mm, 7 * mm, '(подпись плательщика)')
         canvas.rotate(90)
-        canvas.setFillColor(HexColor(0x4f4b4b))
+        canvas.setFillColor(HexColor(0x4F4B4B))
         canvas.setFont('PTAstraSerifReg', 5.2)
         canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
         canvas.restoreState()
@@ -867,11 +1020,7 @@ def form_01(request_data):
                 objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
 
         tbl = Table(route_list, colWidths=(30 * mm, 100 * mm), hAlign='LEFT')
-        tbl.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
 
         objs.append(Spacer(1, 5 * mm))
         objs.append(tbl)
