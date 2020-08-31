@@ -427,8 +427,8 @@ def form_04(c: Canvas, dir: Napravleniya):
         style = styleSheet["Normal"]
         style.fontName = "PTAstraSerifReg"
         style.fontSize = 11
-        style.leading = 10
-        style.spaceAfter = 1 * mm
+        style.leading = 12
+        style.spaceAfter = 1.5 * mm
 
         styleCenterBold = deepcopy(style)
         styleCenterBold.alignment = TA_CENTER
