@@ -500,7 +500,7 @@ def form_01(c: Canvas, dir: Napravleniya):
 
         day_get_date = ""
         if create_date:
-            day_get_date = start_ill[0:5]
+            day_get_date = create_date[0:5]
         day_get_material = [four_obj_date(odd, even, style, type_dash, step_dash, day_get_date, color_dash_for_symbol)]
         day_get_material_frame = Frame(75.4 * mm, 127 * mm, 25 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         day_get_material_frame.addFromList(day_get_material, c)
