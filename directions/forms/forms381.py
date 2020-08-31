@@ -393,7 +393,8 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [Paragraph(' ', style) for i in range(0, count + 2)]
         opinion= opinion.copy()
         opinion[0] = Paragraph('Дата заболевания:', styleRight)
-        start_ill = strdate(dir.data_sozdaniya)
+        start_ill = "  .  .    "
+        create_date = strdate(dir.data_sozdaniya)
         x = 2
         if start_ill:
             for i in start_ill:
@@ -481,15 +482,15 @@ def form_01(c: Canvas, dir: Napravleniya):
         date_arrive_data_frame.addFromList(date_arrive_data, c)
 
         day_get_date = ""
-        if start_ill:
-            day_get_date = start_ill[0:5]
+        if create_date:
+            day_get_date = create_date[0:5]
         day_get_material = [four_obj_date(odd, even, style, type_dash, step_dash, day_get_date, color_dash_for_symbol)]
         day_get_material_frame = Frame(75.4 * mm, 127 * mm, 25 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         day_get_material_frame.addFromList(day_get_material, c)
 
         time_get_date = ""
-        if start_ill:
-            time_get_date = strtime(dir.data_sozdaniya)[:5].replace(':','.')
+        if create_date:
+            time_get_date =strtime(dir.data_sozdaniya)[:5].replace(':', '.')
         time_get_material = [four_obj_date(odd, even, style, type_dash, step_dash, time_get_date, color_dash_for_symbol)]
         time_get_material_frame = Frame(105.1 * mm, 127 * mm, 25 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         time_get_material_frame.addFromList(time_get_material, c)
@@ -498,7 +499,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         day_out_material_frame = Frame(139.1 * mm, 127 * mm, 25 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         day_out_material_frame.addFromList(day_out_material, c)
 
-        time_out_material = [four_obj_date(odd, even, style, type_dash, step_dash, "09.00", color_dash_for_symbol)]
+        time_out_material = [four_obj_date(odd, even, style, type_dash, step_dash, "", color_dash_for_symbol)]
         time_out_material_frame = Frame(168.1 * mm, 127 * mm, 25 * mm, 5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0 * mm, showBoundary=0)
         time_out_material_frame.addFromList(time_out_material, c)
 
