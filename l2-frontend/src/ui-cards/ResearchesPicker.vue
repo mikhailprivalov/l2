@@ -294,7 +294,7 @@
       },
       subcategory_base() {
         if (this.dep === 10001) {
-          return 9;
+          return 8;
         }
         return null;
       },
@@ -305,7 +305,7 @@
         if (!this.work_as_subcategory) {
           return [];
         }
-        let sc = this.$store.getters.ex_dep[this.subcategory_base];
+        let sc = this.$store.getters.ex_dep[this.subcategory_base] || [];
         sc = sc.map(c => {
           const researches = this.researches_sub_categories(c.pk);
           const selected = researches.filter(({pk}) => this.checked_researches.includes(pk)).length;

@@ -61,8 +61,7 @@ def form_01(c: Canvas, d: Napravleniya):
         c.drawString(topw1, py(29.02 + offset), "от 17.08.2009 г. № 1027-мпр.")
 
         c.setFont('TimesNewRoman', 11)
-        c.drawString(px(18.5), py(34 + offset),
-                     "Наименование учереждения здравоохранения: " + SettingManager.get("org_title"))
+        c.drawString(px(18.5), py(34 + offset), "Наименование учереждения здравоохранения: " + SettingManager.get("org_title"))
         c.line(px(95.5), py(35.2 + offset), pxr(18), py(35.2 + offset))
         c.drawString(px(18.5), py(43 + offset), "Отделение, палата")
         c.line(px(50), py(44.2 + offset), pxr(18), py(44.2 + offset))
@@ -76,8 +75,7 @@ def form_01(c: Canvas, d: Napravleniya):
 
         c.drawString(px(18.5), py(73 + offset), "Отчество: " + d.client.individual.patronymic)
         c.line(px(35), py(74.2 + offset), pxr(114.5), py(74.2 + offset))
-        c.drawString(pxr(114), py(73 + offset),
-                     "Дата рождения(число,месяц,год): " + d.client.individual.birthday.strftime("%d.%m.%Y"))
+        c.drawString(pxr(114), py(73 + offset), "Дата рождения(число,месяц,год): " + d.client.individual.birthday.strftime("%d.%m.%Y"))
         c.line(pxr(58.5), py(74.2 + offset), pxr(18), py(74.2 + offset))
 
         c.drawString(px(18.5), py(78 + offset), "Адрес регистрации(прописки): " + d.client.main_address)
@@ -102,13 +100,11 @@ def form_01(c: Canvas, d: Napravleniya):
 
         c.drawString(px(18.5), py(108 + offset), "Дата забора крови: «_____»_________________20____г.")
 
-        c.drawString(px(18.5), py(113 + offset),
-                     "Дата доставки крови в ИОЦ СПИД: «_____»_________________20____г. (заполняется ИОЦ СПИД)")
+        c.drawString(px(18.5), py(113 + offset), "Дата доставки крови в ИОЦ СПИД: «_____»_________________20____г. (заполняется ИОЦ СПИД)")
 
         c.drawString(px(18.5), py(123 + offset), "РЕЗУЛЬТАТ ИССЛЕДОВАНИЯ")
 
-        c.drawString(px(18.5), py(133 + offset),
-                     "Дата выдачи результата: «_____»_________________20____г.  Подпись ____________________________")
+        c.drawString(px(18.5), py(133 + offset), "Дата выдачи результата: «_____»_________________20____г.  Подпись ____________________________")
 
         c.setFont('TimesNewRoman', 8)
         c.drawString(px(18.5), py(139 + offset), "ИС L2. Форма 38001")
@@ -180,20 +176,18 @@ def form_02(c: Canvas, dir: Napravleniya):
 
         c.drawString(x_coord * mm, y_patient[1] * mm, "ФИО: " + dir.client.individual.fio())
         c.drawString(x_coord * mm, y_patient[2] * mm, "Пол: " + dir.client.individual.sex)
-        c.drawString(x_coord * mm, y_patient[3] * mm,
-                     "Д/р: {} ({})".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir)))
-        c.drawString(x_coord * mm, y_patient[4] * mm,
-                     "{}: {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type()))
+        c.drawString(x_coord * mm, y_patient[3] * mm, "Д/р: {} ({})".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir)))
+        c.drawString(x_coord * mm, y_patient[4] * mm, "{}: {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type()))
         diagnosis = dir.diagnos.strip()
         if not dir.imported_from_rmis:
             if diagnosis != "":
-                c.drawString(x_coord * mm, y_patient[5] * mm,
-                             ("" if dir.vich_code == "" else (
-                                 "Код: " + dir.vich_code + "  ")) + "Диагноз (МКБ 10): " + (
-                                 "не указан" if diagnosis == "-" else diagnosis))
+                c.drawString(
+                    x_coord * mm,
+                    y_patient[5] * mm,
+                    ("" if dir.vich_code == "" else ("Код: " + dir.vich_code + "  ")) + "Диагноз (МКБ 10): " + ("не указан" if diagnosis == "-" else diagnosis),
+                )
             if dir.istochnik_f:
-                c.drawString(x_coord * mm, y_patient[6] * mm,
-                             "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.title)
+                c.drawString(x_coord * mm, y_patient[6] * mm, "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.title)
             else:
                 c.drawString(x_coord * mm, y_patient[6] * mm, "Источник финансирования: ")
         ind_data = dir.client.get_data_individual()
@@ -221,7 +215,7 @@ def form_02(c: Canvas, dir: Napravleniya):
         for i in range(0, 19):
             y_dir_form.append(y_coord - y)
             y += 6
-        c.setLineWidth(.2)
+        c.setLineWidth(0.2)
         c.drawString(x_coord * mm, y_dir_form[0] * mm, "Цель исследования:")
         c.line((x_coord + 40) * mm, y_dir_form[0] * mm, 200 * mm, y_dir_form[0] * mm)
 
@@ -316,17 +310,17 @@ def form_03(c: Canvas, dir: Napravleniya):
             [Paragraph('Ф.И.О, должность лица, отправившего материал', style), Paragraph('', styleTB)],
             [Paragraph('E-mail', style), Paragraph('', styleTB)],
             [Paragraph('Цель исследования', style), Paragraph('Коронавирусная инфекция COVID-19 (2019-nCov)', styleTB)],
-            [Paragraph('Указания для исследования', style), Paragraph(
-                'Во исполнении письма Федеральной службы по надзору в сфере защиты прав потребителей и благополучия человека (Роспотребнадзора) '
-                'от 09.01.2020 № 02/107-2020-27 "О дополнительных мерах по недопущению завозов инфекционных заболеваний"',
-                styleTB)],
+            [
+                Paragraph('Указания для исследования', style),
+                Paragraph(
+                    'Во исполнении письма Федеральной службы по надзору в сфере защиты прав потребителей и благополучия человека (Роспотребнадзора) '
+                    'от 09.01.2020 № 02/107-2020-27 "О дополнительных мерах по недопущению завозов инфекционных заболеваний"',
+                    styleTB,
+                ),
+            ],
         ]
         tbl_o = Table(organization_data, colWidths=(60 * mm, 150 * mm,))
-        tbl_o.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
+        tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
         organization_text = [tbl_o]
         organoztion_frame = Frame(10 * mm, 220 * mm, 190 * mm, 60 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
         organoztion_inframe = KeepInFrame(190 * mm, 60 * mm, organization_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
@@ -349,11 +343,7 @@ def form_03(c: Canvas, dir: Napravleniya):
             [Paragraph('Сопутствующий диагноз', style), Paragraph('', styleTB)],
         ]
         tbl_o = Table(patient_data, colWidths=(105 * mm, 95 * mm,))
-        tbl_o.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
+        tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
         patient_text = [tbl_o]
         patient_frame = Frame(10 * mm, 138 * mm, 190 * mm, 80 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
         patient_inframe = KeepInFrame(190 * mm, 80 * mm, patient_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
@@ -372,12 +362,9 @@ def form_03(c: Canvas, dir: Napravleniya):
             [Paragraph('Дата получения материала в лабораторном подразделении', style), Paragraph('', styleTB)],
         ]
         tbl_o = Table(material_data, colWidths=(105 * mm, 95 * mm,))
-        tbl_o.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('SPAN', (0, 1), (0, 5))
-        ]))
+        tbl_o.setStyle(
+            TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('SPAN', (0, 1), (0, 5))])
+        )
         material_text = [tbl_o]
         material_frame = Frame(10 * mm, 75 * mm, 190 * mm, 60 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
         material_inframe = KeepInFrame(190 * mm, 60 * mm, material_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
@@ -386,16 +373,18 @@ def form_03(c: Canvas, dir: Napravleniya):
         c.drawCentredString((210 / 2) * mm, 74 * mm, "Севедения о проведенных исследованиях")
         result_data = [
             [Paragraph('Показатель', style), Paragraph('Результат', style)],
-            [Paragraph('РНК вируса гриппа, респираторно-синициального вируса, метапневмовируса, вирусов парагриппа 1,2,3,3 типов, коронавируа, '
-                       'риновируса, ДНК аденовирусов групп В, С и Е, бокавируса, ДНК Mycoplasma pneumonia и Chlamydophila pneumonia', styleBold), Paragraph('', styleTB)],
+            [
+                Paragraph(
+                    'РНК вируса гриппа, респираторно-синициального вируса, метапневмовируса, вирусов парагриппа 1,2,3,3 типов, коронавируа, '
+                    'риновируса, ДНК аденовирусов групп В, С и Е, бокавируса, ДНК Mycoplasma pneumonia и Chlamydophila pneumonia',
+                    styleBold,
+                ),
+                Paragraph('', styleTB),
+            ],
             [Paragraph('2019-nCov', style), Paragraph('', styleTB)],
         ]
         tbl_o = Table(result_data, colWidths=(105 * mm, 95 * mm,))
-        tbl_o.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
+        tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
         result_text = [tbl_o]
         result_frame = Frame(10 * mm, 42 * mm, 190 * mm, 30 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
         result_inframe = KeepInFrame(190 * mm, 30 * mm, result_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
@@ -404,15 +393,13 @@ def form_03(c: Canvas, dir: Napravleniya):
         c.drawCentredString((210 / 2) * mm, 37 * mm, "Севедения об отправке материала")
         result_data = [
             [Paragraph('Дата и время отправки материала (номер рейса)', style), Paragraph('', style)],
-            [Paragraph('По адресу', style),
-             Paragraph('ФБУЗ "Центр гигиены и эпидимиологии в Иркутской области" Отделение вирусологических исследований с ПЦР лабораторией и микробиологической лаборатории', styleTB)],
+            [
+                Paragraph('По адресу', style),
+                Paragraph('ФБУЗ "Центр гигиены и эпидимиологии в Иркутской области" Отделение вирусологических исследований с ПЦР лабораторией и микробиологической лаборатории', styleTB),
+            ],
         ]
         tbl_o = Table(result_data, colWidths=(60 * mm, 150 * mm,))
-        tbl_o.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
+        tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
         result_text = [tbl_o]
         result_frame = Frame(10 * mm, 10 * mm, 190 * mm, 25 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
         result_inframe = KeepInFrame(190 * mm, 25 * mm, result_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False)
@@ -462,17 +449,14 @@ def form_04(c: Canvas, dir: Napravleniya):
 
         objs = []
         opinion = [
-            [Paragraph(f'<font size=11>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
-             Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: <br/>'
-                       'Медицинская документация<br/>Учетная форма № 204/у</font>', styleT)],
+            [
+                Paragraph(f'<font size=11>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
+                Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: <br/>' 'Медицинская документация<br/>Учетная форма № 204/у</font>', styleT),
+            ],
         ]
 
         tbl = Table(opinion, 2 * [100 * mm])
-        tbl.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
-            ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ]))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
 
         objs.append(tbl)
         objs.append(Spacer(1, 3 * mm))
@@ -532,10 +516,7 @@ def form_04(c: Canvas, dir: Napravleniya):
 
         cols_width = [105 * mm, 45 * mm, 47 * mm]
         tbl = Table(opinion, colWidths=cols_width, hAlign='LEFT')
-        tbl.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ]))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.black), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
         objs.append(Spacer(1, 5 * mm))
         objs.append(tbl)
 

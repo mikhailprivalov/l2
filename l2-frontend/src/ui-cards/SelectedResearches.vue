@@ -609,7 +609,7 @@
         return r
       },
       categories() {
-        const sc = this.$store.getters.ex_dep[9] || [];
+        const sc = this.$store.getters.ex_dep[8] || [];
         return sc.reduce((a, b) => ({...a, [b.pk]: b.title}), {});
       },
       need_vich_code() {
