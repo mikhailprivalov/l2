@@ -478,7 +478,6 @@ def form_04(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph(f'Возраст: {dir.client.individual.bd()} ({dir.client.individual.age_s(direction=dir)}) {space_symbol * 5} Пол: {sex},', style))
         polis_num = ''
         polis_issue = ''
-        snils = ''
         ind_data = dir.client.get_data_individual()
         if ind_data['oms']['polis_num']:
             polis_num = ind_data['oms']['polis_num']
