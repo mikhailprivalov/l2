@@ -600,7 +600,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         category_patient = []
         category_patient_data = iss.localization.title if iss.localization else iss.comment
         count = 6
-        col_width = [2.5 * mm, 77.6 * mm, 2.5 * mm, 58 * mm, 2.5 * mm, 40 * mm]
+        col_width = [2.5 * mm, 77.6 * mm, 2.5 * mm, 58 * mm, 2.5 * mm, 41 * mm]
         col_width = tuple(col_width)
         opinion = [Paragraph(' ', style) for i in range(0, count)]
         category_patient0, category_patient1, category_patient2, category_patient3, category_patient4, category_patient5 = '', '', '', '', '', ''
@@ -622,7 +622,7 @@ def form_01(c: Canvas, dir: Napravleniya):
             category_patient6 = type_ischeck
         elif category_patient_data == "Старше 65 лет с признаками ОРВИ":
             category_patient7 = type_ischeck
-        elif category_patient_data == "Обсерватор":
+        elif category_patient_data == "Плановая госпитализация":
             category_patient8 = type_ischeck
         elif category_patient_data == "Прочие":
             category_patient9 = type_ischeck
@@ -670,7 +670,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion_third[2] = [Paragraph(category_patient7, styleLeft)]
         opinion_third[3] = [Paragraph('Старше 65 лет с признаками ОРВИ', styleLeft)]
         opinion_third[4] = [Paragraph(category_patient8, styleLeft)]
-        opinion_third[5] = [Paragraph('Обсерватор ___________', styleLeft)]
+        opinion_third[5] = [Paragraph('Плановая госпитализация', styleLeft)]
         opinion_t = [opinion_third]
         tbl = Table(opinion_t, hAlign='LEFT', rowHeights=2.5 * mm, colWidths=col_width)
         a = [('OUTLINE', (i, 0), (i, 0), 1, colors.black) for i in range(0, count) if i % 2 == 0]
@@ -779,7 +779,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         picture_t_frame = Frame(14.5 * mm, 10 * mm, 138 * mm, 13.5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0.3 * mm, showBoundary=1)
         picture_t_frame.addFromList(picture_t, c)
 
-        barcode = eanbc.Ean13BarcodeWidget(4220546800643, humanReadable=1, barHeight=13.7 * mm)
+        barcode = eanbc.Ean13BarcodeWidget(3220556479540, humanReadable=1, barHeight=13.7 * mm)
         dir_code = Drawing()
         dir_code.add(barcode)
         renderPDF.draw(dir_code, c, 155 * mm, 10 * mm)
@@ -789,7 +789,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         renderPDF.draw(draw_rectangle(195 * mm, 281 * mm), c, 0 * mm, 0 * mm)
         c.showPage()
 
-        barcode = eanbc.Ean13BarcodeWidget(3220546800590, humanReadable=1, barHeight=13.7 * mm)
+        barcode = eanbc.Ean13BarcodeWidget(7220556479621, humanReadable=1, barHeight=13.7 * mm)
         dir_code = Drawing()
         dir_code.add(barcode)
         renderPDF.draw(dir_code, c, 155 * mm, 10 * mm)
