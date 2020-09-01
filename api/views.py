@@ -235,7 +235,7 @@ def endpoint(request):
                     if direction:
                         direction: directions.Napravleniya = direction
 
-                        if message_type == "R":
+                        if message_type == "R" or data.get("result"):
                             result["patientData"] = {
                                 "fio": direction.client.individual.fio(short=True),
                                 "card": direction.client.number_with_type(),
