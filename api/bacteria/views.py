@@ -7,7 +7,7 @@ import simplejson as json
 @login_required
 def load_culture(request):
     request_data = json.loads(request.body)
-    type = request_data['type']
+    type = request_data['type' ]
     searchObj = request_data['searchObj']
     groups = [{"pk": -3, "title": "не найдено"}]
     elements = []
