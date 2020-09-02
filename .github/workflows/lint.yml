@@ -14,6 +14,6 @@ jobs:
     - name: Install dependencies
       run: pip install black lintly
     - name: Lint with flake8
-      run: black . --check 2>&1 >/dev/null | lintly --format=black --commit-sha=${{ github.event.pull_request.head.sha }}
+      run: black . --check | lintly --format=black --commit-sha=${{ github.event.pull_request.head.sha }}
       env:
         LINTLY_API_KEY: ${{ secrets.GITHUB_TOKEN }}
