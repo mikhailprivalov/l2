@@ -152,7 +152,7 @@ def load_logs(request):
     if check_new == 0:
         offset = int(request.POST.get("offset", request.GET.get("offset", 0)))
         size = int(request.POST.get("size", request.GET.get("size", 0)))
-        rows = obj.order_by("-pk")[offset : size + offset]
+        rows = obj.order_by("-pk")[offset: size + offset]
     else:
         pkgt = int(request.POST.get("last_n", request.GET.get("last_n", 0)))
         rows = obj.filter(pk__gt=pkgt).order_by("pk")

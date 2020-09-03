@@ -34,7 +34,7 @@ def menu(request):
 
     menu = make_menu(pages, groups, request.user.is_superuser)
 
-    menu_st = [menu[i : i + 4] for i in range(0, len(menu), 4)]
+    menu_st = [menu[i: i + 4] for i in range(0, len(menu), 4)]
 
     return render(request, 'construct_menu.html', {"menu": menu_st,})
 

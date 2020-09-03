@@ -1024,7 +1024,7 @@ def print_history(request):
                     tmp.append("")
                 research_tmp = obj["researches"]
                 if len(research_tmp) > 38:
-                    research_tmp = research_tmp[0 : -(len(research_tmp) - 38)] + "..."
+                    research_tmp = research_tmp[0: -(len(research_tmp) - 38)] + "..."
                 tmp.append(Paragraph(research_tmp, styleSheet["BodyText"]))
                 tmp.append(Paragraph("", styleSheet["BodyText"]))
 
