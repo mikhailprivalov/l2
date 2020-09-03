@@ -1,6 +1,7 @@
 import time
 import re
 from collections import defaultdict
+from typing import Union
 
 import simplejson as json
 import yaml
@@ -206,8 +207,10 @@ def endpoint(request):
     data = json.loads(request.POST.get("result", request.GET.get("result", "{}")))
     api_key = request.POST.get("key", request.GET.get("key", ""))
     message_type = data.get("message_type", "C")
-    pk_s = str(data.get("pk", ""))
+    pk_s = str(data.get("pk", "")).strip()
+    iss_s = str(data.get("iss_pk", "-1")).strip()
     pk = -1 if not pk_s.isdigit() else int(pk_s)
+    iss_pk = -1 if not iss_s.isdigit() else int(iss_s)
     data["app_name"] = "API key is incorrect"
     # pid = data.get("processing_id", "P")
     if models.Application.objects.filter(key=api_key).exists():
@@ -218,23 +221,25 @@ def endpoint(request):
         if app.active:
             data["app_name"] = app.name
             if message_type == "R" or data.get("result") or message_type == "R_BAC":
-                if pk != -1:
+                if pk != -1 or iss_pk != -1:
+                    direction: Union[directions.Napravleniya, None] = None
                     dw = app.direction_work or message_type == "R_BAC"
                     if pk >= 4600000000000:
                         pk -= 4600000000000
                         pk //= 10
                         dw = True
-                    if dw:
+                    if pk == -1:
+                        iss = directions.Issledovaniya.objects.filter(pk=iss_pk)
+                        if iss.exists():
+                            direction = iss[0].napravleniye
+                    elif dw:
                         direction = directions.Napravleniya.objects.filter(pk=pk).first()
                     else:
                         direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__pk=pk).first()
 
                     pks = []
                     oks = []
-                    oks_fractions = defaultdict(list)
-                    if direction:
-                        direction: directions.Napravleniya = direction
-
+                    if direction is not None:
                         if message_type == "R" or (data.get("result") and message_type == 'C'):
                             result["patientData"] = {
                                 "fio": direction.client.individual.fio(short=True),
@@ -282,7 +287,6 @@ def endpoint(request):
                                                 fraction_result.ref_m = ref.m
                                                 fraction_result.ref_f = ref.f
                                             fraction_result.save()
-                                            oks_fractions[key].append({'fr': fraction_result.pk, 'iss': issled.pk})
                                             issled.api_app = app
                                             issled.save()
                                             fraction_result.get_ref(re_save=True)
@@ -304,10 +308,15 @@ def endpoint(request):
                                 comments = data.get('comments', [])
                                 if code:
                                     culture = Culture.objects.filter(lis=code).first()
-                                    iss = directions.Issledovaniya.objects.filter(napravleniye=direction)[0]
+                                    iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=True, research__is_microbiology=True)
+                                    if iss.filter(pk=iss_pk).exists():
+                                        iss = iss.filter(pk=iss_pk)
+                                    iss = iss.first()
                                     if not culture:
                                         print('NO CULTURE', code, name)
-                                    elif iss.research.is_microbiology and not iss.time_confirmation:
+                                    elif not iss:
+                                        print('IGNORED')
+                                    else:
                                         directions.MicrobiologyResultCulture.objects.filter(issledovaniye=iss, culture=culture).delete()
 
                                         comments = '\n'.join(
@@ -327,8 +336,7 @@ def endpoint(request):
                                                     result_culture=culture_result, antibiotic=anti_obj, sensitivity=anti_r.get('RSI'), dia=anti_r.get('dia', ''), antibiotic_amount=a_name,
                                                 )
                                                 anti_result.save()
-                    result["body"] = "{} {} {} {}".format(dw, pk, json.dumps(oks), direction is not None)
-                    result["oks"] = dict(oks_fractions)
+                    result["body"] = "{} {} {} {} {}".format(dw, pk, iss_pk, json.dumps(oks), direction is not None)
                 else:
                     result["body"] = "pk '{}' is not exists".format(pk_s)
             elif message_type == "Q":

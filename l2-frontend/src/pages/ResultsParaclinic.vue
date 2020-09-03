@@ -325,7 +325,7 @@
               <div class="group-title">Материал</div>
               <div class="fields">
                 <div class="field">
-                  <div class="field-title" style="flex: 1 0 240px">
+                  <div class="field-title" style="flex: 1 0 280px">
                     Номер для анализатора и вид ёмкости
                   </div>
                   <div class="field-value" style="padding: 3px">
