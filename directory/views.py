@@ -296,12 +296,17 @@ def directory_researches_group(request):
     if request.method == "GET":
         return_result = {"researches": []}
         gid = int(request.GET["gid"])
-        researches = Researches.objects.filter(podrazdeleniye__isnull=False)
+        researches = Researches.objects.all()
         if request.GET["lab"] != "-1":
-            researches = researches.filter(podrazdeleniye__pk=request.GET["lab"]).order_by("title", "podrazdeleniye", "hide")
+            if request.GET["lab"] == "-2":
+                researches = researches.filter(is_microbiology=True)
+            else:
+                researches = researches.filter(podrazdeleniye__pk=request.GET["lab"])
+        else:
+            researches = researches.filter(podrazdeleniye__isnull=False)
 
-        for research in researches:
-            resdict = {"pk": research.pk, "title": "{}{} | {}".format({True: "Скрыто | "}.get(research.hide, ""), research.get_title(), research.podrazdeleniye.get_title())}
+        for research in researches.order_by("title", "podrazdeleniye", "hide"):
+            resdict = {"pk": research.pk, "title": "{}{} | {}".format({True: "Скрыто | "}.get(research.hide, ""), research.get_title(), research.get_podrazdeleniye_title())}
             if gid < 0:
                 if not research.direction:
                     return_result["researches"].append(resdict)
@@ -347,8 +352,11 @@ def directory_get_directions(request):
         return_result = {"directions": {}}
         researches = Researches.objects.filter(not_grouping=False)
         if request.GET["lab"] != "-1":
-            researches = researches.filter(podrazdeleniye__pk=request.GET["lab"]).order_by("title")
-        for research in researches:
+            if request.GET["lab"] == "-2":
+                researches = researches.filter(is_microbiology=True)
+            else:
+                researches = researches.filter(podrazdeleniye__pk=request.GET["lab"])
+        for research in researches.order_by("title"):
             if not research.direction:
                 continue
             if research.direction_id not in return_result["directions"].keys():

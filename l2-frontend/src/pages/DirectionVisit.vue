@@ -74,6 +74,7 @@
                   <div v-for="r in direction_data.tubes">
                     <span
                       :style="`background-color: ${r.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;margin-left: 25px;`"></span>
+                    <code class="tube-pk">{{r.pk}}</code>
                     {{r.title}}
                   </div>
 
@@ -493,5 +494,10 @@
     margin-left: 3px;
     color: #049372;
     font-weight: 600;
+  }
+
+  .tube-pk {
+    font-weight: bold;
+    font-size: 120%;
   }
 </style>

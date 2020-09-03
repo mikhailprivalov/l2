@@ -264,7 +264,7 @@
               </dropdown>
             </div>
             <div class="research-right">
-              <template v-if="row.confirmed">
+              <template v-if="data.direction.all_confirmed">
                 <a :href="`/forms/pdf?type=105.02&napr_id=[${data.direction.pk}]`"
                    class="btn btn-blue-nb" target="_blank" v-if="stat_btn">Статталон</a>
                 <a href="#" class="btn btn-blue-nb"
@@ -321,22 +321,24 @@
             </div>
           </div>
           <template v-if="data.has_microbiology">
-            <div class="group" v-if="data.direction.tube">
+            <div class="group" v-if="row.tube">
               <div class="group-title">Материал</div>
               <div class="fields">
                 <div class="field">
                   <div class="field-title" style="flex: 1 0 240px">
-                    Ёмкость
+                    Номер для анализатора и вид ёмкости
                   </div>
                   <div class="field-value" style="padding: 3px">
+                    <code class="tube-pk">{{row.tube.pk}}</code>
+
                     <span
                       :style="{
                       width: '10px',
                       height: '10px',
-                      background: data.direction.tube.color,
+                      background: row.tube.color,
                       border: '1px solid #aaa',
                       display: 'inline-block' }"></span>
-                    {{data.direction.tube.type}}, дата забора {{data.direction.tube.get}}
+                    {{row.tube.type}}, дата забора {{row.tube.get}}
                   </div>
                 </div>
               </div>
@@ -1891,5 +1893,10 @@
 
   textarea {
     resize: vertical;
+  }
+
+  .tube-pk {
+    font-weight: bold;
+    font-size: 120%;
   }
 </style>

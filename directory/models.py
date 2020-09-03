@@ -258,6 +258,11 @@ class Researches(models.Model):
     def get_podrazdeleniye(self):
         return self.podrazdeleniye
 
+    def get_podrazdeleniye_title(self):
+        if self.is_microbiology:
+            return self.microbiology_tube.title if self.microbiology_tube else ''
+        return self.podrazdeleniye.title if self.podrazdeleniye else ""
+
     def get_title(self):
         return self.short_title if self.short_title != '' else self.title
 

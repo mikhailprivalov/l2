@@ -581,7 +581,7 @@ def directions_services(request):
                 if i.research.is_microbiology:
                     has_microbiology = True
                     tubes.append(
-                        {"title": i.research.microbiology_tube.title, "color": i.research.microbiology_tube.color,}
+                        {"title": i.research.microbiology_tube.title, "color": i.research.microbiology_tube.color, "pk": i.pk}
                     )
 
             if has_microbiology:
@@ -987,6 +987,7 @@ def directions_paraclinic_form(request):
             response["direction"] = {
                 "pk": d.pk,
                 "date": strdate(d.data_sozdaniya),
+                "all_confirmed": d.is_all_confirm(),
                 "diagnos": d.diagnos,
                 "fin_source": d.fin_title,
                 "fin_source_id": d.istochnik_f_id,
@@ -997,6 +998,7 @@ def directions_paraclinic_form(request):
 
             response["researches"] = []
             i: Issledovaniya
+            tube = None
             for i in df:
                 if i.research.is_doc_refferal:
                     response["has_doc_referral"] = True
@@ -1004,13 +1006,14 @@ def directions_paraclinic_form(request):
                     response["has_paraclinic"] = True
                 if i.research.is_microbiology and not response["has_microbiology"]:
                     response["has_microbiology"] = True
-                    if i.research.microbiology_tube:
-                        response["direction"]["tube"] = {
-                            "type": i.research.microbiology_tube.title,
-                            "color": i.research.microbiology_tube.color,
-                            "get": i.get_visit_date(force=True),
-                            "n": d.microbiology_n,
-                        }
+                if i.research.microbiology_tube:
+                    tube = {
+                        "type": i.research.microbiology_tube.title,
+                        "color": i.research.microbiology_tube.color,
+                        "get": i.get_visit_date(force=True),
+                        "n": d.microbiology_n,
+                        "pk": i.pk,
+                    }
                 transfer_d = Napravleniya.objects.filter(parent_auto_gen=i, cancel=False).first()
                 forbidden_edit = forbidden_edit_dir(d.pk)
                 more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
@@ -1045,6 +1048,7 @@ def directions_paraclinic_form(request):
                     "lab_comment": i.lab_comment,
                     "forbidden_edit": forbidden_edit,
                     "maybe_onco": i.maybe_onco,
+                    "tube": tube,
                 }
 
                 if i.research.is_microbiology:
