@@ -44,7 +44,12 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
     tbl = Table(opinion, 2 * [100 * mm])
     tbl.setStyle(
         TableStyle(
-            [('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm), ('LEFTPADDING', (0, 0), (0, -1), 15 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
         )
     )
 
