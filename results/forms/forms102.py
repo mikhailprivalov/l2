@@ -12,6 +12,7 @@ from results.prepare_data import text_to_bold
 
 
 def form_01(direction, iss, fwb, doc, leftnone, user=None):
+    # ПАТОЛОГО-АНАТОМИЧЕСКОЕ заключение
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "FreeSans"
