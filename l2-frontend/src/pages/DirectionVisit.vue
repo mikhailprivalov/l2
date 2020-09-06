@@ -62,26 +62,17 @@
                 </table>
               </li>
               <li class="list-group-item" v-if="loaded_pk > 0">
-                <h5>Услуги направления:</h5>
-                <ol>
-                  <li v-for="r in researches">
-                    {{r.title}}
-                    <span class="comment" v-if="r.comment"> [{{r.comment}}]</span>
-                  </li>
-                </ol>
-                <div style="margin-top: 5px" v-if="direction_data.tubes && direction_data.tubes.length > 0">
-                  <h5>Ёмкости:</h5>
-                  <div v-for="r in direction_data.tubes">
+                <div v-for="r in researches" class="research-card card card-1 card-no-hover">
+                  <div v-if="r.tube">
                     <span
-                      :style="`background-color: ${r.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;margin-left: 25px;`"></span>
-                    <code class="tube-pk">{{r.pk}}</code>
-                    {{r.title}}
+                      :style="`background-color: ${r.tube.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;`"></span>
+                    <span>{{r.tube.title}}</span>
                   </div>
-
-                  <button @click="print_tube()" class="btn btn-blue-nb" style="margin-top: 10px">
-                    Печать штрих-кода
-                  </button>
+                  <div>
+                    <code class="tube-pk">{{r.tube.pk}}</code> {{r.title}} <span class="comment" v-if="r.comment"> [{{r.comment}}]</span>
+                  </div>
                 </div>
+
               </li>
               <li class="list-group-item" v-if="loaded_pk > 0">
                 <div class="row">
@@ -494,6 +485,11 @@
     margin-left: 3px;
     color: #049372;
     font-weight: 600;
+  }
+
+  .research-card {
+    padding: 5px;
+    margin-bottom: 15px;
   }
 
   .tube-pk {

@@ -560,7 +560,6 @@ def directions_services(request):
 
             response["ok"] = True
             researches = []
-            tubes = []
             has_microbiology = False
             receive_datetime = None
             for i in (
@@ -576,13 +575,11 @@ def directions_services(request):
                         "department": "" if not i.research.podrazdeleniye else i.research.podrazdeleniye.get_title(),
                         "is_microbiology": i.research.is_microbiology,
                         "comment": i.localization.title if i.localization else i.comment,
+                        "tube": {"title": i.research.microbiology_tube.title, "color": i.research.microbiology_tube.color, "pk": i.pk} if i.research.is_microbiology else None
                     }
                 )
                 if i.research.is_microbiology:
                     has_microbiology = True
-                    tubes.append(
-                        {"title": i.research.microbiology_tube.title, "color": i.research.microbiology_tube.color, "pk": i.pk}
-                    )
 
             if has_microbiology:
                 receive_datetime = None if not n.time_microbiology_receive else strdatetime(n.time_microbiology_receive)
@@ -592,7 +589,6 @@ def directions_services(request):
                 "client": n.client.individual.fio(full=True),
                 "card": n.client.number_with_type(),
                 "diagnos": n.diagnos,
-                "tubes": tubes,
                 "has_microbiology": has_microbiology,
                 "receive_datetime": receive_datetime,
                 "doc": "" if not n.doc else "{}, {}".format(n.doc.get_fio(), n.doc.podrazdeleniye.title),
