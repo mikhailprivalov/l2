@@ -576,7 +576,7 @@ def receive_journal(request):
                     tmp.append("")
                 research_tmp = obj["researches"]
                 if len(research_tmp) > 44:
-                    research_tmp = research_tmp[0 : -(len(research_tmp) - 44)] + "..."
+                    research_tmp = research_tmp[0: -(len(research_tmp) - 44)] + "..."
                 tmp.append(Paragraph(research_tmp, styleSheet["BodyText"]))
 
                 data.append(tmp)

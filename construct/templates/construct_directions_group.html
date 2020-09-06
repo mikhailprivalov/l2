@@ -1,4 +1,5 @@
 {% extends "dbase.html" %}
+{% load setting_l2 %}
 {% block title %}Группировка исследований по направлениям{% endblock %}
 
 {% block content %}
@@ -14,6 +15,10 @@
                 {% for v in labs %}
                     <option value="{{ v.pk }}">{{ v }}</option>
                 {% endfor %}
+                {% s_l2 "microbiology" as microbiology %}
+                {% if microbiology %}
+                    <option value="-2">Микробиология</option>
+                {% endif%}
                 <option value="-1">Все</option>
             </select>
 
