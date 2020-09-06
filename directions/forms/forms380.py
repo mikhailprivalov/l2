@@ -532,7 +532,7 @@ def form_04(c: Canvas, dir: Napravleniya):
             [
                 Paragraph('Цель и наименование исследования', styleCenterBold),
                 Paragraph('Материал - место взятия', styleCenterBold),
-                Paragraph('Показания   к    обследованию', styleCenterBold),
+                Paragraph('Показания к обследованию', styleCenterBold),
                 Paragraph('Номер', styleCenterBold),
             ],
         ]
