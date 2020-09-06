@@ -26,6 +26,7 @@ from transliterate import translit
 import sys
 import locale
 from laboratory.utils import current_year
+from reportlab.graphics.barcode import code128
 
 w, h = A4
 
@@ -319,7 +320,13 @@ def form_03(c: Canvas, dir: Napravleniya):
                 ),
             ],
         ]
-        tbl_o = Table(organization_data, colWidths=(60 * mm, 150 * mm,))
+        tbl_o = Table(
+            organization_data,
+            colWidths=(
+                60 * mm,
+                150 * mm,
+            ),
+        )
         tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
         organization_text = [tbl_o]
         organoztion_frame = Frame(10 * mm, 220 * mm, 190 * mm, 60 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
@@ -342,7 +349,13 @@ def form_03(c: Canvas, dir: Napravleniya):
             [Paragraph('Состояние (тяжесть заболевания) пр обращении за медицинской помощью', style), Paragraph('', styleTB)],
             [Paragraph('Сопутствующий диагноз', style), Paragraph('', styleTB)],
         ]
-        tbl_o = Table(patient_data, colWidths=(105 * mm, 95 * mm,))
+        tbl_o = Table(
+            patient_data,
+            colWidths=(
+                105 * mm,
+                95 * mm,
+            ),
+        )
         tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
         patient_text = [tbl_o]
         patient_frame = Frame(10 * mm, 138 * mm, 190 * mm, 80 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
@@ -361,7 +374,13 @@ def form_03(c: Canvas, dir: Napravleniya):
             [Paragraph('ФИО, должность забиравшего материал, телефон', style), Paragraph('', styleTB)],
             [Paragraph('Дата получения материала в лабораторном подразделении', style), Paragraph('', styleTB)],
         ]
-        tbl_o = Table(material_data, colWidths=(105 * mm, 95 * mm,))
+        tbl_o = Table(
+            material_data,
+            colWidths=(
+                105 * mm,
+                95 * mm,
+            ),
+        )
         tbl_o.setStyle(
             TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('SPAN', (0, 1), (0, 5))])
         )
@@ -398,7 +417,13 @@ def form_03(c: Canvas, dir: Napravleniya):
                 Paragraph('ФБУЗ "Центр гигиены и эпидимиологии в Иркутской области" Отделение вирусологических исследований с ПЦР лабораторией и микробиологической лаборатории', styleTB),
             ],
         ]
-        tbl_o = Table(result_data, colWidths=(60 * mm, 150 * mm,))
+        tbl_o = Table(
+            result_data,
+            colWidths=(
+                60 * mm,
+                150 * mm,
+            ),
+        )
         tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
         result_text = [tbl_o]
         result_frame = Frame(10 * mm, 10 * mm, 190 * mm, 25 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
@@ -441,6 +466,10 @@ def form_04(c: Canvas, dir: Napravleniya):
         styleT.fontSize = 10
         styleT.leading = 4.5 * mm
         styleT.face = 'PTAstraSerifReg'
+
+        styleTCentre = deepcopy(styleT)
+        styleTCentre.alignment = TA_CENTER
+        styleTCentre.fontSize = 13
 
         barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
         dir_code = Drawing()
@@ -500,22 +529,44 @@ def form_04(c: Canvas, dir: Napravleniya):
 
         issledovaniya = dir.issledovaniya_set.all()
         opinion = [
-            [Paragraph('Цель и наименование исследования', styleT), Paragraph('Материал - место взятия', styleT), Paragraph('Показания   к    обследованию', styleT)],
+            [
+                Paragraph('Цель и наименование исследования', styleCenterBold),
+                Paragraph('Материал - место взятия', styleCenterBold),
+                Paragraph('Показания   к    обследованию', styleCenterBold),
+                Paragraph('Номер', styleCenterBold),
+            ],
         ]
 
         for v in issledovaniya:
             tmp_value = []
-            tmp_value.append(Paragraph(f"{v.research.title} - {v.research.code}", styleT))
+            tmp_value.append(Paragraph(f"{v.research.title}<br/>{v.research.code}", styleT))
             type_material = "" if not v.research.site_type else v.research.site_type.title
             service_location_title = "" if not v.service_location else v.service_location.title
             tmp_value.append(Paragraph(f"{type_material}-{service_location_title}", styleT))
             category_patient = v.localization.title if v.localization else v.comment
-            tmp_value.append(Paragraph(category_patient, styleT))
+            tmp_value.append(Paragraph(f"{category_patient}", styleT))
+            num_iss = '{:,}'.format(v.pk).replace(',', ' ')
+            iss_barcode128 = code128.Code128(v.pk, barHeight=10 * mm, barWidth=1.25, lquiet=1 * mm)
+            tmp_value.append(Paragraph(f"{num_iss}", styleTCentre))
             opinion.append(tmp_value.copy())
+            opinion.append([Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT), iss_barcode128])
 
-        cols_width = [105 * mm, 45 * mm, 47 * mm]
+        style_table = []
+        style_table.append(('VALIGN', (0, 0), (-1, -1), 'TOP'))
+        style_table.append(('GRID', (0, 0), (-1, -1), 0.75, colors.black))
+        count_rows = len(opinion)
+        for i in range(count_rows):
+            if i % 2 == 0 and i != 0:
+                for count_col in range(3):
+                    style_table.append(('SPAN', (count_col, i), (count_col, i - 1)))
+                    style_table.append(('SPA', (count_col, i), (count_col, i - 1)))
+                    style_table.append(('LINEABOVE', (-1, i), (-1, i), 2, colors.white))
+
+        style_table.append(('LINEBEFORE', (-1, 0), (-1, -1), 0.75, colors.black))
+        style_table.append(('LINEAFTER', (-1, 0), (-1, -1), 0.75, colors.black))
+        cols_width = [95 * mm, 35 * mm, 32 * mm, 40 * mm]
         tbl = Table(opinion, colWidths=cols_width, hAlign='LEFT')
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.black), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+        tbl.setStyle(TableStyle(style_table))
         objs.append(Spacer(1, 5 * mm))
         objs.append(tbl)
 
