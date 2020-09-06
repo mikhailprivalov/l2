@@ -912,6 +912,7 @@ def directions_paraclinic_form(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1) or -1
+    by_issledovaniye = request_data.get("byIssledovaniye", False)
     force_form = request_data.get("force", False)
     if pk >= 4600000000000:
         pk -= 4600000000000
@@ -921,6 +922,12 @@ def directions_paraclinic_form(request):
     g = [str(x) for x in request.user.groups.all()]
     if not request.user.is_superuser:
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
+
+    if by_issledovaniye:
+        if Issledovaniya.objects.filter(pk=pk, research__is_microbiology=True).exists():
+            pk = Issledovaniya.objects.get(pk=pk).napravleniye_id
+        else:
+            pk = -1
 
     dn = (
         Napravleniya.objects.filter(pk=pk)
