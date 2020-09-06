@@ -329,7 +329,7 @@
                     Номер для анализатора и вид ёмкости
                   </div>
                   <div class="field-value" style="padding: 3px">
-                    <code class="tube-pk">{{row.tube.pk}}</code>
+                    <span class="tube-pk">{{row.tube.pk}}</span>
 
                     <span
                       :style="{
@@ -1893,10 +1893,5 @@
 
   textarea {
     resize: vertical;
-  }
-
-  .tube-pk {
-    font-weight: bold;
-    font-size: 120%;
   }
 </style>

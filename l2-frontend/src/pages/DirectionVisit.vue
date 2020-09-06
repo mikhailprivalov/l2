@@ -63,16 +63,15 @@
               </li>
               <li class="list-group-item" v-if="loaded_pk > 0">
                 <div v-for="r in researches" class="research-card card card-1 card-no-hover">
-                  <div v-if="r.tube">
+                  <div>
+                    <span v-if="r.tube" class="tube-pk">{{r.tube.pk}}</span> {{r.title}} <span class="comment" v-if="r.comment"> [{{r.comment}}]</span>
+                  </div>
+                  <div v-if="r.tube" style="margin-top: 5px">
                     <span
                       :style="`background-color: ${r.tube.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;`"></span>
                     <span>{{r.tube.title}}</span>
                   </div>
-                  <div>
-                    <code class="tube-pk">{{r.tube.pk}}</code> {{r.title}} <span class="comment" v-if="r.comment"> [{{r.comment}}]</span>
-                  </div>
                 </div>
-
               </li>
               <li class="list-group-item" v-if="loaded_pk > 0">
                 <div class="row">
@@ -490,10 +489,5 @@
   .research-card {
     padding: 5px;
     margin-bottom: 15px;
-  }
-
-  .tube-pk {
-    font-weight: bold;
-    font-size: 120%;
   }
 </style>

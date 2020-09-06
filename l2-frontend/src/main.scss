@@ -1688,7 +1688,7 @@ input[type=date].form-control {
 
 .cell-hover {
   cursor: pointer;
-  background-color: #bde7be!important;
+  background-color: #bde7be !important;
 
   .display-only-hover {
     display: inline;
@@ -1701,6 +1701,16 @@ input[type=date].form-control {
 @import "./menububble";
 
 .treeselect-noborder .vue-treeselect__control {
-  border: none!important;
-  border-radius: 0!important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+.tube-pk {
+  font-weight: 500;
+  font-size: 120%;
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background: rgba(233, 214, 86, .09);
+  display: inline-block;
+  padding: 0 4px;
+  border-radius: 2px;
 }
