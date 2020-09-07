@@ -67,7 +67,7 @@
                     <span v-if="r.tube" class="tube-pk">{{r.tube.pk}}</span> {{r.title}} <span class="comment" v-if="r.comment"> [{{r.comment}}]</span>
                   </div>
                   <div v-if="r.tube" style="margin-top: 5px">
-                    <a style="float: right" href="#" @click.prevent="print_tube_iss(r.tube.pk)">печать ш/к</a>
+                    <a style="float: right" class="a-under" href="#" @click.prevent="print_tube_iss(r.tube.pk)">печать ш/к</a>
                     <span
                       :style="`background-color: ${r.tube.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;`"></span>
                     <span>{{r.tube.title}}</span>
@@ -95,9 +95,9 @@
                       {{direction_data.visit_who_mark}}
                       <div v-if="allow_reset_confirm">
                         <a @click.prevent="cancel_visit" class="a-under" href="#"
-                           v-if="direction_data.has_microbiology && can_get">отменить
-                          забор
-                          материала</a>
+                           v-if="direction_data.has_microbiology && can_get">
+                          отменить забор материала
+                        </a>
                         <a @click.prevent="cancel_visit" class="a-under" href="#"
                            v-else-if="!direction_data.has_microbiology && can_visit">отменить посещение</a>
                       </div>

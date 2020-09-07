@@ -356,7 +356,7 @@
                       border: '1px solid #aaa',
                       display: 'inline-block' }"></span>
                     {{row.tube.type}}, дата забора {{row.tube.get}}
-                    <a href="#" @click.prevent="print_tube_iss(row.tube.pk)">печать ш/к</a>
+                    <a href="#" class="a-under" @click.prevent="print_tube_iss(row.tube.pk)">печать ш/к</a>
                   </div>
                 </div>
               </div>
@@ -1040,6 +1040,7 @@
             iss.confirmed = true
             this.data.direction.amd = data.amd
             this.data.direction.amd_number = data.amd_number
+            this.data.direction.all_confirmed = this.data.researches.every(r => Boolean(r.confirmed));
             this.reload_if_need()
             this.changed = false
           } else {
@@ -1062,6 +1063,7 @@
             iss.allow_reset_confirm = true
             this.data.direction.amd = data.amd
             this.data.direction.amd_number = data.amd_number
+            this.data.direction.all_confirmed = this.data.researches.every(r => Boolean(r.confirmed));
             this.reload_if_need()
             this.changed = false
           } else {
@@ -1089,6 +1091,7 @@
           okmessage('Подтверждение сброшено')
           iss.confirmed = false
           this.data.direction.amd = 'not_need'
+            this.data.direction.all_confirmed = this.data.researches.every(r => Boolean(r.confirmed));
           this.reload_if_need()
           this.changed = false
         } else {
