@@ -67,6 +67,7 @@
                     <span v-if="r.tube" class="tube-pk">{{r.tube.pk}}</span> {{r.title}} <span class="comment" v-if="r.comment"> [{{r.comment}}]</span>
                   </div>
                   <div v-if="r.tube" style="margin-top: 5px">
+                    <a style="float: right" href="#" @click.prevent="print_tube_iss(r.tube.pk)">печать ш/к</a>
                     <span
                       :style="`background-color: ${r.tube.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;`"></span>
                     <span>{{r.tube.title}}</span>
@@ -417,8 +418,8 @@
                     this.load_journal()
                 })
             },
-            print_tube() {
-                this.$root.$emit('print:barcodes', [this.loaded_pk])
+            print_tube_iss(pk) {
+                this.$root.$emit('print:barcodes:iss', [pk])
             },
             cancel_receive() {
                 if (confirm('Вы уверены, что хотите отменить приём биоматериала?'))

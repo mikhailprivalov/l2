@@ -356,6 +356,7 @@
                       border: '1px solid #aaa',
                       display: 'inline-block' }"></span>
                     {{row.tube.type}}, дата забора {{row.tube.get}}
+                    <a href="#" @click.prevent="print_tube_iss(row.tube.pk)">печать ш/к</a>
                   </div>
                 </div>
               </div>
@@ -816,6 +817,9 @@
       },
       tdm() {
         return moment().add(1, 'day').format('YYYY-MM-DD')
+      },
+      print_tube_iss(pk) {
+          this.$root.$emit('print:barcodes:iss', [pk])
       },
       async load_dreg_rows() {
         this.dreg_rows_loading = true

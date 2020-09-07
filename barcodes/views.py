@@ -37,12 +37,16 @@ def tubes(request, direction_implict_id=None):
         pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
     direction_id = []
     tubes_id = set()
+    iss_ids = []
     istubes = False
     if direction_implict_id is None:
         if "napr_id" in request.GET.keys():
             direction_id = json.loads(request.GET["napr_id"])
         elif "tubes_id" in request.GET.keys():
             tubes_id = set(json.loads(request.GET["tubes_id"]))
+            istubes = True
+        elif "iss_ids" in request.GET.keys():
+            iss_ids = set(json.loads(request.GET["iss_ids"]))
             istubes = True
     else:
         direction_id = [direction_implict_id]
@@ -66,7 +70,12 @@ def tubes(request, direction_implict_id=None):
     if istubes:
         direction_id = set([x.napravleniye_id for x in Issledovaniya.objects.filter(tubes__id__in=tubes_id)])
 
-    for d in direction_id:
+    if iss_ids:
+        direction_id_tmp = [*direction_id, *[i.napravleniye_id for i in Issledovaniya.objects.filter(pk__in=iss_ids)]]
+    else:
+        direction_id_tmp = direction_id
+
+    for d in direction_id_tmp:
         if not Napravleniya.objects.filter(pk=int(d)).exists():
             continue
         tmp2 = Napravleniya.objects.get(pk=int(d))
@@ -77,12 +86,11 @@ def tubes(request, direction_implict_id=None):
         fuppers = set()
         flowers = set()
         has_microbiology = False
-        tubet = {}
 
         for iss in Issledovaniya.objects.filter(napravleniye=tmp2):
-            if iss.research.is_microbiology:
+            if iss.research.is_microbiology and (not iss_ids or iss.pk in iss_ids):
                 has_microbiology = True
-                tpk = int(d) * 10 + 4600000000000
+                tpk = iss.pk
                 tubes_id.add(tpk)
                 tubet = {
                     "pk": tpk,
@@ -91,6 +99,7 @@ def tubes(request, direction_implict_id=None):
                     "microbiology": True,
                     "short_title": iss.research.microbiology_tube.get_short_title(),
                 }
+                tubes_buffer[tpk] = tubet
             for fr in iss.research.fractions_set.all():
                 absor = directory.Absorption.objects.filter(fupper=fr)
                 if absor.exists():
@@ -126,13 +135,10 @@ def tubes(request, direction_implict_id=None):
                         v.tubes.add(ntube)
 
                     tubes_buffer[vrpk]["researches"].add(v.research.title)
-        else:
-            tubes_buffer[tubet["pk"]] = tubet
         for tube_k in sorted(tubes_buffer.keys(), key=lambda k: tubes_buffer[k]["pk"]):
             tube = tubes_buffer[tube_k]["pk"]
             if tube not in tubes_id:
                 continue
-            # c.setFont('OpenSans', 8)
             st = ""
             if not tmp2.imported_from_rmis:
                 otd = list(tmp2.doc.podrazdeleniye.title.split(" "))
@@ -147,9 +153,9 @@ def tubes(request, direction_implict_id=None):
                 st = "вн.орг"
 
             if has_microbiology:
-                st = st + "=>м.био"
+                st = f"{st}=>м.био"
             else:
-                st = (st + "=>" + ",".join(set([x.research.get_podrazdeleniye().get_title()[:3] for x in Issledovaniya.objects.filter(tubes__pk=tube)]))).lower()
+                st = f"{st}=>{','.join(set([x.research.get_podrazdeleniye().get_title()[:3] for x in Issledovaniya.objects.filter(tubes__pk=tube)]))}".lower()
 
             fam = tmp2.client.individual.fio(short=True, dots=False)
             f = {}
@@ -171,8 +177,7 @@ def tubes(request, direction_implict_id=None):
             c.drawRightString(pw * mm - 2 * mm, ph * mm - 7 * mm, fam)
             c.setFont('clacon', 12)
             c.drawString(2 * mm, mm, pr)
-            if not has_microbiology:
-                c.drawRightString(pw * mm - 2 * mm, mm, str(tube))
+            c.drawRightString(pw * mm - 2 * mm, mm, str(tube))
             m = 0.03
             if tube >= 100:
                 m = 0.0212
@@ -184,8 +189,6 @@ def tubes(request, direction_implict_id=None):
                 m = 0.0212
             if tube >= 1000000:
                 m = 0.016
-            if has_microbiology:
-                m = 0.012
             barcode = code128.Code128(str(tube), barHeight=ph * mm - 12 * mm, barWidth=pw / 43 * inch * m)
             barcode.drawOn(c, -3 * mm, 4 * mm)
 
