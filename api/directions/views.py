@@ -1003,7 +1003,8 @@ def directions_paraclinic_form(request):
             response["researches"] = []
             i: Issledovaniya
             tube = None
-            medical_certificates = {}
+            medical_certificates = []
+            tmp_certificates = []
             for i in df:
                 if i.research.is_doc_refferal:
                     response["has_doc_referral"] = True
@@ -1024,7 +1025,9 @@ def directions_paraclinic_form(request):
                 more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
                 cert_researches = ResearchesCertificate.objects.filter(research=i.research)
                 for cert in cert_researches:
-                    medical_certificates[cert.medical_certificate.title] = cert.medical_certificate.certificate_form
+                    if cert.medical_certificate.certificate_form not in tmp_certificates:
+                        tmp_certificates.append(cert.medical_certificate.certificate_form)
+                        medical_certificates.append({"form": cert.medical_certificate.certificate_form, "title": cert.medical_certificate.title})
 
                 iss = {
                     "pk": i.pk,

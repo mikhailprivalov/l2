@@ -29,9 +29,9 @@
     <div id="favorites-view" class="tp">
       <table class="table">
         <tbody>
-          <tr v-for="row in data">
+          <tr v-for="row in med_certificates">
             <td>
-              <a href="#" @click.prevent="edit_data(row)">{{row}} <i class="fa fa-print"/></a>
+              <a href="#" @click.prevent="edit_data(row)">{{row.title}} <i class="fa fa-print"/></a>
             </td>
           </tr>
         </tbody>
@@ -44,13 +44,11 @@
 
   export default {
     name: "Certificates",
-    data() {
-      return {
-        data: ['Бассейн', 'О проведенном приеме'],
-      }
-    },
-    methods: {
-
+    props: {
+      med_certificates: {
+        type: Array,
+        required: false,
+      },
     },
   }
 </script>

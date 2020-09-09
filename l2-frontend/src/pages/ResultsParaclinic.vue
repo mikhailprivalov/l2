@@ -236,7 +236,7 @@
                   </a>
                 </div>
               </div>
-              <medical-certificates/>
+              <medical-certificates :med_certificates="data.medical_certificates"/>
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
@@ -840,9 +840,6 @@
         this.anamnesis_loading = true
         this.anamnesis_data = await patients_point.loadAnamnesis(this.data.patient, 'card_pk')
         this.anamnesis_loading = false
-      },
-      async load_medical_certificates() {
-        this.medical_certificatesicates_rows = await researches_point.loadMedicalCertificates(research_pk)
       },
       change_mkb(row) {
         return field => {

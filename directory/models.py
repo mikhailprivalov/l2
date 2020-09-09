@@ -403,6 +403,7 @@ class ParaclinicInputField(models.Model):
     visibility = models.TextField(default='', blank=True)
     helper = models.CharField(max_length=999, blank=True, default='')
     for_extract_card = models.BooleanField(default=False, help_text='В выписку', blank=True)
+    for_med_certificate = models.BooleanField(default=False, help_text='В справку о приеме  пациента', blank=True)
 
     def get_title(self, force_type=None, recursive=False):
         field_type = force_type or self.field_type
