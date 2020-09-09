@@ -263,6 +263,7 @@ def researches_update(request):
                                     order=field["order"],
                                     lines=field["lines"],
                                     for_extract_card=field.get("for_extract_card", False),
+                                    for_med_certificate=field.get("for_med_certificate", False),
                                     hide=field["hide"],
                                     default_value=field["default"],
                                     visibility=field.get("visibility", ""),
@@ -285,6 +286,7 @@ def researches_update(request):
                                 f.field_type = field.get("field_type", 0)
                                 f.required = field.get("required", False)
                                 f.for_talon = field.get("for_talon", False)
+                                f.for_med_certificate = field.get("for_med_certificate", False)
                                 f.helper = field.get("helper", '')
                             if f:
                                 f.save()
@@ -335,6 +337,7 @@ def researches_details(request):
                         "field_type": field.field_type,
                         "required": field.required,
                         "for_talon": field.for_talon,
+                        "for_med_certificate": field.for_med_certificate,
                         "helper": field.helper,
                         "new_value": "",
                     }

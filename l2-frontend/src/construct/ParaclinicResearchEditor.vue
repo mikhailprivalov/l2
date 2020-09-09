@@ -224,6 +224,9 @@
                   <label>
                     <input type="checkbox" v-model="row.for_extract_card"/> в выписку
                   </label>
+                  <label>
+                    <input type="checkbox" v-model="row.for_med_certificate"/> в справку
+                  </label>
                   <label style="line-height: 1"
                          v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14 || row.field_type === 23">
                     Число строк:<br/>
