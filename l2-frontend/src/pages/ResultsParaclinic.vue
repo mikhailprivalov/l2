@@ -727,6 +727,7 @@
         show_results_pk: -1,
         loc_timer: null,
         inited: false,
+        medical_certificatesicates_rows: [],
       }
     },
     watch: {
@@ -839,6 +840,9 @@
         this.anamnesis_loading = true
         this.anamnesis_data = await patients_point.loadAnamnesis(this.data.patient, 'card_pk')
         this.anamnesis_loading = false
+      },
+      async load_medical_certificates() {
+        this.medical_certificatesicates_rows = await researches_point.loadMedicalCertificates(research_pk)
       },
       change_mkb(row) {
         return field => {

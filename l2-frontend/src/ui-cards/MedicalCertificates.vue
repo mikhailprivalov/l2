@@ -27,13 +27,13 @@
     </a>
 
     <div id="favorites-view" class="tp">
-      <table class="table table-condensed table-bordered">
+      <table class="table">
         <tbody>
-        <tr v-for="row in data" :class="{'cancel-row': row.cancel}">
-          <td>
-            <a href="#" @click.prevent="edit_data(row)">{{row}} <i class="fa fa-print"/></a>
-          </td>
-        </tr>
+          <tr v-for="row in data">
+            <td>
+              <a href="#" @click.prevent="edit_data(row)">{{row}} <i class="fa fa-print"/></a>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -56,32 +56,6 @@
 </script>
 
 <style scoped lang="scss">
-  .cancel-row {
-    td, th {
-      opacity: .6;
-      text-decoration: line-through;
-    }
-
-    &:hover {
-      td, th {
-        opacity: 1;
-        text-decoration: none;
-      }
-    }
-  }
-
-  .size-btn {
-    width: 50px;
-  }
-
-  .fv {
-    cursor: pointer;
-
-    &:hover span {
-      text-shadow: 0 0 3px rgba(#049372, .4);
-      color: #049372;
-    }
-  }
 
   i {
     vertical-align: middle;
@@ -89,14 +63,11 @@
     margin-right: 3px;
   }
 
-  .inFavorite i {
-    color: #93046d;
-  }
 
   .tp {
     text-align: left;
-    line-height: 1.1;
-    padding: 5px;
+    /*line-height: 1.1;*/
+    padding: 1px;
 
     table {
       margin: 0;

@@ -47,6 +47,7 @@ from utils.dates import try_parse_range
 from .sql_func import get_history_dir
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
+from medical_certificates.models import ResearchesCertificate
 
 
 @login_required
@@ -1002,6 +1003,7 @@ def directions_paraclinic_form(request):
             response["researches"] = []
             i: Issledovaniya
             tube = None
+            medical_certificates = {}
             for i in df:
                 if i.research.is_doc_refferal:
                     response["has_doc_referral"] = True
@@ -1020,6 +1022,10 @@ def directions_paraclinic_form(request):
                 transfer_d = Napravleniya.objects.filter(parent_auto_gen=i, cancel=False).first()
                 forbidden_edit = forbidden_edit_dir(d.pk)
                 more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
+                cert_researches = ResearchesCertificate.objects.filter(research=i.research)
+                for cert in cert_researches:
+                    medical_certificates[cert.medical_certificate.title] = cert.medical_certificate.certificate_form
+
                 iss = {
                     "pk": i.pk,
                     "research": {
@@ -1164,6 +1170,7 @@ def directions_paraclinic_form(request):
                             break
                 response["status_disp"] = status_disp
                 response["disp_data"] = disp_data
+            response["medical_certificates"] = medical_certificates
 
             f = True
     if not f:
