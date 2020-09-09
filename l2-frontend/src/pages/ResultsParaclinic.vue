@@ -2,9 +2,21 @@
   <div ref="root" class="results-root">
     <div :class="{has_loc}" class="results-sidebar">
       <div class="sidebar-top">
-        <input type="text" class="form-control" v-model="pk" @keyup.enter="load" autofocus
-               placeholder="Номер направления"/>
-        <button class="btn btn-blue-nb" @click="load">Загрузить</button>
+        <div class="input-group">
+          <span class="input-group-btn" v-if="l2_microbiology">
+            <label class="btn btn-blue-nb nbr height34" style="padding: 5px 11px;"
+                   title="Использовать номер микробиологического анализа" v-tippy>
+              <input type="checkbox" v-model="iss_search"/>
+            </label>
+          </span>
+          <input type="text" class="form-control" v-model="pk" @keyup.enter="load" autofocus
+                 :placeholder="iss_search ? 'Номер м/б анализа' : 'Номер направления'"/>
+          <span class="input-group-btn">
+            <button class="btn last btn-blue-nb nbr" type="button" @click="load" style="margin-right: -1px">
+              Поиск
+            </button>
+          </span>
+        </div>
       </div>
       <div class="sidebar-bottom-top">
         <span>Результаты за</span>
@@ -265,7 +277,7 @@
               </dropdown>
             </div>
             <div class="research-right">
-              <template v-if="row.confirmed">
+              <template v-if="data.direction.all_confirmed">
                 <a :href="`/forms/pdf?type=105.02&napr_id=[${data.direction.pk}]`"
                    class="btn btn-blue-nb" target="_blank" v-if="stat_btn">Статталон</a>
                 <a href="#" class="btn btn-blue-nb"
@@ -322,11 +334,18 @@
             </div>
           </div>
           <template v-if="data.has_microbiology">
-            <div class="group" v-if="data.direction.tube">
-              <div class="group-title">Материал</div>
+            <div class="group" v-if="row.tube">
               <div class="fields">
                 <div class="field">
-                  <div class="field-title" style="flex: 1 0 240px">
+                  <div class="field-title" style="flex: 1 0 120px">
+                    Номер анализа
+                  </div>
+                  <div class="field-value" style="padding: 3px">
+                    <span class="tube-pk">{{row.tube.pk}}</span>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="field-title" style="flex: 1 0 120px">
                     Ёмкость
                   </div>
                   <div class="field-value" style="padding: 3px">
@@ -334,10 +353,11 @@
                       :style="{
                       width: '10px',
                       height: '10px',
-                      background: data.direction.tube.color,
+                      background: row.tube.color,
                       border: '1px solid #aaa',
                       display: 'inline-block' }"></span>
-                    {{data.direction.tube.type}}, дата забора {{data.direction.tube.get}}
+                    {{row.tube.type}}, дата забора {{row.tube.get}}
+                    <a href="#" class="a-under" @click.prevent="print_tube_iss(row.tube.pk)">печать ш/к</a>
                   </div>
                 </div>
               </div>
@@ -667,6 +687,7 @@
     data() {
       return {
         pk: '',
+        iss_search: false,
         data: {ok: false, direction: {}},
         date: moment().format('DD.MM.YYYY'),
         td: moment().format('YYYY-MM-DD'),
@@ -799,6 +820,9 @@
       tdm() {
         return moment().add(1, 'day').format('YYYY-MM-DD')
       },
+      print_tube_iss(pk) {
+          this.$root.$emit('print:barcodes:iss', [pk])
+      },
       async load_dreg_rows() {
         this.dreg_rows_loading = true
         this.dreg_rows = (await patients_point.loadDreg(this.data.patient, 'card_pk')).rows.filter(r => !r.date_end)
@@ -917,7 +941,7 @@
         }
         this.clear(true)
         this.$store.dispatch(action_types.INC_LOADING)
-        return directions_point.getParaclinicForm({pk: this.pk_c}).then(data => {
+        return directions_point.getParaclinicForm({pk: this.pk_c, byIssledovaniye: this.iss_search}).then(data => {
           if (data.ok) {
             this.tnd = moment().add(1, 'day').format('YYYY-MM-DD')
             this.td_m_year = moment().subtract(1, 'year').format('YYYY-MM-DD')
@@ -1018,6 +1042,7 @@
             iss.confirmed = true
             this.data.direction.amd = data.amd
             this.data.direction.amd_number = data.amd_number
+            this.data.direction.all_confirmed = this.data.researches.every(r => Boolean(r.confirmed));
             this.reload_if_need()
             this.changed = false
           } else {
@@ -1040,6 +1065,7 @@
             iss.allow_reset_confirm = true
             this.data.direction.amd = data.amd
             this.data.direction.amd_number = data.amd_number
+            this.data.direction.all_confirmed = this.data.researches.every(r => Boolean(r.confirmed));
             this.reload_if_need()
             this.changed = false
           } else {
@@ -1067,6 +1093,7 @@
           okmessage('Подтверждение сброшено')
           iss.confirmed = false
           this.data.direction.amd = 'not_need'
+            this.data.direction.all_confirmed = this.data.researches.every(r => Boolean(r.confirmed));
           this.reload_if_need()
           this.changed = false
         } else {
@@ -1294,6 +1321,9 @@
       amd() {
         return this.$store.getters.modules.l2_amd
       },
+      l2_microbiology() {
+        return this.$store.getters.modules.l2_microbiology
+      },
       pk_c() {
         let lpk = this.pk.trim()
         if (lpk === '')
@@ -1408,32 +1438,6 @@
 
   .results-top > div {
     font-family: "Courier New", Courier, monospace !important;
-  }
-
-  .sidebar-top {
-    flex: 0 0 34px;
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    flex-wrap: nowrap;
-    justify-content: stretch;
-
-    input, button {
-      align-self: stretch;
-      border: none;
-      border-radius: 0;
-    }
-
-    input {
-      border-bottom: 1px solid #b1b1b1;
-      width: 199px !important;
-      flex: 2 199px;
-    }
-
-    button {
-      flex: 3 94px;
-      width: 94px
-    }
   }
 
   .research-title {
