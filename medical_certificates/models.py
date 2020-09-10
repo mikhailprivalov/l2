@@ -1,10 +1,12 @@
 from django.db import models
 from directory.models import Researches
 
+
 class MedicalCertificates(models.Model):
     """
     Виды справок
     """
+
     CERTIFICATE_FORMS = (
         (38001, '38001. В бассейн '),
         (38002, '38002. Нарколог-психиатр'),
@@ -27,6 +29,7 @@ class ResearchesCertificate(models.Model):
     """
     Справки для определенных услуг
     """
+
     research = models.ForeignKey(Researches, null=True, blank=True, help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
     medical_certificate = models.ForeignKey(MedicalCertificates, null=True, blank=True, help_text='Вид справки', db_index=True, on_delete=models.CASCADE)
 
