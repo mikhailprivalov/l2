@@ -144,7 +144,6 @@ new Vue({
     this.$root.$on('print:barcodes:iss', (pks) => printForm('/barcodes/tubes?iss_ids={pks}', pks))
 
     this.$root.$on('print:results', (pks) => printForm(`/results/preview?pk={pks}&hosp=${hosp}`, pks))
-
     this.$root.$on('print:directions_list', (pks) => printForm('/statistic/xls?pk={pks}&type=directions_list', pks))
 
     this.$root.$on('generate-directions', ({

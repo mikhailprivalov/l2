@@ -236,7 +236,7 @@
                   </a>
                 </div>
               </div>
-              <medical-certificates :med_certificates="data.medical_certificates"/>
+              <medical-certificates :med_certificates="data.medical_certificates" :direction="data.direction.pk"/>
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}

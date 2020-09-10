@@ -31,7 +31,7 @@
         <tbody>
           <tr v-for="row in med_certificates">
             <td>
-              <a href="#" @click.prevent="edit_data(row)">{{row.title}} <i class="fa fa-print"/></a>
+              <a href="#" @click.prevent="print_med_certificate(row.form, direction)">{{row.title}} <i class="fa fa-print"/></a>
             </td>
           </tr>
         </tbody>
@@ -41,7 +41,6 @@
 </template>
 
 <script>
-
   export default {
     name: "Certificates",
     props: {
@@ -49,7 +48,17 @@
         type: Array,
         required: false,
       },
+      direction: {
+        type: Number,
+        required: false,
+      }
     },
+    methods:{
+      print_med_certificate(type_form, direction) {
+        console.log(type_form, direction)
+        window.open(`/medical_certificates/pdf?type=${type_form}&dir=${direction}`, '_blank')
+      },
+    }
   }
 </script>
 

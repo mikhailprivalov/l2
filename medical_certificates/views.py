@@ -1,3 +1,15 @@
-from django.shortcuts import render
+from django.http import HttpResponse
+from django.utils.module_loading import import_string
 
-# Create your views here.
+
+def pdf(request):
+    """
+    :param request:
+    :return:
+    """
+    response = HttpResponse(content_type='application/pdf')
+    t = request.GET.get("type")
+    response['Content-Disposition'] = 'inline; filename="form-' + t + '.pdf"'
+    f = import_string('medical_certificates.forms.forms' + t[0:3] + '.form_' + t[3:5])
+    response.write(f(request_data={**dict(request.GET.items()), "user": request.user}))
+    return response
