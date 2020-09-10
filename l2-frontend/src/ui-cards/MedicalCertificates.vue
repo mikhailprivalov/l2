@@ -1,6 +1,6 @@
 <template>
   <fragment>
-    <a href="#" class="dropdown-toggle" style="color: #049372" @click.prevent
+    <a v-if="is_med_certificates" href="#" class="dropdown-toggle" style="color: #049372" @click.prevent
        v-tippy="{
                 html: '#favorites-view',
                 reactive: true,
@@ -23,17 +23,18 @@
                   }
                 },
              }">
-        Справки
+      Справки
     </a>
 
     <div id="favorites-view" class="tp">
       <table class="table">
         <tbody>
-          <tr v-for="row in med_certificates">
-            <td>
-              <a href="#" @click.prevent="print_med_certificate(row.form, direction)">{{row.title}} <i class="fa fa-print"/></a>
-            </td>
-          </tr>
+        <tr v-for="row in med_certificates">
+          <td>
+            <a href="#" @click.prevent="print_med_certificate(row.form, direction)">{{row.title}} <i
+              class="fa fa-print"/></a>
+          </td>
+        </tr>
         </tbody>
       </table>
     </div>
@@ -53,12 +54,19 @@
         required: false,
       }
     },
-    methods:{
+    methods: {
       print_med_certificate(type_form, direction) {
-        console.log(type_form, direction)
         window.open(`/medical_certificates/pdf?type=${type_form}&dir=${direction}`, '_blank')
       },
-    }
+    },
+    computed: {
+      is_med_certificates() {
+        if (this.med_certificates.length > 0) {
+          return true
+        }
+        return false
+      }
+    },
   }
 </script>
 
@@ -73,7 +81,6 @@
 
   .tp {
     text-align: left;
-    /*line-height: 1.1;*/
     padding: 1px;
 
     table {
