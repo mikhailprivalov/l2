@@ -236,6 +236,7 @@
                   </a>
                 </div>
               </div>
+              <medical-certificates :med_certificates="data.medical_certificates" :direction="data.direction.pk"/>
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
@@ -672,6 +673,7 @@
   import DescriptiveForm from '../forms/DescriptiveForm'
   import BacMicroForm from '../forms/BacMicroForm'
   import UrlData from '../UrlData'
+  import MedicalCertificates from "../ui-cards/MedicalCertificates";
 
   export default {
     name: 'results-paraclinic',
@@ -680,7 +682,7 @@
       DescriptiveForm,
       DateFieldNav, Modal, MKBField, ResearchesPicker, SelectedResearches,
       dropdown, SelectPickerM, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-      LastResult, RecipeInput, IssStatus,
+      LastResult, RecipeInput, IssStatus, MedicalCertificates,
     },
     data() {
       return {
@@ -725,6 +727,7 @@
         show_results_pk: -1,
         loc_timer: null,
         inited: false,
+        medical_certificatesicates_rows: [],
       }
     },
     watch: {

@@ -59,6 +59,7 @@ INSTALLED_APPS = (
     'treatment',
     'external_system',
     'plans',
+    'medical_certificates',
 )
 
 MIDDLEWARE = [
