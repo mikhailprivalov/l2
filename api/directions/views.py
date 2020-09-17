@@ -1663,8 +1663,22 @@ def last_field_result(request):
     logical_or, logical_and, logical_group_or = False, False, False
     field_is_link, field_is_aggregate_operation, field_is_aggregate_proto_description = False, False, False
     field_pks, operations_data, aggregate_data = None, None, None
+    result = None
 
-    if request_data["fieldPk"].find('%proto_operation') != -1:
+    if request_data["fieldPk"].find('%work_place') != -1:
+        c = Card.objects.get(pk=client_pk)
+        if c.work_place:
+            work_place = c.work_place
+        elif c.work_place_db:
+            work_place = c.work_place_db
+        else:
+            work_place = ""
+        result = {"value": work_place}
+    elif request_data["fieldPk"].find('%work_position') != -1:
+        c = Card.objects.get(pk=client_pk)
+        work_position = c.work_position
+        result = {"value": work_position}
+    elif request_data["fieldPk"].find('%proto_operation') != -1:
         current_iss = request_data["iss_pk"]
         num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
         # получить все направления в истории по типу hosp
@@ -1689,7 +1703,6 @@ def last_field_result(request):
         logical_or = True
         field_is_link = True
 
-    result = None
     if field_is_link:
         result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or)
     elif field_is_aggregate_operation:

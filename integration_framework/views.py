@@ -108,6 +108,7 @@ def direction_data(request):
             "timeConfirmation": iss[iss_index].time_confirmation,
             "docLogin": iss[iss_index].doc_confirmation.rmis_login,
             "docPassword": iss[iss_index].doc_confirmation.rmis_password,
+            "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid,
         }
     )
 
