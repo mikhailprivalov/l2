@@ -74,8 +74,6 @@ def form_04(request_data):
     styleCenterBold.leading = 15
     styleCenterBold.fontName = 'PTAstraSerifBold'
 
-
-
     patient = Napravleniya.objects.get(pk=direction)
     fio = patient.client.individual.fio()
     fio_short = patient.client.individual.fio(short=True, dots=True)
@@ -85,7 +83,15 @@ def form_04(request_data):
         return ""
 
     result = form_04_data_result_(iss)
-    work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date = "", "", "", "", "", "", "",
+    work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date = (
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+    )
     for i in result:
         if i["title"] == "Место работы":
             work_place = i["value"]
@@ -118,17 +124,22 @@ def form_04(request_data):
     fwb.append(Paragraph(f"3 Профессия (должность) (в настоящее время): {work_position}", style))
     fwb.append(Paragraph(f"Вредный производственный фактор или вид работы: {harmful_factor}", style))
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f"4. Согласно результатам проведенного <u>{type_med_examination}</u> медицинского осмотра (обследования): "
-                         f"<u>{restrictions}</u> медицинские противопоказания к работе с вредными и/или опасными веществами и производственными факторами, "
-                         f"заключение <u>{med_report}</u> ", style))
+    fwb.append(
+        Paragraph(
+            f"4. Согласно результатам проведенного <u>{type_med_examination}</u> медицинского осмотра (обследования): "
+            f"<u>{restrictions}</u> медицинские противопоказания к работе с вредными и/или опасными веществами и производственными факторами, "
+            f"заключение <u>{med_report}</u> ",
+            style,
+        )
+    )
 
     fwb.append(Spacer(1, 8 * mm))
-    fwb.append(Paragraph(f"Председатель врачебной комиссии ____________________________ (__________):", style))
+    fwb.append(Paragraph("Председатель врачебной комиссии ____________________________ (__________)", style))
     fwb.append(Spacer(1, 6 * mm))
     fwb.append(Paragraph('М.П. "___" ________________ 20__ г.', style))
     fwb.append(Spacer(1, 8 * mm))
     fwb.append(Paragraph(f'_______________________({fio_short}) {date} г.', style))
-    fwb.append(Paragraph(f'(подпись работника<br/>освидетельствуемого)', style))
+    fwb.append(Paragraph('(подпись работника<br/>освидетельствуемого)', style))
 
     doc.build(fwb)
     pdf = buffer.getvalue()
@@ -140,8 +151,15 @@ def form_04(request_data):
 def form_04_data_result_(iss):
     result = []
     title = ''
-    title_fields = ['Место работы', 'Должность', 'Вредный производственный фактор или вид работы', 'Тип медосмотра', 'Медицинские противопоказания к работе',
-                    'Заключение по приказу N302н', 'Дата осмотра']
+    title_fields = [
+        'Место работы',
+        'Должность',
+        'Вредный производственный фактор или вид работы',
+        'Тип медосмотра',
+        'Медицинские противопоказания к работе',
+        'Заключение по приказу N302н',
+        'Дата осмотра',
+    ]
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
         if results.exists():
