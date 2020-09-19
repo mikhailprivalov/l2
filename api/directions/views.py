@@ -1676,8 +1676,10 @@ def last_field_result(request):
         result = {"value": work_place}
     elif request_data["fieldPk"].find('%work_position') != -1:
         c = Card.objects.get(pk=client_pk)
-        work_position = c.work_position
-        result = {"value": work_position}
+        result = {"value": c.work_position}
+    elif request_data["fieldPk"].find('%harmful_factor') != -1:
+        c = Card.objects.get(pk=client_pk)
+        result = {"value": c.harmful_factor}
     elif request_data["fieldPk"].find('%proto_operation') != -1:
         current_iss = request_data["iss_pk"]
         num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id

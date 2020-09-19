@@ -10,6 +10,7 @@ from django.utils import timezone, dateformat
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.pagesizes import A4, portrait
+from reportlab.lib.pagesizes import A4, portrait
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
