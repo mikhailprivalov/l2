@@ -35,6 +35,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     rmis_direction_type = models.CharField(max_length=255, default="Направление в лабораторию", blank=True)
     rmis_department_title = models.CharField(max_length=255, default="Клинико-диагностическая лаборатория (КДЛ)", blank=True)
     can_has_pacs = models.BooleanField(default=False, blank=True)
+    oid = models.CharField(max_length=55, default="", blank=True, help_text='OID подразделения')
 
     def get_title(self):
         return self.short_title or self.title
