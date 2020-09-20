@@ -47,7 +47,7 @@
       power: power || '4',
     };
   };
-  const partsToValue = (num, power) => `${num} × 10^${power}`;
+  const partsToValue = ({num, power}) => `${num} × 10^${power}`;
 
   export default {
     props: {
@@ -81,7 +81,7 @@
     },
     methods: {
       updateParts() {
-        this.changeValue(partsToValue(this.num, this.power));
+        this.changeValue(partsToValue(this));
       },
       changeValue(newVal) {
         this.$emit('modified', newVal)
