@@ -52,7 +52,7 @@
                        v-model="field.value"/>
               </div>
               <div class="field-value mkb10" v-else-if="field.field_type === 2 && !confirmed">
-                <MKBField :short="false" @input="change_mkb(field)" v-model="field.value"/>
+                <MKBFieldForm :short="false" @input="change_mkb(field)" v-model="field.value"/>
               </div>
               <div class="field-value mkb10" v-else-if="field.field_type === 3">
                 <FormulaField :fields="research.groups.reduce((a, b) => a.concat(b.fields), [])"
@@ -168,7 +168,7 @@ export default {
       RadioField: () => import('../fields/RadioField'),
       SelectField: () => import('../fields/SelectField'),
       AnesthesiaProcess: () => import('../fields/AnesthesiaProcess'),
-      MKBField: () => import('../fields/MKBField'),
+      MKBFieldForm: () => import('../fields/MKBFieldForm'),
       FormulaField: () => import('../fields/FormulaField'),
     },
     props: {
@@ -255,10 +255,10 @@ export default {
         field.value = ''
       },
       enter_field(...args) {
-        enter_field.apply(this, args);
+        return enter_field.apply(this, args);
       },
       leave_field(...args) {
-        leave_field.apply(this, args);
+        return leave_field.apply(this, args);
       },
     }
   }

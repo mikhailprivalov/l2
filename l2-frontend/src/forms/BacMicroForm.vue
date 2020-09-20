@@ -201,7 +201,9 @@
           groupsObj: {},
           antibiotics: {},
           sets: [],
-        }
+        },
+        prev_scroll: 0,
+        prev_scrollHeightTop: 0,
       }
     },
     async mounted() {
@@ -295,10 +297,10 @@
         };
       },
       enter_field(...args) {
-        enter_field.apply(this, args);
+        return enter_field.apply(this, args);
       },
       leave_field(...args) {
-        leave_field.apply(this, args);
+        return leave_field.apply(this, args);
       },
     },
     watch: {
@@ -338,7 +340,13 @@
 
     .inner-select {
       align-self: stretch;
-      flex: 1;
+      &:first-child {
+        flex: 0 0 210px;
+        max-width: 210px;
+      }
+      &:last-child {
+        flex: 1;
+      }
       margin-right: 5px;
       height: 30px !important;
 

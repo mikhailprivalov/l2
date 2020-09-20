@@ -713,6 +713,7 @@
         td_m_year: moment().subtract(1, 'year').format('YYYY-MM-DD'),
         directions_history: [],
         prev_scroll: 0,
+        prev_scrollHeightTop: 0,
         changed: false,
         inserted: false,
         anamnesis_edit: false,
@@ -1319,8 +1320,12 @@
           field[prop] = newValue
         };
       },
-      enter_field,
-      leave_field,
+      enter_field(...args) {
+        return enter_field.apply(this, args);
+      },
+      leave_field(...args) {
+        return leave_field.apply(this, args);
+      },
     },
     computed: {
       date_to_form() {
