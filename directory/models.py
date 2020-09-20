@@ -188,6 +188,9 @@ class Researches(models.Model):
     )
     vertical_result_display = models.BooleanField(blank=True, default=False, help_text="Отображение дат лабораторных тестов вертикально")
 
+    bac_conclusion_templates = models.TextField(blank=True, default="", help_text="Шаблоны ввода для заключения")
+    bac_culture_comments_templates = models.TextField(blank=True, default="", help_text="Шаблоны ввода для комментария в культуре")
+
     @staticmethod
     def filter_type(t):
         ts = {

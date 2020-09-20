@@ -362,16 +362,31 @@
                 </div>
               </div>
             </div>
-            <BacMicroForm :confirmed="row.confirmed" v-model="row.microbiology.bacteries" />
-            <!--<div class="group">
-              <div class="group-title">Бактериофаги</div>
-              <div class="fields">
-              </div>
-            </div>-->
+            <BacMicroForm
+              :confirmed="row.confirmed"
+              v-model="row.microbiology.bacteries"
+              :cultureCommentsTemplates="row.microbiology.cultureCommentsTemplates"
+            />
             <div class="group">
               <div class="group-title">Заключение</div>
               <div class="fields">
-                <textarea rows="5" class="form-control" :readonly="row.confirmed" v-model="row.microbiology.conclusion"/>
+                <div :class="{disabled: row.confirmed}"
+                 v-on="{
+                  mouseenter: enter_field(row.microbiology.conclusionTemplates.length > 0),
+                  mouseleave: leave_field(row.microbiology.conclusionTemplates.length > 0),
+                 }" class="field">
+                    <FastTemplates
+                      :update_value="updateValue(row.microbiology, 'conclusion')"
+                      :value="row.microbiology.conclusion || ''"
+                      :values="row.microbiology.conclusionTemplates"
+                      :confirmed="row.confirmed"
+                    />
+                    <div class="field-value">
+                      <textarea rows="5" class="form-control"
+                                :readonly="row.confirmed" v-model="row.microbiology.conclusion"
+                      />
+                    </div>
+                </div>
               </div>
             </div>
           </template>
@@ -674,10 +689,13 @@
   import BacMicroForm from '../forms/BacMicroForm'
   import UrlData from '../UrlData'
   import MedicalCertificates from "../ui-cards/MedicalCertificates";
+  import {enter_field, leave_field} from "../forms/utils";
+  import FastTemplates from "../forms/FastTemplates";
 
   export default {
     name: 'results-paraclinic',
     components: {
+      FastTemplates,
       BacMicroForm,
       DescriptiveForm,
       DateFieldNav, Modal, MKBField, ResearchesPicker, SelectedResearches,
@@ -1296,6 +1314,13 @@
         okmessage('Отправка запланирована')
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
+      updateValue(field, prop) {
+        return newValue => {
+          field[prop] = newValue
+        };
+      },
+      enter_field,
+      leave_field,
     },
     computed: {
       date_to_form() {

@@ -170,6 +170,8 @@ def researches_update(request):
         is_simple = request_data.get("simple", False)
         main_service_pk = request_data.get("main_service_pk", -1)
         hs_pk = request_data.get("hs_pk", -1)
+        conclusion_templates = request_data.get("conclusionTpl", "")
+        culture_comments_templates = request_data.get("cultureTpl", "")
         hide_main = request_data.get("hide_main", False)
         if tube == -1:
             tube = None
@@ -199,6 +201,8 @@ def researches_update(request):
                     site_type_id=site_type,
                     internal_code=internal_code,
                     direction_form=direction_current_form,
+                    bac_conclusion_templates=conclusion_templates,
+                    bac_culture_comments_templates=culture_comments_templates,
                 )
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
@@ -221,6 +225,8 @@ def researches_update(request):
                 res.site_type_id = site_type
                 res.internal_code = internal_code
                 res.direction_form = direction_current_form
+                res.bac_conclusion_templates = conclusion_templates
+                res.bac_culture_comments_templates = culture_comments_templates
             if res:
                 res.save()
                 if main_service_pk != 1 and stationar_slave:
@@ -319,6 +325,8 @@ def researches_details(request):
         response["site_type"] = res.site_type_id
         response["internal_code"] = res.internal_code
         response["direction_current_form"] = res.direction_form
+        response["conclusionTpl"] = res.bac_conclusion_templates
+        response["cultureTpl"] = res.bac_culture_comments_templates
 
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title, "hide": group.hide, "fields": [], "visibility": group.visibility}

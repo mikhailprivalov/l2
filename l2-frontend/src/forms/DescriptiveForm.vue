@@ -34,20 +34,14 @@
                          v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21].includes(field.field_type)">
                 ×
               </longpress>
-              <div class="field-inputs"
-                   v-if="field.values_to_input.length > 0 && !confirmed &&
-                   ![10, 12, 18, 19, 21].includes(field.field_type)">
-                <div class="input-values-wrap">
-                  <div class="input-values">
-                    <div class="inner-wrap">
-                      <div @click="append_value(field, val)" class="input-value"
-                           v-for="val in field.values_to_input">
-                        {{val}}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <FastTemplates
+                :update_value="updateValue(field)"
+                :value="field.value"
+                :values="field.values_to_input"
+                :confirmed="confirmed"
+                :field_type="field.field_type"
+                :field_title="field.title"
+              />
               <div class="field-value" v-if="field.field_type === 0">
                 <textarea :readonly="confirmed" :rows="field.lines" class="form-control"
                           v-if="field.lines > 1" v-model="field.value"></textarea>
@@ -150,13 +144,16 @@
 </template>
 
 <script>
-  import Longpress from 'vue-longpress'
-  import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper'
-  import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper'
+import Longpress from 'vue-longpress'
+import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper'
+import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper'
+import FastTemplates from "./FastTemplates";
+import {enter_field, leave_field} from "./utils";
 
-  export default {
+export default {
     name: 'DescriptiveForm',
     components: {
+      FastTemplates,
       VisibilityGroupWrapper,
       VisibilityFieldWrapper,
       Longpress,
@@ -249,49 +246,16 @@
       inc_version() {
         this.research.version = (this.research.version || 0) + 1;
       },
-      enter_field(skip) {
-        if (!skip) {
-          return () => {
-          }
-        }
-        return $e => {
-          this.prev_scroll = $('.results-editor').scrollTop();
-          const {offsetHeight: oh, scrollHeight: sh} = $('.results-editor')[0];
-          this.prev_scrollHeightTop = sh - oh;
-          const $elem = $($e.target);
-          $elem.addClass('open-field')
-        }
-      },
-      leave_field(skip) {
-        if (!skip) {
-          return () => {
-          }
-        }
-        return $e => {
-          const {offsetHeight: oh, scrollHeight: sh} = $('.results-editor > div')[0];
-          if (sh > oh && this.prev_scrollHeightTop < $('.results-editor').scrollTop())
-            $('.results-editor').scrollTo(this.prev_scroll).scrollLeft(0);
-          let $elem = $($e.target);
-          $elem.removeClass('open-field')
-        }
-      },
-      append_value(field, value) {
-        let add_val = value;
-        if (add_val !== ',' && add_val !== '.') {
-          if (field.value.length > 0 && field.value[field.value.length - 1] !== ' ' && field.value[field.value.length - 1] !== '\n') {
-            if (field.value[field.value.length - 1] === '.') {
-              add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
-            }
-            add_val = ' ' + add_val
-          } else if ((field.value.length === 0 || (field.value.length >= 2 && field.value[field.value.length - 2] === '.' && field.value[field.value.length - 1] === '\n')) && field.title === '') {
-            add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
-          }
-        }
-        field.value += add_val
+      updateValue(field) {
+        return newValue => {
+          field.value = newValue
+        };
       },
       clear_val(field) {
         field.value = ''
       },
+      enter_field,
+      leave_field,
     }
   }
 </script>
