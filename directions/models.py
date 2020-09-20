@@ -372,7 +372,7 @@ class Napravleniya(models.Model):
     purpose = models.CharField(max_length=64, null=True, blank=True, default=None, db_index=True, choices=PURPOSES, help_text="Цель направления")
     external_organization = models.ForeignKey(ExternalOrganization, default=None, blank=True, null=True, help_text='Внешняя организация', on_delete=models.SET_NULL)
     harmful_factor = models.CharField(max_length=32, blank=True, default='')
-    workplace = models.CharField(max_length=255, blank=True, default='')
+    workplace = models.CharField(max_length=255, blank=True, default='', db_index=True)
 
     @property
     def data_sozdaniya_local(self):
