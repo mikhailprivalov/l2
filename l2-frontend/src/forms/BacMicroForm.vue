@@ -294,8 +294,12 @@
           field[prop] = newValue
         };
       },
-      enter_field,
-      leave_field,
+      enter_field(...args) {
+        enter_field.apply(this, args);
+      },
+      leave_field(...args) {
+        leave_field.apply(this, args);
+      },
     },
     watch: {
       bacteriesResult: {
