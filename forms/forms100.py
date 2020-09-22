@@ -20,7 +20,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, Page
 from appconf.manager import SettingManager
 from clients.models import Card
 from laboratory.settings import FONTS_FOLDER
-from utils.flowable import InteractiveListBoxField, InteractiveTextField
+from utils.flowable import InteractiveListBoxField, InteractiveTextField, InteractiveListTypeMedExam
 
 
 def form_01(request_data):
@@ -632,6 +632,8 @@ def form_03(request_data):
     objs.append(tbl)
     objs.append(Spacer(1, 7 * mm))
     objs.append(InteractiveListBoxField())
+    objs.append(Spacer(1, 10 * mm))
+    objs.append(InteractiveListTypeMedExam())
 
     def first_pages(canvas, document):
         canvas.saveState()
