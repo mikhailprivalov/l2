@@ -439,7 +439,7 @@
           ) {
             this.localizations[row.pk] = this.localizations[fpk];
           }
-          if (this.comments[fpk] || (row.options || []).find(({code}) => code === this.comments[fpk])) {
+          if (this.comments[fpk] && (row.options || []).find(({code}) => code === this.comments[fpk])) {
             this.comments[row.pk] = this.comments[fpk];
           }
           if (
