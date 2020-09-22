@@ -124,23 +124,31 @@
         <table class="table table-bordered table-responsive"
                style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
           <colgroup>
-            <col width="260">
+            <col width="240">
+            <col width="40">
             <col width="300">
             <col width="300">
             <col width="80">
           </colgroup>
           <thead>
           <tr>
-            <th>Назначение</th>
+            <th colspan="2">Назначение</th>
             <th>Комментарий</th>
             <th>Место</th>
             <th>Количество</th>
           </tr>
           </thead>
           <tbody>
-          <tr v-for="row in need_update_object">
-            <td>
+          <tr v-for="(row, i) in need_update_object">
+            <td :colspan="(need_update_object.length > 1 && i === 0) ? 1 : 2">
               <div style="width:100%; overflow: hidden;text-overflow: ellipsis;" :title="row.title">{{row.title}}</div>
+            </td>
+            <td v-if="need_update_object.length > 1 && i === 0">
+              <button class="btn last btn-blue-nb nbr" type="button"
+                      v-tippy="{ placement : 'bottom', arrow: true }"
+                      title="Назначить всем исследованиям те же параметры" @click="applyAllFromFirst">
+                <i class="fa fa-circle"></i>
+              </button>
             </td>
             <td>
               <v-select :clearable="false" :options="row.localizations"
@@ -422,6 +430,26 @@
       }
     },
     methods: {
+      applyAllFromFirst() {
+        const {pk: fpk} = this.need_update_object[0];
+        for (const row of this.need_update_object.slice(1)) {
+          if (
+            this.localizations[fpk] &&
+            (row.localizations || []).find(({code}) => code === this.localizations[fpk].code)
+          ) {
+            this.localizations[row.pk] = this.localizations[fpk];
+          }
+          if (this.comments[fpk] && (row.options || []).find(({code}) => code === this.comments[fpk])) {
+            this.comments[row.pk] = this.comments[fpk];
+          }
+          if (
+            this.service_locations[fpk] &&
+            (row.service_locations || []).find(({code}) => code === this.service_locations[fpk].code)
+          ) {
+            this.service_locations[row.pk] = this.service_locations[fpk];
+          }
+        }
+      },
       update_comment(pk) {
         if (this.need_update_comment.indexOf(pk) === -1) {
           this.need_update_comment.push(pk)

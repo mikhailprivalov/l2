@@ -115,13 +115,30 @@
               </div>
               <div class="right">
                 <div class="right-inner">
-                  <div class="input-group">
+                  <div class="input-group" style="max-width: 330px">
                     <span class="input-group-addon">КОЕ</span>
-                    <input v-model="bactery.koe" v-mask="'9 × 10^9[9]'" class="form-control" style="z-index: 0"
-                           maxlength="16" :readonly="confirmed"/>
+                    <KOEField v-model="bactery.koe" :disabled="confirmed" />
                   </div>
-                  <textarea v-model="bactery.comments" placeholder="Комментарии" rows="6" class="form-control"
-                            :readonly="confirmed" />
+
+                  <div class="fields" style="padding: 5px 0">
+                    <div :class="{disabled: confirmed}"
+                     v-on="{
+                      mouseenter: enter_field(cultureCommentsTemplates.length > 0),
+                      mouseleave: leave_field(cultureCommentsTemplates.length > 0),
+                     }" class="field field-vertical">
+                      <div class="field-value">
+                        <textarea v-model="bactery.comments" placeholder="Комментарии" rows="6" class="form-control"
+                                  :readonly="confirmed" />
+                      </div>
+
+                      <FastTemplates
+                        :update_value="updateValue(bactery, 'comments')"
+                        :value="bactery.comments || ''"
+                        :values="cultureCommentsTemplates"
+                        :confirmed="confirmed"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -142,6 +159,9 @@
   import * as action_types from '../store/action-types'
   import RadioField from '../fields/RadioField'
   import {createPopper} from '@popperjs/core'
+  import {enter_field, leave_field} from "./utils";
+  import FastTemplates from "./FastTemplates";
+  import KOEField from "../fields/KOEField";
 
   const getDefaultElement = () => ({
     pk: -1,
@@ -150,8 +170,13 @@
 
   export default {
     name: 'BacMicroForm',
-    components: {RadioField, vSelect},
+    components: {KOEField, FastTemplates, RadioField, vSelect},
     props: {
+      cultureCommentsTemplates: {
+        type: Array,
+        default: () => [],
+        required: false,
+      },
       value: {
         type: Array,
         default: () => [],
@@ -176,7 +201,9 @@
           groupsObj: {},
           antibiotics: {},
           sets: [],
-        }
+        },
+        prev_scroll: 0,
+        prev_scrollHeightTop: 0,
       }
     },
     async mounted() {
@@ -264,6 +291,17 @@
       updateSelectedAntibiotic(bactery) {
         bactery.selectedAntibiotic = this.antibiotics.groupsObj[bactery.selectedGroup.pk][0]
       },
+      updateValue(field, prop) {
+        return newValue => {
+          field[prop] = newValue
+        };
+      },
+      enter_field(...args) {
+        return enter_field.apply(this, args);
+      },
+      leave_field(...args) {
+        return leave_field.apply(this, args);
+      },
     },
     watch: {
       bacteriesResult: {
@@ -302,7 +340,13 @@
 
     .inner-select {
       align-self: stretch;
-      flex: 1;
+      &:first-child {
+        flex: 0 0 210px;
+        max-width: 210px;
+      }
+      &:last-child {
+        flex: 1;
+      }
       margin-right: 5px;
       height: 30px !important;
 
@@ -335,8 +379,6 @@
       padding-bottom: 20px;
 
       &-inner {
-        position: sticky;
-        top: 138px;
         width: 100%;
 
         textarea {

@@ -1401,12 +1401,42 @@ body > .container-fluid {
   align-items: stretch;
   justify-content: stretch;
 
+  &.field-vertical {
+    flex-direction: column;
+
+    .input-values {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .field-inputs {
+      flex: 1 0 50px;
+    }
+
+    .field-value .form-control {
+      margin-top: 0!important;
+    }
+  }
+
+  &:not(.field-vertical) {
+    margin-top: 5px;
+    margin-bottom: 5px;
+
+    .field-inputs {
+      flex: 1 0 250px;
+    }
+
+    .input-values {
+      width: 250px;
+      height: 100%;
+    }
+  }
+
   & > div {
     align-self: stretch;
   }
 
-  margin-top: 5px;
-  margin-bottom: 5px;
   background-color: #fafafa;
   position: relative;
 
@@ -1500,7 +1530,6 @@ body > .container-fluid {
 }
 
 .field-inputs {
-  flex: 1 0 250px;
   position: relative;
   overflow: visible;
 }
@@ -1515,8 +1544,6 @@ body > .container-fluid {
 }
 
 .input-values {
-  width: 250px;
-  height: 100%;
   overflow: hidden;
 }
 

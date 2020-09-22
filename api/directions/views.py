@@ -1064,9 +1064,13 @@ def directions_paraclinic_form(request):
                 }
 
                 if i.research.is_microbiology:
+                    conclusion_default = []
+                    culture_default = []
                     iss["microbiology"] = {
                         "bacteries": [],
-                        "conclusion": i.microbiology_conclusion,
+                        "conclusion": i.microbiology_conclusion or "",
+                        "conclusionTemplates": [x for x in [*i.research.bac_conclusion_templates.split('|'), *conclusion_default] if x],
+                        "cultureCommentsTemplates": [x for x in [*i.research.bac_culture_comments_templates.split('|'), *culture_default] if x],
                     }
 
                     for br in MicrobiologyResultCulture.objects.filter(issledovaniye=i):
