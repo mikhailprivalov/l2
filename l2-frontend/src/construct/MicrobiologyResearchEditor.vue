@@ -62,11 +62,11 @@
         </select>
       </div>
       <div class="input-group" style="margin-bottom: 5px">
-        <span class="input-group-addon">Дополнительные шаблоны для комментариев материала (через "|")</span>
+        <span class="input-group-addon">Шаблоны для комментариев материала (через "|")</span>
         <textarea class="form-control noresize" rows="5" v-model="cultureTpl"></textarea>
       </div>
       <div class="input-group" style="margin-bottom: 5px">
-        <span class="input-group-addon">Дополнительные шаблоны быстрого ввода заключения (через "|")</span>
+        <span class="input-group-addon">Шаблоны быстрого ввода заключения (через "|")</span>
         <textarea class="form-control noresize" rows="5" v-model="conclusionTpl"></textarea>
       </div>
     </div>
