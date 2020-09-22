@@ -147,7 +147,7 @@
               <button class="btn last btn-blue-nb nbr" type="button"
                       v-tippy="{ placement : 'bottom', arrow: true }"
                       title="Назначить всем исследованиям те же параметры" @click="applyAllFromFirst">
-                <i class="fa fa-times-circle"></i>
+                <i class="fa fa-circle"></i>
               </button>
             </td>
             <td>
