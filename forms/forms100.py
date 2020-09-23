@@ -30,6 +30,17 @@ def form_01(request_data):
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
 
+    work_data = patient_data['work_position']
+    work_data = work_data.split(';')
+    work_department, work_position = "", ""
+    if len(work_data) >= 2:
+        work_department = work_data[1]
+
+    if len(work_data) >= 1:
+        work_position = work_data[0]
+    else:
+        work_position = work_data
+
     hospital_name = SettingManager.get("rmis_orgname")
     hospital_address = SettingManager.get("org_address")
     hospital_kod_ogrn = SettingManager.get("org_ogrn")
@@ -148,8 +159,8 @@ def form_01(request_data):
         Paragraph(
             '<font face="PTAstraSerifReg">7.1 Форма собственности и вид экономической деятельности ' 'работодателя по ОКВЭД: <u>{}</u></font>'.format(50 * space_symbol), styleJustified
         ),
-        Paragraph('<font face="PTAstraSerifReg">7.2  Наименование структурного подразделения (цех, участок, отдел):' '<br/> <u> {} </u></font>'.format(120 * space_symbol), styleJustified),
-        Paragraph('<font face="PTAstraSerifReg">8. Профессия (должность) (в настоящее время):' ' <u>{}</u></font>'.format(patient_data['work_position']), styleJustified),
+        Paragraph('<font face="PTAstraSerifReg">7.2  Наименование структурного подразделения (цех, участок, отдел):<u> {}</u></font>'.format(work_department), styleJustified),
+        Paragraph('<font face="PTAstraSerifReg">8. Профессия (должность) (в настоящее время):' ' <u>{}</u></font>'.format(work_position), styleJustified),
         FrameBreak(),
         Spacer(1, space),
         Paragraph('<font face="PTAstraSerifReg">12. Заключение:</font>', styleJustified),
@@ -619,6 +630,8 @@ def form_03(request_data):
 
     work_p = patient_data['work_place_db'] if patient_data['work_place_db'] else patient_data['work_place']
     objs.append(Paragraph(f"11. Место работы: {work_p}", style))
+
+
     objs.append(Paragraph(f"12. Должность: {patient_data['work_position']}", style))
     objs.append(Paragraph(f"13. Вредность: {patient_data['harmful_factor']}", style))
 

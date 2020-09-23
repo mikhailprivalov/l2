@@ -1671,16 +1671,28 @@ def last_field_result(request):
 
     if request_data["fieldPk"].find('%work_place') != -1:
         c = Card.objects.get(pk=client_pk)
+        print(c.work_place_db)
         if c.work_place:
             work_place = c.work_place
         elif c.work_place_db:
-            work_place = c.work_place_db
+            work_place = c.work_place_db.title
         else:
             work_place = ""
         result = {"value": work_place}
     elif request_data["fieldPk"].find('%work_position') != -1:
+        work_position = ""
         c = Card.objects.get(pk=client_pk)
-        result = {"value": c.work_position}
+        work_data = c.work_position.split(';')
+        if len(work_data) >= 1:
+            work_position = work_data[0]
+        result = {"value": work_position.strip()}
+    elif request_data["fieldPk"].find('%work_department') != -1:
+        work_department = ""
+        c = Card.objects.get(pk=client_pk)
+        work_data = c.work_position.split(';')
+        if len(work_data) >= 2:
+            work_department = work_data[1]
+        result = {"value": work_department.strip()}
     elif request_data["fieldPk"].find('%harmful_factor') != -1:
         c = Card.objects.get(pk=client_pk)
         result = {"value": c.harmful_factor}
