@@ -161,7 +161,7 @@ def form_01(request_data):
         if param:
             tbl = Table(t_opinion, colWidths=(10 * mm, 60 * mm, 19 * mm, 15 * mm, 75 * mm, 30 * mm, 70 * mm,))
         else:
-            tbl = Table(t_opinion, colWidths=(10 * mm, 30 * mm, 19 * mm, 15 * mm, 46 * mm, 20 * mm, 10 * mm, 13 * mm, 11 * mm, 20 * mm, 20 * mm, 14 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
+            tbl = Table(t_opinion, colWidths=(10 * mm, 30 * mm, 19 * mm, 15 * mm, 46 * mm, 20 * mm, 10 * mm, 13 * mm, 11 * mm, 20 * mm, 18 * mm, 16 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
 
         tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),]))
 
