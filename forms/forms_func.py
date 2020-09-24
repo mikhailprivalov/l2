@@ -350,14 +350,16 @@ def get_finaldata_talon(doc_result_obj):
         if disp:
             for d in disp:
                 if d.date_end is None and d.date_start != i.time_confirmation.date():
-                    d_stand.append(d.diagnos)
+                    date_start = strdate(d.date_start, short_year=True)
+                    date_start = normalize_date(date_start)
+                    d_stand.append(f'{d.diagnos}<br/>{date_start}<br/>')
                 elif d.date_end is None and d.date_start == i.time_confirmation.date():
                     d_take.append(d.diagnos)
                 elif d.date_end == i.time_confirmation.date():
                     d_stop.append(d.diagnos)
                     d_whystop.append(d.why_stop)
 
-        temp_dict['d_stand'] = '' if not d_stand else ', '.join(d_stand)
+        temp_dict['d_stand'] = '' if not d_stand else ''.join(d_stand)
         temp_dict['d_take'] = '' if not d_take else ', '.join(d_take)
         temp_dict['d_stop'] = '' if not d_stand else ', '.join(d_stop)
         temp_dict['d_whystop'] = '' if not d_whystop else ', '.join(d_whystop)

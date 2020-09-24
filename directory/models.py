@@ -628,6 +628,17 @@ class DispensaryRouteSheet(models.Model):
         verbose_name_plural = 'Диспансеризация-Шаблоны'
 
 
+class DispensaryPlan(models.Model):
+    research = models.ForeignKey(Researches, db_index=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
+    repeat = models.PositiveSmallIntegerField(db_index=True, help_text='Кол-во в год', null=False, blank=False)
+    diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True, db_index=True)
+
+    class Meta:
+        unique_together = ("research", "diagnos")
+        verbose_name = 'Диспансерный учет план'
+        verbose_name_plural = 'Диспансерный учет'
+
+
 class GroupCulture(models.Model):
     title = models.CharField(max_length=255, help_text="Группа культур")
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие группы', db_index=True)

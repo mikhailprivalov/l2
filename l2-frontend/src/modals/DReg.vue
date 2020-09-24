@@ -14,7 +14,7 @@
           <col />
           <col width="70" />
           <col />
-          <col width="45" />
+          <col width="90" />
         </colgroup>
         <thead>
           <tr>
@@ -34,6 +34,11 @@
             <td>{{r.diagnos}}</td>
             <td>{{r.spec_reg}} {{r.doc_start_reg}}</td>
             <td>
+                <button class="btn last btn-blue-nb nbr" type="button"
+                        v-tippy="{ placement : 'bottom', arrow: true }"
+                        title="030/у" style="margin-left: -1px" @click="print_form_030(r.pk)">
+                  <i class="fa fa-print"></i>
+                </button>
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
                         title="Редактирование" style="margin-left: -1px" @click="edit(r.pk)">
@@ -201,6 +206,9 @@
           this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
+      print_form_030(pk) {
+        window.open(`/forms/pdf?type=100.04&reg_pk=${pk}&year=2020`);
+      }
     }
   }
 </script>

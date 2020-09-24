@@ -83,7 +83,7 @@ def form_04(request_data):
         return ""
 
     result = form_04_data_result_(iss)
-    work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date = (
+    work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date, department = (
         "",
         "",
         "",
@@ -91,6 +91,7 @@ def form_04(request_data):
         "",
         "",
         "",
+        ""
     )
     for i in result:
         if i["title"] == "Место работы":
@@ -111,6 +112,8 @@ def form_04(request_data):
             med_report = i["value"]
         elif i["title"] == "Дата осмотра":
             date = i["value"]
+        elif i["title"] == "Цех, участок ОПУ":
+            department = i["value"]
 
     fwb.append(Paragraph(f'Заключение № {direction}', styleCenterBold))
     fwb.append(Paragraph(f'{type_med_examination} медицинского осмотра (обследования)', styleCenterBold))
@@ -119,7 +122,7 @@ def form_04(request_data):
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph("2. Место работы:", style))
     fwb.append(Paragraph(f"2.1 Организация (предприятие): {work_place}", style))
-    fwb.append(Paragraph("2.2 Цех, участок ОПУ:", style))
+    fwb.append(Paragraph(f"2.2 Цех, участок ОПУ: {department}", style))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f"3 Профессия (должность) (в настоящее время): {work_position}", style))
     fwb.append(Paragraph(f"Вредный производственный фактор или вид работы: {harmful_factor}", style))
@@ -159,6 +162,7 @@ def form_04_data_result_(iss):
         'Медицинские противопоказания к работе',
         'Заключение по приказу N302н',
         'Дата осмотра',
+        'Цех, участок ОПУ'
     ]
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
