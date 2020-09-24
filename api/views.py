@@ -891,7 +891,12 @@ def users_view(request):
             otd["users"].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username})
         data.append(otd)
 
-    return JsonResponse({"departments": data})
+    spec = users.Speciality.objects.all().order_by("title")
+    spec_data = []
+    for s in spec:
+        spec_data.append({"pk": s.pk, "title": s.title})
+
+    return JsonResponse({"departments": data, "specialities": spec_data})
 
 
 @login_required
@@ -932,6 +937,7 @@ def user_view(request):
             "rmis_password": '',
             "doc_pk": doc.user.pk,
             "personal_code": doc.personal_code,
+            "speciality": doc.specialities_id
         }
 
     return JsonResponse({"user": data})
@@ -993,6 +999,7 @@ def user_save_view(request):
                 doc.users_services.add(DResearches.objects.get(pk=r))
 
             doc.podrazdeleniye_id = ud['department']
+            doc.specialities_id = ud['speciality']
             doc.fio = ud["fio"]
             doc.rmis_location = rmis_location
             doc.personal_code = personal_code
