@@ -50,7 +50,7 @@ from refprocessor.common import RANGE_NOT_IN, RANGE_IN
 from utils.dates import try_parse_range
 from utils.flowable import InteractiveTextField
 from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll
-from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result
+from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result, microbiology_result1
 from django.utils.module_loading import import_string
 
 pdfmetrics.registerFont(TTFont('FreeSans', os.path.join(FONTS_FOLDER, 'FreeSans.ttf')))
@@ -1100,7 +1100,7 @@ def result_print(request):
                         iss.research.is_doc_refferal
                         or iss.research.is_microbiology
                         or iss.research.is_treatment
-                        or iss.research.is_microbiology
+                        # or iss.research.is_microbiology
                         or iss.research.is_citology
                         or iss.research.is_gistology
                     ):
@@ -1121,7 +1121,9 @@ def result_print(request):
                     form_result = import_string('results.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
 
                 if iss.research.is_microbiology:
-                    fwb = microbiology_result(iss, fwb, doc)
+                    # fwb = microbiology_result(iss, fwb, doc)
+                    fwb = microbiology_result1(direction, fwb, doc)
+                    break
                 elif form_result:
                     fwb = form_result(direction, iss, fwb, doc, leftnone, request.user)
                 elif not protocol_plain_text:

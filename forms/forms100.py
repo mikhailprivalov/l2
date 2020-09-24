@@ -662,3 +662,161 @@ def form_03(request_data):
     buffer.close()
 
     return pdf
+
+
+def form_04(request_data):
+    """
+    Форма - учетная форму No 030/у "Контрольная карта диспансерного наблюдения"
+    """
+
+
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    hospital_name = SettingManager.get("org_title")
+    hospital_address = SettingManager.get("org_address")
+    hospital_kod_ogrn = SettingManager.get("org_ogrn")
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=landscape(A5), leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("Профосомотры")
+    )
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 10
+    style.leading = 12
+    style.spaceAfter = 0.5 * mm
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 12
+    styleCenter.leading = 15
+    styleCenter.spaceAfter = 1 * mm
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 15
+    styleCenterBold.face = 'PTAstraSerifBold'
+    styleCenterBold.borderColor = black
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    objs = []
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+    styleT.face = 'PTAstraSerifReg'
+
+    print_district = ''
+    if SettingManager.get("district", default='True', default_type='b'):
+        if ind_card.district is not None:
+            print_district = 'Уч: {}'.format(ind_card.district.title)
+
+    opinion = [
+        [
+            Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} <br/><u>{}</u> </font>'.format(hospital_name, hospital_address, hospital_kod_ogrn, print_district), styleT),
+            Paragraph('', styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, 2 * [90 * mm])
+    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 80), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
+
+    objs.append(tbl)
+    space_symbol = '&nbsp;'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+        patient_data['serial'] = patient_data['bc_serial']
+        patient_data['num'] = patient_data['bc_num']
+    else:
+        patient_data['serial'] = patient_data['passport_serial']
+        patient_data['num'] = patient_data['passport_num']
+
+    p_phone = ''
+    if patient_data['phone']:
+        p_phone = 'тел. ' + ", ".join(patient_data['phone'])
+
+    p_number_poliklinika = ''
+    if patient_data['number_poliklinika']:
+        p_number_poliklinika = "" + patient_data['number_poliklinika']
+
+    card_num_obj = patient_data['card_num'].split(' ')
+    p_card_num = card_num_obj[0]
+    if len(card_num_obj) == 2:
+        p_card_type = '(' + str(card_num_obj[1]) + ')'
+    else:
+        p_card_type = ''
+    content_title = [
+        Indenter(left=0 * mm),
+        Spacer(1, 1 * mm),
+        Paragraph('МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА, <br/> ПОЛУЧАЮЩЕГО МЕДИЦИНСКУЮ ПОМОЩЬ В АМБУЛАТОРНЫХ УСЛОВИЯХ', styleCenter),
+        Paragraph(
+            '{}<font size=14>№</font><font fontname="PTAstraSerifBold" size=17> {}</font><font size=14> {}</font> {}{}'.format(
+                3 * space_symbol, p_card_num, p_card_type, 40 * space_symbol, p_number_poliklinika
+            ),
+            styleCenter,
+        ),
+        Spacer(1, 2 * mm),
+        Paragraph('1.Дата заполнения медицинской карты: {}'.format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())), style),
+        Paragraph("2. Фамилия, имя, отчество:&nbsp;  <font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(patient_data['fio']), style),
+        Paragraph('3. Пол: {} {} 4. Дата рождения: {}'.format(patient_data['sex'], 3 * space_symbol, patient_data['born']), style),
+        Paragraph('5. Место регистрации: {}'.format(patient_data['main_address']), style),
+        Paragraph('{}'.format(p_phone), style),
+        Paragraph('6. Местность: городская — 1, сельская — 2', style),
+        Paragraph(
+            '7. Полис ОМС: серия {} №: {} {}' '8. СНИЛС: {}'.format(patient_data['oms']['polis_serial'], patient_data['oms']['polis_num'], 13 * space_symbol, patient_data['snils']), style
+        ),
+        Paragraph('9. Наименование страховой медицинской организации: {}'.format(patient_data['oms']['polis_issued']), style),
+        Paragraph('10. Документ: {} &nbsp; серия: {} &nbsp;&nbsp; №: {}'.format(patient_data['type_doc'], patient_data['serial'], patient_data['num']), style),
+    ]
+
+    objs.extend(content_title)
+
+    work_p = patient_data['work_place_db'] if patient_data['work_place_db'] else patient_data['work_place']
+    objs.append(Paragraph(f"11. Место работы: {work_p}", style))
+
+
+    objs.append(Paragraph(f"12. Должность: {patient_data['work_position']}", style))
+    objs.append(Paragraph(f"13. Вредность: {patient_data['harmful_factor']}", style))
+
+    opinion = [
+        [Paragraph('14. Прикрепление', style), InteractiveTextField(width=140 * mm, fontsize=10, height=5 * mm)],
+    ]
+    tbl = Table(opinion, colWidths=(40 * mm, 140 * mm), spaceBefore=0 * mm)
+    tbl.setStyle(
+        TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 0), ('BOTTOMPADDING', (0, 0), (0, 0), 4.5), ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),])
+    )
+    objs.append(tbl)
+    objs.append(Spacer(1, 7 * mm))
+    objs.append(InteractiveListBoxField())
+    objs.append(Spacer(1, 10 * mm))
+    objs.append(InteractiveListTypeMedExam())
+
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf

@@ -24,6 +24,25 @@ class ResDispensaryRouteSheet(admin.ModelAdmin):
     )
 
 
+class ResDispensaryPlan(admin.ModelAdmin):
+    list_filter = (
+        'diagnos',
+    )
+    list_display = (
+        'diagnos',
+        'repeat',
+        'research',
+    )
+    list_display_links = (
+        'diagnos',
+        'repeat',
+        'research',
+    )
+    search_fields = (
+        'diagnos',
+    )
+
+
 class ResAdmin(admin.ModelAdmin):
     list_display = (
         'title',
@@ -203,6 +222,7 @@ admin.site.register(models.ParaclinicTemplateName)
 admin.site.register(models.ParaclinicTemplateField)
 admin.site.register(models.DirectionsGroup)
 admin.site.register(models.DispensaryRouteSheet, ResDispensaryRouteSheet)
+admin.site.register(models.DispensaryPlan, ResDispensaryPlan)
 admin.site.register(models.Culture, ResCulture)
 admin.site.register(models.Antibiotic, TitleHide)
 admin.site.register(models.GroupCulture)
