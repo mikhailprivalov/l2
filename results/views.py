@@ -50,7 +50,7 @@ from refprocessor.common import RANGE_NOT_IN, RANGE_IN
 from utils.dates import try_parse_range
 from utils.flowable import InteractiveTextField
 from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll
-from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result, microbiology_result1
+from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result
 from django.utils.module_loading import import_string
 
 pdfmetrics.registerFont(TTFont('FreeSans', os.path.join(FONTS_FOLDER, 'FreeSans.ttf')))

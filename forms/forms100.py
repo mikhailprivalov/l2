@@ -630,8 +630,6 @@ def form_03(request_data):
 
     work_p = patient_data['work_place_db'] if patient_data['work_place_db'] else patient_data['work_place']
     objs.append(Paragraph(f"11. Место работы: {work_p}", style))
-
-
     objs.append(Paragraph(f"12. Должность: {patient_data['work_position']}", style))
     objs.append(Paragraph(f"13. Вредность: {patient_data['harmful_factor']}", style))
 
