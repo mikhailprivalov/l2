@@ -803,7 +803,9 @@ def form_04(request_data):
     diagnos = reg_dipensary.diagnos
     illnes = reg_dipensary.illnes
     doctor = reg_dipensary.doc_start_reg
-    doc_speciality = doctor.specialities.title
+    doc_speciality = ""
+    if doctor.specialities:
+        doc_speciality = doctor.specialities.title
     doc_fio = doctor.fio
     date_start = reg_dipensary.date_start
     date_start = strdate(date_start, short_year=True)
