@@ -1671,7 +1671,6 @@ def last_field_result(request):
 
     if request_data["fieldPk"].find('%work_place') != -1:
         c = Card.objects.get(pk=client_pk)
-        print(c.work_place_db)
         if c.work_place:
             work_place = c.work_place
         elif c.work_place_db:
