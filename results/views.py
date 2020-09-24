@@ -1121,9 +1121,7 @@ def result_print(request):
                     form_result = import_string('results.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
 
                 if iss.research.is_microbiology:
-                    # fwb = microbiology_result(iss, fwb, doc)
-                    fwb = microbiology_result1(direction, fwb, doc)
-                    break
+                    fwb = microbiology_result(iss, fwb, doc)
                 elif form_result:
                     fwb = form_result(direction, iss, fwb, doc, leftnone, request.user)
                 elif not protocol_plain_text:

@@ -619,24 +619,6 @@ def microbiology_result(iss, fwb, doc):
     return fwb
 
 
-def microbiology_result1(direction, fwb, doc):
-    pw = doc.width
-    styleSheet = getSampleStyleSheet()
-    style = styleSheet["Normal"]
-    style.fontName = "FreeSans"
-    style.fontSize = 9
-    style.alignment = TA_JUSTIFY
-    style_ml = deepcopy(style)
-    style_ml.leftIndent = 5 * mm
-    styleBold = deepcopy(style)
-    styleBold.fontName = "FreeSansBold"
-
-    print(direction.pk)
-
-
-    return fwb
-
-
 def text_to_bold(v):
     valid = check_valid_square_brackets(v)
     if valid:
