@@ -15,11 +15,13 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import NextPageTemplate, Indenter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, TableStyle, PageBreak
 
 from appconf.manager import SettingManager
-from clients.models import Card
+from clients.models import Card, DispensaryReg
 from laboratory.settings import FONTS_FOLDER
+from laboratory.utils import strdate
+from utils.dates import normalize_date
 from utils.flowable import InteractiveListBoxField, InteractiveTextField, InteractiveListTypeMedExam
 
 
@@ -285,7 +287,12 @@ def form_01(request_data):
 
     styleDoc = deepcopy(styleJustified)
     styleDoc.spaceAfter = 1 * mm
-    objs.append(Paragraph('<font face="PTAstraSerifReg">10. Заключения врачей - специалистов:</font>', styleDoc,))
+    objs.append(
+        Paragraph(
+            '<font face="PTAstraSerifReg">10. Заключения врачей - специалистов:</font>',
+            styleDoc,
+        )
+    )
     tbl_result = [
         [
             Paragraph('<font face="PTAstraSerifReg" size=11>Врач-специалист</font>', styleT),
@@ -411,7 +418,15 @@ def form_02(request_data):
     ]
 
     tbl = Table(opinion, 2 * [90 * mm])
-    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 80), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 80),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
 
     objs.append(tbl)
     space_symbol = '&nbsp;'
@@ -488,7 +503,14 @@ def form_02(request_data):
 
         tbl = Table(opinion, colWidths=(27 * mm, 30 * mm, 75 * mm, 20 * mm, 27 * mm), rowHeights=row_height)
 
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                    ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+                ]
+            )
+        )
 
         objs.append(tbl)
 
@@ -577,7 +599,15 @@ def form_03(request_data):
     ]
 
     tbl = Table(opinion, 2 * [90 * mm])
-    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 80), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 80),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
 
     objs.append(tbl)
     space_symbol = '&nbsp;'
@@ -638,13 +668,285 @@ def form_03(request_data):
     ]
     tbl = Table(opinion, colWidths=(40 * mm, 140 * mm), spaceBefore=0 * mm)
     tbl.setStyle(
-        TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 0), ('BOTTOMPADDING', (0, 0), (0, 0), 4.5), ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),])
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 0),
+                ('BOTTOMPADDING', (0, 0), (0, 0), 4.5),
+                ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+            ]
+        )
     )
     objs.append(tbl)
     objs.append(Spacer(1, 7 * mm))
     objs.append(InteractiveListBoxField())
     objs.append(Spacer(1, 10 * mm))
     objs.append(InteractiveListTypeMedExam())
+
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
+
+
+def form_04(request_data):
+    """
+    Форма 030/у - контрольная карта диспансерного учета
+    """
+    reg_dipensary = DispensaryReg.objects.get(pk=request_data["reg_pk"])
+    ind_card = reg_dipensary.card
+    patient_data = ind_card.get_data_individual()
+
+    hospital_name = SettingManager.get("org_title")
+    hospital_address = SettingManager.get("org_address")
+    hospital_kod_ogrn = SettingManager.get("org_ogrn")
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    # doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("025/у"))
+    doc = SimpleDocTemplate(
+        buffer, pagesize=landscape(A5), leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("Профосомотры")
+    )
+    width, height = portrait(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 10
+    style.leading = 12
+    style.spaceAfter = 0.5 * mm
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 12
+    styleCenter.leading = 7
+    styleCenter.spaceAfter = 1 * mm
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 15
+    styleCenterBold.face = 'PTAstraSerifBold'
+    styleCenterBold.borderColor = black
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    objs = []
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+    styleT.face = 'PTAstraSerifReg'
+
+    styleTCenter = deepcopy(styleT)
+    styleTCenter.alignment = TA_CENTER
+
+    print_district = ''
+    if SettingManager.get("district", default='True', default_type='b'):
+        if ind_card.district is not None:
+            print_district = 'Уч: {}'.format(ind_card.district.title)
+
+    opinion = [
+        [
+            Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} <br/><u>{}</u> </font>'.format(hospital_name, hospital_address, hospital_kod_ogrn, print_district), styleT),
+            Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО:<br/>' 'Медицинская документация<br/>Учетная форма N 030/у</font>', styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, 2 * [90 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 80),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    objs.append(tbl)
+    space_symbol = '&nbsp;'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+        patient_data['serial'] = patient_data['bc_serial']
+        patient_data['num'] = patient_data['bc_num']
+    else:
+        patient_data['serial'] = patient_data['passport_serial']
+        patient_data['num'] = patient_data['passport_num']
+
+    card_num_obj = patient_data['card_num'].split(' ')
+    p_card_num = card_num_obj[0]
+    if len(card_num_obj) == 2:
+        p_card_type = '(' + str(card_num_obj[1]) + ')'
+    else:
+        p_card_type = ''
+
+    diagnos = reg_dipensary.diagnos
+    illnes = reg_dipensary.illnes
+    doctor = reg_dipensary.doc_start_reg
+    doc_speciality = doctor.specialities.title
+    doc_fio = doctor.fio
+    date_start = reg_dipensary.date_start
+    date_start = strdate(date_start, short_year=True)
+    date_start = normalize_date(date_start)
+
+    date_end = reg_dipensary.date_end
+    if date_end:
+        date_end = strdate(date_end, short_year=True)
+        date_end = normalize_date(date_end)
+    else:
+        date_end = ""
+
+    why_stop = reg_dipensary.why_stop
+    content_title = [
+        Indenter(left=0 * mm),
+        Spacer(1, 1 * mm),
+        Paragraph('КОНТРОЛЬНАЯ КАРТА, ', styleCenter),
+        Paragraph(
+            'ДИСПАНСЕРНОГО НАБЛЮДЕНИЯ {}<font size=14>№</font><font fontname="PTAstraSerifBold" size=17> <u>{}</u></font><font size=14> {}</font>'.format(
+                3 * space_symbol, p_card_num, p_card_type
+            ),
+            styleCenter,
+        ),
+        Spacer(1, 7 * mm),
+        Paragraph(f'1. Диагноз заболевания, по поводу которого пациент подлежит диспансерному наблюдению: <u>{illnes}</u> Код по МКБ-10: <u>{diagnos}</u>', style),
+        Paragraph('2.Дата заполнения медицинской карты: {}'.format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())), style),
+        Paragraph(f'3. Специальность врача: <u>{doc_speciality}</u>{4 * space_symbol} 4.ФИО врача: <u>{doc_fio}</u>', style),
+        Paragraph(f'5. Дата установления диагноза: <u>{date_start}</u> {4 * space_symbol} 6. Диагноз установлен: впервые - 1, повторно - 2.', style),
+        Paragraph(f'7. Заболевание выявлено при: обращении за лечением -1, профилактическом осмотре - 2.', style),
+        Paragraph(f'8. Дата начала диспансерного наблюдения <u>{date_start}</u> {4 * space_symbol} 9. Дата прекращения диспансерного наблюдения {date_end}', style),
+        Paragraph(f'10. Причины прекращения диспансерного наблюдения: <u>{why_stop}</u>', style),
+        Paragraph("11. Фамилия, имя, отчество:&nbsp;  <font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(patient_data['fio']), style),
+        Paragraph('12. Пол: {} {} 13. Дата рождения: {}'.format(patient_data['sex'], 3 * space_symbol, patient_data['born']), style),
+        Paragraph('14. Место регистрации: {}'.format(patient_data['main_address']), style),
+        Paragraph('15. Код категории льготы:__________', style),
+    ]
+
+    objs.extend(content_title)
+    objs.append(Spacer(1, 5 * mm))
+
+    opinion = [
+        [
+            Paragraph('Даты посещений', styleTCenter),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+        ],
+        [
+            Paragraph('Назначено явиться', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+        ],
+        [
+            Paragraph('Явился(лась)', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, colWidths=(40 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+                ('SPAN', (0, 0), (-1, 0)),
+            ]
+        )
+    )
+    objs.append(tbl)
+    objs.append(PageBreak())
+    objs.append(Paragraph('оборотная сторона ф. N 030/у', style))
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(tbl)
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph('17. Сведения об изменении диагноза', style))
+    objs.append(Spacer(1, 2 * mm))
+    empty_para = [Paragraph('', styleT) for i in range(4)]
+    opinion = [
+        [
+            Paragraph('Дата', styleTCenter),
+            Paragraph('Формулировка диагноза', styleT),
+            Paragraph('Код по МКБ-10', styleT),
+            Paragraph('ФИО врача', styleT),
+        ],
+        empty_para,
+        empty_para,
+        empty_para,
+    ]
+    tbl = Table(opinion, colWidths=(30 * mm, 85 * mm, 30 * mm, 35 * mm), rowHeights=6 * mm)
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+            ]
+        )
+    )
+    objs.append(tbl)
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('18. Сопутствующие заболевания ______________________________________________________________________', style))
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('___________________________________________________________________________________________________', style))
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('19. Лечебно-профилактические мероприятия', style))
+    empty_para = [Paragraph('', styleT) for i in range(6)]
+    opinion = [
+        [
+            Paragraph('N п/п', styleT),
+            Paragraph('Мероприятия', styleT),
+            Paragraph('Дата<br/> начала', styleT),
+            Paragraph('Дата<br/>окончания', styleT),
+            Paragraph('Отметка о<br/>выполнении', styleT),
+            Paragraph('ФИО врача', styleT),
+        ],
+        empty_para,
+        empty_para,
+        empty_para,
+        empty_para,
+        empty_para,
+    ]
+
+    tbl = Table(opinion, colWidths=(10 * mm, 70 * mm, 20 * mm, 22 * mm, 23 * mm, 35 * mm), rowHeights=(10 * mm, 5 * mm, 5 * mm, 5 * mm, 5 * mm, 5 * mm))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+            ]
+        )
+    )
+    objs.append(tbl)
 
     def first_pages(canvas, document):
         canvas.saveState()
