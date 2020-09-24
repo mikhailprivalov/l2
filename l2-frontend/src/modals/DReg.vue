@@ -37,7 +37,7 @@
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
                         title="030/у" style="margin-left: -1px" @click="print_form_030(r.pk)">
-                  <i class="fa fa-print" aria-hidden="true"></i>
+                  <i class="fa fa-print"></i>
                 </button>
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"

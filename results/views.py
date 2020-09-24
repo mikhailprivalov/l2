@@ -1100,7 +1100,7 @@ def result_print(request):
                         iss.research.is_doc_refferal
                         or iss.research.is_microbiology
                         or iss.research.is_treatment
-                        # or iss.research.is_microbiology
+                        or iss.research.is_microbiology
                         or iss.research.is_citology
                         or iss.research.is_gistology
                     ):
