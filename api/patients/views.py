@@ -651,7 +651,7 @@ def load_dreg(request):
             diagnoses.add(a.diagnos)
     diagnoses = list(diagnoses)
 
-    data_researches = [
+    data_researches_example = [
         {
             "type": "research",
             "reserch_title": "Холестерин",
@@ -698,27 +698,48 @@ def load_dreg(request):
             "max_time": 1,
         },
     ]
-    print(data_researches)
-    researches = {}
-    specialities = {}
+    researches = []
+    specialities = []
+    researches_data = []
+    specialities_data = []
     for d in diagnoses:
         need = DispensaryPlan.objects.filter(diagnos=d)
         for i in need:
             if i.research:
-                if i.research in researches.values():
-                    continue
-                else:
-                    researches[i.research.pk] = i.research.title
+                if i.research not in researches:
+                    researches.append(i.research)
+                    researches_data.append(
+                        {"type": "research", "research_title": i.research.title, "researche_pk": i.research.pk, "diagnoses_time": [], "results": [], "plans": [], "max_time": 1}
+                    )
             if i.speciality:
-                if i.speciality in specialities.values():
-                    continue
-                else:
-                    specialities[i.speciality.pk] = i.speciality.title
+                if i.speciality not in specialities:
+                    specialities.append(i.speciality)
+                    specialities_data.append(
+                        {"type": "speciality", "research_title": i.speciality.title, "researche_pk": i.speciality.pk, "diagnoses_time": [], "results": [], "plans": [], "max_time": 1}
+                    )
 
-    print(specialities)
-    print(researches)
+    for d in diagnoses:
+        need = DispensaryPlan.objects.filter(diagnos=d)
+        for i in need:
+            if i.research:
+                index_res = researches.index(i.research)
+                data_dict = researches_data[index_res]
+                diagnoses_time = data_dict['diagnoses_time']
+                diagnoses_time.append({"diagnos": i.diagnos, "times": i.repeat})
+                data_dict['diagnoses_time'] = diagnoses_time.copy()
+                researches_data[index_res] = data_dict.copy()
+            if i.speciality:
+                index_spec = specialities.index(i.speciality)
+                data_dict = specialities_data[index_spec]
+                diagnoses_time = data_dict['diagnoses_time']
+                diagnoses_time.append({"diagnos": i.diagnos, "times": i.repeat})
+                data_dict['diagnoses_time'] = diagnoses_time.copy()
+                specialities_data[index_spec] = data_dict.copy()
 
-    return JsonResponse({"rows": data, 'data_researches': data_researches})
+
+    researches_data.extend(specialities_data)
+
+    return JsonResponse({"rows": data, 'data_researches': data_researches_example, "data_researches_work": researches_data})
 
 
 def load_vaccine(request):
