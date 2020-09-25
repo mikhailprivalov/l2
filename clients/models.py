@@ -11,6 +11,7 @@ from django.utils import timezone
 
 import slog.models as slog
 from appconf.manager import SettingManager
+from directory.models import Researches
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
 
@@ -1024,6 +1025,17 @@ class DispensaryReg(models.Model):
 
     class Meta:
         verbose_name = 'Д-учет'
+        verbose_name_plural = 'Д-учет'
+
+
+class DispensaryRegPlans(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, db_index=True, blank=True, default=None, null=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
+    speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальности консультации врача', on_delete=models.CASCADE)
+    date = models.DateField(help_text='Планируемая дата', db_index=True, default=None, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Д-учет план'
         verbose_name_plural = 'Д-учет'
 
 

@@ -27,20 +27,29 @@ class ResDispensaryRouteSheet(admin.ModelAdmin):
 class ResDispensaryPlan(admin.ModelAdmin):
     list_filter = (
         'diagnos',
+        'speciality',
     )
     list_display = (
         'diagnos',
         'repeat',
         'research',
+        'speciality_profile',
     )
     list_display_links = (
         'diagnos',
         'repeat',
         'research',
+        'speciality_profile',
     )
     search_fields = (
         'diagnos',
     )
+
+    def speciality_profile(self, obj):
+        if obj.speciality:
+            return obj.speciality.title
+        else:
+            return ""
 
 
 class ResAdmin(admin.ModelAdmin):

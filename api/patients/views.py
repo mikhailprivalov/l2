@@ -36,6 +36,7 @@ from laboratory.utils import strdate, start_end_year
 from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient
+from directory.models import DispensaryPlan
 
 
 def full_patient_search_data(p, query):
@@ -472,7 +473,12 @@ def individual_search(request):
             Individual.import_from_tfoms(row, no_update=True)
             forced_gender.append(row['gender'].lower())
 
-    for i in Individual.objects.filter(family=family, name=name, patronymic=patronymic, birthday=birthday,):
+    for i in Individual.objects.filter(
+        family=family,
+        name=name,
+        patronymic=patronymic,
+        birthday=birthday,
+    ):
         result.append(
             {
                 "pk": i.pk,
@@ -624,6 +630,7 @@ def edit_agent(request):
 def load_dreg(request):
     request_data = json.loads(request.body)
     data = []
+    diagnoses = set()
     for a in DispensaryReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date_start', 'pk'):
         data.append(
             {
@@ -640,7 +647,69 @@ def load_dreg(request):
                 "why_stop": a.why_stop,
             }
         )
-    return JsonResponse({"rows": data})
+        if not a.date_end:
+            diagnoses.add(a.diagnos)
+    diagnoses = list(diagnoses)
+    researches = set()
+    specialities = set()
+    data_researches = {}
+
+    data_researches = [
+        {
+            "type": "research",
+            "reserch_title": "Холестерин",
+            "researches_pk": "12",
+            "diagnoses_time": [{"diagnos": "z10.1", "times": "1"}, {"diagnos": "z10.3", "time": "2"}],
+            "results": [1, 'номер направления', '46000012323', '', 5, '', 7, 8, '', 10, '43000023232', 12],
+            "plan": [],
+            "max_time": 2,
+        },
+        {
+            "type": "research",
+            "reserch_title": "Общий анализ крови",
+            "researches_pk": "22",
+            "diagnoses_time": [{"diagnos": "z10.1", "times": "1"}, {"diagnos": "z10.3", "time": "2"}],
+            "results": [1, 'номер направления', 46000012323, '', 5, '', 7, 8, '', 10, '43000023232', 12],
+            "max_time": 2,
+        },
+        {
+            "type": "research",
+            "reserch_title": "АСаТ",
+            "researches_pk": "33",
+            "diagnoses_time": [{"diagnos": "z10.1", "times": "1"}, {"diagnos": "z10.3", "time": "2"}],
+            "results": [1, 'номер направления', '', '', 460000123343, '', 7, 8, '', 10, '43000023232', 12],
+            "max_time": 2,
+        },
+        {
+            "type": "speciality",
+            "reserch_title": "Терапевт",
+            "researches_pk": "12",
+            "diagnoses_time": [{"diagnos": "z10.1", "times": "1"}],
+            "results": [1, 'номер направления', '46000012323', '', 5, '', 7, 8, '', 10, '43000023232', 12],
+            "max_time": 1,
+        },
+        {
+            "type": "speciality",
+            "reserch_title": "Кардиолог",
+            "researches_pk": "22",
+            "diagnoses_time": [{"diagnos": "z10.3", "times": "1"}],
+            "results": ['', '', '46000012323', '', '', '', '', '', '', '', '43000023232', ''],
+            "max_time": 1,
+        },
+    ]
+    print(data_researches)
+
+    for d in diagnoses:
+        need = DispensaryPlan.objects.filter(diagnos=d)
+        for i in need:
+            if i:
+                if i.research:
+                    researches.add(i.research)
+                if i.speciality:
+                    specialities.add(i.speciality)
+                print(i.diagnos, i.research, i.repeat, i.speciality)
+
+    return JsonResponse({"rows": data, 'data_researches': data_researches})
 
 
 def load_vaccine(request):
@@ -648,7 +717,16 @@ def load_vaccine(request):
     data = []
     for a in VaccineReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date', 'pk'):
         data.append(
-            {"pk": a.pk, "date": strdate(a.date) if a.date else '', "title": a.title, "series": a.series, "amount": a.amount, "method": a.method, "step": a.step, "tap": a.tap,}
+            {
+                "pk": a.pk,
+                "date": strdate(a.date) if a.date else '',
+                "title": a.title,
+                "series": a.series,
+                "amount": a.amount,
+                "method": a.method,
+                "step": a.step,
+                "tap": a.tap,
+            }
         )
     return JsonResponse({"rows": data})
 
@@ -658,7 +736,11 @@ def load_ambulatory_data(request):
     data = []
     for a in AmbulatoryData.objects.filter(card__pk=request_data["card_pk"]).order_by('date', 'pk'):
         data.append(
-            {"pk": a.pk, "date": strdate(a.date) if a.date else '', "data": a.data,}
+            {
+                "pk": a.pk,
+                "date": strdate(a.date) if a.date else '',
+                "data": a.data,
+            }
         )
 
     return JsonResponse({"rows": data})
@@ -749,7 +831,12 @@ def load_benefit_detail(request):
             "date_end": '',
             "close": False,
         }
-    return JsonResponse({"types": [{"pk": -1, "title": 'Не выбрано'}, *[{"pk": x.pk, "title": str(x)} for x in BenefitType.objects.filter(hide=False).order_by('pk')]], **data,})
+    return JsonResponse(
+        {
+            "types": [{"pk": -1, "title": 'Не выбрано'}, *[{"pk": x.pk, "title": str(x)} for x in BenefitType.objects.filter(hide=False).order_by('pk')]],
+            **data,
+        }
+    )
 
 
 @transaction.atomic
@@ -1000,7 +1087,10 @@ def load_anamnesis(request):
             {
                 "pk": a.pk,
                 "text": a.text,
-                "who_save": {"fio": a.who_save.get_fio(dots=True), "department": a.who_save.podrazdeleniye.get_title(),},
+                "who_save": {
+                    "fio": a.who_save.get_fio(dots=True),
+                    "department": a.who_save.podrazdeleniye.get_title(),
+                },
                 "datetime": a.created_at.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
             }
         )

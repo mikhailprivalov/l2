@@ -3,6 +3,7 @@ from jsonfield import JSONField
 
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
+from users.models import Speciality
 
 
 class DirectionsGroup(models.Model):
@@ -190,6 +191,7 @@ class Researches(models.Model):
 
     bac_conclusion_templates = models.TextField(blank=True, default="", help_text="Шаблоны ввода для заключения")
     bac_culture_comments_templates = models.TextField(blank=True, default="", help_text="Шаблоны ввода для комментария в культуре")
+    speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальность услуги', on_delete=models.SET_NULL)
 
     @staticmethod
     def filter_type(t):
@@ -629,12 +631,12 @@ class DispensaryRouteSheet(models.Model):
 
 
 class DispensaryPlan(models.Model):
-    research = models.ForeignKey(Researches, db_index=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, db_index=True, blank=True, default=None, null=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
     repeat = models.PositiveSmallIntegerField(db_index=True, help_text='Кол-во в год', null=False, blank=False)
     diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True, db_index=True)
+    speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальности консультации врача', on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ("research", "diagnos")
         verbose_name = 'Диспансерный учет план'
         verbose_name_plural = 'Диспансерный учет'
 
