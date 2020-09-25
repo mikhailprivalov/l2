@@ -650,9 +650,6 @@ def load_dreg(request):
         if not a.date_end:
             diagnoses.add(a.diagnos)
     diagnoses = list(diagnoses)
-    researches = set()
-    specialities = set()
-    data_researches = {}
 
     data_researches = [
         {
@@ -661,7 +658,7 @@ def load_dreg(request):
             "researches_pk": "12",
             "diagnoses_time": [{"diagnos": "z10.1", "times": "1"}, {"diagnos": "z10.3", "time": "2"}],
             "results": [1, 'номер направления', '46000012323', '', 5, '', 7, 8, '', 10, '43000023232', 12],
-            "plan": [],
+            "plan": ['', '', '', '', '01.10.2020', '', '', '', '', '01.11.2020', '', ''],
             "max_time": 2,
         },
         {
@@ -670,6 +667,7 @@ def load_dreg(request):
             "researches_pk": "22",
             "diagnoses_time": [{"diagnos": "z10.1", "times": "1"}, {"diagnos": "z10.3", "time": "2"}],
             "results": [1, 'номер направления', 46000012323, '', 5, '', 7, 8, '', 10, '43000023232', 12],
+            "plan": ['', '', '', '', '', '', '', '', '', '', '', ''],
             "max_time": 2,
         },
         {
@@ -678,6 +676,7 @@ def load_dreg(request):
             "researches_pk": "33",
             "diagnoses_time": [{"diagnos": "z10.1", "times": "1"}, {"diagnos": "z10.3", "time": "2"}],
             "results": [1, 'номер направления', '', '', 460000123343, '', 7, 8, '', 10, '43000023232', 12],
+            "plan": ['', '', '', '', '', '', '', '', '', '', '', ''],
             "max_time": 2,
         },
         {
@@ -686,6 +685,7 @@ def load_dreg(request):
             "researches_pk": "12",
             "diagnoses_time": [{"diagnos": "z10.1", "times": "1"}],
             "results": [1, 'номер направления', '46000012323', '', 5, '', 7, 8, '', 10, '43000023232', 12],
+            "plan": ['', '', '', '', '01.10.2020', '', '', '', '', '', '', ''],
             "max_time": 1,
         },
         {
@@ -694,20 +694,29 @@ def load_dreg(request):
             "researches_pk": "22",
             "diagnoses_time": [{"diagnos": "z10.3", "times": "1"}],
             "results": ['', '', '46000012323', '', '', '', '', '', '', '', '43000023232', ''],
+            "plan": ['', '', '01.01.2021', '', '', '', '', '', '', '', '', ''],
             "max_time": 1,
         },
     ]
     print(data_researches)
-
+    researches = {}
+    specialities = {}
     for d in diagnoses:
         need = DispensaryPlan.objects.filter(diagnos=d)
         for i in need:
-            if i:
-                if i.research:
-                    researches.add(i.research)
-                if i.speciality:
-                    specialities.add(i.speciality)
-                print(i.diagnos, i.research, i.repeat, i.speciality)
+            if i.research:
+                if i.research in researches.values():
+                    continue
+                else:
+                    researches[i.research.pk] = i.research.title
+            if i.speciality:
+                if i.speciality in specialities.values():
+                    continue
+                else:
+                    specialities[i.speciality.pk] = i.speciality.title
+
+    print(specialities)
+    print(researches)
 
     return JsonResponse({"rows": data, 'data_researches': data_researches})
 
