@@ -14,6 +14,7 @@ from appconf.manager import SettingManager
 from directory.models import Researches
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
+from utils.dates import normalize_dots_date
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
@@ -227,7 +228,14 @@ class Individual(models.Model):
             for d in Document.objects.filter(individual=self, from_rmis=True):
                 kk = "%s_%s_%s" % (d.document_type_id, d.serial, d.number)
                 if out:
-                    out.write("TD %s %s %s" % (kk, kk not in save_docs, save_docs,))
+                    out.write(
+                        "TD %s %s %s"
+                        % (
+                            kk,
+                            kk not in save_docs,
+                            save_docs,
+                        )
+                    )
                 if kk not in save_docs:
                     to_delete_pks.append(d.pk)
             Document.objects.filter(pk__in=to_delete_pks).delete()
@@ -493,7 +501,14 @@ class Individual(models.Model):
             enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
 
             if not indv.exists():
-                i = Individual(family=family, name=name, patronymic=patronymic, birthday=birthday, sex=gender, tfoms_idp=idp,)
+                i = Individual(
+                    family=family,
+                    name=name,
+                    patronymic=patronymic,
+                    birthday=birthday,
+                    sex=gender,
+                    tfoms_idp=idp,
+                )
                 i.save()
             else:
                 i = indv[0]
@@ -1040,16 +1055,27 @@ class DispensaryRegPlans(models.Model):
 
     @staticmethod
     def update_plan(card_pk, research_pk, type_research, date, type_process):
+        # date: "01.01.1970"
+        card = Card.objects.get(pk=card_pk)
         research, speciality = None, None
-        if type_process == 'delete':
-            DispensaryRegPlans.objects.filter(card__pk=card_pk, date=date).delete()
-            return "Удалено"
         if type_research == 'research':
             research = Researches.objects.get(pk=research_pk)
         if type_research == 'speciality':
             speciality = Speciality.objects.get(pk=research_pk)
-        # disp_plan = DispensaryRegPlans(card__pk=card_pk, research=research, speciality=speciality, date__m)
-        return "Изменено"
+        date_month = int(date[3:5])
+        disp_plan = DispensaryRegPlans.objects.filter(card=card, research=research, speciality=speciality, date__year='2020', date__month=date_month)
+        if type_process == 'delete':
+            if disp_plan.exists():
+                for i in disp_plan:
+                    i.delete()
+                return "Удалено"
+        if type_process == 'update':
+            if DispensaryRegPlans.objects.filter(card=card, research=research, speciality=speciality, date__year='2020', date__month=date_month).exists():
+                DispensaryRegPlans.objects.filter(card=card, research=research, speciality=speciality, date__year='2020', date__month=date_month).update(date=datetime(2008, 3, 27))
+            else:
+                date = normalize_dots_date(date)
+                DispensaryRegPlans(card=card, research=research, speciality=speciality, date=datetime.date(date)).save()
+                return "Изменено"
 
 
 class Phones(models.Model):
@@ -1137,7 +1163,13 @@ class VaccineReg(models.Model):
         'R2',
         'R3',
     )
-    STEPS_CHOICES = ((x, x,) for x in STEPS)
+    STEPS_CHOICES = (
+        (
+            x,
+            x,
+        )
+        for x in STEPS
+    )
 
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     date = models.DateField(help_text='Дата', db_index=True, null=True, default=None, blank=True)

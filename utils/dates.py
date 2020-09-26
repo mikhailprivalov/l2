@@ -33,3 +33,10 @@ def normalize_date(date_value: str):
         if len(vv) == 3:
             date_value = "{}.{}.{}".format(vv[2], vv[1], vv[0])
     return date_value
+
+
+def normalize_dots_date(s):
+    if '.' in s:
+        s = s.split('.')
+        s = '{}-{}-{}'.format(s[2], s[1], s[0])
+    return s

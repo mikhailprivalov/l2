@@ -805,7 +805,7 @@ def get_dispensary_reg_plans(card, research, speciality):
     return plan
 
 
-def save_dispensary_reg_plans(request):
+def update_dispensary_reg_plans(request):
     request_data = json.loads(request.body)
     card_pk = request_data["card_pk"]
     research_pk = request_data["research"]
@@ -815,8 +815,7 @@ def save_dispensary_reg_plans(request):
     type_process = request_data["type_process"]
     update_plan = DispensaryRegPlans.update_plan(card_pk, research_pk, type_research, date, type_process)
 
-
-    return JsonResponse({"ok": True})
+    return JsonResponse({"message": update_plan})
 
 
 def load_vaccine(request):
