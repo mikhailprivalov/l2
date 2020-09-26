@@ -29,14 +29,18 @@ from clients.models import (
     Phones,
     AmbulatoryData,
     AmbulatoryDataHistory,
-)
+    DispensaryRegPlans)
 from contracts.models import Company
+from directions.models import Issledovaniya
+from directory.models import Researches
 from laboratory import settings
 from laboratory.utils import strdate, start_end_year
 from rmis_integration.client import Client
 from slog.models import Log
+from statistics_tickets.models import VisitPurpose
 from tfoms.integration import match_enp, match_patient
 from directory.models import DispensaryPlan
+from utils.dates import normalize_date
 
 
 def full_patient_search_data(p, query):
@@ -702,20 +706,26 @@ def load_dreg(request):
     specialities = []
     researches_data = []
     specialities_data = []
+    card = Card.objects.get(pk=request_data["card_pk"])
+    visits = VisitPurpose.objects.filter(title__contains="Диспансерн")
     for d in diagnoses:
         need = DispensaryPlan.objects.filter(diagnos=d)
         for i in need:
             if i.research:
                 if i.research not in researches:
                     researches.append(i.research)
+                    results = research_last_result_every_month(i.research, card)
+                    plans = dispensary_reg_plans(card, i.research, None)
                     researches_data.append(
-                        {"type": "research", "research_title": i.research.title, "researche_pk": i.research.pk, "diagnoses_time": [], "results": [], "plans": [], "max_time": 1}
+                        {"type": "research", "research_title": i.research.title, "researche_pk": i.research.pk, "diagnoses_time": [], "results": results, "plans": plans, "max_time": 1}
                     )
             if i.speciality:
                 if i.speciality not in specialities:
                     specialities.append(i.speciality)
+                    results = speciality_last_result_every_month(i.speciality, request_data["card_pk"], visits)
+                    plans = dispensary_reg_plans(card, None, i.speciality)
                     specialities_data.append(
-                        {"type": "speciality", "research_title": i.speciality.title, "researche_pk": i.speciality.pk, "diagnoses_time": [], "results": [], "plans": [], "max_time": 1}
+                        {"type": "speciality", "research_title": i.speciality.title, "researche_pk": i.speciality.pk, "diagnoses_time": [], "results": results, "plans": plans, "max_time": 1}
                     )
 
     for d in diagnoses:
@@ -736,10 +746,63 @@ def load_dreg(request):
                 data_dict['diagnoses_time'] = diagnoses_time.copy()
                 specialities_data[index_spec] = data_dict.copy()
 
-
     researches_data.extend(specialities_data)
 
     return JsonResponse({"rows": data, 'data_researches': data_researches_example, "data_researches_work": researches_data})
+
+
+def research_last_result_every_month(research, card):
+    results = []
+    filter = {
+        "napravleniye__client": card,
+        "research": research,
+        "time_confirmation__year": '2020',
+    }
+
+    for i in range(12):
+        i += 1
+        iss = Issledovaniya.objects.filter(**filter, time_confirmation__month=str(i)).order_by("-time_confirmation").first()
+        if iss:
+            date = strdate(iss.time_confirmation, short_year=True)
+            date = normalize_date(date)[0:2]
+            results.append(f'{date}-{iss.napravleniye.pk}')
+        else:
+            results.append('')
+    return results
+
+
+def speciality_last_result_every_month(speciality, card, visits):
+    results = []
+    filter = {
+        "napravleniye__client": card,
+        "time_confirmation__year": '2020',
+    }
+    researches = Researches.objects.filter(speciality=speciality)
+    for i in range(12):
+        i += 1
+        iss = (
+            Issledovaniya.objects.filter(**filter, time_confirmation__month=str(i), research__in=researches, purpose__in=visits)
+            .order_by("-time_confirmation")
+            .first()
+        )
+        if iss:
+            date = strdate(iss.time_confirmation, short_year=True)
+            date = normalize_date(date)[0:2]
+            results.append(f'{date}-{iss.napravleniye.pk}')
+        else:
+            results.append('')
+    return results
+
+
+def dispensary_reg_plans(card, research, speciality):
+    plan = ['' for i in range(12)]
+    disp_plan = DispensaryRegPlans.objects.filter(card=card, research=research, speciality=speciality)
+    for d in disp_plan:
+        date = strdate(d.date, short_year=True)
+        date = normalize_date(date).split('.')
+        plan.insert(int(date[1]), int(date[0]))
+
+    return plan
 
 
 def load_vaccine(request):

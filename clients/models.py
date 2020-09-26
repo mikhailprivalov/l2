@@ -1036,7 +1036,7 @@ class DispensaryRegPlans(models.Model):
 
     class Meta:
         verbose_name = 'Д-учет план'
-        verbose_name_plural = 'Д-учет'
+        verbose_name_plural = 'Д-учет план'
 
 
 class Phones(models.Model):
