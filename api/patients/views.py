@@ -748,7 +748,8 @@ def load_dreg(request):
 
     researches_data.extend(specialities_data)
 
-    return JsonResponse({"rows": data, 'data_researches': data_researches_example, "data_researches_work": researches_data})
+
+    return JsonResponse({"rows": data, 'data_researches': data_researches_example, "researches_data": researches_data})
 
 
 def research_last_result_every_month(research, card):
@@ -765,10 +766,14 @@ def research_last_result_every_month(research, card):
         if iss:
             date = strdate(iss.time_confirmation, short_year=True)
             date = normalize_date(date)[0:2]
-            results.append(f'{date}-{iss.napravleniye.pk}')
+            # results.append(f'{date}-{iss.napravleniye.pk}')
+            results.append(f'{date}')
         else:
             results.append('')
-    return results
+    results_end = ['', '']
+    results_end.extend(results)
+
+    return results_end
 
 
 def speciality_last_result_every_month(speciality, card, visits):
@@ -800,7 +805,8 @@ def get_dispensary_reg_plans(card, research, speciality):
     for d in disp_plan:
         date = strdate(d.date, short_year=True)
         date = normalize_date(date).split('.')
-        plan.insert(int(date[1]), int(date[0]))
+        # plan.insert(int(date[1]), int(date[0]))
+        plan[int(date[1]) - 1] = int(date[0])
 
     return plan
 

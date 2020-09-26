@@ -53,6 +53,66 @@
                 @click="edit(-1)"
                 type="button"><i class="fa fa-plus"></i> Создать запись</button>
       </div>
+      <br>
+      <table class="table table-bordered table-condensed table-sm-pd" style="table-layout: fixed; font-size: 12px">
+        <colgroup>
+          <col width="150" />
+          <col width="60" />
+          <col width="30" />
+          <col width="30" />
+          <col width="30" />
+          <col width="30" />
+          <col width="30" />
+          <col width="30" />
+          <col width="30" />
+          <col width="30" />
+          <col width="30" />
+          <col width="30" />
+          <col width="30" />
+          <col width="30" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Обследование (прием)</th>
+            <th>МКБ-10/<br>кол-во в год</th>
+            <th>янв</th>
+            <th>фев</th>
+            <th>мар</th>
+            <th>апр</th>
+            <th>май</th>
+            <th>июн</th>
+            <th>июл</th>
+            <th>авг</th>
+            <th>сент</th>
+            <th>окт</th>
+            <th>ноя</th>
+            <th>дек</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="k in researches_data">
+            <td>{{k.research_title}}</td>
+            <td>
+              <div v-for="d in k.diagnoses_time">
+                <div v-html="d.diagnos + '  /' + d.times +'<br/>'"></div>
+              </div>
+            </td>
+            <td><input v-model="k.plans[0]" type="text" class="form-control nbr input-cell"></td>
+            <td><input v-model="k.plans[1]" type="text" class="form-control nbr input-cell"></td>
+            <td><input v-model="k.plans[2]" type="text" class="form-control nbr input-cell"></td>
+            <td><input v-model="k.plans[3]" type="text" class="form-control nbr input-cell"></td>
+            <td><input v-model="k.plans[4]" type="text" class="form-control nbr input-cell"></td>
+            <td><input v-model="k.plans[5]" type="text" class="form-control nbr input-cell"></td>
+            <td><input v-model="k.plans[6]" type="text" class="form-control nbr input-cell"></td>
+            <td><input v-model="k.plans[7]" type="text" class="form-control nbr input-cell"></td>
+            <td><input v-model="k.plans[8]" type="text" class="form-control nbr input-cell"></td>
+            <td><input v-model="k.plans[9]" type="text" class="form-control nbr input-cell"></td>
+            <td><input v-model="k.plans[10]" type="text" class="form-control nbr input-cell"></td>
+            <td><input v-model="k.plans[11]" type="text" class="form-control nbr input-cell"></td>
+          </tr>
+        </tbody>
+      </table>
+
       <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
         <span slot="header" v-if="edit_pk > -1">Редактор диспансерного учёта</span>
         <span slot="header" v-else>Создание записи диспансерного учёта</span>
@@ -99,7 +159,12 @@
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-10">
+        <div class="col-xs-6">
+        </div>
+        <div class="col-xs-4">
+          <button @click="save_plan" class="btn btn-primary-nb btn-blue-nb" type="button">
+            Сохранить в план
+          </button>
         </div>
         <div class="col-xs-2">
           <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">
@@ -134,7 +199,9 @@
     data() {
       return {
         td: moment().format('YYYY-MM-DD'),
+        message: '<br>',
         rows: [],
+        researches_data: [],
         edit_data: {
           date_start: '',
           date_end: '',
@@ -190,6 +257,9 @@
         }
         this.$root.$emit('hide_dreg')
       },
+      save_plan(){
+
+      },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
         await patients_point.saveDreg({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
@@ -200,8 +270,9 @@
       },
       load_data() {
         this.$store.dispatch(action_types.INC_LOADING)
-        patients_point.loadDreg(this, 'card_pk').then(({rows}) => {
+        patients_point.loadDreg(this, 'card_pk').then(({rows, researches_data}) => {
           this.rows = rows
+          this.researches_data = researches_data
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING)
         })
@@ -214,6 +285,11 @@
 </script>
 
 <style scoped lang="scss">
+  .input-cell {
+    padding: 3px;
+    margin: 0;
+    height: 25px;
+  }
   select.form-control {
     padding: 0;
     overflow: visible;
