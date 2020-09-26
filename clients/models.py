@@ -1038,6 +1038,19 @@ class DispensaryRegPlans(models.Model):
         verbose_name = 'Д-учет план'
         verbose_name_plural = 'Д-учет план'
 
+    @staticmethod
+    def update_plan(card_pk, research_pk, type_research, date, type_process):
+        research, speciality = None, None
+        if type_process == 'delete':
+            DispensaryRegPlans.objects.filter(card__pk=card_pk, date=date).delete()
+            return "Удалено"
+        if type_research == 'research':
+            research = Researches.objects.get(pk=research_pk)
+        if type_research == 'speciality':
+            speciality = Speciality.objects.get(pk=research_pk)
+        # disp_plan = DispensaryRegPlans(card__pk=card_pk, research=research, speciality=speciality, date__m)
+        return "Изменено"
+
 
 class Phones(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)

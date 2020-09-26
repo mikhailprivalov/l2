@@ -715,7 +715,7 @@ def load_dreg(request):
                 if i.research not in researches:
                     researches.append(i.research)
                     results = research_last_result_every_month(i.research, card)
-                    plans = dispensary_reg_plans(card, i.research, None)
+                    plans = get_dispensary_reg_plans(card, i.research, None)
                     researches_data.append(
                         {"type": "research", "research_title": i.research.title, "researche_pk": i.research.pk, "diagnoses_time": [], "results": results, "plans": plans, "max_time": 1}
                     )
@@ -723,7 +723,7 @@ def load_dreg(request):
                 if i.speciality not in specialities:
                     specialities.append(i.speciality)
                     results = speciality_last_result_every_month(i.speciality, request_data["card_pk"], visits)
-                    plans = dispensary_reg_plans(card, None, i.speciality)
+                    plans = get_dispensary_reg_plans(card, None, i.speciality)
                     specialities_data.append(
                         {"type": "speciality", "research_title": i.speciality.title, "researche_pk": i.speciality.pk, "diagnoses_time": [], "results": results, "plans": plans, "max_time": 1}
                     )
@@ -794,7 +794,7 @@ def speciality_last_result_every_month(speciality, card, visits):
     return results
 
 
-def dispensary_reg_plans(card, research, speciality):
+def get_dispensary_reg_plans(card, research, speciality):
     plan = ['' for i in range(12)]
     disp_plan = DispensaryRegPlans.objects.filter(card=card, research=research, speciality=speciality)
     for d in disp_plan:
@@ -803,6 +803,20 @@ def dispensary_reg_plans(card, research, speciality):
         plan.insert(int(date[1]), int(date[0]))
 
     return plan
+
+
+def save_dispensary_reg_plans(request):
+    request_data = json.loads(request.body)
+    card_pk = request_data["card_pk"]
+    research_pk = request_data["research"]
+    type_research = request_data["type_research"]
+    date = request_data["date"]
+    # type_process: update, delete
+    type_process = request_data["type_process"]
+    update_plan = DispensaryRegPlans.update_plan(card_pk, research_pk, type_research, date, type_process)
+
+
+    return JsonResponse({"ok": True})
 
 
 def load_vaccine(request):
