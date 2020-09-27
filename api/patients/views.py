@@ -1,6 +1,7 @@
 import datetime
 import re
 import threading
+from typing import Optional, List
 
 import pytz
 import simplejson as json
@@ -34,7 +35,7 @@ from contracts.models import Company
 from directions.models import Issledovaniya
 from directory.models import Researches
 from laboratory import settings
-from laboratory.utils import strdate, start_end_year
+from laboratory.utils import strdate, start_end_year, localtime
 from rmis_integration.client import Client
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose
@@ -653,175 +654,80 @@ def load_dreg(request):
         )
         if not a.date_end:
             diagnoses.add(a.diagnos)
-    diagnoses = list(diagnoses)
 
-    data_researches_example = [
-        {
-            "type": "research",
-            "reserch_title": "Холестерин",
-            "researches_pk": "12",
-            "diagnoses_time": [{"diagnos": "z10.1", "times": "1"}, {"diagnos": "z10.3", "time": "2"}],
-            "results": [1, 'номер направления', '46000012323', '', 5, '', 7, 8, '', 10, '43000023232', 12],
-            "plan": ['', '', '', '', '01.10.2020', '', '', '', '', '01.11.2020', '', ''],
-            "max_time": 2,
-        },
-        {
-            "type": "research",
-            "reserch_title": "Общий анализ крови",
-            "researches_pk": "22",
-            "diagnoses_time": [{"diagnos": "z10.1", "times": "1"}, {"diagnos": "z10.3", "time": "2"}],
-            "results": [1, 'номер направления', 46000012323, '', 5, '', 7, 8, '', 10, '43000023232', 12],
-            "plan": ['', '', '', '', '', '', '', '', '', '', '', ''],
-            "max_time": 2,
-        },
-        {
-            "type": "research",
-            "reserch_title": "АСаТ",
-            "researches_pk": "33",
-            "diagnoses_time": [{"diagnos": "z10.1", "times": "1"}, {"diagnos": "z10.3", "time": "2"}],
-            "results": [1, 'номер направления', '', '', 460000123343, '', 7, 8, '', 10, '43000023232', 12],
-            "plan": ['', '', '', '', '', '', '', '', '', '', '', ''],
-            "max_time": 2,
-        },
-        {
-            "type": "speciality",
-            "reserch_title": "Терапевт",
-            "researches_pk": "12",
-            "diagnoses_time": [{"diagnos": "z10.1", "times": "1"}],
-            "results": [1, 'номер направления', '46000012323', '', 5, '', 7, 8, '', 10, '43000023232', 12],
-            "plan": ['', '', '', '', '01.10.2020', '', '', '', '', '', '', ''],
-            "max_time": 1,
-        },
-        {
-            "type": "speciality",
-            "reserch_title": "Кардиолог",
-            "researches_pk": "22",
-            "diagnoses_time": [{"diagnos": "z10.3", "times": "1"}],
-            "results": ['', '', '46000012323', '', '', '', '', '', '', '', '43000023232', ''],
-            "plan": ['', '', '01.01.2021', '', '', '', '', '', '', '', '', ''],
-            "max_time": 1,
-        },
-    ]
     researches = []
     specialities = []
     researches_data = []
     specialities_data = []
     card = Card.objects.get(pk=request_data["card_pk"])
-    visits = VisitPurpose.objects.filter(title__contains="Диспансерн")
-    for d in diagnoses:
+    visits = VisitPurpose.objects.filter(title__icontains="диспансерн")
+    for d in sorted(diagnoses):
         need = DispensaryPlan.objects.filter(diagnos=d)
         for i in need:
             if i.research:
                 if i.research not in researches:
                     researches.append(i.research)
-                    results = research_last_result_every_month(i.research, card)
+                    results = research_last_result_every_month([i.research], card, request_data.get('year', '2020'))
                     plans = get_dispensary_reg_plans(card, i.research, None)
                     researches_data.append(
-                        {"type": "research", "research_title": i.research.title, "researche_pk": i.research.pk, "diagnoses_time": [], "results": results, "plans": plans, "max_time": 1}
+                        {"type": "research", "research_title": i.research.title, "research_pk": i.research.pk, "diagnoses_time": [], "results": results, "plans": plans, "max_time": 1}
                     )
+                index_res = researches.index(i.research)
+                researches_data[index_res]['diagnoses_time'].append({"diagnos": i.diagnos, "times": i.repeat})
             if i.speciality:
                 if i.speciality not in specialities:
                     specialities.append(i.speciality)
-                    results = speciality_last_result_every_month(i.speciality, request_data["card_pk"], visits)
+                    results = research_last_result_every_month(Researches.objects.filter(speciality=i.speciality), request_data["card_pk"], request_data.get('year', '2020'), visits)
                     plans = get_dispensary_reg_plans(card, None, i.speciality)
                     specialities_data.append(
-                        {"type": "speciality", "research_title": i.speciality.title, "researche_pk": i.speciality.pk, "diagnoses_time": [], "results": results, "plans": plans, "max_time": 1}
+                        {"type": "speciality", "research_title": i.speciality.title, "research_pk": i.speciality.pk, "diagnoses_time": [], "results": results, "plans": plans, "max_time": 1}
                     )
-
-    for d in diagnoses:
-        need = DispensaryPlan.objects.filter(diagnos=d)
-        for i in need:
-            if i.research:
-                index_res = researches.index(i.research)
-                data_dict = researches_data[index_res]
-                diagnoses_time = data_dict['diagnoses_time']
-                diagnoses_time.append({"diagnos": i.diagnos, "times": i.repeat})
-                data_dict['diagnoses_time'] = diagnoses_time.copy()
-                researches_data[index_res] = data_dict.copy()
-            if i.speciality:
                 index_spec = specialities.index(i.speciality)
-                data_dict = specialities_data[index_spec]
-                diagnoses_time = data_dict['diagnoses_time']
-                diagnoses_time.append({"diagnos": i.diagnos, "times": i.repeat})
-                data_dict['diagnoses_time'] = diagnoses_time.copy()
-                specialities_data[index_spec] = data_dict.copy()
+                specialities_data[index_spec]['diagnoses_time'].append({"diagnos": i.diagnos, "times": i.repeat})
 
     researches_data.extend(specialities_data)
 
+    return JsonResponse({"rows": data, "researches_data": researches_data})
 
-    return JsonResponse({"rows": data, 'data_researches': data_researches_example, "researches_data": researches_data})
 
-
-def research_last_result_every_month(research, card):
+def research_last_result_every_month(researches: List[Researches], card: Card, year: str, visits: Optional[List[VisitPurpose]] = None):
     results = []
     filter = {
         "napravleniye__client": card,
-        "research": research,
-        "time_confirmation__year": '2020',
+        "research__in": researches,
+        "time_confirmation__year": year,
     }
+
+    if visits:
+        filter['purpose__in'] = visits
 
     for i in range(12):
         i += 1
-        iss = Issledovaniya.objects.filter(**filter, time_confirmation__month=str(i)).order_by("-time_confirmation").first()
+        iss: Optional[Issledovaniya] = Issledovaniya.objects.filter(**filter, time_confirmation__month=str(i)).order_by("-time_confirmation").first()
         if iss:
-            date = strdate(iss.time_confirmation, short_year=True)
-            date = normalize_date(date)[0:2]
-            # results.append(f'{date}-{iss.napravleniye.pk}')
-            results.append(f'{date}')
+            date = str(localtime(iss.time_confirmation).day).rjust(2, '0')
+            results.append({"pk": iss.napravleniye_id, "date": date})
         else:
-            results.append('')
-    results_end = ['', '']
-    results_end.extend(results)
+            results.append(None)
 
-    return results_end
-
-
-def speciality_last_result_every_month(speciality, card, visits):
-    results = []
-    filter = {
-        "napravleniye__client": card,
-        "time_confirmation__year": '2020',
-    }
-    researches = Researches.objects.filter(speciality=speciality)
-    for i in range(12):
-        i += 1
-        iss = (
-            Issledovaniya.objects.filter(**filter, time_confirmation__month=str(i), research__in=researches, purpose__in=visits)
-            .order_by("-time_confirmation")
-            .first()
-        )
-        if iss:
-            date = strdate(iss.time_confirmation, short_year=True)
-            date = normalize_date(date)[0:2]
-            results.append(f'{date}-{iss.napravleniye.pk}')
-        else:
-            results.append('')
     return results
 
 
 def get_dispensary_reg_plans(card, research, speciality):
-    plan = ['' for i in range(12)]
+    plan = [''] * 12
     disp_plan = DispensaryRegPlans.objects.filter(card=card, research=research, speciality=speciality)
     for d in disp_plan:
-        date = strdate(d.date, short_year=True)
-        date = normalize_date(date).split('.')
-        # plan.insert(int(date[1]), int(date[0]))
-        plan[int(date[1]) - 1] = int(date[0])
+        if d.date:
+            plan[d.date.month - 1] = str(d.date.day).rjust(2, '0')
 
     return plan
 
 
 def update_dispensary_reg_plans(request):
     request_data = json.loads(request.body)
-    card_pk = request_data["card_pk"]
-    research_pk = request_data["research"]
-    type_research = request_data["type_research"]
-    date = request_data["date"]
-    # type_process: update, delete
-    type_process = request_data["type_process"]
-    update_plan = DispensaryRegPlans.update_plan(card_pk, research_pk, type_research, date, type_process)
+    DispensaryRegPlans.update_plan(request_data["card_pk"], request_data["researches_data_def"], request_data["researches_data"], request_data["year"])
 
-    return JsonResponse({"message": update_plan})
+    return JsonResponse({"ok": True})
 
 
 def load_vaccine(request):

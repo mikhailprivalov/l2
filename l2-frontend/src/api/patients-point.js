@@ -50,6 +50,8 @@ const saveAnamnesis = creator({url: 'patients/individuals/save-anamnesis'}, {})
 
 const saveDreg = creator({url: 'patients/individuals/save-dreg'}, {})
 
+const savePlan = creator({url: 'patients/individuals/save-plan-dreg'}, {})
+
 const saveVaccine = creator({url: 'patients/individuals/save-vaccine'}, {})
 
 const saveAmbulatoryData = creator({url: 'patients/individuals/save-ambulatory-data'}, {})
@@ -61,7 +63,10 @@ const createIndividualFromCard = creator({url: 'patients/create-l2-individual-fr
 export default {
   searchCard, searchIndividual, searchL2Card, syncRmis, syncTfoms,
   getCard, sendCard, individualsSearch, individualSex, editDoc, updateCdu, updateWIA,
-  editAgent, loadAnamnesis, saveAnamnesis, loadDreg, loadVaccine, saveDreg, saveVaccine, loadDregDetail, loadVaccineDetail,
-  loadBenefit, loadBenefitDetail, saveBenefit, saveAmbulatoryData, loadAmbulatoryData, loadAmbulatoryDataDetail, loadAmbulatoryHistory,
+  editAgent, loadAnamnesis, saveAnamnesis, loadDreg, loadVaccine, saveDreg, saveVaccine, loadDregDetail,
+  loadVaccineDetail,
+  loadBenefit, loadBenefitDetail, saveBenefit, saveAmbulatoryData, loadAmbulatoryData, loadAmbulatoryDataDetail,
+  loadAmbulatoryHistory,
   createIndividualFromCard,
+  savePlan,
 }
