@@ -1054,28 +1054,31 @@ class DispensaryRegPlans(models.Model):
         verbose_name_plural = 'Д-учет план'
 
     @staticmethod
-    def update_plan(card_pk, research_pk, type_research, date, type_process):
+    def update_plan(card_pk, old_research, new_research):
         # date: "01.01.1970"
         card = Card.objects.get(pk=card_pk)
-        research, speciality = None, None
-        if type_research == 'research':
-            research = Researches.objects.get(pk=research_pk)
-        if type_research == 'speciality':
-            speciality = Speciality.objects.get(pk=research_pk)
-        date_month = int(date[3:5])
-        disp_plan = DispensaryRegPlans.objects.filter(card=card, research=research, speciality=speciality, date__year='2020', date__month=date_month)
-        if type_process == 'delete':
-            if disp_plan.exists():
-                for i in disp_plan:
-                    i.delete()
-                return "Удалено"
-        if type_process == 'update':
-            if DispensaryRegPlans.objects.filter(card=card, research=research, speciality=speciality, date__year='2020', date__month=date_month).exists():
-                DispensaryRegPlans.objects.filter(card=card, research=research, speciality=speciality, date__year='2020', date__month=date_month).update(date=datetime(2008, 3, 27))
-            else:
-                date = normalize_dots_date(date)
-                DispensaryRegPlans(card=card, research=research, speciality=speciality, date=datetime.date(date)).save()
-                return "Изменено"
+        year = '2020'
+        for i in range(len(old_research)):
+            research_pk, speciality_pk = None, None
+            type_research = old_research[i]["type"]
+            if type_research == "research":
+                research_pk = old_research[i]["researche_pk"]
+            if type_research == "speciality":
+                speciality_pk = old_research[i]["researche_pk"]
+            old_plans = old_research[i]["plans"]
+            new_plans = new_research[i]["plans"]
+            print(old_plans, new_plans)
+            for p in range(len(old_plans)):
+                if old_plans[p] != new_plans[p]:
+                    if old_plans[p]:
+                        current_date = f'{year}-{p+1}-{old_plans[p]}'
+                        old_data_plan = DispensaryRegPlans.objects.filter(card=card, research__pk=research_pk, speciality__pk=speciality_pk, date=current_date).first()
+                    else:
+                        old_data_plan = DispensaryRegPlans.objects.filter(card=card, research__pk=research_pk, speciality__pk=speciality_pk, date__isnull=True).first()
+                    if old_data_plan:
+                        new_date = f'{year}-{p+1}-{new_plans[p]}'
+                        old_data_plan.date = new_date
+                        old_data_plan.save()
 
 
 class Phones(models.Model):

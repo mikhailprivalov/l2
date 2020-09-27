@@ -1,5 +1,6 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%" marginLeftRight="auto" margin-top>
+  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%"
+         marginLeftRight="auto" margin-top>
     <span slot="header">Диспансерный учёт пациента
       <span v-if="!card_data.fio_age">{{card_data.family}} {{card_data.name}} {{card_data.twoname}},
       {{card_data.age}}, карта {{card_data.num}}</span>
@@ -9,111 +10,198 @@
       <table class="table table-bordered table-condensed table-sm-pd"
              style="table-layout: fixed; font-size: 12px">
         <colgroup>
-          <col width="70" />
-          <col width="98" />
-          <col />
-          <col width="70" />
-          <col />
-          <col width="90" />
+          <col width="70"/>
+          <col width="98"/>
+          <col/>
+          <col width="70"/>
+          <col/>
+          <col width="90"/>
         </colgroup>
         <thead>
-          <tr>
-            <th>Дата начала</th>
-            <th>Дата прекращения</th>
-            <th>Диагноз</th>
-            <th>Код по МКБ-10</th>
-            <th>Врач</th>
-            <th></th>
-          </tr>
+        <tr>
+          <th>Дата начала</th>
+          <th>Дата прекращения</th>
+          <th>Диагноз</th>
+          <th>Код по МКБ-10</th>
+          <th>Врач</th>
+          <th></th>
+        </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :class="{stop: !!r.date_end}">
-            <td>{{r.date_start}}</td>
-            <td>{{r.date_end}}</td>
-            <td>{{r.illnes}}</td>
-            <td>{{r.diagnos}}</td>
-            <td>{{r.spec_reg}} {{r.doc_start_reg}}</td>
-            <td>
-                <button class="btn last btn-blue-nb nbr" type="button"
-                        v-tippy="{ placement : 'bottom', arrow: true }"
-                        title="030/у" style="margin-left: -1px" @click="print_form_030(r.pk)">
-                  <i class="fa fa-print"></i>
-                </button>
-                <button class="btn last btn-blue-nb nbr" type="button"
-                        v-tippy="{ placement : 'bottom', arrow: true }"
-                        title="Редактирование" style="margin-left: -1px" @click="edit(r.pk)">
-                  <i class="glyphicon glyphicon-pencil"></i>
-                </button>
-            </td>
-          </tr>
+        <tr v-for="r in rows" :class="{stop: !!r.date_end}">
+          <td>{{r.date_start}}</td>
+          <td>{{r.date_end}}</td>
+          <td>{{r.illnes}}</td>
+          <td>{{r.diagnos}}</td>
+          <td>{{r.spec_reg}} {{r.doc_start_reg}}</td>
+          <td>
+            <button class="btn last btn-blue-nb nbr" type="button"
+                    v-tippy="{ placement : 'bottom', arrow: true }"
+                    title="030/у" style="margin-left: -1px" @click="print_form_030(r.pk)">
+              <i class="fa fa-print"></i>
+            </button>
+            <button class="btn last btn-blue-nb nbr" type="button"
+                    v-tippy="{ placement : 'bottom', arrow: true }"
+                    title="Редактирование" style="margin-left: -1px" @click="edit(r.pk)">
+              <i class="glyphicon glyphicon-pencil"></i>
+            </button>
+          </td>
+        </tr>
         </tbody>
       </table>
       <div style="margin: 0 auto; width: 200px">
         <button class="btn btn-primary-nb btn-blue-nb"
                 @click="edit(-1)"
-                type="button"><i class="fa fa-plus"></i> Создать запись</button>
+                type="button"><i class="fa fa-plus"></i> Создать запись
+        </button>
       </div>
       <br>
       <table class="table table-bordered table-condensed table-sm-pd" style="table-layout: fixed; font-size: 12px">
         <colgroup>
-          <col width="150" />
-          <col width="60" />
-          <col width="30" />
-          <col width="30" />
-          <col width="30" />
-          <col width="30" />
-          <col width="30" />
-          <col width="30" />
-          <col width="30" />
-          <col width="30" />
-          <col width="30" />
-          <col width="30" />
-          <col width="30" />
-          <col width="30" />
+          <col width="150"/>
+          <col width="60"/>
+          <col width="30"/>
+          <col width="30"/>
+          <col width="30"/>
+          <col width="30"/>
+          <col width="30"/>
+          <col width="30"/>
+          <col width="30"/>
+          <col width="30"/>
+          <col width="30"/>
+          <col width="30"/>
+          <col width="30"/>
+          <col width="30"/>
         </colgroup>
         <thead>
-          <tr>
-            <th>Обследование (прием)</th>
-            <th>МКБ-10/<br>кол-во в год</th>
-            <th>янв</th>
-            <th>фев</th>
-            <th>мар</th>
-            <th>апр</th>
-            <th>май</th>
-            <th>июн</th>
-            <th>июл</th>
-            <th>авг</th>
-            <th>сент</th>
-            <th>окт</th>
-            <th>ноя</th>
-            <th>дек</th>
-          </tr>
+        <tr>
+          <th>Обследование (прием)</th>
+          <th>МКБ-10/<br>кол-во в год</th>
+          <th>янв</th>
+          <th>фев</th>
+          <th>мар</th>
+          <th>апр</th>
+          <th>май</th>
+          <th>июн</th>
+          <th>июл</th>
+          <th>авг</th>
+          <th>сент</th>
+          <th>окт</th>
+          <th>ноя</th>
+          <th>дек</th>
+        </tr>
         </thead>
         <tbody>
-          <tr v-for="k in researches_data">
-            <td>{{k.research_title}}</td>
-            <td>
-              <div v-for="d in k.diagnoses_time">
-                <div v-html="d.diagnos + '  /' + d.times +'<br/>'"></div>
-              </div>
-            </td>
-            <td><input v-model="k.plans[0]" type="text" class="form-control nbr input-cell"></td>
-            <td><input v-model="k.plans[1]" type="text" class="form-control nbr input-cell"></td>
-            <td><input v-model="k.plans[2]" type="text" class="form-control nbr input-cell"></td>
-            <td><input v-model="k.plans[3]" type="text" class="form-control nbr input-cell"></td>
-            <td><input v-model="k.plans[4]" type="text" class="form-control nbr input-cell"></td>
-            <td><input v-model="k.plans[5]" type="text" class="form-control nbr input-cell"></td>
-            <td><input v-model="k.plans[6]" type="text" class="form-control nbr input-cell"></td>
-            <td><input v-model="k.plans[7]" type="text" class="form-control nbr input-cell"></td>
-            <td><input v-model="k.plans[8]" type="text" class="form-control nbr input-cell"></td>
-            <td><input v-model="k.plans[9]" type="text" class="form-control nbr input-cell"></td>
-            <td><input v-model="k.plans[10]" type="text" class="form-control nbr input-cell"></td>
-            <td><input v-model="k.plans[11]" type="text" class="form-control nbr input-cell"></td>
-          </tr>
+        <tr v-for="k in researches_data">
+          <td v-if="!k.result">{{k.research_title}}</td>
+          <td v-else>Результаты</td>
+          <td>
+            <div v-if="!k.result" v-for="d in k.diagnoses_time">
+              <div v-html="d.diagnos + '  /' + d.times +'<br/>'"></div>
+            </div>
+          </td>
+          <td>
+            <div v-if="!k.result"><input v-model="k.plans[0]" type="text" class="form-control nbr input-cell"></div>
+            <div v-else>
+              <a :href="`/results/preview?pk=[${k.results[0].split('-')[1]}]&hosp=0`" class="a-under" target="_blank">
+                {{k.results[0].split('-')[0]}}
+              </a>
+            </div>
+          </td>
+          <td>
+            <div v-if="!k.result"><input v-model="k.plans[1]" type="text" class="form-control nbr input-cell"></div>
+            <div v-else>
+              <a :href="`/results/preview?pk=[${k.results[1].split('-')[1]}]&hosp=0`" class="a-under" target="_blank">
+                {{k.results[1].split('-')[0]}}
+              </a>
+            </div>
+          </td>
+          <td>
+            <div v-if="!k.result"><input v-model="k.plans[2]" type="text" class="form-control nbr input-cell"></div>
+            <div v-else>
+              <a :href="`/results/preview?pk=[${k.results[2].split('-')[1]}]&hosp=0`" class="a-under" target="_blank">
+                {{k.results[2].split('-')[0]}}
+              </a>
+            </div>
+          </td>
+          <td>
+            <div v-if="!k.result"><input v-model="k.plans[3]" type="text" class="form-control nbr input-cell"></div>
+            <div v-else>
+              <a :href="`/results/preview?pk=[${k.results[3].split('-')[1]}]&hosp=0`" class="a-under" target="_blank">
+                {{k.results[3].split('-')[3]}}
+              </a>
+            </div>
+          </td>
+          <td>
+            <div v-if="!k.result"><input v-model="k.plans[4]" type="text" class="form-control nbr input-cell"></div>
+            <div v-else>
+              <a :href="`/results/preview?pk=[${k.results[4].split('-')[1]}]&hosp=0`" class="a-under" target="_blank">
+                {{k.results[4].split('-')[0]}}
+              </a>
+            </div>
+          </td>
+          <td>
+            <div v-if="!k.result"><input v-model="k.plans[5]" type="text" class="form-control nbr input-cell"></div>
+            <div v-else>
+              <a :href="`/results/preview?pk=[${k.results[5].split('-')[1]}]&hosp=0`" class="a-under" target="_blank">
+                {{k.results[5].split('-')[0]}}
+              </a>
+            </div>
+          </td>
+          <td>
+            <div v-if="!k.result"><input v-model="k.plans[6]" type="text" class="form-control nbr input-cell"></div>
+            <div v-else>
+              <a :href="`/results/preview?pk=[${k.results[6].split('-')[1]}]&hosp=0`" class="a-under" target="_blank">
+                {{k.results[6].split('-')[0]}}
+              </a>
+            </div>
+          </td>
+          <td>
+            <div v-if="!k.result"><input v-model="k.plans[7]" type="text" class="form-control nbr input-cell"></div>
+            <div v-else>
+              <a :href="`/results/preview?pk=[${k.results[7].split('-')[1]}]&hosp=0`" class="a-under" target="_blank">
+                {{k.results[7].split('-')[0]}}
+              </a>
+            </div>
+          </td>
+          <td>
+            <div v-if="!k.result"><input v-model="k.plans[8]" type="text" class="form-control nbr input-cell"></div>
+            <div v-else>
+              <a :href="`/results/preview?pk=[${k.results[8].split('-')[1]}]&hosp=0`" class="a-under" target="_blank">
+                {{k.results[8].split('-')[0]}}
+              </a>
+            </div>
+          </td>
+          <td>
+            <div v-if="!k.result"><input v-model="k.plans[9]" type="text" class="form-control nbr input-cell"></div>
+            <div v-else>
+              <a :href="`/results/preview?pk=[${k.results[9].split('-')[1]}]&hosp=0`" class="a-under" target="_blank">
+                {{k.results[9].split('-')[0]}}
+              </a>
+            </div>
+          </td>
+          <td>
+            <div v-if="!k.result"><input v-model="k.plans[10]" type="text" class="form-control nbr input-cell"></div>
+            <div v-else>
+              <a :href="`/results/preview?pk=[${k.results[10].split('-')[1]}]&hosp=0`" class="a-under" target="_blank">
+                {{k.results[10].split('-')[0]}}
+              </a>
+            </div>
+          </td>
+          <td>
+            <div v-if="!k.result"><input v-model="k.plans[11]" type="text" class="form-control nbr input-cell"></div>
+            <div v-else>
+              <a :href="`/results/preview?pk=[${k.results[11].split('-')[1]}]&hosp=0`" class="a-under" target="_blank">
+                {{k.results[11].split('-')[0]}}
+              </a>
+            </div>
+          </td>
+        </tr>
         </tbody>
       </table>
 
-      <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+      <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
+             width="100%" marginLeftRight="auto" margin-top>
         <span slot="header" v-if="edit_pk > -1">Редактор диспансерного учёта</span>
         <span slot="header" v-else>Создание записи диспансерного учёта</span>
         <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
@@ -124,7 +212,7 @@
           </div>
           <div class="form-group mkb10" style="width: 100%">
             <label>Диагноз в полной форме (код по МКБ и название):</label>
-            <m-k-bfield v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false" />
+            <m-k-bfield v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false"/>
             <input class="form-control" v-model="edit_data.diagnos" v-else readonly>
           </div>
           <div class="checkbox" style="padding-left: 15px;">
@@ -202,6 +290,7 @@
         message: '<br>',
         rows: [],
         researches_data: [],
+        old_researches_data: [],
         edit_data: {
           date_start: '',
           date_end: '',
@@ -257,8 +346,11 @@
         }
         this.$root.$emit('hide_dreg')
       },
-      save_plan(){
-
+      async save_plan() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        await patients_point.savePlanDreg({card_pk: this.card_pk, old_data: this.old_researches_data, new_data: this.researches_data})
+        await this.$store.dispatch(action_types.DEC_LOADING)
+        okmessage('Сохранено');
       },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
@@ -273,6 +365,8 @@
         patients_point.loadDreg(this, 'card_pk').then(({rows, researches_data}) => {
           this.rows = rows
           this.researches_data = researches_data
+          this.old_researches_data = JSON.parse(JSON.stringify(researches_data))
+
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING)
         })
@@ -290,6 +384,7 @@
     margin: 0;
     height: 25px;
   }
+
   select.form-control {
     padding: 0;
     overflow: visible;
@@ -297,6 +392,7 @@
 
   .nonPrior {
     opacity: .7;
+
     &:hover {
       opacity: 1;
     }
@@ -330,10 +426,13 @@
     width: 100%;
     display: flex;
     border-bottom: 1px solid #434a54;
+
     &:first-child:not(.nbt-i) {
       border-top: 1px solid #434a54;
     }
+
     justify-content: stretch;
+
     .row-t {
       background-color: #AAB2BD;
       padding: 7px 0 0 10px;
@@ -359,6 +458,7 @@
       .row-t {
         padding: 2px 0 0 10px;
       }
+
       input, .row-v, /deep/ input {
         height: 26px;
       }
@@ -367,6 +467,7 @@
     /deep/ input {
       width: 100% !important;
     }
+
     .row-v {
       padding: 7px 0 0 10px;
     }
@@ -391,21 +492,25 @@
       }
     }
   }
+
   .col-form {
     &.left {
-      padding-right: 0!important;
+      padding-right: 0 !important;
 
       .row-t, input, .row-v, /deep/ input {
         border-right: 1px solid #434a54 !important;
       }
     }
+
     &:not(.left):not(.mid) {
-      padding-left: 0!important;
+      padding-left: 0 !important;
+
       .row-t {
         border-right: 1px solid #434a54;
       }
     }
   }
+
   .info-row {
     padding: 7px;
   }
@@ -417,6 +522,7 @@
       background-color: rgba(0, 0, 0, .15);
     }
   }
+
   .str /deep/ .input-group {
     width: 100%;
   }
@@ -444,6 +550,7 @@
     text-overflow: ellipsis;
     padding: 2px .25rem;
     margin: 0 .2rem;
+
     a {
       padding: 2px 10px;
     }
@@ -452,9 +559,10 @@
   tr.stop {
     opacity: .7;
     text-decoration: line-through;
+
     &:hover {
       opacity: 1;
-    text-decoration: none;
+      text-decoration: none;
     }
   }
 </style>
