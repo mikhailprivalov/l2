@@ -1055,7 +1055,6 @@ class DispensaryRegPlans(models.Model):
 
     @staticmethod
     def update_plan(card_pk, old_research, new_research):
-        # date: "01.01.1970"
         card = Card.objects.get(pk=card_pk)
         year = '2020'
         for i in range(len(old_research)):
