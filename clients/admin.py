@@ -69,3 +69,11 @@ class BenefitTypeAdmin(admin.ModelAdmin):
 @admin.register(models.BenefitReg)
 class BenefitRegAdmin(admin.ModelAdmin):
     raw_id_fields = ('card',)
+
+
+@admin.register(models.DispensaryRegPlans)
+class ResDispensaryRegPlans(admin.ModelAdmin):
+    raw_id_fields = ('card',)
+    list_display = ('card', 'research', 'speciality', 'date', )
+    list_display_links = ('card', 'research', 'speciality', 'date', )
+    search_fields = ('research__title', 'speciality__title',)

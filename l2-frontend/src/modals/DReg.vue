@@ -1,5 +1,5 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%" marginLeftRight="auto" margin-top>
+  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="800px" width="100%" marginLeftRight="auto" margin-top>
     <span slot="header">Диспансерный учёт пациента
       <span v-if="!card_data.fio_age">{{card_data.family}} {{card_data.name}} {{card_data.twoname}},
       {{card_data.age}}, карта {{card_data.num}}</span>
@@ -23,7 +23,11 @@
             <th>Диагноз</th>
             <th>Код по МКБ-10</th>
             <th>Врач</th>
-            <th></th>
+            <th>
+              <button class="btn btn-primary-nb btn-blue-nb" style="padding-left: 4px"
+                      @click="edit(-1)"
+                      type="button">Добавить</button>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -48,11 +52,46 @@
           </tr>
         </tbody>
       </table>
-      <div style="margin: 0 auto; width: 200px">
-        <button class="btn btn-primary-nb btn-blue-nb"
-                @click="edit(-1)"
-                type="button"><i class="fa fa-plus"></i> Создать запись</button>
+      <br>
+      <table class="table table-bordered table-condensed table-sm-pd" style="table-layout: fixed; font-size: 12px">
+        <colgroup>
+          <col />
+          <col width="110" />
+          <col width="40" v-for="m in monthes" :key="m" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Обследование (прием)</th>
+            <th>МКБ-10<br>кол-во в год</th>
+            <th v-for="m in monthes" :key="`th-${m}`">{{m}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="k in researches_data">
+            <td>{{k.research_title}}</td>
+            <td>
+              <div v-for="d in k.diagnoses_time" class="mkb-year">
+                <span>{{d.diagnos}}</span> <span class="year-times">{{d.times}} р. в год</span>
+              </div>
+            </td>
+            <td v-for="(m, i) in monthes" :key="`td-${k.research_pk}-${m}`">
+              <input v-model="k.plans[i]" type="text" class="form-control nbr input-cell" maxlength="3">
+              <div v-if="k.results[i]" class="text-center">
+                <a href="#" @click.prevent="print_results(k.results[i].pk)" class="a-under"
+                   title="Печать результата" v-tippy>
+                  {{k.results[i].date}}
+                </a>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin: 0 auto 20px auto; width: 200px">
+        <button @click="save_plan" class="btn btn-primary-nb btn-blue-nb" type="button">
+          Сохранить план
+        </button>
       </div>
+
       <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
         <span slot="header" v-if="edit_pk > -1">Редактор диспансерного учёта</span>
         <span slot="header" v-else>Создание записи диспансерного учёта</span>
@@ -99,7 +138,9 @@
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-10">
+        <div class="col-xs-6">
+        </div>
+        <div class="col-xs-4">
         </div>
         <div class="col-xs-2">
           <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">
@@ -117,6 +158,7 @@
   import * as action_types from '../store/action-types'
   import MKBfield from '../fields/MKBField'
   import moment from 'moment';
+  import {cloneDeep} from 'lodash-es';
 
   export default {
     name: 'd-reg',
@@ -134,7 +176,25 @@
     data() {
       return {
         td: moment().format('YYYY-MM-DD'),
+        message: '<br>',
         rows: [],
+        researches_data: [],
+        researches_data_def: [],
+        year: Number(moment().format('YYYY')),
+        monthes: [
+          'янв',
+          'фев',
+          'мар',
+          'апр',
+          'май',
+          'июн',
+          'июл',
+          'авг',
+          'сент',
+          'окт',
+          'ноя',
+          'дек',
+        ],
         edit_data: {
           date_start: '',
           date_end: '',
@@ -190,6 +250,12 @@
         }
         this.$root.$emit('hide_dreg')
       },
+      async save_plan(){
+        await this.$store.dispatch(action_types.INC_LOADING)
+        await patients_point.savePlan(this, ['card_pk', 'researches_data', 'researches_data_def', 'year'])
+        await this.$store.dispatch(action_types.DEC_LOADING)
+        okmessage('План сохранён');
+      },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
         await patients_point.saveDreg({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
@@ -200,20 +266,30 @@
       },
       load_data() {
         this.$store.dispatch(action_types.INC_LOADING)
-        patients_point.loadDreg(this, 'card_pk').then(({rows}) => {
+        patients_point.loadDreg(this, ['card_pk', 'year']).then(({rows, researches_data}) => {
           this.rows = rows
+          this.researches_data = researches_data
+          this.researches_data_def = cloneDeep(researches_data)
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
       print_form_030(pk) {
         window.open(`/forms/pdf?type=100.04&reg_pk=${pk}&year=2020`);
-      }
+      },
+      print_results(pk) {
+        this.$root.$emit('print:results', [pk])
+      },
     }
   }
 </script>
 
 <style scoped lang="scss">
+  .input-cell {
+    padding: 3px;
+    margin: 0;
+    height: 25px;
+  }
   select.form-control {
     padding: 0;
     overflow: visible;
@@ -378,7 +454,26 @@
     text-decoration: line-through;
     &:hover {
       opacity: 1;
-    text-decoration: none;
+      text-decoration: none;
     }
+  }
+
+  .year-times {
+    font-weight: 700;
+    font-size: 90%;
+    white-space: nowrap;
+  }
+
+  .mkb-year {
+    color: #000;
+    padding: .2em .3em;
+    line-height: 1;
+    margin-bottom: 2px;
+    background-color: rgba(#000, .08);
+    border-radius: .25em;
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+    white-space: nowrap;
   }
 </style>

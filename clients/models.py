@@ -11,6 +11,7 @@ from django.utils import timezone
 
 import slog.models as slog
 from appconf.manager import SettingManager
+from directory.models import Researches
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
 
@@ -226,7 +227,14 @@ class Individual(models.Model):
             for d in Document.objects.filter(individual=self, from_rmis=True):
                 kk = "%s_%s_%s" % (d.document_type_id, d.serial, d.number)
                 if out:
-                    out.write("TD %s %s %s" % (kk, kk not in save_docs, save_docs,))
+                    out.write(
+                        "TD %s %s %s"
+                        % (
+                            kk,
+                            kk not in save_docs,
+                            save_docs,
+                        )
+                    )
                 if kk not in save_docs:
                     to_delete_pks.append(d.pk)
             Document.objects.filter(pk__in=to_delete_pks).delete()
@@ -492,7 +500,14 @@ class Individual(models.Model):
             enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
 
             if not indv.exists():
-                i = Individual(family=family, name=name, patronymic=patronymic, birthday=birthday, sex=gender, tfoms_idp=idp,)
+                i = Individual(
+                    family=family,
+                    name=name,
+                    patronymic=patronymic,
+                    birthday=birthday,
+                    sex=gender,
+                    tfoms_idp=idp,
+                )
                 i.save()
             else:
                 i = indv[0]
@@ -1027,6 +1042,49 @@ class DispensaryReg(models.Model):
         verbose_name_plural = 'Д-учет'
 
 
+class DispensaryRegPlans(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, db_index=True, blank=True, default=None, null=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
+    speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальности консультации врача', on_delete=models.CASCADE)
+    date = models.DateField(help_text='Планируемая дата', db_index=True, default=None, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Д-учет план'
+        verbose_name_plural = 'Д-учет план'
+
+    @staticmethod
+    def update_plan(card_pk, old_research, new_research, year):
+        card = Card.objects.get(pk=card_pk)
+        for i in range(len(old_research)):
+            research_pk, speciality_pk = None, None
+            type_research = old_research[i]["type"]
+            if type_research == "research":
+                research_pk = old_research[i]["research_pk"]
+            elif type_research == "speciality":
+                speciality_pk = old_research[i]["research_pk"]
+            old_plans = old_research[i]["plans"]
+            new_plans = [''.join(c for c in x if c.isdigit()) for x in new_research[i]["plans"]]
+            for m in range(12):
+                if old_plans[m] != new_plans[m]:
+                    try:
+                        if old_plans[m]:
+                            current_date = f'{year}-{m + 1}-{old_plans[m]}'
+                            old_data_plan = DispensaryRegPlans.objects.filter(card=card, research__pk=research_pk, speciality__pk=speciality_pk, date=current_date).first()
+                        else:
+                            old_data_plan = DispensaryRegPlans.objects.filter(card=card, research__pk=research_pk, speciality__pk=speciality_pk, date__isnull=True).first()
+                        if old_data_plan:
+                            if new_plans[m]:
+                                new_date = f'{year}-{m + 1}-{new_plans[m]}'
+                                old_data_plan.date = new_date
+                                old_data_plan.save()
+                            else:
+                                old_data_plan.delete()
+                        else:
+                            DispensaryRegPlans.objects.create(card=card, research_id=research_pk, speciality_id=speciality_pk, date=f'{year}-{m + 1}-{new_plans[m]}')
+                    except Exception as e:
+                        print(e)  # Возможно косячные даты с фронтенда вроде "99" или "абв", временное решение просто проигнорить
+
+
 class Phones(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     number = models.CharField(max_length=20, help_text='Номер телефона')
@@ -1112,7 +1170,13 @@ class VaccineReg(models.Model):
         'R2',
         'R3',
     )
-    STEPS_CHOICES = ((x, x,) for x in STEPS)
+    STEPS_CHOICES = (
+        (
+            x,
+            x,
+        )
+        for x in STEPS
+    )
 
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     date = models.DateField(help_text='Дата', db_index=True, null=True, default=None, blank=True)
