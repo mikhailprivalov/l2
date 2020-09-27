@@ -70,6 +70,7 @@ class BenefitTypeAdmin(admin.ModelAdmin):
 class BenefitRegAdmin(admin.ModelAdmin):
     raw_id_fields = ('card',)
 
+
 @admin.register(models.DispensaryRegPlans)
 class ResDispensaryRegPlans(admin.ModelAdmin):
     raw_id_fields = ('card',)

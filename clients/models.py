@@ -14,7 +14,6 @@ from appconf.manager import SettingManager
 from directory.models import Researches
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
-from utils.dates import normalize_dots_date
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 

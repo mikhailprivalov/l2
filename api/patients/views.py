@@ -41,7 +41,6 @@ from slog.models import Log
 from statistics_tickets.models import VisitPurpose
 from tfoms.integration import match_enp, match_patient
 from directory.models import DispensaryPlan
-from utils.dates import normalize_date
 
 
 def full_patient_search_data(p, query):
