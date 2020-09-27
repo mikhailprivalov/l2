@@ -1063,7 +1063,7 @@ class DispensaryRegPlans(models.Model):
             elif type_research == "speciality":
                 speciality_pk = old_research[i]["research_pk"]
             old_plans = old_research[i]["plans"]
-            new_plans = new_research[i]["plans"]
+            new_plans = [''.join(c for c in x if c.isdigit()) for x in new_research[i]["plans"]]
             for m in range(12):
                 if old_plans[m] != new_plans[m]:
                     try:
