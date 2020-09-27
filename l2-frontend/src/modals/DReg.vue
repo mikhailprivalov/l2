@@ -24,9 +24,9 @@
             <th>Код по МКБ-10</th>
             <th>Врач</th>
             <th>
-              <button class="btn btn-primary-nb btn-blue-nb"
-                @click="edit(-1)"
-                type="button"><i class="fa fa-plus"></i> запись</button>
+              <button class="btn btn-primary-nb btn-blue-nb" style="padding-left: 4px"
+                      @click="edit(-1)"
+                      type="button">Добавить</button>
             </th>
           </tr>
         </thead>

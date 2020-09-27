@@ -831,7 +831,7 @@ def form_04(request_data):
         ),
         Spacer(1, 7 * mm),
         Paragraph(f'1. Диагноз заболевания, по поводу которого пациент подлежит диспансерному наблюдению: <u>{illnes}</u> Код по МКБ-10: <u>{diagnos}</u>', style),
-        Paragraph('2.Дата заполнения медицинской карты: {}'.format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())), style),
+        Paragraph('2.Дата заполнения медицинской карты: _____________________', style),
         Paragraph(f'3. Специальность врача: <u>{doc_speciality}</u>{4 * space_symbol} 4.ФИО врача: <u>{doc_fio}</u>', style),
         Paragraph(f'5. Дата установления диагноза: <u>{date_start}</u> {4 * space_symbol} 6. Диагноз установлен: впервые - 1, повторно - 2.', style),
         Paragraph('7. Заболевание выявлено при: обращении за лечением -1, профилактическом осмотре - 2.', style),
