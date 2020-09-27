@@ -1066,7 +1066,6 @@ class DispensaryRegPlans(models.Model):
                 speciality_pk = old_research[i]["researche_pk"]
             old_plans = old_research[i]["plans"]
             new_plans = new_research[i]["plans"]
-            print(old_plans, new_plans)
             for p in range(len(old_plans)):
                 if old_plans[p] != new_plans[p]:
                     if old_plans[p]:
@@ -1075,8 +1074,11 @@ class DispensaryRegPlans(models.Model):
                     else:
                         old_data_plan = DispensaryRegPlans.objects.filter(card=card, research__pk=research_pk, speciality__pk=speciality_pk, date__isnull=True).first()
                     if old_data_plan:
-                        new_date = f'{year}-{p+1}-{new_plans[p]}'
-                        old_data_plan.date = new_date
+                        if new_plans[p]:
+                            new_date = f'{year}-{p+1}-{new_plans[p]}'
+                            old_data_plan.date = new_date
+                        else:
+                            old_data_plan.date = None
                         old_data_plan.save()
 
 
