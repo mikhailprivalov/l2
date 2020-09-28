@@ -857,10 +857,7 @@ def form_04(request_data):
 
     for i in research_need:
         if i.speciality:
-            if i.is_visit:
-                visits = ['', Paragraph(f'{i.speciality.title}', styleBold), '', '', '', '']
-            else:
-                specialities_list.append(i.speciality.title)
+            specialities_list.append(i.speciality.title)
         if i.research:
             researches_list.append(i.research.title)
 
