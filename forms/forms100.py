@@ -18,7 +18,8 @@ from reportlab.platypus import NextPageTemplate, Indenter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, TableStyle, PageBreak
 
 from appconf.manager import SettingManager
-from clients.models import Card, DispensaryReg
+from clients.models import Card, DispensaryReg, DispensaryRegPlans
+from directory.models import DispensaryPlan
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
 from utils.dates import normalize_date
@@ -761,6 +762,8 @@ def form_04(request_data):
     styleTCenter = deepcopy(styleT)
     styleTCenter.alignment = TA_CENTER
 
+
+
     print_district = ''
     if SettingManager.get("district", default='True', default_type='b'):
         if ind_card.district is not None:
@@ -846,6 +849,22 @@ def form_04(request_data):
     objs.extend(content_title)
     objs.append(Spacer(1, 5 * mm))
 
+
+    research_need = DispensaryPlan.objects.filter(diagnos=diagnos).order_by('research__title', 'speciality__title')
+    researches_list = []
+    specialities_list = []
+    visits = []
+
+    for i in research_need:
+        if i.speciality:
+            if i.is_visit:
+                visits = ['', Paragraph(f'{i.speciality.title}', styleBold), '', '', '', '']
+            else:
+                specialities_list.append(i.speciality.title)
+        if i.research:
+            researches_list.append(i.research.title)
+
+    researches_list.extend(specialities_list)
     opinion = [
         [
             Paragraph('Даты посещений', styleTCenter),
@@ -923,24 +942,22 @@ def form_04(request_data):
     objs.append(Paragraph('___________________________________________________________________________________________________', style))
     objs.append(Spacer(1, 1 * mm))
     objs.append(Paragraph('19. Лечебно-профилактические мероприятия', style))
-    empty_para = [Paragraph('', styleT) for i in range(6)]
-    opinion = [
-        [
+
+    opinion_title = [
             Paragraph('N п/п', styleT),
             Paragraph('Мероприятия', styleT),
             Paragraph('Дата<br/> начала', styleT),
             Paragraph('Дата<br/>окончания', styleT),
             Paragraph('Отметка о<br/>выполнении', styleT),
             Paragraph('ФИО врача', styleT),
-        ],
-        empty_para,
-        empty_para,
-        empty_para,
-        empty_para,
-        empty_para,
-    ]
+        ]
 
-    tbl = Table(opinion, colWidths=(10 * mm, 70 * mm, 20 * mm, 22 * mm, 23 * mm, 35 * mm), rowHeights=(10 * mm, 5 * mm, 5 * mm, 5 * mm, 5 * mm, 5 * mm))
+    opinion = [['', Paragraph(f'{i}', styleT), '', '', '', ''] for i in researches_list]
+    if len(visits) > 0:
+        opinion.insert(0, visits)
+    opinion.insert(0, opinion_title)
+
+    tbl = Table(opinion, colWidths=(10 * mm, 70 * mm, 20 * mm, 22 * mm, 23 * mm, 35 * mm))
     tbl.setStyle(
         TableStyle(
             [
