@@ -1885,3 +1885,15 @@ def all_directions_in_favorites(request):
     ]
 
     return JsonResponse({"data": data})
+
+
+def directions_type_date(request):
+    podr = request.user.doctorprofile.podrazdeleniye
+    print(podr.pk, podr.title)
+    request_data = json.loads(request.body)
+    type_direction = request_data['type']
+    date = request_data['date']
+    print('########')
+    print(type_direction)
+    print(date)
+    return JsonResponse({"data": True})

@@ -33,7 +33,13 @@ class CardAdmin(admin.ModelAdmin):
     raw_id_fields = (
         'individual',
         'polis',
+        'mother',
+        'father',
+        'curator',
+        'agent',
+        'payer',
     )
+
     search_fields = ('individual__family',)
 
 

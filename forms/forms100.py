@@ -17,11 +17,13 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import NextPageTemplate, Indenter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, TableStyle, PageBreak
 
+from api.patients.views import research_last_result_every_month, get_dispensary_reg_plans
 from appconf.manager import SettingManager
 from clients.models import Card, DispensaryReg, DispensaryRegPlans
-from directory.models import DispensaryPlan
+from directory.models import DispensaryPlan, Researches
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
+from statistics_tickets.models import VisitPurpose
 from utils.dates import normalize_date
 from utils.flowable import InteractiveListBoxField, InteractiveTextField, InteractiveListTypeMedExam
 
@@ -853,13 +855,45 @@ def form_04(request_data):
     research_need = DispensaryPlan.objects.filter(diagnos=diagnos).order_by('research__title', 'speciality__title')
     researches_list = []
     specialities_list = []
-    visits = []
+    visits_result = []
+    visits_research = VisitPurpose.objects.filter(title__icontains="диспансерн")
 
+    year = '2020'
     for i in research_need:
         if i.speciality:
-            specialities_list.append(i.speciality.title)
+            results = research_last_result_every_month(Researches.objects.filter(speciality=i.speciality), ind_card, year, visits_research)
+            dates_result = " "
+            dates_plan = " "
+            plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year='2020')
+            for p in plans:
+                date = strdate(p.date)
+                dates_plan = f"{dates_plan} {normalize_date(date)[0:5]};"
+            for r in range(12):
+                if results[r]:
+                    if r < 9:
+                        dates_result = f"{dates_result} {results[r]['date']}.0{r + 1};"
+                    else:
+                        dates_result = f"{dates_result} {results[r]['date']}.{r + 1};"
+            if i.is_visit:
+                visits_result.append(dates_result)
+            else:
+                specialities_list.append(f'{i.speciality.title}-{dates_plan}-{dates_result}')
+
         if i.research:
-            researches_list.append(i.research.title)
+            dates_plan = " "
+            plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year='2020')
+            for p in plans:
+                date = strdate(p.date)
+                dates_plan = f"{dates_plan}{normalize_date(date)[0:5]};"
+            results = research_last_result_every_month([i.research], ind_card, year)
+            dates_result = ""
+            for r in range(12):
+                if results[r]:
+                    if r < 9:
+                        dates_result = f"{dates_result} {results[r]['date']}.0{r + 1};"
+                    else:
+                        dates_result = f"{dates_result} {results[r]['date']}.{r + 1};"
+            researches_list.append(f'{i.research.title}-{dates_plan}-{dates_result}')
 
     researches_list.extend(specialities_list)
     opinion = [
@@ -922,7 +956,6 @@ def form_04(request_data):
         ],
         empty_para,
         empty_para,
-        empty_para,
     ]
     tbl = Table(opinion, colWidths=(30 * mm, 85 * mm, 30 * mm, 35 * mm), rowHeights=6 * mm)
     tbl.setStyle(
@@ -949,12 +982,10 @@ def form_04(request_data):
             Paragraph('ФИО врача', styleT),
         ]
 
-    opinion = [['', Paragraph(f'{i}', styleT), '', '', '', ''] for i in researches_list]
-    if len(visits) > 0:
-        opinion.insert(0, visits)
+    opinion = [['', Paragraph(f'{i.split("-")[0]}', styleT), '', Paragraph(f'{i.split("-")[2]}', styleT), ''] for i in researches_list]
     opinion.insert(0, opinion_title)
 
-    tbl = Table(opinion, colWidths=(10 * mm, 70 * mm, 20 * mm, 22 * mm, 23 * mm, 35 * mm))
+    tbl = Table(opinion, colWidths=(10 * mm, 60 * mm, 25 * mm, 25 * mm, 23 * mm, 35 * mm))
     tbl.setStyle(
         TableStyle(
             [

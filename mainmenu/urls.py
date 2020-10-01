@@ -25,6 +25,7 @@ urlpatterns = [
     path('results_history', views.results_history),  # TemplateView.as_view(template_name="dashboard/results_history.html")),
     path('results_report', views.results_report),
     path('results_fastprint', TemplateView.as_view(template_name="dashboard/results_fastprint.html")),
+    path('results_department', TemplateView.as_view(template_name="dashboard/results_department.html")),
     path('utils', TemplateView.as_view(template_name="dashboard/utils.html")),
     path('results_history/search', views.results_history_search),
     path('change_password', views.change_password),
