@@ -97,3 +97,40 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
 
         row = cursor.fetchall()
     return row
+
+
+# def get_confirm_direction(d_s, d_e):
+#     with connection.cursor() as cursor:
+#         cursor.execute(
+#             """
+#         SELECT DISTINCT ON (napravleniye_id) napravleniye_id FROM public.directions_issledovaniya
+#         WHERE time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+#         AND research_id IN (SELECT id FROM directory_researches WHERE
+#             is_hospital=false AND
+#             is_slave_hospital=false AND
+#             is_doc_refferal=false AND
+#             is_paraclinic=false AND
+#             is_gistology=false AND
+#             is_microbiology=false AND
+#             is_citology=false AND
+#             is_treatment=false AND
+#             is_stom=false)
+#         """,
+#             params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE,},
+#         )
+#         row = cursor.fetchall()
+#     return row
+
+
+def get_confirm_direction(d_s, d_e):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT DISTINCT ON (napravleniye_id) napravleniye_id FROM public.directions_issledovaniya
+        WHERE time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+        AND research_id IN (SELECT id FROM directory_researches WHERE is_paraclinic=true)
+        """,
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE,},
+        )
+        row = cursor.fetchall()
+    return row

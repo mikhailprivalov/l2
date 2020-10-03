@@ -46,8 +46,6 @@
           </div>
         </div>
       </div>
-      <!--        <div class="col-xs-4">-->
-      <!--        </div>-->
     </div>
 
   </div>
@@ -56,21 +54,25 @@
 <script>
   import * as action_types from "../store/action-types";
   import directions_point from '../api/directions-point'
-  import departments from "../store/modules/departments";
+  import moment from "moment";
 
   export default {
     name: "results-department",
     data() {
       return {
-        date: '',
+        date: moment().format('YYYY-MM-DD'),
       }
     },
     methods: {
       async print(type) {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const data = directions_point.getDirectionsTypeDate({'type': type, 'date': this.date})
+        const {results} = await directions_point.getDirectionsTypeDate({'type': type, 'date': this.date})
+        this.print_results(results)
         await this.$store.dispatch(action_types.DEC_LOADING)
-      }
+      },
+      print_results(pk) {
+        this.$root.$emit('print:results', pk)
+      },
     }
   }
 
