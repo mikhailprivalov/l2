@@ -21,9 +21,9 @@
           <div class="autocomplete">
             <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
                    maxlength="255" @keyup.enter="search" @keypress="keypress" @keydown="keypress_arrow"
-                   @click="click_input" @blur="unblur"
+                   @click="click_input" @blur="blur"
                    @keyup.esc="suggests.open = false"
-                   @focus="suggests.open = true; suggests.focused = -1">
+                   @focus="suggests_focus">
             <div class="clear-input" :class="{display: query.length > 0}" @click="clear_input">
               <i class="fa fa-times"></i>
             </div>
@@ -564,10 +564,17 @@
           this.loadSuggests();
         }
       }, 200),
-      unblur() {
+      blur() {
         setTimeout(() => {
           this.suggests.open = false
         }, 200)
+      },
+      suggests_focus() {
+        if (this.normalized_query.length === 0) {
+          return
+        }
+        this.suggests.focused = -1;
+        this.suggests.open = true;
       },
       move_focus(d) {
         this.suggests.focused += d
