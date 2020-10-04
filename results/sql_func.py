@@ -32,11 +32,7 @@ def get_not_confirm_direction(list_dirs):
 def get_direction_by_client(list_dirs):
     with connection.cursor() as cursor:
         cursor.execute(
-            """
-        SELECT id as dir_id, client_id  FROM public.directions_napravleniya
-        WHERE id = ANY(ARRAY[%(num_dirs)s])
-	    order by client_id
-        """,
+            """SELECT id as dir_id, client_id  FROM public.directions_napravleniya WHERE id = ANY(ARRAY[%(num_dirs)s]) order by client_id""",
             params={'num_dirs': list_dirs},
         )
         row = cursor.fetchall()
