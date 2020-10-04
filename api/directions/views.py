@@ -45,7 +45,7 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
 from users.models import DoctorProfile
 from utils.dates import normalize_date
 from utils.dates import try_parse_range
-from .sql_func import get_history_dir, get_confirm_direction
+from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate
@@ -1893,14 +1893,18 @@ def directions_type_date(request):
     podr = request.user.doctorprofile.podrazdeleniye
     print(podr.pk, podr.title)
     request_data = json.loads(request.body)
-    type_direction = request_data['type']
+    is_lab = request_data.get('is_lab', False)
+    is_paraclinic = request_data.get('is_paraclinic', False)
+    is_doc_refferal = request_data.get('is_doc_refferal', False)
     date = request_data['date']
     date = normalize_date(date)
     d1 = datetime.datetime.strptime(date, '%d.%m.%Y')
     start_date = datetime.datetime.combine(d1, datetime.time.min)
     end_date = datetime.datetime.combine(d1, datetime.time.max)
-    confirm_direction = get_confirm_direction(start_date, end_date)
+    confirm_direction = get_confirm_direction(start_date, end_date, is_lab, is_paraclinic, is_doc_refferal)
     confirm_direction = [i[0] for i in confirm_direction]
+    confirm_direction_department = filter_direction_department(confirm_direction, podr.pk)
+    confirm_direction = [i[0] for i in confirm_direction_department]
     not_confirm_direction = get_not_confirm_direction(confirm_direction)
     not_confirm_direction = [i[0] for i in not_confirm_direction]
     result_direction = list(set(confirm_direction) - set(not_confirm_direction))
