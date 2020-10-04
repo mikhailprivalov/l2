@@ -228,8 +228,8 @@
       <div slot="body">
         <div class="founded" v-for="(row, i) in founded_cards" @click="select_card(i)">
           <div class="founded-row">Карта <span class="b">{{row.type_title}} {{row.num}}</span></div>
-          <div class="founded-row"><span class="b">ФИО, пол:</span> {{row.family}} {{row.name}} {{row.twoname}},
-            {{row.sex}}
+          <div class="founded-row">
+            <span class="b">ФИО, пол:</span> {{row.family}} {{row.name}} {{row.twoname}}, {{row.sex}}
           </div>
           <div class="founded-row"><span class="b">Дата рождения:</span> {{row.birthday}} ({{row.age}})</div>
           <div class="founded-row" v-for="d in row.docs">
