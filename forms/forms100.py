@@ -17,7 +17,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import NextPageTemplate, Indenter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, TableStyle, PageBreak
 
-from api.patients.views import research_last_result_every_month, get_dispensary_reg_plans
+from api.patients.views import research_last_result_every_month
 from appconf.manager import SettingManager
 from clients.models import Card, DispensaryReg, DispensaryRegPlans
 from directory.models import DispensaryPlan, Researches
@@ -764,8 +764,6 @@ def form_04(request_data):
     styleTCenter = deepcopy(styleT)
     styleTCenter.alignment = TA_CENTER
 
-
-
     print_district = ''
     if SettingManager.get("district", default='True', default_type='b'):
         if ind_card.district is not None:
@@ -850,7 +848,6 @@ def form_04(request_data):
 
     objs.extend(content_title)
     objs.append(Spacer(1, 5 * mm))
-
 
     research_need = DispensaryPlan.objects.filter(diagnos=diagnos).order_by('research__title', 'speciality__title')
     researches_list = []
@@ -974,13 +971,13 @@ def form_04(request_data):
     objs.append(Paragraph('19. Лечебно-профилактические мероприятия', style))
 
     opinion_title = [
-            Paragraph('N п/п', styleT),
-            Paragraph('Мероприятия', styleT),
-            Paragraph('Дата<br/> начала', styleT),
-            Paragraph('Дата<br/>окончания', styleT),
-            Paragraph('Отметка о<br/>выполнении', styleT),
-            Paragraph('ФИО врача', styleT),
-        ]
+        Paragraph('N п/п', styleT),
+        Paragraph('Мероприятия', styleT),
+        Paragraph('Дата<br/> начала', styleT),
+        Paragraph('Дата<br/>окончания', styleT),
+        Paragraph('Отметка о<br/>выполнении', styleT),
+        Paragraph('ФИО врача', styleT),
+    ]
 
     opinion = [['', Paragraph(f'{i.split("-")[0]}', styleT), '', Paragraph(f'{i.split("-")[2]}', styleT), ''] for i in researches_list]
     opinion.insert(0, opinion_title)
