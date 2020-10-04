@@ -1,15 +1,12 @@
 <template>
   <div>
-    <br/>
-    <br/>
-    <br/>
-    <div class="row">
+    <div class="row" style="margin-top: 60px">
       <div class="col-xs-4">
       </div>
       <div class="col-xs-4">
         <div class="panel panel-default panel-flt">
           <div class="panel-heading">
-            <h3 class="panel-title">Быстрая печать результатов</h3>
+            <h3 class="panel-title">Быстрая печать результатов по отделению</h3>
           </div>
           <div class="panel-body">
             <div class="row">
@@ -40,7 +37,7 @@
               <div class="col-xs-4" style="text-align: right;line-height: 1.26;">
                 <div class="checkbox">
                   <label>
-                    <input type="checkbox" v-model="is_doc_reffearl"> Консультации
+                    <input type="checkbox" v-model="is_doc_refferal"> Консультации
                   </label>
                 </div>
               </div>
@@ -74,15 +71,16 @@
         date: moment().format('YYYY-MM-DD'),
         is_lab: true,
         is_paraclinic: true,
-        is_doc_reffearl: false,
+        is_doc_refferal: false,
       }
     },
     methods: {
       async print(type) {
         await this.$store.dispatch(action_types.INC_LOADING)
         const {results} = await directions_point.getDirectionsTypeDate({
-          'is_lab': this.is_lab, 'is_paraclinic': this.is_paraclinic, 'is_doc_reffearl': this.is_doc_reffearl,
-          'date': this.date});
+          'is_lab': this.is_lab, 'is_paraclinic': this.is_paraclinic, 'is_doc_refferal': this.is_doc_refferal,
+          'date': this.date
+        });
         this.print_results(results);
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
