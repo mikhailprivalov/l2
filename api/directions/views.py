@@ -1236,6 +1236,9 @@ def directions_anesthesia_load(request):
                             if type in ['potent_drugs', 'narcotic_drugs'] and v:
                                 sum += float(v.replace(',', '.'))
                     current_param.append(sum or '')
+                    current_param_temp = set([current_param[i] for i in range(1, len(current_param))])
+                    if len(current_param_temp) == 1 and '' in current_param_temp:
+                        continue
                     tb_data.append(current_param)
                     row_category[len(tb_data) - 1] = type
 
