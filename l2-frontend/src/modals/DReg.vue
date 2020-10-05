@@ -1,13 +1,13 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="800px" width="100%" marginLeftRight="auto" margin-top>
+  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="900px" width="100%" marginLeftRight="auto" margin-top>
     <span slot="header">Диспансерный учёт пациента
       <span v-if="!card_data.fio_age">{{card_data.family}} {{card_data.name}} {{card_data.twoname}},
       {{card_data.age}}, карта {{card_data.num}}</span>
       <span v-else>{{card_data.fio_age}}</span>
     </span>
-    <div slot="body" style="min-height: 200px" class="registry-body">
+    <div slot="body" style="min-height: 200px;" class="registry-body">
       <table class="table table-bordered table-condensed table-sm-pd"
-             style="table-layout: fixed; font-size: 12px">
+             style="table-layout: fixed; font-size: 12px; margin-bottom: 0;">
         <colgroup>
           <col width="70" />
           <col width="98" />
@@ -52,44 +52,79 @@
           </tr>
         </tbody>
       </table>
-      <br>
-      <table class="table table-bordered table-condensed table-sm-pd" style="table-layout: fixed; font-size: 12px">
-        <colgroup>
-          <col />
-          <col width="110" />
-          <col width="40" v-for="m in monthes" :key="m" />
-        </colgroup>
-        <thead>
-          <tr>
-            <th>Обследование (прием)</th>
-            <th>МКБ-10<br>кол-во в год</th>
-            <th v-for="m in monthes" :key="`th-${m}`">{{m}}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="k in researches_data">
-            <td>{{k.research_title}}</td>
-            <td>
-              <div v-for="d in k.diagnoses_time" class="mkb-year">
-                <span>{{d.diagnos}}</span> <span class="year-times">{{d.times}} р. в год</span>
-              </div>
-            </td>
-            <td v-for="(m, i) in monthes" :key="`td-${k.research_pk}-${m}`">
-              <input v-model="k.plans[i]" type="text" class="form-control nbr input-cell" maxlength="3">
-              <div v-if="k.results[i]" class="text-center">
-                <a href="#" @click.prevent="print_results(k.results[i].pk)" class="a-under"
-                   title="Печать результата" v-tippy>
-                  {{k.results[i].date}}
+      <template v-if="researches_data && researches_data.length > 0">
+        <div class="years">
+          <div class="year"
+               @click="year = y; load_data()"
+               :class="{active: y === year}" v-for="y in years">
+            {{y}}
+          </div>
+        </div>
+        <table class="table table-bordered table-condensed table-sm-pd"
+               style="table-layout: fixed; font-size: 12px; margin-top: 0;">
+          <colgroup>
+            <col />
+            <col width="110" />
+            <col width="40" v-for="m in monthes" :key="m" />
+            <col width="30" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Обследование (прием)</th>
+              <th>МКБ-10<br>кол-во в год</th>
+              <th v-for="(m, i) in monthes" :key="`th-${m}`" class="text-center">
+                {{m}}<br />
+                <a href="#" class="a-under" @click.prevent="fill_column(i)"
+                   v-if="researches_data && researches_data.length > 1"
+                   title="Заполнить столбец по первой строке" v-tippy="{ placement : 'top', arrow: true }">
+                  <i class="fa fa-arrow-circle-down"></i>
                 </a>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div style="margin: 0 auto 20px auto; width: 200px">
-        <button @click="save_plan" class="btn btn-primary-nb btn-blue-nb" type="button">
-          Сохранить план
-        </button>
+              </th>
+              <th title="Сколько есть результатов в году" v-tippy="{ placement : 'top', arrow: true }"
+                  class="text-center" style="font-size: 14px">
+                <i class="fa fa-times-circle-o"></i>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="k in researches_data">
+              <td>{{k.research_title}}</td>
+              <td>
+                <div v-for="d in k.diagnoses_time" class="mkb-year">
+                  <span>{{d.diagnos}}</span> <span class="year-times">{{d.times}} р. в год</span>
+                </div>
+              </td>
+              <td v-for="(m, i) in monthes" :key="`td-${k.research_pk}-${m}`">
+                <input v-model="k.plans[i]" type="text" class="form-control nbr input-cell" maxlength="3"
+                       :title="get_date_string(year, i, k.plans[i])"
+                       v-tippy="{ placement : 'left', arrow: true, reactive: true, trigger: 'mouseenter focus input' }">
+                <div v-if="k.results[i]" class="text-center">
+                  <a href="#" @click.prevent="print_results(k.results[i].pk)" class="a-under"
+                     title="Печать результата" v-tippy>
+                    {{k.results[i].date}}
+                  </a>
+                </div>
+                <div v-else>&nbsp;</div>
+              </td>
+              <td class="text-center">
+                <div style="height: 22px;">&nbsp;</div>
+                x{{k.times}}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin: 0 auto 20px auto; width: 200px">
+          <button @click="save_plan" class="btn btn-primary-nb btn-blue-nb" type="button">
+            Сохранить план
+          </button>
+        </div>
+      </template>
+      <div v-else class="text-center">
+        <br/>
+        <br/>
+        Нет данных для построения плана
+        <br/>
       </div>
 
       <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
@@ -103,7 +138,7 @@
           </div>
           <div class="form-group mkb10" style="width: 100%">
             <label>Диагноз в полной форме (код по МКБ и название):</label>
-            <m-k-bfield v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false" />
+            <MKBFieldForm v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false" />
             <input class="form-control" v-model="edit_data.diagnos" v-else readonly>
           </div>
           <div class="checkbox" style="padding-left: 15px;">
@@ -156,13 +191,44 @@
   import Modal from '../ui-cards/Modal'
   import patients_point from '../api/patients-point'
   import * as action_types from '../store/action-types'
-  import MKBfield from '../fields/MKBField'
+  import MKBFieldForm from '../fields/MKBFieldForm'
   import moment from 'moment';
   import {cloneDeep} from 'lodash-es';
 
+  const years = [];
+
+  for (let i = 2020; i <= Number(moment().format('YYYY')) + 2; i++) {
+    years.push(i);
+  }
+
+  const monthes = [
+    'янв',
+    'фев',
+    'мар',
+    'апр',
+    'май',
+    'июн',
+    'июл',
+    'авг',
+    'сент',
+    'окт',
+    'ноя',
+    'дек',
+  ];
+
+  const weekDays = [
+    'понедельник',
+    'вторник',
+    'среда',
+    'четверг',
+    'пятница',
+    'суббота',
+    'воскресенье',
+  ];
+
   export default {
     name: 'd-reg',
-    components: {Modal, MKBfield},
+    components: {Modal, MKBFieldForm},
     props: {
       card_pk: {
         type: Number,
@@ -181,20 +247,8 @@
         researches_data: [],
         researches_data_def: [],
         year: Number(moment().format('YYYY')),
-        monthes: [
-          'янв',
-          'фев',
-          'мар',
-          'апр',
-          'май',
-          'июн',
-          'июл',
-          'авг',
-          'сент',
-          'окт',
-          'ноя',
-          'дек',
-        ],
+        monthes,
+        years,
         edit_data: {
           date_start: '',
           date_end: '',
@@ -218,6 +272,23 @@
       }
     },
     methods: {
+      get_date_string(year, month, day) {
+        day = day.trim();
+        if (!day) {
+          return 'Нет даты в плане';
+        }
+
+        try {
+          const dateString = `${year}-${month + 1}-${day}`;
+          const date = moment(dateString, 'YYYY-MM-DD');
+
+          if (!isNaN(day) && day < 32 && day > 0 && date.isValid()) {
+            return `План: ${day} ${monthes[month]} ${year}, ${weekDays[date.isoWeekday() - 1]}`;
+          }
+        } catch (e) {}
+
+        return 'Некорректная дата';
+      },
       async edit(pk) {
         if (pk === -1) {
           this.edit_data = {
@@ -266,10 +337,14 @@
       },
       load_data() {
         this.$store.dispatch(action_types.INC_LOADING)
-        patients_point.loadDreg(this, ['card_pk', 'year']).then(({rows, researches_data}) => {
+        patients_point.loadDreg(this, ['card_pk', 'year']).then(({rows, researches_data, year}) => {
           this.rows = rows
           this.researches_data = researches_data
           this.researches_data_def = cloneDeep(researches_data)
+          if (researches_data && researches_data.length > 0) {
+            okmessage(`Загружен ${year} год`)
+          }
+          this.year = year
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING)
         })
@@ -279,6 +354,14 @@
       },
       print_results(pk) {
         this.$root.$emit('print:results', [pk])
+      },
+      fill_column(i) {
+        const orig = this.researches_data[0].plans[i];
+        for (let j = 1; j < this.researches_data.length; j++) {
+          this.researches_data[j].plans[i] = orig;
+          this.researches_data[j].plans = [...this.researches_data[j].plans] // Принудительно делаем перерендер
+        }
+        okmessage(`Столбец "${this.monthes[i]}" заполнен значением "${orig}"`)
       },
     }
   }
@@ -475,5 +558,34 @@
     justify-content: space-between;
     align-content: center;
     white-space: nowrap;
+  }
+
+  .years {
+    padding: 18px 10px 9px 10px;
+    overflow-x: auto;
+
+    .year {
+      cursor: pointer;
+      display: inline-block;
+      margin-right: 7px;
+      padding: 3px;
+      border-radius: 3px;
+      color: #049372;
+      background-color: rgba(#049372, .3);
+      transition: all .2s cubic-bezier(.25, .8, .25, 1);
+
+      &.active {
+        font-weight: bold;
+        background-color: #049372;
+        color: #fff;
+      }
+
+      &:not(.active):hover {
+        box-shadow: 0 7px 14px rgba(#049372, 0.15), 0 5px 5px rgba(#049372, 0.11);
+        z-index: 1;
+        transform: scale(1.02);
+        background-color: rgba(#049372, .4);
+      }
+    }
   }
 </style>
