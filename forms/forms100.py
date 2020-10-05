@@ -880,7 +880,6 @@ def form_04(request_data):
             dates_plan = " "
             plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year=year)
             for p in plans:
-                date = strdate(p.date)
                 dates_plan = f"{dates_plan}{strfdatetime(p.date, '%d.%m')};"
             results = research_last_result_every_month([i.research], ind_card, year)
             dates_result = ""
