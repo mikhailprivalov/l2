@@ -855,13 +855,14 @@ def form_04(request_data):
     visits_result = []
     visits_research = VisitPurpose.objects.filter(title__icontains="диспансерн")
 
-    year = '2020'
+    current_year = datetime.datetime.now().year
+    year = request_data.get('year', current_year)
     for i in research_need:
         if i.speciality:
             results = research_last_result_every_month(Researches.objects.filter(speciality=i.speciality), ind_card, year, visits_research)
             dates_result = " "
             dates_plan = " "
-            plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year='2020')
+            plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year=year)
             for p in plans:
                 date = strdate(p.date)
                 dates_plan = f"{dates_plan} {normalize_date(date)[0:5]};"
@@ -875,7 +876,6 @@ def form_04(request_data):
                 visits_result.append(dates_result)
             else:
                 specialities_list.append(f'{i.speciality.title}-{dates_plan}-{dates_result}')
-
         if i.research:
             dates_plan = " "
             plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year='2020')

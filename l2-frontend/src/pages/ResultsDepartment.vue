@@ -46,7 +46,7 @@
               <div class="col-xs-9"></div>
               <div class="col-xs-3">
                 <div class="btn btn-blue-nb" style="margin-bottom: 5px;margin-top: 15px;"
-                     @click="print()">
+                     @click="print">
                   Печать
                 </div>
               </div>
@@ -55,7 +55,6 @@
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -75,20 +74,13 @@
       }
     },
     methods: {
-      async print(type) {
+      async print() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const {results} = await directions_point.getDirectionsTypeDate({
-          'is_lab': this.is_lab, 'is_paraclinic': this.is_paraclinic, 'is_doc_refferal': this.is_doc_refferal,
-          'date': this.date
-        });
-        this.print_results(results);
+        const {results} = await directions_point.getDirectionsTypeDate(this, ['is_lab', 'is_paraclinic', 'is_doc_refferal', 'date']);
+        this.$root.$emit('print:results', results)
         await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      print_results(pk) {
-        this.$root.$emit('print:results', pk)
       },
     }
   }
 
 </script>
-
