@@ -38,7 +38,7 @@ def menu(request):
                 "access": ["Лечащий врач", "Оператор лечащего врача", "Лаборант", "Врач-лаборант", "Просмотр журнала"],
             },
             {"url": "/mainmenu/directions/multiprint", "title": "Печать направлений", "nt": False, "access": ["*"]},
-            {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
+            # {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
             {"url": "/mainmenu/results_department", "title": "Печать по отделению", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
             {"url": "/mainmenu/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
             {"url": "/mainmenu/receive", "title": "Приём биоматериала", "nt": False, "access": ["Получатель биоматериала"]},

@@ -878,7 +878,7 @@ def form_04(request_data):
                 specialities_list.append(f'{i.speciality.title}-{dates_plan}-{dates_result}')
         if i.research:
             dates_plan = " "
-            plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year='2020')
+            plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year=year)
             for p in plans:
                 date = strdate(p.date)
                 dates_plan = f"{dates_plan}{normalize_date(date)[0:5]};"
