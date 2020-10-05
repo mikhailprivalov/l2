@@ -164,6 +164,10 @@ def send(request):
                             else:
                                 fraction_result = directions.Result(issledovaniye=issled, fraction=fraction)
                             fraction_result.value = str(resdict["result"][key]).strip()  # Установка значения
+
+                            if 'Non-React' in fraction_result.value:
+                                fraction_result.value = 'Отрицательно'
+
                             if fraction_result.value.isdigit():
                                 fraction_result.value = "%s.0" % fraction_result.value
 
@@ -269,6 +273,9 @@ def endpoint(request):
                                             else:
                                                 fraction_result = directions.Result(issledovaniye=issled, fraction=fraction_rel.fraction)
                                             fraction_result.value = str(results[key]).strip()
+
+                                            if 'Non-React' in fraction_result.value:
+                                                fraction_result.value = 'Отрицательно'
 
                                             find = re.findall(r"\d+.\d+", fraction_result.value)
                                             if len(find) > 0:

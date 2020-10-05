@@ -30,7 +30,8 @@ from clients.models import (
     Phones,
     AmbulatoryData,
     AmbulatoryDataHistory,
-    DispensaryRegPlans)
+    DispensaryRegPlans,
+)
 from contracts.models import Company
 from directions.models import Issledovaniya
 from directory.models import Researches
@@ -477,12 +478,7 @@ def individual_search(request):
             Individual.import_from_tfoms(row, no_update=True)
             forced_gender.append(row['gender'].lower())
 
-    for i in Individual.objects.filter(
-        family=family,
-        name=name,
-        patronymic=patronymic,
-        birthday=birthday,
-    ):
+    for i in Individual.objects.filter(family=family, name=name, patronymic=patronymic, birthday=birthday):
         result.append(
             {
                 "pk": i.pk,
@@ -660,33 +656,52 @@ def load_dreg(request):
     specialities_data = []
     card = Card.objects.get(pk=request_data["card_pk"])
     visits = VisitPurpose.objects.filter(title__icontains="диспансерн")
+    year = request_data.get('year', '2020')
     for d in sorted(diagnoses):
         need = DispensaryPlan.objects.filter(diagnos=d)
         for i in need:
             if i.research:
                 if i.research not in researches:
                     researches.append(i.research)
-                    results = research_last_result_every_month([i.research], card, request_data.get('year', '2020'))
-                    plans = get_dispensary_reg_plans(card, i.research, None)
+                    results = research_last_result_every_month([i.research], card, year)
+                    plans = get_dispensary_reg_plans(card, i.research, None, year)
                     researches_data.append(
-                        {"type": "research", "research_title": i.research.title, "research_pk": i.research.pk, "diagnoses_time": [], "results": results, "plans": plans, "max_time": 1}
+                        {
+                            "type": "research",
+                            "research_title": i.research.title,
+                            "research_pk": i.research.pk,
+                            "diagnoses_time": [],
+                            "results": results,
+                            "plans": plans,
+                            "max_time": 1,
+                            "times": len([x for x in results if x]),
+                        }
                     )
                 index_res = researches.index(i.research)
                 researches_data[index_res]['diagnoses_time'].append({"diagnos": i.diagnos, "times": i.repeat})
             if i.speciality:
                 if i.speciality not in specialities:
                     specialities.append(i.speciality)
-                    results = research_last_result_every_month(Researches.objects.filter(speciality=i.speciality), request_data["card_pk"], request_data.get('year', '2020'), visits)
-                    plans = get_dispensary_reg_plans(card, None, i.speciality)
+                    results = research_last_result_every_month(Researches.objects.filter(speciality=i.speciality), request_data["card_pk"], year, visits)
+                    plans = get_dispensary_reg_plans(card, None, i.speciality, year)
                     specialities_data.append(
-                        {"type": "speciality", "research_title": i.speciality.title, "research_pk": i.speciality.pk, "diagnoses_time": [], "results": results, "plans": plans, "max_time": 1}
+                        {
+                            "type": "speciality",
+                            "research_title": i.speciality.title,
+                            "research_pk": i.speciality.pk,
+                            "diagnoses_time": [],
+                            "results": results,
+                            "plans": plans,
+                            "max_time": 1,
+                            "times": len([x for x in results if x]),
+                        }
                     )
                 index_spec = specialities.index(i.speciality)
                 specialities_data[index_spec]['diagnoses_time'].append({"diagnos": i.diagnos, "times": i.repeat})
 
     researches_data.extend(specialities_data)
 
-    return JsonResponse({"rows": data, "researches_data": researches_data})
+    return JsonResponse({"rows": data, "researches_data": researches_data, "year": year})
 
 
 def research_last_result_every_month(researches: List[Researches], card: Card, year: str, visits: Optional[List[VisitPurpose]] = None):
@@ -712,9 +727,9 @@ def research_last_result_every_month(researches: List[Researches], card: Card, y
     return results
 
 
-def get_dispensary_reg_plans(card, research, speciality):
+def get_dispensary_reg_plans(card, research, speciality, year):
     plan = [''] * 12
-    disp_plan = DispensaryRegPlans.objects.filter(card=card, research=research, speciality=speciality)
+    disp_plan = DispensaryRegPlans.objects.filter(card=card, research=research, speciality=speciality, date__year=year)
     for d in disp_plan:
         if d.date:
             plan[d.date.month - 1] = str(d.date.day).rjust(2, '0')
@@ -734,16 +749,7 @@ def load_vaccine(request):
     data = []
     for a in VaccineReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date', 'pk'):
         data.append(
-            {
-                "pk": a.pk,
-                "date": strdate(a.date) if a.date else '',
-                "title": a.title,
-                "series": a.series,
-                "amount": a.amount,
-                "method": a.method,
-                "step": a.step,
-                "tap": a.tap,
-            }
+            {"pk": a.pk, "date": strdate(a.date) if a.date else '', "title": a.title, "series": a.series, "amount": a.amount, "method": a.method, "step": a.step, "tap": a.tap}
         )
     return JsonResponse({"rows": data})
 
@@ -753,11 +759,7 @@ def load_ambulatory_data(request):
     data = []
     for a in AmbulatoryData.objects.filter(card__pk=request_data["card_pk"]).order_by('date', 'pk'):
         data.append(
-            {
-                "pk": a.pk,
-                "date": strdate(a.date) if a.date else '',
-                "data": a.data,
-            }
+            {"pk": a.pk, "date": strdate(a.date) if a.date else '', "data": a.data}
         )
 
     return JsonResponse({"rows": data})
@@ -848,12 +850,7 @@ def load_benefit_detail(request):
             "date_end": '',
             "close": False,
         }
-    return JsonResponse(
-        {
-            "types": [{"pk": -1, "title": 'Не выбрано'}, *[{"pk": x.pk, "title": str(x)} for x in BenefitType.objects.filter(hide=False).order_by('pk')]],
-            **data,
-        }
-    )
+    return JsonResponse({"types": [{"pk": -1, "title": 'Не выбрано'}, *[{"pk": x.pk, "title": str(x)} for x in BenefitType.objects.filter(hide=False).order_by('pk')]], **data,})
 
 
 @transaction.atomic
@@ -1104,10 +1101,7 @@ def load_anamnesis(request):
             {
                 "pk": a.pk,
                 "text": a.text,
-                "who_save": {
-                    "fio": a.who_save.get_fio(dots=True),
-                    "department": a.who_save.podrazdeleniye.get_title(),
-                },
+                "who_save": {"fio": a.who_save.get_fio(dots=True), "department": a.who_save.podrazdeleniye.get_title(),},
                 "datetime": a.created_at.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
             }
         )
