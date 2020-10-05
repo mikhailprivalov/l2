@@ -26,6 +26,7 @@ from laboratory.utils import strdate
 from statistics_tickets.models import VisitPurpose
 from utils.dates import normalize_date
 from utils.flowable import InteractiveListBoxField, InteractiveTextField, InteractiveListTypeMedExam
+from laboratory.utils import strfdatetime
 
 
 def form_01(request_data):
@@ -864,8 +865,7 @@ def form_04(request_data):
             dates_plan = " "
             plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year=year)
             for p in plans:
-                date = strdate(p.date)
-                dates_plan = f"{dates_plan} {normalize_date(date)[0:5]};"
+                dates_plan = f"{dates_plan} {strfdatetime(p.date, '%d.%m')};"
             for r in range(12):
                 if results[r]:
                     if r < 9:
@@ -881,7 +881,7 @@ def form_04(request_data):
             plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year=year)
             for p in plans:
                 date = strdate(p.date)
-                dates_plan = f"{dates_plan}{normalize_date(date)[0:5]};"
+                dates_plan = f"{dates_plan}{strfdatetime(p.date, '%d.%m')};"
             results = research_last_result_every_month([i.research], ind_card, year)
             dates_result = ""
             for r in range(12):
