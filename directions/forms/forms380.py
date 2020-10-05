@@ -335,7 +335,7 @@ def form_03(c: Canvas, dir: Napravleniya):
 
         c.drawCentredString((210 / 2) * mm, 219 * mm, "Севедения о заболевшем")
         issledovaniye = Issledovaniya.objects.get(napravleniye=dir.pk)
-        localization = "" if not issledovaniye.localization else issledovaniye.localization.title
+        localization = issledovaniye.localization.title if issledovaniye.localization else issledovaniye.comment
         patient_data = [
             [Paragraph('Категория', style), Paragraph(localization, styleTB)],
             [Paragraph('ФИО', style), Paragraph(dir.client.individual.fio(), styleTB)],

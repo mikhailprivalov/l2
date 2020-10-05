@@ -55,7 +55,7 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                     if field_type == 21:
                         continue
                     v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
-
+                    v = text_to_bold(v)
                     column_result = column_result + "<font face=\"FreeSans\">{}:</font>{}".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;'), v) + ";"
                     if i == 1:
                         column_result += "<br/>"

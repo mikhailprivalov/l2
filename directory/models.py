@@ -635,6 +635,7 @@ class DispensaryPlan(models.Model):
     repeat = models.PositiveSmallIntegerField(db_index=True, help_text='Кол-во в год', null=False, blank=False)
     diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True, db_index=True)
     speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальности консультации врача', on_delete=models.CASCADE)
+    is_visit = models.BooleanField(default=False, blank=True, db_index=True)
 
     class Meta:
         verbose_name = 'Диспансерный учет план'

@@ -53,6 +53,7 @@ from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result
 from django.utils.module_loading import import_string
 
+
 pdfmetrics.registerFont(TTFont('FreeSans', os.path.join(FONTS_FOLDER, 'FreeSans.ttf')))
 pdfmetrics.registerFont(TTFont('FreeSansBold', os.path.join(FONTS_FOLDER, 'FreeSansBold.ttf')))
 pdfmetrics.registerFont(TTFont('OpenSansItalic', os.path.join(FONTS_FOLDER, 'OpenSans-Italic.ttf')))
@@ -524,14 +525,15 @@ def result_print(request):
     def mark_pages(canvas_mark, direction: Napravleniya):
         canvas_mark.saveState()
         canvas_mark.setFont('FreeSansBold', 8)
-        canvas_mark.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-        canvas_mark.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
-        canvas_mark.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-        canvas_mark.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
+        canvas_mark.drawString(55 * mm, 13 * mm, '{}'.format(SettingManager.get("org_title")))
+        canvas_mark.drawString(55 * mm, 9.6 * mm, '№ карты : {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
+        canvas_mark.drawString(55 * mm, 7.1 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
+        canvas_mark.line(55 * mm, 12.7 * mm, 181 * mm, 11.5 * mm)
         canvas_mark.restoreState()
 
     count_pages = 0
     has_page_break = False
+
     for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
         dpk = direction.pk
 
@@ -1225,14 +1227,13 @@ def result_print(request):
     num_card = hosp_nums
     if not hosp:
         num_card = pk[0]
-
-    if len(pk) == 1 and not link_result and not hosp:
+    if len(pk) == 1 and not link_result and not hosp and fwb:
         doc.build(fwb, canvasmaker=PageNumCanvas)
     elif len(pk) == 1 and not link_result and hosp:
         doc.build(fwb, canvasmaker=PageNumCanvasPartitionAll)
     elif has_page_break:
         doc.build(naprs, canvasmaker=PageNumCanvasPartitionAll)
-    else:
+    elif fwb:
         doc.build(naprs)
 
     if len(link_result) > 0:

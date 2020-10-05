@@ -17,12 +17,16 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import NextPageTemplate, Indenter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, TableStyle, PageBreak
 
+from api.patients.views import research_last_result_every_month
 from appconf.manager import SettingManager
-from clients.models import Card, DispensaryReg
+from clients.models import Card, DispensaryReg, DispensaryRegPlans
+from directory.models import DispensaryPlan, Researches
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
+from statistics_tickets.models import VisitPurpose
 from utils.dates import normalize_date
 from utils.flowable import InteractiveListBoxField, InteractiveTextField, InteractiveListTypeMedExam
+from laboratory.utils import strfdatetime
 
 
 def form_01(request_data):
@@ -846,6 +850,48 @@ def form_04(request_data):
     objs.extend(content_title)
     objs.append(Spacer(1, 5 * mm))
 
+    research_need = DispensaryPlan.objects.filter(diagnos=diagnos).order_by('research__title', 'speciality__title')
+    researches_list = []
+    specialities_list = []
+    visits_result = []
+    visits_research = VisitPurpose.objects.filter(title__icontains="диспансерн")
+
+    current_year = datetime.datetime.now().year
+    year = request_data.get('year', current_year)
+    for i in research_need:
+        if i.speciality:
+            results = research_last_result_every_month(Researches.objects.filter(speciality=i.speciality), ind_card, year, visits_research)
+            dates_result = " "
+            dates_plan = " "
+            plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year=year)
+            for p in plans:
+                dates_plan = f"{dates_plan} {strfdatetime(p.date, '%d.%m')};"
+            for r in range(12):
+                if results[r]:
+                    if r < 9:
+                        dates_result = f"{dates_result} {results[r]['date']}.0{r + 1};"
+                    else:
+                        dates_result = f"{dates_result} {results[r]['date']}.{r + 1};"
+            if i.is_visit:
+                visits_result.append(dates_result)
+            else:
+                specialities_list.append(f'{i.speciality.title}-{dates_plan}-{dates_result}')
+        if i.research:
+            dates_plan = " "
+            plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year=year)
+            for p in plans:
+                dates_plan = f"{dates_plan} {strfdatetime(p.date, '%d.%m')};"
+            results = research_last_result_every_month([i.research], ind_card, year)
+            dates_result = ""
+            for r in range(12):
+                if results[r]:
+                    if r < 9:
+                        dates_result = f"{dates_result} {results[r]['date']}.0{r + 1};"
+                    else:
+                        dates_result = f"{dates_result} {results[r]['date']}.{r + 1};"
+            researches_list.append(f'{i.research.title}-{dates_plan}-{dates_result}')
+
+    researches_list.extend(specialities_list)
     opinion = [
         [
             Paragraph('Даты посещений', styleTCenter),
@@ -906,7 +952,6 @@ def form_04(request_data):
         ],
         empty_para,
         empty_para,
-        empty_para,
     ]
     tbl = Table(opinion, colWidths=(30 * mm, 85 * mm, 30 * mm, 35 * mm), rowHeights=6 * mm)
     tbl.setStyle(
@@ -923,24 +968,20 @@ def form_04(request_data):
     objs.append(Paragraph('___________________________________________________________________________________________________', style))
     objs.append(Spacer(1, 1 * mm))
     objs.append(Paragraph('19. Лечебно-профилактические мероприятия', style))
-    empty_para = [Paragraph('', styleT) for i in range(6)]
-    opinion = [
-        [
-            Paragraph('N п/п', styleT),
-            Paragraph('Мероприятия', styleT),
-            Paragraph('Дата<br/> начала', styleT),
-            Paragraph('Дата<br/>окончания', styleT),
-            Paragraph('Отметка о<br/>выполнении', styleT),
-            Paragraph('ФИО врача', styleT),
-        ],
-        empty_para,
-        empty_para,
-        empty_para,
-        empty_para,
-        empty_para,
+
+    opinion_title = [
+        Paragraph('N п/п', styleT),
+        Paragraph('Мероприятия', styleT),
+        Paragraph('Дата<br/> начала', styleT),
+        Paragraph('Дата<br/>окончания', styleT),
+        Paragraph('Отметка о<br/>выполнении', styleT),
+        Paragraph('ФИО врача', styleT),
     ]
 
-    tbl = Table(opinion, colWidths=(10 * mm, 70 * mm, 20 * mm, 22 * mm, 23 * mm, 35 * mm), rowHeights=(10 * mm, 5 * mm, 5 * mm, 5 * mm, 5 * mm, 5 * mm))
+    opinion = [['', Paragraph(f'{i.split("-")[0]}', styleT), '', Paragraph(f'{i.split("-")[2]}', styleT), ''] for i in researches_list]
+    opinion.insert(0, opinion_title)
+
+    tbl = Table(opinion, colWidths=(10 * mm, 60 * mm, 25 * mm, 25 * mm, 23 * mm, 35 * mm))
     tbl.setStyle(
         TableStyle(
             [

@@ -34,6 +34,7 @@ class ResDispensaryPlan(admin.ModelAdmin):
         'repeat',
         'research',
         'speciality_profile',
+        'is_visit',
     )
     list_display_links = (
         'diagnos',
