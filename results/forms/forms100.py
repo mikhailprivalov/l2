@@ -5,6 +5,7 @@ from copy import deepcopy
 from reportlab.lib.enums import TA_JUSTIFY
 import directory.models as directory
 from directions.models import ParaclinicResult
+from results.prepare_data import text_to_bold
 from utils.dates import normalize_date
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
 from api.directions.views import directions_anesthesia_load
@@ -31,6 +32,7 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
     styleTC.fontSize = 8
     styleTCBold = deepcopy(style)
     styleTCBold.fontName = "FreeSansBold"
+    fwb.append(Paragraph(f'№ карты : {direction.client.number_with_type()} Пациент : {direction.client.individual.fio()}', styleTCBold))
 
     txt = ''
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
@@ -100,9 +102,9 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                     v = '<font face="FreeSans" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
 
                 if r.field.get_title(force_type=field_type) != "":
-                    vals.append("{}:&nbsp;{}".format(r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
+                    vals.append("{}:&nbsp;{}".format(r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), text_to_bold(v)))
                 else:
-                    vals.append(v)
+                    vals.append(text_to_bold(v))
             txt += "; ".join(vals)
             txt = txt.strip()
             if len(txt) > 0 and txt.strip()[-1] != ".":

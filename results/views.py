@@ -525,10 +525,10 @@ def result_print(request):
     def mark_pages(canvas_mark, direction: Napravleniya):
         canvas_mark.saveState()
         canvas_mark.setFont('FreeSansBold', 8)
-        canvas_mark.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-        canvas_mark.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
-        canvas_mark.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-        canvas_mark.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
+        canvas_mark.drawString(55 * mm, 13 * mm, '{}'.format(SettingManager.get("org_title")))
+        canvas_mark.drawString(55 * mm, 9.6 * mm, '№ карты : {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
+        canvas_mark.drawString(55 * mm, 7.1 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
+        canvas_mark.line(55 * mm, 12.7 * mm, 181 * mm, 11.5 * mm)
         canvas_mark.restoreState()
 
     count_pages = 0
