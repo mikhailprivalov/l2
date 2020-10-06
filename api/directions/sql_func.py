@@ -174,7 +174,3 @@ def filter_direction_doctor(list_dirs, doc_id):
         )
         row = cursor.fetchall()
     return row
-
-
-
-
