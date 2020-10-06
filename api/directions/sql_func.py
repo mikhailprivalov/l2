@@ -162,3 +162,19 @@ def filter_direction_department(list_dirs, podrazdeleniye_id):
         row = cursor.fetchall()
     return row
 
+
+def filter_direction_doctor(list_dirs, doc_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT DISTINCT ON (id) id FROM public.directions_napravleniya
+        WHERE id = ANY(ARRAY[%(num_dirs)s]) AND doc_id = %(doc_id)s
+        """,
+            params={'num_dirs': list_dirs, 'doc_id': doc_id},
+        )
+        row = cursor.fetchall()
+    return row
+
+
+
+
