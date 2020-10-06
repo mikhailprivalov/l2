@@ -18,10 +18,10 @@ from django.db.models import Q
 def load(request):
     data = json.loads(request.body)
     pk = int(data["pk"])
-    tree_direction = hosp_get_hosp_direction(pk)
     if pk >= 4600000000000:
         pk -= 4600000000000
         pk //= 10
+    tree_direction = hosp_get_hosp_direction(pk)
     result = {"ok": False, "message": "Нет данных", "data": {}}
     for i in Issledovaniya.objects.filter(napravleniye__pk=pk, research__is_hospital=True):
         direction: Napravleniya = i.napravleniye
