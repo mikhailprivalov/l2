@@ -45,7 +45,7 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
 from users.models import DoctorProfile
 from utils.dates import normalize_date
 from utils.dates import try_parse_range
-from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr
+from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate
@@ -1893,10 +1893,12 @@ def all_directions_in_favorites(request):
 
 def directions_type_date(request):
     podr = request.user.doctorprofile.podrazdeleniye
+    doc_pk = request.user.doctorprofile.pk
     request_data = json.loads(request.body)
     is_lab = request_data.get('is_lab', False)
     is_paraclinic = request_data.get('is_paraclinic', False)
     is_doc_refferal = request_data.get('is_doc_refferal', False)
+    by_doc = request_data.get('by_doc', False)
     date = request_data['date']
     date = normalize_date(date)
     d1 = datetime.strptime(date, '%d.%m.%Y')
@@ -1913,9 +1915,15 @@ def directions_type_date(request):
         lab_podr = [-1]
 
     confirm_direction = get_confirm_direction(start_date, end_date, lab_podr, is_lab, is_paraclinic, is_doc_refferal)
+    if not confirm_direction:
+        return JsonResponse({"results": []})
+
     confirm_direction = [i[0] for i in confirm_direction]
 
-    confirm_direction_department = filter_direction_department(confirm_direction, int(podr.pk))
+    if not by_doc:
+        confirm_direction_department = filter_direction_department(confirm_direction, int(podr.pk))
+    else:
+        confirm_direction_department = filter_direction_doctor(confirm_direction, doc_pk)
     confirm_direction = [i[0] for i in confirm_direction_department]
 
     not_confirm_direction = get_not_confirm_direction(confirm_direction)
