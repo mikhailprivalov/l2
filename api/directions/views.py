@@ -45,6 +45,7 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
 from users.models import DoctorProfile
 from utils.dates import normalize_date
 from utils.dates import try_parse_range
+from utils.xh import check_float_is_valid
 from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
@@ -1234,7 +1235,9 @@ def directions_anesthesia_load(request):
                             index = times_row.index(k)
                             current_param[index] = v
                             if type in ['potent_drugs', 'narcotic_drugs'] and v:
-                                sum += float(v.replace(',', '.'))
+                                v = v.replace(',', '.')
+                                if check_float_is_valid(v):
+                                    sum += float(v)
                     current_param.append(sum or '')
                     current_param_temp = set([current_param[i] for i in range(1, len(current_param))])
                     if len(current_param_temp) == 1 and '' in current_param_temp:
