@@ -53,12 +53,10 @@ class ResultRight:
             value = "0"
 
         if self.mode == ResultRight.MODE_CONSTANT:
-            return (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)\
-                if value == self.const else\
-                (ResultRight.RESULT_MODE_MAYBE, RANGE_NEQ)
+            return (ResultRight.RESULT_MODE_NORMAL, RANGE_IN) if value == self.const else (ResultRight.RESULT_MODE_MAYBE, RANGE_NEQ)
 
         if "сплошь" in value.lower() or "++" in value or "+ +" in value or "++++" in value or "+" == value.strip() or "оксал ед" in value:
-            value = float("inf")
+            value = "inf"
 
         numbers = re.findall(r"-?\d*[.,]\d+|-?\d+|inf", value)
 

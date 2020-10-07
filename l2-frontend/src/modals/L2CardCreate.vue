@@ -180,7 +180,7 @@
                   <TypeAhead v-if="card.custom_workplace"
                              :delayTime="100" :getResponse="getResponse"
                              :highlighting="highlighting" :limit="10"
-                             :minChars="1" :onHit="onHit('work_place')" :selectFirst="true" maxlength="36"
+                             :minChars="1" :onHit="onHit('work_place')" :selectFirst="true" maxlength="128"
                              ref="wp" src="/api/autocomplete?value=:keyword&type=work_place" v-model="card.work_place"
                   />
                   <select v-else v-model="card.work_place_db" class="form-control"
@@ -196,7 +196,7 @@
                   <div class="row-t">Должность</div>
                   <TypeAhead :delayTime="100" :getResponse="getResponse"
                              :highlighting="highlighting" :limit="10"
-                             :minChars="1" :onHit="onHit('work_position')" :selectFirst="true" maxlength="36"
+                             :minChars="1" :onHit="onHit('work_position')" :selectFirst="true" maxlength="128"
                              ref="wp" src="/api/autocomplete?value=:keyword&type=work_position"
                              v-model="card.work_position"
                   />

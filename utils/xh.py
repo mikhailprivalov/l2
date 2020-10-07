@@ -13,3 +13,11 @@ def check_valid_square_brackets(v: str):
             if count > 0:
                 return False
     return count == 0
+
+
+def check_float_is_valid(val):
+    try:
+        float(val)
+        return True
+    except ValueError:
+        return False

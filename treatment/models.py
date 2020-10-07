@@ -5,6 +5,7 @@ class Medicament(models.Model):
     """
     Справочник лекарств (медикаментов)
     """
+
     number_registration = models.CharField(max_length=511, help_text='Номер регистрационного удостверения', db_index=True)
     date_start_registration = models.DateField(help_text="Дата регистрации", blank=True, null=True)
     date_end_registration = models.DateField(help_text="Дата окончания регистрации", blank=True, null=True)

@@ -5,6 +5,10 @@ export default generator({
     url: 'laboratory/fractions',
     onReject: {fractions: [], title: 'error'},
   },
+  getFraction: {
+    url: 'laboratory/fraction',
+    onReject: {fractions: [], title: 'error'},
+  },
   saveFsli: {
     url: 'laboratory/save-fsli',
   },

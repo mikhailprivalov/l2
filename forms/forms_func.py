@@ -63,9 +63,9 @@ def get_coast_from_issledovanie(dir_research_loc):
     if type(dir_research_loc) == dict:
         dict_coast = {}
         for k, v in dir_research_loc.items():
-            d = ({r: [s, d, h, ] for r, s, d, h in
-                  Issledovaniya.objects.filter(napravleniye=k, research__in=v, coast__isnull=False).values_list(
-                      'research_id', 'coast', 'discount', 'how_many')})
+            d = {
+                r: [s, d, h,] for r, s, d, h in Issledovaniya.objects.filter(napravleniye=k, research__in=v, coast__isnull=False).values_list('research_id', 'coast', 'discount', 'how_many')
+            }
             dict_coast[k] = d
         return dict_coast
     else:
@@ -84,7 +84,7 @@ def get_research_by_dir(dir_temp_l):
         if any([x.doc_save is not None for x in Issledovaniya.objects.filter(napravleniye=i)]):
             continue
         else:
-            research_l = ([x.research_id for x in Issledovaniya.objects.filter(napravleniye=i)])
+            research_l = [x.research_id for x in Issledovaniya.objects.filter(napravleniye=i)]
         dict_research_dir[i] = research_l
     return dict_research_dir
 
@@ -104,8 +104,7 @@ def get_final_data(research_price_loc):
     tmp_napr = []
     for k, v in research_price_loc.items():
         # research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title')])
-        research_attr = (
-            [s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title', 'internal_code')])
+        research_attr = [s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title', 'internal_code')]
         research_attr_list = [list(z) for z in research_attr]
         for research_id, research_coast in v.items():
             h = []
@@ -173,10 +172,8 @@ def get_data_individual(card_object):
     ind_data['doc'] = Document.objects.filter(individual=ind_data['ind'], is_active=True)
     ind_data['fio'] = ind_data['ind'].fio()
     ind_data['born'] = ind_data['ind'].bd()
-    ind_data['main_address'] = "____________________________________________________" if not card_object.main_address \
-        else card_object.main_address
-    ind_data['fact_address'] = "____________________________________________________" if not card_object.fact_address \
-        else card_object.fact_address
+    ind_data['main_address'] = "____________________________________________________" if not card_object.main_address else card_object.main_address
+    ind_data['fact_address'] = "____________________________________________________" if not card_object.fact_address else card_object.fact_address
 
     #     document_passport = "Паспорт РФ"
     ind_documents = get_all_doc(ind_data['doc'])
@@ -220,11 +217,9 @@ def form_notfound():
     buffer = BytesIO()
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
-    doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=10 * mm,
-                            rightMargin=10 * mm, topMargin=10 * mm,
-                            bottomMargin=10 * mm, allowSplitting=1,
-                            title="Форма {}".format("Паспорт здоровья"))
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=10 * mm, topMargin=10 * mm, bottomMargin=10 * mm, allowSplitting=1, title="Форма {}".format("Паспорт здоровья")
+    )
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifBold"
@@ -239,14 +234,11 @@ def form_notfound():
 
     objs = [
         Spacer(1, 3 * mm),
-        Paragraph('<font face="PTAstraSerifBold">Ая-я-я-я-я-я-я-яй!</font>',
-                  styleCenter),
+        Paragraph('<font face="PTAstraSerifBold">Ая-я-я-я-я-я-я-яй!</font>', styleCenter),
         Spacer(1, 3 * mm),
-        Paragraph('<font face="PTAstraSerifBold">Что-то Администраторы не верно настроили с типами форм! </font>',
-                  styleCenter),
+        Paragraph('<font face="PTAstraSerifBold">Что-то Администраторы не верно настроили с типами форм! </font>', styleCenter),
         Spacer(1, 3 * mm),
-        Paragraph('<font face="PTAstraSerifBold">А-та-та-та им!</font>',
-                  styleCenter),
+        Paragraph('<font face="PTAstraSerifBold">А-та-та-та им!</font>', styleCenter),
     ]
     doc.build(objs)
 
@@ -358,14 +350,16 @@ def get_finaldata_talon(doc_result_obj):
         if disp:
             for d in disp:
                 if d.date_end is None and d.date_start != i.time_confirmation.date():
-                    d_stand.append(d.diagnos)
+                    date_start = strdate(d.date_start, short_year=True)
+                    date_start = normalize_date(date_start)
+                    d_stand.append(f'{d.diagnos}<br/>{date_start}<br/>')
                 elif d.date_end is None and d.date_start == i.time_confirmation.date():
                     d_take.append(d.diagnos)
                 elif d.date_end == i.time_confirmation.date():
                     d_stop.append(d.diagnos)
                     d_whystop.append(d.why_stop)
 
-        temp_dict['d_stand'] = '' if not d_stand else ', '.join(d_stand)
+        temp_dict['d_stand'] = '' if not d_stand else ''.join(d_stand)
         temp_dict['d_take'] = '' if not d_take else ', '.join(d_take)
         temp_dict['d_stop'] = '' if not d_stand else ', '.join(d_stop)
         temp_dict['d_whystop'] = '' if not d_whystop else ', '.join(d_whystop)
@@ -395,10 +389,25 @@ def primary_reception_get_data(hosp_first_num):
         hosp_primary_iss = hosp_primary_receptions[0].get('iss')
         primary_research_id = hosp_primary_receptions[0].get('research_id')
 
-    titles_field = ['Дата поступления', 'Время поступления', 'Виды транспортировки', 'Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
-                    'Вид госпитализации', 'Время через, которое доставлен после начала заболевания, получения травмы', 'Диагноз направившего учреждения',
-                    'Диагноз при поступлении', 'Госпитализирован по поводу данного заболевания', 'Общее состояние', 'Социальный статус', 'Категория льготности',
-                    'Всего госпитализаций', 'Вид травмы', 'Группа крови', 'Резус принадлежность']
+    titles_field = [
+        'Дата поступления',
+        'Время поступления',
+        'Виды транспортировки',
+        'Побочное действие лекарств (непереносимость)',
+        'Кем направлен больной',
+        'Вид госпитализации',
+        'Время через, которое доставлен после начала заболевания, получения травмы',
+        'Диагноз направившего учреждения',
+        'Диагноз при поступлении',
+        'Госпитализирован по поводу данного заболевания',
+        'Общее состояние',
+        'Социальный статус',
+        'Категория льготности',
+        'Всего госпитализаций',
+        'Вид травмы',
+        'Группа крови',
+        'Резус принадлежность',
+    ]
     list_values = None
     if titles_field and hosp_primary_receptions:
         list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
@@ -469,12 +478,27 @@ def primary_reception_get_data(hosp_first_num):
                 resus_factor = i[2]
                 continue
 
-    return {'date_entered_value': date_entered_value, 'time_entered_value': time_entered_value, 'type_transport': type_transport,
-            'medicament_allergy': medicament_allergy, 'who_directed': who_directed, 'plan_hospital': plan_hospital, 'extra_hospital': extra_hospital,
-            'type_hospital': type_hospital, 'time_start_ill': time_start_ill, 'diagnos_who_directed': diagnos_who_directed,
-            'diagnos_entered': diagnos_entered, 'what_time_hospitalized': what_time_hospitalized, 'state': state, 'social_status': social_status,
-            'category_privilege': category_privilege, 'all_hospitalized': all_hospitalized, 'type_trauma': type_trauma, 'blood_group': blood_group,
-            'resus_factor': resus_factor}
+    return {
+        'date_entered_value': date_entered_value,
+        'time_entered_value': time_entered_value,
+        'type_transport': type_transport,
+        'medicament_allergy': medicament_allergy,
+        'who_directed': who_directed,
+        'plan_hospital': plan_hospital,
+        'extra_hospital': extra_hospital,
+        'type_hospital': type_hospital,
+        'time_start_ill': time_start_ill,
+        'diagnos_who_directed': diagnos_who_directed,
+        'diagnos_entered': diagnos_entered,
+        'what_time_hospitalized': what_time_hospitalized,
+        'state': state,
+        'social_status': social_status,
+        'category_privilege': category_privilege,
+        'all_hospitalized': all_hospitalized,
+        'type_trauma': type_trauma,
+        'blood_group': blood_group,
+        'resus_factor': resus_factor,
+    }
 
 
 def hosp_extract_get_data(hosp_last_num):
@@ -490,11 +514,21 @@ def hosp_extract_get_data(hosp_last_num):
             return {}
         extract_research_id = hosp_extract[0].get('research_id')
 
-    titles_field = ['Время выписки', 'Дата выписки', 'Основной диагноз (описание)', 'Основной диагноз по МКБ',
-                    'Осложнение основного диагноза (описание)', 'Осложнение основного диагноза по МКБ',
-                    'Сопутствующий диагноз (описание)', 'Сопутствующий диагноз по МКБ',
-                    'Исход госпитализации', 'Результат госпитализации', 'Проведено койко-дней', 'Заведующий отделением', 'Палата №'
-                    ]
+    titles_field = [
+        'Время выписки',
+        'Дата выписки',
+        'Основной диагноз (описание)',
+        'Основной диагноз по МКБ',
+        'Осложнение основного диагноза (описание)',
+        'Осложнение основного диагноза по МКБ',
+        'Сопутствующий диагноз (описание)',
+        'Сопутствующий диагноз по МКБ',
+        'Исход госпитализации',
+        'Результат госпитализации',
+        'Проведено койко-дней',
+        'Заведующий отделением',
+        'Палата №',
+    ]
     list_values = None
     if titles_field and hosp_extract:
         list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
@@ -532,15 +566,28 @@ def hosp_extract_get_data(hosp_last_num):
                 room_num = str(i[2])
 
     doc_fio = doc_confirm.get_fio()
-    return {'date_value': date_value, 'time_value': time_value, 'final_diagnos': final_diagnos, 'other_diagnos': other_diagnos, 'near_diagnos': near_diagnos,
-            'outcome': outcome, 'final_diagnos_mkb': final_diagnos_mkb, 'other_diagnos_mkb': other_diagnos_mkb, 'near_diagnos_mkb': near_diagnos_mkb,
-            'extract_iss': hosp_extract_iss, 'days_count': days_count, 'result_hospital': result_hospital, 'doc_fio': doc_fio, 'manager_depart': manager_depart,
-            'room_num': room_num
-            }
+    return {
+        'date_value': date_value,
+        'time_value': time_value,
+        'final_diagnos': final_diagnos,
+        'other_diagnos': other_diagnos,
+        'near_diagnos': near_diagnos,
+        'outcome': outcome,
+        'final_diagnos_mkb': final_diagnos_mkb,
+        'other_diagnos_mkb': other_diagnos_mkb,
+        'near_diagnos_mkb': near_diagnos_mkb,
+        'extract_iss': hosp_extract_iss,
+        'days_count': days_count,
+        'result_hospital': result_hospital,
+        'doc_fio': doc_fio,
+        'manager_depart': manager_depart,
+        'room_num': room_num,
+    }
 
 
 def hosp_get_clinical_diagnos(hosp_obj):
     clinic_diagnos = ''
+    tmp_clinic_diagnos = []
     for i in hosp_obj:
         hosp_diagnostic_epicris = hosp_get_data_direction(i['direction'], site_type=6, type_service='None', level=2)
         day_entries_iss = []
@@ -552,24 +599,37 @@ def hosp_get_clinical_diagnos(hosp_obj):
                     day_entries_iss.append(i.get('iss'))
                     if not day_entries_research_id:
                         day_entries_research_id = i.get('research_id')
-        titles_field = ['Диагноз клинический', 'Дата установления диагноза']
+        titles_field = ['Диагноз клинический', 'Дата установления диагноза', 'Основной', 'Осложнение', 'Сопутствующий']
         list_values = []
         if titles_field and day_entries_iss:
             for i in day_entries_iss:
                 list_values.append(get_result_value_iss(i, day_entries_research_id, titles_field))
 
         if list_values:
-            for i in list_values:
-                if not i:
-                    continue
-                if (i[1][3]).find('Дата установления диагноза') != -1:
-                    date_diag = normalize_date(i[1][2])
-                    if date_diag and i[0][2]:
-                        clinic_diagnos = f'{clinic_diagnos}{i[0][2]}; дата: {str(date_diag)} <br/>'
-                elif (i[0][3]).find('Дата установления диагноза') != -1:
-                    date_diag = normalize_date(i[0][2])
-                    if date_diag and i[1][2]:
-                        clinic_diagnos = f'{clinic_diagnos}{i[1][2]}; дата: {str(date_diag)} <br/>'
+            for fields in list_values:
+                clinical_data = {'clinic_diagnos': '', 'main_diagnos': '', 'other_diagnos': '', 'near_diagnos': '', 'date': ''}
+                for i in fields:
+                    if i[3] == 'Дата установления диагноза':
+                        clinical_data['date'] = normalize_date(i[2])
+                        continue
+                    if i[3] == 'Диагноз клинический':
+                        clinical_data['clinic_diagnos'] = i[2]
+                        continue
+                    if i[3] == 'Основной':
+                        clinical_data['main_diagnos'] = f"Основной: {i[2]}"
+                        continue
+                    if i[3] == 'Осложнение':
+                        clinical_data['other_diagnos'] = f"; Осложнение: {i[2]}"
+                        continue
+                    if i[3] == 'Сопутствующий':
+                        clinical_data['near_diagnos'] = f"; Сопутствующий: {i[2]}"
+                        continue
+                if clinical_data['date'] and (clinical_data['clinic_diagnos'] or clinical_data['main_diagnos']):
+                    tmp_clinic_diagnos.append(clinical_data.copy())
+
+    for i in tmp_clinic_diagnos:
+        clinic_diagnos = f"{clinic_diagnos}{i['clinic_diagnos']} <u>{i['main_diagnos']}</u>{i['other_diagnos']}{i['near_diagnos']}; дата: {i['date']}<br/>"
+
     return clinic_diagnos
 
 
@@ -641,8 +701,15 @@ def hosp_patient_movement(hosp_nums_obj):
                 if i[3] == 'Клинический диагноз по МКБ':
                     diagnos_mkb = i[2]
 
-        patient_movement.append({'bed_profile_research_title': bed_profile_research_title, 'date_entered_value': primary_reception_data['date_entered_value'],
-                                 'date_oute': date_out, 'diagnos_mkb': diagnos_mkb, 'doc_confirm_code': doc_confirm_code})
+        patient_movement.append(
+            {
+                'bed_profile_research_title': bed_profile_research_title,
+                'date_entered_value': primary_reception_data['date_entered_value'],
+                'date_oute': date_out,
+                'diagnos_mkb': diagnos_mkb,
+                'doc_confirm_code': doc_confirm_code,
+            }
+        )
 
     return patient_movement
 
@@ -656,9 +723,22 @@ def hosp_get_operation_data(num_dir):
             if (i.get('research_title').lower().find('операци') != -1 or i.get('research_title').lower().find('манипул') != -1) and i['date_confirm']:
                 operation_iss_research.append({'iss': i['iss'], 'research': i['research_id']})
 
-    titles_field = ['Название операции', 'Дата проведения', 'Время начала', 'Время окончания', 'Метод обезболивания', 'Осложнения', 'Код операции',
-                    'Код манипуляции', 'Оперативное вмешательство', 'Код анестезиолога', 'Категория сложности', 'Диагноз после оперативного лечения',
-                    'МКБ 10']
+    titles_field = [
+        'Название операции',
+        'Дата проведения',
+        'Время начала',
+        'Время окончания',
+        'Метод обезболивания',
+        'Осложнения',
+        'Код операции',
+        'Код манипуляции',
+        'Оперативное вмешательство',
+        'Код анестезиолога',
+        'Категория сложности',
+        'Диагноз после оперативного лечения',
+        'МКБ 10',
+        'Оперировал',
+    ]
     list_values = []
 
     operation_result = []
@@ -669,8 +749,21 @@ def hosp_get_operation_data(num_dir):
         operation_result = []
         for fields_operation in list_values:
             pk_iss_operation = fields_operation[0][1]
-            operation_data = {'name_operation': '', 'date': '', 'time_start': '', 'time_end': '', 'anesthesia method': '', 'complications': '', 'doc_fio': '',
-                              'code_operation': '', 'code_doc_anesthesia': '', 'plan_operation': '', 'diagnos_after_operation': '', 'mkb10': '', 'category_difficult': ''}
+            operation_data = {
+                'name_operation': '',
+                'date': '',
+                'time_start': '',
+                'time_end': '',
+                'anesthesia method': '',
+                'complications': '',
+                'doc_fio': '',
+                'code_operation': '',
+                'code_doc_anesthesia': '',
+                'plan_operation': '',
+                'diagnos_after_operation': '',
+                'mkb10': '',
+                'category_difficult': '',
+            }
             iss_obj = Issledovaniya.objects.filter(pk=pk_iss_operation).first()
             if not iss_obj.doc_confirmation:
                 continue
@@ -719,6 +812,10 @@ def hosp_get_operation_data(num_dir):
                 if field[3] == 'МКБ 10':
                     operation_data['mkb10'] = field[2]
                     continue
+                if field[3] == 'Оперировал':
+                    if field[2]:
+                        operation_data['doc_fio'] = field[2]
+                    continue
 
             operation_data['name_operation'] = f"{operation_data['name_operation']} {category_difficult}"
             operation_result.append(operation_data.copy())
@@ -760,7 +857,7 @@ def closed_bl(hosp_num_dir):
                 if b.field.title == "к труду":
                     start_work = b.value
                     if start_work.find('-') != -1:
-                        start_work = normalize_date(end_date)
+                        start_work = normalize_date(start_work)
                     continue
 
             return {'is_closed': True, 'num': num, 'who_get': who_get, 'who_care': who_care, 'start_date': start_date, 'end_date': end_date, 'start_work': start_work}

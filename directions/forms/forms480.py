@@ -63,17 +63,14 @@ def form_01(c: Canvas, dir: Napravleniya):
 
         objs = []
         opinion = [
-            [Paragraph(f'<font size=11>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
-             Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: <br/>'
-                       'Медицинская документация<br/>Учетная форма № 014/у</font>', styleT)],
+            [
+                Paragraph(f'<font size=11>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
+                Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: <br/>' 'Медицинская документация<br/>Учетная форма № 014/у</font>', styleT),
+            ],
         ]
 
         tbl = Table(opinion, 2 * [100 * mm])
-        tbl.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
-            ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ]))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
 
         objs.append(tbl)
         objs.append(Spacer(1, 5 * mm))
@@ -115,7 +112,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph('8. Местность: городская — 1, сельская — 2.', style))
 
         hosp_operation = None
-        if len(hosp_get_operation_data(dir.parent.napravleniye_id)) > 0:
+        if dir.parent and len(hosp_get_operation_data(dir.parent.napravleniye_id)) > 0:
             hosp_operation = hosp_get_operation_data(dir.parent.napravleniye_id)[-1]
         diagnos_after_operation = ''
         mkb10 = ''
@@ -147,10 +144,12 @@ def form_01(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph('18. Маркировка биопсийного (операционного) материала (расшифровка маркировки флаконов):', style))
 
         opinion = [
-            [Paragraph('Номер флакона', styleT),
-             Paragraph('Локализация патологического процесса (орган, топография)', styleT),
-             Paragraph('Характер патологического процесса (эрозия, язва, полип, пятно, узел, внешне не измененная ткань, отношение к окружающим тканям)', styleT),
-             Paragraph('Количество объектов', styleT)],
+            [
+                Paragraph('Номер флакона', styleT),
+                Paragraph('Локализация патологического процесса (орган, топография)', styleT),
+                Paragraph('Характер патологического процесса (эрозия, язва, полип, пятно, узел, внешне не измененная ткань, отношение к окружающим тканям)', styleT),
+                Paragraph('Количество объектов', styleT),
+            ],
             [Paragraph('1', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
             [Paragraph('2', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
             [Paragraph('3', styleT), Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT)],
@@ -160,10 +159,7 @@ def form_01(c: Canvas, dir: Napravleniya):
 
         cols_width = [20 * mm, 50 * mm, 100 * mm, 30 * mm]
         tbl = Table(opinion, colWidths=cols_width)
-        tbl.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ]))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.black), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
         objs.append(Spacer(1, 5 * mm))
         objs.append(tbl)
         objs.append(Spacer(1, 5 * mm))

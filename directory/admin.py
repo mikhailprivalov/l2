@@ -4,17 +4,75 @@ import directory.models as models
 
 
 class ResDispensaryRouteSheet(admin.ModelAdmin):
-    list_filter = ('age_client', 'sex_client',)
-    list_display = ('age_client', 'sex_client', 'research',)
-    list_display_links = ('age_client', 'sex_client', 'research',)
-    search_fields = ('age_client', 'sex_client',)
+    list_filter = (
+        'age_client',
+        'sex_client',
+    )
+    list_display = (
+        'age_client',
+        'sex_client',
+        'research',
+    )
+    list_display_links = (
+        'age_client',
+        'sex_client',
+        'research',
+    )
+    search_fields = (
+        'age_client',
+        'sex_client',
+    )
+
+
+class ResDispensaryPlan(admin.ModelAdmin):
+    list_filter = (
+        'diagnos',
+        'speciality',
+    )
+    list_display = (
+        'diagnos',
+        'repeat',
+        'research',
+        'speciality_profile',
+        'is_visit',
+    )
+    list_display_links = (
+        'diagnos',
+        'repeat',
+        'research',
+        'speciality_profile',
+    )
+    search_fields = (
+        'diagnos',
+    )
+
+    def speciality_profile(self, obj):
+        if obj.speciality:
+            return obj.speciality.title
+        else:
+            return ""
 
 
 class ResAdmin(admin.ModelAdmin):
-    list_display = ('title', 'short_title', 'internal_code', 'pk', 'podrazdeleniye',)
-    list_display_links = ('title', 'internal_code', 'pk', 'podrazdeleniye',)
-    list_filter = ('podrazdeleniye', 'groups', 'hide', 'is_doc_refferal', 'is_paraclinic', 'is_treatment',)
-    search_fields = ('title', 'internal_code', 'pk',)
+    list_display = (
+        'title',
+        'short_title',
+        'internal_code',
+        'pk',
+        'podrazdeleniye',
+    )
+    list_display_links = (
+        'title',
+        'internal_code',
+        'pk',
+        'podrazdeleniye',
+    )
+    list_filter = ('podrazdeleniye', 'groups', 'hide', 'is_doc_refferal', 'is_paraclinic', 'is_treatment', 'is_microbiology')
+    search_fields = (
+        'title',
+        'internal_code',
+        'pk',
+    )
 
 
 class RefAdmin(admin.ModelAdmin):
@@ -24,8 +82,16 @@ class RefAdmin(admin.ModelAdmin):
 
 
 class RefFractions(admin.ModelAdmin):
-    list_display = ('title', 'research', 'podr',)
-    list_display_links = ('title', 'research', 'podr',)
+    list_display = (
+        'title',
+        'research',
+        'podr',
+    )
+    list_display_links = (
+        'title',
+        'research',
+        'podr',
+    )
     list_filter = ('research__podrazdeleniye',)
     search_fields = ('title',)
 
@@ -37,26 +103,54 @@ class RefFractions(admin.ModelAdmin):
 
 
 class RefResearch(admin.ModelAdmin):
-    list_display = ('title', 'internal_code', 'podr',)
-    list_display_links = ('title', 'internal_code', 'podrazdeleniye',)
-    list_filter = ('podrazdeleniye', 'is_doc_refferal', 'is_paraclinic', 'is_treatment',)
-    search_fields = ('title', 'internal_code',)
+    list_display = (
+        'title',
+        'internal_code',
+        'podr',
+    )
+    list_display_links = (
+        'title',
+        'internal_code',
+        'podrazdeleniye',
+    )
+    list_filter = (
+        'podrazdeleniye',
+        'is_doc_refferal',
+        'is_paraclinic',
+        'is_treatment',
+    )
+    search_fields = (
+        'title',
+        'internal_code',
+    )
 
 
 class RefSiteType(admin.ModelAdmin):
-    list_display = ('title', 'site_type',)
-    list_display_links = ('title', 'site_type',)
+    list_display = (
+        'title',
+        'site_type',
+    )
+    list_display_links = (
+        'title',
+        'site_type',
+    )
     list_filter = ('site_type',)
 
 
 class TitleHide(admin.ModelAdmin):
-    list_display = ('title', 'hide',)
+    list_display = (
+        'title',
+        'hide',
+    )
     list_display_links = ('title',)
     list_filter = ('hide',)
 
 
 class TitleFsli(admin.ModelAdmin):
-    list_display = ('title', 'fsli',)
+    list_display = (
+        'title',
+        'fsli',
+    )
     list_display_links = ('title',)
 
 
@@ -65,28 +159,48 @@ class HospitalServiceAdmin(admin.ModelAdmin):
 
 
 class ResParaclinicInputField(admin.ModelAdmin):
-    list_display = ('title', 'group',)
-    list_display_links = ('title', 'group',)
+    list_display = (
+        'title',
+        'group',
+    )
+    list_display_links = (
+        'title',
+        'group',
+    )
     list_filter = ('group',)
     search_fields = ('group__pk',)
 
 
 class ResParaclinicInputGroups(admin.ModelAdmin):
-    list_display = ('title', 'pk', 'research',)
+    list_display = (
+        'title',
+        'pk',
+        'research',
+    )
     list_display_links = ('title',)
     list_filter = ('research',)
     search_fields = ('research__title',)
 
 
 class ResHospitalService(admin.ModelAdmin):
-    list_display = ('main_research', 'site_type', 'slave_research',)
-    list_display_links = ('main_research', 'slave_research',)
+    list_display = (
+        'main_research',
+        'site_type',
+        'slave_research',
+    )
+    list_display_links = (
+        'main_research',
+        'slave_research',
+    )
     list_filter = ('main_research',)
     search_fields = ('slave_research__title',)
 
 
 class ResCulture(admin.ModelAdmin):
-    list_display = ('title', 'fsli',)
+    list_display = (
+        'title',
+        'fsli',
+    )
     list_display_links = ('title',)
     list_filter = ('group_culture__title',)
     search_fields = ('group_culture__title',)
@@ -95,7 +209,10 @@ class ResCulture(admin.ModelAdmin):
 class ResAntibioticSets(admin.ModelAdmin):
     list_display = ('title',)
     list_display_links = ('title',)
-    list_filter = ('title', 'antibiotics__title',)
+    list_filter = (
+        'title',
+        'antibiotics__title',
+    )
     search_fields = ('antibiotics__title',)
 
 
@@ -115,6 +232,7 @@ admin.site.register(models.ParaclinicTemplateName)
 admin.site.register(models.ParaclinicTemplateField)
 admin.site.register(models.DirectionsGroup)
 admin.site.register(models.DispensaryRouteSheet, ResDispensaryRouteSheet)
+admin.site.register(models.DispensaryPlan, ResDispensaryPlan)
 admin.site.register(models.Culture, ResCulture)
 admin.site.register(models.Antibiotic, TitleHide)
 admin.site.register(models.GroupCulture)

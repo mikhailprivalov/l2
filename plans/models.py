@@ -26,14 +26,16 @@ class PlanOperations(models.Model):
             doc_anesthetist_obj = DoctorProfile.objects.filter(pk=doc_anesthetist)[0]
 
         if data['pk_plan'] == -1:
-            plan_obj = PlanOperations(patient_card=patient_card,
-                                      direction=direction_obj,
-                                      date=datetime.strptime(data['date'], '%Y-%m-%d'),
-                                      doc_operate=doc_operate_obj,
-                                      type_operation=type_operation,
-                                      doc_anesthetist=doc_anesthetist_obj,
-                                      doc_who_create=doc_who_create,
-                                      canceled=False)
+            plan_obj = PlanOperations(
+                patient_card=patient_card,
+                direction=direction_obj,
+                date=datetime.strptime(data['date'], '%Y-%m-%d'),
+                doc_operate=doc_operate_obj,
+                type_operation=type_operation,
+                doc_anesthetist=doc_anesthetist_obj,
+                doc_who_create=doc_who_create,
+                canceled=False,
+            )
             plan_obj.save()
         else:
             plan_obj = PlanOperations.objects.filter(pk=data['pk_plan'])[0]

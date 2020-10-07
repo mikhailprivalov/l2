@@ -58,6 +58,7 @@ urlpatterns = [
     path('mq/', include('mq.urls')),
     path('logout/', LogoutView.as_view(), {'next_page': '/'}),
     path('if/', include('integration_framework.urls')),
+    path('medical_certificates/', include('medical_certificates.urls')),
     path('sentry-debug/', trigger_error),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

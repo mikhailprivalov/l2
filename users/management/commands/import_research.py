@@ -26,7 +26,18 @@ class Command(BaseCommand):
                 group_current = ParaclinicInputGroups(research=r, title=group["title"], show_title=group["show_title"], order=group["order"], hide=group["hide"])
                 group_current.save()
                 for f in group['paraclinic_input_field']:
-                    field = ParaclinicInputField(group=group_current, title=f['title'], order=f['order'], default_value=f['default_value'], lines=f['lines'], field_type=f['field_type'],
-                                                 for_extract_card=f['for_extract_card'], for_talon=f['for_talon'], helper=f['helper'], input_templates=f['input_templates'],
-                                                 required=f['required'], hide=f['hide'])
+                    field = ParaclinicInputField(
+                        group=group_current,
+                        title=f['title'],
+                        order=f['order'],
+                        default_value=f['default_value'],
+                        lines=f['lines'],
+                        field_type=f['field_type'],
+                        for_extract_card=f['for_extract_card'],
+                        for_talon=f['for_talon'],
+                        helper=f['helper'],
+                        input_templates=f['input_templates'],
+                        required=f['required'],
+                        hide=f['hide'],
+                    )
                     field.save()

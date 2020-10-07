@@ -22,4 +22,5 @@ def logged_in_or_token(view_func):
         if request.GET.get('token', request.POST.get('token')) == "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7":
             return view_func(request, *args, **kwargs)
         return HttpResponseRedirect('/?next=' + urlquote(request.get_full_path()))
+
     return _wrapped_view

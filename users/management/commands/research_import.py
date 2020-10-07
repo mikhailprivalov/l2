@@ -79,10 +79,9 @@ class Command(BaseCommand):
                             s_t = None
                         else:
                             s_t = ResearchSite.objects.get(pk=int(cells[place_research]))
-                        c = Researches.objects.create(title=cells[research], site_type=s_t,
-                                                      internal_code=cells[int_code],
-                                                      is_treatment=treatment, is_doc_refferal=doc_refferal,
-                                                      is_hospital=hospital, is_stom=stom)
+                        c = Researches.objects.create(
+                            title=cells[research], site_type=s_t, internal_code=cells[int_code], is_treatment=treatment, is_doc_refferal=doc_refferal, is_hospital=hospital, is_stom=stom
+                        )
                         insert_data(int(c.pk))
                         print('добавлен услуга:', c.title, c.pk, c.internal_code)
                 else:

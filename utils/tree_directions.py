@@ -15,7 +15,8 @@ def root_direction(napravleniye):
     """
 
     with connection.cursor() as cursor:
-        cursor.execute("""WITH RECURSIVE r AS (
+        cursor.execute(
+            """WITH RECURSIVE r AS (
                SELECT nn.id, 
                to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
                to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI:SS') as time_create,
@@ -43,7 +44,8 @@ def root_direction(napravleniye):
             )
             
             SELECT * FROM r;""",
-                       params={'num_direction': napravleniye, 'tz': TIME_ZONE})
+            params={'num_direction': napravleniye, 'tz': TIME_ZONE},
+        )
 
         row = cursor.fetchall()
     return row
@@ -61,7 +63,8 @@ def tree_direction(iss):
     """
 
     with connection.cursor() as cursor:
-        cursor.execute("""WITH RECURSIVE r AS (
+        cursor.execute(
+            """WITH RECURSIVE r AS (
             SELECT nn.id, 
             to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
             to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') as time_create,
@@ -103,14 +106,84 @@ def tree_direction(iss):
             )
             
             SELECT * FROM r;""",
-                       params={'num_issledovaniye': iss, 'tz': TIME_ZONE})
+            params={'num_issledovaniye': iss, 'tz': TIME_ZONE},
+        )
 
         row = cursor.fetchall()
     return row
 
 
-def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclinic, hosp_is_doc_refferal,
-                           hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all, hosp_morfology):
+def hosp_tree_direction(iss):
+    """
+    парам: услуга
+
+    Вернуть стуркутру Направлений:
+    id-направления, дата создания, id-услуг(и) относящейся к данному направлению, уровень поиска.
+    в SQL:
+    nn - directions_napravleniya
+    ii - directions_issledovaniya
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """WITH RECURSIVE r AS (
+            SELECT nn.id, 
+            to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
+            to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') as time_create,
+            nn.parent_id, 
+            ii.napravleniye_id,
+            ii.id as iss, 
+            to_char(ii.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm, 
+            to_char(ii.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') as time_confirm, 
+            ii.research_id, 
+            ddrr.title,
+            ii.diagnos, 1 AS level, 
+            ddrr.short_title,
+            ddrr.is_hospital,
+            nn.cancel
+            FROM directions_issledovaniya ii 
+            LEFT JOIN directions_napravleniya nn 
+            ON ii.napravleniye_id=nn.id
+            LEFT JOIN directory_researches ddrr
+            ON ii.research_id = ddrr.id
+
+            WHERE ii.id = %(num_issledovaniye)s
+
+            UNION ALL
+
+            SELECT n.id, 
+                  to_char(n.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
+                  to_char(n.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') as time_create,
+                  n.parent_id,
+                  i.napravleniye_id,
+                  i.id, 
+                  to_char(i.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm, 
+                  to_char(i.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') as time_confirm,
+                  i.research_id, 
+                  dr.title,
+                  i.diagnos, 
+                  r.level + 1 AS level, 
+                  dr.short_title,
+                  dr.is_hospital,
+                  n.cancel
+            FROM directions_issledovaniya i 
+            LEFT JOIN directions_napravleniya n 
+            ON i.napravleniye_id=n.id
+            LEFT JOIN directory_researches dr
+            ON i.research_id = dr.id
+            JOIN r
+            ON r.iss = n.parent_id
+            )
+
+            SELECT * FROM r WHERE r.is_hospital = TRUE;""",
+            params={'num_issledovaniye': iss, 'tz': TIME_ZONE},
+        )
+
+        row = cursor.fetchall()
+    return row
+
+
+def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all, hosp_morfology):
     """
     парам: услуга
     Вернуть стуркутру в след порядке:
@@ -125,7 +198,8 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
     """
 
     with connection.cursor() as cursor:
-        cursor.execute("""WITH RECURSIVE r AS (
+        cursor.execute(
+            """WITH RECURSIVE r AS (
             SELECT nn.id,
             to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
             to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') as time_create,
@@ -213,11 +287,20 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
                 END
             ORDER BY napravleniye_id
            ;""",
-                       params={'num_issledovaniye': iss, 'main_research': main_research,
-                               'hosp_site_type': hosp_site_type,
-                               'hosp_is_paraclinic': hosp_is_paraclinic, 'hosp_is_doc_refferal': hosp_is_doc_refferal,
-                               'hosp_is_lab': hosp_is_lab, 'hosp_is_hosp': hosp_is_hosp, 'hosp_level': hosp_level,
-                               'hosp_is_all': hosp_is_all, 'hosp_morfology': hosp_morfology, 'tz': TIME_ZONE})
+            params={
+                'num_issledovaniye': iss,
+                'main_research': main_research,
+                'hosp_site_type': hosp_site_type,
+                'hosp_is_paraclinic': hosp_is_paraclinic,
+                'hosp_is_doc_refferal': hosp_is_doc_refferal,
+                'hosp_is_lab': hosp_is_lab,
+                'hosp_is_hosp': hosp_is_hosp,
+                'hosp_level': hosp_level,
+                'hosp_is_all': hosp_is_all,
+                'hosp_morfology': hosp_morfology,
+                'tz': TIME_ZONE,
+            },
+        )
         row = cursor.fetchall()
     return row
 
@@ -228,10 +311,13 @@ def get_research_by_dir(numdir):
     directions_issledovaniya.research_id - является main_research
     """
     with connection.cursor() as cursor:
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT directions_issledovaniya.id, directions_issledovaniya.research_id 
             FROM directions_issledovaniya where napravleniye_id = %(num_dir)s
-            """, params={'num_dir': numdir})
+            """,
+            params={'num_dir': numdir},
+        )
 
         row = cursor.fetchall()
     return row

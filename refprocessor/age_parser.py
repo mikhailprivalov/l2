@@ -1,8 +1,7 @@
 import re
 from typing import Tuple, Union, List
 
-from refprocessor.common import RANGE_REGEXP, SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE, get_sign_by_string, ValueRange, \
-    POINT_STRICT, Value, RANGE_IN
+from refprocessor.common import RANGE_REGEXP, SIGN_GT, SIGN_GTE, SIGN_LT, SIGN_LTE, get_sign_by_string, ValueRange, POINT_STRICT, Value, RANGE_IN
 
 
 class AgeRight:

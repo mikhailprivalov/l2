@@ -45,26 +45,22 @@ class CheckFunctions(unittest.TestCase):
 
         signs = (
             ("invalid", None),
-
             (">", SIGN_GT),
             ("&gt;", SIGN_GT),
             ("старше", SIGN_GT),
             ("больше", SIGN_GT),
             ("более", SIGN_GT),
-
             (">=", SIGN_GTE),
             ("≥", SIGN_GTE),
             ("&ge;", SIGN_GTE),
             ("от", SIGN_GTE),
             ("с", SIGN_GTE),
-
             ("<", SIGN_LT),
             ("&lt;", SIGN_LT),
             ("младше", SIGN_LT),
             ("меньше", SIGN_LT),
             ("менее", SIGN_LT),
             ("до", SIGN_LT),
-
             ("<=", SIGN_LTE),
             ("≤", SIGN_LTE),
             ("&le;", SIGN_LTE),
@@ -256,20 +252,16 @@ class ParseResultRights(unittest.TestCase):
             ["> 1", (1, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
             ["&gt; 1", (1, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
             ["больше 1", (1, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
-
             ["больше 10<sup>2</sup>", (100, ")"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
-
             [">= 1.1", (1.1, "]"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
             ["≥ 1.1", (1.1, "]"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
             ["&ge; 1.1", (1.1, "]"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
             ["от 1.1", (1.1, "]"), float("inf"), ResultRight.MODE_NUMBER_RANGE],
-
             ["< 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
             ["&lt; 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
             ["меньше 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
             ["менее 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
             ["до 10", float("-inf"), (10, ")"), ResultRight.MODE_NUMBER_RANGE],
-
             ["<= 10,1", float("-inf"), (10.1, "]"), ResultRight.MODE_NUMBER_RANGE],
             ["≤ 10", float("-inf"), (10, "]"), ResultRight.MODE_NUMBER_RANGE],
             ["&le; 10", float("-inf"), (10, "]"), ResultRight.MODE_NUMBER_RANGE],
@@ -298,6 +290,7 @@ class ParseResultRights(unittest.TestCase):
             ["test", "1", (ResultRight.RESULT_MODE_MAYBE, RANGE_NEQ)],
             [">= 10<sup>2</sup>", "10<sup>2</sup>", (ResultRight.RESULT_MODE_NORMAL, RANGE_IN)],
             ["> 10<sup>2</sup>", "10<sup>2</sup>", (ResultRight.RESULT_MODE_NOT_NORMAL, RANGE_LOWER)],
+            ["до 5", "сплошь", (ResultRight.RESULT_MODE_NOT_NORMAL, RANGE_OVER)],
         ]
 
         for r in rs:

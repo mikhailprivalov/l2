@@ -20,9 +20,19 @@ class Command(BaseCommand):
         for group in groups:
             fields_in_group = []
             for f in ParaclinicInputField.objects.filter(group=group, hide=False):
-                field_data = {'title': f.title, 'order': f.order, 'default_value': f.default_value, 'lines': f.lines, 'field_type': f.field_type,
-                              'for_extract_card': f.for_extract_card, 'for_talon': f.for_talon, 'helper': f.helper, 'input_templates': f.input_templates,
-                              'required': f.required, 'hide': f.hide}
+                field_data = {
+                    'title': f.title,
+                    'order': f.order,
+                    'default_value': f.default_value,
+                    'lines': f.lines,
+                    'field_type': f.field_type,
+                    'for_extract_card': f.for_extract_card,
+                    'for_talon': f.for_talon,
+                    'helper': f.helper,
+                    'input_templates': f.input_templates,
+                    'required': f.required,
+                    'hide': f.hide,
+                }
                 fields_in_group.append(field_data)
             groups_to_save.append({'title': group.title, 'show_title': group.show_title, 'order': group.order, 'hide': group.hide, 'paraclinic_input_field': fields_in_group})
         research_data['paraclinic_input_groups'] = groups_to_save

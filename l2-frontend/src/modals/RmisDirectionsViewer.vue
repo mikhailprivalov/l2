@@ -174,7 +174,7 @@
         return has_n_ex
       },
       has_excluded() {
-        if (!this.valid())
+        if (!this.valid)
           return false
         for (let r of this.direction_data.services) {
           if (r.exclude_direction)
