@@ -962,7 +962,7 @@ def user_save_view(request):
     rmis_location = str(ud["rmis_location"]).strip() or None
     rmis_login = ud["rmis_login"].strip() or None
     rmis_password = ud["rmis_password"].strip() or None
-    personal_code = ud["personal_code"] or 0
+    personal_code = ud.get("personal_code", 0)
     npk = pk
     if pk == -1:
         if not User.objects.filter(username=username).exists():
@@ -1006,7 +1006,7 @@ def user_save_view(request):
                 doc.users_services.add(DResearches.objects.get(pk=r))
 
             doc.podrazdeleniye_id = ud['department']
-            doc.specialities_id = ud['speciality']
+            doc.specialities_id = ud.get('speciality', None)
             doc.fio = ud["fio"]
             doc.rmis_location = rmis_location
             doc.personal_code = personal_code
