@@ -28,7 +28,7 @@ et-xmlfile==1.0.1
 Genshi==0.7.3
 gprof2dot==2019.11.30
 gunicorn==20.0.4
-idna==2.8
+idna==2.10
 isodate==0.6.0
 jdcal==1.4.1
 Jinja2==2.10.3
@@ -64,7 +64,7 @@ requests==2.24.0
 requests-toolbelt==0.9.1
 selenium==3.141.0
 simplejson==3.17.0
-six==1.14.0
+six==1.15.0
 socketIO-client-nexus==0.7.6
 sqlparse==0.3.1
 urllib3==1.25.10
