@@ -10,7 +10,8 @@ def get_research(title_podr, vertical_result_display):
     """
 
     with connection.cursor() as cursor:
-        cursor.execute("""WITH
+        cursor.execute(
+            """WITH
         t_podr AS (
             SELECT id as podr_id, title as podr_title FROM public.podrazdeleniya_podrazdeleniya),
 
@@ -23,7 +24,9 @@ def get_research(title_podr, vertical_result_display):
         ON t_research.podrazdeleniye_id=t_podr.podr_id
         WHERE podr_title = %(title_podr)s and vertical_result_display = %(vertical)s
         ORDER BY research_id
-        """, params={'title_podr': title_podr, 'vertical': vertical_result_display})
+        """,
+            params={'title_podr': title_podr, 'vertical': vertical_result_display},
+        )
 
         row = cursor.fetchall()
     return row
@@ -35,11 +38,14 @@ def get_iss(list_research_id, list_dirs):
     добавить:
     """
     with connection.cursor() as cursor:
-        cursor.execute("""
+        cursor.execute(
+            """
         SELECT id, research_id FROM public.directions_issledovaniya
         WHERE napravleniye_id = ANY(ARRAY[%(num_dirs)s]) AND research_id = ANY(ARRAY[%(id_researches)s]) 
         AND time_confirmation IS NOT NULL
-        """, params={'id_researches': list_research_id, 'num_dirs': list_dirs})
+        """,
+            params={'id_researches': list_research_id, 'num_dirs': list_dirs},
+        )
         row = cursor.fetchall()
     return row
 
@@ -50,7 +56,8 @@ def get_distinct_research(list_research_id, list_dirs, is_text_research=False):
     добавить:
     """
     with connection.cursor() as cursor:
-        cursor.execute("""WITH
+        cursor.execute(
+            """WITH
         t_iss AS (SELECT id, research_id FROM public.directions_issledovaniya
         WHERE CASE 
         WHEN  %(is_text_research)s = TRUE THEN 
@@ -61,7 +68,9 @@ def get_distinct_research(list_research_id, list_dirs, is_text_research=False):
 
         SELECT DISTINCT ON (research_id) research_id FROM t_iss
 
-        """, params={'id_researches': list_research_id, 'num_dirs': list_dirs, 'is_text_research': is_text_research})
+        """,
+            params={'id_researches': list_research_id, 'num_dirs': list_dirs, 'is_text_research': is_text_research},
+        )
         row = cursor.fetchall()
     return row
 
@@ -71,14 +80,17 @@ def get_distinct_fraction(list_iss):
     возвращает уникальные фракци(id, title, units), которые присутствуют во всех исследованиях
     """
     with connection.cursor() as cursor:
-        cursor.execute("""WITH
+        cursor.execute(
+            """WITH
         t_fraction AS (SELECT id as id_frac, title as title_frac FROM public.directory_fractions ORDER BY id)
 
         SELECT DISTINCT ON (fraction_id) fraction_id, title_frac, units FROM directions_result
         LEFT JOIN t_fraction ON directions_result.fraction_id = t_fraction.id_frac
         WHERE issledovaniye_id = ANY(ARRAY[%(id_iss)s])
         ORDER by fraction_id
-        """, params={'id_iss': list_iss})
+        """,
+            params={'id_iss': list_iss},
+        )
         row = cursor.fetchall()
     return row
 
@@ -88,7 +100,8 @@ def get_result_fraction(list_iss):
     возвращает результат: дата, фракция, значение(value)
     """
     with connection.cursor() as cursor:
-        cursor.execute("""WITH
+        cursor.execute(
+            """WITH
         t_fraction AS (SELECT id as id_frac, title as title_frac FROM public.directory_fractions ORDER BY id),
         
         t_iss AS (SELECT id as iss_id, napravleniye_id, to_char(time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YY') as date_confirm
@@ -100,14 +113,17 @@ def get_result_fraction(list_iss):
         LEFT JOIN t_iss ON directions_result.issledovaniye_id = t_iss.iss_id
         WHERE issledovaniye_id = ANY(ARRAY[%(id_iss)s])
         ORDER by napravleniye_id, date_confirm
-        """, params={'id_iss': list_iss, 'tz': TIME_ZONE})
+        """,
+            params={'id_iss': list_iss, 'tz': TIME_ZONE},
+        )
         row = cursor.fetchall()
     return row
 
 
 def get_result_text_research(research_pk, listdirs, force_all_fields=False):
     with connection.cursor() as cursor:
-        cursor.execute("""
+        cursor.execute(
+            """
            WITH
             t_research AS (SELECT id as research_id, title as research_title FROM directory_researches
                           WHERE id = %(id_research)s),
@@ -140,14 +156,17 @@ def get_result_text_research(research_pk, listdirs, force_all_fields=False):
             directions_paraclinicresult.field_id in (SELECT field_id from t_fields)
             order by time_confirmation, group_order, field_order
 
-         """, params={'id_research': research_pk, 'id_dirs': listdirs, 'force_all_fields': force_all_fields, 'tz': TIME_ZONE})
+         """,
+            params={'id_research': research_pk, 'id_dirs': listdirs, 'force_all_fields': force_all_fields, 'tz': TIME_ZONE},
+        )
         row = cursor.fetchall()
     return row
 
 
 def get_result_value_iss(iss_pk, research_pk, titles_field):
     with connection.cursor() as cursor:
-        cursor.execute("""
+        cursor.execute(
+            """
         WITH
            t_field AS (SELECT "id", title FROM directory_paraclinicinputfield
            WHERE group_id in (SELECT "id" FROM directory_paraclinicinputgroups WHERE research_id=%(id_research)s)
@@ -158,14 +177,17 @@ def get_result_value_iss(iss_pk, research_pk, titles_field):
             where field_id in (SELECT "id" FROM t_field) and issledovaniye_id = %(id_iss)s
 
 
-         """, params={'id_iss': iss_pk, 'id_research': research_pk, 'titles_field': titles_field})
+         """,
+            params={'id_iss': iss_pk, 'id_research': research_pk, 'titles_field': titles_field},
+        )
         row = cursor.fetchall()
     return row
 
 
 def get_result_temperature_list(iss_pk_list, research_pk, titles_field):
     with connection.cursor() as cursor:
-        cursor.execute("""
+        cursor.execute(
+            """
         WITH
            t_field AS (SELECT "id", title FROM directory_paraclinicinputfield
            WHERE group_id in (SELECT "id" FROM directory_paraclinicinputgroups WHERE research_id=%(id_research)s)
@@ -177,6 +199,8 @@ def get_result_temperature_list(iss_pk_list, research_pk, titles_field):
             ORDER by issledovaniye_id
 
 
-         """, params={'id_iss': iss_pk_list, 'id_research': research_pk, 'titles_field': titles_field})
+         """,
+            params={'id_iss': iss_pk_list, 'id_research': research_pk, 'titles_field': titles_field},
+        )
         row = cursor.fetchall()
     return row

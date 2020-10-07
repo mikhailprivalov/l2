@@ -16,16 +16,34 @@ export const CalculateFormula = (fields, formula, patient = {}, strict = false) 
 
 const patientProps = ['age', 'sex'];
 
-export const PrepareFormula = (fields, formula, patient = {}, strict = false) => {
+export const LINK_FIELD = 'LINK_FIELD';
+export const LINK_PATIENT = 'LINK_PATIENT';
+
+export class Link {
+  constructor(type, id) {
+    this.type = type
+    this.id = id
+  }
+}
+
+export const PrepareFormula = (fields, formula, patient = {}, strict = false, returnLinks = false) => {
   let s = formula;
   let necessary = s.match(/{(\d+)}/g);
+  const links = [];
 
   if (necessary) {
     for (const n of necessary) {
       let v = null;
-      let vOrig = ((fields[n.replace(/[{}]/g, '')] || {}).value || '').trim();
+      const vid = n.replace(/[{}]/g, '');
+      let vOrig = ((fields[vid] || {}).value || '').trim();
+      if (returnLinks) {
+        if (!links.find(l => l.id === vid)) {
+          links.push(new Link(LINK_FIELD, vid))
+        }
+        continue
+      }
       if ((/^\d+([,.]\d+)?$/).test(vOrig) && !strict) {
-        if (fields[n.replace(/[{}]/g, '')]) {
+        if (fields[vid]) {
           v = parseFloat(vOrig.trim().replace(',', '.'))
         }
         v = v || 0;
@@ -43,8 +61,19 @@ export const PrepareFormula = (fields, formula, patient = {}, strict = false) =>
   }
 
   for (const prop of patientProps) {
+    if (returnLinks) {
+      const propOrig = `[_${prop}_]`;
+      if (s.includes(propOrig)) {
+        links.push(new Link(LINK_PATIENT, prop));
+      }
+      continue;
+    }
     const r = new RegExp(`\\[_${prop}_\\]`, 'g');
     s = s.replace(r, patient[prop] || '')
+  }
+
+  if (returnLinks) {
+    return links;
   }
 
   s = s.replace(/\n/g, '\\n');

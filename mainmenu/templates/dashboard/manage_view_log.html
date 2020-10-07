@@ -146,10 +146,10 @@
                 data: {checknew: 0, offset: offset, size: 40, searchdata: JSON.stringify(searchdata)}
             }).done(function (d) {
                 $.each(d.data, function (k, v) {
-                    let dbody = v.body
+                    let dbody
                     try {
-                        const par = JSON.parse(v.body.replace(/'/g, '"'))
-                        dbody = syntaxHighlight(JSON.stringify(((Object.prototype.toString.call(par) === '[object Array]') ? par.filter(function (n) {
+                        const par = JSON.parse(v.body)
+                        dbody = syntaxHighlight(JSON.stringify((Array.isArray(par) ? par.filter(function (n) {
                             return n !== undefined
                         }) : par), null, 2))
                     }

@@ -49,10 +49,15 @@ def directory_researches(request):
                     sort_list.append(fr.research.sort_weight)
                 for fraction in research["fraction"][key]["fractions"]:
                     if int(fraction["pk"]) < 0:
-                        fraction_obj = Fractions(title=fraction["title"], research=research_obj,
-                                                 units=fraction["units"],
-                                                 relation=tube_relation, ref_m=json.dumps(fraction["ref_m"]),
-                                                 ref_f=json.dumps(fraction["ref_f"]), variants=direct.ResultVariants.objects.get(pk=fraction["type"]))
+                        fraction_obj = Fractions(
+                            title=fraction["title"],
+                            research=research_obj,
+                            units=fraction["units"],
+                            relation=tube_relation,
+                            ref_m=json.dumps(fraction["ref_m"]),
+                            ref_f=json.dumps(fraction["ref_f"]),
+                            variants=direct.ResultVariants.objects.get(pk=fraction["type"]),
+                        )
                         fraction_obj.save()
                         return_result["F"].append((tube_relation.pk, fraction_obj.pk, key, int(key.split("-")[1])))
                     else:
@@ -74,26 +79,26 @@ def directory_researches(request):
             for fraction in fractions:
                 if fraction.pk not in fractions_pk:
                     fraction.delete()'''
-            return_result = {"ok": True, "id": research_obj.pk, "title": research_obj.title,
-                             "tubes_r": return_result["tubes_r"], "F": return_result["F"]}
+            return_result = {"ok": True, "id": research_obj.pk, "title": research_obj.title, "tubes_r": return_result["tubes_r"], "F": return_result["F"]}
     elif request.method == "GET":
         return_result = {"researches": []}
         researches = Researches.objects.filter(podrazdeleniye__pk=request.GET["lab"]).order_by("sort_weight")
         i = 0
         for research in researches:
             i += 1
-            resdict = {"pk": research.pk, "title": research.title, "tubes": {}, "tubes_c": 0, "readonly": False,
-                       "hide": research.hide, "sort_weight": research.sort_weight}
+            resdict = {"pk": research.pk, "title": research.title, "tubes": {}, "tubes_c": 0, "readonly": False, "hide": research.hide, "sort_weight": research.sort_weight}
             if directions.Issledovaniya.objects.filter(research=research).exists():
                 resdict["readonly"] = True
             fractions = Fractions.objects.filter(research=research).order_by("pk", "sort_weight")
             for fraction in fractions:
                 if fraction.relation_id not in resdict["tubes"].keys():
                     resdict["tubes_c"] += 1
-                    resdict["tubes"][fraction.relation_id] = {"id": fraction.relation_id,
-                                                              "color": fraction.relation.tube.color,
-                                                              "title": fraction.relation.tube.title,
-                                                              "num": fraction.sort_weight}
+                    resdict["tubes"][fraction.relation_id] = {
+                        "id": fraction.relation_id,
+                        "color": fraction.relation.tube.color,
+                        "title": fraction.relation.tube.title,
+                        "num": fraction.sort_weight,
+                    }
             # return_result["researches"][str(research.sort_weight) + "-" + str(i)] = resdict
             return_result["researches"].append(resdict)
         return_result["researches"] = sorted(return_result["researches"], key=lambda d: d["pk"])
@@ -109,28 +114,27 @@ def directory_researches_list(request):
         lab_id = request.POST["lab_id"]
     else:
         lab_id = request.GET["lab_id"]
-    researches = Researches.objects.filter(podrazdeleniye__pk=lab_id, hide=False).order_by("title").values("pk",
-                                                                                                           "onlywith",
-                                                                                                           "onlywith__pk",
-                                                                                                           "title",
-                                                                                                           "comment_variants",
-                                                                                                           "comment_variants__pk")
+    researches = (
+        Researches.objects.filter(podrazdeleniye__pk=lab_id, hide=False).order_by("title").values("pk", "onlywith", "onlywith__pk", "title", "comment_variants", "comment_variants__pk")
+    )
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).values("pk")
     for r in researches:
         autoadd = {lab["pk"]: [x["b__pk"] for x in direct.AutoAdd.objects.filter(a__pk=r["pk"], b__podrazdeleniye__pk=lab["pk"]).values("b__pk")] for lab in labs}
         addto = {lab["pk"]: [x["a__pk"] for x in direct.AutoAdd.objects.filter(b__pk=r["pk"], a__podrazdeleniye__pk=lab["pk"]).values("a__pk")] for lab in labs}
 
         return_result.append(
-            {"pk": r["pk"],
-             "id": r["pk"],
-             "onlywith": -1 if not r["onlywith"] else r["onlywith__pk"],
-             "fields": {"id_lab_fk": lab_id, "ref_title": r["title"]},
-             "isFolder": False,
-             "text": r["title"],
-             "comment_template": "-1" if r["comment_variants"] is None else r["comment_variants__pk"],
-             "autoadd": autoadd,
-             "addto": addto
-             })
+            {
+                "pk": r["pk"],
+                "id": r["pk"],
+                "onlywith": -1 if not r["onlywith"] else r["onlywith__pk"],
+                "fields": {"id_lab_fk": lab_id, "ref_title": r["title"]},
+                "isFolder": False,
+                "text": r["title"],
+                "comment_template": "-1" if r["comment_variants"] is None else r["comment_variants__pk"],
+                "autoadd": autoadd,
+                "addto": addto,
+            }
+        )
 
     return JsonResponse(return_result, safe=False)
 
@@ -198,8 +202,7 @@ def directory_toggle_hide_research(request):
     research = Researches.objects.get(pk=int(pk))
     research.hide = not research.hide
     research.save()
-    slog.Log(key=pk, type=19, body=json.dumps({"hide": research.hide}),
-             user=request.user.doctorprofile).save()
+    slog.Log(key=pk, type=19, body=json.dumps({"hide": research.hide}), user=request.user.doctorprofile).save()
     return JsonResponse({"status_hide": research.hide})
 
 
@@ -226,6 +229,7 @@ def directory_copy_research(request):
 def directory_research(request):
     """GET: получение исследования и фракций"""
     from collections import OrderedDict
+
     return_result = {}
     if request.method == "GET":
         id = int(request.GET["id"])
@@ -247,11 +251,12 @@ def directory_research(request):
         fractions = Fractions.objects.filter(research=research).order_by("pk", "relation__tube__id", "sort_weight")
         for fraction in fractions:
             if "tube-" + str(fraction.relation_id) not in return_result["fractiontubes"].keys():
-                return_result["fractiontubes"]["tube-" + str(fraction.relation_id)] = {"fractions": [],
-                                                                                       "color": fraction.relation.tube.color,
-                                                                                       "title": fraction.relation.tube.title,
-                                                                                       "sel": "tube-" + str(
-                                                                                           fraction.relation_id)}
+                return_result["fractiontubes"]["tube-" + str(fraction.relation_id)] = {
+                    "fractions": [],
+                    "color": fraction.relation.tube.color,
+                    "title": fraction.relation.tube.title,
+                    "sel": "tube-" + str(fraction.relation_id),
+                }
             return_result["uet_doc"][fraction.pk] = fraction.uet_doc
             return_result["uet_co_executor_1"][fraction.pk] = fraction.uet_co_executor_1
             return_result["uet_co_executor_2"][fraction.pk] = fraction.uet_co_executor_2
@@ -262,12 +267,19 @@ def directory_research(request):
             if isinstance(ref_f, str):
                 ref_f = json.loads(ref_f)
             return_result["fractiontubes"]["tube-" + str(fraction.relation_id)]["fractions"].append(
-                {"title": fraction.title, "units": fraction.units, "ref_m": ref_m,
-                 "ref_f": ref_f, "pk": fraction.pk, "type": 1 if not fraction.variants else fraction.variants_id,
-                 "type_values": [] if not fraction.variants else fraction.variants.get_variants(), "num": fraction.sort_weight})
+                {
+                    "title": fraction.title,
+                    "units": fraction.units,
+                    "ref_m": ref_m,
+                    "ref_f": ref_f,
+                    "pk": fraction.pk,
+                    "type": 1 if not fraction.variants else fraction.variants_id,
+                    "type_values": [] if not fraction.variants else fraction.variants.get_variants(),
+                    "num": fraction.sort_weight,
+                }
+            )
         for key in return_result["fractiontubes"].keys():
-            return_result["fractiontubes"][key]["fractions"] = sorted(return_result["fractiontubes"][key]["fractions"],
-                                                                      key=lambda k: k['num'])
+            return_result["fractiontubes"][key]["fractions"] = sorted(return_result["fractiontubes"][key]["fractions"], key=lambda k: k['num'])
         '''
         sel: id,
         color: color,
@@ -284,12 +296,17 @@ def directory_researches_group(request):
     if request.method == "GET":
         return_result = {"researches": []}
         gid = int(request.GET["gid"])
-        researches = Researches.objects.filter(podrazdeleniye__isnull=False)
+        researches = Researches.objects.all()
         if request.GET["lab"] != "-1":
-            researches = researches.filter(podrazdeleniye__pk=request.GET["lab"]).order_by("title", "podrazdeleniye", "hide")
+            if request.GET["lab"] == "-2":
+                researches = researches.filter(is_microbiology=True)
+            else:
+                researches = researches.filter(podrazdeleniye__pk=request.GET["lab"])
+        else:
+            researches = researches.filter(podrazdeleniye__isnull=False)
 
-        for research in researches:
-            resdict = {"pk": research.pk, "title": "{}{} | {}".format({True: "Скрыто | "}.get(research.hide, ""), research.get_title(), research.podrazdeleniye.get_title())}
+        for research in researches.order_by("title", "podrazdeleniye", "hide"):
+            resdict = {"pk": research.pk, "title": "{}{} | {}".format({True: "Скрыто | "}.get(research.hide, ""), research.get_title(), research.get_podrazdeleniye_title())}
             if gid < 0:
                 if not research.direction:
                     return_result["researches"].append(resdict)
@@ -306,8 +323,7 @@ def directory_researches_group(request):
         else:
             direction = DirectionsGroup.objects.get(pk=gid)
             type = 6
-        slog.Log(key=direction.pk, type=type, body="{'data': " + request.POST["researches"] + "}",
-                 user=request.user.doctorprofile).save()
+        slog.Log(key=direction.pk, type=type, body="{'data': " + request.POST["researches"] + "}", user=request.user.doctorprofile).save()
         tmp_researches = Researches.objects.filter(direction=direction)
         for v in tmp_researches:
             v.direction = None
@@ -336,8 +352,11 @@ def directory_get_directions(request):
         return_result = {"directions": {}}
         researches = Researches.objects.filter(not_grouping=False)
         if request.GET["lab"] != "-1":
-            researches = researches.filter(podrazdeleniye__pk=request.GET["lab"]).order_by("title")
-        for research in researches:
+            if request.GET["lab"] == "-2":
+                researches = researches.filter(is_microbiology=True)
+            else:
+                researches = researches.filter(podrazdeleniye__pk=request.GET["lab"])
+        for research in researches.order_by("title"):
             if not research.direction:
                 continue
             if research.direction_id not in return_result["directions"].keys():
@@ -363,9 +382,17 @@ def researches_get_details(request):
         return_result["template"] = research_obj.template
         for fraction in Fractions.objects.filter(research=research_obj).order_by("sort_weight"):
             return_result["fractions"].append(
-                {"pk": fraction.pk, "title": fraction.title, "hide": fraction.hide, "render_type": fraction.render_type,
-                 "formula": fraction.formula,
-                 "sw": fraction.sort_weight, "options": fraction.options, "fsli": fraction.get_fsli_code() or ''})
+                {
+                    "pk": fraction.pk,
+                    "title": fraction.title,
+                    "hide": fraction.hide,
+                    "render_type": fraction.render_type,
+                    "formula": fraction.formula,
+                    "sw": fraction.sort_weight,
+                    "options": fraction.options,
+                    "fsli": fraction.get_fsli_code() or '',
+                }
+            )
     else:
         data = json.loads(request.POST["data"])
         for row in data:

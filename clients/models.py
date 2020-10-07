@@ -11,6 +11,7 @@ from django.utils import timezone
 
 import slog.models as slog
 from appconf.manager import SettingManager
+from directory.models import Researches
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
 
@@ -42,9 +43,7 @@ class Individual(models.Model):
     def join_individual(self, b: 'Individual', out: OutputWrapper = None):
         if out:
             out.write("Карт для переноса: %s" % Card.objects.filter(individual=b).count())
-        slog.Log(key=str(self.pk), type=2002,
-                 body=simplejson.dumps({"Сохраняемая запись": str(self), "Объединяемая запись": str(b)}),
-                 user=None).save()
+        slog.Log(key=str(self.pk), type=2002, body=simplejson.dumps({"Сохраняемая запись": str(self), "Объединяемая запись": str(b)}), user=None).save()
         for c in Card.objects.filter(individual=b):
             c.individual = self
             c.save()
@@ -60,6 +59,7 @@ class Individual(models.Model):
             out.write("Обновление данных для: %s" % self.fio(full=True))
         if c is None:
             from rmis_integration.client import Client
+
             c = Client()
         ok = False
         has_rmis = False
@@ -71,8 +71,7 @@ class Individual(models.Model):
                 out.write("Есть РМИС запись: %s" % rmis_uid)
 
         if not ok:
-            docs = Document.objects.filter(individual=self).exclude(document_type__check_priority=0).order_by(
-                "-document_type__check_priority")
+            docs = Document.objects.filter(individual=self).exclude(document_type__check_priority=0).order_by("-document_type__check_priority")
             for document in docs:
                 s = c.patients.search_by_document(document)
                 if len(s) > 0:
@@ -84,8 +83,7 @@ class Individual(models.Model):
 
         if ok:
             data = c.patients.get_data(rmis_uid)
-            upd = self.family != data["family"] or self.name != data["name"] or self.patronymic != data[
-                "patronymic"] or (self.birthday != data["birthday"] and data["birthday"] is not None)
+            upd = self.family != data["family"] or self.name != data["name"] or self.patronymic != data["patronymic"] or (self.birthday != data["birthday"] and data["birthday"] is not None)
 
             if upd:
                 prev = str(self)
@@ -98,13 +96,10 @@ class Individual(models.Model):
                 self.save()
                 if out:
                     out.write("Обновление данных: %s" % self.fio(full=True))
-                slog.Log(key=str(self.pk), type=2003,
-                         body=simplejson.dumps({"Новые данные": str(self), "Не актуальные данные": prev}),
-                         user=None).save()
+                slog.Log(key=str(self.pk), type=2003, body=simplejson.dumps({"Новые данные": str(self), "Не актуальные данные": prev}), user=None).save()
 
         if not ok:
-            query = {"surname": self.family, "name": self.name, "patrName": self.patronymic,
-                     "birthDate": self.birthday.strftime("%Y-%m-%d")}
+            query = {"surname": self.family, "name": self.name, "patrName": self.patronymic, "birthDate": self.birthday.strftime("%Y-%m-%d")}
             rows = c.patients.client.searchIndividual(**query)
             if len(rows) == 1:
                 rmis_uid = rows[0]
@@ -123,8 +118,7 @@ class Individual(models.Model):
 
         save_docs = []
 
-        if ok and rmis_uid != "" and Card.objects.filter(individual=self, base__is_rmis=True,
-                                                         is_archive=False).exists():
+        if ok and rmis_uid != "" and Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False).exists():
             pat_data = c.patients.extended_data(rmis_uid)
             cards = Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False)
             for card_i in cards:
@@ -149,22 +143,20 @@ class Individual(models.Model):
                 if k and document_object["active"]:
                     if out:
                         out.write("Тип: %s -> %s (%s)" % (document_object["type"], k, document_object["active"]))
-                    data = dict(document_type=DocumentType.objects.get(pk=k),
-                                serial=document_object["series"] or "",
-                                number=document_object["number"] or "",
-                                date_start=document_object["issueDate"],
-                                date_end=document_object["expiryDate"],
-                                who_give=(document_object["issueOrganization"] or {"name": document_object["issuerText"] or ""})["name"] or "",
-                                individual=self,
-                                is_active=True)
-                    rowss = Document.objects.filter(document_type=data['document_type'], individual=self,
-                                                    from_rmis=True)
+                    data = dict(
+                        document_type=DocumentType.objects.get(pk=k),
+                        serial=document_object["series"] or "",
+                        number=document_object["number"] or "",
+                        date_start=document_object["issueDate"],
+                        date_end=document_object["expiryDate"],
+                        who_give=(document_object["issueOrganization"] or {"name": document_object["issuerText"] or ""})["name"] or "",
+                        individual=self,
+                        is_active=True,
+                    )
+                    rowss = Document.objects.filter(document_type=data['document_type'], individual=self, from_rmis=True)
                     if rowss.exclude(serial=data["serial"]).exclude(number=data["number"]).filter(card__isnull=True).exists():
-                        Document.objects.filter(document_type=data['document_type'], individual=self,
-                                                from_rmis=True).delete()
-                    docs = Document.objects.filter(document_type=data['document_type'],
-                                                   serial=data['serial'],
-                                                   number=data['number'], from_rmis=True)
+                        Document.objects.filter(document_type=data['document_type'], individual=self, from_rmis=True).delete()
+                    docs = Document.objects.filter(document_type=data['document_type'], serial=data['serial'], number=data['number'], from_rmis=True)
                     if not docs.exists():
                         doc = Document(**data)
                         doc.save()
@@ -197,10 +189,7 @@ class Individual(models.Model):
                                 ndocs[kk] = d
 
                         Document.objects.filter(pk__in=to_delete).delete()
-                        docs = Document.objects.filter(document_type=data['document_type'],
-                                                       serial=data['serial'],
-                                                       number=data['number'],
-                                                       individual=self)
+                        docs = Document.objects.filter(document_type=data['document_type'], serial=data['serial'], number=data['number'], individual=self)
                         for d in docs:
                             if d.date_start != data["date_start"]:
                                 d.date_start = data["date_start"]
@@ -221,11 +210,13 @@ class Individual(models.Model):
                         if out:
                             out.write("Данные для документов верны: %s" % [str(x) for x in docs])
 
-                    docs = Document.objects.filter(document_type=data['document_type'],
-                                                   document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ',
-                                                                             'Полис ОМС'],
-                                                   serial=data['serial'],
-                                                   number=data['number']).exclude(individual=self).exclude(number="")
+                    docs = (
+                        Document.objects.filter(
+                            document_type=data['document_type'], document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС'], serial=data['serial'], number=data['number']
+                        )
+                        .exclude(individual=self)
+                        .exclude(number="")
+                    )
                     if docs.exists():
                         if out:
                             out.write("Объединение записей физ.лиц")
@@ -236,7 +227,14 @@ class Individual(models.Model):
             for d in Document.objects.filter(individual=self, from_rmis=True):
                 kk = "%s_%s_%s" % (d.document_type_id, d.serial, d.number)
                 if out:
-                    out.write("TD %s %s %s" % (kk, kk not in save_docs, save_docs,))
+                    out.write(
+                        "TD %s %s %s"
+                        % (
+                            kk,
+                            kk not in save_docs,
+                            save_docs,
+                        )
+                    )
                 if kk not in save_docs:
                     to_delete_pks.append(d.pk)
             Document.objects.filter(pk__in=to_delete_pks).delete()
@@ -250,6 +248,7 @@ class Individual(models.Model):
 
     def reverse_sync(self, force_new=False):
         from rmis_integration.client import Client
+
         c = Client(modules=['patients', 'individuals'])
         cards = Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False)
         n = False
@@ -268,11 +267,7 @@ class Individual(models.Model):
         elif not n:
             p = pat_data["patient"]
             g = {"ж": "2"}.get(self.sex.lower(), "1")
-            if self.family != p["lastName"] or \
-                    self.name != p["firstName"] or \
-                    self.patronymic != p["middleName"] or \
-                    self.sex != g or \
-                    self.birthday != self.birthday:
+            if self.family != p["lastName"] or self.name != p["firstName"] or self.patronymic != p["middleName"] or self.sex != g or self.birthday != self.birthday:
                 c.patients.edit_patient(self)
 
     def bd(self):
@@ -290,9 +285,11 @@ class Individual(models.Model):
         Функция подсчета возраста
         """
 
-        if iss is None or (not iss.tubes.exists() and not iss.time_confirmation) or \
-            ((not iss.tubes.exists() or not iss.tubes.filter(
-                time_recive__isnull=False).exists()) and not iss.research.is_paraclinic and not iss.research.is_doc_refferal):
+        if (
+            iss is None
+            or (not iss.tubes.exists() and not iss.time_confirmation)
+            or ((not iss.tubes.exists() or not iss.tubes.filter(time_recive__isnull=False).exists()) and not iss.research.is_paraclinic and not iss.research.is_doc_refferal)
+        ):
             today = date.today()
         elif iss.time_confirmation and (iss.research.is_paraclinic or iss.research.is_doc_refferal) or not iss.tubes.exists():
             today = iss.time_confirmation.date()
@@ -322,16 +319,13 @@ class Individual(models.Model):
         """
         if direction is not None:
             from directions.models import Issledovaniya
+
             iss = None
-            i = Issledovaniya.objects.filter(tubes__time_recive__isnull=False, napravleniye=direction) \
-                .order_by("-tubes__time_recive")
+            i = Issledovaniya.objects.filter(tubes__time_recive__isnull=False, napravleniye=direction).order_by("-tubes__time_recive")
             if i.exists():
                 iss = i[0]
-            elif Issledovaniya.objects.filter(research__is_paraclinic=True, napravleniye=direction,
-                                              time_confirmation__isnull=False):
-                iss = Issledovaniya.objects.filter(research__is_paraclinic=True, napravleniye=direction,
-                                                   time_confirmation__isnull=False) \
-                    .order_by("-time_confirmation")[0]
+            elif Issledovaniya.objects.filter(research__is_paraclinic=True, napravleniye=direction, time_confirmation__isnull=False):
+                iss = Issledovaniya.objects.filter(research__is_paraclinic=True, napravleniye=direction, time_confirmation__isnull=False).order_by("-time_confirmation")[0]
 
         days, monthes, years = self.age(iss=iss, days_monthes_years=True)
 
@@ -342,6 +336,7 @@ class Individual(models.Model):
                 r = ages[0].s
             else:
                 import pymorphy2
+
                 morph = pymorphy2.MorphAnalyzer()
                 if age == 0:
                     _let = morph.parse("лет ")[0]
@@ -363,6 +358,7 @@ class Individual(models.Model):
                 r = ages[0].s
             else:
                 import pymorphy2
+
                 morph = pymorphy2.MorphAnalyzer()
                 if age == 0:
                     _let = morph.parse("месяцев ")[0]
@@ -382,6 +378,7 @@ class Individual(models.Model):
                 r = ages[0].s
             else:
                 import pymorphy2
+
                 morph = pymorphy2.MorphAnalyzer()
                 if age == 0:
                     _let = morph.parse("дней ")[0]
@@ -403,25 +400,21 @@ class Individual(models.Model):
 
         if not short:
             if full:
-                r = "{0} {1} {2}, {5}, {3:%d.%m.%Y} ({4})".format(self.family, self.name, self.patronymic,
-                                                                  self.birthday, self.age_s(direction=direction),
-                                                                  self.sex)
+                r = "{0} {1} {2}, {5}, {3:%d.%m.%Y} ({4})".format(self.family, self.name, self.patronymic, self.birthday, self.age_s(direction=direction), self.sex)
             elif not npf:
                 r = "{} {} {}".format(self.family, self.name, self.patronymic).strip()
             elif bd:
-                r = "{0} {1} {2}, {3:%d.%m.%Y}".format(self.family, self.name, self.patronymic,
-                                                       self.birthday)
+                r = "{0} {1} {2}, {3:%d.%m.%Y}".format(self.family, self.name, self.patronymic, self.birthday)
             else:
                 r = "{} {} {}".format(self.name, self.patronymic, self.family).strip()
         else:
+
             def first_letter_not_blank(s):
                 if len(s) > 0:
                     return " " + s[0] + ("." if dots else "")
                 return ""
 
-            r = "{0}{1}".format(self.family,
-                                first_letter_not_blank(self.name) + first_letter_not_blank(self.patronymic).replace(" ",
-                                                                                                                    "" if not dots else " "))
+            r = "{0}{1}".format(self.family, first_letter_not_blank(self.name) + first_letter_not_blank(self.patronymic).replace(" ", "" if not dots else " "))
         return r.strip()
 
     def __str__(self):
@@ -429,11 +422,13 @@ class Individual(models.Model):
 
     def check_rmis(self, update=True, client=None):
         from rmis_integration.client import Client
+
         if client is None:
             client = Client()
         rmis_id = client.patients.get_rmis_id_for_individual(individual=self)
         if rmis_id and rmis_id != 'NONERMIS':
             from directions.models import Napravleniya
+
             Napravleniya.objects.filter(client__individual=self, rmis_number='NONERMIS').update(rmis_number=None)
         return rmis_id
 
@@ -456,10 +451,12 @@ class Individual(models.Model):
         tfoms_data = None
         if enp_doc and enp_doc.number:
             from tfoms.integration import match_enp
+
             tfoms_data = match_enp(enp_doc.number)
 
         if not tfoms_data:
             from tfoms.integration import match_patient
+
             tfoms_data = match_patient(self.family, self.name, self.patronymic, strfdatetime(self.birthday, '%Y-%m-%d'))
 
         if tfoms_data:
@@ -490,10 +487,13 @@ class Individual(models.Model):
             q_idp = dict(tfoms_idp=idp or '##fakeidp##')
 
             if not individual:
-                indv = Individual.objects.filter(
-                    Q(**q_idp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)) \
-                    if snils else \
-                    Individual.objects.filter(Q(**q_idp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
+                indv = (
+                    Individual.objects.filter(
+                        Q(**q_idp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)
+                    )
+                    if snils
+                    else Individual.objects.filter(Q(**q_idp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
+                )
             else:
                 indv = Individual.objects.filter(pk=individual.pk)
 
@@ -619,8 +619,7 @@ class Individual(models.Model):
 
 class DocumentType(models.Model):
     title = models.CharField(max_length=60, help_text="Название типа документа")
-    check_priority = models.IntegerField(default=0,
-                                         help_text="Приоритет проверки документа (чем больше число - тем больше (сильнее) приоритет)")
+    check_priority = models.IntegerField(default=0, help_text="Приоритет проверки документа (чем больше число - тем больше (сильнее) приоритет)")
     rmis_type = models.CharField(max_length=10, default=None, blank=True, null=True)
 
     def __str__(self):
@@ -652,8 +651,7 @@ class Document(models.Model):
         return localtime(self.date_end)
 
     def __str__(self):
-        return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number,
-                                                        self.is_active, self.individual)
+        return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number, self.is_active, self.individual)
 
     @staticmethod
     def get_all_doc(docs):
@@ -694,6 +692,7 @@ class Document(models.Model):
     def sync_rmis(self):
         if self.individual.primary_for_rmis and not self.from_rmis and self.individual.rmis_uid and self.document_type.rmis_type:
             from rmis_integration.client import Client
+
             c = Client(modules=['patients', 'individuals'])
             cards = Card.objects.filter(individual=self.individual, base__is_rmis=True, is_archive=False)
             if not cards.exists():
@@ -701,12 +700,14 @@ class Document(models.Model):
             # card = cards[0]
             if self.rmis_uid:
                 d = c.individuals.client.getDocument(self.rmis_uid)
-                if d["series"] != self.serial or \
-                        d['number'] != self.number or \
-                        d['issuerText'] != self.who_give or \
-                        d['issueDate'] != self.date_start or \
-                        d['expireDate'] != self.date_end or \
-                        d['active'] != self.is_active:
+                if (
+                    d["series"] != self.serial
+                    or d['number'] != self.number
+                    or d['issuerText'] != self.who_give
+                    or d['issueDate'] != self.date_start
+                    or d['expireDate'] != self.date_end
+                    or d['active'] != self.is_active
+                ):
                     data = {
                         "documentId": self.rmis_uid,
                         "documentData": {
@@ -718,7 +719,7 @@ class Document(models.Model):
                             "active": self.is_active,
                             "issueDate": self.date_start,
                             "expireDate": self.date_end,
-                        }
+                        },
                     }
                     d = c.individuals.client.editDocument(**data)
             else:
@@ -753,10 +754,15 @@ class CardBase(models.Model):
     hide = models.BooleanField(help_text="Скрыть базу", default=False)
     history_number = models.BooleanField(help_text="Ввод номера истории", default=False)
     internal_type = models.BooleanField(help_text="Внутренний тип карт", default=False)
-    assign_in_search = models.ForeignKey("clients.CardBase", related_name="assign_in_search_base",
-                                         help_text="Показывать результаты в поиске вместе с этой базой", null=True,
-                                         blank=True, default=None,
-                                         on_delete=models.SET_NULL)
+    assign_in_search = models.ForeignKey(
+        "clients.CardBase",
+        related_name="assign_in_search_base",
+        help_text="Показывать результаты в поиске вместе с этой базой",
+        null=True,
+        blank=True,
+        default=None,
+        on_delete=models.SET_NULL,
+    )
     order_weight = models.SmallIntegerField(default=0)
     forbidden_create_napr = models.BooleanField(help_text="Запрет создания направлений", default=False)
 
@@ -772,8 +778,7 @@ class District(models.Model):
     title = models.CharField(max_length=128)
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
     is_ginekolog = models.BooleanField(help_text="Гинекологический участок", default=False)
-    code_poliklinika = models.CharField(max_length=8, default='', help_text="Краткий код участка", db_index=True,
-                                        blank=True)
+    code_poliklinika = models.CharField(max_length=8, default='', help_text="Краткий код участка", db_index=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -800,42 +805,28 @@ class Card(models.Model):
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)
     individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
     is_archive = models.BooleanField(default=False, blank=True, db_index=True)
-    polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None,
-                              on_delete=models.SET_NULL)
-    main_diagnosis = models.CharField(max_length=36, blank=True, default='', help_text="Основной диагноз",
-                                      db_index=True)
+    polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    main_diagnosis = models.CharField(max_length=36, blank=True, default='', help_text="Основной диагноз", db_index=True)
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
-    work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None,
-                                      on_delete=models.SET_NULL, help_text="Место работы из базы")
+    work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
-    mother = models.ForeignKey('self', related_name='mother_p', help_text="Мать", blank=True, null=True, default=None,
-                               on_delete=models.SET_NULL)
-    father = models.ForeignKey('self', related_name='father_p', help_text="Отец", blank=True, null=True, default=None,
-                               on_delete=models.SET_NULL)
-    curator = models.ForeignKey('self', related_name='curator_p', help_text="Опекун", blank=True, null=True,
-                                default=None, on_delete=models.SET_NULL)
+    mother = models.ForeignKey('self', related_name='mother_p', help_text="Мать", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    father = models.ForeignKey('self', related_name='father_p', help_text="Отец", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    curator = models.ForeignKey('self', related_name='curator_p', help_text="Опекун", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     curator_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-основание опекуна")
-    agent = models.ForeignKey('self', related_name='agent_p', help_text="Представитель (из учреждения, родственник)",
-                              blank=True, null=True, default=None, on_delete=models.SET_NULL)
-    agent_doc_auth = models.CharField(max_length=255, blank=True, default='',
-                                      help_text="Документ-оснвоание представителя")
-    payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True,
-                              default=None, on_delete=models.SET_NULL)
+    agent = models.ForeignKey('self', related_name='agent_p', help_text="Представитель (из учреждения, родственник)", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание представителя")
+    payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True, default=None, on_delete=models.SET_NULL)
 
-    who_is_agent = models.CharField(max_length=7, choices=AGENT_CHOICES, blank=True, default='',
-                                    help_text="Законный представитель пациента", db_index=True)
-    district = models.ForeignKey(District, default=None, null=True, blank=True, help_text="Участок",
-                                 on_delete=models.SET_NULL)
+    who_is_agent = models.CharField(max_length=7, choices=AGENT_CHOICES, blank=True, default='', help_text="Законный представитель пациента", db_index=True)
+    district = models.ForeignKey(District, default=None, null=True, blank=True, help_text="Участок", on_delete=models.SET_NULL)
 
-    ginekolog_district = models.ForeignKey(District, related_name='ginekolog_district', default=None, null=True,
-                                           blank=True, help_text="Участок",
-                                           on_delete=models.SET_NULL)
+    ginekolog_district = models.ForeignKey(District, related_name='ginekolog_district', default=None, null=True, blank=True, help_text="Участок", on_delete=models.SET_NULL)
 
     anamnesis_of_life = models.TextField(default='', blank=True, help_text='Анамнез жизни')
-    number_poliklinika = models.CharField(max_length=20, blank=True, default='',
-                                          help_text="Идетификатор карты поликлиника", db_index=True)
+    number_poliklinika = models.CharField(max_length=20, blank=True, default='', help_text="Идетификатор карты поликлиника", db_index=True)
     phone = models.CharField(max_length=20, blank=True, default='')
     harmful_factor = models.CharField(max_length=32, blank=True, default='')
 
@@ -851,10 +842,9 @@ class Card(models.Model):
         return "{}{}".format(self.number, (" " + self.base.short_title) if not self.base.is_rmis else "")
 
     def get_phones(self):
-        return list(set([y for y in [x.normalize_number() for x in
-                                     Phones.objects.filter(card__individual=self.individual, card__is_archive=False)]
-                         + [Phones.nn(self.phone)]
-                         if y and len(y) > 1]))
+        return list(
+            set([y for y in [x.normalize_number() for x in Phones.objects.filter(card__individual=self.individual, card__is_archive=False)] + [Phones.nn(self.phone)] if y and len(y) > 1])
+        )
 
     def short_type_card(self):
         return "{}".format(self.base.short_title)
@@ -878,8 +868,7 @@ class Card(models.Model):
             if CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=True).exists():
                 docs[t] = CardDocUsage.objects.filter(card=self, document__document_type__pk=t)[0].document_id
             elif Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).exists():
-                d = Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).order_by(
-                    '-id')[0]
+                d = Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).order_by('-id')[0]
                 c = CardDocUsage(card=self, document=d)
                 c.save()
                 docs[t] = d.pk
@@ -906,12 +895,8 @@ class Card(models.Model):
         ind_data['doc'] = docs if not full_empty else []
         ind_data['fio'] = self.individual.fio()
         ind_data['born'] = self.individual.bd()
-        ind_data[
-            'main_address'] = "____________________________________________________" if not self.main_address and not full_empty \
-            else self.main_address
-        ind_data[
-            'fact_address'] = "____________________________________________________" if not self.fact_address and not full_empty \
-            else self.fact_address
+        ind_data['main_address'] = "____________________________________________________" if not self.main_address and not full_empty else self.main_address
+        ind_data['fact_address'] = "____________________________________________________" if not self.fact_address and not full_empty else self.fact_address
         ind_data['card_num'] = self.number_with_type()
         ind_data['number_poliklinika'] = self.number_poliklinika
         ind_data['harmful_factor'] = self.harmful_factor
@@ -927,15 +912,15 @@ class Card(models.Model):
         ind_data['passport_num'] = ind_documents['passport']['num']
         ind_data['passport_serial'] = ind_documents['passport']['serial']
         ind_data['passport_date_start'] = ind_documents['passport']['date_start']
-        ind_data['passport_issued'] = "______________________________________________________________" \
-            if not ind_documents['passport']['issued'] and not full_empty else ind_documents['passport']['issued']
+        ind_data['passport_issued'] = (
+            "______________________________________________________________" if not ind_documents['passport']['issued'] and not full_empty else ind_documents['passport']['issued']
+        )
 
         # document "св-во о рождении"
         ind_data['bc_num'] = ind_documents['bc']['num']
         ind_data['bc_serial'] = ind_documents['bc']['serial']
         ind_data['bc_date_start'] = ind_documents['bc']['date_start']
-        ind_data['bc_issued'] = "______________________________________________________________" \
-            if not ind_documents['bc']['issued'] and not full_empty else ind_documents['bc']['issued']
+        ind_data['bc_issued'] = "______________________________________________________________" if not ind_documents['bc']['issued'] and not full_empty else ind_documents['bc']['issued']
         if ind_data['passport_num']:
             ind_data['type_doc'] = 'паспорт'
         elif ind_data['bc_num']:
@@ -954,26 +939,23 @@ class Card(models.Model):
         if not ind_data['oms']['polis_serial']:
             ind_data['oms']['polis_serial'] = None if empty else '________'
         # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
-        ind_data['oms']['polis_issued'] = (None if empty else '') if not ind_documents["polis"]["issued"] else \
-            ind_documents["polis"]["issued"]
+        ind_data['oms']['polis_issued'] = (None if empty else '') if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
 
         return ind_data
 
     @staticmethod
     def next_l2_n():
-        last_l2 = Card.objects.filter(base__internal_type=True).extra(
-            select={'numberInt': 'CAST(number AS INTEGER)'}
-        ).order_by("-numberInt").first()
+        last_l2 = Card.objects.filter(base__internal_type=True).extra(select={'numberInt': 'CAST(number AS INTEGER)'}).order_by("-numberInt").first()
         n = 0
         if last_l2:
             n = last_l2.numberInt
         return n + 1
 
     @staticmethod
-    def add_l2_card(individual: [Individual, None] = None, card_orig: ['Card', None] = None, distinct=True, polis: ['Document', None] = None, address: [str, None] = None, force=False,
-                    updated_data=None):
-        if distinct and card_orig \
-                and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True).exists():
+    def add_l2_card(
+        individual: [Individual, None] = None, card_orig: ['Card', None] = None, distinct=True, polis: ['Document', None] = None, address: [str, None] = None, force=False, updated_data=None
+    ):
+        if distinct and card_orig and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True).exists():
             return None
 
         if force and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True).exists():
@@ -1009,12 +991,15 @@ class Card(models.Model):
             cb = CardBase.objects.select_for_update().filter(internal_type=True).first()
             if (not card_orig and not individual) or not cb:
                 return
-            c = Card(number=Card.next_l2_n(), base=cb,
-                     individual=individual if individual else card_orig.individual,
-                     polis=polis or (None if not card_orig else card_orig.polis),
-                     main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
-                     main_address=address or ('' if not card_orig else card_orig.main_address),
-                     fact_address='' if not card_orig else card_orig.fact_address)
+            c = Card(
+                number=Card.next_l2_n(),
+                base=cb,
+                individual=individual if individual else card_orig.individual,
+                polis=polis or (None if not card_orig else card_orig.polis),
+                main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
+                main_address=address or ('' if not card_orig else card_orig.main_address),
+                fact_address='' if not card_orig else card_orig.fact_address,
+            )
             c.save()
             if polis:
                 CardDocUsage(card=c, document=polis).save()
@@ -1040,24 +1025,64 @@ class AnamnesisHistory(models.Model):
 class DispensaryReg(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True, db_index=True)
-    illnes = models.CharField(max_length=511, help_text='Заболевание по которому состоит на учете', default='',
-                              blank=True)
-    spec_reg = models.ForeignKey(Speciality, related_name='doc_spec_start', default=None, blank=True, null=True,
-                                 help_text="Профиль специальности", db_index=True, on_delete=models.CASCADE)
-    doc_start_reg = models.ForeignKey(DoctorProfile, related_name='doc_start_reg', default=None, blank=True, null=True,
-                                      db_index=True, help_text='Лечащий врач кто поставил на учет',
-                                      on_delete=models.CASCADE)
-    date_start = models.DateField(help_text='Дата постановки на Д-учет', db_index=True, default=None, blank=True,
-                                  null=True)
-    doc_end_reg = models.ForeignKey(DoctorProfile, related_name='doc_end_reg', default=None, blank=True, null=True,
-                                    db_index=True, help_text='Лечащий врач, кто снял с учета',
-                                    on_delete=models.CASCADE)
+    illnes = models.CharField(max_length=511, help_text='Заболевание по которому состоит на учете', default='', blank=True)
+    spec_reg = models.ForeignKey(Speciality, related_name='doc_spec_start', default=None, blank=True, null=True, help_text="Профиль специальности", db_index=True, on_delete=models.CASCADE)
+    doc_start_reg = models.ForeignKey(
+        DoctorProfile, related_name='doc_start_reg', default=None, blank=True, null=True, db_index=True, help_text='Лечащий врач кто поставил на учет', on_delete=models.CASCADE
+    )
+    date_start = models.DateField(help_text='Дата постановки на Д-учет', db_index=True, default=None, blank=True, null=True)
+    doc_end_reg = models.ForeignKey(
+        DoctorProfile, related_name='doc_end_reg', default=None, blank=True, null=True, db_index=True, help_text='Лечащий врач, кто снял с учета', on_delete=models.CASCADE
+    )
     date_end = models.DateField(help_text='Дата сняти с Д-учета', db_index=True, default=None, blank=True, null=True)
     why_stop = models.CharField(max_length=511, help_text='Причина снятия с Д-учета', default='', blank=True)
 
     class Meta:
         verbose_name = 'Д-учет'
         verbose_name_plural = 'Д-учет'
+
+
+class DispensaryRegPlans(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, db_index=True, blank=True, default=None, null=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
+    speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальности консультации врача', on_delete=models.CASCADE)
+    date = models.DateField(help_text='Планируемая дата', db_index=True, default=None, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Д-учет план'
+        verbose_name_plural = 'Д-учет план'
+
+    @staticmethod
+    def update_plan(card_pk, old_research, new_research, year):
+        card = Card.objects.get(pk=card_pk)
+        for i in range(len(old_research)):
+            research_pk, speciality_pk = None, None
+            type_research = old_research[i]["type"]
+            if type_research == "research":
+                research_pk = old_research[i]["research_pk"]
+            elif type_research == "speciality":
+                speciality_pk = old_research[i]["research_pk"]
+            old_plans = old_research[i]["plans"]
+            new_plans = [''.join(c for c in x if c.isdigit()) for x in new_research[i]["plans"]]
+            for m in range(12):
+                if old_plans[m] != new_plans[m]:
+                    try:
+                        if old_plans[m]:
+                            current_date = f'{year}-{m + 1}-{old_plans[m]}'
+                            old_data_plan = DispensaryRegPlans.objects.filter(card=card, research__pk=research_pk, speciality__pk=speciality_pk, date=current_date).first()
+                        else:
+                            old_data_plan = DispensaryRegPlans.objects.filter(card=card, research__pk=research_pk, speciality__pk=speciality_pk, date__isnull=True).first()
+                        if old_data_plan:
+                            if new_plans[m]:
+                                new_date = f'{year}-{m + 1}-{new_plans[m]}'
+                                old_data_plan.date = new_date
+                                old_data_plan.save()
+                            else:
+                                old_data_plan.delete()
+                        else:
+                            DispensaryRegPlans.objects.create(card=card, research_id=research_pk, speciality_id=speciality_pk, date=f'{year}-{m + 1}-{new_plans[m]}')
+                    except Exception as e:
+                        print(e)  # Возможно косячные даты с фронтенда вроде "99" или "абв", временное решение просто проигнорить
 
 
 class Phones(models.Model):
@@ -1119,24 +1144,39 @@ class BenefitReg(models.Model):
     """
     Учет пациентов по льготам, стоящим на текущий момент
     """
+
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
-    benefit = models.ForeignKey(BenefitType, related_name='benefit', help_text="Льгота", db_index=True,
-                                on_delete=models.CASCADE)
-    doc_start_reg = models.ForeignKey(DoctorProfile, related_name='doc_start_benefit', default=None, blank=True,
-                                      null=True, db_index=True, help_text='Лечащий врач кто поставил на льготу',
-                                      on_delete=models.CASCADE)
-    date_start = models.DateField(help_text='Дата постановки на Льготу', db_index=True, default=None, blank=True,
-                                  null=True)
-    doc_end_reg = models.ForeignKey(DoctorProfile, related_name='doc_end_benefit', default=None, blank=True, null=True,
-                                    db_index=True, help_text='Лечащий врач, кто снял с льготы',
-                                    on_delete=models.CASCADE)
+    benefit = models.ForeignKey(BenefitType, related_name='benefit', help_text="Льгота", db_index=True, on_delete=models.CASCADE)
+    doc_start_reg = models.ForeignKey(
+        DoctorProfile, related_name='doc_start_benefit', default=None, blank=True, null=True, db_index=True, help_text='Лечащий врач кто поставил на льготу', on_delete=models.CASCADE
+    )
+    date_start = models.DateField(help_text='Дата постановки на Льготу', db_index=True, default=None, blank=True, null=True)
+    doc_end_reg = models.ForeignKey(
+        DoctorProfile, related_name='doc_end_benefit', default=None, blank=True, null=True, db_index=True, help_text='Лечащий врач, кто снял с льготы', on_delete=models.CASCADE
+    )
     date_end = models.DateField(help_text='Дата сняти с льготы', db_index=True, default=None, blank=True, null=True)
     registration_basis = models.TextField(default="", blank=True)
 
 
 class VaccineReg(models.Model):
-    STEPS = ('V', 'V1', 'V2', 'V3', 'V4', 'R', 'R1', 'R2', 'R3',)
-    STEPS_CHOICES = ((x, x,) for x in STEPS)
+    STEPS = (
+        'V',
+        'V1',
+        'V2',
+        'V3',
+        'V4',
+        'R',
+        'R1',
+        'R2',
+        'R3',
+    )
+    STEPS_CHOICES = (
+        (
+            x,
+            x,
+        )
+        for x in STEPS
+    )
 
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     date = models.DateField(help_text='Дата', db_index=True, null=True, default=None, blank=True)

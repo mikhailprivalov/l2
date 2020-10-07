@@ -35,13 +35,13 @@ class Command(BaseCommand):
             else:
                 # если есть индивидуал по документам
                 ind = clients.Document.objects.filter(
-                    Q(document_type__title__iexact="СНИЛС", number=cells[snils]) |
-                    Q(document_type__title__iexact="Полис ОМС", number=cells[polis]) |
-                    Q(document_type__title__iexact="Паспорт гражданина РФ", serial=cells[pasport_serial], number=cells[pasport_num])).first()
+                    Q(document_type__title__iexact="СНИЛС", number=cells[snils])
+                    | Q(document_type__title__iexact="Полис ОМС", number=cells[polis])
+                    | Q(document_type__title__iexact="Паспорт гражданина РФ", serial=cells[pasport_serial], number=cells[pasport_num])
+                ).first()
                 if ind:
                     i = ind.individual
                     if clients.Card.objects.filter(individual=i, base=base_l2).exists():
                         district = clients.District.objects.filter(code_poliklinika=cells[distict_num], is_ginekolog=False).first()
                         district_ginikolog = clients.District.objects.filter(code_poliklinika=cells[district_gin], is_ginekolog=True).first()
-                        clients.Card.objects.filter(individual=i, base=base_l2).update(number_poliklinika=cells[num_card].strip(),
-                                                                                       district=district, ginekolog_district=district_ginikolog)
+                        clients.Card.objects.filter(individual=i, base=base_l2).update(number_poliklinika=cells[num_card].strip(), district=district, ginekolog_district=district_ginikolog)

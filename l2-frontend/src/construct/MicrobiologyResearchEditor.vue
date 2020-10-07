@@ -54,12 +54,20 @@
         <span class="input-group-addon">Подготовка</span>
         <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
       </div>
-      <div class="input-group">
+      <div class="input-group" style="margin-bottom: 5px">
         <span class="input-group-addon">Ёмкость для биоматериала</span>
         <select class="form-control" v-model="tube">
           <option :value="-1">Не выбрано</option>
           <option :value="t.pk" v-for="t in tubes">{{t.title}}</option>
         </select>
+      </div>
+      <div class="input-group" style="margin-bottom: 5px">
+        <span class="input-group-addon">Шаблоны для комментариев материала (через "|")</span>
+        <textarea class="form-control noresize" rows="5" v-model="cultureTpl"></textarea>
+      </div>
+      <div class="input-group" style="margin-bottom: 5px">
+        <span class="input-group-addon">Шаблоны быстрого ввода заключения (через "|")</span>
+        <textarea class="form-control noresize" rows="5" v-model="conclusionTpl"></textarea>
       </div>
     </div>
 
@@ -86,6 +94,11 @@
         type: Number,
         required: true
       },
+      direction_forms: {
+        type: Array,
+        required: false,
+        default: () => [],
+      }
     },
     created() {
       this.load()
@@ -97,7 +110,8 @@
         code: '',
         internal_code: '',
         direction_current_form: '',
-        direction_forms: '',
+        conclusionTpl: '',
+        cultureTpl: '',
         info: '',
         hide: false,
         cancel_do: false,
@@ -176,6 +190,7 @@
           '-3': 5,
           '-4': 6,
           '-5': 7,
+          '-6': 8,
         }[this.department] || this.department
       },
       ex_deps() {
@@ -341,7 +356,6 @@
         this.site_type = null
         this.tube = -1
         this.direction_current_form = ''
-        this.direction_forms = ''
         if (this.pk >= 0) {
           this.$store.dispatch(action_types.INC_LOADING)
           construct_point.researchDetails(this, 'pk').then(data => {
@@ -350,7 +364,8 @@
             this.code = data.code
             this.internal_code = data.internal_code
             this.direction_current_form = data.direction_current_form
-            this.direction_forms = data.direction_forms
+            this.conclusionTpl = data.conclusionTpl
+            this.cultureTpl = data.cultureTpl
             this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
             this.hide = data.hide
             this.site_type = data.site_type
@@ -372,7 +387,20 @@
       },
       save() {
         this.$store.dispatch(action_types.INC_LOADING)
-        construct_point.updateResearch(this, ['pk', 'department', 'title', 'short_title', 'code', 'hide', 'site_type', 'internal_code', 'tube', 'direction_current_form'], {
+        construct_point.updateResearch(this, [
+          'pk',
+          'department',
+          'title',
+          'short_title',
+          'code',
+          'hide',
+          'site_type',
+          'internal_code',
+          'tube',
+          'direction_current_form',
+          'conclusionTpl',
+          'cultureTpl',
+        ], {
           info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>')
         }).then(() => {
           this.has_unsaved = false

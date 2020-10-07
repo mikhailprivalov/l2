@@ -5,6 +5,7 @@ class FsliRefbookTest(models.Model):
     """
     Таблица справочников ФСЛИ: https://nsi.rosminzdrav.ru/#!/refbook/1.2.643.5.1.13.13.11.1080
     """
+
     code_fsli = models.CharField(max_length=20, db_index=True, help_text='Уникальный код ФСЛИ')
     code_loinc = models.CharField(max_length=20, help_text='Код LOINC')
     title = models.CharField(max_length=1000, db_index=True, help_text='Полное наименование')

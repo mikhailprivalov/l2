@@ -16,30 +16,27 @@ def menu(request):
     """ Меню конструктора """
     groups = [str(x) for x in request.user.groups.all()]
     pages = [
-        {"url": "/construct/tubes", "title": "Ёмкости для биоматериала",
-         "access": ["Конструктор: Ёмкости для биоматериала"], "module": None},
-        {"url": "/construct/researches", "title": "Лабораторные исследования",
-         "access": ["Конструктор: Лабораторные исследования"], "module": None},
-        {"url": "/construct/researches-paraclinic", "title": "Описательные исследования и консультации",
-         "access": ["Конструктор: Параклинические (описательные) исследования"], "module": "paraclinic_module"},
-        {"url": "/construct/directions_group", "title": "Группировка исследований по направлениям",
-         "access": ["Конструктор: Группировка исследований по направлениям"], "module": None},
-        {"url": "/construct/uets", "title": "Настройка УЕТов",
-         "access": ["Конструктор: Настройка УЕТов"], "module": None},
-        {"url": "/construct/templates", "title": "Настройка шаблонов",
-         "access": ["Конструктор: Настройка шаблонов"], "module": None},
-        {"url": "/construct/bacteria", "title": "Бактерии и антибиотики",
-         "access": ["Конструктор: Бактерии и антибиотики"], "module": None},
+        {"url": "/construct/tubes", "title": "Ёмкости для биоматериала", "access": ["Конструктор: Ёмкости для биоматериала"], "module": None},
+        {"url": "/construct/researches", "title": "Лабораторные исследования", "access": ["Конструктор: Лабораторные исследования"], "module": None},
+        {
+            "url": "/construct/researches-paraclinic",
+            "title": "Описательные исследования и консультации",
+            "access": ["Конструктор: Параклинические (описательные) исследования"],
+            "module": "paraclinic_module",
+        },
+        {"url": "/construct/directions_group", "title": "Группировка исследований по направлениям", "access": ["Конструктор: Группировка исследований по направлениям"], "module": None},
+        {"url": "/construct/uets", "title": "Настройка УЕТов", "access": ["Конструктор: Настройка УЕТов"], "module": None},
+        {"url": "/construct/templates", "title": "Настройка шаблонов", "access": ["Конструктор: Настройка шаблонов"], "module": None},
+        {"url": "/construct/bacteria", "title": "Бактерии и антибиотики", "access": ["Конструктор: Бактерии и антибиотики"], "module": None},
     ]
 
     from context_processors.utils import make_menu
+
     menu = make_menu(pages, groups, request.user.is_superuser)
 
-    menu_st = [menu[i:i + 4] for i in range(0, len(menu), 4)]
+    menu_st = [menu[i: i + 4] for i in range(0, len(menu), 4)]
 
-    return render(request, 'construct_menu.html', {
-        "menu": menu_st,
-    })
+    return render(request, 'construct_menu.html', {"menu": menu_st,})
 
 
 @login_required
@@ -47,8 +44,7 @@ def menu(request):
 def researches(request):
     """ Конструктор исследований """
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
-    return render(request, 'construct_researches.html',
-                  {"labs": labs, "variants": directory.ResultVariants.objects.all()})
+    return render(request, 'construct_researches.html', {"labs": labs, "variants": directory.ResultVariants.objects.all()})
 
 
 @login_required
@@ -56,8 +52,7 @@ def researches(request):
 def researches_tune(request):
     """ Настройка исследований """
     pk = request.GET["pk"]
-    return render(request, 'construct_researches_tune.html',
-                  {"pk": pk, "material_types": directory.MaterialVariants.objects.all()})
+    return render(request, 'construct_researches_tune.html', {"pk": pk, "material_types": directory.MaterialVariants.objects.all()})
 
 
 @login_required
@@ -120,10 +115,18 @@ def refs(request):
         rows = []
         fraction = directory.Fractions.objects.get(pk=int(request.GET["pk"]))
         for r in directory.References.objects.filter(fraction=fraction).order_by("pk"):
-            rows.append({'pk': r.pk, 'title': r.title, 'about': r.about,
-                         'ref_m': json.loads(r.ref_m) if isinstance(r.ref_m, str) else r.ref_m,
-                         'ref_f': json.loads(r.ref_f) if isinstance(r.ref_f, str) else r.ref_f, 'del': False,
-                         'hide': False, 'isdefault': r.pk == fraction.default_ref_id})
+            rows.append(
+                {
+                    'pk': r.pk,
+                    'title': r.title,
+                    'about': r.about,
+                    'ref_m': json.loads(r.ref_m) if isinstance(r.ref_m, str) else r.ref_m,
+                    'ref_f': json.loads(r.ref_f) if isinstance(r.ref_f, str) else r.ref_f,
+                    'del': False,
+                    'hide': False,
+                    'isdefault': r.pk == fraction.default_ref_id,
+                }
+            )
         return JsonResponse(rows, safe=False)
     elif request.method == "POST":
         pk = int(request.POST["pk"])
@@ -138,8 +141,7 @@ def refs(request):
                     if r["pk"] == default:
                         default = -1
                 elif not r["del"] and r["pk"] == -1:
-                    nrf = directory.References(title=r["title"], about=r["about"], ref_m=r["ref_m"], ref_f=r["ref_f"],
-                                               fraction=fraction)
+                    nrf = directory.References(title=r["title"], about=r["about"], ref_m=r["ref_m"], ref_f=r["ref_f"], fraction=fraction)
                     nrf.save()
                     if r["isdefault"]:
                         default = nrf.pk

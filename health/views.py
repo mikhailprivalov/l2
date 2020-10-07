@@ -14,18 +14,19 @@ from slog.models import Log as slog
 @login_required
 @staff_member_required
 def log(request):
-    response = {"cnt": slog.objects.all().count(),
-                "store_days": SettingManager.get("max_log_store_days", "120", "i")}
-    response["to_delete"] = slog.objects.filter(
-        time__lt=datetime.today() - timedelta(days=response["store_days"])).exclude(type__in=(7, 21, 9, 11, 12, 4000, 13, 14, 24, 26, 5001)).count()
+    response = {"cnt": slog.objects.all().count(), "store_days": SettingManager.get("max_log_store_days", "120", "i")}
+    response["to_delete"] = slog.objects.filter(time__lt=datetime.today() - timedelta(days=response["store_days"])).exclude(type__in=(7, 21, 9, 11, 12, 4000, 13, 14, 24, 26, 5001)).count()
     return JsonResponse(response)
 
 
 @login_required
 @staff_member_required
 def log_cleanup(request):
-    _, cnt = slog.objects.filter(
-        time__lt=datetime.today() - timedelta(days=SettingManager.get("max_log_store_days", "120", "i"))).exclude(type__in=(7, 21, 9, 11, 12, 4000, 13, 14, 24, 26, 5001)).delete()
+    _, cnt = (
+        slog.objects.filter(time__lt=datetime.today() - timedelta(days=SettingManager.get("max_log_store_days", "120", "i")))
+        .exclude(type__in=(7, 21, 9, 11, 12, 4000, 13, 14, 24, 26, 5001))
+        .delete()
+    )
     return HttpResponse(str(cnt.get("slog.Log", 0)), content_type="text/plain")
 
 

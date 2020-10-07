@@ -122,4 +122,8 @@ export default generator({
   getPlanExaminationPatient: {
     url: 'directions/get-plan-operation-by-patient',
   },
+  getDirectionsTypeDate: {
+    url: 'directions/directions-type-date',
+  },
+
 })

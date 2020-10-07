@@ -35,3 +35,8 @@ def normalize_date(date_value: str):
     return date_value
 
 
+def normalize_dots_date(s):
+    if '.' in s:
+        s = s.split('.')
+        s = '{}-{}-{}'.format(s[2], s[1], s[0])
+    return s

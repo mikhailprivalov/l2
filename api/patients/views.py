@@ -1,6 +1,7 @@
 import datetime
 import re
 import threading
+from typing import Optional, List
 
 import pytz
 import simplejson as json
@@ -13,14 +14,34 @@ from django.http import JsonResponse
 
 from api import sql_func
 from appconf.manager import SettingManager
-from clients.models import CardBase, Individual, Card, Document, DocumentType, District, AnamnesisHistory, \
-    DispensaryReg, CardDocUsage, BenefitReg, BenefitType, VaccineReg, Phones, AmbulatoryData, AmbulatoryDataHistory
+from clients.models import (
+    CardBase,
+    Individual,
+    Card,
+    Document,
+    DocumentType,
+    District,
+    AnamnesisHistory,
+    DispensaryReg,
+    CardDocUsage,
+    BenefitReg,
+    BenefitType,
+    VaccineReg,
+    Phones,
+    AmbulatoryData,
+    AmbulatoryDataHistory,
+    DispensaryRegPlans,
+)
 from contracts.models import Company
+from directions.models import Issledovaniya
+from directory.models import Researches
 from laboratory import settings
-from laboratory.utils import strdate, start_end_year
+from laboratory.utils import strdate, start_end_year, localtime
 from rmis_integration.client import Client
 from slog.models import Log
+from statistics_tickets.models import VisitPurpose
 from tfoms.integration import match_enp, match_patient
+from directory.models import DispensaryPlan
 
 
 def full_patient_search_data(p, query):
@@ -77,10 +98,7 @@ def patients_search_card(request):
             if from_tfoms:
                 Individual.import_from_tfoms(from_tfoms)
 
-        objects = Individual.objects.filter(
-            document__number=query,
-            document__document_type__title='Полис ОМС'
-        )
+        objects = Individual.objects.filter(document__number=query, document__document_type__title='Полис ОМС')
     elif not p4i:
         if inc_tfoms:
             t_parts = re.search(p_tfoms, query.lower()).groups()
@@ -97,15 +115,10 @@ def patients_search_card(request):
             if not pat_bd.match(btday):
                 return JsonResponse([], safe=False)
             try:
-                objects = Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1],
-                                                    patronymic__startswith=initials[2], birthday=btday,
-                                                    card__base=card_type)
+                objects = Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1], patronymic__startswith=initials[2], birthday=btday, card__base=card_type)
                 if ((card_type.is_rmis and len(objects) == 0) or (card_type.internal_type and inc_rmis)) and not suggests:
                     c = Client(modules="patients")
-                    objects = c.patients.import_individual_to_base(
-                        {"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%",
-                         "birthDate": btday},
-                        fio=True)
+                    objects = c.patients.import_individual_to_base({"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%", "birthDate": btday}, fio=True)
             except ValidationError:
                 objects = []
         elif re.search(p2, query):
@@ -116,16 +129,14 @@ def patients_search_card(request):
                 if len(sbd) == 8:
                     sbd = "{}.{}.{}".format(sbd[0:2], sbd[2:4], sbd[4:8])
 
-                objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n, card__base=card_type,
-                                                    birthday=datetime.datetime.strptime(sbd, "%d.%m.%Y").date())
+                objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n, card__base=card_type, birthday=datetime.datetime.strptime(sbd, "%d.%m.%Y").date())
 
                 if len(split) > 3:
                     objects.filter(patronymic__istartswith=p)
 
                 objects = objects[:10]
             else:
-                objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
-                                                    patronymic__istartswith=p, card__base=card_type)[:10]
+                objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n, patronymic__istartswith=p, card__base=card_type)[:10]
 
             if ((card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10))) or (card_type.internal_type and inc_rmis)) and not suggests:
                 objects = list(objects)
@@ -136,14 +147,16 @@ def patients_search_card(request):
                 except ConnectionError:
                     pass
 
-        if (re.search(p3, query) and not card_type.is_rmis) or (len(list(objects)) == 0 and len(query) == 16 and not p_enp and card_type.internal_type)\
-                or (card_type.is_rmis and not re.search(p3, query)):
+        if (
+            (re.search(p3, query) and not card_type.is_rmis)
+            or (len(list(objects)) == 0 and len(query) == 16 and not p_enp and card_type.internal_type)
+            or (card_type.is_rmis and not re.search(p3, query))
+        ):
             resync = True
             if len(list(objects)) == 0:
                 resync = False
                 try:
-                    objects = Individual.objects.filter(card__number=query.upper(), card__is_archive=False,
-                                                        card__base=card_type)
+                    objects = Individual.objects.filter(card__number=query.upper(), card__is_archive=False, card__base=card_type)
                 except ValueError:
                     pass
                 if (card_type.is_rmis or card_type.internal_type) and len(list(objects)) == 0 and len(query) == 16 and not suggests:
@@ -187,12 +200,21 @@ def patients_search_card(request):
         cards = cards.order_by('-individual__birthday')
 
     row: Card
-    for row in cards.filter(is_archive=False).select_related("individual", "base").prefetch_related(
-        Prefetch(
-            'individual__document_set', queryset=Document.objects.filter(is_active=True, document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС'])
-                    .distinct("pk", "number", "document_type", "serial").select_related('document_type').order_by('pk')
-        ), 'phones_set'
-    ).distinct()[:10]:
+    for row in (
+        cards.filter(is_archive=False)
+        .select_related("individual", "base")
+        .prefetch_related(
+            Prefetch(
+                'individual__document_set',
+                queryset=Document.objects.filter(is_active=True, document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС'])
+                .distinct("pk", "number", "document_type", "serial")
+                .select_related('document_type')
+                .order_by('pk'),
+            ),
+            'phones_set',
+        )
+        .distinct()[:10]
+    ):
         disp_data = sql_func.dispensarization_research(row.individual.sex, row.individual.age_for_year(), row.pk, d1, d2)
 
         status_disp = 'finished'
@@ -204,38 +226,42 @@ def patients_search_card(request):
                     status_disp = 'need'
                     break
 
-        data.append({"type_title": card_type.title,
-                     "num": row.number,
-                     "is_rmis": row.base.is_rmis,
-                     "family": row.individual.family,
-                     "name": row.individual.name,
-                     "twoname": row.individual.patronymic,
-                     "birthday": row.individual.bd(),
-                     "age": row.individual.age_s(),
-                     "fio_age": row.individual.fio(full=True),
-                     "sex": row.individual.sex,
-                     "individual_pk": row.individual_id,
-                     "pk": row.pk,
-                     "phones": Phones.phones_to_normalized_list(row.phones_set.all(), row.phone),
-                     "main_diagnosis": row.main_diagnosis,
-                     "docs": [
-                         {
-                             "pk": x.pk,
-                             "type_title": x.document_type.title,
-                             "document_type_id": x.document_type_id,
-                             "serial": x.serial,
-                             "number": x.number,
-                             "is_active": x.is_active,
-                             "date_start": x.date_start,
-                             "date_end": x.date_end,
-                             "who_give": x.who_give,
-                             "from_rmis": x.from_rmis,
-                             "rmis_uid": x.rmis_uid,
-                         }
-                         for x in row.individual.document_set.all()
-                     ],
-                     "status_disp": status_disp,
-                     "disp_data": disp_data})
+        data.append(
+            {
+                "type_title": card_type.title,
+                "num": row.number,
+                "is_rmis": row.base.is_rmis,
+                "family": row.individual.family,
+                "name": row.individual.name,
+                "twoname": row.individual.patronymic,
+                "birthday": row.individual.bd(),
+                "age": row.individual.age_s(),
+                "fio_age": row.individual.fio(full=True),
+                "sex": row.individual.sex,
+                "individual_pk": row.individual_id,
+                "pk": row.pk,
+                "phones": Phones.phones_to_normalized_list(row.phones_set.all(), row.phone),
+                "main_diagnosis": row.main_diagnosis,
+                "docs": [
+                    {
+                        "pk": x.pk,
+                        "type_title": x.document_type.title,
+                        "document_type_id": x.document_type_id,
+                        "serial": x.serial,
+                        "number": x.number,
+                        "is_active": x.is_active,
+                        "date_start": x.date_start,
+                        "date_end": x.date_end,
+                        "who_give": x.who_give,
+                        "from_rmis": x.from_rmis,
+                        "rmis_uid": x.rmis_uid,
+                    }
+                    for x in row.individual.document_set.all()
+                ],
+                "status_disp": status_disp,
+                "disp_data": disp_data,
+            }
+        )
 
     return JsonResponse({"results": data})
 
@@ -256,17 +282,14 @@ def patients_search_individual(request):
         if not pat_bd.match(btday):
             return JsonResponse([], safe=False)
         try:
-            objects = Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1],
-                                                patronymic__startswith=initials[2], birthday=btday)
+            objects = Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1], patronymic__startswith=initials[2], birthday=btday)
         except ValidationError:
             objects = []
     elif re.search(p2, query):
         f, n, p, rmis_req, split = full_patient_search_data(p, query)
         objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n, patronymic__istartswith=p)
         if len(split) > 3:
-            objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
-                                                patronymic__istartswith=p,
-                                                birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())
+            objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n, patronymic__istartswith=p, birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())
 
     if re.search(p4, query):
         objects = Individual.objects.filter(pk=int(query.split(":")[1]))
@@ -275,13 +298,7 @@ def patients_search_individual(request):
     if not isinstance(objects, list):
         for row in objects.distinct().order_by("family", "name", "patronymic", "birthday"):
             n += 1
-            data.append({"family": row.family,
-                         "name": row.name,
-                         "patronymic": row.patronymic,
-                         "birthday": row.bd(),
-                         "age": row.age_s(),
-                         "sex": row.sex,
-                         "pk": row.pk})
+            data.append({"family": row.family, "name": row.name, "patronymic": row.patronymic, "birthday": row.bd(), "age": row.age_s(), "sex": row.sex, "pk": row.pk})
             if n == 25:
                 break
     return JsonResponse({"results": data})
@@ -298,24 +315,30 @@ def patients_search_l2_card(request):
         l2_cards = Card.objects.filter(individual=card_orig.individual, base__internal_type=True)
 
         for row in l2_cards.filter(is_archive=False):
-            docs = Document.objects.filter(individual__pk=row.individual_id, is_active=True,
-                                           document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС']) \
-                .distinct("pk", "number", "document_type", "serial").order_by('pk')
-            data.append({"type_title": row.base.title,
-                         "num": row.number,
-                         "is_rmis": row.base.is_rmis,
-                         "family": row.individual.family,
-                         "name": row.individual.name,
-                         "twoname": row.individual.patronymic,
-                         "birthday": row.individual.bd(),
-                         "age": row.individual.age_s(),
-                         "sex": row.individual.sex,
-                         "individual_pk": row.individual_id,
-                         "base_pk": row.base_id,
-                         "pk": row.pk,
-                         "phones": row.get_phones(),
-                         "docs": [{**model_to_dict(x), "type_title": x.document_type.title} for x in docs],
-                         "main_diagnosis": row.main_diagnosis})
+            docs = (
+                Document.objects.filter(individual__pk=row.individual_id, is_active=True, document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС'])
+                .distinct("pk", "number", "document_type", "serial")
+                .order_by('pk')
+            )
+            data.append(
+                {
+                    "type_title": row.base.title,
+                    "num": row.number,
+                    "is_rmis": row.base.is_rmis,
+                    "family": row.individual.family,
+                    "name": row.individual.name,
+                    "twoname": row.individual.patronymic,
+                    "birthday": row.individual.bd(),
+                    "age": row.individual.age_s(),
+                    "sex": row.individual.sex,
+                    "individual_pk": row.individual_id,
+                    "base_pk": row.base_id,
+                    "pk": row.pk,
+                    "phones": row.get_phones(),
+                    "docs": [{**model_to_dict(x), "type_title": x.document_type.title} for x in docs],
+                    "main_diagnosis": row.main_diagnosis,
+                }
+            )
     return JsonResponse({"results": data})
 
 
@@ -323,46 +346,45 @@ def patients_get_card_data(request, card_id):
     card = Card.objects.get(pk=card_id)
     c = model_to_dict(card)
     i = model_to_dict(card.individual)
-    docs = [{**model_to_dict(x), "type_title": x.document_type.title}
-            for x in Document.objects.filter(individual=card.individual).distinct('pk', "number", "document_type",
-                                                                                  "serial").order_by('pk')]
+    docs = [
+        {**model_to_dict(x), "type_title": x.document_type.title}
+        for x in Document.objects.filter(individual=card.individual).distinct('pk', "number", "document_type", "serial").order_by('pk')
+    ]
     rc = Card.objects.filter(base__is_rmis=True, individual=card.individual)
     d = District.objects.all().order_by('-sort_weight', '-id')
-    return JsonResponse({
-        **i,
-        **c,
-        "docs": docs,
-        "main_docs": card.get_card_documents(),
-        "has_rmis_card": rc.exists(),
-        "av_companies": [{"id": -1, "title": "НЕ ВЫБРАНО", "short_title": ""},
-                         *[model_to_dict(x) for x in
-                           Company.objects.filter(active_status=True).order_by('title')]],
-        "custom_workplace": card.work_place != "",
-        "work_place_db": card.work_place_db_id or -1,
-        "district": card.district_id or -1,
-        "districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
-                      *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=False)]],
-        "ginekolog_district": card.ginekolog_district_id or -1,
-        "gin_districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
-                          *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=True)]],
-        "agent_types": [{"key": x[0], "title": x[1]} for x in Card.AGENT_CHOICES if x[0]],
-        "excluded_types": Card.AGENT_CANT_SELECT,
-        "agent_need_doc": Card.AGENT_NEED_DOC,
-        "mother": None if not card.mother else card.mother.get_fio_w_card(),
-        "mother_pk": card.mother_id,
-        "father": None if not card.father else card.father.get_fio_w_card(),
-        "father_pk": card.father_id,
-        "curator": None if not card.curator else card.curator.get_fio_w_card(),
-        "curator_pk": card.curator_id,
-        "agent": None if not card.agent else card.agent.get_fio_w_card(),
-        "agent_pk": card.agent_id,
-        "payer": None if not card.payer else card.payer.get_fio_w_card(),
-        "payer_pk": card.payer_id,
-        "rmis_uid": rc[0].number if rc.exists() else None,
-        "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()],
-        "number_poli": card.number_poliklinika,
-        "harmful": card.harmful_factor,
-    })
+    return JsonResponse(
+        {
+            **i,
+            **c,
+            "docs": docs,
+            "main_docs": card.get_card_documents(),
+            "has_rmis_card": rc.exists(),
+            "av_companies": [{"id": -1, "title": "НЕ ВЫБРАНО", "short_title": ""}, *[model_to_dict(x) for x in Company.objects.filter(active_status=True).order_by('title')]],
+            "custom_workplace": card.work_place != "",
+            "work_place_db": card.work_place_db_id or -1,
+            "district": card.district_id or -1,
+            "districts": [{"id": -1, "title": "НЕ ВЫБРАН"}, *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=False)]],
+            "ginekolog_district": card.ginekolog_district_id or -1,
+            "gin_districts": [{"id": -1, "title": "НЕ ВЫБРАН"}, *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=True)]],
+            "agent_types": [{"key": x[0], "title": x[1]} for x in Card.AGENT_CHOICES if x[0]],
+            "excluded_types": Card.AGENT_CANT_SELECT,
+            "agent_need_doc": Card.AGENT_NEED_DOC,
+            "mother": None if not card.mother else card.mother.get_fio_w_card(),
+            "mother_pk": card.mother_id,
+            "father": None if not card.father else card.father.get_fio_w_card(),
+            "father_pk": card.father_id,
+            "curator": None if not card.curator else card.curator.get_fio_w_card(),
+            "curator_pk": card.curator_id,
+            "agent": None if not card.agent else card.agent.get_fio_w_card(),
+            "agent_pk": card.agent_id,
+            "payer": None if not card.payer else card.payer.get_fio_w_card(),
+            "payer_pk": card.payer_id,
+            "rmis_uid": rc[0].number if rc.exists() else None,
+            "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()],
+            "number_poli": card.number_poliklinika,
+            "harmful": card.harmful_factor,
+        }
+    )
 
 
 def patients_card_save(request):
@@ -371,19 +393,18 @@ def patients_card_save(request):
     messages = []
 
     if "new_individual" in request_data and (request_data["new_individual"] or not Individual.objects.filter(pk=request_data["individual_pk"])) and request_data["card_pk"] < 0:
-        i = Individual(family=request_data["family"],
-                       name=request_data["name"],
-                       patronymic=request_data["patronymic"],
-                       birthday=request_data["birthday"],
-                       sex=request_data["sex"])
+        i = Individual(family=request_data["family"], name=request_data["name"], patronymic=request_data["patronymic"], birthday=request_data["birthday"], sex=request_data["sex"])
         i.save()
     else:
         changed = False
-        i = Individual.objects.get(
-            pk=request_data["individual_pk"] if request_data["card_pk"] < 0 else Card.objects.get(
-                pk=request_data["card_pk"]).individual_id)
-        if i.family != request_data["family"] \
-                or i.name != request_data["name"] or i.patronymic != request_data["patronymic"] or str(i.birthday) != request_data["birthday"] or i.sex != request_data["sex"]:
+        i = Individual.objects.get(pk=request_data["individual_pk"] if request_data["card_pk"] < 0 else Card.objects.get(pk=request_data["card_pk"]).individual_id)
+        if (
+            i.family != request_data["family"]
+            or i.name != request_data["name"]
+            or i.patronymic != request_data["patronymic"]
+            or str(i.birthday) != request_data["birthday"]
+            or i.sex != request_data["sex"]
+        ):
             changed = True
         i.family = request_data["family"]
         i.name = request_data["name"]
@@ -402,16 +423,11 @@ def patients_card_save(request):
 
     if request_data["card_pk"] < 0:
         base = CardBase.objects.get(pk=request_data["base_pk"], internal_type=True)
-        last_l2 = Card.objects.filter(base__internal_type=True).extra(
-            select={'numberInt': 'CAST(number AS INTEGER)'}
-        ).order_by("-numberInt").first()
+        last_l2 = Card.objects.filter(base__internal_type=True).extra(select={'numberInt': 'CAST(number AS INTEGER)'}).order_by("-numberInt").first()
         n = 0
         if last_l2:
             n = int(last_l2.number)
-        c = Card(number=n + 1, base=base,
-                 individual=i,
-                 main_diagnosis="", main_address="",
-                 fact_address="")
+        c = Card(number=n + 1, base=base, individual=i, main_diagnosis="", main_address="", fact_address="")
         c.save()
         card_pk = c.pk
         Log.log(card_pk, 30000, request.user.doctorprofile, request_data)
@@ -442,8 +458,7 @@ def patients_card_save(request):
         except:
             messages.append("Синхронизация с РМИС не удалась")
     result = "ok"
-    return JsonResponse({"result": result, "message": message, "messages": messages,
-                         "card_pk": card_pk, "individual_pk": individual_pk})
+    return JsonResponse({"result": result, "message": message, "messages": messages, "card_pk": card_pk, "individual_pk": individual_pk})
 
 
 def individual_search(request):
@@ -463,23 +478,18 @@ def individual_search(request):
             Individual.import_from_tfoms(row, no_update=True)
             forced_gender.append(row['gender'].lower())
 
-    for i in Individual.objects.filter(
-        family=family,
-        name=name,
-        patronymic=patronymic,
-        birthday=birthday,
-    ):
-        result.append({
-            "pk": i.pk,
-            "fio": i.fio(full=True),
-            "docs": [
-                {**model_to_dict(x), "type_title": x.document_type.title}
-                for x in Document.objects.filter(individual=i, is_active=True).distinct("number", "document_type", "serial", "date_end", "date_start")
-            ],
-            "l2_cards": [
-                {"number": x.number, "pk": x.pk} for x in Card.objects.filter(individual=i, base__internal_type=True, is_archive=False)
-            ],
-        })
+    for i in Individual.objects.filter(family=family, name=name, patronymic=patronymic, birthday=birthday):
+        result.append(
+            {
+                "pk": i.pk,
+                "fio": i.fio(full=True),
+                "docs": [
+                    {**model_to_dict(x), "type_title": x.document_type.title}
+                    for x in Document.objects.filter(individual=i, is_active=True).distinct("number", "document_type", "serial", "date_end", "date_start")
+                ],
+                "l2_cards": [{"number": x.number, "pk": x.pk} for x in Card.objects.filter(individual=i, base__internal_type=True, is_archive=False)],
+            }
+        )
         forced_gender.append(i.sex)
 
     forced_gender = None if not forced_gender or forced_gender.count(forced_gender[0]) != len(forced_gender) else forced_gender[0]
@@ -519,9 +529,17 @@ def edit_doc(request):
 
     if pk == -1:
         card = Card.objects.get(pk=request_data["card_pk"])
-        d = Document(document_type=type_o, number=number, serial=serial, from_rmis=False, date_start=date_start,
-                     date_end=date_end, who_give=who_give, is_active=is_active,
-                     individual=Individual.objects.get(pk=request_data["individual_pk"]))
+        d = Document(
+            document_type=type_o,
+            number=number,
+            serial=serial,
+            from_rmis=False,
+            date_start=date_start,
+            date_end=date_end,
+            who_give=who_give,
+            is_active=is_active,
+            individual=Individual.objects.get(pk=request_data["individual_pk"]),
+        )
         d.save()
         cdu = CardDocUsage.objects.filter(card=card, document__document_type=type_o)
         if not cdu.exists():
@@ -530,9 +548,7 @@ def edit_doc(request):
             cdu.update(document=d)
         Log.log(d.pk, 30002, request.user.doctorprofile, request_data)
     else:
-        Document.objects.filter(pk=pk, from_rmis=False).update(number=number, serial=serial,
-                                                               is_active=is_active, date_start=date_start,
-                                                               date_end=date_end, who_give=who_give)
+        Document.objects.filter(pk=pk, from_rmis=False).update(number=number, serial=serial, is_active=is_active, date_start=date_start, date_end=date_end, who_give=who_give)
         Log.log(pk, 30002, request.user.doctorprofile, request_data)
         d = Document.objects.get(pk=pk)
     d.sync_rmis()
@@ -614,37 +630,127 @@ def edit_agent(request):
 def load_dreg(request):
     request_data = json.loads(request.body)
     data = []
+    diagnoses = set()
     for a in DispensaryReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date_start', 'pk'):
-        data.append({
-            "pk": a.pk,
-            "diagnos": a.diagnos,
-            "illnes": a.illnes,
-            "spec_reg": '' if not a.spec_reg else a.spec_reg.title,
-            "doc_start_reg": '' if not a.doc_start_reg else a.doc_start_reg.get_fio(),
-            "doc_start_reg_id": a.doc_start_reg_id,
-            "date_start": '' if not a.date_start else strdate(a.date_start),
-            "doc_end_reg": '' if not a.doc_end_reg else a.doc_end_reg.get_fio(),
-            "doc_end_reg_id": a.doc_end_reg_id,
-            "date_end": '' if not a.date_end else strdate(a.date_end),
-            "why_stop": a.why_stop,
-        })
-    return JsonResponse({"rows": data})
+        data.append(
+            {
+                "pk": a.pk,
+                "diagnos": a.diagnos,
+                "illnes": a.illnes,
+                "spec_reg": '' if not a.spec_reg else a.spec_reg.title,
+                "doc_start_reg": '' if not a.doc_start_reg else a.doc_start_reg.get_fio(),
+                "doc_start_reg_id": a.doc_start_reg_id,
+                "date_start": '' if not a.date_start else strdate(a.date_start),
+                "doc_end_reg": '' if not a.doc_end_reg else a.doc_end_reg.get_fio(),
+                "doc_end_reg_id": a.doc_end_reg_id,
+                "date_end": '' if not a.date_end else strdate(a.date_end),
+                "why_stop": a.why_stop,
+            }
+        )
+        if not a.date_end:
+            diagnoses.add(a.diagnos)
+
+    researches = []
+    specialities = []
+    researches_data = []
+    specialities_data = []
+    card = Card.objects.get(pk=request_data["card_pk"])
+    visits = VisitPurpose.objects.filter(title__icontains="диспансерн")
+    year = request_data.get('year', '2020')
+    for d in sorted(diagnoses):
+        need = DispensaryPlan.objects.filter(diagnos=d)
+        for i in need:
+            if i.research:
+                if i.research not in researches:
+                    researches.append(i.research)
+                    results = research_last_result_every_month([i.research], card, year)
+                    plans = get_dispensary_reg_plans(card, i.research, None, year)
+                    researches_data.append(
+                        {
+                            "type": "research",
+                            "research_title": i.research.title,
+                            "research_pk": i.research.pk,
+                            "diagnoses_time": [],
+                            "results": results,
+                            "plans": plans,
+                            "max_time": 1,
+                            "times": len([x for x in results if x]),
+                        }
+                    )
+                index_res = researches.index(i.research)
+                researches_data[index_res]['diagnoses_time'].append({"diagnos": i.diagnos, "times": i.repeat})
+            if i.speciality:
+                if i.speciality not in specialities:
+                    specialities.append(i.speciality)
+                    results = research_last_result_every_month(Researches.objects.filter(speciality=i.speciality), request_data["card_pk"], year, visits)
+                    plans = get_dispensary_reg_plans(card, None, i.speciality, year)
+                    specialities_data.append(
+                        {
+                            "type": "speciality",
+                            "research_title": i.speciality.title,
+                            "research_pk": i.speciality.pk,
+                            "diagnoses_time": [],
+                            "results": results,
+                            "plans": plans,
+                            "max_time": 1,
+                            "times": len([x for x in results if x]),
+                        }
+                    )
+                index_spec = specialities.index(i.speciality)
+                specialities_data[index_spec]['diagnoses_time'].append({"diagnos": i.diagnos, "times": i.repeat})
+
+    researches_data.extend(specialities_data)
+
+    return JsonResponse({"rows": data, "researches_data": researches_data, "year": year})
+
+
+def research_last_result_every_month(researches: List[Researches], card: Card, year: str, visits: Optional[List[VisitPurpose]] = None):
+    results = []
+    filter = {
+        "napravleniye__client": card,
+        "research__in": researches,
+        "time_confirmation__year": year,
+    }
+
+    if visits:
+        filter['purpose__in'] = visits
+
+    for i in range(12):
+        i += 1
+        iss: Optional[Issledovaniya] = Issledovaniya.objects.filter(**filter, time_confirmation__month=str(i)).order_by("-time_confirmation").first()
+        if iss:
+            date = str(localtime(iss.time_confirmation).day).rjust(2, '0')
+            results.append({"pk": iss.napravleniye_id, "date": date})
+        else:
+            results.append(None)
+
+    return results
+
+
+def get_dispensary_reg_plans(card, research, speciality, year):
+    plan = [''] * 12
+    disp_plan = DispensaryRegPlans.objects.filter(card=card, research=research, speciality=speciality, date__year=year)
+    for d in disp_plan:
+        if d.date:
+            plan[d.date.month - 1] = str(d.date.day).rjust(2, '0')
+
+    return plan
+
+
+def update_dispensary_reg_plans(request):
+    request_data = json.loads(request.body)
+    DispensaryRegPlans.update_plan(request_data["card_pk"], request_data["researches_data_def"], request_data["researches_data"], request_data["year"])
+
+    return JsonResponse({"ok": True})
 
 
 def load_vaccine(request):
     request_data = json.loads(request.body)
     data = []
     for a in VaccineReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date', 'pk'):
-        data.append({
-            "pk": a.pk,
-            "date": strdate(a.date) if a.date else '',
-            "title": a.title,
-            "series": a.series,
-            "amount": a.amount,
-            "method": a.method,
-            "step": a.step,
-            "tap": a.tap,
-        })
+        data.append(
+            {"pk": a.pk, "date": strdate(a.date) if a.date else '', "title": a.title, "series": a.series, "amount": a.amount, "method": a.method, "step": a.step, "tap": a.tap}
+        )
     return JsonResponse({"rows": data})
 
 
@@ -652,11 +758,9 @@ def load_ambulatory_data(request):
     request_data = json.loads(request.body)
     data = []
     for a in AmbulatoryData.objects.filter(card__pk=request_data["card_pk"]).order_by('date', 'pk'):
-        data.append({
-            "pk": a.pk,
-            "date": strdate(a.date) if a.date else '',
-            "data": a.data,
-        })
+        data.append(
+            {"pk": a.pk, "date": strdate(a.date) if a.date else '', "data": a.data}
+        )
 
     return JsonResponse({"rows": data})
 
@@ -665,17 +769,19 @@ def load_benefit(request):
     request_data = json.loads(request.body)
     data = []
     for a in BenefitReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date_start', 'pk'):
-        data.append({
-            "pk": a.pk,
-            "benefit": str(a.benefit),
-            "registration_basis": a.registration_basis,
-            "doc_start_reg": '' if not a.doc_start_reg else a.doc_start_reg.get_fio(),
-            "doc_start_reg_id": a.doc_start_reg_id,
-            "date_start": '' if not a.date_start else strdate(a.date_start),
-            "doc_end_reg": '' if not a.doc_end_reg else a.doc_end_reg.get_fio(),
-            "doc_end_reg_id": a.doc_end_reg_id,
-            "date_end": '' if not a.date_end else strdate(a.date_end),
-        })
+        data.append(
+            {
+                "pk": a.pk,
+                "benefit": str(a.benefit),
+                "registration_basis": a.registration_basis,
+                "doc_start_reg": '' if not a.doc_start_reg else a.doc_start_reg.get_fio(),
+                "doc_start_reg_id": a.doc_start_reg_id,
+                "date_start": '' if not a.date_start else strdate(a.date_start),
+                "doc_end_reg": '' if not a.doc_end_reg else a.doc_end_reg.get_fio(),
+                "doc_end_reg_id": a.doc_end_reg_id,
+                "date_end": '' if not a.date_end else strdate(a.date_end),
+            }
+        )
     return JsonResponse({"rows": data})
 
 
@@ -744,15 +850,7 @@ def load_benefit_detail(request):
             "date_end": '',
             "close": False,
         }
-    return JsonResponse({
-        "types": [
-            {"pk": -1, "title": 'Не выбрано'},
-            *[
-                {"pk": x.pk, "title": str(x)} for x in BenefitType.objects.filter(hide=False).order_by('pk')
-            ]
-        ],
-        **data,
-    })
+    return JsonResponse({"types": [{"pk": -1, "title": 'Не выбрано'}, *[{"pk": x.pk, "title": str(x)} for x in BenefitType.objects.filter(hide=False).order_by('pk')]], **data,})
 
 
 @transaction.atomic
@@ -781,8 +879,13 @@ def save_dreg(request):
             s = '{}-{}-{}'.format(s[2], s[1], s[0])
         return s
 
-    if not a.date_start and d["date_start"] \
-            or str(a.date_start) != fd(d["date_start"]) or a.spec_reg != request.user.doctorprofile.specialities or a.doc_start_reg != request.user.doctorprofile:
+    if (
+        not a.date_start
+        and d["date_start"]
+        or str(a.date_start) != fd(d["date_start"])
+        or a.spec_reg != request.user.doctorprofile.specialities
+        or a.doc_start_reg != request.user.doctorprofile
+    ):
         a.date_start = fd(d["date_start"])
         a.doc_start_reg = request.user.doctorprofile
         a.spec_reg = request.user.doctorprofile.specialities
@@ -956,9 +1059,7 @@ def save_benefit(request):
             a.benefit_id = d["benefit_id"]
             c = True
 
-    Log.log(pk, 50000 if n else 50001, request.user.doctorprofile, {**rd, "data": {
-        **{k: v for k, v in rd["data"].items() if k not in ['types']}
-    }})
+    Log.log(pk, 50000 if n else 50001, request.user.doctorprofile, {**rd, "data": {**{k: v for k, v in rd["data"].items() if k not in ['types']}}})
 
     def fd(s):
         if '.' in s:
@@ -996,15 +1097,14 @@ def load_anamnesis(request):
     card = Card.objects.get(pk=request_data["card_pk"])
     history = []
     for a in AnamnesisHistory.objects.filter(card=card).order_by('-pk'):
-        history.append({
-            "pk": a.pk,
-            "text": a.text,
-            "who_save": {
-                "fio": a.who_save.get_fio(dots=True),
-                "department": a.who_save.podrazdeleniye.get_title(),
-            },
-            "datetime": a.created_at.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
-        })
+        history.append(
+            {
+                "pk": a.pk,
+                "text": a.text,
+                "who_save": {"fio": a.who_save.get_fio(dots=True), "department": a.who_save.podrazdeleniye.get_title(),},
+                "datetime": a.created_at.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
+            }
+        )
     data = {
         "text": card.anamnesis_of_life,
         "history": history,
@@ -1035,13 +1135,16 @@ def create_l2_individual_from_card(request):
             Individual.import_from_tfoms(from_tfoms, no_update=True)
 
     if not has_tfoms_data:
-        Individual.import_from_tfoms({
-            "enp": polis,
-            "family": request_data['family'],
-            "given": request_data['name'],
-            "patronymic": request_data['patronymic'],
-            "gender": request_data['sex'],
-            "birthdate": request_data['bdate'],
-        }, no_update=True)
+        Individual.import_from_tfoms(
+            {
+                "enp": polis,
+                "family": request_data['family'],
+                "given": request_data['name'],
+                "patronymic": request_data['patronymic'],
+                "gender": request_data['sex'],
+                "birthdate": request_data['bdate'],
+            },
+            no_update=True,
+        )
 
     return JsonResponse({"ok": True})

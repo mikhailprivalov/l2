@@ -15,7 +15,8 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
     """
 
     with connection.cursor() as cursor:
-        cursor.execute("""WITH
+        cursor.execute(
+            """WITH
         t_iss AS 
             (SELECT directions_napravleniya.client_id, directory_researches.title, directory_researches.code,
             directory_researches.is_first_reception, 
@@ -27,13 +28,12 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
             directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s AS datetime_confirm,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI:SS') as time_confirm,
-            
             directions_issledovaniya.maybe_onco, statistics_tickets_visitpurpose.title AS purpose,
             directions_issledovaniya.diagnos, statistics_tickets_resultoftreatment.title AS iss_result,
             statistics_tickets_outcomes.title AS outcome
             FROM directions_issledovaniya 
             LEFT JOIN directory_researches
-            ON directions_issledovaniya.research_id = directory_researches.Id
+            ON directions_issledovaniya.research_id = directory_researches.id
             LEFT JOIN directions_napravleniya 
             ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
             LEFT JOIN statistics_tickets_visitpurpose
@@ -44,7 +44,7 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
             ON directions_issledovaniya.outcome_illness_id=statistics_tickets_outcomes.id
             WHERE (%(d_confirms)s in (directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.co_executor_id,
             directions_issledovaniya.co_executor2_id)) 
-            AND time_confirmation BETWEEN %(d_start)s AND %(d_end)s
+            AND time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
             AND directory_researches.is_slave_hospital=FALSE AND directory_researches.is_hospital=FALSE
             AND 
             CASE when %(can_null)s = 1 THEN 
@@ -57,19 +57,18 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
         t_card AS 
             (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number AS card_number, 
             clients_individual.family AS client_family, clients_individual.name AS client_name,
-            clients_individual.patronymic AS client_patronymic, to_char(clients_individual.birthday, 'DD.MM.YYYY') as birthday, 
-            clients_document.number, clients_document.serial, clients_document.who_give 
+            clients_individual.patronymic AS client_patronymic, to_char(clients_individual.birthday, 'DD.MM.YYYY') as birthday 
             FROM clients_individual
             LEFT JOIN clients_card ON clients_individual.id = clients_card.individual_id
-            LEFT JOIN clients_document ON clients_card.individual_id = clients_document.individual_id          
-            WHERE clients_document.document_type_id=(SELECT id AS polis_id FROM clients_documenttype  WHERE title = 'Полис ОМС')
             ORDER BY clients_card.id)
         
         SELECT title, code, is_first_reception, polis_n, polis_who_give, first_time, napravleniye_id, doc_confirmation_id, 
         def_uet, co_executor_id, co_executor_uet, co_executor2_id, co_executor2_uet, datetime_confirm, date_confirm, time_confirm,
         maybe_onco, purpose, diagnos, iss_result, outcome, card_number, client_family, client_name, client_patronymic, birthday FROM t_iss
         LEFT JOIN t_card ON t_iss.client_id=t_card.id
-        ORDER BY datetime_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin': fin, 'can_null': can_null, 'tz': TIME_ZONE})
+        ORDER BY datetime_confirm""",
+            params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin': fin, 'can_null': can_null, 'tz': TIME_ZONE},
+        )
 
         row = cursor.fetchall()
     return row
@@ -89,18 +88,21 @@ def indirect_job_sql(d_conf, d_s, d_e):
     :return:
     """
     with connection.cursor() as cursor:
-        cursor.execute("""WITH 
+        cursor.execute(
+            """WITH 
         t_j AS 
             (SELECT ej.type_job_id, ej.count, ej.date_job AT TIME ZONE %(tz)s as date_job , tj.value, tj.title as title, 
             (ej.count*tj.value) as total
             FROM public.directions_employeejob ej
             LEFT JOIN public.directions_typejob tj ON ej.type_job_id=tj.id
-            WHERE ej.doc_execute_id=%(d_confirms)s AND ej.date_job BETWEEN %(d_start)s AND %(d_end)s
+            WHERE ej.doc_execute_id=%(d_confirms)s AND ej.date_job AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
             ORDER BY ej.date_job, ej.type_job_id)
 
         SELECT date_job, title, SUM(total) FROM t_j
         GROUP BY title, date_job
-        ORDER BY date_job """, params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE})
+        ORDER BY date_job """,
+            params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
 
         row = cursor.fetchall()
     return row
@@ -114,7 +116,8 @@ def total_report_sql(d_conf, d_s, d_e, fin):
     :return:
     """
     with connection.cursor() as cursor:
-        cursor.execute("""WITH 
+        cursor.execute(
+            """WITH 
         iss_doc AS
            (SELECT directions_napravleniya.id, d_iss.id as iss_id, d_iss.research_id, EXTRACT(DAY FROM d_iss.time_confirmation) AS date_confirm, d_iss.doc_confirmation_id, d_iss.def_uet,
            d_iss.co_executor_id, d_iss.co_executor_uet, d_iss.co_executor2_id, d_iss.co_executor2_uet, d_iss.napravleniye_id
@@ -123,7 +126,7 @@ def total_report_sql(d_conf, d_s, d_e, fin):
            ON d_iss.napravleniye_id=directions_napravleniya.id
            WHERE 
            (%(d_confirms)s IN (d_iss.doc_confirmation_id, d_iss.co_executor_id, d_iss.co_executor2_id)) 
-           AND d_iss.time_confirmation BETWEEN  %(d_start)s AND %(d_end)s AND directions_napravleniya.istochnik_f_id=%(ist_fin)s
+           AND d_iss.time_confirmation AT TIME ZONE %(tz)s BETWEEN  %(d_start)s AND %(d_end)s AND directions_napravleniya.istochnik_f_id=%(ist_fin)s
            ORDER BY date_confirm),  
         t_res AS 
            (SELECT d_res.id, d_res.title, co_executor_2_title
@@ -134,7 +137,9 @@ def total_report_sql(d_conf, d_s, d_e, fin):
         t_res.id, t_res.title, t_res.co_executor_2_title
         FROM iss_doc
         LEFT JOIN t_res ON iss_doc.research_id = t_res.id
-        ORDER BY iss_doc.date_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin': fin})
+        ORDER BY iss_doc.date_confirm""",
+            params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin': fin, 'tz': TIME_ZONE},
+        )
 
         row = cursor.fetchall()
     return row
@@ -142,7 +147,8 @@ def total_report_sql(d_conf, d_s, d_e, fin):
 
 def passed_research(d_s, d_e):
     with connection.cursor() as cursor:
-        cursor.execute(""" WITH
+        cursor.execute(
+            """ WITH
         t_iss AS
             (SELECT directions_napravleniya.client_id, directory_researches.title,
             directions_napravleniya.polis_n, directions_napravleniya.polis_who_give,
@@ -159,7 +165,7 @@ def passed_research(d_s, d_e):
                 ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
             LEFT JOIN statistics_tickets_resultoftreatment 
                 ON directions_issledovaniya.result_reception_id=statistics_tickets_resultoftreatment.id
-            WHERE directions_napravleniya.data_sozdaniya BETWEEN %(d_start)s AND %(d_end)s 
+            WHERE directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
             AND directions_issledovaniya.time_confirmation IS NOT NULL
             AND TRUE IN (directory_researches.is_paraclinic, directory_researches.is_doc_refferal, 
             directory_researches.is_stom, directory_researches.is_hospital)
@@ -184,7 +190,9 @@ def passed_research(d_s, d_e):
         LEFT JOIN t_card ON t_iss.client_id = t_card.id
         LEFT JOIN directions_paraclinicresult ON t_iss.iss_id = directions_paraclinicresult.issledovaniye_id
         AND (directions_paraclinicresult.field_id IN (SELECT * FROM t_field))
-        ORDER BY client_id, data_sozdaniya""", params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE})
+        ORDER BY client_id, data_sozdaniya""",
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
 
         row = cursor.fetchall()
     return row
@@ -198,7 +206,8 @@ def statistics_research(research_id, d_s, d_e):
     :return:
     """
     with connection.cursor() as cursor:
-        cursor.execute(""" WITH
+        cursor.execute(
+            """ WITH
     t_iss AS
         (SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id as napr, 
         to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
@@ -217,7 +226,7 @@ def statistics_research(research_id, d_s, d_e):
            ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
         LEFT JOIN directions_istochnikifinansirovaniya
         ON directions_napravleniya.istochnik_f_id=directions_istochnikifinansirovaniya.id 
-        WHERE directions_issledovaniya.time_confirmation BETWEEN %(d_start)s AND %(d_end)s
+        WHERE directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
         AND directions_issledovaniya.research_id=%(research_id)s),
     t_card AS
        (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number AS num_card, 
@@ -233,7 +242,9 @@ def statistics_research(research_id, d_s, d_e):
         ind_family, ind_name, patronymic, birthday, date_born,
         to_char(EXTRACT(YEAR from age(time_confirmation, date_born)), '999') as ind_age FROM t_iss
         LEFT JOIN t_card ON t_iss.client_id = t_card.id
-        ORDER BY time_confirmation""", params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE})
+        ORDER BY time_confirmation""",
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
 
         row = cursor.fetchall()
     return row
@@ -241,13 +252,14 @@ def statistics_research(research_id, d_s, d_e):
 
 def disp_diagnos(diagnos, d_s, d_e):
     with connection.cursor() as cursor:
-        cursor.execute("""WITH
+        cursor.execute(
+            """WITH
             t_iss AS (
             SELECT id, diagnos, illnes, date_start, date_end, why_stop, card_id, 
                         doc_end_reg_id, doc_start_reg_id, spec_reg_id 
             FROM public.clients_dispensaryreg
-            WHERE diagnos = 'U999' and (date_start
-            BETWEEN %(d_start)s AND %(d_end)s OR date_end BETWEEN %(d_start)s AND %(d_end)s)
+            WHERE diagnos = 'U999' and (date_start AT TIME ZONE %(tz)s
+            BETWEEN %(d_start)s AND %(d_end)s OR date_end AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
             ORDER BY date_start DESC),
             t_card AS (SELECT id as card_id, individual_id, number as num_card from clients_card WHERE id in (SELECT card_id from t_iss)),
             
@@ -271,6 +283,8 @@ def disp_diagnos(diagnos, d_s, d_e):
             LEFT JOIN t_doc_start ON t_iss.doc_start_reg_id = t_doc_start.docstart_id
             LEFT JOIN t_doc_end ON t_iss.doc_end_reg_id = t_doc_end.docend_id
             ORDER by patient
-            """, params={'diagnos': diagnos, 'd_start': d_s, 'd_end': d_e})
+            """,
+            params={'diagnos': diagnos, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
         row = cursor.fetchall()
     return row

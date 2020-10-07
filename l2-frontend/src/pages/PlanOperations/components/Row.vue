@@ -4,7 +4,11 @@
       {{data.date}}
     </td>
     <td>
-      {{data.direction}}
+      <a
+        :href="`/mainmenu/stationar#{%22pk%22:${data.direction},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
+        target="_blank" class="a-under">
+        {{data.direction}}
+      </a>
     </td>
     <td>
       {{data.fio_patient}} {{data.birthday}}

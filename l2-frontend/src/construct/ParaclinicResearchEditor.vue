@@ -201,6 +201,7 @@
                       </div>
                     </div>
                   </v-collapse-wrapper>
+                  <FieldHelper :fieldType="row.field_type" :value="row.default" :groups="groups" />
                 </div>
                 <div>
                   <strong>Подсказка:</strong>
@@ -222,6 +223,9 @@
                   </label>
                   <label>
                     <input type="checkbox" v-model="row.for_extract_card"/> в выписку
+                  </label>
+                  <label>
+                    <input type="checkbox" v-model="row.for_med_certificate"/> в справку
                   </label>
                   <label style="line-height: 1"
                          v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14 || row.field_type === 23">
@@ -277,21 +281,27 @@
 </template>
 
 <script>
-    import construct_point from '../api/construct-point'
-    import FastTemplatesEditor from './FastTemplatesEditor'
-    import * as action_types from '../store/action-types'
-    import RichTextEditor from '../fields/RichTextEditor'
-    import NumberField from "../fields/NumberField";
-    import NumberRangeField from "../fields/NumberRangeField";
-    import ConfigureAnesthesiaField from "../fields/ConfigureAnesthesiaField";
     import Vue from 'vue'
     import Vue2Filters from 'vue2-filters'
+
+    import construct_point from '@/api/construct-point'
+    import * as action_types from '@/store/action-types'
+    import NumberRangeField from "@/fields/NumberRangeField";
+    import ConfigureAnesthesiaField from "@/fields/ConfigureAnesthesiaField";
+    import RichTextEditor from '@/fields/RichTextEditor'
+    import NumberField from "@/fields/NumberField";
+    import FieldHelper from "@/ui-cards/FieldHelper";
+
+    import FastTemplatesEditor from './FastTemplatesEditor'
 
     Vue.use(Vue2Filters)
 
     export default {
         name: 'paraclinic-research-editor',
-        components: {NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor, ConfigureAnesthesiaField},
+        components: {
+          FieldHelper,
+          NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor, ConfigureAnesthesiaField
+        },
         mixins: [Vue2Filters.mixin],
         props: {
             pk: {

@@ -66,8 +66,7 @@ class Contract(models.Model):
     modifier = models.DecimalField(max_digits=8, decimal_places=3, default=1, help_text="10000,101")
     active_status = models.BooleanField(default=True, help_text='Действующий', db_index=True)
     show_in_card = models.BooleanField(default=False, help_text='Показывать в карте пациента', db_index=True)
-    main = models.BooleanField(default=False, help_text='По умолчанию действует. если несколько.'
-                                                        'Можно переназначить', db_index=True)
+    main = models.BooleanField(default=False, help_text='По умолчанию действует. если несколько.' 'Можно переназначить', db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)

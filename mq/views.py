@@ -204,72 +204,29 @@ def get_directory(request):
     import directory.models as directory
 
     d = {
-        "clients.models.CardBase": [{
-            "pk": x.pk,
-            "title": x.title,
-            "short_title": x.short_title
-        } for x in clients.CardBase.objects.all().order_by("pk")],
-
-        "directions.models.IstochnikiFinansirovaniya": [{
-            "pk": x.pk,
-            "title": x.title,
-            "base": x.base_id
-        } for x in directions.IstochnikiFinansirovaniya.objects.all().order_by("pk")],
-
-        "podrazdeleniya.models.Podrazdeleniya.TYPES": [{"pk": x[0], "title": x[1]} for x in
-                                                       podrazdeleniya.Podrazdeleniya.TYPES],
-
-        "podrazdeleniya.models.Podrazdeleniya": [{
-            "pk": x.pk,
-            "title": x.title,
-            "short_title": x.get_title(),
-            "p_type": x.p_type
-        } for x in podrazdeleniya.Podrazdeleniya.objects.all().order_by("pk")],
-
-        "users.models.DoctorProfile": [{
-            "pk": x.pk,
-            "username": x.user.username,
-            "fio": x.fio,
-            "podrazdeleniye": x.podrazdeleniye_id
-        } for x in users.DoctorProfile.objects.all().order_by("pk")],
-
-        "researches.models.Tubes": [{
-            "pk": x.pk,
-            "color": x.color,
-            "title": x.title,
-            "short_title": x.get_short_title()
-        } for x in researches.Tubes.objects.all().order_by("pk")],
-
-        "directory.models.Researches": [{
-            "pk": x.pk,
-            "title": x.title,
-            "short_title": x.get_title(),
-            "podrazdeleniye": x.podrazdeleniye_id,
-            "is_paraclinic": x.is_paraclinic,
-            "code": x.code,
-        } for x in directory.Researches.objects.all().order_by("pk")],
-
-        "directory.models.Fractions": [{
-            "pk": x.pk,
-            "title": x.title,
-            "research": x.research_id,
-            "order": x.sort_weight,
-            "code": x.code,
-        } for x in directory.Fractions.objects.all().order_by("pk")],
-
-        "directory.models.ParaclinicInputGroups": [{
-            "pk": x.pk,
-            "title": x.title,
-            "research": x.research_id,
-            "order": x.order,
-        } for x in directory.ParaclinicInputGroups.objects.all().order_by("pk")],
-
-        "directory.models.ParaclinicInputField": [{
-            "pk": x.pk,
-            "title": x.title,
-            "group": x.group_id,
-            "order": x.order,
-        } for x in directory.ParaclinicInputField.objects.all().order_by("pk")],
+        "clients.models.CardBase": [{"pk": x.pk, "title": x.title, "short_title": x.short_title} for x in clients.CardBase.objects.all().order_by("pk")],
+        "directions.models.IstochnikiFinansirovaniya": [{"pk": x.pk, "title": x.title, "base": x.base_id} for x in directions.IstochnikiFinansirovaniya.objects.all().order_by("pk")],
+        "podrazdeleniya.models.Podrazdeleniya.TYPES": [{"pk": x[0], "title": x[1]} for x in podrazdeleniya.Podrazdeleniya.TYPES],
+        "podrazdeleniya.models.Podrazdeleniya": [
+            {"pk": x.pk, "title": x.title, "short_title": x.get_title(), "p_type": x.p_type} for x in podrazdeleniya.Podrazdeleniya.objects.all().order_by("pk")
+        ],
+        "users.models.DoctorProfile": [
+            {"pk": x.pk, "username": x.user.username, "fio": x.fio, "podrazdeleniye": x.podrazdeleniye_id} for x in users.DoctorProfile.objects.all().order_by("pk")
+        ],
+        "researches.models.Tubes": [{"pk": x.pk, "color": x.color, "title": x.title, "short_title": x.get_short_title()} for x in researches.Tubes.objects.all().order_by("pk")],
+        "directory.models.Researches": [
+            {"pk": x.pk, "title": x.title, "short_title": x.get_title(), "podrazdeleniye": x.podrazdeleniye_id, "is_paraclinic": x.is_paraclinic, "code": x.code,}
+            for x in directory.Researches.objects.all().order_by("pk")
+        ],
+        "directory.models.Fractions": [
+            {"pk": x.pk, "title": x.title, "research": x.research_id, "order": x.sort_weight, "code": x.code,} for x in directory.Fractions.objects.all().order_by("pk")
+        ],
+        "directory.models.ParaclinicInputGroups": [
+            {"pk": x.pk, "title": x.title, "research": x.research_id, "order": x.order,} for x in directory.ParaclinicInputGroups.objects.all().order_by("pk")
+        ],
+        "directory.models.ParaclinicInputField": [
+            {"pk": x.pk, "title": x.title, "group": x.group_id, "order": x.order,} for x in directory.ParaclinicInputField.objects.all().order_by("pk")
+        ],
     }
 
     return JsonResponse(d)

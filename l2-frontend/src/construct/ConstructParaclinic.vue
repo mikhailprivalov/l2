@@ -36,12 +36,14 @@
 </template>
 
 <script>
-  import SelectPickerB from '../fields/SelectPickerM'
+  import {mapGetters} from 'vuex'
+
+  import SelectPickerB from '@/fields/SelectPickerM'
+  import researches_point from '@/api/researches-point'
+  import * as action_types from '@/store/action-types'
+
   import ParaclinicResearchEditor from './ParaclinicResearchEditor'
   import MicrobiologyResearchEditor from './MicrobiologyResearchEditor'
-  import researches_point from '../api/researches-point'
-  import {mapGetters} from 'vuex'
-  import * as action_types from '../store/action-types'
   import StationarFormEditor from './StationarFormEditor'
 
   export default {
@@ -293,10 +295,6 @@
     &.rhide {
       background-image: linear-gradient(#6C7A89, #56616c);
       color: #fff;
-    }
-
-    hr {
-
     }
 
     &:hover {

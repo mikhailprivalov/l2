@@ -11,7 +11,7 @@
     </div>
     <div class="form-row">
       <div class="row-t">№ Истории</div>
-      <input class="form-control" v-model="current_direction">
+      <input class="form-control" v-model="current_direction" readonly>
     </div>
     <div class="form-row">
       <div class="row-t">Дата операции</div>

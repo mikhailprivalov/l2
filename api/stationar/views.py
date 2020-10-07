@@ -4,8 +4,7 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, \
-    hosp_get_hosp_direction, hosp_get_text_iss, get_temperature_list, desc_to_data
+from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, hosp_get_hosp_direction, hosp_get_text_iss, get_temperature_list, desc_to_data
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import HospitalService
@@ -22,6 +21,7 @@ def load(request):
     if pk >= 4600000000000:
         pk -= 4600000000000
         pk //= 10
+    tree_direction = hosp_get_hosp_direction(pk)
     result = {"ok": False, "message": "Нет данных", "data": {}}
     for i in Issledovaniya.objects.filter(napravleniye__pk=pk, research__is_hospital=True):
         direction: Napravleniya = i.napravleniye
@@ -31,33 +31,43 @@ def load(request):
         if direction.cancel:
             result["message"] = "Направление было отменено"
         forbidden_edit = forbidden_edit_dir(direction.pk)
+        child_issledovaniye, child_research_title, child_direction = '', '', ''
+        for iss in tree_direction:
+            if i.pk == iss['parent_iss']:
+                child_issledovaniye = iss['issledovaniye']
+                iss_obj = Issledovaniya.objects.filter(pk=child_issledovaniye).first()
+                if iss_obj:
+                    child_direction = iss_obj.napravleniye.pk
+                    child_research_title = iss_obj.research.title
+                break
         result["data"] = {
             "direction": direction.pk,
             "cancel": direction.cancel,
             "fin_pk": direction.istochnik_f_id,
             "iss": i.pk,
+            "parent_issledovaniye": direction.parent.pk if direction.parent else '-1',
+            "child_issledovaniye": child_issledovaniye if child_issledovaniye else '-1',
+            "child_direction": child_direction if child_direction else '-1',
+            "child_research_title": child_research_title if child_research_title else '-1',
             "iss_title": i.research.title,
             "forbidden_edit": forbidden_edit or "Врач стационара" not in [str(x) for x in request.user.groups.all()],
             "soft_forbidden": not forbidden_edit,
-            "patient": {
-                "fio_age": card.individual.fio(full=True),
-                "card": card.number_with_type(),
-                "base": card.base_id,
-                "card_pk": card.pk,
-                "individual_pk": card.individual_id,
-            },
-            "tree": list(filter(
-                lambda d: not d["cancel"],
+            "patient": {"fio_age": card.individual.fio(full=True), "card": card.number_with_type(), "base": card.base_id, "card_pk": card.pk, "individual_pk": card.individual_id,},
+            "tree": list(
                 map(
                     lambda dirc: {
                         **dirc,
                         "research_title": dirc["research_title"].replace("отделение", "отд.").replace("Отделение", "Отд."),
                         "isCurrent": int(dirc["direction"]) == pk,
                         "cancel": Napravleniya.objects.get(pk=dirc["direction"]).cancel,
+                        "correct_level": dirc["correct_level"],
+                        "color": dirc["color"],
+                        "issledovaniye": dirc["issledovaniye"],
+                        "order": dirc["order"],
                     },
-                    hosp_get_hosp_direction(pk)
+                    tree_direction,
                 )
-            ))
+            ),
         }
         break
     return JsonResponse(result)
@@ -72,40 +82,25 @@ def counts(request):
     result = defaultdict(int)
 
     if every:
-        hosps = list(
-            map(
-                lambda d: d["direction"],
-                filter(
-                    lambda d: not Napravleniya.objects.get(pk=d["direction"]).cancel,
-                    hosp_get_hosp_direction(pk)
-                )
-            )
-        )
+        hosps = list(map(lambda d: d["direction"], filter(lambda d: not Napravleniya.objects.get(pk=d["direction"]).cancel, hosp_get_hosp_direction(pk))))
         result["all"] += 1
     else:
         hosps = [pk]
 
     for i in Issledovaniya.objects.filter(napravleniye__pk__in=hosps, research__is_hospital=True).distinct():
         for k in HospitalService.TYPES_BY_KEYS:
-            hss = HospitalService.objects.filter(
-                main_research=i.research,
-                site_type=HospitalService.TYPES_BY_KEYS[k]
-            )
-            nested = Napravleniya.objects.filter(
-                parent=i,
-                issledovaniya__research__in=[x.slave_research for x in hss]
-            ).distinct()
+            hss = HospitalService.objects.filter(main_research=i.research, site_type=HospitalService.TYPES_BY_KEYS[k])
+            nested = Napravleniya.objects.filter(parent=i, issledovaniya__research__in=[x.slave_research for x in hss]).distinct()
             result[k] += nested.count()
-        result["laboratory"] += Napravleniya.objects.filter(parent=i,
-                                                            issledovaniya__research__podrazdeleniye__p_type=2).distinct().count()
-        result["paraclinical"] += Napravleniya.objects.filter(parent=i,
-                                                              issledovaniya__research__is_paraclinic=True).distinct().count()
-        result["consultation"] += Napravleniya.objects.filter(parent=i,
-                                                              issledovaniya__research__is_doc_refferal=True).distinct().count()
-        result["morfology"] += Napravleniya.objects.filter(parent=i).filter(
-            Q(issledovaniya__research__is_microbiology=True) |
-            Q(issledovaniya__research__is_citology=True) |
-            Q(issledovaniya__research__is_gistology=True)).distinct().count()
+        result["laboratory"] += Napravleniya.objects.filter(parent=i, issledovaniya__research__podrazdeleniye__p_type=2).distinct().count()
+        result["paraclinical"] += Napravleniya.objects.filter(parent=i, issledovaniya__research__is_paraclinic=True).distinct().count()
+        result["consultation"] += Napravleniya.objects.filter(parent=i, issledovaniya__research__is_doc_refferal=True).distinct().count()
+        result["morfology"] += (
+            Napravleniya.objects.filter(parent=i)
+            .filter(Q(issledovaniya__research__is_microbiology=True) | Q(issledovaniya__research__is_citology=True) | Q(issledovaniya__research__is_gistology=True))
+            .distinct()
+            .count()
+        )
         result["all"] += Napravleniya.objects.filter(parent=i).count()
     return JsonResponse(dict(result))
 
@@ -120,12 +115,9 @@ def hosp_services_by_type(request):
     type_by_key = HospitalService.TYPES_BY_KEYS.get(r_type, -1)
     for i in Issledovaniya.objects.filter(napravleniye__pk=base_direction_pk, research__is_hospital=True):
         for hs in HospitalService.objects.filter(site_type=type_by_key, main_research=i.research, hide=False):
-            result.append({
-                "pk": hs.pk,
-                "title": hs.slave_research.title,
-                "short_title": hs.slave_research.short_title,
-                "main_title": hs.main_research.title,
-            })
+            result.append(
+                {"pk": hs.pk, "title": hs.slave_research.title, "short_title": hs.slave_research.short_title, "main_title": hs.main_research.title,}
+            )
     return JsonResponse({"data": result})
 
 
@@ -139,20 +131,22 @@ def make_service(request):
     TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     if "Врач стационара" not in [str(x) for x in request.user.groups.all()] and TADP not in service.slave_research.title:
         return JsonResponse({"pk": None})
-    result = Napravleniya.gen_napravleniya_by_issledovaniya(main_direction.client_id,
-                                                            "",
-                                                            None,
-                                                            "",
-                                                            None,
-                                                            request.user.doctorprofile,
-                                                            {-1: [service.slave_research_id]},
-                                                            {},
-                                                            False,
-                                                            {},
-                                                            vich_code="",
-                                                            count=1,
-                                                            discount=0,
-                                                            parent_iss=parent_iss.pk)
+    result = Napravleniya.gen_napravleniya_by_issledovaniya(
+        main_direction.client_id,
+        "",
+        None,
+        "",
+        None,
+        request.user.doctorprofile,
+        {-1: [service.slave_research_id]},
+        {},
+        False,
+        {},
+        vich_code="",
+        count=1,
+        discount=0,
+        parent_iss=parent_iss.pk,
+    )
     pk = result["list_id"][0]
     return JsonResponse({"pk": pk})
 

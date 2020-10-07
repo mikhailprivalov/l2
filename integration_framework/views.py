@@ -86,38 +86,31 @@ def direction_data(request):
         iss = iss.filter(research__pk__in=research_pks.split(','))
 
     if not iss:
-        return Response({
-            "ok": False,
-        })
+        return Response({"ok": False,})
 
     iss_index = random.randrange(len(iss))
 
-    return Response({
-        "ok": True,
-        "pk": pk,
-        "createdAt": direction.data_sozdaniya,
-        "patient": {
-            **card.get_data_individual(full_empty=True, only_json_serializable=True),
-            "family": individual.family,
-            "name": individual.name,
-            "patronymic": individual.patronymic,
-            "birthday": individual.birthday,
-            "sex": individual.sex,
-            "card": {
-                "base": {
-                    "pk": card.base_id,
-                    "title": card.base.title,
-                    "short_title": card.base.short_title,
-                },
-                "pk": card.pk,
-                "number": card.number,
+    return Response(
+        {
+            "ok": True,
+            "pk": pk,
+            "createdAt": direction.data_sozdaniya,
+            "patient": {
+                **card.get_data_individual(full_empty=True, only_json_serializable=True),
+                "family": individual.family,
+                "name": individual.name,
+                "patronymic": individual.patronymic,
+                "birthday": individual.birthday,
+                "sex": individual.sex,
+                "card": {"base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title,}, "pk": card.pk, "number": card.number,},
             },
-        },
-        "issledovaniya": [x.pk for x in iss],
-        "timeConfirmation": iss[iss_index].time_confirmation,
-        "docLogin": iss[iss_index].doc_confirmation.rmis_login,
-        "docPassword": iss[iss_index].doc_confirmation.rmis_password
-    })
+            "issledovaniya": [x.pk for x in iss],
+            "timeConfirmation": iss[iss_index].time_confirmation,
+            "docLogin": iss[iss_index].doc_confirmation.rmis_login,
+            "docPassword": iss[iss_index].doc_confirmation.rmis_password,
+            "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid,
+        }
+    )
 
 
 @api_view()
@@ -130,31 +123,31 @@ def issledovaniye_data(request):
     results = directions.Result.objects.filter(issledovaniye=i, fraction__fsli__isnull=False)
 
     if (not ignore_sample and not sample) or not results.exists():
-        return Response({
-            "ok": False,
-        })
+        return Response({"ok": False,})
 
     results_data = []
 
     for r in results:
-        results_data.append({
-            "pk": r.pk,
-            "fsli": r.fraction.get_fsli_code(),
-            "value": r.value.replace(',', '.'),
-            "units": r.get_units(),
-            "ref": list(map(lambda rf: rf if '.' in rf else rf + '.0', map(lambda f: f.replace(',', '.'), (r.calc_normal(only_ref=True) or '').split("-"))))
-        })
+        results_data.append(
+            {
+                "pk": r.pk,
+                "fsli": r.fraction.get_fsli_code(),
+                "value": r.value.replace(',', '.'),
+                "units": r.get_units(),
+                "ref": list(map(lambda rf: rf if '.' in rf else rf + '.0', map(lambda f: f.replace(',', '.'), (r.calc_normal(only_ref=True) or '').split("-")))),
+            }
+        )
 
-    return Response({
-        "ok": True,
-        "pk": pk,
-        "sample": {
-            "date": sample.time_get.date() if sample else i.time_confirmation.date(),
-        },
-        "date": i.time_confirmation.date(),
-        "results": results_data,
-        "code": i.research.code,
-    })
+    return Response(
+        {
+            "ok": True,
+            "pk": pk,
+            "sample": {"date": sample.time_get.date() if sample else i.time_confirmation.date(),},
+            "date": i.time_confirmation.date(),
+            "results": results_data,
+            "code": i.research.code,
+        }
+    )
 
 
 @api_view()
@@ -172,6 +165,4 @@ def make_log(request):
             directions.Napravleniya.objects.filter(pk=k).update(need_resend_n3=False)
 
             Log.log(key=k, type=t, body=json.dumps(body.get(k, {})))
-    return Response({
-        "ok": True,
-    })
+    return Response({"ok": True,})

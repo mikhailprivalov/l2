@@ -100,6 +100,12 @@
           <div class="input-group" style="width: 100%">
             <span class="input-group-addon">Код врача</span>
             <input class="form-control" v-model="user.personal_code"/>
+            <span class="input-group-addon">Специальность</span>
+            <select class="form-control" v-model="user.speciality">
+              <option :value="d.pk" v-for="d in specialities">
+                {{d.title}}
+              </option>
+            </select>
           </div>
           <div class="input-group" style="width: 100%">
             <span class="input-group-addon">Группы</span>
@@ -186,6 +192,7 @@
       return {
         filter: '',
         departments: [],
+        specialities: [],
         user: {
           username: '',
           rmis_location: '',
@@ -236,8 +243,9 @@
         if (!prev_clr) {
           this.departments = [];
         }
-        const {departments} = await users_point.loadUsers()
+        const {departments, specialities} = await users_point.loadUsers()
         this.departments = departments
+        this.specialities = specialities
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async open(pk, dep = null) {

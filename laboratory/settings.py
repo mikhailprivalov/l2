@@ -58,7 +58,8 @@ INSTALLED_APPS = (
     'lq',
     'treatment',
     'external_system',
-    'plans'
+    'plans',
+    'medical_certificates',
 )
 
 MIDDLEWARE = [
@@ -80,17 +81,13 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.RemoteUserBackend',
 ]
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'integration_framework.authentication.TokenAuthentication',
-    ]
-}
+REST_FRAMEWORK = {'DEFAULT_AUTHENTICATION_CLASSES': ['integration_framework.authentication.TokenAuthentication',]}
 
 ROOT_URLCONF = 'laboratory.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates'), ],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'),],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -112,23 +109,10 @@ LOGIN_REDIRECT_URL = '/mainmenu/'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'l2',
-        'USER': 'postgres',
-        'PASSWORD': '123456',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
-    }
-}
+DATABASES = {'default': {'ENGINE': 'django.db.backends.postgresql_psycopg2', 'NAME': 'l2', 'USER': 'postgres', 'PASSWORD': '123456', 'HOST': '127.0.0.1', 'PORT': '5432',}}
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',
-        'KEY_PREFIX': 'lis' + ("" if not DEBUG else "_DBG")
-    },
+    'default': {'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache', 'LOCATION': '127.0.0.1:11211', 'KEY_PREFIX': 'lis' + ("" if not DEBUG else "_DBG")},
 }
 LANGUAGE_CODE = 'ru-ru'
 DATE_FORMAT = 'd.m.Y'
@@ -142,9 +126,7 @@ USE_L10N = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'assets'),
-)
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'assets'),)
 
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -160,45 +142,13 @@ AUTH_PROFILE_MODULE = 'users.models.DoctorsProfile'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'base': {
-            'format': '\n[%(asctime)s] [%(levelname)s] %(module)s\n'
-                      'Request: %(path)s [%(method)s] %(user)s %(data)s\n'
-                      'Body: %(body)s\n'
-                      '%(stack_info)s\n'
-        }
-    },
-    'filters': {
-        'requestdata': {
-            '()': 'utils.filters.RequestDataFilter',
-        },
-    },
+    'formatters': {'base': {'format': '\n[%(asctime)s] [%(levelname)s] %(module)s\n' 'Request: %(path)s [%(method)s] %(user)s %(data)s\n' 'Body: %(body)s\n' '%(stack_info)s\n'}},
+    'filters': {'requestdata': {'()': 'utils.filters.RequestDataFilter',},},
     'handlers': {
-        'file': {
-            'level': 'WARNING',
-            'class': 'logging.FileHandler',
-            'filters': ['requestdata'],
-            'filename': os.path.join(BASE_DIR, 'logs') + '/log.txt',
-            'formatter': 'base'
-        },
-        'pika': {
-            'level': 'WARNING',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs') + '/log-pika.txt',
-        },
+        'file': {'level': 'WARNING', 'class': 'logging.FileHandler', 'filters': ['requestdata'], 'filename': os.path.join(BASE_DIR, 'logs') + '/log.txt', 'formatter': 'base'},
+        'pika': {'level': 'WARNING', 'class': 'logging.FileHandler', 'filename': os.path.join(BASE_DIR, 'logs') + '/log-pika.txt',},
     },
-    'loggers': {
-        'django.request': {
-            'handlers': ['file'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-        'pika': {
-            'handlers': ['pika'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    },
+    'loggers': {'django.request': {'handlers': ['file'], 'level': 'ERROR', 'propagate': True,}, 'pika': {'handlers': ['pika'], 'level': 'ERROR', 'propagate': True,},},
 }
 DEBUG_TOOLBAR_PANELS = (
     'debug_toolbar.panels.versions.VersionsPanel',
@@ -215,14 +165,9 @@ DEBUG_TOOLBAR_PANELS = (
 )
 LDAP = {
     "enable": False,
-    "server": {
-        "host": "192.168.0.254",
-        "port": 389,
-        "user": "cn=Admin,dc=fc-ismu,dc=local",
-        "password": ""
-    },
+    "server": {"host": "192.168.0.254", "port": 389, "user": "cn=Admin,dc=fc-ismu,dc=local", "password": ""},
     "user_object": "(objectClass=*)",
-    "base": "dc=fc-ismu,dc=local"
+    "base": "dc=fc-ismu,dc=local",
 }
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
@@ -248,9 +193,7 @@ class DisableMigrations(object):
 TESTS_IN_PROGRESS = False
 if 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]:
     logging.disable(logging.CRITICAL)
-    PASSWORD_HASHERS = (
-        'django.contrib.auth.hashers.MD5PasswordHasher',
-    )
+    PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher',)
     DEBUG = False
     TEMPLATE_DEBUG = False
     TESTS_IN_PROGRESS = True
@@ -263,9 +206,7 @@ DEBUG = False
 
 LOGOUT_REDIRECT_URL = '/'
 
-LOGTAIL_FILES = {
-    'L2': os.path.join(BASE_DIR, 'logs', 'log.txt')
-}
+LOGTAIL_FILES = {'L2': os.path.join(BASE_DIR, 'logs', 'log.txt')}
 
 RMQ_URL = "amqp://t:t@localhost:5672/"
 RMQ_ENABLED = False
@@ -311,6 +252,6 @@ WEBPACK_LOADER = {
         'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
         'POLL_INTERVAL': 0.1,
         'TIMEOUT': None,
-        'IGNORE': ['.+\.hot-update.js', '.+\.map']
+        'IGNORE': ['.+\.hot-update.js', '.+\.map'],
     }
 }

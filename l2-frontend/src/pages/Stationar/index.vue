@@ -11,13 +11,21 @@
           <div class="inner-card">
             <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" class="a-under"
                target="_blank" v-if="!every" style="float: right">
-              форма 003/у
+              003/у
             </a>
             <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" class="a-under" target="_blank" v-if="every">
               №{{tree.map(d => d.direction).join('-')}}
             </a>
             <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" class="a-under" target="_blank" v-else>
-              История/б №{{direction}}
+              <del v-if="cancel">И/б {{direction}}</del>
+              <span v-else>И/б {{direction}}</span>
+            </a>
+            &nbsp;&nbsp;&nbsp;
+            <a v-if="!cancel" href="#" @click.prevent="cancel_direction(direction)" :class="{cancel_color: !cancel}" class="a-under">
+              Отменить
+            </a>
+            <a v-if="cancel" href="#" @click.prevent="cancel_direction(direction)" :class="{active_color: cancel}" class="a-under">
+              Вернуть
             </a>
           </div>
           <div class="inner-card" v-if="every">
@@ -25,11 +33,11 @@
           </div>
           <div class="inner-card" v-if="every">
             <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" class="a-under" target="_blank">
-              форма 003/у
+              003/у
             </a>
           </div>
           <div class="inner-card" v-if="!every">
-            <Favorite :direction="direction" />
+            <Favorite :direction="direction"/>
           </div>
           <div class="inner-card" v-else>
             {{issTitle}}
@@ -51,7 +59,7 @@
                       }
                     }
                   },
-                  interactive : true, html: '#template-anamnesis' }"
+                  interactive : true, html: '#template-anamnesis'}"
                @show="load_anamnesis"
                class="a-under"
                @click.prevent="edit_anamnesis">Анамнез жизни</a>
@@ -86,21 +94,22 @@
           </div>
           <template v-for="(dir, index) in tree">
             <div class="sidebar-btn-wrapper" v-if="!every && dir.isCurrent" :key="dir.direction">
-              <button class="btn btn-blue-nb sidebar-btn active-btn" style="font-size: 12px">
+              <button class="btn btn-blue-nb sidebar-btn active-btn" style="font-size: 12px" :style="{color: dir.color}">
                 <i class="fa fa-arrow-down" v-if="index < tree.length - 1"/>
                 <i class="fa fa-dot-circle-o" v-else/>
-                №{{dir.direction}} {{dir.research_title}}
+                <del v-if="dir.cancel">№{{dir.direction}} {{dir.research_title}}</del>
+                <span v-else>№{{dir.direction}} {{dir.research_title}}</span>
                 <i class="fa fa-check"/>
               </button>
             </div>
             <div class="sidebar-btn-wrapper" v-else :key="dir.direction">
-              <button class="btn btn-blue-nb sidebar-btn"
-                      style="font-size: 12px"
+              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" :style="{color: dir.color}"
                       @click="load_pk(dir.direction)"
               >
                 <i class="fa fa-arrow-down" v-if="index < tree.length - 1"/>
                 <i class="fa fa-dot-circle-o" v-else/>
-                №{{dir.direction}} {{dir.research_title}}
+                 <del v-if="dir.cancel">№{{dir.direction}} {{dir.research_title}}</del>
+                <span v-else>№{{dir.direction}} {{dir.research_title}}</span>
               </button>
             </div>
           </template>
@@ -214,9 +223,14 @@
             :hospital_r_type="'desc'"
           />
           <div class="group" v-if="r_is_transfer(row)">
-            <div class="group-title">Отделение перевода</div>
+            <div class="radio-button-object radio-button-groups" v-if="!row.confirmed">
+              <radio-field v-model="typeTransfer" :variants="variantTypeTransfer" fullWidth
+                           style="width: 100%"/>
+            </div>
+            <div class="group-title" v-if="newTransfer">Отделение перевода</div>
+            <div class="group-title" v-else>Схема движения по отделениям</div>
             <div class="fields">
-              <div class="content-picker" v-if="!row.confirmed">
+              <div class="content-picker" v-if="!row.confirmed && newTransfer">
                 <research-pick :class="{ active: r.pk === stationar_research }" :research="r"
                                @click.native="stationar_research = r.pk"
                                class="research-select"
@@ -224,20 +238,44 @@
                                force_tippy
                                :key="r.pk"/>
               </div>
-              <div v-else-if="row.research.transfer_direction">
-                История болезни №{{row.research.transfer_direction}}
+              <div v-else-if="!newTransfer && !row.confirmed">
+                <div class="row" id="row-box">
+                  <div class="col-xs-3">
+                    <h6><strong>Поступил ИЗ (предыдущее отделение)</strong></h6>
+                    <treeselect :multiple="false" :disable-branch-nodes="true"
+                                :options="directions_parent_select" placeholder="Откуда поступил" v-model="parent_issledovaniye"/>
+                  </div>
+                  <div class="col-xs-1">
+                    <i class="fa fa-arrow-right fa-2x fa-fw transferArrow"></i>
+                  </div>
+                  <div class="col-xs-3">
+                    <h6><strong>Текущее отделение</strong></h6>
+                      <div style="padding-top: 10px">{{direction}} - {{issTitle}}</div>
+                  </div>
+                  <div class="col-xs-1">
+                    <i class="fa fa-arrow-right fa-2x fa-fw transferArrow"></i>
+                  </div>
+                  <div class="col-xs-3">
+                    <h6><strong>Переведен В (следующее отделение)</strong></h6>
+                    <treeselect :multiple="false" :disable-branch-nodes="true"
+                                :options="directions_child_select" placeholder="Куда переведен" v-model="child_issledovaniye"/>
+                  </div>
+                </div>
+              </div>
+              <div v-else-if="row.confirmed">
+                История болезни №{{child_direction}}
                 <br/>
-                {{row.research.transfer_direction_iss[0]}}
+                {{child_research_title}}
                 <br/>
-                <a class="a-under" href="#" @click.prevent="print_hosp(row.research.transfer_direction)">
+                <a class="a-under" href="#" @click.prevent="print_hosp(child_direction)">
                   Печать ш/к браслета
                 </a>
                 <br/>
-                <a class="a-under" href="#" @click.prevent="print_direction(row.research.transfer_direction)">
+                <a class="a-under" href="#" @click.prevent="print_direction(child_direction)">
                   Печать направления
                 </a>
                 <br/>
-                <a class="a-under" href="#" @click.prevent="load_pk(row.research.transfer_direction)">
+                <a class="a-under" href="#" @click.prevent="load_pk(child_direction)">
                   Открыть историю
                 </a>
               </div>
@@ -437,11 +475,15 @@
   import patients_point from '../../api/patients-point'
   import UrlData from '../../UrlData'
   import AmbulatoryData from '../../modals/AmbulatoryData'
+  import RadioField from '@/fields/RadioField'
   import Favorite from "./Favorite";
+  import Treeselect from '@riophae/vue-treeselect'
 
   export default {
     mixins: [menuMixin],
     components: {
+      RadioField,
+      Treeselect,
       Favorite,
       dropdown,
       DisplayDirection,
@@ -500,6 +542,17 @@
         research_history: [],
         inited: false,
         ambulatory_data: false,
+        variantTypeTransfer: ["Новый перевод", "Выбрать из предыдущих"],
+        typeTransfer: 'Новый перевод',
+        selectStationarDir: '',
+        directions_parent_select: [],
+        directions_child_select: [],
+        parent_issledovaniye: null,
+        child_issledovaniye: null,
+        child_direction: null,
+        child_research_title: null,
+        direcions_order: {},
+
       }
     },
     watch: {
@@ -548,6 +601,13 @@
       });
     },
     methods: {
+      async cancel_direction(pk) {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        await directions_point.cancelDirection({pk});
+        this.pk = pk
+        await this.load();
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      },
       show_anesthesia() {
         this.$store.dispatch(action_types.CHANGE_STATUS_MENU_ANESTHESIA)
       },
@@ -618,6 +678,7 @@
         this.direction = null
         this.cancel = false
         this.iss = null
+        this.parent_iss = null
         this.issTitle = null
         this.finId = null
         this.counts = {}
@@ -641,11 +702,27 @@
           this.direction = data.direction
           this.cancel = data.cancel
           this.iss = data.iss
+          this.parent_issledovaniye = data.parent_issledovaniye
+          this.child_issledovaniye = data.child_issledovaniye
+          this.child_direction = data.child_direction
+          this.child_research_title = data.child_research_title
           this.issTitle = data.iss_title
           this.finId = data.fin_pk
           this.forbidden_edit = data.forbidden_edit
           this.soft_forbidden = !!data.soft_forbidden
           this.tree = data.tree
+          this.directions_parent_select = []
+          this.directions_child_select = []
+          for (const direction_obj of this.tree) {
+            this.directions_parent_select.push({'label': direction_obj.direction + '-' +
+                direction_obj.research_title + '(' + direction_obj.order + ')',
+              'id': direction_obj.issledovaniye})
+            this.direcions_order[direction_obj.issledovaniye] = direction_obj.order
+          }
+          this.directions_child_select = [...this.directions_parent_select]
+          this.directions_parent_select.push({'label': 'Назначить головным текущее', 'id': -1})
+          this.directions_child_select.push({'label': 'Очистить', 'id': -1})
+
           this.patient = new Patient(data.patient)
           this.counts = await stationar_point.counts(this, ['direction'], {every})
           if (message && message.length > 0) {
@@ -756,7 +833,17 @@
       },
       save_and_confirm(iss) {
         this.hide_results();
+        if (this.direcions_order[this.parent_issledovaniye] > this.direcions_order[this.iss]) {
+          return errmessage("Порядок отделений меняется снизу вверх")
+        }
+        if (this.direcions_order[this.parent_issledovaniye] > this.direcions_order[this.child_issledovaniye]) {
+          return errmessage("Порядок отделений меняется снизу вверх")
+        }
+
         this.$store.dispatch(action_types.INC_LOADING)
+        if (!this.newTransfer) {
+          this.stationar_research = -1
+        }
         directions_point.paraclinicResultSave({
           force: true,
           data: {
@@ -767,7 +854,9 @@
             stationar_research: this.stationar_research,
           },
           with_confirm: true,
-          visibility_state: this.visibility_state(iss)
+          visibility_state: this.visibility_state(iss),
+          parent_child_data: {"parent_iss": this.parent_issledovaniye, "current_direction": this.direction, "current_iss": this.iss,
+            "child_iss": this.child_issledovaniye}
         }).then(data => {
           if (data.ok) {
             okmessage('Сохранено')
@@ -786,6 +875,8 @@
             errmessage(data.message)
           }
         }).finally(() => {
+          this.pk = this.direction
+          this.newTransfer = true
           this.$store.dispatch(action_types.DEC_LOADING)
         })
       },
@@ -861,7 +952,7 @@
             }
           }
         }
-        if (this.r_is_transfer(research) && this.stationar_research === -1) {
+        if (this.r_is_transfer(research) && this.stationar_research === -1 && this.typeTransfer === "Новый перевод") {
           l.push('Отделение перевода')
         }
         return l.slice(0, 2)
@@ -996,6 +1087,12 @@
         researches: 'researches',
         bases: 'bases',
       }),
+      newTransfer() {
+        if (this.typeTransfer == "Новый перевод") {
+          return true
+        }
+        return false
+      },
       navState() {
         if (!this.direction) {
           return null
@@ -1064,6 +1161,24 @@
 </script>
 
 <style scoped lang="scss">
+  .transferArrow {
+    padding-top: 40px;
+    opacity: 0.5
+  }
+
+  .cancel_color {
+    color: #93046d
+  }
+
+  .active_color {
+    color: #1a6451;
+    font-weight: bold;
+  }
+
+  .colorBad {
+    background-color: lightblue!important;
+    color: #d35400;
+  }
 
   .root {
     display: flex;
@@ -1242,14 +1357,13 @@
     padding: 0 12px;
     height: 24px;
 
-    &:not(:hover), &.active-btn:hover {
+    &:not(:hover):not(.colorBad), &.active-btn:hover:not(.colorBad) {
       cursor: default;
       background-color: rgba(#000, .02) !important;
       color: #000;
       border-bottom: 1px solid #b1b1b1 !important;
       }
     }
-
 
   .sidebar-btn-wrapper {
     display: flex;

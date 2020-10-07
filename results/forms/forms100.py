@@ -5,6 +5,7 @@ from copy import deepcopy
 from reportlab.lib.enums import TA_JUSTIFY
 import directory.models as directory
 from directions.models import ParaclinicResult
+from results.prepare_data import text_to_bold
 from utils.dates import normalize_date
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
 from api.directions.views import directions_anesthesia_load
@@ -31,6 +32,7 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
     styleTC.fontSize = 8
     styleTCBold = deepcopy(style)
     styleTCBold.fontName = "FreeSansBold"
+    fwb.append(Paragraph(f'№ карты : {direction.client.number_with_type()} Пациент : {direction.client.individual.fio()}', styleTCBold))
 
     txt = ''
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
@@ -73,9 +75,9 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                         step = 1
                         for record in results_json['data']:
                             if step == 1:
-                                temp_record = [Paragraph('{} {}'.format(el[11:16], normalize_date(el[0:10])[0:5]), styleTCBold) for el in record[start: end]]
+                                temp_record = [Paragraph('{} {}'.format(el[11:16], normalize_date(el[0:10])[0:5]), styleTCBold) for el in record[start:end]]
                             else:
-                                temp_record = [Paragraph('{}'.format(el), styleTC) for el in record[start: end]]
+                                temp_record = [Paragraph('{}'.format(el), styleTC) for el in record[start:end]]
                             temp_record.insert(0, Paragraph('{}'.format(record[0]), styleTCBold))
                             v_table.append(temp_record)
                             step += 1
@@ -84,11 +86,7 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                         if temp_count_table == count_table:
                             cols_width[-1] = 15 * mm
                         tbl = Table(v_table, repeatRows=1, colWidths=cols_width, hAlign='LEFT')
-                        tbl.setStyle(TableStyle([
-                            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-                            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
-                            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                        ]))
+                        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
 
                         fwb.append(tbl)
                         fwb.append(Spacer(1, 1 * mm))
@@ -104,9 +102,9 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                     v = '<font face="FreeSans" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
 
                 if r.field.get_title(force_type=field_type) != "":
-                    vals.append("{}:&nbsp;{}".format(r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
+                    vals.append("{}:&nbsp;{}".format(r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), text_to_bold(v)))
                 else:
-                    vals.append(v)
+                    vals.append(text_to_bold(v))
             txt += "; ".join(vals)
             txt = txt.strip()
             if len(txt) > 0 and txt.strip()[-1] != ".":

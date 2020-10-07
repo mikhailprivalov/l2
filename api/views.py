@@ -1,5 +1,7 @@
 import time
+import re
 from collections import defaultdict
+from typing import Union
 
 import simplejson as json
 import yaml
@@ -18,7 +20,7 @@ from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document
-from directory.models import Fractions, ParaclinicInputField, ResearchSite
+from directory.models import Fractions, ParaclinicInputField, ResearchSite, Culture, Antibiotic
 from directory.models import Researches as DResearches
 from external_system.models import FsliRefbookTest
 from laboratory.decorators import group_required
@@ -26,8 +28,7 @@ from laboratory.utils import strdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from slog import models as slog
 from slog.models import Log
-from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, \
-    ExcludePurposes
+from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, ExcludePurposes
 from utils.dates import try_parse_range, try_strptime
 from .sql_func import users_by_group
 
@@ -39,39 +40,72 @@ def translit(locallangstring):
     :return: translit of locallangstring
     """
     conversion = {
-        u'\u0410': 'A', u'\u0430': 'a',
-        u'\u0411': 'B', u'\u0431': 'b',
-        u'\u0412': 'V', u'\u0432': 'v',
-        u'\u0413': 'G', u'\u0433': 'g',
-        u'\u0414': 'D', u'\u0434': 'd',
-        u'\u0415': 'E', u'\u0435': 'e',
-        u'\u0401': 'Yo', u'\u0451': 'yo',
-        u'\u0416': 'Zh', u'\u0436': 'zh',
-        u'\u0417': 'Z', u'\u0437': 'z',
-        u'\u0418': 'I', u'\u0438': 'i',
-        u'\u0419': 'Y', u'\u0439': 'y',
-        u'\u041a': 'K', u'\u043a': 'k',
-        u'\u041b': 'L', u'\u043b': 'l',
-        u'\u041c': 'M', u'\u043c': 'm',
-        u'\u041d': 'N', u'\u043d': 'n',
-        u'\u041e': 'O', u'\u043e': 'o',
-        u'\u041f': 'P', u'\u043f': 'p',
-        u'\u0420': 'R', u'\u0440': 'r',
-        u'\u0421': 'S', u'\u0441': 's',
-        u'\u0422': 'T', u'\u0442': 't',
-        u'\u0423': 'U', u'\u0443': 'u',
-        u'\u0424': 'F', u'\u0444': 'f',
-        u'\u0425': 'H', u'\u0445': 'h',
-        u'\u0426': 'Ts', u'\u0446': 'ts',
-        u'\u0427': 'Ch', u'\u0447': 'ch',
-        u'\u0428': 'Sh', u'\u0448': 'sh',
-        u'\u0429': 'Sch', u'\u0449': 'sch',
-        u'\u042a': '', u'\u044a': '',
-        u'\u042b': 'Y', u'\u044b': 'y',
-        u'\u042c': '', u'\u044c': '',
-        u'\u042d': 'E', u'\u044d': 'e',
-        u'\u042e': 'Yu', u'\u044e': 'yu',
-        u'\u042f': 'Ya', u'\u044f': 'ya',
+        u'\u0410': 'A',
+        u'\u0430': 'a',
+        u'\u0411': 'B',
+        u'\u0431': 'b',
+        u'\u0412': 'V',
+        u'\u0432': 'v',
+        u'\u0413': 'G',
+        u'\u0433': 'g',
+        u'\u0414': 'D',
+        u'\u0434': 'd',
+        u'\u0415': 'E',
+        u'\u0435': 'e',
+        u'\u0401': 'Yo',
+        u'\u0451': 'yo',
+        u'\u0416': 'Zh',
+        u'\u0436': 'zh',
+        u'\u0417': 'Z',
+        u'\u0437': 'z',
+        u'\u0418': 'I',
+        u'\u0438': 'i',
+        u'\u0419': 'Y',
+        u'\u0439': 'y',
+        u'\u041a': 'K',
+        u'\u043a': 'k',
+        u'\u041b': 'L',
+        u'\u043b': 'l',
+        u'\u041c': 'M',
+        u'\u043c': 'm',
+        u'\u041d': 'N',
+        u'\u043d': 'n',
+        u'\u041e': 'O',
+        u'\u043e': 'o',
+        u'\u041f': 'P',
+        u'\u043f': 'p',
+        u'\u0420': 'R',
+        u'\u0440': 'r',
+        u'\u0421': 'S',
+        u'\u0441': 's',
+        u'\u0422': 'T',
+        u'\u0442': 't',
+        u'\u0423': 'U',
+        u'\u0443': 'u',
+        u'\u0424': 'F',
+        u'\u0444': 'f',
+        u'\u0425': 'H',
+        u'\u0445': 'h',
+        u'\u0426': 'Ts',
+        u'\u0446': 'ts',
+        u'\u0427': 'Ch',
+        u'\u0447': 'ch',
+        u'\u0428': 'Sh',
+        u'\u0448': 'sh',
+        u'\u0429': 'Sch',
+        u'\u0449': 'sch',
+        u'\u042a': '',
+        u'\u044a': '',
+        u'\u042b': 'Y',
+        u'\u044b': 'y',
+        u'\u042c': '',
+        u'\u044c': '',
+        u'\u042d': 'E',
+        u'\u044d': 'e',
+        u'\u042e': 'Yu',
+        u'\u044e': 'yu',
+        u'\u042f': 'Ya',
+        u'\u044f': 'ya',
     }
     translitstring = []
     for c in locallangstring:
@@ -108,11 +142,8 @@ def send(request):
                 dpk -= 4600000000000
                 dpk //= 10
             tubes(request, direction_implict_id=dpk)
-            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk,
-                                                           issledovaniya__doc_confirmation__isnull=True).exists():
-                resdict["pk"] = directions.TubesRegistration.objects.filter(
-                    issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).order_by(
-                    "pk").first().pk
+            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).exists():
+                resdict["pk"] = directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).order_by("pk").first().pk
             else:
                 resdict["pk"] = False
         result["A"] = appkey
@@ -126,25 +157,20 @@ def send(request):
                     fractionRels = models.RelationFractionASTM.objects.filter(astm_field=key)
                     for fractionRel in fractionRels:
                         fraction = fractionRel.fraction
-                        if directions.Issledovaniya.objects.filter(napravleniye=direction,
-                                                                   research=fraction.research,
-                                                                   doc_confirmation__isnull=True).exists():
-                            issled = directions.Issledovaniya.objects.filter(napravleniye=direction,
-                                                                             research=fraction.research,
-                                                                             doc_confirmation__isnull=True).order_by(
-                                "pk")[0]
-                            if directions.Result.objects.filter(issledovaniye=issled,
-                                                                fraction=fraction).exists():
-                                fraction_result = directions.Result.objects.filter(issledovaniye=issled,
-                                                                                   fraction__pk=fraction.pk).order_by(
-                                    "-pk")[0]
+                        if directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction.research, doc_confirmation__isnull=True).exists():
+                            issled = directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction.research, doc_confirmation__isnull=True).order_by("pk")[0]
+                            if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction).exists():
+                                fraction_result = directions.Result.objects.filter(issledovaniye=issled, fraction__pk=fraction.pk).order_by("-pk")[0]
                             else:
-                                fraction_result = directions.Result(issledovaniye=issled,
-                                                                    fraction=fraction)
+                                fraction_result = directions.Result(issledovaniye=issled, fraction=fraction)
                             fraction_result.value = str(resdict["result"][key]).strip()  # Установка значения
+
+                            if 'Non-React' in fraction_result.value:
+                                fraction_result.value = 'Отрицательно'
+
                             if fraction_result.value.isdigit():
                                 fraction_result.value = "%s.0" % fraction_result.value
-                            import re
+
                             find = re.findall(r"\d+.\d+", fraction_result.value)
                             if len(find) > 0:
                                 val = float(find[0]) * fractionRel.get_multiplier_display()
@@ -185,8 +211,10 @@ def endpoint(request):
     data = json.loads(request.POST.get("result", request.GET.get("result", "{}")))
     api_key = request.POST.get("key", request.GET.get("key", ""))
     message_type = data.get("message_type", "C")
-    pk_s = str(data.get("pk", ""))
+    pk_s = str(data.get("pk", "")).strip()
+    iss_s = str(data.get("iss_pk", "-1")).strip()
     pk = -1 if not pk_s.isdigit() else int(pk_s)
+    iss_pk = -1 if not iss_s.isdigit() else int(iss_s)
     data["app_name"] = "API key is incorrect"
     # pid = data.get("processing_id", "P")
     if models.Application.objects.filter(key=api_key).exists():
@@ -196,90 +224,126 @@ def endpoint(request):
         app = models.Application.objects.get(key=api_key)
         if app.active:
             data["app_name"] = app.name
-            if message_type == "R" or data.get("result"):
-                if pk != -1:
-                    dw = app.direction_work
+            if message_type == "R" or data.get("result") or message_type == "R_BAC":
+                if pk != -1 or iss_pk != -1:
+                    direction: Union[directions.Napravleniya, None] = None
+                    dw = app.direction_work or message_type == "R_BAC"
                     if pk >= 4600000000000:
                         pk -= 4600000000000
                         pk //= 10
                         dw = True
-                    if dw:
+                    if pk == -1:
+                        iss = directions.Issledovaniya.objects.filter(pk=iss_pk)
+                        if iss.exists():
+                            direction = iss[0].napravleniye
+                    elif dw:
                         direction = directions.Napravleniya.objects.filter(pk=pk).first()
                     else:
                         direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__pk=pk).first()
 
                     pks = []
                     oks = []
-                    if direction:
-                        direction: directions.Napravleniya = direction
-                        result["patientData"] = {
-                            "fio": direction.client.individual.fio(short=True),
-                            "card": direction.client.number_with_type(),
-                        }
+                    if direction is not None:
+                        if message_type == "R" or (data.get("result") and message_type == 'C'):
+                            result["patientData"] = {
+                                "fio": direction.client.individual.fio(short=True),
+                                "card": direction.client.number_with_type(),
+                            }
 
-                        result["patientData"]["fioTranslit"] = translit(result["patientData"]["fio"])
-                        result["patientData"]["cardTranslit"] = translit(result["patientData"]["card"])
+                            result["patientData"]["fioTranslit"] = translit(result["patientData"]["fio"])
+                            result["patientData"]["cardTranslit"] = translit(result["patientData"]["card"])
 
-                        results = data.get("result", {})
-                        for key in results:
-                            ok = False
-                            q = models.RelationFractionASTM.objects.filter(astm_field=key)
-                            if q.filter(application_api=app).exists():
-                                q = q.filter(application_api=app)
-                                ok = True
-                            elif q.filter(application_api__isnull=True).exists():
-                                q = q.filter(application_api__isnull=True)
-                                ok = True
-                            if ok:
-                                for fraction_rel in q:
-                                    save_state = []
-                                    issleds = []
-                                    for issled in directions.Issledovaniya.objects.filter(napravleniye=direction,
-                                                                                          research=fraction_rel.fraction.research,
-                                                                                          doc_confirmation__isnull=True):
-                                        if directions.Result.objects.filter(issledovaniye=issled,
-                                                                            fraction=fraction_rel.fraction).exists():
-                                            fraction_result = directions.Result.objects.filter(issledovaniye=issled,
-                                                                                               fraction=fraction_rel.fraction).order_by(
-                                                "-pk")[0]
-                                        else:
-                                            fraction_result = directions.Result(issledovaniye=issled,
-                                                                                fraction=fraction_rel.fraction)
-                                        fraction_result.value = str(results[key]).strip()
-                                        import re
-                                        find = re.findall(r"\d+.\d+", fraction_result.value)
-                                        if len(find) > 0:
-                                            val_str = fraction_result.value
-                                            for f in find:
-                                                val = float(f) * fraction_rel.get_multiplier_display()
-                                                val = app.auto_set_places(fraction_rel, val)
-                                                val_str = val_str.replace(f, str(val))
-                                            fraction_result.value = val_str
+                            results = data.get("result", {})
+                            for key in results:
+                                ok = False
+                                q = models.RelationFractionASTM.objects.filter(astm_field=key)
+                                if q.filter(application_api=app).exists():
+                                    q = q.filter(application_api=app)
+                                    ok = True
+                                elif q.filter(application_api__isnull=True).exists():
+                                    q = q.filter(application_api__isnull=True)
+                                    ok = True
+                                if ok:
+                                    for fraction_rel in q:
+                                        save_state = []
+                                        issleds = []
+                                        for issled in directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction_rel.fraction.research, doc_confirmation__isnull=True):
+                                            if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).exists():
+                                                fraction_result = directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).order_by("-pk")[0]
+                                            else:
+                                                fraction_result = directions.Result(issledovaniye=issled, fraction=fraction_rel.fraction)
+                                            fraction_result.value = str(results[key]).strip()
 
-                                        fraction_result.iteration = 1
-                                        ref = fraction_rel.default_ref
-                                        if ref:
-                                            fraction_result.ref_title = ref.title
-                                            fraction_result.ref_about = ref.about
-                                            fraction_result.ref_m = ref.m
-                                            fraction_result.ref_f = ref.f
-                                        fraction_result.save()
-                                        issled.api_app = app
-                                        issled.save()
-                                        fraction_result.get_ref(re_save=True)
-                                        fraction_result.issledovaniye.doc_save = astm_user
-                                        fraction_result.issledovaniye.time_save = timezone.now()
-                                        fraction_result.issledovaniye.save()
-                                        save_state.append({"fraction": fraction_result.fraction.title,
-                                                           "value": fraction_result.value})
-                                        issleds.append({"pk": issled.pk, "title": issled.research.title})
+                                            if 'Non-React' in fraction_result.value:
+                                                fraction_result.value = 'Отрицательно'
 
-                                        if issled not in pks:
-                                            pks.append(issled)
-                                    # slog.Log(key=json.dumps({"direction": direction.pk, "issleds": str(issleds)}),
-                                    #          type=22, body=json.dumps(save_state), user=None).save()
-                            oks.append(ok)
-                    result["body"] = "{} {} {} {}".format(dw, pk, json.dumps(oks), direction is not None)
+                                            find = re.findall(r"\d+.\d+", fraction_result.value)
+                                            if len(find) > 0:
+                                                val_str = fraction_result.value
+                                                for f in find:
+                                                    val = float(f) * fraction_rel.get_multiplier_display()
+                                                    val = app.auto_set_places(fraction_rel, val)
+                                                    val_str = val_str.replace(f, str(val))
+                                                fraction_result.value = val_str
+
+                                            fraction_result.iteration = 1
+                                            ref = fraction_rel.default_ref
+                                            if ref:
+                                                fraction_result.ref_title = ref.title
+                                                fraction_result.ref_about = ref.about
+                                                fraction_result.ref_m = ref.m
+                                                fraction_result.ref_f = ref.f
+                                            fraction_result.save()
+                                            issled.api_app = app
+                                            issled.save()
+                                            fraction_result.get_ref(re_save=True)
+                                            fraction_result.issledovaniye.doc_save = astm_user
+                                            fraction_result.issledovaniye.time_save = timezone.now()
+                                            fraction_result.issledovaniye.save()
+                                            save_state.append({"fraction": fraction_result.fraction.title, "value": fraction_result.value})
+                                            issleds.append({"pk": issled.pk, "title": issled.research.title})
+
+                                            if issled not in pks:
+                                                pks.append(issled)
+                                oks.append(ok)
+                        elif message_type == "R_BAC":
+                            mo = data.get('mo')
+                            if mo:
+                                code = mo.get('code')
+                                name = mo.get('name')
+                                anti = data.get('anti', {})
+                                comments = data.get('comments', [])
+                                if code:
+                                    culture = Culture.objects.filter(lis=code).first()
+                                    iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=True, research__is_microbiology=True)
+                                    if iss.filter(pk=iss_pk).exists():
+                                        iss = iss.filter(pk=iss_pk)
+                                    iss = iss.first()
+                                    if not culture:
+                                        print('NO CULTURE', code, name)
+                                    elif not iss:
+                                        print('IGNORED')
+                                    else:
+                                        directions.MicrobiologyResultCulture.objects.filter(issledovaniye=iss, culture=culture).delete()
+
+                                        comments = '\n'.join(
+                                            [c["text"] for c in comments if not c["text"].startswith('S:') and not c["text"].startswith('R:') and not c["text"].startswith('I:')]
+                                        )
+                                        culture_result = directions.MicrobiologyResultCulture(issledovaniye=iss, culture=culture, comments=comments)
+                                        culture_result.save()
+
+                                        for a in anti:
+                                            anti_r = anti[a]
+                                            anti_obj = Antibiotic.objects.filter(lis=a).first()
+                                            if anti_obj and anti_r.get('RSI'):
+                                                a_name = anti_r.get('name', '').replace('µg', 'мг')
+                                                a_name_parts = a_name.split()
+                                                a_name = a_name_parts[-2] + ' ' + a_name_parts[-1]
+                                                anti_result = directions.MicrobiologyResultCultureAntibiotic(
+                                                    result_culture=culture_result, antibiotic=anti_obj, sensitivity=anti_r.get('RSI'), dia=anti_r.get('dia', ''), antibiotic_amount=a_name,
+                                                )
+                                                anti_result.save()
+                    result["body"] = "{} {} {} {} {}".format(dw, pk, iss_pk, json.dumps(oks), direction is not None)
                 else:
                     result["body"] = "pk '{}' is not exists".format(pk_s)
             elif message_type == "Q":
@@ -296,8 +360,7 @@ def endpoint(request):
 
                     result["patientData"]["fioTranslit"] = translit(result["patientData"]["fio"])
                     result["patientData"]["cardTranslit"] = translit(result["patientData"]["card"])
-                    for fraction in Fractions.objects.filter(research=i.research,
-                                                             hide=False):
+                    for fraction in Fractions.objects.filter(research=i.research, hide=False):
                         rel = models.RelationFractionASTM.objects.filter(fraction=fraction, application_api=app)
                         if not rel.exists():
                             continue
@@ -321,22 +384,17 @@ def endpoint(request):
 @login_required
 def departments(request):
     from podrazdeleniya.models import Podrazdeleniya
-    can_edit = request.user.is_superuser or request.user.doctorprofile.has_group(
-        'Создание и редактирование пользователей')
+
+    can_edit = request.user.is_superuser or request.user.doctorprofile.has_group('Создание и редактирование пользователей')
     if request.method == "GET":
-        deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "updated": False} for
-                x in Podrazdeleniya.objects.all().order_by("pk")]
+        deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "updated": False} for x in Podrazdeleniya.objects.all().order_by("pk")]
         en = SettingManager.en()
         more_types = []
         if SettingManager.is_morfology_enabled(en):
             more_types.append({"pk": str(Podrazdeleniya.MORFOLOGY), "title": "Морфология"})
         return JsonResponse(
-            {"departments": deps,
-             "can_edit": can_edit,
-             "types": [
-                 *[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] != 8 and en.get(x[0], True)],
-                 *more_types,
-             ]})
+            {"departments": deps, "can_edit": can_edit, "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] != 8 and en.get(x[0], True)], *more_types]}
+        )
     elif can_edit:
         ok = False
         message = ""
@@ -371,27 +429,39 @@ def bases(request):
     k = f'view:bases:{request.user.pk}'
     ret = cache.get(k)
     if not ret:
-        ret = {"bases": [
-            {"pk": x.pk,
-             "title": x.title,
-             "code": x.short_title,
-             "hide": x.hide,
-             "history_number": x.history_number,
-             "internal_type": x.internal_type,
-             "fin_sources": [{
-                 "pk": y.pk,
-                 "title": y.title,
-                 "default_diagnos": y.default_diagnos
-             } for y in directions.IstochnikiFinansirovaniya.objects.filter(base=x, hide=False).order_by('-order_weight')]
-             } for x in CardBase.objects.all().order_by('-order_weight')]}
+        ret = {
+            "bases": [
+                {
+                    "pk": x.pk,
+                    "title": x.title,
+                    "code": x.short_title,
+                    "hide": x.hide,
+                    "history_number": x.history_number,
+                    "internal_type": x.internal_type,
+                    "fin_sources": [
+                        {"pk": y.pk, "title": y.title, "default_diagnos": y.default_diagnos}
+                        for y in directions.IstochnikiFinansirovaniya.objects.filter(base=x, hide=False).order_by('-order_weight')
+                    ],
+                }
+                for x in CardBase.objects.all().order_by('-order_weight')
+            ]
+        }
         cache.set(k, ret, 100)
     return JsonResponse(ret)
 
 
 def current_user_info(request):
-    ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "",
-           "department": {"pk": -1, "title": ""}, "groups": [], "modules": SettingManager.l2_modules(),
-           "user_services": [], "rmis_enabled": SettingManager.get("rmis_enabled", default='false', default_type='b')}
+    ret = {
+        "auth": request.user.is_authenticated,
+        "doc_pk": -1,
+        "username": "",
+        "fio": "",
+        "department": {"pk": -1, "title": ""},
+        "groups": [],
+        "modules": SettingManager.l2_modules(),
+        "user_services": [],
+        "rmis_enabled": SettingManager.get("rmis_enabled", default='false', default_type='b'),
+    }
     if ret["auth"]:
         ret["username"] = request.user.username
         ret["fio"] = request.user.doctorprofile.fio
@@ -402,11 +472,9 @@ def current_user_info(request):
         ret["rmis_location"] = request.user.doctorprofile.rmis_location
         ret["rmis_login"] = request.user.doctorprofile.rmis_login
         ret["rmis_password"] = request.user.doctorprofile.rmis_password
-        ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye_id,
-                             "title": request.user.doctorprofile.podrazdeleniye.title}
+        ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye_id, "title": request.user.doctorprofile.podrazdeleniye.title}
         ret["restricted"] = [x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]
-        ret["user_services"] = [x.pk for x in
-                                request.user.doctorprofile.users_services.all() if x not in ret["restricted"]]
+        ret["user_services"] = [x.pk for x in request.user.doctorprofile.users_services.all() if x not in ret["restricted"]]
         ret["su"] = request.user.is_superuser
 
         en = SettingManager.en()
@@ -418,69 +486,40 @@ def current_user_info(request):
                 continue
 
             t = e - 4
-            has_def = DResearches.objects.filter(hide=False, site_type__isnull=True,
-                                                 **DResearches.filter_type(e)).exists()
+            has_def = DResearches.objects.filter(hide=False, site_type__isnull=True, **DResearches.filter_type(e)).exists()
 
             if has_def:
-                d = [
-                    {
-                        "pk": None,
-                        "title": 'Общие',
-                        'type': t,
-                        "extended": True,
-                    }
-                ]
+                d = [{"pk": None, "title": 'Общие', 'type': t, "extended": True}]
             else:
                 d = []
 
-            ret["extended_departments"][e] = [
-                *d,
-                *[{
-                    "pk": x.pk,
-                    "title": x.title,
-                    "type": t,
-                    "extended": True,
-                    'e': e,
-                } for x in st_base.filter(site_type=t)]
-            ]
+            ret["extended_departments"][e] = [*d, *[{"pk": x.pk, "title": x.title, "type": t, "extended": True, 'e': e} for x in st_base.filter(site_type=t)]]
 
         if SettingManager.is_morfology_enabled(en):
             ret["extended_departments"][Podrazdeleniya.MORFOLOGY] = []
             if en.get(8):
-                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append({
-                    "pk": Podrazdeleniya.MORFOLOGY + 1,
-                    "title": "Микробиология",
-                    "type": Podrazdeleniya.MORFOLOGY,
-                    "extended": True,
-                    "e": Podrazdeleniya.MORFOLOGY,
-                })
+                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
+                    {"pk": Podrazdeleniya.MORFOLOGY + 1, "title": "Микробиология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
+                )
             if en.get(9):
-                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append({
-                    "pk": Podrazdeleniya.MORFOLOGY + 2,
-                    "title": "Цитология",
-                    "type": Podrazdeleniya.MORFOLOGY,
-                    "extended": True,
-                    "e": Podrazdeleniya.MORFOLOGY,
-                })
+                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
+                    {"pk": Podrazdeleniya.MORFOLOGY + 2, "title": "Цитология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
+                )
             if en.get(10):
-                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append({
-                    "pk": Podrazdeleniya.MORFOLOGY + 3,
-                    "title": "Гистология",
-                    "type": Podrazdeleniya.MORFOLOGY,
-                    "extended": True,
-                    "e": Podrazdeleniya.MORFOLOGY,
-                })
+                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
+                    {"pk": Podrazdeleniya.MORFOLOGY + 3, "title": "Гистология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
+                )
     return JsonResponse(ret)
 
 
 @login_required
 def directive_from(request):
     data = []
-    for dep in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).prefetch_related(
-        Prefetch(
-            'doctorprofile_set', queryset=users.DoctorProfile.objects.filter(user__groups__name="Лечащий врач").order_by("fio")
-        )
-    ).order_by('title'):
+    for dep in (
+        Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)
+        .prefetch_related(Prefetch('doctorprofile_set', queryset=users.DoctorProfile.objects.filter(user__groups__name="Лечащий врач").order_by("fio")))
+        .order_by('title')
+    ):
         d = {
             "pk": dep.pk,
             "title": dep.title,
@@ -493,13 +532,12 @@ def directive_from(request):
 
 @group_required("Оформление статталонов", "Лечащий врач", "Оператор лечащего врача")
 def statistics_tickets_types(request):
-    result = {"visit": [{"pk": x.pk, "title": x.title} for x in VisitPurpose.objects.filter(hide=False).order_by("pk")],
-              "result": [{"pk": x.pk, "title": x.title} for x in
-                         ResultOfTreatment.objects.filter(hide=False).order_by("pk")],
-              "outcome": [{"pk": x.pk, "title": x.title} for x in
-                          Outcomes.objects.filter(hide=False).order_by("pk")],
-              "exclude": [{"pk": x.pk, "title": x.title} for x in
-                          ExcludePurposes.objects.filter(hide=False).order_by("pk")]}
+    result = {
+        "visit": [{"pk": x.pk, "title": x.title} for x in VisitPurpose.objects.filter(hide=False).order_by("pk")],
+        "result": [{"pk": x.pk, "title": x.title} for x in ResultOfTreatment.objects.filter(hide=False).order_by("pk")],
+        "outcome": [{"pk": x.pk, "title": x.title} for x in Outcomes.objects.filter(hide=False).order_by("pk")],
+        "exclude": [{"pk": x.pk, "title": x.title} for x in ExcludePurposes.objects.filter(hide=False).order_by("pk")],
+    }
     return JsonResponse(result)
 
 
@@ -511,19 +549,21 @@ def statistics_tickets_send(request):
     doc = None
     if ofname > -1 and users.DoctorProfile.objects.filter(pk=ofname).exists():
         doc = users.DoctorProfile.objects.get(pk=ofname)
-    t = StatisticsTicket(card=Card.objects.get(pk=rd["card_pk"]),
-                         purpose=VisitPurpose.objects.get(pk=rd["visit"]),
-                         result=ResultOfTreatment.objects.get(pk=rd["result"]),
-                         info=rd["info"].strip(),
-                         first_time=rd["first_time"],
-                         primary_visit=rd["primary_visit"],
-                         dispensary_registration=int(rd["disp"]),
-                         doctor=doc or request.user.doctorprofile,
-                         creator=request.user.doctorprofile,
-                         outcome=Outcomes.objects.filter(pk=rd["outcome"]).first(),
-                         dispensary_exclude_purpose=ExcludePurposes.objects.filter(pk=rd["exclude"]).first(),
-                         dispensary_diagnos=rd["disp_diagnos"],
-                         date_ticket=rd.get("date_ticket", None))
+    t = StatisticsTicket(
+        card=Card.objects.get(pk=rd["card_pk"]),
+        purpose=VisitPurpose.objects.get(pk=rd["visit"]),
+        result=ResultOfTreatment.objects.get(pk=rd["result"]),
+        info=rd["info"].strip(),
+        first_time=rd["first_time"],
+        primary_visit=rd["primary_visit"],
+        dispensary_registration=int(rd["disp"]),
+        doctor=doc or request.user.doctorprofile,
+        creator=request.user.doctorprofile,
+        outcome=Outcomes.objects.filter(pk=rd["outcome"]).first(),
+        dispensary_exclude_purpose=ExcludePurposes.objects.filter(pk=rd["exclude"]).first(),
+        dispensary_diagnos=rd["disp_diagnos"],
+        date_ticket=rd.get("date_ticket", None),
+    )
     t.save()
     Log(key="", type=7000, body=json.dumps(rd), user=request.user.doctorprofile).save()
     return JsonResponse(response)
@@ -538,26 +578,28 @@ def statistics_tickets_get(request):
     for row in StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(date__range=(date_start, date_end,)).order_by('pk'):
         if not row.invalid_ticket:
             n += 1
-        response["data"].append({
-            "pk": row.pk,
-            "n": n if not row.invalid_ticket else '',
-            "doc": row.doctor.get_fio(),
-            "date_ticket": row.get_date(),
-            "department": row.doctor.podrazdeleniye.get_title(),
-            "patinet": row.card.individual.fio(full=True),
-            "card": row.card.number_with_type(),
-            "purpose": row.purpose.title if row.purpose else "",
-            "first_time": row.first_time,
-            "primary": row.primary_visit,
-            "info": row.info,
-            "disp": row.get_dispensary_registration_display()
-            + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
-            + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
-            "result": row.result.title if row.result else "",
-            "outcome": row.outcome.title if row.outcome else "",
-            "invalid": row.invalid_ticket,
-            "can_invalidate": row.can_invalidate()
-        })
+        response["data"].append(
+            {
+                "pk": row.pk,
+                "n": n if not row.invalid_ticket else '',
+                "doc": row.doctor.get_fio(),
+                "date_ticket": row.get_date(),
+                "department": row.doctor.podrazdeleniye.get_title(),
+                "patinet": row.card.individual.fio(full=True),
+                "card": row.card.number_with_type(),
+                "purpose": row.purpose.title if row.purpose else "",
+                "first_time": row.first_time,
+                "primary": row.primary_visit,
+                "info": row.info,
+                "disp": row.get_dispensary_registration_display()
+                + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
+                + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
+                "result": row.result.title if row.result else "",
+                "outcome": row.outcome.title if row.outcome else "",
+                "invalid": row.invalid_ticket,
+                "can_invalidate": row.can_invalidate(),
+            }
+        )
     return JsonResponse(response)
 
 
@@ -571,8 +613,7 @@ def statistics_tickets_invalidate(request):
                 s.invalid_ticket = request_data.get("invalid", False)
                 s.save()
             response["ok"] = True
-            Log(key=str(request_data["pk"]), type=7001, body=json.dumps(request_data.get("invalid", False)),
-                user=request.user.doctorprofile).save()
+            Log(key=str(request_data["pk"]), type=7001, body=json.dumps(request_data.get("invalid", False)), user=request.user.doctorprofile).save()
         else:
             response["message"] = "Время на отмену или возврат истекло"
     return JsonResponse(response)
@@ -643,18 +684,13 @@ def rmis_confirm_list(request):
     request_data = json.loads(request.body)
     data = {"directions": []}
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
-    d = directions.Napravleniya.objects.filter(istochnik_f__rmis_auto_send=False,
-                                               force_rmis_send=False,
-                                               issledovaniya__time_confirmation__range=(date_start, date_end)) \
-        .exclude(issledovaniya__time_confirmation__isnull=True).distinct().order_by("pk")
-    data["directions"] = [{
-        "pk": x.pk,
-        "patient": {
-            "fiodr": x.client.individual.fio(full=True),
-            "card": x.client.number_with_type()
-        },
-        "fin": x.fin_title
-    } for x in d]
+    d = (
+        directions.Napravleniya.objects.filter(istochnik_f__rmis_auto_send=False, force_rmis_send=False, issledovaniya__time_confirmation__range=(date_start, date_end))
+        .exclude(issledovaniya__time_confirmation__isnull=True)
+        .distinct()
+        .order_by("pk")
+    )
+    data["directions"] = [{"pk": x.pk, "patient": {"fiodr": x.client.individual.fio(full=True), "card": x.client.number_with_type()}, "fin": x.fin_title} for x in d]
     return JsonResponse(data)
 
 
@@ -708,9 +744,7 @@ def search_template(request):
     q = request.GET.get('q', '')
     if q != '':
         for r in users.AssignmentTemplates.objects.filter(title__istartswith=q, global_template=False).order_by('title')[:10]:
-            result.append({"pk": r.pk, "title": r.title, "researches": [x.research.pk for x in
-                                                                        users.AssignmentResearches.objects.filter(
-                                                                            template=r, research__hide=False)]})
+            result.append({"pk": r.pk, "title": r.title, "researches": [x.research.pk for x in users.AssignmentResearches.objects.filter(template=r, research__hide=False)]})
     return JsonResponse({"result": result, "q": q})
 
 
@@ -718,9 +752,7 @@ def load_templates(request):
     result = []
     t = request.GET.get('type', '1')
     for r in users.AssignmentTemplates.objects.filter(global_template=t == '1').order_by('title'):
-        result.append({"pk": r.pk, "title": r.title, "researches": [x.research.pk for x in
-                                                                    users.AssignmentResearches.objects.filter(
-                                                                        template=r, research__hide=False)]})
+        result.append({"pk": r.pk, "title": r.title, "researches": [x.research.pk for x in users.AssignmentResearches.objects.filter(template=r, research__hide=False)]})
     return JsonResponse({"result": result})
 
 
@@ -732,8 +764,7 @@ def get_template(request):
     if pk:
         t = users.AssignmentTemplates.objects.get(pk=pk)
         title = t.title
-        researches = [x.research_id for x in
-                      users.AssignmentResearches.objects.filter(template=t, research__hide=False)]
+        researches = [x.research_id for x in users.AssignmentResearches.objects.filter(template=t, research__hide=False)]
         global_template = t.global_template
     return JsonResponse({"title": title, "researches": researches, "global_template": global_template})
 
@@ -761,8 +792,7 @@ def update_template(request):
                 t.save()
             if t:
                 users.AssignmentResearches.objects.filter(template=t).exclude(research__pk__in=researches).delete()
-                to_add = [x for x in researches if
-                          not users.AssignmentResearches.objects.filter(template=t, research__pk=x).exists()]
+                to_add = [x for x in researches if not users.AssignmentResearches.objects.filter(template=t, research__pk=x).exists()]
                 for ta in to_add:
                     if DResearches.objects.filter(pk=ta).exists():
                         users.AssignmentResearches(template=t, research=DResearches.objects.get(pk=ta)).save()
@@ -771,9 +801,7 @@ def update_template(request):
 
 
 def modules_view(request):
-    return JsonResponse({
-        "l2_cards": SettingManager.get("l2_cards_module", default='false', default_type='b')
-    })
+    return JsonResponse({"l2_cards": SettingManager.get("l2_cards_module", default='false', default_type='b')})
 
 
 def autocomplete(request):
@@ -820,20 +848,11 @@ def autocomplete(request):
         elif t == "fsli":
             if v == "HGB":
                 p = FsliRefbookTest.objects.filter(
-                    Q(code_fsli__startswith=v) |
-                    Q(title__icontains=v) |
-                    Q(english_title__icontains=v) |
-                    Q(short_title__icontains=v) |
-                    Q(synonym__istartswith=v) |
-                    Q(synonym='Hb')
+                    Q(code_fsli__startswith=v) | Q(title__icontains=v) | Q(english_title__icontains=v) | Q(short_title__icontains=v) | Q(synonym__istartswith=v) | Q(synonym='Hb')
                 )
             else:
                 p = FsliRefbookTest.objects.filter(
-                    Q(code_fsli__startswith=v) |
-                    Q(title__icontains=v) |
-                    Q(english_title__icontains=v) |
-                    Q(short_title__icontains=v) |
-                    Q(synonym__istartswith=v)
+                    Q(code_fsli__startswith=v) | Q(title__icontains=v) | Q(english_title__icontains=v) | Q(short_title__icontains=v) | Q(synonym__istartswith=v)
                 )
 
             p = p.filter(active=True).distinct('code_fsli').order_by('code_fsli', 'ordering')[:limit]
@@ -848,8 +867,7 @@ def laborants(request):
         data = [{"pk": '-1', "fio": 'Не выбрано'}]
         for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by('fio'):
             data.append({"pk": str(d.pk), "fio": d.fio})
-    return JsonResponse({"data": data,
-                         "doc": request.user.doctorprofile.has_group("Врач-лаборант")})
+    return JsonResponse({"data": data, "doc": request.user.doctorprofile.has_group("Врач-лаборант")})
 
 
 @login_required
@@ -880,7 +898,12 @@ def users_view(request):
             otd["users"].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username})
         data.append(otd)
 
-    return JsonResponse({"departments": data})
+    spec = users.Speciality.objects.all().order_by("title")
+    spec_data = []
+    for s in spec:
+        spec_data.append({"pk": s.pk, "title": s.title})
+
+    return JsonResponse({"departments": data, "specialities": spec_data})
 
 
 @login_required
@@ -920,7 +943,8 @@ def user_view(request):
             "rmis_login": doc.rmis_login or '',
             "rmis_password": '',
             "doc_pk": doc.user.pk,
-            "personal_code": doc.personal_code
+            "personal_code": doc.personal_code,
+            "speciality": doc.specialities_id
         }
 
     return JsonResponse({"user": data})
@@ -938,7 +962,7 @@ def user_save_view(request):
     rmis_location = str(ud["rmis_location"]).strip() or None
     rmis_login = ud["rmis_login"].strip() or None
     rmis_password = ud["rmis_password"].strip() or None
-    personal_code = ud["personal_code"] or 0
+    personal_code = ud.get("personal_code", 0)
     npk = pk
     if pk == -1:
         if not User.objects.filter(username=username).exists():
@@ -982,6 +1006,7 @@ def user_save_view(request):
                 doc.users_services.add(DResearches.objects.get(pk=r))
 
             doc.podrazdeleniye_id = ud['department']
+            doc.specialities_id = ud.get('speciality', None)
             doc.fio = ud["fio"]
             doc.rmis_location = rmis_location
             doc.personal_code = personal_code
@@ -1004,6 +1029,7 @@ def user_location(request):
     rl = request.user.doctorprofile.rmis_location
     if rl and SettingManager.get("l2_rmis_queue", default='false', default_type='b'):
         from rmis_integration.client import Client
+
         c = Client(modules=['patients'])
         d = c.patients.get_reserves(date, rl)
 
@@ -1030,6 +1056,7 @@ def user_get_reserve(request):
     rl = request.user.doctorprofile.rmis_location
     if rl:
         from rmis_integration.client import Client
+
         c = Client(modules=['patients'])
         d = c.patients.get_slot(pk)
         n = directions.Napravleniya.objects.filter(rmis_slot_id=pk).first()
@@ -1037,12 +1064,7 @@ def user_get_reserve(request):
         ds = directions.Issledovaniya.objects.filter(napravleniye=n, napravleniye__isnull=False).first()
         d['direction_service'] = ds.research_id if ds else -1
         if d:
-            return JsonResponse({
-                **d,
-                "datetime": d["datetime"].strftime('%d.%m.%Y %H:%M'),
-                "patient_uid": patient_uid,
-                "pk": int(str(pk)[1:]),
-            })
+            return JsonResponse({**d, "datetime": d["datetime"].strftime('%d.%m.%Y %H:%M'), "patient_uid": patient_uid, "pk": int(str(pk)[1:])})
     return JsonResponse({})
 
 
@@ -1053,21 +1075,23 @@ def user_fill_slot(request):
     if directions.Napravleniya.objects.filter(rmis_slot_id=slot["id"]).exists():
         direction = directions.Napravleniya.objects.filter(rmis_slot_id=slot["id"])[0].pk
     else:
-        result = directions.Napravleniya.gen_napravleniya_by_issledovaniya(slot["card_pk"],
-                                                                           "",
-                                                                           None,
-                                                                           "",
-                                                                           None,
-                                                                           request.user.doctorprofile,
-                                                                           {-1: [slot_data["direction_service"]]},
-                                                                           {},
-                                                                           False,
-                                                                           {},
-                                                                           vich_code="",
-                                                                           count=1,
-                                                                           discount=0,
-                                                                           parent_iss=None,
-                                                                           rmis_slot=slot["id"])
+        result = directions.Napravleniya.gen_napravleniya_by_issledovaniya(
+            slot["card_pk"],
+            "",
+            None,
+            "",
+            None,
+            request.user.doctorprofile,
+            {-1: [slot_data["direction_service"]]},
+            {},
+            False,
+            {},
+            vich_code="",
+            count=1,
+            discount=0,
+            parent_iss=None,
+            rmis_slot=slot["id"],
+        )
         direction = result["list_id"][0]
     return JsonResponse({"direction": direction})
 
@@ -1087,8 +1111,7 @@ def job_types(request):
 @login_required
 def job_save(request):
     data = json.loads(request.body)
-    ej = directions.EmployeeJob(type_job_id=data["type"], count=data["count"],
-                                doc_execute_id=data["executor"], date_job=try_strptime(data["date"]).date())
+    ej = directions.EmployeeJob(type_job_id=data["type"], count=data["count"], doc_execute_id=data["executor"], date_job=try_strptime(data["date"]).date())
     ej.save()
     return JsonResponse({"ok": True})
 
@@ -1105,14 +1128,7 @@ def job_list(request):
             users_list.append(user)
     result = []
     for j in directions.EmployeeJob.objects.filter(doc_execute__in=users_list, date_job=date).order_by("doc_execute", "-time_save"):
-        result.append({
-            "pk": j.pk,
-            "executor": j.doc_execute.get_fio(),
-            "type": j.type_job.title,
-            "count": j.count,
-            "saved": strdatetime(j.time_save),
-            "canceled": bool(j.who_do_cancel),
-        })
+        result.append({"pk": j.pk, "executor": j.doc_execute.get_fio(), "type": j.type_job.title, "count": j.count, "saved": strdatetime(j.time_save), "canceled": bool(j.who_do_cancel)})
     return JsonResponse({"list": result})
 
 
@@ -1151,12 +1167,7 @@ def reader_status_update(request):
     if status == 'inserted':
         polis = data['polis']
         fio = data['fio']
-        cache.set(f'reader-status:{reader_id}', json.dumps({
-            "status": 'inserted',
-            "polis": polis,
-            "fio": fio,
-            "details": data['details'],
-        }), 10)
+        cache.set(f'reader-status:{reader_id}', json.dumps({"status": 'inserted', "polis": polis, "fio": fio, "details": data['details']}), 10)
     else:
         cache.set(f'reader-status:{reader_id}', '{"status": "wait"}', 10)
 

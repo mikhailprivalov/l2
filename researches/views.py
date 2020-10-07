@@ -66,25 +66,21 @@ def researches_get_one(request):
                             "about": avref.about,
                             "m": json.loads(avref.ref_m) if isinstance(avref.ref_m, str) else avref.ref_m,
                             "f": json.loads(avref.ref_f) if isinstance(avref.ref_f, str) else avref.ref_f,
-
                         }
 
-                    tmp = {"title": val.title,
-                           "pk": val.pk,
-                           "unit": val.units,
-                           "hide": val.hide,
-                           "render_type": val.render_type,
-                           "options": val.options.split(","),
-                           "type": val.variants.get_variants() if val.variants else [],
-                           "type2": val.variants2.get_variants() if val.variants2 else [],
-                           "references": {
-                               "m": ref_m,
-                               "f": ref_f,
-                               "default": -1 if not val.default_ref else val.default_ref_id,
-                               "available": av,
-                           },
-                           "num": val.sort_weight,
-                           "formula": val.formula}
+                    tmp = {
+                        "title": val.title,
+                        "pk": val.pk,
+                        "unit": val.units,
+                        "hide": val.hide,
+                        "render_type": val.render_type,
+                        "options": val.options.split(","),
+                        "type": val.variants.get_variants() if val.variants else [],
+                        "type2": val.variants2.get_variants() if val.variants2 else [],
+                        "references": {"m": ref_m, "f": ref_f, "default": -1 if not val.default_ref else val.default_ref_id, "available": av,},
+                        "num": val.sort_weight,
+                        "formula": val.formula,
+                    }
                     if val.sort_weight and val.sort_weight > 0:
                         vsr = val.sort_weight
                         if vsr in res["fractions"]:
@@ -134,10 +130,12 @@ def tubes_control(request):
         color = "#" + request.PUT["color"]
         new_tube = Tubes(title=title, color=color, short_title=request.PUT.get("short_title", ""))
         new_tube.save()
-        slog.Log(key=str(new_tube.pk), user=request.user.doctorprofile, type=1,
-                 body=json.dumps({"data": {"title": request.POST["title"],
-                                           "color": request.POST["color"],
-                                           "code": request.POST.get("code", "")}})).save()
+        slog.Log(
+            key=str(new_tube.pk),
+            user=request.user.doctorprofile,
+            type=1,
+            body=json.dumps({"data": {"title": request.POST["title"], "color": request.POST["color"], "code": request.POST.get("code", "")}}),
+        ).save()
     if request.method == "POST":
         id = int(request.POST["id"])
         title = request.POST["title"]
@@ -147,10 +145,12 @@ def tubes_control(request):
         tube.title = title
         tube.short_title = request.POST.get("code", "")
         tube.save()
-        slog.Log(key=str(tube.pk), user=request.user.doctorprofile, type=2,
-                 body=json.dumps({"data": {"title": request.POST["title"],
-                                           "color": request.POST["color"],
-                                           "code": request.POST.get("code", "")}})).save()
+        slog.Log(
+            key=str(tube.pk),
+            user=request.user.doctorprofile,
+            type=2,
+            body=json.dumps({"data": {"title": request.POST["title"], "color": request.POST["color"], "code": request.POST.get("code", "")}}),
+        ).save()
     return JsonResponse({})
 
 
@@ -184,6 +184,5 @@ def tubes_relation(request):
         return_result["id"] = relation.pk
         return_result["title"] = tube.title
         return_result["color"] = tube.color
-        slog.Log(key=str(relation.pk), user=request.user.doctorprofile, type=20,
-                 body=json.dumps({"data": {"id": tube_id}})).save()
+        slog.Log(key=str(relation.pk), user=request.user.doctorprofile, type=20, body=json.dumps({"data": {"id": tube_id}})).save()
     return JsonResponse(return_result)

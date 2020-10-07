@@ -13,8 +13,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, \
-    TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 
 from clients.models import Card, Document
 from directions.models import Napravleniya, IstochnikiFinansirovaniya
@@ -39,7 +38,7 @@ def form_01(request_data):
 
     # Получить все источники, у которых title-ПЛАТНО
     ist_f = list(IstochnikiFinansirovaniya.objects.values_list('id').filter(title__exact='Платно'))
-    ist_f_list = ([int(x[0]) for x in ist_f])
+    ist_f_list = [int(x[0]) for x in ist_f]
 
     napr = Napravleniya.objects.filter(id__in=ind_dir)
     dir_temp = []
@@ -68,11 +67,7 @@ def form_01(request_data):
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=10 * mm,
-                            rightMargin=5 * mm, topMargin=6 * mm,
-                            bottomMargin=5 * mm, allowSplitting=1,
-                            title="Форма {}".format("Лист на оплату"))
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Лист на оплату"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -128,31 +123,36 @@ def form_01(request_data):
 
     tbl = Table(opinion, colWidths=(23 * mm, 75 * mm, 100 * mm))
 
-    tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.0 * mm),
-        ('BOTTOMPADDING', (1, 0), (1, 0), 1.0 * mm),
-        ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),
-    ]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.0 * mm),
+                ('BOTTOMPADDING', (1, 0), (1, 0), 1.0 * mm),
+                ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),
+            ]
+        )
+    )
 
     objs.append(Spacer(1, 2 * mm))
     objs.append(tbl)
 
     opinion = [
-        [Paragraph('', style), Paragraph('', style), ],
-        [Paragraph('Пациент:', style), Paragraph(individual_fio, style), ],
-        [Paragraph('Паспорт:', style), Paragraph('серия: {} &nbsp;&nbsp;&nbsp;&nbsp; номер: {} &nbsp;&nbsp;&nbsp;&nbsp; дата выдачи: {}'.
-                                                 format(document_passport_serial, document_passport_num, document_passport_issued), style), ],
-        [Paragraph('Д/р:', style), Paragraph(individual_date_born, style), ],
+        [Paragraph('', style), Paragraph('', style),],
+        [Paragraph('Пациент:', style), Paragraph(individual_fio, style),],
+        [
+            Paragraph('Паспорт:', style),
+            Paragraph(
+                'серия: {} &nbsp;&nbsp;&nbsp;&nbsp; номер: {} &nbsp;&nbsp;&nbsp;&nbsp; дата выдачи: {}'.format(document_passport_serial, document_passport_num, document_passport_issued),
+                style,
+            ),
+        ],
+        [Paragraph('Д/р:', style), Paragraph(individual_date_born, style),],
     ]
 
     tbl = Table(opinion, colWidths=(23 * mm, 175 * mm))
 
-    tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.1 * mm),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-    ]))
+    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.white), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.1 * mm), ('ALIGN', (0, 0), (-1, -1), 'LEFT'),]))
 
     objs.append(Spacer(1, 2 * mm))
     objs.append(tbl)
@@ -173,33 +173,34 @@ def form_01(request_data):
     styleTCcenter.alignment = TA_CENTER
 
     opinion = [
-        [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
-         Paragraph('Информация', styleTB), Paragraph('Утвержденный перечень исследований', styleTB),
-         ],
+        [
+            Paragraph('Код услуги', styleTB),
+            Paragraph('Направление', styleTB),
+            Paragraph('Услуга', styleTB),
+            Paragraph('Информация', styleTB),
+            Paragraph('Утвержденный перечень исследований', styleTB),
+        ],
     ]
 
     example_template = [
-        [Paragraph('1.2.3', style), Paragraph('4856397', style), Paragraph('Полный гематологический анализ', style),
-         Paragraph('', style), Paragraph('', style), ],
-        [Paragraph('1.2.3', style), Paragraph('97', style), Paragraph('ЛОР', style),
-         Paragraph('каб.45', style), Paragraph('Аудиометрия, Исследование вестибулярного анализатора', style), ],
-        [Paragraph('1.2.3', style), Paragraph('4856398', style), Paragraph('Офтальмолог', style),
-         Paragraph('каб.14 с 8.00 до 15.00', style), Paragraph('биомикроскопия переднего отрезка глаза, Острота зрения, поле зрения', style), ],
-        [Paragraph('1.2', style), Paragraph('98', style), Paragraph('Рентгенография грудной клетки в 2 проекциях', style),
-         Paragraph('каб.19 с 8.00 до 15.00', style), Paragraph('', style), ],
-        [Paragraph('1.5', style), Paragraph('981', style), Paragraph('Спирометрия', style),
-         Paragraph('каб.16 с 9.00 до 15.00', style), Paragraph('', style), ],
+        [Paragraph('1.2.3', style), Paragraph('4856397', style), Paragraph('Полный гематологический анализ', style), Paragraph('', style), Paragraph('', style),],
+        [Paragraph('1.2.3', style), Paragraph('97', style), Paragraph('ЛОР', style), Paragraph('каб.45', style), Paragraph('Аудиометрия, Исследование вестибулярного анализатора', style),],
+        [
+            Paragraph('1.2.3', style),
+            Paragraph('4856398', style),
+            Paragraph('Офтальмолог', style),
+            Paragraph('каб.14 с 8.00 до 15.00', style),
+            Paragraph('биомикроскопия переднего отрезка глаза, Острота зрения, поле зрения', style),
+        ],
+        [Paragraph('1.2', style), Paragraph('98', style), Paragraph('Рентгенография грудной клетки в 2 проекциях', style), Paragraph('каб.19 с 8.00 до 15.00', style), Paragraph('', style),],
+        [Paragraph('1.5', style), Paragraph('981', style), Paragraph('Спирометрия', style), Paragraph('каб.16 с 9.00 до 15.00', style), Paragraph('', style),],
     ]
 
     opinion.extend(example_template)
 
     tbl = Table(opinion, colWidths=(18 * mm, 25 * mm, 52 * mm, 45 * mm, 59 * mm))
 
-    tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
+    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
 
     objs.append(Spacer(1, 2 * mm))
     objs.append(tbl)

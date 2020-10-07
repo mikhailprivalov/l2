@@ -28,32 +28,25 @@ class DoctorProfile(models.Model):
     """
     Профили врачей
     """
+
     labtypes = (
         (0, "Не из лаборатории"),
         (1, "Врач"),
         (2, "Лаборант"),
     )
-    user = models.OneToOneField(User, null=True, blank=True, help_text='Ссылка на Django-аккаунт',
-                                on_delete=models.CASCADE)
-    specialities = models.ForeignKey(Speciality, blank=True, default=None, null=True,
-                                     help_text='Специальности пользователя', on_delete=models.CASCADE)
+    user = models.OneToOneField(User, null=True, blank=True, help_text='Ссылка на Django-аккаунт', on_delete=models.CASCADE)
+    specialities = models.ForeignKey(Speciality, blank=True, default=None, null=True, help_text='Специальности пользователя', on_delete=models.CASCADE)
     fio = models.CharField(max_length=255, help_text='ФИО')
-    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True,
-                                       on_delete=models.CASCADE)
-    isLDAP_user = models.BooleanField(default=False, blank=True,
-                                      help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
-    labtype = models.IntegerField(choices=labtypes, default=0, blank=True,
-                                  help_text='Категория профиля для лаборатории')
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
+    isLDAP_user = models.BooleanField(default=False, blank=True, help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
+    labtype = models.IntegerField(choices=labtypes, default=0, blank=True, help_text='Категория профиля для лаборатории')
     login_id = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Код авторизации')
 
-    restricted_to_direct = models.ManyToManyField('directory.Researches', blank=True,
-                                                  help_text='Запрет на выдачу направлений с исследованиями')
-    users_services = models.ManyToManyField('directory.Researches', related_name='users_services', blank=True,
-                                            help_text='Услуги, оказываемые пользователем')
+    restricted_to_direct = models.ManyToManyField('directory.Researches', blank=True, help_text='Запрет на выдачу направлений с исследованиями')
+    users_services = models.ManyToManyField('directory.Researches', related_name='users_services', blank=True, help_text='Услуги, оказываемые пользователем')
     personal_code = models.CharField(default='0', blank=True, max_length=5, help_text='Код врача для ТФОМС внутри МО')
     rmis_location = models.IntegerField(default=None, blank=True, null=True)
-    local_location = models.CharField(default='', blank=True, null=True, max_length=20,
-                                      help_text='Номера очередей (pk) через запятую', db_index=True)
+    local_location = models.CharField(default='', blank=True, null=True, max_length=20, help_text='Номера очередей (pk) через запятую', db_index=True)
     rmis_login = models.CharField(default='', blank=True, null=True, max_length=50, help_text='РМИС логин')
     rmis_password = models.CharField(default='', blank=True, null=True, max_length=50, help_text='РМИС пароль')
 
@@ -118,13 +111,11 @@ class DoctorProfile(models.Model):
 class AssignmentTemplates(models.Model):
     title = models.CharField(max_length=40)
     doc = models.ForeignKey(DoctorProfile, null=True, blank=True, on_delete=models.CASCADE)
-    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, related_name='podr',
-                                       on_delete=models.CASCADE)
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, related_name='podr', on_delete=models.CASCADE)
     global_template = models.BooleanField(default=True, blank=True)
 
     def __str__(self):
-        return (self.title + " | Шаблон для ") + (
-            str(self.doc) if self.doc else str(self.podrazdeleniye) if self.podrazdeleniye else "всех")
+        return (self.title + " | Шаблон для ") + (str(self.doc) if self.doc else str(self.podrazdeleniye) if self.podrazdeleniye else "всех")
 
     class Meta:
         verbose_name = 'Шаблон назначений'

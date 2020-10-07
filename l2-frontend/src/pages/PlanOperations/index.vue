@@ -4,9 +4,6 @@
     <Filters :filters="filters" :hirurgs="hirurgsWithEmpty" :anestesiologs="anestesiologsWithEmpty"
              :departments="departments"/>
     <div class="buttons">
-      <button class="btn btn-blue-nb" @click="add_data" v-if="can_edit_operations">
-        Добавить запись
-      </button>
       <button class="btn btn-blue-nb" @click="load_data">
         Обновить
       </button>
@@ -43,14 +40,12 @@
       <tr v-if="data.length === 0"><td colspan="8" style="text-align: center">нет данных</td></tr>
       </tbody>
     </table>
-    <plan-operation-edit v-if="edit_plan_operations" :pk_plan="pk_plan"/>
   </div>
 
 </template>
 
 
 <script>
-  import PlanOperationEdit from '../../modals/PlanOperationEdit'
   import plans_point from '../../api/plans-point'
   import moment from "moment";
   import Filters from "./components/Filters";
@@ -63,14 +58,12 @@
   export default {
     components: {
       Filters,
-      PlanOperationEdit,
       Row,
     },
     name: "PlanOperations",
     data() {
       return {
         title: 'План операций',
-        edit_plan_operations: false,
         pk_plan: '',
         data: [],
         hirurgs: [],
@@ -86,9 +79,6 @@
     },
     mounted() {
       this.init();
-      this.$root.$on('hide_plan_operations', () => {
-        this.edit_plan_operations = false
-      });
       this.$root.$on('reload-plans', () => {
         this.load_data();
       });
@@ -112,9 +102,6 @@
       hirurgsReversed() {
         return flatten(this.hirurgsWithEmpty.map(x => x.children).filter(Boolean))
           .reduce((a, b) => ({...a, [b.id]: b}), {});
-      },
-      can_edit_operations() {
-        return (this.$store.getters.user_data.groups || []).includes('Управление планами операций')
       },
       forms() {
         return planOperations.map(f => {
@@ -146,10 +133,6 @@
     methods: {
       async open_form_planOperations() {
         window.open(this.forms[0].url)
-      },
-      add_data() {
-        this.edit_plan_operations = true
-        this.pk_plan = -1
       },
       async init() {
         if (this.hirurgs.length === 0) {

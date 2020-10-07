@@ -541,13 +541,13 @@
     "@babel/helper-skip-transparent-expression-wrappers" "^7.11.0"
     "@babel/plugin-syntax-optional-chaining" "^7.8.0"
 
-"@babel/plugin-proposal-pipeline-operator@^7.8.3":
-  version "7.8.3"
-  resolved "https://registry.yarnpkg.com/@babel/plugin-proposal-pipeline-operator/-/plugin-proposal-pipeline-operator-7.8.3.tgz#c3569228e7466f91bfff7f1c1ae18fb5d36b3097"
-  integrity sha512-Z0qV3aUYoLUAnVLdfLTlz/GJYfcrbX7Mhrp897Twik29wQseAFAAXQ4TPvN1oswVBHdN74sLPIn9HVfTXtjuQA==
+"@babel/plugin-proposal-pipeline-operator@^7.10.5":
+  version "7.10.5"
+  resolved "https://registry.yarnpkg.com/@babel/plugin-proposal-pipeline-operator/-/plugin-proposal-pipeline-operator-7.10.5.tgz#0fa2871dbfb74efe19eeb17722032056cb5697f3"
+  integrity sha512-tCpZ46KUAHgFoXsH593k9sX/ZKsNb4NlTGNif8PdlmkGbtYdbTQi6zNv8yibpRf+3sQFElOBLyNo3I5ZwVu90g==
   dependencies:
-    "@babel/helper-plugin-utils" "^7.8.3"
-    "@babel/plugin-syntax-pipeline-operator" "^7.8.3"
+    "@babel/helper-plugin-utils" "^7.10.4"
+    "@babel/plugin-syntax-pipeline-operator" "^7.10.4"
 
 "@babel/plugin-proposal-private-methods@^7.10.4":
   version "7.10.4"
@@ -629,12 +629,12 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.0.0"
 
-"@babel/plugin-syntax-import-meta@^7.8.3":
-  version "7.8.3"
-  resolved "https://registry.yarnpkg.com/@babel/plugin-syntax-import-meta/-/plugin-syntax-import-meta-7.8.3.tgz#230afff79d3ccc215b5944b438e4e266daf3d84d"
-  integrity sha512-vYiGd4wQ9gx0Lngb7+bPCwQXGK/PR6FeTIJ+TIOlq+OfOKG/kCAOO2+IBac3oMM9qV7/fU76hfcqxUaLKZf1hQ==
+"@babel/plugin-syntax-import-meta@^7.10.4":
+  version "7.10.4"
+  resolved "https://registry.yarnpkg.com/@babel/plugin-syntax-import-meta/-/plugin-syntax-import-meta-7.10.4.tgz#ee601348c370fa334d2207be158777496521fd51"
+  integrity sha512-Yqfm+XDx0+Prh3VSeEQCPU81yC+JWZ2pDPFSS4ZdpfZhp4MkFMaDC1UqseovEKwSUpnIL7+vK+Clp7bfh0iD7g==
   dependencies:
-    "@babel/helper-plugin-utils" "^7.8.3"
+    "@babel/helper-plugin-utils" "^7.10.4"
 
 "@babel/plugin-syntax-json-strings@^7.8.0":
   version "7.8.3"
@@ -685,12 +685,12 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.8.0"
 
-"@babel/plugin-syntax-pipeline-operator@^7.8.3":
-  version "7.8.3"
-  resolved "https://registry.yarnpkg.com/@babel/plugin-syntax-pipeline-operator/-/plugin-syntax-pipeline-operator-7.8.3.tgz#945d9f13958408e2b1048f6ebe03f370d390aaca"
-  integrity sha512-GhiBvlXZLWeP+MjKaEv33KmiR/QMCv4iCwz1AuuAp7pHxBvOxxyQmIPukh+N/py6PRLYG10bvRCNeenG34QbDA==
+"@babel/plugin-syntax-pipeline-operator@^7.10.4":
+  version "7.10.4"
+  resolved "https://registry.yarnpkg.com/@babel/plugin-syntax-pipeline-operator/-/plugin-syntax-pipeline-operator-7.10.4.tgz#31bf327cf780dd60e0444fd98561119795247a6c"
+  integrity sha512-QOmXevisZebt9pBkMdDdXWg+fndB8dT/puwSKKu/1K3P4oBwmydN/4dX1hdrNvPHbw4xE+ocIoEus7c4eh7Igg==
   dependencies:
-    "@babel/helper-plugin-utils" "^7.8.3"
+    "@babel/helper-plugin-utils" "^7.10.4"
 
 "@babel/plugin-syntax-throw-expressions@^7.10.4":
   version "7.10.4"
@@ -1052,10 +1052,10 @@
     "@babel/types" "^7.4.4"
     esutils "^2.0.2"
 
-"@babel/preset-stage-1@^7.0.0":
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/@babel/preset-stage-1/-/preset-stage-1-7.0.0.tgz#e06be32a4055739f355057473ccbbb969e52d12c"
-  integrity sha512-5uQtayYgYrdHJIpwN8c4FH1kIStsL2/n1EBs7UU/nctswPLHSNNDUaslYlJvMFqlB5tGejnXLKKj0Jn/+aitUw==
+"@babel/preset-stage-1@^7.8.3":
+  version "7.8.3"
+  resolved "https://registry.yarnpkg.com/@babel/preset-stage-1/-/preset-stage-1-7.8.3.tgz#065f2f372ef6798485e5c593386b8d52b193e9d5"
+  integrity sha512-ukHsqBrQ+5qex3Lq9HwFjv04lGoiv+a9vXH3q9DDhOIMkH080/DvhB8pU78c09r5NmyFqNL4WR1fGdLy/adKfg==
 
 "@babel/runtime@^7.3.1":
   version "7.10.5"
@@ -2333,18 +2333,6 @@ cosmiconfig@^2.1.0, cosmiconfig@^2.1.1:
     parse-json "^2.2.0"
     require-from-string "^1.1.0"
 
-coveralls@^3.0.2:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/coveralls/-/coveralls-3.0.2.tgz#f5a0bcd90ca4e64e088b710fa8dda640aea4884f"
-  integrity sha512-Tv0LKe/MkBOilH2v7WBiTBdudg2ChfGbdXafc/s330djpF3zKOmuehTeRwjXWc7pzfj9FrDUTA7tEx6Div8NFw==
-  dependencies:
-    growl "~> 1.10.0"
-    js-yaml "^3.11.0"
-    lcov-parse "^0.0.10"
-    log-driver "^1.2.7"
-    minimist "^1.2.0"
-    request "^2.85.0"
-
 create-ecdh@^4.0.0:
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/create-ecdh/-/create-ecdh-4.0.3.tgz#c9111b6f33045c4697f144787f9254cdc77c45ff"
@@ -3197,11 +3185,6 @@ faye-websocket@~0.11.1:
   dependencies:
     websocket-driver ">=0.5.1"
 
-ferrocarriloeste@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/ferrocarriloeste/-/ferrocarriloeste-1.0.1.tgz#1613d81db8e79e451cda372ae40db97680e5da0c"
-  integrity sha1-FhPYHbjnnkUc2jcq5A25doDl2gw=
-
 file-loader@^1.1.11:
   version "1.1.11"
   resolved "https://registry.yarnpkg.com/file-loader/-/file-loader-1.1.11.tgz#6fe886449b0f2a936e43cabaac0cdbfb369506f8"
@@ -3483,11 +3466,6 @@ graceful-fs@^4.1.11, graceful-fs@^4.1.2:
   version "4.1.15"
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.15.tgz#ffb703e1066e8a0eeaa4c8b80ba9253eeefbfb00"
   integrity sha512-6uHUhOPEBgQ24HM+r6b/QwWfZq+yiFcipKFrOFiBEnWdy5sdzYoi+pJeQaPI5qOLRFqWmAXUPQNsielzdLoecA==
-
-"growl@~> 1.10.0":
-  version "1.10.5"
-  resolved "https://registry.yarnpkg.com/growl/-/growl-1.10.5.tgz#f2735dc2283674fa67478b10181059355c369e5e"
-  integrity sha512-qBr4OuELkhPenW6goKVXiv47US3clb3/IbuWF9KNKEijAy9oeHxU9IgzjvJhHkUzhaj7rOUD7+YGWqUjLp5oSA==
 
 gzip-size@^5.0.0:
   version "5.1.1"
@@ -4132,7 +4110,7 @@ js-tokens@^3.0.2:
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.2.tgz#9866df395102130e38f7f996bceb65443209c25b"
   integrity sha1-mGbfOVECEw449/mWvOtlRDIJwls=
 
-js-yaml@^3.11.0, js-yaml@^3.4.3:
+js-yaml@^3.4.3:
   version "3.12.1"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.12.1.tgz#295c8632a18a23e054cf5c9d3cecafe678167600"
   integrity sha512-um46hB9wNOKlwkHgiuyEVAybXBjwFUV0Z/RaHJblRd9DXltue9FTYvzCr9ErQrK9Adz5MU4gHWVaNUfdmrC8qA==
@@ -4263,11 +4241,6 @@ lcid@^1.0.0:
   dependencies:
     invert-kv "^1.0.0"
 
-lcov-parse@^0.0.10:
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/lcov-parse/-/lcov-parse-0.0.10.tgz#1b0b8ff9ac9c7889250582b70b71315d9da6d9a3"
-  integrity sha1-GwuP+ayceIklBYK3C3ExXZ2m2aM=
-
 leven@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/leven/-/leven-3.1.0.tgz#77891de834064cccba82ae7842bb6b14a13ed7f2"
@@ -4362,11 +4335,6 @@ lodash@^4.0.0, lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.13, lodash@^4.17.1
   version "4.17.19"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.19.tgz#e48ddedbe30b3321783c5b4301fbd353bc1e4a4b"
   integrity sha512-JNvd8XER9GQX0v2qJgsaN/mzFCNA5BRe/j8JN9d+tWyGLSodKQHKFicdwNYzWwI3wjRnaKPsGj1XkBjx/F96DQ==
-
-log-driver@^1.2.7:
-  version "1.2.7"
-  resolved "https://registry.yarnpkg.com/log-driver/-/log-driver-1.2.7.tgz#63b95021f0702fedfa2c9bb0a24e7797d71871d8"
-  integrity sha512-U7KCmLdqsGHBLeWqYlFA0V0Sl6P08EE1ZrmA9cxjUE0WVqT9qnyVDPz1kzpFEP0jdJuFnasWIfSd7fsaNXkpbg==
 
 loglevel@^1.6.8:
   version "1.6.8"
@@ -6056,7 +6024,7 @@ repeating@^2.0.0:
   dependencies:
     is-finite "^1.0.0"
 
-request@^2.85.0, request@^2.87.0, request@^2.88.0:
+request@^2.87.0, request@^2.88.0:
   version "2.88.0"
   resolved "https://registry.yarnpkg.com/request/-/request-2.88.0.tgz#9c2fca4f7d35b592efe57c7f0a55e81052124fef"
   integrity sha512-NAqBSrijGLZdM0WZNsInLJpkJokL72XYjUpnB0iwsRgxh7dB6COrHnTBNwN0E+lHDAJzu7kLAkDeY08z2/A0hg==
@@ -6577,10 +6545,10 @@ split-string@^3.0.1, split-string@^3.0.2:
   dependencies:
     extend-shallow "^3.0.0"
 
-split.js@^1.5.11:
-  version "1.5.11"
-  resolved "https://registry.yarnpkg.com/split.js/-/split.js-1.5.11.tgz#3654b2a8c625994e33c531df5c4dea83ca8af011"
-  integrity sha512-ec0sAbWnaMGpNHWo1ZgIlF3Mx7GzSyaO0GlcEBZGIFZQwYPPkbDV6JRpDmpzIshVig7USREuEPudy0ygQaskXg==
+split.js@^1.6.2:
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/split.js/-/split.js-1.6.2.tgz#b8c63aeef2b15d84a003ead09e7def6ad166bb40"
+  integrity sha512-72C7zcQePzlmWqPOKkB2Ro0sUmnWSx+qEWXjLJKk6Qp4jAkFRz1hJgJb+ay6ZQyz/Aw9r8N/PZiCEKbPVpFoDQ==
 
 sprintf-js@~1.0.2:
   version "1.0.3"
@@ -7299,13 +7267,11 @@ vue-hot-reload-api@^2.2.0:
   resolved "https://registry.yarnpkg.com/vue-hot-reload-api/-/vue-hot-reload-api-2.3.1.tgz#b2d3d95402a811602380783ea4f566eb875569a2"
   integrity sha512-AA86yKZ5uOKz87/q1UpngEXhbRkaYg1b7HMMVRobNV1IVKqZe8oLIzo6iMocVwZXnYitlGwf2k4ZRLOZlS8oPQ==
 
-vue-input-tag@^1.0.3:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/vue-input-tag/-/vue-input-tag-1.0.7.tgz#f24a70a1d2299c0d7e95f51b9cdf984b5f0da910"
-  integrity sha512-HBbNf5A2w9mO+VKBecgUYr5CV44ssuCiPM6sM5rsInSoHjTjge8lPawc+jvFp04/c1qs/Gd6RbP7lWepy5nR5g==
+vue-input-tag@^2.0.7:
+  version "2.0.7"
+  resolved "https://registry.yarnpkg.com/vue-input-tag/-/vue-input-tag-2.0.7.tgz#daea4db750df34a8c87605f88455dc5f64e1052b"
+  integrity sha512-MiTVXg/OQ0SEPmQRPBw77akCrANAn/MUvo8U5fXLEwwtzGAASpGSru2uBvCMakDB5zF0ZV3ynkX/V8tOfSU6qA==
   dependencies:
-    coveralls "^3.0.2"
-    ferrocarriloeste "^1.0.1"
     vue "^2.5.17"
 
 vue-inputmask@^0.2.1:

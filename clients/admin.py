@@ -4,7 +4,12 @@ from django.contrib import admin
 
 @admin.register(models.Individual)
 class IndividualAdmin(admin.ModelAdmin):
-    list_display = ('family', 'name', 'patronymic', 'birthday',)
+    list_display = (
+        'family',
+        'name',
+        'patronymic',
+        'birthday',
+    )
     search_fields = ('family',)
 
 
@@ -25,7 +30,16 @@ class CardBaseAdmin(admin.ModelAdmin):
 
 @admin.register(models.Card)
 class CardAdmin(admin.ModelAdmin):
-    raw_id_fields = ('individual', 'polis',)
+    raw_id_fields = (
+        'individual',
+        'polis',
+        'mother',
+        'father',
+        'curator',
+        'agent',
+        'payer',
+    )
+
     search_fields = ('individual__family',)
 
 
@@ -41,7 +55,11 @@ class AgeCacheAdmin(admin.ModelAdmin):
 
 @admin.register(models.District)
 class DistrictAdmin(admin.ModelAdmin):
-    list_display = ('title', 'is_ginekolog', 'code_poliklinika',)
+    list_display = (
+        'title',
+        'is_ginekolog',
+        'code_poliklinika',
+    )
 
 
 @admin.register(models.DispensaryReg)
@@ -57,3 +75,11 @@ class BenefitTypeAdmin(admin.ModelAdmin):
 @admin.register(models.BenefitReg)
 class BenefitRegAdmin(admin.ModelAdmin):
     raw_id_fields = ('card',)
+
+
+@admin.register(models.DispensaryRegPlans)
+class ResDispensaryRegPlans(admin.ModelAdmin):
+    raw_id_fields = ('card',)
+    list_display = ('card', 'research', 'speciality', 'date', )
+    list_display_links = ('card', 'research', 'speciality', 'date', )
+    search_fields = ('research__title', 'speciality__title',)

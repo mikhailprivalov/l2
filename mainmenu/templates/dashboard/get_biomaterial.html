@@ -320,7 +320,7 @@
 
         function cancel_direction_pk(pk) {
             let tubes = []
-            $.each($(`#work-modal`).find(`tr[pk=${pk}] .tube-pk`), function (k, v) {
+            $.each($(`#work-modal`).find(`tr[pk=${pk}] .tube-pki`), function (k, v) {
                 tubes.push('№' + $(v).text())
             })
             if (confirm(`Отменить направление ${pk}? ${(tubes.length < 2) ? 'Ёмкость' : 'Ёмкости'} ${tubes.join(', ')} из этого направления ${(tubes.length < 2) ? 'будет не доступна' : 'будут не доступны'} для подтверждения`)) {
@@ -355,7 +355,7 @@
                 $wm.find('.allprint').prop('checked', true)
                 if (d.rows.length > 0) {
                     $.each(d.rows, function (k, v) {
-                        $wm.find('tbody').append('<tr pk=\'{3}\'><td onclick=\'toggle_check($("#work-modal tr[pk={3}]"));\' style=\'cursor: pointer\'>{0}</td><td class=\'cnc\'>{3}<br/><small><a onclick=\'cancel_direction_pk({3});return false;\' href=\'#\'>отменить</a></small></td><td onclick=\'toggle_check($("#work-modal tr[pk={3}]"));\' class=\'tube-pk\' style=\'cursor: pointer\'>{1}</td><td onclick=\'toggle_check($("#work-modal tr[pk={3}]"));\' style=\'cursor: pointer\'><div class=\'well tube\'><div><div class=\'sq\'><div class=\'color-sq\' style=\'background-color: {4}\'></div></div>{2}</div></div></td><td class=\'label-c\'><label><input class=\'custom_print\' checked type=\'checkbox\' value=\'{1}\' name=\'complete-res-fast\'/></label></td></tr>'.f(v.patient, v.pk, v.title, v.direction, v.color))
+                        $wm.find('tbody').append('<tr pk=\'{3}\'><td onclick=\'toggle_check($("#work-modal tr[pk={3}]"));\' style=\'cursor: pointer\'>{0}</td><td class=\'cnc\'>{3}<br/><small><a onclick=\'cancel_direction_pk({3});return false;\' href=\'#\'>отменить</a></small></td><td onclick=\'toggle_check($("#work-modal tr[pk={3}]"));\' class=\'tube-pki\' style=\'cursor: pointer\'>{1}</td><td onclick=\'toggle_check($("#work-modal tr[pk={3}]"));\' style=\'cursor: pointer\'><div class=\'well tube\'><div><div class=\'sq\'><div class=\'color-sq\' style=\'background-color: {4}\'></div></div>{2}</div></div></td><td class=\'label-c\'><label><input class=\'custom_print\' checked type=\'checkbox\' value=\'{1}\' name=\'complete-res-fast\'/></label></td></tr>'.f(v.patient, v.pk, v.title, v.direction, v.color))
                     })
                     $('#getconfirmbtn').prop('disabled', false)
                 }

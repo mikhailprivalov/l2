@@ -18,13 +18,8 @@ def suggest(query, resource='address', count=5):
     result = cache.get(key)
     if not result:
         url = BASE_URL.format(resource)
-        headers = {"Authorization": "Token {}".format(k),
-                   "Content-Type": "application/json"}
-        data = {"query": query, "count": count,
-                "locations_boost": [{
-                    "kladr_id": SettingManager.get("dadata_kladr_prior_city", default='38', default_type='s')
-                }]
-                }
+        headers = {"Authorization": "Token {}".format(k), "Content-Type": "application/json"}
+        data = {"query": query, "count": count, "locations_boost": [{"kladr_id": SettingManager.get("dadata_kladr_prior_city", default='38', default_type='s')}]}
         r = requests.post(url, data=json.dumps(data), headers=headers)
         result = list(map(lambda x: x.get('value', ''), r.json().get('suggestions', [])))
         cache.set(key, pickle.dumps(result, protocol=4), 24 * 3600)
