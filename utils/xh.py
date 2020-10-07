@@ -15,9 +15,9 @@ def check_valid_square_brackets(v: str):
     return count == 0
 
 
-def check_float_is_valid(str):
+def check_float_is_valid(val):
     try:
-        float(str)
+        float(val)
         return True
     except ValueError:
         return False
