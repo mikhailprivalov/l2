@@ -15,7 +15,7 @@ def check_valid_square_brackets(v: str):
     return count == 0
 
 
-def check_valid_number(str):
+def check_float_is_valid(str):
     try:
         float(str)
         return True
