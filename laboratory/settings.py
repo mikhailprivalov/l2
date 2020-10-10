@@ -29,6 +29,7 @@ INSTALLED_APPS = (
     'ajax_select',
     'health',
     'appconf.apps.AppconfConfig',
+    'manifest_loader',
     'clients',
     'users',
     'mainmenu',
@@ -49,7 +50,6 @@ INSTALLED_APPS = (
     'django_logtail',
     'corsheaders',
     'statistics_tickets',
-    'webpack_loader',
     'reports',
     'mq.apps.MqConfig',
     'cases.apps.CasesConfig',
@@ -137,7 +137,7 @@ FONTS_FOLDER = os.path.join(BASE_DIR, 'assets', 'fonts')
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-FIXTURE_DIRS = (os.path.join(BASE_DIR, 'fixtures'),)
+FIXTURE_DIRS = [os.path.join(BASE_DIR, 'fixtures')]
 AUTH_PROFILE_MODULE = 'users.models.DoctorsProfile'
 LOGGING = {
     'version': 1,
@@ -245,13 +245,8 @@ INSTALLED_APPS = [x for x in OrderedDict.fromkeys(INSTALLED_APPS_PRE_ADD + INSTA
 
 WS_URL = "ws://{}:{}/".format(WS_BASE, WS_PORT)
 
-WEBPACK_LOADER = {
-    'DEFAULT': {
-        'CACHE': not DEBUG,
-        'BUNDLE_DIR_NAME': 'webpack_bundles/',
-        'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
-        'POLL_INTERVAL': 0.1,
-        'TIMEOUT': None,
-        'IGNORE': ['.+\.hot-update.js', '.+\.map'],
-    }
+MANIFEST_LOADER = {
+    'cache': not DEBUG,
+    'output_dir': 'webpack_bundles/',
+    'manifest_file': os.path.join(BASE_DIR, 'assets/webpack_bundles/manifest.json'),
 }

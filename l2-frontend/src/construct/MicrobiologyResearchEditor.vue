@@ -420,7 +420,7 @@
     justify-content: stretch !important;
   }
 
-  /deep/ .panel-flt {
+  ::v-deep .panel-flt {
     margin: 41px;
     align-self: stretch !important;
     width: 100%;
@@ -428,7 +428,7 @@
     flex-direction: column;
   }
 
-  /deep/ .panel-body {
+  ::v-deep .panel-body {
     flex: 1;
     padding: 0;
     height: calc(100% - 91px);
@@ -571,11 +571,11 @@
     border-radius: 0;
   }
 
-  /deep/ .v-collapse-content-end {
+  ::v-deep .v-collapse-content-end {
     max-height: 10000px !important;
   }
 
-  .vc-collapse /deep/ .v-collapse-content {
+  .vc-collapse ::v-deep .v-collapse-content {
     display: none;
 
     &.v-collapse-content-end {

@@ -146,11 +146,11 @@
     justify-content: flex-start;
     align-items: center;
 
-    /deep/ .input-group-addon {
+    ::v-deep .input-group-addon {
       background-color: #eaeaea!important;
     }
 
-    /deep/ .form-control {
+    ::v-deep .form-control {
       border-radius: 0;
       border-top: none;
       border-left: none;

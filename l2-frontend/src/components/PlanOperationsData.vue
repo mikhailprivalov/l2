@@ -256,7 +256,7 @@
       flex: 0 65%;
     }
 
-    input, .row-v, /deep/ input {
+    input, .row-v, ::v-deep input {
       background: #fff;
       border: none;
       border-radius: 0 !important;
@@ -270,12 +270,12 @@
         padding: 2px 0 0 10px;
       }
 
-      input, .row-v, /deep/ input {
+      input, .row-v, ::v-deep input {
         height: 26px;
       }
     }
 
-    /deep/ input {
+    ::v-deep input {
       width: 100% !important;
     }
 
@@ -283,7 +283,7 @@
       padding: 0 0 0 0;
     }
 
-    /deep/ .input-group {
+    ::v-deep .input-group {
       border-radius: 0;
     }
   }

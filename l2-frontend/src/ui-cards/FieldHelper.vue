@@ -35,8 +35,8 @@
 </template>
 
 <script>
-  import _ from 'lodash-es';
-  import {debounce} from 'lodash-es/function'
+  import _ from 'lodash';
+  import {debounce} from 'lodash/function'
   import {LINK_FIELD, LINK_PATIENT, PrepareFormula} from '@/utils';
   import laboratoryPoint from '@/api/laboratory-point';
   import researchesPoint from '@/api/researches-point';

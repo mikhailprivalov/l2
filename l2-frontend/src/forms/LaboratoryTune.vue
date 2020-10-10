@@ -91,12 +91,12 @@
   .root {
     max-width: 650px;
 
-    /deep/ ul {
+    ::v-deep ul {
       width: auto;
       font-size: 13px;
     }
 
-    /deep/ ul li {
+    ::v-deep ul li {
       overflow: hidden;
       text-overflow: ellipsis;
       padding: 2px .25rem;
@@ -107,7 +107,7 @@
       }
     }
 
-    /deep/ input {
+    ::v-deep input {
       background: #fff;
       border: none;
       border-radius: 0 !important;
@@ -115,7 +115,7 @@
       flex: 0 100%;
     }
 
-    /deep/ .input-group {
+    ::v-deep .input-group {
       border-radius: 0;
       width: 100%;
     }
