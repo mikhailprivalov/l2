@@ -58,11 +58,11 @@ pytz==2020.1
 PyYAML==5.3.1
 redis==3.3.11
 relatorio==0.9.1
-reportlab==3.5.44
+reportlab==3.5.53
 requests==2.24.0
 requests-toolbelt==0.9.1
 selenium==3.141.0
-simplejson==3.17.0
+simplejson==3.17.2
 six==1.15.0
 socketIO-client-nexus==0.7.6
 sqlparse==0.3.1
