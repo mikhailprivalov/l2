@@ -9,7 +9,6 @@ import VuejsDialog from 'vuejs-dialog';
 import VueCollapse from 'vue2-collapse'
 import 'vuejs-dialog/dist/vuejs-dialog.min.css';
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
-import RmisLocation from './ui-cards/RmisLocation'
 import Fragment from 'vue-fragment'
 import './styles.scss';
 
@@ -52,7 +51,6 @@ new Vue({
     'PlanOperations': () => import('@/pages/PlanOperations'),
     'ResultsDepartment': () => import('@/pages/ResultsDepartment'),
     'ResultsReport': () => import('@/pages/ResultsReport'),
-    // 'RmqManagement': () => import('@/ui-cards/RmqManagement'),
     'DirectionSteps': () => import('@/ui-cards/DirectionSteps'),
     'Favorites': () => import('@/ui-cards/Favorites'),
     'OperationPlans': () => import('@/ui-cards/OperationPlans'),
@@ -61,7 +59,6 @@ new Vue({
     'Profiles': () => import('@/pages/Profiles'),
     'EmployeeJobs': () => import('@/pages/EmployeeJobs'),
     'Stationar': () => import('@/pages/Stationar'),
-    // RmisLocation,
   },
   data: {
     timeouts: {},
