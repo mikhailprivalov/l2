@@ -52,7 +52,6 @@ class PlanOperations(models.Model):
                         "card_pk": data['card_pk'],
                         "direction": direction_obj,
                         "date_operation": data['date'],
-                        "create_at": date_now.strftime("%d.%m.%y-%H:%M"),
                         "doc_operate": data['hirurg'],
                         "type_operation": type_operation,
                     }
@@ -79,7 +78,6 @@ class PlanOperations(models.Model):
                         "card_pk": data['card_pk'],
                         "direction": direction_obj,
                         "date_operation": data['date'],
-                        "update_at": date_now.strftime("%d.%m.%y-%H:%M"),
                         "doc_operate": data['hirurg'],
                         "type_operation": type_operation,
                     }

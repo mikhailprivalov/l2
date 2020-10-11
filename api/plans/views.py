@@ -3,8 +3,9 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from clients.models import Card
-from laboratory.utils import strdate, current_time
+from laboratory.utils import strdate, current_time, strfdatetime
 from plans.models import PlanOperations
+from utils.xh import json_safe_parse
 from .sql_func import get_plans_by_params_sql
 from ..sql_func import users_by_group
 from slog.models import Log
@@ -68,15 +69,16 @@ def get_plan_operations_by_params(request):
         date_raw = f"{date_raw[2]}-{date_raw[1]}-{date_raw[0]}"
         update_date = Log.objects.filter(key=i[0], type=80002)
         create_date = Log.objects.filter(key=i[0], type=80001)
-        tooltip_data = ""
+        tooltip_data = []
         for c in create_date:
             doctor = c.user.get_fio()
-            obj = json.loads(c.body)
-            tooltip_data = f" Создал: {doctor} ({obj['create_at']})\n"
+            time = strfdatetime(c.time, '%d.%m.%y-%H:%M')
+            tooltip_data.append(f'Создал: {doctor} ({time})')
         for u in update_date:
             doctor = u.user.get_fio()
-            obj = json.loads(u.body)
-            tooltip_data = f"{tooltip_data} Обновил: {doctor} ({obj['update_at']})\n"
+            time = strfdatetime(u.time, '%d.%m.%y-%H:%M')
+            tooltip_data.append(f"Обновил: {doctor} ({time})")
+
         data.append(
             {
                 "pk_plan": i[0],
@@ -90,10 +92,9 @@ def get_plan_operations_by_params(request):
                 "canceled": i[7],
                 "fio_patient": fio_patient,
                 "birthday": i[11],
-                "tooltip_data": tooltip_data,
+                "tooltip_data": '\n'.join(tooltip_data),
             }
         )
-    print(data)
 
     return JsonResponse({"result": data})
 
