@@ -477,7 +477,7 @@
     text-decoration: none;
   }
 
-  .btr /deep/ input {
+  .btr ::v-deep input {
     border-radius: 0 4px 0 0;
   }
 

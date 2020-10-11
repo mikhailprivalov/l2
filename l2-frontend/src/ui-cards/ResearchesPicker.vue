@@ -135,7 +135,7 @@
 <script>
   import * as action_types from '../store/action-types'
   import ResearchPick from './ResearchPick'
-  import {debounce} from 'lodash-es/function'
+  import {debounce} from 'lodash/function'
   import CategoryPick from "@/ui-cards/CategoryPick";
 
   export default {

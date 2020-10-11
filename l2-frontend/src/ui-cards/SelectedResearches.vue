@@ -731,7 +731,7 @@
     left: 0;
   }
 
-  .top-picker /deep/ .form-control {
+  .top-picker ::v-deep .form-control {
     border-radius: 0 !important;
     border: none;
     border-bottom: 1px solid #AAB2BD;
@@ -748,21 +748,21 @@
     top: 0;
   }
 
-  .top-picker .vich-code /deep/ .form-control {
+  .top-picker .vich-code ::v-deep .form-control {
     width: 90px;
   }
 
-  .top-picker /deep/ .input-group {
+  .top-picker ::v-deep .input-group {
     border-radius: 0;
   }
 
-  .top-picker /deep/ ul {
+  .top-picker ::v-deep ul {
     width: auto;
     right: -250px;
     font-size: 13px;
   }
 
-  .top-picker /deep/ ul li {
+  .top-picker ::v-deep ul li {
     overflow: hidden;
     text-overflow: ellipsis;
     padding: 2px .25rem;

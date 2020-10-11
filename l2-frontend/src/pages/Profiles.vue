@@ -153,7 +153,7 @@
   import * as action_types from '../store/action-types'
   import ResearchesPicker from '../ui-cards/ResearchesPicker'
   import SelectedResearches from '../ui-cards/SelectedResearches'
-  import {debounce} from 'lodash-es'
+  import {debounce} from 'lodash'
   import {mapGetters} from 'vuex'
 
   let toTranslit = function (text) {
