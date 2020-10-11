@@ -2,7 +2,7 @@ from clients.models import Card
 from django.db import models
 from users.models import DoctorProfile
 from datetime import datetime
-from laboratory.utils import current_time, strdatetime
+from laboratory.utils import current_time, strdatetime, strfdatetime
 import slog.models as slog
 import simplejson as json
 
@@ -30,8 +30,6 @@ class PlanOperations(models.Model):
             doc_anesthetist_obj = DoctorProfile.objects.filter(pk=doc_anesthetist)[0]
 
         date_now = current_time()
-        print(data['date'], type(data['date']))
-
         if data['pk_plan'] == -1:
             plan_obj = PlanOperations(
                 patient_card=patient_card,
@@ -45,12 +43,11 @@ class PlanOperations(models.Model):
                 create_at=date_now,
             )
             plan_obj.save()
-            print(plan_obj.pk)
 
             slog.Log(
                 key=plan_obj.pk,
                 type=80001,
-                body=json.dumps({"card_pk": data['card_pk'], "direction": direction_obj, "date_operation": data['date'], "create_at": strdatetime(date_now), "doc_operate": data['hirurg'],
+                body=json.dumps({"card_pk": data['card_pk'], "direction": direction_obj, "date_operation": data['date'], "create_at": date_now.strftime("%d.%m.%y-%H:%M"), "doc_operate": data['hirurg'],
                                  "type_operation": type_operation }),
                 user=doc_who_create,
             ).save()
@@ -70,7 +67,7 @@ class PlanOperations(models.Model):
                 key=data['pk_plan'],
                 type=80002,
                 body=json.dumps({"card_pk": data['card_pk'], "direction": direction_obj,
-                                 "date_operation": data['date'], "update_at": strdatetime(date_now),
+                                 "date_operation": data['date'], "update_at": date_now.strftime("%d.%m.%y-%H:%M"),
                                  "doc_operate": data['hirurg'], "type_operation": type_operation,
                                  }),
                 user=doc_who_create,

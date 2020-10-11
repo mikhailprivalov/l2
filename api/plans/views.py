@@ -72,11 +72,11 @@ def get_plan_operations_by_params(request):
         for c in create_date:
             doctor = c.user.get_fio()
             obj = json.loads(c.body)
-            tooltip_data = f" Создал: {doctor} ){obj['create_at'][:-3]})\n"
+            tooltip_data = f" Создал: {doctor} ){obj['create_at']})\n"
         for u in update_date:
             doctor = u.user.get_fio()
             obj = json.loads(u.body)
-            tooltip_data = f"{tooltip_data} Обновил: {doctor} ({obj['update_at'][:-3]})\n"
+            tooltip_data = f"{tooltip_data} Обновил: {doctor} ({obj['update_at']})\n"
         data.append(
             {
                 "pk_plan": i[0],
