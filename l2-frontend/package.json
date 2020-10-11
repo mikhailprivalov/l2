@@ -16,7 +16,7 @@
     "@riophae/vue-treeselect": "^0.4.0",
     "animate.css": "^4.1.1",
     "apexcharts": "^3.19.3",
-    "axios": "^0.19.2",
+    "axios": "^0.20.0",
     "bootflat": "^2.0.4",
     "bootstrap3": "^3.3.5",
     "element-ui": "^2.13.0",
