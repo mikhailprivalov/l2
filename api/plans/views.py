@@ -5,7 +5,6 @@ from django.http import JsonResponse
 from clients.models import Card
 from laboratory.utils import strdate, current_time, strfdatetime
 from plans.models import PlanOperations
-from utils.xh import json_safe_parse
 from .sql_func import get_plans_by_params_sql
 from ..sql_func import users_by_group
 from slog.models import Log
