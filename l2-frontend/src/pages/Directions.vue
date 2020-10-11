@@ -375,16 +375,16 @@
     background-color: #ffdb4d;
     border-color: #000;
 
-    /deep/ th, /deep/ td {
+    ::v-deep th, ::v-deep td {
       border-color: #000;
     }
 
-    /deep/ a {
+    ::v-deep a {
       color: #000;
       text-decoration: dotted underline;
     }
 
-    /deep/ a:hover {
+    ::v-deep a:hover {
       text-decoration: none;
     }
   }

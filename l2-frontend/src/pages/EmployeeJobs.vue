@@ -302,7 +302,7 @@
     justify-content: flex-start;
     align-items: center;
 
-    /deep/ .form-control {
+    ::v-deep .form-control {
       border-radius: 0;
       border-top: none;
       border-left: none;

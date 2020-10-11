@@ -1,58 +1,58 @@
-const path = require('path')
-const webpack = require('webpack')
-const BundleTracker = require('webpack-bundle-tracker')
-const CleanWebpackPlugin = require('clean-webpack-plugin')
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
-// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+const webpack = require('webpack');
+const path = require('path');
+const {VueLoaderPlugin} = require('vue-loader');
+const LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+const ManifestPlugin = require('webpack-manifest-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const TerserJSPlugin = require('terser-webpack-plugin');
 
-module.exports = {
-  entry: {
-    main: ['./src/main.js', './src/main.scss'],
-  },
+const isDev = process.env.NODE_ENV !== 'production';
+
+const config = {
+  entry: './src/main.js',
   output: {
     path: path.resolve(__dirname, '../assets/webpack_bundles/'),
+    filename: '[name].[contenthash].js',
     publicPath: '/static/webpack_bundles/',
-    filename: '[name]-[hash].js'
   },
-  plugins: [
-    new CleanWebpackPlugin(['../assets/webpack_bundles/*.*', '../static/webpack_bundles/*.*'], {allowExternal: true}),
-    new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /ru/),
-    new ExtractTextPlugin({filename: '[name]-[hash].css', allChunks: true,}),
-    new BundleTracker({filename: '../webpack-stats.json'}),
-  ],
   module: {
     rules: [
       {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        loader: 'babel-loader',
+      }, {
+        test: /.vue$/,
+        loader: 'vue-loader'
+      },
+      {
         test: /\.css$/,
-        include: /node_modules/,
         use: [
-          'style-loader', 'css-loader',
+          'vue-style-loader',
+          MiniCssExtractPlugin.loader,
+          'css-loader',
+        ]
+      },
+      {
+        test: /\.scss$/,
+        use: [
+          'vue-style-loader',
+          MiniCssExtractPlugin.loader,
+          'css-loader',
+          {
+            loader: 'sass-loader',
+          },
         ],
-      },
-      {
-        test: /\.(sass|scss)$/,
-        loader: ExtractTextPlugin.extract([{loader: 'css-loader', options: {minimize: true}}, 'sass-loader'])
-      },
-      {
-        test: /\.vue$/,
-        loader: 'vue-loader',
-        options: {
-          loaders: {
-            'scss': [
-              'vue-style-loader',
-              'css-loader',
-              'sass-loader'
-            ]
-          }
-        }
       },
       {
         test: /\.(png|jpg|gif|svg|ttf|woff)$/,
         loader: 'file-loader',
         options: {
-          name: '[name].[ext]?[hash]'
+          name: '[name].[ext]?[contenthash]'
         }
-      }
+      },
     ]
   },
   resolve: {
@@ -62,20 +62,60 @@ module.exports = {
     },
     extensions: ['*', '.js', '.vue', '.json']
   },
-  devServer: {
-    historyApiFallback: true,
-    noInfo: true,
-    overlay: true
+  optimization: {
+    minimize: !isDev,
+    runtimeChunk: 'single',
+    splitChunks: {
+      chunks: 'all',
+      maxInitialRequests: Infinity,
+      minSize: 0,
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all'
+        },
+        styles: {
+          test: /\.css$/,
+          name: 'styles',
+          chunks: 'all',
+          enforce: true
+        }
+      }
+    },
+    minimizer: isDev ? [] : [
+      new TerserJSPlugin({
+        cache: true,
+        parallel: true,
+      }),
+      new OptimizeCSSAssetsPlugin({
+        cssProcessorPluginOptions: {
+          preset: ['default', { discardComments: { removeAll: true } }],
+        },
+        canPrint: true,
+      }),
+    ],
   },
-  performance: {
-    hints: 'warning'
-  },
+  plugins: [
+    new VueLoaderPlugin(),
+    new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /ru/),
+    new webpack.HashedModuleIdsPlugin(),
+    new LodashModuleReplacementPlugin,
+    new MiniCssExtractPlugin({
+      filename: '[name].[contenthash].css',
+      chunkFilename: '[id].[contenthash].css',
+    }),
+    new CleanWebpackPlugin(),
+    new ManifestPlugin({
+      publicPath: 'webpack_bundles/',
+    }),
+  ],
   devtool: '#eval-source-map'
-}
+};
 
-if (process.env.NODE_ENV === 'production') {
-  module.exports.devtool = '#source-map'
-  module.exports.plugins = (module.exports.plugins || []).concat([
+if (!isDev) {
+  config.devtool = '#source-map'
+  config.plugins = (config.plugins || []).concat([
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: '"production"'
@@ -84,6 +124,4 @@ if (process.env.NODE_ENV === 'production') {
   ])
 }
 
-//module.exports.plugins = (module.exports.plugins || []).concat([
-//  new BundleAnalyzerPlugin(),
-//])
+module.exports = config;

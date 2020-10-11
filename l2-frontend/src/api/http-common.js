@@ -1,6 +1,6 @@
 import axios from 'axios'
 import * as Cookies from 'es-cookie'
-import {merge, pick} from 'lodash-es/object'
+import {merge, pick} from 'lodash/object'
 
 export const HTTP = axios.create({
   baseURL: window.location.origin + '/api',

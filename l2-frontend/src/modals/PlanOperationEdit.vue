@@ -81,7 +81,7 @@
 </script>
 
 <style scoped lang="scss">
-  /deep/ .panel-flt {
+  ::v-deep .panel-flt {
     margin: 41px;
     align-self: stretch !important;
     width: 100%;
@@ -89,7 +89,7 @@
     flex-direction: column;
   }
 
-  /deep/ .panel-body {
+  ::v-deep .panel-body {
     flex: 1;
     padding: 0;
     height: calc(100% - 91px);

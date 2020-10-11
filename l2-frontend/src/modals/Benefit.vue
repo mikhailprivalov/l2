@@ -217,7 +217,7 @@
     justify-content: stretch !important;
   }
 
-  /deep/ .panel-flt {
+  ::v-deep .panel-flt {
     margin: 41px;
     align-self: stretch !important;
     width: 100%;
@@ -225,7 +225,7 @@
     flex-direction: column;
   }
 
-  /deep/ .panel-body {
+  ::v-deep .panel-body {
     flex: 1;
     padding: 0;
     height: calc(100% - 91px);
@@ -255,7 +255,7 @@
       flex: 0 65%;
     }
 
-    input, .row-v, /deep/ input {
+    input, .row-v, ::v-deep input {
       background: #fff;
       border: none;
       border-radius: 0 !important;
@@ -269,12 +269,12 @@
         padding: 2px 0 0 10px;
       }
 
-      input, .row-v, /deep/ input {
+      input, .row-v, ::v-deep input {
         height: 26px;
       }
     }
 
-    /deep/ input {
+    ::v-deep input {
       width: 100% !important;
     }
 
@@ -282,16 +282,16 @@
       padding: 7px 0 0 10px;
     }
 
-    /deep/ .input-group {
+    ::v-deep .input-group {
       border-radius: 0;
     }
 
-    /deep/ ul {
+    ::v-deep ul {
       width: auto;
       font-size: 13px;
     }
 
-    /deep/ ul li {
+    ::v-deep ul li {
       overflow: hidden;
       text-overflow: ellipsis;
       padding: 2px .25rem;
@@ -307,7 +307,7 @@
     &.left {
       padding-right: 0 !important;
 
-      .row-t, input, .row-v, /deep/ input {
+      .row-t, input, .row-v, ::v-deep input {
         border-right: 1px solid #434a54 !important;
       }
     }
@@ -333,7 +333,7 @@
     }
   }
 
-  .str /deep/ .input-group {
+  .str ::v-deep .input-group {
     width: 100%;
   }
 
@@ -346,16 +346,16 @@
     z-index: 0;
   }
 
-  .mkb10 /deep/ .input-group {
+  .mkb10 ::v-deep .input-group {
     width: 100%;
   }
 
-  .mkb10 /deep/ ul {
+  .mkb10 ::v-deep ul {
     font-size: 13px;
     z-index: 1000;
   }
 
-  .mkb10 /deep/ ul li {
+  .mkb10 ::v-deep ul li {
     overflow: hidden;
     text-overflow: ellipsis;
     padding: 2px .25rem;

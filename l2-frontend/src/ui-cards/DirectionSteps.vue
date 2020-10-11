@@ -32,7 +32,7 @@
 <style scoped lang="scss">
 
   @media (max-width: 1116px) {
-    /deep/.el-steps--simple {
+    ::v-deep.el-steps--simple {
       padding: 5px !important;
     }
 

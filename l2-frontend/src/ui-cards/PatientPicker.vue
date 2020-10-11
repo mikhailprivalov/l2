@@ -289,7 +289,7 @@
   import patients_point from '../api/patients-point'
   import {mapGetters} from 'vuex'
   import Vaccine from '../modals/Vaccine'
-  import {debounce} from "lodash-es";
+  import {debounce} from "lodash";
 
   const tfoms_re = /^([А-яЁё\-]+) ([А-яЁё\-]+)( ([А-яЁё\-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
 

@@ -75,10 +75,13 @@
             resize: none;
         }
     </style>
+    {% load manifest %}
+
+    <link rel="stylesheet" href="{% manifest 'vendors.css' %}" />
+    <link rel="stylesheet" href="{% manifest 'main.css' %}" />
 
     <script src="{% static 'js/jquery.min.js' %}"></script>
-    {% load render_bundle from webpack_loader %}
-    {% render_bundle 'main' 'css' %}
+
     <script>
         function getFormattedDate(date) {
             const year = date.getFullYear()
@@ -868,7 +871,9 @@
         }
     </script>
     <div id="page-preloader"></div>
-    {% render_bundle 'main' 'js' %}
+    <script src="{% manifest 'vendors.js' %}"></script>
+    <script src="{% manifest 'main.js' %}"></script>
+    <script src="{% manifest 'runtime.js' %}"></script>
 {% endblock %}
 {% block scripts %}{% endblock %}
 </body>

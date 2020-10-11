@@ -350,7 +350,7 @@
       margin-right: 5px;
       height: 30px !important;
 
-      /deep/ .vs__dropdown-toggle {
+      ::v-deep .vs__dropdown-toggle {
         border-radius: 0 !important;
       }
     }

@@ -9,10 +9,8 @@ import VuejsDialog from 'vuejs-dialog';
 import VueCollapse from 'vue2-collapse'
 import 'vuejs-dialog/dist/vuejs-dialog.min.css';
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
-import RmisLocation from './ui-cards/RmisLocation'
-// import * as Sentry from '@sentry/browser';
-// import * as Integrations from '@sentry/integrations';
 import Fragment from 'vue-fragment'
+import './styles.scss';
 
 
 const VueInputMask = require('vue-inputmask').default;
@@ -31,13 +29,7 @@ Vue.use(Fragment.Plugin)
 
 const promiseFinally = require('promise.prototype.finally');
 Vue.dialog.registerComponent('replace-append-modal', ReplaceAppendModal);
-promiseFinally.shim()
-
-// Sentry.init({
-//   dsn: 'https://dab77c771228499a902ea3843f187be9@sentry.io/3083627',
-//   integrations: [new Integrations.Vue({Vue, attachProps: true, logErrors: true})],
-//   environment: window.org_title || "Default L2",
-// });
+promiseFinally.shim();
 
 new Vue({
   el: '#app',
@@ -59,7 +51,6 @@ new Vue({
     'PlanOperations': () => import('@/pages/PlanOperations'),
     'ResultsDepartment': () => import('@/pages/ResultsDepartment'),
     'ResultsReport': () => import('@/pages/ResultsReport'),
-    // 'RmqManagement': () => import('@/ui-cards/RmqManagement'),
     'DirectionSteps': () => import('@/ui-cards/DirectionSteps'),
     'Favorites': () => import('@/ui-cards/Favorites'),
     'OperationPlans': () => import('@/ui-cards/OperationPlans'),
@@ -68,7 +59,6 @@ new Vue({
     'Profiles': () => import('@/pages/Profiles'),
     'EmployeeJobs': () => import('@/pages/EmployeeJobs'),
     'Stationar': () => import('@/pages/Stationar'),
-    RmisLocation,
   },
   data: {
     timeouts: {},
@@ -205,4 +195,4 @@ new Vue({
       })
     })
   }
-})
+});
