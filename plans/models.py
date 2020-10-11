@@ -2,6 +2,8 @@ from clients.models import Card
 from django.db import models
 from users.models import DoctorProfile
 from datetime import datetime
+import slog.models as slog
+import simplejson as json
 
 
 class PlanOperations(models.Model):
@@ -37,6 +39,21 @@ class PlanOperations(models.Model):
                 canceled=False,
             )
             plan_obj.save()
+
+            slog.Log(
+                key=plan_obj.pk,
+                type=80001,
+                body=json.dumps(
+                    {
+                        "card_pk": data['card_pk'],
+                        "direction": direction_obj,
+                        "date_operation": data['date'],
+                        "doc_operate": data['hirurg'],
+                        "type_operation": type_operation,
+                    }
+                ),
+                user=doc_who_create,
+            ).save()
         else:
             plan_obj = PlanOperations.objects.filter(pk=data['pk_plan'])[0]
             plan_obj.doc_operate = doc_operate_obj
@@ -49,6 +66,20 @@ class PlanOperations(models.Model):
             plan_obj.patient_card = patient_card
             plan_obj.canceled = False
             plan_obj.save()
+            slog.Log(
+                key=data['pk_plan'],
+                type=80002,
+                body=json.dumps(
+                    {
+                        "card_pk": data['card_pk'],
+                        "direction": direction_obj,
+                        "date_operation": data['date'],
+                        "doc_operate": data['hirurg'],
+                        "type_operation": type_operation,
+                    }
+                ),
+                user=doc_who_create,
+            ).save()
 
         return plan_obj.pk
 
