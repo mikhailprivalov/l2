@@ -1,0 +1,20 @@
+@import "~bootstrap3/dist/css/bootstrap.min.css";
+
+$img-src: "~bootflat/bootflat/img/check_flat/default.png";
+@import "~bootflat/bootflat/scss/bootflat";
+
+$fa-font-path: '~@fortawesome/fontawesome-free/webfonts';
+@import "~@fortawesome/fontawesome-free/scss/fontawesome";
+@import "~@fortawesome/fontawesome-free/scss/v4-shims";
+@import "~@fortawesome/fontawesome-free/scss/solid";
+
+@import "~animate.css/animate.min.css";
+
+@import "~vuejs-dialog/dist/vuejs-dialog.min.css";
+
+@import "legacy";
+@import "main";
+@import "variables";
+@import "editor";
+@import "menubar";
+@import "menububble";

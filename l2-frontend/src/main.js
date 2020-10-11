@@ -1,16 +1,20 @@
 import Vue from 'vue'
+
+import VueAutosize from 'vue-autosize';
+import VueCollapse from 'vue2-collapse'
+import Fragment from 'vue-fragment'
+import VuejsDialog from 'vuejs-dialog';
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min'
+
 import store from './store'
 import * as action_types from './store/action-types'
 import * as mutation_types from './store/mutation-types'
 import directions_point from './api/directions-point'
-import VueAutosize from 'vue-autosize';
-import VuejsDialog from 'vuejs-dialog';
-import VueCollapse from 'vue2-collapse'
-import 'vuejs-dialog/dist/vuejs-dialog.min.css';
+
+import '@openfonts/open-sans_all';
+import './styles/index.scss';
+
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
-import Fragment from 'vue-fragment'
-import './styles.scss';
 
 
 const VueInputMask = require('vue-inputmask').default;

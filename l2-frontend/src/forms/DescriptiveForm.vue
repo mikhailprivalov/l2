@@ -128,7 +128,7 @@
               </div>
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
-                    placement : 'left',
+                    placement: 'left',
                     arrow: true,
                     interactive: true,
                     theme: 'dark longread',

@@ -44,11 +44,16 @@ const config = {
           'css-loader',
           {
             loader: 'sass-loader',
+            options: {
+              sassOptions: {
+                includePaths: [path.resolve(__dirname, 'node_modules')],
+              },
+            },
           },
         ],
       },
       {
-        test: /\.(png|jpg|gif|svg|ttf|woff)$/,
+        test: /\.(png|jpg|ttf|eot|svg|gif|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
         loader: 'file-loader',
         options: {
           name: '[name].[ext]?[contenthash]'
@@ -61,7 +66,7 @@ const config = {
       'vue$': 'vue/dist/vue.esm.js',
       '@': path.resolve(__dirname, 'src'),
     },
-    extensions: ['*', '.js', '.vue', '.json']
+    extensions: ['*', '.js', '.vue', '.json'],
   },
   optimization: {
     minimize: !isDev,
@@ -76,12 +81,6 @@ const config = {
           name: 'vendors',
           chunks: 'all'
         },
-        styles: {
-          test: /\.css$/,
-          name: 'styles',
-          chunks: 'all',
-          enforce: true
-        }
       }
     },
     minimizer: isDev ? [] : [
@@ -91,7 +90,7 @@ const config = {
       }),
       new OptimizeCSSAssetsPlugin({
         cssProcessorPluginOptions: {
-          preset: ['default', { discardComments: { removeAll: true } }],
+          preset: ['default', {discardComments: {removeAll: true}}],
         },
         canPrint: true,
       }),

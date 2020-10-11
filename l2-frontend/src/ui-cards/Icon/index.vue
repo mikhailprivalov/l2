@@ -20,7 +20,7 @@
         },
         data() {
             return {
-                source: require(`./icons/${this.name}.svg`),
+                source: require(`./icons/${this.name}.svg`).default,
             };
         }
     }
