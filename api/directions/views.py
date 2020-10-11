@@ -30,6 +30,7 @@ from directions.models import (
     MicrobiologyResultCulture,
     MicrobiologyResultCultureAntibiotic,
     DirectionToUserWatch,
+    IstochnikiFinansirovaniya,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
@@ -62,10 +63,19 @@ def directions_generate(request):
         if type_card.base.forbidden_create_napr:
             result["message"] = "Для данного типа карт нельзя создать направления"
             return JsonResponse(result)
+        fin_source = p.get("fin_source")
+        fin_source_obj = (
+            IstochnikiFinansirovaniya.objects.get(pk=fin_source)
+            if fin_source.isdigit()
+            else (
+                IstochnikiFinansirovaniya.objects.filter(base=type_card.base, title=fin_source).first()
+                or IstochnikiFinansirovaniya.objects.filter(base=type_card.base).order_by('-order_weight').first()
+            )
+        )
         args = [
             p.get("card_pk"),
             p.get("diagnos"),
-            p.get("fin_source"),
+            fin_source_obj.pk,
             p.get("history_num"),
             p.get("ofname_pk"),
             request.user.doctorprofile,
@@ -578,7 +588,7 @@ def directions_services(request):
                         "department": "" if not i.research.podrazdeleniye else i.research.podrazdeleniye.get_title(),
                         "is_microbiology": i.research.is_microbiology,
                         "comment": i.localization.title if i.localization else i.comment,
-                        "tube": {"title": i.research.microbiology_tube.title, "color": i.research.microbiology_tube.color, "pk": i.pk} if i.research.is_microbiology else None
+                        "tube": {"title": i.research.microbiology_tube.title, "color": i.research.microbiology_tube.color, "pk": i.pk} if i.research.is_microbiology else None,
                     }
                 )
                 if i.research.is_microbiology:
