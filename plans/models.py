@@ -2,7 +2,6 @@ from clients.models import Card
 from django.db import models
 from users.models import DoctorProfile
 from datetime import datetime
-from laboratory.utils import current_time
 import slog.models as slog
 import simplejson as json
 
