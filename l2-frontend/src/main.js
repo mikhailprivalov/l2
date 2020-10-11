@@ -13,7 +13,6 @@ import directions_point from './api/directions-point'
 
 import '@openfonts/open-sans_all';
 import './styles/index.scss';
-import 'vuejs-dialog/dist/vuejs-dialog.min.css';
 
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
 
