@@ -68,8 +68,8 @@ def directions_generate(request):
             IstochnikiFinansirovaniya.objects.get(pk=fin_source)
             if fin_source.isdigit()
             else (
-                IstochnikiFinansirovaniya.objects.filter(base=type_card.base, title=fin_source).first()
-                or IstochnikiFinansirovaniya.objects.filter(base=type_card.base).order_by('-order_weight').first()
+                IstochnikiFinansirovaniya.objects.filter(base=type_card.base, title=fin_source, hide=False).first()
+                or IstochnikiFinansirovaniya.objects.filter(base=type_card.base, hide=False).order_by('-order_weight').first()
             )
         )
         args = [
