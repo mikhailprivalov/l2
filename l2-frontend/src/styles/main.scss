@@ -1370,6 +1370,10 @@ body > .container-fluid {
   }
 }
 
+.tippy-popper {
+  max-width: 90%;
+}
+
 .tippy-tooltip.longread-theme .tippy-content {
   text-align: left;
   white-space: pre !important;
