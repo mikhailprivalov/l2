@@ -12,24 +12,37 @@ export const HTTP = axios.create({
   }
 })
 
-export const creator = ({method = 'post', url = null, urlFmt = null, onReject={}}, resultOnCatch = null) =>
-  async (t = null, pickThis = null, moreData = {}) => {
-    let data = t ? (pickThis ? merge(pick(t, Array.isArray(pickThis) ? pickThis : [pickThis]), moreData) : t) : moreData
-    try {
-      let response
-      if (urlFmt) {
-        response = await HTTP.get(urlFmt.kwf(data))
-      } else {
-        response = await HTTP[method](url, data)
-      }
-      if (response.statusText === 'OK') {
-        return response.data
-      }
-    } catch (e) {
-      console.error(e)
+export const smartCall = async ({method = 'post', url, urlFmt = null, onReject = {}, ctx = null, moreData = {}, pickKeys}) => {
+  const data = ctx
+    ? (pickKeys ? merge(pick(ctx, Array.isArray(pickKeys) ? pickKeys : [pickThis]), moreData) : ctx)
+    : moreData;
+  try {
+    let response
+    if (urlFmt) {
+      response = await HTTP.get(urlFmt.kwf(data))
+    } else {
+      response = await HTTP[method](url, data)
     }
-    return resultOnCatch || onReject
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+    console.error(e)
   }
+  return onReject
+};
+
+export const creator = ({method = 'post', url = null, urlFmt = null, onReject={}}, resultOnCatch = null) =>
+  (ctx = null, pickKeys = null, moreData = {}) =>
+    smartCall({
+      method,
+      url,
+      urlFmt,
+      onReject: resultOnCatch || onReject,
+      ctx,
+      moreData,
+      pickKeys,
+    })
 
 export const generator = (points) => {
   const apiPoints = {};

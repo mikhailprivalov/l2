@@ -684,13 +684,14 @@
   import ResultsViewer from '../modals/ResultsViewer'
   import LastResult from '../ui-cards/LastResult'
   import IssStatus from '../ui-cards/IssStatus'
-  import {vField, vGroup} from '../components/visibility-triggers'
+  import {vField, vGroup} from '@/components/visibility-triggers'
   import DescriptiveForm from '../forms/DescriptiveForm'
   import BacMicroForm from '../forms/BacMicroForm'
   import UrlData from '../UrlData'
   import MedicalCertificates from "../ui-cards/MedicalCertificates";
-  import {enter_field, leave_field} from "../forms/utils";
+  import {enter_field, leave_field} from "@/forms/utils";
   import FastTemplates from "../forms/FastTemplates";
+  import api from "@/api";
 
   export default {
     name: 'results-paraclinic',
@@ -845,7 +846,7 @@
       },
       async load_dreg_rows() {
         this.dreg_rows_loading = true
-        this.dreg_rows = (await patients_point.loadDreg(this.data.patient, 'card_pk')).rows.filter(r => !r.date_end)
+        this.dreg_rows = (await api('patients/individuals/load-dreg', this.data.patient, 'card_pk')).rows.filter(r => !r.date_end)
         this.data.patient.has_dreg = this.dreg_rows.length > 0
         this.dreg_rows_loading = false
       },

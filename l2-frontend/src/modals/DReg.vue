@@ -189,7 +189,7 @@
 
 <script>
   import Modal from '../ui-cards/Modal'
-  import patients_point from '../api/patients-point'
+  import api from '@/api'
   import * as action_types from '../store/action-types'
   import MKBFieldForm from '../fields/MKBFieldForm'
   import moment from 'moment';
@@ -300,7 +300,7 @@
             illnes: '',
           };
         } else {
-          const d = await patients_point.loadDregDetail({pk})
+          const d = await api('patients/individuals/load-dreg-detail', {pk})
           this.edit_data = {
             ...this.edit_data,
             ...d,
@@ -323,13 +323,13 @@
       },
       async save_plan(){
         await this.$store.dispatch(action_types.INC_LOADING)
-        await patients_point.savePlan(this, ['card_pk', 'researches_data', 'researches_data_def', 'year'])
+        await api('patients/individuals/save-plan-dreg', this, ['card_pk', 'researches_data', 'researches_data_def', 'year'])
         await this.$store.dispatch(action_types.DEC_LOADING)
         okmessage('План сохранён');
       },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        await patients_point.saveDreg({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
+        await api('patients/individuals/save-dreg', {card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
         await this.$store.dispatch(action_types.DEC_LOADING)
         okmessage('Сохранено');
         this.hide_edit()
@@ -337,7 +337,7 @@
       },
       load_data() {
         this.$store.dispatch(action_types.INC_LOADING)
-        patients_point.loadDreg(this, ['card_pk', 'year']).then(({rows, researches_data, year}) => {
+        api('patients/individuals/load-dreg', this, ['card_pk', 'year']).then(({rows, researches_data, year}) => {
           this.rows = rows
           this.researches_data = researches_data
           this.researches_data_def = cloneDeep(researches_data)
