@@ -6,8 +6,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "cross-env NODE_ENV=development webpack --mode development --progress",
-    "build_prod": "cross-env NODE_ENV=production webpack --mode production --progress"
+    "build": "cross-env NODE_ENV=development webpack --mode development --no-info --quiet",
+    "build_prod": "cross-env NODE_ENV=production webpack --mode production --no-info --quiet"
   },
   "dependencies": {
     "@popperjs/core": "^2.4.0",
@@ -75,6 +75,7 @@
     "vue-template-compiler": "^2.6.12",
     "webpack": "^4.44.2",
     "webpack-cli": "^3.3.12",
-    "webpack-manifest-plugin": "^2.2.0"
+    "webpack-manifest-plugin": "^2.2.0",
+    "webpackbar": "^4.0.0"
   }
 }

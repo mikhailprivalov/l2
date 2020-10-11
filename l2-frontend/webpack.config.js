@@ -7,6 +7,7 @@ const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const TerserJSPlugin = require('terser-webpack-plugin');
+const WebpackBar = require('webpackbar');
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -109,8 +110,13 @@ const config = {
     new ManifestPlugin({
       publicPath: 'webpack_bundles/',
     }),
+    new WebpackBar({
+      profile: isDev,
+      name: 'L2 Frontend',
+    }),
   ],
-  devtool: '#eval-source-map'
+  devtool: '#eval-source-map',
+  stats: 'minimal',
 };
 
 if (!isDev) {
