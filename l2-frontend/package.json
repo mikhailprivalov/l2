@@ -6,8 +6,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "cross-env NODE_ENV=development webpack --mode development --no-info --quiet",
-    "build_prod": "cross-env NODE_ENV=production webpack --mode production --no-info --quiet"
+    "build": "cross-env NODE_ENV=development webpack --mode development",
+    "build_prod": "cross-env NODE_ENV=production webpack --mode production"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.1",
