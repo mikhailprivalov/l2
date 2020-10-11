@@ -16,7 +16,6 @@ class PlanOperations(models.Model):
     canceled = models.BooleanField(default=False, help_text='Операция отменена')
     doc_anesthetist = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_anesthetist", help_text='Кто опрерирует', on_delete=models.SET_NULL)
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_create_plan", help_text='Создатель планирвоания', on_delete=models.SET_NULL)
-    create_at = models.DateTimeField(default=None, null=True, blank=True, help_text='Дата создания', db_index=True)
 
     @staticmethod
     def save_data(data, doc_who_create):
@@ -29,7 +28,6 @@ class PlanOperations(models.Model):
         if doc_anesthetist:
             doc_anesthetist_obj = DoctorProfile.objects.filter(pk=doc_anesthetist)[0]
 
-        date_now = current_time()
         if data['pk_plan'] == -1:
             plan_obj = PlanOperations(
                 patient_card=patient_card,
@@ -40,7 +38,6 @@ class PlanOperations(models.Model):
                 doc_anesthetist=doc_anesthetist_obj,
                 doc_who_create=doc_who_create,
                 canceled=False,
-                create_at=date_now,
             )
             plan_obj.save()
 
