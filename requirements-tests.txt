@@ -29,7 +29,7 @@ gunicorn==20.0.4
 idna==2.10
 isodate==0.6.0
 jdcal==1.4.1
-Jinja2==2.10.3
+Jinja2==2.11.2
 jsonfield==3.1.0
 jsonpickle==1.4.1
 ldap3==2.7
