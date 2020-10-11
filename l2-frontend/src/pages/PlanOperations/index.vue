@@ -36,7 +36,9 @@
       </thead>
       <tbody>
       <Row :data="row" :key="row.pk_plan" v-for="row in data" :hirurgs="hirurgsReversed"
-           :anestesiologs="anestesiologsWithEmpty" />
+           :anestesiologs="anestesiologsWithEmpty"
+           v-tippy="{ placement : 'top', arrow: true, interactive: true, theme: 'dark longread',}"
+           :title="row.tooltip_data"/>
       <tr v-if="data.length === 0"><td colspan="8" style="text-align: center">нет данных</td></tr>
       </tbody>
     </table>

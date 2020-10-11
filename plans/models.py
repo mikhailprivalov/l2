@@ -2,6 +2,9 @@ from clients.models import Card
 from django.db import models
 from users.models import DoctorProfile
 from datetime import datetime
+from laboratory.utils import current_time, strdatetime
+import slog.models as slog
+import simplejson as json
 
 
 class PlanOperations(models.Model):
@@ -13,6 +16,7 @@ class PlanOperations(models.Model):
     canceled = models.BooleanField(default=False, help_text='Операция отменена')
     doc_anesthetist = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_anesthetist", help_text='Кто опрерирует', on_delete=models.SET_NULL)
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_create_plan", help_text='Создатель планирвоания', on_delete=models.SET_NULL)
+    create_at = models.DateTimeField(default=None, null=True, blank=True, help_text='Дата создания', db_index=True)
 
     @staticmethod
     def save_data(data, doc_who_create):
@@ -25,6 +29,9 @@ class PlanOperations(models.Model):
         if doc_anesthetist:
             doc_anesthetist_obj = DoctorProfile.objects.filter(pk=doc_anesthetist)[0]
 
+        date_now = current_time()
+        print(data['date'], type(data['date']))
+
         if data['pk_plan'] == -1:
             plan_obj = PlanOperations(
                 patient_card=patient_card,
@@ -35,8 +42,18 @@ class PlanOperations(models.Model):
                 doc_anesthetist=doc_anesthetist_obj,
                 doc_who_create=doc_who_create,
                 canceled=False,
+                create_at=date_now,
             )
             plan_obj.save()
+            print(plan_obj.pk)
+
+            slog.Log(
+                key=plan_obj.pk,
+                type=80001,
+                body=json.dumps({"card_pk": data['card_pk'], "direction": direction_obj, "date_operation": data['date'], "create_at": strdatetime(date_now), "doc_operate": data['hirurg'],
+                                 "type_operation": type_operation }),
+                user=doc_who_create,
+            ).save()
         else:
             plan_obj = PlanOperations.objects.filter(pk=data['pk_plan'])[0]
             plan_obj.doc_operate = doc_operate_obj
@@ -49,6 +66,15 @@ class PlanOperations(models.Model):
             plan_obj.patient_card = patient_card
             plan_obj.canceled = False
             plan_obj.save()
+            slog.Log(
+                key=data['pk_plan'],
+                type=80002,
+                body=json.dumps({"card_pk": data['card_pk'], "direction": direction_obj,
+                                 "date_operation": data['date'], "update_at": strdatetime(date_now),
+                                 "doc_operate": data['hirurg'], "type_operation": type_operation,
+                                 }),
+                user=doc_who_create,
+            ).save()
 
         return plan_obj.pk
 
