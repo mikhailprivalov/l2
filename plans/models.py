@@ -2,7 +2,7 @@ from clients.models import Card
 from django.db import models
 from users.models import DoctorProfile
 from datetime import datetime
-from laboratory.utils import current_time, strdatetime, strfdatetime
+from laboratory.utils import current_time
 import slog.models as slog
 import simplejson as json
 
@@ -47,8 +47,16 @@ class PlanOperations(models.Model):
             slog.Log(
                 key=plan_obj.pk,
                 type=80001,
-                body=json.dumps({"card_pk": data['card_pk'], "direction": direction_obj, "date_operation": data['date'], "create_at": date_now.strftime("%d.%m.%y-%H:%M"), "doc_operate": data['hirurg'],
-                                 "type_operation": type_operation }),
+                body=json.dumps(
+                    {
+                        "card_pk": data['card_pk'],
+                        "direction": direction_obj,
+                        "date_operation": data['date'],
+                        "create_at": date_now.strftime("%d.%m.%y-%H:%M"),
+                        "doc_operate": data['hirurg'],
+                        "type_operation": type_operation,
+                    }
+                ),
                 user=doc_who_create,
             ).save()
         else:
@@ -66,10 +74,16 @@ class PlanOperations(models.Model):
             slog.Log(
                 key=data['pk_plan'],
                 type=80002,
-                body=json.dumps({"card_pk": data['card_pk'], "direction": direction_obj,
-                                 "date_operation": data['date'], "update_at": date_now.strftime("%d.%m.%y-%H:%M"),
-                                 "doc_operate": data['hirurg'], "type_operation": type_operation,
-                                 }),
+                body=json.dumps(
+                    {
+                        "card_pk": data['card_pk'],
+                        "direction": direction_obj,
+                        "date_operation": data['date'],
+                        "update_at": date_now.strftime("%d.%m.%y-%H:%M"),
+                        "doc_operate": data['hirurg'],
+                        "type_operation": type_operation,
+                    }
+                ),
                 user=doc_who_create,
             ).save()
 

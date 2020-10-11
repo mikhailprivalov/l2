@@ -8,7 +8,7 @@ from plans.models import PlanOperations
 from .sql_func import get_plans_by_params_sql
 from ..sql_func import users_by_group
 from slog.models import Log
-from users.models import DoctorProfile
+
 
 @login_required
 def plan_operations_save(request):
@@ -90,7 +90,7 @@ def get_plan_operations_by_params(request):
                 "canceled": i[7],
                 "fio_patient": fio_patient,
                 "birthday": i[11],
-                "tooltip_data": tooltip_data
+                "tooltip_data": tooltip_data,
             }
         )
     print(data)
