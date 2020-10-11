@@ -235,7 +235,7 @@
       update_so(researches) {
         const s = [].concat.apply([], Object.values(researches)).map(r => ({
           value: String(r.pk),
-          label: truncate(r.full_title, 60, true),
+          label: truncate(r.full_title, 70, true),
         }))
         if (s.length === 0) {
           return
