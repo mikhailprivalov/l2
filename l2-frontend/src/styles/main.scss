@@ -2,7 +2,23 @@
   font-family: 'Open Sans', sans-serif;
 }
 
-.animated.fast {
+body, html {
+    min-height: 100%;
+}
+
+body {
+    background: #f2f2f2;
+}
+
+table {
+    background: #fff;
+}
+
+.noresize {
+    resize: none;
+}
+
+.animate__animated.fast {
   -webkit-animation-duration: .3s;
   animation-duration: .3s;
 }
@@ -1721,11 +1737,6 @@ input[type=date].form-control {
     display: inline;
   }
 }
-
-@import "./variables";
-@import "./editor";
-@import "./menubar";
-@import "./menububble";
 
 .treeselect-noborder .vue-treeselect__control {
   border: none !important;

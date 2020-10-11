@@ -26,55 +26,6 @@
     <meta name="theme-color" content="#ffffff">
 
     <title>{% block title %}{% endblock %} &mdash; {{ org_title }}</title>
-    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
-    <link href="{% static 'bootflat/css/bootflat.min.css' %}?3" rel="stylesheet">
-    <link href="{% static 'css/font-awesome.min.css' %}" rel="stylesheet">
-    <link href="{% static 'css/bootstrap-select.min.css' %}" rel="stylesheet">
-    <link href="{% static 'css/perfect-scrollbar.min.css' %}" rel="stylesheet">
-    <link href="{% static 'css/amaran.min.css' %}" rel="stylesheet">
-    <link href="{% static 'css/animate.min.css' %}" rel="stylesheet">
-    <link href="{% static 'css/tooltipster.css' %}" rel="stylesheet">
-    <link href="{% static 'css/themes/tooltipster-shadow.css' %}" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/bootstrap-datepicker3.standalone.min.css' %}" type="text/css"/>
-    <style>
-        @font-face {
-            font-family: 'Open Sans';
-            font-style: normal;
-            font-weight: 300;
-            src: local('Open Sans Light'), local('OpenSans-Light'), url('/static/fonts/OpenSans/OpenSans-Light.ttf');
-        }
-
-        @font-face {
-            font-family: 'Open Sans';
-            font-style: normal;
-            font-weight: 400;
-            src: local('Open Sans'), local('OpenSans'), url('/static/fonts/OpenSans/OpenSans-Regular.ttf')
-        }
-
-        @font-face {
-            font-family: 'Open Sans';
-            font-style: normal;
-            font-weight: 700;
-            src: local('Open Sans Bold'), local('OpenSans-Bold'), url('/static/fonts/OpenSans/OpenSans-Bold.ttf')
-        }
-
-        body, html {
-            min-height: 100%;
-        }
-
-        body {
-            background: #f2f2f2;
-        {#background: linear-gradient(to bottom, #fff, rgba(108, 122, 137, 0.04) 75%, rgba(108, 122, 137, 0.1) 100%);#}
-        }
-
-        table {
-            background: #fff;
-        }
-
-        .noresize {
-            resize: none;
-        }
-    </style>
     {% load manifest %}
 
     <link rel="stylesheet" href="{% manifest 'vendors.css' %}" />
@@ -390,14 +341,6 @@
             return s;
         }
 
-        Array.prototype.reversedCopy = function () {
-            let arr = []
-            for (let i = this.length; i--;) {
-                arr.push(this[i])
-            }
-            return arr
-        }
-
         if (!Element.prototype.closest) {
             Element.prototype.closest = function (css) {
                 let node = this;
@@ -415,36 +358,6 @@
             Array.prototype.last = function () {
                 return this[this.length - 1]
             }
-        }
-
-        function checkTime(i) {
-            if (i < 10) {
-                i = '0' + i
-            }
-            return i
-        }
-
-        function uHash() {
-            let indx = document.URL.indexOf('#')
-            if (indx === -1)
-                return ''
-            return document.URL.substr(indx + 1)
-        }
-
-        function setUHash(hash) {
-            if (hash === '' || hash === {} || hash === null) {
-                history.pushState('', document.title, window.location.pathname + window.location.search)
-                return
-            }
-            if (typeof hash === 'object') {
-                hash = JSON.stringify(hash)
-            }
-
-            history.pushState('', document.title, window.location.pathname + window.location.search + '#' + hash)
-        }
-
-        function sTitle(title) {
-            document.title = title
         }
 
         let stopped = true
@@ -494,22 +407,6 @@
                 selectAllText: 'Выбрать всё',
                 noneSelectedText: 'Ничего не выбрано'
             })
-        }
-
-        Object.getKeys = function (obj, add) {
-            if (obj === undefined || obj === null) {
-                return undefined
-            }
-            let keys = []
-            if (add !== undefined) {
-                keys = jQuery.merge(keys, add)
-            }
-            for (let key in obj) {
-                if (obj.hasOwnProperty(key)) {
-                    keys.push(key)
-                }
-            }
-            return keys
         }
 
         Object.compare = function (obj1, obj2) {
@@ -582,16 +479,13 @@
             })
 
             $(document).on("mouseenter", "table.all-hover td:not(.no-hover)", function () {
-                {#$(this).parent().addClass("cell-hover");#}
                 const i = $(this).index();
                 $(this).closest('table').find(`tr td:nth-child(${(i + 1)}):not(.no-hover)`).addClass("cell-hover");
-                {#$(this).closest('table').find('colgroup').eq(i).addClass("cell-hover");#}
             });
 
             $(document).on("mouseleave", "table.all-hover td:not(.no-hover)", function () {
                 const i = $(this).index();
                 $(this).closest('table').find(`tr td:nth-child(${(i + 1)}):not(.no-hover)`).removeClass("cell-hover");
-                {#$(this).closest('table').find('colgroup').eq(i).removeClass("cell-hover");#}
             });
         })
         let willbe_error = false
@@ -807,11 +701,12 @@
         function okblink(selector, effect) {
             if (blink_animated[selector]) return
             let e = effect || 'fadeIn'
-            $(selector).removeClass(e).removeClass('animated fast')
-            $(selector).addClass(e).addClass('animated fast')
+            e = `animate__${e}`
+            $(selector).removeClass(e).removeClass('animate__animated fast')
+            $(selector).addClass(e).addClass('animate__animated fast')
             blink_animated[selector] = true
             setTimeout(function (s) {
-                $(selector).removeClass(e).removeClass('animated fast')
+                $(selector).removeClass(e).removeClass('animate__animated fast')
                 blink_animated[s] = false
             }.bind(this, selector), 334)
         }
