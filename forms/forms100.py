@@ -725,9 +725,7 @@ def form_04(request_data):
 
     buffer = BytesIO()
     # doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("025/у"))
-    doc = SimpleDocTemplate(
-        buffer, pagesize=landscape(A5), leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("030/у")
-    )
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A5), leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("030/у"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -831,15 +829,12 @@ def form_04(request_data):
     else:
         what_times = "впервые - 1, повторно - 2"
 
-
     if reg_dipensary.how_identified == 1:
         how_identified = "обращении за лечением - 1"
     elif reg_dipensary.how_identified == 2:
         how_identified = "профилактическом осмотре - 2"
     else:
         how_identified = "обращении за лечением - 1, профилактическом осмотре - 2"
-
-
 
     content_title = [
         Indenter(left=0 * mm),
@@ -924,7 +919,7 @@ def form_04(request_data):
     if len(visits_result) < 7:
         for i in range(7 - len(visits_result)):
             visits_result.append(Paragraph('', styleT))
-    visits_result.insert(0,  Paragraph('Явился(лась)', styleT))
+    visits_result.insert(0, Paragraph('Явился(лась)', styleT))
 
     opinion = [
         [
@@ -938,7 +933,7 @@ def form_04(request_data):
             Paragraph('', styleT),
         ],
         visits_plan,
-        visits_result
+        visits_result,
     ]
 
     tbl = Table(opinion, colWidths=(40 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm))
@@ -962,11 +957,7 @@ def form_04(request_data):
     visits_result = [Paragraph('', styleT) for i in range(7)]
     visits_result.insert(0, Paragraph('Явился(лась)я', styleT))
 
-    opinion = [
-        visit_date,
-        visits_plan,
-        visits_result
-    ]
+    opinion = [visit_date, visits_plan, visits_result]
 
     tbl = Table(opinion, colWidths=(40 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm))
     tbl.setStyle(
