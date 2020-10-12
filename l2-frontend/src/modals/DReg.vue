@@ -155,6 +155,14 @@
             <MKBFieldForm v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false" />
             <input class="form-control" v-model="edit_data.diagnos" v-else readonly>
           </div>
+          <div class="radio-button-object radio-button-groups">
+            <label>Диагноз установлен</label>
+              <radio-field v-model="is_first_time" :variants="variant_is_first_time" @modified="change_index" fullWidth/>
+          </div>
+          <div class="radio-button-object radio-button-groups" style="margin-top: 15px; margin-bottom: 15px;">
+            <label>Заболевание выявлено при:</label>
+            <radio-field v-model="how_identified" :variants="variant_identified" @modified="change_index" fullWidth/>
+          </div>
           <div class="checkbox" style="padding-left: 15px;">
             <label>
               <input type="checkbox" v-model="edit_data.close"> прекращён
@@ -206,6 +214,7 @@
   import api from '@/api'
   import * as action_types from '../store/action-types'
   import MKBFieldForm from '../fields/MKBFieldForm'
+  import RadioField from '../fields/RadioField'
   import moment from 'moment';
   import {cloneDeep} from 'lodash';
 
@@ -242,7 +251,7 @@
 
   export default {
     name: 'd-reg',
-    components: {Modal, MKBFieldForm},
+    components: {Modal, MKBFieldForm, RadioField,},
     props: {
       card_pk: {
         type: Number,
@@ -270,8 +279,14 @@
           close: false,
           diagnos: '',
           illnes: '',
+          time_index: 0,
+          identified_index: 0,
         },
         edit_pk: -2,
+        is_first_time: '',
+        how_identified: '',
+        variant_is_first_time: ['не указано', 'впервые', 'повторно'],
+        variant_identified: ['не указано', 'обращении за лечением', 'профилактическом осмотре'],
       }
     },
     created() {
@@ -320,6 +335,8 @@
             close: false,
             diagnos: '',
             illnes: '',
+            time_index: 0,
+            identified_index: 0,
           };
         } else {
           const d = await api('patients/individuals/load-dreg-detail', {pk})
@@ -328,6 +345,8 @@
             ...d,
             date_end: d.date_end || this.td,
           };
+          this.is_first_time = this.variant_is_first_time[d.time_index]
+          this.how_identified = this.variant_identified[d.identified_index]
         }
         this.edit_pk = pk;
       },
@@ -348,6 +367,10 @@
         await api('patients/individuals/save-plan-dreg', this, ['card_pk', 'researches_data', 'researches_data_def', 'year'])
         await this.$store.dispatch(action_types.DEC_LOADING)
         okmessage('План сохранён');
+      },
+      change_index(){
+        this.edit_data.time_index = this.variant_is_first_time.indexOf(this.is_first_time)
+        this.edit_data.identified_index = this.variant_identified.indexOf(this.how_identified)
       },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)

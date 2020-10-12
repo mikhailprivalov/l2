@@ -798,6 +798,8 @@ def load_dreg_detail(request):
         "date_end": None if not a.date_end else a.date_end,
         "close": bool(a.date_end),
         "why_stop": a.why_stop,
+        "time_index": a.what_times,
+        "identified_index": a.how_identified,
     }
     return JsonResponse(data)
 
@@ -926,6 +928,14 @@ def save_dreg(request):
             if disp_obj.exists():
                 a.delete()
                 return JsonResponse({"ok": False, "pk": -1, "c": False})
+        c = True
+
+    if d.get('identified_index', 0) != a.how_identified:
+        a.how_identified = d.get('identified_index', 0)
+        c = True
+
+    if d.get('time_index', 0) != a.what_times:
+        a.what_times = d.get('time_index', 0)
         c = True
 
     if c:
