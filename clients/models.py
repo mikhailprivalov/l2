@@ -1048,8 +1048,8 @@ class DispensaryReg(models.Model):
     )
     date_end = models.DateField(help_text='Дата сняти с Д-учета', db_index=True, default=None, blank=True, null=True)
     why_stop = models.CharField(max_length=511, help_text='Причина снятия с Д-учета', default='', blank=True)
-    what_times = models.SmallIntegerField(choices=TIMES, default=0, help_text="Как установлен диагноз", db_index=True)
-    how_identified = models.SmallIntegerField(choices=IDENTIFIEDS, default=0, help_text="как установлен диагноз", db_index=True)
+    what_times = models.SmallIntegerField(choices=TIMES, default=0, help_text="Как установлен диагноз")
+    how_identified = models.SmallIntegerField(choices=IDENTIFIEDS, default=0, help_text="как установлен диагноз")
 
     class Meta:
         verbose_name = 'Д-учет'
