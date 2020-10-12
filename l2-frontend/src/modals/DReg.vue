@@ -265,14 +265,14 @@
           close: false,
           diagnos: '',
           illnes: '',
-          time_index: -1,
-          identified_index: -1,
+          time_index: 0,
+          identified_index: 0,
         },
         edit_pk: -2,
         is_first_time: '',
         how_identified: '',
-        variant_is_first_time: ['Не указано', 'впервые', 'повторно'],
-        variant_identified: ['Не указано', 'обращении за лечением', 'профилактическом осмотре'],
+        variant_is_first_time: ['не указано', 'впервые', 'повторно'],
+        variant_identified: ['не указано', 'обращении за лечением', 'профилактическом осмотре'],
       }
     },
     created() {
