@@ -1051,7 +1051,6 @@ class DispensaryReg(models.Model):
     what_times = models.SmallIntegerField(choices=TIMES, default=0, help_text="Как установлен диагноз", db_index=True)
     how_identified = models.SmallIntegerField(choices=IDENTIFIEDS, default=0, help_text="как установлен диагноз", db_index=True)
 
-
     class Meta:
         verbose_name = 'Д-учет'
         verbose_name_plural = 'Д-учет'
