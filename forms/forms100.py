@@ -726,7 +726,7 @@ def form_04(request_data):
     buffer = BytesIO()
     # doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("025/у"))
     doc = SimpleDocTemplate(
-        buffer, pagesize=landscape(A5), leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("Профосомотры")
+        buffer, pagesize=landscape(A5), leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("030/у")
     )
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
@@ -807,9 +807,9 @@ def form_04(request_data):
     diagnos = reg_dipensary.diagnos
     illnes = reg_dipensary.illnes
     doctor = reg_dipensary.doc_start_reg
-    doc_speciality = ""
+    doc_speciality = "____________________"
     if doctor.specialities:
-        doc_speciality = doctor.specialities.title
+        doc_speciality = f"<u>{doctor.specialities.title}</u>"
     doc_fio = doctor.fio
     date_start = reg_dipensary.date_start
     date_start = strdate(date_start, short_year=True)
@@ -836,7 +836,7 @@ def form_04(request_data):
         Spacer(1, 7 * mm),
         Paragraph(f'1. Диагноз заболевания, по поводу которого пациент подлежит диспансерному наблюдению: <u>{illnes}</u> Код по МКБ-10: <u>{diagnos}</u>', style),
         Paragraph('2.Дата заполнения медицинской карты: _____________________', style),
-        Paragraph(f'3. Специальность врача: <u>{doc_speciality}</u>{4 * space_symbol} 4.ФИО врача: <u>{doc_fio}</u>', style),
+        Paragraph(f'3. Специальность врача: {doc_speciality} {4 * space_symbol} 4.ФИО врача: <u>{doc_fio}</u>', style),
         Paragraph(f'5. Дата установления диагноза: <u>{date_start}</u> {4 * space_symbol} 6. Диагноз установлен: впервые - 1, повторно - 2.', style),
         Paragraph('7. Заболевание выявлено при: обращении за лечением -1, профилактическом осмотре - 2.', style),
         Paragraph(f'8. Дата начала диспансерного наблюдения <u>{date_start}</u> {4 * space_symbol} 9. Дата прекращения диспансерного наблюдения {date_end}', style),
@@ -853,7 +853,8 @@ def form_04(request_data):
     research_need = DispensaryPlan.objects.filter(diagnos=diagnos).order_by('research__title', 'speciality__title')
     researches_list = []
     specialities_list = []
-    visits_result = []
+    visits_result = ""
+    visits_plan = ""
     visits_research = VisitPurpose.objects.filter(title__icontains="диспансерн")
 
     current_year = datetime.datetime.now().year
@@ -861,9 +862,9 @@ def form_04(request_data):
     for i in research_need:
         if i.speciality:
             results = research_last_result_every_month(Researches.objects.filter(speciality=i.speciality), ind_card, year, visits_research)
-            dates_result = " "
-            dates_plan = " "
-            plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year=year)
+            dates_result = ""
+            dates_plan = ""
+            plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year=year).order_by('date')
             for p in plans:
                 dates_plan = f"{dates_plan} {strfdatetime(p.date, '%d.%m')};"
             for r in range(12):
@@ -873,12 +874,13 @@ def form_04(request_data):
                     else:
                         dates_result = f"{dates_result} {results[r]['date']}.{r + 1};"
             if i.is_visit:
-                visits_result.append(dates_result)
+                visits_result = dates_result
+                visits_plan = dates_plan
             else:
                 specialities_list.append(f'{i.speciality.title}-{dates_plan}-{dates_result}')
         if i.research:
             dates_plan = " "
-            plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year=year)
+            plans = DispensaryRegPlans.objects.filter(card=ind_card, research=None, speciality=i.speciality, date__year=year).order_by('date')
             for p in plans:
                 dates_plan = f"{dates_plan} {strfdatetime(p.date, '%d.%m')};"
             results = research_last_result_every_month([i.research], ind_card, year)
@@ -892,6 +894,20 @@ def form_04(request_data):
             researches_list.append(f'{i.research.title}-{dates_plan}-{dates_result}')
 
     researches_list.extend(specialities_list)
+    visits_result = visits_result.split(';')[:-1]
+    visits_plan = visits_plan.split(';')[:-1]
+    visits_plan = [Paragraph(i, styleT) for i in visits_plan]
+    if len(visits_plan) < 7:
+        for i in range(7 - len(visits_plan)):
+            visits_plan.append(Paragraph('', styleT))
+    visits_plan.insert(0, Paragraph('Назначено явиться', styleT))
+
+    visits_result = [Paragraph(i, styleT) for i in visits_result]
+    if len(visits_result) < 7:
+        for i in range(7 - len(visits_result)):
+            visits_result.append(Paragraph('', styleT))
+    visits_result.insert(0,  Paragraph('Явился(лась)', styleT))
+
     opinion = [
         [
             Paragraph('Даты посещений', styleTCenter),
@@ -903,26 +919,8 @@ def form_04(request_data):
             Paragraph('', styleT),
             Paragraph('', styleT),
         ],
-        [
-            Paragraph('Назначено явиться', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-        ],
-        [
-            Paragraph('Явился(лась)', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-        ],
+        visits_plan,
+        visits_result
     ]
 
     tbl = Table(opinion, colWidths=(40 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm))
@@ -938,6 +936,30 @@ def form_04(request_data):
     objs.append(PageBreak())
     objs.append(Paragraph('оборотная сторона ф. N 030/у', style))
     objs.append(Spacer(1, 5 * mm))
+
+    visit_date = [Paragraph('', styleT) for i in range(7)]
+    visit_date.insert(0, Paragraph('Даты посещений', styleTCenter))
+    visits_plan = [Paragraph('', styleT) for i in range(7)]
+    visits_plan.insert(0, Paragraph('Назначено явиться', styleT))
+    visits_result = [Paragraph('', styleT) for i in range(7)]
+    visits_result.insert(0, Paragraph('Явился(лась)я', styleT))
+
+    opinion = [
+        visit_date,
+        visits_plan,
+        visits_result
+    ]
+
+    tbl = Table(opinion, colWidths=(40 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+                ('SPAN', (0, 0), (-1, 0)),
+            ]
+        )
+    )
+
     objs.append(tbl)
     objs.append(Spacer(1, 5 * mm))
     objs.append(Paragraph('17. Сведения об изменении диагноза', style))
