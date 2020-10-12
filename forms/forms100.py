@@ -823,6 +823,24 @@ def form_04(request_data):
         date_end = ""
 
     why_stop = reg_dipensary.why_stop
+
+    if reg_dipensary.what_times == 1:
+        what_times = "впервые - 1"
+    elif reg_dipensary.what_times == 2:
+        what_times = "повторно - 2"
+    else:
+        what_times = "впервые - 1, повторно - 2"
+
+
+    if reg_dipensary.how_identified == 1:
+        how_identified = "обращении за лечением - 1"
+    elif reg_dipensary.how_identified == 2:
+        how_identified = "профилактическом осмотре - 2"
+    else:
+        how_identified = "обращении за лечением - 1, профилактическом осмотре - 2"
+
+
+
     content_title = [
         Indenter(left=0 * mm),
         Spacer(1, 1 * mm),
@@ -837,8 +855,8 @@ def form_04(request_data):
         Paragraph(f'1. Диагноз заболевания, по поводу которого пациент подлежит диспансерному наблюдению: <u>{illnes}</u> Код по МКБ-10: <u>{diagnos}</u>', style),
         Paragraph('2.Дата заполнения медицинской карты: _____________________', style),
         Paragraph(f'3. Специальность врача: {doc_speciality} {4 * space_symbol} 4.ФИО врача: <u>{doc_fio}</u>', style),
-        Paragraph(f'5. Дата установления диагноза: <u>{date_start}</u> {4 * space_symbol} 6. Диагноз установлен: впервые - 1, повторно - 2.', style),
-        Paragraph('7. Заболевание выявлено при: обращении за лечением -1, профилактическом осмотре - 2.', style),
+        Paragraph(f'5. Дата установления диагноза: <u>{date_start}</u> {4 * space_symbol} 6. Диагноз установлен: {what_times}', style),
+        Paragraph(f'7. Заболевание выявлено при: {how_identified}', style),
         Paragraph(f'8. Дата начала диспансерного наблюдения <u>{date_start}</u> {4 * space_symbol} 9. Дата прекращения диспансерного наблюдения {date_end}', style),
         Paragraph(f'10. Причины прекращения диспансерного наблюдения: <u>{why_stop}</u>', style),
         Paragraph("11. Фамилия, имя, отчество:&nbsp;  <font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(patient_data['fio']), style),

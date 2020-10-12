@@ -143,11 +143,11 @@
           </div>
           <div class="radio-button-object radio-button-groups">
             <label>Диагноз установлен</label>
-              <radio-field v-model="is_first_time" :variants="variant_is_first_time" fullWidth/>
+              <radio-field v-model="is_first_time" :variants="variant_is_first_time" @modified="change_index" fullWidth/>
           </div>
           <div class="radio-button-object radio-button-groups" style="margin-top: 15px; margin-bottom: 15px;">
-            <label>Заболевание выявлено</label>
-            <radio-field v-model="how_identified" :variants="variant_identified" fullWidth/>
+            <label>Заболевание выявлено при:</label>
+            <radio-field v-model="how_identified" :variants="variant_identified" @modified="change_index" fullWidth/>
           </div>
           <div class="checkbox" style="padding-left: 15px;">
             <label>
@@ -265,12 +265,14 @@
           close: false,
           diagnos: '',
           illnes: '',
+          time_index: -1,
+          identified_index: -1,
         },
         edit_pk: -2,
+        is_first_time: '',
+        how_identified: '',
         variant_is_first_time: ['Не указано', 'впервые', 'повторно'],
         variant_identified: ['Не указано', 'обращении за лечением', 'профилактическом осмотре'],
-        how_identified: '',
-        is_first_time: ''
       }
     },
     created() {
@@ -311,6 +313,8 @@
             close: false,
             diagnos: '',
             illnes: '',
+            time_index: 0,
+            identified_index: 0,
           };
         } else {
           const d = await api('patients/individuals/load-dreg-detail', {pk})
@@ -319,6 +323,8 @@
             ...d,
             date_end: d.date_end || this.td,
           };
+          this.is_first_time = this.variant_is_first_time[d.time_index]
+          this.how_identified = this.variant_identified[d.identified_index]
         }
         this.edit_pk = pk;
       },
@@ -339,6 +345,10 @@
         await api('patients/individuals/save-plan-dreg', this, ['card_pk', 'researches_data', 'researches_data_def', 'year'])
         await this.$store.dispatch(action_types.DEC_LOADING)
         okmessage('План сохранён');
+      },
+      change_index(){
+        this.edit_data.time_index = this.variant_is_first_time.indexOf(this.is_first_time)
+        this.edit_data.identified_index = this.variant_identified.indexOf(this.how_identified)
       },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
