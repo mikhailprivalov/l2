@@ -1023,6 +1023,18 @@ class AnamnesisHistory(models.Model):
 
 
 class DispensaryReg(models.Model):
+    TIMES = (
+        (0, 'не указано'),
+        (1, 'впервые'),
+        (2, 'повторно'),
+    )
+
+    IDENTIFIEDS = (
+        (0, 'не указано'),
+        (1, 'обращении за лечением'),
+        (2, 'профилактическом осмотре'),
+    )
+
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True, db_index=True)
     illnes = models.CharField(max_length=511, help_text='Заболевание по которому состоит на учете', default='', blank=True)
@@ -1036,6 +1048,9 @@ class DispensaryReg(models.Model):
     )
     date_end = models.DateField(help_text='Дата сняти с Д-учета', db_index=True, default=None, blank=True, null=True)
     why_stop = models.CharField(max_length=511, help_text='Причина снятия с Д-учета', default='', blank=True)
+    times = models.SmallIntegerField(choices=TIMES, default=0, help_text="как установлен диагноз", db_index=True)
+    how_identified = models.SmallIntegerField(choices=IDENTIFIEDS, default=0, help_text="как установлен диагноз", db_index=True)
+
 
     class Meta:
         verbose_name = 'Д-учет'

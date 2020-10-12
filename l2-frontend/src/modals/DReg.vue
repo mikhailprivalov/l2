@@ -141,6 +141,14 @@
             <MKBFieldForm v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false" />
             <input class="form-control" v-model="edit_data.diagnos" v-else readonly>
           </div>
+          <div class="radio-button-object radio-button-groups">
+            <label>Диагноз установлен</label>
+              <radio-field v-model="is_first_time" :variants="variant_is_first_time" fullWidth/>
+          </div>
+          <div class="radio-button-object radio-button-groups" style="margin-top: 15px; margin-bottom: 15px;">
+            <label>Заболевание выявлено</label>
+            <radio-field v-model="how_identified" :variants="variant_identified" fullWidth/>
+          </div>
           <div class="checkbox" style="padding-left: 15px;">
             <label>
               <input type="checkbox" v-model="edit_data.close"> прекращён
@@ -192,6 +200,7 @@
   import api from '@/api'
   import * as action_types from '../store/action-types'
   import MKBFieldForm from '../fields/MKBFieldForm'
+  import RadioField from '../fields/RadioField'
   import moment from 'moment';
   import {cloneDeep} from 'lodash';
 
@@ -228,7 +237,7 @@
 
   export default {
     name: 'd-reg',
-    components: {Modal, MKBFieldForm},
+    components: {Modal, MKBFieldForm, RadioField,},
     props: {
       card_pk: {
         type: Number,
@@ -258,6 +267,10 @@
           illnes: '',
         },
         edit_pk: -2,
+        variant_is_first_time: ['Не указано', 'впервые', 'повторно'],
+        variant_identified: ['Не указано', 'обращении за лечением', 'профилактическом осмотре'],
+        how_identified: '',
+        is_first_time: ''
       }
     },
     created() {
