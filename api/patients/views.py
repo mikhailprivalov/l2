@@ -670,6 +670,8 @@ def load_dreg(request):
                             "type": "research",
                             "research_title": i.research.title,
                             "research_pk": i.research.pk,
+                            "assign_research_pk": i.research.pk,
+                            "assignment": False,
                             "diagnoses_time": [],
                             "results": results,
                             "plans": plans,
@@ -684,11 +686,14 @@ def load_dreg(request):
                     specialities.append(i.speciality)
                     results = research_last_result_every_month(Researches.objects.filter(speciality=i.speciality), request_data["card_pk"], year, visits)
                     plans = get_dispensary_reg_plans(card, None, i.speciality, year)
+                    spec_assign_research = Researches.objects.filter(speciality=i.speciality).first()
                     specialities_data.append(
                         {
                             "type": "speciality",
                             "research_title": i.speciality.title,
                             "research_pk": i.speciality.pk,
+                            "assign_research_pk": spec_assign_research.pk if spec_assign_research else None,
+                            "assignment": False,
                             "diagnoses_time": [],
                             "results": results,
                             "plans": plans,

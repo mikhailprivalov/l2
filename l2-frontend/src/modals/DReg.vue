@@ -63,6 +63,7 @@
         <table class="table table-bordered table-condensed table-sm-pd"
                style="table-layout: fixed; font-size: 12px; margin-top: 0;">
           <colgroup>
+            <col width="30" />
             <col />
             <col width="110" />
             <col width="40" v-for="m in monthes" :key="m" />
@@ -70,6 +71,7 @@
           </colgroup>
           <thead>
             <tr>
+              <th />
               <th>Обследование (прием)</th>
               <th>МКБ-10<br>кол-во в год</th>
               <th v-for="(m, i) in monthes" :key="`th-${m}`" class="text-center">
@@ -80,7 +82,7 @@
                   <i class="fa fa-arrow-circle-down"></i>
                 </a>
               </th>
-              <th title="Сколько есть результатов в году" v-tippy="{ placement : 'top', arrow: true }"
+              <th title="Результатов в году" v-tippy="{ placement : 'top', arrow: true }"
                   class="text-center" style="font-size: 14px">
                 <i class="fa fa-times-circle-o"></i>
               </th>
@@ -88,6 +90,11 @@
           </thead>
           <tbody>
             <tr v-for="k in researches_data">
+              <td class="cl-td">
+                <label v-if="k.assign_research_pk" title="Выбор для назначения" v-tippy="{ placement : 'top', arrow: true }">
+                  <input type="checkbox" v-model="k.assignment">
+                </label>
+              </td>
               <td>{{k.research_title}}</td>
               <td>
                 <div v-for="d in k.diagnoses_time" class="mkb-year">
@@ -109,6 +116,13 @@
               <td class="text-center">
                 <div style="height: 22px;">&nbsp;</div>
                 x{{k.times}}
+              </td>
+            </tr>
+            <tr v-if="assignments.length > 0">
+              <td :colspan="4 + monthes.length">
+                <button @click="create_directions" class="btn btn-primary-nb btn-blue-nb" type="button">
+                  Создать направления по выбранным назначениям
+                </button>
               </td>
             </tr>
           </tbody>
@@ -269,7 +283,15 @@
           this.edit_data.diagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?.*/gm) &&
           this.edit_data.date_start !== '' &&
           (!this.edit_data.close || this.edit_data.date_end !== '');
-      }
+      },
+      assignments() {
+        return this.researches_data.filter(({assignment}) => assignment).map(rd => rd.assign_research_pk);
+      },
+      assignments_diagnoses() {
+        return Object.keys(this.researches_data
+          .filter(({assignment}) => assignment)
+          .reduce((a, rd) => ({...a, ...rd.diagnoses_time.reduce((b, dt) => ({...b, [dt.diagnos]: true}), {})}), {}));
+      },
     },
     methods: {
       get_date_string(year, month, day) {
@@ -362,6 +384,23 @@
           this.researches_data[j].plans = [...this.researches_data[j].plans] // Принудительно делаем перерендер
         }
         okmessage(`Столбец "${this.monthes[i]}" заполнен значением "${orig}"`)
+      },
+      create_directions() {
+        this.$root.$emit('generate-directions', {
+          type: 'direction',
+          card_pk: this.card_pk,
+          fin_source_pk: 'ОМС',
+          researches: {'-1': this.assignments},
+          diagnos: this.assignments_diagnoses.join('; '),
+          counts: {},
+          comments: {},
+          localizations: {},
+          service_locations: {},
+        });
+
+        for (const row of this.researches_data) {
+          row.assignment = false;
+        }
       },
     }
   }
