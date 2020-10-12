@@ -859,7 +859,6 @@ def load_benefit_detail(request):
 def save_dreg(request):
     rd = json.loads(request.body)
     d = rd["data"]
-    print(d)
     pk = rd["pk"]
     n = False
     create_disp_record = False
