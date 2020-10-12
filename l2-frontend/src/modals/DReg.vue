@@ -287,6 +287,11 @@
       assignments() {
         return this.researches_data.filter(({assignment}) => assignment).map(rd => rd.assign_research_pk);
       },
+      assignments_diagnoses() {
+        return Object.keys(this.researches_data
+          .filter(({assignment}) => assignment)
+          .reduce((a, rd) => ({...a, ...rd.diagnoses_time.reduce((b, dt) => ({...b, [dt.diagnos]: true}), {})}), {}));
+      },
     },
     methods: {
       get_date_string(year, month, day) {
@@ -386,7 +391,7 @@
           card_pk: this.card_pk,
           fin_source_pk: 'ОМС',
           researches: {'-1': this.assignments},
-          diagnos: '',
+          diagnos: this.assignments_diagnoses.join('; '),
           counts: {},
           comments: {},
           localizations: {},
