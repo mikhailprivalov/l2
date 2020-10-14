@@ -47,7 +47,7 @@
           </div>
           <div class="form-row">
             <div class="row-t">Пол</div>
-            <radio-field v-model="card.sex" :variants="genders" fullWidth/>
+            <radio-field v-model="card.sex" :variants="GENDERS" fullWidth/>
           </div>
         </div>
       </form>
@@ -498,89 +498,8 @@
   import Treeselect from "@riophae/vue-treeselect";
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   import forms from '../forms'
-
-  function validateSnils(snils, error = {}) {
-    let result = false
-    if (typeof snils === 'number') {
-      snils = snils.toString();
-    } else if (typeof snils !== 'string') {
-      snils = '';
-    }
-    snils = snils.replace(/-/g, '').replace(/ /g, '')
-    if (!snils.length) {
-      error.code = 1;
-      error.message = 'СНИЛС пуст';
-    } else if (/[^0-9]/.test(snils)) {
-      error.code = 2;
-      error.message = 'СНИЛС может состоять только из цифр';
-    } else if (snils.length !== 11) {
-      error.code = 3;
-      error.message = 'СНИЛС может состоять только из 11 цифр';
-    } else {
-      let sum = 0
-      for (let i = 0; i < 9; i++) {
-        sum += parseInt(snils[i]) * (9 - i);
-      }
-      let checkDigit = 0
-      if (sum < 100) {
-        checkDigit = sum;
-      } else if (sum > 101) {
-        checkDigit = parseInt(sum % 101);
-        if (checkDigit === 100) {
-          checkDigit = 0;
-        }
-      }
-      if (checkDigit === parseInt(snils.slice(-2))) {
-        result = true;
-      } else {
-        error.code = 4;
-        error.message = 'Неправильное контрольное число';
-      }
-    }
-    return result;
-  }
-
-  function capitalizeFirstLetter(string) {
-    string = SwapLayouts(string).replace(/  +/g, ' ');
-    const r = []
-    for (const s of string.split(' ')) {
-      let v = [];
-
-      for (const si of s.split('-')) {
-        v.push(si.charAt(0).toUpperCase() + si.slice(1).toLowerCase())
-      }
-
-      r.push(v.join('-'))
-    }
-    return r.join(' ').trim();
-  }
-
-  function SwapLayouts(str) {
-    const replacer = {
-      'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г',
-      'i': 'ш', 'o': 'щ', 'p': 'з', '[': 'х', ']': 'ъ', 'a': 'ф', 's': 'ы',
-      'd': 'в', 'f': 'а', 'g': 'п', 'h': 'р', 'j': 'о', 'k': 'л', 'l': 'д',
-      ';': 'ж', '\'': 'э', 'z': 'я', 'x': 'ч', 'c': 'с', 'v': 'м', 'b': 'и',
-      'n': 'т', 'm': 'ь', ',': 'б', '.': 'ю', '/': '.'
-    }
-
-    for (let i = 0; i < str.length; i++) {
-      if (replacer[str[i].toLowerCase()]) {
-        let replace
-        if (str[i] === str[i].toLowerCase()) {
-          replace = replacer[str[i].toLowerCase()]
-        } else if (str[i] === str[i].toUpperCase()) {
-          replace = replacer[str[i].toLowerCase()].toUpperCase()
-        }
-
-        str = str.replace(str[i], replace)
-      }
-    }
-
-    return str
-  }
-
-  const genders = ['м', 'ж'];
+  import {normalizeNamePart, swapLayouts, validateSnils} from "@/utils";
+  import {GENDERS} from "@/constants";
 
   export default {
     name: 'l2-card-create',
@@ -597,7 +516,7 @@
     },
     data() {
       return {
-        genders,
+        GENDERS,
         card: {
           number: '',
           number_poli: '',
@@ -609,7 +528,7 @@
           patronymic: "",
           name: "",
           main_diagnosis: "",
-          sex: genders[0],
+          sex: GENDERS[0],
           has_rmis_card: false,
           birthday: moment().format('YYYY-MM-DD'),
           individual: -1,
@@ -752,7 +671,7 @@
     },
     watch: {
       sex() {
-        let s = SwapLayouts(this.card.sex.toLowerCase())
+        let s = swapLayouts(this.card.sex.toLowerCase())
         if (s.length > 1) {
           s = s[0]
         }
@@ -763,17 +682,17 @@
         this.individuals_search()
       },
       family() {
-        this.card.family = capitalizeFirstLetter(this.card.family)
+        this.card.family = normalizeNamePart(this.card.family)
         this.individuals_search()
         this.individual_sex('family', this.card.family)
       },
       name() {
-        this.card.name = capitalizeFirstLetter(this.card.name)
+        this.card.name = normalizeNamePart(this.card.name)
         this.individuals_search()
         this.individual_sex('name', this.card.name)
       },
       patronymic() {
-        this.card.patronymic = capitalizeFirstLetter(this.card.patronymic)
+        this.card.patronymic = normalizeNamePart(this.card.patronymic)
         this.individuals_search()
         this.individual_sex('patronymic', this.card.patronymic)
       },
