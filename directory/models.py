@@ -192,7 +192,7 @@ class Researches(models.Model):
     bac_conclusion_templates = models.TextField(blank=True, default="", help_text="Шаблоны ввода для заключения")
     bac_culture_comments_templates = models.TextField(blank=True, default="", help_text="Шаблоны ввода для комментария в культуре")
     speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальность услуги', on_delete=models.SET_NULL)
-    rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True, help_text='РМИС-id')
+    rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
 
     @staticmethod
     def filter_type(t):
