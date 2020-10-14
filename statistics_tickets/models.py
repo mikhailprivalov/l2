@@ -12,7 +12,7 @@ from users.models import DoctorProfile
 class VisitPurpose(models.Model):
     title = models.CharField(max_length=255)
     hide = models.BooleanField()
-    rmis_id = models.PositiveSmallIntegerField(default=0, db_index=True, blank=True, null=True)
+    rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
 
     def __str__(self):
         return self.title
