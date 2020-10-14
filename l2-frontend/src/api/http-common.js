@@ -14,7 +14,7 @@ export const HTTP = axios.create({
 
 export const smartCall = async ({method = 'post', url, urlFmt = null, onReject = {}, ctx = null, moreData = {}, pickKeys}) => {
   const data = ctx
-    ? (pickKeys ? merge(pick(ctx, Array.isArray(pickKeys) ? pickKeys : [pickThis]), moreData) : ctx)
+    ? (pickKeys ? merge(pick(ctx, Array.isArray(pickKeys) ? pickKeys : [pickKeys]), moreData) : ctx)
     : moreData;
   try {
     let response
