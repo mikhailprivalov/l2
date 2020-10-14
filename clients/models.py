@@ -828,7 +828,7 @@ class Card(models.Model):
     anamnesis_of_life = models.TextField(default='', blank=True, help_text='Анамнез жизни')
     number_poliklinika = models.CharField(max_length=20, blank=True, default='', help_text="Идетификатор карты поликлиника", db_index=True)
     phone = models.CharField(max_length=20, blank=True, default='')
-    harmful_factor = models.CharField(max_length=32, blank=True, default='')
+    harmful_factor = models.CharField(max_length=255, blank=True, default='', help_text="Фактор вредности")
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
 

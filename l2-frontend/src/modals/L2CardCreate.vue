@@ -345,7 +345,7 @@
               <div class="row-t">Фактор вредности</div>
               <TypeAhead :delayTime="100" :getResponse="getResponse"
                          :highlighting="highlighting" :limit="10"
-                         :minChars="1" :onHit="onHit('harmful')" :selectFirst="true" maxlength="32"
+                         :minChars="1" :onHit="onHit('harmful')" :selectFirst="true" maxlength="255"
                          ref="n" src="/api/autocomplete?value=:keyword&type=harmful" v-model="card.harmful"
               />
             </div>

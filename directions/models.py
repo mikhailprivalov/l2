@@ -247,6 +247,7 @@ class Diagnoses(models.Model):
     parent = models.CharField(max_length=255, null=True, blank=True, db_index=True)
     d_type = models.CharField(max_length=255, db_index=True)
     m_type = models.IntegerField(choices=M, db_index=True)
+    rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
 
     def __str__(self):
         return "{} {}".format(self.code, self.title)
@@ -331,6 +332,7 @@ class Napravleniya(models.Model):
     additional_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Дополнительный номер')
     microbiology_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Микробиология номер')
     rmis_case_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: Номер случая')
+    rmis_visit_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: Номер посещения')
     rmis_hosp_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: ЗОГ')
     rmis_resend_services = models.BooleanField(default=False, blank=True, help_text='Переотправить услуги?', db_index=True)
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create", help_text='Создатель направления', on_delete=models.SET_NULL)
@@ -346,7 +348,7 @@ class Napravleniya(models.Model):
     )
 
     case = models.ForeignKey(cases.Case, default=None, blank=True, null=True, help_text='Случай обслуживания', on_delete=models.SET_NULL)
-    num_contract = models.CharField(max_length=25, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
+    num_contract = models.CharField(max_length=25, default=None, blank=True, null=True, db_index=True, help_text='Номер контракта')
     protect_code = models.CharField(max_length=32, default=None, blank=True, null=True, db_index=True, help_text="Контрольная сумма контракта")
 
     polis_who_give = models.TextField(blank=True, null=True, default=None, help_text="Страховая компания")
