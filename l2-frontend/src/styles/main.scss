@@ -144,7 +144,7 @@ span.isloading-wrapper {
   }
 }
 
-.table-sm-pd td:not(.ref) {
+.table-sm-pd td:not(.ref):not(.cl-td) {
   padding: 3px !important;
 }
 

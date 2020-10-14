@@ -71,7 +71,11 @@
           </colgroup>
           <thead>
             <tr>
-              <th />
+              <th class="cl-td">
+                <label v-if="has_assignments" title="Выбор всех назначений" v-tippy="{ placement : 'top', arrow: true }">
+                  <input type="checkbox" v-model="all_selected">
+                </label>
+              </th>
               <th>Обследование (прием)</th>
               <th>МКБ-10<br>кол-во в год</th>
               <th v-for="(m, i) in monthes" :key="`th-${m}`" class="text-center">
@@ -283,6 +287,8 @@
           identified_index: 0,
         },
         edit_pk: -2,
+        all_selected: false,
+        lock_changes: false,
         is_first_time: '',
         how_identified: '',
         variant_is_first_time: ['не указано', 'впервые', 'повторно'],
@@ -306,6 +312,43 @@
         return Object.keys(this.researches_data
           .filter(({assignment}) => assignment)
           .reduce((a, rd) => ({...a, ...rd.diagnoses_time.reduce((b, dt) => ({...b, [dt.diagnos]: true}), {})}), {}));
+      },
+      has_assignments() {
+        return this.count_assignments_available > 0;
+      },
+      count_assignments_available() {
+        return this.researches_data.filter(rd => rd.assign_research_pk).length;
+      },
+      count_assignments() {
+        return this.assignments.length;
+      },
+      has_all_selected() {
+        return this.count_assignments === this.count_assignments_available;
+      },
+      not_selected() {
+        return this.count_assignments === 0;
+      },
+    },
+    watch: {
+      count_assignments() {
+        this.lock_changes = true;
+        if (this.has_all_selected) {
+          this.all_selected = true;
+        } else if (this.not_selected) {
+          this.all_selected = false;
+        }
+        setTimeout(() => {
+          this.lock_changes = false
+        }, 0)
+      },
+      all_selected() {
+        if (!this.lock_changes) {
+          for (const row of this.researches_data) {
+            if (row.assign_research_pk) {
+              row.assignment = this.all_selected;
+            }
+          }
+        }
       },
     },
     methods: {
@@ -386,6 +429,7 @@
           this.rows = rows
           this.researches_data = researches_data
           this.researches_data_def = cloneDeep(researches_data)
+          this.all_selected = false;
           if (researches_data && researches_data.length > 0) {
             okmessage(`Загружен ${year} год`)
           }
@@ -422,8 +466,11 @@
         });
 
         for (const row of this.researches_data) {
-          row.assignment = false;
+          if (row.assign_research_pk) {
+            row.assignment = false;
+          }
         }
+        this.all_selected = false
       },
     }
   }
