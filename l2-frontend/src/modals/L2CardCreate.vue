@@ -47,7 +47,7 @@
           </div>
           <div class="form-row">
             <div class="row-t">Пол</div>
-            <radio-field v-model="card.sex" :variants="sexes" fullWidth/>
+            <radio-field v-model="card.sex" :variants="genders" fullWidth/>
           </div>
         </div>
       </form>
@@ -183,12 +183,13 @@
                              :minChars="1" :onHit="onHit('work_place')" :selectFirst="true" maxlength="128"
                              ref="wp" src="/api/autocomplete?value=:keyword&type=work_place" v-model="card.work_place"
                   />
-                  <select v-else v-model="card.work_place_db" class="form-control"
-                          style="width: 55%;border: none;height: 26px;">
-                    <option v-for="c in card.av_companies" :value="c.id">
-                      {{c.short_title === '' ? c.title : c.short_title}}
-                    </option>
-                  </select>
+                  <div style="width: 55%;" v-else>
+                    <treeselect class="treeselect-noborder treeselect-26px"
+                                :multiple="false" :disable-branch-nodes="true" :append-to-body="true" :zIndex="99999"
+                                :options="companiesTreeselect(card.av_companies)" placeholder="НЕ ВЫБРАНО"
+                                v-model="card.work_place_db"
+                    />
+                  </div>
                 </div>
               </div>
               <div class="col-xs-6" style="padding-left: 0">
@@ -494,6 +495,8 @@
   import RadioField from '../fields/RadioField'
   import TypeAhead from 'vue2-typeahead'
   import moment from 'moment'
+  import Treeselect from "@riophae/vue-treeselect";
+  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   import forms from '../forms'
 
   function validateSnils(snils, error = {}) {
@@ -577,9 +580,11 @@
     return str
   }
 
+  const genders = ['м', 'ж'];
+
   export default {
     name: 'l2-card-create',
-    components: {Modal, TypeAhead, PatientSmallPicker, RadioField},
+    components: {Modal, TypeAhead, PatientSmallPicker, RadioField, Treeselect},
     props: {
       card_pk: {
         type: Number,
@@ -592,10 +597,7 @@
     },
     data() {
       return {
-        sexes: [
-          'м',
-          'ж',
-        ],
+        genders,
         card: {
           number: '',
           number_poli: '',
@@ -607,7 +609,7 @@
           patronymic: "",
           name: "",
           main_diagnosis: "",
-          sex: "м",
+          sex: genders[0],
           has_rmis_card: false,
           birthday: moment().format('YYYY-MM-DD'),
           individual: -1,
@@ -791,6 +793,9 @@
       }
     },
     methods: {
+      companiesTreeselect(companies) {
+        return companies.map(c => ({id: c.id, label: c.short_title || c.title}));
+      },
       agent_type_by_key(key) {
         for (const t of this.card.agent_types) {
           if (t.key === key) {

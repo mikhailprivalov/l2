@@ -440,9 +440,9 @@ def patients_card_save(request):
     c.main_address = request_data["main_address"]
     c.fact_address = request_data["fact_address"]
     c.number_poliklinika = request_data.get("number_poli", "")
-    if request_data["custom_workplace"] or not Company.objects.filter(pk=request_data["work_place_db"]).exists():
+    if request_data["custom_workplace"] or not Company.objects.filter(pk=request_data.get("work_place_db", -1)).exists():
         c.work_place_db = None
-        c.work_place = request_data["work_place"]
+        c.work_place = request_data["work_place"] if request_data["custom_workplace"] else ''
     else:
         c.work_place_db = Company.objects.get(pk=request_data["work_place_db"])
         c.work_place = ''
