@@ -25,7 +25,7 @@ class VisitPurpose(models.Model):
 class ResultOfTreatment(models.Model):
     title = models.CharField(max_length=255)
     hide = models.BooleanField()
-    rmis_id = models.PositiveSmallIntegerField(default=0, db_index=True, blank=True, null=True, help_text='РМИС-id')
+    rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True, help_text='РМИС-id')
 
     def __str__(self):
         return self.title
@@ -38,7 +38,7 @@ class ResultOfTreatment(models.Model):
 class Outcomes(models.Model):
     title = models.CharField(max_length=255)
     hide = models.BooleanField()
-    rmis_id = models.PositiveSmallIntegerField(default=0, db_index=True, blank=True, null=True, help_text='РМИС-id')
+    rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True, help_text='РМИС-id')
 
     def __str__(self):
         return self.title
