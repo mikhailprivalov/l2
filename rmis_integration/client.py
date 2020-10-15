@@ -1114,8 +1114,8 @@ class Directions(BaseRequester):
             .distinct()
         )
         if slice_to_upload:
-            stdout.write("Total to upload: {}".format(to_upload.count()))
-            stdout.write("Slice to upload: {}".format(MAX_RMIS_THREADS))
+            stdout.write("Total to upload directions: {}".format(to_upload.count()))
+            stdout.write("Slice to upload directions: {}".format(MAX_RMIS_THREADS))
             to_upload = to_upload[:MAX_RMIS_THREADS]
         cnt = to_upload.count()
         if stdout:
@@ -1161,6 +1161,10 @@ class Directions(BaseRequester):
         [t.join() for t in threads]
         threads = []
         to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date, rmis_resend_services=True).exclude(rmis_number='NONERMIS').distinct()
+        if slice_to_upload:
+            stdout.write("Total to upload results: {}".format(to_upload.count()))
+            stdout.write("Slice to upload results: {}".format(MAX_RMIS_THREADS))
+            to_upload = to_upload[:MAX_RMIS_THREADS]
         for d in to_upload:
             thread = threading.Thread(target=upload_services, args=(self, d, stdout))
             threads.append(thread)
