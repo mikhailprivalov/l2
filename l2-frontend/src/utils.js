@@ -80,3 +80,92 @@ export const PrepareFormula = (fields, formula, patient = {}, strict = false, re
 
   return `return (${s});`
 };
+
+export const swapLayouts = str => {
+  const replacer = {
+    'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г',
+    'i': 'ш', 'o': 'щ', 'p': 'з', '[': 'х', ']': 'ъ', 'a': 'ф', 's': 'ы',
+    'd': 'в', 'f': 'а', 'g': 'п', 'h': 'р', 'j': 'о', 'k': 'л', 'l': 'д',
+    ';': 'ж', '\'': 'э', 'z': 'я', 'x': 'ч', 'c': 'с', 'v': 'м', 'b': 'и',
+    'n': 'т', 'm': 'ь', ',': 'б', '.': 'ю', '/': '.'
+  }
+
+  for (let i = 0; i < str.length; i++) {
+    if (replacer[str[i].toLowerCase()]) {
+      let replace
+      if (str[i] === str[i].toLowerCase()) {
+        replace = replacer[str[i].toLowerCase()]
+      } else if (str[i] === str[i].toUpperCase()) {
+        replace = replacer[str[i].toLowerCase()].toUpperCase()
+      }
+
+      str = str.replace(str[i], replace)
+    }
+  }
+
+  return str
+}
+
+export const validateSnils = (snils, returnErrors) => {
+  let result = false;
+  const errors = {};
+
+  if (typeof snils === 'number') {
+    snils = snils.toString();
+  } else if (typeof snils !== 'string') {
+    snils = '';
+  }
+  snils = snils.replace(/-/g, '').replace(/ /g, '')
+  if (!snils.length) {
+    errors.code = 1;
+    errors.message = 'СНИЛС пуст';
+  } else if (/[^0-9]/.test(snils)) {
+    errors.code = 2;
+    errors.message = 'СНИЛС может состоять только из цифр';
+  } else if (snils.length !== 11) {
+    errors.code = 3;
+    errors.message = 'СНИЛС может состоять только из 11 цифр';
+  } else {
+    let sum = 0
+    for (let i = 0; i < 9; i++) {
+      sum += parseInt(snils[i]) * (9 - i);
+    }
+    let checkDigit = 0
+    if (sum < 100) {
+      checkDigit = sum;
+    } else if (sum > 101) {
+      checkDigit = parseInt(sum % 101);
+      if (checkDigit === 100) {
+        checkDigit = 0;
+      }
+    }
+    if (checkDigit === parseInt(snils.slice(-2))) {
+      result = true;
+    } else {
+      errors.code = 4;
+      errors.message = 'Неправильное контрольное число';
+    }
+  }
+  if (returnErrors) {
+    return {
+      result,
+      errors,
+    }
+  }
+  return result;
+}
+
+export const normalizeNamePart = string => {
+  string = swapLayouts(string).replace(/  +/g, ' ');
+  const r = []
+  for (const s of string.split(' ')) {
+    let v = [];
+
+    for (const si of s.split('-')) {
+      v.push(si.charAt(0).toUpperCase() + si.slice(1).toLowerCase())
+    }
+
+    r.push(v.join('-'))
+  }
+  return r.join(' ').trim();
+};

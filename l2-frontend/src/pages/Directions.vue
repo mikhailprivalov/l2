@@ -203,27 +203,7 @@
         }
         return false
       },
-      step() {
-        if (this.patient_valid) {
-          if (this.selected_researches.length > 0) {
-            if (this.diagnos !== '') {
-              if (this.fin === -1) {
-                return 3
-              }
-              return 4
-            }
-            return 2
-          }
-          return 1
-        }
-        return 0
-      }
     },
-    watch: {
-      step() {
-        this.$root.$emit('set-step', this.step)
-      }
-    }
   }
 </script>
 

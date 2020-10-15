@@ -20,9 +20,9 @@ import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
 const VueInputMask = require('vue-inputmask').default;
 
 Vue.use(VuejsDialog, {
-    okText: 'Подтвердить',
-    cancelText: 'Отмена',
-    animation: 'fade'
+  okText: 'Подтвердить',
+  cancelText: 'Отмена',
+  animation: 'fade'
 });
 Vue.use(VueAutosize)
 Vue.use(VueTippy)
@@ -34,6 +34,16 @@ Vue.use(Fragment.Plugin)
 const promiseFinally = require('promise.prototype.finally');
 Vue.dialog.registerComponent('replace-append-modal', ReplaceAppendModal);
 promiseFinally.shim();
+
+
+function printForm(tpl, pks) {
+  if (!pks || pks.length === 0) {
+    return;
+  }
+  window.open(tpl.replace('{pks}', JSON.stringify(pks)), '_blank')
+}
+
+const hosp = window.location.href.includes('/stationar') ? 1 : 0;
 
 new Vue({
   el: '#app',
@@ -55,7 +65,6 @@ new Vue({
     'PlanOperations': () => import('@/pages/PlanOperations'),
     'ResultsDepartment': () => import('@/pages/ResultsDepartment'),
     'ResultsReport': () => import('@/pages/ResultsReport'),
-    'DirectionSteps': () => import('@/ui-cards/DirectionSteps'),
     'Favorites': () => import('@/ui-cards/Favorites'),
     'OperationPlans': () => import('@/ui-cards/OperationPlans'),
     'CardReader': () => import('@/ui-cards/CardReader'),
@@ -107,29 +116,14 @@ new Vue({
       })
     }, {deep: true})
 
-    this.$store.dispatch(action_types.INC_LOADING)
-    this.$store.dispatch(action_types.GET_ALL_DEPARTMENTS).then(() => {
+    Promise.all([
+      this.$store.dispatch(action_types.INC_LOADING),
+      this.$store.dispatch(action_types.GET_ALL_DEPARTMENTS),
+      this.$store.dispatch(action_types.GET_BASES),
+      this.$store.dispatch(action_types.GET_USER_DATA),
+    ]).then(() => {
       this.$store.dispatch(action_types.DEC_LOADING)
     })
-
-    this.$store.dispatch(action_types.INC_LOADING)
-    this.$store.dispatch(action_types.GET_BASES).then(() => {
-      this.$store.dispatch(action_types.DEC_LOADING)
-    })
-
-    this.$store.dispatch(action_types.INC_LOADING)
-    this.$store.dispatch(action_types.GET_USER_DATA).then(() => {
-      this.$store.dispatch(action_types.DEC_LOADING)
-    })
-
-    function printForm(tpl, pks) {
-      if (!pks || pks.length === 0) {
-        return;
-      }
-      window.open(tpl.replace('{pks}', JSON.stringify(pks)), '_blank')
-    }
-
-    const hosp = window.location.href.includes('/stationar') ? 1 : 0;
 
     this.$root.$on('print:directions', (pks) => printForm('/directions/pdf?napr_id={pks}', pks))
     this.$root.$on('print:hosp', (pks) => printForm('/barcodes/hosp?napr_id={pks}', pks))
@@ -146,9 +140,9 @@ new Vue({
                                              researches, operator, ofname, history_num, comments,
                                              counts, for_rmis, rmis_data, callback, vich_code, count,
                                              discount, need_contract,
-                                             parent_iss=null, kk='', localizations={}, service_locations={},
-                                             direction_purpose='NONE', directions_count=1, external_organization='NONE',
-                                             parent_slave_hosp=null,
+                                             parent_iss = null, kk = '', localizations = {}, service_locations = {},
+                                             direction_purpose = 'NONE', directions_count = 1,
+                                             external_organization = 'NONE', parent_slave_hosp = null,
                                            }) => {
       if (card_pk === -1) {
         errmessage('Не выбрана карта')
@@ -189,8 +183,8 @@ new Vue({
           if (type === 'just-save' || type === 'barcode') {
             okmessage('Направления созданы', 'Номера: ' + data.directions.join(', '))
           }
-          this.$root.$emit('researches-picker:clear_all'+kk)
-          this.$root.$emit('researches-picker:directions_created'+kk)
+          this.$root.$emit('researches-picker:clear_all' + kk)
+          this.$root.$emit('researches-picker:directions_created' + kk)
         } else {
           errmessage('Направления не созданы', data.message)
         }
