@@ -704,7 +704,7 @@
           i {
             font-size: 80%;
 
-            vertical-align: middle;
+            margin-left: -1px;
           }
         }
 
