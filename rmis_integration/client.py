@@ -3,6 +3,7 @@ import hashlib
 import pickle
 import threading
 import urllib.parse
+from typing import Optional
 
 import requests
 import simplejson as json
@@ -1087,7 +1088,7 @@ class Directions(BaseRequester):
                 self.fill_send_old_data(send_data, service_old_data)
         return send_data, ssd
 
-    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=MAX_RMIS_THREADS):
+    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=MAX_RMIS_THREADS, slice_to_upload: bool = False):
         def check_lock():
             return cache.get('upload_lock') is not None
 
@@ -1113,6 +1114,10 @@ class Directions(BaseRequester):
             .exclude(issledovaniya__research__in=exclude_res)
             .distinct()
         )
+        if slice_to_upload:
+            stdout.write("Total to upload: {}".format(to_upload.count()))
+            stdout.write("Slice to upload: {}".format(MAX_RMIS_THREADS))
+            to_upload = to_upload[:MAX_RMIS_THREADS]
         cnt = to_upload.count()
         if stdout:
             stdout.write("Directions to upload: {}".format(cnt))
