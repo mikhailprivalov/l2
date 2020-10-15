@@ -3,7 +3,6 @@ import hashlib
 import pickle
 import threading
 import urllib.parse
-from typing import Optional
 
 import requests
 import simplejson as json
