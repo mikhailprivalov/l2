@@ -1091,10 +1091,11 @@ class Directions(BaseRequester):
         def check_lock():
             return cache.get('upload_lock') is not None
 
-        if check_lock():
-            if stdout:
-                stdout.write("Lockfile exists. EXIT")
-            return
+        if not slice_to_upload:
+            if check_lock():
+                if stdout:
+                    stdout.write("Lockfile exists. EXIT")
+                return
 
         def update_lock():
             cache.set('upload_lock', '1', 15)
