@@ -11,7 +11,7 @@
               title="Отменить"
               v-tippy
             >
-              <icon name="undo"/>
+              <i class="fa fa-undo"></i>
             </button>
 
             <button
@@ -20,7 +20,7 @@
               title="Вернуть"
               v-tippy
             >
-              <icon name="redo"/>
+              <i class="fa fa-redo"></i>
             </button>
 
             <button
@@ -30,7 +30,7 @@
               title="Полужирный"
               v-tippy
             >
-              <icon name="bold"/>
+              <i class="fa fa-bold"></i>
             </button>
 
             <button
@@ -40,7 +40,7 @@
               title="Курсив"
               v-tippy
             >
-              <icon name="italic"/>
+              <i class="fa fa-italic"></i>
             </button>
 
             <button
@@ -50,7 +50,7 @@
               title="Перечёркнутый"
               v-tippy
             >
-              <icon name="strike"/>
+              <i class="fa fa-strikethrough"></i>
             </button>
 
             <button
@@ -60,7 +60,7 @@
               title="Подчёркнутый"
               v-tippy
             >
-              <icon name="underline"/>
+              <i class="fa fa-underline"></i>
             </button>
 
             <button
@@ -70,7 +70,7 @@
               title="Параграф"
               v-tippy
             >
-              <icon name="paragraph"/>
+              <i class="fa fa-paragraph"></i>
             </button>
 
             <button
@@ -110,7 +110,7 @@
               title="Маркированный список"
               v-tippy
             >
-              <icon name="ul"/>
+              <i class="fa fa-list-ul"></i>
             </button>
 
             <button
@@ -120,7 +120,7 @@
               title="Нумерованный список"
               v-tippy
             >
-              <icon name="ol"/>
+              <i class="fa fa-list-ol"></i>
             </button>
 
             <button
@@ -129,7 +129,7 @@
               title="Таблица"
               v-tippy
             >
-              <icon name="table"/>
+              <i class="fa fa-table"></i>
             </button>
 
             <span v-if="isActive.table()">
@@ -139,7 +139,7 @@
                 title="Удалить таблицу"
                 v-tippy
               >
-                <icon name="delete_table"/>
+                <img src="@/icons/delete_table.svg" />
               </button>
               <button
                 class="menubar__button"
@@ -147,7 +147,7 @@
                 title="Добавить колонку до"
                 v-tippy
               >
-                <icon name="add_col_before"/>
+                <img src="@/icons/add_col_before.svg" />
               </button>
               <button
                 class="menubar__button"
@@ -155,7 +155,7 @@
                 title="Добавить колонку после"
                 v-tippy
               >
-                <icon name="add_col_after"/>
+                <img src="@/icons/add_col_after.svg" />
               </button>
               <button
                 class="menubar__button"
@@ -163,7 +163,7 @@
                 title="Удалить колонку"
                 v-tippy
               >
-                <icon name="delete_col"/>
+                <img src="@/icons/delete_col.svg" />
               </button>
               <button
                 class="menubar__button"
@@ -171,7 +171,7 @@
                 title="Добавить строку до"
                 v-tippy
               >
-                <icon name="add_row_before"/>
+                <img src="@/icons/add_row_before.svg" />
               </button>
               <button
                 class="menubar__button"
@@ -179,7 +179,7 @@
                 title="Добавить строку после"
                 v-tippy
               >
-                <icon name="add_row_after"/>
+                <img src="@/icons/add_row_after.svg" />
               </button>
               <button
                 class="menubar__button"
@@ -187,7 +187,7 @@
                 title="Удалить строку"
                 v-tippy
               >
-                <icon name="delete_row"/>
+                <img src="@/icons/delete_row.svg" />
               </button>
               <button
                 class="menubar__button"
@@ -195,9 +195,9 @@
                 title="Объединить ячейки"
                 v-tippy
               >
-                <icon name="combine_cells"/>
+                <img src="@/icons/combine_cells.svg" />
               </button>
-					</span>
+            </span>
           </div>
         </div>
       </editor-menu-bar>
@@ -224,13 +224,11 @@
         Underline,
         History,
     } from 'tiptap-extensions'
-    import Icon from '../ui-cards/Icon'
 
     export default {
         components: {
             EditorContent,
             EditorMenuBar,
-            Icon,
         },
         props: {
             value: {
@@ -341,6 +339,14 @@
       &.resize-cursor {
         cursor: move;
       }
+    }
+  }
+
+  .menubar__button {
+    vertical-align: middle;
+    img {
+      height: 14px;
+      width: auto;
     }
   }
 </style>

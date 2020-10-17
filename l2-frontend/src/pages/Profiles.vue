@@ -89,23 +89,41 @@
           </div>
         </div>
         <div class="more-data">
-          <div class="input-group" style="width: 100%" v-if="l2_user_data.rmis_enabled">
-            <span class="input-group-addon" v-if="modules.l2_rmis_queue">РМИС location</span>
-            <input class="form-control" v-if="modules.l2_rmis_queue" v-model="user.rmis_location"/>
-            <span class="input-group-addon">РМИС логин</span>
-            <input class="form-control" v-model="user.rmis_login"/>
-            <span class="input-group-addon">РМИС пароль</span>
-            <input class="form-control" placeholder="Для замены введите значение" v-model="user.rmis_password"/>
+          <div class="row" v-if="l2_user_data.rmis_enabled">
+            <div class="col-xs-6" style="padding-right: 0">
+              <div class="input-group" style="width: 100%">
+                <span class="input-group-addon">РМИС логин</span>
+                <input class="form-control" v-model="user.rmis_login"/>
+              </div>
+            </div>
+            <div class="col-xs-6" style="padding-left: 0">
+              <div class="input-group" style="width: 100%">
+                <span class="input-group-addon">РМИС пароль</span>
+                <input class="form-control" placeholder="Для замены введите значение" v-model="user.rmis_password"/>
+              </div>
+            </div>
           </div>
-          <div class="input-group" style="width: 100%">
-            <span class="input-group-addon">Код врача</span>
-            <input class="form-control" v-model="user.personal_code"/>
-            <span class="input-group-addon">Специальность</span>
-            <select class="form-control" v-model="user.speciality">
-              <option :value="d.pk" v-for="d in specialities">
-                {{d.title}}
-              </option>
-            </select>
+          <div class="input-group" style="width: 100%" v-if="l2_user_data.rmis_enabled && modules.l2_rmis_queue">
+            <span class="input-group-addon">РМИС location</span>
+            <input class="form-control" v-model="user.rmis_location"/>
+          </div>
+          <div class="row">
+            <div class="col-xs-6" style="padding-right: 0">
+              <div class="input-group" style="width: 100%">
+                <span class="input-group-addon">Код врача</span>
+                <input class="form-control" v-model="user.personal_code"/>
+              </div>
+            </div>
+            <div class="col-xs-6" style="padding-left: 0">
+              <div class="input-group" style="width: 100%">
+                <span class="input-group-addon">Специальность</span>
+                <select class="form-control" v-model="user.speciality">
+                  <option :value="d.pk" v-for="d in specialities">
+                    {{d.title}}
+                  </option>
+                </select>
+              </div>
+            </div>
           </div>
           <div class="input-group" style="width: 100%">
             <span class="input-group-addon">Группы</span>
@@ -450,10 +468,6 @@
     &-data {
       height: calc(100% - 68px);
       overflow-y: auto;
-
-      .col-xs-6 {
-        border-bottom: 1px solid #eaeaea;
-      }
     }
 
     &-title {

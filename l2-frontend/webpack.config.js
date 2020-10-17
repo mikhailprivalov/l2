@@ -53,7 +53,18 @@ const config = {
         ],
       },
       {
-        test: /\.(png|jpg|ttf|eot|svg|gif|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+        test: /\.svg$/i,
+        use: [
+          {
+            loader: 'url-loader',
+            options: {
+              esModule: false,
+            },
+          },
+        ],
+      },
+      {
+        test: /\.(png|jpg|ttf|eot|gif|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
         loader: 'file-loader',
         options: {
           name: '[name].[ext]?[contenthash]'

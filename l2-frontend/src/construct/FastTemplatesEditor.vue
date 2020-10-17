@@ -457,7 +457,7 @@
     input, button {
       align-self: stretch;
       border: none;
-      border-radius: 0;
+      border-radius: 0 !important;
     }
     input {
       border-bottom: 1px solid #b1b1b1;
