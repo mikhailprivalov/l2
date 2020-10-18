@@ -20,7 +20,7 @@ def get_confirm_direction(d_s, d_e, limit):
         
         t_istochnik_f_rmis_auto_send AS (
             SELECT id FROM directions_istochnikifinansirovaniya
-            WHERE rmis_auto_send = true) 
+            WHERE rmis_auto_send = false) 
                 
         SELECT id FROM directions_napravleniya
             WHERE id IN (SELECT napravleniye_id FROM t_only_confirm_direction)
