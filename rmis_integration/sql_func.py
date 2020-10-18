@@ -20,16 +20,16 @@ def get_confirm_direction(d_s, d_e, limit):
         
         t_istochnik_f_rmis_auto_send AS (
             SELECT id FROM directions_istochnikifinansirovaniya
-            WHERE rmis_auto_send = false) 
+            WHERE rmis_auto_send = False) 
                 
         SELECT id FROM directions_napravleniya
             WHERE id IN (SELECT napravleniye_id FROM t_only_confirm_direction)
             AND 
                 data_sozdaniya AT TIME ZONE %(tz)s >= %(d_start)s
             AND 
-                NOT (rmis_number='NONERMIS' OR rmis_number='' OR rmis_number is Null)
+                NOT (rmis_number='NONERMIS' OR rmis_number='' OR rmis_number IS NULL)
             AND 
-                result_rmis_send = false
+                result_rmis_send = False
             AND 
                 NOT (imported_from_rmis = True and imported_directions_rmis_send = False)
             AND
