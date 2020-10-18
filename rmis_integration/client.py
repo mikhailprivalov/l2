@@ -1188,7 +1188,7 @@ class Directions(BaseRequester):
                 .exclude(rmis_number="")
                 .exclude(imported_from_rmis=True, imported_directions_rmis_send=False)
                 .exclude(istochnik_f__rmis_auto_send=False, force_rmis_send=False)
-                .exclude(issledovaniya__time_confirmation__isnull=True)
+                # .exclude(issledovaniya__time_confirmation__isnull=True)
                 .distinct()
             )
             if slice_to_upload:
