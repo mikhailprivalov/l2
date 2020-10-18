@@ -27,7 +27,7 @@ def get_confirm_direction(d_s, d_e, limit):
             AND 
                 data_sozdaniya AT TIME ZONE %(tz)s >= %(d_start)s
             AND 
-                rmis_number != ANY(ARRAY['NONERMIS', '', NULL]) 
+                NOT (rmis_number='NONERMIS' OR rmis_number='' OR rmis_number is Null)
             AND 
                 result_rmis_send = false
             AND 
