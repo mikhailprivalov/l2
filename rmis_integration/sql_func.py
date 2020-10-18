@@ -10,7 +10,7 @@ def get_confirm_direction(d_s, d_e, limit):
             SELECT DISTINCT ON (napravleniye_id) napravleniye_id FROM public.directions_issledovaniya
             WHERE time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s),
         
-         t_not_confirm_direction AS (
+        t_not_confirm_direction AS (
             SELECT DISTINCT ON (napravleniye_id) napravleniye_id FROM public.directions_issledovaniya
             WHERE napravleniye_id IN (SELECT napravleniye_id FROM t_all_direction) AND time_confirmation IS NULL),
         
