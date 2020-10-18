@@ -25,13 +25,13 @@ def get_confirm_direction(d_s, d_e, limit):
         SELECT id FROM directions_napravleniya
             WHERE id IN (SELECT napravleniye_id FROM t_only_confirm_direction)
             AND 
-			    rmis_number != ANY(ARRAY['NONERMIS', '', NULL]) 
-			AND 
-			    result_rmis_send = false
+                rmis_number != ANY(ARRAY['NONERMIS', '', NULL]) 
             AND 
-			    NOT (imported_from_rmis = True and imported_directions_rmis_send = False)
-			AND
-			    NOT (istochnik_f_id IN (SELECT id FROM t_istochnik_f_rmis_auto_send) and force_rmis_send = False)
+                result_rmis_send = false
+            AND 
+                NOT (imported_from_rmis = True and imported_directions_rmis_send = False)
+            AND
+                NOT (istochnik_f_id IN (SELECT id FROM t_istochnik_f_rmis_auto_send) and force_rmis_send = False)
             ORDER BY data_sozdaniya 
             LIMIT %(limit)s     
         """,
