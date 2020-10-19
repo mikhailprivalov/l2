@@ -22,7 +22,6 @@ class Command(BaseCommand):
                 code, name, rmis_id = '', '', ''
                 m_type = 1
                 for j in data:
-                    print(j)
                     if j['name'] == 'CODE':
                         code = j['data']
                     if j['name'] == 'NAME':
