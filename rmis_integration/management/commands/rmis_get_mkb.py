@@ -19,7 +19,7 @@ class Command(BaseCommand):
             mkb_part = c.get_client("path_directory").service.getRefbookPartial(**request_data)
             for m in mkb_part:
                 data = m['column']
-                code, name, rmis_data, rmis_id = '', '', '', ''
+                code, name, rmis_id = '', '', ''
                 m_type = 1
                 for j in data:
                     print(j)
