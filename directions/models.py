@@ -308,14 +308,18 @@ class Napravleniya(models.Model):
     Таблица направлений
     """
 
+    PURPOSE_PRELIMINARY_EXAMINATION = 'PRELIMINARY_EXAMINATION'
     PURPOSE_WORK_EXAMINATION = 'WORK_EXAMINATION'
     PURPOSE_DRIVE_EXAMINATION = 'DRIVE_EXAMINATION'
     PURPOSE_WEAPON_EXAMINATION = 'WEAPON_EXAMINATION'
+    PURPOSE_PERIODIC_EXAMINATION = 'PERIODIC_EXAMINATION'
 
     PURPOSES = (
+        (PURPOSE_PRELIMINARY_EXAMINATION, 'Предварительный медосмотр'),
         (PURPOSE_WORK_EXAMINATION, 'На работу'),
         (PURPOSE_DRIVE_EXAMINATION, 'На водительское'),
         (PURPOSE_WEAPON_EXAMINATION, 'На оружие'),
+        (PURPOSE_PERIODIC_EXAMINATION, 'Периодический медосмотр'),
     )
 
     data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
