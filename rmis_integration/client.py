@@ -29,6 +29,7 @@ from laboratory import settings as l2settings
 from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
 from laboratory.utils import strdate, strtime, localtime, strfdatetime
 from podrazdeleniya.models import Podrazdeleniya
+from rmis_integration.sql_func import get_confirm_direction
 
 
 class Utils:
@@ -1176,29 +1177,15 @@ class Directions(BaseRequester):
         uploaded_results = []
         if not without_results:
             upload_lt = timezone.now() - datetime.timedelta(hours=Settings.get("upload_hours_interval", default="8", default_type="i"))
-            to_upload = (
-                Napravleniya.objects.filter(
-                    data_sozdaniya__gte=date,
-                    issledovaniya__time_confirmation__isnull=False,
-                    issledovaniya__time_confirmation__lt=upload_lt,
-                    rmis_number__isnull=False,
-                    result_rmis_send=False,
-                )
-                .exclude(rmis_number="NONERMIS")
-                .exclude(rmis_number="")
-                .exclude(imported_from_rmis=True, imported_directions_rmis_send=False)
-                .exclude(istochnik_f__rmis_auto_send=False, force_rmis_send=False)
-                .distinct()
-            )
+            direction_ids = get_confirm_direction(date, upload_lt, MAX_RMIS_THREADS if slice_to_upload else 10000)
+            cnt = len(direction_ids)
+            stdout.write("To upload results: {}".format(cnt))
             if slice_to_upload:
-                stdout.write("Total to upload results: {}".format(to_upload.count()))
-                stdout.write("Slice to upload results: {}".format(MAX_RMIS_THREADS))
-                to_upload = to_upload[:MAX_RMIS_THREADS]
-            cnt = to_upload.count()
+                stdout.write("Directions: {}".format(direction_ids))
             i = 0
-            for d in to_upload:
+            for d in direction_ids:
                 i += 1
-                thread = threading.Thread(target=upload_results, args=(self, d, stdout, i))
+                thread = threading.Thread(target=upload_results, args=(self, d[0], stdout, i))
                 threads.append(thread)
                 thread.start()
             [t.join() for t in threads]
