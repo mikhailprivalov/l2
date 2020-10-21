@@ -3,11 +3,13 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from clients.models import Card
+from forms.forms_func import primary_reception_get_data
 from laboratory.utils import strdate, current_time, strfdatetime
 from plans.models import PlanOperations
 from .sql_func import get_plans_by_params_sql
 from ..sql_func import users_by_group
 from slog.models import Log
+from ..stationar.stationar_func import hosp_get_hosp_direction
 
 
 @login_required
@@ -63,6 +65,13 @@ def get_plan_operations_by_params(request):
 
     data = []
     for i in result:
+        hosp_nums_obj = hosp_get_hosp_direction(i[2])
+        hosp_first_num = hosp_nums_obj[0].get('direction')
+        primary_reception_data = primary_reception_get_data(hosp_first_num)
+        if primary_reception_data['weight']:
+            weight = f"Вес-{primary_reception_data['weight']}"
+        else:
+            weight = ''
         fio_patient = f"{i[8]} {i[9][0:1]}.{i[10][0:1]}."
         date_raw = i[3].split('.')
         date_raw = f"{date_raw[2]}-{date_raw[1]}-{date_raw[0]}"
@@ -91,6 +100,7 @@ def get_plan_operations_by_params(request):
                 "canceled": i[7],
                 "fio_patient": fio_patient,
                 "birthday": i[11],
+                "weight": weight,
                 "tooltip_data": '\n'.join(tooltip_data),
             }
         )

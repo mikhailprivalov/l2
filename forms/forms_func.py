@@ -407,6 +407,7 @@ def primary_reception_get_data(hosp_first_num):
         'Вид травмы',
         'Группа крови',
         'Резус принадлежность',
+        'Вес',
     ]
     list_values = None
     if titles_field and hosp_primary_receptions:
@@ -417,6 +418,7 @@ def primary_reception_get_data(hosp_first_num):
     time_start_ill, diagnos_who_directed, diagnos_entered = '', '', ''
     what_time_hospitalized, state, social_status, category_privilege = '', '', '', ''
     all_hospitalized, type_trauma, blood_group, resus_factor = '', '', '', ''
+    weight = ''
 
     if list_values:
         for i in list_values:
@@ -477,6 +479,9 @@ def primary_reception_get_data(hosp_first_num):
             if i[3] == 'Резус принадлежность':
                 resus_factor = i[2]
                 continue
+            if i[3] == 'Вес':
+                weight = i[2]
+                continue
 
     return {
         'date_entered_value': date_entered_value,
@@ -498,6 +503,7 @@ def primary_reception_get_data(hosp_first_num):
         'type_trauma': type_trauma,
         'blood_group': blood_group,
         'resus_factor': resus_factor,
+        'weight': weight,
     }
 
 
