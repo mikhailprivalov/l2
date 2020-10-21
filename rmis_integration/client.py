@@ -1148,10 +1148,10 @@ class Directions(BaseRequester):
             sema.acquire()
             update_lock()
             try:
-                if direct.is_all_confirm():
-                    uploaded_results.append(self.check_send_results(direct))
-                    if out:
-                        out.write("Upload result for direction {} ({}/{})".format(direct.pk, i, cnt))
+                direct = Napravleniya.objects.get(pk=direct)
+                uploaded_results.append(self.check_send_results(direct))
+                if out:
+                    out.write("Upload result for direction {} ({}/{})".format(direct.pk, i, cnt))
             finally:
                 sema.release()
 
