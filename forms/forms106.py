@@ -297,7 +297,8 @@ def form_01(request_data):
         Paragraph('Лечащий врач: {}'.format(doc_fio), style),
         Paragraph('Заведующий отделением: {}'.format(manager_depart), style),
     ]
-
+    if primary_reception_data['weight']:
+        second_page.append(Paragraph(f"Вес: {primary_reception_data['weight']}", styleRight))
     objs.extend(title_page)
     objs.extend(second_page)
 

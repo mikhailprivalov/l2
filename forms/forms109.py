@@ -11,6 +11,9 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+
+from api.stationar.stationar_func import hosp_get_hosp_direction
+from forms.forms_func import primary_reception_get_data
 from laboratory.settings import FONTS_FOLDER
 from api.plans.sql_func import get_plans_by_pk
 
@@ -91,11 +94,18 @@ def form_01(request_data):
             strike_cl = "</strike>"
         department = i[7] if i[7] else i[16]
 
+        hosp_nums_obj = hosp_get_hosp_direction(i[2])
+        hosp_first_num = hosp_nums_obj[0].get('direction')
+        primary_reception_data = primary_reception_get_data(hosp_first_num)
+        if primary_reception_data['weight']:
+            weight = f", Вес-{primary_reception_data['weight']}"
+        else:
+            weight = ''
         opinion.append(
             [
                 Paragraph(f"{strike_o}{i[3]}{strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{i[2]}{strike_cl}", styleCenter),
-                Paragraph(f"{strike_o}{i[11]} {i[12]} {i[13]}, {i[14]}{strike_cl}", style),
+                Paragraph(f"{strike_o}{i[11]} {i[12]} {i[13]}, {i[14]}{weight}{strike_cl}", style),
                 Paragraph(f"{strike_o}{i[4]}{strike_cl}", style),
                 Paragraph(f"{strike_o}{doc_fio}{strike_cl}", style),
                 Paragraph(f"{strike_o}{department}{strike_cl}", style),

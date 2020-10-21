@@ -11,7 +11,7 @@
       </a>
     </td>
     <td>
-      {{data.fio_patient}} {{data.birthday}}
+      {{data.fio_patient}} <br/>{{data.birthday}}<br/>{{data.weight}}
     </td>
     <td>
       {{data.type_operation}}
