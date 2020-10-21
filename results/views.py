@@ -1201,7 +1201,8 @@ def result_print(request):
                 if iss.doc_confirmation.podrazdeleniye.vaccine:
                     fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
                 else:
-                    fwb.append(Paragraph("Исполнитель: врач {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                    doc_execute = "фельдшер" if request.user.doctorprofile.has_group("Фельдшер") else "врач"
+                    fwb.append(Paragraph("Исполнитель: {} {}, {}".format(doc_execute, iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
 
                     if iss.research.is_doc_refferal and SettingManager.get("agree_diagnos", default='True', default_type='b'):
                         fwb.append(Spacer(1, 3.5 * mm))
