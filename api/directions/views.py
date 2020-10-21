@@ -63,19 +63,16 @@ def directions_generate(request):
         if type_card.base.forbidden_create_napr:
             result["message"] = "Для данного типа карт нельзя создать направления"
             return JsonResponse(result)
-        fin_source = p.get("fin_source")
-        fin_source_obj = (
-            IstochnikiFinansirovaniya.objects.get(pk=fin_source)
-            if (isinstance(fin_source, int) or fin_source.isdigit())
-            else (
-                IstochnikiFinansirovaniya.objects.filter(base=type_card.base, title=fin_source, hide=False).first()
-                or IstochnikiFinansirovaniya.objects.filter(base=type_card.base, hide=False).order_by('-order_weight').first()
-            )
+        fin_source = p.get("fin_source", -1)
+        fin_source_pk = (
+            int(fin_source)
+            if (isinstance(fin_source, int) or str(fin_source).isdigit()) else
+            fin_source
         )
         args = [
             p.get("card_pk"),
             p.get("diagnos"),
-            fin_source_obj.pk,
+            fin_source_pk,
             p.get("history_num"),
             p.get("ofname_pk"),
             request.user.doctorprofile,

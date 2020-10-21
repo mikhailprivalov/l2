@@ -2,6 +2,8 @@ import re
 import time
 import unicodedata
 from datetime import date
+from typing import Optional
+
 import simplejson as json
 from django.contrib.auth.models import User
 from django.db import models
@@ -569,6 +571,18 @@ class Napravleniya(models.Model):
         if not Clients.Card.objects.filter(pk=client_id).exists():
             result["message"] = "Карта в базе не зарегистрирована, попробуйте выполнить поиск заново"
             return result
+        card = Clients.Card.objects.get(pk=client_id)
+
+        if finsource and isinstance(finsource, str) and not finsource.isdigit():
+            f_obj: Optional[IstochnikiFinansirovaniya] = (
+                IstochnikiFinansirovaniya.objects.filter(base=card.base, title="ОМС", hide=False).first()
+                or IstochnikiFinansirovaniya.objects.filter(base=card.base, hide=False).order_by('-order_weight').first()
+            )
+            if not f_obj:
+                finsource = None
+            else:
+                finsource = f_obj.pk
+
         if client_id and researches:  # если client_id получен и исследования получены
             if ofname_id > -1:
                 ofname = umodels.DoctorProfile.objects.get(pk=ofname_id)
@@ -604,7 +618,7 @@ class Napravleniya(models.Model):
                 finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
 
                 # получить прайс
-                work_place_link = Clients.Card.objects.get(pk=client_id).work_place_db
+                work_place_link = card.work_place_db
                 price_obj = IstochnikiFinansirovaniya.get_price_modifier(finsource, work_place_link)
 
                 for v in res:
@@ -713,7 +727,7 @@ class Napravleniya(models.Model):
                     body=json.dumps(
                         {
                             "researches": researches,
-                            "client_num": Clients.Card.objects.get(pk=client_id).number,
+                            "client_num": card.number,
                             "client_id": client_id,
                             "diagnos": diagnos,
                             "finsource": "" if not finsource else finsource.title + " " + finsource.base.title,

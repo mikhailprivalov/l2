@@ -1078,7 +1078,7 @@ def user_fill_slot(request):
         result = directions.Napravleniya.gen_napravleniya_by_issledovaniya(
             slot["card_pk"],
             "",
-            None,
+            "ОМС",
             "",
             None,
             request.user.doctorprofile,
