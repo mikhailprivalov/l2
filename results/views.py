@@ -1262,8 +1262,9 @@ def result_print(request):
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
+    k = str(request.GET["pk"])
     slog.Log(
-        key=request.GET["pk"],
+        key=f"{k[:497]}..." if len(k) > 497 else k,
         type=15,
         body=json.dumps({"leftnone": request.GET.get("leftnone", "0"), "split": request.GET.get("split", "1")}),
         user=request.user.doctorprofile if request.user.is_authenticated else None,
