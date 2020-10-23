@@ -1,6 +1,7 @@
 from django.db import models
 from clients.models import Card
 from directory.models import Researches
+from users.models import DoctorProfile
 
 
 class ListWait(models.Model):
@@ -10,7 +11,7 @@ class ListWait(models.Model):
     exec_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания', db_index=True)
     comment = models.TextField()
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена ожидания')
-
+    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create", help_text='Создатель направления', on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = 'Лист ожидания'
