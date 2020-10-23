@@ -11,11 +11,19 @@ from rmis_integration.client import Client
 from slog.models import Log as slog
 
 
+CLEANUP_TYPES_LOG = (
+    1, 2, 3, 4, 5, 6, 10, 16, 17, 18, 19, 20, 25, 27, 22, 23, 100, 998, 999, 1001, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 3000, 3001, 5000, 6000, 10000, 20000, 60001, 60003
+)
+
+
 @login_required
 @staff_member_required
 def log(request):
     response = {"cnt": slog.objects.all().count(), "store_days": SettingManager.get("max_log_store_days", "120", "i")}
-    response["to_delete"] = slog.objects.filter(time__lt=datetime.today() - timedelta(days=response["store_days"])).exclude(type__in=(7, 21, 9, 11, 12, 4000, 13, 14, 24, 26, 5001)).count()
+    response["to_delete"] = slog.objects.filter(
+        time__lt=datetime.today() - timedelta(days=response["store_days"]),
+        type__in=CLEANUP_TYPES_LOG
+    ).count()
     return JsonResponse(response)
 
 
@@ -23,9 +31,10 @@ def log(request):
 @staff_member_required
 def log_cleanup(request):
     _, cnt = (
-        slog.objects.filter(time__lt=datetime.today() - timedelta(days=SettingManager.get("max_log_store_days", "120", "i")))
-        .exclude(type__in=(7, 21, 9, 11, 12, 4000, 13, 14, 24, 26, 5001))
-        .delete()
+        slog.objects.filter(
+            time__lt=datetime.today() - timedelta(days=SettingManager.get("max_log_store_days", "120", "i")),
+            type__in=CLEANUP_TYPES_LOG
+        ).delete()
     )
     return HttpResponse(str(cnt.get("slog.Log", 0)), content_type="text/plain")
 
