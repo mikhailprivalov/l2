@@ -12,7 +12,12 @@ def get_confirm_direction(d_s, d_e, limit):
         
         t_not_confirm_direction AS (
             SELECT DISTINCT ON (napravleniye_id) napravleniye_id FROM public.directions_issledovaniya
-            WHERE napravleniye_id IN (SELECT napravleniye_id FROM t_all_direction) AND time_confirmation IS NULL),
+            WHERE napravleniye_id IN 
+                (SELECT DISTINCT ON (napravleniye_id) napravleniye_id FROM public.directions_issledovaniya
+                 WHERE 
+                     time_confirmation AT TIME ZONE %(tz)s <= %(d_end)s) 
+                 AND 
+                     time_confirmation IS NULL),
         
         t_only_confirm_direction AS (
             SELECT napravleniye_id FROM t_all_direction
