@@ -9,6 +9,7 @@ class ListWait(models.Model):
     create_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания', db_index=True)
     exec_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания', db_index=True)
     comment = models.TextField()
+    cancel = models.BooleanField(default=False, blank=True, help_text='Отмена ожидания')
 
 
     class Meta:
