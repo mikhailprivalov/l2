@@ -45,7 +45,7 @@
       insert() {
         if (!this.create_valid)
           return
-        this.$store.dispatch(action_types.UPDATE_DEPARTMENTS, {type_update: 'insert', to_update: [{pk: -1, title: vm.create.title, type: vm.create.type}]}).then((ok) => {
+        this.$store.dispatch(action_types.UPDATE_DEPARTMENTS, {type_update: 'insert', to_update: [{pk: -1, title: this.create.title, type: this.create.type}]}).then((ok) => {
           if (ok) {
             this.create.title = ''
           }
