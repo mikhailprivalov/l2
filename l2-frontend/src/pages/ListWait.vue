@@ -1,0 +1,80 @@
+<template>
+  <div>
+    <div class="row" style="margin-top: 60px">
+      <div class="col-xs-4">
+      </div>
+      <div class="col-xs-4">
+        <div class="panel panel-default panel-flt">
+          <div class="panel-heading">
+            <h3 class="panel-title">Лист ожидания</h3>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-xs-3" style="text-align: right; line-height: 1.4;">
+                <label style="margin-top: 5px">
+                  Дата:
+                </label>
+              </div>
+              <div class="col-xs-5">
+                <date-range v-model="date"/>
+              </div>
+              <div class="col-xs-4"/>
+            </div>
+            <div class="row" style="margin-top: 10px">
+              <div class="col-xs-3" style="text-align: right; line-height: 1.26; margin-top: 10px;">
+                <label>
+                  Услуги:
+                </label>
+              </div>
+              <div class="col-xs-9">
+                <treeselect :multiple="false" :disable-branch-nodes="true" :options="researches"
+                    placeholder="Все услуги" v-model="research"
+                    :append-to-body="true"
+                />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-9"></div>
+              <div class="col-xs-3">
+                <div class="btn btn-blue-nb" style="margin-bottom: 5px;margin-top: 15px; margin-left: 20px;"
+                     @click="print(true)">
+                  Печать
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import * as action_types from "../store/action-types";
+  import Treeselect from "@riophae/vue-treeselect";
+  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+  import moment from "moment";
+  import DateRange from "../ui-cards/DateRange"
+
+  export default {
+    name: "ListWait",
+    components: {Treeselect, DateRange},
+      data() {
+        return {
+          // date: moment().format('YYYY-MM-DD'),
+          date: [moment().format('DD.MM.YYYY'), moment().add(1, 'days').format('DD.MM.YYYY')],
+          research: -1,
+          researches: [{id: -1, label: 'Все услуги'}, {id: 1, label: 'one'}, {id: 2, label: '2'}, {id: 3, label: 'three'}, {id: 4, label: '4'}],
+      }
+    },
+    methods: {
+      async print() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const {results} = await directions_point.getDirectionsTypeDate(this, ['district', 'date']);
+        this.$root.$emit('print:results', results)
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      },
+    }
+  }
+
+</script>

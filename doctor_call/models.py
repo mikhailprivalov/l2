@@ -47,6 +47,7 @@ class DoctorCall(models.Model):
         ).save()
         return doc_call.pk
 
+    @staticmethod
     def doctor_call_cancel(data, doc_who_create):
         doc_call = DoctorCall.objects.filter(pk=data['pk_doc_call'])[0]
         doc_call.doc_who_create = doc_who_create
