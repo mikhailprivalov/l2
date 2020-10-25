@@ -232,7 +232,7 @@
           $(this).trigger('blur')
         })
         this.clear()
-        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'})
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты'})
         patients_point.searchCard(this.base, this.query, true).then((result) => {
           if (result.results) {
             this.founded_cards = result.results

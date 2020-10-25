@@ -56,10 +56,22 @@
     </div>
     <div class="f gutter gutter-col gutter-column-2"></div>
     <div class="g">
-      <selected-researches :operator="selected_card.operator" :ofname="selected_card.ofname"
-                           :main_diagnosis="selected_card.main_diagnosis"
-                           :history_num="selected_card.history_num" :valid="patient_valid"
-                           :researches="selected_researches" :base="selected_card.base" :card_pk="selected_card.pk"/>
+      <DirectAndPlanSwitcher v-model="mode" :bages="this.modes_counts" />
+      <div v-show="mode === DIRECTION_MODE_DIRECTION" style="padding-top: 1px">
+        <selected-researches :operator="selected_card.operator" :ofname="selected_card.ofname"
+                             :visible="mode === DIRECTION_MODE_DIRECTION"
+                             :main_diagnosis="selected_card.main_diagnosis"
+                             :history_num="selected_card.history_num" :valid="patient_valid"
+                             :researches="selected_researches" :base="selected_card.base" :card_pk="selected_card.pk"/>
+      </div>
+      <div v-show="mode === DIRECTION_MODE_CALL">
+        <CallDoctor :card_pk="selected_card.pk" :researches="selected_researches"
+                    :visible="mode === DIRECTION_MODE_CALL" />
+      </div>
+      <div v-show="mode === DIRECTION_MODE_WAIT">
+        <ListWaitCreator :card_pk="selected_card.pk" :researches="selected_researches"
+          :visible="mode === DIRECTION_MODE_WAIT" />
+      </div>
     </div>
     <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1"/>
     <rmis-directions-viewer v-if="show_rmis_directions && selected_card.is_rmis" :card="selected_card"/>
@@ -69,17 +81,28 @@
 
 <script>
   import Split from "split-grid";
-  import ResearchesPicker from '../ui-cards/ResearchesPicker'
-  import PatientPicker from '../ui-cards/PatientPicker'
-  import SelectedResearches from '../ui-cards/SelectedResearches'
-  import DirectionsHistory from '../ui-cards/DirectionsHistory'
-  import ResultsViewer from '../modals/ResultsViewer'
-  import RmisDirectionsViewer from '../modals/RmisDirectionsViewer'
-  import LastResult from '../ui-cards/LastResult'
-  import forms from '../forms';
+  import ResearchesPicker from '@/ui-cards/ResearchesPicker'
+  import PatientPicker from '@/ui-cards/PatientPicker'
+  import SelectedResearches from '@/ui-cards/SelectedResearches'
+  import DirectionsHistory from '@/ui-cards/DirectionsHistory'
+  import ResultsViewer from '@/modals/ResultsViewer'
+  import RmisDirectionsViewer from '@/modals/RmisDirectionsViewer'
+  import LastResult from '@/ui-cards/LastResult'
+  import DirectAndPlanSwitcher from "@/ui-cards/DirectAndPlanSwitcher";
+  import forms from '@/forms';
+  import {
+    DIRECTION_MODE_DIRECTION,
+    DIRECTION_MODE_CALL,
+    DIRECTION_MODE_WAIT,
+  } from '@/constants';
+  import CallDoctor from "@/ui-cards/CallDoctor";
+  import ListWaitCreator from "@/ui-cards/ListWaitCreator";
 
   export default {
     components: {
+      ListWaitCreator,
+      CallDoctor,
+      DirectAndPlanSwitcher,
       PatientPicker,
       ResearchesPicker,
       SelectedResearches,
@@ -114,6 +137,14 @@
         diagnos: '',
         fin: -1,
         hasGrid: Modernizr.cssgrid,
+        mode: null,
+        DIRECTION_MODE_DIRECTION,
+        DIRECTION_MODE_CALL,
+        DIRECTION_MODE_WAIT,
+        modes_counts: {
+          [DIRECTION_MODE_CALL]: 0,
+          [DIRECTION_MODE_WAIT]: 0,
+        },
       }
     },
     created() {
@@ -136,6 +167,14 @@
 
       this.$root.$on('update_fin', (fin) => {
         this.fin = fin
+      })
+
+      this.$root.$on('call-doctor:rows-count', count => {
+        this.modes_counts[DIRECTION_MODE_CALL] = count
+      })
+
+      this.$root.$on('list-wait-creator:rows-count', count => {
+        this.modes_counts[DIRECTION_MODE_WAIT] = count
       })
     },
     mounted() {
@@ -424,6 +463,27 @@
 
         content: " ";
       }
+    }
+  }
+
+  .g {
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+
+    > div:first-child {
+      height: 34px;
+      flex: 1 1 34px;
+      width: 100%;
+      border: none!important;
+    }
+
+    > div:not(:first-child) {
+      flex: 1 calc(100% - 34px);
+      height: calc(100% - 34px);
+      padding-top: 1px;
+      width: 100%;
+      border-top: none;
     }
   }
 </style>

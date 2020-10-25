@@ -46,14 +46,8 @@ export default new Vuex.Store({
     },
     [mutation_types.SET_LOADING_COUNTER](state, {loadingCounter}) {
       state.loadingCounter = Math.max(0, loadingCounter)
-      if (state.loadingCounter > 0) {
-        state.inLoading = true
-        state.loadingLabel = 'Загрузка...'
-      }
-      else {
-        state.inLoading = false
-        state.loadingLabel = 'Загрузка...'
-      }
+      state.inLoading = state.loadingCounter > 0
+      state.loadingLabel = 'Загрузка'
     },
     [mutation_types.TOGGLE_ANESTHESIA_MENU_SHOW](state){
       state.showMenuAnesthesiaStatus = !state.showMenuAnesthesiaStatus

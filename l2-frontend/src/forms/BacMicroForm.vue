@@ -72,7 +72,7 @@
                   </colgroup>
                   <thead>
                   <tr>
-                    <th colspan="2"  v-if="!confirmed">Название</th>
+                    <th colspan="2" v-if="!confirmed">Название</th>
                     <th v-else>Название</th>
                     <th></th>
                     <th>Чувствительность</th>

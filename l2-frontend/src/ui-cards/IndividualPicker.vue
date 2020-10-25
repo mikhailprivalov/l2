@@ -191,7 +191,7 @@
         if (!this.query.includes('individual_pk:')) {
           this.return_base = this.return_card = null
         }
-        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск пациента...'})
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск пациента'})
         patients_point.searchIndividual(this, 'query').then((result) => {
           this.clear()
           if (result.results) {

@@ -60,6 +60,8 @@ INSTALLED_APPS = (
     'external_system',
     'plans',
     'medical_certificates',
+    'list_wait',
+    'doctor_call',
 )
 
 MIDDLEWARE = [

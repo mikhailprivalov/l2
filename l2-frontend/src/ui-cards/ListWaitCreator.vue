@@ -1,0 +1,209 @@
+<template>
+  <div v-if="card_pk === -1" class="empty">
+    <div>Пациент не выбран</div>
+  </div>
+  <div v-else class="root">
+    <div class="col-form mid">
+      <div class="form-row sm-header">
+        Данные для листа ожидания
+      </div>
+      <div class="form-row sm-f">
+        <div class="row-t">Дата</div>
+        <input class="form-control" type="date" v-model="date" :min="td">
+      </div>
+      <div class="form-row sm-f">
+        <div class="row-t">Комментарий</div>
+        <textarea class="form-control" v-model="comment"></textarea>
+      </div>
+      <template v-if="researches.length > 0">
+        <div class="form-row sm-header">
+          Услуги
+        </div>
+        <div class="researches">
+          <research-display v-for="(res, idx) in disp_researches" :simple="true"
+                            :no_tooltip="true"
+                            :key="res.pk"
+                            :title="res.title" :pk="res.pk" :n="idx"
+                            :nof="disp_researches.length"/>
+        </div>
+        <div class="controls">
+          <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save">Создать записи в лист ожидания</button>
+        </div>
+      </template>
+      <div v-else style="padding: 10px;color: gray;text-align: center">
+        Услуги не выбраны
+      </div>
+
+      <div class="rows" v-if="rows_count > 0">
+        <table class="table table-bordered table-condensed table-sm-pd"
+               style="table-layout: fixed; font-size: 12px; margin-top: 0;">
+          <colgroup>
+            <col width="75">
+            <col/>
+            <col/>
+            <col/>
+          </colgroup>
+          <thead>
+          <tr>
+            <th>Дата</th>
+            <th>Услуга</th>
+            <th>Комментарий</th>
+            <th>Статус</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr v-for="r in rows_mapped">
+              <td>{{r.date}}</td>
+              <td>{{r.service}}</td>
+              <td style="white-space: pre-wrap">{{r.comment}}</td>
+              <td>{{STATUSES[r.status]}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import * as action_types from "@/store/action-types";
+  import api from "@/api";
+  import moment from "moment";
+  import ResearchDisplay from "@/ui-cards/ResearchDisplay";
+
+  const STATUSES = {0: "ожидает", 1: "выполнено", 2: "отменено"};
+
+  export default {
+    name: "ListWaitCreator",
+    components: {
+      ResearchDisplay,
+    },
+    props: {
+      card_pk: {
+        required: true,
+      },
+      researches: {
+        type: Array,
+      },
+      visible: {
+        type: Boolean,
+      },
+    },
+    data() {
+      return {
+        date: moment().format('YYYY-MM-DD'),
+        td: moment().format('YYYY-MM-DD'),
+        comment: '',
+        rows: [],
+        STATUSES,
+      };
+    },
+    watch: {
+      rows_count: {
+        handler() {
+          this.$root.$emit('list-wait-creator:rows-count', this.rows_count);
+        },
+        immediate: true,
+      },
+      card_pk: {
+        handler() {
+          this.rows = []
+          this.load_data();
+        },
+        immediate: true,
+      },
+      visible: {
+        handler() {
+          this.load_data();
+        },
+      },
+    },
+    methods: {
+      async save() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const result = await api(
+          'list-wait/create', this,
+          ['card_pk', 'researches', 'date', 'comment']
+        )
+        await this.$store.dispatch(action_types.DEC_LOADING)
+        if (result.ok) {
+          okmessage('Записи в лист ожидания созданы');
+          this.date = this.td = moment().format('YYYY-MM-DD');
+          this.comment = '';
+          this.$root.$emit('researches-picker:clear_all');
+        }
+      },
+      async load_data() {
+        if (this.card_pk === -1) {
+          return;
+        }
+        if (!this.visible) {
+          this.rows = await api('list-wait/actual-rows', this, 'card_pk')
+          return;
+        }
+        await this.$store.dispatch(action_types.INC_LOADING)
+        this.rows = await api('list-wait/actual-rows', this, 'card_pk')
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      },
+    },
+    computed: {
+      disp_researches() {
+        return this.researches.map(id => {
+          return this.$store.getters.researches_obj[id];
+        })
+      },
+      rows_count() {
+        return this.rows.length;
+      },
+      rows_mapped() {
+        return this.rows.map(r => ({
+          pk: r.pk,
+          date: moment(r.exec_at).format('DD.MM.YYYY'),
+          service: r.research__title,
+          comment: r.comment,
+          status: r.work_status,
+        }));
+      },
+    },
+  }
+</script>
+
+<style scoped lang="scss">
+  .root, .empty {
+    position: absolute;
+    top: 0 !important;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .empty {
+    color: gray;
+    display: flex;
+    justify-content: center;
+
+    div {
+      align-self: center;
+    }
+  }
+
+  .root {
+    overflow: auto;
+  }
+
+  .col-form {
+    padding-bottom: 10px;
+  }
+
+  .researches, .controls {
+    padding: 5px;
+  }
+
+  .controls {
+    padding-top: 0;
+  }
+
+  .rows {
+    margin-top: 5px;
+  }
+</style>

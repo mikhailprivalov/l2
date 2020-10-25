@@ -38,6 +38,7 @@ urlpatterns = [
     path('job-cancel', views.job_cancel),
     path('reader-status', views.reader_status),
     path('reader-status-update', views.reader_status_update),
+    path('actual-districts', views.actual_districts),
     path('researches/', include('api.researches.urls')),
     path('patients/', include('api.patients.urls')),
     path('directions/', include('api.directions.urls')),
@@ -45,4 +46,6 @@ urlpatterns = [
     path('bacteria/', include('api.bacteria.urls')),
     path('laboratory/', include('api.laboratory.urls')),
     path('plans/', include('api.plans.urls')),
+    path('doctor-call/', include('api.doctor_call.urls')),
+    path('list-wait/', include('api.list_wait.urls')),
 ]

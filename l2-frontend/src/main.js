@@ -72,6 +72,8 @@ new Vue({
     'Profiles': () => import('@/pages/Profiles'),
     'EmployeeJobs': () => import('@/pages/EmployeeJobs'),
     'Stationar': () => import('@/pages/Stationar'),
+    'DocCall': () => import('@/pages/DocCall'),
+    'ListWait': () => import('@/pages/ListWait'),
   },
   data: {
     timeouts: {},
