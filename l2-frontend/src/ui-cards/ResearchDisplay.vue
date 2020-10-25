@@ -1,6 +1,6 @@
 <template>
   <div class="root-c" @click.left="remove"
-       :title="`${title}, ${count} шт.`" v-tippy="{ placement : 'bottom', arrow: true }"
+       :title="no_tooltip ? null : `${title}, ${count} шт.`" v-tippy="{ placement : 'bottom', arrow: true }"
        @click.right.prevent="update_comment">
     <div class="root-in">
       <span class="category" v-if="category">[{{category}}]</span>
@@ -42,6 +42,10 @@
         default: ''
       },
       simple: {
+        type: Boolean,
+        default: false,
+      },
+      no_tooltip: {
         type: Boolean,
         default: false,
       },

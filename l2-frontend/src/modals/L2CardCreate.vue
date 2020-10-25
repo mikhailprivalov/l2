@@ -152,8 +152,7 @@
             </div>
             <div class="form-row sm-f">
               <div class="row-t">Участок</div>
-              <select v-model="card.district" class="form-control"
-                      style="width: 65%;border: none;height: 26px;">
+              <select v-model="card.district" class="form-control">
                 <option v-for="c in card.districts" :value="c.id">
                   {{c.title}}
                 </option>
@@ -161,8 +160,7 @@
             </div>
             <div class="form-row sm-f" v-if="card.sex === 'ж'">
               <div class="row-t">Гинекологический участок</div>
-              <select v-model="card.ginekolog_district" class="form-control"
-                      style="width: 65%;border: none;height: 26px;">
+              <select v-model="card.ginekolog_district" class="form-control">
                 <option v-for="c in card.gin_districts" :value="c.id">
                   {{c.title}}
                 </option>
@@ -763,6 +761,7 @@
           }
         }
         okmessage('Данные сохранены')
+        this.$root.$emit('update_card_data');
         if (hide_after) {
           this.hide_modal()
         }
@@ -953,11 +952,6 @@
 </script>
 
 <style scoped lang="scss">
-  select.form-control {
-    padding: 0;
-    overflow: visible;
-  }
-
   .nonPrior {
     opacity: .7;
 
@@ -988,99 +982,6 @@
     padding: 0;
     height: calc(100% - 91px);
     min-height: 200px;
-  }
-
-  .form-row {
-    width: 100%;
-    display: flex;
-    border-bottom: 1px solid #434a54;
-
-    &:first-child:not(.nbt-i) {
-      border-top: 1px solid #434a54;
-    }
-
-    justify-content: stretch;
-
-    .row-t {
-      background-color: #AAB2BD;
-      padding: 7px 0 0 10px;
-      width: 35%;
-      flex: 0 35%;
-      color: #fff;
-    }
-
-    .input-group {
-      flex: 0 65%;
-    }
-
-    input, .row-v, ::v-deep input {
-      background: #fff;
-      border: none;
-      border-radius: 0 !important;
-      width: 65%;
-      flex: 0 65%;
-      height: 34px;
-    }
-
-    &.sm-f {
-      .row-t {
-        padding: 2px 0 0 10px;
-      }
-
-      input, .row-v, ::v-deep input {
-        height: 26px;
-      }
-    }
-
-    ::v-deep input {
-      width: 100% !important;
-    }
-
-    .row-v {
-      padding: 7px 0 0 10px;
-    }
-
-    ::v-deep .input-group {
-      border-radius: 0;
-    }
-
-    ::v-deep ul {
-      width: auto;
-      font-size: 13px;
-    }
-
-    ::v-deep ul li {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      padding: 2px .25rem;
-      margin: 0 .2rem;
-
-      a {
-        padding: 2px 10px;
-      }
-    }
-  }
-
-  .col-form {
-    &.left {
-      padding-right: 0 !important;
-
-      .row-t, input, .row-v, ::v-deep input {
-        border-right: 1px solid #434a54 !important;
-      }
-
-      .form-row .input-group {
-        width: 65%;
-      }
-    }
-
-    &:not(.left):not(.mid) {
-      padding-left: 0 !important;
-
-      .row-t {
-        border-right: 1px solid #434a54;
-      }
-    }
   }
 
   .info-row {

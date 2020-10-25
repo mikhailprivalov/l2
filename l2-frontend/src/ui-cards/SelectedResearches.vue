@@ -62,7 +62,7 @@
         </tr>
         </tbody>
       </table>
-      <table class="table table-bordered table-condensed" style="table-layout: fixed" v-if="show_additions">
+      <table class="table table-bordered table-condensed more-params" style="table-layout: fixed" v-if="show_additions">
         <colgroup>
           <col width="185">
           <col>
@@ -118,7 +118,7 @@
 
     <modal ref="modal" @close="cancel_update" show-footer="true"
            overflow-unset="true"
-           v-show="need_update_comment.length > 0 && !hide_window_update && !simple">
+           v-show="visible && need_update_comment.length > 0 && !hide_window_update && !simple">
       <span slot="header">Настройка назначений</span>
       <div slot="body" class="overflow-unset">
         <table class="table table-bordered table-responsive"
@@ -215,6 +215,10 @@
       },
       card_pk: {
         type: Number
+      },
+      visible: {
+        type: Boolean,
+        default: true
       },
       operator: {
         type: Boolean,
@@ -903,5 +907,12 @@
   .pb0 {
     padding-bottom: 0;
     padding-top: 4px;
+  }
+
+  .more-params {
+    select, input, ::v-deep select, ::v-deep input {
+      border-radius: 0;
+      border: none;
+    }
   }
 </style>

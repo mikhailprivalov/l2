@@ -1762,3 +1762,149 @@ input[type=date].form-control {
   padding: 0 4px;
   border-radius: 2px;
 }
+
+.form-row {
+  width: 100%;
+  display: flex;
+  border-bottom: 1px solid #434a54;
+
+  &:first-child:not(.nbt-i) {
+    border-top: 1px solid #434a54;
+  }
+
+  justify-content: stretch;
+
+  .row-t {
+    background-color: #AAB2BD;
+    padding: 7px 0 0 10px;
+    width: 35%;
+    flex: 0 35%;
+    color: #fff;
+  }
+
+  .input-group {
+    flex: 0 65%;
+  }
+
+  select {
+    padding: 0;
+    overflow: visible;
+  }
+
+  input, .row-v, select {
+    height: 34px;
+  }
+
+  input, .row-v, select, textarea {
+    background: #fff;
+    border: none;
+    border-radius: 0 !important;
+    width: 65%;
+    flex: 0 65%;
+  }
+
+  textarea {
+    resize: none;
+  }
+
+  &.sm-header {
+    padding: 4px 8px;
+    font-weight: bold;
+    span {
+      display: inline-block;
+      height: 19px;
+    }
+  }
+
+  &.sm-f {
+    .row-t {
+      padding: 2px 0 0 10px;
+    }
+
+    input, .row-v, select {
+      height: 26px;
+    }
+
+    select {
+      padding-left: 6px;
+    }
+  }
+
+  input {
+    width: 100% !important;
+  }
+
+  .row-v {
+    padding: 7px 0 0 10px;
+  }
+
+  .input-group {
+    border-radius: 0;
+  }
+
+  ul {
+    width: auto;
+    font-size: 13px;
+  }
+
+  ul li {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 2px .25rem;
+    margin: 0 .2rem;
+
+    a {
+      padding: 2px 10px;
+    }
+  }
+}
+
+.col-form {
+  &.left {
+    padding-right: 0 !important;
+
+    .row-t, input, .row-v {
+      border-right: 1px solid #434a54 !important;
+    }
+
+    .form-row .input-group {
+      width: 65%;
+    }
+  }
+
+  &:not(.left):not(.mid) {
+    padding-left: 0 !important;
+
+    .row-t {
+      border-right: 1px solid #434a54;
+    }
+  }
+}
+
+.loading-text {
+  &.loading-sm {
+    color: lightgray;
+    font-weight: bold;
+  }
+
+  &:after {
+    font-family: "Courier New", Courier, monospace !important;
+    animation: dots 1s linear infinite;
+    content: "\00a0\00a0\00a0";
+  }
+}
+
+@keyframes dots {
+  0%, 20% {
+    content: ".\00a0\00a0";
+  }
+  40% {
+    content: "..\00a0";
+  }
+  60% {
+    content: "...";
+  }
+  90%, 100% {
+    content: "\00a0\00a0\00a0";
+  }
+}

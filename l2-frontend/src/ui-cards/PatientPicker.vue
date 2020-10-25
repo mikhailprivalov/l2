@@ -880,7 +880,7 @@
         this.emit_input()
       },
       open_as_l2_card() {
-        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Загрузка...'})
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Загрузка'})
         patients_point.searchL2Card({card_pk: this.selected_card.pk}).then((result) => {
           this.clear()
           if (result.results) {
@@ -914,7 +914,7 @@
         $('input').each(function () {
           $(this).trigger('blur')
         })
-        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'})
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты'})
         patients_point.searchCard({
           type: this.base,
           query: q,

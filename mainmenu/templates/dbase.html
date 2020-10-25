@@ -126,7 +126,7 @@
                         <div class="sk-circle12 sk-circle"></div>
                     </div>
                     {% verbatim %}
-                    <span style="color: #fff; font-size: 14pt;font-weight: 200;margin-left: 10px;vertical-align: middle;display: inline-block">{{ loadingLabel.toUpperCase() }}</span>
+                    <span class="loading-text" style="color: #fff; font-size: 14pt;font-weight: 200;margin-left: 10px;vertical-align: middle;display: inline-block">{{ loadingLabel.toUpperCase() }}</span>
                     {% endverbatim %}
                 </div>
             </div>
@@ -135,7 +135,6 @@
     {% block content %}{% endblock %}
     {% block foot %}
     {% endblock %}
-    {#    <loading :show="inLoading" :label="loadingLabel" :overlay="false"></loading>#}
 </div>
 <ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none;z-index: 100000">
     <li class="context-st"><a class="noclick" onclick="return false"><label>Число:<input type="number" value="10"

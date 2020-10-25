@@ -293,7 +293,7 @@
         if (!this.query_valid || this.inLoading)
           return
         this.check_base()
-        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'})
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты'})
         patients_point.searchCard(this, ['query', 'inc_rmis'], {
           type: this.base,
           list_all_cards: false,
