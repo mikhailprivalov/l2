@@ -1,7 +1,6 @@
 <template>
   <div>
-    <h4 style="text-align: center">Листожидания</h4>
-    <div class="row" style="margin-top: 100px">
+    <div class="row" style="margin-top: 100px;min-height: 400px;">
       <div class="col-xs-4">
       </div>
       <div class="col-xs-4">
@@ -51,7 +50,6 @@
 </template>
 
 <script>
-  import * as action_types from "../store/action-types";
   import Treeselect from "@riophae/vue-treeselect";
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   import moment from "moment";

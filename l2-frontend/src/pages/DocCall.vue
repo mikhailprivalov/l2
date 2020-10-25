@@ -16,7 +16,7 @@
                 </label>
               </div>
               <div class="col-xs-9">
-                <input v-model="date" type="date" style="display: inline-block"/>
+                <input v-model="date" type="date" class="form-control"/>
               </div>
             </div>
             <div class="row" style="margin-top: 10px">
@@ -49,10 +49,10 @@
 </template>
 
 <script>
-  import * as action_types from "../store/action-types";
   import Treeselect from "@riophae/vue-treeselect";
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   import moment from "moment";
+  import api from '@/api';
 
   export default {
     name: "DocCall",
@@ -61,8 +61,11 @@
         return {
           date: moment().format('YYYY-MM-DD'),
           district: -1,
-          districts: [{id: -1, label: 'Не выбран'}, {id: 1, label: '1'}, {id: 2, label: '2'}, {id: 3, label: '3'}, {id: 4, label: '4'}],
+          districts: [],
       }
+    },
+    mounted() {
+      api('actual-districts').then(rows => this.districts = rows);
     },
     methods: {
       print() {

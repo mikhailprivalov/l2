@@ -19,7 +19,7 @@ import users.models as users
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
-from clients.models import CardBase, Individual, Card, Document
+from clients.models import CardBase, Individual, Card, Document, District
 from directory.models import Fractions, ParaclinicInputField, ResearchSite, Culture, Antibiotic
 from directory.models import Researches as DResearches
 from external_system.models import FsliRefbookTest
@@ -1172,3 +1172,9 @@ def reader_status_update(request):
         cache.set(f'reader-status:{reader_id}', '{"status": "wait"}', 10)
 
     return JsonResponse({"ok": True})
+
+
+def actual_districts(request):
+    rows = District.objects.all().order_by('-sort_weight', '-id').values('pk', 'title', 'is_ginekolog')
+    rows = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["title"] if not x['is_ginekolog'] else "Гинекология: {}".format(x['title'])} for x in rows]]
+    return JsonResponse(rows, safe=False)
