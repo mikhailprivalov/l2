@@ -1,22 +1,25 @@
+import datetime
+
+import simplejson as json
 from django.db import models
+
+import slog.models as slog
 from clients.models import Card, District
 from directory.models import Researches
-from users.models import DoctorProfile
-import datetime
 from laboratory.utils import current_time
-import slog.models as slog
-import simplejson as json
+from users.models import DoctorProfile
 
 
 class DoctorCall(models.Model):
     client = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
     research = models.ForeignKey(Researches, null=True, blank=True, help_text='Вид исследования из справочника', on_delete=models.CASCADE)
     create_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания')
-    exec_at = models.DateTimeField(auto_now_add=True, help_text='Дата вызова на дом', db_index=True)
+    exec_at = models.DateTimeField(help_text='Дата вызова на дом', db_index=True)
     comment = models.TextField()
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена вызова')
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель вызова на дом', on_delete=models.SET_NULL)
     district = models.ForeignKey(District, default=None, null=True, blank=True, db_index=True, help_text="Участок", on_delete=models.SET_NULL)
+    address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес")
 
     class Meta:
         verbose_name = 'Вызов'
@@ -24,11 +27,11 @@ class DoctorCall(models.Model):
 
     @staticmethod
     def doctor_call_save(data, doc_who_create):
-        patient_card = Card.objects.filter(pk=data['card_pk'])[0]
+        patient_card = Card.objects.get(pk=data['card_pk']) if 'card' not in data else data['card']
         research_obj = Researches.objects.get(pk=data['research'])
-        district_obj = District.objects.get(pk=data.get('district'))
+        district_obj = District.objects.get(pk=data['district'])
         doc_call = DoctorCall(client=patient_card, research=research_obj, exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'), comment=data['comment'],
-                              doc_who_create=doc_who_create, cancel=False, district=district_obj)
+                              doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'])
         doc_call.save()
 
         slog.Log(
@@ -36,10 +39,10 @@ class DoctorCall(models.Model):
             type=80003,
             body=json.dumps(
                 {
-                    "card_pk": data['card_pk'],
+                    "card_pk": patient_card.pk,
                     "research": research_obj.title,
-                    "distric": district_obj.title,
-                    "date": datetime.datetime.strptime(data['date']),
+                    "district": district_obj.title,
+                    "date": data['date'],
                     "comment": data['comment'],
                 }
             ),
@@ -66,7 +69,6 @@ class DoctorCall(models.Model):
             user=doc_who_create,
         ).save()
         return doc_call.pk
-
 
     @staticmethod
     def doctor_call_get(data):

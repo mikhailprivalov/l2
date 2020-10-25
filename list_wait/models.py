@@ -17,9 +17,9 @@ class ListWait(models.Model):
     client = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
     research = models.ForeignKey(Researches, null=True, blank=True, db_index=True, help_text='Вид исследования из справочника', on_delete=models.CASCADE)
     create_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания')
-    exec_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания', db_index=True)
+    exec_at = models.DateTimeField(help_text='Дата создания', db_index=True)
     comment = models.TextField()
-    status = models.BooleanField(choices=STATUS, db_index=True)
+    work_status = models.PositiveSmallIntegerField(choices=STATUS, db_index=True, default=0, blank=True)
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель листа ожидания', on_delete=models.SET_NULL)
 
     class Meta:
@@ -28,7 +28,7 @@ class ListWait(models.Model):
 
     @staticmethod
     def list_wait_save(data, doc_who_create):
-        patient_card = Card.objects.filter(pk=data['card_pk'])[0]
+        patient_card = Card.objects.get(pk=data['card_pk']) if 'card' not in data else data['card']
         research_obj = Researches.objects.get(pk=data['research'])
         list_wait = ListWait(client=patient_card,
                              research=research_obj,
@@ -43,9 +43,9 @@ class ListWait(models.Model):
             type=80005,
             body=json.dumps(
                 {
-                    "card_pk": data['card_pk'],
+                    "card_pk": patient_card.pk,
                     "research": research_obj.title,
-                    "date": datetime.datetime.strptime(data['date']),
+                    "date": data['date'],
                     "comment": data['comment'],
                 }
             ),

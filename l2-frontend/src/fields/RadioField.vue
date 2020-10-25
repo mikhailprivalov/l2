@@ -2,7 +2,7 @@
   <div class="base" :class="{fullWidth, redesigned}">
     <a href="#" @click.prevent="changeValue(v)" :class="{ active: v === val, disabled }"
        v-for="v in variants">
-      <span>{{ v }}</span>
+      <span>{{ v }} <span class="badge badge-warning" v-if="Boolean(bages[v])">{{bages[v]}}</span></span>
     </a>
   </div>
 </template>
@@ -31,6 +31,11 @@
                 required: false,
                 default: false,
                 type: Boolean,
+            },
+            bages: {
+              type: Object,
+              required: false,
+              default: () => {},
             },
         },
         watch: {
@@ -102,7 +107,7 @@
         opacity: .8;
       }
 
-      span {
+      > span {
         display: block;
         text-overflow: ellipsis;
         overflow: hidden;

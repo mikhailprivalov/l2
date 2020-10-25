@@ -1,5 +1,5 @@
 <template>
-  <radio-field v-model="val" :variants="DIRECTION_MODES" fullWidth/>
+  <radio-field v-model="val" :variants="DIRECTION_MODES" :bages="bages"/>
 </template>
 
 <script>
@@ -13,6 +13,11 @@
       value: {
         type: String,
         required: false,
+      },
+      bages: {
+        type: Object,
+        required: false,
+        default: () => {},
       },
     },
     data() {

@@ -56,7 +56,7 @@
     </div>
     <div class="f gutter gutter-col gutter-column-2"></div>
     <div class="g">
-      <DirectAndPlanSwitcher v-model="mode" />
+      <DirectAndPlanSwitcher v-model="mode" :bages="this.modes_counts" />
       <div v-show="mode === DIRECTION_MODE_DIRECTION" style="padding-top: 1px">
         <selected-researches :operator="selected_card.operator" :ofname="selected_card.ofname"
                              :visible="mode === DIRECTION_MODE_DIRECTION"
@@ -69,7 +69,8 @@
                     :visible="mode === DIRECTION_MODE_CALL" />
       </div>
       <div v-show="mode === DIRECTION_MODE_WAIT">
-        WAIT
+        <ListWaitCreator :card_pk="selected_card.pk" :researches="selected_researches"
+          :visible="mode === DIRECTION_MODE_WAIT" />
       </div>
     </div>
     <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1"/>
@@ -95,9 +96,11 @@
     DIRECTION_MODE_WAIT,
   } from '@/constants';
   import CallDoctor from "@/ui-cards/CallDoctor";
+  import ListWaitCreator from "@/ui-cards/ListWaitCreator";
 
   export default {
     components: {
+      ListWaitCreator,
       CallDoctor,
       DirectAndPlanSwitcher,
       PatientPicker,
@@ -138,6 +141,10 @@
         DIRECTION_MODE_DIRECTION,
         DIRECTION_MODE_CALL,
         DIRECTION_MODE_WAIT,
+        modes_counts: {
+          [DIRECTION_MODE_CALL]: 0,
+          [DIRECTION_MODE_WAIT]: 0,
+        },
       }
     },
     created() {
@@ -160,6 +167,14 @@
 
       this.$root.$on('update_fin', (fin) => {
         this.fin = fin
+      })
+
+      this.$root.$on('call-doctor:rows-count', count => {
+        this.modes_counts[DIRECTION_MODE_CALL] = count
+      })
+
+      this.$root.$on('list-wait-creator:rows-count', count => {
+        this.modes_counts[DIRECTION_MODE_WAIT] = count
       })
     },
     mounted() {

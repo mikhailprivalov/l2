@@ -5,27 +5,7 @@
   <div v-else class="root">
     <div class="col-form mid">
       <div class="form-row sm-header">
-        Данные из картотеки<span v-if="!loaded" class="loading-text loading-sm">&nbsp;загрузка</span>
-      </div>
-      <div class="form-row sm-f">
-        <div class="row-t">Адрес проживания</div>
-        <TypeAhead :delayTime="400" :getResponse="getResponse"
-                   :highlighting="highlighting" :limit="10"
-                   name="af"
-                   :minChars="4" :onHit="onHit('fact_address', true)" :selectFirst="true" maxlength="110"
-                   ref="af" :src="`/api/autocomplete?value=:keyword&type=fias`" v-model="card.fact_address"
-        />
-      </div>
-      <div class="form-row sm-f">
-        <div class="row-t">Участок</div>
-        <select v-model="card.district" class="form-control">
-          <option v-for="c in card.districts" :value="c.id">
-            {{c.title}}
-          </option>
-        </select>
-      </div>
-      <div class="form-row sm-header">
-        Данные вызова
+        Данные для листа ожидания
       </div>
       <div class="form-row sm-f">
         <div class="row-t">Дата</div>
@@ -47,8 +27,7 @@
                             :nof="disp_researches.length"/>
         </div>
         <div class="controls">
-          <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save">Создать записи для вызова на дом
-          </button>
+          <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save">Создать записи в лист ожидания</button>
         </div>
       </template>
       <div v-else style="padding: 10px;color: gray;text-align: center">
@@ -63,15 +42,13 @@
             <col/>
             <col/>
             <col/>
-            <col/>
           </colgroup>
           <thead>
           <tr>
             <th>Дата</th>
             <th>Услуга</th>
             <th>Комментарий</th>
-            <th>Адрес</th>
-            <th>Участок</th>
+            <th>Статус</th>
           </tr>
           </thead>
           <tbody>
@@ -79,8 +56,7 @@
               <td>{{r.date}}</td>
               <td>{{r.service}}</td>
               <td style="white-space: pre-wrap">{{r.comment}}</td>
-              <td>{{r.address}}</td>
-              <td>{{r.district}}</td>
+              <td>{{STATUSES[r.status]}}</td>
             </tr>
           </tbody>
         </table>
@@ -90,18 +66,17 @@
 </template>
 
 <script>
-  import TypeAhead from 'vue2-typeahead'
   import * as action_types from "@/store/action-types";
   import api from "@/api";
-  import patients_point from "@/api/patients-point";
   import moment from "moment";
   import ResearchDisplay from "@/ui-cards/ResearchDisplay";
 
+  const STATUSES = {0: "ожидает", 1: "выполнено", 2: "отменено"};
+
   export default {
-    name: "CallDoctor",
+    name: "ListWaitCreator",
     components: {
       ResearchDisplay,
-      TypeAhead,
     },
     props: {
       card_pk: {
@@ -116,25 +91,17 @@
     },
     data() {
       return {
-        card: {
-          fact_address: "",
-          districts: [],
-          district: -1,
-        },
-        loaded: true,
         date: moment().format('YYYY-MM-DD'),
         td: moment().format('YYYY-MM-DD'),
         comment: '',
         rows: [],
+        STATUSES,
       };
-    },
-    mounted() {
-      this.$root.$on('update_card_data', () => this.load_data());
     },
     watch: {
       rows_count: {
         handler() {
-          this.$root.$emit('call-doctor:rows-count', this.rows_count);
+          this.$root.$emit('list-wait-creator:rows-count', this.rows_count);
         },
         immediate: true,
       },
@@ -152,59 +119,31 @@
       },
     },
     methods: {
-      getResponse(resp) {
-        return [...resp.data.data]
-      },
-      onHit(name, no_next) {
-        return (item, t) => {
-          if (t.$el) {
-            if (no_next) {
-              $('input', t.$el).focus();
-            } else {
-              let index = $('input', this.$el).index($('input', t.$el)) + 1;
-              $('input', this.$el).eq(index).focus();
-            }
-          }
-          if (!item) {
-            return;
-          }
-          this.card[name] = item;
+      async save() {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const result = await api(
+          'list-wait/create', this,
+          ['card_pk', 'researches', 'date', 'comment']
+        )
+        await this.$store.dispatch(action_types.DEC_LOADING)
+        if (result.ok) {
+          okmessage('Записи в лист ожидания созданы');
+          this.date = this.td = moment().format('YYYY-MM-DD');
+          this.comment = '';
+          this.$root.$emit('researches-picker:clear_all');
         }
       },
-      highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
       async load_data() {
         if (this.card_pk === -1) {
           return;
         }
         if (!this.visible) {
-          this.rows = await api('doctor-call/actual-rows', this, 'card_pk')
+          this.rows = await api('list-wait/actual-rows', this, 'card_pk')
           return;
         }
-        this.loaded = false
         await this.$store.dispatch(action_types.INC_LOADING)
-        this.card = await patients_point.getCard(this, 'card_pk')
-        this.loaded = true
-        this.rows = await api('doctor-call/actual-rows', this, 'card_pk')
+        this.rows = await api('list-wait/actual-rows', this, 'card_pk')
         await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      async save() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const result = await api(
-          'doctor-call/create', this,
-          ['card_pk', 'researches', 'date', 'comment'],
-          {
-            fact_address: this.card.fact_address,
-            district: this.card.district,
-          }
-        )
-        await this.load_data();
-        await this.$store.dispatch(action_types.DEC_LOADING)
-        if (result.ok) {
-          okmessage('Записи для вызова на дом созданы');
-          this.date = this.td = moment().format('YYYY-MM-DD');
-          this.comment = '';
-          this.$root.$emit('researches-picker:clear_all');
-        }
       },
     },
     computed: {
@@ -221,9 +160,8 @@
           pk: r.pk,
           date: moment(r.exec_at).format('DD.MM.YYYY'),
           service: r.research__title,
-          address: r.address,
-          district: r.district__title,
           comment: r.comment,
+          status: r.work_status,
         }));
       },
     },
