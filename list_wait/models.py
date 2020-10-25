@@ -88,10 +88,10 @@ class ListWait(models.Model):
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         if data.get('research', None):
             research_obj = Researches.objects.filter(pk=data.get('research'))
-            result = ListWait.objects.filter(research=research_obj, exet_at__range=(start_date, end_date)).order_by("exec_at")
+            result = ListWait.objects.filter(research=research_obj, exec_at__range=(start_date, end_date)).order_by("exec_at")
         elif data.get('patient_pk', None):
             result = ListWait.objects.filter(client__pk=data.get('patient_pk')).order_by("exec_at")
         else:
-            result = ListWait.objects.filter(exet_at__range=(start_date, end_date)).order_by("pk", "exec_at", "research")
+            result = ListWait.objects.filter(exec_at__range=(start_date, end_date)).order_by("pk", "exec_at", "research")
 
         return result

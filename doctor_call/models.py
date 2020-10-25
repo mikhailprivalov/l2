@@ -83,10 +83,10 @@ class DoctorCall(models.Model):
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         if data.get('district', None):
             district_obj = District.objects.filter(pk__in=data.get('district'))
-            result = DoctorCall.objects.filter(district__in=district_obj, exet_at____range=(start_date, end_date)).order_by("district")
+            result = DoctorCall.objects.filter(district__in=district_obj, exec_at__range=(start_date, end_date)).order_by("district")
         elif data.get('patient_pk', None):
             result = DoctorCall.objects.filter(client__pk=data.get('patient_pk')).order_by("exec_at")
         else:
-            result = DoctorCall.objects.filter(exet_at____range=(start_date, end_date)).order_by("exet_at, district")
+            result = DoctorCall.objects.filter(exec_at__range=(start_date, end_date)).order_by("exec_at, district")
 
         return result
