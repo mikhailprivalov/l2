@@ -1,6 +1,7 @@
 <template>
   <div>
-    <div class="row" style="margin-top: 60px">
+    <h4 style="text-align: center">Листожидания</h4>
+    <div class="row" style="margin-top: 100px">
       <div class="col-xs-4">
       </div>
       <div class="col-xs-4">
@@ -61,18 +62,15 @@
     components: {Treeselect, DateRange},
       data() {
         return {
-          // date: moment().format('YYYY-MM-DD'),
-          date: [moment().format('DD.MM.YYYY'), moment().add(1, 'days').format('DD.MM.YYYY')],
+          date: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
           research: -1,
           researches: [{id: -1, label: 'Все услуги'}, {id: 1, label: 'one'}, {id: 2, label: '2'}, {id: 3, label: 'three'}, {id: 4, label: '4'}],
       }
     },
     methods: {
-      async print() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {results} = await directions_point.getDirectionsTypeDate(this, ['district', 'date']);
-        this.$root.$emit('print:results', results)
-        await this.$store.dispatch(action_types.DEC_LOADING)
+      print() {
+        console.log(this.date)
+        window.open(`/forms/pdf?type=109.03&date=${this.date}&research_pk=${this.research}`);
       },
     }
   }

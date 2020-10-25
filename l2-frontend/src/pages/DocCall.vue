@@ -65,11 +65,8 @@
       }
     },
     methods: {
-      async print() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {results} = await directions_point.getDirectionsTypeDate(this, ['district', 'date']);
-        this.$root.$emit('print:results', results)
-        await this.$store.dispatch(action_types.DEC_LOADING)
+      print() {
+        window.open(`/forms/pdf?type=109.02&date=${this.date}&district=${this.district}`);
       },
     }
   }
