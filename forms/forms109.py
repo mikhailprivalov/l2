@@ -119,7 +119,15 @@ def form_01(request_data):
 
     tbl = Table(opinion, colWidths=(30 * mm, 27 * mm, 50 * mm, 50 * mm, 40 * mm, 30 * mm, 40 * mm), splitByRow=1, repeatRows=1)
 
-    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]
+        )
+    )
 
     objs.append(tbl)
     doc.build(objs)
@@ -209,13 +217,20 @@ def form_02(request_data):
                 Paragraph(f"{i.client.phone}", style),
                 Paragraph(f"{i.research.title}", style),
                 Paragraph(f"{i.comment}", style),
-
             ]
         )
 
     tbl = Table(opinion, colWidths=(10 * mm, 60 * mm, 50 * mm, 20 * mm, 30 * mm, 60 * mm, 40 * mm), splitByRow=1, repeatRows=1)
 
-    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]
+        )
+    )
 
     objs.append(tbl)
     doc.build(objs)
@@ -265,7 +280,6 @@ def form_03(request_data):
     styleCenter.firstLineIndent = 0
     styleCenter.alignment = TA_CENTER
 
-
     dates = request_data["date"].split(",")
     date_start, date_end = try_parse_range(dates[0], dates[1])
 
@@ -276,9 +290,20 @@ def form_03(request_data):
 
     research_pk = int(request_data["research_pk"])
     if research_pk > -1:
-        list_wait = ListWait.objects.filter(exec_at__range=(date_start, date_end,), research_id__pk=research_pk).order_by("exec_at")
+        list_wait = ListWait.objects.filter(
+            exec_at__range=(
+                date_start,
+                date_end,
+            ),
+            research_id__pk=research_pk,
+        ).order_by("exec_at")
     else:
-        list_wait = ListWait.objects.filter(exec_at__range=(date_start, date_end,)).order_by("exec_at")
+        list_wait = ListWait.objects.filter(
+            exec_at__range=(
+                date_start,
+                date_end,
+            )
+        ).order_by("exec_at")
 
     opinion = [
         [
@@ -302,13 +327,20 @@ def form_03(request_data):
                 Paragraph(f"{i.research.title}", style),
                 Paragraph(f"{i.get_work_status_display()}", style),
                 Paragraph(f"{i.comment}", style),
-
             ]
         )
 
     tbl = Table(opinion, colWidths=(10 * mm, 80 * mm, 30 * mm, 50 * mm, 30 * mm, 40 * mm), splitByRow=1, repeatRows=1)
 
-    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]
+        )
+    )
 
     objs.append(tbl)
     doc.build(objs)
