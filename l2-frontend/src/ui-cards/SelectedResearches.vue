@@ -22,6 +22,10 @@
       </div>
     </div>
     <div :class="['content-picker', simple ? 'simple': '']" style="margin: 5px">
+      <div v-if="Object.keys(researches_departments).length === 0"
+           style="padding: 10px;color: gray;text-align: center;width: 100%;">
+        Услуги не выбраны
+      </div>
       <table class="table table-bordered table-condensed" style="table-layout: fixed; margin-bottom: 10px;">
         <colgroup>
           <col width="130">

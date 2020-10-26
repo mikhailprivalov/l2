@@ -4,7 +4,11 @@
 
 <script>
   import RadioField from "@/fields/RadioField";
-  import {DIRECTION_MODES} from "@/constants";
+  import {
+    DIRECTION_MODE_DIRECTION,
+    DIRECTION_MODE_CALL,
+    DIRECTION_MODE_WAIT
+  } from "@/constants";
 
   export default {
     name: "DirectAndPlanSwitcher",
@@ -22,8 +26,7 @@
     },
     data() {
       return {
-        DIRECTION_MODES,
-        val: this.value || DIRECTION_MODES[0],
+        val: this.value
       }
     },
     watch: {
@@ -32,6 +35,26 @@
           this.$emit('modified', this.val);
         },
         immediate: true,
+      },
+    },
+    computed: {
+      l2_list_wait() {
+        return this.$store.getters.modules.l2_list_wait
+      },
+      l2_doc_call() {
+        return this.$store.getters.modules.l2_doc_call
+      },
+      DIRECTION_MODES() {
+        const modes = [
+          DIRECTION_MODE_DIRECTION,
+        ];
+        if (this.l2_doc_call) {
+          modes.push(DIRECTION_MODE_CALL)
+        }
+        if (this.l2_list_wait) {
+          modes.push(DIRECTION_MODE_WAIT)
+        }
+        return modes;
       },
     },
     model: {

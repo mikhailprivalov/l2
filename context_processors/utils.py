@@ -111,8 +111,8 @@ def menu(request):
                 "module": "l2_hosp",
             },
             {"url": '/mainmenu/rmis_confirm', "title": "Подтверждение отправки результатов в РМИС", "nt": False, "access": ["Подтверждение отправки результатов в РМИС"]},
-            {"url": '/mainmenu/list_wait', "title": "Листы ожидания", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
-            {"url": '/mainmenu/doc_call', "title": "Вызовы врача на дом", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
+            {"url": '/mainmenu/list_wait', "title": "Листы ожидания", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"], "module": "l2_list_wait"},
+            {"url": '/mainmenu/doc_call', "title": "Вызовы врача на дом", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"], "module": "l2_doc_call"},
             # {"url": '/cases/', "title": "Случаи обслуживания", "nt": False, "access": []},
         ]
 

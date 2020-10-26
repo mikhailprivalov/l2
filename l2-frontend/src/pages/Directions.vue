@@ -55,20 +55,20 @@
       <researches-picker v-model="selected_researches"/>
     </div>
     <div class="f gutter gutter-col gutter-column-2"></div>
-    <div class="g">
-      <DirectAndPlanSwitcher v-model="mode" :bages="this.modes_counts" />
-      <div v-show="mode === DIRECTION_MODE_DIRECTION" style="padding-top: 1px">
+    <div class="g" :class="{noMoreModules: !l2_doc_call && !l2_list_wait}">
+      <DirectAndPlanSwitcher v-model="mode" :bages="this.modes_counts" v-if="l2_doc_call || l2_list_wait" />
+      <div v-show="mode === DIRECTION_MODE_DIRECTION" :style="(l2_doc_call || l2_list_wait) && 'padding-top: 1px'">
         <selected-researches :operator="selected_card.operator" :ofname="selected_card.ofname"
                              :visible="mode === DIRECTION_MODE_DIRECTION"
                              :main_diagnosis="selected_card.main_diagnosis"
                              :history_num="selected_card.history_num" :valid="patient_valid"
                              :researches="selected_researches" :base="selected_card.base" :card_pk="selected_card.pk"/>
       </div>
-      <div v-show="mode === DIRECTION_MODE_CALL">
+      <div v-show="mode === DIRECTION_MODE_CALL" v-if="l2_doc_call">
         <CallDoctor :card_pk="selected_card.pk" :researches="selected_researches"
                     :visible="mode === DIRECTION_MODE_CALL" />
       </div>
-      <div v-show="mode === DIRECTION_MODE_WAIT">
+      <div v-show="mode === DIRECTION_MODE_WAIT" v-if="l2_list_wait">
         <ListWaitCreator :card_pk="selected_card.pk" :researches="selected_researches"
           :visible="mode === DIRECTION_MODE_WAIT" />
       </div>
@@ -137,7 +137,7 @@
         diagnos: '',
         fin: -1,
         hasGrid: Modernizr.cssgrid,
-        mode: null,
+        mode: DIRECTION_MODE_DIRECTION,
         DIRECTION_MODE_DIRECTION,
         DIRECTION_MODE_CALL,
         DIRECTION_MODE_WAIT,
@@ -241,6 +241,12 @@
           }
         }
         return false
+      },
+      l2_list_wait() {
+        return this.$store.getters.modules.l2_list_wait
+      },
+      l2_doc_call() {
+        return this.$store.getters.modules.l2_doc_call
       },
     },
   }
@@ -471,19 +477,29 @@
     flex-direction: column;
     justify-content: stretch;
 
-    > div:first-child {
-      height: 34px;
-      flex: 1 1 34px;
-      width: 100%;
-      border: none!important;
+    &:not(.noMoreModules) {
+      > div:first-child {
+        height: 34px;
+        flex: 1 1 34px;
+        width: 100%;
+        border: none !important;
+      }
+
+      > div:not(:first-child) {
+        flex: 1 calc(100% - 34px);
+        height: calc(100% - 34px);
+        padding-top: 1px;
+        width: 100%;
+        border-top: none;
+      }
     }
 
-    > div:not(:first-child) {
-      flex: 1 calc(100% - 34px);
-      height: calc(100% - 34px);
-      padding-top: 1px;
-      width: 100%;
-      border-top: none;
+    &.noMoreModules {
+      > div:first-child {
+        flex: 1 100%;
+        height: 100%;
+        width: 100%;
+      }
     }
   }
 </style>

@@ -44,6 +44,8 @@ class SettingManager:
                     "external_organizations",
                     "vaccine",
                     "tfoms",
+                    "doc_call",
+                    "list_wait",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
