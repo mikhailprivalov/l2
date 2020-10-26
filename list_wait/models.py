@@ -17,7 +17,7 @@ class ListWait(models.Model):
     client = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
     research = models.ForeignKey(Researches, null=True, blank=True, db_index=True, help_text='Вид исследования из справочника', on_delete=models.CASCADE)
     create_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания')
-    exec_at = models.DateTimeField(help_text='Дата создания', db_index=True)
+    exec_at = models.DateTimeField(help_text='Дата для записи', db_index=True)
     comment = models.TextField()
     work_status = models.PositiveSmallIntegerField(choices=STATUS, db_index=True, default=0, blank=True)
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель листа ожидания', on_delete=models.SET_NULL)
@@ -35,7 +35,7 @@ class ListWait(models.Model):
                              exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'),
                              comment=data['comment'],
                              doc_who_create=doc_who_create,
-                             status=0)
+                             work_status=0)
         list_wait.save()
 
         slog.Log(

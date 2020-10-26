@@ -29,7 +29,10 @@ class DoctorCall(models.Model):
     def doctor_call_save(data, doc_who_create):
         patient_card = Card.objects.get(pk=data['card_pk']) if 'card' not in data else data['card']
         research_obj = Researches.objects.get(pk=data['research'])
-        district_obj = District.objects.get(pk=data['district'])
+        if int(data['district']) < 0:
+            district_obj = None
+        else:
+            district_obj = District.objects.get(pk=data['district'])
         doc_call = DoctorCall(client=patient_card, research=research_obj, exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'), comment=data['comment'],
                               doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'])
         doc_call.save()

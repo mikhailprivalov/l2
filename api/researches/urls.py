@@ -16,4 +16,5 @@ urlpatterns = [
     path('fraction-title', views.fraction_title),
     path('field-title', views.field_title),
     path('fields-and-groups-titles', views.fields_and_groups_titles),
+    path('descriptive-research', views.descriptive_research),
 ]

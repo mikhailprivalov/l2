@@ -40,3 +40,10 @@ def normalize_dots_date(s):
         s = s.split('.')
         s = '{}-{}-{}'.format(s[2], s[1], s[0])
     return s
+
+
+def normalize_dash_date(s):
+    if '-' in s:
+        s = s.split('-')
+        s = '{}.{}.{}'.format(s[2], s[1], s[0])
+    return s
