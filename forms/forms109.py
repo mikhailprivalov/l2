@@ -177,7 +177,6 @@ def form_02(request_data):
     styleCenter.firstLineIndent = 0
     styleCenter.alignment = TA_CENTER
 
-    print(request_data)
     date = request_data["date"]
     district = int(request_data["district"])
 
@@ -284,7 +283,6 @@ def form_03(request_data):
     date_start, date_end = try_parse_range(dates[0], dates[1])
 
     objs = []
-
     objs.append(Paragraph(f"Лист ожидани: {dates[0]} - {dates[1]}", styleCenterBold))
     objs.append(Spacer(1, 5 * mm))
 
