@@ -1,12 +1,15 @@
+import inspect
 import sys
 from datetime import date, datetime
-from typing import List
+from typing import List, Union
+import logging
 
 import simplejson
 from dateutil.relativedelta import relativedelta
 from django.core.management.base import OutputWrapper
 from django.db import models, transaction
 from django.db.models import Q
+from django.db.models.signals import pre_save
 from django.utils import timezone
 
 import slog.models as slog
@@ -16,6 +19,8 @@ from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
+
+logger = logging.getLogger(__name__)
 
 
 class AgeCache(models.Model):
@@ -35,7 +40,7 @@ class Individual(models.Model):
     sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
     primary_for_rmis = models.BooleanField(default=False, blank=True)
     rmis_uid = models.CharField(max_length=64, default=None, null=True, blank=True)
-    tfoms_idp = models.CharField(max_length=64, default=None, null=True, blank=True)
+    tfoms_idp = models.CharField(max_length=64, default=None, null=True, blank=True, help_text="ID в ТФОМС")
     time_tfoms_last_sync = models.DateTimeField(default=None, null=True, blank=True)
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
@@ -520,7 +525,9 @@ class Individual(models.Model):
                         if not cdu.exists():
                             CardDocUsage(card=ce, document=polis).save()
                         else:
-                            cdu.update(document=polis)
+                            for c in cdu:
+                                c.document = polis
+                                c.save(update_fields=["document"])
                     return
                 print('Update patient data')
                 updated = []
@@ -635,10 +642,10 @@ class Document(models.Model):
     serial = models.CharField(max_length=30, blank=True, help_text="Серия")
     number = models.CharField(max_length=30, blank=True, help_text="Номер")
     individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
-    is_active = models.BooleanField(default=True, blank=True)
+    is_active = models.BooleanField(default=True, blank=True, help_text="Документ активен")
     date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
-    who_give = models.TextField(default="", blank=True)
+    who_give = models.TextField(default="", blank=True, help_text="Кто выдал")
     from_rmis = models.BooleanField(default=True, blank=True)
     rmis_uid = models.CharField(max_length=11, default=None, blank=True, null=True)
 
@@ -651,7 +658,7 @@ class Document(models.Model):
         return localtime(self.date_end)
 
     def __str__(self):
-        return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number, self.is_active, self.individual)
+        return "{0} {1} {2}".format(self.document_type, self.serial, self.number)
 
     @staticmethod
     def get_all_doc(docs):
@@ -744,7 +751,7 @@ class Document(models.Model):
 
 class CardDocUsage(models.Model):
     card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
-    document = models.ForeignKey('clients.Document', db_index=True, on_delete=models.CASCADE)
+    document = models.ForeignKey('clients.Document', db_index=True, on_delete=models.CASCADE, help_text='Используемый документ карты')
 
 
 class CardBase(models.Model):
@@ -983,7 +990,9 @@ class Card(models.Model):
                 if not cdu.exists():
                     CardDocUsage(card=c, document=polis).save()
                 else:
-                    cdu.update(document=polis)
+                    for c in cdu:
+                        c.document = polis
+                        c.save(update_fields=["document"])
 
             return c
 
@@ -1009,6 +1018,62 @@ class Card(models.Model):
     class Meta:
         verbose_name = 'Карта'
         verbose_name_plural = 'Карты'
+
+
+def on_obj_pre_save_log(sender, instance: Union[Document, CardDocUsage, Card, Individual], **kwargs):  # NOQA
+    if not isinstance(instance, (Card, Document, CardDocUsage, Individual)):
+        return
+    try:
+        for frame_record in inspect.stack():
+            if frame_record[3] == 'get_response':
+                request = frame_record[0].f_locals['request']
+                break
+        else:
+            request = None
+
+        doctorprofile = request.user.doctorprofile if request and request.user.is_authenticated else None
+
+        if instance.pk is not None:
+            orig = sender.objects.get(pk=instance.pk)
+            field_names = [field.name for field in sender._meta.fields]
+            updated_data = {}
+            for field_name in field_names:
+                help_text = sender._meta.get_field(field_name).help_text
+
+                if not help_text or field_name == 'pk':
+                    continue
+
+                from_value = getattr(orig, field_name)
+                from_value = from_value if from_value is None or isinstance(from_value, (str, bool, int, float)) else str(from_value)
+                to_value = getattr(instance, field_name)
+                to_value = to_value if to_value is None or isinstance(to_value, (str, bool, int, float)) else str(to_value)
+
+                if from_value != to_value:
+                    updated_data[field_name] = {
+                        "from": from_value,
+                        "to": to_value,
+                        "help_text": str(help_text),
+                        "field_name": field_name,
+                    }
+            if not updated_data:
+                return
+            k = 30007
+            if isinstance(instance, Document):
+                k = 30008
+            elif isinstance(instance, CardDocUsage):
+                k = 30009
+            elif isinstance(instance, Individual):
+                k = 30010
+            slog.Log.log(instance.pk, k, doctorprofile, {"updates": list(updated_data.values())})
+    except Exception as e:
+        print(e)
+        logger.exception(e)
+
+
+pre_save.connect(on_obj_pre_save_log, sender=Document)
+pre_save.connect(on_obj_pre_save_log, sender=CardDocUsage)
+pre_save.connect(on_obj_pre_save_log, sender=Card)
+pre_save.connect(on_obj_pre_save_log, sender=Individual)
 
 
 class AnamnesisHistory(models.Model):

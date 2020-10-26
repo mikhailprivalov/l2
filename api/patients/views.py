@@ -44,6 +44,7 @@ from tfoms.integration import match_enp, match_patient
 from directory.models import DispensaryPlan
 
 
+
 def full_patient_search_data(p, query):
     dp = re.compile(r'^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$')
     split = str(re.sub(' +', ' ', str(query))).split()
@@ -435,7 +436,6 @@ def patients_card_save(request):
         card_pk = request_data["card_pk"]
         c = Card.objects.get(pk=card_pk)
         individual_pk = request_data["individual_pk"]
-        Log.log(card_pk, 30001, request.user.doctorprofile, request_data)
     c.main_diagnosis = request_data["main_diagnosis"]
     c.main_address = request_data["main_address"]
     c.fact_address = request_data["fact_address"]
@@ -545,13 +545,26 @@ def edit_doc(request):
         if not cdu.exists():
             CardDocUsage(card=card, document=d).save()
         else:
-            cdu.update(document=d)
+            for c in cdu:
+                c.document = d
+                c.save(update_fields=["document"])
         Log.log(d.pk, 30002, request.user.doctorprofile, request_data)
     else:
-        Document.objects.filter(pk=pk, from_rmis=False).update(number=number, serial=serial, is_active=is_active, date_start=date_start, date_end=date_end, who_give=who_give)
+        for d in Document.objects.filter(pk=pk, from_rmis=False):
+            d.number = number
+            d.serial = serial
+            d.is_active = is_active
+            d.date_start = date_start
+            d.date_end = date_end
+            d.who_give = who_give
+            d.save()
         Log.log(pk, 30002, request.user.doctorprofile, request_data)
         d = Document.objects.get(pk=pk)
-    d.sync_rmis()
+
+    try:
+        d.sync_rmis()
+    except Exception as e:
+        print('RMIS error', e)
 
     return JsonResponse({"ok": True})
 
@@ -564,7 +577,9 @@ def update_cdu(request):
     if not cdu.exists():
         CardDocUsage(card=card, document=doc).save()
     else:
-        cdu.update(document=doc)
+        for c in cdu:
+            c.document = doc
+            c.save(update_fields=["document"])
     Log.log(card.pk, 30004, request.user.doctorprofile, request_data)
 
     return JsonResponse({"ok": True})
@@ -620,7 +635,11 @@ def edit_agent(request):
         if key not in Card.AGENT_CANT_SELECT:
             upd["who_is_agent"] = key
 
-    parent_card.update(**upd)
+    for card in parent_card:
+        for k, v in upd.items():
+            setattr(card, k, v)
+
+        card.save(update_fields=list(upd.keys()))
 
     Log.log(request_data["parent_card_pk"], 30005, request.user.doctorprofile, request_data)
 

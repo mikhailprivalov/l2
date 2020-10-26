@@ -98,7 +98,12 @@ class Command(BaseCommand):
                     add_dist = get_district(cells[distict_num], cells[district_gin])
                     i = ind.individual
                     if clients.Card.objects.filter(individual=i, base=base_l2).exists():
-                        clients.Card.objects.filter(individual=i, base=base_l2).update(number_poliklinika=cells[num_card], district=add_dist[0], ginekolog_district=add_dist[1])
+                        for c in clients.Card.objects.filter(individual=i, base=base_l2):
+                            # .update(number_poliklinika=cells[num_card], district=add_dist[0], ginekolog_district=add_dist[1])
+                            c.number_poliklinika = cells[num_card]
+                            c.district = add_dist[0]
+                            c.ginekolog_district = add_dist[1]
+                            c.save(update_fields=['number_poliklinika', 'district', 'ginekolog_district'])
                     else:
                         # создать карту L2
                         m_address = ' '.join('{}, {}, д.{}, кв.{}'.format(cells[city], cells[street], cells[house], cells[room]).strip().split())
