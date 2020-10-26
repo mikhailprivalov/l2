@@ -116,7 +116,7 @@
             <a href="#" class="a-under" @click.prevent="sync_tfoms" tabindex="-1">сверка</a>
           </div>
         </div>
-        <div class="col-xs-6 text-right">
+        <div class="text-right" :class="{'col-xs-6': l2_tfoms, 'col-xs-12': !l2_tfoms}">
           <div class="info-row">
             Связь с РМИС – {{card.has_rmis_card ? 'ЕСТЬ' : 'НЕТ'}}
             <strong v-if="card.has_rmis_card">{{card.rmis_uid}}</strong>

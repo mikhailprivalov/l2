@@ -35,7 +35,7 @@
             bages: {
               type: Object,
               required: false,
-              default: () => {},
+              default: () => ({}),
             },
         },
         watch: {
