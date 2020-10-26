@@ -44,4 +44,8 @@ class Command(BaseCommand):
                     if clients.Card.objects.filter(individual=i, base=base_l2).exists():
                         district = clients.District.objects.filter(code_poliklinika=cells[distict_num], is_ginekolog=False).first()
                         district_ginikolog = clients.District.objects.filter(code_poliklinika=cells[district_gin], is_ginekolog=True).first()
-                        clients.Card.objects.filter(individual=i, base=base_l2).update(number_poliklinika=cells[num_card].strip(), district=district, ginekolog_district=district_ginikolog)
+                        for c in clients.Card.objects.filter(individual=i, base=base_l2):
+                            c.number_poliklinika = cells[num_card].strip()
+                            c.district = district
+                            c.ginekolog_district = district_ginikolog
+                            c.save()
