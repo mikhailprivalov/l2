@@ -67,8 +67,7 @@
       }
     },
     mounted() {
-      api('researches/descriptive-research').then(rows => this.researches= rows);
-      console.log(this.researches)
+      api('researches/descriptive-research').then(rows => this.researches = rows);
     },
     methods: {
       print() {
