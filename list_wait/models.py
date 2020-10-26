@@ -21,6 +21,7 @@ class ListWait(models.Model):
     comment = models.TextField()
     work_status = models.PositiveSmallIntegerField(choices=STATUS, db_index=True, default=0, blank=True)
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель листа ожидания', on_delete=models.SET_NULL)
+    phone = models.CharField(max_length=20, blank=True, default='')
 
     class Meta:
         verbose_name = 'Лист ожидания'
@@ -34,6 +35,7 @@ class ListWait(models.Model):
                              research=research_obj,
                              exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'),
                              comment=data['comment'],
+                             phone=data['phone'],
                              doc_who_create=doc_who_create,
                              work_status=0)
         list_wait.save()

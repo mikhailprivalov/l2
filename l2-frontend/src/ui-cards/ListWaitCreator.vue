@@ -5,6 +5,13 @@
   <div v-else class="root">
     <div class="col-form mid">
       <div class="form-row sm-header">
+        Данные из картотеки<span v-if="!loaded" class="loading-text loading-sm">&nbsp;загрузка</span>
+      </div>
+      <div class="form-row sm-f">
+        <div class="row-t">Телефон</div>
+        <input class="form-control" v-model="card.phone" v-mask="'8 999 9999999'">
+      </div>
+      <div class="form-row sm-header">
         Данные для листа ожидания
       </div>
       <div class="form-row sm-f">
@@ -41,13 +48,15 @@
             <col width="75">
             <col/>
             <col/>
-            <col/>
+            <col width="100"/>
+            <col width="75"/>
           </colgroup>
           <thead>
           <tr>
             <th>Дата</th>
             <th>Услуга</th>
             <th>Комментарий</th>
+            <th>Телефон</th>
             <th>Статус</th>
           </tr>
           </thead>
@@ -56,6 +65,7 @@
               <td>{{r.date}}</td>
               <td>{{r.service}}</td>
               <td style="white-space: pre-wrap">{{r.comment}}</td>
+              <td>{{r.phone}}</td>
               <td>{{STATUSES[r.status]}}</td>
             </tr>
           </tbody>
@@ -70,6 +80,7 @@
   import api from "@/api";
   import moment from "moment";
   import ResearchDisplay from "@/ui-cards/ResearchDisplay";
+  import patients_point from "@/api/patients-point";
 
   const STATUSES = {0: "ожидает", 1: "выполнено", 2: "отменено"};
 
@@ -91,6 +102,10 @@
     },
     data() {
       return {
+        card: {
+          phone: "",
+        },
+        loaded: true,
         date: moment().format('YYYY-MM-DD'),
         td: moment().format('YYYY-MM-DD'),
         comment: '',
@@ -118,13 +133,20 @@
         },
       },
     },
+    mounted() {
+      this.$root.$on('update_card_data', () => this.load_data());
+    },
     methods: {
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
         const result = await api(
           'list-wait/create', this,
-          ['card_pk', 'researches', 'date', 'comment']
+          ['card_pk', 'researches', 'date', 'comment'],
+          {
+            phone: this.card.phone,
+          }
         )
+        await this.load_data();
         await this.$store.dispatch(action_types.DEC_LOADING)
         if (result.ok) {
           okmessage('Записи в лист ожидания созданы');
@@ -141,7 +163,10 @@
           this.rows = await api('list-wait/actual-rows', this, 'card_pk')
           return;
         }
+        this.loaded = false
         await this.$store.dispatch(action_types.INC_LOADING)
+        this.card = await patients_point.getCard(this, 'card_pk')
+        this.loaded = true
         this.rows = await api('list-wait/actual-rows', this, 'card_pk')
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
@@ -162,6 +187,7 @@
           service: r.research__title,
           comment: r.comment,
           status: r.work_status,
+          phone: r.phone,
         }));
       },
     },

@@ -20,6 +20,7 @@ class DoctorCall(models.Model):
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель вызова на дом', on_delete=models.SET_NULL)
     district = models.ForeignKey(District, default=None, null=True, blank=True, db_index=True, help_text="Участок", on_delete=models.SET_NULL)
     address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес")
+    phone = models.CharField(max_length=20, blank=True, default='')
 
     class Meta:
         verbose_name = 'Вызов'
@@ -34,7 +35,7 @@ class DoctorCall(models.Model):
         else:
             district_obj = District.objects.get(pk=data['district'])
         doc_call = DoctorCall(client=patient_card, research=research_obj, exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'), comment=data['comment'],
-                              doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'])
+                              doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'], phone=data['phone'])
         doc_call.save()
 
         slog.Log(

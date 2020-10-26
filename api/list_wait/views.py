@@ -14,13 +14,18 @@ from utils.data_verification import data_parse
 def create(request):
     data = data_parse(
         request.body,
-        {'card_pk': 'card', 'comment': 'str_strip', 'date': str, 'researches': list}
+        {'card_pk': 'card', 'comment': 'str_strip', 'date': str, 'researches': list, 'phone': 'str_strip'}
     )
 
     card: Card = data[0]
     comment: str = data[1]
     date: str = data[2]
     researches: List[int] = data[3]
+    phone: str = data[4]
+
+    if phone != card.phone:
+        card.phone = phone
+        card.save(update_fields=['phone'])
 
     for research_pk in researches:
         ListWait.list_wait_save({
@@ -28,6 +33,7 @@ def create(request):
             'research': research_pk,
             'date': date,
             'comment': comment,
+            'phone': phone,
         }, request.user.doctorprofile)
 
     return JsonResponse({"ok": True})
@@ -46,7 +52,7 @@ def actual_rows(request):
     rows = list(
         ListWait.objects.filter(client_id=card_pk, exec_at__gte=date_from)
         .order_by('exec_at', 'pk')
-        .values('pk', 'exec_at', 'research__title', 'comment', 'work_status')
+        .values('pk', 'exec_at', 'research__title', 'comment', 'work_status', 'phone')
     )
 
     return JsonResponse(rows, safe=False)

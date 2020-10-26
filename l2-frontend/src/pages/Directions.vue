@@ -57,7 +57,8 @@
     <div class="f gutter gutter-col gutter-column-2"></div>
     <div class="g" :class="{noMoreModules: !l2_doc_call && !l2_list_wait}">
       <DirectAndPlanSwitcher v-model="mode" :bages="this.modes_counts" v-if="l2_doc_call || l2_list_wait" />
-      <div v-show="mode === DIRECTION_MODE_DIRECTION" :style="(l2_doc_call || l2_list_wait) && 'padding-top: 1px'">
+      <div v-show="mode === DIRECTION_MODE_DIRECTION"
+           :style="(l2_doc_call || l2_list_wait) && 'border-top: 1px solid #434a54'">
         <selected-researches :operator="selected_card.operator" :ofname="selected_card.ofname"
                              :visible="mode === DIRECTION_MODE_DIRECTION"
                              :main_diagnosis="selected_card.main_diagnosis"
@@ -488,7 +489,6 @@
       > div:not(:first-child) {
         flex: 1 calc(100% - 34px);
         height: calc(100% - 34px);
-        padding-top: 1px;
         width: 100%;
         border-top: none;
       }

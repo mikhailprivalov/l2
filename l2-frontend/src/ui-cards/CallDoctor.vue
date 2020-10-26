@@ -16,13 +16,23 @@
                    ref="af" :src="`/api/autocomplete?value=:keyword&type=fias`" v-model="card.fact_address"
         />
       </div>
-      <div class="form-row sm-f">
-        <div class="row-t">Участок</div>
-        <select v-model="card.district" class="form-control">
-          <option v-for="c in card.districts" :value="c.id">
-            {{c.title}}
-          </option>
-        </select>
+      <div class="row">
+        <div class="col-xs-6 col-form left" style="padding-bottom: 0">
+          <div class="form-row sm-f" style="border-top: none">
+            <div class="row-t">Участок</div>
+            <select v-model="card.district" class="form-control">
+              <option v-for="c in card.districts" :value="c.id">
+                {{c.title}}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="col-xs-6 col-form right" style="padding-bottom: 0">
+          <div class="form-row sm-f" style="border-top: none">
+            <div class="row-t">Телефон</div>
+            <input class="form-control" v-model="card.phone" v-mask="'8 999 9999999'">
+          </div>
+        </div>
       </div>
       <div class="form-row sm-header">
         Данные вызова
@@ -61,16 +71,16 @@
           <colgroup>
             <col width="75">
             <col/>
+            <col width="150"/>
             <col/>
-            <col/>
-            <col/>
+            <col width="100"/>
           </colgroup>
           <thead>
           <tr>
             <th>Дата</th>
             <th>Услуга</th>
             <th>Комментарий</th>
-            <th>Адрес</th>
+            <th>Адрес, телефон</th>
             <th>Участок</th>
           </tr>
           </thead>
@@ -79,7 +89,7 @@
               <td>{{r.date}}</td>
               <td>{{r.service}}</td>
               <td style="white-space: pre-wrap">{{r.comment}}</td>
-              <td>{{r.address}}</td>
+              <td>{{r.address}}<br/>{{r.phone}}</td>
               <td>{{r.district}}</td>
             </tr>
           </tbody>
@@ -120,6 +130,7 @@
           fact_address: "",
           districts: [],
           district: -1,
+          phone: "",
         },
         loaded: true,
         date: moment().format('YYYY-MM-DD'),
@@ -195,6 +206,7 @@
           {
             fact_address: this.card.fact_address,
             district: this.card.district,
+            phone: this.card.phone,
           }
         )
         await this.load_data();
@@ -224,6 +236,7 @@
           address: r.address,
           district: r.district__title,
           comment: r.comment,
+          phone: r.phone,
         }));
       },
     },
