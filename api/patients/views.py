@@ -44,7 +44,6 @@ from statistics_tickets.models import VisitPurpose
 from tfoms.integration import match_enp, match_patient
 from directory.models import DispensaryPlan
 
-logger = logging.getLogger(__name__)
 
 
 def full_patient_search_data(p, query):
@@ -566,7 +565,6 @@ def edit_doc(request):
     try:
         d.sync_rmis()
     except Exception as e:
-        # logger.exception(e)
         print('RMIS error', e)
 
     return JsonResponse({"ok": True})
