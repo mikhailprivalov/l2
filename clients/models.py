@@ -658,7 +658,7 @@ class Document(models.Model):
         return localtime(self.date_end)
 
     def __str__(self):
-        return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number, self.is_active, self.individual)
+        return "{0} {1} {2}".format(self.document_type, self.serial, self.number)
 
     @staticmethod
     def get_all_doc(docs):
@@ -1020,8 +1020,8 @@ class Card(models.Model):
         verbose_name_plural = 'Карты'
 
 
-def on_obj_pre_save_log(sender, instance: Union[Document, CardDocUsage, Card], **kwargs):  # NOQA
-    if not isinstance(instance, (Card, Document, CardDocUsage)):
+def on_obj_pre_save_log(sender, instance: Union[Document, CardDocUsage, Card, Individual], **kwargs):  # NOQA
+    if not isinstance(instance, (Card, Document, CardDocUsage, Individual)):
         return
     try:
         for frame_record in inspect.stack():
@@ -1038,18 +1038,20 @@ def on_obj_pre_save_log(sender, instance: Union[Document, CardDocUsage, Card], *
             field_names = [field.name for field in sender._meta.fields]
             updated_data = {}
             for field_name in field_names:
-                if field_name != 'pk' and getattr(orig, field_name) != getattr(instance, field_name):
-                    help_text = sender._meta.get_field(field_name).help_text
+                help_text = sender._meta.get_field(field_name).help_text
 
-                    if not help_text:
-                        continue
+                if not help_text or field_name == 'pk':
+                    continue
 
-                    from_value = getattr(orig, field_name)
-                    to_value = getattr(instance, field_name)
+                from_value = getattr(orig, field_name)
+                from_value = from_value if from_value is None or isinstance(from_value, (str, bool, int, float)) else str(from_value)
+                to_value = getattr(instance, field_name)
+                to_value = to_value if to_value is None or isinstance(to_value, (str, bool, int, float)) else str(to_value)
 
+                if from_value != to_value:
                     updated_data[field_name] = {
-                        "from": from_value if from_value is None or isinstance(from_value, (str, bool, int, float)) else str(from_value),
-                        "to": to_value if to_value is None or isinstance(to_value, (str, bool, int, float)) else str(to_value),
+                        "from": from_value,
+                        "to": to_value,
                         "help_text": str(help_text),
                         "field_name": field_name,
                     }
@@ -1060,6 +1062,8 @@ def on_obj_pre_save_log(sender, instance: Union[Document, CardDocUsage, Card], *
                 k = 30008
             elif isinstance(instance, CardDocUsage):
                 k = 30009
+            elif isinstance(instance, Individual):
+                k = 30010
             slog.Log.log(instance.pk, k, doctorprofile, {"updates": list(updated_data.values())})
     except Exception as e:
         print(e)
@@ -1069,6 +1073,7 @@ def on_obj_pre_save_log(sender, instance: Union[Document, CardDocUsage, Card], *
 pre_save.connect(on_obj_pre_save_log, sender=Document)
 pre_save.connect(on_obj_pre_save_log, sender=CardDocUsage)
 pre_save.connect(on_obj_pre_save_log, sender=Card)
+pre_save.connect(on_obj_pre_save_log, sender=Individual)
 
 
 class AnamnesisHistory(models.Model):

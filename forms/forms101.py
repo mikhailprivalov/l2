@@ -6,6 +6,7 @@ from copy import deepcopy
 from io import BytesIO
 
 import pytils
+import simplejson
 from django.utils import timezone, dateformat
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
@@ -18,9 +19,11 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.platypus.flowables import HRFlowable
 
 from appconf.manager import SettingManager
-from clients.models import Individual, Card
+from clients.models import Individual, Card, Document, CardDocUsage
 from laboratory import settings
 from laboratory.settings import FONTS_FOLDER
+from laboratory.utils import strfdatetime, current_time
+from slog.models import Log
 
 
 def form_01(request_data):
@@ -32,7 +35,7 @@ def form_01(request_data):
     ind = Individual.objects.get(pk=request_data["individual"])
     buffer = BytesIO()
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm, topMargin=10 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Сгласие на вич"))
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm, topMargin=10 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Согласие на вич"))
 
     pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
     pdfmetrics.registerFont(TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))
@@ -563,3 +566,152 @@ def form_04(request_date):
     :return:
     """
     pass
+
+
+def form_05(request_data):
+    """
+    История изменения данных пациента
+    """
+    card = Card.objects.get(pk=request_data["card_pk"])
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm, topMargin=10 * mm, bottomMargin=5 * mm, allowSplitting=1,
+                            title="История изменения данных пациента. Карта {}".format(card))
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
+    pdfmetrics.registerFont(TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('OpenSansItalic', os.path.join(FONTS_FOLDER, 'OpenSans-Italic.ttf')))
+    pdfmetrics.registerFont(TTFont('OpenSansBoldItalic', os.path.join(FONTS_FOLDER, 'OpenSans', 'OpenSans-BoldItalic.ttf')))
+    pdfmetrics.registerFont(TTFont('OpenSansLight', os.path.join(FONTS_FOLDER, 'OpenSans', 'OpenSans-Light.ttf')))
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "OpenSans"
+    style.fontSize = 10
+    style.leading = 15
+    styleBold = deepcopy(style)
+    styleBold.fontName = "OpenSansBold"
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+
+    objs = []
+
+    hospital_name = SettingManager.get("org_title")
+    hospital_address = SettingManager.get("org_address")
+
+    objs.append(
+        Paragraph(
+            f'{hospital_name}, {hospital_address}',
+            styleCenter,
+        )
+    )
+
+    objs.append(Spacer(1, 3 * mm))
+
+    objs.append(
+        Paragraph(
+            f'История изменений данных пациента (генерация {strfdatetime(current_time(), "%d.%m.%Y %H:%M:%S")})',
+            styleCenterBold,
+        )
+    )
+
+    objs.append(Spacer(1, 3 * mm))
+
+    objs.append(
+        Paragraph(
+            'Текущие данные:',
+            style,
+        )
+    )
+
+    objs.append(
+        Paragraph(
+            f'Пациент: {card.individual.fio(full=True)}',
+            style,
+        )
+    )
+
+    objs.append(
+        Paragraph(
+            f'Загруженная карта: {card.number_with_type()}',
+            style,
+        )
+    )
+
+    def b_font_val(s, v):
+        return f'<font face="OpenSansBold">{s}:</font> {v}'
+
+    types = [
+        (30010, "Данные физлица"),
+        (30008, "Данные документов"),
+        (30007, "Данные карт"),
+        (30009, "Использование документов в картах"),
+    ]
+
+    for t, h in types:
+        objs.append(Spacer(1, 3 * mm))
+
+        objs.append(
+            Paragraph(
+                h,
+                styleBold,
+            )
+        )
+
+        if t == 30010:
+            keys = [str(card.individual.pk)]
+        elif t == 30008:
+            keys = [x.pk for x in Document.objects.filter(individual=card.individual)]
+        elif t == 30009:
+            keys = [x.pk for x in CardDocUsage.objects.filter(card__in=Card.objects.filter(individual=card.individual, is_archive=False))]
+        else:
+            keys = [x.pk for x in Card.objects.filter(individual=card.individual, is_archive=False)]
+
+        if not keys:
+            continue
+
+        qs = Log.objects.filter(key__in=keys, type=t) if len(keys) > 1 else Log.objects.filter(key=keys[0], type=t)
+        lg: Log
+        for lg in qs.order_by('pk'):
+            try:
+                data = simplejson.loads(lg.body)
+                if not data or not isinstance(data, dict) or "updates" not in data:
+                    continue
+                rows = [
+                    f'{lg.user or "system"} – {strfdatetime(lg.time, "%d.%m.%Y %H:%M:%S")}',
+                ]
+                cnt = len(data["updates"])
+                n = 0
+                for row in data["updates"]:
+                    n += 1
+                    rows += [
+                        f'{b_font_val("Поле", row["help_text"])} ({row["field_name"]})',
+                        b_font_val("Старое значение", row["from"]),
+                        b_font_val("Новое значение", row["to"]),
+                    ]
+                    if n < cnt:
+                        rows.append("")
+                rows.append("<br/>")
+                objs.append(
+                    Paragraph(
+                        "<br/>".join(rows),
+                        style,
+                    )
+                )
+            except Exception as e:
+                print(e)
+                pass
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
