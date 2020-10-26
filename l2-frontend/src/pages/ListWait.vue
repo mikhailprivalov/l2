@@ -54,6 +54,7 @@
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   import moment from "moment";
   import DateRange from "../ui-cards/DateRange"
+  import api from '@/api';
 
   export default {
     name: "ListWait",
@@ -62,8 +63,12 @@
         return {
           date: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
           research: -1,
-          researches: [{id: -1, label: 'Все услуги'}, {id: 1, label: 'one'}, {id: 2, label: '2'}, {id: 3, label: 'three'}, {id: 4, label: '4'}],
+          researches: [],
       }
+    },
+    mounted() {
+      api('researches/descriptive-research').then(rows => this.researches= rows);
+      console.log(this.researches)
     },
     methods: {
       print() {
