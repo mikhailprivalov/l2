@@ -1,5 +1,6 @@
 import functools
 from datetime import datetime, time
+from typing import Union
 
 from django.db import reset_queries, connection
 from django.utils import timezone
@@ -32,7 +33,9 @@ def strdateiso(d):
     return strfdatetime(d, '%Y.%m.%d')
 
 
-def strtime(d):
+def strtime(d: Union[datetime, time]):
+    if isinstance(d, time):
+        return f"{d.hour:02}:{d.minute:02}:{d.second:02}"
     return strfdatetime(d, '%X')
 
 
