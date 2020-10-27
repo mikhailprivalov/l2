@@ -104,8 +104,8 @@
             </div>
             <div class="col-xs-4" style="padding-left: 0;">
               <div class="input-group" style="width: 100%">
-                <span class="input-group-addon">id-ресурс</span>
-                <input class="form-control" v-model="user.rmis_id_resource"/>
+                <span class="input-group-addon">ID ресурса РМИС</span>
+                <input class="form-control" v-model="user.rmis_resource_id"/>
               </div>
             </div>
           </div>
@@ -224,7 +224,7 @@
           rmis_password: '',
           doc_pk: -1,
           personal_code: -1,
-          rmis_id_resource: '',
+          rmis_resource_id: '',
         },
         open_pk: -2,
       }
@@ -311,7 +311,7 @@
           username: '',
           password: '',
           department: null,
-          rmis_id_resource: '',
+          rmis_resource_id: '',
         }
       },
     },

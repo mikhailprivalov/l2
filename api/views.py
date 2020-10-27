@@ -924,7 +924,7 @@ def user_view(request):
             "rmis_location": '',
             "rmis_login": '',
             "rmis_password": '',
-            "rmis_id_resource": '',
+            "rmis_resource_id": '',
             "doc_pk": -1,
             "doc_code": -1,
         }
@@ -942,7 +942,7 @@ def user_view(request):
             "password": '',
             "rmis_location": doc.rmis_location or '',
             "rmis_login": doc.rmis_login or '',
-            "rmis_id_resource": doc.rmis_id_resource or '',
+            "rmis_resource_id": doc.rmis_resource_id or '',
             "rmis_password": '',
             "doc_pk": doc.user.pk,
             "personal_code": doc.personal_code,
@@ -965,7 +965,7 @@ def user_save_view(request):
     rmis_login = ud["rmis_login"].strip() or None
     rmis_password = ud["rmis_password"].strip() or None
     personal_code = ud.get("personal_code", 0)
-    rmis_id_resource = ud["rmis_id_resource"].strip() or None
+    rmis_resource_id = ud["rmis_resource_id"].strip() or None
 
     npk = pk
     if pk == -1:
@@ -1014,7 +1014,7 @@ def user_save_view(request):
             doc.fio = ud["fio"]
             doc.rmis_location = rmis_location
             doc.personal_code = personal_code
-            doc.rmis_id_resource = rmis_id_resource
+            doc.rmis_resource_id = rmis_resource_id
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:
