@@ -1091,8 +1091,9 @@ class Directions(BaseRequester):
                 stdout.write("OLD DATA: " + str(service_old_data))
             if service_old_data:
                 self.fill_send_old_data(send_data, service_old_data)
-        print(send_data)
-        print(ssd)
+        send_data["dateFrom"] = ndate(send_data["dateFrom"]) if send_data["dateFrom"] and not isinstance(send_data["dateFrom"], str) else send_data["dateFrom"]
+        send_data["timeFrom"] = strtime(send_data["timeFrom"]) if send_data["timeFrom"] and not isinstance(send_data["timeFrom"], str) else send_data["timeFrom"]
+        send_data["dateTo"] = ndate(send_data["dateTo"]) if send_data["dateTo"] and not isinstance(send_data["dateTo"], str) else send_data["dateTo"]
         return send_data, ssd
 
     def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=MAX_RMIS_THREADS, slice_to_upload: bool = False):
