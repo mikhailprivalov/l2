@@ -3,6 +3,7 @@ import hashlib
 import pickle
 import threading
 import urllib.parse
+import logging
 
 import requests
 import simplejson as json
@@ -1028,7 +1029,7 @@ class Directions(BaseRequester):
                                 self.main_client.get_addr("referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат-" + str(direction.pk) + "/Resultat.pdf"),
                             )
                 except Fault as e:
-                    print(e)
+                    logging.exception(e)
                     if "ата смерти пациента" in e.message:
                         direction.rmis_number = "NONERMIS"
                     else:
