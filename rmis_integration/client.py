@@ -4,6 +4,7 @@ import pickle
 import threading
 import urllib.parse
 import logging
+from typing import Union
 
 import requests
 import simplejson as json
@@ -701,7 +702,9 @@ class Services(BaseRequester):
         return [y for y in [self.get_service_id(x) for x in list(set(services_tmp))] if y is not None]
 
 
-def ndate(d: datetime.datetime):
+def ndate(d: Union[datetime.datetime, datetime.date]):
+    if isinstance(d, datetime.date):
+        return f"{d.year}-{d.month:02}-{d.day:02}"
     return localtime(d).strftime("%Y-%m-%d")
 
 
