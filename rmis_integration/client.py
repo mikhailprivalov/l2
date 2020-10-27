@@ -1091,6 +1091,8 @@ class Directions(BaseRequester):
                 stdout.write("OLD DATA: " + str(service_old_data))
             if service_old_data:
                 self.fill_send_old_data(send_data, service_old_data)
+        print(send_data)
+        print(ssd)
         return send_data, ssd
 
     def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=MAX_RMIS_THREADS, slice_to_upload: bool = False):
