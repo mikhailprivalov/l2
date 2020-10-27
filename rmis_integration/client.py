@@ -1188,7 +1188,7 @@ class Directions(BaseRequester):
         uploaded_results = []
         if not without_results:
             upload_lt = timezone.now() - datetime.timedelta(hours=Settings.get("upload_hours_interval", default="8", default_type="i"))
-            direction_ids = get_confirm_direction(date, upload_lt, MAX_RMIS_THREADS if slice_to_upload else 10000)
+            direction_ids = get_confirm_direction(date, upload_lt, MAX_RMIS_THREADS * 2 if slice_to_upload else 10000)
             cnt = len(direction_ids)
             stdout.write("To upload results: {}".format(cnt))
             if slice_to_upload:
