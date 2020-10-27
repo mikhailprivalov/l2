@@ -49,6 +49,7 @@ class DoctorProfile(models.Model):
     local_location = models.CharField(default='', blank=True, null=True, max_length=20, help_text='Номера очередей (pk) через запятую', db_index=True)
     rmis_login = models.CharField(default='', blank=True, null=True, max_length=50, help_text='РМИС логин')
     rmis_password = models.CharField(default='', blank=True, null=True, max_length=50, help_text='РМИС пароль')
+    rmis_id_resource = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
 
     def get_login_id(self):
         if not self.login_id:
