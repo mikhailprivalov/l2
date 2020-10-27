@@ -8,7 +8,7 @@ from rmis_integration.client import Client as RC
 
 WAIT_TIME_SECS = 8
 WAIT_LONG_TIME_SECS = 300
-COUNT_TO_REFRESH_CLIENT = 100
+COUNT_TO_REFRESH_CLIENT = 40
 
 
 class Command(BaseCommand):
