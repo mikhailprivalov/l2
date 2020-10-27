@@ -199,8 +199,8 @@ class IstochnikiFinansirovaniya(models.Model):
     title = models.CharField(max_length=511, help_text='Название')
     active_status = models.BooleanField(default=True, help_text='Статус активности')
     base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
-    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие")
-    rmis_auto_send = models.BooleanField(default=True, blank=True, help_text="Автоматическая отправка в РМИС")
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие", db_index=True)
+    rmis_auto_send = models.BooleanField(default=True, blank=True, help_text="Автоматическая отправка в РМИС", db_index=True)
     default_diagnos = models.CharField(max_length=36, help_text="Диагноз по умолчанию", default="", blank=True)
     contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE)
     order_weight = models.SmallIntegerField(default=0)
@@ -345,10 +345,10 @@ class Napravleniya(models.Model):
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create", help_text='Создатель направления', on_delete=models.SET_NULL)
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена направления')
     rmis_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
-    result_rmis_send = models.BooleanField(default=False, blank=True, help_text='Результат отправлен в РМИС?')
+    result_rmis_send = models.BooleanField(default=False, blank=True, help_text='Результат отправлен в РМИС?', db_index=True)
     imported_from_rmis = models.BooleanField(default=False, blank=True, db_index=True, help_text='Направление создано на основе направления из РМИС?')
     imported_org = models.ForeignKey(RMISOrgs, default=None, blank=True, null=True, on_delete=models.SET_NULL)
-    imported_directions_rmis_send = models.BooleanField(default=False, blank=True, help_text='Для направления из РМИС отправлен бланк')
+    imported_directions_rmis_send = models.BooleanField(default=False, blank=True, help_text='Для направления из РМИС отправлен бланк', db_index=True)
     force_rmis_send = models.BooleanField(default=False, blank=True, help_text='Подтверждение ручной отправки в РМИС')
     forcer_rmis_send = models.ForeignKey(
         DoctorProfile, default=None, blank=True, null=True, related_name="doc_forcer_rmis_send", help_text='Исполнитель подтверждения отправки в РМИС', on_delete=models.SET_NULL

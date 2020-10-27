@@ -1,46 +1,30 @@
 from django.db import connection
+
 from laboratory.settings import TIME_ZONE
 
 
 def get_confirm_direction(d_s, d_e, limit):
     with connection.cursor() as cursor:
         cursor.execute(
-            """WITH     
-        t_all_direction AS (
-            SELECT DISTINCT ON (napravleniye_id) napravleniye_id FROM public.directions_issledovaniya
-            WHERE time_confirmation AT TIME ZONE %(tz)s <= %(d_end)s),
-        
-        t_not_confirm_direction AS (
-            SELECT DISTINCT ON (napravleniye_id) napravleniye_id FROM public.directions_issledovaniya
-            WHERE napravleniye_id IN 
-                (SELECT DISTINCT ON (napravleniye_id) napravleniye_id FROM public.directions_issledovaniya
-                 WHERE 
-                     time_confirmation AT TIME ZONE %(tz)s <= %(d_end)s) 
-                 AND 
-                     time_confirmation IS NULL),
-        
-        t_only_confirm_direction AS (
-            SELECT napravleniye_id FROM t_all_direction
-            WHERE napravleniye_id NOT IN (SELECT napravleniye_id FROM t_not_confirm_direction)),
-        
-        t_istochnik_f_rmis_auto_send AS (
-            SELECT id FROM directions_istochnikifinansirovaniya
-            WHERE rmis_auto_send = False) 
-                
-        SELECT id FROM directions_napravleniya
-            WHERE id IN (SELECT napravleniye_id FROM t_only_confirm_direction)
-            AND 
-                data_sozdaniya AT TIME ZONE %(tz)s >= %(d_start)s
-            AND 
-                NOT (rmis_number='NONERMIS' OR rmis_number='' OR rmis_number IS NULL)
-            AND 
-                result_rmis_send = False
-            AND 
-                NOT (imported_from_rmis = True and imported_directions_rmis_send = False)
-            AND
-                NOT (istochnik_f_id IN (SELECT id FROM t_istochnik_f_rmis_auto_send) and force_rmis_send = False)
-            ORDER BY data_sozdaniya 
-            LIMIT %(limit)s     
+            """SELECT DISTINCT ON (directions_napravleniya.id) directions_napravleniya.id
+        FROM directions_napravleniya
+        INNER JOIN directions_issledovaniya ON (directions_napravleniya.id = directions_issledovaniya.napravleniye_id)
+        INNER JOIN directions_istochnikifinansirovaniya ON (directions_napravleniya.istochnik_f_id = directions_istochnikifinansirovaniya.id)
+        WHERE directions_issledovaniya.time_confirmation IS NOT NULL
+          AND directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s <= %(d_end)s
+          AND directions_istochnikifinansirovaniya.rmis_auto_send = TRUE
+          AND NOT EXISTS (SELECT napravleniye_id
+             FROM directions_issledovaniya
+             WHERE time_confirmation IS NULL AND napravleniye_id = directions_napravleniya.id)
+          AND directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s >= %(d_start)s
+          AND directions_napravleniya.rmis_number <> 'NONERMIS'
+          AND directions_napravleniya.rmis_number <> ''
+          AND directions_napravleniya.rmis_number IS NOT NULL
+          AND directions_napravleniya.result_rmis_send = FALSE
+          AND (directions_napravleniya.imported_from_rmis = FALSE OR directions_napravleniya.imported_directions_rmis_send = TRUE)
+          AND directions_napravleniya.force_rmis_send = FALSE
+        ORDER BY directions_napravleniya.id, data_sozdaniya
+        LIMIT %(limit)s
         """,
             params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'limit': limit},
         )

@@ -3,6 +3,8 @@ import hashlib
 import pickle
 import threading
 import urllib.parse
+import logging
+from typing import Union
 
 import requests
 import simplejson as json
@@ -593,6 +595,9 @@ class Patients(BaseRequester):
     @staticmethod
     def create_rmis_card(individual: clients_models.Individual, get_id: str):
         base = clients_models.CardBase.objects.filter(is_rmis=True).first()
+        if not individual.rmis_uid and individual.rmis_uid != get_id:
+            individual.rmis_uid = get_id
+            individual.save(update_fields=['rmis_uid'])
         if get_id and not clients_models.Card.objects.filter(base=base, number=get_id, is_archive=False).exists():
             for cm in clients_models.Card.objects.filter(base=base, individual=individual):
                 cm.is_archive = True
@@ -697,7 +702,9 @@ class Services(BaseRequester):
         return [y for y in [self.get_service_id(x) for x in list(set(services_tmp))] if y is not None]
 
 
-def ndate(d: datetime.datetime):
+def ndate(d: Union[datetime.datetime, datetime.date]):
+    if isinstance(d, datetime.date):
+        return f"{d.year}-{d.month:02}-{d.day:02}"
     return localtime(d).strftime("%Y-%m-%d")
 
 
@@ -1025,6 +1032,7 @@ class Directions(BaseRequester):
                                 self.main_client.get_addr("referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат-" + str(direction.pk) + "/Resultat.pdf"),
                             )
                 except Fault as e:
+                    logging.exception(e)
                     if "ата смерти пациента" in e.message:
                         direction.rmis_number = "NONERMIS"
                     else:
@@ -1077,7 +1085,7 @@ class Directions(BaseRequester):
             patientUid=rindiv,
         )
         if not direction.imported_from_rmis:
-            send_data["fundingSourceTypeId"] = (Utils.get_fin_src_id(direction.fin_title, self.main_client.get_fin_dict()),)
+            send_data["fundingSourceTypeId"] = Utils.get_fin_src_id(direction.fin_title, self.main_client.get_fin_dict())
         if stdout:
             stdout.write("SR: " + str(service_rend_id))
         if service_rend_id:
@@ -1086,6 +1094,9 @@ class Directions(BaseRequester):
                 stdout.write("OLD DATA: " + str(service_old_data))
             if service_old_data:
                 self.fill_send_old_data(send_data, service_old_data)
+        send_data["dateFrom"] = ndate(send_data["dateFrom"]) if send_data["dateFrom"] and not isinstance(send_data["dateFrom"], str) else send_data["dateFrom"]
+        send_data["timeFrom"] = strtime(send_data["timeFrom"]) if send_data["timeFrom"] and not isinstance(send_data["timeFrom"], str) else send_data["timeFrom"]
+        send_data["dateTo"] = ndate(send_data["dateTo"]) if send_data["dateTo"] and not isinstance(send_data["dateTo"], str) else send_data["dateTo"]
         return send_data, ssd
 
     def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=MAX_RMIS_THREADS, slice_to_upload: bool = False):
@@ -1117,8 +1128,8 @@ class Directions(BaseRequester):
         )
         if slice_to_upload:
             stdout.write("Total to upload directions: {}".format(to_upload.count()))
-            stdout.write("Slice to upload directions: {}".format(MAX_RMIS_THREADS))
-            to_upload = to_upload[:MAX_RMIS_THREADS]
+            stdout.write("Slice to upload directions: {}".format(MAX_RMIS_THREADS * 2))
+            to_upload = to_upload[:MAX_RMIS_THREADS * 2]
         cnt = to_upload.count()
         if stdout:
             stdout.write("Directions to upload: {}".format(cnt))
@@ -1165,8 +1176,8 @@ class Directions(BaseRequester):
         to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date, rmis_resend_services=True).exclude(rmis_number='NONERMIS').distinct()
         if slice_to_upload:
             stdout.write("Total to upload resend services: {}".format(to_upload.count()))
-            stdout.write("Slice to upload resend services: {}".format(MAX_RMIS_THREADS))
-            to_upload = to_upload[:MAX_RMIS_THREADS]
+            stdout.write("Slice to upload resend services: {}".format(MAX_RMIS_THREADS * 2))
+            to_upload = to_upload[:MAX_RMIS_THREADS * 2]
         for d in to_upload:
             thread = threading.Thread(target=upload_services, args=(self, d, stdout))
             threads.append(thread)
@@ -1177,7 +1188,7 @@ class Directions(BaseRequester):
         uploaded_results = []
         if not without_results:
             upload_lt = timezone.now() - datetime.timedelta(hours=Settings.get("upload_hours_interval", default="8", default_type="i"))
-            direction_ids = get_confirm_direction(date, upload_lt, MAX_RMIS_THREADS if slice_to_upload else 10000)
+            direction_ids = get_confirm_direction(date, upload_lt, MAX_RMIS_THREADS * 2 if slice_to_upload else 10000)
             cnt = len(direction_ids)
             stdout.write("To upload results: {}".format(cnt))
             if slice_to_upload:
