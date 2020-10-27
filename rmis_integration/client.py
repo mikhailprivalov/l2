@@ -1087,7 +1087,7 @@ class Directions(BaseRequester):
             patientUid=rindiv,
         )
         if not direction.imported_from_rmis:
-            send_data["fundingSourceTypeId"] = (Utils.get_fin_src_id(direction.fin_title, self.main_client.get_fin_dict()),)
+            send_data["fundingSourceTypeId"] = Utils.get_fin_src_id(direction.fin_title, self.main_client.get_fin_dict())
         if stdout:
             stdout.write("SR: " + str(service_rend_id))
         if service_rend_id:
