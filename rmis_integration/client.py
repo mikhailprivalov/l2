@@ -593,6 +593,9 @@ class Patients(BaseRequester):
     @staticmethod
     def create_rmis_card(individual: clients_models.Individual, get_id: str):
         base = clients_models.CardBase.objects.filter(is_rmis=True).first()
+        if not individual.rmis_uid and individual.rmis_uid != get_id:
+            individual.rmis_uid = get_id
+            individual.save(update_fields=['rmis_uid'])
         if get_id and not clients_models.Card.objects.filter(base=base, number=get_id, is_archive=False).exists():
             for cm in clients_models.Card.objects.filter(base=base, individual=individual):
                 cm.is_archive = True
@@ -1025,6 +1028,7 @@ class Directions(BaseRequester):
                                 self.main_client.get_addr("referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат-" + str(direction.pk) + "/Resultat.pdf"),
                             )
                 except Fault as e:
+                    print(e)
                     if "ата смерти пациента" in e.message:
                         direction.rmis_number = "NONERMIS"
                     else:
