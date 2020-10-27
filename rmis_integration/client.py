@@ -1014,8 +1014,6 @@ class Directions(BaseRequester):
                                             self.main_client.rendered_services.delete_service(service_rend_id)
                                     if stdout:
                                         stdout.write("DATA2: " + json.dumps(send_data))
-                                    else:
-                                        print(send_data)
                                     ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
                                     xresult = protocol_row.replace("{{фракция}}", x.fraction.title).replace("{{значение}}", x.value).replace("{{едизм}}", x.get_units())
                                     xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
