@@ -90,16 +90,22 @@
         </div>
         <div class="more-data">
           <div class="row" v-if="l2_user_data.rmis_enabled">
-            <div class="col-xs-6" style="padding-right: 0">
+            <div class="col-xs-4" style="padding-right: 0">
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">РМИС логин</span>
                 <input class="form-control" v-model="user.rmis_login"/>
               </div>
             </div>
-            <div class="col-xs-6" style="padding-left: 0">
+            <div class="col-xs-4" style="padding-left: 0; padding-right: 0;">
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">РМИС пароль</span>
                 <input class="form-control" placeholder="Для замены введите значение" v-model="user.rmis_password"/>
+              </div>
+            </div>
+            <div class="col-xs-4" style="padding-left: 0;">
+              <div class="input-group" style="width: 100%">
+                <span class="input-group-addon">ID ресурса РМИС</span>
+                <input class="form-control" v-model="user.rmis_resource_id"/>
               </div>
             </div>
           </div>
@@ -218,6 +224,7 @@
           rmis_password: '',
           doc_pk: -1,
           personal_code: -1,
+          rmis_resource_id: '',
         },
         open_pk: -2,
       }
@@ -304,6 +311,7 @@
           username: '',
           password: '',
           department: null,
+          rmis_resource_id: '',
         }
       },
     },

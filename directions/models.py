@@ -19,7 +19,7 @@ from laboratory.utils import strdate, localtime
 from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
 import contracts.models as contracts
-from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
+from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, ConditionsCare
 
 from appconf.manager import SettingManager
 
@@ -204,6 +204,7 @@ class IstochnikiFinansirovaniya(models.Model):
     default_diagnos = models.CharField(max_length=36, help_text="Диагноз по умолчанию", default="", blank=True)
     contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE)
     order_weight = models.SmallIntegerField(default=0)
+
 
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
@@ -922,6 +923,7 @@ class Issledovaniya(models.Model):
     first_time = models.BooleanField(default=False, help_text="Впервые")
     result_reception = models.ForeignKey(ResultOfTreatment, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Результат обращения")
     outcome_illness = models.ForeignKey(Outcomes, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Исход")
+    conditions_care = models.ForeignKey(ConditionsCare, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Условие оказание помощи")
     diagnos = models.CharField(blank=True, help_text="Заключительный Диагноз приема", default="", max_length=255)
     maybe_onco = models.BooleanField(default=False, help_text="Подозрение на онко")
     creator = models.ForeignKey(
