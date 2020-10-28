@@ -70,10 +70,11 @@
                style="table-layout: fixed; font-size: 12px; margin-top: 0;">
           <colgroup>
             <col width="75">
-            <col/>
-            <col width="150"/>
-            <col/>
-            <col width="100"/>
+            <col width="180"/>
+            <col width="120"/>
+            <col width="200"/>
+            <col width="70"/>
+            <col width="70"/>
           </colgroup>
           <thead>
           <tr>
@@ -82,15 +83,19 @@
             <th>Комментарий</th>
             <th>Адрес, телефон</th>
             <th>Участок</th>
+            <th>Статус</th>
           </tr>
           </thead>
           <tbody>
-            <tr v-for="r in rows_mapped">
+            <tr v-for="r in rows_mapped" :class="{'cancel-row':  r.cancel}">
               <td>{{r.date}}</td>
               <td>{{r.service}}</td>
               <td style="white-space: pre-wrap">{{r.comment}}</td>
               <td>{{r.address}}<br/>{{r.phone}}</td>
               <td>{{r.district}}</td>
+              <td>
+                <button type="button" class="btn btn-blue-nb btn-xs" @click="cancel_doc_call(r.pk)">Отменить</button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -218,6 +223,17 @@
           this.$root.$emit('researches-picker:clear_all');
         }
       },
+      async cancel_doc_call(pk) {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        await api(
+          'doctor-call/cancel-row',
+          {
+            pk: pk,
+          }
+        )
+        await this.load_data();
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      }
     },
     computed: {
       disp_researches() {
@@ -237,6 +253,7 @@
           district: r.district__title,
           comment: r.comment,
           phone: r.phone,
+          cancel: r.cancel
         }));
       },
     },
@@ -280,5 +297,12 @@
 
   .rows {
     margin-top: 5px;
+  }
+
+  .cancel-row {
+    td, th {
+      opacity: .6;
+      text-decoration: line-through;
+    }
   }
 </style>

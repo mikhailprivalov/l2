@@ -179,15 +179,23 @@ def form_02(request_data):
 
     date = request_data["date"]
     district = int(request_data["district"])
+    is_canceled = int(request_data["cancel"])
+    cancel = True if is_canceled == 0 else False
 
     objs = []
     objs.append(Paragraph(f"Вызов врача {normalize_dash_date(date)}", styleCenterBold))
     objs.append(Spacer(1, 5 * mm))
 
     if district > -1:
-        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), district_id__pk=district).order_by("pk")
+        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), district_id__pk=district, cancel=cancel).order_by("pk")
     else:
-        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d')).order_by("district__title")
+        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), cancel=cancel).order_by("district__title")
+    strike_o = ""
+    strike_cl = ""
+
+    if cancel:
+        strike_o = "<strike>"
+        strike_cl = "</strike>"
 
     opinion = [
         [
@@ -209,13 +217,13 @@ def form_02(request_data):
             title = i.district.title
         opinion.append(
             [
-                Paragraph(f"{count}", styleCenter),
-                Paragraph(f"{i.client.individual.fio()} ({i.client.number_with_type()})", styleCenter),
-                Paragraph(f"{i.address}", styleCenter),
-                Paragraph(f"{title}", style),
-                Paragraph(f"{i.client.phone}", style),
-                Paragraph(f"{i.research.title}", style),
-                Paragraph(f"{i.comment}", style),
+                Paragraph(f"{strike_o}{count}{strike_cl}", styleCenter),
+                Paragraph(f"{strike_o}{i.client.individual.fio()} ({i.client.number_with_type()}){strike_cl}", styleCenter),
+                Paragraph(f"{strike_o}{i.address}{strike_cl}", styleCenter),
+                Paragraph(f"{strike_o}{title}{strike_cl}", style),
+                Paragraph(f"{strike_o}{i.client.phone}{strike_cl}", style),
+                Paragraph(f"{strike_o}{i.research.title}{strike_cl}", style),
+                Paragraph(f"{strike_o}{i.comment}{strike_cl}", style),
             ]
         )
 
