@@ -68,7 +68,24 @@ def actual_rows(request):
     rows = list(
         DoctorCall.objects.filter(client_id=card_pk, exec_at__gte=date_from)
         .order_by('exec_at', 'pk')
-        .values('pk', 'exec_at', 'research__title', 'comment', 'cancel', 'district__title', 'address', 'phone')
+        .values('pk', 'exec_at', 'research__title', 'comment', 'cancel', 'district__title', 'address', 'phone', 'cancel')
     )
 
     return JsonResponse(rows, safe=False)
+
+
+@login_required
+def cancel_row(request):
+    data = data_parse(
+        request.body,
+        {'pk': int}
+    )
+    pk_row: int = data[0]
+    row = DoctorCall.objects.get(pk=pk_row)
+    row.cancel = not row.cancel
+    row.save()
+
+    return JsonResponse(True, safe=False)
+
+
+

@@ -33,7 +33,13 @@
               </div>
             </div>
             <div class="row">
-              <div class="col-xs-9"></div>
+              <div class="col-xs-9">
+                <div class="checkbox" style="text-align: right; margin-top: 20px;">
+                  <label>
+                    <input type="checkbox" v-model="is_canceled"> Показать отмененные
+                  </label>
+                </div>
+              </div>
               <div class="col-xs-3">
                 <div class="btn btn-blue-nb" style="margin-bottom: 5px;margin-top: 15px; margin-left: 20px;"
                      @click="print(true)">
@@ -62,6 +68,7 @@
           date: moment().format('YYYY-MM-DD'),
           district: -1,
           districts: [],
+          is_canceled: false,
       }
     },
     mounted() {
@@ -69,7 +76,7 @@
     },
     methods: {
       print() {
-        window.open(`/forms/pdf?type=109.02&date=${this.date}&district=${this.district}`);
+        window.open(`/forms/pdf?type=109.02&date=${this.date}&district=${this.district}&cancel=${this.is_canceled ? 0 : 1}`);
       },
     }
   }
