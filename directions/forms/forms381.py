@@ -1,6 +1,7 @@
 import os
 from copy import deepcopy
 
+from django.core.exceptions import ObjectDoesNotExist
 from reportlab.graphics import renderPDF
 from reportlab.graphics.barcode import eanbc
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
@@ -12,7 +13,7 @@ from reportlab.graphics.shapes import Drawing, Rect
 from reportlab.lib import colors
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
-from reportlab.platypus import Table, TableStyle, Paragraph, Frame, Spacer
+from reportlab.platypus import Table, TableStyle, Paragraph, Frame, Spacer, KeepInFrame
 from reportlab.platypus.flowables import HRFlowable
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import Image
@@ -22,10 +23,11 @@ import locale
 from reportlab.lib.colors import black, HexColor
 from laboratory.settings import FONTS_FOLDER
 from directions.models import Issledovaniya
+from utils.flowable import InteractiveTextField
 
 
 def form_01(c: Canvas, dir: Napravleniya):
-    # Диагностический центр
+    # Диагностический центр - COVID-19
     def printForm():
         hospital_name = SettingManager.get("org_title")
 
@@ -855,3 +857,122 @@ def draw_rectangle(x, y):
     rect_draw = Drawing()
     rect_draw.add(rectangle)
     return rect_draw
+
+
+def form_02(c: Canvas, dir: Napravleniya):
+    # Диагностический цент - направление на МСКТ
+    def printForm():
+        hospital_name = SettingManager.get("org_title")
+        hospital_address = SettingManager.get("org_address")
+
+        if sys.platform == 'win32':
+            locale.setlocale(locale.LC_ALL, 'rus_rus')
+        else:
+            locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+        pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+        pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+        styleSheet = getSampleStyleSheet()
+        style = styleSheet["Normal"]
+        style.fontName = "PTAstraSerifReg"
+        style.fontSize = 11.5
+        style.leading = 14
+        style.spaceAfter = 3.5 * mm
+
+        styleZeroSpaceAfter = deepcopy(style)
+        styleZeroSpaceAfter.spaceAfter = 1 * mm
+
+        styleCenterBold = deepcopy(style)
+        styleCenterBold.alignment = TA_CENTER
+        styleCenterBold.fontSize = 12
+        styleCenterBold.leading = 15
+        styleCenterBold.fontName = 'PTAstraSerifBold'
+
+        styleT = deepcopy(style)
+        styleT.alignment = TA_LEFT
+        styleT.fontSize = 10
+        styleT.leading = 4.5 * mm
+        styleT.face = 'PTAstraSerifReg'
+
+        objs = []
+        objs.append(Spacer(1, 32 * mm))
+        opinion = [
+            [
+                Paragraph(f'<font size=11>Иркутский областной клинический<br/>консультативно  диагностический центр<br/>г. Иркутск 666047  ул., Байкальская 109  <br/> </font>', styleT),
+                Paragraph('', styleT),
+            ],
+        ]
+
+        tbl = Table(opinion, 2 * [100 * mm])
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
+
+        objs.append(tbl)
+        objs.append(Spacer(1, 5 * mm))
+        try:
+            issledovaniye = Issledovaniya.objects.get(napravleniye=dir.pk)
+        except ObjectDoesNotExist:
+            issledovaniye = None
+        title_research = issledovaniye.research.title
+        objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk} ', styleCenterBold))
+        objs.append(Paragraph('для получения  медицинских  услуг в областном  государственном  учреждении  здравоохранения.', styleCenterBold))
+        objs.append(Spacer(1, 10 * mm))
+        objs.append(Paragraph(f'От: {strdate(dir.data_sozdaniya)}', style))
+        objs.append(Paragraph(f'ФИО: {dir.client.individual.fio()}', style))
+        space_symbol = '&nbsp;'
+
+        sex = dir.client.individual.sex
+        if sex == "м":
+            sex = 'муж'
+        else:
+            sex = 'жен'
+
+        born = dir.client.individual.bd().split('.')
+        objs.append(Paragraph(f'Дата <u>{born[0]}</u> Месяц <u>{born[1]}</u> Год рождения <u>{born[2]}</u> Пол {sex} ', style))
+        objs.append(Paragraph(f'Контактный телефон: {dir.client.phone}', style))
+
+        polis_num = ''
+        polis_issue = ''
+        ind_data = dir.client.get_data_individual()
+        if ind_data['oms']['polis_num']:
+            polis_num = ind_data['oms']['polis_num']
+        if ind_data['oms']['polis_issued']:
+            polis_issue = ind_data['oms']['polis_issued']
+        address = ind_data['main_address']
+        objs.append(Paragraph(f'Регистрация по месту жительства: {address}', style))
+        objs.append(Paragraph(f'Страховой полис № {polis_num} <br/>Страховая компания: {polis_issue}', style))
+        objs.append(Paragraph(f'Наименование территориального лечебно – профилактического учреждения<br/>по месту прикрепления {hospital_address} {hospital_name}', style))
+
+        objs.append(Paragraph(f'Наименование направившего ЛПУ  {hospital_address} {hospital_name}', style))
+        objs.append(Paragraph(f'Направлени на: <br/>{title_research}', style))
+
+        diagnos = dir.diagnos
+        if not diagnos or len(diagnos) <=1:
+            objs.append(Paragraph(f"<font face=\"PTAstraSerifBold\">Диагноз направившего учреждения:</font>", styleZeroSpaceAfter))
+            objs.append(InteractiveTextField())
+        else:
+            objs.append(Paragraph(f"<font face=\"PTAstraSerifBold\">Диагноз направившего учреждения: <br/>{diagnos}</font>", style))
+
+        objs.append(Spacer(1, 2 * mm))
+        objs.append(Paragraph(f'Врач: {dir.doc.get_fio()} {space_symbol * 5} подпись _________', style))
+        objs.append(Spacer(1, 3 * mm))
+        hospital_director = SettingManager.get("hospital director", default='', default_type='s')
+        objs.append(Paragraph(f'Руководитель направившего  ЛПУ__________________________{hospital_director}', style))
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph(f'М.П.', style))
+
+        picture_t = []
+        img_path = os.path.join(FONTS_FOLDER, '..', 'img')
+        footer_picture = os.path.join(img_path, 'dc_label.png')
+        alphabet_image = Image(footer_picture)
+        alphabet_image.drawHeight = 30 * mm
+        alphabet_image.drawWidth = 60 * mm
+        picture_t.append(alphabet_image)
+        picture_t_frame = Frame(12 * mm, 250 * mm, 65 * mm, 35 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0.3 * mm, showBoundary=0)
+        picture_t_frame.addFromList(picture_t, c)
+
+        gistology_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+        gistology_inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
+        gistology_frame.addFromList([gistology_inframe], c)
+
+    printForm()
