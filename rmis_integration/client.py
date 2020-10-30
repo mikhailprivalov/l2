@@ -1031,6 +1031,41 @@ class Directions(BaseRequester):
                                 self.main_client.local_get("/results/pdf", {"pk": json.dumps([direction.pk]), "normis": '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}),
                                 self.main_client.get_addr("referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат-" + str(direction.pk) + "/Resultat.pdf"),
                             )
+                            #создать случай в РМИС, если это не анализы
+                            case_data = {
+                                "uid": SettingManager.get("org_title").join(direction.pk), #случая рандомно
+                                "patientUid": rindiv,
+                                "caseTypeId": "1", #Тип случая
+                                "medicalOrganizationId": "31",
+                                "fundingSourceTypeId": "1", #Источник финансирования
+                                "careLevelId": "1", #Вид медицинской помощи
+                                "paymentMethodId": "26", #Способ оплаты
+                                "initGoalId": "4", #Цель первичного обращения
+                                "careRegimenId": "1", #Условия оказания медпомощи
+                                "createdDate": "2020-10-15",
+                            }
+                            client = self.main_client.get_client("https://38.is-mis.ru/cases-ws/cases?wsdl")
+                            case_id = client.service.sendCase(**case_data)
+
+                            #создать посещение
+                            visit_data = {
+                                "caseId": case_id, #id - Номер случая РМИС
+                                # "visitResultId": 9, # Результат – при закрытии
+                                # "deseaseResultId": "1", # Исход – при закрытии
+                                "admissionDate": "2020-10-15", # Дата посещения
+                                "admissionTime": "14:50:00", # Время посещения
+                                "rendererDate": "2020-10-15", # Дата оказания услуги
+                                "resourceGroupId": "151205615", # Врач-id в справочнике ресурс
+                                "goalId": "1", # Цель обращения
+                                "placeId": "1", # Место оказания
+                                "profileId": "65", # Профиль-специальности
+                            }
+                            client = self.main_client.get_client("https://38.is-mis.ru/visits-ws/visits?wsdl")
+                            visit_id = client.service.sendVisit(**visit_data)
+                            # получить услугу по id
+                            # указать id-case + id_visit
+                            # получить id_visit: вставить visitResultId + deseaseResultId
+
                 except Fault as e:
                     logging.exception(e)
                     if "ата смерти пациента" in e.message:
