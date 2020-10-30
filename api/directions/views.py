@@ -30,7 +30,6 @@ from directions.models import (
     MicrobiologyResultCulture,
     MicrobiologyResultCultureAntibiotic,
     DirectionToUserWatch,
-    IstochnikiFinansirovaniya,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings

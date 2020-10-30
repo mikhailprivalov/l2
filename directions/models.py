@@ -205,7 +205,6 @@ class IstochnikiFinansirovaniya(models.Model):
     contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE)
     order_weight = models.SmallIntegerField(default=0)
 
-
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
 
