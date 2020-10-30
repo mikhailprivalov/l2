@@ -554,7 +554,7 @@
           type,
           card_pk: this.card_pk,
           fin_source_pk: this.fin,
-          diagnos: this.diagnos.substr(0, 35),
+          diagnos: this.diagnos.substr(0, 200),
           base: this.base,
           researches: this.researches_departments_simple(),
           operator: this.operator,

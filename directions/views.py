@@ -426,7 +426,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
     c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn, "Д/р: {} ({})".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir)))
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "{}: {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type()))
-    diagnosis = dir.diagnos.strip()
+    diagnosis = dir.diagnos.strip()[:35]
     if not dir.imported_from_rmis:
         if diagnosis != "":
             c.drawString(
