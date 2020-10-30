@@ -899,13 +899,21 @@ def form_02(c: Canvas, dir: Napravleniya):
         objs.append(Spacer(1, 32 * mm))
         opinion = [
             [
-                Paragraph(f'<font size=11>Иркутский областной клинический<br/>консультативно  диагностический центр<br/>г. Иркутск 666047  ул., Байкальская 109  <br/> </font>', styleT),
+                Paragraph('<font size=10>Иркутский областной клинический<br/>консультативно  диагностический центр<br/>г. Иркутск 666047  ул., Байкальская 109</font>', styleT),
                 Paragraph('', styleT),
             ],
         ]
 
         tbl = Table(opinion, 2 * [100 * mm])
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                    ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ]
+            )
+        )
 
         objs.append(tbl)
         objs.append(Spacer(1, 5 * mm))
@@ -942,13 +950,11 @@ def form_02(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph(f'Регистрация по месту жительства: {address}', style))
         objs.append(Paragraph(f'Страховой полис № {polis_num} <br/>Страховая компания: {polis_issue}', style))
         objs.append(Paragraph(f'Наименование территориального лечебно – профилактического учреждения<br/>по месту прикрепления {hospital_address} {hospital_name}', style))
-
         objs.append(Paragraph(f'Наименование направившего ЛПУ  {hospital_address} {hospital_name}', style))
         objs.append(Paragraph(f'Направлени на: <br/>{title_research}', style))
-
         diagnos = dir.diagnos
-        if not diagnos or len(diagnos) <=1:
-            objs.append(Paragraph(f"<font face=\"PTAstraSerifBold\">Диагноз направившего учреждения:</font>", styleZeroSpaceAfter))
+        if not diagnos or len(diagnos) <= 1:
+            objs.append(Paragraph("<font face=\"PTAstraSerifBold\">Диагноз направившего учреждения:</font>", styleZeroSpaceAfter))
             objs.append(InteractiveTextField())
         else:
             objs.append(Paragraph(f"<font face=\"PTAstraSerifBold\">Диагноз направившего учреждения: <br/>{diagnos}</font>", style))
@@ -959,7 +965,7 @@ def form_02(c: Canvas, dir: Napravleniya):
         hospital_director = SettingManager.get("hospital director", default='', default_type='s')
         objs.append(Paragraph(f'Руководитель направившего  ЛПУ__________________________{hospital_director}', style))
         objs.append(Spacer(1, 3 * mm))
-        objs.append(Paragraph(f'М.П.', style))
+        objs.append(Paragraph('М.П.', style))
 
         picture_t = []
         img_path = os.path.join(FONTS_FOLDER, '..', 'img')

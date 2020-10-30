@@ -44,7 +44,6 @@ from tfoms.integration import match_enp, match_patient
 from directory.models import DispensaryPlan
 
 
-
 def full_patient_search_data(p, query):
     dp = re.compile(r'^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$')
     split = str(re.sub(' +', ' ', str(query))).split()
@@ -772,9 +771,7 @@ def load_vaccine(request):
     request_data = json.loads(request.body)
     data = []
     for a in VaccineReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date', 'pk'):
-        data.append(
-            {"pk": a.pk, "date": strdate(a.date) if a.date else '', "title": a.title, "series": a.series, "amount": a.amount, "method": a.method, "step": a.step, "tap": a.tap}
-        )
+        data.append({"pk": a.pk, "date": strdate(a.date) if a.date else '', "title": a.title, "series": a.series, "amount": a.amount, "method": a.method, "step": a.step, "tap": a.tap})
     return JsonResponse({"rows": data})
 
 
@@ -782,9 +779,7 @@ def load_ambulatory_data(request):
     request_data = json.loads(request.body)
     data = []
     for a in AmbulatoryData.objects.filter(card__pk=request_data["card_pk"]).order_by('date', 'pk'):
-        data.append(
-            {"pk": a.pk, "date": strdate(a.date) if a.date else '', "data": a.data}
-        )
+        data.append({"pk": a.pk, "date": strdate(a.date) if a.date else '', "data": a.data})
 
     return JsonResponse({"rows": data})
 
@@ -876,7 +871,12 @@ def load_benefit_detail(request):
             "date_end": '',
             "close": False,
         }
-    return JsonResponse({"types": [{"pk": -1, "title": 'Не выбрано'}, *[{"pk": x.pk, "title": str(x)} for x in BenefitType.objects.filter(hide=False).order_by('pk')]], **data,})
+    return JsonResponse(
+        {
+            "types": [{"pk": -1, "title": 'Не выбрано'}, *[{"pk": x.pk, "title": str(x)} for x in BenefitType.objects.filter(hide=False).order_by('pk')]],
+            **data,
+        }
+    )
 
 
 @transaction.atomic
@@ -1135,7 +1135,10 @@ def load_anamnesis(request):
             {
                 "pk": a.pk,
                 "text": a.text,
-                "who_save": {"fio": a.who_save.get_fio(dots=True), "department": a.who_save.podrazdeleniye.get_title(),},
+                "who_save": {
+                    "fio": a.who_save.get_fio(dots=True),
+                    "department": a.who_save.podrazdeleniye.get_title(),
+                },
                 "datetime": a.created_at.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
             }
         )
