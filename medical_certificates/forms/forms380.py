@@ -7,7 +7,7 @@ from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, SimpleDocTe
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from copy import deepcopy
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY, TA_RIGHT
 from appconf.manager import SettingManager
 from io import BytesIO
 from reportlab.lib.pagesizes import A4, landscape, A5
@@ -205,8 +205,13 @@ def form_05(request_data):
     style.fontSize = 10
     style.leading = 12
     style.spaceAfter = 0.5 * mm
+
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
+
+    styleRight = deepcopy(style)
+    styleRight.alignment = TA_RIGHT
+
     styleCenter = deepcopy(style)
     styleCenter.alignment = TA_CENTER
     styleCenter.fontSize = 12
@@ -220,7 +225,7 @@ def form_05(request_data):
     styleCenterBold.face = 'PTAstraSerifBold'
 
     styleJustified = deepcopy(style)
-    styleCenterBold.fontSize = 11
+    styleJustified.fontSize = 9
     styleJustified.alignment = TA_JUSTIFY
     styleJustified.leading = 3 * mm
     styleJustified.firstLineIndent = 5 * mm
@@ -297,8 +302,8 @@ def form_05(request_data):
     fwb.append(Paragraph('госпитализации', style))
 
     fwb.append(PageBreak())
-    fwb.append(Paragraph('оборотная сторона ф. N 058/у', style))
-    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph('оборотная сторона ф. N 058/у', styleRight))
+    fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph('8. Место госпитализации __________________________________', style))
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph('9.Если отравление - указать, где оно произошло, чем отравлен пострадавший', style))
@@ -322,7 +327,7 @@ def form_05(request_data):
     fwb.append(Paragraph('санэпидстанции', style))
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph('Подпись получившего извещение ________________________', style))
-    fwb.append(Spacer(1, 6 * mm))
+    fwb.append(Spacer(1, 10 * mm))
     fwb.append(Paragraph('Составляется медработником, выявившим при любых обстоятельствах инфекционное заболевание, пищевое отравление, острое профессиональное отравление или подозревающих их, а также при изменении диагноза.', styleJustified))
     fwb.append(Paragraph('Посылается в санэпидстанцию по месту выявления больного не позднее 12 часов с момента обнаружения больного.', styleJustified))
     fwb.append(Paragraph('В случае сообщения об изменении диагноза п.1 извещения указывается измененный диагноз, дата его установления и первоначальный диагноз.', styleJustified))
