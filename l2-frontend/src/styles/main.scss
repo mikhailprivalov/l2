@@ -1908,3 +1908,15 @@ input[type=date].form-control {
     content: "\00a0\00a0\00a0";
   }
 }
+
+@media (max-width: 1025px) {
+  .hidden-small {
+    display: none!important;
+  }
+}
+
+@media (min-width: 1026px) {
+  .visible-small {
+    display: none !important;
+  }
+}
