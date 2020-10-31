@@ -16,8 +16,6 @@ import os.path
 import directory.models as directory
 from reportlab.lib.units import mm
 
-from utils.dates import normalize_date
-
 
 def form_04(request_data):
     # Профосомтр
@@ -86,16 +84,7 @@ def form_04(request_data):
         return ""
 
     result = form_04_data_result_(iss)
-    work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date, department = (
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        ""
-    )
+    work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date, department = ("", "", "", "", "", "", "", "")
     for i in result:
         if i["title"] == "Место работы":
             work_place = i["value"]
@@ -165,7 +154,7 @@ def form_04_data_result_(iss):
         'Медицинские противопоказания к работе',
         'Заключение по приказу N302н',
         'Дата осмотра',
-        'Цех, участок ОПУ'
+        'Цех, участок ОПУ',
     ]
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
@@ -200,7 +189,9 @@ def form_05(request_data):
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
-    doc = SimpleDocTemplate(buffer, pagesize=landscape(A5), leftMargin=18 * mm, rightMargin=18 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("058/у"))
+    doc = SimpleDocTemplate(
+        buffer, pagesize=landscape(A5), leftMargin=18 * mm, rightMargin=18 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("058/у")
+    )
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -275,7 +266,7 @@ def form_05(request_data):
     result = form_05_06_data_result_(iss)
 
     work_place, work_position, address, phone, add_diagnos = '', '', '', '', ''
-    main_diagnos, date_start_ill, date_post, last_visit, medical_treatment  = '', '', '', '', ''
+    main_diagnos, date_start_ill, date_post, last_visit, medical_treatment = '', '', '', '', ''
     protocol_num, protocol_date, protocol_date, laboratory_protocol = '', '', '', ''
     for i in result:
         if i["title"] == "Место работы (обучения)":
@@ -328,7 +319,7 @@ def form_05(request_data):
     fwb.append(Paragraph(f'первичного обращения (выявления) - {date_post}', style))
     fwb.append(Paragraph(f'установления диагноза - {date_diagnos}; / {laboratory_protocol} / {protocol_date} / {protocol_num} /', style))
     fwb.append(Paragraph(f'последующего посещения детского учреждения, школы - {last_visit}', style))
-    fwb.append(Paragraph(f'госпитализации - {medical_treatment}',  style))
+    fwb.append(Paragraph(f'госпитализации - {medical_treatment}', style))
 
     fwb.append(PageBreak())
     fwb.append(Paragraph('оборотная сторона ф. N 058/у', styleRight))
@@ -357,11 +348,20 @@ def form_05(request_data):
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph('Подпись получившего извещение ________________________', style))
     fwb.append(Spacer(1, 10 * mm))
-    fwb.append(Paragraph('Составляется медработником, выявившим при любых обстоятельствах инфекционное заболевание, пищевое отравление, острое профессиональное отравление или подозревающих их, а также при изменении диагноза.', styleJustified))
+    fwb.append(
+        Paragraph(
+            'Составляется медработником, выявившим при любых обстоятельствах инфекционное заболевание, пищевое отравление, острое профессиональное отравление или подозревающих их, а также при изменении диагноза.',
+            styleJustified,
+        )
+    )
     fwb.append(Paragraph('Посылается в санэпидстанцию по месту выявления больного не позднее 12 часов с момента обнаружения больного.', styleJustified))
     fwb.append(Paragraph('В случае сообщения об изменении диагноза п.1 извещения указывается измененный диагноз, дата его установления и первоначальный диагноз.', styleJustified))
-    fwb.append(Paragraph('Извещение составляется также на случаи укусов, оцарапанья, ослюнения домашними или дикими животными, которые следует рассматривать как подозрение на заболевание бешенством', styleJustified))
-
+    fwb.append(
+        Paragraph(
+            'Извещение составляется также на случаи укусов, оцарапанья, ослюнения домашними или дикими животными, которые следует рассматривать как подозрение на заболевание бешенством',
+            styleJustified,
+        )
+    )
 
     doc.build(fwb)
     pdf = buffer.getvalue()
@@ -378,7 +378,9 @@ def form_06(request_data):
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
-    doc = SimpleDocTemplate(buffer, pagesize=portrait(A4), leftMargin=20 * mm, rightMargin=10 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("Эпидемиологу"))
+    doc = SimpleDocTemplate(
+        buffer, pagesize=portrait(A4), leftMargin=20 * mm, rightMargin=10 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("Эпидемиологу")
+    )
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -414,7 +416,7 @@ def form_06(request_data):
     work_place, work_position, address, phone, work_address = '', '', '', '', ''
     work_phone, last_visit, date_start_ill, date_post, protocol_num = '', '', '', '', ''
     date_post, protocol_date, laboratory_protocol, symptoms, add_diagnos = '', '', '', '', ''
-    main_diagnos, medical_treatment, medical_destination, contacts =  '', '', '', ''
+    main_diagnos, medical_treatment, medical_destination, contacts = '', '', '', ''
     for i in result:
         if i["title"] == "Место работы (обучения)":
             work_place = i["value"]
@@ -459,31 +461,106 @@ def form_06(request_data):
     fwb.append(Paragraph(f'осомтр L2 - {dir.pk} подтверждено  {strfdatetime(iss.time_confirmation, "%d.%m.%Y")}', styleCenterBold))
     fwb.append(Spacer(1, 6 * mm))
     opinion = [
-        [Paragraph('Дата выявление', styleT), Paragraph(f'{date_diagnos}', styleT),],
-        [Paragraph('Экстренное извещение №', styleT), Paragraph('', styleT),],
-        [Paragraph('ФИО', styleT), Paragraph(f'{patient_data["fio"]}', styleT),],
-        [Paragraph('Дата рождения', styleT), Paragraph(f'{patient_data["born"]}', styleT),],
-        [Paragraph('Возраст', styleT), Paragraph(f'{age}', styleT),],
-        [Paragraph('Адрес', styleT), Paragraph(f'{address}', styleT),],
-        [Paragraph('ФИО терапевта', styleT), Paragraph(f'{iss.doc_confirmation.get_fio()}', styleT),],
-        [Paragraph('Телефон', styleT), Paragraph(f'{phone}', styleT),],
-        [Paragraph('Место работы (обучения)', styleT), Paragraph(f'{work_place}', styleT),],
-        [Paragraph('Должность (группа)', styleT), Paragraph(f'{work_position}', styleT),],
-        [Paragraph('Адрес работы', styleT), Paragraph(f'{work_address}', styleT),],
-        [Paragraph('Телефон по месту работы', styleT), Paragraph(f'{work_phone}', styleT),],
-        [Paragraph('Последнее посещение', styleT), Paragraph(f'{last_visit}', styleT),],
-        [Paragraph('Дата заболевания', styleT), Paragraph(f'{date_start_ill}', styleT),],
-        [Paragraph('Дата обращения', styleT), Paragraph(f'{date_diagnos}', styleT),],
-        [Paragraph('Протокол №', styleT), Paragraph(f'{protocol_num}', styleT),],
-        [Paragraph('Дата формирования протокола', styleT), Paragraph(f'{protocol_date}', styleT),],
-        [Paragraph('Лаборатория', styleT), Paragraph(f'{laboratory_protocol}', styleT),],
-        [Paragraph('Симптомы', styleT), Paragraph(f'{symptoms}', styleT),],
-        [Paragraph('Диагноз сопутсвующий', styleT), Paragraph(f'{add_diagnos}', styleT),],
-        [Paragraph('Диагноз основной', styleT), Paragraph(f'{main_diagnos}', styleT),],
-        [Paragraph('Дата установления диагноза', styleT), Paragraph(f'{date_diagnos}', styleT),],
-        [Paragraph('Лечение (амб/стац)', styleT), Paragraph(f'{medical_treatment}', styleT),],
-        [Paragraph('Амбулаторное лечение (назначение)', styleT), Paragraph(f'{medical_destination}', styleT),],
-        [Paragraph('Контактные (близкие)<br/>(ФИО, ДР, ТЕЛ, Адрес, симптомы/нет, Работает/нет)', styleT), Paragraph(f'{contacts}', styleT),],
+        [
+            Paragraph('Дата выявление', styleT),
+            Paragraph(f'{date_diagnos}', styleT),
+        ],
+        [
+            Paragraph('Экстренное извещение №', styleT),
+            Paragraph('', styleT),
+        ],
+        [
+            Paragraph('ФИО', styleT),
+            Paragraph(f'{patient_data["fio"]}', styleT),
+        ],
+        [
+            Paragraph('Дата рождения', styleT),
+            Paragraph(f'{patient_data["born"]}', styleT),
+        ],
+        [
+            Paragraph('Возраст', styleT),
+            Paragraph(f'{age}', styleT),
+        ],
+        [
+            Paragraph('Адрес', styleT),
+            Paragraph(f'{address}', styleT),
+        ],
+        [
+            Paragraph('ФИО терапевта', styleT),
+            Paragraph(f'{iss.doc_confirmation.get_fio()}', styleT),
+        ],
+        [
+            Paragraph('Телефон', styleT),
+            Paragraph(f'{phone}', styleT),
+        ],
+        [
+            Paragraph('Место работы (обучения)', styleT),
+            Paragraph(f'{work_place}', styleT),
+        ],
+        [
+            Paragraph('Должность (группа)', styleT),
+            Paragraph(f'{work_position}', styleT),
+        ],
+        [
+            Paragraph('Адрес работы', styleT),
+            Paragraph(f'{work_address}', styleT),
+        ],
+        [
+            Paragraph('Телефон по месту работы', styleT),
+            Paragraph(f'{work_phone}', styleT),
+        ],
+        [
+            Paragraph('Последнее посещение', styleT),
+            Paragraph(f'{last_visit}', styleT),
+        ],
+        [
+            Paragraph('Дата заболевания', styleT),
+            Paragraph(f'{date_start_ill}', styleT),
+        ],
+        [
+            Paragraph('Дата обращения', styleT),
+            Paragraph(f'{date_post}', styleT),
+        ],
+        [
+            Paragraph('Протокол №', styleT),
+            Paragraph(f'{protocol_num}', styleT),
+        ],
+        [
+            Paragraph('Дата формирования протокола', styleT),
+            Paragraph(f'{protocol_date}', styleT),
+        ],
+        [
+            Paragraph('Лаборатория', styleT),
+            Paragraph(f'{laboratory_protocol}', styleT),
+        ],
+        [
+            Paragraph('Симптомы', styleT),
+            Paragraph(f'{symptoms}', styleT),
+        ],
+        [
+            Paragraph('Диагноз сопутсвующий', styleT),
+            Paragraph(f'{add_diagnos}', styleT),
+        ],
+        [
+            Paragraph('Диагноз основной', styleT),
+            Paragraph(f'{main_diagnos}', styleT),
+        ],
+        [
+            Paragraph('Дата установления диагноза', styleT),
+            Paragraph(f'{date_diagnos}', styleT),
+        ],
+        [
+            Paragraph('Лечение (амб/стац)', styleT),
+            Paragraph(f'{medical_treatment}', styleT),
+        ],
+        [
+            Paragraph('Амбулаторное лечение (назначение)', styleT),
+            Paragraph(f'{medical_destination}', styleT),
+        ],
+        [
+            Paragraph('Контактные (близкие)<br/>(ФИО, ДР, ТЕЛ, Адрес, симптомы/нет, Работает/нет)', styleT),
+            Paragraph(f'{contacts}', styleT),
+        ],
     ]
 
     tbl = Table(opinion, colWidths=(75 * mm, 100 * mm))
@@ -528,7 +605,7 @@ def form_05_06_data_result_(iss):
         'Дата установления диагноза',
         'Лечение (амб/стац)',
         'Назначения',
-        'Контактные'
+        'Контактные',
     ]
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
