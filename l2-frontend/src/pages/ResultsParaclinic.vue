@@ -128,8 +128,25 @@
         <i class="fa fa-bars"></i>&nbsp;&nbsp;
         {{sidebarIsOpened ? 'закрыть поиск и результаты' : 'открыть поиск и результаты'}}
       </span>
+      <div class="burger-lines" v-if="data.ok"/>
     </div>
-    <div class="backdrop" v-if="sidebarIsOpened || !data.ok" @click="sidebarIsOpened = false"/>
+    <div class="backdrop" v-if="sidebarIsOpened || !data.ok" @click="sidebarIsOpened = false">
+      <div class="backdrop-inner" v-if="data.ok">
+        <div>
+          <div style="font-weight: bold;">Загруженное направление:</div>
+          <div>
+            №{{data.direction.pk}} от {{data.direction.date}}
+          </div>
+          <div>{{data.patient.fio_age}}</div>
+          <div v-for="row in data.researches">
+              Услуга: {{row.research.title}}
+          </div>
+        </div>
+      </div>
+      <div class="backdrop-inner" v-else>
+        <div>направление не загружено</div>
+      </div>
+    </div>
     <div class="results-content" v-if="data.ok">
       <div class="results-top">
         <div class="row">
@@ -1463,19 +1480,28 @@
   }
 
 
-  @media (max-width: 1025px) {
+  @media (max-width: 1366px) {
     .burger {
       position: absolute;
       top: 0;
       left: 0;
       bottom: 0;
       z-index: 11;
-      background-color: rgb(50, 54, 57);
-      width: 37px;
+      background-color: #323639;
+      width: 36px;
       transition: all .4s cubic-bezier(.25, .8, .25, 1);
+      cursor: pointer;
+
+      &:hover {
+        background-color: #4a5054;
+      }
 
       &.active {
         background-color: #03614b;
+        &:hover {
+          background-color: #059271;
+        }
+
         .burger-inner i {
           transform: rotate(90deg);
         }
@@ -1491,22 +1517,58 @@
           transition: all .4s cubic-bezier(.25, .8, .25, 1);
         }
       }
+
+      .burger-lines {
+        top: 290px;
+        bottom: 10px;
+        left: 17px;
+
+        &, &::before, &::after {
+          position: absolute;
+          width: 1px;
+          background-color: rgba(#fff, .1);
+        }
+
+        &::before, &::after {
+          top: 0;
+          bottom: 0;
+          content: "";
+        }
+
+        &::before {
+          left: -9px;
+        }
+
+        &::after {
+          left: 9px;
+        }
+      }
     }
   }
 
-  @media (max-width: 1025px) {
+  @media (max-width: 1366px) {
     .backdrop {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: rgba(#000, .2);
+      background-color: rgba(#000, .6);
+      backdrop-filter: blur(3px);
       z-index: 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-left: 341px;
+
+      &-inner {
+        color: #fff;
+        text-shadow: 0 0 4px rgba(#000, .6);
+      }
     }
   }
 
-  @media (min-width: 1026px) {
+  @media (min-width: 1367px) {
     .burger, .backdrop {
       display: none;
     }
@@ -1518,7 +1580,7 @@
     display: flex;
     flex-direction: column;
 
-    @media (max-width: 1025px) {
+    @media (max-width: 1366px) {
       position: absolute;
       top: 0;
       left: -304px;
@@ -1528,7 +1590,7 @@
       transition: all .4s cubic-bezier(.25, .8, .25, 1);
 
       &.opened {
-        left: 37px;
+        left: 36px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
       }
     }
@@ -1539,8 +1601,8 @@
     flex-direction: column;
     width: calc(100% - 304px);
 
-    @media (max-width: 1025px) {
-      padding-left: 37px;
+    @media (max-width: 1366px) {
+      padding-left: 36px;
       width: 100%;
     }
   }
