@@ -1480,7 +1480,7 @@
   }
 
 
-  @media (max-width: 1536px) {
+  @media (max-width: 1366px) {
     .burger {
       position: absolute;
       top: 0;
@@ -1546,7 +1546,7 @@
     }
   }
 
-  @media (max-width: 1536px) {
+  @media (max-width: 1366px) {
     .backdrop {
       position: absolute;
       top: 0;
@@ -1568,7 +1568,7 @@
     }
   }
 
-  @media (min-width: 1537px) {
+  @media (min-width: 1367px) {
     .burger, .backdrop {
       display: none;
     }
@@ -1580,7 +1580,7 @@
     display: flex;
     flex-direction: column;
 
-    @media (max-width: 1536px) {
+    @media (max-width: 1366px) {
       position: absolute;
       top: 0;
       left: -304px;
@@ -1601,7 +1601,7 @@
     flex-direction: column;
     width: calc(100% - 304px);
 
-    @media (max-width: 1536px) {
+    @media (max-width: 1366px) {
       padding-left: 36px;
       width: 100%;
     }
