@@ -11,6 +11,13 @@ from users.models import DoctorProfile
 
 
 class DoctorCall(models.Model):
+    PURPOSES = (
+        (1, 'Больничный лист продление'),
+        (2, 'Неотложная помощь'),
+        (3, 'Обострение хронического заболевания'),
+        (4, 'Активное наблюдени'),
+    )
+
     client = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
     research = models.ForeignKey(Researches, null=True, blank=True, help_text='Вид исследования из справочника', on_delete=models.CASCADE)
     create_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания')
@@ -21,6 +28,8 @@ class DoctorCall(models.Model):
     district = models.ForeignKey(District, default=None, null=True, blank=True, db_index=True, help_text="Участок", on_delete=models.SET_NULL)
     address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес")
     phone = models.CharField(max_length=20, blank=True, default='')
+    purpose = models.IntegerField(default=0, blank=True, db_index=True, choices=PURPOSES, help_text="Цель вызова")
+    doc_assigned = models.ForeignKey(DoctorProfile, db_index=True, null=True, related_name="doc_assigned", help_text='Лечащий врач', on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Вызов'
@@ -34,8 +43,14 @@ class DoctorCall(models.Model):
             district_obj = None
         else:
             district_obj = District.objects.get(pk=data['district'])
+
+        ofname_doc = None
+        if data['ofname'] > -1:
+            ofname_doc = DoctorProfile.objects.get(pk=data['ofname'])
+
         doc_call = DoctorCall(client=patient_card, research=research_obj, exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'), comment=data['comment'],
-                              doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'], phone=data['phone'])
+                              doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'], phone=data['phone'],
+                              doc_assigned=ofname_doc, purpose=data['purpose'])
         doc_call.save()
 
         slog.Log(
@@ -48,6 +63,7 @@ class DoctorCall(models.Model):
                     "district": district_obj.title,
                     "date": data['date'],
                     "comment": data['comment'],
+                    "purpose": data['purpose'],
                 }
             ),
             user=doc_who_create,
