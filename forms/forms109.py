@@ -180,6 +180,8 @@ def form_02(request_data):
     date = request_data["date"]
     district = int(request_data["district"])
     is_canceled = int(request_data["cancel"])
+    doc_assigned = int(request_data["doc"])
+    purpose = int(request_data["purpose"])
     cancel = True if is_canceled == 0 else False
 
     objs = []
