@@ -14,8 +14,7 @@ from utils.data_verification import data_parse
 def create(request):
     data = data_parse(
         request.body,
-        {'card_pk': 'card', 'comment': 'str_strip', 'date': str, 'district': int, 'fact_address': 'str_strip', 'researches': list, 'phone': 'str_strip',
-         'ofname_id': int, 'purpose': int}
+        {'card_pk': 'card', 'comment': 'str_strip', 'date': str, 'district': int, 'fact_address': 'str_strip', 'researches': list, 'phone': 'str_strip'}
     )
 
     card: Card = data[0]
@@ -25,9 +24,6 @@ def create(request):
     fact_address: str = data[4]
     researches: List[int] = data[5]
     phone: str = data[6]
-    ofname_id: int = data[7]
-    purpose: int = data[8]
-
 
     card_updates = []
     if district != (card.district_id or -1):
@@ -54,8 +50,6 @@ def create(request):
             'date': date,
             'comment': comment,
             'phone': phone,
-            'ofname': ofname_id,
-            'purpose': purpose,
         }, request.user.doctorprofile)
 
     return JsonResponse({"ok": True})
@@ -92,6 +86,3 @@ def cancel_row(request):
     row.save()
 
     return JsonResponse(True, safe=False)
-
-
-
