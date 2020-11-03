@@ -1,8 +1,6 @@
 from django.contrib import admin
 from medical_certificates import models
 
-# Register your models here.
-
 
 class RefResearchesCertificates(admin.ModelAdmin):
     list_display = (

@@ -6,11 +6,19 @@ from django.db import models
 import slog.models as slog
 from clients.models import Card, District
 from directory.models import Researches
+from hospitals.models import Hospitals
 from laboratory.utils import current_time
 from users.models import DoctorProfile
 
 
 class DoctorCall(models.Model):
+    PURPOSES = (
+        (1, 'Больничный лист продление'),
+        (2, 'Неотложная помощь'),
+        (3, 'Обострение хронического заболевания'),
+        (4, 'Активное наблюдени'),
+    )
+
     client = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
     research = models.ForeignKey(Researches, null=True, blank=True, help_text='Вид исследования из справочника', on_delete=models.CASCADE)
     create_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания')
@@ -21,6 +29,9 @@ class DoctorCall(models.Model):
     district = models.ForeignKey(District, default=None, null=True, blank=True, db_index=True, help_text="Участок", on_delete=models.SET_NULL)
     address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес")
     phone = models.CharField(max_length=20, blank=True, default='')
+    purpose = models.IntegerField(default=0, blank=True, db_index=True, choices=PURPOSES, help_text="Цель вызова")
+    doc_assigned = models.ForeignKey(DoctorProfile, db_index=True, null=True, related_name="doc_assigned", help_text='Лечащий врач', on_delete=models.CASCADE)
+    hospital = models.ForeignKey(Hospitals, db_index=True, null=True, help_text='Больница', on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Вызов'
@@ -34,8 +45,25 @@ class DoctorCall(models.Model):
             district_obj = None
         else:
             district_obj = District.objects.get(pk=data['district'])
+
+        if int(data['doc']) < 0:
+            doc_obj = None
+        else:
+            doc_obj = DoctorProfile.objects.get(pk=data['doc'])
+
+        if int(data['purpose']) < 0:
+            purpose = None
+        else:
+            purpose = int(data['purpose'])
+
+        if int(data['hospital']) < 0:
+            hospital_obj = None
+        else:
+            hospital_obj = Hospitals.objects.get(pk=data['hospital'])
+
         doc_call = DoctorCall(client=patient_card, research=research_obj, exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'), comment=data['comment'],
-                              doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'], phone=data['phone'])
+                              doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'], phone=data['phone'],
+                              purpose=purpose, doc_assigned=doc_obj, hospitals=hospital_obj)
         doc_call.save()
 
         slog.Log(
@@ -46,6 +74,9 @@ class DoctorCall(models.Model):
                     "card_pk": patient_card.pk,
                     "research": research_obj.title,
                     "district": district_obj.title,
+                    "purpose": doc_call.get_purpose_display(),
+                    "doc_assigned": str(doc_obj),
+                    "hospital": str(hospital_obj),
                     "date": data['date'],
                     "comment": data['comment'],
                 }
