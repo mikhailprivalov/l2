@@ -1191,8 +1191,8 @@ def actual_districts(request):
     purposes = DoctorCall.PURPOSES
     purposes = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{'id': row[0], 'label': row[1]} for row in purposes]]
 
-    hospitals = Hospitals.objects.all().order_by('short_title').values('pk', 'short_title')
-    hospitals = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["short_title"]} for x in hospitals]]
+    hospitals = Hospitals.objects.all().order_by('short_title').values('pk', 'short_title', 'title')
+    hospitals = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["short_title"] or x["title"]} for x in hospitals]]
 
     data = {'rows': rows, 'docs': users, 'purposes': purposes, 'hospitals': hospitals}
     return JsonResponse(data)

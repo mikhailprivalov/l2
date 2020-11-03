@@ -182,6 +182,7 @@ def form_02(request_data):
     is_canceled = int(request_data["cancel"])
     doc_assigned = int(request_data["doc"])
     purpose = int(request_data["purpose"])
+    hospital = int(request_data["hospital"])
     cancel = True if is_canceled == 0 else False
 
     objs = []
