@@ -46,8 +46,24 @@ class DoctorCall(models.Model):
         else:
             district_obj = District.objects.get(pk=data['district'])
 
+        if int(data['doc']) < 0:
+            doc_obj = None
+        else:
+            doc_obj = DoctorProfile.objects.get(pk=data['doc'])
+
+        if int(data['purpose']) < 0:
+            purpose = None
+        else:
+            purpose = int(data['purpose'])
+
+        if int(data['hospital']) < 0:
+            hospital_obj = None
+        else:
+            hospital_obj = Hospitals.objects.get(pk=data['hospital'])
+
         doc_call = DoctorCall(client=patient_card, research=research_obj, exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'), comment=data['comment'],
-                              doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'], phone=data['phone'])
+                              doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'], phone=data['phone'],
+                              purpose=purpose, doc_assigned=doc_obj, hospitals=hospital_obj)
         doc_call.save()
 
         slog.Log(
@@ -58,6 +74,9 @@ class DoctorCall(models.Model):
                     "card_pk": patient_card.pk,
                     "research": research_obj.title,
                     "district": district_obj.title,
+                    "purpose": doc_call.get_purpose_display(),
+                    "doc_assigned": str(doc_obj),
+                    "hospital": str(hospital_obj),
                     "date": data['date'],
                     "comment": data['comment'],
                 }

@@ -1768,6 +1768,10 @@ input[type=date].form-control {
   display: flex;
   border-bottom: 1px solid #434a54;
 
+  &.border-right {
+    border-right: 1px solid #434a54;
+  }
+
   &:first-child:not(.nbt-i) {
     border-top: 1px solid #434a54;
   }
@@ -1805,11 +1809,29 @@ input[type=date].form-control {
 
   textarea {
     resize: none;
+    min-height: 53px;
+  }
+
+  .vue-treeselect {
+    flex: 0 65%;
+
+    .vue-treeselect__control {
+      height: 26px;
+    }
+
+    .vue-treeselect__single-value {
+      line-height: 28px;
+    }
+
+    .vue-treeselect__input-container {
+      line-height: 1;
+    }
   }
 
   &.sm-header {
     padding: 4px 8px;
     font-weight: bold;
+
     span {
       display: inline-block;
       height: 19px;
@@ -1911,7 +1933,7 @@ input[type=date].form-control {
 
 @media (max-width: 1025px) {
   .hidden-small {
-    display: none!important;
+    display: none !important;
   }
 }
 
