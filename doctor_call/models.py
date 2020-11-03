@@ -31,7 +31,7 @@ class DoctorCall(models.Model):
     phone = models.CharField(max_length=20, blank=True, default='')
     purpose = models.IntegerField(default=0, blank=True, db_index=True, choices=PURPOSES, help_text="Цель вызова")
     doc_assigned = models.ForeignKey(DoctorProfile, db_index=True, null=True, related_name="doc_assigned", help_text='Лечащий врач', on_delete=models.CASCADE)
-    hospitals = models.ForeignKey(Hospitals, db_index=True, null=True, help_text='Больница', on_delete=models.CASCADE)
+    hospital = models.ForeignKey(Hospitals, db_index=True, null=True, help_text='Больница', on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Вызов'
