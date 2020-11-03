@@ -44,9 +44,9 @@ def create(request):
         card.district_id = district if district > -1 else None
         card_updates.append('district_id')
 
-    if fact_address != card.fact_address:
-        card.fact_address = fact_address
-        card_updates.append('fact_address')
+    #     if fact_address != card.fact_address:
+    #         card.fact_address = fact_address
+    #         card_updates.append('fact_address')
 
     if phone != card.phone:
         card.phone = phone
