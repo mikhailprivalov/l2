@@ -189,16 +189,22 @@ def form_02(request_data):
     objs.append(Paragraph(f"Вызова (обращения) {normalize_dash_date(date)}", styleCenterBold))
     objs.append(Spacer(1, 5 * mm))
 
+    doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), cancel=cancel)
+
     if hospital > -1:
-        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), hospital__pk=hospital, cancel=cancel).order_by("pk")
-    elif doc_assigned > -1:
-        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), doc_assigned__pk=doc_assigned, cancel=cancel).order_by("pk")
-    elif district > -1:
-        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), district_id__pk=district, cancel=cancel).order_by("pk")
-    elif purpose_id > -1:
-        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), purpose=purpose_id, cancel=cancel).order_by("pk")
+        doc_call = doc_call.filter(hospital__pk=hospital)
+    if doc_assigned > -1:
+        doc_call = doc_call.filter(doc_assigned__pk=doc_assigned)
+    if district > -1:
+        doc_call = doc_call.filter(district_id__pk=district)
+    if purpose_id > -1:
+        doc_call = doc_call.filter(purpose=purpose_id)
+
+    if hospital + doc_assigned + district + purpose_id > -4:
+        doc_call = doc_call.order_by("pk")
     else:
-        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), cancel=cancel).order_by("district__title")
+        doc_call = doc_call.order_by("district__title")
+
     strike_o = ""
     strike_cl = ""
 
