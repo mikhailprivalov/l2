@@ -318,7 +318,7 @@
           district: r.district__title,
           doc: r.doc_assigned__fio && `${r.doc_assigned__fio}, ${r.doc_assigned__podrazdeleniye__title}`,
           purpose: (this.purposes || {})[r.purpose],
-          hospital: r.hospitals__short_title || r.hospitals__title,
+          hospital: r.hospital__short_title || r.hospital__title,
           comment: r.comment,
           phone: r.phone,
           cancel: r.cancel
