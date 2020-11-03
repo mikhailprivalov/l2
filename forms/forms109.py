@@ -190,7 +190,7 @@ def form_02(request_data):
     objs.append(Spacer(1, 5 * mm))
 
     if hospital > -1:
-        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), hospitals__pk=hospital, cancel=cancel).order_by("pk")
+        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), hospital__pk=hospital, cancel=cancel).order_by("pk")
     elif doc_assigned > -1:
         doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), doc_assigned__pk=doc_assigned, cancel=cancel).order_by("pk")
     elif district > -1:
