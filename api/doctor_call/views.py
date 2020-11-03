@@ -14,7 +14,18 @@ from utils.data_verification import data_parse
 def create(request):
     data = data_parse(
         request.body,
-        {'card_pk': 'card', 'comment': 'str_strip', 'date': str, 'district': int, 'fact_address': 'str_strip', 'researches': list, 'phone': 'str_strip'}
+        {
+            'card_pk': 'card',
+            'comment': 'str_strip',
+            'date': str,
+            'district': int,
+            'fact_address': 'str_strip',
+            'researches': list,
+            'phone': 'str_strip',
+            'doc': int,
+            'purpose': int,
+            'hospital': int,
+        }
     )
 
     card: Card = data[0]
@@ -24,6 +35,9 @@ def create(request):
     fact_address: str = data[4]
     researches: List[int] = data[5]
     phone: str = data[6]
+    doc: int = data[7]
+    purpose: int = data[8]
+    hospital: int = data[9]
 
     card_updates = []
     if district != (card.district_id or -1):
@@ -50,6 +64,9 @@ def create(request):
             'date': date,
             'comment': comment,
             'phone': phone,
+            'doc': doc,
+            'purpose': purpose,
+            'hospital': hospital,
         }, request.user.doctorprofile)
 
     return JsonResponse({"ok": True})
@@ -68,7 +85,11 @@ def actual_rows(request):
     rows = list(
         DoctorCall.objects.filter(client_id=card_pk, exec_at__gte=date_from)
         .order_by('exec_at', 'pk')
-        .values('pk', 'exec_at', 'research__title', 'comment', 'cancel', 'district__title', 'address', 'phone', 'cancel')
+        .values(
+            'pk', 'exec_at', 'research__title', 'comment', 'cancel', 'district__title',
+            'address', 'phone', 'cancel', 'doc_assigned__fio', 'doc_assigned__podrazdeleniye__title', 'purpose',
+            'hospitals__title', 'hospitals__short_title',
+        )
     )
 
     return JsonResponse(rows, safe=False)

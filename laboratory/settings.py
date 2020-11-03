@@ -62,7 +62,7 @@ INSTALLED_APPS = (
     'medical_certificates',
     'list_wait',
     'doctor_call',
-    'hospitals',
+    'hospitals.apps.HospitalsConfig',
 )
 
 MIDDLEWARE = [
