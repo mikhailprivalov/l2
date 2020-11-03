@@ -474,7 +474,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 120) + (h / 2) * yn, "Цель: " + dir.get_purpose_display())
 
     if dir.external_organization:
-        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 134) + (h / 2) * yn, dir.external_organization.title)
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 128) + (h / 2) * yn, dir.external_organization.title)
 
     if dir.parent and dir.parent.research.is_hospital:
         c.setFont('OpenSansBold', 8)
