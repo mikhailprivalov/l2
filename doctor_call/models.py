@@ -63,7 +63,7 @@ class DoctorCall(models.Model):
 
         doc_call = DoctorCall(client=patient_card, research=research_obj, exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'), comment=data['comment'],
                               doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'], phone=data['phone'],
-                              purpose=purpose, doc_assigned=doc_obj, hospitals=hospital_obj)
+                              purpose=purpose, doc_assigned=doc_obj, hospital=hospital_obj)
         doc_call.save()
 
         slog.Log(

@@ -88,7 +88,7 @@ def actual_rows(request):
         .values(
             'pk', 'exec_at', 'research__title', 'comment', 'cancel', 'district__title',
             'address', 'phone', 'cancel', 'doc_assigned__fio', 'doc_assigned__podrazdeleniye__title', 'purpose',
-            'hospitals__title', 'hospitals__short_title',
+            'hospital__title', 'hospital__short_title',
         )
     )
 

@@ -237,7 +237,7 @@ def form_02(request_data):
         if i.doc_assigned:
             who_doc_assigned = i.doc_assigned.fio
         if i.purpose:
-            what_purpose = i.purpose.get_purpose_display()
+            what_purpose = i.get_purpose_display()
         opinion.append(
             [
                 Paragraph(f"{strike_o}{count}{strike_cl}", styleCenter),
