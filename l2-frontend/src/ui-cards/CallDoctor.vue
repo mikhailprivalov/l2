@@ -104,11 +104,11 @@
                style="table-layout: fixed; font-size: 12px; margin-top: 0;">
           <colgroup>
             <col width="75">
-            <col width="180"/>
+            <col />
             <col width="120"/>
-            <col width="200"/>
+            <col />
             <col width="70"/>
-            <col width="70"/>
+            <col width="75"/>
           </colgroup>
           <thead>
           <tr>
@@ -348,7 +348,8 @@
   }
 
   .root {
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .col-form {
