@@ -1786,6 +1786,11 @@ input[type=date].form-control {
     color: #fff;
   }
 
+  &.border-right .row-t {
+    width: calc(35% + 1px);
+    flex: 0 calc(35% + 1px);
+  }
+
   .input-group {
     flex: 0 65%;
   }
