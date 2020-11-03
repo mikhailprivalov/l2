@@ -6,7 +6,7 @@
       <div class="col-xs-4">
         <div class="panel panel-default panel-flt">
           <div class="panel-heading">
-            <h3 class="panel-title">Вызова врача на дом</h3>
+            <h3 class="panel-title">Вызова (обращения)</h3>
           </div>
           <div class="panel-body">
             <div class="row">
@@ -127,7 +127,7 @@
     },
     methods: {
       print() {
-        window.open(`/forms/pdf?type=109.02&date=${this.date}&district=${this.district}&doc=${this.doc_assigned}&purpose=${this.purpose}&cancel=${this.is_canceled ? 0 : 1}`);
+        window.open(`/forms/pdf?type=109.02&date=${this.date}&district=${this.district}&doc=${this.doc_assigned}&purpose=${this.purpose}&hospital=${this.hospital}&cancel=${this.is_canceled ? 0 : 1}`);
       },
     }
   }

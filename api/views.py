@@ -1193,7 +1193,6 @@ def actual_districts(request):
 
     hospitals = Hospitals.objects.all().order_by('short_title').values('pk', 'short_title')
     hospitals = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["short_title"]} for x in hospitals]]
-    print(hospitals)
 
     data = {'rows': rows, 'docs': users, 'purposes': purposes, 'hospitals': hospitals}
     return JsonResponse(data)

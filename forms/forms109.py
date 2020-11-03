@@ -188,6 +188,8 @@ def form_02(request_data):
     objs.append(Paragraph(f"Вызов врача {normalize_dash_date(date)}", styleCenterBold))
     objs.append(Spacer(1, 5 * mm))
 
+
+
     if district > -1:
         doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), district_id__pk=district, cancel=cancel).order_by("pk")
     else:
