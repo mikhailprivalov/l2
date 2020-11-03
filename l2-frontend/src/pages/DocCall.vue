@@ -58,6 +58,19 @@
                 />
               </div>
             </div>
+            <div class="row" style="margin-top: 10px">
+              <div class="col-xs-3" style="text-align: right;line-height: 1.26; margin-top: 10px;">
+                <label>
+                  Больница:
+                </label>
+              </div>
+              <div class="col-xs-9">
+                <treeselect :multiple="false" :disable-branch-nodes="true" :options="hospitals"
+                    placeholder="Больницв не выбрана" v-model="hospital"
+                    :append-to-body="true"
+                />
+              </div>
+            </div>
 
             <div class="row">
               <div class="col-xs-9">
@@ -100,6 +113,8 @@
           purpose: -1,
           docs_assigned: [],
           doc_assigned: -1,
+          hospitals: [],
+          hospital: -1,
       }
     },
     mounted() {
@@ -107,8 +122,7 @@
         this.districts = rows.rows;
         this.docs_assigned = rows.docs;
         this.purposes = rows.purposes;
-        console.log(this.purposes)
-
+        this.hospitals = rows.hospitals;
       });
     },
     methods: {

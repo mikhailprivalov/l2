@@ -24,6 +24,7 @@ from directory.models import Fractions, ParaclinicInputField, ResearchSite, Cult
 from directory.models import Researches as DResearches
 from doctor_call.models import DoctorCall
 from external_system.models import FsliRefbookTest
+from hospitals.models import Hospitals
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from podrazdeleniya.models import Podrazdeleniya
@@ -1188,8 +1189,11 @@ def actual_districts(request):
     users = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{'id': row[0], 'label': row[1]} for row in users]]
 
     purposes = DoctorCall.PURPOSES
-    print(list(purposes))
-    purposes = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{'id': row[0], 'label': row[1]} for row in list(purposes)]]
+    purposes = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{'id': row[0], 'label': row[1]} for row in purposes]]
 
-    data = {'rows': rows, 'docs': users, 'purposes': purposes}
-    return JsonResponse(data, safe=False)
+    hospitals = Hospitals.objects.all().order_by('short_title').values('pk', 'short_title')
+    hospitals = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["short_title"]} for x in hospitals]]
+    print(hospitals)
+
+    data = {'rows': rows, 'docs': users, 'purposes': purposes, 'hospitals': hospitals}
+    return JsonResponse(data)
