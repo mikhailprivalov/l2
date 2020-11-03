@@ -2,7 +2,7 @@ import re
 import time
 import unicodedata
 from datetime import date
-from typing import Optional
+from typing import Optional, Union
 
 import simplejson as json
 from django.contrib.auth.models import User
@@ -310,6 +310,11 @@ class Napravleniya(models.Model):
     Таблица направлений
     """
 
+    BARCODE_ORG_ID_SIZE = 5
+    BARCODE_DIRECTION_NUMBER_SIZE = 9
+    BARCODE_DIRECTION_PREFIX = '99'
+    BARCODE_DIRECTION_OLD_PREFIX = '460'
+
     PURPOSE_PRELIMINARY_EXAMINATION = 'PRELIMINARY_EXAMINATION'
     PURPOSE_WORK_EXAMINATION = 'WORK_EXAMINATION'
     PURPOSE_DRIVE_EXAMINATION = 'DRIVE_EXAMINATION'
@@ -389,6 +394,33 @@ class Napravleniya(models.Model):
     @property
     def visit_date_local(self):
         return localtime(self.visit_date)
+
+    def barcode_number(self):
+        org_id = SettingManager.get_org_id()
+        direction_number = str(self.pk).rjust(Napravleniya.BARCODE_DIRECTION_NUMBER_SIZE, '0')
+        return f"{Napravleniya.BARCODE_DIRECTION_PREFIX}{org_id}{direction_number}"
+
+    @staticmethod
+    def parse_barcode_number(barcode: Union[str, int]):
+        barcode = str(barcode)
+        prefix_len = len(Napravleniya.BARCODE_DIRECTION_PREFIX)
+        current_org_id = SettingManager.get_org_id()
+        if (
+            (not barcode.startswith(Napravleniya.BARCODE_DIRECTION_PREFIX) and not barcode.endswith(Napravleniya.BARCODE_DIRECTION_OLD_PREFIX))
+            or len(barcode) not in (13, prefix_len + Napravleniya.BARCODE_ORG_ID_SIZE + Napravleniya.BARCODE_DIRECTION_NUMBER_SIZE)
+        ):
+            return True, current_org_id, barcode, False
+
+        if len(barcode) == 13:
+            barcode = int(barcode)
+            barcode -= 4600000000000
+            barcode //= 10
+            return True, current_org_id, str(barcode), True
+
+        org_id = barcode[prefix_len:prefix_len + Napravleniya.BARCODE_ORG_ID_SIZE]
+        direction_number = barcode[prefix_len + Napravleniya.BARCODE_ORG_ID_SIZE:]
+
+        return org_id == current_org_id, org_id, direction_number, True
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s, par: [%s])" % (

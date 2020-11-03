@@ -781,6 +781,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         picture_t_frame = Frame(14.5 * mm, 10 * mm, 138 * mm, 13.5 * mm, leftPadding=0 * mm, bottomPadding=0 * mm, rightPadding=0 * mm, topPadding=0.3 * mm, showBoundary=1)
         picture_t_frame.addFromList(picture_t, c)
 
+        # TODO: перейти на napravleniye.barcode_number()
         barcode = eanbc.Ean13BarcodeWidget(3220556479540, humanReadable=1, barHeight=13.7 * mm)
         dir_code = Drawing()
         dir_code.add(barcode)
@@ -791,6 +792,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         renderPDF.draw(draw_rectangle(195 * mm, 281 * mm), c, 0 * mm, 0 * mm)
         c.showPage()
 
+        # TODO: перейти на napravleniye.barcode_number()
         barcode = eanbc.Ean13BarcodeWidget(7220556479621, humanReadable=1, barHeight=13.7 * mm)
         dir_code = Drawing()
         dir_code.add(barcode)

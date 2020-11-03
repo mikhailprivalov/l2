@@ -149,6 +149,7 @@ def form_02(c: Canvas, dir: Napravleniya):
 
         # Точки отсчета
         x_coord, y_coord = 20, 235
+        # TODO: перейти на napravleniye.barcode_number()
         barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=10 * mm, barWidth=1.25)
         dir_code = Drawing()
         dir_code.add(barcode)
@@ -295,6 +296,7 @@ def form_03(c: Canvas, dir: Napravleniya):
 
         c.drawString(10 * mm, 287 * mm, "Дата: {}".format(strdate(dir.data_sozdaniya)))
 
+        # TODO: перейти на napravleniye.barcode_number()
         barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
         dir_code = Drawing()
         dir_code.add(barcode)
@@ -471,6 +473,7 @@ def form_04(c: Canvas, dir: Napravleniya):
         styleTCentre.alignment = TA_CENTER
         styleTCentre.fontSize = 13
 
+        # TODO: перейти на napravleniye.barcode_number()
         barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
         dir_code = Drawing()
         dir_code.add(barcode)

@@ -337,10 +337,12 @@ function do_receive_direction(pk){
     let num;
     if (pk.substr(0, 3) === "460" && pk.length === 13) {
         num = parseInt(pk.substr(0, 12)) - 460000000000;
-    } else{
+    } else if(pk.length > 13) {
+        num = pk;
+    } else {
         num = parseInt(pk);
     }
-    pk = ""+num;
+    pk = String(num);
 
     block = true;
     sl();

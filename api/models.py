@@ -63,15 +63,13 @@ class Application(models.Model):
 
     def get_issledovaniya(self, pk):
         r = []
-        from directions.models import TubesRegistration, Issledovaniya
+        from directions.models import TubesRegistration, Issledovaniya, Napravleniya
 
         for ps in pk:
             d = self.direction_work
-            p = ps
-            if p >= 4600000000000:
-                d = True
-                p -= 4600000000000
-                p //= 10
+            _, _, p, dw = Napravleniya.parse_barcode_number(pk)
+
+            d = d or dw
 
             if d:
                 t_filter = dict(issledovaniya__napravleniye__pk=p)
