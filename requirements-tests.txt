@@ -23,7 +23,7 @@ django-manifest-loader==0.0.1
 docopt==0.6.2
 docutils==0.16
 et-xmlfile==1.0.1
-Genshi==0.7.3
+Genshi==0.7.4
 gprof2dot==2019.11.30
 gunicorn==20.0.4
 idna==2.10
