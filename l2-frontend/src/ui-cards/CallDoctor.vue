@@ -37,13 +37,47 @@
       <div class="form-row sm-header">
         Данные вызова
       </div>
-      <div class="form-row sm-f">
-        <div class="row-t">Дата</div>
-        <input class="form-control" type="date" v-model="date" :min="td">
+      <div class="row">
+        <div class="col-xs-6 col-form left" style="padding-bottom: 0">
+          <div class="form-row sm-f" style="border-top: none">
+            <div class="row-t">Дата</div>
+            <input class="form-control" type="date" v-model="date" :min="td">
+          </div>
+        </div>
+        <div class="col-xs-6 col-form right" style="padding-bottom: 0">
+          <div class="form-row sm-f" style="border-top: none">
+            <div class="row-t">Больница</div>
+            <treeselect class="treeselect-noborder"
+              :multiple="false" :disable-branch-nodes="true" :options="card.hospitals"
+              :append-to-body="true" placeholder="Больница не выбрана" v-model="card.hospital"
+            />
+          </div>
+        </div>
       </div>
-      <div class="form-row sm-f">
-        <div class="row-t">Комментарий</div>
-        <textarea class="form-control" v-model="comment"></textarea>
+      <div class="row">
+        <div class="col-xs-6 col-form left" style="padding-bottom: 0">
+          <div class="form-row sm-f border-right" style="border-top: none">
+            <div class="row-t">Цель вызова</div>
+            <select v-model="card.purpose" class="form-control">
+              <option v-for="c in card.purposes" :value="c.id">
+                {{c.label}}
+              </option>
+            </select>
+          </div>
+          <div class="form-row sm-f border-right">
+            <div class="row-t">Лечащий врач</div>
+            <treeselect class="treeselect-noborder"
+              :multiple="false" :disable-branch-nodes="true" :options="card.docs"
+              :append-to-body="true" placeholder="Врач не выбран" v-model="card.doc"
+            />
+          </div>
+        </div>
+        <div class="col-xs-6 col-form right" style="padding-bottom: 0">
+          <div class="form-row sm-f" style="border-top: none">
+            <div class="row-t">Комментарий</div>
+            <textarea class="form-control" v-model="comment"></textarea>
+          </div>
+        </div>
       </div>
       <template v-if="researches.length > 0">
         <div class="form-row sm-header">
@@ -70,11 +104,11 @@
                style="table-layout: fixed; font-size: 12px; margin-top: 0;">
           <colgroup>
             <col width="75">
-            <col width="180"/>
+            <col />
             <col width="120"/>
-            <col width="200"/>
+            <col />
             <col width="70"/>
-            <col width="70"/>
+            <col width="75"/>
           </colgroup>
           <thead>
           <tr>
@@ -89,7 +123,12 @@
           <tbody>
             <tr v-for="r in rows_mapped" :class="{'cancel-row':  r.cancel}">
               <td>{{r.date}}</td>
-              <td>{{r.service}}</td>
+              <td>
+                {{r.service}}
+                <template v-if="r.doc"><br />{{r.doc}}</template>
+                <template v-if="r.purpose"><br />{{r.purpose}}</template>
+                <template v-if="r.hospital"><br />{{r.hospital}}</template>
+              </td>
               <td style="white-space: pre-wrap">{{r.comment}}</td>
               <td>{{r.address}}<br/>{{r.phone}}</td>
               <td>{{r.district}}</td>
@@ -111,12 +150,15 @@
   import patients_point from "@/api/patients-point";
   import moment from "moment";
   import ResearchDisplay from "@/ui-cards/ResearchDisplay";
+  import Treeselect from "@riophae/vue-treeselect";
+  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
   export default {
     name: "CallDoctor",
     components: {
       ResearchDisplay,
       TypeAhead,
+      Treeselect,
     },
     props: {
       card_pk: {
@@ -135,6 +177,12 @@
           fact_address: "",
           districts: [],
           district: -1,
+          docs: [],
+          doc: -1,
+          purposes: [],
+          purpose: -1,
+          hospitals: [],
+          hospital: -1,
           phone: "",
         },
         loaded: true,
@@ -198,9 +246,20 @@
         }
         this.loaded = false
         await this.$store.dispatch(action_types.INC_LOADING)
-        this.card = await patients_point.getCard(this, 'card_pk')
+        const [card, {docs, purposes, hospitals}, rows] = await Promise.all([
+          patients_point.getCard(this, 'card_pk'),
+          api('actual-districts'),
+          api('doctor-call/actual-rows', this, 'card_pk'),
+        ])
+        this.card = card
+        this.card.doc = -1
+        this.card.docs = docs
+        this.card.purpose = -1
+        this.card.purposes = purposes
+        this.card.hospital = -1
+        this.card.hospitals = hospitals
+        this.rows = rows;
         this.loaded = true
-        this.rows = await api('doctor-call/actual-rows', this, 'card_pk')
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async save() {
@@ -211,6 +270,9 @@
           {
             fact_address: this.card.fact_address,
             district: this.card.district,
+            doc: this.card.doc,
+            purpose: this.card.purpose,
+            hospital: this.card.hospital,
             phone: this.card.phone,
           }
         )
@@ -244,6 +306,9 @@
       rows_count() {
         return this.rows.length;
       },
+      purposes() {
+        return this.card.purposes.reduce((a, b) => ({...a, [b.id]: b.label}), {});
+      },
       rows_mapped() {
         return this.rows.map(r => ({
           pk: r.pk,
@@ -251,6 +316,9 @@
           service: r.research__title,
           address: r.address,
           district: r.district__title,
+          doc: r.doc_assigned__fio && `${r.doc_assigned__fio}, ${r.doc_assigned__podrazdeleniye__title}`,
+          purpose: (this.purposes || {})[r.purpose],
+          hospital: r.hospital__short_title || r.hospital__title,
           comment: r.comment,
           phone: r.phone,
           cancel: r.cancel
@@ -280,7 +348,8 @@
   }
 
   .root {
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .col-form {

@@ -30,7 +30,6 @@ from directions.models import (
     MicrobiologyResultCulture,
     MicrobiologyResultCultureAntibiotic,
     DirectionToUserWatch,
-    IstochnikiFinansirovaniya,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
@@ -1683,8 +1682,8 @@ def last_field_result(request):
     field_pks, operations_data, aggregate_data = None, None, None
     result = None
 
+    c = Card.objects.get(pk=client_pk)
     if request_data["fieldPk"].find('%work_place') != -1:
-        c = Card.objects.get(pk=client_pk)
         if c.work_place:
             work_place = c.work_place
         elif c.work_place_db:
@@ -1692,22 +1691,23 @@ def last_field_result(request):
         else:
             work_place = ""
         result = {"value": work_place}
+    elif request_data["fieldPk"].find('%fact_address') != -1:
+        result = {"value": c.fact_address}
+    elif request_data["fieldPk"].find('%phone') != -1:
+        result = {"value": c.phone}
     elif request_data["fieldPk"].find('%work_position') != -1:
         work_position = ""
-        c = Card.objects.get(pk=client_pk)
         work_data = c.work_position.split(';')
         if len(work_data) >= 1:
             work_position = work_data[0]
         result = {"value": work_position.strip()}
     elif request_data["fieldPk"].find('%work_department') != -1:
         work_department = ""
-        c = Card.objects.get(pk=client_pk)
         work_data = c.work_position.split(';')
         if len(work_data) >= 2:
             work_department = work_data[1]
         result = {"value": work_department.strip()}
     elif request_data["fieldPk"].find('%harmful_factor') != -1:
-        c = Card.objects.get(pk=client_pk)
         result = {"value": c.harmful_factor}
     elif request_data["fieldPk"].find('%proto_operation') != -1:
         current_iss = request_data["iss_pk"]

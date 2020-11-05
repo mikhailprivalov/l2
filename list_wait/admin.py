@@ -9,4 +9,5 @@ class ResListWait(admin.ModelAdmin):
 
     search_fields = ('research__title',)
 
+
 admin.site.register(ListWait, ResListWait)

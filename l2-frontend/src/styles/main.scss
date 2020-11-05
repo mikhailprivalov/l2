@@ -1768,6 +1768,10 @@ input[type=date].form-control {
   display: flex;
   border-bottom: 1px solid #434a54;
 
+  &.border-right {
+    border-right: 1px solid #434a54;
+  }
+
   &:first-child:not(.nbt-i) {
     border-top: 1px solid #434a54;
   }
@@ -1780,6 +1784,11 @@ input[type=date].form-control {
     width: 35%;
     flex: 0 35%;
     color: #fff;
+  }
+
+  &.border-right .row-t {
+    width: calc(35% + 1px);
+    flex: 0 calc(35% + 1px);
   }
 
   .input-group {
@@ -1805,11 +1814,29 @@ input[type=date].form-control {
 
   textarea {
     resize: none;
+    min-height: 53px;
+  }
+
+  .vue-treeselect {
+    flex: 0 65%;
+
+    .vue-treeselect__control {
+      height: 26px;
+    }
+
+    .vue-treeselect__single-value {
+      line-height: 28px;
+    }
+
+    .vue-treeselect__input-container {
+      line-height: 1;
+    }
   }
 
   &.sm-header {
     padding: 4px 8px;
     font-weight: bold;
+
     span {
       display: inline-block;
       height: 19px;
@@ -1906,5 +1933,17 @@ input[type=date].form-control {
   }
   90%, 100% {
     content: "\00a0\00a0\00a0";
+  }
+}
+
+@media (max-width: 1025px) {
+  .hidden-small {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1026px) {
+  .visible-small {
+    display: none !important;
   }
 }

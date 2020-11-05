@@ -1,6 +1,6 @@
 <template>
   <div ref="root" class="results-root">
-    <div :class="{has_loc}" class="results-sidebar">
+    <div :class="{has_loc, opened: sidebarIsOpened || !data.ok}" class="results-sidebar">
       <div class="sidebar-top">
         <div class="input-group">
           <span class="input-group-btn" v-if="l2_microbiology">
@@ -122,6 +122,31 @@
         </div>
       </div>
     </div>
+    <div class="burger" :class="{active: sidebarIsOpened && data.ok}"
+         @click="sidebarIsOpened = !sidebarIsOpened">
+      <span class="burger-inner" v-if="data.ok">
+        <i class="fa fa-bars"></i>&nbsp;&nbsp;
+        {{sidebarIsOpened ? 'закрыть поиск и результаты' : 'открыть поиск и результаты'}}
+      </span>
+      <div class="burger-lines" v-if="data.ok"/>
+    </div>
+    <div class="backdrop" v-if="sidebarIsOpened || !data.ok" @click="sidebarIsOpened = false">
+      <div class="backdrop-inner" v-if="data.ok">
+        <div>
+          <div style="font-weight: bold;">Загруженное направление:</div>
+          <div>
+            №{{data.direction.pk}} от {{data.direction.date}}
+          </div>
+          <div>{{data.patient.fio_age}}</div>
+          <div v-for="row in data.researches">
+              Услуга: {{row.research.title}}
+          </div>
+        </div>
+      </div>
+      <div class="backdrop-inner" v-else>
+        <div>направление не загружено</div>
+      </div>
+    </div>
     <div class="results-content" v-if="data.ok">
       <div class="results-top">
         <div class="row">
@@ -146,6 +171,7 @@
                    interactive : true, html: '#template-anamnesis' }"
                  @show="load_anamnesis"
                  @click.prevent="edit_anamnesis"><i class="fa fa-book"></i></a>
+              <span class="visible-small">&nbsp;</span>
               <div id="template-anamnesis"
                    v-if="data.card_internal"
                    :class="{hidden: !data.ok || !data.has_doc_referral || !data.card_internal}">
@@ -163,6 +189,7 @@
                  :class="{dreg_nex: !data.patient.has_dreg, dreg_ex: data.patient.has_dreg }"
                  @show="load_dreg_rows"
                  @click.prevent="dreg = true"><i class="fa fa-database"></i></a>
+              <span class="visible-small">&nbsp;</span>
               <div id="template-dreg"
                    v-if="data.card_internal"
                    :class="{hidden: !data.ok || (!data.has_doc_referral && !data.has_paraclinic) || !data.card_internal}">
@@ -183,6 +210,7 @@
                    interactive : true, html: '#template-benefit' }"
                  @show="load_benefit_rows"
                  @click.prevent="benefit = true"><i class="fa fa-cubes"></i></a>
+              <span class="visible-small">&nbsp;</span>
               <div id="template-benefit" :class="{hidden: !data.ok || !data.has_doc_referral || !data.card_internal}"
                    v-if="data.card_internal">
                 <strong>Льготы пациента</strong><br/>
@@ -748,6 +776,7 @@
         loc_timer: null,
         inited: false,
         medical_certificatesicates_rows: [],
+        sidebarIsOpened: false,
       }
     },
     watch: {
@@ -972,6 +1001,7 @@
             this.benefit_rows = []
             this.pk = ''
             this.data = data
+            this.sidebarIsOpened = false;
             if (data.card_internal && data.status_disp === 'need' && data.has_doc_referral) {
               errmessage('Диспансеризация не пройдена')
             }
@@ -1449,17 +1479,132 @@
     }
   }
 
+
+  @media (max-width: 1366px) {
+    .burger {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 11;
+      background-color: #323639;
+      width: 36px;
+      transition: all .4s cubic-bezier(.25, .8, .25, 1);
+      cursor: pointer;
+
+      &:hover {
+        background-color: #4a5054;
+      }
+
+      &.active {
+        background-color: #03614b;
+        &:hover {
+          background-color: #059271;
+        }
+
+        .burger-inner i {
+          transform: rotate(90deg);
+        }
+      }
+
+      .burger-inner {
+        writing-mode: vertical-lr;
+        text-orientation: mixed;
+        color: #fff;
+        padding: 20px 0 0 7px;
+        font-size: 16px;
+        i {
+          transition: all .4s cubic-bezier(.25, .8, .25, 1);
+        }
+      }
+
+      .burger-lines {
+        top: 290px;
+        bottom: 10px;
+        left: 17px;
+
+        &, &::before, &::after {
+          position: absolute;
+          width: 1px;
+          background-color: rgba(#fff, .1);
+        }
+
+        &::before, &::after {
+          top: 0;
+          bottom: 0;
+          content: "";
+        }
+
+        &::before {
+          left: -9px;
+        }
+
+        &::after {
+          left: 9px;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 1366px) {
+    .backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(#000, .6);
+      backdrop-filter: blur(3px);
+      z-index: 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-left: 341px;
+
+      &-inner {
+        color: #fff;
+        text-shadow: 0 0 4px rgba(#000, .6);
+      }
+    }
+  }
+
+  @media (min-width: 1367px) {
+    .burger, .backdrop {
+      display: none;
+    }
+  }
+
   .results-sidebar {
     width: 304px;
     border-right: 1px solid #b1b1b1;
     display: flex;
     flex-direction: column;
+
+    @media (max-width: 1366px) {
+      position: absolute;
+      top: 0;
+      left: -304px;
+      bottom: 0;
+      z-index: 10;
+      background-color: #fff;
+      transition: all .4s cubic-bezier(.25, .8, .25, 1);
+
+      &.opened {
+        left: 36px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+      }
+    }
   }
 
   .results-content {
     display: flex;
     flex-direction: column;
     width: calc(100% - 304px);
+
+    @media (max-width: 1366px) {
+      padding-left: 36px;
+      width: 100%;
+    }
   }
 
   .results-top {

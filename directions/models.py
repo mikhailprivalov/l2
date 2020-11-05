@@ -15,7 +15,7 @@ import slog.models as slog
 import users.models as umodels
 import cases.models as cases
 from api.models import Application
-from laboratory.utils import strdate, localtime
+from laboratory.utils import strdate, localtime, current_time
 from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
 import contracts.models as contracts
@@ -204,7 +204,6 @@ class IstochnikiFinansirovaniya(models.Model):
     default_diagnos = models.CharField(max_length=36, help_text="Диагноз по умолчанию", default="", blank=True)
     contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE)
     order_weight = models.SmallIntegerField(default=0)
-
 
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
@@ -1001,9 +1000,12 @@ class Issledovaniya(models.Model):
         return strdate(self.napravleniye.visit_date)
 
     def get_medical_examination(self):
-        if not self.medical_examination and (self.napravleniye.visit_date or self.time_confirmation):
-            self.medical_examination = (self.napravleniye.visit_date or self.time_confirmation).date()
-            self.save()
+        if not self.medical_examination:
+            if self.napravleniye.visit_date or self.time_confirmation:
+                self.medical_examination = (self.napravleniye.visit_date or self.time_confirmation).date()
+            else:
+                self.medical_examination = current_time(only_date=True)
+            self.save(update_fields=['medical_examination'])
         return self.medical_examination
 
     def is_receive_material(self):

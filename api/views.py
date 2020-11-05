@@ -22,7 +22,9 @@ from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document, District
 from directory.models import Fractions, ParaclinicInputField, ResearchSite, Culture, Antibiotic
 from directory.models import Researches as DResearches
+from doctor_call.models import DoctorCall
 from external_system.models import FsliRefbookTest
+from hospitals.models import Hospitals
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from podrazdeleniya.models import Podrazdeleniya
@@ -1182,4 +1184,15 @@ def reader_status_update(request):
 def actual_districts(request):
     rows = District.objects.all().order_by('-sort_weight', '-id').values('pk', 'title', 'is_ginekolog')
     rows = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["title"] if not x['is_ginekolog'] else "Гинекология: {}".format(x['title'])} for x in rows]]
-    return JsonResponse(rows, safe=False)
+
+    users = users_by_group(['Лечащий врач'])
+    users = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{'id': row[0], 'label': row[1]} for row in users]]
+
+    purposes = DoctorCall.PURPOSES
+    purposes = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{'id': row[0], 'label': row[1]} for row in purposes]]
+
+    hospitals = Hospitals.objects.all().filter(hide=False).order_by('short_title').values('pk', 'short_title', 'title')
+    hospitals = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["short_title"] or x["title"]} for x in hospitals]]
+
+    data = {'rows': rows, 'docs': users, 'purposes': purposes, 'hospitals': hospitals}
+    return JsonResponse(data)

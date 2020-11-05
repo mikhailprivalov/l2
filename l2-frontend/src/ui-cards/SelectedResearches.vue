@@ -114,7 +114,8 @@
     <div class="bottom-picker" v-if="!simple">
       <div class="top-inner-select" :class="{ disabled: !can_save }" @click="generate('direction')"
            title="Сохранить и распечатать направления"><span>Сохранить и распечатать направления</span></div>
-      <div class="top-inner-select" :class="{ disabled: !can_save }" @click="generate('barcode')"
+      <div class="top-inner-select hidden-small" :class="{ disabled: !can_save }"
+           @click="generate('barcode')"
            title="Сохранить и распечатать штрих-коды"><span>Сохранить и распечатать штрих-коды</span></div>
       <div class="top-inner-select" :class="{ disabled: !can_save }" @click="generate('just-save')"
            title="Сохранить без печати"><span>Сохранить без печати</span></div>
@@ -554,7 +555,7 @@
           type,
           card_pk: this.card_pk,
           fin_source_pk: this.fin,
-          diagnos: this.diagnos.substr(0, 35),
+          diagnos: this.diagnos.substr(0, 200),
           base: this.base,
           researches: this.researches_departments_simple(),
           operator: this.operator,

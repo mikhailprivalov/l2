@@ -180,16 +180,31 @@ def form_02(request_data):
     date = request_data["date"]
     district = int(request_data["district"])
     is_canceled = int(request_data["cancel"])
+    doc_assigned = int(request_data["doc"])
+    purpose_id = int(request_data["purpose"])
+    hospital = int(request_data["hospital"])
     cancel = True if is_canceled == 0 else False
 
     objs = []
-    objs.append(Paragraph(f"Вызов врача {normalize_dash_date(date)}", styleCenterBold))
+    objs.append(Paragraph(f"Вызова (обращения) {normalize_dash_date(date)}", styleCenterBold))
     objs.append(Spacer(1, 5 * mm))
 
+    doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), cancel=cancel)
+
+    if hospital > -1:
+        doc_call = doc_call.filter(hospital__pk=hospital)
+    if doc_assigned > -1:
+        doc_call = doc_call.filter(doc_assigned__pk=doc_assigned)
     if district > -1:
-        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), district_id__pk=district, cancel=cancel).order_by("pk")
+        doc_call = doc_call.filter(district_id__pk=district)
+    if purpose_id > -1:
+        doc_call = doc_call.filter(purpose=purpose_id)
+
+    if hospital + doc_assigned + district + purpose_id > -4:
+        doc_call = doc_call.order_by("pk")
     else:
-        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), cancel=cancel).order_by("district__title")
+        doc_call = doc_call.order_by("district__title")
+
     strike_o = ""
     strike_cl = ""
 
@@ -204,17 +219,25 @@ def form_02(request_data):
             Paragraph('Адрес', styleTB),
             Paragraph('Участок', styleTB),
             Paragraph('Телефон', styleTB),
-            Paragraph('Врач', styleTB),
+            Paragraph('Услуга', styleTB),
             Paragraph('Примечание', styleTB),
+            Paragraph('Врач', styleTB),
+            Paragraph('Цель', styleTB),
         ],
     ]
 
     count = 0
+    what_purpose = ''
+    who_doc_assigned = ''
     for i in doc_call:
         count += 1
         title = ''
         if i.district:
             title = i.district.title
+        if i.doc_assigned:
+            who_doc_assigned = i.doc_assigned.fio
+        if i.purpose:
+            what_purpose = i.get_purpose_display()
         opinion.append(
             [
                 Paragraph(f"{strike_o}{count}{strike_cl}", styleCenter),
@@ -224,10 +247,12 @@ def form_02(request_data):
                 Paragraph(f"{strike_o}{i.client.phone}{strike_cl}", style),
                 Paragraph(f"{strike_o}{i.research.title}{strike_cl}", style),
                 Paragraph(f"{strike_o}{i.comment}{strike_cl}", style),
+                Paragraph(f"{strike_o}{who_doc_assigned}{strike_cl}", style),
+                Paragraph(f"{strike_o}{what_purpose}{strike_cl}", style),
             ]
         )
 
-    tbl = Table(opinion, colWidths=(10 * mm, 60 * mm, 50 * mm, 20 * mm, 30 * mm, 60 * mm, 40 * mm), splitByRow=1, repeatRows=1)
+    tbl = Table(opinion, colWidths=(10 * mm, 40 * mm, 40 * mm, 15 * mm, 30 * mm, 40 * mm, 30 * mm, 30 * mm, 30 * mm), splitByRow=1, repeatRows=1)
 
     tbl.setStyle(
         TableStyle(

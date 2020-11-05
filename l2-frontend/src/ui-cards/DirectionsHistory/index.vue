@@ -61,10 +61,10 @@
         </colgroup>
         <tbody>
         <tr v-if="directions.length === 0 && is_created">
-          <td class="text-center" :colspan="!iss_pk ? 6 : 5">Не найдено</td>
+          <td class="text-center" :colspan="6">Не найдено</td>
         </tr>
         <tr v-if="directions.length === 0 && !is_created">
-          <td class="text-center" :colspan="!iss_pk ? 6 : 5">Загрузка...</td>
+          <td class="text-center" :colspan="6">Загрузка...</td>
         </tr>
         <tr v-for="row in directions">
           <td class="text-center">{{row.date}}</td>
