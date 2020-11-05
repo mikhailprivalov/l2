@@ -140,9 +140,7 @@ def send(request):
         if "bydirection" in request.POST or "bydirection" in request.GET:
             dpk = resdict["pk"]
 
-            if dpk >= 4600000000000:
-                dpk -= 4600000000000
-                dpk //= 10
+            _, _, dpk, _ = directions.Napravleniya.parse_barcode_number(dpk)
             tubes(request, direction_implict_id=dpk)
             if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).exists():
                 resdict["pk"] = directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).order_by("pk").first().pk
@@ -229,11 +227,9 @@ def endpoint(request):
             if message_type == "R" or data.get("result") or message_type == "R_BAC":
                 if pk != -1 or iss_pk != -1:
                     direction: Union[directions.Napravleniya, None] = None
-                    dw = app.direction_work or message_type == "R_BAC"
-                    if pk >= 4600000000000:
-                        pk -= 4600000000000
-                        pk //= 10
-                        dw = True
+                    _, _, pk, direction_has_been_parsed = directions.Napravleniya.parse_barcode_number(pk)
+                    pk = int(pk)
+                    dw = direction_has_been_parsed or app.direction_work or message_type == "R_BAC"
                     if pk == -1:
                         iss = directions.Issledovaniya.objects.filter(pk=iss_pk)
                         if iss.exists():

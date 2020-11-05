@@ -249,6 +249,7 @@ def gen_band_pdf(request):
     c.drawString(50 * mm, 8 * mm, '{}'.format(iss['research__title']))
     c.drawString(50 * mm, 4 * mm, 'поступил: {}'.format(dir_create))
 
+    # TODO: перейти на napravleniye.barcode_number()
     barcodeEAN = eanbc.Ean13BarcodeWidget(napr_id[0] + 460000000000, humanReadable=0, barHeight=11 * mm, barWidth=1.25)
     d = Drawing()
     d.add(barcodeEAN)

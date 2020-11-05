@@ -555,9 +555,7 @@ def directions_services(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1)
-    if pk >= 4600000000000:
-        pk -= 4600000000000
-        pk //= 10
+    _, _, pk, _ = Napravleniya.parse_barcode_number(pk)
     f = False
     dn = Napravleniya.objects.filter(pk=pk)
     if dn.exists():
@@ -923,9 +921,7 @@ def directions_paraclinic_form(request):
     pk = request_data.get("pk", -1) or -1
     by_issledovaniye = request_data.get("byIssledovaniye", False)
     force_form = request_data.get("force", False)
-    if pk >= 4600000000000:
-        pk -= 4600000000000
-        pk //= 10
+    _, _, pk, _ = Napravleniya.parse_barcode_number(pk)
     add_fr = {}
     f = False
     g = [str(x) for x in request.user.groups.all()]
