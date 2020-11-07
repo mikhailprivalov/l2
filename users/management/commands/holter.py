@@ -94,7 +94,10 @@ class Command(BaseCommand):
                                 result = pattern.match(line)
                                 if result:
                                     obj_num_dir = re.search(r'\d+', result.group(0))
-                                    _, _, num_dir, _ = Napravleniya.parse_barcode_number(obj_num_dir.group(0))
+                                    num_dir = int(obj_num_dir.group(0))
+                                    if num_dir >= 4600000000000:
+                                        num_dir -= 4600000000000
+                                        num_dir //= 10
                                     obj_iss = Issledovaniya.objects.filter(napravleniye=num_dir, research=pk_research).first()
                                     if obj_iss:
                                         time_confirm = obj_iss.time_confirmation

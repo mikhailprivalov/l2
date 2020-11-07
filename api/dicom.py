@@ -36,7 +36,7 @@ def check_server_port(address, port):
 
 def search_dicom_study(direction=None):
     if direction:
-        research_obj: Issledovaniya = Issledovaniya.objects.filter(napravleniye__pk=direction).first()
+        research_obj = Issledovaniya.objects.filter(napravleniye__pk=direction).first()
         if not research_obj.research.podrazdeleniye or not research_obj.research.podrazdeleniye.can_has_pacs:
             return ''
         dicom_study = Issledovaniya.objects.values('study_instance_uid').filter(napravleniye=direction).first()
@@ -48,13 +48,12 @@ def search_dicom_study(direction=None):
             try:
                 str_dir = str(direction)
                 ean13_dir = str(direction + 460000000000)
-                code128_dir = research_obj.napravleniye.barcode_number()
                 check_sum = check_sum_ean13(ean13_dir)
                 ean13_dir = f'{ean13_dir}{check_sum}'
 
                 orthanc = Orthanc(DICOM_SERVER)
                 for tag in DICOM_SEARCH_TAGS:
-                    for dir in [ean13_dir, str_dir, code128_dir]:
+                    for dir in [ean13_dir, str_dir]:
                         query = {"Level": "Study", "Query": {"Modality": "*", "StudyDate": "*", tag: dir}}
                         dicom_study = orthanc.find(query)
                         if len(dicom_study) > 0:

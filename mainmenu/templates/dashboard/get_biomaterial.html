@@ -11,7 +11,7 @@
                 <div class="input-group">
                     <input type="text" class="form-control" id="search-field" name="search-field" data-container="body"
                            data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
-                           placeholder="Номер направления" maxlength="17" autofocus
+                           placeholder="Номер направления" maxlength="13" autofocus
                            onkeyup="bar_scanner($('#search-field').val())" data-width="100%">
                     <span class="input-group-btn">
                         <button class="btn btn-blue-nb" onclick="search($('#search-field').val());" type="button">Поиск
@@ -388,7 +388,6 @@
         }
 
         function bar_scanner(v) {
-            // TODO: добавить парсинг napravleniye.barcode_number()
             const tdnum = parseInt(v.substr(0, 12)) - 460000000000
             if (v.substr(0, 3) === '460' && v.length === 13) {
                 if (dnum !== tdnum) {
