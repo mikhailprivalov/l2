@@ -56,7 +56,6 @@ def form_01(c: Canvas, dir: Napravleniya):
         styleT.leading = 4.5 * mm
         styleT.face = 'PTAstraSerifReg'
 
-        # TODO: перейти на napravleniye.barcode_number()
         barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
         dir_code = Drawing()
         dir_code.add(barcode)

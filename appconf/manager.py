@@ -19,11 +19,6 @@ class SettingManager:
         return value
 
     @staticmethod
-    def get_org_id():
-        from directions.models import Napravleniya
-        return SettingManager.get("org_id", default='0').rjust(Napravleniya.BARCODE_ORG_ID_SIZE, '0')
-
-    @staticmethod
     def l2(key):
         return SettingManager.get('l2_{}'.format(key), default='false', default_type='b')
 

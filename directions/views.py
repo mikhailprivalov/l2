@@ -14,12 +14,12 @@ from django.utils import timezone
 from django.utils.text import Truncator
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.graphics import renderPDF
-from reportlab.graphics.barcode import qr, code128
+from reportlab.graphics.barcode import eanbc, qr
 from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, A6
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import mm, inch
+from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfdoc
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -356,10 +356,12 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
         if n > 2:
             yn = 1
 
-    height = 12 * mm
-    barcode = code128.Code128(dir.barcode_number(), barHeight=height * 0.6, barWidth=inch * 0.0136)
-
-    width = 50 * mm
+    barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=17)
+    bounds = barcode.getBounds()
+    width = bounds[2] - bounds[0]
+    height = bounds[3] - bounds[1]
+    d = Drawing(width, height)
+    d.add(barcode)
     paddingx = 15
     ac = dir.is_all_confirm()
     canc = dir.cancel
@@ -398,7 +400,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
     c.setFont('OpenSans', 14)
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 30) + (h / 2) * yn, "Направление" + ("" if not dir.imported_from_rmis else " из РМИС"))
 
-    barcode.drawOn(c, w / 2 - width + (w / 2 * xn) - paddingx / 3 - 5 * mm, (h / 2 - height - 57) + (h / 2) * yn)
+    renderPDF.draw(d, c, w / 2 - width + (w / 2 * xn) - paddingx / 3 - 5 * mm, (h / 2 - height - 57) + (h / 2) * yn)
 
     c.setFont('OpenSans', 20)
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height) + (h / 2) * yn - 57, "№ " + str(dir.pk))  # Номер направления
@@ -474,7 +476,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 120) + (h / 2) * yn, "Цель: " + dir.get_purpose_display())
 
     if dir.external_organization:
-        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 128) + (h / 2) * yn, dir.external_organization.title)
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 134) + (h / 2) * yn, dir.external_organization.title)
 
     if dir.parent and dir.parent.research.is_hospital:
         c.setFont('OpenSansBold', 8)
@@ -682,7 +684,6 @@ def get_one_dir(request):
     if request.method == 'GET':
         direction_pk = request.GET['id']
         direction_pk = ''.join(x for x in direction_pk if x.isdigit())
-        _, _, direction_pk, _ = Napravleniya.parse_barcode_number(direction_pk)
         try:
             direction_pk = int(direction_pk)
         except ValueError:
@@ -1104,8 +1105,10 @@ def get_issledovaniya(request):
         res["all_confirmed"] = True
         t = request.GET["type"]
         if id.isdigit():
-            _, _, id, is_direction = Napravleniya.parse_barcode_number(id)
-            if is_direction:
+            id = int(id)
+            if id >= 4600000000000:
+                id -= 4600000000000
+                id //= 10
                 t = "2"
             if t == "0":
                 iss = Issledovaniya.objects.filter(tubes__id=id)
