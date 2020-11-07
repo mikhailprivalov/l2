@@ -184,6 +184,4 @@ def check_enp(request):
         if normalize_date(bd) == normalize_date(bdate):
             return Response({"ok": True, 'patient_data': tfoms_data})
 
-        return Response({"ok": False, 'message': 'Неверные данные или нет прикрепления к поликлинике'})
-
-    return Response({"ok": False})
+    return Response({"ok": False, 'message': 'Неверные данные или нет прикрепления к поликлинике'})
