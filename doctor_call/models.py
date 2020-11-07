@@ -32,6 +32,8 @@ class DoctorCall(models.Model):
     purpose = models.IntegerField(default=0, blank=True, db_index=True, choices=PURPOSES, help_text="Цель вызова")
     doc_assigned = models.ForeignKey(DoctorProfile, db_index=True, null=True, related_name="doc_assigned", help_text='Лечащий врач', on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospitals, db_index=True, null=True, help_text='Больница', on_delete=models.CASCADE)
+    is_external = models.BooleanField(default=False, blank=True, help_text='Внешняя заявка')
+    external = models.CharField(max_length=128, blank=True, default='', help_text='Номер внешней заявки')
 
     class Meta:
         verbose_name = 'Вызов'
@@ -127,3 +129,4 @@ class DoctorCall(models.Model):
             result = DoctorCall.objects.filter(exec_at__range=(start_date, end_date)).order_by("exec_at, district")
 
         return result
+
