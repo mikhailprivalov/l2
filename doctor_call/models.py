@@ -88,6 +88,7 @@ class DoctorCall(models.Model):
             body=json.dumps(
                 {
                     "card_pk": patient_card.pk,
+                    "card": str(patient_card),
                     "research": research_obj.title,
                     "district": district_obj.title if district_obj else None,
                     "purpose": doc_call.get_purpose_display(),
