@@ -19,6 +19,20 @@
                 <input v-model="date" type="date" class="form-control"/>
               </div>
             </div>
+            <div class="row">
+              <div class="col-xs-3" style="text-align: right;line-height: 1.26;">
+                <label>
+                  Время:
+                </label>
+              </div>
+              <div class="col-xs-4">
+                <input v-model="time_start" type="time" class="form-control"/>
+              </div>
+              <div class="col-xs-1"></div>
+              <div class="col-xs-4">
+                <input v-model="time_end" type="time" class="form-control"/>
+              </div>
+            </div>
             <div class="row" style="margin-top: 10px">
               <div class="col-xs-3" style="text-align: right;line-height: 1.26; margin-top: 10px;">
                 <label>

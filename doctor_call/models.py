@@ -32,13 +32,15 @@ class DoctorCall(models.Model):
     purpose = models.IntegerField(default=0, blank=True, db_index=True, choices=PURPOSES, help_text="Цель вызова")
     doc_assigned = models.ForeignKey(DoctorProfile, db_index=True, null=True, related_name="doc_assigned", help_text='Лечащий врач', on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospitals, db_index=True, null=True, help_text='Больница', on_delete=models.CASCADE)
+    is_external = models.BooleanField(default=False, blank=True, help_text='Внешняя заявка')
+    external_num = models.CharField(max_length=128, blank=True, default='', help_text='Номер внешней заявки')
 
     class Meta:
         verbose_name = 'Вызов'
         verbose_name_plural = 'Вызова на дом'
 
     @staticmethod
-    def doctor_call_save(data, doc_who_create):
+    def doctor_call_save(data, doc_who_create=None):
         patient_card = Card.objects.get(pk=data['card_pk']) if 'card' not in data else data['card']
         research_obj = Researches.objects.get(pk=data['research'])
         if int(data['district']) < 0:
@@ -61,9 +63,14 @@ class DoctorCall(models.Model):
         else:
             hospital_obj = Hospitals.objects.get(pk=data['hospital'])
 
+        if data['num_book'] < 0:
+            num_book = ''
+        else:
+            num_book = data['num_book']
+
         doc_call = DoctorCall(client=patient_card, research=research_obj, exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'), comment=data['comment'],
                               doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'], phone=data['phone'],
-                              purpose=purpose, doc_assigned=doc_obj, hospital=hospital_obj)
+                              purpose=purpose, doc_assigned=doc_obj, hospital=hospital_obj, is_external=data['external'], external_num=num_book )
         doc_call.save()
 
         slog.Log(
@@ -79,6 +86,7 @@ class DoctorCall(models.Model):
                     "hospital": str(hospital_obj),
                     "date": data['date'],
                     "comment": data['comment'],
+                    "is_external": data['external']
                 }
             ),
             user=doc_who_create,

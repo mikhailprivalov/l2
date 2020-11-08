@@ -6,12 +6,12 @@ class RefHospitals(admin.ModelAdmin):
     list_display = (
         'title',
         'short_title',
-        'code',
+        'code_tfoms',
     )
     list_display_links = (
         'title',
         'short_title',
-        'code',
+        'code_tfoms',
     )
     search_fields = ('title',)
 
