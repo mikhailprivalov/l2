@@ -475,10 +475,10 @@ class Individual(models.Model):
         idp = data.get('idp')
         updated_data = []
 
-        family = data.get('family', '').title()
-        name = data.get('given', '').title()
-        patronymic = data.get('patronymic', '').title()
-        gender = data.get('gender', '').lower()
+        family = data.get('family', '').title().strip()
+        name = data.get('given', '').title().strip()
+        patronymic = data.get('patronymic', '').title().strip()
+        gender = data.get('gender', '').lower().strip()
         bdate = data.get('birthdate', '').split(' ')[0]
 
         if family and name and gender and bdate:
