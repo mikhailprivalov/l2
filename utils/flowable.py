@@ -1,7 +1,8 @@
+from reportlab import rl_config
 from reportlab.lib.colors import white, black
-from reportlab.pdfbase.acroform import AcroForm
-from reportlab.platypus import Flowable
 from reportlab.lib.units import mm
+from reportlab.pdfbase.acroform import AcroForm
+from reportlab.platypus import Flowable, Table
 
 
 class InteractiveTextField(Flowable):
@@ -106,3 +107,30 @@ class InteractiveListTypeMedExam(Flowable):
         )
 
         self.canv.restoreState()
+
+
+class LaterPagesTable(Table):
+    def __init__(self, data, laterColWidths=None, laterStyle=None, **kwargs):
+        Table.__init__(self, data, **kwargs)
+
+        self._later_column_widths = laterColWidths
+        self._later_style = laterStyle
+
+    def split(self, availWidth, availHeight):
+        self._calc(availWidth, availHeight)
+        if self.splitByRow:
+            if not getattr(rl_config, 'allowTableBoundsErrors') and self._width > availWidth: return []
+            tables = self._splitRows(availHeight)
+
+            if len(tables):
+                self.onLaterPages(tables[1])
+            return tables
+        else:
+            raise NotImplementedError
+
+    def onLaterPages(self, T):
+        if self._later_column_widths:
+            T._argW = self._later_column_widths
+
+        if self._later_style:
+            T.setStyle(self._later_style)
