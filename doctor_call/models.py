@@ -31,7 +31,7 @@ class DoctorCall(models.Model):
     district = models.ForeignKey(District, default=None, null=True, blank=True, db_index=True, help_text="Участок", on_delete=models.SET_NULL)
     address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес")
     phone = models.CharField(max_length=20, blank=True, default='')
-    purpose = models.IntegerField(default=0, blank=True, db_index=True, choices=PURPOSES, help_text="Цель вызова")
+    purpose = models.IntegerField(default=None, null=True, blank=True, db_index=True, choices=PURPOSES, help_text="Цель вызова")
     doc_assigned = models.ForeignKey(DoctorProfile, db_index=True, null=True, related_name="doc_assigned", help_text='Лечащий врач', on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospitals, db_index=True, null=True, help_text='Больница', on_delete=models.CASCADE)
     is_external = models.BooleanField(default=False, blank=True, help_text='Внешняя заявка')
