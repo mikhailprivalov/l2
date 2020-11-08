@@ -1,11 +1,17 @@
 import random
 
 import simplejson as json
+from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 import directions.models as directions
+from clients.models import Individual, Card
+from directory.models import Researches
+from doctor_call.models import DoctorCall
+from hospitals.models import Hospitals
 from laboratory.settings import AFTER_DATE
+from laboratory.utils import current_time
 from slog.models import Log
 from tfoms.integration import match_enp
 from utils.data_verification import data_parse
@@ -185,3 +191,40 @@ def check_enp(request):
             return Response({"ok": True, 'patient_data': tfoms_data})
 
     return Response({"ok": False, 'message': 'Неверные данные или нет прикрепления к поликлинике'})
+
+
+def external_doc_call_create(request):
+    data = json.loads(request.body)
+    org_id = data.get('org_id')
+    patient_data = data.get('patient_data')
+    form = data.get('form')
+    idp = patient_data.get('idp')
+    comment = form.get('comment')
+    purpose = form.get('purpose')
+
+    Individual.import_from_tfoms(patient_data)
+    individual_obj = Individual.objects.filter(tfoms_idp=idp).first()
+    card = Card.objects.filter(individual=individual_obj, base__internal_type=True).first()
+
+    research_pk = Researches.objects.filter(title='Обращение пациента').first().values('pk')
+    hospital = Hospitals.objects.filter(code_tfoms=org_id).first()
+
+    doc_call = DoctorCall.doctor_call_save(
+        {
+            'card': card,
+            'research': research_pk,
+            'address': card.main_address,
+            'district': -1,
+            'date': current_time(),
+            'comment': comment,
+            'phone': form.get('phone'),
+            'doc': -1,
+            'purpose': int(purpose),
+            'hospital': hospital.pk,
+            'extrnal': True,
+        }
+    )
+    doc_call.external_num = f"{org_id}{doc_call.pk}"
+    doc_call.save()
+
+    return JsonResponse({"ok": True, "number": doc_call.pk})

@@ -40,7 +40,7 @@ class Individual(models.Model):
     sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
     primary_for_rmis = models.BooleanField(default=False, blank=True)
     rmis_uid = models.CharField(max_length=64, default=None, null=True, blank=True)
-    tfoms_idp = models.CharField(max_length=64, default=None, null=True, blank=True, help_text="ID в ТФОМС")
+    tfoms_idp = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="ID в ТФОМС")
     time_tfoms_last_sync = models.DateTimeField(default=None, null=True, blank=True)
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
