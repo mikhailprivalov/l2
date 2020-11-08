@@ -8,6 +8,9 @@ class Hospitals(models.Model):
     oid = models.CharField(max_length=128, blank=True, default='', help_text="Код больницы", db_index=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие больницы', db_index=True)
 
+    def __str__(self):
+        return f"{self.short_title} – {self.code_tfoms}"
+
     class Meta:
         verbose_name = 'Больница'
         verbose_name_plural = 'Больницы'
