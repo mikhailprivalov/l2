@@ -205,6 +205,11 @@ def form_02(request_data):
     else:
         doc_call = doc_call.order_by("district__title")
 
+    is_external = int(request_data["external"])
+    external = True if is_external == 0 else False
+    if external:
+        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), is_external=True)
+
     strike_o = ""
     strike_cl = ""
 
