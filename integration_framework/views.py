@@ -199,11 +199,18 @@ def external_doc_call_create(request):
     patient_data = data.get('patient_data')
     form = data.get('form')
     idp = patient_data.get('idp')
+    enp = patient_data.get('enp')
     comment = form.get('comment')
     purpose = form.get('purpose')
 
     Individual.import_from_tfoms(patient_data)
-    individual_obj = Individual.objects.filter(tfoms_idp=idp).first()
+    individuals = Individual.objects.all()
+    if idp:
+        individuals = individuals.filter(tfoms_idp=idp)
+    else:
+        individuals = individuals.filter(tfoms_enp=enp)
+
+    individual_obj = individuals.first()
     card = Card.objects.filter(individual=individual_obj, base__internal_type=True).first()
 
     research_pk = Researches.objects.filter(title='Обращение пациента')[0].pk

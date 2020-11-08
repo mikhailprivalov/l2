@@ -41,6 +41,7 @@ class Individual(models.Model):
     primary_for_rmis = models.BooleanField(default=False, blank=True)
     rmis_uid = models.CharField(max_length=64, default=None, null=True, blank=True)
     tfoms_idp = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="ID в ТФОМС")
+    tfoms_enp = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="ENP в ТФОМС")
     time_tfoms_last_sync = models.DateTimeField(default=None, null=True, blank=True)
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
@@ -465,7 +466,7 @@ class Individual(models.Model):
             tfoms_data = match_patient(self.family, self.name, self.patronymic, strfdatetime(self.birthday, '%Y-%m-%d'))
 
         if tfoms_data:
-            is_new = bool(self.tfoms_idp)
+            is_new = not bool(self.tfoms_idp or self.tfoms_enp)
             updated = Individual.import_from_tfoms(tfoms_data, self)
 
         return is_new, updated
@@ -490,14 +491,15 @@ class Individual(models.Model):
             snils = data.get('snils', '').strip()
 
             q_idp = dict(tfoms_idp=idp or '##fakeidp##')
+            q_enp = dict(tfoms_enp=enp)
 
             if not individual:
                 indv = (
                     Individual.objects.filter(
-                        Q(**q_idp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)
+                        Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)
                     )
                     if snils
-                    else Individual.objects.filter(Q(**q_idp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
+                    else Individual.objects.filter(Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
                 )
             else:
                 indv = Individual.objects.filter(pk=individual.pk)
@@ -512,6 +514,7 @@ class Individual(models.Model):
                     birthday=birthday,
                     sex=gender,
                     tfoms_idp=idp,
+                    tfoms_enp=enp,
                 )
                 i.save()
             else:
