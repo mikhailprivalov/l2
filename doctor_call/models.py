@@ -89,7 +89,7 @@ class DoctorCall(models.Model):
                 {
                     "card_pk": patient_card.pk,
                     "research": research_obj.title,
-                    "district": district_obj.title,
+                    "district": district_obj.title if district_obj else None,
                     "purpose": doc_call.get_purpose_display(),
                     "doc_assigned": str(doc_obj),
                     "hospital": str(hospital_obj),
