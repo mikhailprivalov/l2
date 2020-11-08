@@ -178,11 +178,11 @@ def form_02(request_data):
     styleCenter.alignment = TA_CENTER
 
     date = request_data["date"]
-    district = int(request_data["district"])
+    district = int(request_data.get("district", -1) or -1)
     is_canceled = int(request_data["cancel"])
-    doc_assigned = int(request_data["doc"])
-    purpose_id = int(request_data["purpose"])
-    hospital = int(request_data["hospital"])
+    doc_assigned = int(request_data.get("doc", -1) or -1)
+    purpose_id = int(request_data.get("purpose", -1) or -1)
+    hospital = int(request_data.get("hospital", -1) or -1)
     cancel = True if is_canceled == 0 else False
 
     objs = []
