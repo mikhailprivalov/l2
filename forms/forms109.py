@@ -252,7 +252,7 @@ def form_02(request_data):
                 Paragraph(f"{strike_o}{i.client.individual.fio()} ({i.client.number_with_type()}){strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{i.address.replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{title}{strike_cl}", style),
-                Paragraph(f"{strike_o}{i.client.phone.replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", style),
+                Paragraph(f"{strike_o}{(i.phone or i.client.phone).replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", style),
                 Paragraph(f"{strike_o}{i.research.title}{strike_cl}", style),
                 Paragraph(f"{strike_o}{i.comment.replace('<', '&lt;').replace('>', '&gt;')[:300]}{strike_cl}", style),
                 Paragraph(f"{strike_o}{who_doc_assigned}{strike_cl}", style),
