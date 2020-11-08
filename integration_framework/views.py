@@ -206,7 +206,7 @@ def external_doc_call_create(request):
     individual_obj = Individual.objects.filter(tfoms_idp=idp).first()
     card = Card.objects.filter(individual=individual_obj, base__internal_type=True).first()
 
-    research_pk = Researches.objects.filter(title='Обращение пациента').first().values('pk')
+    research_pk = Researches.objects.filter(title='Обращение пациента')[0].pk
     hospital = Hospitals.objects.filter(code_tfoms=org_id).first()
 
     doc_call = DoctorCall.doctor_call_save(
