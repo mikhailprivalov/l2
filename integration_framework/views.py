@@ -221,7 +221,7 @@ def external_doc_call_create(request):
             'doc': -1,
             'purpose': int(purpose),
             'hospital': hospital.pk,
-            'extrnal': True,
+            'external': True,
         }
     )
     doc_call.external_num = f"{org_id}{doc_call.pk}"
