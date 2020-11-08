@@ -208,7 +208,9 @@ def form_02(request_data):
     if purpose_id > -1:
         doc_call = doc_call.filter(purpose=purpose_id)
 
-    if hospital + doc_assigned + district + purpose_id > -4:
+    if external:
+        doc_call = doc_call.order_by('hospital', 'pk')
+    elif hospital + doc_assigned + district + purpose_id > -4:
         doc_call = doc_call.order_by("pk")
     else:
         doc_call = doc_call.order_by("district__title")
@@ -246,15 +248,19 @@ def form_02(request_data):
             who_doc_assigned = i.doc_assigned.fio
         if i.purpose:
             what_purpose = i.get_purpose_display()
+        org = ""
+        if i.hospital:
+            org = f"<br/>{i.hospital.short_title or i.title}"
+
         opinion.append(
             [
                 Paragraph(f"{strike_o}{count}{strike_cl}", styleCenter),
-                Paragraph(f"{strike_o}{i.client.individual.fio()} ({i.client.number_with_type()}){strike_cl}", styleCenter),
+                Paragraph(f"{strike_o}{i.client.individual.fio()} ({i.client.number_with_type()}){org}{strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{i.address.replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{title}{strike_cl}", style),
                 Paragraph(f"{strike_o}{(i.phone or i.client.phone).replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", style),
                 Paragraph(f"{strike_o}{i.research.title}{strike_cl}", style),
-                Paragraph(f"{strike_o}{i.comment.replace('<', '&lt;').replace('>', '&gt;')[:300]}{strike_cl}", style),
+                Paragraph(f"{strike_o}{i.comment.replace('<', '&lt;').replace('>', '&gt;')[:400]}{strike_cl}", style),
                 Paragraph(f"{strike_o}{who_doc_assigned}{strike_cl}", style),
                 Paragraph(f"{strike_o}{what_purpose}{strike_cl}", style),
             ]
