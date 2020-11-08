@@ -71,7 +71,8 @@ def create(request):
                 'doc': doc,
                 'purpose': purpose,
                 'hospital': hospital,
-                'external': False
+                'external': False,
+                'num_book': -1,
             },
             request.user.doctorprofile,
         )
@@ -140,6 +141,8 @@ def external_create(request):
     passport_number = data.get('passport_number', '')
     passport_seria = data.get('passport_seria', '')
     snils = data.get('snils', '')
+    comment = data.get('comment', '')
+    purpose = data.get('purpose', '')
 
     individual_obj = Individual.objects.filter(tfoms_idp='idp').first()
     if not individual_obj:
