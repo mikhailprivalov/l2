@@ -260,7 +260,7 @@ def form_02(request_data):
             ]
         )
 
-    tbl = Table(opinion, colWidths=(10 * mm, 40 * mm, 40 * mm, 15 * mm, 30 * mm, 40 * mm, 30 * mm, 30 * mm, 30 * mm), splitByRow=1, repeatRows=1)
+    tbl = Table(opinion, colWidths=(10 * mm, 40 * mm, 35 * mm, 10 * mm, 25 * mm, 40 * mm, 30 * mm, 30 * mm, 20 * mm), splitByRow=1, repeatRows=1)
 
     tbl.setStyle(
         TableStyle(
