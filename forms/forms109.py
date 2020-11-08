@@ -254,7 +254,7 @@ def form_02(request_data):
                 Paragraph(f"{strike_o}{title}{strike_cl}", style),
                 Paragraph(f"{strike_o}{i.client.phone.replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", style),
                 Paragraph(f"{strike_o}{i.research.title}{strike_cl}", style),
-                Paragraph(f"{strike_o}{i.comment.replace('<', '&lt;').replace('>', '&gt;')[:500]}{strike_cl}", style),
+                Paragraph(f"{strike_o}{i.comment.replace('<', '&lt;').replace('>', '&gt;')[:300]}{strike_cl}", style),
                 Paragraph(f"{strike_o}{who_doc_assigned}{strike_cl}", style),
                 Paragraph(f"{strike_o}{what_purpose}{strike_cl}", style),
             ]
