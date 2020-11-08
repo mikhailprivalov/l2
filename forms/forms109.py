@@ -189,7 +189,7 @@ def form_02(request_data):
     objs.append(Paragraph(f"Вызова (обращения) {normalize_dash_date(date)}", styleCenterBold))
     objs.append(Spacer(1, 5 * mm))
 
-    is_external = int(request_data("external", 1))
+    is_external = int(request_data.get("external", 1))
     external = True if is_external == 0 else False
     if external:
         doc_call = DoctorCall.objects.filter(
