@@ -482,12 +482,12 @@ class Individual(models.Model):
         bdate = data.get('birthdate', '').split(' ')[0]
 
         if family and name and gender and bdate:
-            enp = data.get('enp', '')
+            enp = data.get('enp', '').strip()
             birthday = datetime.strptime(bdate, "%d.%m.%Y" if '.' in bdate else "%Y-%m-%d").date()
-            address = data.get('address', '').title().replace('Ул.', 'ул.').replace('Д.', 'д.').replace('Кв.', 'кв.')
-            passport_number = data.get('passport_number', '')
-            passport_seria = data.get('passport_seria', '')
-            snils = data.get('snils', '')
+            address = data.get('address', '').title().replace('Ул.', 'ул.').replace('Д.', 'д.').replace('Кв.', 'кв.').strip()
+            passport_number = data.get('passport_number', '').strip()
+            passport_seria = data.get('passport_seria', '').strip()
+            snils = data.get('snils', '').strip()
 
             q_idp = dict(tfoms_idp=idp or '##fakeidp##')
 
