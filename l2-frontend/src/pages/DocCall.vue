@@ -147,7 +147,7 @@
     },
     methods: {
       print() {
-        window.open(`/forms/pdf?type=109.02&date=${this.date}&time_start=${this.time_start}&time_end=${this.time_end}&district=${this.district}&doc=${this.doc_assigned}&purpose=${this.purpose}&hospital=${this.hospital}&external=${this.is_extrnal ? 0 : 1}&cancel=${this.is_canceled ? 0 : 1}`);
+        window.open(`/forms/pdf?type=109.02&date=${this.date}&time_start=${this.time_start}&time_end=${this.time_end}&district=${this.district || -1}&doc=${this.doc_assigned || -1}&purpose=${this.purpose || -1}&hospital=${this.hospital || -1}&external=${this.is_extrnal ? 0 : 1}&cancel=${this.is_canceled ? 0 : 1}`);
       },
     }
   }
