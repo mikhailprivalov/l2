@@ -13,6 +13,9 @@ from hospitals.models import Hospitals
 from laboratory.settings import AFTER_DATE
 from laboratory.utils import current_time
 from slog.models import Log
+from tfoms.integration import match_enp
+from utils.data_verification import data_parse
+from utils.dates import normalize_date
 from . import sql_if
 
 
@@ -171,7 +174,23 @@ def make_log(request):
             directions.Napravleniya.objects.filter(pk=k).update(need_resend_n3=False)
 
             Log.log(key=k, type=t, body=json.dumps(body.get(k, {})))
-    return Response({"ok": True,})
+    return Response({"ok": True})
+
+
+@api_view(['POST'])
+def check_enp(request):
+    enp, bd = data_parse(request.body, {'enp': str, 'bd': str})
+
+    enp = enp.replace(' ', '')
+
+    tfoms_data = match_enp(enp)
+
+    if tfoms_data:
+        bdate = tfoms_data.get('birthdate', '').split(' ')[0]
+        if normalize_date(bd) == normalize_date(bdate):
+            return Response({"ok": True, 'patient_data': tfoms_data})
+
+    return Response({"ok": False, 'message': 'Неверные данные или нет прикрепления к поликлинике'})
 
 
 def external_doc_call_create(request):
