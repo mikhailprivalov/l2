@@ -17,6 +17,8 @@ class DoctorCall(models.Model):
         (2, 'Неотложная помощь'),
         (3, 'Обострение хронического заболевания'),
         (4, 'Активное наблюдени'),
+        (5, 'Другое'),
+        (6, 'Выписать рецепт'),
     )
 
     client = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
@@ -63,15 +65,10 @@ class DoctorCall(models.Model):
         else:
             hospital_obj = Hospitals.objects.get(pk=data['hospital'])
 
-        if data['num_book'] < 0:
-            num_book = ''
-        else:
-            num_book = data['num_book']
-
         doc_call = DoctorCall(
             client=patient_card,
             research=research_obj,
-            exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'),
+            exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d') if isinstance(data['date'], str) else data['date'],
             comment=data['comment'],
             doc_who_create=doc_who_create,
             cancel=False,
@@ -82,7 +79,6 @@ class DoctorCall(models.Model):
             doc_assigned=doc_obj,
             hospital=hospital_obj,
             is_external=data['external'],
-            external_num=num_book,
         )
         doc_call.save()
 
@@ -104,7 +100,7 @@ class DoctorCall(models.Model):
             ),
             user=doc_who_create,
         ).save()
-        return doc_call.pk
+        return doc_call
 
     @staticmethod
     def doctor_call_cancel(data, doc_who_create):

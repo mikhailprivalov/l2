@@ -19,8 +19,8 @@
                 <input v-model="date" type="date" class="form-control"/>
               </div>
             </div>
-            <div class="row">
-              <div class="col-xs-3" style="text-align: right;line-height: 1.26;">
+            <div class="row" style="margin-top: 10px">
+              <div class="col-xs-3" style="text-align: right;line-height: 1.26; margin-top: 10px;">
                 <label>
                   Время:
                 </label>
@@ -88,7 +88,10 @@
 
             <div class="row">
               <div class="col-xs-9">
-                <div class="checkbox" style="text-align: right; margin-top: 20px;">
+                <div class="checkbox" style="text-align: left; margin-top: 20px;">
+                  <label>
+                    <input type="checkbox" v-model="is_extrnal">Внешние заявки
+                  </label>
                   <label>
                     <input type="checkbox" v-model="is_canceled"> Показать отмененные
                   </label>
@@ -123,12 +126,15 @@
           district: -1,
           districts: [],
           is_canceled: false,
+          is_extrnal: false,
           purposes: [],
           purpose: -1,
           docs_assigned: [],
           doc_assigned: -1,
           hospitals: [],
           hospital: -1,
+          time_start: "00:00",
+          time_end: "23:59",
       }
     },
     mounted() {
@@ -141,7 +147,7 @@
     },
     methods: {
       print() {
-        window.open(`/forms/pdf?type=109.02&date=${this.date}&district=${this.district}&doc=${this.doc_assigned}&purpose=${this.purpose}&hospital=${this.hospital}&cancel=${this.is_canceled ? 0 : 1}`);
+        window.open(`/forms/pdf?type=109.02&date=${this.date}&time_start=${this.time_start}&time_end=${this.time_end}&district=${this.district}&doc=${this.doc_assigned}&purpose=${this.purpose}&hospital=${this.hospital}&external=${this.is_extrnal ? 0 : 1}&cancel=${this.is_canceled ? 0 : 1}`);
       },
     }
   }
