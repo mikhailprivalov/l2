@@ -141,7 +141,7 @@
       api('actual-districts').then(rows => {
         this.districts = rows.rows;
         this.docs_assigned = rows.docs;
-        this.purposes = rows.purposes;
+        this.purposes = [{id: -1, label: 'Не выбрана'}, ...rows.purposes];
         this.hospitals = rows.hospitals;
       });
     },
