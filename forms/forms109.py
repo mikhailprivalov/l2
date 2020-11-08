@@ -20,7 +20,6 @@ from doctor_call.models import DoctorCall
 from list_wait.models import ListWait
 import datetime
 from utils.dates import normalize_dash_date, try_parse_range
-from utils.flowable import LaterPagesTable
 
 
 def form_01(request_data):
@@ -255,13 +254,13 @@ def form_02(request_data):
                 Paragraph(f"{strike_o}{title}{strike_cl}", style),
                 Paragraph(f"{strike_o}{i.client.phone.replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", style),
                 Paragraph(f"{strike_o}{i.research.title}{strike_cl}", style),
-                Paragraph(f"{strike_o}{i.comment.replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", style),
+                Paragraph(f"{strike_o}{i.comment.replace('<', '&lt;').replace('>', '&gt;')[:500]}{strike_cl}", style),
                 Paragraph(f"{strike_o}{who_doc_assigned}{strike_cl}", style),
                 Paragraph(f"{strike_o}{what_purpose}{strike_cl}", style),
             ]
         )
 
-    tbl = LaterPagesTable(opinion, colWidths=(10 * mm, 40 * mm, 40 * mm, 15 * mm, 30 * mm, 40 * mm, 30 * mm, 30 * mm, 30 * mm), splitByRow=1, repeatRows=1)
+    tbl = Table(opinion, colWidths=(10 * mm, 40 * mm, 40 * mm, 15 * mm, 30 * mm, 40 * mm, 30 * mm, 30 * mm, 30 * mm), splitByRow=1, repeatRows=1)
 
     tbl.setStyle(
         TableStyle(
