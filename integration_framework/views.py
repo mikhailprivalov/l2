@@ -208,10 +208,17 @@ def external_doc_call_create(request):
     individuals = Individual.objects.filter(Q(tfoms_enp=enp or '###$fakeenp$###') | Q(tfoms_idp=idp or '###$fakeidp$###'))
 
     individual_obj = individuals.first()
-    card = Card.objects.filter(individual=individual_obj, base__internal_type=True).first()
+    if not individual_obj:
+        return JsonResponse({"ok": False, "number": None})
 
-    research_pk = Researches.objects.filter(title='Обращение пациента')[0].pk
+    card = Card.objects.filter(individual=individual_obj, base__internal_type=True).first()
+    research = Researches.objects.filter(title='Обращение пациента').first()
     hospital = Hospitals.objects.filter(code_tfoms=org_id).first()
+
+    if not card or not research or not hospital:
+        return JsonResponse({"ok": False, "number": None})
+
+    research_pk = research.pk
 
     doc_call = DoctorCall.doctor_call_save(
         {
