@@ -22,7 +22,8 @@ def make_request(path, query=None):
     try:
         url = get_url(path, query=query)
         headers = get_headers()
-        return requests.post(url, headers=headers).json()
+        data = requests.post(url, headers=headers).json()
+        return data
     except Exception as e:
         print(e)
         return {}
@@ -42,4 +43,7 @@ def match_patient(family, name, patronymic, birthday) -> List[dict]:
 
 
 def match_enp(enp) -> dict:
-    return make_request("match-patient-by-enp", {"enp": enp})
+    data = make_request("match-patient-by-enp-set2", {"enp": enp})
+    if isinstance(data, list) and len(data) > 0:
+        return data[0]
+    return data
