@@ -254,7 +254,7 @@
         this.card = card
         this.card.doc = -1
         this.card.docs = docs
-        this.card.purpose = -1
+        this.card.purpose = (purposes.find(p => p.label === 'Другое') || {id: purposes[0].id}).id
         this.card.purposes = purposes
         this.card.hospital = -1
         this.card.hospitals = hospitals
