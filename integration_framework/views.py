@@ -1,6 +1,7 @@
 import random
 
 import simplejson as json
+from django.db.models import Q
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -204,11 +205,7 @@ def external_doc_call_create(request):
     purpose = form.get('purpose')
 
     Individual.import_from_tfoms(patient_data)
-    individuals = Individual.objects.all()
-    if idp:
-        individuals = individuals.filter(tfoms_idp=idp)
-    else:
-        individuals = individuals.filter(tfoms_enp=enp)
+    individuals = Individual.objects.filter(Q(tfoms_enp=enp or '###$fakeenp$###') | Q(tfoms_idp=idp or '###$fakeidp$###'))
 
     individual_obj = individuals.first()
     card = Card.objects.filter(individual=individual_obj, base__internal_type=True).first()

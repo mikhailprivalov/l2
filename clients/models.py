@@ -491,7 +491,7 @@ class Individual(models.Model):
             snils = data.get('snils', '').strip()
 
             q_idp = dict(tfoms_idp=idp or '##fakeidp##')
-            q_enp = dict(tfoms_enp=enp)
+            q_enp = dict(tfoms_enp=enp or '##fakeenp##')
 
             if not individual:
                 indv = (
@@ -563,6 +563,10 @@ class Individual(models.Model):
                 if idp and i.tfoms_idp != idp:
                     i.tfoms_idp = idp
                     updated.append('tfoms_idp')
+
+                if enp and i.tfoms_enp != enp:
+                    i.tfoms_enp = enp
+                    updated.append('tfoms_enp')
 
                 if updated:
                     print('Updated:', updated)
