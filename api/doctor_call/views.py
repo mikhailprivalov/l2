@@ -123,8 +123,7 @@ def cancel_row(request):
 
 
 def external_create(request):
-    fact_address, main_address, phone = '', '', ''
-    address, passport_number, passport_seria, snils, idp = '', '', '', '', ''
+    fact_address, phone = '', ''
 
     enp, book_num, hospital_id = '', '', ''
 
@@ -146,32 +145,45 @@ def external_create(request):
 
     individual_obj = Individual.objects.filter(tfoms_idp='idp').first()
     if not individual_obj:
-        Individual.import_from_tfoms({'enp': enp, 'family': family, 'name': name, 'patronymic': patronymic, 'gender': gender, 'bdate': birthday,
-                                  'address': address, 'passport_number': passport_number, 'passport_seria': passport_seria, 'snils': snils, 'idp': idp})
+        Individual.import_from_tfoms(
+            {
+                'enp': enp,
+                'family': family,
+                'name': name,
+                'patronymic': patronymic,
+                'gender': gender,
+                'bdate': birthday,
+                'address': address,
+                'passport_number': passport_number,
+                'passport_seria': passport_seria,
+                'snils': snils,
+                'idp': idp,
+            }
+        )
 
     individual_obj = Individual.objects.filter(tfoms_idp='idp').first()
     card = Card.objects.filter(individual=individual_obj, base__internal_type=True).first()
     research_pk = Researches.objects.filter(title='Обращение пациента').first().values('pk')
 
-    date, comment, purpose, hospital  = '', '', '', ''
+    date, comment, purpose, hospital = '', '', '', ''
     if int(hospital_id) > 0:
         hospital = Hospitals.objects.filter(code_tfoms=int(hospital_id)).first()
 
     DoctorCall.doctor_call_save(
-            {
-                'card': card,
-                'research': research_pk,
-                'address': fact_address,
-                'district': -1,
-                'date': date,
-                'comment': comment,
-                'phone': phone,
-                'doc': -1,
-                'purpose': purpose,
-                'hospital': hospital,
-                'extrnal': True,
-                'external_num': book_num
-            }
-        )
+        {
+            'card': card,
+            'research': research_pk,
+            'address': fact_address,
+            'district': -1,
+            'date': date,
+            'comment': comment,
+            'phone': phone,
+            'doc': -1,
+            'purpose': purpose,
+            'hospital': hospital,
+            'extrnal': True,
+            'external_num': book_num,
+        }
+    )
 
     return JsonResponse({"ok": True})
