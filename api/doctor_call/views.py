@@ -25,7 +25,7 @@ def create(request):
             'doc': int,
             'purpose': int,
             'hospital': int,
-        }
+        },
     )
 
     card: Card = data[0]
@@ -56,28 +56,30 @@ def create(request):
         card.save(update_fields=card_updates)
 
     for research_pk in researches:
-        DoctorCall.doctor_call_save({
-            'card': card,
-            'research': research_pk,
-            'address': fact_address,
-            'district': district,
-            'date': date,
-            'comment': comment,
-            'phone': phone,
-            'doc': doc,
-            'purpose': purpose,
-            'hospital': hospital,
-        }, request.user.doctorprofile)
+        DoctorCall.doctor_call_save(
+            {
+                'card': card,
+                'research': research_pk,
+                'address': fact_address,
+                'district': district,
+                'date': date,
+                'comment': comment,
+                'phone': phone,
+                'doc': doc,
+                'purpose': purpose,
+                'hospital': hospital,
+                'external': False,
+                'num_book': -1,
+            },
+            request.user.doctorprofile,
+        )
 
     return JsonResponse({"ok": True})
 
 
 @login_required
 def actual_rows(request):
-    data = data_parse(
-        request.body,
-        {'card_pk': int}
-    )
+    data = data_parse(request.body, {'card_pk': int})
     card_pk: int = data[0]
 
     date_from = datetime.datetime.combine(current_time(), datetime.time.min)
@@ -86,9 +88,20 @@ def actual_rows(request):
         DoctorCall.objects.filter(client_id=card_pk, exec_at__gte=date_from)
         .order_by('exec_at', 'pk')
         .values(
-            'pk', 'exec_at', 'research__title', 'comment', 'cancel', 'district__title',
-            'address', 'phone', 'cancel', 'doc_assigned__fio', 'doc_assigned__podrazdeleniye__title', 'purpose',
-            'hospital__title', 'hospital__short_title',
+            'pk',
+            'exec_at',
+            'research__title',
+            'comment',
+            'cancel',
+            'district__title',
+            'address',
+            'phone',
+            'cancel',
+            'doc_assigned__fio',
+            'doc_assigned__podrazdeleniye__title',
+            'purpose',
+            'hospital__title',
+            'hospital__short_title',
         )
     )
 
@@ -97,13 +110,11 @@ def actual_rows(request):
 
 @login_required
 def cancel_row(request):
-    data = data_parse(
-        request.body,
-        {'pk': int}
-    )
+    data = data_parse(request.body, {'pk': int})
     pk_row: int = data[0]
     row = DoctorCall.objects.get(pk=pk_row)
     row.cancel = not row.cancel
     row.save()
 
     return JsonResponse(True, safe=False)
+
