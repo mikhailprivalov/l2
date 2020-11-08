@@ -4,13 +4,10 @@ from typing import List
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from clients.models import Card, Individual
+from clients.models import Card
 from doctor_call.models import DoctorCall
-from hospitals.models import Hospitals
 from laboratory.utils import current_time
 from utils.data_verification import data_parse
-from directory.models import Researches
-import simplejson as json
 
 
 @login_required
