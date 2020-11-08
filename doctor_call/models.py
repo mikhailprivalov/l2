@@ -68,9 +68,22 @@ class DoctorCall(models.Model):
         else:
             num_book = data['num_book']
 
-        doc_call = DoctorCall(client=patient_card, research=research_obj, exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'), comment=data['comment'],
-                              doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'], phone=data['phone'],
-                              purpose=purpose, doc_assigned=doc_obj, hospital=hospital_obj, is_external=data['external'], external_num=num_book )
+        doc_call = DoctorCall(
+            client=patient_card,
+            research=research_obj,
+            exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'),
+            comment=data['comment'],
+            doc_who_create=doc_who_create,
+            cancel=False,
+            district=district_obj,
+            address=data['address'],
+            phone=data['phone'],
+            purpose=purpose,
+            doc_assigned=doc_obj,
+            hospital=hospital_obj,
+            is_external=data['external'],
+            external_num=num_book,
+        )
         doc_call.save()
 
         slog.Log(
@@ -86,7 +99,7 @@ class DoctorCall(models.Model):
                     "hospital": str(hospital_obj),
                     "date": data['date'],
                     "comment": data['comment'],
-                    "is_external": data['external']
+                    "is_external": data['external'],
                 }
             ),
             user=doc_who_create,
@@ -103,12 +116,7 @@ class DoctorCall(models.Model):
         slog.Log(
             key=doc_call.pk,
             type=80004,
-            body=json.dumps(
-                {
-                    "card_pk": doc_call.client.pk,
-                    "status": doc_call.cancel
-                }
-            ),
+            body=json.dumps({"card_pk": doc_call.client.pk, "status": doc_call.cancel}),
             user=doc_who_create,
         ).save()
         return doc_call.pk
