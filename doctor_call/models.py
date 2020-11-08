@@ -93,7 +93,7 @@ class DoctorCall(models.Model):
                     "purpose": doc_call.get_purpose_display(),
                     "doc_assigned": str(doc_obj),
                     "hospital": str(hospital_obj),
-                    "date": data['date'],
+                    "date": str(data['date']),
                     "comment": data['comment'],
                     "is_external": data['external'],
                 }
