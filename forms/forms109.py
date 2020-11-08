@@ -189,7 +189,15 @@ def form_02(request_data):
     objs.append(Paragraph(f"Вызова (обращения) {normalize_dash_date(date)}", styleCenterBold))
     objs.append(Spacer(1, 5 * mm))
 
-    doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), cancel=cancel)
+    is_external = int(request_data("external", 1))
+    external = True if is_external == 0 else False
+    if external:
+        doc_call = DoctorCall.objects.filter(
+            exec_at__date=datetime.datetime.strptime(date, '%Y-%m-%d').date()
+        )
+    else:
+        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'))
+    doc_call = doc_call.filter(is_external=external, cancel=cancel)
 
     if hospital > -1:
         doc_call = doc_call.filter(hospital__pk=hospital)
@@ -204,11 +212,6 @@ def form_02(request_data):
         doc_call = doc_call.order_by("pk")
     else:
         doc_call = doc_call.order_by("district__title")
-
-    is_external = int(request_data["external"])
-    external = True if is_external == 0 else False
-    if external:
-        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), is_external=True)
 
     strike_o = ""
     strike_cl = ""
