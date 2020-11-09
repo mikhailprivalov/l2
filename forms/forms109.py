@@ -17,6 +17,7 @@ from forms.forms_func import primary_reception_get_data
 from laboratory.settings import FONTS_FOLDER
 from api.plans.sql_func import get_plans_by_pk
 from doctor_call.models import DoctorCall
+from laboratory.utils import strdatetime
 from list_wait.models import ListWait
 import datetime
 from utils.dates import normalize_dash_date, try_parse_range
@@ -185,18 +186,27 @@ def form_02(request_data):
     hospital = int(request_data.get("hospital", -1) or -1)
     cancel = True if is_canceled == 0 else False
 
-    objs = []
-    objs.append(Paragraph(f"Вызова (обращения) {normalize_dash_date(date)}", styleCenterBold))
-    objs.append(Spacer(1, 5 * mm))
-
     is_external = int(request_data.get("external", 1))
     external = True if is_external == 0 else False
+    out_call = ''
+    if external:
+        out_call = "внешние"
+
+    objs = []
+    objs.append(Paragraph(f"Вызова (обращения) <u>{out_call}</u> {normalize_dash_date(date)}", styleCenterBold))
+    objs.append(Spacer(1, 5 * mm))
+
+    time_start = f'{date} {request_data.get("time_start", "00:00")}'
+    time_end = f'{date} {request_data.get("time_end", "23:59")}'
+    datetime_start = datetime.datetime.strptime(time_start, '%Y-%m-%d %H:%M')
+    datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M')
     if external:
         doc_call = DoctorCall.objects.filter(
-            exec_at__date=datetime.datetime.strptime(date, '%Y-%m-%d').date()
+            exec_at__date=datetime.datetime.strptime(date, '%Y-%m-%d').date(),
+            create_at__range=[datetime_start, datetime_end],
         )
     else:
-        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'))
+        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), create_at__range=[datetime_start, datetime_end])
     doc_call = doc_call.filter(is_external=external, cancel=cancel)
 
     if hospital > -1:
@@ -252,10 +262,12 @@ def form_02(request_data):
         if i.hospital:
             org = f"<br/>{i.hospital.short_title or i.title}"
 
+        create_at = strdatetime(i.create_at)
+
         opinion.append(
             [
                 Paragraph(f"{strike_o}{count}{strike_cl}", styleCenter),
-                Paragraph(f"{strike_o}{i.client.individual.fio()} ({i.client.number_with_type()}){org}{strike_cl}", styleCenter),
+                Paragraph(f"{strike_o}{i.client.individual.fio()} ({i.client.number_with_type()}){org}\n{create_at}{strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{i.address.replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{title}{strike_cl}", style),
                 Paragraph(f"{strike_o}{(i.phone or i.client.phone).replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", style),
