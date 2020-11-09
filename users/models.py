@@ -50,6 +50,7 @@ class DoctorProfile(models.Model):
     rmis_login = models.CharField(default='', blank=True, null=True, max_length=50, help_text='РМИС логин')
     rmis_password = models.CharField(default='', blank=True, null=True, max_length=50, help_text='РМИС пароль')
     rmis_resource_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
+    hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, blank=True, default=None, null=True, on_delete=models.SET_NULL)
 
     def get_login_id(self):
         if not self.login_id:

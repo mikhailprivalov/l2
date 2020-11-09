@@ -385,11 +385,28 @@ def endpoint(request):
 
 @login_required
 def departments(request):
-    from podrazdeleniya.models import Podrazdeleniya
+    req = json.loads(request.body)
+    method = req.get('method', 'GET')
+    current_user_hospital_id = request.user.doctorprofile.hospital_id or -1
+    hospital_pk = req.get('hospital', current_user_hospital_id)
 
-    can_edit = request.user.is_superuser or request.user.doctorprofile.has_group('Создание и редактирование пользователей')
-    if request.method == "GET":
-        deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "updated": False} for x in Podrazdeleniya.objects.all().order_by("pk")]
+    su = request.user.is_superuser
+
+    if hospital_pk != current_user_hospital_id and not su:
+        return JsonResponse({"ok": False})
+
+    can_edit = su or request.user.doctorprofile.has_group('Создание и редактирование пользователей')
+
+    if method == "GET":
+        deps = [
+            {"pk": x.pk, "title": x.get_title(), "type": str(x.p_type)}
+            for x in (
+                Podrazdeleniya
+                .objects
+                .filter(hospital_id=hospital_pk)
+                .order_by("pk")
+            )
+        ]
         en = SettingManager.en()
         more_types = []
         if SettingManager.is_morfology_enabled(en):
@@ -397,11 +414,11 @@ def departments(request):
         return JsonResponse(
             {"departments": deps, "can_edit": can_edit, "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] != 8 and en.get(x[0], True)], *more_types]}
         )
-    elif can_edit:
+
+    if can_edit:
         ok = False
         message = ""
         try:
-            req = json.loads(request.body)
             data_type = req.get("type", "update")
             rows = req.get("data", [])
             if data_type == "update":
@@ -412,6 +429,7 @@ def departments(request):
                         department = Podrazdeleniya.objects.get(pk=row["pk"])
                         department.title = title
                         department.p_type = int(row["type"])
+                        department.hospital_id = hospital_pk
                         department.save()
                         ok = True
             elif data_type == "insert":
@@ -419,7 +437,7 @@ def departments(request):
                 for row in rows:
                     title = row["title"].strip()
                     if len(title) > 0:
-                        department = Podrazdeleniya(title=title, p_type=int(row["type"]))
+                        department = Podrazdeleniya(title=title, p_type=int(row["type"]), hospital_id=hospital_pk)
                         department.save()
                         ok = True
         finally:
@@ -453,8 +471,9 @@ def bases(request):
 
 
 def current_user_info(request):
+    user = request.user
     ret = {
-        "auth": request.user.is_authenticated,
+        "auth": user.is_authenticated,
         "doc_pk": -1,
         "username": "",
         "fio": "",
@@ -464,20 +483,22 @@ def current_user_info(request):
         "user_services": [],
         "rmis_enabled": SettingManager.get("rmis_enabled", default='false', default_type='b'),
     }
+    doctorprofile = request.user.doctorprofile
     if ret["auth"]:
-        ret["username"] = request.user.username
-        ret["fio"] = request.user.doctorprofile.fio
-        ret["groups"] = list(request.user.groups.values_list('name', flat=True))
-        if request.user.is_superuser:
+        ret["username"] = user.username
+        ret["fio"] = doctorprofile.fio
+        ret["groups"] = list(user.groups.values_list('name', flat=True))
+        if user.is_superuser:
             ret["groups"].append("Admin")
-        ret["doc_pk"] = request.user.doctorprofile.pk
-        ret["rmis_location"] = request.user.doctorprofile.rmis_location
-        ret["rmis_login"] = request.user.doctorprofile.rmis_login
-        ret["rmis_password"] = request.user.doctorprofile.rmis_password
-        ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye_id, "title": request.user.doctorprofile.podrazdeleniye.title}
-        ret["restricted"] = [x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]
-        ret["user_services"] = [x.pk for x in request.user.doctorprofile.users_services.all() if x not in ret["restricted"]]
-        ret["su"] = request.user.is_superuser
+        ret["doc_pk"] = doctorprofile.pk
+        ret["rmis_location"] = doctorprofile.rmis_location
+        ret["rmis_login"] = doctorprofile.rmis_login
+        ret["rmis_password"] = doctorprofile.rmis_password
+        ret["department"] = {"pk": doctorprofile.podrazdeleniye_id, "title": doctorprofile.podrazdeleniye.title}
+        ret["restricted"] = [x.pk for x in doctorprofile.restricted_to_direct.all()]
+        ret["user_services"] = [x.pk for x in doctorprofile.users_services.all() if x not in ret["restricted"]]
+        ret["su"] = user.is_superuser
+        ret["hospital"] = doctorprofile.hospital_id
 
         en = SettingManager.en()
         ret["extended_departments"] = {}
@@ -519,8 +540,8 @@ def directive_from(request):
     data = []
     for dep in (
         Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)
-        .prefetch_related(Prefetch('doctorprofile_set', queryset=users.DoctorProfile.objects.filter(user__groups__name="Лечащий врач").order_by("fio")))
-        .order_by('title')
+            .prefetch_related(Prefetch('doctorprofile_set', queryset=users.DoctorProfile.objects.filter(user__groups__name="Лечащий врач").order_by("fio")))
+            .order_by('title')
     ):
         d = {
             "pk": dep.pk,
@@ -594,8 +615,8 @@ def statistics_tickets_get(request):
                 "primary": row.primary_visit,
                 "info": row.info,
                 "disp": row.get_dispensary_registration_display()
-                + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
-                + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
+                        + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
+                        + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
                 "result": row.result.title if row.result else "",
                 "outcome": row.outcome.title if row.outcome else "",
                 "invalid": row.invalid_ticket,
@@ -688,9 +709,9 @@ def rmis_confirm_list(request):
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
     d = (
         directions.Napravleniya.objects.filter(istochnik_f__rmis_auto_send=False, force_rmis_send=False, issledovaniya__time_confirmation__range=(date_start, date_end))
-        .exclude(issledovaniya__time_confirmation__isnull=True)
-        .distinct()
-        .order_by("pk")
+            .exclude(issledovaniya__time_confirmation__isnull=True)
+            .distinct()
+            .order_by("pk")
     )
     data["directions"] = [{"pk": x.pk, "patient": {"fiodr": x.client.individual.fio(full=True), "card": x.client.number_with_type()}, "fin": x.fin_title} for x in d]
     return JsonResponse(data)
@@ -1191,8 +1212,22 @@ def actual_districts(request):
     purposes = DoctorCall.PURPOSES
     purposes = [{'id': row[0], 'label': row[1]} for row in purposes]
 
-    hospitals = Hospitals.objects.all().filter(hide=False).order_by('short_title').values('pk', 'short_title', 'title')
+    hospitals = Hospitals.objects.filter(hide=False).order_by('short_title').values('pk', 'short_title', 'title')
     hospitals = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["short_title"] or x["title"]} for x in hospitals]]
 
     data = {'rows': rows, 'docs': users, 'purposes': purposes, 'hospitals': hospitals}
     return JsonResponse(data)
+
+
+def hospitals(request):
+    rows = Hospitals.objects.filter(hide=False).order_by('-is_default', 'short_title').values('pk', 'short_title', 'title', 'code_tfoms')
+    return JsonResponse({
+        "hospitals": [
+            {
+                "id": x['pk'],
+                "label": x["short_title"] or x["title"],
+                "code_tfoms": x["code_tfoms"],
+            }
+            for x in rows
+        ]
+    })

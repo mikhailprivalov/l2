@@ -1,4 +1,5 @@
-import departments_directory from '../../api/departments-directory'
+import api from '@/api'
+import departments_directory from '@/api/departments-directory'
 import * as mutation_types from '../mutation-types'
 import * as action_types from '../action-types'
 
@@ -6,10 +7,13 @@ const state = {
   all: [],
   old_all: [],
   can_edit: false,
-  department_types: []
+  department_types: [],
+  hospitals: [],
 }
 
 const getters = {
+  hospitals: state => state.hospitals || [],
+  hospitalsById: (state, getters) => getters.hospitals.reduce((a, b) => ({...a, [b.id]: b}), {}),
   allDepartments: state => state.all || [],
   oldDepartments: state => state.old_all || [],
   diff_departments: (state, getters) => {
@@ -33,14 +37,17 @@ const getters = {
 
 const actions = {
   async [action_types.GET_ALL_DEPARTMENTS]({commit}) {
-    const answer = await departments_directory.getDepartments()
+    const answer = await departments_directory.getDepartments({method: 'GET'})
     let departments = answer.departments
     commit(mutation_types.UPDATE_DEPARTMENTS, {departments})
     commit(mutation_types.UPDATE_OLD_DEPARTMENTS, {departments})
     commit(mutation_types.SET_CAN_EDIT, {can_edit: answer.can_edit})
     commit(mutation_types.SET_TYPES, {department_types: answer.types})
   },
-
+  async [action_types.LOAD_HOSPITALS]({commit}) {
+    const data = await api('hospitals');
+    commit(mutation_types.SET_HOSPITALS, data);
+  },
   async [action_types.UPDATE_DEPARTMENTS]({commit, getters}, {type_update, to_update}) {
     const data = to_update || getters.diff_departments
     const type = type_update || 'update'
@@ -76,6 +83,9 @@ const actions = {
 }
 
 const mutations = {
+  [mutation_types.SET_HOSPITALS](state, {hospitals}) {
+    state.hospitals = hospitals
+  },
   [mutation_types.UPDATE_DEPARTMENTS](state, {departments}) {
     state.all = departments
   },

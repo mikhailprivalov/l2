@@ -36,7 +36,7 @@ def statistic_page(request):
     getters_material = DoctorProfile.objects.filter(user__groups__name='Заборщик биоматериала').distinct()
     statistics_tickets_users = DoctorProfile.objects.filter(user__groups__name__in=['Оформление статталонов', 'Лечащий врач', 'Лаборант', 'Врач-лаборант']).distinct()
     statistics_tickets_deps = Podrazdeleniya.objects.all().order_by('title')
-    statistics_researches_res = Researches.objects.all().filter(hide=False, is_slave_hospital=False, is_hospital=False).order_by('title')
+    statistics_researches_res = Researches.objects.filter(hide=False, is_slave_hospital=False, is_hospital=False).order_by('title')
 
     type_by_key_extract = HospitalService.TYPES_BY_KEYS.get('extracts', -1)
     extract_research = None

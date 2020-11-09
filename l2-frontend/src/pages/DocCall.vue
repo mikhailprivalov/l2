@@ -80,7 +80,7 @@
               </div>
               <div class="col-xs-9">
                 <treeselect :multiple="false" :disable-branch-nodes="true" :options="hospitals"
-                    placeholder="Больницв не выбрана" v-model="hospital"
+                    placeholder="Больница не выбрана" v-model="hospital"
                     :append-to-body="true"
                 />
               </div>
