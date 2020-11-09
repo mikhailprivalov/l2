@@ -190,10 +190,10 @@ def form_02(request_data):
     external = True if is_external == 0 else False
     out_call = ''
     if external:
-        out_call = "внешние"
+        out_call = " <u>внешние</u>"
 
     objs = []
-    objs.append(Paragraph(f"Вызова (обращения) <u>{out_call}</u> {normalize_dash_date(date)}", styleCenterBold))
+    objs.append(Paragraph(f"Вызова (обращения){out_call} {normalize_dash_date(date)}", styleCenterBold))
     objs.append(Spacer(1, 5 * mm))
 
     time_start = f'{date} {request_data.get("time_start", "00:00")}'
@@ -202,11 +202,10 @@ def form_02(request_data):
     datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M')
     if external:
         doc_call = DoctorCall.objects.filter(
-            exec_at__date=datetime.datetime.strptime(date, '%Y-%m-%d').date(),
             create_at__range=[datetime_start, datetime_end],
         )
     else:
-        doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), create_at__range=[datetime_start, datetime_end])
+        doc_call = DoctorCall.objects.filter(create_at__range=[datetime_start, datetime_end])
     doc_call = doc_call.filter(is_external=external, cancel=cancel)
 
     if hospital > -1:
@@ -267,7 +266,7 @@ def form_02(request_data):
         opinion.append(
             [
                 Paragraph(f"{strike_o}{count}{strike_cl}", styleCenter),
-                Paragraph(f"{strike_o}{i.client.individual.fio()} ({i.client.number_with_type()}){org}\n{create_at}{strike_cl}", styleCenter),
+                Paragraph(f"{strike_o}{i.client.individual.fio()} ({i.client.number_with_type()}){org}<br/>{create_at}{strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{i.address.replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{title}{strike_cl}", style),
                 Paragraph(f"{strike_o}{(i.phone or i.client.phone).replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", style),
