@@ -15,6 +15,10 @@ class Hospitals(models.Model):
     def get_default_hospital() -> Optional['Hospitals']:
         return Hospitals.objects.filter(hide=False, is_default=True).first()
 
+    @property
+    def safe_short_title(self):
+        return self.short_title or self.title
+
     def __str__(self):
         return f"{self.short_title} – {self.code_tfoms}"
 

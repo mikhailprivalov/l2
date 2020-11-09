@@ -909,17 +909,23 @@ def load_docprofile_by_group(request):
 @login_required
 @group_required("Создание и редактирование пользователей")
 def users_view(request):
+    request_data = json.loads(request.body)
+    hospital_pk = request_data.get('selected_hospital', request.user.doctorprofile.hospital_id)
+
+    can_edit = request.user.is_superuser or hospital_pk == request.user.doctorprofile.hospital_id
+
     data = []
 
-    podr = Podrazdeleniya.objects.all().order_by("title")
-    for x in podr:
-        otd = {"pk": x.pk, "title": x.title, "users": []}
-        docs = users.DoctorProfile.objects.filter(podrazdeleniye=x).order_by('fio')
-        if not request.user.is_superuser:
-            docs = docs.filter(user__is_superuser=False)
-        for y in docs:
-            otd["users"].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username})
-        data.append(otd)
+    if can_edit:
+        podr = Podrazdeleniya.objects.filter(hospital_id=hospital_pk).order_by("title")
+        for x in podr:
+            otd = {"pk": x.pk, "title": x.title, "users": []}
+            docs = users.DoctorProfile.objects.filter(podrazdeleniye=x, hospital_id=hospital_pk).order_by('fio')
+            if not request.user.is_superuser:
+                docs = docs.filter(user__is_superuser=False)
+            for y in docs:
+                otd["users"].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username})
+            data.append(otd)
 
     spec = users.Speciality.objects.all().order_by("title")
     spec_data = []
@@ -989,6 +995,12 @@ def user_save_view(request):
     rmis_password = ud["rmis_password"].strip() or None
     personal_code = ud.get("personal_code", 0)
     rmis_resource_id = ud["rmis_resource_id"].strip() or None
+    hospital_pk = request_data.get('hospital_pk', request.user.doctorprofile.hospital_id)
+
+    can_edit = request.user.is_superuser or hospital_pk == request.user.doctorprofile.hospital_id
+
+    if not can_edit:
+        return JsonResponse({"ok": False})
 
     npk = pk
     if pk == -1:
@@ -1038,6 +1050,7 @@ def user_save_view(request):
             doc.rmis_location = rmis_location
             doc.personal_code = personal_code
             doc.rmis_resource_id = rmis_resource_id
+            doc.hospital_id = hospital_pk
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:

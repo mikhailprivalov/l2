@@ -3,6 +3,7 @@ import uuid
 from django.contrib.auth.models import User
 from django.db import models
 
+from appconf.manager import SettingManager
 from podrazdeleniya.models import Podrazdeleniya
 
 
@@ -58,6 +59,12 @@ class DoctorProfile(models.Model):
             self.save()
         c = '{:X>5}'.format(self.pk) + self.login_id.hex[:5]
         return c
+
+    @property
+    def hospital_safe_title(self):
+        if not self.hospital:
+            return SettingManager.get("org_title")
+        return self.hospital.safe_short_title
 
     def get_fio(self, dots=True):
         """
