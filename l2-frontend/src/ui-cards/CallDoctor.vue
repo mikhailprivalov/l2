@@ -41,7 +41,7 @@
         <div class="col-xs-6 col-form left" style="padding-bottom: 0">
           <div class="form-row sm-f" style="border-top: none">
             <div class="row-t">Дата</div>
-            <input class="form-control" type="date" v-model="date" :min="td">
+            <input class="form-control" readonly type="date" v-model="date" :min="td">
           </div>
         </div>
         <div class="col-xs-6 col-form right" style="padding-bottom: 0">
