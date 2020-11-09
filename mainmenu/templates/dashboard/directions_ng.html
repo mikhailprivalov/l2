@@ -1,6 +1,7 @@
 {% extends "dbase.html" %}
 {% block title %}Направления и картотека{% endblock %}
 {% block container %}container-fluid{% endblock %}
+
 {% block navbar_classes %}fluid-nav-cont{% endblock %}
 
 {% block extended_header %}
@@ -33,26 +34,6 @@
 
         .navbar {
             margin-bottom: 3px;
-        }
-
-
-        @media (min-width: 768px) {
-            .fluid-nav-cont:not(.sloader) .nav-cont {
-                display: flex;
-                justify-content: stretch;
-            }
-
-            .fluid-nav {
-                flex: 1;
-                display: flex;
-                justify-content: flex-end;
-            }
-        }
-
-        @media (max-width: 767px) {
-            .fluid-nav {
-                display: none;
-            }
         }
     </style>
 {% endblock %}
