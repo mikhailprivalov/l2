@@ -1,5 +1,6 @@
 export default [
   {url: '/forms/pdf?type=101.05&card_pk={card}', title: 'История изменений данных пациента'},
+  {url: '/forms/pdf?type=101.06&card_pk={card}', title: 'Согласие COVID-19'},
   {url: '/forms/pdf?type=101.02&card_pk={card}', title: 'Согласие на обработку персональных данных'},
   {url: '/forms/pdf?type=101.03&card_pk={card}', title: 'Согласие на медицинское вмешательство'},
   {url: '/forms/pdf?type=101.01&individual={individual}', title: 'Согласие на ВИЧ-исследование', not_internal: true},
