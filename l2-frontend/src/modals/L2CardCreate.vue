@@ -110,7 +110,7 @@
       <div class="row" v-else>
         <div class="col-xs-6" v-if="l2_tfoms">
           <div class="info-row">
-            <template v-if="card.tfoms_idp">Есть связь с ТФОМС</template>
+            <template v-if="card.tfoms_idp || card.tfoms_enp">Есть связь с ТФОМС</template>
             <template v-else>Не связано с ТФОМС</template>
             <template v-if="time_tfoms_last_sync">({{time_tfoms_last_sync}})</template>
             <a href="#" class="a-under" @click.prevent="sync_tfoms" tabindex="-1">сверка</a>
@@ -560,6 +560,7 @@
           phone: '',
           harmful: '',
           tfoms_idp: null,
+          tfoms_enp: null,
           time_tfoms_last_sync: null,
         },
         individuals: [],

@@ -1,12 +1,22 @@
 import random
 
 import simplejson as json
+from django.db.models import Q
+from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 import directions.models as directions
+from clients.models import Individual, Card
+from directory.models import Researches
+from doctor_call.models import DoctorCall
+from hospitals.models import Hospitals
 from laboratory.settings import AFTER_DATE
+from laboratory.utils import current_time
 from slog.models import Log
+from tfoms.integration import match_enp
+from utils.data_verification import data_parse
+from utils.dates import normalize_date
 from . import sql_if
 
 
@@ -165,4 +175,67 @@ def make_log(request):
             directions.Napravleniya.objects.filter(pk=k).update(need_resend_n3=False)
 
             Log.log(key=k, type=t, body=json.dumps(body.get(k, {})))
-    return Response({"ok": True,})
+    return Response({"ok": True})
+
+
+@api_view(['POST'])
+def check_enp(request):
+    enp, bd = data_parse(request.body, {'enp': str, 'bd': str})
+
+    enp = enp.replace(' ', '')
+
+    tfoms_data = match_enp(enp)
+
+    if tfoms_data:
+        bdate = tfoms_data.get('birthdate', '').split(' ')[0]
+        if normalize_date(bd) == normalize_date(bdate):
+            return Response({"ok": True, 'patient_data': tfoms_data})
+
+    return Response({"ok": False, 'message': 'Неверные данные или нет прикрепления к поликлинике'})
+
+
+def external_doc_call_create(request):
+    data = json.loads(request.body)
+    org_id = data.get('org_id')
+    patient_data = data.get('patient_data')
+    form = data.get('form')
+    idp = patient_data.get('idp')
+    enp = patient_data.get('enp')
+    comment = form.get('comment')
+    purpose = form.get('purpose')
+
+    Individual.import_from_tfoms(patient_data)
+    individuals = Individual.objects.filter(Q(tfoms_enp=enp or '###$fakeenp$###') | Q(tfoms_idp=idp or '###$fakeidp$###'))
+
+    individual_obj = individuals.first()
+    if not individual_obj:
+        return JsonResponse({"ok": False, "number": None})
+
+    card = Card.objects.filter(individual=individual_obj, base__internal_type=True).first()
+    research = Researches.objects.filter(title='Обращение пациента').first()
+    hospital = Hospitals.objects.filter(code_tfoms=org_id).first()
+
+    if not card or not research or not hospital:
+        return JsonResponse({"ok": False, "number": None})
+
+    research_pk = research.pk
+
+    doc_call = DoctorCall.doctor_call_save(
+        {
+            'card': card,
+            'research': research_pk,
+            'address': card.main_address,
+            'district': -1,
+            'date': current_time(),
+            'comment': comment,
+            'phone': form.get('phone'),
+            'doc': -1,
+            'purpose': int(purpose),
+            'hospital': hospital.pk,
+            'external': True,
+        }
+    )
+    doc_call.external_num = f"{org_id}{doc_call.pk}"
+    doc_call.save()
+
+    return JsonResponse({"ok": True, "number": doc_call.pk})

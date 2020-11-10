@@ -41,7 +41,7 @@
         <div class="col-xs-6 col-form left" style="padding-bottom: 0">
           <div class="form-row sm-f" style="border-top: none">
             <div class="row-t">Дата</div>
-            <input class="form-control" type="date" v-model="date" :min="td">
+            <input class="form-control" readonly type="date" v-model="date" :min="td">
           </div>
         </div>
         <div class="col-xs-6 col-form right" style="padding-bottom: 0">
@@ -254,7 +254,7 @@
         this.card = card
         this.card.doc = -1
         this.card.docs = docs
-        this.card.purpose = -1
+        this.card.purpose = (purposes.find(p => p.label === 'Другое') || {id: purposes[0].id}).id
         this.card.purposes = purposes
         this.card.hospital = -1
         this.card.hospitals = hospitals

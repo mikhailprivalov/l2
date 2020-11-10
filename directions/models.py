@@ -77,9 +77,7 @@ class TubesRegistration(models.Model):
     time_recive = models.DateTimeField(null=True, blank=True, help_text='Время получения материала', db_index=True)
     doc_recive = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docrecive', help_text='Кто получил материал', on_delete=models.SET_NULL)
     barcode = models.CharField(max_length=255, null=True, blank=True, help_text='Штрих-код или номер ёмкости', db_index=True)
-
     notice = models.CharField(max_length=512, default="", blank=True, help_text='Замечания', db_index=True)
-
     daynum = models.IntegerField(default=0, blank=True, null=True, help_text='Номер принятия ёмкости среди дня в лаборатории')
 
     @property

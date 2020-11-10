@@ -9,5 +9,7 @@ urlpatterns = [
     path('result/sendamd', views.result_amd_send),
     path('direction/data', views.direction_data),
     path('iss/data', views.issledovaniye_data),
+    path('check-enp', views.check_enp),
     path('log', views.make_log),
+    path('doc-call-create', views.external_doc_call_create),
 ]

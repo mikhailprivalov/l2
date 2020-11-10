@@ -17,6 +17,7 @@ from forms.forms_func import primary_reception_get_data
 from laboratory.settings import FONTS_FOLDER
 from api.plans.sql_func import get_plans_by_pk
 from doctor_call.models import DoctorCall
+from laboratory.utils import strdatetime
 from list_wait.models import ListWait
 import datetime
 from utils.dates import normalize_dash_date, try_parse_range
@@ -149,7 +150,7 @@ def form_02(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
-        buffer, pagesize=landscape(A4), leftMargin=20 * mm, rightMargin=12 * mm, topMargin=6 * mm, bottomMargin=4 * mm, allowSplitting=1, title="Форма {}".format("План операций")
+        buffer, pagesize=landscape(A4), leftMargin=20 * mm, rightMargin=12 * mm, topMargin=6 * mm, bottomMargin=4 * mm, allowSplitting=1, title="Форма – Вызов врача"
     )
 
     styleSheet = getSampleStyleSheet()
@@ -178,18 +179,34 @@ def form_02(request_data):
     styleCenter.alignment = TA_CENTER
 
     date = request_data["date"]
-    district = int(request_data["district"])
+    district = int(request_data.get("district", -1) or -1)
     is_canceled = int(request_data["cancel"])
-    doc_assigned = int(request_data["doc"])
-    purpose_id = int(request_data["purpose"])
-    hospital = int(request_data["hospital"])
+    doc_assigned = int(request_data.get("doc", -1) or -1)
+    purpose_id = int(request_data.get("purpose", -1) or -1)
+    hospital = int(request_data.get("hospital", -1) or -1)
     cancel = True if is_canceled == 0 else False
 
+    is_external = int(request_data.get("external", 1))
+    external = True if is_external == 0 else False
+    out_call = ''
+    if external:
+        out_call = " <u>внешние</u>"
+
     objs = []
-    objs.append(Paragraph(f"Вызова (обращения) {normalize_dash_date(date)}", styleCenterBold))
+    objs.append(Paragraph(f"Вызова (обращения){out_call} {normalize_dash_date(date)}", styleCenterBold))
     objs.append(Spacer(1, 5 * mm))
 
-    doc_call = DoctorCall.objects.filter(exec_at=datetime.datetime.strptime(date, '%Y-%m-%d'), cancel=cancel)
+    time_start = f'{date} {request_data.get("time_start", "00:00")}'
+    time_end = f'{date} {request_data.get("time_end", "23:59")}'
+    datetime_start = datetime.datetime.strptime(time_start, '%Y-%m-%d %H:%M')
+    datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M')
+    if external:
+        doc_call = DoctorCall.objects.filter(
+            create_at__range=[datetime_start, datetime_end],
+        )
+    else:
+        doc_call = DoctorCall.objects.filter(create_at__range=[datetime_start, datetime_end])
+    doc_call = doc_call.filter(is_external=external, cancel=cancel)
 
     if hospital > -1:
         doc_call = doc_call.filter(hospital__pk=hospital)
@@ -200,7 +217,9 @@ def form_02(request_data):
     if purpose_id > -1:
         doc_call = doc_call.filter(purpose=purpose_id)
 
-    if hospital + doc_assigned + district + purpose_id > -4:
+    if external:
+        doc_call = doc_call.order_by('hospital', 'pk')
+    elif hospital + doc_assigned + district + purpose_id > -4:
         doc_call = doc_call.order_by("pk")
     else:
         doc_call = doc_call.order_by("district__title")
@@ -238,21 +257,27 @@ def form_02(request_data):
             who_doc_assigned = i.doc_assigned.fio
         if i.purpose:
             what_purpose = i.get_purpose_display()
+        org = ""
+        if i.hospital:
+            org = f"<br/>{i.hospital.short_title or i.title}"
+
+        create_at = strdatetime(i.create_at)
+
         opinion.append(
             [
                 Paragraph(f"{strike_o}{count}{strike_cl}", styleCenter),
-                Paragraph(f"{strike_o}{i.client.individual.fio()} ({i.client.number_with_type()}){strike_cl}", styleCenter),
-                Paragraph(f"{strike_o}{i.address}{strike_cl}", styleCenter),
+                Paragraph(f"{strike_o}{i.client.individual.fio()} ({i.client.number_with_type()}){org}<br/>{create_at}{strike_cl}", styleCenter),
+                Paragraph(f"{strike_o}{i.address.replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{title}{strike_cl}", style),
-                Paragraph(f"{strike_o}{i.client.phone}{strike_cl}", style),
+                Paragraph(f"{strike_o}{(i.phone or i.client.phone).replace('<', '&lt;').replace('>', '&gt;')}{strike_cl}", style),
                 Paragraph(f"{strike_o}{i.research.title}{strike_cl}", style),
-                Paragraph(f"{strike_o}{i.comment}{strike_cl}", style),
+                Paragraph(f"{strike_o}{i.comment.replace('<', '&lt;').replace('>', '&gt;')[:400]}{strike_cl}", style),
                 Paragraph(f"{strike_o}{who_doc_assigned}{strike_cl}", style),
                 Paragraph(f"{strike_o}{what_purpose}{strike_cl}", style),
             ]
         )
 
-    tbl = Table(opinion, colWidths=(10 * mm, 40 * mm, 40 * mm, 15 * mm, 30 * mm, 40 * mm, 30 * mm, 30 * mm, 30 * mm), splitByRow=1, repeatRows=1)
+    tbl = Table(opinion, colWidths=(10 * mm, 40 * mm, 35 * mm, 15 * mm, 25 * mm, 40 * mm, 35 * mm, 30 * mm, 25 * mm), splitByRow=1, repeatRows=1)
 
     tbl.setStyle(
         TableStyle(

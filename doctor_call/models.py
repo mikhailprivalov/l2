@@ -17,6 +17,8 @@ class DoctorCall(models.Model):
         (2, 'Неотложная помощь'),
         (3, 'Обострение хронического заболевания'),
         (4, 'Активное наблюдени'),
+        (5, 'Другое'),
+        (6, 'Выписать рецепт'),
     )
 
     client = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
@@ -29,16 +31,18 @@ class DoctorCall(models.Model):
     district = models.ForeignKey(District, default=None, null=True, blank=True, db_index=True, help_text="Участок", on_delete=models.SET_NULL)
     address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес")
     phone = models.CharField(max_length=20, blank=True, default='')
-    purpose = models.IntegerField(default=0, blank=True, db_index=True, choices=PURPOSES, help_text="Цель вызова")
+    purpose = models.IntegerField(default=5, blank=True, db_index=True, choices=PURPOSES, help_text="Цель вызова")
     doc_assigned = models.ForeignKey(DoctorProfile, db_index=True, null=True, related_name="doc_assigned", help_text='Лечащий врач', on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospitals, db_index=True, null=True, help_text='Больница', on_delete=models.CASCADE)
+    is_external = models.BooleanField(default=False, blank=True, help_text='Внешняя заявка')
+    external_num = models.CharField(max_length=128, blank=True, default='', help_text='Номер внешней заявки')
 
     class Meta:
         verbose_name = 'Вызов'
         verbose_name_plural = 'Вызова на дом'
 
     @staticmethod
-    def doctor_call_save(data, doc_who_create):
+    def doctor_call_save(data, doc_who_create=None):
         patient_card = Card.objects.get(pk=data['card_pk']) if 'card' not in data else data['card']
         research_obj = Researches.objects.get(pk=data['research'])
         if int(data['district']) < 0:
@@ -52,7 +56,7 @@ class DoctorCall(models.Model):
             doc_obj = DoctorProfile.objects.get(pk=data['doc'])
 
         if int(data['purpose']) < 0:
-            purpose = None
+            purpose = 5
         else:
             purpose = int(data['purpose'])
 
@@ -61,9 +65,21 @@ class DoctorCall(models.Model):
         else:
             hospital_obj = Hospitals.objects.get(pk=data['hospital'])
 
-        doc_call = DoctorCall(client=patient_card, research=research_obj, exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'), comment=data['comment'],
-                              doc_who_create=doc_who_create, cancel=False, district=district_obj, address=data['address'], phone=data['phone'],
-                              purpose=purpose, doc_assigned=doc_obj, hospital=hospital_obj)
+        doc_call = DoctorCall(
+            client=patient_card,
+            research=research_obj,
+            exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d') if isinstance(data['date'], str) else data['date'],
+            comment=data['comment'],
+            doc_who_create=doc_who_create,
+            cancel=False,
+            district=district_obj,
+            address=data['address'],
+            phone=data['phone'],
+            purpose=purpose,
+            doc_assigned=doc_obj,
+            hospital=hospital_obj,
+            is_external=data['external'],
+        )
         doc_call.save()
 
         slog.Log(
@@ -72,18 +88,20 @@ class DoctorCall(models.Model):
             body=json.dumps(
                 {
                     "card_pk": patient_card.pk,
+                    "card": str(patient_card),
                     "research": research_obj.title,
-                    "district": district_obj.title,
+                    "district": district_obj.title if district_obj else None,
                     "purpose": doc_call.get_purpose_display(),
                     "doc_assigned": str(doc_obj),
                     "hospital": str(hospital_obj),
-                    "date": data['date'],
+                    "date": str(data['date']),
                     "comment": data['comment'],
+                    "is_external": data['external'],
                 }
             ),
             user=doc_who_create,
         ).save()
-        return doc_call.pk
+        return doc_call
 
     @staticmethod
     def doctor_call_cancel(data, doc_who_create):
@@ -95,12 +113,7 @@ class DoctorCall(models.Model):
         slog.Log(
             key=doc_call.pk,
             type=80004,
-            body=json.dumps(
-                {
-                    "card_pk": doc_call.client.pk,
-                    "status": doc_call.cancel
-                }
-            ),
+            body=json.dumps({"card_pk": doc_call.client.pk, "status": doc_call.cancel}),
             user=doc_who_create,
         ).save()
         return doc_call.pk
