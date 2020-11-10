@@ -13,6 +13,7 @@ class Command(BaseCommand):
         if not default_h:
             print('Не настроена организация по умолчанию')
             return
-        Podrazdeleniya.objects.filter(hospital__isnull=True).update(hospital=default_h)
+        Podrazdeleniya.objects.filter(hospital__isnull=True, p_type=Podrazdeleniya.DEPARTMENT).update(hospital=default_h)
+        Podrazdeleniya.objects.filter(hospital__isnull=False).exclude(p_type=Podrazdeleniya.DEPARTMENT).update(hospital=None)
         DoctorProfile.objects.filter(hospital__isnull=True).update(hospital=default_h)
 
