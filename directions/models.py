@@ -15,6 +15,7 @@ import slog.models as slog
 import users.models as umodels
 import cases.models as cases
 from api.models import Application
+from hospitals.models import Hospitals
 from laboratory.utils import strdate, localtime, current_time
 from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
@@ -381,6 +382,7 @@ class Napravleniya(models.Model):
     external_organization = models.ForeignKey(ExternalOrganization, default=None, blank=True, null=True, help_text='Внешняя организация', on_delete=models.SET_NULL)
     harmful_factor = models.CharField(max_length=255, blank=True, default='')
     workplace = models.CharField(max_length=255, blank=True, default='', db_index=True)
+    hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, on_delete=models.SET_NULL)
 
     @property
     def data_sozdaniya_local(self):
@@ -947,6 +949,7 @@ class Issledovaniya(models.Model):
     aggregate_lab = JSONField(null=True, blank=True, default=None, help_text='ID направлений лаборатории, привязаных к стационарному случаю')
     aggregate_desc = JSONField(null=True, blank=True, default=None, help_text='ID направлений описательных, привязаных к стационарному случаю')
     microbiology_conclusion = models.TextField(default=None, null=True, blank=True, help_text='Заключение по микробиологии')
+    external_doc_confirm = models.CharField(max_length=128, blank=True, default='')
 
     @property
     def time_save_local(self):

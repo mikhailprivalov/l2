@@ -15,4 +15,5 @@ urlpatterns = [
     path('check-enp', views.check_enp),
     path('log', views.make_log),
     path('doc-call-create', views.external_doc_call_create),
+    path('research-create', views.external_research_create),
 ]
