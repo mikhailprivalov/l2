@@ -38,14 +38,12 @@ def next_result_direction(request):
     next_n = int(request.GET.get("nextN", 1))
     type_researches = request.GET.get("research", '*')
     d_start = f'{after_date}'
-    dirs = sql_if.direction_collect(d_start, type_researches, next_n)
+    dirs = sql_if.direction_collect(d_start, type_researches, next_n) or []
 
     next_time = None
-    naprs = []
+    naprs = [d[0] for d in dirs]
     if dirs:
-        for i in dirs:
-            naprs.append(i[0])
-            next_time = i[3]
+        next_time = dirs[-1][3]
 
     return Response({"next": naprs, "next_time": next_time, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
 
@@ -107,11 +105,21 @@ def result_amd_send(request):
 def direction_data(request):
     pk = request.GET.get("pk")
     research_pks = request.GET.get("research", '*')
-    direction = directions.Napravleniya.objects.get(pk=pk)
+    direction = (
+        directions.Napravleniya
+        .objects
+        .select_related('istochnik_f', 'client', 'client__individual', 'client__base')
+        .get(pk=pk)
+    )
     card = direction.client
     individual = card.individual
 
-    iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=False)
+    iss = (
+        directions.Issledovaniya
+        .objects
+        .filter(napravleniye=direction, time_confirmation__isnull=False)
+        .select_related('research', 'doc_confirmation')
+    )
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
 
@@ -132,14 +140,14 @@ def direction_data(request):
                 "patronymic": individual.patronymic,
                 "birthday": individual.birthday,
                 "sex": individual.sex,
-                "card": {"base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title,}, "pk": card.pk, "number": card.number,},
+                "card": {"base": {"pk": card.base_id, "title": card.base.title, "short_title": card.base.short_title}, "pk": card.pk, "number": card.number},
             },
             "issledovaniya": [x.pk for x in iss],
             "timeConfirmation": iss[iss_index].time_confirmation,
             "docLogin": iss[iss_index].doc_confirmation.rmis_login if iss[iss_index].doc_confirmation else None,
             "docPassword": iss[iss_index].doc_confirmation.rmis_password if iss[iss_index].doc_confirmation else None,
             "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid if iss[iss_index].doc_confirmation else None,
-            "finSourceTitle": direction.istochnik_f.title,
+            "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else 'ОМС',
             "oldPk": direction.core_id,
             "isExternal": direction.is_external,
         }
@@ -323,10 +331,10 @@ def make_log(request):
         directions.Napravleniya.objects.filter(pk__in=pks_to_resend_l2_false).update(need_resend_l2=False)
 
         for k in pks_to_resend_n3_false:
-            Log.log(key=k, type=t, body=json.dumps(body.get(k, {})))
+            Log.log(key=k, type=t, body=body.get(k, {}))
 
         for k in pks_to_resend_l2_false:
-            Log.log(key=k, type=t, body=json.dumps(body.get(k, {})))
+            Log.log(key=k, type=t, body=body.get(k, {}))
 
     return Response({"ok": True})
 
@@ -596,7 +604,12 @@ def external_research_create(request):
                         ref_m=ref_str,
                     ).save()
             try:
-                Log.log(str(direction.pk), 90000, body=body)
+                Log.log(str(direction.pk), 90000, body={
+                    "org": body.get("org"),
+                    "patient": body.get("patient"),
+                    "financingSource": body.get("financingSource"),
+                    "resultsCount": len(body.get("results")),
+                })
             except Exception as e:
                 logger.exception(e)
             return Response({"ok": True, 'id': str(direction.pk)})
