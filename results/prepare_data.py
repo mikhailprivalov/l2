@@ -344,7 +344,8 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
         ["Пол:", direction.client.individual.sex],
         ["Возраст:", "{} {}".format(direction.client.individual.age_s(direction=direction), individual_birthday)],
     ]
-    data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
+    if not direction.is_external:
+        data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
     data += [
         [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
         ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:", direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "") + number_poliklinika],
