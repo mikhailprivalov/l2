@@ -714,7 +714,7 @@ def result_print(request):
                             f_units = r.get_units()
                         else:
                             continue
-                        if not iss.doc_confirmation and iss.deferred:
+                        if not iss.time_confirmation and iss.deferred:
                             result = "отложен"
                         f = fractions[0]
                         st = TableStyle(
@@ -804,7 +804,7 @@ def result_print(request):
                             tmp.append("")
                             tmp.append("")
 
-                        if iss.doc_confirmation:
+                        if iss.doc_confirmation_fio:
                             if prev_conf != iss.doc_confirmation_fio:
                                 prev_conf = iss.doc_confirmation_fio
                                 prev_date_conf = ""
