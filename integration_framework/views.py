@@ -468,7 +468,7 @@ def external_research_create(request):
     financing_source = (
         directions.IstochnikiFinansirovaniya
         .objects
-        .filter(title=financing_source_title, base__internal_type=True)
+        .filter(title__iexact=financing_source_title, base__internal_type=True)
         .first()
     )
 
