@@ -298,7 +298,7 @@ def result_confirm_list(request):
         iss_pks = json.loads(request.POST["list"])
         for pk in iss_pks:
             issledovaniye = Issledovaniya.objects.get(pk=int(pk))
-            if issledovaniye.doc_save and not issledovaniye.doc_confirmation:  # Если исследование сохранено
+            if issledovaniye.doc_save and not issledovaniye.time_confirmation:  # Если исследование сохранено
                 for r in Result.objects.filter(issledovaniye=issledovaniye):
                     r.get_ref()
                 issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
@@ -742,7 +742,7 @@ def result_print(request):
                                 tmp.append(Paragraph('<font face="FreeSans" size="7">' + get_r(ref) + "</font>", stl))
                                 tmp.append(Paragraph('<font face="FreeSans" size="7">' + f_units + "</font>", stl))
 
-                            if iss.doc_confirmation:
+                            if iss.doc_confirmation_fio:
                                 if prev_conf != iss.doc_confirmation_fio:
                                     prev_conf = iss.doc_confirmation_fio
                                     prev_date_conf = ""
@@ -764,7 +764,7 @@ def result_print(request):
                             tmp.append("")
                             tmp.append("")
 
-                            if iss.doc_confirmation:
+                            if iss.doc_confirmation_fio:
                                 tmp.append(Paragraph('<font face="FreeSansBold" size="7">%s</font>' % iss.doc_confirmation_fio, styleSheet["BodyText"]))
                                 tmp.append(
                                     Paragraph(

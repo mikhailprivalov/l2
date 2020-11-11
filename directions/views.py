@@ -1274,8 +1274,8 @@ def get_issledovaniya(request):
                 res["client_vozrast"] = napr.client.individual.age_s(direction=napr)
                 res["imported_from_rmis"] = napr.imported_from_rmis
                 res["imported_org"] = "" if not napr.imported_org else napr.imported_org.title
-                res["directioner"] = "" if napr.imported_from_rmis else napr.doc.fio
-                res["otd"] = "" if napr.imported_from_rmis else napr.doc.podrazdeleniye.title
+                res["directioner"] = "" if napr.imported_from_rmis or not napr.doc else napr.doc.fio
+                res["otd"] = "" if napr.imported_from_rmis else napr.get_doc_podrazdeleniye_title()
                 res["fin_source"] = "" if napr.imported_from_rmis else napr.fin_title
                 res["ok"] = True
                 res["in_rmis"] = napr.result_rmis_send
