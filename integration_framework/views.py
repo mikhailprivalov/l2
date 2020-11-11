@@ -18,6 +18,7 @@ from tfoms.integration import match_enp
 from utils.data_verification import data_parse
 from utils.dates import normalize_date
 from . import sql_if
+from directions.models import Napravleniya
 
 
 @api_view()
@@ -245,41 +246,96 @@ def external_doc_call_create(request):
 def external_research_create(request):
     if request.method == "POST":
         body = json.loads(request.body)
-        patient = body.get["patient"]
+        patient = body.get("patient")
         enp = patient["enp"].replace(' ', '')
-        tfoms_data = match_enp(enp)
-        if not tfoms_data:
-            return Response({"ok": False, 'message': 'Неверные данные полиса в ТФОМС нет такого пациента'})
 
-        org = body.get["org"]
+        org = body.get("org")
         code_tfoms = org["codeTfoms"]
         oid_org = org["oidOrg"]
         hospital = Hospitals.objects.filter(Q(code_tfoms=code_tfoms) | Q(oid_org=oid_org)).first()
         if not hospital:
             return Response({"ok": False, 'message': 'Неверные данные организации/не найдена'})
 
-        interpretation = body.get["interpretation"][0]
-        fsli = interpretation["idFsli"]
-        confirm = interpretation["issued"]
-        result = interpretation["valueString"]
-        referenceRange = interpretation["referenceRange"]
-        comments = interpretation["comments"]
-        docResourceL2 = interpretation["docResourceL2"]
-        docResourceRMIS = interpretation["docResourceRMIS"]
-        fraction = Fractions.objects.get(fsli=fsli)
-        research = fraction.research
-        #все услуги в одном bundl-е в одно направление
-        # Создать направление
-        client = Clients.Card.objects.get(pk=client_id)
-        dir = Napravleniya.gen_napravleniye()
+        # Создать карты
+        individuals = Individual.objects.filter(tfoms_enp=enp)
+        if not individuals:
+            tfoms_data = match_enp(enp)
+            if not tfoms_data:
+                return Response({"ok": False, 'message': 'Неверные данные полиса в ТФОМС нет такого пациента'})
+            Individual.import_from_tfoms(tfoms_data)
+            individuals = Individual.objects.filter(tfoms_enp=enp)
 
-        #create issledovaniya_by_dir
-        Issledovaniya()
-        #создаем результаты с фракциями с созданными на исследования
-        Result
-        #печатная форма
+        individual_obj = individuals.first()
+        client = Card.objects.filter(individual=individual_obj).first()
+        if not client:
+            client = Card.add_l2_card(individual_obj)
 
-        return Response({"ok": True, 'id': dir.pk})
+        results = body.get("results")
+        correct_data = correct_input_data(results)
+        if not correct_data["correct"]:
+            return Response({"ok": False, 'message': correct_data["message"]})
+
+        financingSource = body.get("financingSource")
+        x =""
+        dir = Napravleniya(client=client, istochnik_f=x, polis_who_give=x, polis_n=x).save()
+        for r in results:
+            code_research = r.get("codeResearch")
+            research = Researches.objects.filter(code=code_research).first()
+            iss = directions.Issledovaniya(napravleniye=dir).save()
+            tests = r.get("tests")
+            for t in tests:
+                fsli_code = t.get("idFsli")
+                fraction = Fractions.objects.filter(fsli=fsli_code).first()
+                time_confirmation = t.get("dateTimeConfirm")
+                time_get = t.get("dateTimeGet")
+                time_recieve = t.get("dateTimeReceive")
+                value = t.get("valueString")
+                units = t.get("units")
+                doc_confirm = t.get("docConfirm")
+                reference_value = t.get("referenceValue")
+                reference_range = t.get("referenceRange")
+                comments = t.get("comments")
+                directions.Result(issledovaniye=iss, fraction=fraction, value=value, units=units).save()
+                iss.external_doc_confirm = doc_confirm
+                iss.time_confirmation = time_confirmation
+
+    return Response({"ok": True, 'id': dir.pk})
+
+
+def correct_input_data(results):
+    for r in results:
+        code_research = r.get("codeResearch")
+        research = Researches.objects.filter(code=code_research).first()
+        if not research:
+            return {"correct": False, "message": "Услуга с таким кодом не найдена"}
+        tests = r.get("tests")
+        for t in tests:
+            fsli_code = t.get("idFsli")
+            fraction = Fractions.objects.filter(fsli=fsli_code).first()
+            if not fraction:
+                return {"correct": False, "message": f"Тест с кодом {fsli_code} не нацден "}
+            time_confirmation = t.get("dateTimeConfirm")
+            time_get = t.get("dateTimeGet")
+            time_recieve = t.get("dateTimeReceive")
+            value = t.get("valueString")
+            if not value:
+                return {"correct": False, "message": "результа пустой"}
+
+            unit = t.get("unit")
+            doc_confirm = t.get("docConfirm")
+            if not doc_confirm:
+                return {"correct": False, "message": "Исполнитель не указан"}
+            reference_value = t.get("referenceValue")
+            if len(reference_value) > 50:
+                return {"correct": False, "message": "превышено длина референсного значения"}
+            comments = t.get("comments")
+            if len(comments) > 500:
+                return {"correct": False, "message": "превышено длина комментария"}
+    return {"correct": True, "message": "данные корректны"}
+
+
+
+
 
 
 
