@@ -425,7 +425,7 @@ def external_research_create(request):
 
     body = json.loads(request.body)
 
-    old_pk = body.get("oldPk")
+    old_pk = body.get("oldId")
     org = body.get("org")
     code_tfoms = org.get("codeTFOMS")
     oid_org = org.get("oid")
@@ -499,6 +499,7 @@ def external_research_create(request):
                 direction.polis_n = card.polis.number if card.polis else None
                 direction.save()
                 direction.issledovaniya_set.all().delete()
+                print('Replacing all data for', old_pk)
             else:
                 direction = (
                     Napravleniya
