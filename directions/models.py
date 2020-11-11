@@ -15,6 +15,7 @@ import slog.models as slog
 import users.models as umodels
 import cases.models as cases
 from api.models import Application
+from hospitals.models import Hospitals
 from laboratory.utils import strdate, localtime, current_time
 from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
@@ -379,6 +380,7 @@ class Napravleniya(models.Model):
     external_organization = models.ForeignKey(ExternalOrganization, default=None, blank=True, null=True, help_text='Внешняя организация', on_delete=models.SET_NULL)
     harmful_factor = models.CharField(max_length=255, blank=True, default='')
     workplace = models.CharField(max_length=255, blank=True, default='', db_index=True)
+    hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, on_delete=models.SET_NULL)
 
     @property
     def data_sozdaniya_local(self):

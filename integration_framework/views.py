@@ -8,7 +8,7 @@ from rest_framework.response import Response
 
 import directions.models as directions
 from clients.models import Individual, Card
-from directory.models import Researches
+from directory.models import Researches, Fractions
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
 from laboratory.settings import AFTER_DATE
@@ -239,3 +239,58 @@ def external_doc_call_create(request):
     doc_call.save()
 
     return JsonResponse({"ok": True, "number": doc_call.pk})
+
+
+@api_view(['POST'])
+def external_research_create(request):
+    if request.method == "POST":
+        body = json.loads(request.body)
+        patient = body.get["patient"]
+        enp = patient["enp"].replace(' ', '')
+        tfoms_data = match_enp(enp)
+        if not tfoms_data:
+            return Response({"ok": False, 'message': 'Неверные данные полиса в ТФОМС нет такого пациента'})
+
+        org = body.get["org"]
+        code_tfoms = org["codeTfoms"]
+        oid_org = org["oidOrg"]
+        hospital = Hospitals.objects.filter(Q(code_tfoms=code_tfoms) | Q(oid_org=oid_org)).first()
+        if not hospital:
+            return Response({"ok": False, 'message': 'Неверные данные организации/не найдена'})
+
+        interpretation = body.get["interpretation"][0]
+        fsli = interpretation["idFsli"]
+        confirm = interpretation["issued"]
+        result = interpretation["valueString"]
+        referenceRange = interpretation["referenceRange"]
+        comments = interpretation["comments"]
+        docResourceL2 = interpretation["docResourceL2"]
+        docResourceRMIS = interpretation["docResourceRMIS"]
+        fraction = Fractions.objects.get(fsli=fsli)
+        research = fraction.research
+        #все услуги в одном bundl-е в одно направление
+        # Создать направление
+        client = Clients.Card.objects.get(pk=client_id)
+        dir = Napravleniya.gen_napravleniye()
+
+        #create issledovaniya_by_dir
+        Issledovaniya()
+        #создаем результаты с фракциями с созданными на исследования
+        Result
+        #печатная форма
+
+        return Response({"ok": True, 'id': dir.pk})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
