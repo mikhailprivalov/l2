@@ -244,40 +244,40 @@ def external_doc_call_create(request):
 
 @api_view(['POST'])
 def external_research_create(request):
-    if request.method == "POST":
-        body = json.loads(request.body)
-        patient = body.get("patient")
-        enp = patient["enp"].replace(' ', '')
+    body = json.loads(request.body)
+    patient = body.get("patient")
+    enp = patient["enp"].replace(' ', '')
 
-        org = body.get("org")
-        code_tfoms = org["codeTfoms"]
-        oid_org = org["oidOrg"]
-        hospital = Hospitals.objects.filter(Q(code_tfoms=code_tfoms) | Q(oid_org=oid_org)).first()
-        if not hospital:
-            return Response({"ok": False, 'message': 'Неверные данные организации/не найдена'})
+    org = body.get("org")
+    code_tfoms = org["codeTfoms"]
+    oid_org = org["oidOrg"]
+    hospital = Hospitals.objects.filter(Q(code_tfoms=code_tfoms) | Q(oid_org=oid_org)).first()
+    if not hospital:
+        return Response({"ok": False, 'message': 'Неверные данные организации/не найдена'})
 
-        # Создать карты
+    # Создать карты
+    individuals = Individual.objects.filter(tfoms_enp=enp)
+    if not individuals:
+        tfoms_data = match_enp(enp)
+        if not tfoms_data:
+            return Response({"ok": False, 'message': 'Неверные данные полиса в ТФОМС нет такого пациента'})
+        Individual.import_from_tfoms(tfoms_data)
         individuals = Individual.objects.filter(tfoms_enp=enp)
-        if not individuals:
-            tfoms_data = match_enp(enp)
-            if not tfoms_data:
-                return Response({"ok": False, 'message': 'Неверные данные полиса в ТФОМС нет такого пациента'})
-            Individual.import_from_tfoms(tfoms_data)
-            individuals = Individual.objects.filter(tfoms_enp=enp)
 
-        individual_obj = individuals.first()
-        client = Card.objects.filter(individual=individual_obj).first()
-        if not client:
-            client = Card.add_l2_card(individual_obj)
+    individual_obj = individuals.first()
+    client = Card.objects.filter(individual=individual_obj).first()
+    if not client:
+        client = Card.add_l2_card(individual_obj)
 
-        results = body.get("results")
-        correct_data = correct_input_data(results)
-        if not correct_data["correct"]:
-            return Response({"ok": False, 'message': correct_data["message"]})
+    results = body.get("results")
+    correct_data = correct_input_data(results)
+    if not correct_data["correct"]:
+        return Response({"ok": False, 'message': correct_data["message"]})
 
-        financingSource = body.get("financingSource")
-        x =""
-        dir = Napravleniya(client=client, istochnik_f=x, polis_who_give=x, polis_n=x).save()
+    financingSource = body.get("financingSource")
+    x =""
+    with transaction.atomic():
+        dir = Napravleniya(client=client, istochnik_f=x, polis_who_give=x, polis_n=x, hospital=x).save()
         for r in results:
             code_research = r.get("codeResearch")
             research = Researches.objects.filter(code=code_research).first()
@@ -313,7 +313,7 @@ def correct_input_data(results):
             fsli_code = t.get("idFsli")
             fraction = Fractions.objects.filter(fsli=fsli_code).first()
             if not fraction:
-                return {"correct": False, "message": f"Тест с кодом {fsli_code} не нацден "}
+                return {"correct": False, "message": f"Тест с кодом {fsli_code} не найдена"}
             time_confirmation = t.get("dateTimeConfirm")
             time_get = t.get("dateTimeGet")
             time_recieve = t.get("dateTimeReceive")
