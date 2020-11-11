@@ -1,7 +1,7 @@
 import inspect
 import sys
 from datetime import date, datetime
-from typing import List, Union
+from typing import List, Union, Dict, Optional
 import logging
 
 import simplejson
@@ -899,7 +899,7 @@ class Card(models.Model):
         :param card_object:
         :return:
         """
-        ind_data = {'ind': self.individual} if not full_empty else {}
+        ind_data: Dict[Optional[Union[str, Dict, Individual]]] = {'ind': self.individual} if not full_empty else {}
         ind_data['age'] = self.individual.age()
         docs = []
         cd = self.get_card_documents()
@@ -947,6 +947,7 @@ class Card(models.Model):
         # document= "полис ОМС"
         ind_data['oms'] = {}
         ind_data['oms']['polis_num'] = ind_documents["polis"]["num"]
+        ind_data['enp'] = ind_documents["polis"]["num"]
         if not ind_data['oms']['polis_num']:
             ind_data['oms']['polis_num'] = None if empty else '___________________________'
         ind_data['oms']['polis_serial'] = ind_documents["polis"]["serial"]
@@ -1038,7 +1039,7 @@ def on_obj_pre_save_log(sender, instance: Union[Document, CardDocUsage, Card, In
         else:
             request = None
 
-        doctorprofile = request.user.doctorprofile if request and request.user.is_authenticated else None
+        doctorprofile = request.user.doctorprofile if request and hasattr(request.user, 'doctorprofile') and request.user.is_authenticated else None
 
         if instance.pk is not None:
             orig = sender.objects.get(pk=instance.pk)

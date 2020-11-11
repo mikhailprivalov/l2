@@ -1,7 +1,8 @@
 import random
 
 import simplejson as json
-from django.db.models import Q
+from django.db import transaction
+from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -13,6 +14,7 @@ from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
 from laboratory.settings import AFTER_DATE
 from laboratory.utils import current_time
+from refprocessor.result_parser import ResultRight
 from slog.models import Log
 from tfoms.integration import match_enp
 from utils.data_verification import data_parse
@@ -64,6 +66,17 @@ def get_dir_n3(request):
 
 
 @api_view()
+def resend_dir_l2(request):
+    next_n = int(request.GET.get("nextN", 5))
+    dirs = sql_if.direction_resend_l2(next_n)
+    result = {"ok": False, "next": []}
+    if dirs:
+        result = {"ok": True, "next": [i[0] for i in dirs]}
+
+    return Response(result)
+
+
+@api_view()
 def result_amd_send(request):
     result = json.loads(request.GET.get("result"))
     resp = {"ok": False}
@@ -96,7 +109,7 @@ def direction_data(request):
         iss = iss.filter(research__pk__in=research_pks.split(','))
 
     if not iss:
-        return Response({"ok": False,})
+        return Response({"ok": False})
 
     iss_index = random.randrange(len(iss))
 
@@ -119,8 +132,15 @@ def direction_data(request):
             "docLogin": iss[iss_index].doc_confirmation.rmis_login,
             "docPassword": iss[iss_index].doc_confirmation.rmis_password,
             "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid,
+            "finSourceTitle": direction.istochnik_f.title,
         }
     )
+
+
+def format_time_if_is_not_none(t):
+    if not t:
+        return None
+    return "{:%Y-%m-%d %H:%M}".format(t)
 
 
 @api_view()
@@ -133,34 +153,150 @@ def issledovaniye_data(request):
     results = directions.Result.objects.filter(issledovaniye=i, fraction__fsli__isnull=False)
 
     if (not ignore_sample and not sample) or not results.exists():
-        return Response({"ok": False,})
+        return Response({"ok": False})
 
     results_data = []
 
     for r in results:
+        refs = r.calc_normal(only_ref=True, raw_ref=False)
+
+        if isinstance(refs, ResultRight):
+            if refs.mode == ResultRight.MODE_CONSTANT:
+                refs = [refs.const]
+            else:
+                refs = [str(refs.range.val_from.value), str(refs.range.val_to.value)]
+                if refs[0] == '-inf':
+                    refs = [f'до {refs[1]}']
+                elif refs[1] == 'inf':
+                    refs = [f'от {refs[0]}']
+                elif refs[0] == refs[1]:
+                    refs = [refs[0]]
+        else:
+            refs = [r.calc_normal(only_ref=True) or '']
+
         results_data.append(
             {
                 "pk": r.pk,
                 "fsli": r.fraction.get_fsli_code(),
                 "value": r.value.replace(',', '.'),
                 "units": r.get_units(),
-                "ref": list(map(lambda rf: rf if '.' in rf else rf + '.0', map(lambda f: f.replace(',', '.'), (r.calc_normal(only_ref=True) or '').split("-")))),
+                "ref": refs,
             }
         )
+
+    time_confirmation = i.time_confirmation_local
 
     return Response(
         {
             "ok": True,
             "pk": pk,
-            "sample": {"date": sample.time_get.date() if sample else i.time_confirmation.date(),},
-            "date": i.time_confirmation.date(),
+            "sample": {"date": sample.time_get.date() if sample else i.time_confirmation.date()},
+            "date": time_confirmation.date(),
+            "dateTimeGet": format_time_if_is_not_none(sample.time_get_local) if sample else None,
+            "dateTimeReceive": format_time_if_is_not_none(sample.time_recive_local) if sample else None,
+            "dateTimeConfirm": format_time_if_is_not_none(time_confirmation),
+            "docConfirm": i.doc_confirmation.get_fio(),
             "results": results_data,
             "code": i.research.code,
+            "comments": i.lab_comment,
         }
     )
 
 
 @api_view()
+def issledovaniye_data_multi(request):
+    pks = request.GET["pks"].split(",")
+    ignore_sample = request.GET.get("ignoreSample") == 'true'
+    iss = (
+        directions.Issledovaniya
+        .objects
+        .filter(pk__in=pks)
+        .select_related('doc_confirmation', 'research')
+        .prefetch_related(
+            Prefetch(
+                'result_set',
+                queryset=(
+                    directions.Result
+                    .objects
+                    .filter(fraction__fsli__isnull=False)
+                    .select_related('fraction')
+                )
+            )
+        )
+        .prefetch_related(
+            Prefetch(
+                'tubes',
+                queryset=(
+                    directions.TubesRegistration
+                    .objects.filter(time_get__isnull=False)
+                )
+            )
+        )
+    )
+
+    result = []
+
+    i: directions.Issledovaniya
+
+    for i in iss:
+        sample = i.tubes.all().first()
+
+        if (not ignore_sample and not sample) or not i.result_set.all().exists():
+            continue
+
+        results_data = []
+
+        for r in i.result_set.all():
+            refs = r.calc_normal(only_ref=True, raw_ref=False)
+
+            if isinstance(refs, ResultRight):
+                if refs.mode == ResultRight.MODE_CONSTANT:
+                    refs = [refs.const]
+                else:
+                    refs = [str(refs.range.val_from.value), str(refs.range.val_to.value)]
+                    if refs[0] == '-inf':
+                        refs = [f'до {refs[1]}']
+                    elif refs[1] == 'inf':
+                        refs = [f'от {refs[0]}']
+                    elif refs[0] == refs[1]:
+                        refs = [refs[0]]
+            else:
+                refs = [r.calc_normal(only_ref=True) or '']
+
+            results_data.append(
+                {
+                    "pk": r.pk,
+                    "fsli": r.fraction.get_fsli_code(),
+                    "value": r.value.replace(',', '.'),
+                    "units": r.get_units(),
+                    "ref": refs,
+                }
+            )
+
+        time_confirmation = i.time_confirmation_local
+
+        result.append(
+            {
+                "pk": i.pk,
+                "sample": {"date": sample.time_get.date() if sample else i.time_confirmation.date()},
+                "date": time_confirmation.date(),
+                "dateTimeGet": format_time_if_is_not_none(sample.time_get_local) if sample else None,
+                "dateTimeReceive": format_time_if_is_not_none(sample.time_recive_local) if sample else None,
+                "dateTimeConfirm": format_time_if_is_not_none(time_confirmation),
+                "docConfirm": i.doc_confirmation.get_fio(),
+                "results": results_data,
+                "code": i.research.code,
+                "comments": i.lab_comment,
+            }
+        )
+    return Response({
+        "ok": len(result) > 0,
+        "pks": pks,
+        "results": result,
+    })
+
+
+@api_view(['GET'])
 def make_log(request):
     key = request.GET.get("key")
     keys = request.GET.get("keys", key).split(",")
@@ -170,11 +306,19 @@ def make_log(request):
     if request.method == "POST":
         body = json.loads(request.body)
 
-    for k in keys:
-        if t in (60000, 60001, 60002, 60003) and k:
-            directions.Napravleniya.objects.filter(pk=k).update(need_resend_n3=False)
+    pks_to_resend_n3_false = [x for x in keys if x] if t in (60000, 60001, 60002, 60003) else []
+    pks_to_resend_l2_false = [x for x in keys if x] if t in (60004, 60005) else []
 
+    with transaction.atomic():
+        directions.Napravleniya.objects.filter(pk__in=pks_to_resend_n3_false).update(need_resend_n3=False)
+        directions.Napravleniya.objects.filter(pk__in=pks_to_resend_l2_false).update(need_resend_l2=False)
+
+        for k in pks_to_resend_n3_false:
             Log.log(key=k, type=t, body=json.dumps(body.get(k, {})))
+
+        for k in pks_to_resend_l2_false:
+            Log.log(key=k, type=t, body=json.dumps(body.get(k, {})))
+
     return Response({"ok": True})
 
 
@@ -194,6 +338,7 @@ def check_enp(request):
     return Response({"ok": False, 'message': 'Неверные данные или нет прикрепления к поликлинике'})
 
 
+@api_view(['POST'])
 def external_doc_call_create(request):
     data = json.loads(request.body)
     org_id = data.get('org_id')
@@ -238,4 +383,16 @@ def external_doc_call_create(request):
     doc_call.external_num = f"{org_id}{doc_call.pk}"
     doc_call.save()
 
-    return JsonResponse({"ok": True, "number": doc_call.pk})
+    return Response({"ok": True, "number": doc_call.pk})
+
+
+@api_view(['POST'])
+def set_core_id(request):
+    data = json.loads(request.body)
+    pk = data.get('pk')
+    core_id = data.get('coreId')
+    n = directions.Napravleniya.objects.get(pk=pk)
+    n.core_id = core_id
+    n.save(update_fields=['core_id'])
+    return Response({"ok": True})
+
