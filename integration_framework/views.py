@@ -173,12 +173,12 @@ def issledovaniye_data(request):
             if refs.mode == ResultRight.MODE_CONSTANT:
                 refs = [refs.const_orig]
             else:
-                refs = [str(refs.range.val_from.value), str(refs.range.val_to.value)]
-                if refs[0] == '-inf':
-                    refs = [f'до {refs[1]}']
-                elif refs[1] == 'inf':
-                    refs = [f'от {refs[0]}']
-                elif refs[0] == refs[1]:
+                refs_list = [str(refs.range.val_from.value), str(refs.range.val_to.value)]
+                if refs_list[0] == '-inf':
+                    refs = [f'до {refs_list[1]}']
+                elif refs_list[1] == 'inf':
+                    refs = [f'от {refs_list[0]}']
+                elif refs_list[0] == refs_list[1]:
                     refs = [refs.const_orig]
         else:
             refs = [r.calc_normal(only_ref=True) or '']
