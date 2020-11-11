@@ -1,26 +1,32 @@
+import logging
 import random
 
 import simplejson as json
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
+from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 import directions.models as directions
 from clients.models import Individual, Card
-from directory.models import Researches, Fractions
+from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
 from laboratory.settings import AFTER_DATE
 from laboratory.utils import current_time
 from refprocessor.result_parser import ResultRight
+from researches.models import Tubes
 from slog.models import Log
 from tfoms.integration import match_enp
 from utils.data_verification import data_parse
-from utils.dates import normalize_date
+from utils.dates import normalize_date, valid_date
 from . import sql_if
 from directions.models import Napravleniya
+
+
+logger = logging.getLogger("IF")
 
 
 @api_view()
@@ -130,10 +136,12 @@ def direction_data(request):
             },
             "issledovaniya": [x.pk for x in iss],
             "timeConfirmation": iss[iss_index].time_confirmation,
-            "docLogin": iss[iss_index].doc_confirmation.rmis_login,
-            "docPassword": iss[iss_index].doc_confirmation.rmis_password,
-            "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid,
+            "docLogin": iss[iss_index].doc_confirmation.rmis_login if iss[iss_index].doc_confirmation else None,
+            "docPassword": iss[iss_index].doc_confirmation.rmis_password if iss[iss_index].doc_confirmation else None,
+            "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid if iss[iss_index].doc_confirmation else None,
             "finSourceTitle": direction.istochnik_f.title,
+            "oldPk": direction.core_id,
+            "isExternal": direction.is_external,
         }
     )
 
@@ -196,7 +204,7 @@ def issledovaniye_data(request):
             "dateTimeGet": format_time_if_is_not_none(sample.time_get_local) if sample else None,
             "dateTimeReceive": format_time_if_is_not_none(sample.time_recive_local) if sample else None,
             "dateTimeConfirm": format_time_if_is_not_none(time_confirmation),
-            "docConfirm": i.doc_confirmation.get_fio(),
+            "docConfirm": i.doc_confirmation_fio,
             "results": results_data,
             "code": i.research.code,
             "comments": i.lab_comment,
@@ -284,7 +292,7 @@ def issledovaniye_data_multi(request):
                 "dateTimeGet": format_time_if_is_not_none(sample.time_get_local) if sample else None,
                 "dateTimeReceive": format_time_if_is_not_none(sample.time_recive_local) if sample else None,
                 "dateTimeConfirm": format_time_if_is_not_none(time_confirmation),
-                "docConfirm": i.doc_confirmation.get_fio(),
+                "docConfirm": i.doc_confirmation_fio,
                 "results": results_data,
                 "code": i.research.code,
                 "comments": i.lab_comment,
@@ -398,93 +406,205 @@ def set_core_id(request):
     return Response({"ok": True})
 
 
+class InvalidData(Exception):
+    pass
+
+
 @api_view(['POST'])
 def external_research_create(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
     body = json.loads(request.body)
-    patient = body.get("patient")
-    enp = patient["enp"].replace(' ', '')
 
+    old_pk = body.get("oldPk")
     org = body.get("org")
-    code_tfoms = org["codeTfoms"]
-    oid_org = org["oidOrg"]
-    hospital = Hospitals.objects.filter(Q(code_tfoms=code_tfoms) | Q(oid_org=oid_org)).first()
-    if not hospital:
-        return Response({"ok": False, 'message': 'Неверные данные организации/не найдена'})
+    code_tfoms = org.get("codeTFOMS")
+    oid_org = org.get("oid")
 
-    # Создать карты
+    if not code_tfoms and not oid_org:
+        return Response({"ok": False, 'message': 'Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid'})
+
+    if code_tfoms:
+        hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
+    else:
+        hospital = Hospitals.objects.filter(oid_org=oid_org).first()
+
+    if not hospital:
+        return Response({"ok": False, 'message': 'Организация не найдена'})
+
+    if not request.user.hospitals.filter(pk=hospital.pk).exists():
+        return Response({"ok": False, 'message': 'Нет доступа в переданную организацию'})
+
+    patient = body.get("patient", {})
+    enp = patient.get("enp", '').replace(' ', '')
+
+    if len(enp) != 16 or not enp.isdigit():
+        return Response({"ok": False, 'message': 'Неверные данные полиса, должно быть 16 чисел'})
+
     individuals = Individual.objects.filter(tfoms_enp=enp)
-    if not individuals:
+    if not individuals.exists():
+        individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title='Полис ОМС') | Q(document__document_type__title='ЕНП'))
+    if not individuals.exists():
         tfoms_data = match_enp(enp)
         if not tfoms_data:
-            return Response({"ok": False, 'message': 'Неверные данные полиса в ТФОМС нет такого пациента'})
+            return Response({"ok": False, 'message': 'Неверные данные полиса, в базе ТФОМС нет такого пациента'})
         Individual.import_from_tfoms(tfoms_data)
         individuals = Individual.objects.filter(tfoms_enp=enp)
 
-    individual_obj = individuals.first()
-    client = Card.objects.filter(individual=individual_obj).first()
-    if not client:
-        client = Card.add_l2_card(individual_obj)
+    individual = individuals.first()
+    if not individual:
+        return Response({"ok": False, 'message': 'Физлицо не найдено'})
+
+    card = Card.objects.filter(individual=individual, base__internal_type=True).first()
+    if not card:
+        card = Card.add_l2_card(individual)
+
+    if not card:
+        return Response({"ok": False, 'message': 'Карта не найдена'})
+
+    financing_source_title = body.get("financingSource", '')
+
+    financing_source = (
+        directions.IstochnikiFinansirovaniya
+        .objects
+        .filter(title=financing_source_title, base__internal_type=True)
+        .first()
+    )
+
+    if not financing_source:
+        return Response({"ok": False, 'message': 'Некорректный источник финансирования'})
 
     results = body.get("results")
-    correct_data = correct_input_data(results)
-    if not correct_data["correct"]:
-        return Response({"ok": False, 'message': correct_data["message"]})
+    if not results or not isinstance(results, list):
+        return Response({"ok": False, 'message': 'Некорректное значение results'})
 
-    financingSource = body.get("financingSource")
-    x =""
-    with transaction.atomic():
-        dir = Napravleniya(client=client, istochnik_f=x, polis_who_give=x, polis_n=x, hospital=x).save()
-        for r in results:
-            code_research = r.get("codeResearch")
-            research = Researches.objects.filter(code=code_research).first()
-            iss = directions.Issledovaniya(napravleniye=dir).save()
-            tests = r.get("tests")
-            for t in tests:
-                fsli_code = t.get("idFsli")
-                fraction = Fractions.objects.filter(fsli=fsli_code).first()
-                time_confirmation = t.get("dateTimeConfirm")
-                time_get = t.get("dateTimeGet")
-                time_recieve = t.get("dateTimeReceive")
-                value = t.get("valueString")
-                units = t.get("units")
-                doc_confirm = t.get("docConfirm")
-                reference_value = t.get("referenceValue")
-                reference_range = t.get("referenceRange")
-                comments = t.get("comments")
-                directions.Result(issledovaniye=iss, fraction=fraction, value=value, units=units).save()
-                iss.external_doc_confirm = doc_confirm
-                iss.time_confirmation = time_confirmation
+    message = None
 
-    return Response({"ok": True, 'id': dir.pk})
+    try:
+        with transaction.atomic():
+            if old_pk and Napravleniya.objects.filter(pk=old_pk, hospital=hospital).exists():
+                direction = Napravleniya.objects.get(pk=old_pk)
+                direction.is_external = True
+                direction.istochnik_f = financing_source
+                direction.polis_who_give = card.polis.who_give if card.polis else None
+                direction.polis_n = card.polis.number if card.polis else None
+                direction.save()
+                direction.issledovaniya_set.all().delete()
+            else:
+                direction = (
+                    Napravleniya
+                    .objects
+                    .create(
+                        client=card,
+                        is_external=True,
+                        istochnik_f=financing_source,
+                        polis_who_give=card.polis.who_give if card.polis else None,
+                        polis_n=card.polis.number if card.polis else None,
+                        hospital=hospital,
+                    )
+                )
 
+            for r in results:
+                code_research = r.get("codeResearch", "unknown")
+                research = Researches.objects.filter(code=code_research).first()
+                if not research:
+                    raise InvalidData(f'Исследование с кодом {code_research} не найдено')
 
-def correct_input_data(results):
-    for r in results:
-        code_research = r.get("codeResearch")
-        research = Researches.objects.filter(code=code_research).first()
-        if not research:
-            return {"correct": False, "message": "Услуга с таким кодом не найдена"}
-        tests = r.get("tests")
-        for t in tests:
-            fsli_code = t.get("idFsli")
-            fraction = Fractions.objects.filter(fsli=fsli_code).first()
-            if not fraction:
-                return {"correct": False, "message": f"Тест с кодом {fsli_code} не найдена"}
-            time_confirmation = t.get("dateTimeConfirm")
-            time_get = t.get("dateTimeGet")
-            time_recieve = t.get("dateTimeReceive")
-            value = t.get("valueString")
-            if not value:
-                return {"correct": False, "message": "результа пустой"}
+                tests = r.get("tests")
+                if not tests or not isinstance(tests, list):
+                    raise InvalidData(f'Исследование {code_research} содержит некорректное поле tests')
 
-            unit = t.get("unit")
-            doc_confirm = t.get("docConfirm")
-            if not doc_confirm:
-                return {"correct": False, "message": "Исполнитель не указан"}
-            reference_value = t.get("referenceValue")
-            if len(reference_value) > 50:
-                return {"correct": False, "message": "превышено длина референсного значения"}
-            comments = t.get("comments")
-            if len(comments) > 500:
-                return {"correct": False, "message": "превышено длина комментария"}
-    return {"correct": True, "message": "данные корректны"}
+                comments = str(r.get("comments", "") or "") or None
+
+                time_confirmation = r.get("dateTimeConfirm")
+                if not time_confirmation or not valid_date(time_confirmation):
+                    raise InvalidData(f'{code_research}: содержит некорректное поле dateTimeConfirm. Оно должно быть заполнено и соответствовать шаблону YYYY-MM-DD HH:MM')
+
+                time_get = str(r.get("dateTimeGet", "") or "") or None
+                if time_get and not valid_date(time_confirmation):
+                    raise InvalidData(f'{code_research}: содержит некорректное поле dateTimeGet. Оно должно быть пустым или соответствовать шаблону YYYY-MM-DD HH:MM')
+
+                time_receive = str(r.get("dateTimeReceive", "") or "") or None
+                if time_receive and not valid_date(time_confirmation):
+                    raise InvalidData(f'{code_research}: содержит некорректное поле dateTimeReceive. Оно должно быть пустым или соответствовать шаблону YYYY-MM-DD HH:MM')
+
+                doc_confirm = str(r.get("docConfirm", "") or "") or None
+
+                iss = (
+                    directions.Issledovaniya
+                    .objects
+                    .create(
+                        napravleniye=direction,
+                        research=research,
+                        lab_comment=comments,
+                        time_confirmation=time_confirmation,
+                        time_save=timezone.now(),
+                        doc_confirmation_string=doc_confirm or f'Врач {hospital.short_title or hospital.title}',
+                    )
+                )
+                tube = Tubes.objects.filter(title='Универсальная пробирка').first()
+                if not tube:
+                    tube = Tubes.objects.create(
+                        title='Универсальная пробирка',
+                        color='#049372'
+                    )
+
+                ft = ReleationsFT.objects.filter(tube=tube).first()
+                if not ft:
+                    ft = ReleationsFT.objects.create(tube=tube)
+
+                tr = iss.tubes.create(type=ft)
+                tr.time_get = time_get
+                tr.time_recive = time_receive
+                tr.save(update_fields=['time_get', 'time_recive'])
+
+                for t in tests:
+                    fsli_code = t.get("idFsli", "unknown")
+                    fraction = Fractions.objects.filter(fsli=fsli_code).first()
+                    if not fraction:
+                        raise InvalidData(f'В исследовании {code_research} не найден тест {fsli_code}')
+                    value = str(t.get("valueString", "") or "")
+                    units = str(t.get("units", "") or "")
+
+                    reference_value = t.get("referenceValue") or None
+                    reference_range = t.get("referenceRange") or None
+
+                    if reference_value and not isinstance(reference_value, str):
+                        raise InvalidData(f'{code_research} -> {fsli_code}: поле referenceValue должно быть строкой или null')
+                    if reference_range and not isinstance(reference_range, dict):
+                        raise InvalidData(f'{code_research} -> {fsli_code}: поле referenceRange должно быть объектом {{low, high}} или null')
+
+                    if reference_range and ('low' not in reference_range or 'high' not in reference_range):
+                        raise InvalidData(f'{code_research} -> {fsli_code}: поле referenceRange должно быть объектом с полями {{low, high}} или null')
+
+                    ref_str = reference_value
+
+                    if not ref_str and reference_range:
+                        ref_str = f"{reference_range['low']} – {reference_range['high']}"
+
+                    if ref_str:
+                        ref_str = ref_str.replace("\"", "'")
+                        ref_str = f'{{"Все": "{ref_str}"}}'
+
+                    directions.Result(
+                        issledovaniye=iss,
+                        fraction=fraction,
+                        value=value,
+                        units=units,
+                        ref_f=ref_str,
+                        ref_m=ref_str,
+                    ).save()
+            try:
+                Log.log(str(direction.pk), 90000, body=body)
+            except Exception as e:
+                logger.exception(e)
+            return Response({"ok": True, 'id': str(direction.pk)})
+
+    except InvalidData as e:
+        message = str(e)
+    except Exception as e:
+        logger.exception(e)
+        message = 'Серверная ошибка'
+
+    return Response({"ok": False, 'message': message})

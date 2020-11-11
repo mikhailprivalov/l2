@@ -87,7 +87,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph(f'{short_title.upper()}', styleCenterBold))
         objs.append(Spacer(1, 10 * mm))
         space_symbol = '&nbsp;'
-        objs.append(Paragraph(f'1. Отделение, направившее биопсийный (операционный) материал: {dir.doc.podrazdeleniye.title}', style))
+        objs.append(Paragraph(f'1. Отделение, направившее биопсийный (операционный) материал: {dir.get_doc_podrazdeleniye_title()}', style))
         objs.append(Paragraph(f'2. Фамилия, имя, отчество (при наличии) пациента: {dir.client.individual.fio()}', style))
         sex = dir.client.individual.sex
         if sex == "м":

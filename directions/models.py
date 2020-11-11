@@ -383,6 +383,14 @@ class Napravleniya(models.Model):
     harmful_factor = models.CharField(max_length=255, blank=True, default='')
     workplace = models.CharField(max_length=255, blank=True, default='', db_index=True)
     hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, on_delete=models.SET_NULL)
+    is_external = models.BooleanField(default=False, blank=True, null=True)
+
+    def get_doc_podrazdeleniye_title(self):
+        if self.hospital:
+            return self.hospital.short_title or self.hospital.title
+        if self.doc.podrazdeleniye:
+            return self.doc.podrazdeleniye.title
+        return ''
 
     @property
     def data_sozdaniya_local(self):
@@ -781,14 +789,14 @@ class Napravleniya(models.Model):
         Есть ли подтверждение у одного или более исследований в направлении
         :return: True, если есть подтверждение у одного или более
         """
-        return any([x.doc_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
+        return any([x.time_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
 
     def is_all_confirm(self):
         """
         Есть ли подтверждение у всех исследований в направлении
         :return: True, если всё подтверждено
         """
-        return all([x.doc_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
+        return all([x.time_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
 
     def is_has_deff(self):
         """
@@ -907,6 +915,7 @@ class Issledovaniya(models.Model):
     doc_confirmation = models.ForeignKey(
         DoctorProfile, null=True, blank=True, related_name="doc_confirmation", db_index=True, help_text='Профиль пользователя, подтвердившего результат', on_delete=models.SET_NULL
     )
+    doc_confirmation_string = models.CharField(max_length=64, null=True, blank=True, default=None)
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
     deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование', db_index=True)
     comment = models.CharField(max_length=255, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
@@ -949,7 +958,6 @@ class Issledovaniya(models.Model):
     aggregate_lab = JSONField(null=True, blank=True, default=None, help_text='ID направлений лаборатории, привязаных к стационарному случаю')
     aggregate_desc = JSONField(null=True, blank=True, default=None, help_text='ID направлений описательных, привязаных к стационарному случаю')
     microbiology_conclusion = models.TextField(default=None, null=True, blank=True, help_text='Заключение по микробиологии')
-    external_doc_confirm = models.CharField(max_length=128, blank=True, default='')
 
     @property
     def time_save_local(self):
@@ -961,6 +969,14 @@ class Issledovaniya(models.Model):
 
     def get_stat_diagnosis(self):
         pass
+
+    @property
+    def doc_confirmation_fio(self):
+        if self.doc_confirmation_string:
+            return self.doc_confirmation_string
+        if self.doc_confirmation:
+            return self.doc_confirmation.get_fio()
+        return ''
 
     def gen_after_confirm(self, user: User):
         if not self.time_confirmation or not self.gen_direction_with_research_after_confirm:

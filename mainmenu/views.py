@@ -221,7 +221,7 @@ def confirm_reset(request):
                 or request.user.is_superuser
                 or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
             ):
-                predoc = {"fio": 'не подтверждено' if cdid == -1 else iss.doc_confirmation.get_fio(), "pk": cdid, "direction": iss.napravleniye_id}
+                predoc = {"fio": iss.doc_confirmation_fio or 'не подтверждено', "pk": cdid, "direction": iss.napravleniye_id}
                 iss.doc_confirmation = iss.time_confirmation = None
                 iss.save()
                 if iss.napravleniye.result_rmis_send:
@@ -552,16 +552,16 @@ def results_history_search(request):
 
     if type == "otd":
         collect = Napravleniya.objects.filter(
-            issledovaniya__doc_confirmation__isnull=False,
+            issledovaniya__time_confirmation__isnull=False,
             issledovaniya__time_confirmation__range=(day1, day2),
             doc__podrazdeleniye=request.user.doctorprofile.podrazdeleniye,
             issledovaniya__research__is_doc_refferal=False,
             issledovaniya__research__is_slave_hospital=False,
         )
     else:
-        collect = Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False, issledovaniya__time_confirmation__range=(day1, day2), doc=request.user.doctorprofile)
+        collect = Napravleniya.objects.filter(issledovaniya__time_confirmation__isnull=False, issledovaniya__time_confirmation__range=(day1, day2), doc=request.user.doctorprofile)
 
-    result = list(collect.order_by("doc", "client").exclude(issledovaniya__doc_confirmation__isnull=True).values_list('pk', flat=True))
+    result = list(collect.order_by("doc", "client").exclude(issledovaniya__time_confirmation__isnull=True).values_list('pk', flat=True))
 
     return JsonResponse(result, safe=False)
 

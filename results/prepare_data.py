@@ -349,7 +349,9 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
         [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
         ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:", direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "") + number_poliklinika],
     ]
-    if not direction.imported_from_rmis and not is_extract:
+    if direction.is_external and direction.hospital:
+        data.append(["<font>Организация:</font>", direction.get_doc_podrazdeleniye_title()])
+    elif not direction.imported_from_rmis and not is_extract and direction.doc:
         data.append(["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)])
     elif direction.imported_org:
         data.append(["<font>Направляющая<br/>организация:</font>", direction.imported_org.title])
