@@ -179,7 +179,7 @@ def issledovaniye_data(request):
                 elif refs[1] == 'inf':
                     refs = [f'от {refs[0]}']
                 elif refs[0] == refs[1]:
-                    refs = [refs[0]]
+                    refs = [refs.const_orig]
         else:
             refs = [r.calc_normal(only_ref=True) or '']
 
