@@ -171,7 +171,7 @@ def issledovaniye_data(request):
 
         if isinstance(refs, ResultRight):
             if refs.mode == ResultRight.MODE_CONSTANT:
-                refs = [refs.const]
+                refs = [refs.const_orig]
             else:
                 refs = [str(refs.range.val_from.value), str(refs.range.val_to.value)]
                 if refs[0] == '-inf':
