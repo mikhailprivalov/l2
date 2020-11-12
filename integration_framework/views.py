@@ -419,7 +419,7 @@ class InvalidData(Exception):
     pass
 
 
-def limit_str(s: str, limit = 500):
+def limit_str(s: str, limit=500):
     return str(s)[:limit]
 
 
