@@ -1021,7 +1021,7 @@ class Directions(BaseRequester):
                                         xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}", x.issledovaniye.get_analyzer()).replace("{{едизм}}", "")
                                     self.main_client.put_content(
                                         "Protocol.otg",
-                                        protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation.get_fio()).replace("{{результат}}", xresult),
+                                        protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation_fio).replace("{{результат}}", xresult),
                                         self.main_client.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/" + ss),
                                         method="POST",
                                     )
@@ -1042,7 +1042,7 @@ class Directions(BaseRequester):
         return direction.result_rmis_send
 
     def put_protocol(self, code, direction, protocol_template, ss, x, xresult, stdout: OutputWrapper = None):
-        protocol = protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation.get_fio()).replace("{{результат}}", xresult)
+        protocol = protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation_fio).replace("{{результат}}", xresult)
         self.main_client.put_content(
             "Protocol.otg", protocol, self.main_client.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/" + ss), method="POST", filetype="text/xml", stdout=stdout
         )

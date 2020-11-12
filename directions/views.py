@@ -78,10 +78,10 @@ def gen_pdf_execlist(request):
     for res in directory.Researches.objects.filter(pk__in=researches):
         if type != 2:
             iss_list = Issledovaniya.objects.filter(
-                tubes__doc_recive_id__isnull=False, tubes__time_recive__range=(date_start, date_end), doc_confirmation_id__isnull=True, research__pk=res.pk, deferred=False
+                tubes__doc_recive_id__isnull=False, tubes__time_recive__range=(date_start, date_end), time_confirmation__isnull=True, research__pk=res.pk, deferred=False
             ).order_by('tubes__time_recive')
         else:
-            iss_list = Issledovaniya.objects.filter(research__pk=res.pk, deferred=True, doc_confirmation__isnull=True, tubes__doc_recive__isnull=False).order_by('tubes__time_recive')
+            iss_list = Issledovaniya.objects.filter(research__pk=res.pk, deferred=True, time_confirmation__isnull=True, tubes__doc_recive__isnull=False).order_by('tubes__time_recive')
 
         if iss_list.count() == 0:
             # if not hb:
@@ -648,8 +648,10 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
         if dir.doc_who_create and dir.doc_who_create != dir.doc:
             nn = 9
             c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn, Truncator("Выписал: %s, %s" % (dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title)).chars(63))
-        c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Отделение: " + Truncator(dir.doc.podrazdeleniye.title).chars(50))
-        c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, "Л/врач: " + dir.doc.get_fio())
+
+        if dir.doc:
+            c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Отделение: " + Truncator(dir.get_doc_podrazdeleniye_title).chars(50))
+            c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, "Л/врач: " + dir.doc.get_fio())
     else:
         c.drawString(paddingx + (w / 2 * xn), 31 + (h / 2) * yn + nn, "РМИС#" + dir.rmis_number)
         c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Создал направление: " + dir.doc_who_create.get_fio())
@@ -1185,7 +1187,7 @@ def get_issledovaniya(request):
                                     elif any([x.get_is_norm()[0] == "maybe" for x in issledovaniye.result_set.all()]):
                                         isnorm = "maybe"
 
-                            if not issledovaniye.doc_confirmation:
+                            if not issledovaniye.time_confirmation:
                                 confirmed = False
                                 if not issledovaniye.deferred:
                                     res["all_confirmed"] = False
@@ -1272,8 +1274,8 @@ def get_issledovaniya(request):
                 res["client_vozrast"] = napr.client.individual.age_s(direction=napr)
                 res["imported_from_rmis"] = napr.imported_from_rmis
                 res["imported_org"] = "" if not napr.imported_org else napr.imported_org.title
-                res["directioner"] = "" if napr.imported_from_rmis else napr.doc.fio
-                res["otd"] = "" if napr.imported_from_rmis else napr.doc.podrazdeleniye.title
+                res["directioner"] = "" if napr.imported_from_rmis or not napr.doc else napr.doc.fio
+                res["otd"] = "" if napr.imported_from_rmis else napr.get_doc_podrazdeleniye_title()
                 res["fin_source"] = "" if napr.imported_from_rmis else napr.fin_title
                 res["ok"] = True
                 res["in_rmis"] = napr.result_rmis_send

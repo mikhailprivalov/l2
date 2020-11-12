@@ -1,4 +1,5 @@
 import collections
+import operator
 import re
 import time
 from datetime import datetime, time as dtime
@@ -263,7 +264,7 @@ def get_data_parent(parent_id):
     research_is_doc_refferal = iss_obj.research.is_doc_refferal
     direction = iss_obj.napravleniye_id
     is_confirm = False
-    if iss_obj.doc_confirmation:
+    if iss_obj.time_confirmation:
         is_confirm = True
 
     return {
@@ -405,28 +406,30 @@ def directions_results(request):
                     dates[dt] = 0
                 dates[dt] += 1
 
-        import operator
-
         maxdate = ""
         if dates != {}:
             maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
+        else:
+            iss = Issledovaniya.objects.filter(napravleniye=napr)[0]
+            if iss.time_confirmation:
+                maxdate = str(dateformat.format(iss.time_confirmation, settings.DATE_FORMAT))
 
         iss_list = Issledovaniya.objects.filter(napravleniye=napr)
         t = 0
-        if not iss_list.filter(doc_confirmation__isnull=True).exists() or iss_list.filter(deferred=False).exists():
+        if not iss_list.filter(time_confirmation__isnull=True).exists() or iss_list.filter(deferred=False).exists():
             result["direction"]["pk"] = napr.pk
             result["full"] = False
             result["ok"] = True
             result["pacs"] = None if not iss_list[0].research.podrazdeleniye or not iss_list[0].research.podrazdeleniye.can_has_pacs else search_dicom_study(pk)
-            if iss_list.filter(doc_confirmation__isnull=False).exists():
-                result["direction"]["doc"] = iss_list.filter(doc_confirmation__isnull=False)[0].doc_confirmation.get_fio()
-                if iss_list.filter(doc_confirmation__isnull=True, deferred=False).exists():
+            if iss_list.filter(time_confirmation__isnull=False).exists():
+                result["direction"]["doc"] = iss_list.filter(time_confirmation__isnull=False)[0].doc_confirmation_fio
+                if iss_list.filter(time_confirmation__isnull=True, deferred=False).exists():
                     result["direction"]["doc"] = result["direction"]["doc"] + " (выполнено не полностью)"
                 else:
                     result["full"] = True
             else:
                 result["direction"]["doc"] = "Не подтверждено"
-            result["direction"]["date"] = maxdate
+            result["direction"]["date"] = maxdate or iss
 
             result["client"]["sex"] = napr.client.individual.sex
             result["client"]["fio"] = napr.client.individual.fio()
@@ -448,7 +451,7 @@ def directions_results(request):
                     issledovaniye.research_id,
                 )
                 result["results"][kint] = {"title": issledovaniye.research.title, "fractions": collections.OrderedDict(), "sort": issledovaniye.research.sort_weight, "tube_time_get": ""}
-                if not issledovaniye.deferred or issledovaniye.doc_confirmation:
+                if not issledovaniye.deferred or issledovaniye.time_confirmation:
                     for isstube in issledovaniye.tubes.all():
                         if isstube.time_get:
                             result["results"][kint]["tube_time_get"] = str(dateformat.format(isstube.time_get, settings.DATE_FORMAT))
@@ -1565,7 +1568,7 @@ def directions_paraclinic_confirm_reset(request):
             return JsonResponse(response)
 
         if allow_reset:
-            predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation_id, "direction": iss.napravleniye_id}
+            predoc = {"fio": iss.doc_confirmation_fio, "pk": iss.doc_confirmation_id, "direction": iss.napravleniye_id}
             iss.doc_confirmation = iss.time_confirmation = None
             iss.save()
             transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()

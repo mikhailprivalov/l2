@@ -253,7 +253,7 @@ def form_02(c: Canvas, dir: Napravleniya):
         c.drawString((x_coord + 140) * mm, (y_dir_form[17] - 3) * mm, "(подпись)")
 
         c.setFont('PTAstraSerifReg', 12)
-        c.drawString(x_coord * mm, y_dir_form[18] * mm, "Отделение: " + Truncator(dir.doc.podrazdeleniye.title).chars(100))
+        c.drawString(x_coord * mm, y_dir_form[18] * mm, "Отделение: " + Truncator(dir.get_doc_podrazdeleniye_title()).chars(100))
 
         # QR-code
         qr_value = translit(dir.client.individual.fio(), 'ru', reversed=True)
@@ -515,7 +515,7 @@ def form_04(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph(f'Полис ОМС: {polis_num} с/к: {polis_issue}', style))
         address = ind_data['main_address']
         objs.append(Paragraph(f'Карта: {dir.client.number_with_type()}', style))
-        objs.append(Paragraph(f'Отделение: {dir.doc.podrazdeleniye.title} {space_symbol * 7} палата _______ ', style))
+        objs.append(Paragraph(f'Отделение: {dir.get_doc_podrazdeleniye_title()} {space_symbol * 7} палата _______ ', style))
         objs.append(Paragraph(f'Адрес постоянного места жительства: {address}', style))
         objs.append(Paragraph(f'Место работы, учебы (наименование детского учреждения, школы): {dir.workplace}', style))
         clinical_diagnos = ''
