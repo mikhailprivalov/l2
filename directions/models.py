@@ -383,6 +383,7 @@ class Napravleniya(models.Model):
     harmful_factor = models.CharField(max_length=255, blank=True, default='')
     workplace = models.CharField(max_length=255, blank=True, default='', db_index=True)
     hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, on_delete=models.SET_NULL)
+    id_in_hospital = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='Номер документа во внешней организации')
     is_external = models.BooleanField(default=False, blank=True, null=True)
 
     def get_doc_podrazdeleniye_title(self):

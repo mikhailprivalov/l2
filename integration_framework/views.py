@@ -489,6 +489,11 @@ def external_research_create(request):
 
     message = None
 
+    id_in_hospital = body.get("internalId", '')
+
+    if id_in_hospital is not None:
+        id_in_hospital = str(id_in_hospital)
+
     try:
         with transaction.atomic():
             if old_pk and Napravleniya.objects.filter(pk=old_pk, hospital=hospital).exists():
@@ -497,6 +502,7 @@ def external_research_create(request):
                 direction.istochnik_f = financing_source
                 direction.polis_who_give = card.polis.who_give if card.polis else None
                 direction.polis_n = card.polis.number if card.polis else None
+                direction.id_in_hospital = id_in_hospital
                 direction.save()
                 direction.issledovaniya_set.all().delete()
                 print('Replacing all data for', old_pk)
@@ -511,6 +517,7 @@ def external_research_create(request):
                         polis_who_give=card.polis.who_give if card.polis else None,
                         polis_n=card.polis.number if card.polis else None,
                         hospital=hospital,
+                        id_in_hospital=id_in_hospital,
                     )
                 )
 
