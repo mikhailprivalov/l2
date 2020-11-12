@@ -1,5 +1,6 @@
 import logging
 import random
+from collections import defaultdict
 
 import simplejson as json
 from django.db import transaction
@@ -418,6 +419,10 @@ class InvalidData(Exception):
     pass
 
 
+def limit_str(s: str, limit = 500):
+    return str(s)[:limit]
+
+
 @api_view(['POST'])
 def external_research_create(request):
     if not hasattr(request.user, 'hospitals'):
@@ -487,12 +492,14 @@ def external_research_create(request):
     if not results or not isinstance(results, list):
         return Response({"ok": False, 'message': 'Некорректное значение results'})
 
+    results = results[:40]
+
     message = None
 
     id_in_hospital = body.get("internalId", '')
 
     if id_in_hospital is not None:
-        id_in_hospital = str(id_in_hospital)
+        id_in_hospital = limit_str(id_in_hospital, 15)
 
     try:
         with transaction.atomic():
@@ -521,11 +528,16 @@ def external_research_create(request):
                     )
                 )
 
+            research_to_filter = defaultdict(lambda: False)
+
             for r in results:
                 code_research = r.get("codeResearch", "unknown")
                 research = Researches.objects.filter(code=code_research).first()
                 if not research:
                     raise InvalidData(f'Исследование с кодом {code_research} не найдено')
+
+                if research_to_filter[code_research]:
+                    raise InvalidData(f'Исследование с кодом {code_research} отправлено повторно в одном направлении')
 
                 tests = r.get("tests")
                 if not tests or not isinstance(tests, list):
@@ -546,6 +558,9 @@ def external_research_create(request):
                     raise InvalidData(f'{code_research}: содержит некорректное поле dateTimeReceive. Оно должно быть пустым или соответствовать шаблону YYYY-MM-DD HH:MM')
 
                 doc_confirm = str(r.get("docConfirm", "") or "") or None
+
+                if doc_confirm is not None:
+                    doc_confirm = limit_str(doc_confirm, 64)
 
                 iss = (
                     directions.Issledovaniya
@@ -575,13 +590,19 @@ def external_research_create(request):
                 tr.time_recive = time_receive
                 tr.save(update_fields=['time_get', 'time_recive'])
 
-                for t in tests:
+                tests_to_filter = defaultdict(lambda: False)
+
+                for t in tests[:30]:
                     fsli_code = t.get("idFsli", "unknown")
                     fraction = Fractions.objects.filter(fsli=fsli_code).first()
                     if not fraction:
                         raise InvalidData(f'В исследовании {code_research} не найден тест {fsli_code}')
-                    value = str(t.get("valueString", "") or "")
-                    units = str(t.get("units", "") or "")
+
+                    if tests_to_filter[code_research]:
+                        raise InvalidData(f'Тест с кодом {fsli_code} отправлен повторно в одном направлении в {code_research}')
+
+                    value = limit_str(t.get("valueString", "") or "", 500)
+                    units = limit_str(str(t.get("units", "") or ""), 50)
 
                     reference_value = t.get("referenceValue") or None
                     reference_range = t.get("referenceRange") or None
@@ -600,7 +621,7 @@ def external_research_create(request):
                         ref_str = f"{reference_range['low']} – {reference_range['high']}"
 
                     if ref_str:
-                        ref_str = ref_str.replace("\"", "'")
+                        ref_str = limit_str(ref_str.replace("\"", "'"), 120)
                         ref_str = f'{{"Все": "{ref_str}"}}'
 
                     directions.Result(

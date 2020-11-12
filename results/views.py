@@ -403,23 +403,34 @@ def result_print(request):
     styleTableMonoBold.fontName = "Consolas-Bold"
     styleTableSm = deepcopy(styleTable)
     styleTableSm.fontSize = 4
+    styleLogo = deepcopy(styleBold)
+    styleLogo.alignment = TA_CENTER
+    styleLogo.fontName = 'FreeSansBold'
+    styleLogo.fontSize = 25
+    styleLogo.spaceBefore = 0
+    styleLogo.spaceAfter = 0
+    styleLogo.leftIndent = 0
+    styleLogo.rightIndent = 0
 
     styleSheet["BodyText"].wordWrap = 'CJK'
     stl = deepcopy(styleSheet["BodyText"])
     stl.alignment = TA_CENTER
+    logo_text = SettingManager.get("results_l2_logo_string", default='', default_type='s')
+    if logo_text:
+        i = Paragraph(logo_text, styleLogo)
+    else:
+        img_path = os.path.join(FONTS_FOLDER, '..', 'static', 'img')
+        if not os.path.exists(img_path):
+            os.makedirs(img_path)
+        logo_path = os.path.join(img_path, 'logo.png')
+        if request.GET.get("update_logo", "0") == "1" or not os.path.isfile(logo_path):
+            with open(logo_path, "wb") as fh:
+                fh.write(base64.decodebytes(SettingManager.get("logo_base64_img").split(",")[1].encode()))
 
-    img_path = os.path.join(FONTS_FOLDER, '..', 'static', 'img')
-    if not os.path.exists(img_path):
-        os.makedirs(img_path)
-    logo_path = os.path.join(img_path, 'logo.png')
-    if request.GET.get("update_logo", "0") == "1" or not os.path.isfile(logo_path):
-        with open(logo_path, "wb") as fh:
-            fh.write(base64.decodebytes(SettingManager.get("logo_base64_img").split(",")[1].encode()))
-
-    i = Image(logo_path)
-    nw = 158
-    i.drawHeight = i.drawHeight * (nw / i.drawWidth)
-    i.drawWidth = nw
+        i = Image(logo_path)
+        nw = 158
+        i.drawHeight = i.drawHeight * (nw / i.drawWidth)
+        i.drawWidth = nw
     region = SettingManager.get("region", default='38', default_type='s')
     logo_col = [
         i,
