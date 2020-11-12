@@ -14,10 +14,12 @@ import imgkit
 import sys
 import directory.models as directory
 import collections
-from directions.models import ParaclinicResult, MicrobiologyResultCulture
+from directions.models import ParaclinicResult, MicrobiologyResultCulture, TubesRegistration
 import datetime
 from appconf.manager import SettingManager
 import simplejson as json
+
+from laboratory.utils import strfdatetime
 from utils.xh import check_valid_square_brackets
 
 
@@ -344,25 +346,43 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
         ["Пол:", direction.client.individual.sex],
         ["Возраст:", "{} {}".format(direction.client.individual.age_s(direction=direction), individual_birthday)],
     ]
-    data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
-    data += [
-        [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
-        ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:", direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "") + number_poliklinika],
-    ]
-    if not direction.imported_from_rmis and not is_extract:
+    if not direction.is_external:
+        data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
+        data += [
+            [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
+            ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:", direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "") + number_poliklinika],
+        ]
+
+    if direction.is_external and direction.hospital:
+        data.append(["Организация:", direction.get_doc_podrazdeleniye_title()])
+        if direction.id_in_hospital is not None:
+            data += [["Номер в организации:", direction.id_in_hospital]]
+        tube = TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).first()
+        if tube and (tube.time_get or tube.time_recive):
+            data += [["Забор биоматериала:", strfdatetime((tube.time_get or tube.time_recive), "%d.%m.%Y %H:%M")]]
+    elif not direction.imported_from_rmis and not is_extract and direction.doc:
         data.append(["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)])
     elif direction.imported_org:
         data.append(["<font>Направляющая<br/>организация:</font>", direction.imported_org.title])
+    rows = len(data)
 
-    data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for xi in range(len(data))]
+    data = [
+        [Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]]
+        for xi in
+        range(rows)
+    ]
+    if direction.is_external:
+        colWidths = [40 * mm, doc.width - 158 - 40 * mm, 158]
+    else:
+        colWidths = [doc.width * 0.145, doc.width - 158 - doc.width * 0.145, 158]
 
-    t = Table(data, colWidths=[doc.width * 0.145, doc.width - 158 - doc.width * 0.145, 158])
+    t = Table(data, colWidths=colWidths)
     t.setStyle(
         TableStyle(
             [
                 ('ALIGN', (-1, 0), (-1, 0), 'CENTER'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('VALIGN', (-1, 0), (-1, 0), 'BOTTOM'),
+                ('VALIGN', (-1, 0), (-1, 0), 'MIDDLE'),
                 ('VALIGN', (-1, 5), (-1, 5), 'TOP'),
                 ('LEFTPADDING', (0, 0), (-1, -1), 0),
                 ('RIGHTPADDING', (0, 0), (-1, -1), 1),
@@ -371,6 +391,7 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
                 ('BOTTOMPADDING', (-1, 0), (-1, -1), 0),
                 ('TOPPADDING', (-1, 0), (-1, -1), 0),
                 ('TOPPADDING', (-1, 5), (-1, 5), 3),
+                ('TOPPADDING', (-1, 0), (-1, 0), -7 * mm if isinstance(logo_col[0], Paragraph) else 0),
                 ('TOPPADDING', (0, 5), (1, 5), 0),
                 ('TOPPADDING', (0, 6), (1, 6), -6),
                 ('BOTTOMPADDING', (0, 5), (1, 5), 0),

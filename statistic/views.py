@@ -484,7 +484,7 @@ def statistic_xls(request):
         for i in Issledovaniya.objects.filter(research__podrazdeleniye__vaccine=True, time_confirmation__range=(date_start, date_end,)).order_by("time_confirmation"):
             if i.napravleniye:
                 row = [
-                    i.doc_confirmation.get_fio(),
+                    i.doc_confirmation_fio,
                     i.time_confirmation.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
                     i.napravleniye.client.individual.get_rmis_uid_fast(),
                     i.research.title,

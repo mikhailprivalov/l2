@@ -37,7 +37,7 @@ def researches_get_one(request):
                 res["co_executor_title"] = iss.research.co_executor_2_title
                 if not iss.doc_save:
                     res["saved"] = False
-                if not iss.doc_confirmation:
+                if not iss.time_confirmation:
                     res["confirmed"] = False
 
             if not res["cached"]:

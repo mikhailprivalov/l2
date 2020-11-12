@@ -126,7 +126,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         count = 23 * 2
         opinion = [Paragraph(' ', style) for i in range(0, count)]
         len_opinion = int(count / 2)
-        department_title = list(dir.doc.podrazdeleniye.title.upper())[0:len_opinion]
+        department_title = list(dir.get_doc_podrazdeleniye_title().upper())[0:len_opinion]
         x = 0
         for i in department_title:
             opinion[x] = Paragraph(f"{i}", style)
