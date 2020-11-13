@@ -228,13 +228,14 @@ def gen_pdf_dir(request):
             continue
         form = iss[0].research.direction_form
 
-        if form != 0:
+        if form != 0 or d.external_organization:
             current_type_form = str(form)
             f = import_string('directions.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
+            if d.external_organization:
+                f = import_string('directions.forms.forms' + '380' + '.form_' + '05')
             f(c, d)
         if n != cntn:
             c.showPage()
-
     instructions_pks = []
     instructions_filtered = []
     for i in instructions:

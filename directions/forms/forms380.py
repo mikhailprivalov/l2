@@ -581,3 +581,191 @@ def form_04(c: Canvas, dir: Napravleniya):
         gistology_frame.addFromList([gistology_inframe], c)
 
     printForm()
+
+
+def form_05(c: Canvas, dir: Napravleniya):
+    # Утверждено Приказом Министерства здравоохранения Иркутской области от 22 мая 2013 г. N 83-МПР
+    def printForm():
+        hospital_name = SettingManager.get("org_title")
+        hospital_address = SettingManager.get("org_address")
+        hospital_kod_ogrn = SettingManager.get("org_ogrn")
+
+        if sys.platform == 'win32':
+            locale.setlocale(locale.LC_ALL, 'rus_rus')
+        else:
+            locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+        pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+        pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+        styleSheet = getSampleStyleSheet()
+        style = styleSheet["Normal"]
+        style.fontName = "PTAstraSerifReg"
+        style.fontSize = 11
+        style.leading = 12
+        style.spaceAfter = 1.5 * mm
+
+        styleCenterBold = deepcopy(style)
+        styleCenterBold.alignment = TA_CENTER
+        styleCenterBold.fontSize = 12
+        styleCenterBold.leading = 15
+        styleCenterBold.fontName = 'PTAstraSerifBold'
+
+        styleT = deepcopy(style)
+        styleT.alignment = TA_LEFT
+        styleT.fontSize = 10
+        styleT.leading = 4.5 * mm
+        styleT.face = 'PTAstraSerifReg'
+
+        styleTCentre = deepcopy(styleT)
+        styleTCentre.alignment = TA_CENTER
+        styleTCentre.fontSize = 13
+
+        barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
+        dir_code = Drawing()
+        dir_code.add(barcode)
+        renderPDF.draw(dir_code, c, 157 * mm, 259 * mm)
+
+        objs = []
+        opinion = [
+            [
+                Paragraph(f'<font size=11>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
+                Paragraph('<font size=9 >Утверждено<br/>Приказом Министерства здравоохранения<br/>Иркутской области от 22 мая 2013 г. N 83-МПР</font>', styleT),
+            ],
+        ]
+
+        tbl = Table(opinion, 2 * [100 * mm])
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+
+        objs.append(tbl)
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk}', styleCenterBold))
+        objs.append(Paragraph('в медицинские организации Иркутской области', styleCenterBold))
+        objs.append(Spacer(1, 3 * mm))
+        space_symbol = '&nbsp;'
+        objs.append(Paragraph(f'От: {strdate(dir.data_sozdaniya)}', style))
+        objs.append(Paragraph(f'Фамилия, Имя, Отчество: {dir.client.individual.fio()}', style))
+        sex = dir.client.individual.sex
+        if sex == "м":
+            sex = f'{sex}-1'
+        else:
+            sex = f'{sex}-2'
+        born = dir.client.individual.bd().split('.')
+        objs.append(Paragraph(f'Дата <u>{born[0]}</u> Месяц <u>{born[1]}</u> Год рождения <u>{born[2]}</u> Пол {sex} ', style))
+        objs.append(Paragraph(f'Рабочий, домашний телефон : {dir.client.phone}', style))
+        polis_num = ''
+        polis_issue = ''
+        ind_data = dir.client.get_data_individual()
+        if ind_data['oms']['polis_num']:
+            polis_num = ind_data['oms']['polis_num']
+        if ind_data['oms']['polis_issued']:
+            polis_issue = ind_data['oms']['polis_issued']
+        address = ind_data['main_address']
+        objs.append(Paragraph(f'Регистрация по месту жительства: {address}', style))
+        objs.append(Paragraph(f"Страховой полис серия: _______ №{polis_num}", style))
+        objs.append(Paragraph(f"Страховая компания (наименование): {polis_issue}", style))
+        external_org = dir.external_organization.title if dir.external_organization else ""
+        objs.append(Paragraph(f"Направляется в: {external_org}", style))
+        objs.append(Paragraph("Дата приема _______________________ Время приема _________________", style))
+        objs.append(Paragraph(f"Наименование медицинской организации по месту прикрепления: {hospital_address} {hospital_name}", style))
+        objs.append(Paragraph(f"Наименование направившей медицинской организации: {hospital_address} {hospital_name}", style))
+        objs.append(Paragraph("Направлен(а) на:", style))
+        objs.append(Paragraph("1) консультацию (вписать специалистов)", style))
+        objs.append(Paragraph("2) исследование (указать вид исследования)", style))
+        objs.append(Paragraph("3) госпитализацию", style))
+        objs.append(Paragraph("Цель консультации (и, или) исследования (нужное обвести):", style))
+        objs.append(Paragraph("01 - дообследование при неясном диагнозе;", style))
+        objs.append(Paragraph("02 - уточнение диагноза;", style))
+        objs.append(Paragraph("03 - для коррекции лечения;", style))
+        objs.append(Paragraph("04 - дообследование для госпитализации;", style))
+        objs.append(Paragraph("05 - и прочие цели (нужное вписать) __________________", style))
+        objs.append(Paragraph("Диагноз направившей медицинской организации (диагноз/ код диагноза в соответствии с МКБ10):", style))
+        objs.append(Paragraph("Основной ___________________________________________________________________________________________", style))
+        objs.append(Paragraph("Сопутствующий ______________________________________________________________________________________", style))
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph("Выписка из амбулаторной карты:", style))
+        objs.append(Paragraph("(данные анамнеза, клиники, предварительного обследования и проведенного лечения)", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("Сведения о профилактических прививках (для детей до 18 лет) ________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph(f"Справка об отсутствии инфекционных контактов (для детей до 18 лет), выданная не ранее 3 дней на дату поступления в ОГУЗ ", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("Врач ___________________________________________________________________________", style))
+        objs.append(Paragraph('телефон ____________________________ "_____" _____________ 20__ г.', style))
+        objs.append(Paragraph("Руководитель направившей медицинской организации", style))
+        objs.append(Paragraph("Согласие пациента на передачу сведений электронной почтой для осуществления предварительной записи и передачи заключения:", style))
+
+        objs.append(Paragraph(f'Карта: {dir.client.number_with_type()}', style))
+        objs.append(Paragraph(f'Отделение: {dir.doc.podrazdeleniye.title} {space_symbol * 7} палата _______ ', style))
+
+        objs.append(Paragraph(f'Место работы, учебы (наименование детского учреждения, школы): {dir.workplace}', style))
+        clinical_diagnos = ''
+        if dir.parent:
+            hosp_nums_obj = hosp_get_hosp_direction(dir.parent.napravleniye_id)
+            if len(hosp_nums_obj) > 0:
+                clinical_diagnos = hosp_get_clinical_diagnos(hosp_nums_obj)
+
+        objs.append(Paragraph(f"Диагноз, дата заболевания:  <font face=\"PTAstraSerifBold\">{clinical_diagnos}</font>", style))
+        objs.append(Paragraph('_______________________________________________________________________________________________________', style))
+
+        issledovaniya = dir.issledovaniya_set.all()
+        opinion = [
+            [
+                Paragraph('Цель и наименование исследования', styleCenterBold),
+                Paragraph('Материал - место взятия', styleCenterBold),
+                Paragraph('Показания к обследованию', styleCenterBold),
+                Paragraph('Номер', styleCenterBold),
+            ],
+        ]
+
+        for v in issledovaniya:
+            tmp_value = []
+            tmp_value.append(Paragraph(f"{v.research.title}<br/>{v.research.code}", styleT))
+            type_material = "" if not v.research.site_type else v.research.site_type.title
+            service_location_title = "" if not v.service_location else v.service_location.title
+            tmp_value.append(Paragraph(f"{type_material}-{service_location_title}", styleT))
+            category_patient = v.localization.title if v.localization else v.comment
+            tmp_value.append(Paragraph(f"{category_patient}", styleT))
+            num_iss = '{:,}'.format(v.pk).replace(',', ' ')
+            iss_barcode128 = code128.Code128(v.pk, barHeight=10 * mm, barWidth=1.25, lquiet=1 * mm)
+            tmp_value.append(Paragraph(f"{num_iss}", styleTCentre))
+            opinion.append(tmp_value.copy())
+            opinion.append([Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT), iss_barcode128])
+
+        style_table = []
+        style_table.append(('VALIGN', (0, 0), (-1, -1), 'TOP'))
+        style_table.append(('GRID', (0, 0), (-1, -1), 0.75, colors.black))
+        count_rows = len(opinion)
+        for i in range(count_rows):
+            if i % 2 == 0 and i != 0:
+                for count_col in range(3):
+                    style_table.append(('SPAN', (count_col, i), (count_col, i - 1)))
+                    style_table.append(('SPA', (count_col, i), (count_col, i - 1)))
+                    style_table.append(('LINEABOVE', (-1, i), (-1, i), 2, colors.white))
+
+        style_table.append(('LINEBEFORE', (-1, 0), (-1, -1), 0.75, colors.black))
+        style_table.append(('LINEAFTER', (-1, 0), (-1, -1), 0.75, colors.black))
+        cols_width = [95 * mm, 35 * mm, 32 * mm, 40 * mm]
+        tbl = Table(opinion, colWidths=cols_width, hAlign='LEFT')
+        tbl.setStyle(TableStyle(style_table))
+        objs.append(Spacer(1, 5 * mm))
+        objs.append(tbl)
+
+        objs.append(Spacer(1, 5 * mm))
+        objs.append(Paragraph(f'Врач: {dir.doc.get_fio()} {space_symbol * 5} подпись _________', style))
+        if dir.doc_who_create and dir.doc_who_create != dir.doc:
+            objs.append(Paragraph(f'Выписал: {dir.doc_who_create.get_fio()}', style))
+        objs.append(Paragraph(f'Дата направления:  {strdate(dir.data_sozdaniya)}', style))
+
+        gistology_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+        gistology_inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
+        gistology_frame.addFromList([gistology_inframe], c)
+
+    printForm()
