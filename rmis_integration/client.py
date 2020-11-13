@@ -233,6 +233,10 @@ class Client(object):
             stdout.write("put_content ANSWER: [{}] {}".format(resip.status_code, resip.text))
         return str(resip.status_code) == "200"
 
+    def get_content(self, path):
+        resip = requests.request("GET", path, auth=self.session.auth, proxies=RMIS_PROXY)
+        return resip.text
+
     def req(self, path, method="DELETE", ret="bool"):
         resip = requests.request(method, path, auth=self.session.auth)
         if ret == "bool":
@@ -1070,6 +1074,11 @@ class Directions(BaseRequester):
             direction.result_rmis_send = True
             direction.save()
         return direction.result_rmis_send
+
+    def get_protocol(self, rendered_service_id):
+        self.main_client.get_content(
+            self.main_client.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/" + rendered_service_id)
+        )
 
     def put_protocol(self, code, direction, protocol_template, ss, x, xresult, stdout: OutputWrapper = None):
         protocol = protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation_fio).replace("{{результат}}", xresult)
