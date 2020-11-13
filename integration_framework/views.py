@@ -348,6 +348,8 @@ def check_enp(request):
     enp, bd, enp_mode = data_parse(request.body, {'enp': str, 'bd': str, 'check_mode': str}, {'check_mode': 'tfoms'})
     enp = enp.replace(' ', '')
 
+    logger.exception(f'enp_mode: {enp_mode}')
+
     if enp_mode == 'tfoms':
         tfoms_data = match_enp(enp)
 
