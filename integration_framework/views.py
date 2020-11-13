@@ -345,10 +345,8 @@ def make_log(request):
 
 @api_view(['POST'])
 def check_enp(request):
-    enp, bd = data_parse(request.body, {'enp': str, 'bd': str, 'check_mode': str}, {'check_mode': 'tfoms'})
+    enp, bd, enp_mode = data_parse(request.body, {'enp': str, 'bd': str, 'check_mode': str}, {'check_mode': 'tfoms'})
     enp = enp.replace(' ', '')
-
-    enp_mode = SettingManager.get("enp_mode", default_type='s', default="rmis")
 
     if enp_mode == 'tfoms':
         tfoms_data = match_enp(enp)
