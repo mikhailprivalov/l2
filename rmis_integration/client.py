@@ -34,6 +34,9 @@ from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.sql_func import get_confirm_direction
 
 
+logger = logging.getLogger("RMIS")
+
+
 class Utils:
     @staticmethod
     def get_column_value(row, column):
@@ -618,20 +621,28 @@ class Patients(BaseRequester):
 
     def get_l2_card_by_enp(self, enp: str):
         get_id = self.patient_first_id_by_poils("", enp)
+        logger.exception(f'{enp} <-> {get_id}')
         if get_id not in ['', 'NONERMIS']:
             if clients_models.Card.objects.filter(number=get_id, base__is_rmis=True).exists():
                 rmis_card = clients_models.Card.objects.filter(number=get_id, base__is_rmis=True)[0]
+                logger.exception(f'{enp}:1 – {rmis_card}')
             elif clients_models.Individual.objects.filter(rmis_uid=get_id).exists():
                 i = clients_models.Individual.objects.filter(rmis_uid=get_id)[0]
                 rmis_card = self.create_rmis_card(i, get_id)
+                logger.exception(f'{enp}:2 – {rmis_card}')
             else:
                 i = self.import_individual_to_base(get_id, limit=1)
+                logger.exception(f'{enp}:3 – {i}')
                 if not i:
                     return None
+                logger.exception(f'{enp}:4 – {i[0]}')
                 rmis_card = self.create_rmis_card(i[0], get_id)
+                logger.exception(f'{enp}:5 – {rmis_card}')
             if rmis_card:
                 if clients_models.Card.objects.filter(individual=rmis_card.individual, base__internal_type=True).exists():
+                    logger.exception(f'{enp}:6')
                     return clients_models.Card.objects.filter(individual=rmis_card.individual, base__internal_type=True)[0]
+                logger.exception(f'{enp}:7')
                 return clients_models.Card.add_l2_card(card_orig=rmis_card)
         return None
 
