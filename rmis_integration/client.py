@@ -616,6 +616,25 @@ class Patients(BaseRequester):
                 return get_id
         return return_none
 
+    def get_l2_card_by_enp(self, enp: str):
+        get_id = self.patient_first_id_by_poils("", enp)
+        if get_id not in ['', 'NONERMIS']:
+            if clients_models.Card.objects.filter(number=get_id, base__is_rmis=True).exists():
+                rmis_card = clients_models.Card.objects.filter(number=get_id, base__is_rmis=True)[0]
+            elif clients_models.Individual.objects.filter(rmis_uid=get_id).exists():
+                i = clients_models.Individual.objects.filter(rmis_uid=get_id)[0]
+                rmis_card = self.create_rmis_card(i, get_id)
+            else:
+                i = self.import_individual_to_base(get_id, limit=1)
+                if not i:
+                    return None
+                rmis_card = self.create_rmis_card(i[0], get_id)
+            if rmis_card:
+                if clients_models.Card.objects.filter(individual=rmis_card.individual, base__internal_type=True).exists():
+                    return clients_models.Card.objects.filter(individual=rmis_card.individual, base__internal_type=True)[0]
+                return clients_models.Card.add_l2_card(card_orig=rmis_card)
+        return None
+
     def import_individual_to_base(self, query, fio=False, limit=10) -> clients_models.Individual or None:
         return_rows = []
         if fio:

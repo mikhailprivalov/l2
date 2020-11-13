@@ -1,6 +1,7 @@
 import logging
 import random
 from collections import defaultdict
+from typing import Optional
 
 import simplejson as json
 from django.db import transaction
@@ -11,6 +12,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 import directions.models as directions
+from appconf.manager import SettingManager
 from clients.models import Individual, Card
 from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
@@ -19,6 +21,7 @@ from laboratory.settings import AFTER_DATE
 from laboratory.utils import current_time
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
+from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp
 from utils.data_verification import data_parse
@@ -342,16 +345,28 @@ def make_log(request):
 
 @api_view(['POST'])
 def check_enp(request):
-    enp, bd = data_parse(request.body, {'enp': str, 'bd': str})
-
+    enp, bd = data_parse(request.body, {'enp': str, 'bd': str, 'check_mode': str}, {'check_mode': 'tfoms'})
     enp = enp.replace(' ', '')
 
-    tfoms_data = match_enp(enp)
+    enp_mode = SettingManager.get("enp_mode", default_type='s', default="rmis")
 
-    if tfoms_data:
-        bdate = tfoms_data.get('birthdate', '').split(' ')[0]
-        if normalize_date(bd) == normalize_date(bdate):
-            return Response({"ok": True, 'patient_data': tfoms_data})
+    if enp_mode == 'tfoms':
+        tfoms_data = match_enp(enp)
+
+        if tfoms_data:
+            bdate = tfoms_data.get('birthdate', '').split(' ')[0]
+            if normalize_date(bd) == normalize_date(bdate):
+                return Response({"ok": True, 'patient_data': tfoms_data})
+    elif enp_mode == 'rmis':
+        c = Client(modules=['patients'])
+        card = c.patients.get_l2_card_by_enp(enp)
+        if card:
+            i: Individual = card.individual
+            bd_orig = f"{i.birthday:%Y-%m-%d}"
+            if bd_orig == bd:
+                return Response({"ok": True, 'patient_data': {
+                    "rmis_id": card.individual.get_rmis_uid_fast(),
+                }})
 
     return Response({"ok": False, 'message': 'Неверные данные или нет прикрепления к поликлинике'})
 

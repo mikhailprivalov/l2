@@ -998,9 +998,9 @@ class Card(models.Model):
                 if not cdu.exists():
                     CardDocUsage(card=c, document=polis).save()
                 else:
-                    for c in cdu:
-                        c.document = polis
-                        c.save(update_fields=["document"])
+                    for cd in cdu:
+                        cd.document = polis
+                        cd.save(update_fields=["document"])
 
             return c
 
