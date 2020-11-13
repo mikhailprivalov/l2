@@ -356,11 +356,14 @@ def check_enp(request):
             if normalize_date(bd) == normalize_date(bdate):
                 return Response({"ok": True, 'patient_data': tfoms_data})
     elif enp_mode == 'rmis':
+        logger.exception(f'enp: {enp}')
         c = Client(modules=['patients'])
         card = c.patients.get_l2_card_by_enp(enp)
         if card:
+            logger.exception(f'card: {card}')
             i: Individual = card.individual
             bd_orig = f"{i.birthday:%Y-%m-%d}"
+            logger.exception(f'{bd_orig} == {bd}')
             if bd_orig == bd:
                 return Response({"ok": True, 'patient_data': {
                     "rmis_id": card.individual.get_rmis_uid_fast(),
