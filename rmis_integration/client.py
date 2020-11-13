@@ -1076,7 +1076,7 @@ class Directions(BaseRequester):
         return direction.result_rmis_send
 
     def get_protocol(self, rendered_service_id):
-        self.main_client.get_content(
+        return self.main_client.get_content(
             self.main_client.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/" + rendered_service_id)
         )
 
