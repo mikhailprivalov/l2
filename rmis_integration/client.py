@@ -4,7 +4,7 @@ import pickle
 import threading
 import urllib.parse
 import logging
-from typing import Union
+from typing import Union, Optional
 
 import requests
 import simplejson as json
@@ -25,7 +25,7 @@ from zeep.transports import Transport
 import clients.models as clients_models
 import slog.models as slog
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, RMISServiceInactive
+from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, RMISServiceInactive, TubesRegistration
 from directory.models import Fractions, ParaclinicInputGroups, Researches
 from laboratory import settings as l2settings
 from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
@@ -46,6 +46,12 @@ class Utils:
                     return col["data"]
         except:
             return ""
+
+    @staticmethod
+    def fix_nmu_code(s: Optional[str]):
+        if not s:
+            return s
+        return s.strip().replace("А", "A").replace("В", "B")
 
     @staticmethod
     def make_dict(rows, key_column="NAME", value_column="ID"):
@@ -176,6 +182,14 @@ class Client(object):
             id = self.get_directory("pim_organization").get_first("ID", "FULL_NAME", query)
             cache.set(key, id, 24 * 3600)
         return id
+
+    def get_org_id_for_direction(self, direction: Napravleniya):
+        if not direction.hospital:
+            return self.search_organization_id()
+        org_id = self.search_organization_id(q=direction.hospital.title)
+        if org_id:
+            return org_id
+        return self.search_organization_id()
 
     def get_organization_title(self, pk, full=False):
         key = 'rmis_org_t_%s_%s' % (pk, full)
@@ -700,19 +714,26 @@ class Services(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_services")
 
+        org_id = client.search_organization_id()
+
         key = "zeep_services"
         r = cache.get(key)
+
         if not r:
             self.services = {}
-            srv = self.client.getServices(clinic=client.search_organization_id())
+            srv = self.client.getServices(clinic=org_id)
             for r in srv:
                 if RMISServiceInactive.isInactive(r["id"]):
                     continue
-                self.services[r["code"] if not r["code"] else r["code"].strip()] = r["id"]
+                self.services[Utils.fix_nmu_code(r["code"])] = r["id"]
 
             cache.set(key, pickle.dumps(self.services, protocol=4), 300)
         else:
             self.services = pickle.loads(r, encoding="utf8")
+
+        self.external_services = {
+            org_id: self.services,
+        }
 
     def get_service_data(self, pk):
         key = "get_service_d{}".format(pk)
@@ -725,10 +746,22 @@ class Services(BaseRequester):
         return r
 
     def get_service_id(self, s):
-        s = s.replace("А", "A").replace("В", "B")
+        s = Utils.fix_nmu_code(s)
         if s in self.services:
             return self.services[s]
         return None
+
+    def get_service_id_for_direction(self, s, direction: Napravleniya):
+        s = Utils.fix_nmu_code(s)
+        org_id = self.main_client.get_org_id_for_direction(direction)
+        if org_id not in self.external_services:
+            self.external_services[org_id] = {}
+            srv = self.client.getServices(clinic=org_id)
+            for r in srv:
+                if RMISServiceInactive.isInactive(r["id"]):
+                    continue
+                self.external_services[org_id][Utils.fix_nmu_code(r["code"])] = r["id"]
+        return self.external_services.get(org_id, {}).get(s)
 
     def get_service_ids(self, direction: Napravleniya):
         services_tmp = []
@@ -736,7 +769,15 @@ class Services(BaseRequester):
             services_tmp.append(iss.research.code)
             for f in Fractions.objects.filter(research=iss.research):
                 services_tmp.append(f.code)
-        return [y for y in [self.get_service_id(x) for x in list(set(services_tmp))] if y is not None]
+        return [
+            y
+            for y in
+            [
+                self.get_service_id_for_direction(x, direction)
+                for x in list(set(services_tmp))
+            ]
+            if y is not None
+        ]
 
 
 def ndate(d: Union[datetime.datetime, datetime.date]):
@@ -761,6 +802,14 @@ def get_direction_full_data_cache(pk):
 class Directions(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_directions")
+        self.covid_service_codes = {
+            'A26.08.044.001',
+            'A26.08.027.001',
+        }
+
+    def service_is_covid(self, code):
+        code = Utils.fix_nmu_code(code)
+        return code in self.covid_service_codes
 
     def search_directions(self, **kwargs):
         return self.client.searchReferral(**kwargs)
@@ -866,10 +915,10 @@ class Directions(BaseRequester):
                     number=str(direction.pk),
                     typeId=self.main_client.get_directory("md_referral_type").get_first("ID", search_data=direction.rmis_direction_type()),
                     referralDate=ndate(direction.data_sozdaniya_local),
-                    referralOrganizationId=self.main_client.search_organization_id(),
-                    referringDepartmentId=self.main_client.search_dep_id(q=direction.rmis_referral_title(), org_id=self.main_client.search_organization_id()),
-                    receivingOrganizationId=self.main_client.search_organization_id(),
-                    receivingDepartmentId=self.main_client.search_dep_id(q=direction.rmis_department_title(), org_id=self.main_client.search_organization_id()),
+                    referralOrganizationId=self.main_client.get_org_id_for_direction(direction),
+                    referringDepartmentId=self.main_client.search_dep_id(q=direction.rmis_referral_title(), org_id=self.main_client.get_org_id_for_direction(direction)),
+                    receivingOrganizationId=self.main_client.get_org_id_for_direction(direction),
+                    receivingDepartmentId=self.main_client.search_dep_id(q=direction.rmis_department_title(), org_id=self.main_client.get_org_id_for_direction(direction)),
                     refServiceId=self.main_client.services.get_service_ids(direction),
                     fundingSourceTypeId=Utils.get_fin_src_id(direction.fin_title, self.main_client.get_fin_dict()),
                     note='Автоматический вывод из Информационной Системы L2',
@@ -908,7 +957,7 @@ class Directions(BaseRequester):
             direction.rmis_hosp_id = h_id
 
     def send_service(self, code: str, patient_uid: str, refferal_id: str, direction: Napravleniya) -> str:
-        service_id = self.main_client.services.get_service_id(code)
+        service_id = self.main_client.services.get_service_id_for_direction(code, direction)
         if service_id is None:
             return ""
         send_data = dict(
@@ -916,7 +965,7 @@ class Directions(BaseRequester):
             serviceId=service_id,
             isRendered="false",
             patientUid=patient_uid,
-            orgId=self.main_client.search_organization_id(),
+            orgId=self.main_client.get_org_id_for_direction(direction),
             note='Результаты в направлении или в протоколе.\nАвтоматический вывод из МИС L2',
             quantity=1,
         )
@@ -961,6 +1010,7 @@ class Directions(BaseRequester):
 
     def check_send_results(self, direction: Napravleniya, stdout: OutputWrapper = None):
         protocol_template = Settings.get("protocol_template")
+        protocol_covid_template = Settings.get("protocol_covid_template")
         protocol_row = Settings.get("protocol_template_row")
         if not direction.result_rmis_send:
             if direction.rmis_number != "NONERMIS":
@@ -974,6 +1024,8 @@ class Directions(BaseRequester):
                                 sended_ids[row.code] = row.rmis_id
                             sended_researches = []
                             sended_codes = []
+                            has_covid = False
+
                             for x in ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction):
                                 code = x.field.group.research.code
                                 if code in sended_codes or code.strip() == "":
@@ -1021,16 +1073,42 @@ class Directions(BaseRequester):
                                         if stdout:
                                             stdout.write("DATA: " + str(send_data))
                                         ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
-                                        xresult = ""
-                                        for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
-                                            xresult += protocol_row.replace("{{фракция}}", y.fraction.title).replace("{{значение}}", y.value).replace("{{едизм}}", y.get_units())
-                                        xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
-                                        if x.issledovaniye.get_analyzer() != "":
-                                            xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}", x.issledovaniye.get_analyzer()).replace("{{едизм}}", "")
-                                        if x.issledovaniye.lab_comment and x.issledovaniye.lab_comment != "":
-                                            xresult += protocol_row.replace("{{фракция}}", "Комментарий").replace("{{значение}}", x.issledovaniye.lab_comment).replace("{{едизм}}", "")
-                                        self.put_protocol(code, direction, protocol_template, ss, x, xresult, stdout)
                                         RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
+
+                                        if self.service_is_covid(code):
+                                            has_covid = True
+                                            i: Issledovaniya = x.issledovaniye
+                                            tube: TubesRegistration = i.tubes.all().first()
+
+                                            if tube:
+                                                time_get = tube.time_get or tube.time_recive
+                                                date_get = "" if not time_get else localtime(time_get).strftime("%Y-%m-%d")
+                                            else:
+                                                date_get = ""
+
+                                            protocol: str = (
+                                                protocol_covid_template
+                                                .replace("{{комментарий}}", i.lab_comment)
+                                                .replace("{{дата забора}}", date_get)
+                                                .replace(
+                                                    "{{дата подтверждения}}",
+                                                    "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%Y-%m-%d")
+                                                )
+                                            )
+                                            for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
+                                                protocol = protocol.replace("{{результат}}", y.value)
+
+                                            self.put_protocol(code, direction, protocol, ss, x, "", stdout)
+                                        else:
+                                            xresult = ""
+                                            for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
+                                                xresult += protocol_row.replace("{{фракция}}", y.fraction.title).replace("{{значение}}", y.value).replace("{{едизм}}", y.get_units())
+                                            xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
+                                            if x.issledovaniye.get_analyzer() != "":
+                                                xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}", x.issledovaniye.get_analyzer()).replace("{{едизм}}", "")
+                                            if x.issledovaniye.lab_comment and x.issledovaniye.lab_comment != "":
+                                                xresult += protocol_row.replace("{{фракция}}", "Комментарий").replace("{{значение}}", x.issledovaniye.lab_comment).replace("{{едизм}}", "")
+                                            self.put_protocol(code, direction, protocol_template, ss, x, xresult, stdout)
                                 code = x.fraction.code
                                 if code in sended_codes or code.strip() == "":
                                     continue
@@ -1052,22 +1130,50 @@ class Directions(BaseRequester):
                                     if stdout:
                                         stdout.write("DATA2: " + json.dumps(send_data))
                                     ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
-                                    xresult = protocol_row.replace("{{фракция}}", x.fraction.title).replace("{{значение}}", x.value).replace("{{едизм}}", x.get_units())
-                                    xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
-                                    if x.issledovaniye.get_analyzer() != "":
-                                        xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}", x.issledovaniye.get_analyzer()).replace("{{едизм}}", "")
-                                    self.main_client.put_content(
-                                        "Protocol.otg",
-                                        protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation_fio).replace("{{результат}}", xresult),
-                                        self.main_client.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/" + ss),
-                                        method="POST",
-                                    )
+                                    if self.service_is_covid(code):
+                                        has_covid = True
+                                        i: Issledovaniya = x.issledovaniye
+                                        tube: TubesRegistration = i.tubes.all().first()
+
+                                        if tube:
+                                            time_get = tube.time_get or tube.time_recive
+                                            date_get = "" if not time_get else localtime(time_get).strftime("%Y-%m-%d")
+                                        else:
+                                            date_get = ""
+
+                                        protocol: str = (
+                                            protocol_covid_template
+                                            .replace("{{комментарий}}", i.lab_comment)
+                                            .replace("{{дата забора}}", date_get)
+                                            .replace(
+                                                "{{дата подтверждения}}",
+                                                "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%Y-%m-%d")
+                                            )
+                                        )
+                                        for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
+                                            protocol = protocol.replace("{{результат}}", y.value)
+
+                                        self.put_protocol(code, direction, protocol, ss, x, "", stdout)
+                                    else:
+                                        xresult = protocol_row.replace("{{фракция}}", x.fraction.title).replace("{{значение}}", x.value).replace("{{едизм}}", x.get_units())
+                                        xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
+                                        if x.issledovaniye.get_analyzer() != "":
+                                            xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}", x.issledovaniye.get_analyzer()).replace("{{едизм}}", "")
+                                        self.main_client.put_content(
+                                            "Protocol.otg",
+                                            protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation_fio).replace("{{результат}}", xresult),
+                                            self.main_client.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/" + ss),
+                                            method="POST",
+                                        )
                                     RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
-                            self.main_client.put_content(
-                                "Resultat.pdf",
-                                self.main_client.local_get("/results/pdf", {"pk": json.dumps([direction.pk]), "normis": '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}),
-                                self.main_client.get_addr("referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат-" + str(direction.pk) + "/Resultat.pdf"),
-                            )
+
+                            if not has_covid:
+                                self.main_client.put_content(
+                                    "Resultat.pdf",
+                                    self.main_client.local_get("/results/pdf", {"pk": json.dumps([direction.pk]), "normis": '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}),
+                                    self.main_client.get_addr("referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number +
+                                                              "/Результат-" + str(direction.pk) + "/Resultat.pdf"),
+                                )
                 except Fault as e:
                     logging.exception(e)
                     if "ата смерти пациента" in e.message:
@@ -1112,14 +1218,14 @@ class Directions(BaseRequester):
         ]:
             send_data[p] = service_old_data.get(p, None) or send_data.get(p, None)
 
-    def gen_rmis_direction_data(self, code, direction, rid, rindiv, service_rend_id, stdout, x):
-        ssd = self.main_client.services.get_service_id(code)
+    def gen_rmis_direction_data(self, code, direction: Napravleniya, rid, rindiv, service_rend_id, stdout, x):
+        ssd = self.main_client.services.get_service_id_for_direction(code, direction)
         send_data = dict(
             referralId=rid,
             serviceId=ssd,
             isRendered="true",
             quantity="1",
-            orgId=self.main_client.search_organization_id(),
+            orgId=self.main_client.get_org_id_for_direction(direction),
             dateFrom=ndate(x.issledovaniye.time_confirmation),
             timeFrom=strtime(x.issledovaniye.time_confirmation),
             dateTo=ndate(x.issledovaniye.time_confirmation),

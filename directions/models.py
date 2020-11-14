@@ -820,6 +820,8 @@ class Napravleniya(models.Model):
         return Settings.get("direction_type_title", default="Направление в лабораторию")
 
     def rmis_department_title(self) -> str:
+        if self.is_external:
+            return "КДЛ"
         dep = self.department()
         if dep:
             return dep.rmis_department_title
@@ -828,6 +830,8 @@ class Napravleniya(models.Model):
         return Settings.get("depname")
 
     def rmis_referral_title(self) -> str:
+        if self.is_external:
+            return "КДЛ"
         return self.doc.podrazdeleniye.rmis_department_title
 
     def get_attr(self):
