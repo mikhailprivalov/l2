@@ -806,10 +806,17 @@ class Directions(BaseRequester):
             'A26.08.044.001',
             'A26.08.027.001',
         }
+        self.allowed_covid_values = {
+            'РНК вируса SARS-CоV2 не обнаружена',
+            'РНК вируса SARS-CоV2 обнаружена',
+        }
 
     def service_is_covid(self, code):
         code = Utils.fix_nmu_code(code)
         return code in self.covid_service_codes
+
+    def check_is_valid_covid_value(self, value):
+        return value in self.allowed_covid_values
 
     def search_directions(self, **kwargs):
         return self.client.searchReferral(**kwargs)
@@ -1010,7 +1017,7 @@ class Directions(BaseRequester):
 
     def check_send_results(self, direction: Napravleniya, stdout: OutputWrapper = None):
         protocol_template = Settings.get("protocol_template")
-        protocol_covid_template = Settings.get("protocol_covid_template")
+        protocol_covid_template = Settings.get("protocol_covid_template") or ""
         protocol_row = Settings.get("protocol_template_row")
         if not direction.result_rmis_send:
             if direction.rmis_number != "NONERMIS":
@@ -1096,7 +1103,8 @@ class Directions(BaseRequester):
                                                 )
                                             )
                                             for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
-                                                protocol = protocol.replace("{{результат}}", y.value)
+                                                if self.check_is_valid_covid_value(y.value):
+                                                    protocol = protocol.replace("{{результат}}", y.value)
 
                                             self.put_protocol(code, direction, protocol, ss, x, "", stdout)
                                         else:
@@ -1151,7 +1159,8 @@ class Directions(BaseRequester):
                                             )
                                         )
                                         for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
-                                            protocol = protocol.replace("{{результат}}", y.value)
+                                            if self.check_is_valid_covid_value(y.value):
+                                                protocol = protocol.replace("{{результат}}", y.value)
 
                                         self.put_protocol(code, direction, protocol, ss, x, "", stdout)
                                     else:
