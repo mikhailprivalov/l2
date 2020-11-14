@@ -67,6 +67,8 @@ class DoctorCall(models.Model):
         else:
             hospital_obj = Hospitals.objects.get(pk=data['hospital'])
 
+        email = data.get('email')
+
         doc_call = DoctorCall(
             client=patient_card,
             research=research_obj,
@@ -81,6 +83,7 @@ class DoctorCall(models.Model):
             doc_assigned=doc_obj,
             hospital=hospital_obj,
             is_external=data['external'],
+            email=None if not email else email[:64]
         )
         doc_call.save()
 

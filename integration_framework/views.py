@@ -414,6 +414,7 @@ def external_doc_call_create(request):
     enp = patient_data.get('enp')
     comment = form.get('comment')
     purpose = form.get('purpose')
+    email = form.get('email')
 
     Individual.import_from_tfoms(patient_data)
     individuals = Individual.objects.filter(Q(tfoms_enp=enp or '###$fakeenp$###') | Q(tfoms_idp=idp or '###$fakeidp$###'))
@@ -444,6 +445,7 @@ def external_doc_call_create(request):
             'purpose': int(purpose),
             'hospital': hospital.pk,
             'external': True,
+            'email': email,
         }
     )
     doc_call.external_num = f"{org_id}{doc_call.pk}"
