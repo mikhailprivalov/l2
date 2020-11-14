@@ -388,7 +388,7 @@ def patient_results_covid19(request):
 
     for i in reversed(range(days)):
         date = now - datetime.timedelta(days=i)
-        rendered_services = c.rendered_services.client.searchRenderedServices(
+        rendered_services = c.rendered_services.client.searchServiceRend(
             patientUid=rmis_id,
             dateFrom=date
         )
