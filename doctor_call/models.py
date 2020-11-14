@@ -102,6 +102,7 @@ class DoctorCall(models.Model):
                     "date": str(data['date']),
                     "comment": data['comment'],
                     "is_external": data['external'],
+                    "email": email,
                 }
             ),
             user=doc_who_create,
