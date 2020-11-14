@@ -13,6 +13,7 @@ urlpatterns = [
     path('iss/data-multi', views.issledovaniye_data_multi),
     path('set-core-id', views.set_core_id),
     path('check-enp', views.check_enp),
+    path('get-patient-results-covid19', views.patient_results_covid19),
     path('log', views.make_log),
     path('doc-call-create', views.external_doc_call_create),
     path('send-result', views.external_research_create),

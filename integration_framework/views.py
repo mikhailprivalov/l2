@@ -1,3 +1,4 @@
+import datetime
 import logging
 import random
 from collections import defaultdict
@@ -12,7 +13,6 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 import directions.models as directions
-from appconf.manager import SettingManager
 from clients.models import Individual, Card
 from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
@@ -372,6 +372,36 @@ def check_enp(request):
                 }})
 
     return Response({"ok": False, 'message': 'Неверные данные или нет прикрепления к поликлинике'})
+
+
+@api_view(['POST'])
+def patient_results_covid19(request):
+    rmis_id = data_parse(request.body, {'rmis_id': str})[0]
+
+    c = Client(modules=['directions', 'rendered_services'])
+
+    now = current_time().date()
+    days = 15
+    variants = ['РНК вируса SARS-CоV2 не обнаружена', 'РНК вируса SARS-CоV2 обнаружена']
+
+    results = []
+
+    for i in reversed(range(days)):
+        date = now - datetime.timedelta(days=i)
+        rendered_services = c.rendered_services.client.searchRenderedServices(
+            patientUid=rmis_id,
+            dateFrom=date
+        )
+        for rs in rendered_services:
+            protocol = c.directions.get_protocol(rs)
+            for v in variants:
+                if v in protocol:
+                    results.append({
+                        'date': date.strftime('%d.%m.%Y'),
+                        'result': v
+                    })
+
+    return Response({"ok": True, 'results': results})
 
 
 @api_view(['POST'])
