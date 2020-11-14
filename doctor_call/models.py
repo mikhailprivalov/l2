@@ -19,6 +19,7 @@ class DoctorCall(models.Model):
         (4, 'Активное наблюдени'),
         (5, 'Другое'),
         (6, 'Выписать рецепт'),
+        (7, 'Заявка на отправку результата COVID-19'),
     )
 
     client = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
@@ -36,6 +37,7 @@ class DoctorCall(models.Model):
     hospital = models.ForeignKey(Hospitals, db_index=True, null=True, help_text='Больница', on_delete=models.CASCADE)
     is_external = models.BooleanField(default=False, blank=True, help_text='Внешняя заявка')
     external_num = models.CharField(max_length=128, blank=True, default='', help_text='Номер внешней заявки')
+    email = models.CharField(max_length=64, blank=True, default=None, null=True, help_text='Email заявки на результат covid')
 
     class Meta:
         verbose_name = 'Вызов'
