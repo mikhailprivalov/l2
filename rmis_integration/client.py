@@ -600,18 +600,21 @@ class Patients(BaseRequester):
         return "NONERMIS"
 
     @staticmethod
-    def create_rmis_card(individual: clients_models.Individual, get_id: str):
+    def create_rmis_card(individual: clients_models.Individual, get_id: str, strict=True):
         base = clients_models.CardBase.objects.filter(is_rmis=True).first()
         if not individual.rmis_uid and individual.rmis_uid != get_id:
             individual.rmis_uid = get_id
             individual.save(update_fields=['rmis_uid'])
-        if get_id and not clients_models.Card.objects.filter(base=base, number=get_id, is_archive=False).exists():
-            for cm in clients_models.Card.objects.filter(base=base, individual=individual):
-                cm.is_archive = True
-                cm.save()
-            c = clients_models.Card(base=base, number=get_id, individual=individual, is_archive=False)
-            c.save()
-            return c
+        if get_id:
+            if not clients_models.Card.objects.filter(base=base, number=get_id, is_archive=False).exists():
+                for cm in clients_models.Card.objects.filter(base=base, individual=individual):
+                    cm.is_archive = True
+                    cm.save()
+                c = clients_models.Card(base=base, number=get_id, individual=individual, is_archive=False)
+                c.save()
+                return c
+            elif not strict:
+                return clients_models.Card.objects.filter(base=base, number=get_id, is_archive=False)[0]
         return None
 
     def get_rmis_id_for_individual(self, individual: clients_models.Individual):
@@ -640,7 +643,7 @@ class Patients(BaseRequester):
                 if not i:
                     return None
                 logger.exception(f'{enp}:4 – {i[0]}')
-                rmis_card = self.create_rmis_card(i[0], get_id)
+                rmis_card = self.create_rmis_card(i[0], get_id, strict=False)
                 logger.exception(f'{enp}:5 – {rmis_card}')
             if rmis_card:
                 if clients_models.Card.objects.filter(individual=rmis_card.individual, base__internal_type=True).exists():
