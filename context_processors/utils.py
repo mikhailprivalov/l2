@@ -24,7 +24,7 @@ def menu(request):
     if request.user.is_authenticated and not request.is_ajax():
         from laboratory import settings
 
-        groups = [str(x) for x in request.user.groups.all()]
+        groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
         pages = [
             {"url": "/mainmenu/", "title": "Начальная страница", "nt": False, "access": ["*"], "not_show_home": True},
