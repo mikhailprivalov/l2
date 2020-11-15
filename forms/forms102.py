@@ -29,6 +29,7 @@ from reportlab.platypus.flowables import HRFlowable
 from appconf.manager import SettingManager
 from clients.models import Card
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, PersonContract
+from hospitals.models import Hospitals
 from laboratory import utils
 from laboratory.settings import FONTS_FOLDER, BASE_DIR
 from . import forms_func
@@ -228,9 +229,12 @@ def form_01(request_data):
     objs.append(tbl)
 
     objs.append(Spacer(1, 4.5 * mm))
-    hospital_name = SettingManager.get("org_title")
-    hospital_short_name = SettingManager.get("org_title")
-    hospital_address = SettingManager.get("org_address")
+
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+    hospital_short_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
 
     post_contract = SettingManager.get("post_contract")
     document_base = SettingManager.get("document_base")

@@ -13,6 +13,7 @@ from reportlab.lib.colors import black
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya
 from directory.models import Fractions
+from hospitals.models import Hospitals
 from laboratory.settings import FONTS_FOLDER
 import locale
 import sys
@@ -36,9 +37,11 @@ def form_01(request_data):
     ind_card = direction_obj.client
     patient_data = ind_card.get_data_individual()
 
-    hospital_name = SettingManager.get("org_title")
-    hospital_address = SettingManager.get("org_address")
-    hospital_kod_ogrn = SettingManager.get("org_ogrn")
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -450,7 +453,11 @@ def form_01(request_data):
         operation_frame.addFromList([operation_inframe], canvas)
 
         canvas.setFont('PTAstraSerifBold', 8)
-        canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
+        hospital: Hospitals = request_data["hospital"]
+
+        hospital_name = hospital.safe_short_title
+
+        canvas.drawString(55 * mm, 12 * mm, '{}'.format(hospital_name))
         canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер истории: {}'.format(p_card_num, hosp_nums))
         canvas.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(patient_data['fio'], patient_data['born']))
         canvas.line(55 * mm, 11.5 * mm, 200 * mm, 11.5 * mm)

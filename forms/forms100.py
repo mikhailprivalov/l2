@@ -21,6 +21,7 @@ from api.patients.views import research_last_result_every_month
 from appconf.manager import SettingManager
 from clients.models import Card, DispensaryReg, DispensaryRegPlans
 from directory.models import DispensaryPlan, Researches
+from hospitals.models import Hospitals
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
 from statistics_tickets.models import VisitPurpose
@@ -47,9 +48,12 @@ def form_01(request_data):
     else:
         work_position = work_data
 
-    hospital_name = SettingManager.get("rmis_orgname")
-    hospital_address = SettingManager.get("org_address")
-    hospital_kod_ogrn = SettingManager.get("org_ogrn")
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.title
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
+
     health_passport_num = request_data["card_pk"]  # номер id patient из базы
 
     list_result = [
@@ -360,10 +364,11 @@ def form_02(request_data):
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
+    hospital: Hospitals = request_data["hospital"]
 
-    hospital_name = SettingManager.get("org_title")
-    hospital_address = SettingManager.get("org_address")
-    hospital_kod_ogrn = SettingManager.get("org_ogrn")
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -541,9 +546,11 @@ def form_03(request_data):
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
 
-    hospital_name = SettingManager.get("org_title")
-    hospital_address = SettingManager.get("org_address")
-    hospital_kod_ogrn = SettingManager.get("org_ogrn")
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -711,9 +718,11 @@ def form_04(request_data):
     ind_card = reg_dipensary.card
     patient_data = ind_card.get_data_individual()
 
-    hospital_name = SettingManager.get("org_title")
-    hospital_address = SettingManager.get("org_address")
-    hospital_kod_ogrn = SettingManager.get("org_ogrn")
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')

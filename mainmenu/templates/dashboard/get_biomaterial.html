@@ -417,7 +417,6 @@
                 hl()
                 com = false
                 if (data && data.direction && data.direction.pk && data.direction.type === 2) {
-
                     dnum = data.direction.pk
                     $('#success-b').show()
                     $('.btn#success-b').removeAttr('disabled')
@@ -485,6 +484,9 @@
                     $('input[name=complete-res]').first().focus()
                 }
                 else {
+                    if (data.message) {
+                        errmessage(data.message)
+                    }
                     if(data.direction && data.direction.type === 3)
                         $('#dir-num').html(`Направление ${q} не в лабораторию`)
                     else

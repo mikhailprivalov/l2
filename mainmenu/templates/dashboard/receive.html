@@ -40,7 +40,9 @@
                 <td>
                     <select class="selectpicker" data-width="100%" id="from" onchange="loadfrom();">
                         {% for v in podrazdeleniya %}
-                            <option num='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}</select>
+                            <option num='{{ v.pk }}'>{{ v.title }}</option>
+                        {% endfor %}
+                    </select>
                 </td>
                 <td style="width: 350px">
                     <div class="row" style="margin-bottom: 5px">

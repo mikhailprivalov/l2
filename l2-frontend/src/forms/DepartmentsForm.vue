@@ -2,7 +2,7 @@
   <div>
     <div class="card-no-hover card card-1 filters">
       <treeselect :multiple="false" :disable-branch-nodes="true"
-                  :options="can_edit_any_organization ? hospitals : own_hospital"
+                  :options="can_edit_any_organization ? all_hospitals_with_none : own_hospital"
                   placeholder="Больница не выбрана" v-model="selected_hospital"
                   :append-to-body="true"
                   :clearable="false"
@@ -62,7 +62,7 @@ export default {
   watch: {
     user_hospital: {
       handler() {
-        if (this.selected_hospital !== -1 || this.user_hospital === -1) {
+        if (this.user_hospital === -1) {
           return;
         }
         this.selected_hospital = this.user_hospital;
@@ -70,8 +70,8 @@ export default {
       immediate: true,
     },
     selected_hospital() {
-      if (this.selected_hospital === -1) {
-        return
+      if (this.user_hospital === -1) {
+        return;
       }
 
       this.loadDepartments();
@@ -102,7 +102,11 @@ export default {
     async loadDepartments() {
       await this.$store.dispatch(action_types.INC_LOADING)
       this.departments =
-        (await departments_directory.getDepartments({method: 'GET', hospital: this.selected_hospital})).departments;
+        (await departments_directory.getDepartments({
+          method: 'GET',
+          hospital: this.selected_hospital,
+          withoutDefault: true,
+        })).departments;
       await this.$store.dispatch(action_types.DEC_LOADING)
     },
   },
@@ -126,7 +130,7 @@ export default {
     create_valid() {
       return this.trim_title.length > 0
     },
-    ...mapGetters(['user_data', 'hospitals']),
+    ...mapGetters(['user_data', 'hospitals', 'all_hospitals_with_none']),
     can_edit_any_organization() {
       return this.user_data.su;
     },

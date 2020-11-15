@@ -7,6 +7,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.db import IntegrityError
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import dateformat
@@ -192,7 +193,12 @@ def receive_journal_form(request):
     if not lab or lab.p_type != Podrazdeleniya.LABORATORY:
         lab = labs[0]
     groups = directory.ResearchGroup.objects.filter(lab=lab)
-    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+    podrazdeleniya = (
+        Podrazdeleniya.objects
+        .filter(p_type=Podrazdeleniya.DEPARTMENT)
+        .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
+        .order_by("title")
+    )
     return render(request, 'dashboard/receive_journal.html', {"groups": groups, "podrazdeleniya": podrazdeleniya, "labs": labs, "lab": lab})
 
 
@@ -577,9 +583,18 @@ def dashboard_from(request):
     try:
         date_start, date_end = try_parse_range(date_start, date_end)
         if request.GET.get("get_labs", "false") == "true":
-            for lab in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации"):
-                tubes_list = TubesRegistration.objects.filter(
-                    doc_get__podrazdeleniye__p_type=Podrazdeleniya.DEPARTMENT, time_get__range=(date_start, date_end), issledovaniya__research__podrazdeleniye=lab
+            for lab in (
+                           Podrazdeleniya.objects
+                           .filter(p_type=Podrazdeleniya.LABORATORY)
+                           .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
+                           .exclude(title="Внешние организации")
+            ):
+                tubes_list = (
+                    TubesRegistration.objects
+                    .filter(
+                        doc_get__podrazdeleniye__p_type=Podrazdeleniya.DEPARTMENT, time_get__range=(date_start, date_end), issledovaniya__research__podrazdeleniye=lab
+                    )
+                    .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
                 )
                 if filter_type == "not_received":
                     tubes_list = tubes_list.filter(doc_recive__isnull=True).exclude(notice="")
@@ -590,12 +605,17 @@ def dashboard_from(request):
                 tubes = tubes_list.distinct().count()
                 result[lab.pk] = tubes
             return JsonResponse(result)
-        podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+        podrazdeleniya = (
+            Podrazdeleniya.objects
+            .filter(p_type=Podrazdeleniya.DEPARTMENT)
+            .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
+            .order_by("title")
+        )
         lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
         i = 0
         for podrazledeniye in podrazdeleniya:
             i += 1
-            tubes_list = get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye)
+            tubes_list = get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye, request.user.doctorprofile)
             result[i] = {"tubes": tubes_list.distinct().count(), "title": podrazledeniye.title, "pk": podrazledeniye.pk}
     except ValueError:
         pass
@@ -603,8 +623,12 @@ def dashboard_from(request):
     return JsonResponse(result)
 
 
-def get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye):
-    tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye=podrazledeniye, time_get__range=(date_start, date_end), issledovaniya__research__podrazdeleniye=lab)
+def get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye, doctorprofile):
+    tubes_list = (
+        TubesRegistration.objects
+        .filter(doc_get__podrazdeleniye=podrazledeniye, time_get__range=(date_start, date_end), issledovaniya__research__podrazdeleniye=lab)
+        .filter(Q(issledovaniya__napravleniye__hospital=doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
+    )
     if filter_type == "not_received":
         tubes_list = tubes_list.filter(doc_recive__isnull=True).exclude(notice="")
     elif filter_type == "received":

@@ -389,10 +389,14 @@ def endpoint(request):
 def departments(request):
     req = json.loads(request.body)
     method = req.get('method', 'GET')
+    without_default = req.get('withoutDefault', False)
     current_user_hospital_id = request.user.doctorprofile.hospital_id or -1
     hospital_pk = req.get('hospital', current_user_hospital_id)
 
     su = request.user.is_superuser
+
+    if hospital_pk == -1:
+        hospital_pk = None
 
     if hospital_pk != current_user_hospital_id and not su:
         return JsonResponse({"ok": False})
@@ -400,14 +404,23 @@ def departments(request):
     can_edit = su or request.user.doctorprofile.has_group('Создание и редактирование пользователей')
 
     if method == "GET":
-        deps = [
-            {"pk": x.pk, "title": x.get_title(), "type": str(x.p_type)}
-            for x in (
+        if without_default:
+            qs = (
                 Podrazdeleniya
                 .objects
                 .filter(hospital_id=hospital_pk)
                 .order_by("pk")
             )
+        else:
+            qs = (
+                Podrazdeleniya
+                .objects
+                .filter(Q(hospital_id=hospital_pk) | Q(hospital__isnull=True))
+                .order_by("pk")
+            )
+        deps = [
+            {"pk": x.pk, "title": x.get_title(), "type": str(x.p_type)}
+            for x in qs
         ]
         en = SettingManager.en()
         more_types = []
@@ -500,7 +513,7 @@ def current_user_info(request):
         ret["restricted"] = [x.pk for x in doctorprofile.restricted_to_direct.all()]
         ret["user_services"] = [x.pk for x in doctorprofile.users_services.all() if x not in ret["restricted"]]
         ret["su"] = user.is_superuser
-        ret["hospital"] = doctorprofile.hospital_id
+        ret["hospital"] = doctorprofile.get_hospital_id()
 
         en = SettingManager.en()
         ret["extended_departments"] = {}
@@ -542,7 +555,15 @@ def directive_from(request):
     data = []
     for dep in (
         Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)
-            .prefetch_related(Prefetch('doctorprofile_set', queryset=users.DoctorProfile.objects.filter(user__groups__name="Лечащий врач").order_by("fio")))
+            .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
+            .prefetch_related(
+                Prefetch('doctorprofile_set', queryset=(
+                    users.DoctorProfile.objects
+                    .filter(user__groups__name="Лечащий врач")
+                    .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
+                    .order_by("fio")
+                ))
+            )
             .order_by('title')
     ):
         d = {
@@ -919,7 +940,7 @@ def users_view(request):
     data = []
 
     if can_edit:
-        podr = Podrazdeleniya.objects.filter(hospital_id=hospital_pk).order_by("title")
+        podr = Podrazdeleniya.objects.filter(Q(hospital_id=hospital_pk) | Q(hospital__isnull=True)).exclude(p_type=Podrazdeleniya.HIDDEN, hospital__isnull=True).order_by("title")
         for x in podr:
             otd = {"pk": x.pk, "title": x.title, "users": []}
             docs = users.DoctorProfile.objects.filter(podrazdeleniye=x, hospital_id=hospital_pk).order_by('fio')

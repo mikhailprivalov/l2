@@ -162,6 +162,8 @@ def loadready(request):
             issledovaniya__isnull=False,
         )
 
+    tlist = tlist.filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
+
     for tube in tlist.prefetch_related('issledovaniya_set__napravleniye'):
         direction = None
         if tube.pk not in tubes:
@@ -432,26 +434,28 @@ def result_print(request):
         i.drawHeight = i.drawHeight * (nw / i.drawWidth)
         i.drawWidth = nw
     region = SettingManager.get("region", default='38', default_type='s')
-    logo_col = [
-        i,
-        '',
-        '',
-        '',
-        '',
-        Paragraph(
-            'Результат из <font face="OpenSansBoldItalic">L²</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s'
-            % (
-                '<font face="OpenSansLight">(L2-irk.ru)</font>' if region == '38' else 'DEMO' if region == 'DEMO' else '',
-                SettingManager.get("org_title"),
-                SettingManager.get("org_www"),
-                SettingManager.get("org_phones"),
+
+    def logo_col(direction: Napravleniya):
+        return [
+            i,
+            '',
+            '',
+            '',
+            '',
+            Paragraph(
+                'Результат из <font face="OpenSansBoldItalic">L²</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s'
+                % (
+                    '<font face="OpenSansLight">(L2-irk.ru)</font>' if region == '38' else 'DEMO' if region == 'DEMO' else '',
+                    direction.hospital_short_title,
+                    direction.hospital_www,
+                    direction.hospital_phones,
+                ),
+                styleAb,
             ),
-            styleAb,
-        ),
-        '',
-        '',
-        '',
-    ]
+            '',
+            '',
+            '',
+        ]
     pw = doc.width
 
     def print_vtype(data, f, iss, j, style_t, styleSheet):

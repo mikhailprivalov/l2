@@ -23,6 +23,7 @@ from reportlab.platypus.flowables import HRFlowable
 from appconf.manager import SettingManager
 from directions.models import Issledovaniya, Napravleniya, ParaclinicResult
 from directory.models import Researches
+from hospitals.models import Hospitals
 from laboratory import utils
 from laboratory.settings import FONTS_FOLDER
 from utils import tree_directions
@@ -459,9 +460,11 @@ def form_03(request_data):
     ind_card = direction_obj.client
     patient_data = ind_card.get_data_individual()
 
-    hospital_name = SettingManager.get("org_title")
-    hospital_address = SettingManager.get("org_address")
-    hospital_kod_ogrn = SettingManager.get("org_ogrn")
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')

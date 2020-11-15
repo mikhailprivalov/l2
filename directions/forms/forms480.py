@@ -25,7 +25,7 @@ from forms.forms_func import hosp_get_operation_data
 def form_01(c: Canvas, dir: Napravleniya):
     # Гистология - Учетная форма № 014/у Утверждена приказом Минздрава России от 24 марта 2016 г. № 179н
     def printForm():
-        hospital_name = SettingManager.get("org_title")
+        hospital_name = dir.hospital_short_title
         hospital_address = SettingManager.get("org_address")
         hospital_kod_ogrn = SettingManager.get("org_ogrn")
 

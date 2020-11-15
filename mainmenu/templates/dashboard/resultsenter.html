@@ -1597,7 +1597,7 @@
                 }
                 $.each(data.issledovaniya, function (k, v) {
                     if (v.saved && !v.confirmed) status = 's'
-                    else if (v.saved && v.confirmed) status = 'c'
+                    else if (v.confirmed) status = 'c'
                     else if (!v.deff) status = 'n'
                     else status = 'o'
 

@@ -53,6 +53,19 @@ class DoctorProfile(models.Model):
     rmis_resource_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
     hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, blank=True, default=None, null=True, on_delete=models.SET_NULL)
 
+    def get_hospital_id(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.pk
+        return None
+
+    def get_hospital(self):
+        if not self.hospital:
+            from hospitals.models import Hospitals
+            self.hospital = Hospitals.get_default_hospital()
+            self.save()
+        return self.hospital
+
     def get_login_id(self):
         if not self.login_id:
             self.login_id = uuid.uuid4()

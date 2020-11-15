@@ -20,6 +20,7 @@ from reportlab.platypus.flowables import HRFlowable
 
 from appconf.manager import SettingManager
 from clients.models import Individual, Card, Document, CardDocUsage
+from hospitals.models import Hospitals
 from laboratory import settings
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strfdatetime, current_time
@@ -195,8 +196,10 @@ def form_02(request_data):
     objs.append(Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
     objs.append(Spacer(1, 2 * mm))
 
-    hospital_name = SettingManager.get("org_title")
-    hospital_address = SettingManager.get("org_address")
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
 
     if agent_status:
         opinion = [
@@ -442,7 +445,9 @@ def form_03(request_data):
     objs.append(Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
     objs.append(Spacer(1, 3 * mm))
 
-    hospital_name = SettingManager.get("org_title")
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
 
     opinion = []
     if agent_status:
@@ -614,8 +619,10 @@ def form_05(request_data):
 
     objs = []
 
-    hospital_name = SettingManager.get("org_title")
-    hospital_address = SettingManager.get("org_address")
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
 
     objs.append(
         Paragraph(
@@ -814,7 +821,10 @@ def form_06(request_data):
         )
     )
 
-    hospital_name = SettingManager.get("org_title")
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+
     objs.append(Paragraph(f"<u>{hospital_name}</u>", styleCenterBold))
     objs.append(Paragraph('<br/>_____________________________________________________________________________________', styleSign))
     objs.append(Paragraph('(должность, фамилия, имя, отчество медицинского работника)', styleCenter))
