@@ -24,7 +24,7 @@ def menu(request):
     if request.user.is_authenticated and not request.is_ajax():
         from laboratory import settings
 
-        groups = [str(x) for x in request.user.groups.all()]
+        groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
         pages = [
             {"url": "/mainmenu/", "title": "Начальная страница", "nt": False, "access": ["*"], "not_show_home": True},
@@ -150,7 +150,7 @@ def make_menu(pages, groups, superuser, current_path=None):
 
 
 def profile(request):
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated or not hasattr(request.user, 'doctorprofile'):
         return {}
     # return {"specialities": [x.title for x in request.user.doctorprofile.specialities.all() if not x.hide]}
     return {"specialities": [] if not request.user.doctorprofile.specialities else [request.user.doctorprofile.specialities.title]}

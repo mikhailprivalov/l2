@@ -391,9 +391,9 @@ def form_02(request_data):
 
         personal_code = ''
         doc_fio = ''
-        if obj_iss.doc_confirmation:
-            personal_code = empty if not obj_iss.doc_confirmation.personal_code else obj_iss.doc_confirmation.personal_code
-            doc_fio = obj_iss.doc_confirmation.get_fio()
+        if obj_iss.time_confirmation:
+            personal_code = empty if not obj_iss.doc_confirmation or not obj_iss.doc_confirmation.personal_code else obj_iss.doc_confirmation.personal_code
+            doc_fio = obj_iss.doc_confirmation_fio
 
         objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '.format(doc_fio, 42 * space_symbol, personal_code), style))
 

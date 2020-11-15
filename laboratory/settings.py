@@ -84,7 +84,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.RemoteUserBackend',
 ]
 
-REST_FRAMEWORK = {'DEFAULT_AUTHENTICATION_CLASSES': ['integration_framework.authentication.TokenAuthentication',]}
+REST_FRAMEWORK = {'DEFAULT_AUTHENTICATION_CLASSES': ['integration_framework.authentication.TokenAuthentication']}
 
 ROOT_URLCONF = 'laboratory.urls'
 TEMPLATES = [

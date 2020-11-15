@@ -144,8 +144,8 @@ def send(request):
                 dpk -= 4600000000000
                 dpk //= 10
             tubes(request, direction_implict_id=dpk)
-            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).exists():
-                resdict["pk"] = directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).order_by("pk").first().pk
+            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__time_confirmation__isnull=True).exists():
+                resdict["pk"] = directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__time_confirmation__isnull=True).order_by("pk").first().pk
             else:
                 resdict["pk"] = False
         result["A"] = appkey
@@ -159,8 +159,8 @@ def send(request):
                     fractionRels = models.RelationFractionASTM.objects.filter(astm_field=key)
                     for fractionRel in fractionRels:
                         fraction = fractionRel.fraction
-                        if directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction.research, doc_confirmation__isnull=True).exists():
-                            issled = directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction.research, doc_confirmation__isnull=True).order_by("pk")[0]
+                        if directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction.research, time_confirmation__isnull=True).exists():
+                            issled = directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction.research, time_confirmation__isnull=True).order_by("pk")[0]
                             if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction).exists():
                                 fraction_result = directions.Result.objects.filter(issledovaniye=issled, fraction__pk=fraction.pk).order_by("-pk")[0]
                             else:
@@ -269,7 +269,9 @@ def endpoint(request):
                                     for fraction_rel in q:
                                         save_state = []
                                         issleds = []
-                                        for issled in directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction_rel.fraction.research, doc_confirmation__isnull=True):
+                                        for issled in directions.Issledovaniya.objects.filter(
+                                            napravleniye=direction, research=fraction_rel.fraction.research, time_confirmation__isnull=True
+                                        ):
                                             if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).exists():
                                                 fraction_result = directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).order_by("-pk")[0]
                                             else:

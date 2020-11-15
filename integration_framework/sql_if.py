@@ -46,7 +46,7 @@ def direction_collect(d_s, type_integration, limit):
             
             SELECT napravleniye_id, research_id, time_confirmation, t_confirm FROM t_all WHERE napr_null IS NULL
             ORDER BY time_confirmation LIMIT %(limit)s """,
-            params={'d_start': d_s, 'tz': TIME_ZONE, 'type_integration': type_integration, 'limit': limit},
+            params={'d_start': d_s if str(d_s) != 'None' else '2018-01-01', 'tz': TIME_ZONE, 'type_integration': type_integration, 'limit': limit},
         )
 
         row = cursor.fetchall()
@@ -85,6 +85,26 @@ def direction_resend_n3(limit):
             """
         SELECT id FROM public.directions_napravleniya
             WHERE need_resend_n3 = True
+            ORDER BY id DESC LIMIT %(limit)s """,
+            params={'limit': limit},
+        )
+
+        row = cursor.fetchall()
+    return row
+
+
+def direction_resend_l2(limit):
+    """
+    Вернуть:
+    Направления, в к-рых все исследования подтверждены, и подтверждены после определенной даты
+    в SQL:
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT id FROM public.directions_napravleniya
+            WHERE need_resend_l2 = True
             ORDER BY id DESC LIMIT %(limit)s """,
             params={'limit': limit},
         )

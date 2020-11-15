@@ -690,7 +690,9 @@ def hosp_patient_movement(hosp_nums_obj):
             if extract_data:
                 date_out = extract_data['date_value']
                 diagnos_mkb = extract_data['final_diagnos_mkb']
-                doc_confirm_code = Issledovaniya.objects.get(pk=extract_data['extract_iss']).doc_confirmation.personal_code
+                doc_confirm_code = (
+                    None if not Issledovaniya.objects.get(pk=extract_data['extract_iss']) else Issledovaniya.objects.get(pk=extract_data['extract_iss']).doc_confirmation.personal_code
+                )
 
         epicrisis_data = hosp_get_data_direction(hosp_dir, site_type=6, type_service='None', level=2)
         if epicrisis_data:
@@ -771,10 +773,10 @@ def hosp_get_operation_data(num_dir):
                 'category_difficult': '',
             }
             iss_obj = Issledovaniya.objects.filter(pk=pk_iss_operation).first()
-            if not iss_obj.doc_confirmation:
+            if not iss_obj.time_confirmation:
                 continue
-            operation_data['doc_fio'] = iss_obj.doc_confirmation.get_fio()
-            operation_data['doc_code'] = Issledovaniya.objects.get(pk=pk_iss_operation).doc_confirmation.personal_code
+            operation_data['doc_fio'] = iss_obj.doc_confirmation_fio
+            operation_data['doc_code'] = None if not Issledovaniya.objects.get(pk=pk_iss_operation) else Issledovaniya.objects.get(pk=pk_iss_operation).doc_confirmation.personal_code
             if operation_data['doc_code'] == 0:
                 operation_data['doc_code'] = ''
             category_difficult = ''

@@ -250,7 +250,7 @@ def receive_execlist(request):
     for pk in researches:
         if (
             directory.Researches.objects.filter(pk=pk).exists()
-            and Issledovaniya.objects.filter(research__pk=pk, tubes__time_recive__range=(date1, date2), doc_confirmation__isnull=True).exists()
+            and Issledovaniya.objects.filter(research__pk=pk, tubes__time_recive__range=(date1, date2), time_confirmation__isnull=True).exists()
         ):
             research = directory.Researches.objects.get(pk=pk)
             fractions_o = directory.Fractions.objects.filter(research=research, hide=False).order_by("sort_weight")
@@ -263,7 +263,7 @@ def receive_execlist(request):
             else:
                 tubes = [
                     x.pk
-                    for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2), issledovaniya__doc_confirmation__isnull=True, issledovaniya__research=research).order_by(
+                    for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2), issledovaniya__time_confirmation__isnull=True, issledovaniya__research=research).order_by(
                         "issledovaniya__napravleniye__client__individual__family", "issledovaniya__napravleniye__client__individual__name"
                     )
                 ]
