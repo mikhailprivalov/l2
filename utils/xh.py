@@ -15,6 +15,13 @@ def check_valid_square_brackets(v: str):
     return count == 0
 
 
+def check_number_is_valid(s):
+    s = str(s)
+    if s.isdigit():
+        return True
+    return check_float_is_valid(s)
+
+
 def check_float_is_valid(val):
     try:
         float(val)

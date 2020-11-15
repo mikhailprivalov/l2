@@ -14,7 +14,9 @@ class ResultRight:
     RESULT_MODE_NOT_NORMAL = 'not_normal'
 
     def __init__(self, orig_str: str):
-        orig_str = orig_str.strip().lower()
+        self.const_orig = orig_str.strip()
+
+        orig_str = self.const_orig.lower()
         self.range = ValueRange(0, 0)
 
         if not orig_str:

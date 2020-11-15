@@ -80,7 +80,7 @@ def form_04(request_data):
     fio_short = patient.client.individual.fio(short=True, dots=True)
 
     iss = Issledovaniya.objects.filter(napravleniye__pk=direction).order_by("research__pk", "research__sort_weight").first()
-    if not iss.doc_confirmation:
+    if not iss.time_confirmation:
         return ""
 
     result = form_04_data_result_(iss)
@@ -260,7 +260,7 @@ def form_05(request_data):
     patient_data = dir.client.get_data_individual()
 
     iss = Issledovaniya.objects.filter(napravleniye__pk=direction).order_by("research__pk", "research__sort_weight").first()
-    if not iss.doc_confirmation:
+    if not iss.time_confirmation:
         return ""
 
     result = form_05_06_data_result_(iss)
@@ -341,7 +341,7 @@ def form_05(request_data):
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph('12. Дата и час отсылки извещения _____________________', style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f'Подпись пославшего извещение _____________________{iss.doc_confirmation.get_fio()}', style))
+    fwb.append(Paragraph(f'Подпись пославшего извещение _____________________{iss.doc_confirmation_fio}', style))
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph('Регистрационный N _______________ в журнале ф. N ______________', style))
     fwb.append(Paragraph('санэпидстанции', style))
@@ -411,7 +411,7 @@ def form_06(request_data):
     patient_data = dir.client.get_data_individual()
     age = dir.client.individual.age_s(direction=dir)
     iss = Issledovaniya.objects.filter(napravleniye__pk=direction).order_by("research__pk", "research__sort_weight").first()
-    if not iss.doc_confirmation:
+    if not iss.time_confirmation:
         return ""
     result = form_05_06_data_result_(iss)
     work_place, work_position, address, phone, work_address = '', '', '', '', ''
@@ -488,7 +488,7 @@ def form_06(request_data):
         ],
         [
             Paragraph('ФИО терапевта', styleT),
-            Paragraph(f'{iss.doc_confirmation.get_fio()}', styleT),
+            Paragraph(f'{iss.doc_confirmation_fio}', styleT),
         ],
         [
             Paragraph('Телефон', styleT),

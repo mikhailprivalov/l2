@@ -30,6 +30,7 @@ class Application(models.Model):
     direction_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами направлений")
     decimal_places = models.PositiveIntegerField(default=4)
     places_type = models.CharField(max_length=10, default=PLACES_FRACTION, choices=PLACES)
+    hospitals = models.ManyToManyField('hospitals.Hospitals', blank=True)
     is_superuser = False
 
     def auto_set_places(self, rel: "RelationFractionASTM", value: [str, float, int]) -> str:
@@ -55,7 +56,7 @@ class Application(models.Model):
         return 'API: ' + self.name
 
     def __str__(self):
-        return self.name
+        return self.username
 
     class Meta:
         verbose_name = 'Приложение API'
