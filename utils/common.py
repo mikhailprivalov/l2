@@ -1,7 +1,7 @@
-from typing import Union, Dict, Iterable
+from typing import Union, Dict, Iterable, Any
 
 
-def one_of_includes(check_value: Union[str, Iterable[str], Dict[str]], values_to_check: Iterable[str]):
+def one_of_includes(check_value: Union[str, Iterable[str], Dict[str, Any]], values_to_check: Iterable[str]):
     return any(x in check_value for x in values_to_check)
 
 
