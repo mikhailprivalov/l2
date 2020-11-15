@@ -32,7 +32,7 @@ from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
 from laboratory.utils import strdate, strtime, localtime, strfdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.sql_func import get_confirm_direction
-
+from utils.common import select_key_by_one_of_values_includes
 
 logger = logging.getLogger("RMIS")
 
@@ -806,17 +806,24 @@ class Directions(BaseRequester):
             'A26.08.044.001',
             'A26.08.027.001',
         }
-        self.allowed_covid_values = {
-            'РНК вируса SARS-CоV2 не обнаружена',
-            'РНК вируса SARS-CоV2 обнаружена',
+        self.covid_values = {
+            'undetected': 'РНК вируса SARS-CоV2 не обнаружена',
+            'detected': 'РНК вируса SARS-CоV2 обнаружена',
         }
+
+        # Порядок определения ключей важен
+        self.allowed_covid_values = {
+            'undetected': ('не обнаружен', 'отрицат'),
+            'detected': ('обнаружен', 'положительн'),
+        }
+
+    def get_covid_value(self, orig_value: str):
+        key = select_key_by_one_of_values_includes(orig_value, self.allowed_covid_values)
+        return self.covid_values.get(key)
 
     def service_is_covid(self, code):
         code = Utils.fix_nmu_code(code)
         return code in self.covid_service_codes
-
-    def check_is_valid_covid_value(self, value):
-        return value in self.allowed_covid_values
 
     def search_directions(self, **kwargs):
         return self.client.searchReferral(**kwargs)
@@ -1103,8 +1110,10 @@ class Directions(BaseRequester):
                                                 )
                                             )
                                             for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
-                                                if self.check_is_valid_covid_value(y.value):
-                                                    protocol = protocol.replace("{{результат}}", y.value)
+                                                value = self.get_covid_value(y.value)
+                                                if value:
+                                                    protocol = protocol.replace("{{результат}}", value)
+                                                    break
 
                                             self.put_protocol(code, direction, protocol, ss, x, "", stdout)
                                         else:
@@ -1159,8 +1168,10 @@ class Directions(BaseRequester):
                                             )
                                         )
                                         for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
-                                            if self.check_is_valid_covid_value(y.value):
-                                                protocol = protocol.replace("{{результат}}", y.value)
+                                            value = self.get_covid_value(y.value)
+                                            if value:
+                                                protocol = protocol.replace("{{результат}}", value)
+                                                break
 
                                         self.put_protocol(code, direction, protocol, ss, x, "", stdout)
                                     else:
