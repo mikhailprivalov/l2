@@ -818,7 +818,7 @@ class Directions(BaseRequester):
         }
 
     def get_covid_value(self, orig_value: str):
-        key = select_key_by_one_of_values_includes(orig_value, self.allowed_covid_values)
+        key = select_key_by_one_of_values_includes(orig_value.lower(), self.allowed_covid_values)
         return self.covid_values.get(key)
 
     def service_is_covid(self, code):
