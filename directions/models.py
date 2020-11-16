@@ -541,6 +541,7 @@ class Napravleniya(models.Model):
             parent_auto_gen_id=parent_auto_gen_id,
             parent_slave_hosp_id=parent_slave_hosp_id,
             rmis_slot_id=rmis_slot,
+            hospital=doc.hospital or Hospitals.get_default_hospital(),
         )
         dir.additional_num = client.number_poliklinika
         dir.harmful_factor = dir.client.harmful_factor
