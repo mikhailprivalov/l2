@@ -54,7 +54,7 @@ from medical_certificates.models import ResearchesCertificate
 
 
 @login_required
-@group_required("Лечащий врач", "Оператор лечащего врача")
+@group_required("Лечащий врач", "Врач-лаборант", "Оператор лечащего врача")
 def directions_generate(request):
     result = {"ok": False, "directions": [], "message": ""}
     if request.method == "POST":
