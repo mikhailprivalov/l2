@@ -52,6 +52,7 @@ class DoctorProfile(models.Model):
     rmis_password = models.CharField(default='', blank=True, null=True, max_length=50, help_text='РМИС пароль')
     rmis_resource_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
     hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, blank=True, default=None, null=True, on_delete=models.SET_NULL)
+    all_hospitals_users_control = models.BooleanField(default=False, blank=True, help_text="Может настраивать пользователей во всех организациях")
 
     def get_hospital_id(self):
         hosp = self.get_hospital()

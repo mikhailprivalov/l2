@@ -366,7 +366,7 @@ let toTranslit = function (text) {
         hospitals: 'hospitals',
       }),
       can_edit_any_organization() {
-        return this.l2_user_data.su;
+        return this.l2_user_data.su || this.l2_user_data.all_hospitals_users_control;
       },
       user_hospital() {
         return this.l2_user_data.hospital || -1;

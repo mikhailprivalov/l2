@@ -505,6 +505,7 @@ def current_user_info(request):
         ret["user_services"] = [x.pk for x in doctorprofile.users_services.all() if x not in ret["restricted"]]
         ret["su"] = user.is_superuser
         ret["hospital"] = doctorprofile.get_hospital_id()
+        ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
 
         en = SettingManager.en()
         ret["extended_departments"] = {}
@@ -937,7 +938,7 @@ def users_view(request):
     request_data = json.loads(request.body)
     hospital_pk = request_data.get('selected_hospital', request.user.doctorprofile.hospital_id)
 
-    can_edit = request.user.is_superuser or hospital_pk == request.user.doctorprofile.hospital_id
+    can_edit = request.user.is_superuser or request.user.doctorprofile.all_hospitals_users_control or hospital_pk == request.user.doctorprofile.hospital_id
 
     data = []
 
@@ -1022,7 +1023,7 @@ def user_save_view(request):
     rmis_resource_id = ud["rmis_resource_id"].strip() or None
     hospital_pk = request_data.get('hospital_pk', request.user.doctorprofile.hospital_id)
 
-    can_edit = request.user.is_superuser or hospital_pk == request.user.doctorprofile.hospital_id
+    can_edit = request.user.is_superuser or request.user.doctorprofile.all_hospitals_users_control or hospital_pk == request.user.doctorprofile.hospital_id
 
     if not can_edit:
         return JsonResponse({"ok": False})
