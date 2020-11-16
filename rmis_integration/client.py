@@ -30,7 +30,7 @@ from directory.models import Fractions, ParaclinicInputGroups, Researches
 from hospitals.models import Hospitals
 from laboratory import settings as l2settings
 from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
-from laboratory.utils import strdate, strtime, localtime, strfdatetime
+from laboratory.utils import strdate, strtime, localtime, strfdatetime, current_time
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.sql_func import get_confirm_direction
 from utils.common import select_key_by_one_of_values_includes
@@ -459,7 +459,7 @@ class Patients(BaseRequester):
 
         self.patient_client.createPatient(patientId=iuid, patientData={})
 
-        ruid = self.smart_client.sendPatient(patientCard={'patient': {'uid': iuid}, 'identifiers': {'code': iuid, 'codeType': '7', 'issueDate': strfdatetime(timezone.now(), "%Y-%m-%d"),}})
+        ruid = self.smart_client.sendPatient(patientCard={'patient': {'uid': iuid}, 'identifiers': {'code': iuid, 'codeType': '7', 'issueDate': strfdatetime(current_time(), "%Y-%m-%d")}})
 
         return iuid, ruid["patientUid"]
 
@@ -1360,7 +1360,7 @@ class Directions(BaseRequester):
 
         uploaded_results = []
         if not without_results:
-            upload_lt = timezone.now() - datetime.timedelta(hours=Settings.get("upload_hours_interval", default="8", default_type="i"))
+            upload_lt = current_time() - datetime.timedelta(hours=Settings.get("upload_hours_interval", default="8", default_type="i"))
             direction_ids = get_confirm_direction(date, upload_lt, MAX_RMIS_THREADS * 2 if slice_to_upload else 10000)
             cnt = len(direction_ids)
             stdout.write("To upload results: {}".format(cnt))
