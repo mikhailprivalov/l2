@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% load static %}
     {% load setting %}
+    {% s_get "org_title" as org_title %}
     <link rel="apple-touch-icon" sizes="57x57" href="{% static 'icon/apple-icon-57x57.png' %}">
     <link rel="apple-touch-icon" sizes="60x60" href="{% static 'icon/apple-icon-60x60.png' %}">
     <link rel="apple-touch-icon" sizes="72x72" href="{% static 'icon/apple-icon-72x72.png' %}">
@@ -24,7 +25,11 @@
     <meta name="msapplication-TileImage" content="{% static 'icon/ms-icon-144x144.png' %}">
     <meta name="theme-color" content="#ffffff">
 
-    <title>{% block title %}{% endblock %} &mdash; {{ request.user.doctorprofile.hospital_safe_title }}</title>
+    <title>
+        {% block title %}{% endblock %}
+        &mdash;
+        {% firstof request.user.doctorprofile.hospital_safe_title org_title %}
+    </title>
     {% load manifest %}
 
     <link rel="stylesheet" href="{% manifest 'vendors.css' %}" />
