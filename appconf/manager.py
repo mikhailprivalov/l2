@@ -46,6 +46,7 @@ class SettingManager:
                     "tfoms",
                     "doc_call",
                     "list_wait",
+                    "is_core",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

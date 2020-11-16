@@ -419,7 +419,7 @@ def result_print(request):
     stl.alignment = TA_CENTER
     logo_text = SettingManager.get("results_l2_logo_string", default='', default_type='s')
     if logo_text:
-        i = Paragraph(logo_text, styleLogo)
+        logo_cell = Paragraph(logo_text, styleLogo)
     else:
         img_path = os.path.join(FONTS_FOLDER, '..', 'static', 'img')
         if not os.path.exists(img_path):
@@ -429,15 +429,15 @@ def result_print(request):
             with open(logo_path, "wb") as fh:
                 fh.write(base64.decodebytes(SettingManager.get("logo_base64_img").split(",")[1].encode()))
 
-        i = Image(logo_path)
+        logo_cell = Image(logo_path)
         nw = 158
-        i.drawHeight = i.drawHeight * (nw / i.drawWidth)
-        i.drawWidth = nw
+        logo_cell.drawHeight = logo_cell.drawHeight * (nw / logo_cell.drawWidth)
+        logo_cell.drawWidth = nw
     region = SettingManager.get("region", default='38', default_type='s')
 
-    def logo_col(direction: Napravleniya):
+    def logo_col(d: Napravleniya):
         return [
-            i,
+            logo_cell,
             '',
             '',
             '',
@@ -446,9 +446,9 @@ def result_print(request):
                 'Результат из <font face="OpenSansBoldItalic">L²</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s'
                 % (
                     '<font face="OpenSansLight">(L2-irk.ru)</font>' if region == '38' else 'DEMO' if region == 'DEMO' else '',
-                    direction.hospital_short_title,
-                    direction.hospital_www,
-                    direction.hospital_phones,
+                    d.hospital_short_title,
+                    d.hospital_www,
+                    d.hospital_phones,
                 ),
                 styleAb,
             ),
