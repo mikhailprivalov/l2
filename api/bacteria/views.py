@@ -147,14 +147,33 @@ def update_group(request):
 @login_required
 def get_bac_groups(request):
     groups = GroupCulture.objects.filter(hide=False).order_by('title')
-    return JsonResponse({"groups": [{"pk": x.pk, "title": x.title,} for x in groups]})
+    return JsonResponse(
+        {
+            "groups": [
+                {
+                    "pk": x.pk,
+                    "title": x.title,
+                }
+                for x in groups
+            ]
+        }
+    )
 
 
 @login_required
 def get_antibiotic_groups(request):
     groups = GroupAntibiotic.objects.filter(hide=False).order_by('title')
     result = {
-        "groups": [{"pk": -1, "title": "Все антибиотики"}, *[{"pk": x.pk, "title": x.title,} for x in groups]],
+        "groups": [
+            {"pk": -1, "title": "Все антибиотики"},
+            *[
+                {
+                    "pk": x.pk,
+                    "title": x.title,
+                }
+                for x in groups
+            ],
+        ],
         "groupsObj": {},
         "antibiotics": {},
         "sets": [{"pk": x.pk, "title": x.title, "ids": [y.pk for y in x.get_not_hidden_antibiotics()]} for x in AntibioticSets.objects.filter(hide=False).order_by('title')],
@@ -182,7 +201,17 @@ def get_bac_by_group(request):
     request_data = json.loads(request.body)
     group_pk = request_data["groupId"]
 
-    return JsonResponse({"list": [{"pk": x.pk, "title": x.title,} for x in Culture.objects.filter(group_culture_id=group_pk, hide=False).order_by('title')]})
+    return JsonResponse(
+        {
+            "list": [
+                {
+                    "pk": x.pk,
+                    "title": x.title,
+                }
+                for x in Culture.objects.filter(group_culture_id=group_pk, hide=False).order_by('title')
+            ]
+        }
+    )
 
 
 @login_required

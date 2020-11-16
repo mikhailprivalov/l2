@@ -149,9 +149,7 @@ def form_02(request_data):
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(
-        buffer, pagesize=landscape(A4), leftMargin=20 * mm, rightMargin=12 * mm, topMargin=6 * mm, bottomMargin=4 * mm, allowSplitting=1, title="Форма – Вызов врача"
-    )
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), leftMargin=20 * mm, rightMargin=12 * mm, topMargin=6 * mm, bottomMargin=4 * mm, allowSplitting=1, title="Форма – Вызов врача")
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]

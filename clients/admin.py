@@ -80,6 +80,19 @@ class BenefitRegAdmin(admin.ModelAdmin):
 @admin.register(models.DispensaryRegPlans)
 class ResDispensaryRegPlans(admin.ModelAdmin):
     raw_id_fields = ('card',)
-    list_display = ('card', 'research', 'speciality', 'date', )
-    list_display_links = ('card', 'research', 'speciality', 'date', )
-    search_fields = ('research__title', 'speciality__title',)
+    list_display = (
+        'card',
+        'research',
+        'speciality',
+        'date',
+    )
+    list_display_links = (
+        'card',
+        'research',
+        'speciality',
+        'date',
+    )
+    search_fields = (
+        'research__title',
+        'speciality__title',
+    )

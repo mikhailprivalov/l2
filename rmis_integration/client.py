@@ -12,7 +12,6 @@ from django.core.cache import cache
 from django.core.management.base import OutputWrapper
 from django.db.models import Q
 from django.test import Client as TC
-from django.utils import timezone
 from requests import Session
 from requests.auth import HTTPBasicAuth
 from requests_toolbelt import MultipartEncoder
@@ -27,9 +26,10 @@ import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, RMISServiceInactive, TubesRegistration
 from directory.models import Fractions, ParaclinicInputGroups, Researches
+from hospitals.models import Hospitals
 from laboratory import settings as l2settings
 from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
-from laboratory.utils import strdate, strtime, localtime, strfdatetime
+from laboratory.utils import strdate, strtime, localtime, strfdatetime, current_time
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.sql_func import get_confirm_direction
 from utils.common import select_key_by_one_of_values_includes
@@ -173,6 +173,8 @@ class Client(object):
         return self.directories[title]
 
     def search_organization_id(self, q=None, check=False):
+        if not q and Hospitals.get_default_hospital().rmis_org_id:
+            return Hospitals.get_default_hospital().rmis_org_id
         query = q or Settings.get("orgname")
         key = 'rmis_organization_id_' + get_md5(query)
         id = cache.get(key)
@@ -186,6 +188,8 @@ class Client(object):
     def get_org_id_for_direction(self, direction: Napravleniya):
         if not direction.hospital:
             return self.search_organization_id()
+        if direction.hospital.rmis_org_id:
+            return direction.hospital.rmis_org_id
         org_id = self.search_organization_id(q=direction.hospital.title)
         if org_id:
             return org_id
@@ -240,7 +244,9 @@ class Client(object):
         return fin_src
 
     def put_content(self, filename, content, path, filetype='application/pdf', method="PUT", stdout: OutputWrapper = None):
-        multipart_data = MultipartEncoder(fields={'file': (filename, content, filetype)},)
+        multipart_data = MultipartEncoder(
+            fields={'file': (filename, content, filetype)},
+        )
 
         resip = requests.request(method, path, data=multipart_data, headers={'Content-Type': "multipart/form-data"}, auth=self.session.auth, proxies=RMIS_PROXY)
         if stdout:
@@ -421,7 +427,14 @@ class Patients(BaseRequester):
 
     def get_slot(self, pk: [int, str]):
         d = self.appointment_client.getSlot(pk)
-        return {"status": d["status"], "datetime": d["date"],} if d else {}
+        return (
+            {
+                "status": d["status"],
+                "datetime": d["date"],
+            }
+            if d
+            else {}
+        )
 
     def extended_data(self, uid):
         d = self.smart_client.getPatient(uid)
@@ -454,7 +467,7 @@ class Patients(BaseRequester):
 
         self.patient_client.createPatient(patientId=iuid, patientData={})
 
-        ruid = self.smart_client.sendPatient(patientCard={'patient': {'uid': iuid}, 'identifiers': {'code': iuid, 'codeType': '7', 'issueDate': strfdatetime(timezone.now(), "%Y-%m-%d"),}})
+        ruid = self.smart_client.sendPatient(patientCard={'patient': {'uid': iuid}, 'identifiers': {'code': iuid, 'codeType': '7', 'issueDate': strfdatetime(current_time(), "%Y-%m-%d")}})
 
         return iuid, ruid["patientUid"]
 
@@ -769,15 +782,7 @@ class Services(BaseRequester):
             services_tmp.append(iss.research.code)
             for f in Fractions.objects.filter(research=iss.research):
                 services_tmp.append(f.code)
-        return [
-            y
-            for y in
-            [
-                self.get_service_id_for_direction(x, direction)
-                for x in list(set(services_tmp))
-            ]
-            if y is not None
-        ]
+        return [y for y in [self.get_service_id_for_direction(x, direction) for x in list(set(services_tmp))] if y is not None]
 
 
 def ndate(d: Union[datetime.datetime, datetime.date]):
@@ -1101,13 +1106,9 @@ class Directions(BaseRequester):
                                                 date_get = ""
 
                                             protocol: str = (
-                                                protocol_covid_template
-                                                .replace("{{комментарий}}", i.lab_comment)
+                                                protocol_covid_template.replace("{{комментарий}}", i.lab_comment)
                                                 .replace("{{дата забора}}", date_get)
-                                                .replace(
-                                                    "{{дата подтверждения}}",
-                                                    "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%Y-%m-%d")
-                                                )
+                                                .replace("{{дата подтверждения}}", "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%Y-%m-%d"))
                                             )
                                             for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
                                                 value = self.get_covid_value(y.value)
@@ -1159,13 +1160,9 @@ class Directions(BaseRequester):
                                             date_get = ""
 
                                         protocol: str = (
-                                            protocol_covid_template
-                                            .replace("{{комментарий}}", i.lab_comment)
+                                            protocol_covid_template.replace("{{комментарий}}", i.lab_comment)
                                             .replace("{{дата забора}}", date_get)
-                                            .replace(
-                                                "{{дата подтверждения}}",
-                                                "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%Y-%m-%d")
-                                            )
+                                            .replace("{{дата подтверждения}}", "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%Y-%m-%d"))
                                         )
                                         for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
                                             value = self.get_covid_value(y.value)
@@ -1191,8 +1188,9 @@ class Directions(BaseRequester):
                                 self.main_client.put_content(
                                     "Resultat.pdf",
                                     self.main_client.local_get("/results/pdf", {"pk": json.dumps([direction.pk]), "normis": '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}),
-                                    self.main_client.get_addr("referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number +
-                                                              "/Результат-" + str(direction.pk) + "/Resultat.pdf"),
+                                    self.main_client.get_addr(
+                                        "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат-" + str(direction.pk) + "/Resultat.pdf"
+                                    ),
                                 )
                 except Fault as e:
                     logging.exception(e)
@@ -1205,9 +1203,7 @@ class Directions(BaseRequester):
         return direction.result_rmis_send
 
     def get_protocol(self, rendered_service_id):
-        return self.main_client.get_content(
-            self.main_client.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/" + rendered_service_id)
-        )
+        return self.main_client.get_content(self.main_client.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/" + rendered_service_id))
 
     def put_protocol(self, code, direction, protocol_template, ss, x, xresult, stdout: OutputWrapper = None):
         protocol = protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation_fio).replace("{{результат}}", xresult)
@@ -1297,7 +1293,7 @@ class Directions(BaseRequester):
         if slice_to_upload:
             stdout.write("Total to upload directions: {}".format(to_upload.count()))
             stdout.write("Slice to upload directions: {}".format(MAX_RMIS_THREADS * 2))
-            to_upload = to_upload[:MAX_RMIS_THREADS * 2]
+            to_upload = to_upload[: MAX_RMIS_THREADS * 2]
         cnt = to_upload.count()
         if stdout:
             stdout.write("Directions to upload: {}".format(cnt))
@@ -1345,7 +1341,7 @@ class Directions(BaseRequester):
         if slice_to_upload:
             stdout.write("Total to upload resend services: {}".format(to_upload.count()))
             stdout.write("Slice to upload resend services: {}".format(MAX_RMIS_THREADS * 2))
-            to_upload = to_upload[:MAX_RMIS_THREADS * 2]
+            to_upload = to_upload[: MAX_RMIS_THREADS * 2]
         for d in to_upload:
             thread = threading.Thread(target=upload_services, args=(self, d, stdout))
             threads.append(thread)
@@ -1355,7 +1351,7 @@ class Directions(BaseRequester):
 
         uploaded_results = []
         if not without_results:
-            upload_lt = timezone.now() - datetime.timedelta(hours=Settings.get("upload_hours_interval", default="8", default_type="i"))
+            upload_lt = current_time() - datetime.timedelta(hours=Settings.get("upload_hours_interval", default="8", default_type="i"))
             direction_ids = get_confirm_direction(date, upload_lt, MAX_RMIS_THREADS * 2 if slice_to_upload else 10000)
             cnt = len(direction_ids)
             stdout.write("To upload results: {}".format(cnt))

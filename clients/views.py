@@ -12,7 +12,7 @@ from . import models as Clients
 
 
 def ignore_exception(IgnoreException=Exception, DefaultVal=None):
-    """ Decorator for ignoring exception from a function
+    """Decorator for ignoring exception from a function
     e.g.   @ignore_exception(DivideByZero)
     e.g.2. ignore_exception(DivideByZero)(Divide)(2/0)
     """

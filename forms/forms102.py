@@ -29,6 +29,7 @@ from reportlab.platypus.flowables import HRFlowable
 from appconf.manager import SettingManager
 from clients.models import Card
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, PersonContract
+from hospitals.models import Hospitals
 from laboratory import utils
 from laboratory.settings import FONTS_FOLDER, BASE_DIR
 from . import forms_func
@@ -222,15 +223,25 @@ def form_01(request_data):
 
     tbl = Table(opinion, colWidths=(95 * mm, 95 * mm))
 
-    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.white), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+            ]
+        )
+    )
 
     objs.append(Spacer(1, 5 * mm))
     objs.append(tbl)
 
     objs.append(Spacer(1, 4.5 * mm))
-    hospital_name = SettingManager.get("org_title")
-    hospital_short_name = SettingManager.get("org_title")
-    hospital_address = SettingManager.get("org_address")
+
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+    hospital_short_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
 
     post_contract = SettingManager.get("post_contract")
     document_base = SettingManager.get("document_base")
@@ -454,7 +465,15 @@ def form_01(request_data):
 
     tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 52 * mm, 22 * mm, 21 * mm, 22 * mm, 13 * mm, 25 * mm))
 
-    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]
+        )
+    )
 
     objs.append(tbl)
     objs.append(Spacer(1, 1 * mm))
@@ -1020,7 +1039,15 @@ def form_01(request_data):
                 objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
 
         tbl = Table(route_list, colWidths=(30 * mm, 100 * mm), hAlign='LEFT')
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ]
+            )
+        )
 
         objs.append(Spacer(1, 5 * mm))
         objs.append(tbl)

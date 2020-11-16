@@ -8,7 +8,6 @@ import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min'
 
 import store from './store'
 import * as action_types from './store/action-types'
-import * as mutation_types from './store/mutation-types'
 import directions_point from './api/directions-point'
 
 import '@openfonts/open-sans_all';
@@ -97,32 +96,12 @@ new Vue({
     }
   },
   created() {
-    this.$store.watch((state) => (state.departments.all), () => {
-      let diff = this.$store.getters.diff_departments
-      this.$store.dispatch(action_types.UPDATE_DEPARTMENTS, {type_update: 'update', to_update: diff}).then((ok) => {
-        if (Array.isArray(ok) && ok.length > 0) {
-          for (let r of ok) {
-            this.$store.commit(mutation_types.SET_UPDATED_DEPARTMENT, {pk: r.pk, value: true})
-            if (this.timeouts.hasOwnProperty(r.pk) && this.timeouts[r.pk] !== null) {
-              clearTimeout(this.timeouts[r.pk])
-              this.timeouts[r.pk] = null
-            }
-            this.timeouts[r.pk] = (function (vm, r) {
-              return setTimeout(() => {
-                this.$store.commit(mutation_types.SET_UPDATED_DEPARTMENT, {pk: r.pk, value: false})
-                this.timeouts[r.pk] = null
-              }, 2000)
-            })(vm, r)
-          }
-        }
-      })
-    }, {deep: true})
-
     Promise.all([
       this.$store.dispatch(action_types.INC_LOADING),
       this.$store.dispatch(action_types.GET_ALL_DEPARTMENTS),
       this.$store.dispatch(action_types.GET_BASES),
       this.$store.dispatch(action_types.GET_USER_DATA),
+      this.$store.dispatch(action_types.LOAD_HOSPITALS),
     ]).then(() => {
       this.$store.dispatch(action_types.DEC_LOADING)
     })

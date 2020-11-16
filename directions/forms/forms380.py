@@ -62,7 +62,7 @@ def form_01(c: Canvas, d: Napravleniya):
         c.drawString(topw1, py(29.02 + offset), "от 17.08.2009 г. № 1027-мпр.")
 
         c.setFont('TimesNewRoman', 11)
-        c.drawString(px(18.5), py(34 + offset), "Наименование учереждения здравоохранения: " + SettingManager.get("org_title"))
+        c.drawString(px(18.5), py(34 + offset), "Наименование учереждения здравоохранения: " + d.hospital_short_title)
         c.line(px(95.5), py(35.2 + offset), pxr(18), py(35.2 + offset))
         c.drawString(px(18.5), py(43 + offset), "Отделение, палата")
         c.line(px(50), py(44.2 + offset), pxr(18), py(44.2 + offset))
@@ -126,7 +126,7 @@ def form_02(c: Canvas, dir: Napravleniya):
         c.setLineWidth(0.2 * mm)
         c.setFont('PTAstraSerifReg', 12)
 
-        c.drawCentredString((210 / 2) * mm, 280 * mm, SettingManager.get("org_title"))
+        c.drawCentredString((210 / 2) * mm, 280 * mm, dir.hospital_short_title)
         c.drawCentredString((210 / 2) * mm, 275 * mm, SettingManager.get("org_address") + ' ' + SettingManager.get("org_phones"))
 
         try:
@@ -303,7 +303,7 @@ def form_03(c: Canvas, dir: Napravleniya):
 
         c.drawCentredString((210 / 2) * mm, 281 * mm, "Контактные данные учреждения, направляющего материал")
         organization_data = [
-            [Paragraph('Название', style), Paragraph(SettingManager.get("org_title"), styleTB)],
+            [Paragraph('Название', style), Paragraph(dir.hospital_short_title, styleTB)],
             [Paragraph('Телефон', style), Paragraph(SettingManager.get("org_phones"), styleTB)],
             [Paragraph('Факс', style), Paragraph(SettingManager.get("org_phones"), styleTB)],
             [Paragraph('E-mail', style), Paragraph(SettingManager.get("mail", default='', default_type='s'), styleTB)],
@@ -436,7 +436,7 @@ def form_03(c: Canvas, dir: Napravleniya):
 def form_04(c: Canvas, dir: Napravleniya):
     # Микробиология - Учетная форма № 204/у Утверждена приказом 10130
     def printForm():
-        hospital_name = SettingManager.get("org_title")
+        hospital_name = dir.hospital_short_title
         hospital_address = SettingManager.get("org_address")
         hospital_kod_ogrn = SettingManager.get("org_ogrn")
 

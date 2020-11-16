@@ -162,6 +162,8 @@ def loadready(request):
             issledovaniya__isnull=False,
         )
 
+    tlist = tlist.filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
+
     for tube in tlist.prefetch_related('issledovaniya_set__napravleniye'):
         direction = None
         if tube.pk not in tubes:
@@ -417,7 +419,7 @@ def result_print(request):
     stl.alignment = TA_CENTER
     logo_text = SettingManager.get("results_l2_logo_string", default='', default_type='s')
     if logo_text:
-        i = Paragraph(logo_text, styleLogo)
+        logo_cell = Paragraph(logo_text, styleLogo)
     else:
         img_path = os.path.join(FONTS_FOLDER, '..', 'static', 'img')
         if not os.path.exists(img_path):
@@ -427,31 +429,34 @@ def result_print(request):
             with open(logo_path, "wb") as fh:
                 fh.write(base64.decodebytes(SettingManager.get("logo_base64_img").split(",")[1].encode()))
 
-        i = Image(logo_path)
+        logo_cell = Image(logo_path)
         nw = 158
-        i.drawHeight = i.drawHeight * (nw / i.drawWidth)
-        i.drawWidth = nw
+        logo_cell.drawHeight = logo_cell.drawHeight * (nw / logo_cell.drawWidth)
+        logo_cell.drawWidth = nw
     region = SettingManager.get("region", default='38', default_type='s')
-    logo_col = [
-        i,
-        '',
-        '',
-        '',
-        '',
-        Paragraph(
-            'Результат из <font face="OpenSansBoldItalic">L²</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s'
-            % (
-                '<font face="OpenSansLight">(L2-irk.ru)</font>' if region == '38' else 'DEMO' if region == 'DEMO' else '',
-                SettingManager.get("org_title"),
-                SettingManager.get("org_www"),
-                SettingManager.get("org_phones"),
+
+    def logo_col(d: Napravleniya):
+        return [
+            logo_cell,
+            '',
+            '',
+            '',
+            '',
+            Paragraph(
+                'Результат из <font face="OpenSansBoldItalic">L²</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s'
+                % (
+                    '<font face="OpenSansLight">(L2-irk.ru)</font>' if region == '38' else 'DEMO' if region == 'DEMO' else '',
+                    d.hospital_short_title,
+                    d.hospital_www,
+                    d.hospital_phones,
+                ),
+                styleAb,
             ),
-            styleAb,
-        ),
-        '',
-        '',
-        '',
-    ]
+            '',
+            '',
+            '',
+        ]
+
     pw = doc.width
 
     def print_vtype(data, f, iss, j, style_t, styleSheet):
@@ -526,10 +531,10 @@ def result_print(request):
             Prefetch(
                 'issledovaniya_set',
                 queryset=(
-                    Issledovaniya
-                    .objects
-                    .filter(Q(time_save__isnull=False) | Q(time_confirmation__isnull=False)).select_related('research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye')
-                )
+                    Issledovaniya.objects.filter(Q(time_save__isnull=False) | Q(time_confirmation__isnull=False)).select_related(
+                        'research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'
+                    )
+                ),
             )
         )
         .annotate(results_count=Count('issledovaniya__result'))
@@ -931,9 +936,7 @@ def result_print(request):
                             Paragraph(
                                 '<font face="FreeSans" size="8">%s</font>' % ("Не подтверждено" if not iss.time_confirmation else strdate(iss.time_confirmation)), styleSheet["BodyText"]
                             ),
-                            Paragraph(
-                                '<font face="FreeSans" size="8">%s</font>' % (iss.doc_confirmation_fio or "Не подтверждено"), styleSheet["BodyText"]
-                            ),
+                            Paragraph('<font face="FreeSans" size="8">%s</font>' % (iss.doc_confirmation_fio or "Не подтверждено"), styleSheet["BodyText"]),
                         ]
                         data.append(tmp)
 
@@ -1890,7 +1893,13 @@ def result_journal_print(request):
             ('BOTTOMPADDING', (0, 2), (-1, -1), 1),
         ]
         if not codes:
-            sta.append(('SPAN', (0, 0), (-1, 0),))
+            sta.append(
+                (
+                    'SPAN',
+                    (0, 0),
+                    (-1, 0),
+                )
+            )
         st = TableStyle(sta)
         tw = pw - 25 * mm
         t = Table(data, colWidths=[tw * 0.05, tw * 0.19, tw * 0.76])
@@ -2158,12 +2167,22 @@ def results_search_directions(request):
     if sorting_direction == "up":
         sort_types = {
             "confirm-date": ("issledovaniya__time_confirmation",),
-            "patient": ("issledovaniya__time_confirmation", "client__individual__family", "client__individual__name", "client__individual__patronymic",),
+            "patient": (
+                "issledovaniya__time_confirmation",
+                "client__individual__family",
+                "client__individual__name",
+                "client__individual__patronymic",
+            ),
         }
     else:
         sort_types = {
             "confirm-date": ("-issledovaniya__time_confirmation",),
-            "patient": ("-issledovaniya__time_confirmation", "-client__individual__family", "-client__individual__name", "-client__individual__patronymic",),
+            "patient": (
+                "-issledovaniya__time_confirmation",
+                "-client__individual__family",
+                "-client__individual__name",
+                "-client__individual__patronymic",
+            ),
         }
     filtered = []
     cnt = 0

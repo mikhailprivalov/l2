@@ -36,7 +36,7 @@ def statistic_page(request):
     getters_material = DoctorProfile.objects.filter(user__groups__name='Заборщик биоматериала').distinct()
     statistics_tickets_users = DoctorProfile.objects.filter(user__groups__name__in=['Оформление статталонов', 'Лечащий врач', 'Лаборант', 'Врач-лаборант']).distinct()
     statistics_tickets_deps = Podrazdeleniya.objects.all().order_by('title')
-    statistics_researches_res = Researches.objects.all().filter(hide=False, is_slave_hospital=False, is_hospital=False).order_by('title')
+    statistics_researches_res = Researches.objects.filter(hide=False, is_slave_hospital=False, is_hospital=False).order_by('title')
 
     type_by_key_extract = HospitalService.TYPES_BY_KEYS.get('extracts', -1)
     extract_research = None
@@ -220,7 +220,12 @@ def statistic_xls(request):
                 else:
                     frac = False
                 finish_ord[t_lab][iss_id] = {}
-                opinion_dict = {('напр', 'дата',): fract_dict}
+                opinion_dict = {
+                    (
+                        'напр',
+                        'дата',
+                    ): fract_dict
+                }
                 val_dict = fract_dict.copy()
                 finish_ord[t_lab][iss_id].update(opinion_dict)
                 for k, v in fract_dict.items():
@@ -234,22 +239,40 @@ def statistic_xls(request):
                         if iss_id == d[0]:
                             for i, j in d[3].items():
                                 val_dict[i] = j
-                            tmp_dict[(d[1], d[2],)] = deepcopy(val_dict)
+                            tmp_dict[
+                                (
+                                    d[1],
+                                    d[2],
+                                )
+                            ] = deepcopy(val_dict)
                             finish_ord[t_lab][iss_id].update(tmp_dict)
 
                 # Строим стр-ру {one_param:{(направление, дата,):{id-фракции:результат,id-фракции:результат}}}
                 # one_param - это анализы у которых только один параметр-фракции (холестерин, глюкоза и др.)
-                key_tuple = ((0, 0,),)
+                key_tuple = (
+                    (
+                        0,
+                        0,
+                    ),
+                )
                 if iss_id == 'one_param' and frac:
                     tmp_dict = {}
                     for d in finish_obj:
-                        if key_tuple != (d[1], d[2],):
+                        if key_tuple != (
+                            d[1],
+                            d[2],
+                        ):
                             for k, v in fract_dict.items():
                                 val_dict[k] = ''
                         for u, s in val_dict.items():
                             if d[3].get(u):
                                 val_dict[u] = d[3].get(u)
-                                tmp_dict[(d[1], d[2],)] = deepcopy(val_dict)
+                                tmp_dict[
+                                    (
+                                        d[1],
+                                        d[2],
+                                    )
+                                ] = deepcopy(val_dict)
                                 key_tuple = (
                                     d[1],
                                     d[2],
@@ -319,7 +342,9 @@ def statistic_xls(request):
             }
             for i in Issledovaniya.objects.filter(napravleniye=d):
                 cards[c.pk]["d"][d.pk]["r"].append(
-                    {"title": i.research.title,}
+                    {
+                        "title": i.research.title,
+                    }
                 )
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
@@ -384,7 +409,13 @@ def statistic_xls(request):
         t = request.GET.get("t", "sum")
         fio = request.user.doctorprofile.fio
         dep = request.user.doctorprofile.podrazdeleniye.get_title()
-        dirs = Napravleniya.objects.filter(visit_date__range=(date_start, date_end,), visit_who_mark=request.user.doctorprofile).order_by("visit_date")
+        dirs = Napravleniya.objects.filter(
+            visit_date__range=(
+                date_start,
+                date_end,
+            ),
+            visit_who_mark=request.user.doctorprofile,
+        ).order_by("visit_date")
 
         if t == "sum":
             response['Content-Disposition'] = str.translate("attachment; filename=\"Суммарный отчёт по посещениям.xls\"", tr)
@@ -481,7 +512,13 @@ def statistic_xls(request):
             ws.col(col_num).width = row[col_num][1]
         row_num += 1
 
-        for i in Issledovaniya.objects.filter(research__podrazdeleniye__vaccine=True, time_confirmation__range=(date_start, date_end,)).order_by("time_confirmation"):
+        for i in Issledovaniya.objects.filter(
+            research__podrazdeleniye__vaccine=True,
+            time_confirmation__range=(
+                date_start,
+                date_end,
+            ),
+        ).order_by("time_confirmation"):
             if i.napravleniye:
                 row = [
                     i.doc_confirmation_fio,
@@ -1020,7 +1057,12 @@ def statistic_xls(request):
             from django.utils.text import Truncator
 
             for research in researches:
-                row.append((Truncator(research.title).chars(30), 1300,))
+                row.append(
+                    (
+                        Truncator(research.title).chars(30),
+                        1300,
+                    )
+                )
 
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num][0], font_style_wrap if col_num < 2 else font_style_vertical)
@@ -1175,7 +1217,12 @@ def statistic_xls(request):
                 title.append(x if x.isupper() else x[0].upper() + ("" if nx > 0 else x[1:7]))
                 nx += 1
 
-            row.append(("".join(title), 3700,))
+            row.append(
+                (
+                    "".join(title),
+                    3700,
+                )
+            )
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num][0], font_style)
             ws.col(col_num).width = row[col_num][1]

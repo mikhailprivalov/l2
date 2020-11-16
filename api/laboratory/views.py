@@ -13,9 +13,19 @@ def fractions(request):
     fractions_list = []
     for f in Fractions.objects.filter(research=research).order_by("sort_weight"):
         fractions_list.append(
-            {"pk": f.pk, "title": f.title, "units": f.units, "fsli": f.get_fsli_code(),}
+            {
+                "pk": f.pk,
+                "title": f.title,
+                "units": f.units,
+                "fsli": f.get_fsli_code(),
+            }
         )
-    return JsonResponse({"fractions": fractions_list, "title": research.get_title(),})
+    return JsonResponse(
+        {
+            "fractions": fractions_list,
+            "title": research.get_title(),
+        }
+    )
 
 
 @login_required

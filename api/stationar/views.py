@@ -52,7 +52,13 @@ def load(request):
             "iss_title": i.research.title,
             "forbidden_edit": forbidden_edit or "Врач стационара" not in [str(x) for x in request.user.groups.all()],
             "soft_forbidden": not forbidden_edit,
-            "patient": {"fio_age": card.individual.fio(full=True), "card": card.number_with_type(), "base": card.base_id, "card_pk": card.pk, "individual_pk": card.individual_id,},
+            "patient": {
+                "fio_age": card.individual.fio(full=True),
+                "card": card.number_with_type(),
+                "base": card.base_id,
+                "card_pk": card.pk,
+                "individual_pk": card.individual_id,
+            },
             "tree": list(
                 map(
                     lambda dirc: {
@@ -116,7 +122,12 @@ def hosp_services_by_type(request):
     for i in Issledovaniya.objects.filter(napravleniye__pk=base_direction_pk, research__is_hospital=True):
         for hs in HospitalService.objects.filter(site_type=type_by_key, main_research=i.research, hide=False):
             result.append(
-                {"pk": hs.pk, "title": hs.slave_research.title, "short_title": hs.slave_research.short_title, "main_title": hs.main_research.title,}
+                {
+                    "pk": hs.pk,
+                    "title": hs.slave_research.title,
+                    "short_title": hs.slave_research.short_title,
+                    "main_title": hs.main_research.title,
+                }
             )
     return JsonResponse({"data": result})
 

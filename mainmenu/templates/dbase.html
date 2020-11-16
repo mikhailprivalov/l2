@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% load static %}
     {% load setting %}
-    {% s_get "org_title" as org_title %}
     <link rel="apple-touch-icon" sizes="57x57" href="{% static 'icon/apple-icon-57x57.png' %}">
     <link rel="apple-touch-icon" sizes="60x60" href="{% static 'icon/apple-icon-60x60.png' %}">
     <link rel="apple-touch-icon" sizes="72x72" href="{% static 'icon/apple-icon-72x72.png' %}">
@@ -25,7 +24,7 @@
     <meta name="msapplication-TileImage" content="{% static 'icon/ms-icon-144x144.png' %}">
     <meta name="theme-color" content="#ffffff">
 
-    <title>{% block title %}{% endblock %} &mdash; {{ org_title }}</title>
+    <title>{% block title %}{% endblock %} &mdash; {{ request.user.doctorprofile.hospital_safe_title }}</title>
     {% load manifest %}
 
     <link rel="stylesheet" href="{% manifest 'vendors.css' %}" />
@@ -43,7 +42,7 @@
             return day + '.' + month + '.' + year
         }
 
-        window.org_title = `{{ org_title |safe  }}`;
+        window.org_title = `{{ request.user.doctorprofile.hospital_safe_title |safe  }}`;
     </script>
     {% block head_cn %}{% endblock %}
 </head>
@@ -92,13 +91,19 @@
                                     {% endfor %}
                                     </div>
                                 <div class="info">
-                                    L2 {{ version }}<br/>
-                                    Организация: {{ org_title }}
+                                    L2 {{ version }}
                                 </div>
                             </div>
                         </li>
                     </ul>
                     {% block extended_header %}{% endblock %}
+                    <ul class="nav navbar-right navbar-nav">
+                        <li>
+                            <span class="navbar-brand" style="font-size: 14px">
+                                Организация: {{ request.user.doctorprofile.hospital_safe_title }}
+                            </span>
+                        </li>
+                    </ul>
                 </div>
             </div>
             <div class="nav-loader center">
