@@ -558,11 +558,12 @@ def directive_from(request):
             .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
             .prefetch_related(
                 Prefetch('doctorprofile_set', queryset=(
-                    users.DoctorProfile.objects
-                    .filter(user__groups__name="Лечащий врач")
-                    .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
-                    .order_by("fio")
-                ))
+                        users.DoctorProfile.objects
+                        .filter(user__groups__name="Лечащий врач")
+                        .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
+                        .order_by("fio")
+                    )
+                )
             )
             .order_by('title')
     ):
@@ -637,9 +638,11 @@ def statistics_tickets_get(request):
                 "first_time": row.first_time,
                 "primary": row.primary_visit,
                 "info": row.info,
-                "disp": row.get_dispensary_registration_display()
-                        + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
-                        + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
+                "disp": (
+                    row.get_dispensary_registration_display()
+                    + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
+                    + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else "")
+                ),
                 "result": row.result.title if row.result else "",
                 "outcome": row.outcome.title if row.outcome else "",
                 "invalid": row.invalid_ticket,
