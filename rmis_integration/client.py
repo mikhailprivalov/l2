@@ -27,6 +27,7 @@ import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, RMISServiceInactive, TubesRegistration
 from directory.models import Fractions, ParaclinicInputGroups, Researches
+from hospitals.models import Hospitals
 from laboratory import settings as l2settings
 from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
 from laboratory.utils import strdate, strtime, localtime, strfdatetime
@@ -173,6 +174,8 @@ class Client(object):
         return self.directories[title]
 
     def search_organization_id(self, q=None, check=False):
+        if not q and Hospitals.get_default_hospital().rmis_org_id:
+            return Hospitals.get_default_hospital().rmis_org_id
         query = q or Settings.get("orgname")
         key = 'rmis_organization_id_' + get_md5(query)
         id = cache.get(key)
@@ -186,6 +189,8 @@ class Client(object):
     def get_org_id_for_direction(self, direction: Napravleniya):
         if not direction.hospital:
             return self.search_organization_id()
+        if direction.hospital.rmis_org_id:
+            return direction.hospital.rmis_org_id
         org_id = self.search_organization_id(q=direction.hospital.title)
         if org_id:
             return org_id
