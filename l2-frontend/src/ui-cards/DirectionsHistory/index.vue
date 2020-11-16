@@ -76,6 +76,13 @@
                 {{row.pk}}
               </a>
             </span>
+            <span v-if="!!row.has_descriptive && role_can_use_descriptive">
+              <a
+                :href="`/mainmenu/results/paraclinic#{%22pk%22:${row.pk}}`"
+                target="_blank" class="a-under">
+                {{row.pk}}
+              </a>
+            </span>
             <span v-else>{{row.pk}}</span>
           </td>
           <td class="researches" :title="row.researches">{{row.researches}}</td>
@@ -205,6 +212,14 @@
       role_can_use_stationar() {
         for (let g of (this.$store.getters.user_data.groups || [])) {
           if (g === 'Врач стационара') {
+            return true
+          }
+        }
+        return false
+      },
+      role_can_use_descriptive() {
+        for (let g of (this.$store.getters.user_data.groups || [])) {
+          if (['Врач консультаций', 'Врач параклиники'].includes(g)) {
             return true
           }
         }
