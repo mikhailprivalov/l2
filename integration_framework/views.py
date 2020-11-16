@@ -2,7 +2,6 @@ import datetime
 import logging
 import random
 from collections import defaultdict
-from typing import Optional
 
 import simplejson as json
 from django.db import transaction
@@ -109,21 +108,11 @@ def result_amd_send(request):
 def direction_data(request):
     pk = request.GET.get("pk")
     research_pks = request.GET.get("research", '*')
-    direction = (
-        directions.Napravleniya
-        .objects
-        .select_related('istochnik_f', 'client', 'client__individual', 'client__base')
-        .get(pk=pk)
-    )
+    direction = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=pk)
     card = direction.client
     individual = card.individual
 
-    iss = (
-        directions.Issledovaniya
-        .objects
-        .filter(napravleniye=direction, time_confirmation__isnull=False)
-        .select_related('research', 'doc_confirmation')
-    )
+    iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=False).select_related('research', 'doc_confirmation')
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
 
@@ -229,30 +218,10 @@ def issledovaniye_data_multi(request):
     pks = request.GET["pks"].split(",")
     ignore_sample = request.GET.get("ignoreSample") == 'true'
     iss = (
-        directions.Issledovaniya
-        .objects
-        .filter(pk__in=pks)
+        directions.Issledovaniya.objects.filter(pk__in=pks)
         .select_related('doc_confirmation', 'research')
-        .prefetch_related(
-            Prefetch(
-                'result_set',
-                queryset=(
-                    directions.Result
-                    .objects
-                    .filter(fraction__fsli__isnull=False)
-                    .select_related('fraction')
-                )
-            )
-        )
-        .prefetch_related(
-            Prefetch(
-                'tubes',
-                queryset=(
-                    directions.TubesRegistration
-                    .objects.filter(time_get__isnull=False)
-                )
-            )
-        )
+        .prefetch_related(Prefetch('result_set', queryset=(directions.Result.objects.filter(fraction__fsli__isnull=False).select_related('fraction'))))
+        .prefetch_related(Prefetch('tubes', queryset=(directions.TubesRegistration.objects.filter(time_get__isnull=False))))
     )
 
     result = []
@@ -310,11 +279,13 @@ def issledovaniye_data_multi(request):
                 "comments": i.lab_comment,
             }
         )
-    return Response({
-        "ok": len(result) > 0,
-        "pks": pks,
-        "results": result,
-    })
+    return Response(
+        {
+            "ok": len(result) > 0,
+            "pks": pks,
+            "results": result,
+        }
+    )
 
 
 @api_view(['GET'])
@@ -367,9 +338,14 @@ def check_enp(request):
             bd_orig = f"{i.birthday:%Y-%m-%d}"
             logger.exception(f'{bd_orig} == {bd}')
             if bd_orig == bd:
-                return Response({"ok": True, 'patient_data': {
-                    "rmis_id": card.individual.get_rmis_uid_fast(),
-                }})
+                return Response(
+                    {
+                        "ok": True,
+                        'patient_data': {
+                            "rmis_id": card.individual.get_rmis_uid_fast(),
+                        },
+                    }
+                )
 
     return Response({"ok": False, 'message': 'Неверные данные или нет прикрепления к поликлинике'})
 
@@ -388,18 +364,12 @@ def patient_results_covid19(request):
 
     for i in range(days):
         date = now - datetime.timedelta(days=i)
-        rendered_services = c.rendered_services.client.searchServiceRend(
-            patientUid=rmis_id,
-            dateFrom=date
-        )
+        rendered_services = c.rendered_services.client.searchServiceRend(patientUid=rmis_id, dateFrom=date)
         for rs in rendered_services:
             protocol = c.directions.get_protocol(rs)
             for v in variants:
                 if v in protocol:
-                    results.append({
-                        'date': date.strftime('%d.%m.%Y'),
-                        'result': v
-                    })
+                    results.append({'date': date.strftime('%d.%m.%Y'), 'result': v})
 
     return Response({"ok": True, 'results': results})
 
@@ -528,12 +498,7 @@ def external_research_create(request):
 
     financing_source_title = body.get("financingSource", '')
 
-    financing_source = (
-        directions.IstochnikiFinansirovaniya
-        .objects
-        .filter(title__iexact=financing_source_title, base__internal_type=True)
-        .first()
-    )
+    financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__iexact=financing_source_title, base__internal_type=True).first()
 
     if not financing_source:
         return Response({"ok": False, 'message': 'Некорректный источник финансирования'})
@@ -564,18 +529,14 @@ def external_research_create(request):
                 direction.issledovaniya_set.all().delete()
                 print('Replacing all data for', old_pk)
             else:
-                direction = (
-                    Napravleniya
-                    .objects
-                    .create(
-                        client=card,
-                        is_external=True,
-                        istochnik_f=financing_source,
-                        polis_who_give=card.polis.who_give if card.polis else None,
-                        polis_n=card.polis.number if card.polis else None,
-                        hospital=hospital,
-                        id_in_hospital=id_in_hospital,
-                    )
+                direction = Napravleniya.objects.create(
+                    client=card,
+                    is_external=True,
+                    istochnik_f=financing_source,
+                    polis_who_give=card.polis.who_give if card.polis else None,
+                    polis_n=card.polis.number if card.polis else None,
+                    hospital=hospital,
+                    id_in_hospital=id_in_hospital,
                 )
 
             research_to_filter = defaultdict(lambda: False)
@@ -612,24 +573,17 @@ def external_research_create(request):
                 if doc_confirm is not None:
                     doc_confirm = limit_str(doc_confirm, 64)
 
-                iss = (
-                    directions.Issledovaniya
-                    .objects
-                    .create(
-                        napravleniye=direction,
-                        research=research,
-                        lab_comment=comments,
-                        time_confirmation=time_confirmation,
-                        time_save=timezone.now(),
-                        doc_confirmation_string=doc_confirm or f'Врач {hospital.short_title or hospital.title}',
-                    )
+                iss = directions.Issledovaniya.objects.create(
+                    napravleniye=direction,
+                    research=research,
+                    lab_comment=comments,
+                    time_confirmation=time_confirmation,
+                    time_save=timezone.now(),
+                    doc_confirmation_string=doc_confirm or f'Врач {hospital.short_title or hospital.title}',
                 )
                 tube = Tubes.objects.filter(title='Универсальная пробирка').first()
                 if not tube:
-                    tube = Tubes.objects.create(
-                        title='Универсальная пробирка',
-                        color='#049372'
-                    )
+                    tube = Tubes.objects.create(title='Универсальная пробирка', color='#049372')
 
                 ft = ReleationsFT.objects.filter(tube=tube).first()
                 if not ft:
@@ -683,12 +637,16 @@ def external_research_create(request):
                         ref_m=ref_str,
                     ).save()
             try:
-                Log.log(str(direction.pk), 90000, body={
-                    "org": body.get("org"),
-                    "patient": body.get("patient"),
-                    "financingSource": body.get("financingSource"),
-                    "resultsCount": len(body.get("results")),
-                })
+                Log.log(
+                    str(direction.pk),
+                    90000,
+                    body={
+                        "org": body.get("org"),
+                        "patient": body.get("patient"),
+                        "financingSource": body.get("financingSource"),
+                        "resultsCount": len(body.get("results")),
+                    },
+                )
             except Exception as e:
                 logger.exception(e)
             return Response({"ok": True, 'id': str(direction.pk)})

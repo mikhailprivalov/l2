@@ -62,6 +62,7 @@ class DoctorProfile(models.Model):
     def get_hospital(self):
         if not self.hospital:
             from hospitals.models import Hospitals
+
             self.hospital = Hospitals.get_default_hospital()
             self.save()
         return self.hospital

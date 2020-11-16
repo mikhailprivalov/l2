@@ -223,7 +223,14 @@ def form_01(request_data):
 
     tbl = Table(opinion, colWidths=(95 * mm, 95 * mm))
 
-    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.white), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+            ]
+        )
+    )
 
     objs.append(Spacer(1, 5 * mm))
     objs.append(tbl)
@@ -458,7 +465,15 @@ def form_01(request_data):
 
     tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 52 * mm, 22 * mm, 21 * mm, 22 * mm, 13 * mm, 25 * mm))
 
-    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]
+        )
+    )
 
     objs.append(tbl)
     objs.append(Spacer(1, 1 * mm))
@@ -1024,7 +1039,15 @@ def form_01(request_data):
                 objs.append(Paragraph(f"{section['text']}", styles_obj[section['style']]))
 
         tbl = Table(route_list, colWidths=(30 * mm, 100 * mm), hAlign='LEFT')
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ]
+            )
+        )
 
         objs.append(Spacer(1, 5 * mm))
         objs.append(tbl)

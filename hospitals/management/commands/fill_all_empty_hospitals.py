@@ -16,4 +16,3 @@ class Command(BaseCommand):
         Podrazdeleniya.objects.filter(hospital__isnull=True, p_type=Podrazdeleniya.DEPARTMENT).update(hospital=default_h)
         Podrazdeleniya.objects.filter(hospital__isnull=False).exclude(p_type=Podrazdeleniya.DEPARTMENT).update(hospital=None)
         DoctorProfile.objects.filter(hospital__isnull=True).update(hospital=default_h)
-

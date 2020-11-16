@@ -344,7 +344,11 @@ def endpoint(request):
                                                 a_name_parts = a_name.split()
                                                 a_name = a_name_parts[-2] + ' ' + a_name_parts[-1]
                                                 anti_result = directions.MicrobiologyResultCultureAntibiotic(
-                                                    result_culture=culture_result, antibiotic=anti_obj, sensitivity=anti_r.get('RSI'), dia=anti_r.get('dia', ''), antibiotic_amount=a_name,
+                                                    result_culture=culture_result,
+                                                    antibiotic=anti_obj,
+                                                    sensitivity=anti_r.get('RSI'),
+                                                    dia=anti_r.get('dia', ''),
+                                                    antibiotic_amount=a_name,
                                                 )
                                                 anti_result.save()
                     result["body"] = "{} {} {} {} {}".format(dw, pk, iss_pk, json.dumps(oks), direction is not None)
@@ -405,23 +409,10 @@ def departments(request):
 
     if method == "GET":
         if without_default:
-            qs = (
-                Podrazdeleniya
-                .objects
-                .filter(hospital_id=hospital_pk)
-                .order_by("pk")
-            )
+            qs = Podrazdeleniya.objects.filter(hospital_id=hospital_pk).order_by("pk")
         else:
-            qs = (
-                Podrazdeleniya
-                .objects
-                .filter(Q(hospital_id=hospital_pk) | Q(hospital__isnull=True))
-                .order_by("pk")
-            )
-        deps = [
-            {"pk": x.pk, "title": x.get_title(), "type": str(x.p_type)}
-            for x in qs
-        ]
+            qs = Podrazdeleniya.objects.filter(Q(hospital_id=hospital_pk) | Q(hospital__isnull=True)).order_by("pk")
+        deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type)} for x in qs]
         en = SettingManager.en()
         more_types = []
         if SettingManager.is_morfology_enabled(en):
@@ -555,19 +546,16 @@ def directive_from(request):
     data = []
     for dep in (
         Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)
-            .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
-            .prefetch_related(
-                Prefetch(
-                    'doctorprofile_set',
-                    queryset=(
-                        users.DoctorProfile.objects
-                        .filter(user__groups__name="Лечащий врач")
-                        .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
-                        .order_by("fio")
-                    )
-                )
+        .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
+        .prefetch_related(
+            Prefetch(
+                'doctorprofile_set',
+                queryset=(
+                    users.DoctorProfile.objects.filter(user__groups__name="Лечащий врач").filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True)).order_by("fio")
+                ),
             )
-            .order_by('title')
+        )
+        .order_by('title')
     ):
         d = {
             "pk": dep.pk,
@@ -624,7 +612,16 @@ def statistics_tickets_get(request):
     request_data = json.loads(request.body)
     date_start, date_end = try_parse_range(request_data["date"])
     n = 0
-    for row in StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(date__range=(date_start, date_end,)).order_by('pk'):
+    for row in (
+        StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile))
+        .filter(
+            date__range=(
+                date_start,
+                date_end,
+            )
+        )
+        .order_by('pk')
+    ):
         if not row.invalid_ticket:
             n += 1
         response["data"].append(
@@ -1003,7 +1000,7 @@ def user_view(request):
             "rmis_password": '',
             "doc_pk": doc.user.pk,
             "personal_code": doc.personal_code,
-            "speciality": doc.specialities_id
+            "speciality": doc.specialities_id,
         }
 
     return JsonResponse({"user": data})
@@ -1262,13 +1259,15 @@ def actual_districts(request):
 
 def hospitals(request):
     rows = Hospitals.objects.filter(hide=False).order_by('-is_default', 'short_title').values('pk', 'short_title', 'title', 'code_tfoms')
-    return JsonResponse({
-        "hospitals": [
-            {
-                "id": x['pk'],
-                "label": x["short_title"] or x["title"],
-                "code_tfoms": x["code_tfoms"],
-            }
-            for x in rows
-        ]
-    })
+    return JsonResponse(
+        {
+            "hospitals": [
+                {
+                    "id": x['pk'],
+                    "label": x["short_title"] or x["title"],
+                    "code_tfoms": x["code_tfoms"],
+                }
+                for x in rows
+            ]
+        }
+    )

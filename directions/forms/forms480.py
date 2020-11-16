@@ -70,7 +70,15 @@ def form_01(c: Canvas, dir: Napravleniya):
         ]
 
         tbl = Table(opinion, 2 * [100 * mm])
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                    ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ]
+            )
+        )
 
         objs.append(tbl)
         objs.append(Spacer(1, 5 * mm))
@@ -159,7 +167,14 @@ def form_01(c: Canvas, dir: Napravleniya):
 
         cols_width = [20 * mm, 50 * mm, 100 * mm, 30 * mm]
         tbl = Table(opinion, colWidths=cols_width)
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.black), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ]
+            )
+        )
         objs.append(Spacer(1, 5 * mm))
         objs.append(tbl)
         objs.append(Spacer(1, 5 * mm))

@@ -83,7 +83,7 @@ class DoctorCall(models.Model):
             doc_assigned=doc_obj,
             hospital=hospital_obj,
             is_external=data['external'],
-            email=None if not email else email[:64]
+            email=None if not email else email[:64],
         )
         doc_call.save()
 

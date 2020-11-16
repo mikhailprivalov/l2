@@ -108,7 +108,15 @@ def form_01(request_data):
     ]
 
     tbl = Table(opinion, 2 * [90 * mm])
-    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 80), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 80),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
 
     objs.append(tbl)
     space_symbol = '&nbsp;'
@@ -315,49 +323,97 @@ def form_01(request_data):
         # Переведен
         transfers_text = [Paragraph('{}'.format(transfers), styleJustified)]
         transfers_frame = Frame(27 * mm, 206 * mm, 175 * mm, 7 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        transfers_inframe = KeepInFrame(175 * mm, 12 * mm, transfers_text, hAlign='LEFT', vAlign='TOP',)
+        transfers_inframe = KeepInFrame(
+            175 * mm,
+            12 * mm,
+            transfers_text,
+            hAlign='LEFT',
+            vAlign='TOP',
+        )
         transfers_frame.addFromList([transfers_inframe], canvas)
 
         # Побочное действие лекарств(непереносимость) координаты
         medicament_text = [Paragraph('{}'.format(primary_reception_data['medicament_allergy']), styleJustified)]
         medicament_frame = Frame(27 * mm, 171 * mm, 175 * mm, 9 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        medicament_inframe = KeepInFrame(175 * mm, 12 * mm, medicament_text, hAlign='LEFT', vAlign='TOP',)
+        medicament_inframe = KeepInFrame(
+            175 * mm,
+            12 * mm,
+            medicament_text,
+            hAlign='LEFT',
+            vAlign='TOP',
+        )
         medicament_frame.addFromList([medicament_inframe], canvas)
 
         # ФИО
         fio_text = [Paragraph("<font size=11.7 fontname ='PTAstraSerifBold'> {}</font> ".format(patient_data['fio']), style)]
         fio_frame = Frame(77 * mm, 159 * mm, 125 * mm, 8 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        fio_inframe = KeepInFrame(175 * mm, 12 * mm, fio_text, hAlign='LEFT', vAlign='TOP',)
+        fio_inframe = KeepInFrame(
+            175 * mm,
+            12 * mm,
+            fio_text,
+            hAlign='LEFT',
+            vAlign='TOP',
+        )
         fio_frame.addFromList([fio_inframe], canvas)
 
         # Постоянное место жительства
         live_text = [Paragraph('{}, {}'.format(p_address, p_phone), style)]
         live_frame = Frame(88 * mm, 144 * mm, 115 * mm, 9 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        live_inframe = KeepInFrame(175 * mm, 12 * mm, live_text, hAlign='LEFT', vAlign='TOP',)
+        live_inframe = KeepInFrame(
+            175 * mm,
+            12 * mm,
+            live_text,
+            hAlign='LEFT',
+            vAlign='TOP',
+        )
         live_frame.addFromList([live_inframe], canvas)
 
         # Место работы
         work_text = [Paragraph('{}'.format(p_work), style)]
         work_frame = Frame(108 * mm, 138.5 * mm, 95 * mm, 5 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        work_inframe = KeepInFrame(175 * mm, 12 * mm, work_text, hAlign='LEFT', vAlign='TOP',)
+        work_inframe = KeepInFrame(
+            175 * mm,
+            12 * mm,
+            work_text,
+            hAlign='LEFT',
+            vAlign='TOP',
+        )
         work_frame.addFromList([work_inframe], canvas)
 
         # Кем направлен больной
         who_directed_text = [Paragraph('{}'.format(primary_reception_data['who_directed']), style)]
         who_directed_frame = Frame(77 * mm, 129.5 * mm, 126 * mm, 7 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        who_directed_inframe = KeepInFrame(175 * mm, 12 * mm, who_directed_text, hAlign='LEFT', vAlign='TOP',)
+        who_directed_inframe = KeepInFrame(
+            175 * mm,
+            12 * mm,
+            who_directed_text,
+            hAlign='LEFT',
+            vAlign='TOP',
+        )
         who_directed_frame.addFromList([who_directed_inframe], canvas)
 
         # Диагноз направившего учреждения координаты
         diagnos_directed_text = [Paragraph('{}'.format(primary_reception_data['diagnos_who_directed']), styleJustified)]
         diagnos_directed_frame = Frame(27 * mm, 98 * mm, 175 * mm, 9 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        diagnos_directed_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_directed_text, hAlign='LEFT', vAlign='TOP',)
+        diagnos_directed_inframe = KeepInFrame(
+            175 * mm,
+            10 * mm,
+            diagnos_directed_text,
+            hAlign='LEFT',
+            vAlign='TOP',
+        )
         diagnos_directed_frame.addFromList([diagnos_directed_inframe], canvas)
 
         # Диагноз при поступлении координаты
         diagnos_entered_text = [Paragraph('{}'.format(primary_reception_data['diagnos_entered']), styleJustified)]
         diagnos_entered_frame = Frame(27 * mm, 83 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        diagnos_entered_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_entered_text, hAlign='LEFT', vAlign='TOP',)
+        diagnos_entered_inframe = KeepInFrame(
+            175 * mm,
+            10 * mm,
+            diagnos_entered_text,
+            hAlign='LEFT',
+            vAlign='TOP',
+        )
         diagnos_entered_frame.addFromList([diagnos_entered_inframe], canvas)
 
         # клинический диагноз координаты
@@ -422,8 +478,26 @@ def form_01(request_data):
     opinion_oper.extend(operation_result)
 
     t_opinion_oper = opinion_oper.copy()
-    tbl_o = Table(t_opinion_oper, colWidths=(7 * mm, 62 * mm, 25 * mm, 30 * mm, 15 * mm, 45 * mm,))
-    tbl_o.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 2.1 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+    tbl_o = Table(
+        t_opinion_oper,
+        colWidths=(
+            7 * mm,
+            62 * mm,
+            25 * mm,
+            30 * mm,
+            15 * mm,
+            45 * mm,
+        ),
+    )
+    tbl_o.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 2.1 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]
+        )
+    )
 
     def later_pages(canvas, document):
         canvas.saveState()
@@ -431,19 +505,36 @@ def form_01(request_data):
         # Основной заключительный диагноз
         final_diagnos_text = [Paragraph('{}'.format(final_diagnos), styleJustified)]
         final_diagnos_frame = Frame(27 * mm, 230 * mm, 175 * mm, 45 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
-        final_diagnos_inframe = KeepInFrame(175 * mm, 50 * mm, final_diagnos_text, hAlign='LEFT', vAlign='TOP',)
+        final_diagnos_inframe = KeepInFrame(
+            175 * mm,
+            50 * mm,
+            final_diagnos_text,
+            hAlign='LEFT',
+            vAlign='TOP',
+        )
         final_diagnos_frame.addFromList([final_diagnos_inframe], canvas)
 
         # Осложнения основного заключительного диагноза
         other_diagnos_text = [Paragraph('{}'.format(other_diagnos), styleJustified)]
         other_diagnos_frame = Frame(27 * mm, 205 * mm, 175 * mm, 20 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
-        other_diagnos_inframe = KeepInFrame(175 * mm, 20 * mm, other_diagnos_text, hAlign='LEFT', vAlign='TOP',)
+        other_diagnos_inframe = KeepInFrame(
+            175 * mm,
+            20 * mm,
+            other_diagnos_text,
+            hAlign='LEFT',
+            vAlign='TOP',
+        )
         other_diagnos_frame.addFromList([other_diagnos_inframe], canvas)
 
         # Сопутствующие основного заключительного диагноза
         near_diagnos_text = [Paragraph('{}'.format(near_diagnos.replace('<', '&lt;').replace('>', '&gt;')), styleJustified)]
         near_diagnos_frame = Frame(27 * mm, 181 * mm, 175 * mm, 20 * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
-        near_diagnos_inframe = KeepInFrame(175 * mm, 20 * mm, near_diagnos_text, vAlign='TOP',)
+        near_diagnos_inframe = KeepInFrame(
+            175 * mm,
+            20 * mm,
+            near_diagnos_text,
+            vAlign='TOP',
+        )
         near_diagnos_frame.addFromList([near_diagnos_inframe], canvas)
 
         # Таблица операции

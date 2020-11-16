@@ -368,11 +368,7 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
 
     logo_col = logo_col_func(direction)
 
-    data = [
-        [Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]]
-        for xi in
-        range(rows)
-    ]
+    data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for xi in range(rows)]
     if direction.is_external:
         colWidths = [40 * mm, doc.width - 158 - 40 * mm, 158]
     else:
@@ -602,7 +598,16 @@ def microbiology_result(iss, fwb, doc):
         data = [[Paragraph(x, styleBold) for x in ['Антибиотик', 'Диаметр', 'Чувствительность']]]
 
         for anti in culture.culture_antibiotic.all():
-            data.append([Paragraph(x, style) for x in [anti.antibiotic.title + ' ' + anti.antibiotic_amount, anti.dia, anti.sensitivity,]])
+            data.append(
+                [
+                    Paragraph(x, style)
+                    for x in [
+                        anti.antibiotic.title + ' ' + anti.antibiotic_amount,
+                        anti.dia,
+                        anti.sensitivity,
+                    ]
+                ]
+            )
 
         cw = [int(tw * 0.4), int(tw * 0.3)]
         cw = cw + [tw - sum(cw)]

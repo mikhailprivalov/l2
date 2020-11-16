@@ -130,7 +130,13 @@ def gen_pdf_execlist(request):
                 if len(data[y]) < xsize:
                     for i in range(len(data[y]), xsize):
                         data[y].append("<br/><br/><br/><br/><br/>")
-            style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'), ('INNERGRID', (0, 0), (-1, -1), 0.3, colors.black), ('BOX', (0, 0), (-1, -1), 0.3, colors.black),])
+            style = TableStyle(
+                [
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('INNERGRID', (0, 0), (-1, -1), 0.3, colors.black),
+                    ('BOX', (0, 0), (-1, -1), 0.3, colors.black),
+                ]
+            )
 
             s = getSampleStyleSheet()
             s = s["BodyText"]
@@ -301,12 +307,14 @@ def gen_pdf_dir(request):
             if len(card_pk_set) == 1 and fin_status:
                 from forms.forms102 import form_01 as f_contract
 
-                fc = f_contract(request_data={
-                    **dict(request.GET.items()),
-                    "user": request.user,
-                    "card_pk": card_pk_set.pop(),
-                    "hospital": request.user.doctorprofile.get_hospital(),
-                })
+                fc = f_contract(
+                    request_data={
+                        **dict(request.GET.items()),
+                        "user": request.user,
+                        "card_pk": card_pk_set.pop(),
+                        "hospital": request.user.doctorprofile.get_hospital(),
+                    }
+                )
                 if fc:
                     fc_buf = BytesIO()
                     fc_buf.write(fc)
@@ -463,7 +471,14 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
         rtp = i.research.reversed_type
         if rtp < -1:
             has_doc_refferal = True
-            rt = {-2: 'Консультации', -3: 'Лечение', -4: 'Стоматология', -5: 'Стационар', -6: 'Микробиология', -9998: 'Морфология',}[rtp]
+            rt = {
+                -2: 'Консультации',
+                -3: 'Лечение',
+                -4: 'Стоматология',
+                -5: 'Стационар',
+                -6: 'Микробиология',
+                -9998: 'Морфология',
+            }[rtp]
             # if rtp == -6:
             #     has_micro = True
         else:
@@ -698,10 +713,12 @@ def get_one_dir(request):
         if Napravleniya.objects.filter(pk=direction_pk).exists():
             tmp2 = Napravleniya.objects.get(pk=direction_pk)
             if tmp2.get_hospital() != request.user.doctorprofile.get_hospital():
-                return JsonResponse({
-                    "ok": False,
-                    "message": "Направление для другой организации",
-                })
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "message": "Направление для другой организации",
+                    }
+                )
             if "check" not in request.GET.keys():
                 tmp = Issledovaniya.objects.filter(napravleniye=tmp2).order_by("research__title")
                 response["direction"] = {
@@ -1036,7 +1053,7 @@ def print_history(request):
                     tmp.append("")
                 research_tmp = obj["researches"]
                 if len(research_tmp) > 38:
-                    research_tmp = research_tmp[0: -(len(research_tmp) - 38)] + "..."
+                    research_tmp = research_tmp[0:-(len(research_tmp) - 38)] + "..."
                 tmp.append(Paragraph(research_tmp, styleSheet["BodyText"]))
                 tmp.append(Paragraph("", styleSheet["BodyText"]))
 

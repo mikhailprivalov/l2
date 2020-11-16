@@ -117,4 +117,3 @@ def cancel_row(request):
     row.save()
 
     return JsonResponse(True, safe=False)
-

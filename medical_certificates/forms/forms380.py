@@ -10,7 +10,6 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY, TA_RIGHT
-from appconf.manager import SettingManager
 from io import BytesIO
 from reportlab.lib.pagesizes import A4, landscape, A5, portrait
 import os.path

@@ -456,6 +456,7 @@ def result_print(request):
             '',
             '',
         ]
+
     pw = doc.width
 
     def print_vtype(data, f, iss, j, style_t, styleSheet):
@@ -530,10 +531,10 @@ def result_print(request):
             Prefetch(
                 'issledovaniya_set',
                 queryset=(
-                    Issledovaniya
-                    .objects
-                    .filter(Q(time_save__isnull=False) | Q(time_confirmation__isnull=False)).select_related('research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye')
-                )
+                    Issledovaniya.objects.filter(Q(time_save__isnull=False) | Q(time_confirmation__isnull=False)).select_related(
+                        'research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'
+                    )
+                ),
             )
         )
         .annotate(results_count=Count('issledovaniya__result'))
@@ -935,9 +936,7 @@ def result_print(request):
                             Paragraph(
                                 '<font face="FreeSans" size="8">%s</font>' % ("Не подтверждено" if not iss.time_confirmation else strdate(iss.time_confirmation)), styleSheet["BodyText"]
                             ),
-                            Paragraph(
-                                '<font face="FreeSans" size="8">%s</font>' % (iss.doc_confirmation_fio or "Не подтверждено"), styleSheet["BodyText"]
-                            ),
+                            Paragraph('<font face="FreeSans" size="8">%s</font>' % (iss.doc_confirmation_fio or "Не подтверждено"), styleSheet["BodyText"]),
                         ]
                         data.append(tmp)
 
@@ -1894,7 +1893,13 @@ def result_journal_print(request):
             ('BOTTOMPADDING', (0, 2), (-1, -1), 1),
         ]
         if not codes:
-            sta.append(('SPAN', (0, 0), (-1, 0),))
+            sta.append(
+                (
+                    'SPAN',
+                    (0, 0),
+                    (-1, 0),
+                )
+            )
         st = TableStyle(sta)
         tw = pw - 25 * mm
         t = Table(data, colWidths=[tw * 0.05, tw * 0.19, tw * 0.76])
@@ -2162,12 +2167,22 @@ def results_search_directions(request):
     if sorting_direction == "up":
         sort_types = {
             "confirm-date": ("issledovaniya__time_confirmation",),
-            "patient": ("issledovaniya__time_confirmation", "client__individual__family", "client__individual__name", "client__individual__patronymic",),
+            "patient": (
+                "issledovaniya__time_confirmation",
+                "client__individual__family",
+                "client__individual__name",
+                "client__individual__patronymic",
+            ),
         }
     else:
         sort_types = {
             "confirm-date": ("-issledovaniya__time_confirmation",),
-            "patient": ("-issledovaniya__time_confirmation", "-client__individual__family", "-client__individual__name", "-client__individual__patronymic",),
+            "patient": (
+                "-issledovaniya__time_confirmation",
+                "-client__individual__family",
+                "-client__individual__name",
+                "-client__individual__patronymic",
+            ),
         }
     filtered = []
     cnt = 0

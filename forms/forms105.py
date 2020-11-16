@@ -160,11 +160,29 @@ def form_01(request_data):
         t_opinion.extend(list_g)
 
         if param:
-            tbl = Table(t_opinion, colWidths=(10 * mm, 60 * mm, 19 * mm, 15 * mm, 75 * mm, 30 * mm, 70 * mm,))
+            tbl = Table(
+                t_opinion,
+                colWidths=(
+                    10 * mm,
+                    60 * mm,
+                    19 * mm,
+                    15 * mm,
+                    75 * mm,
+                    30 * mm,
+                    70 * mm,
+                ),
+            )
         else:
             tbl = Table(t_opinion, colWidths=(10 * mm, 30 * mm, 19 * mm, 15 * mm, 46 * mm, 20 * mm, 10 * mm, 13 * mm, 11 * mm, 20 * mm, 18 * mm, 16 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
 
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+                ]
+            )
+        )
 
         objs.append(tbl)
         new_page = True
@@ -188,13 +206,22 @@ def form_01(request_data):
         canvas.drawString(99 * mm, 200 * mm, '{}'.format(title))
 
         tbl = Table(opinion, colWidths=(35 * mm, 220 * mm, 25 * mm), rowHeights=(5 * mm))
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.white), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+                ]
+            )
+        )
         tbl.wrapOn(canvas, width, height)
         tbl.drawOn(canvas, 30, 530)
         canvas.restoreState()
 
     doc.build(
-        objs, onFirstPage=later_pages, onLaterPages=later_pages,
+        objs,
+        onFirstPage=later_pages,
+        onLaterPages=later_pages,
     )
 
     pdf = buffer.getvalue()
@@ -351,7 +378,14 @@ def form_02(request_data):
             opinion.extend(list_f)
 
         tbl = Table(opinion, colWidths=(60 * mm, 123 * mm))
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+                ]
+            )
+        )
 
         objs.append(tbl)
 
@@ -373,7 +407,14 @@ def form_02(request_data):
         ]
 
         tbl = Table(opinion, colWidths=(60 * mm, 123 * mm))
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+                ]
+            )
+        )
         objs.append(tbl)
 
         # Добавить Дополнительные услуги
@@ -435,7 +476,14 @@ def form_02(request_data):
             opinion.append(para)
 
         tbl = Table(opinion, colWidths=(190 * mm))
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.white), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+                ]
+            )
+        )
         objs.append(tbl)
 
         objs.append(PageBreak())
@@ -523,7 +571,15 @@ def form_03(request_data):
     ]
 
     tbl = Table(opinion, 2 * [90 * mm])
-    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 80), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 80),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
 
     objs.append(tbl)
     space_symbol = '&nbsp;'
@@ -702,10 +758,20 @@ def form_03(request_data):
     # получить структуру данных для таблицы
     tbl_act = Table(opinion, repeatRows=1, colWidths=(7 * mm, 15 * mm, 30 * mm, 20 * mm, 21 * mm, 21 * mm, 20 * mm, 14 * mm, 14 * mm, 20 * mm))
 
-    tbl_act.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+    tbl_act.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]
+        )
+    )
     objs.append(tbl_act)
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('27. Хирургические операции(обозначить: основную операцию, использование спец.аппаратуры):', style),)
+    objs.append(
+        Paragraph('27. Хирургические операции(обозначить: основную операцию, использование спец.аппаратуры):', style),
+    )
 
     opinion = [
         [
@@ -739,14 +805,26 @@ def form_03(request_data):
 
     opinion.extend(operation_result)
     tbl_act = Table(opinion, repeatRows=1, colWidths=(22 * mm, 12 * mm, 11 * mm, 26 * mm, 26 * mm, 20 * mm, 10 * mm, 15 * mm, 7 * mm, 7 * mm, 7 * mm, 16 * mm))
-    tbl_act.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+    tbl_act.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]
+        )
+    )
     objs.append(tbl_act)
     objs.append(Spacer(1, 2 * mm))
     space_symbol = '&nbsp;'
 
-    objs.append(Paragraph('28. Обследован: RW {}  AIDS '.format(space_symbol * 10), style),)
+    objs.append(
+        Paragraph('28. Обследован: RW {}  AIDS '.format(space_symbol * 10), style),
+    )
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('29. Диагноз стационара(при выписке):', style),)
+    objs.append(
+        Paragraph('29. Диагноз стационара(при выписке):', style),
+    )
 
     opinion = [
         [
@@ -793,12 +871,21 @@ def form_03(request_data):
     opinion.extend(opinion_pathologist)
     tbl_act = Table(opinion, repeatRows=1, colWidths=(28 * mm, 45 * mm, 15 * mm, 30 * mm, 15 * mm, 30 * mm, 15 * mm))
     tbl_act.setStyle(
-        TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('SPAN', (0, 0), (0, 1)),])
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('SPAN', (0, 0), (0, 1)),
+            ]
+        )
     )
 
     objs.append(tbl_act)
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('30.В случае смерти указать основную причину:______________________________________________________________' 'Код МКБ', style),)
+    objs.append(
+        Paragraph('30.В случае смерти указать основную причину:______________________________________________________________' 'Код МКБ', style),
+    )
     objs.append(Spacer(1, 20 * mm))
     objs.append(
         Paragraph(
@@ -808,9 +895,13 @@ def form_03(request_data):
         ),
     )
     objs.append(Spacer(1, 7 * mm))
-    objs.append(Paragraph('Подпись лечащего врача ({}) ____________________________'.format(doc_fio), style),)
+    objs.append(
+        Paragraph('Подпись лечащего врача ({}) ____________________________'.format(doc_fio), style),
+    )
     objs.append(Spacer(1, 7 * mm))
-    objs.append(Paragraph('Подпись заведующего отделением', style),)
+    objs.append(
+        Paragraph('Подпись заведующего отделением', style),
+    )
 
     def first_pages(canvas, document):
         canvas.saveState()
