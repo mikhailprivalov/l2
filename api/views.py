@@ -557,7 +557,9 @@ def directive_from(request):
         Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)
             .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
             .prefetch_related(
-                Prefetch('doctorprofile_set', queryset=(
+                Prefetch(
+                    'doctorprofile_set',
+                    queryset=(
                         users.DoctorProfile.objects
                         .filter(user__groups__name="Лечащий врач")
                         .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
@@ -735,9 +737,9 @@ def rmis_confirm_list(request):
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
     d = (
         directions.Napravleniya.objects.filter(istochnik_f__rmis_auto_send=False, force_rmis_send=False, issledovaniya__time_confirmation__range=(date_start, date_end))
-            .exclude(issledovaniya__time_confirmation__isnull=True)
-            .distinct()
-            .order_by("pk")
+        .exclude(issledovaniya__time_confirmation__isnull=True)
+        .distinct()
+        .order_by("pk")
     )
     data["directions"] = [{"pk": x.pk, "patient": {"fiodr": x.client.individual.fio(full=True), "card": x.client.number_with_type()}, "fin": x.fin_title} for x in d]
     return JsonResponse(data)

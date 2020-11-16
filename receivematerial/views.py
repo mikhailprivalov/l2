@@ -460,12 +460,12 @@ def receive_journal(request):
 
     if return_type == "directions":
         tubes = (
-                    TubesRegistration.objects
-                    .filter(
-                        issledovaniya__research__podrazdeleniye=lab, time_recive__gte=datetime.now().date(), doc_get__podrazdeleniye__pk__in=otd, doc_recive__isnull=False
-                    )
-                    .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
-                    .order_by('time_recive', 'daynum')
+            TubesRegistration.objects
+            .filter(
+                issledovaniya__research__podrazdeleniye=lab, time_recive__gte=datetime.now().date(), doc_get__podrazdeleniye__pk__in=otd, doc_recive__isnull=False
+            )
+            .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
+            .order_by('time_recive', 'daynum')
         )
     else:
         tubes = (

@@ -584,10 +584,10 @@ def dashboard_from(request):
         date_start, date_end = try_parse_range(date_start, date_end)
         if request.GET.get("get_labs", "false") == "true":
             for lab in (
-                           Podrazdeleniya.objects
-                           .filter(p_type=Podrazdeleniya.LABORATORY)
-                           .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
-                           .exclude(title="Внешние организации")
+               Podrazdeleniya.objects
+               .filter(p_type=Podrazdeleniya.LABORATORY)
+               .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
+               .exclude(title="Внешние организации")
             ):
                 tubes_list = (
                     TubesRegistration.objects

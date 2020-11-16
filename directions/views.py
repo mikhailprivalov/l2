@@ -1143,7 +1143,7 @@ def get_issledovaniya(request):
                     iss = []
             if napr and napr.hospital and napr.hospital != request.user.doctorprofile.hospital:
                 napr = None
-                iss =[]
+                iss = []
             mnext = False
             for i in Issledovaniya.objects.filter(napravleniye=napr):
                 po = i.research.podrazdeleniye
