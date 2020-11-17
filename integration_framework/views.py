@@ -324,6 +324,8 @@ def check_enp(request):
     if enp_mode == 'tfoms':
         tfoms_data = match_enp(enp)
 
+        logger.exception(f'tfoms data: {json.dumps(tfoms_data)}')
+
         if tfoms_data:
             bdate = tfoms_data.get('birthdate', '').split(' ')[0]
             if normalize_date(bd) == normalize_date(bdate):
