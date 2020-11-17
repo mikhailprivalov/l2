@@ -64,7 +64,7 @@ class Individual(models.Model):
         if out:
             out.write("Обновление данных для: %s" % self.fio(full=True))
         if force_print:
-            print("Обновление данных для: %s" % self.fio(full=True))
+            logger.exception("Обновление данных для: %s" % self.fio(full=True))
         if c is None:
             from rmis_integration.client import Client
 
@@ -78,7 +78,7 @@ class Individual(models.Model):
             if out:
                 out.write("Есть РМИС запись: %s" % rmis_uid)
             if force_print:
-                print("Есть РМИС запись: %s" % rmis_uid)
+                logger.exception("Есть РМИС запись: %s" % rmis_uid)
 
         if not ok:
             docs = Document.objects.filter(individual=self).exclude(document_type__check_priority=0).order_by("-document_type__check_priority")
@@ -90,7 +90,7 @@ class Individual(models.Model):
                     if out:
                         out.write("Физ.лицо найдено по документу: %s -> %s" % (document, rmis_uid))
                         if force_print:
-                            print("Физ.лицо найдено по документу: %s -> %s" % (document, rmis_uid))
+                            logger.exception("Физ.лицо найдено по документу: %s -> %s" % (document, rmis_uid))
                     break
 
         if ok:
@@ -109,7 +109,7 @@ class Individual(models.Model):
                 if out:
                     out.write("Обновление данных: %s" % self.fio(full=True))
                 if force_print:
-                    print("Обновление данных: %s" % self.fio(full=True))
+                    logger.exception("Обновление данных: %s" % self.fio(full=True))
                 slog.Log(key=str(self.pk), type=2003, body=simplejson.dumps({"Новые данные": str(self), "Не актуальные данные": prev}), user=None).save()
 
         if not ok:
@@ -121,7 +121,7 @@ class Individual(models.Model):
                 if out:
                     out.write("Физ.лицо найдено по ФИО и д.р.: %s" % rmis_uid)
                 if force_print:
-                    print("Физ.лицо найдено по ФИО и д.р.: %s" % rmis_uid)
+                    logger.exception("Физ.лицо найдено по ФИО и д.р.: %s" % rmis_uid)
 
         if not has_rmis and rmis_uid and rmis_uid != '':
             ex = Card.objects.filter(number=rmis_uid, is_archive=False, base__is_rmis=True)
@@ -132,7 +132,7 @@ class Individual(models.Model):
             if out:
                 out.write("Добавление РМИС карты -> %s" % s)
             if force_print:
-                print("Добавление РМИС карты -> %s" % s)
+                logger.exception("Добавление РМИС карты -> %s" % s)
 
         save_docs = []
 
@@ -263,7 +263,7 @@ class Individual(models.Model):
             if out:
                 out.write("Физ.лицо не найдено в РМИС")
             if force_print:
-                print("Физ.лицо не найдено в РМИС")
+                logger.exception("Физ.лицо не найдено в РМИС")
         return ok
 
     def reverse_sync(self, force_new=False):
