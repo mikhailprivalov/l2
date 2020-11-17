@@ -216,7 +216,12 @@ def gen_pdf_dir(request):
         pg = p.page(pg_num)
         i = 4  # Номер позиции направления на странице (4..1)
         for n_ob in pg.object_list:  # Перебор номеров направлений на странице
-            print_direction(c, i, n_ob, format_A6)  # Вызов функции печати направления на указанную позицию
+            if not n_ob.external_organization:
+                print_direction(c, i, n_ob, format_A6)  # Вызов функции печати направления на указанную позицию
+            else:
+                f = import_string('directions.forms.forms' + '380' + '.form_' + '05')
+                c = canvas.Canvas(buffer, pagesize=A4)
+                f(c, n_ob)
             instructions += n_ob.get_instructions()
             i -= 1
         if pg.has_next():  # Если есть следующая страница
@@ -233,12 +238,10 @@ def gen_pdf_dir(request):
         if not iss.exists():
             continue
         form = iss[0].research.direction_form
-        print(d.external_organization)
-        if form != 0 or d.external_organization:
+        print("1212", d.external_organization)
+        if form != 0 and not d.external_organization:
             current_type_form = str(form)
             f = import_string('directions.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
-            if d.external_organization:
-                f = import_string('directions.forms.forms' + '380' + '.form_' + '05')
             f(c, d)
         if n != cntn:
             c.showPage()

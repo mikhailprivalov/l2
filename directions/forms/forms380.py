@@ -598,12 +598,26 @@ def form_05(c: Canvas, dir: Napravleniya):
         pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
         pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
+        try:
+            issledovaniye = Issledovaniya.objects.get(napravleniye=dir.pk)
+        except ObjectDoesNotExist:
+            issledovaniye = None
+        title_research = ""
+        is_doc_refferal = False
+        if issledovaniye:
+            title_research = issledovaniye.research.title
+            if issledovaniye.research.is_doc_refferal:
+                is_doc_refferal = True
+
         styleSheet = getSampleStyleSheet()
         style = styleSheet["Normal"]
         style.fontName = "PTAstraSerifReg"
         style.fontSize = 11
         style.leading = 12
         style.spaceAfter = 1.5 * mm
+
+        styleBold = deepcopy(style)
+        styleBold.fontName = 'PTAstraSerifBold'
 
         styleCenterBold = deepcopy(style)
         styleCenterBold.alignment = TA_CENTER
@@ -624,7 +638,7 @@ def form_05(c: Canvas, dir: Napravleniya):
         barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
         dir_code = Drawing()
         dir_code.add(barcode)
-        renderPDF.draw(dir_code, c, 157 * mm, 259 * mm)
+        renderPDF.draw(dir_code, c, 154 * mm, 255 * mm)
 
         objs = []
         opinion = [
@@ -671,14 +685,19 @@ def form_05(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph(f"Наименование направившей медицинской организации: {hospital_address} {hospital_name}", style))
         objs.append(Paragraph("Направлен(а) на:", style))
         objs.append(Paragraph("1) консультацию (вписать специалистов)", style))
+        if is_doc_refferal:
+            objs.append(Paragraph(f"{title_research}", styleBold))
         objs.append(Paragraph("2) исследование (указать вид исследования)", style))
+        if not is_doc_refferal:
+            objs.append(Paragraph(f"{title_research}", styleBold))
         objs.append(Paragraph("3) госпитализацию", style))
+        objs.append(Paragraph(f"____________________________________________________", style))
         objs.append(Paragraph("Цель консультации (и, или) исследования (нужное обвести):", style))
-        objs.append(Paragraph("01 - дообследование при неясном диагнозе;", style))
-        objs.append(Paragraph("02 - уточнение диагноза;", style))
-        objs.append(Paragraph("03 - для коррекции лечения;", style))
-        objs.append(Paragraph("04 - дообследование для госпитализации;", style))
-        objs.append(Paragraph("05 - и прочие цели (нужное вписать) __________________", style))
+        objs.append(Paragraph(f"{space_symbol * 10}01 - дообследование при неясном диагнозе;", style))
+        objs.append(Paragraph(f"{space_symbol * 10}02 - уточнение диагноза;", style))
+        objs.append(Paragraph(f"{space_symbol * 10}03 - для коррекции лечения;", style))
+        objs.append(Paragraph(f"{space_symbol * 10}04 - дообследование для госпитализации;", style))
+        objs.append(Paragraph(f"{space_symbol * 10}05 - и прочие цели (нужное вписать) __________________", style))
         objs.append(Paragraph("Диагноз направившей медицинской организации (диагноз/ код диагноза в соответствии с МКБ10):", style))
         objs.append(Paragraph("Основной ___________________________________________________________________________________________", style))
         objs.append(Paragraph("Сопутствующий ______________________________________________________________________________________", style))
@@ -701,68 +720,6 @@ def form_05(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph('телефон ____________________________ "_____" _____________ 20__ г.', style))
         objs.append(Paragraph("Руководитель направившей медицинской организации", style))
         objs.append(Paragraph("Согласие пациента на передачу сведений электронной почтой для осуществления предварительной записи и передачи заключения:", style))
-
-        objs.append(Paragraph(f'Карта: {dir.client.number_with_type()}', style))
-        objs.append(Paragraph(f'Отделение: {dir.doc.podrazdeleniye.title} {space_symbol * 7} палата _______ ', style))
-
-        objs.append(Paragraph(f'Место работы, учебы (наименование детского учреждения, школы): {dir.workplace}', style))
-        clinical_diagnos = ''
-        if dir.parent:
-            hosp_nums_obj = hosp_get_hosp_direction(dir.parent.napravleniye_id)
-            if len(hosp_nums_obj) > 0:
-                clinical_diagnos = hosp_get_clinical_diagnos(hosp_nums_obj)
-
-        objs.append(Paragraph(f"Диагноз, дата заболевания:  <font face=\"PTAstraSerifBold\">{clinical_diagnos}</font>", style))
-        objs.append(Paragraph('_______________________________________________________________________________________________________', style))
-
-        issledovaniya = dir.issledovaniya_set.all()
-        opinion = [
-            [
-                Paragraph('Цель и наименование исследования', styleCenterBold),
-                Paragraph('Материал - место взятия', styleCenterBold),
-                Paragraph('Показания к обследованию', styleCenterBold),
-                Paragraph('Номер', styleCenterBold),
-            ],
-        ]
-
-        for v in issledovaniya:
-            tmp_value = []
-            tmp_value.append(Paragraph(f"{v.research.title}<br/>{v.research.code}", styleT))
-            type_material = "" if not v.research.site_type else v.research.site_type.title
-            service_location_title = "" if not v.service_location else v.service_location.title
-            tmp_value.append(Paragraph(f"{type_material}-{service_location_title}", styleT))
-            category_patient = v.localization.title if v.localization else v.comment
-            tmp_value.append(Paragraph(f"{category_patient}", styleT))
-            num_iss = '{:,}'.format(v.pk).replace(',', ' ')
-            iss_barcode128 = code128.Code128(v.pk, barHeight=10 * mm, barWidth=1.25, lquiet=1 * mm)
-            tmp_value.append(Paragraph(f"{num_iss}", styleTCentre))
-            opinion.append(tmp_value.copy())
-            opinion.append([Paragraph('', styleT), Paragraph('', styleT), Paragraph('', styleT), iss_barcode128])
-
-        style_table = []
-        style_table.append(('VALIGN', (0, 0), (-1, -1), 'TOP'))
-        style_table.append(('GRID', (0, 0), (-1, -1), 0.75, colors.black))
-        count_rows = len(opinion)
-        for i in range(count_rows):
-            if i % 2 == 0 and i != 0:
-                for count_col in range(3):
-                    style_table.append(('SPAN', (count_col, i), (count_col, i - 1)))
-                    style_table.append(('SPA', (count_col, i), (count_col, i - 1)))
-                    style_table.append(('LINEABOVE', (-1, i), (-1, i), 2, colors.white))
-
-        style_table.append(('LINEBEFORE', (-1, 0), (-1, -1), 0.75, colors.black))
-        style_table.append(('LINEAFTER', (-1, 0), (-1, -1), 0.75, colors.black))
-        cols_width = [95 * mm, 35 * mm, 32 * mm, 40 * mm]
-        tbl = Table(opinion, colWidths=cols_width, hAlign='LEFT')
-        tbl.setStyle(TableStyle(style_table))
-        objs.append(Spacer(1, 5 * mm))
-        objs.append(tbl)
-
-        objs.append(Spacer(1, 5 * mm))
-        objs.append(Paragraph(f'Врач: {dir.doc.get_fio()} {space_symbol * 5} подпись _________', style))
-        if dir.doc_who_create and dir.doc_who_create != dir.doc:
-            objs.append(Paragraph(f'Выписал: {dir.doc_who_create.get_fio()}', style))
-        objs.append(Paragraph(f'Дата направления:  {strdate(dir.data_sozdaniya)}', style))
 
         gistology_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
         gistology_inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
