@@ -119,7 +119,8 @@ class LaterPagesTable(Table):
     def split(self, availWidth, availHeight):
         self._calc(availWidth, availHeight)
         if self.splitByRow:
-            if not getattr(rl_config, 'allowTableBoundsErrors') and self._width > availWidth: return []
+            if not getattr(rl_config, 'allowTableBoundsErrors') and self._width > availWidth:
+                return []
             tables = self._splitRows(availHeight)
 
             if len(tables):

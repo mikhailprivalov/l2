@@ -122,7 +122,14 @@ def researches_by_department(request):
 
         for research in q:
             response["researches"].append(
-                {"pk": research.pk, "title": research.title, "short_title": research.short_title, "preparation": research.preparation, "hide": research.hide, "code": research.code,}
+                {
+                    "pk": research.pk,
+                    "title": research.title,
+                    "short_title": research.short_title,
+                    "preparation": research.preparation,
+                    "hide": research.hide,
+                    "code": research.code,
+                }
             )
     return JsonResponse(response)
 
@@ -395,7 +402,12 @@ def fast_templates(request):
 
     for rt in rts.order_by('pk'):
         data.append(
-            {"pk": rt.pk, "title": rt.title, "hide": rt.hide, "readonly": not is_all or rt.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,}
+            {
+                "pk": rt.pk,
+                "title": rt.title,
+                "hide": rt.hide,
+                "readonly": not is_all or rt.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
+            }
         )
 
     return JsonResponse({"data": data})
@@ -467,7 +479,15 @@ def field_title(request):
 def hospital_service_details(request):
     request_data = json.loads(request.body)
     hs = HospitalService.objects.get(pk=request_data["pk"])
-    return JsonResponse({"pk": hs.pk, "department": -500 - hs.site_type, "hide": hs.hide, "main_service_pk": hs.main_research_id, "slave_service_pk": hs.slave_research_id,})
+    return JsonResponse(
+        {
+            "pk": hs.pk,
+            "department": -500 - hs.site_type,
+            "hide": hs.hide,
+            "main_service_pk": hs.main_research_id,
+            "slave_service_pk": hs.slave_research_id,
+        }
+    )
 
 
 def fields_and_groups_titles(request):
@@ -497,7 +517,11 @@ def fields_and_groups_titles(request):
                     titles[i] = None
         else:
             titles[i] = None
-    return JsonResponse({"titles": titles,})
+    return JsonResponse(
+        {
+            "titles": titles,
+        }
+    )
 
 
 @login_required

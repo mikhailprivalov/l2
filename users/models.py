@@ -3,6 +3,7 @@ import uuid
 from django.contrib.auth.models import User
 from django.db import models
 
+from appconf.manager import SettingManager
 from podrazdeleniya.models import Podrazdeleniya
 
 
@@ -50,6 +51,22 @@ class DoctorProfile(models.Model):
     rmis_login = models.CharField(default='', blank=True, null=True, max_length=50, help_text='РМИС логин')
     rmis_password = models.CharField(default='', blank=True, null=True, max_length=50, help_text='РМИС пароль')
     rmis_resource_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
+    hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, blank=True, default=None, null=True, on_delete=models.SET_NULL)
+    all_hospitals_users_control = models.BooleanField(default=False, blank=True, help_text="Может настраивать пользователей во всех организациях")
+
+    def get_hospital_id(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.pk
+        return None
+
+    def get_hospital(self):
+        if not self.hospital:
+            from hospitals.models import Hospitals
+
+            self.hospital = Hospitals.get_default_hospital()
+            self.save()
+        return self.hospital
 
     def get_login_id(self):
         if not self.login_id:
@@ -57,6 +74,12 @@ class DoctorProfile(models.Model):
             self.save()
         c = '{:X>5}'.format(self.pk) + self.login_id.hex[:5]
         return c
+
+    @property
+    def hospital_safe_title(self):
+        if not self.hospital:
+            return SettingManager.get("org_title")
+        return self.hospital.safe_short_title
 
     def get_fio(self, dots=True):
         """

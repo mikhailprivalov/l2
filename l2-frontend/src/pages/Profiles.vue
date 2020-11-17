@@ -1,7 +1,13 @@
 <template>
   <div class="root">
     <div class="left">
-      <input class="form-control" placeholder="Фильтр" v-model="filter"/>
+      <treeselect :multiple="false" :disable-branch-nodes="true"
+                  :options="can_edit_any_organization ? hospitals : own_hospital"
+                  placeholder="Больница не выбрана" v-model="selected_hospital"
+                  :append-to-body="true"
+                  :disabled="open_pk !== -2"
+                  :clearable="false" />
+      <input class="form-control" placeholder="Фильтр" v-model="filter" style="margin-top: 5px;"/>
       <div class="left-wrapper">
         <ul>
           <li v-for="d in department_filter" v-if="filter === '' || d.users.length || d.title.toLowerCase().startsWith(filter.toLowerCase())">
@@ -173,14 +179,16 @@
 </template>
 
 <script>
-  import users_point from '../api/user-point'
-  import * as action_types from '../store/action-types'
-  import ResearchesPicker from '../ui-cards/ResearchesPicker'
-  import SelectedResearches from '../ui-cards/SelectedResearches'
-  import {debounce} from 'lodash'
-  import {mapGetters} from 'vuex'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import users_point from '../api/user-point'
+import * as action_types from '../store/action-types'
+import ResearchesPicker from '../ui-cards/ResearchesPicker'
+import SelectedResearches from '../ui-cards/SelectedResearches'
+import {debounce} from 'lodash'
+import {mapGetters} from 'vuex'
 
-  let toTranslit = function (text) {
+let toTranslit = function (text) {
     return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi,
       function (all, ch, space, words, i) {
         if (space || words) {
@@ -210,7 +218,7 @@
   }
 
   export default {
-    components: {ResearchesPicker, SelectedResearches},
+    components: {ResearchesPicker, SelectedResearches, Treeselect},
     name: 'profiles',
     data() {
       return {
@@ -226,6 +234,7 @@
           personal_code: -1,
           rmis_resource_id: '',
         },
+        selected_hospital: -1,
         open_pk: -2,
       }
     },
@@ -240,6 +249,22 @@
         if (this.open_pk === -1) {
           this.deb_gu()
         }
+      },
+      user_hospital: {
+        handler() {
+          if (this.selected_hospital !== -1 || this.user_hospital === -1) {
+            return;
+          }
+          this.selected_hospital = this.user_hospital;
+        },
+        immediate: true,
+      },
+      selected_hospital() {
+        if (this.selected_hospital === -1) {
+          return
+        }
+
+        this.load_users();
       },
     },
     methods: {
@@ -268,7 +293,7 @@
         if (!prev_clr) {
           this.departments = [];
         }
-        const {departments, specialities} = await users_point.loadUsers()
+        const {departments, specialities} = await users_point.loadUsers(this, 'selected_hospital')
         this.departments = departments
         this.specialities = specialities
         await this.$store.dispatch(action_types.DEC_LOADING)
@@ -290,7 +315,11 @@
       },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const {ok, npk, message} = await users_point.saveUser({pk: this.open_pk, user_data: this.user})
+        const {ok, npk, message} = await users_point.saveUser({
+          pk: this.open_pk,
+          user_data: this.user,
+          hospital_pk: this.selected_hospital,
+        })
         if (ok) {
           okmessage('Пользователь сохранён', `${this.user.fio} – ${this.user.username}`)
           this.open_pk = npk
@@ -334,7 +363,17 @@
       ...mapGetters({
         modules: 'modules',
         l2_user_data: 'user_data',
+        hospitals: 'hospitals',
       }),
+      can_edit_any_organization() {
+        return this.l2_user_data.su || this.l2_user_data.all_hospitals_users_control;
+      },
+      user_hospital() {
+        return this.l2_user_data.hospital || -1;
+      },
+      own_hospital() {
+        return [this.hospitals.find(({id}) => id === this.l2_user_data.hospital) || {}];
+      },
     },
   }
 </script>
@@ -350,6 +389,7 @@
   }
 
   .left {
+    background: #fff;
     border-right: 1px solid #646d78;
     padding-top: 5px;
     padding-left: 2px;
@@ -363,7 +403,7 @@
   }
 
   .left-wrapper {
-    height: calc(100% - 34px);
+    height: calc(100% - 73px);
     padding-top: 5px;
     overflow-y: auto;
   }

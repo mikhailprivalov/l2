@@ -387,11 +387,60 @@ class Napravleniya(models.Model):
     is_external = models.BooleanField(default=False, blank=True, null=True)
 
     def get_doc_podrazdeleniye_title(self):
-        if self.hospital:
-            return self.hospital.short_title or self.hospital.title
-        if self.doc.podrazdeleniye:
-            return self.doc.podrazdeleniye.title
-        return ''
+        parts = [
+            self.hospital_short_title,
+        ]
+
+        if self.doc and self.doc.podrazdeleniye:
+            parts.append(self.doc.podrazdeleniye.title)
+
+        return ', '.join(parts)
+
+    def get_hospital(self):
+        if self.doc and self.doc.hospital and not self.is_external:
+            if self.hospital != self.doc.hospital:
+                self.hospital = self.doc.hospital
+                self.save(update_fields=['hospital'])
+            return self.doc.hospital
+        if not self.hospital:
+            self.hospital = Hospitals.get_default_hospital()
+            self.save(update_fields=['hospital'])
+        return self.hospital
+
+    @property
+    def hospital_title(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.title
+        return SettingManager.get("org_title")
+
+    @property
+    def hospital_short_title(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.safe_short_title
+        return SettingManager.get("org_title")
+
+    @property
+    def hospital_address(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.safe_address
+        return SettingManager.get("org_address")
+
+    @property
+    def hospital_phones(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.safe_phones
+        return SettingManager.get("org_phones")
+
+    @property
+    def hospital_www(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.safe_www
+        return SettingManager.get("org_www")
 
     @property
     def data_sozdaniya_local(self):
@@ -492,6 +541,7 @@ class Napravleniya(models.Model):
             parent_auto_gen_id=parent_auto_gen_id,
             parent_slave_hosp_id=parent_slave_hosp_id,
             rmis_slot_id=rmis_slot,
+            hospital=doc.hospital or Hospitals.get_default_hospital(),
         )
         dir.additional_num = client.number_poliklinika
         dir.harmful_factor = dir.client.harmful_factor

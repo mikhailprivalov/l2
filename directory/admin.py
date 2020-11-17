@@ -42,9 +42,7 @@ class ResDispensaryPlan(admin.ModelAdmin):
         'research',
         'speciality_profile',
     )
-    search_fields = (
-        'diagnos',
-    )
+    search_fields = ('diagnos',)
 
     def speciality_profile(self, obj):
         if obj.speciality:

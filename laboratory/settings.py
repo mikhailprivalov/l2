@@ -90,7 +90,9 @@ ROOT_URLCONF = 'laboratory.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates'),],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -112,7 +114,16 @@ LOGIN_REDIRECT_URL = '/mainmenu/'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-DATABASES = {'default': {'ENGINE': 'django.db.backends.postgresql_psycopg2', 'NAME': 'l2', 'USER': 'postgres', 'PASSWORD': '123456', 'HOST': '127.0.0.1', 'PORT': '5432',}}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'l2',
+        'USER': 'postgres',
+        'PASSWORD': '123456',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
+    }
+}
 
 CACHES = {
     'default': {'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache', 'LOCATION': '127.0.0.1:11211', 'KEY_PREFIX': 'lis' + ("" if not DEBUG else "_DBG")},
@@ -146,12 +157,31 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {'base': {'format': '\n[%(asctime)s] [%(levelname)s] %(module)s\n' 'Request: %(path)s [%(method)s] %(user)s %(data)s\n' 'Body: %(body)s\n' '%(stack_info)s\n'}},
-    'filters': {'requestdata': {'()': 'utils.filters.RequestDataFilter',},},
+    'filters': {
+        'requestdata': {
+            '()': 'utils.filters.RequestDataFilter',
+        },
+    },
     'handlers': {
         'file': {'level': 'WARNING', 'class': 'logging.FileHandler', 'filters': ['requestdata'], 'filename': os.path.join(BASE_DIR, 'logs') + '/log.txt', 'formatter': 'base'},
-        'pika': {'level': 'WARNING', 'class': 'logging.FileHandler', 'filename': os.path.join(BASE_DIR, 'logs') + '/log-pika.txt',},
+        'pika': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs') + '/log-pika.txt',
+        },
     },
-    'loggers': {'django.request': {'handlers': ['file'], 'level': 'ERROR', 'propagate': True,}, 'pika': {'handlers': ['pika'], 'level': 'ERROR', 'propagate': True,},},
+    'loggers': {
+        'django.request': {
+            'handlers': ['file'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'pika': {
+            'handlers': ['pika'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    },
 }
 DEBUG_TOOLBAR_PANELS = (
     'debug_toolbar.panels.versions.VersionsPanel',

@@ -31,13 +31,15 @@ class ListWait(models.Model):
     def list_wait_save(data, doc_who_create):
         patient_card = Card.objects.get(pk=data['card_pk']) if 'card' not in data else data['card']
         research_obj = Researches.objects.get(pk=data['research'])
-        list_wait = ListWait(client=patient_card,
-                             research=research_obj,
-                             exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'),
-                             comment=data['comment'],
-                             phone=data['phone'],
-                             doc_who_create=doc_who_create,
-                             work_status=0)
+        list_wait = ListWait(
+            client=patient_card,
+            research=research_obj,
+            exec_at=datetime.datetime.strptime(data['date'], '%Y-%m-%d'),
+            comment=data['comment'],
+            phone=data['phone'],
+            doc_who_create=doc_who_create,
+            work_status=0,
+        )
         list_wait.save()
 
         slog.Log(
@@ -65,12 +67,7 @@ class ListWait(models.Model):
         slog.Log(
             key=list_wait.pk,
             type=80006,
-            body=json.dumps(
-                {
-                    "card_pk": list_wait.client.pk,
-                    "status": list_wait.status
-                }
-            ),
+            body=json.dumps({"card_pk": list_wait.client.pk, "status": list_wait.status}),
             user=doc_who_create,
         ).save()
         return list_wait.pk

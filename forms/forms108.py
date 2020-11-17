@@ -86,7 +86,15 @@ def form_01(request_data):
 
     tbl = Table(opinion, colWidths=(20 * mm, 20 * mm, 140 * mm), splitByRow=1, repeatRows=1)
 
-    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]
+        )
+    )
 
     objs.append(tbl)
 

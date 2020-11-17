@@ -86,7 +86,15 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
                         if temp_count_table == count_table:
                             cols_width[-1] = 15 * mm
                         tbl = Table(v_table, repeatRows=1, colWidths=cols_width, hAlign='LEFT')
-                        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 1.0, colors.black), ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),]))
+                        tbl.setStyle(
+                            TableStyle(
+                                [
+                                    ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+                                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                                ]
+                            )
+                        )
 
                         fwb.append(tbl)
                         fwb.append(Spacer(1, 1 * mm))

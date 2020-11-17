@@ -4,6 +4,7 @@ from datetime import datetime, date
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import dateformat
@@ -33,7 +34,7 @@ def receive(request):
     """Представление для приемщика материала в лаборатории"""
 
     if request.method == "GET":
-        podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+        podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True)).order_by("title")
         labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
         return render(request, 'dashboard/receive.html', {"labs": labs, "podrazdeleniya": podrazdeleniya})
     else:
@@ -81,7 +82,14 @@ def receive_obo(request):
             ret = []
         else:
             tubes(request, direction_implict_id=pk)
-            pks = [x.pk for x in TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk).distinct()]
+            pks = [
+                x.pk
+                for x in (
+                    TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)
+                    .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
+                    .distinct()
+                )
+            ]
         for p in pks:
             if TubesRegistration.objects.filter(pk=p).exists() and Issledovaniya.objects.filter(tubes__id=p).exists():
                 tube = TubesRegistration.objects.get(pk=p)
@@ -248,9 +256,10 @@ def receive_execlist(request):
         return pw - x + marginx
 
     for pk in researches:
-        if (
-            directory.Researches.objects.filter(pk=pk).exists()
-            and Issledovaniya.objects.filter(research__pk=pk, tubes__time_recive__range=(date1, date2), time_confirmation__isnull=True).exists()
+        if directory.Researches.objects.filter(pk=pk).exists() and (
+            Issledovaniya.objects.filter(research__pk=pk, tubes__time_recive__range=(date1, date2), time_confirmation__isnull=True)
+            .filter(Q(napravleniye__hospital=request.user.doctorprofile.hospital) | Q(napravleniye__hospital__isnull=True))
+            .exists()
         ):
             research = directory.Researches.objects.get(pk=pk)
             fractions_o = directory.Fractions.objects.filter(research=research, hide=False).order_by("sort_weight")
@@ -263,8 +272,10 @@ def receive_execlist(request):
             else:
                 tubes = [
                     x.pk
-                    for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2), issledovaniya__time_confirmation__isnull=True, issledovaniya__research=research).order_by(
-                        "issledovaniya__napravleniye__client__individual__family", "issledovaniya__napravleniye__client__individual__name"
+                    for x in (
+                        TubesRegistration.objects.filter(time_recive__range=(date1, date2), issledovaniya__time_confirmation__isnull=True, issledovaniya__research=research)
+                        .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
+                        .order_by("issledovaniya__napravleniye__client__individual__family", "issledovaniya__napravleniye__client__individual__name")
                     )
                 ]
             pages = Paginator(tubes, 16)
@@ -372,7 +383,7 @@ def tubes_get(request):
         date_start, date_end = try_parse_range(date_start, date_end)
         from mainmenu.views import get_tubes_list_in_receive_ui
 
-        tubes_list = get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye)
+        tubes_list = get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye, request.user.doctorprofile)
 
         for tube in tubes_list:
             if tube.getbc() in k or (tube.rstatus() and filter_type != "received"):
@@ -430,13 +441,21 @@ def receive_journal(request):
     c = canvas.Canvas(buffer, pagesize=A4)  # Холст
 
     if return_type == "directions":
-        tubes = TubesRegistration.objects.filter(
-            issledovaniya__research__podrazdeleniye=lab, time_recive__gte=datetime.now().date(), doc_get__podrazdeleniye__pk__in=otd, doc_recive__isnull=False
-        ).order_by('time_recive', 'daynum')
+        tubes = (
+            TubesRegistration.objects.filter(
+                issledovaniya__research__podrazdeleniye=lab, time_recive__gte=datetime.now().date(), doc_get__podrazdeleniye__pk__in=otd, doc_recive__isnull=False
+            )
+            .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
+            .order_by('time_recive', 'daynum')
+        )
     else:
-        tubes = TubesRegistration.objects.filter(
-            issledovaniya__research__podrazdeleniye=lab, time_recive__gte=datetime.now().date(), doc_get__podrazdeleniye__pk__in=otd, doc_recive__isnull=False
-        ).order_by('issledovaniya__napravleniye__client__pk')
+        tubes = (
+            TubesRegistration.objects.filter(
+                issledovaniya__research__podrazdeleniye=lab, time_recive__gte=datetime.now().date(), doc_get__podrazdeleniye__pk__in=otd, doc_recive__isnull=False
+            )
+            .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
+            .order_by('issledovaniya__napravleniye__client__pk')
+        )
 
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
     directions = []
@@ -537,7 +556,7 @@ def receive_journal(request):
             if len(pg) == 0:
                 continue
             if pg_num >= 0:
-                drawTituls(c, p.num_pages, pg_num, paddingx, lab=lab.title, group=group, otd=key.split("@")[1])
+                draw_tituls(c, p.num_pages, pg_num, paddingx, lab=lab.title, group=group, otd=key.split("@")[1], hospital_title=request.user.doctorprofile.hospital_safe_title)
             data = []
             tmp = []
             for v in data_header:
@@ -576,7 +595,7 @@ def receive_journal(request):
                     tmp.append("")
                 research_tmp = obj["researches"]
                 if len(research_tmp) > 44:
-                    research_tmp = research_tmp[0: -(len(research_tmp) - 44)] + "..."
+                    research_tmp = research_tmp[0:-(len(research_tmp) - 44)] + "..."
                 tmp.append(Paragraph(research_tmp, styleSheet["BodyText"]))
 
                 data.append(tmp)
@@ -628,13 +647,13 @@ def receive_journal(request):
     return response
 
 
-def drawTituls(c, pages, page, paddingx, lab, otd="", group=-2):
+def draw_tituls(c, pages, page, paddingx, lab, otd="", group=-2, hospital_title=None):
     """Функция рисования шапки и подвала страницы pdf"""
     c.setFont('OpenSans', 9)
     c.setStrokeColorRGB(0, 0, 0)
     c.setLineWidth(1)
 
-    c.drawCentredString(w / 2, h - 30, SettingManager.get("org_title"))
+    c.drawCentredString(w / 2, h - 30, hospital_title or SettingManager.get("org_title"))
     c.setFont('OpenSans', 12)
     c.drawCentredString(w / 2, h - 50, "Журнал приёма материала - " + lab)
 

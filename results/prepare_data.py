@@ -313,7 +313,7 @@ def html_to_pdf(file_tmp, r_value, pw, leftnone=False):
     return i
 
 
-def default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract):
+def default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col_func, is_extract):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "FreeSans"
@@ -361,16 +361,14 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
         if tube and (tube.time_get or tube.time_recive):
             data += [["Забор биоматериала:", strfdatetime((tube.time_get or tube.time_recive), "%d.%m.%Y %H:%M")]]
     elif not direction.imported_from_rmis and not is_extract and direction.doc:
-        data.append(["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)])
+        data.append(["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.get_doc_podrazdeleniye_title())])
     elif direction.imported_org:
         data.append(["<font>Направляющая<br/>организация:</font>", direction.imported_org.title])
     rows = len(data)
 
-    data = [
-        [Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]]
-        for xi in
-        range(rows)
-    ]
+    logo_col = logo_col_func(direction)
+
+    data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for xi in range(rows)]
     if direction.is_external:
         colWidths = [40 * mm, doc.width - 158 - 40 * mm, 158]
     else:
@@ -600,7 +598,16 @@ def microbiology_result(iss, fwb, doc):
         data = [[Paragraph(x, styleBold) for x in ['Антибиотик', 'Диаметр', 'Чувствительность']]]
 
         for anti in culture.culture_antibiotic.all():
-            data.append([Paragraph(x, style) for x in [anti.antibiotic.title + ' ' + anti.antibiotic_amount, anti.dia, anti.sensitivity,]])
+            data.append(
+                [
+                    Paragraph(x, style)
+                    for x in [
+                        anti.antibiotic.title + ' ' + anti.antibiotic_amount,
+                        anti.dia,
+                        anti.sensitivity,
+                    ]
+                ]
+            )
 
         cw = [int(tw * 0.4), int(tw * 0.3)]
         cw = cw + [tw - sum(cw)]

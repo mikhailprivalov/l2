@@ -10,6 +10,11 @@ def send_json(ip, port, data):
 
 def send(ip, port, data: str):
     conn = socket.socket()
-    conn.connect((ip, int(port),))
+    conn.connect(
+        (
+            ip,
+            int(port),
+        )
+    )
     conn.send(data.encode())
     conn.close()

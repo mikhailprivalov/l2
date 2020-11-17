@@ -64,7 +64,12 @@ def get_coast_from_issledovanie(dir_research_loc):
         dict_coast = {}
         for k, v in dir_research_loc.items():
             d = {
-                r: [s, d, h,] for r, s, d, h in Issledovaniya.objects.filter(napravleniye=k, research__in=v, coast__isnull=False).values_list('research_id', 'coast', 'discount', 'how_many')
+                r: [
+                    s,
+                    d,
+                    h,
+                ]
+                for r, s, d, h in Issledovaniya.objects.filter(napravleniye=k, research__in=v, coast__isnull=False).values_list('research_id', 'coast', 'discount', 'how_many')
             }
             dict_coast[k] = d
         return dict_coast

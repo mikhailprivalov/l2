@@ -1,6 +1,7 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from directions.models import ParaclinicResult, Issledovaniya, Napravleniya
+from hospitals.models import Hospitals
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strfdatetime
 from results.prepare_data import text_to_bold
@@ -9,7 +10,6 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY, TA_RIGHT
-from appconf.manager import SettingManager
 from io import BytesIO
 from reportlab.lib.pagesizes import A4, landscape, A5, portrait
 import os.path
@@ -37,9 +37,11 @@ def form_04(request_data):
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
 
-    hospital_name = SettingManager.get("org_title")
-    hospital_address = SettingManager.get("org_address")
-    hospital_kod_ogrn = SettingManager.get("org_ogrn")
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
 
     styleT = deepcopy(style)
     styleT.alignment = TA_LEFT
@@ -224,9 +226,11 @@ def form_05(request_data):
     styleJustified.leading = 3 * mm
     styleJustified.firstLineIndent = 5 * mm
 
-    hospital_name = SettingManager.get("org_title")
-    hospital_address = SettingManager.get("org_address")
-    hospital_kod_ogrn = SettingManager.get("org_ogrn")
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
 
     styleT = deepcopy(style)
     styleT.alignment = TA_LEFT

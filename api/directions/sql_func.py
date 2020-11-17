@@ -142,8 +142,7 @@ def get_confirm_direction(d_s, d_e, lab_podr, is_lab=False, is_paraclinic=False,
         )
         
         """,
-            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'is_lab': is_lab, 'is_paraclinic': is_paraclinic, 'is_doc_refferal': is_doc_refferal,
-                    'lab_podr': lab_podr},
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'is_lab': is_lab, 'is_paraclinic': is_paraclinic, 'is_doc_refferal': is_doc_refferal, 'lab_podr': lab_podr},
         )
         row = cursor.fetchall()
     return row
