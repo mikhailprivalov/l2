@@ -425,9 +425,9 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     if history_num and len(history_num) > 0:
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "№ истории: " + history_num)
     elif additional_num and len(additional_num) > 0:
-        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "(" + additional_num + ")")
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, f"({str(additional_num).strip()})")
     elif dir.client.number_poliklinika and len(dir.client.number_poliklinika) > 0:
-        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "(" + dir.client.number_poliklinika + ")")
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, f"({str(dir.client.number_poliklinika).strip()})")
 
     if dir.history_num and len(dir.history_num) > 0:
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "№ истории: " + dir.history_num)
