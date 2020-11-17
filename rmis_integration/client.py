@@ -673,11 +673,11 @@ class Patients(BaseRequester):
                 rmis_card = self.create_rmis_card(i[0], get_id, strict=False)
                 logger.exception(f'{enp}:5 – {rmis_card}')
             if rmis_card:
+                rmis_card.individual.sync_with_rmis(None, self.main_client, True)
                 if clients_models.Card.objects.filter(individual=rmis_card.individual, base__internal_type=True).exists():
                     logger.exception(f'{enp}:6')
                     return clients_models.Card.objects.filter(individual=rmis_card.individual, base__internal_type=True)[0]
                 logger.exception(f'{enp}:7')
-                rmis_card.individual.sync_with_rmis(None, self.main_client, True)
                 return clients_models.Card.add_l2_card(card_orig=rmis_card)
         return None
 
