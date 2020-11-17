@@ -275,6 +275,7 @@ def get_finaldata_talon(doc_result_obj):
     fin_pay = 'платно'
     fin_medexam = 'медосмотр'
     fin_disp = 'диспансеризация'
+    fin_budget = 'бюджет'
 
     fin_source = OrderedDict()
     fin_source[fin_oms] = OrderedDict()
@@ -282,6 +283,7 @@ def get_finaldata_talon(doc_result_obj):
     fin_source[fin_dms] = OrderedDict()
     fin_source[fin_medexam] = OrderedDict()
     fin_source[fin_disp] = OrderedDict()
+    fin_source[fin_budget] = OrderedDict()
 
     fin_source_iss = OrderedDict()
     fin_source_iss[fin_oms] = OrderedDict()
@@ -289,12 +291,14 @@ def get_finaldata_talon(doc_result_obj):
     fin_source_iss[fin_dms] = OrderedDict()
     fin_source_iss[fin_medexam] = OrderedDict()
     fin_source_iss[fin_disp] = OrderedDict()
+    fin_source_iss[fin_budget] = OrderedDict()
 
     oms_count = 0
     dms_count = 0
     pay_count = 0
     disp_count = 0
     medexam_count = 0
+    budget_count = 0
     empty = '-'
     today = utils.timezone.now().date()
 
@@ -324,6 +328,10 @@ def get_finaldata_talon(doc_result_obj):
             disp_count += 1
             dict_fsourcce = fin_disp
             order = disp_count
+        elif napr_attr['istochnik_f'] == 'бюджет':
+            budget_count += 1
+            dict_fsourcce = fin_budget
+            order = budget_count
         else:
             continue
         polis_who_giv = empty if not napr_attr['polis_who_give'] else napr_attr['polis_who_give']
