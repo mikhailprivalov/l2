@@ -461,7 +461,7 @@ def external_research_create(request):
     if code_tfoms:
         hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
     else:
-        hospital = Hospitals.objects.filter(oid_org=oid_org).first()
+        hospital = Hospitals.objects.filter(oid=oid_org).first()
 
     if not hospital:
         return Response({"ok": False, 'message': 'Организация не найдена'})
