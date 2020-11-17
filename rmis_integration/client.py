@@ -677,7 +677,7 @@ class Patients(BaseRequester):
                     logger.exception(f'{enp}:6')
                     return clients_models.Card.objects.filter(individual=rmis_card.individual, base__internal_type=True)[0]
                 logger.exception(f'{enp}:7')
-                rmis_card.individual.sync_with_rmis(None, self.main_client)
+                rmis_card.individual.sync_with_rmis(None, self.main_client, True)
                 return clients_models.Card.add_l2_card(card_orig=rmis_card)
         return None
 
