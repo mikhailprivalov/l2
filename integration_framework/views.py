@@ -354,6 +354,8 @@ def check_enp(request):
 def patient_results_covid19(request):
     rmis_id = data_parse(request.body, {'rmis_id': str})[0]
 
+    logger.exception(f'patient_results_covid19: {rmis_id}')
+
     c = Client(modules=['directions', 'rendered_services'])
 
     now = current_time().date()
@@ -385,6 +387,8 @@ def external_doc_call_create(request):
     comment = form.get('comment')
     purpose = form.get('purpose')
     email = form.get('email')
+
+    logger.exception(f'external_doc_call_create: {org_id} {json.dumps(patient_data)} {json.dumps(form)} {idp} {enp} {comment} {purpose} {email}')
 
     Individual.import_from_tfoms(patient_data)
     individuals = Individual.objects.filter(Q(tfoms_enp=enp or '###$fakeenp$###') | Q(tfoms_idp=idp or '###$fakeidp$###'))
