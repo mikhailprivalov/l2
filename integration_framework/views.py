@@ -390,6 +390,9 @@ def external_doc_call_create(request):
     purpose = form.get('purpose')
     email = form.get('email')
 
+    if email == 'undefined':
+        email = None
+
     logger.exception(f'external_doc_call_create: {org_id} {json.dumps(patient_data)} {json.dumps(form)} {idp} {enp} {comment} {purpose} {email}')
 
     Individual.import_from_tfoms(patient_data)
