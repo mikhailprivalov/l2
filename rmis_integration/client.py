@@ -1133,7 +1133,7 @@ class Directions(BaseRequester):
                                             for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
                                                 value = self.get_covid_value(y.value)
                                                 if value:
-                                                    protocol = protocol.replace("{{результат}}", replace_values_by_keys(protocol, value))
+                                                    protocol = replace_values_by_keys(protocol, value)
                                                     break
 
                                             self.put_protocol(code, direction, protocol, ss, x, "", stdout)
@@ -1192,7 +1192,7 @@ class Directions(BaseRequester):
                                         for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
                                             value = self.get_covid_value(y.value)
                                             if value:
-                                                protocol = protocol.replace("{{результат}}", replace_values_by_keys(protocol, value))
+                                                protocol = replace_values_by_keys(protocol, value)
                                                 break
 
                                         self.put_protocol(code, direction, protocol, ss, x, "", stdout)
