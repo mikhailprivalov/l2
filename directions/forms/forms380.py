@@ -643,7 +643,7 @@ def form_05(c: Canvas, dir: Napravleniya):
         objs = []
         opinion = [
             [
-                Paragraph(f'<font size=11>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
+                Paragraph(f'<font size=11>{dir.hospital_title}<br/>Адрес: {dir.hospital_address}<br/>ОГРН: {dir.hospital.ogrn} <br/> </font>', styleT),
                 Paragraph('<font size=9 >Утверждено<br/>Приказом Министерства здравоохранения<br/>Иркутской области от 22 мая 2013 г. N 83-МПР</font>', styleT),
             ],
         ]
@@ -681,8 +681,8 @@ def form_05(c: Canvas, dir: Napravleniya):
         external_org = dir.external_organization.title if dir.external_organization else ""
         objs.append(Paragraph(f"Направляется в: {external_org}", style))
         objs.append(Paragraph("Дата приема _______________________ Время приема _________________", style))
-        objs.append(Paragraph(f"Наименование медицинской организации по месту прикрепления: {hospital_address} {hospital_name}", style))
-        objs.append(Paragraph(f"Наименование направившей медицинской организации: {hospital_address} {hospital_name}", style))
+        objs.append(Paragraph(f"Наименование медицинской организации по месту прикрепления: {dir.hospital_address} {dir.hospital_title}", style))
+        objs.append(Paragraph(f"Наименование направившей медицинской организации: {dir.hospital_address} {dir.hospital_title}", style))
         objs.append(Paragraph("Направлен(а) на:", style))
         objs.append(Paragraph("1) консультацию (вписать специалистов)", style))
         if is_doc_refferal:
@@ -691,7 +691,7 @@ def form_05(c: Canvas, dir: Napravleniya):
         if not is_doc_refferal:
             objs.append(Paragraph(f"{title_research}", styleBold))
         objs.append(Paragraph("3) госпитализацию", style))
-        objs.append(Paragraph(f"____________________________________________________", style))
+        objs.append(Paragraph("____________________________________________________", style))
         objs.append(Paragraph("Цель консультации (и, или) исследования (нужное обвести):", style))
         objs.append(Paragraph(f"{space_symbol * 10}01 - дообследование при неясном диагнозе;", style))
         objs.append(Paragraph(f"{space_symbol * 10}02 - уточнение диагноза;", style))
@@ -714,7 +714,7 @@ def form_05(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph("______________________________________________________________________________________", style))
         objs.append(Paragraph("______________________________________________________________________________________", style))
         objs.append(Paragraph("______________________________________________________________________________________", style))
-        objs.append(Paragraph(f"Справка об отсутствии инфекционных контактов (для детей до 18 лет), выданная не ранее 3 дней на дату поступления в ОГУЗ ", style))
+        objs.append(Paragraph("Справка об отсутствии инфекционных контактов (для детей до 18 лет), выданная не ранее 3 дней на дату поступления в ОГУЗ ", style))
         objs.append(Paragraph("______________________________________________________________________________________", style))
         objs.append(Paragraph("Врач ___________________________________________________________________________", style))
         objs.append(Paragraph('телефон ____________________________ "_____" _____________ 20__ г.', style))
