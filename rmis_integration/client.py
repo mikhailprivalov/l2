@@ -32,7 +32,7 @@ from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
 from laboratory.utils import strdate, strtime, localtime, strfdatetime, current_time
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.sql_func import get_confirm_direction
-from utils.common import select_key_by_one_of_values_includes
+from utils.common import select_key_by_one_of_values_includes, replace_values_by_keys
 
 logger = logging.getLogger("RMIS")
 
@@ -813,8 +813,21 @@ class Directions(BaseRequester):
             'A26.08.027.001',
         }
         self.covid_values = {
-            'undetected': 'РНК вируса SARS-CоV2 не обнаружена',
-            'detected': 'РНК вируса SARS-CоV2 обнаружена',
+            'undetected': {
+                "результат": "РНК вируса SARS-CоV2 не обнаружена",
+                "результат defining": '<code_string xml:space="preserve">at0006</code_string>',
+                "диагноз value": '',
+                "диагноз defining": '<terminology_id/>',
+            },
+            'detected': {
+                "результат": "РНК вируса SARS-CоV2 обнаружена",
+                "результат defining": 'code_string xml:space="preserve">at0005</code_string>',
+                "диагноз value": '<value xml:space="preserve">U07.1  COVID-19, вирус идентифицирован</value>',
+                "диагноз defining": '''<terminology_id>	
+                           <value xml:space="preserve">MD-Base-UI-Diagnosis</value>	
+                        </terminology_id>	
+                        <code_string xml:space="preserve">404</code_string>''',
+            },
         }
 
         # Порядок определения ключей важен
@@ -1115,11 +1128,12 @@ class Directions(BaseRequester):
                                                 protocol_covid_template.replace("{{комментарий}}", i.lab_comment or "")
                                                 .replace("{{дата забора}}", date_get)
                                                 .replace("{{дата подтверждения}}", date_confirm)
+                                                .replace("{{номер результата}}", i.napravleniye.id_in_hospital or str(i.napravleniye.pk))
                                             )
                                             for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
                                                 value = self.get_covid_value(y.value)
                                                 if value:
-                                                    protocol = protocol.replace("{{результат}}", value)
+                                                    protocol = protocol.replace("{{результат}}", replace_values_by_keys(protocol, value))
                                                     break
 
                                             self.put_protocol(code, direction, protocol, ss, x, "", stdout)
@@ -1173,11 +1187,12 @@ class Directions(BaseRequester):
                                             protocol_covid_template.replace("{{комментарий}}", i.lab_comment or "")
                                             .replace("{{дата забора}}", date_get)
                                             .replace("{{дата подтверждения}}", date_confirm)
+                                            .replace("{{номер результата}}", i.napravleniye.id_in_hospital or str(i.napravleniye.pk))
                                         )
                                         for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
                                             value = self.get_covid_value(y.value)
                                             if value:
-                                                protocol = protocol.replace("{{результат}}", value)
+                                                protocol = protocol.replace("{{результат}}", replace_values_by_keys(protocol, value))
                                                 break
 
                                         self.put_protocol(code, direction, protocol, ss, x, "", stdout)
