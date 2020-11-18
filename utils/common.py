@@ -14,5 +14,5 @@ def select_key_by_one_of_values_includes(value: str, values_to_check: Dict[str, 
 
 def replace_values_by_keys(value: str, to_replace: Dict[str, str]):
     for key in to_replace:
-        value.replace(f"{{{{{key}}}}}", to_replace[key])
+        value = value.replace(f"{{{{{key}}}}}", to_replace[key])
     return value
