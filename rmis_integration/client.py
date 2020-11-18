@@ -1107,7 +1107,7 @@ class Directions(BaseRequester):
                                                 date_get = ""
 
                                             protocol: str = (
-                                                protocol_covid_template.replace("{{комментарий}}", i.lab_comment)
+                                                protocol_covid_template.replace("{{комментарий}}", i.lab_comment or "")
                                                 .replace("{{дата забора}}", date_get)
                                                 .replace("{{дата подтверждения}}", "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%Y-%m-%d"))
                                             )
@@ -1161,7 +1161,7 @@ class Directions(BaseRequester):
                                             date_get = ""
 
                                         protocol: str = (
-                                            protocol_covid_template.replace("{{комментарий}}", i.lab_comment)
+                                            protocol_covid_template.replace("{{комментарий}}", i.lab_comment or "")
                                             .replace("{{дата забора}}", date_get)
                                             .replace("{{дата подтверждения}}", "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%Y-%m-%d"))
                                         )
