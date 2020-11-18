@@ -823,9 +823,9 @@ class Directions(BaseRequester):
                 "результат": "РНК вируса SARS-CоV2 обнаружена",
                 "результат defining": '<code_string xml:space="preserve">at0005</code_string>',
                 "диагноз value": '<value xml:space="preserve">U07.1  COVID-19, вирус идентифицирован</value>',
-                "диагноз defining_code": '''<terminology_id>	
+                "диагноз defining_code": '''<terminology_id>
                            <value xml:space="preserve">MD-Base-UI-Diagnosis</value>	
-                        </terminology_id>	
+                        </terminology_id>
                         <code_string xml:space="preserve">404</code_string>''',
             },
         }
