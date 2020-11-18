@@ -324,6 +324,8 @@ def check_enp(request):
     if enp_mode == 'tfoms':
         tfoms_data = match_enp(enp)
 
+        logger.exception(f'tfoms data: {json.dumps(tfoms_data)}')
+
         if tfoms_data:
             bdate = tfoms_data.get('birthdate', '').split(' ')[0]
             if normalize_date(bd) == normalize_date(bdate):
@@ -353,6 +355,8 @@ def check_enp(request):
 @api_view(['POST'])
 def patient_results_covid19(request):
     rmis_id = data_parse(request.body, {'rmis_id': str})[0]
+
+    logger.exception(f'patient_results_covid19: {rmis_id}')
 
     c = Client(modules=['directions', 'rendered_services'])
 
@@ -385,6 +389,11 @@ def external_doc_call_create(request):
     comment = form.get('comment')
     purpose = form.get('purpose')
     email = form.get('email')
+
+    if email == 'undefined':
+        email = None
+
+    logger.exception(f'external_doc_call_create: {org_id} {json.dumps(patient_data)} {json.dumps(form)} {idp} {enp} {comment} {purpose} {email}')
 
     Individual.import_from_tfoms(patient_data)
     individuals = Individual.objects.filter(Q(tfoms_enp=enp or '###$fakeenp$###') | Q(tfoms_idp=idp or '###$fakeidp$###'))

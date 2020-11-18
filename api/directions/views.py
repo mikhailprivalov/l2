@@ -425,7 +425,7 @@ def directions_results(request):
                     result["full"] = True
             else:
                 result["direction"]["doc"] = "Не подтверждено"
-            result["direction"]["date"] = maxdate or iss
+            result["direction"]["date"] = maxdate
 
             result["client"]["sex"] = napr.client.individual.sex
             result["client"]["fio"] = napr.client.individual.fio()

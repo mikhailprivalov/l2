@@ -32,7 +32,7 @@ from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
 from laboratory.utils import strdate, strtime, localtime, strfdatetime, current_time
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.sql_func import get_confirm_direction
-from utils.common import select_key_by_one_of_values_includes
+from utils.common import select_key_by_one_of_values_includes, replace_values_by_keys
 
 logger = logging.getLogger("RMIS")
 
@@ -673,6 +673,7 @@ class Patients(BaseRequester):
                 rmis_card = self.create_rmis_card(i[0], get_id, strict=False)
                 logger.exception(f'{enp}:5 – {rmis_card}')
             if rmis_card:
+                rmis_card.individual.sync_with_rmis(None, self.main_client, True)
                 if clients_models.Card.objects.filter(individual=rmis_card.individual, base__internal_type=True).exists():
                     logger.exception(f'{enp}:6')
                     return clients_models.Card.objects.filter(individual=rmis_card.individual, base__internal_type=True)[0]
@@ -812,8 +813,21 @@ class Directions(BaseRequester):
             'A26.08.027.001',
         }
         self.covid_values = {
-            'undetected': 'РНК вируса SARS-CоV2 не обнаружена',
-            'detected': 'РНК вируса SARS-CоV2 обнаружена',
+            'undetected': {
+                "результат": "РНК вируса SARS-CоV2 не обнаружена",
+                "результат defining": '<code_string xml:space="preserve">at0006</code_string>',
+                "диагноз value": '',
+                "диагноз defining": '<terminology_id/>',
+            },
+            'detected': {
+                "результат": "РНК вируса SARS-CоV2 обнаружена",
+                "результат defining": 'code_string xml:space="preserve">at0005</code_string>',
+                "диагноз value": '<value xml:space="preserve">U07.1  COVID-19, вирус идентифицирован</value>',
+                "диагноз defining": '''<terminology_id>	
+                           <value xml:space="preserve">MD-Base-UI-Diagnosis</value>	
+                        </terminology_id>	
+                        <code_string xml:space="preserve">404</code_string>''',
+            },
         }
 
         # Порядок определения ключей важен
@@ -823,7 +837,8 @@ class Directions(BaseRequester):
         }
 
     def get_covid_value(self, orig_value: str):
-        key = select_key_by_one_of_values_includes(orig_value.lower(), self.allowed_covid_values)
+        orig_value = orig_value.lower().strip()
+        key = select_key_by_one_of_values_includes(orig_value, self.allowed_covid_values)
         return self.covid_values.get(key)
 
     def service_is_covid(self, code):
@@ -1099,21 +1114,26 @@ class Directions(BaseRequester):
                                             i: Issledovaniya = x.issledovaniye
                                             tube: TubesRegistration = i.tubes.all().first()
 
+                                            date_confirm = "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%d.%m.%Y")
+
                                             if tube:
                                                 time_get = tube.time_get or tube.time_recive
-                                                date_get = "" if not time_get else localtime(time_get).strftime("%Y-%m-%d")
+                                                date_get = "" if not time_get else localtime(time_get).strftime("%d.%m.%Y")
                                             else:
                                                 date_get = ""
 
+                                            date_get = date_get or date_confirm
+
                                             protocol: str = (
-                                                protocol_covid_template.replace("{{комментарий}}", i.lab_comment)
+                                                protocol_covid_template.replace("{{комментарий}}", i.lab_comment or "")
                                                 .replace("{{дата забора}}", date_get)
-                                                .replace("{{дата подтверждения}}", "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%Y-%m-%d"))
+                                                .replace("{{дата подтверждения}}", date_confirm)
+                                                .replace("{{номер результата}}", i.napravleniye.id_in_hospital or str(i.napravleniye.pk))
                                             )
                                             for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
                                                 value = self.get_covid_value(y.value)
                                                 if value:
-                                                    protocol = protocol.replace("{{результат}}", value)
+                                                    protocol = replace_values_by_keys(protocol, value)
                                                     break
 
                                             self.put_protocol(code, direction, protocol, ss, x, "", stdout)
@@ -1153,21 +1173,26 @@ class Directions(BaseRequester):
                                         i: Issledovaniya = x.issledovaniye
                                         tube: TubesRegistration = i.tubes.all().first()
 
+                                        date_confirm = "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%d.%m.%Y")
+
                                         if tube:
                                             time_get = tube.time_get or tube.time_recive
-                                            date_get = "" if not time_get else localtime(time_get).strftime("%Y-%m-%d")
+                                            date_get = "" if not time_get else localtime(time_get).strftime("%d.%m.%Y")
                                         else:
                                             date_get = ""
 
+                                        date_get = date_get or date_confirm
+
                                         protocol: str = (
-                                            protocol_covid_template.replace("{{комментарий}}", i.lab_comment)
+                                            protocol_covid_template.replace("{{комментарий}}", i.lab_comment or "")
                                             .replace("{{дата забора}}", date_get)
-                                            .replace("{{дата подтверждения}}", "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%Y-%m-%d"))
+                                            .replace("{{дата подтверждения}}", date_confirm)
+                                            .replace("{{номер результата}}", i.napravleniye.id_in_hospital or str(i.napravleniye.pk))
                                         )
                                         for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
                                             value = self.get_covid_value(y.value)
                                             if value:
-                                                protocol = protocol.replace("{{результат}}", value)
+                                                protocol = replace_values_by_keys(protocol, value)
                                                 break
 
                                         self.put_protocol(code, direction, protocol, ss, x, "", stdout)

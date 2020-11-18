@@ -55,7 +55,7 @@ class Individual(models.Model):
             c.save()
         b.delete()
 
-    def sync_with_rmis(self, out: OutputWrapper = None, c=None):
+    def sync_with_rmis(self, out: OutputWrapper = None, c=None, force_print=False):
         if not SettingManager.get("rmis_enabled", default='false', default_type='b') or not CardBase.objects.filter(is_rmis=True).exists():
             return
         if self.primary_for_rmis:
@@ -63,6 +63,8 @@ class Individual(models.Model):
             return
         if out:
             out.write("Обновление данных для: %s" % self.fio(full=True))
+        if force_print:
+            logger.exception("Обновление данных для: %s" % self.fio(full=True))
         if c is None:
             from rmis_integration.client import Client
 
@@ -75,6 +77,8 @@ class Individual(models.Model):
             ok = has_rmis = True
             if out:
                 out.write("Есть РМИС запись: %s" % rmis_uid)
+            if force_print:
+                logger.exception("Есть РМИС запись: %s" % rmis_uid)
 
         if not ok:
             docs = Document.objects.filter(individual=self).exclude(document_type__check_priority=0).order_by("-document_type__check_priority")
@@ -85,6 +89,8 @@ class Individual(models.Model):
                     ok = True
                     if out:
                         out.write("Физ.лицо найдено по документу: %s -> %s" % (document, rmis_uid))
+                        if force_print:
+                            logger.exception("Физ.лицо найдено по документу: %s -> %s" % (document, rmis_uid))
                     break
 
         if ok:
@@ -102,6 +108,8 @@ class Individual(models.Model):
                 self.save()
                 if out:
                     out.write("Обновление данных: %s" % self.fio(full=True))
+                if force_print:
+                    logger.exception("Обновление данных: %s" % self.fio(full=True))
                 slog.Log(key=str(self.pk), type=2003, body=simplejson.dumps({"Новые данные": str(self), "Не актуальные данные": prev}), user=None).save()
 
         if not ok:
@@ -112,6 +120,8 @@ class Individual(models.Model):
                 ok = True
                 if out:
                     out.write("Физ.лицо найдено по ФИО и д.р.: %s" % rmis_uid)
+                if force_print:
+                    logger.exception("Физ.лицо найдено по ФИО и д.р.: %s" % rmis_uid)
 
         if not has_rmis and rmis_uid and rmis_uid != '':
             ex = Card.objects.filter(number=rmis_uid, is_archive=False, base__is_rmis=True)
@@ -121,6 +131,8 @@ class Individual(models.Model):
             s = str(c.patients.create_rmis_card(self, rmis_uid))
             if out:
                 out.write("Добавление РМИС карты -> %s" % s)
+            if force_print:
+                logger.exception("Добавление РМИС карты -> %s" % s)
 
         save_docs = []
 
@@ -250,6 +262,8 @@ class Individual(models.Model):
             self.reverse_sync()
             if out:
                 out.write("Физ.лицо не найдено в РМИС")
+            if force_print:
+                logger.exception("Физ.лицо не найдено в РМИС")
         return ok
 
     def reverse_sync(self, force_new=False):

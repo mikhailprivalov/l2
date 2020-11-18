@@ -181,7 +181,7 @@ def form_02(request_data):
     is_canceled = int(request_data["cancel"])
     doc_assigned = int(request_data.get("doc", -1) or -1)
     purpose_id = int(request_data.get("purpose", -1) or -1)
-    hospital = int(request_data.get("hospital", -1) or -1)
+    hospital = int(request_data.get("hospital_pk", -1) or -1)
     cancel = True if is_canceled == 0 else False
 
     is_external = int(request_data.get("external", 1))

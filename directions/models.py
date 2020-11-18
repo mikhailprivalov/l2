@@ -387,9 +387,12 @@ class Napravleniya(models.Model):
     is_external = models.BooleanField(default=False, blank=True, null=True)
 
     def get_doc_podrazdeleniye_title(self):
-        parts = [
-            self.hospital_short_title,
-        ]
+        if self.hospital and (self.is_external or not self.hospital.is_default):
+            parts = [
+                self.hospital_short_title,
+            ]
+        else:
+            parts = []
 
         if self.doc and self.doc.podrazdeleniye:
             parts.append(self.doc.podrazdeleniye.title)

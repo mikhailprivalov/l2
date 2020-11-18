@@ -418,7 +418,7 @@ class ParaclinicInputField(models.Model):
         titles = ['']
         if self.title:
             titles.append(self.title)
-        if field_type != 14:
+        if field_type != 14 and self.default_value.isdigit():
             if field_type == 11 and Fractions.objects.filter(pk=self.default_value).exists():
                 f = Fractions.objects.get(pk=self.default_value)
                 titles.append(f.research.title)
