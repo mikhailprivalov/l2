@@ -821,7 +821,7 @@ class Directions(BaseRequester):
             },
             'detected': {
                 "результат": "РНК вируса SARS-CоV2 обнаружена",
-                "результат defining": 'code_string xml:space="preserve">at0005</code_string>',
+                "результат defining": '<code_string xml:space="preserve">at0005</code_string>',
                 "диагноз value": '<value xml:space="preserve">U07.1  COVID-19, вирус идентифицирован</value>',
                 "диагноз defining_code": '''<terminology_id>	
                            <value xml:space="preserve">MD-Base-UI-Diagnosis</value>	
