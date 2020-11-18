@@ -586,10 +586,6 @@ def form_04(c: Canvas, dir: Napravleniya):
 def form_05(c: Canvas, dir: Napravleniya):
     # Утверждено Приказом Министерства здравоохранения Иркутской области от 22 мая 2013 г. N 83-МПР
     def printForm():
-        hospital_name = SettingManager.get("org_title")
-        hospital_address = SettingManager.get("org_address")
-        hospital_kod_ogrn = SettingManager.get("org_ogrn")
-
         if sys.platform == 'win32':
             locale.setlocale(locale.LC_ALL, 'rus_rus')
         else:
