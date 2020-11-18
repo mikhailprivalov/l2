@@ -1100,16 +1100,20 @@ class Directions(BaseRequester):
                                             i: Issledovaniya = x.issledovaniye
                                             tube: TubesRegistration = i.tubes.all().first()
 
+                                            date_confirm = "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%d.%m.%Y")
+
                                             if tube:
                                                 time_get = tube.time_get or tube.time_recive
-                                                date_get = "" if not time_get else localtime(time_get).strftime("%Y-%m-%d")
+                                                date_get = "" if not time_get else localtime(time_get).strftime("%d.%m.%Y")
                                             else:
                                                 date_get = ""
+
+                                            date_get = date_get or date_confirm
 
                                             protocol: str = (
                                                 protocol_covid_template.replace("{{комментарий}}", i.lab_comment or "")
                                                 .replace("{{дата забора}}", date_get)
-                                                .replace("{{дата подтверждения}}", "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%Y-%m-%d"))
+                                                .replace("{{дата подтверждения}}", date_confirm)
                                             )
                                             for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
                                                 value = self.get_covid_value(y.value)
@@ -1154,16 +1158,20 @@ class Directions(BaseRequester):
                                         i: Issledovaniya = x.issledovaniye
                                         tube: TubesRegistration = i.tubes.all().first()
 
+                                        date_confirm = "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%d.%m.%Y")
+
                                         if tube:
                                             time_get = tube.time_get or tube.time_recive
-                                            date_get = "" if not time_get else localtime(time_get).strftime("%Y-%m-%d")
+                                            date_get = "" if not time_get else localtime(time_get).strftime("%d.%m.%Y")
                                         else:
                                             date_get = ""
+
+                                        date_get = date_get or date_confirm
 
                                         protocol: str = (
                                             protocol_covid_template.replace("{{комментарий}}", i.lab_comment or "")
                                             .replace("{{дата забора}}", date_get)
-                                            .replace("{{дата подтверждения}}", "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%Y-%m-%d"))
+                                            .replace("{{дата подтверждения}}", date_confirm)
                                         )
                                         for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
                                             value = self.get_covid_value(y.value)
