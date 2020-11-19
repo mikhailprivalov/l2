@@ -267,7 +267,11 @@ def receive_execlist(request):
             if t == "received":
                 tubes = [
                     x.pk
-                    for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2), doc_recive=request.user.doctorprofile, issledovaniya__research=research).order_by("daynum")
+                    for x in
+                    TubesRegistration.objects
+                    .filter(time_recive__range=(date1, date2), doc_recive=request.user.doctorprofile, issledovaniya__research=research)
+                    .order_by("daynum")
+                    .distinct()
                 ]
             else:
                 tubes = [
@@ -276,6 +280,7 @@ def receive_execlist(request):
                         TubesRegistration.objects.filter(time_recive__range=(date1, date2), issledovaniya__time_confirmation__isnull=True, issledovaniya__research=research)
                         .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
                         .order_by("issledovaniya__napravleniye__client__individual__family", "issledovaniya__napravleniye__client__individual__name")
+                        .distinct()
                     )
                 ]
             pages = Paginator(tubes, 16)
