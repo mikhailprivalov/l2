@@ -76,7 +76,7 @@
                 {{row.pk}}
               </a>
             </span>
-            <span v-if="!!row.has_descriptive && role_can_use_descriptive">
+            <span v-else-if="!!row.has_descriptive && role_can_use_descriptive">
               <a
                 :href="`/mainmenu/results/paraclinic#{%22pk%22:${row.pk}}`"
                 target="_blank" class="a-under">
