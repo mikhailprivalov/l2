@@ -1,5 +1,4 @@
-from typing import List
-from urllib.parse import urljoin, urlencode
+from urllib.parse import urljoin
 
 import requests
 
