@@ -397,8 +397,11 @@
       this.inited()
     },
     watch: {
-      force_rmis_search() {
-        this.inc_rmis = this.force_rmis_search;
+      force_rmis_search: {
+        handler() {
+          this.inc_rmis = this.force_rmis_search;
+        },
+        immediate: true,
       },
       query() {
         this.query = this.query.split(' ')
