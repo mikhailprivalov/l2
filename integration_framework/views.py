@@ -316,12 +316,15 @@ def make_log(request):
 
 @api_view(['POST'])
 def check_enp(request):
-    enp, bd, enp_mode = data_parse(request.body, {'enp': str, 'bd': str, 'check_mode': str}, {'check_mode': 'tfoms'})
+    enp, bd, enp_mode = data_parse(request.body, {'enp': str, 'bd': str, 'check_mode': str}, {'check_mode': 'tfoms', 'bd': None})
     enp = enp.replace(' ', '')
 
-    logger.exception(f'enp_mode: {enp_mode}')
+    if enp_mode == 'l2-enp':
+        tfoms_data = match_enp(enp)
 
-    if enp_mode == 'tfoms':
+        if tfoms_data:
+            return Response({"ok": True, 'patient_data': tfoms_data})
+    elif enp_mode == 'tfoms':
         tfoms_data = match_enp(enp)
 
         logger.exception(f'tfoms data: {json.dumps(tfoms_data)}')
