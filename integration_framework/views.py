@@ -330,7 +330,7 @@ def check_enp(request):
         if tfoms_data:
             return Response({"ok": True, 'patient_data': tfoms_data})
     elif enp_mode == 'l2-enp-full':
-        tfoms_data = match_patient(family, name, patronymic, bd)
+        tfoms_data = match_patient(family, name, patronymic if patronymic != 'None' else None, bd)
 
         if tfoms_data:
             return Response({"ok": True, 'list': tfoms_data})
