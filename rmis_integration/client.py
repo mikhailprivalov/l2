@@ -1288,7 +1288,7 @@ class Directions(BaseRequester):
         send_data["dateTo"] = ndate(send_data["dateTo"]) if send_data["dateTo"] and not isinstance(send_data["dateTo"], str) else send_data["dateTo"]
         return send_data, ssd
 
-    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=MAX_RMIS_THREADS, slice_to_upload: bool = False):
+    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=MAX_RMIS_THREADS, slice_to_upload: bool = False, slice_to_upload_count=None):
         def check_lock():
             return cache.get('upload_lock') is not None
 
@@ -1315,37 +1315,38 @@ class Directions(BaseRequester):
             .exclude(issledovaniya__research__in=exclude_res)
             .distinct()
         )
+        slice_to_upload_count = slice_to_upload_count or MAX_RMIS_THREADS * 2
         if slice_to_upload:
             stdout.write("Total to upload directions: {}".format(to_upload.count()))
-            stdout.write("Slice to upload directions: {}".format(MAX_RMIS_THREADS * 2))
-            to_upload = to_upload[: MAX_RMIS_THREADS * 2]
+            stdout.write("Slice to upload directions: {}".format(slice_to_upload_count))
+            to_upload = to_upload[:slice_to_upload_count]
         cnt = to_upload.count()
         if stdout:
             stdout.write("Directions to upload: {}".format(cnt))
         i = 0
 
-        def upload_dir(self, direct, out, i):
-            sema.acquire()
+        def upload_dir(self, direct, out, i, s):
+            s.acquire()
             update_lock()
             try:
                 uploaded.append(self.check_send(direct, out))
                 if out:
                     out.write("Upload direction {} ({}/{}); RMIS number={}".format(direct.pk, i, cnt, uploaded[-1]))
             finally:
-                sema.release()
+                s.release()
 
-        def upload_services(self, direct, out):
-            sema.acquire()
+        def upload_services(self, direct, out, s):
+            s.acquire()
             update_lock()
             try:
                 self.check_service(direct, out)
                 if out:
                     out.write("Check services for direction {}; RMIS number={}".format(direct.pk, direct.rmis_number))
             finally:
-                sema.release()
+                s.release()
 
-        def upload_results(self, direct, out, i):
-            sema.acquire()
+        def upload_results(self, direct, out, i, s):
+            s.acquire()
             update_lock()
             try:
                 direct = Napravleniya.objects.get(pk=direct)
@@ -1353,31 +1354,41 @@ class Directions(BaseRequester):
                 if out:
                     out.write("Upload result for direction {} ({}/{})".format(direct.pk, i, cnt))
             finally:
-                sema.release()
+                s.release()
 
         for d in to_upload:
             i += 1
-            thread = threading.Thread(target=upload_dir, args=(self, d, stdout, i))
+            thread = threading.Thread(target=upload_dir, args=(self, d, stdout, i, sema))
             threads.append(thread)
             thread.start()
-        [t.join() for t in threads]
+
+        for t in threads:
+            t.join()
+
+        sema = threading.BoundedSemaphore(maxthreads)
+
         threads = []
         to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date, rmis_resend_services=True).exclude(rmis_number='NONERMIS').distinct()
         if slice_to_upload:
             stdout.write("Total to upload resend services: {}".format(to_upload.count()))
-            stdout.write("Slice to upload resend services: {}".format(MAX_RMIS_THREADS * 2))
-            to_upload = to_upload[: MAX_RMIS_THREADS * 2]
+            stdout.write("Slice to upload resend services: {}".format(slice_to_upload_count))
+            to_upload = to_upload[:slice_to_upload_count]
         for d in to_upload:
-            thread = threading.Thread(target=upload_services, args=(self, d, stdout))
+            thread = threading.Thread(target=upload_services, args=(self, d, stdout, sema))
             threads.append(thread)
             thread.start()
-        [t.join() for t in threads]
+
+        for t in threads:
+            t.join()
+
+        sema = threading.BoundedSemaphore(maxthreads)
+
         threads = []
 
         uploaded_results = []
         if not without_results:
             upload_lt = current_time() - datetime.timedelta(hours=Settings.get("upload_hours_interval", default="8", default_type="i"))
-            direction_ids = get_confirm_direction(date, upload_lt, MAX_RMIS_THREADS * 2 if slice_to_upload else 10000)
+            direction_ids = get_confirm_direction(date, upload_lt, slice_to_upload_count if slice_to_upload else 10000)
             cnt = len(direction_ids)
             stdout.write("To upload results: {}".format(cnt))
             if slice_to_upload:
@@ -1385,7 +1396,7 @@ class Directions(BaseRequester):
             i = 0
             for d in direction_ids:
                 i += 1
-                thread = threading.Thread(target=upload_results, args=(self, d[0], stdout, i))
+                thread = threading.Thread(target=upload_results, args=(self, d[0], stdout, i, sema))
                 threads.append(thread)
                 thread.start()
             [t.join() for t in threads]
