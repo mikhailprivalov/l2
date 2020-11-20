@@ -19,13 +19,17 @@ def get_headers():
 def make_request(path, json_data=None):
     if json_data is None:
         json_data = {}
+    text_resp = None
     try:
         url = get_url(path)
         headers = get_headers()
-        data = requests.post(url, headers=headers, json=json_data).json()
+        data = requests.post(url, headers=headers, json=json_data)
+        text_resp = data.text
+        data = data.json()
         return data
     except Exception as e:
         logger.exception(e)
+        logger.exception(text_resp)
         return {}
 
 
