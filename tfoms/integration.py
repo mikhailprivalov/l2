@@ -34,8 +34,11 @@ def make_request(path, query=None):
 
 
 def match_patient(family, name, patronymic, birthday) -> List[dict]:
+    logger.exception(f"match_patient: {(family, name, patronymic, birthday)}")
     if SettingManager.get("l2_patients_is_active", default='f', default_type='b'):
+        logger.exception("l2_patients_is_active")
         resp = check_l2_patient(family, name, patronymic, birthday)
+        logger.exception(f"resp: {resp}")
         if not isinstance(resp, dict) or not resp.get('ok') or not resp.get('list'):
             return []
         return resp.get('list')
