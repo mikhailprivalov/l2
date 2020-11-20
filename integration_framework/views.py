@@ -386,11 +386,13 @@ def patient_results_covid19(request):
     for i in range(days):
         date = now - datetime.timedelta(days=i)
         rendered_services = c.rendered_services.client.searchServiceRend(patientUid=rmis_id, dateFrom=date)
-        for rs in rendered_services:
+
+        for rs in rendered_services[:5]:
             protocol = c.directions.get_protocol(rs)
             for v in variants:
                 if v in protocol:
                     results.append({'date': date.strftime('%d.%m.%Y'), 'result': v})
+                    break
 
     return Response({"ok": True, 'results': results})
 
