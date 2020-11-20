@@ -28,12 +28,9 @@ class Command(BaseCommand):
                 sema.release()
 
             try:
-                conn_n = 0
-                for conn in connections:
-                    conn.close()
-                    conn_n += 1
+                connections.close_all()
                 if out:
-                    out.write(f"Closed {conn_n} connections")
+                    out.write(f"Closed db connections")
             except Exception as e:
                 if out:
                     out.write(f"Error closing connections {e}")

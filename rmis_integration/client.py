@@ -1337,12 +1337,9 @@ class Directions(BaseRequester):
                 s.release()
 
             try:
-                conn_n = 0
-                for conn in connections:
-                    conn.close()
-                    conn_n += 1
+                connections.close_all()
                 if out:
-                    out.write(f"Closed {conn_n} connections")
+                    out.write(f"Closed db connections")
             except Exception as e:
                 if out:
                     out.write(f"Error closing connections {e}")
@@ -1358,15 +1355,12 @@ class Directions(BaseRequester):
                 s.release()
 
             try:
-                conn_n = 0
-                for conn in connections:
-                    conn.close()
-                    conn_n += 1
+                connections.close_all()
                 if out:
-                    out.write(f"Closed {conn_n} connections")
+                    out.write(f"Closed db connections")
             except Exception as e:
                 if out:
-                    out.write(f"Error closing connections {e}")
+                    out.write(f"Error closing connection {e}")
 
         def upload_results(self, direct, out, i, s):
             s.acquire()
@@ -1380,15 +1374,12 @@ class Directions(BaseRequester):
                 s.release()
 
             try:
-                conn_n = 0
-                for conn in connections:
-                    conn.close()
-                    conn_n += 1
+                connections.close_all()
                 if out:
-                    out.write(f"Closed {conn_n} connections")
+                    out.write(f"Closed db connections")
             except Exception as e:
                 if out:
-                    out.write(f"Error closing connections {e}")
+                    out.write(f"Error closing connection {e}")
 
         for d in to_upload:
             i += 1

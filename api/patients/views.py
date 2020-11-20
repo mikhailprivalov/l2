@@ -184,11 +184,8 @@ def patients_search_card(request):
                         sema.release()
 
                     try:
-                        conn_n = 0
-                        for conn in connections:
-                            conn.close()
-                            conn_n += 1
-                        logger.exception(f"Closed {conn_n} connections")
+                        connections.close_all()
+                        logger.exception(f"Closed db connections")
                     except Exception as e:
                         logger.exception(f"Error closing connections {e}")
 
