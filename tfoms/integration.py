@@ -36,7 +36,7 @@ def make_request(path, query=None):
 def match_patient(family, name, patronymic, birthday) -> List[dict]:
     if SettingManager.get("l2_patients_is_active", default='f', default_type='b'):
         resp = check_l2_patient(family, name, patronymic, birthday)
-        if not isinstance(resp, dict) or not resp.get('ok') or not resp.get('patient_data'):
+        if not isinstance(resp, dict) or not resp.get('ok') or not resp.get('list'):
             return []
         return resp.get('list')
     q = {
