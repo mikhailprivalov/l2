@@ -324,13 +324,17 @@ def check_enp(request):
         )
     enp = enp.replace(' ', '')
 
+    logger.exception(f'enp_mode: {enp_mode}')
+
     if enp_mode == 'l2-enp':
         tfoms_data = match_enp(enp)
 
         if tfoms_data:
             return Response({"ok": True, 'patient_data': tfoms_data})
     elif enp_mode == 'l2-enp-full':
-        tfoms_data = match_patient(family, name, patronymic if patronymic != 'None' else None, bd)
+        patronymic = patronymic if patronymic != 'None' else None
+        logger.exception(f'data: {(family, name, patronymic, bd)}')
+        tfoms_data = match_patient(family, name, patronymic, bd)
 
         if tfoms_data:
             return Response({"ok": True, 'list': tfoms_data})
