@@ -39,5 +39,5 @@ def check_l2_enp(enp) -> dict:
 
 
 def check_l2_patient(family, name, patronymic, bd) -> dict:
-    data = make_request("check-enp", {"family": family, "name": name, "patronymic": patronymic, "": bd, "check_mode": "l2-enp-full"})
+    data = make_request("check-enp", {"family": family, "name": name, "patronymic": patronymic, "bd": bd, "check_mode": "l2-enp-full"})
     return data
