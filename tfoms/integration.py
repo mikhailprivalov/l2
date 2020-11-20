@@ -5,7 +5,7 @@ from urllib.parse import urljoin, urlencode
 import requests
 
 from appconf.manager import SettingManager
-from tfoms.l2 import check_l2_enp
+from tfoms.l2 import check_l2_enp, check_l2_patient
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,11 @@ def make_request(path, query=None):
 
 
 def match_patient(family, name, patronymic, birthday) -> List[dict]:
+    if SettingManager.get("l2_patients_is_active", default='f', default_type='b'):
+        resp = check_l2_patient(family, name, patronymic, birthday)
+        if not isinstance(resp, dict) or not resp.get('ok') or not resp.get('patient_data'):
+            return []
+        return resp.get('list')
     q = {
         "family": family,
         "name": name,

@@ -22,7 +22,7 @@ from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
 from rmis_integration.client import Client
 from slog.models import Log
-from tfoms.integration import match_enp
+from tfoms.integration import match_enp, match_patient
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
 from . import sql_if
@@ -316,7 +316,12 @@ def make_log(request):
 
 @api_view(['POST'])
 def check_enp(request):
-    enp, bd, enp_mode = data_parse(request.body, {'enp': str, 'bd': str, 'check_mode': str}, {'check_mode': 'tfoms', 'bd': None})
+    enp, family, name, patronymic, bd, enp_mode =\
+        data_parse(
+            request.body,
+            {'enp': str, 'family': str, 'name': str, 'patronymic': str, 'bd': str, 'check_mode': str},
+            {'check_mode': 'tfoms', 'bd': None, 'name': None, 'patronymic': None, 'family': None, 'enp': None}
+        )
     enp = enp.replace(' ', '')
 
     if enp_mode == 'l2-enp':
@@ -324,6 +329,11 @@ def check_enp(request):
 
         if tfoms_data:
             return Response({"ok": True, 'patient_data': tfoms_data})
+    elif enp_mode == 'l2-enp-full':
+        tfoms_data = match_patient(family, name, patronymic, bd)
+
+        if tfoms_data:
+            return Response({"ok": True, 'list': tfoms_data})
     elif enp_mode == 'tfoms':
         tfoms_data = match_enp(enp)
 
