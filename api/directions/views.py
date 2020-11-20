@@ -891,7 +891,7 @@ def directions_results_report(request):
                         not_norm_dir = ""
                         delta = ""
                         active_ref = r.calc_normal(fromsave=False, only_ref=True)
-                        if "r" in active_ref and re.match(r"^\d+(\.\d+)?$", r.value.replace(",", ".").strip()):
+                        if isinstance(active_ref, str) and "r" in active_ref and re.match(r"^\d+(\.\d+)?$", r.value.replace(",", ".").strip()):
                             x = float(r.value.replace(",", ".").strip())
                             spl = r.calc_normal(fromsave=False, only_ref=True, raw_ref=False)
                             if (isinstance(spl, list) or isinstance(spl, tuple)) and len(spl) == 2:
