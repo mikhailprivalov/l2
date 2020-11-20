@@ -1,8 +1,11 @@
+import logging
 from urllib.parse import urljoin
 
 import requests
 
 from appconf.manager import SettingManager
+
+logger = logging.getLogger(__name__)
 
 
 def get_url(path):
@@ -22,7 +25,7 @@ def make_request(path, json_data=None):
         data = requests.post(url, headers=headers, json=json_data).json()
         return data
     except Exception as e:
-        print(e)
+        logger.exception(e)
         return {}
 
 
