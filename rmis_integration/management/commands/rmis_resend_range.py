@@ -2,6 +2,7 @@ import threading
 
 import simplejson as json
 from django.core.management import BaseCommand
+from django.db import connections
 
 from directions.models import Napravleniya
 from rmis_integration.client import Client
@@ -25,6 +26,17 @@ class Command(BaseCommand):
                 out.write("ADD TO RESEND %s -> %s" % (dir.pk, c.directions.delete_services(dir, user=DoctorProfile.objects.all().order_by("pk")[0])))
             finally:
                 sema.release()
+
+            try:
+                conn_n = 0
+                for conn in connections:
+                    conn.close()
+                    conn_n += 1
+                if out:
+                    out.write(f"Closed {conn_n} connections")
+            except Exception as e:
+                if out:
+                    out.write(f"Error closing connections {e}")
 
         def resend(out):
             out.write("END")

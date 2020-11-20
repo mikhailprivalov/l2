@@ -10,6 +10,7 @@ import requests
 import simplejson as json
 from django.core.cache import cache
 from django.core.management.base import OutputWrapper
+from django.db import connections
 from django.db.models import Q
 from django.test import Client as TC
 from requests import Session
@@ -1335,6 +1336,17 @@ class Directions(BaseRequester):
             finally:
                 s.release()
 
+            try:
+                conn_n = 0
+                for conn in connections:
+                    conn.close()
+                    conn_n += 1
+                if out:
+                    out.write(f"Closed {conn_n} connections")
+            except Exception as e:
+                if out:
+                    out.write(f"Error closing connections {e}")
+
         def upload_services(self, direct, out, s):
             s.acquire()
             update_lock()
@@ -1344,6 +1356,17 @@ class Directions(BaseRequester):
                     out.write("Check services for direction {}; RMIS number={}".format(direct.pk, direct.rmis_number))
             finally:
                 s.release()
+
+            try:
+                conn_n = 0
+                for conn in connections:
+                    conn.close()
+                    conn_n += 1
+                if out:
+                    out.write(f"Closed {conn_n} connections")
+            except Exception as e:
+                if out:
+                    out.write(f"Error closing connections {e}")
 
         def upload_results(self, direct, out, i, s):
             s.acquire()
@@ -1355,6 +1378,17 @@ class Directions(BaseRequester):
                     out.write("Upload result for direction {} ({}/{})".format(direct.pk, i, cnt))
             finally:
                 s.release()
+
+            try:
+                conn_n = 0
+                for conn in connections:
+                    conn.close()
+                    conn_n += 1
+                if out:
+                    out.write(f"Closed {conn_n} connections")
+            except Exception as e:
+                if out:
+                    out.write(f"Error closing connections {e}")
 
         for d in to_upload:
             i += 1

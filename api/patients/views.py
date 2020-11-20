@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 import threading
 from typing import Optional, List
@@ -7,7 +8,7 @@ import pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import transaction, connections
 from django.db.models import Prefetch
 from django.forms import model_to_dict
 from django.http import JsonResponse
@@ -42,6 +43,9 @@ from slog.models import Log
 from statistics_tickets.models import VisitPurpose
 from tfoms.integration import match_enp, match_patient
 from directory.models import DispensaryPlan
+
+
+logger = logging.getLogger(__name__)
 
 
 def full_patient_search_data(p, query):
@@ -178,6 +182,15 @@ def patients_search_card(request):
                         ind_local.sync_with_rmis(c=client)
                     finally:
                         sema.release()
+
+                    try:
+                        conn_n = 0
+                        for conn in connections:
+                            conn.close()
+                            conn_n += 1
+                        logger.exception(f"Closed {conn_n} connections")
+                    except Exception as e:
+                        logger.exception(f"Error closing connections {e}")
 
                 for obj in objects:
                     thread = threading.Thread(target=sync_i, args=(obj, c))
