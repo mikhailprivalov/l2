@@ -1,6 +1,4 @@
 from django.db import models
-from jsonfield import JSONField
-
 from clients.models import Card
 from directions.models import Napravleniya
 from users.models import DoctorProfile
