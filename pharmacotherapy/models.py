@@ -5,13 +5,25 @@ from datetime import date
 class Mnn(models.Model):
     title = models.CharField(max_length=255, default="", help_text='МНН')
 
+    class Meta:
+        verbose_name = 'МНН'
+        verbose_name_plural = 'МНН'
+
 
 class FormRelease(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Форма выпуска')
 
+    class Meta:
+        verbose_name = 'Форма выпуска'
+        verbose_name_plural = 'Формы выпуска'
+
 
 class MethodsReception(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Способ применения')
+
+    class Meta:
+        verbose_name = 'Способ приема'
+        verbose_name_plural = 'Способы приема'
 
 
 class ProcedureList(models.Model):
@@ -24,3 +36,7 @@ class ProcedureList(models.Model):
     date_start = models.DateField(default=date.today, help_text="Дата начала", blank=False, null=False, db_index=True)
     count_day = models.SmallIntegerField(default=1, blank=True)
     date_end = models.DateField(default=date.today, help_text="Дата окончания включительно", blank=False, null=False, db_index=True)
+
+    class Meta:
+        verbose_name = 'Назначение'
+        verbose_name_plural = 'Назначения'
