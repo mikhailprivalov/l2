@@ -27,7 +27,6 @@ class FormRelease(models.Model):
         verbose_name_plural = 'Формы выпуска'
 
 
-
 class MethodsReception(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Способ применения')
 
