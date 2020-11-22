@@ -1089,6 +1089,7 @@ def directions_paraclinic_form(request):
                     "forbidden_edit": forbidden_edit,
                     "maybe_onco": i.maybe_onco,
                     "tube": tube,
+                    "procedure_list": [],
                 }
 
                 if i.research.is_microbiology:
@@ -1226,7 +1227,6 @@ def directions_paraclinic_form(request):
             response["medical_certificates"] = medical_certificates
 
             result_procedure_list = []
-            procedures_obj = None
             procedures_obj = ProcedureList.objects.filter(diary=d)
             if procedures_obj:
                 for procedure in procedures_obj:
