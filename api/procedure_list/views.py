@@ -1,22 +1,11 @@
-from datetime import datetime, time as dtime
-
+from datetime import datetime
 import pytz
 import simplejson as json
-from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from clients.models import Card
 from directions.models import Napravleniya
-from forms.forms_func import primary_reception_get_data
 from laboratory.settings import TIME_ZONE
-from laboratory.utils import strdate, current_time, strfdatetime
 from pharmacotherapy.models import ProcedureList, Drugs, FormRelease, MethodsReception, ProcedureListTimes
-from plans.models import PlanOperations
 from clients.models import Card
-from .sql_func import get_plans_by_params_sql
-
-from ..sql_func import users_by_group
-from slog.models import Log
-from ..stationar.stationar_func import hosp_get_hosp_direction
 
 
 def procedure_save(request):
@@ -33,8 +22,8 @@ def procedure_save(request):
             method = MethodsReception.objects.filter(pk=data["method"]).first()
             dosage = data["dosage"]
             units = data["units"]
-            date_start = datetime.strptime(data['date_start'], '%Y-%m-%d'),
-            date_end = datetime.strptime(data['date_end'], '%Y-%m-%d'),
+            date_start = (datetime.strptime(data['date_start'], '%Y-%m-%d'),)
+            date_end = (datetime.strptime(data['date_end'], '%Y-%m-%d'),)
             proc_obj = ProcedureList(
                 history=history,
                 diary=diary,
@@ -50,10 +39,7 @@ def procedure_save(request):
             )
             proc_obj.save()
             for time in data["times"]:
-                ProcedureListTimes(
-                    prescription=proc_obj,
-                    times_medication=datetime.strptime(time, '%Y-%m-%d %H:%M').astimezone(user_timezone)
-                )
+                ProcedureListTimes(prescription=proc_obj, times_medication=datetime.strptime(time, '%Y-%m-%d %H:%M').astimezone(user_timezone))
             created += 1
 
     return JsonResponse({"создано": f"Назначений {created}"})
@@ -72,10 +58,10 @@ def get_procedure_by_dir(request):
     if procedures_obj:
         for procedure in procedures_obj:
             drug = procedure.drug.mnn if procedure.drug.mnn else procedure.trade_name
-            form_release = procedure.form_release.title,
-            method = procedure.method.title,
-            dosage = procedure.dosage,
-            units = procedure.units,
+            form_release = (procedure.form_release.title,)
+            method = (procedure.method.title,)
+            dosage = (procedure.dosage,)
+            units = (procedure.units,)
             procedure_times = ProcedureListTimes.objects.filter(prescription=procedure)
             times = []
             for proc_time in procedure_times:
