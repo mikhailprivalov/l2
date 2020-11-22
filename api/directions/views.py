@@ -1226,7 +1226,6 @@ def directions_paraclinic_form(request):
                 response["disp_data"] = disp_data
             response["medical_certificates"] = medical_certificates
 
-            result_procedure_list = []
             procedures_obj = ProcedureList.objects.filter(diary=d)
             if procedures_obj:
                 for procedure in procedures_obj:
@@ -1239,8 +1238,8 @@ def directions_paraclinic_form(request):
                     times = []
                     for proc_time in procedure_times:
                         times.append({"time": proc_time.times_medication, "executor": proc_time.executor, "cancel": proc_time.cancel})
-                    result_procedure_list.append({"drug": drug, "form_release": form_release, "method": method, "dosage": dosage, "units": units, "times": times})
-            response["procedure_list"] = result_procedure_list
+                    response["procedure_list"].append({"drug": drug, "form_release": form_release, "method": method, "dosage": dosage, "units": units, "times": times})
+
             f = True
     if not f:
         response["message"] = "Направление не найдено"
