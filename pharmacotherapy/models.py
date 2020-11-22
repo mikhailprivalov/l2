@@ -29,9 +29,9 @@ class MethodsReception(models.Model):
 
 
 class ProcedureList(models.Model):
-    history = models.ForeignKey(Napravleniya, default=None, related_name='history_number', help_text='Номер истории', db_index=True, on_delete=models.CASCADE)
-    diary = models.ForeignKey(Napravleniya, default=None, related_name='diaries_number', help_text='Номер дневника', db_index=True, on_delete=models.CASCADE)
-    card = models.ForeignKey(Card, default=None, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
+    history = models.ForeignKey(Napravleniya, related_name='history_number', help_text='Номер истории', db_index=True, on_delete=models.CASCADE)
+    diary = models.ForeignKey(Napravleniya, related_name='diaries_number', help_text='Номер дневника', db_index=True, on_delete=models.CASCADE)
+    card = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
     mnn = models.ForeignKey(Mnn, help_text="МНН препарата", on_delete=models.CASCADE, db_index=True)
     form_release = models.ForeignKey(FormRelease, help_text="Форма выпуска", on_delete=models.CASCADE)
     method = models.ForeignKey(MethodsReception, help_text="Способ применения", on_delete=models.CASCADE)
