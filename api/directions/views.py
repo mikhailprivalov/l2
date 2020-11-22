@@ -1240,7 +1240,7 @@ def directions_paraclinic_form(request):
                     for proc_time in procedure_times:
                         times.append({"time": proc_time.times_medication, "executor": proc_time.executor, "cancel": proc_time.cancel})
                     result_procedure_list.append({"drug": drug, "form_release": form_release, "method": method, "dosage": dosage, "units": units, "times": times})
-            response["procedure)list"] = result_procedure_list
+            response["procedure_list"] = result_procedure_list
             f = True
     if not f:
         response["message"] = "Направление не найдено"
@@ -1326,7 +1326,7 @@ def directions_paraclinic_result(request):
     v_g = visibility_state.get("groups", {})
     v_f = visibility_state.get("fields", {})
     recipe = request_data.get("recipe", [])
-    procedures = request_data.get("procedures", [])
+    procedure_list = request_data.get("procedure_list", [])
 
     tube = request_data.get("direction", {}).get("tube", {})
     force = rb.get("force", False)
@@ -1377,8 +1377,8 @@ def directions_paraclinic_result(request):
 
         Recipe.objects.filter(issledovaniye=iss).exclude(pk__in=recipe_no_remove).delete()
 
-        if procedures:
-            for proc_data in procedures:
+        if procedure_list:
+            for proc_data in procedure_list:
                 user_timezone = pytz.timezone(TIME_ZONE)
                 created = 0
                 if proc_data['pk'] == -1:
