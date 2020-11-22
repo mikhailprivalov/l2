@@ -58,10 +58,10 @@ def get_procedure_by_dir(request):
     if procedures_obj:
         for procedure in procedures_obj:
             drug = procedure.drug.mnn if procedure.drug.mnn else procedure.trade_name
-            form_release = (procedure.form_release.title,)
-            method = (procedure.method.title,)
-            dosage = (procedure.dosage,)
-            units = (procedure.units,)
+            form_release = procedure.form_release.title
+            method = procedure.method.title
+            dosage = procedure.dosage
+            units = procedure.units
             procedure_times = ProcedureListTimes.objects.filter(prescription=procedure)
             times = []
             for proc_time in procedure_times:
