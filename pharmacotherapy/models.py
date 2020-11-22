@@ -5,8 +5,8 @@ from users.models import DoctorProfile
 
 
 class Drugs(models.Model):
-    mnn = models.CharField(max_length=255, default="", help_text='МНН')
-    trade_name = models.CharField(max_length=255, default="", help_text='торговое наименование')
+    mnn = models.CharField(max_length=255, default="", help_text='МНН препарата')
+    trade_name = models.CharField(max_length=255, default="", help_text='Торговое наименование препарата')
 
     class Meta:
         verbose_name = 'МНН'
