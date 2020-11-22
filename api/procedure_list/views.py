@@ -2,14 +2,23 @@ from datetime import datetime
 import pytz
 import simplejson as json
 from django.http import JsonResponse
+
+from api.stationar.stationar_func import forbidden_edit_dir
 from directions.models import Napravleniya
 from laboratory.settings import TIME_ZONE
 from pharmacotherapy.models import ProcedureList, Drugs, FormRelease, MethodsReception, ProcedureListTimes
 from clients.models import Card
+from django.contrib.auth.decorators import login_required
+from laboratory.decorators import group_required
 
 
+@login_required
+@group_required("Врач стационара", "t, ad, p")
 def procedure_save(request):
     request_data = json.loads(request.body)
+    forbidden_edit = forbidden_edit_dir(request_data["history"])
+    if forbidden_edit:
+        return JsonResponse({"message": f"Редактирование запрещено"})
     user_timezone = pytz.timezone(TIME_ZONE)
     created = 0
     for data in request_data:
@@ -42,9 +51,11 @@ def procedure_save(request):
                 ProcedureListTimes(prescription=proc_obj, times_medication=datetime.strptime(time, '%Y-%m-%d %H:%M').astimezone(user_timezone))
             created += 1
 
-    return JsonResponse({"создано": f"Назначений {created}"})
+    return JsonResponse({"message": f"Назначений {created}"})
 
 
+@login_required
+@group_required("Врач стационара", "t, ad, p")
 def get_procedure_by_dir(request):
     request_data = json.loads(request.body)
     result = []
@@ -66,13 +77,18 @@ def get_procedure_by_dir(request):
             times = []
             for proc_time in procedure_times:
                 times.append({"time": proc_time.times_medication, "executor": proc_time.executor, "cancel": proc_time.cancel})
-            result.append({"drug": drug, "form_release": form_release, "method": method, "dosage": dosage, "units": units, "times": times.copy()})
+            result.append({"drug": drug, "form_release": form_release, "method": method, "dosage": dosage, "units": units, "times": times})
 
     return JsonResponse({"result": result})
 
 
+@login_required
+@group_required("Врач стационара", "t, ad, p")
 def procedure_cancel(request):
     request_data = json.loads(request.body)
+    forbidden_edit = forbidden_edit_dir(request_data["history"])
+    if forbidden_edit:
+        return JsonResponse({"message": f"Редактирование запрещено"})
     proc_obj = ProcedureList.objects.filter(pk=request_data["pk"])
     proc_times = ProcedureListTimes.objects.filter(prescription=proc_obj)
     executed = 0
@@ -85,6 +101,6 @@ def procedure_cancel(request):
         canceled += 1
     if executed == 0:
         ProcedureListTimes.objects.filter(prescription=proc_obj).delete()
-        return JsonResponse({"messege": "Удалено"})
+        return JsonResponse({"message": "Удалено"})
 
-    return JsonResponse({"messege": f"Отменоно время {canceled} записей"})
+    return JsonResponse({"message": f"Отменоно время {canceled} записей"})

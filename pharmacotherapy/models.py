@@ -8,6 +8,9 @@ class Drugs(models.Model):
     mnn = models.CharField(max_length=255, default="", help_text='МНН препарата')
     trade_name = models.CharField(max_length=255, default="", help_text='Торговое наименование препарата')
 
+    def __str__(self):
+        return self.mnn if self.mnn else self.trade_name
+
     class Meta:
         verbose_name = 'МНН'
         verbose_name_plural = 'МНН'
@@ -16,13 +19,20 @@ class Drugs(models.Model):
 class FormRelease(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Форма выпуска')
 
+    def __str__(self):
+        return self.title
+
     class Meta:
         verbose_name = 'Форма выпуска'
         verbose_name_plural = 'Формы выпуска'
 
 
+
 class MethodsReception(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Способ применения')
+
+    def __str__(self):
+        return self.title
 
     class Meta:
         verbose_name = 'Способ приема'
