@@ -5,8 +5,8 @@ from users.models import DoctorProfile
 
 
 class Drugs(models.Model):
-    mnn = models.CharField(max_length=255, default="", help_text='МНН препарата')
-    trade_name = models.CharField(max_length=255, default="", help_text='Торговое наименование препарата')
+    mnn = models.CharField(max_length=255, default="", null=True, blank=True, help_text='МНН препарата')
+    trade_name = models.CharField(max_length=255, default="", null=True, blank=True, help_text='Торговое наименование препарата')
 
     def __str__(self):
         return self.mnn if self.mnn else self.trade_name

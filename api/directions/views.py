@@ -4,6 +4,8 @@ import re
 import time
 from datetime import datetime, time as dtime
 from operator import itemgetter
+
+import pytz
 import simplejson as json
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
@@ -36,8 +38,9 @@ from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplat
 from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
-from laboratory.settings import DICOM_SERVER
+from laboratory.settings import DICOM_SERVER, TIME_ZONE
 from laboratory.utils import strdatetime, strdate, tsdatetime, start_end_year, strfdatetime, current_time
+from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
 from results.sql_func import get_not_confirm_direction
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
@@ -1222,6 +1225,22 @@ def directions_paraclinic_form(request):
                 response["disp_data"] = disp_data
             response["medical_certificates"] = medical_certificates
 
+            result_procedure_list = []
+            procedures_obj = None
+            procedures_obj = ProcedureList.objects.filter(diary=d)
+            if procedures_obj:
+                for procedure in procedures_obj:
+                    drug = procedure.drug.mnn if procedure.drug.mnn else procedure.trade_name
+                    form_release = procedure.form_release.title
+                    method = procedure.method.title
+                    dosage = procedure.dosage
+                    units = procedure.units
+                    procedure_times = ProcedureListTimes.objects.filter(prescription=procedure)
+                    times = []
+                    for proc_time in procedure_times:
+                        times.append({"time": proc_time.times_medication, "executor": proc_time.executor, "cancel": proc_time.cancel})
+                    result_procedure_list.append({"drug": drug, "form_release": form_release, "method": method, "dosage": dosage, "units": units, "times": times})
+            response["procedure)list"] = result_procedure_list
             f = True
     if not f:
         response["message"] = "Направление не найдено"
@@ -1307,6 +1326,8 @@ def directions_paraclinic_result(request):
     v_g = visibility_state.get("groups", {})
     v_f = visibility_state.get("fields", {})
     recipe = request_data.get("recipe", [])
+    procedures = request_data.get("procedures", [])
+
     tube = request_data.get("direction", {}).get("tube", {})
     force = rb.get("force", False)
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
@@ -1355,6 +1376,39 @@ def directions_paraclinic_result(request):
             recipe_no_remove.append(rn.pk)
 
         Recipe.objects.filter(issledovaniye=iss).exclude(pk__in=recipe_no_remove).delete()
+
+        if len(procedures) > 0:
+            for proc_data in procedures:
+                user_timezone = pytz.timezone(TIME_ZONE)
+                created = 0
+                if proc_data['pk'] == -1:
+                    history = Napravleniya.objects.filter(pk=proc_data["history"]).first()
+                    diary = Napravleniya.objects.filter(pk=proc_data["diary"]).first()
+                    card = Card.objects.filter(pk=proc_data["card"]).first()
+                    drug = Drugs.objects.filter(pk=proc_data["drug"]).first()
+                    form_release = FormRelease.objects.filter(pk=proc_data["form_release"]).first()
+                    method = MethodsReception.objects.filter(pk=proc_data["method"]).first()
+                    dosage = proc_data["dosage"]
+                    units = proc_data["units"]
+                    date_start = datetime.strptime(proc_data['date_start'], '%Y-%m-%d')
+                    date_end = datetime.strptime(proc_data['date_end'], '%Y-%m-%d')
+                    proc_obj = ProcedureList(
+                        history=history,
+                        diary=diary,
+                        card=card,
+                        drug=drug,
+                        form_release=form_release,
+                        method=method,
+                        dosage=dosage,
+                        units=units,
+                        date_start=date_start,
+                        date_end=date_end,
+                        doc_create=request.user.doctorprofile,
+                    )
+                    proc_obj.save()
+                    for time in proc_data["times"]:
+                        ProcedureListTimes(prescription=proc_obj, times_medication=datetime.strptime(time, '%Y-%m-%d %H:%M').astimezone(user_timezone))
+                    created += 1
 
         for group in request_data["research"]["groups"]:
             if not v_g.get(str(group["pk"]), True):
