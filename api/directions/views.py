@@ -1377,7 +1377,7 @@ def directions_paraclinic_result(request):
 
         Recipe.objects.filter(issledovaniye=iss).exclude(pk__in=recipe_no_remove).delete()
 
-        if len(procedures) > 0:
+        if procedures:
             for proc_data in procedures:
                 user_timezone = pytz.timezone(TIME_ZONE)
                 created = 0
