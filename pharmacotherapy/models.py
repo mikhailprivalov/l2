@@ -4,8 +4,9 @@ from directions.models import Napravleniya
 from users.models import DoctorProfile
 
 
-class Mnn(models.Model):
-    title = models.CharField(max_length=255, default="", help_text='МНН')
+class Drugs(models.Model):
+    mnn = models.CharField(max_length=255, default="", help_text='МНН')
+    trade_name = models.CharField(max_length=255, default="", help_text='торговое наименование')
 
     class Meta:
         verbose_name = 'МНН'
@@ -32,7 +33,7 @@ class ProcedureList(models.Model):
     history = models.ForeignKey(Napravleniya, related_name='history_number', help_text='Номер истории', db_index=True, on_delete=models.CASCADE)
     diary = models.ForeignKey(Napravleniya, related_name='diaries_number', help_text='Номер дневника', db_index=True, on_delete=models.CASCADE)
     card = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
-    mnn = models.ForeignKey(Mnn, help_text="МНН препарата", on_delete=models.CASCADE, db_index=True)
+    drug = models.ForeignKey(Drugs, help_text="Препарат", on_delete=models.CASCADE, db_index=True)
     form_release = models.ForeignKey(FormRelease, help_text="Форма выпуска", on_delete=models.CASCADE)
     method = models.ForeignKey(MethodsReception, help_text="Способ применения", on_delete=models.CASCADE)
     dosage = models.FloatField(help_text='Дозировка')
