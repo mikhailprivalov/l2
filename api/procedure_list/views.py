@@ -1,5 +1,3 @@
-from datetime import datetime
-import pytz
 import simplejson as json
 from django.http import JsonResponse
 
@@ -8,6 +6,7 @@ from directions.models import Napravleniya
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes
 from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
+
 
 @login_required
 @group_required("Врач стационара", "t, ad, p")
@@ -40,7 +39,7 @@ def procedure_cancel(request):
     request_data = json.loads(request.body)
     forbidden_edit = forbidden_edit_dir(request_data["history"])
     if forbidden_edit:
-        return JsonResponse({"message": f"Редактирование запрещено"})
+        return JsonResponse({"message": "Редактирование запрещено"})
     proc_obj = ProcedureList.objects.filter(pk=request_data["pk"])
     proc_times = ProcedureListTimes.objects.filter(prescription=proc_obj)
     executed = 0

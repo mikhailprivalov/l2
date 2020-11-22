@@ -1406,8 +1406,8 @@ def directions_paraclinic_result(request):
                         doc_create=request.user.doctorprofile,
                     )
                     proc_obj.save()
-                    for time in proc_data["times"]:
-                        ProcedureListTimes(prescription=proc_obj, times_medication=datetime.strptime(time, '%Y-%m-%d %H:%M').astimezone(user_timezone))
+                    for pc_time in proc_data["times"]:
+                        ProcedureListTimes(prescription=proc_obj, times_medication=datetime.strptime(pc_time, '%Y-%m-%d %H:%M').astimezone(user_timezone))
                     created += 1
 
         for group in request_data["research"]["groups"]:
