@@ -31,8 +31,8 @@ def procedure_save(request):
             method = MethodsReception.objects.filter(pk=data["method"]).first()
             dosage = data["dosage"]
             units = data["units"]
-            date_start = (datetime.strptime(data['date_start'], '%Y-%m-%d'),)
-            date_end = (datetime.strptime(data['date_end'], '%Y-%m-%d'),)
+            date_start = datetime.strptime(data['date_start'], '%Y-%m-%d')
+            date_end = datetime.strptime(data['date_end'], '%Y-%m-%d')
             proc_obj = ProcedureList(
                 history=history,
                 diary=diary,
