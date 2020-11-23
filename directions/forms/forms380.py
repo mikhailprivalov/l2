@@ -62,7 +62,7 @@ def form_01(c: Canvas, d: Napravleniya):
         c.drawString(topw1, py(29.02 + offset), "от 17.08.2009 г. № 1027-мпр.")
 
         c.setFont('TimesNewRoman', 11)
-        c.drawString(px(18.5), py(34 + offset), "Наименование учереждения здравоохранения: " + SettingManager.get("org_title"))
+        c.drawString(px(18.5), py(34 + offset), "Наименование учереждения здравоохранения: " + d.hospital_short_title)
         c.line(px(95.5), py(35.2 + offset), pxr(18), py(35.2 + offset))
         c.drawString(px(18.5), py(43 + offset), "Отделение, палата")
         c.line(px(50), py(44.2 + offset), pxr(18), py(44.2 + offset))
@@ -126,7 +126,7 @@ def form_02(c: Canvas, dir: Napravleniya):
         c.setLineWidth(0.2 * mm)
         c.setFont('PTAstraSerifReg', 12)
 
-        c.drawCentredString((210 / 2) * mm, 280 * mm, SettingManager.get("org_title"))
+        c.drawCentredString((210 / 2) * mm, 280 * mm, dir.hospital_short_title)
         c.drawCentredString((210 / 2) * mm, 275 * mm, SettingManager.get("org_address") + ' ' + SettingManager.get("org_phones"))
 
         try:
@@ -253,7 +253,7 @@ def form_02(c: Canvas, dir: Napravleniya):
         c.drawString((x_coord + 140) * mm, (y_dir_form[17] - 3) * mm, "(подпись)")
 
         c.setFont('PTAstraSerifReg', 12)
-        c.drawString(x_coord * mm, y_dir_form[18] * mm, "Отделение: " + Truncator(dir.doc.podrazdeleniye.title).chars(100))
+        c.drawString(x_coord * mm, y_dir_form[18] * mm, "Отделение: " + Truncator(dir.get_doc_podrazdeleniye_title()).chars(100))
 
         # QR-code
         qr_value = translit(dir.client.individual.fio(), 'ru', reversed=True)
@@ -303,7 +303,7 @@ def form_03(c: Canvas, dir: Napravleniya):
 
         c.drawCentredString((210 / 2) * mm, 281 * mm, "Контактные данные учреждения, направляющего материал")
         organization_data = [
-            [Paragraph('Название', style), Paragraph(SettingManager.get("org_title"), styleTB)],
+            [Paragraph('Название', style), Paragraph(dir.hospital_short_title, styleTB)],
             [Paragraph('Телефон', style), Paragraph(SettingManager.get("org_phones"), styleTB)],
             [Paragraph('Факс', style), Paragraph(SettingManager.get("org_phones"), styleTB)],
             [Paragraph('E-mail', style), Paragraph(SettingManager.get("mail", default='', default_type='s'), styleTB)],
@@ -436,7 +436,7 @@ def form_03(c: Canvas, dir: Napravleniya):
 def form_04(c: Canvas, dir: Napravleniya):
     # Микробиология - Учетная форма № 204/у Утверждена приказом 10130
     def printForm():
-        hospital_name = SettingManager.get("org_title")
+        hospital_name = dir.hospital_short_title
         hospital_address = SettingManager.get("org_address")
         hospital_kod_ogrn = SettingManager.get("org_ogrn")
 
@@ -515,7 +515,7 @@ def form_04(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph(f'Полис ОМС: {polis_num} с/к: {polis_issue}', style))
         address = ind_data['main_address']
         objs.append(Paragraph(f'Карта: {dir.client.number_with_type()}', style))
-        objs.append(Paragraph(f'Отделение: {dir.doc.podrazdeleniye.title} {space_symbol * 7} палата _______ ', style))
+        objs.append(Paragraph(f'Отделение: {dir.get_doc_podrazdeleniye_title()} {space_symbol * 7} палата _______ ', style))
         objs.append(Paragraph(f'Адрес постоянного места жительства: {address}', style))
         objs.append(Paragraph(f'Место работы, учебы (наименование детского учреждения, школы): {dir.workplace}', style))
         clinical_diagnos = ''
@@ -575,6 +575,147 @@ def form_04(c: Canvas, dir: Napravleniya):
         if dir.doc_who_create and dir.doc_who_create != dir.doc:
             objs.append(Paragraph(f'Выписал: {dir.doc_who_create.get_fio()}', style))
         objs.append(Paragraph(f'Дата направления:  {strdate(dir.data_sozdaniya)}', style))
+
+        gistology_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+        gistology_inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
+        gistology_frame.addFromList([gistology_inframe], c)
+
+    printForm()
+
+
+def form_05(c: Canvas, dir: Napravleniya):
+    # Утверждено Приказом Министерства здравоохранения Иркутской области от 22 мая 2013 г. N 83-МПР
+    def printForm():
+        if sys.platform == 'win32':
+            locale.setlocale(locale.LC_ALL, 'rus_rus')
+        else:
+            locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+        pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+        pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+        try:
+            issledovaniye = Issledovaniya.objects.get(napravleniye=dir.pk)
+        except ObjectDoesNotExist:
+            issledovaniye = None
+        title_research = ""
+        is_doc_refferal = False
+        if issledovaniye:
+            title_research = issledovaniye.research.title
+            if issledovaniye.research.is_doc_refferal:
+                is_doc_refferal = True
+
+        styleSheet = getSampleStyleSheet()
+        style = styleSheet["Normal"]
+        style.fontName = "PTAstraSerifReg"
+        style.fontSize = 11
+        style.leading = 12
+        style.spaceAfter = 1.5 * mm
+
+        styleBold = deepcopy(style)
+        styleBold.fontName = 'PTAstraSerifBold'
+
+        styleCenterBold = deepcopy(style)
+        styleCenterBold.alignment = TA_CENTER
+        styleCenterBold.fontSize = 12
+        styleCenterBold.leading = 15
+        styleCenterBold.fontName = 'PTAstraSerifBold'
+
+        styleT = deepcopy(style)
+        styleT.alignment = TA_LEFT
+        styleT.fontSize = 10
+        styleT.leading = 4.5 * mm
+        styleT.face = 'PTAstraSerifReg'
+
+        styleTCentre = deepcopy(styleT)
+        styleTCentre.alignment = TA_CENTER
+        styleTCentre.fontSize = 13
+
+        barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
+        dir_code = Drawing()
+        dir_code.add(barcode)
+        renderPDF.draw(dir_code, c, 154 * mm, 255 * mm)
+
+        objs = []
+        opinion = [
+            [
+                Paragraph(f'<font size=11>{dir.hospital_title}<br/>Адрес: {dir.hospital_address}<br/>ОГРН: {dir.hospital.ogrn} <br/> </font>', styleT),
+                Paragraph('<font size=9 >Утверждено<br/>Приказом Министерства здравоохранения<br/>Иркутской области от 22 мая 2013 г. N 83-МПР</font>', styleT),
+            ],
+        ]
+
+        tbl = Table(opinion, 2 * [100 * mm])
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+
+        objs.append(tbl)
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk}', styleCenterBold))
+        objs.append(Paragraph('в медицинские организации Иркутской области', styleCenterBold))
+        objs.append(Spacer(1, 3 * mm))
+        space_symbol = '&nbsp;'
+        objs.append(Paragraph(f'От: {strdate(dir.data_sozdaniya)}', style))
+        objs.append(Paragraph(f'Фамилия, Имя, Отчество: {dir.client.individual.fio()}', style))
+        sex = dir.client.individual.sex
+        if sex == "м":
+            sex = f'{sex}-1'
+        else:
+            sex = f'{sex}-2'
+        born = dir.client.individual.bd().split('.')
+        objs.append(Paragraph(f'Дата <u>{born[0]}</u> Месяц <u>{born[1]}</u> Год рождения <u>{born[2]}</u> Пол {sex} ', style))
+        objs.append(Paragraph(f'Рабочий, домашний телефон : {dir.client.phone}', style))
+        polis_num = ''
+        polis_issue = ''
+        ind_data = dir.client.get_data_individual()
+        if ind_data['oms']['polis_num']:
+            polis_num = ind_data['oms']['polis_num']
+        if ind_data['oms']['polis_issued']:
+            polis_issue = ind_data['oms']['polis_issued']
+        address = ind_data['main_address']
+        objs.append(Paragraph(f'Регистрация по месту жительства: {address}', style))
+        objs.append(Paragraph(f"Страховой полис серия: _______ №{polis_num}", style))
+        objs.append(Paragraph(f"Страховая компания (наименование): {polis_issue}", style))
+        external_org = dir.external_organization.title if dir.external_organization else ""
+        objs.append(Paragraph(f"Направляется в: {external_org}", style))
+        objs.append(Paragraph("Дата приема _______________________ Время приема _________________", style))
+        objs.append(Paragraph(f"Наименование медицинской организации по месту прикрепления: {dir.hospital_address} {dir.hospital_title}", style))
+        objs.append(Paragraph(f"Наименование направившей медицинской организации: {dir.hospital_address} {dir.hospital_title}", style))
+        objs.append(Paragraph("Направлен(а) на:", style))
+        objs.append(Paragraph("1) консультацию (вписать специалистов)", style))
+        if is_doc_refferal:
+            objs.append(Paragraph(f"{title_research}", styleBold))
+        objs.append(Paragraph("2) исследование (указать вид исследования)", style))
+        if not is_doc_refferal:
+            objs.append(Paragraph(f"{title_research}", styleBold))
+        objs.append(Paragraph("3) госпитализацию", style))
+        objs.append(Paragraph("____________________________________________________", style))
+        objs.append(Paragraph("Цель консультации (и, или) исследования (нужное обвести):", style))
+        objs.append(Paragraph(f"{space_symbol * 10}01 - дообследование при неясном диагнозе;", style))
+        objs.append(Paragraph(f"{space_symbol * 10}02 - уточнение диагноза;", style))
+        objs.append(Paragraph(f"{space_symbol * 10}03 - для коррекции лечения;", style))
+        objs.append(Paragraph(f"{space_symbol * 10}04 - дообследование для госпитализации;", style))
+        objs.append(Paragraph(f"{space_symbol * 10}05 - и прочие цели (нужное вписать) __________________", style))
+        objs.append(Paragraph("Диагноз направившей медицинской организации (диагноз/ код диагноза в соответствии с МКБ10):", style))
+        objs.append(Paragraph("Основной ___________________________________________________________________________________________", style))
+        objs.append(Paragraph("Сопутствующий ______________________________________________________________________________________", style))
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph("Выписка из амбулаторной карты:", style))
+        objs.append(Paragraph("(данные анамнеза, клиники, предварительного обследования и проведенного лечения)", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("Сведения о профилактических прививках (для детей до 18 лет) ________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("Справка об отсутствии инфекционных контактов (для детей до 18 лет), выданная не ранее 3 дней на дату поступления в ОГУЗ ", style))
+        objs.append(Paragraph("______________________________________________________________________________________", style))
+        objs.append(Paragraph("Врач ___________________________________________________________________________", style))
+        objs.append(Paragraph('телефон ____________________________ "_____" _____________ 20__ г.', style))
+        objs.append(Paragraph("Руководитель направившей медицинской организации", style))
+        objs.append(Paragraph("Согласие пациента на передачу сведений электронной почтой для осуществления предварительной записи и передачи заключения:", style))
 
         gistology_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
         gistology_inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)

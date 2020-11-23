@@ -64,7 +64,12 @@ def get_coast_from_issledovanie(dir_research_loc):
         dict_coast = {}
         for k, v in dir_research_loc.items():
             d = {
-                r: [s, d, h,] for r, s, d, h in Issledovaniya.objects.filter(napravleniye=k, research__in=v, coast__isnull=False).values_list('research_id', 'coast', 'discount', 'how_many')
+                r: [
+                    s,
+                    d,
+                    h,
+                ]
+                for r, s, d, h in Issledovaniya.objects.filter(napravleniye=k, research__in=v, coast__isnull=False).values_list('research_id', 'coast', 'discount', 'how_many')
             }
             dict_coast[k] = d
         return dict_coast
@@ -270,6 +275,7 @@ def get_finaldata_talon(doc_result_obj):
     fin_pay = 'платно'
     fin_medexam = 'медосмотр'
     fin_disp = 'диспансеризация'
+    fin_budget = 'бюджет'
 
     fin_source = OrderedDict()
     fin_source[fin_oms] = OrderedDict()
@@ -277,6 +283,7 @@ def get_finaldata_talon(doc_result_obj):
     fin_source[fin_dms] = OrderedDict()
     fin_source[fin_medexam] = OrderedDict()
     fin_source[fin_disp] = OrderedDict()
+    fin_source[fin_budget] = OrderedDict()
 
     fin_source_iss = OrderedDict()
     fin_source_iss[fin_oms] = OrderedDict()
@@ -284,12 +291,14 @@ def get_finaldata_talon(doc_result_obj):
     fin_source_iss[fin_dms] = OrderedDict()
     fin_source_iss[fin_medexam] = OrderedDict()
     fin_source_iss[fin_disp] = OrderedDict()
+    fin_source_iss[fin_budget] = OrderedDict()
 
     oms_count = 0
     dms_count = 0
     pay_count = 0
     disp_count = 0
     medexam_count = 0
+    budget_count = 0
     empty = '-'
     today = utils.timezone.now().date()
 
@@ -319,6 +328,10 @@ def get_finaldata_talon(doc_result_obj):
             disp_count += 1
             dict_fsourcce = fin_disp
             order = disp_count
+        elif napr_attr['istochnik_f'] == 'бюджет':
+            budget_count += 1
+            dict_fsourcce = fin_budget
+            order = budget_count
         else:
             continue
         polis_who_giv = empty if not napr_attr['polis_who_give'] else napr_attr['polis_who_give']
@@ -690,7 +703,9 @@ def hosp_patient_movement(hosp_nums_obj):
             if extract_data:
                 date_out = extract_data['date_value']
                 diagnos_mkb = extract_data['final_diagnos_mkb']
-                doc_confirm_code = Issledovaniya.objects.get(pk=extract_data['extract_iss']).doc_confirmation.personal_code
+                doc_confirm_code = (
+                    None if not Issledovaniya.objects.get(pk=extract_data['extract_iss']) else Issledovaniya.objects.get(pk=extract_data['extract_iss']).doc_confirmation.personal_code
+                )
 
         epicrisis_data = hosp_get_data_direction(hosp_dir, site_type=6, type_service='None', level=2)
         if epicrisis_data:
@@ -771,10 +786,10 @@ def hosp_get_operation_data(num_dir):
                 'category_difficult': '',
             }
             iss_obj = Issledovaniya.objects.filter(pk=pk_iss_operation).first()
-            if not iss_obj.doc_confirmation:
+            if not iss_obj.time_confirmation:
                 continue
-            operation_data['doc_fio'] = iss_obj.doc_confirmation.get_fio()
-            operation_data['doc_code'] = Issledovaniya.objects.get(pk=pk_iss_operation).doc_confirmation.personal_code
+            operation_data['doc_fio'] = iss_obj.doc_confirmation_fio
+            operation_data['doc_code'] = None if not Issledovaniya.objects.get(pk=pk_iss_operation) else Issledovaniya.objects.get(pk=pk_iss_operation).doc_confirmation.personal_code
             if operation_data['doc_code'] == 0:
                 operation_data['doc_code'] = ''
             category_difficult = ''

@@ -46,6 +46,9 @@ class SettingManager:
                     "tfoms",
                     "doc_call",
                     "list_wait",
+                    "is_core",
+                    "tfoms_as_l2",
+                    "force_rmis_search",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

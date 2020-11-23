@@ -24,18 +24,18 @@ def menu(request):
     if request.user.is_authenticated and not request.is_ajax():
         from laboratory import settings
 
-        groups = [str(x) for x in request.user.groups.all()]
+        groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
         pages = [
             {"url": "/mainmenu/", "title": "Начальная страница", "nt": False, "access": ["*"], "not_show_home": True},
             {"url": "/logout", "title": "Выход из профиля", "nt": False, "access": ["*"], "not_show_home": True},
             {"hr": True, "access": ["*"]},
-            {"url": "/mainmenu/directions", "title": "Направления и картотека", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
+            {"url": "/mainmenu/directions", "title": "Направления и картотека", "nt": False, "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача"]},
             {
                 "url": "/mainmenu/direction/info",
                 "title": "История направления",
                 "nt": False,
-                "access": ["Лечащий врач", "Оператор лечащего врача", "Лаборант", "Врач-лаборант", "Просмотр журнала"],
+                "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Лаборант", "Врач-лаборант", "Просмотр журнала"],
             },
             {"url": "/mainmenu/directions/multiprint", "title": "Печать направлений", "nt": False, "access": ["*"]},
             # {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
@@ -150,7 +150,7 @@ def make_menu(pages, groups, superuser, current_path=None):
 
 
 def profile(request):
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated or not hasattr(request.user, 'doctorprofile'):
         return {}
     # return {"specialities": [x.title for x in request.user.doctorprofile.specialities.all() if not x.hide]}
     return {"specialities": [] if not request.user.doctorprofile.specialities else [request.user.doctorprofile.specialities.title]}

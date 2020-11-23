@@ -215,17 +215,43 @@ def get_directory(request):
         ],
         "researches.models.Tubes": [{"pk": x.pk, "color": x.color, "title": x.title, "short_title": x.get_short_title()} for x in researches.Tubes.objects.all().order_by("pk")],
         "directory.models.Researches": [
-            {"pk": x.pk, "title": x.title, "short_title": x.get_title(), "podrazdeleniye": x.podrazdeleniye_id, "is_paraclinic": x.is_paraclinic, "code": x.code,}
+            {
+                "pk": x.pk,
+                "title": x.title,
+                "short_title": x.get_title(),
+                "podrazdeleniye": x.podrazdeleniye_id,
+                "is_paraclinic": x.is_paraclinic,
+                "code": x.code,
+            }
             for x in directory.Researches.objects.all().order_by("pk")
         ],
         "directory.models.Fractions": [
-            {"pk": x.pk, "title": x.title, "research": x.research_id, "order": x.sort_weight, "code": x.code,} for x in directory.Fractions.objects.all().order_by("pk")
+            {
+                "pk": x.pk,
+                "title": x.title,
+                "research": x.research_id,
+                "order": x.sort_weight,
+                "code": x.code,
+            }
+            for x in directory.Fractions.objects.all().order_by("pk")
         ],
         "directory.models.ParaclinicInputGroups": [
-            {"pk": x.pk, "title": x.title, "research": x.research_id, "order": x.order,} for x in directory.ParaclinicInputGroups.objects.all().order_by("pk")
+            {
+                "pk": x.pk,
+                "title": x.title,
+                "research": x.research_id,
+                "order": x.order,
+            }
+            for x in directory.ParaclinicInputGroups.objects.all().order_by("pk")
         ],
         "directory.models.ParaclinicInputField": [
-            {"pk": x.pk, "title": x.title, "group": x.group_id, "order": x.order,} for x in directory.ParaclinicInputField.objects.all().order_by("pk")
+            {
+                "pk": x.pk,
+                "title": x.title,
+                "group": x.group_id,
+                "order": x.order,
+            }
+            for x in directory.ParaclinicInputField.objects.all().order_by("pk")
         ],
     }
 

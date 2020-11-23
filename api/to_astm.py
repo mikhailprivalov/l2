@@ -27,7 +27,7 @@ def get_iss_direction(direction: directions.Napravleniya, analyzer: api.Analyzer
     n = 0
     iss_list = directions.Issledovaniya.objects.filter(napravleniye=direction)
     if not full:
-        iss_list = iss_list.filter(doc_confirmation__isnull=True)
+        iss_list = iss_list.filter(time_confirmation__isnull=True)
     for i in iss_list:
         researches = defaultdict(list)
         for fraction in directory.Fractions.objects.filter(research=i.research, relationfractionastm__analyzer=analyzer, hide=False):

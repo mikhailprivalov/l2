@@ -51,7 +51,8 @@
         </div>
         <span class="rmis-search input-group-btn" v-if="tfoms_query">
           <label class="btn btn-blue-nb nbr height34" style="padding: 5px 12px;">
-            <input type="checkbox" v-model="inc_tfoms"/> ТФОМС
+            <input type="checkbox" v-model="inc_tfoms"/>
+            {{tfoms_as_l2 ? 'ЕРЦП' : 'ТФОМС'}}
           </label>
         </span>
         <span class="rmis-search input-group-btn" v-if="selected_base.internal_type && user_data.rmis_enabled">
@@ -397,6 +398,12 @@
       this.inited()
     },
     watch: {
+      force_rmis_search: {
+        handler() {
+          this.inc_rmis = this.force_rmis_search;
+        },
+        immediate: true,
+      },
       query() {
         this.query = this.query.split(' ')
           .map((s) => s.split('-').map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
@@ -470,6 +477,12 @@
       },
       l2_benefit() {
         return this.$store.getters.modules.l2_benefit
+      },
+      force_rmis_search() {
+        return Boolean(this.$store.getters.modules.l2_force_rmis_search);
+      },
+      tfoms_as_l2() {
+        return Boolean(this.$store.getters.modules.l2_tfoms_as_l2);
       },
       is_operator() {
         if ('groups' in this.$store.getters.user_data) {

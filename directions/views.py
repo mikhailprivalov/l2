@@ -78,10 +78,10 @@ def gen_pdf_execlist(request):
     for res in directory.Researches.objects.filter(pk__in=researches):
         if type != 2:
             iss_list = Issledovaniya.objects.filter(
-                tubes__doc_recive_id__isnull=False, tubes__time_recive__range=(date_start, date_end), doc_confirmation_id__isnull=True, research__pk=res.pk, deferred=False
+                tubes__doc_recive_id__isnull=False, tubes__time_recive__range=(date_start, date_end), time_confirmation__isnull=True, research__pk=res.pk, deferred=False
             ).order_by('tubes__time_recive')
         else:
-            iss_list = Issledovaniya.objects.filter(research__pk=res.pk, deferred=True, doc_confirmation__isnull=True, tubes__doc_recive__isnull=False).order_by('tubes__time_recive')
+            iss_list = Issledovaniya.objects.filter(research__pk=res.pk, deferred=True, time_confirmation__isnull=True, tubes__doc_recive__isnull=False).order_by('tubes__time_recive')
 
         if iss_list.count() == 0:
             # if not hb:
@@ -130,7 +130,13 @@ def gen_pdf_execlist(request):
                 if len(data[y]) < xsize:
                     for i in range(len(data[y]), xsize):
                         data[y].append("<br/><br/><br/><br/><br/>")
-            style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'), ('INNERGRID', (0, 0), (-1, -1), 0.3, colors.black), ('BOX', (0, 0), (-1, -1), 0.3, colors.black),])
+            style = TableStyle(
+                [
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('INNERGRID', (0, 0), (-1, -1), 0.3, colors.black),
+                    ('BOX', (0, 0), (-1, -1), 0.3, colors.black),
+                ]
+            )
 
             s = getSampleStyleSheet()
             s = s["BodyText"]
@@ -159,14 +165,14 @@ def gen_pdf_dir(request):
     """Генерация PDF направлений"""
     if SettingManager.get("pdf_auto_print", "true", "b"):
         pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
-    direction_id = json.loads(request.GET["napr_id"])  # Перевод JSON строки в объект
+    direction_id = json.loads(request.GET["napr_id"])
 
-    response = HttpResponse(content_type='application/pdf')  # Формирование ответа типа PDF
-    response['Content-Disposition'] = 'inline; filename="directions.pdf"'  # Включение режима вывода PDF в браузер
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="directions.pdf"'
 
-    pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))  # Загрузка шрифта из файла
-    pdfmetrics.registerFont(TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))  # Загрузка шрифта из файла
-    pdfmetrics.registerFont(TTFont('TimesNewRoman', os.path.join(FONTS_FOLDER, 'TimesNewRoman.ttf')))  # Загрузка шрифта из файла
+    pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
+    pdfmetrics.registerFont(TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('TimesNewRoman', os.path.join(FONTS_FOLDER, 'TimesNewRoman.ttf')))
     dn = (
         Napravleniya.objects.filter(pk__in=direction_id)
         .prefetch_related(
@@ -193,7 +199,7 @@ def gen_pdf_dir(request):
 
     donepage = dn.exclude(issledovaniya__research__direction_form=0)
 
-    buffer = BytesIO()  # Буфер
+    buffer = BytesIO()
     count_direction = len(direction_id)
     format_A6 = SettingManager.get("format_A6", default='False', default_type='b') and count_direction == 1 and donepage.count() == 0
     page_size = A6 if format_A6 else A4
@@ -210,7 +216,12 @@ def gen_pdf_dir(request):
         pg = p.page(pg_num)
         i = 4  # Номер позиции направления на странице (4..1)
         for n_ob in pg.object_list:  # Перебор номеров направлений на странице
-            printDirection(c, i, n_ob, format_A6)  # Вызов функции печати направления на указанную позицию
+            if not n_ob.external_organization:
+                print_direction(c, i, n_ob, format_A6)  # Вызов функции печати направления на указанную позицию
+            else:
+                f = import_string('directions.forms.forms' + '380' + '.form_' + '05')
+                c = canvas.Canvas(buffer, pagesize=A4)
+                f(c, n_ob)
             instructions += n_ob.get_instructions()
             i -= 1
         if pg.has_next():  # Если есть следующая страница
@@ -227,14 +238,12 @@ def gen_pdf_dir(request):
         if not iss.exists():
             continue
         form = iss[0].research.direction_form
-
-        if form != 0:
+        if form != 0 and not d.external_organization:
             current_type_form = str(form)
             f = import_string('directions.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
             f(c, d)
         if n != cntn:
             c.showPage()
-
     instructions_pks = []
     instructions_filtered = []
     for i in instructions:
@@ -301,7 +310,14 @@ def gen_pdf_dir(request):
             if len(card_pk_set) == 1 and fin_status:
                 from forms.forms102 import form_01 as f_contract
 
-                fc = f_contract(request_data={**dict(request.GET.items()), "user": request.user, "card_pk": card_pk_set.pop()})
+                fc = f_contract(
+                    request_data={
+                        **dict(request.GET.items()),
+                        "user": request.user,
+                        "card_pk": card_pk_set.pop(),
+                        "hospital": request.user.doctorprofile.get_hospital(),
+                    }
+                )
                 if fc:
                     fc_buf = BytesIO()
                     fc_buf.write(fc)
@@ -348,9 +364,9 @@ def framePage(canvas):
     canvas.line(0, h / 2, w, h / 2)
 
 
-def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
+def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     xn, yn = 0, 0
-    if not format_A6:
+    if not format_a6:
         if n % 2 != 0:
             xn = 1
         if n > 2:
@@ -392,10 +408,10 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
         c.restoreState()
 
     c.setFont('OpenSans', 10)
-    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 5) + (h / 2) * yn, SettingManager.get("org_title"))
+    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 5) + (h / 2) * yn, dir.hospital_title)
 
     c.setFont('OpenSans', 8)
-    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 15) + (h / 2) * yn, "(%s. %s)" % (SettingManager.get("org_address"), SettingManager.get("org_phones"),))
+    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 15) + (h / 2) * yn, "(%s. %s)" % (dir.hospital_address, dir.hospital_phones))
 
     c.setFont('OpenSans', 14)
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 30) + (h / 2) * yn, "Направление" + ("" if not dir.imported_from_rmis else " из РМИС"))
@@ -412,9 +428,9 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
     if history_num and len(history_num) > 0:
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "№ истории: " + history_num)
     elif additional_num and len(additional_num) > 0:
-        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "(" + additional_num + ")")
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, f"({str(additional_num).strip()})")
     elif dir.client.number_poliklinika and len(dir.client.number_poliklinika) > 0:
-        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "(" + dir.client.number_poliklinika + ")")
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, f"({str(dir.client.number_poliklinika).strip()})")
 
     if dir.history_num and len(dir.history_num) > 0:
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "№ истории: " + dir.history_num)
@@ -458,7 +474,14 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
         rtp = i.research.reversed_type
         if rtp < -1:
             has_doc_refferal = True
-            rt = {-2: 'Консультации', -3: 'Лечение', -4: 'Стоматология', -5: 'Стационар', -6: 'Микробиология', -9998: 'Морфология',}[rtp]
+            rt = {
+                -2: 'Консультации',
+                -3: 'Лечение',
+                -4: 'Стоматология',
+                -5: 'Стационар',
+                -6: 'Микробиология',
+                -9998: 'Морфология',
+            }[rtp]
             # if rtp == -6:
             #     has_micro = True
         else:
@@ -648,8 +671,10 @@ def printDirection(c: Canvas, n, dir: Napravleniya, format_A6: bool = False):
         if dir.doc_who_create and dir.doc_who_create != dir.doc:
             nn = 9
             c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn, Truncator("Выписал: %s, %s" % (dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title)).chars(63))
-        c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Отделение: " + Truncator(dir.doc.podrazdeleniye.title).chars(50))
-        c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, "Л/врач: " + dir.doc.get_fio())
+
+        if dir.doc:
+            c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Отделение: " + Truncator(dir.get_doc_podrazdeleniye_title()).chars(50))
+            c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, "Л/врач: " + dir.doc.get_fio())
     else:
         c.drawString(paddingx + (w / 2 * xn), 31 + (h / 2) * yn + nn, "РМИС#" + dir.rmis_number)
         c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Создал направление: " + dir.doc_who_create.get_fio())
@@ -689,8 +714,15 @@ def get_one_dir(request):
         except ValueError:
             direction_pk = -1
         if Napravleniya.objects.filter(pk=direction_pk).exists():
+            tmp2 = Napravleniya.objects.get(pk=direction_pk)
+            if tmp2.get_hospital() != request.user.doctorprofile.get_hospital():
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "message": "Направление для другой организации",
+                    }
+                )
             if "check" not in request.GET.keys():
-                tmp2 = Napravleniya.objects.get(pk=direction_pk)
                 tmp = Issledovaniya.objects.filter(napravleniye=tmp2).order_by("research__title")
                 response["direction"] = {
                     "pk": tmp2.pk,
@@ -987,7 +1019,7 @@ def print_history(request):
         for pg_num in p.page_range:
             pg = p.page(pg_num)
             if pg_num >= 0:
-                drawTituls(c, p.num_pages, pg_num, paddingx, pg[0])
+                draw_tituls(c, p.num_pages, pg_num, paddingx, pg[0], request.user.doctorprofile.hospital_safe_title)
             data = []
             tmp = []
             for v in data_header:
@@ -1024,7 +1056,7 @@ def print_history(request):
                     tmp.append("")
                 research_tmp = obj["researches"]
                 if len(research_tmp) > 38:
-                    research_tmp = research_tmp[0: -(len(research_tmp) - 38)] + "..."
+                    research_tmp = research_tmp[0:-(len(research_tmp) - 38)] + "..."
                 tmp.append(Paragraph(research_tmp, styleSheet["BodyText"]))
                 tmp.append(Paragraph("", styleSheet["BodyText"]))
 
@@ -1064,13 +1096,13 @@ def print_history(request):
     return response
 
 
-def drawTituls(c, pages, page, paddingx, obj):
+def draw_tituls(c, pages, page, paddingx, obj, hospital_title):
     """Функция рисования шапки и подвала страницы pdf"""
     c.setFont('OpenSans', 9)
     c.setStrokeColorRGB(0, 0, 0)
     c.setLineWidth(1)
 
-    c.drawCentredString(w / 2, h - 30, SettingManager.get("org_title"))
+    c.drawCentredString(w / 2, h - 30, hospital_title)
     c.setFont('OpenSans', 12)
     c.drawCentredString(w / 2, h - 50, "АКТ приёма-передачи емкостей с биоматериалом")
 
@@ -1129,6 +1161,9 @@ def get_issledovaniya(request):
                 except Napravleniya.DoesNotExist:
                     napr = None
                     iss = []
+            if napr and napr.hospital and napr.hospital != request.user.doctorprofile.hospital:
+                napr = None
+                iss = []
             mnext = False
             for i in Issledovaniya.objects.filter(napravleniye=napr):
                 po = i.research.podrazdeleniye
@@ -1185,7 +1220,7 @@ def get_issledovaniya(request):
                                     elif any([x.get_is_norm()[0] == "maybe" for x in issledovaniye.result_set.all()]):
                                         isnorm = "maybe"
 
-                            if not issledovaniye.doc_confirmation:
+                            if not issledovaniye.time_confirmation:
                                 confirmed = False
                                 if not issledovaniye.deferred:
                                     res["all_confirmed"] = False
@@ -1272,8 +1307,8 @@ def get_issledovaniya(request):
                 res["client_vozrast"] = napr.client.individual.age_s(direction=napr)
                 res["imported_from_rmis"] = napr.imported_from_rmis
                 res["imported_org"] = "" if not napr.imported_org else napr.imported_org.title
-                res["directioner"] = "" if napr.imported_from_rmis else napr.doc.fio
-                res["otd"] = "" if napr.imported_from_rmis else napr.doc.podrazdeleniye.title
+                res["directioner"] = "" if napr.imported_from_rmis or not napr.doc else napr.doc.fio
+                res["otd"] = "" if napr.imported_from_rmis else napr.get_doc_podrazdeleniye_title()
                 res["fin_source"] = "" if napr.imported_from_rmis else napr.fin_title
                 res["ok"] = True
                 res["in_rmis"] = napr.result_rmis_send

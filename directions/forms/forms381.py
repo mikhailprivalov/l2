@@ -29,7 +29,7 @@ from utils.flowable import InteractiveTextField
 def form_01(c: Canvas, dir: Napravleniya):
     # Диагностический центр - COVID-19
     def printForm():
-        hospital_name = SettingManager.get("org_title")
+        hospital_name = dir.hospital_short_title
 
         if sys.platform == 'win32':
             locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -126,7 +126,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         count = 23 * 2
         opinion = [Paragraph(' ', style) for i in range(0, count)]
         len_opinion = int(count / 2)
-        department_title = list(dir.doc.podrazdeleniye.title.upper())[0:len_opinion]
+        department_title = list(dir.get_doc_podrazdeleniye_title().upper())[0:len_opinion]
         x = 0
         for i in department_title:
             opinion[x] = Paragraph(f"{i}", style)
@@ -862,7 +862,7 @@ def draw_rectangle(x, y):
 def form_02(c: Canvas, dir: Napravleniya):
     # Диагностический цент - направление на МСКТ
     def printForm():
-        hospital_name = SettingManager.get("org_title")
+        hospital_name = dir.hospital_short_title
         hospital_address = SettingManager.get("org_address")
 
         if sys.platform == 'win32':

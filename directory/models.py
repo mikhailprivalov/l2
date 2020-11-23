@@ -116,6 +116,7 @@ class Researches(models.Model):
         (38002, '38002. ИО - Направление на МСКТ'),
         (38003, '38003. ИО - Направление на COVID-19'),
         (38004, '38004. ИО - Направление на Микробиологию'),
+        (38005, '38005. ИО - Напрвление в др. организацию'),
         (48001, '48001. ИО - Направление на Гистологию'),
         (38101, '38101. ИО - Направление в ИДЦ Ковид'),
         (38102, '38102. ИО - Направление в ИДЦ обследование'),
@@ -417,7 +418,7 @@ class ParaclinicInputField(models.Model):
         titles = ['']
         if self.title:
             titles.append(self.title)
-        if field_type != 14:
+        if field_type != 14 and self.default_value.isdigit():
             if field_type == 11 and Fractions.objects.filter(pk=self.default_value).exists():
                 f = Fractions.objects.get(pk=self.default_value)
                 titles.append(f.research.title)

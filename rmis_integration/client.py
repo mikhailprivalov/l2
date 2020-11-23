@@ -4,15 +4,15 @@ import pickle
 import threading
 import urllib.parse
 import logging
-from typing import Union
+from typing import Union, Optional
 
 import requests
 import simplejson as json
 from django.core.cache import cache
 from django.core.management.base import OutputWrapper
+from django.db import connections
 from django.db.models import Q
 from django.test import Client as TC
-from django.utils import timezone
 from requests import Session
 from requests.auth import HTTPBasicAuth
 from requests_toolbelt import MultipartEncoder
@@ -25,13 +25,17 @@ from zeep.transports import Transport
 import clients.models as clients_models
 import slog.models as slog
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, RMISServiceInactive
+from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, RMISServiceInactive, TubesRegistration
 from directory.models import Fractions, ParaclinicInputGroups, Researches
+from hospitals.models import Hospitals
 from laboratory import settings as l2settings
 from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
-from laboratory.utils import strdate, strtime, localtime, strfdatetime
+from laboratory.utils import strdate, strtime, localtime, strfdatetime, current_time
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.sql_func import get_confirm_direction
+from utils.common import select_key_by_one_of_values_includes, replace_values_by_keys
+
+logger = logging.getLogger("RMIS")
 
 
 class Utils:
@@ -43,6 +47,12 @@ class Utils:
                     return col["data"]
         except:
             return ""
+
+    @staticmethod
+    def fix_nmu_code(s: Optional[str]):
+        if not s:
+            return s
+        return s.strip().replace("А", "A").replace("В", "B")
 
     @staticmethod
     def make_dict(rows, key_column="NAME", value_column="ID"):
@@ -164,6 +174,8 @@ class Client(object):
         return self.directories[title]
 
     def search_organization_id(self, q=None, check=False):
+        if not q and Hospitals.get_default_hospital().rmis_org_id:
+            return Hospitals.get_default_hospital().rmis_org_id
         query = q or Settings.get("orgname")
         key = 'rmis_organization_id_' + get_md5(query)
         id = cache.get(key)
@@ -173,6 +185,16 @@ class Client(object):
             id = self.get_directory("pim_organization").get_first("ID", "FULL_NAME", query)
             cache.set(key, id, 24 * 3600)
         return id
+
+    def get_org_id_for_direction(self, direction: Napravleniya):
+        if not direction.hospital:
+            return self.search_organization_id()
+        if direction.hospital.rmis_org_id:
+            return direction.hospital.rmis_org_id
+        org_id = self.search_organization_id(q=direction.hospital.title)
+        if org_id:
+            return org_id
+        return self.search_organization_id()
 
     def get_organization_title(self, pk, full=False):
         key = 'rmis_org_t_%s_%s' % (pk, full)
@@ -223,12 +245,18 @@ class Client(object):
         return fin_src
 
     def put_content(self, filename, content, path, filetype='application/pdf', method="PUT", stdout: OutputWrapper = None):
-        multipart_data = MultipartEncoder(fields={'file': (filename, content, filetype)},)
+        multipart_data = MultipartEncoder(
+            fields={'file': (filename, content, filetype)},
+        )
 
         resip = requests.request(method, path, data=multipart_data, headers={'Content-Type': "multipart/form-data"}, auth=self.session.auth, proxies=RMIS_PROXY)
         if stdout:
             stdout.write("put_content ANSWER: [{}] {}".format(resip.status_code, resip.text))
         return str(resip.status_code) == "200"
+
+    def get_content(self, path):
+        resip = requests.request("GET", path, auth=self.session.auth, proxies=RMIS_PROXY)
+        return resip.text
 
     def req(self, path, method="DELETE", ret="bool"):
         resip = requests.request(method, path, auth=self.session.auth)
@@ -400,7 +428,14 @@ class Patients(BaseRequester):
 
     def get_slot(self, pk: [int, str]):
         d = self.appointment_client.getSlot(pk)
-        return {"status": d["status"], "datetime": d["date"],} if d else {}
+        return (
+            {
+                "status": d["status"],
+                "datetime": d["date"],
+            }
+            if d
+            else {}
+        )
 
     def extended_data(self, uid):
         d = self.smart_client.getPatient(uid)
@@ -433,7 +468,7 @@ class Patients(BaseRequester):
 
         self.patient_client.createPatient(patientId=iuid, patientData={})
 
-        ruid = self.smart_client.sendPatient(patientCard={'patient': {'uid': iuid}, 'identifiers': {'code': iuid, 'codeType': '7', 'issueDate': strfdatetime(timezone.now(), "%Y-%m-%d"),}})
+        ruid = self.smart_client.sendPatient(patientCard={'patient': {'uid': iuid}, 'identifiers': {'code': iuid, 'codeType': '7', 'issueDate': strfdatetime(current_time(), "%Y-%m-%d")}})
 
         return iuid, ruid["patientUid"]
 
@@ -593,18 +628,21 @@ class Patients(BaseRequester):
         return "NONERMIS"
 
     @staticmethod
-    def create_rmis_card(individual: clients_models.Individual, get_id: str):
+    def create_rmis_card(individual: clients_models.Individual, get_id: str, strict=True):
         base = clients_models.CardBase.objects.filter(is_rmis=True).first()
         if not individual.rmis_uid and individual.rmis_uid != get_id:
             individual.rmis_uid = get_id
             individual.save(update_fields=['rmis_uid'])
-        if get_id and not clients_models.Card.objects.filter(base=base, number=get_id, is_archive=False).exists():
-            for cm in clients_models.Card.objects.filter(base=base, individual=individual):
-                cm.is_archive = True
-                cm.save()
-            c = clients_models.Card(base=base, number=get_id, individual=individual, is_archive=False)
-            c.save()
-            return c
+        if get_id:
+            if not clients_models.Card.objects.filter(base=base, number=get_id, is_archive=False).exists():
+                for cm in clients_models.Card.objects.filter(base=base, individual=individual):
+                    cm.is_archive = True
+                    cm.save()
+                c = clients_models.Card(base=base, number=get_id, individual=individual, is_archive=False)
+                c.save()
+                return c
+            elif not strict:
+                return clients_models.Card.objects.filter(base=base, number=get_id, is_archive=False)[0]
         return None
 
     def get_rmis_id_for_individual(self, individual: clients_models.Individual):
@@ -615,6 +653,34 @@ class Patients(BaseRequester):
                 self.create_rmis_card(individual, get_id)
                 return get_id
         return return_none
+
+    def get_l2_card_by_enp(self, enp: str):
+        get_id = self.patient_first_id_by_poils("", enp)
+        logger.exception(f'{enp} <-> {get_id}')
+        if get_id not in ['', 'NONERMIS']:
+            if clients_models.Card.objects.filter(number=get_id, base__is_rmis=True).exists():
+                rmis_card = clients_models.Card.objects.filter(number=get_id, base__is_rmis=True)[0]
+                logger.exception(f'{enp}:1 – {rmis_card}')
+            elif clients_models.Individual.objects.filter(rmis_uid=get_id).exists():
+                i = clients_models.Individual.objects.filter(rmis_uid=get_id)[0]
+                rmis_card = self.create_rmis_card(i, get_id)
+                logger.exception(f'{enp}:2 – {rmis_card}')
+            else:
+                i = self.import_individual_to_base(get_id, limit=1)
+                logger.exception(f'{enp}:3 – {i}')
+                if not i:
+                    return None
+                logger.exception(f'{enp}:4 – {i[0]}')
+                rmis_card = self.create_rmis_card(i[0], get_id, strict=False)
+                logger.exception(f'{enp}:5 – {rmis_card}')
+            if rmis_card:
+                rmis_card.individual.sync_with_rmis(None, self.main_client, True)
+                if clients_models.Card.objects.filter(individual=rmis_card.individual, base__internal_type=True).exists():
+                    logger.exception(f'{enp}:6')
+                    return clients_models.Card.objects.filter(individual=rmis_card.individual, base__internal_type=True)[0]
+                logger.exception(f'{enp}:7')
+                return clients_models.Card.add_l2_card(card_orig=rmis_card)
+        return None
 
     def import_individual_to_base(self, query, fio=False, limit=10) -> clients_models.Individual or None:
         return_rows = []
@@ -663,19 +729,26 @@ class Services(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_services")
 
+        org_id = client.search_organization_id()
+
         key = "zeep_services"
         r = cache.get(key)
+
         if not r:
             self.services = {}
-            srv = self.client.getServices(clinic=client.search_organization_id())
+            srv = self.client.getServices(clinic=org_id)
             for r in srv:
                 if RMISServiceInactive.isInactive(r["id"]):
                     continue
-                self.services[r["code"] if not r["code"] else r["code"].strip()] = r["id"]
+                self.services[Utils.fix_nmu_code(r["code"])] = r["id"]
 
             cache.set(key, pickle.dumps(self.services, protocol=4), 300)
         else:
             self.services = pickle.loads(r, encoding="utf8")
+
+        self.external_services = {
+            org_id: self.services,
+        }
 
     def get_service_data(self, pk):
         key = "get_service_d{}".format(pk)
@@ -688,10 +761,22 @@ class Services(BaseRequester):
         return r
 
     def get_service_id(self, s):
-        s = s.replace("А", "A").replace("В", "B")
+        s = Utils.fix_nmu_code(s)
         if s in self.services:
             return self.services[s]
         return None
+
+    def get_service_id_for_direction(self, s, direction: Napravleniya):
+        s = Utils.fix_nmu_code(s)
+        org_id = self.main_client.get_org_id_for_direction(direction)
+        if org_id not in self.external_services:
+            self.external_services[org_id] = {}
+            srv = self.client.getServices(clinic=org_id)
+            for r in srv:
+                if RMISServiceInactive.isInactive(r["id"]):
+                    continue
+                self.external_services[org_id][Utils.fix_nmu_code(r["code"])] = r["id"]
+        return self.external_services.get(org_id, {}).get(s)
 
     def get_service_ids(self, direction: Napravleniya):
         services_tmp = []
@@ -699,7 +784,7 @@ class Services(BaseRequester):
             services_tmp.append(iss.research.code)
             for f in Fractions.objects.filter(research=iss.research):
                 services_tmp.append(f.code)
-        return [y for y in [self.get_service_id(x) for x in list(set(services_tmp))] if y is not None]
+        return [y for y in [self.get_service_id_for_direction(x, direction) for x in list(set(services_tmp))] if y is not None]
 
 
 def ndate(d: Union[datetime.datetime, datetime.date]):
@@ -724,6 +809,42 @@ def get_direction_full_data_cache(pk):
 class Directions(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_directions")
+        self.covid_service_codes = {
+            'A26.08.044.001',
+            'A26.08.027.001',
+        }
+        self.covid_values = {
+            'undetected': {
+                "результат": "РНК вируса SARS-CоV2 не обнаружена",
+                "результат defining": '<code_string xml:space="preserve">at0006</code_string>',
+                "диагноз value": '',
+                "диагноз defining_code": '<terminology_id/>',
+            },
+            'detected': {
+                "результат": "РНК вируса SARS-CоV2 обнаружена",
+                "результат defining": '<code_string xml:space="preserve">at0005</code_string>',
+                "диагноз value": '<value xml:space="preserve">U07.1  COVID-19, вирус идентифицирован</value>',
+                "диагноз defining_code": '''<terminology_id>
+                           <value xml:space="preserve">MD-Base-UI-Diagnosis</value>	
+                        </terminology_id>
+                        <code_string xml:space="preserve">404</code_string>''',
+            },
+        }
+
+        # Порядок определения ключей важен
+        self.allowed_covid_values = {
+            'undetected': ('не обнаружен', 'отрицат'),
+            'detected': ('обнаружен', 'положительн'),
+        }
+
+    def get_covid_value(self, orig_value: str):
+        orig_value = orig_value.lower().strip()
+        key = select_key_by_one_of_values_includes(orig_value, self.allowed_covid_values)
+        return self.covid_values.get(key)
+
+    def service_is_covid(self, code):
+        code = Utils.fix_nmu_code(code)
+        return code in self.covid_service_codes
 
     def search_directions(self, **kwargs):
         return self.client.searchReferral(**kwargs)
@@ -829,10 +950,10 @@ class Directions(BaseRequester):
                     number=str(direction.pk),
                     typeId=self.main_client.get_directory("md_referral_type").get_first("ID", search_data=direction.rmis_direction_type()),
                     referralDate=ndate(direction.data_sozdaniya_local),
-                    referralOrganizationId=self.main_client.search_organization_id(),
-                    referringDepartmentId=self.main_client.search_dep_id(q=direction.rmis_referral_title(), org_id=self.main_client.search_organization_id()),
-                    receivingOrganizationId=self.main_client.search_organization_id(),
-                    receivingDepartmentId=self.main_client.search_dep_id(q=direction.rmis_department_title(), org_id=self.main_client.search_organization_id()),
+                    referralOrganizationId=self.main_client.get_org_id_for_direction(direction),
+                    referringDepartmentId=self.main_client.search_dep_id(q=direction.rmis_referral_title(), org_id=self.main_client.get_org_id_for_direction(direction)),
+                    receivingOrganizationId=self.main_client.get_org_id_for_direction(direction),
+                    receivingDepartmentId=self.main_client.search_dep_id(q=direction.rmis_department_title(), org_id=self.main_client.get_org_id_for_direction(direction)),
                     refServiceId=self.main_client.services.get_service_ids(direction),
                     fundingSourceTypeId=Utils.get_fin_src_id(direction.fin_title, self.main_client.get_fin_dict()),
                     note='Автоматический вывод из Информационной Системы L2',
@@ -871,7 +992,7 @@ class Directions(BaseRequester):
             direction.rmis_hosp_id = h_id
 
     def send_service(self, code: str, patient_uid: str, refferal_id: str, direction: Napravleniya) -> str:
-        service_id = self.main_client.services.get_service_id(code)
+        service_id = self.main_client.services.get_service_id_for_direction(code, direction)
         if service_id is None:
             return ""
         send_data = dict(
@@ -879,7 +1000,7 @@ class Directions(BaseRequester):
             serviceId=service_id,
             isRendered="false",
             patientUid=patient_uid,
-            orgId=self.main_client.search_organization_id(),
+            orgId=self.main_client.get_org_id_for_direction(direction),
             note='Результаты в направлении или в протоколе.\nАвтоматический вывод из МИС L2',
             quantity=1,
         )
@@ -924,6 +1045,7 @@ class Directions(BaseRequester):
 
     def check_send_results(self, direction: Napravleniya, stdout: OutputWrapper = None):
         protocol_template = Settings.get("protocol_template")
+        protocol_covid_template = Settings.get("protocol_covid_template") or ""
         protocol_row = Settings.get("protocol_template_row")
         if not direction.result_rmis_send:
             if direction.rmis_number != "NONERMIS":
@@ -937,6 +1059,8 @@ class Directions(BaseRequester):
                                 sended_ids[row.code] = row.rmis_id
                             sended_researches = []
                             sended_codes = []
+                            has_covid = False
+
                             for x in ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction):
                                 code = x.field.group.research.code
                                 if code in sended_codes or code.strip() == "":
@@ -984,16 +1108,46 @@ class Directions(BaseRequester):
                                         if stdout:
                                             stdout.write("DATA: " + str(send_data))
                                         ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
-                                        xresult = ""
-                                        for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
-                                            xresult += protocol_row.replace("{{фракция}}", y.fraction.title).replace("{{значение}}", y.value).replace("{{едизм}}", y.get_units())
-                                        xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
-                                        if x.issledovaniye.get_analyzer() != "":
-                                            xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}", x.issledovaniye.get_analyzer()).replace("{{едизм}}", "")
-                                        if x.issledovaniye.lab_comment and x.issledovaniye.lab_comment != "":
-                                            xresult += protocol_row.replace("{{фракция}}", "Комментарий").replace("{{значение}}", x.issledovaniye.lab_comment).replace("{{едизм}}", "")
-                                        self.put_protocol(code, direction, protocol_template, ss, x, xresult, stdout)
                                         RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
+
+                                        if self.service_is_covid(code):
+                                            has_covid = True
+                                            i: Issledovaniya = x.issledovaniye
+                                            tube: TubesRegistration = i.tubes.all().first()
+
+                                            date_confirm = "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%d.%m.%Y")
+
+                                            if tube:
+                                                time_get = tube.time_get or tube.time_recive
+                                                date_get = "" if not time_get else localtime(time_get).strftime("%d.%m.%Y")
+                                            else:
+                                                date_get = ""
+
+                                            date_get = date_get or date_confirm
+
+                                            protocol: str = (
+                                                protocol_covid_template.replace("{{комментарий}}", i.lab_comment or "")
+                                                .replace("{{дата забора}}", date_get)
+                                                .replace("{{дата подтверждения}}", date_confirm)
+                                                .replace("{{номер результата}}", i.napravleniye.id_in_hospital or str(i.napravleniye.pk))
+                                            )
+                                            for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
+                                                value = self.get_covid_value(y.value)
+                                                if value:
+                                                    protocol = replace_values_by_keys(protocol, value)
+                                                    break
+
+                                            self.put_protocol(code, direction, protocol, ss, x, "", stdout)
+                                        else:
+                                            xresult = ""
+                                            for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
+                                                xresult += protocol_row.replace("{{фракция}}", y.fraction.title).replace("{{значение}}", y.value).replace("{{едизм}}", y.get_units())
+                                            xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
+                                            if x.issledovaniye.get_analyzer() != "":
+                                                xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}", x.issledovaniye.get_analyzer()).replace("{{едизм}}", "")
+                                            if x.issledovaniye.lab_comment and x.issledovaniye.lab_comment != "":
+                                                xresult += protocol_row.replace("{{фракция}}", "Комментарий").replace("{{значение}}", x.issledovaniye.lab_comment).replace("{{едизм}}", "")
+                                            self.put_protocol(code, direction, protocol_template, ss, x, xresult, stdout)
                                 code = x.fraction.code
                                 if code in sended_codes or code.strip() == "":
                                     continue
@@ -1015,57 +1169,55 @@ class Directions(BaseRequester):
                                     if stdout:
                                         stdout.write("DATA2: " + json.dumps(send_data))
                                     ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
-                                    xresult = protocol_row.replace("{{фракция}}", x.fraction.title).replace("{{значение}}", x.value).replace("{{едизм}}", x.get_units())
-                                    xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
-                                    if x.issledovaniye.get_analyzer() != "":
-                                        xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}", x.issledovaniye.get_analyzer()).replace("{{едизм}}", "")
-                                    self.main_client.put_content(
-                                        "Protocol.otg",
-                                        protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation.get_fio()).replace("{{результат}}", xresult),
-                                        self.main_client.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/" + ss),
-                                        method="POST",
-                                    )
+                                    if self.service_is_covid(code):
+                                        has_covid = True
+                                        i: Issledovaniya = x.issledovaniye
+                                        tube: TubesRegistration = i.tubes.all().first()
+
+                                        date_confirm = "" if not i.time_confirmation else localtime(i.time_confirmation).strftime("%d.%m.%Y")
+
+                                        if tube:
+                                            time_get = tube.time_get or tube.time_recive
+                                            date_get = "" if not time_get else localtime(time_get).strftime("%d.%m.%Y")
+                                        else:
+                                            date_get = ""
+
+                                        date_get = date_get or date_confirm
+
+                                        protocol: str = (
+                                            protocol_covid_template.replace("{{комментарий}}", i.lab_comment or "")
+                                            .replace("{{дата забора}}", date_get)
+                                            .replace("{{дата подтверждения}}", date_confirm)
+                                            .replace("{{номер результата}}", i.napravleniye.id_in_hospital or str(i.napravleniye.pk))
+                                        )
+                                        for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
+                                            value = self.get_covid_value(y.value)
+                                            if value:
+                                                protocol = replace_values_by_keys(protocol, value)
+                                                break
+
+                                        self.put_protocol(code, direction, protocol, ss, x, "", stdout)
+                                    else:
+                                        xresult = protocol_row.replace("{{фракция}}", x.fraction.title).replace("{{значение}}", x.value).replace("{{едизм}}", x.get_units())
+                                        xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
+                                        if x.issledovaniye.get_analyzer() != "":
+                                            xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}", x.issledovaniye.get_analyzer()).replace("{{едизм}}", "")
+                                        self.main_client.put_content(
+                                            "Protocol.otg",
+                                            protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation_fio).replace("{{результат}}", xresult),
+                                            self.main_client.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/" + ss),
+                                            method="POST",
+                                        )
                                     RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
-                            self.main_client.put_content(
-                                "Resultat.pdf",
-                                self.main_client.local_get("/results/pdf", {"pk": json.dumps([direction.pk]), "normis": '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}),
-                                self.main_client.get_addr("referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат-" + str(direction.pk) + "/Resultat.pdf"),
-                            )
-                            #создать случай в РМИС, если это не анализы
-                            case_data = {
-                                "uid": SettingManager.get("org_title").join(direction.pk), #случая рандомно
-                                "patientUid": rindiv,
-                                "caseTypeId": "1", #Тип случая
-                                "medicalOrganizationId": "31",
-                                "fundingSourceTypeId": "1", #Источник финансирования
-                                "careLevelId": "1", #Вид медицинской помощи
-                                "paymentMethodId": "26", #Способ оплаты
-                                "initGoalId": "4", #Цель первичного обращения
-                                "careRegimenId": "1", #Условия оказания медпомощи
-                                "createdDate": "2020-10-15",
-                            }
-                            client = self.main_client.get_client("https://38.is-mis.ru/cases-ws/cases?wsdl")
-                            case_id = client.service.sendCase(**case_data)
 
-                            #создать посещение
-                            visit_data = {
-                                "caseId": case_id, #id - Номер случая РМИС
-                                # "visitResultId": 9, # Результат – при закрытии
-                                # "deseaseResultId": "1", # Исход – при закрытии
-                                "admissionDate": "2020-10-15", # Дата посещения
-                                "admissionTime": "14:50:00", # Время посещения
-                                "rendererDate": "2020-10-15", # Дата оказания услуги
-                                "resourceGroupId": "151205615", # Врач-id в справочнике ресурс
-                                "goalId": "1", # Цель обращения
-                                "placeId": "1", # Место оказания
-                                "profileId": "65", # Профиль-специальности
-                            }
-                            client = self.main_client.get_client("https://38.is-mis.ru/visits-ws/visits?wsdl")
-                            visit_id = client.service.sendVisit(**visit_data)
-                            # получить услугу по id
-                            # указать id-case + id_visit
-                            # получить id_visit: вставить visitResultId + deseaseResultId
-
+                            if not has_covid:
+                                self.main_client.put_content(
+                                    "Resultat.pdf",
+                                    self.main_client.local_get("/results/pdf", {"pk": json.dumps([direction.pk]), "normis": '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}),
+                                    self.main_client.get_addr(
+                                        "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат-" + str(direction.pk) + "/Resultat.pdf"
+                                    ),
+                                )
                 except Fault as e:
                     logging.exception(e)
                     if "ата смерти пациента" in e.message:
@@ -1076,8 +1228,11 @@ class Directions(BaseRequester):
             direction.save()
         return direction.result_rmis_send
 
+    def get_protocol(self, rendered_service_id):
+        return self.main_client.get_content(self.main_client.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/" + rendered_service_id))
+
     def put_protocol(self, code, direction, protocol_template, ss, x, xresult, stdout: OutputWrapper = None):
-        protocol = protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation.get_fio()).replace("{{результат}}", xresult)
+        protocol = protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation_fio).replace("{{результат}}", xresult)
         self.main_client.put_content(
             "Protocol.otg", protocol, self.main_client.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/" + ss), method="POST", filetype="text/xml", stdout=stdout
         )
@@ -1105,14 +1260,14 @@ class Directions(BaseRequester):
         ]:
             send_data[p] = service_old_data.get(p, None) or send_data.get(p, None)
 
-    def gen_rmis_direction_data(self, code, direction, rid, rindiv, service_rend_id, stdout, x):
-        ssd = self.main_client.services.get_service_id(code)
+    def gen_rmis_direction_data(self, code, direction: Napravleniya, rid, rindiv, service_rend_id, stdout, x):
+        ssd = self.main_client.services.get_service_id_for_direction(code, direction)
         send_data = dict(
             referralId=rid,
             serviceId=ssd,
             isRendered="true",
             quantity="1",
-            orgId=self.main_client.search_organization_id(),
+            orgId=self.main_client.get_org_id_for_direction(direction),
             dateFrom=ndate(x.issledovaniye.time_confirmation),
             timeFrom=strtime(x.issledovaniye.time_confirmation),
             dateTo=ndate(x.issledovaniye.time_confirmation),
@@ -1134,7 +1289,7 @@ class Directions(BaseRequester):
         send_data["dateTo"] = ndate(send_data["dateTo"]) if send_data["dateTo"] and not isinstance(send_data["dateTo"], str) else send_data["dateTo"]
         return send_data, ssd
 
-    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=MAX_RMIS_THREADS, slice_to_upload: bool = False):
+    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=MAX_RMIS_THREADS, slice_to_upload: bool = False, slice_to_upload_count=None):
         def check_lock():
             return cache.get('upload_lock') is not None
 
@@ -1161,37 +1316,54 @@ class Directions(BaseRequester):
             .exclude(issledovaniya__research__in=exclude_res)
             .distinct()
         )
+        slice_to_upload_count = slice_to_upload_count or MAX_RMIS_THREADS * 2
         if slice_to_upload:
             stdout.write("Total to upload directions: {}".format(to_upload.count()))
-            stdout.write("Slice to upload directions: {}".format(MAX_RMIS_THREADS * 2))
-            to_upload = to_upload[:MAX_RMIS_THREADS * 2]
+            stdout.write("Slice to upload directions: {}".format(slice_to_upload_count))
+            to_upload = to_upload[:slice_to_upload_count]
         cnt = to_upload.count()
         if stdout:
             stdout.write("Directions to upload: {}".format(cnt))
         i = 0
 
-        def upload_dir(self, direct, out, i):
-            sema.acquire()
+        def upload_dir(self, direct, out, i, s):
+            s.acquire()
             update_lock()
             try:
                 uploaded.append(self.check_send(direct, out))
                 if out:
                     out.write("Upload direction {} ({}/{}); RMIS number={}".format(direct.pk, i, cnt, uploaded[-1]))
             finally:
-                sema.release()
+                s.release()
 
-        def upload_services(self, direct, out):
-            sema.acquire()
+            try:
+                connections.close_all()
+                if out:
+                    out.write(f"Closed db connections")
+            except Exception as e:
+                if out:
+                    out.write(f"Error closing connections {e}")
+
+        def upload_services(self, direct, out, s):
+            s.acquire()
             update_lock()
             try:
                 self.check_service(direct, out)
                 if out:
                     out.write("Check services for direction {}; RMIS number={}".format(direct.pk, direct.rmis_number))
             finally:
-                sema.release()
+                s.release()
 
-        def upload_results(self, direct, out, i):
-            sema.acquire()
+            try:
+                connections.close_all()
+                if out:
+                    out.write(f"Closed db connections")
+            except Exception as e:
+                if out:
+                    out.write(f"Error closing connection {e}")
+
+        def upload_results(self, direct, out, i, s):
+            s.acquire()
             update_lock()
             try:
                 direct = Napravleniya.objects.get(pk=direct)
@@ -1199,31 +1371,49 @@ class Directions(BaseRequester):
                 if out:
                     out.write("Upload result for direction {} ({}/{})".format(direct.pk, i, cnt))
             finally:
-                sema.release()
+                s.release()
+
+            try:
+                connections.close_all()
+                if out:
+                    out.write(f"Closed db connections")
+            except Exception as e:
+                if out:
+                    out.write(f"Error closing connection {e}")
 
         for d in to_upload:
             i += 1
-            thread = threading.Thread(target=upload_dir, args=(self, d, stdout, i))
+            thread = threading.Thread(target=upload_dir, args=(self, d, stdout, i, sema))
             threads.append(thread)
             thread.start()
-        [t.join() for t in threads]
+
+        for t in threads:
+            t.join()
+
+        sema = threading.BoundedSemaphore(maxthreads)
+
         threads = []
         to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date, rmis_resend_services=True).exclude(rmis_number='NONERMIS').distinct()
         if slice_to_upload:
             stdout.write("Total to upload resend services: {}".format(to_upload.count()))
-            stdout.write("Slice to upload resend services: {}".format(MAX_RMIS_THREADS * 2))
-            to_upload = to_upload[:MAX_RMIS_THREADS * 2]
+            stdout.write("Slice to upload resend services: {}".format(slice_to_upload_count))
+            to_upload = to_upload[:slice_to_upload_count]
         for d in to_upload:
-            thread = threading.Thread(target=upload_services, args=(self, d, stdout))
+            thread = threading.Thread(target=upload_services, args=(self, d, stdout, sema))
             threads.append(thread)
             thread.start()
-        [t.join() for t in threads]
+
+        for t in threads:
+            t.join()
+
+        sema = threading.BoundedSemaphore(maxthreads)
+
         threads = []
 
         uploaded_results = []
         if not without_results:
-            upload_lt = timezone.now() - datetime.timedelta(hours=Settings.get("upload_hours_interval", default="8", default_type="i"))
-            direction_ids = get_confirm_direction(date, upload_lt, MAX_RMIS_THREADS * 2 if slice_to_upload else 10000)
+            upload_lt = current_time() - datetime.timedelta(hours=Settings.get("upload_hours_interval", default="8", default_type="i"))
+            direction_ids = get_confirm_direction(date, upload_lt, slice_to_upload_count if slice_to_upload else 10000)
             cnt = len(direction_ids)
             stdout.write("To upload results: {}".format(cnt))
             if slice_to_upload:
@@ -1231,7 +1421,7 @@ class Directions(BaseRequester):
             i = 0
             for d in direction_ids:
                 i += 1
-                thread = threading.Thread(target=upload_results, args=(self, d[0], stdout, i))
+                thread = threading.Thread(target=upload_results, args=(self, d[0], stdout, i, sema))
                 threads.append(thread)
                 thread.start()
             [t.join() for t in threads]

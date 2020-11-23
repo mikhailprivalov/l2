@@ -1,4 +1,5 @@
 import collections
+import operator
 import re
 import time
 from datetime import datetime, time as dtime
@@ -53,7 +54,7 @@ from medical_certificates.models import ResearchesCertificate
 
 
 @login_required
-@group_required("Лечащий врач", "Оператор лечащего врача")
+@group_required("Лечащий врач", "Врач-лаборант", "Оператор лечащего врача")
 def directions_generate(request):
     result = {"ok": False, "directions": [], "message": ""}
     if request.method == "POST":
@@ -63,11 +64,7 @@ def directions_generate(request):
             result["message"] = "Для данного типа карт нельзя создать направления"
             return JsonResponse(result)
         fin_source = p.get("fin_source", -1)
-        fin_source_pk = (
-            int(fin_source)
-            if (isinstance(fin_source, int) or str(fin_source).isdigit()) else
-            fin_source
-        )
+        fin_source_pk = int(fin_source) if (isinstance(fin_source, int) or str(fin_source).isdigit()) else fin_source
         args = [
             p.get("card_pk"),
             p.get("diagnos"),
@@ -263,7 +260,7 @@ def get_data_parent(parent_id):
     research_is_doc_refferal = iss_obj.research.is_doc_refferal
     direction = iss_obj.napravleniye_id
     is_confirm = False
-    if iss_obj.doc_confirmation:
+    if iss_obj.time_confirmation:
         is_confirm = True
 
     return {
@@ -405,22 +402,24 @@ def directions_results(request):
                     dates[dt] = 0
                 dates[dt] += 1
 
-        import operator
-
         maxdate = ""
         if dates != {}:
             maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
+        else:
+            iss = Issledovaniya.objects.filter(napravleniye=napr)[0]
+            if iss.time_confirmation:
+                maxdate = str(dateformat.format(iss.time_confirmation, settings.DATE_FORMAT))
 
         iss_list = Issledovaniya.objects.filter(napravleniye=napr)
         t = 0
-        if not iss_list.filter(doc_confirmation__isnull=True).exists() or iss_list.filter(deferred=False).exists():
+        if not iss_list.filter(time_confirmation__isnull=True).exists() or iss_list.filter(deferred=False).exists():
             result["direction"]["pk"] = napr.pk
             result["full"] = False
             result["ok"] = True
             result["pacs"] = None if not iss_list[0].research.podrazdeleniye or not iss_list[0].research.podrazdeleniye.can_has_pacs else search_dicom_study(pk)
-            if iss_list.filter(doc_confirmation__isnull=False).exists():
-                result["direction"]["doc"] = iss_list.filter(doc_confirmation__isnull=False)[0].doc_confirmation.get_fio()
-                if iss_list.filter(doc_confirmation__isnull=True, deferred=False).exists():
+            if iss_list.filter(time_confirmation__isnull=False).exists():
+                result["direction"]["doc"] = iss_list.filter(time_confirmation__isnull=False)[0].doc_confirmation_fio
+                if iss_list.filter(time_confirmation__isnull=True, deferred=False).exists():
                     result["direction"]["doc"] = result["direction"]["doc"] + " (выполнено не полностью)"
                 else:
                     result["full"] = True
@@ -448,7 +447,7 @@ def directions_results(request):
                     issledovaniye.research_id,
                 )
                 result["results"][kint] = {"title": issledovaniye.research.title, "fractions": collections.OrderedDict(), "sort": issledovaniye.research.sort_weight, "tube_time_get": ""}
-                if not issledovaniye.deferred or issledovaniye.doc_confirmation:
+                if not issledovaniye.deferred or issledovaniye.time_confirmation:
                     for isstube in issledovaniye.tubes.all():
                         if isstube.time_get:
                             result["results"][kint]["tube_time_get"] = str(dateformat.format(isstube.time_get, settings.DATE_FORMAT))
@@ -719,7 +718,13 @@ def directions_visit_journal(request):
     response = {"data": []}
     request_data = json.loads(request.body)
     date_start, date_end = try_parse_range(request_data["date"])
-    for v in Napravleniya.objects.filter(visit_date__range=(date_start, date_end,), visit_who_mark=request.user.doctorprofile).order_by("-visit_date"):
+    for v in Napravleniya.objects.filter(
+        visit_date__range=(
+            date_start,
+            date_end,
+        ),
+        visit_who_mark=request.user.doctorprofile,
+    ).order_by("-visit_date"):
         response["data"].append({"pk": v.pk, "client": v.client.individual.fio(full=True), "card": v.client.number_with_type(), "datetime": strdatetime(v.visit_date)})
     return JsonResponse(response)
 
@@ -729,17 +734,29 @@ def directions_recv_journal(request):
     response = {"data": []}
     request_data = json.loads(request.body)
     date_start, date_end = try_parse_range(request_data["date"])
-    for v in Napravleniya.objects.filter(time_microbiology_receive__range=(date_start, date_end,), doc_microbiology_receive=request.user.doctorprofile).order_by(
-        "-time_microbiology_receive"
-    ):
+    for v in Napravleniya.objects.filter(
+        time_microbiology_receive__range=(
+            date_start,
+            date_end,
+        ),
+        doc_microbiology_receive=request.user.doctorprofile,
+    ).order_by("-time_microbiology_receive"):
         tubes = []
         for i in Issledovaniya.objects.filter(napravleniye=v, research__microbiology_tube__isnull=False):
             tube = i.research.microbiology_tube
             tubes.append(
-                {"color": tube.color, "title": tube.title,}
+                {
+                    "color": tube.color,
+                    "title": tube.title,
+                }
             )
         response["data"].append(
-            {"pk": v.pk, "client": v.client.individual.fio(full=True), "datetime": strdatetime(v.time_microbiology_receive), "tubes": tubes,}
+            {
+                "pk": v.pk,
+                "client": v.client.individual.fio(full=True),
+                "datetime": strdatetime(v.time_microbiology_receive),
+                "tubes": tubes,
+            }
         )
     return JsonResponse(response)
 
@@ -874,7 +891,7 @@ def directions_results_report(request):
                         not_norm_dir = ""
                         delta = ""
                         active_ref = r.calc_normal(fromsave=False, only_ref=True)
-                        if "r" in active_ref and re.match(r"^\d+(\.\d+)?$", r.value.replace(",", ".").strip()):
+                        if isinstance(active_ref, str) and "r" in active_ref and re.match(r"^\d+(\.\d+)?$", r.value.replace(",", ".").strip()):
                             x = float(r.value.replace(",", ".").strip())
                             spl = r.calc_normal(fromsave=False, only_ref=True, raw_ref=False)
                             if (isinstance(spl, list) or isinstance(spl, tuple)) and len(spl) == 2:
@@ -1097,7 +1114,13 @@ def directions_paraclinic_form(request):
 
                         for ar in MicrobiologyResultCultureAntibiotic.objects.filter(result_culture=br):
                             bactery["antibiotics"].append(
-                                {"pk": ar.antibiotic.pk, "amount": ar.antibiotic_amount, "resultPk": ar.pk, "sri": ar.sensitivity, "dia": ar.dia,}
+                                {
+                                    "pk": ar.antibiotic.pk,
+                                    "amount": ar.antibiotic_amount,
+                                    "resultPk": ar.pk,
+                                    "sri": ar.sensitivity,
+                                    "dia": ar.dia,
+                                }
                             )
 
                         iss["microbiology"]["bacteries"].append(bactery)
@@ -1105,7 +1128,11 @@ def directions_paraclinic_form(request):
                 if not force_form:
                     for sd in Napravleniya.objects.filter(parent=i):
                         iss["sub_directions"].append(
-                            {"pk": sd.pk, "cancel": sd.cancel, "researches": [x.research.title for x in Issledovaniya.objects.filter(napravleniye=sd)],}
+                            {
+                                "pk": sd.pk,
+                                "cancel": sd.cancel,
+                                "researches": [x.research.title for x in Issledovaniya.objects.filter(napravleniye=sd)],
+                            }
                         )
 
                 if not force_form and iss["research"]["is_doc_refferal"]:
@@ -1124,7 +1151,12 @@ def directions_paraclinic_form(request):
                     if not force_form:
                         for rp in i.recipe_set.all():
                             iss["recipe"].append(
-                                {"pk": rp.pk, "prescription": rp.drug_prescription, "taking": rp.method_of_taking, "comment": rp.comment,}
+                                {
+                                    "pk": rp.pk,
+                                    "prescription": rp.drug_prescription,
+                                    "taking": rp.method_of_taking,
+                                    "comment": rp.comment,
+                                }
                             )
 
                 ParaclinicTemplateName.make_default(i.research)
@@ -1133,7 +1165,10 @@ def directions_paraclinic_form(request):
 
                 for rt in rts.order_by('title'):
                     iss["templates"].append(
-                        {"pk": rt.pk, "title": rt.title,}
+                        {
+                            "pk": rt.pk,
+                            "title": rt.title,
+                        }
                     )
 
                 for group in i.research.paraclinicinputgroups_set.all():
@@ -1403,7 +1438,11 @@ def directions_paraclinic_result(request):
                     for ar in br['antibiotics']:
                         if ar['resultPk'] == -1:
                             anti = MicrobiologyResultCultureAntibiotic(
-                                result_culture=bactery, antibiotic_id=ar['pk'], sensitivity=ar['sri'], dia=ar['dia'], antibiotic_amount=ar.get('amount', ''),
+                                result_culture=bactery,
+                                antibiotic_id=ar['pk'],
+                                sensitivity=ar['sri'],
+                                dia=ar['dia'],
+                                antibiotic_amount=ar.get('amount', ''),
                             )
                         else:
                             anti = MicrobiologyResultCultureAntibiotic.objects.get(pk=ar['resultPk'])
@@ -1565,7 +1604,7 @@ def directions_paraclinic_confirm_reset(request):
             return JsonResponse(response)
 
         if allow_reset:
-            predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation_id, "direction": iss.napravleniye_id}
+            predoc = {"fio": iss.doc_confirmation_fio, "pk": iss.doc_confirmation_id, "direction": iss.napravleniye_id}
             iss.doc_confirmation = iss.time_confirmation = None
             iss.save()
             transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
@@ -1854,7 +1893,10 @@ def purposes(request):
     result = [{"pk": "NONE", "title": " – Не выбрано"}]
     for p in Napravleniya.PURPOSES:
         result.append(
-            {"pk": p[0], "title": p[1],}
+            {
+                "pk": p[0],
+                "title": p[1],
+            }
         )
     return JsonResponse({"purposes": result})
 
@@ -1865,7 +1907,10 @@ def external_organizations(request):
     ]
     for e in ExternalOrganization.objects.filter(hide=False).order_by('pk'):
         result.append(
-            {"pk": e.pk, "title": e.title,}
+            {
+                "pk": e.pk,
+                "title": e.title,
+            }
         )
     return JsonResponse({"organizations": result})
 
@@ -1894,7 +1939,12 @@ def all_directions_in_favorites(request):
     doc: DoctorProfile = request.user.doctorprofile
 
     data = [
-        {"pk": x.pk, "direction": x.direction_id, "card": x.direction.client.number_with_type(), "client": x.direction.client.individual.fio(full=True),}
+        {
+            "pk": x.pk,
+            "direction": x.direction_id,
+            "card": x.direction.client.number_with_type(),
+            "client": x.direction.client.individual.fio(full=True),
+        }
         for x in DirectionToUserWatch.objects.filter(doc=doc).order_by('pk')
     ]
 

@@ -73,7 +73,7 @@ def results_search(request):
         dirs = set()
         result = {"directions": [], "client_id": int(request.POST["client_id"]), "research_id": int(request.POST["research_id"]), "other_dirs": []}
         for r in Result.objects.filter(
-            fraction__research_id=result["research_id"], issledovaniye__napravleniye__client_id=result["client_id"], issledovaniye__doc_confirmation__isnull=False
+            fraction__research_id=result["research_id"], issledovaniye__napravleniye__client_id=result["client_id"], issledovaniye__time_confirmation__isnull=False
         ):
             dirs.add(r.issledovaniye.napravleniye_id)
         for d in Napravleniya.objects.filter(client_id=result["client_id"], issledovaniya__research_id=result["research_id"]):
@@ -148,7 +148,7 @@ def loadready(request):
         tlist = TubesRegistration.objects.filter(
             doc_recive__isnull=False,
             time_recive__range=(date_start, date_end),
-            issledovaniya__doc_confirmation__isnull=True,
+            issledovaniya__time_confirmation__isnull=True,
             issledovaniya__research__podrazdeleniye=lab,
             issledovaniya__isnull=False,
         )
@@ -156,11 +156,13 @@ def loadready(request):
         tlist = TubesRegistration.objects.filter(
             doc_recive__isnull=False,
             time_get__isnull=False,
-            issledovaniya__doc_confirmation__isnull=True,
+            issledovaniya__time_confirmation__isnull=True,
             issledovaniya__research__podrazdeleniye=lab,
             issledovaniya__deferred=True,
             issledovaniya__isnull=False,
         )
+
+    tlist = tlist.filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
 
     for tube in tlist.prefetch_related('issledovaniya_set__napravleniye'):
         direction = None
@@ -298,7 +300,7 @@ def result_confirm_list(request):
         iss_pks = json.loads(request.POST["list"])
         for pk in iss_pks:
             issledovaniye = Issledovaniya.objects.get(pk=int(pk))
-            if issledovaniye.doc_save and not issledovaniye.doc_confirmation:  # Если исследование сохранено
+            if issledovaniye.doc_save and not issledovaniye.time_confirmation:  # Если исследование сохранено
                 for r in Result.objects.filter(issledovaniye=issledovaniye):
                     r.get_ref()
                 issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
@@ -403,44 +405,58 @@ def result_print(request):
     styleTableMonoBold.fontName = "Consolas-Bold"
     styleTableSm = deepcopy(styleTable)
     styleTableSm.fontSize = 4
+    styleLogo = deepcopy(styleBold)
+    styleLogo.alignment = TA_CENTER
+    styleLogo.fontName = 'FreeSansBold'
+    styleLogo.fontSize = 25
+    styleLogo.spaceBefore = 0
+    styleLogo.spaceAfter = 0
+    styleLogo.leftIndent = 0
+    styleLogo.rightIndent = 0
 
     styleSheet["BodyText"].wordWrap = 'CJK'
     stl = deepcopy(styleSheet["BodyText"])
     stl.alignment = TA_CENTER
+    logo_text = SettingManager.get("results_l2_logo_string", default='', default_type='s')
+    if logo_text:
+        logo_cell = Paragraph(logo_text, styleLogo)
+    else:
+        img_path = os.path.join(FONTS_FOLDER, '..', 'static', 'img')
+        if not os.path.exists(img_path):
+            os.makedirs(img_path)
+        logo_path = os.path.join(img_path, 'logo.png')
+        if request.GET.get("update_logo", "0") == "1" or not os.path.isfile(logo_path):
+            with open(logo_path, "wb") as fh:
+                fh.write(base64.decodebytes(SettingManager.get("logo_base64_img").split(",")[1].encode()))
 
-    img_path = os.path.join(FONTS_FOLDER, '..', 'static', 'img')
-    if not os.path.exists(img_path):
-        os.makedirs(img_path)
-    logo_path = os.path.join(img_path, 'logo.png')
-    if request.GET.get("update_logo", "0") == "1" or not os.path.isfile(logo_path):
-        with open(logo_path, "wb") as fh:
-            fh.write(base64.decodebytes(SettingManager.get("logo_base64_img").split(",")[1].encode()))
-
-    i = Image(logo_path)
-    nw = 158
-    i.drawHeight = i.drawHeight * (nw / i.drawWidth)
-    i.drawWidth = nw
+        logo_cell = Image(logo_path)
+        nw = 158
+        logo_cell.drawHeight = logo_cell.drawHeight * (nw / logo_cell.drawWidth)
+        logo_cell.drawWidth = nw
     region = SettingManager.get("region", default='38', default_type='s')
-    logo_col = [
-        i,
-        '',
-        '',
-        '',
-        '',
-        Paragraph(
-            'Результат из <font face="OpenSansBoldItalic">L²</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s'
-            % (
-                '<font face="OpenSansLight">(L2-irk.ru)</font>' if region == '38' else 'DEMO' if region == 'DEMO' else '',
-                SettingManager.get("org_title"),
-                SettingManager.get("org_www"),
-                SettingManager.get("org_phones"),
+
+    def logo_col(d: Napravleniya):
+        return [
+            logo_cell,
+            '',
+            '',
+            '',
+            '',
+            Paragraph(
+                'Результат из <font face="OpenSansBoldItalic">L²</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s'
+                % (
+                    '<font face="OpenSansLight">(L2-irk.ru)</font>' if region == '38' else 'DEMO' if region == 'DEMO' else '',
+                    d.hospital_short_title,
+                    d.hospital_www,
+                    d.hospital_phones,
+                ),
+                styleAb,
             ),
-            styleAb,
-        ),
-        '',
-        '',
-        '',
-    ]
+            '',
+            '',
+            '',
+        ]
+
     pw = doc.width
 
     def print_vtype(data, f, iss, j, style_t, styleSheet):
@@ -512,7 +528,14 @@ def result_print(request):
         Napravleniya.objects.filter(pk__in=pk)
         .select_related('client')
         .prefetch_related(
-            Prefetch('issledovaniya_set', queryset=Issledovaniya.objects.filter(time_save__isnull=False).select_related('research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'))
+            Prefetch(
+                'issledovaniya_set',
+                queryset=(
+                    Issledovaniya.objects.filter(Q(time_save__isnull=False) | Q(time_confirmation__isnull=False)).select_related(
+                        'research', 'doc_confirmation', 'doc_confirmation__podrazdeleniye'
+                    )
+                ),
+            )
         )
         .annotate(results_count=Count('issledovaniya__result'))
         .distinct()
@@ -525,8 +548,14 @@ def result_print(request):
     def mark_pages(canvas_mark, direction: Napravleniya):
         canvas_mark.saveState()
         canvas_mark.setFont('FreeSansBold', 8)
-        canvas_mark.drawString(55 * mm, 13 * mm, '{}'.format(SettingManager.get("org_title")))
-        canvas_mark.drawString(55 * mm, 9.6 * mm, '№ карты : {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
+        if direction.hospital:
+            canvas_mark.drawString(55 * mm, 13 * mm, direction.hospital.title)
+        else:
+            canvas_mark.drawString(55 * mm, 13 * mm, '{}'.format(SettingManager.get("org_title")))
+        if direction.is_external:
+            canvas_mark.drawString(55 * mm, 9.6 * mm, f'№ карты : {direction.client.number_with_type()}; Номер в организации: {direction.id_in_hospital}; Направление № {direction.pk}')
+        else:
+            canvas_mark.drawString(55 * mm, 9.6 * mm, '№ карты : {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
         canvas_mark.drawString(55 * mm, 7.1 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
         canvas_mark.line(55 * mm, 12.7 * mm, 181 * mm, 11.5 * mm)
         canvas_mark.restoreState()
@@ -704,7 +733,7 @@ def result_print(request):
                             f_units = r.get_units()
                         else:
                             continue
-                        if not iss.doc_confirmation and iss.deferred:
+                        if not iss.time_confirmation and iss.deferred:
                             result = "отложен"
                         f = fractions[0]
                         st = TableStyle(
@@ -732,9 +761,9 @@ def result_print(request):
                                 tmp.append(Paragraph('<font face="FreeSans" size="7">' + get_r(ref) + "</font>", stl))
                                 tmp.append(Paragraph('<font face="FreeSans" size="7">' + f_units + "</font>", stl))
 
-                            if iss.doc_confirmation:
-                                if prev_conf != iss.doc_confirmation.get_fio():
-                                    prev_conf = iss.doc_confirmation.get_fio()
+                            if iss.doc_confirmation_fio:
+                                if prev_conf != iss.doc_confirmation_fio:
+                                    prev_conf = iss.doc_confirmation_fio
                                     prev_date_conf = ""
                                     tmp.append(Paragraph('<font face="FreeSans" size="7">%s</font>' % prev_conf, styleSheet["BodyText"]))
                                 else:
@@ -754,8 +783,8 @@ def result_print(request):
                             tmp.append("")
                             tmp.append("")
 
-                            if iss.doc_confirmation:
-                                tmp.append(Paragraph('<font face="FreeSansBold" size="7">%s</font>' % iss.doc_confirmation.get_fio(), styleSheet["BodyText"]))
+                            if iss.doc_confirmation_fio:
+                                tmp.append(Paragraph('<font face="FreeSansBold" size="7">%s</font>' % iss.doc_confirmation_fio, styleSheet["BodyText"]))
                                 tmp.append(
                                     Paragraph(
                                         '<font face="FreeSansBold" size="7">%s</font>'
@@ -794,9 +823,9 @@ def result_print(request):
                             tmp.append("")
                             tmp.append("")
 
-                        if iss.doc_confirmation:
-                            if prev_conf != iss.doc_confirmation.get_fio():
-                                prev_conf = iss.doc_confirmation.get_fio()
+                        if iss.doc_confirmation_fio:
+                            if prev_conf != iss.doc_confirmation_fio:
+                                prev_conf = iss.doc_confirmation_fio
                                 prev_date_conf = ""
                                 tmp.append(Paragraph('<font face="FreeSans" size="7">%s</font>' % prev_conf, styleSheet["BodyText"]))
                             else:
@@ -907,9 +936,7 @@ def result_print(request):
                             Paragraph(
                                 '<font face="FreeSans" size="8">%s</font>' % ("Не подтверждено" if not iss.time_confirmation else strdate(iss.time_confirmation)), styleSheet["BodyText"]
                             ),
-                            Paragraph(
-                                '<font face="FreeSans" size="8">%s</font>' % ("Не подтверждено" if not iss.doc_confirmation else iss.doc_confirmation.get_fio()), styleSheet["BodyText"]
-                            ),
+                            Paragraph('<font face="FreeSans" size="8">%s</font>' % (iss.doc_confirmation_fio or "Не подтверждено"), styleSheet["BodyText"]),
                         ]
                         data.append(tmp)
 
@@ -1107,7 +1134,7 @@ def result_print(request):
                         or iss.research.is_gistology
                     ):
                         iss_title = iss.research.title
-                    elif iss.doc_confirmation.podrazdeleniye.vaccine:
+                    elif iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
                         iss_title = "Вакцина: " + iss.research.title
                     else:
                         iss_title = "Услуга: " + iss.research.title
@@ -1198,11 +1225,14 @@ def result_print(request):
                             fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                     fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
 
-                if iss.doc_confirmation.podrazdeleniye.vaccine:
+                if iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
                     fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
                 else:
-                    doc_execute = "фельдшер" if request.user.is_authenticated and request.user.doctorprofile.has_group("Фельдшер") else "врач"
-                    fwb.append(Paragraph("Исполнитель: {} {}, {}".format(doc_execute, iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                    if iss.doc_confirmation:
+                        doc_execute = "фельдшер" if request.user.is_authenticated and request.user.doctorprofile.has_group("Фельдшер") else "врач"
+                        fwb.append(Paragraph("Исполнитель: {} {}, {}".format(doc_execute, iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                    else:
+                        fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation_string, iss.napravleniye.hospital.short_title or iss.napravleniye.hospital.title), styleBold))
 
                     if iss.research.is_doc_refferal and SettingManager.get("agree_diagnos", default='True', default_type='b'):
                         fwb.append(Spacer(1, 3.5 * mm))
@@ -1288,7 +1318,12 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                 dates[dt] = 0
             dates[dt] += 1
 
-    maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
+    if dates:
+        maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
+    elif Issledovaniya.objects.filter(napravleniye=napr, time_confirmation__isnull=False).exists():
+        maxdate = str(dateformat.format(Issledovaniya.objects.filter(napravleniye=napr, time_confirmation__isnull=False).time_confirmation, settings.DATE_FORMAT))
+    else:
+        maxdate = ""
 
     last_iss = napr.issledovaniya_set.filter(time_confirmation__isnull=False).order_by("-time_confirmation").first()
 
@@ -1315,11 +1350,11 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
             s + paddingx,
             18,
             "Врач (лаборант): "
-            + last_iss.doc_confirmation.fio.split(" ")[0]
+            + last_iss.doc_confirmation_fio.split(" ")[0]
             + " "
-            + last_iss.doc_confirmation.fio.split(" ")[1][0]
+            + last_iss.doc_confirmation_fio.split(" ")[1][0]
             + "."
-            + last_iss.doc_confirmation.fio.split(" ")[2][0]
+            + last_iss.doc_confirmation_fio.split(" ")[2][0]
             + ".   ____________________   (подпись)",
         )
     else:
@@ -1772,7 +1807,7 @@ def result_journal_print(request):
                         clientresults[key]["directions"][iss.napravleniye_id]["researches"][iss.research_id]["fail"] = True
                 clientresults[key]["directions"][iss.napravleniye_id]["researches"][iss.research_id]["res"].append(tres)
         if not group_to_otd:
-            otds[iss.napravleniye.doc.podrazdeleniye.title + " - " + iss.napravleniye.fin_title][key] = clientresults[key]
+            otds[iss.napravleniye.get_doc_podrazdeleniye_title() + " - " + iss.napravleniye.fin_title][key] = clientresults[key]
         else:
             otds[iss.napravleniye.fin_title][key] = clientresults[key]
     j = 0
@@ -1858,7 +1893,13 @@ def result_journal_print(request):
             ('BOTTOMPADDING', (0, 2), (-1, -1), 1),
         ]
         if not codes:
-            sta.append(('SPAN', (0, 0), (-1, 0),))
+            sta.append(
+                (
+                    'SPAN',
+                    (0, 0),
+                    (-1, 0),
+                )
+            )
         st = TableStyle(sta)
         tw = pw - 25 * mm
         t = Table(data, colWidths=[tw * 0.05, tw * 0.19, tw * 0.76])
@@ -1935,14 +1976,14 @@ def get_day_results(request):
     if otd == -1:
         for dir in Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2), issledovaniya__research_id__in=researches).order_by("client__pk"):
 
-            if dir.pk not in directions[dir.doc.podrazdeleniye.title]:
-                directions[dir.doc.podrazdeleniye.title].append(dir.pk)
+            if dir.pk not in directions[dir.get_doc_podrazdeleniye_title()]:
+                directions[dir.get_doc_podrazdeleniye_title()].append(dir.pk)
     else:
         for dir in Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2), issledovaniya__research_id__in=researches, doc__podrazdeleniye__pk=otd).order_by(
             "client__pk"
         ):
-            if dir.pk not in directions[dir.doc.podrazdeleniye.title]:
-                directions[dir.doc.podrazdeleniye.title].append(dir.pk)
+            if dir.pk not in directions[dir.get_doc_podrazdeleniye_title()]:
+                directions[dir.get_doc_podrazdeleniye_title()].append(dir.pk)
 
     return HttpResponse(json.dumps({"directions": directions}), content_type="application/json")
 
@@ -1975,7 +2016,7 @@ def result_filter(request):
                 iss_list = iss_list.filter(napravleniye__doc_print__isnull=True, doc_confirmation__isnull=False)
                 is_tmp = iss_list
                 for v in is_tmp:
-                    if Issledovaniya.objects.filter(napravleniye=v.napravleniye, doc_confirmation__isnull=True).exists():
+                    if Issledovaniya.objects.filter(napravleniye=v.napravleniye, time_confirmation__isnull=True).exists():
                         iss_list = iss_list.exclude(napravleniye=v.napravleniye)
             elif dir_pk.isnumeric():
                 iss_list = iss_list.filter(napravleniye__pk=int(dir_pk))
@@ -1983,11 +2024,11 @@ def result_filter(request):
             result["list"] = {}
             for v in iss_list:
                 status_v = 0
-                if v.doc_save and not v.doc_confirmation:
+                if v.doc_save and not v.time_confirmation:
                     status_v = 1
-                elif v.doc_save and v.doc_confirmation and v.napravleniye.doc_print:
+                elif v.doc_save and v.time_confirmation and v.napravleniye.doc_print:
                     status_v = 2
-                elif v.doc_save and v.doc_confirmation and not v.napravleniye.doc_print:
+                elif v.doc_save and v.time_confirmation and not v.napravleniye.doc_print:
                     status_v = 3
                 if v.pk in result["list"].keys() or (status != status_v and not dir_pk.isnumeric()):
                     continue
@@ -2126,12 +2167,22 @@ def results_search_directions(request):
     if sorting_direction == "up":
         sort_types = {
             "confirm-date": ("issledovaniya__time_confirmation",),
-            "patient": ("issledovaniya__time_confirmation", "client__individual__family", "client__individual__name", "client__individual__patronymic",),
+            "patient": (
+                "issledovaniya__time_confirmation",
+                "client__individual__family",
+                "client__individual__name",
+                "client__individual__patronymic",
+            ),
         }
     else:
         sort_types = {
             "confirm-date": ("-issledovaniya__time_confirmation",),
-            "patient": ("-issledovaniya__time_confirmation", "-client__individual__family", "-client__individual__name", "-client__individual__patronymic",),
+            "patient": (
+                "-issledovaniya__time_confirmation",
+                "-client__individual__family",
+                "-client__individual__name",
+                "-client__individual__patronymic",
+            ),
         }
     filtered = []
     cnt = 0
@@ -2208,7 +2259,7 @@ def results_search_directions(request):
         tmp_dir = {
             "pk": direction.pk,
             "laboratory": "Консультации" if not pod else pod.title,
-            "otd": ("" if not direction.imported_org else direction.imported_org.title) if direction.imported_from_rmis else direction.doc.podrazdeleniye.title,
+            "otd": ("" if not direction.imported_org else direction.imported_org.title) if direction.imported_from_rmis else direction.get_doc_podrazdeleniye_title(),
             "doc": "" if direction.imported_from_rmis else direction.doc.get_fio(),
             "researches": researches,
             "is_normal": row_normal,

@@ -37,7 +37,7 @@ def researches_get_one(request):
                 res["co_executor_title"] = iss.research.co_executor_2_title
                 if not iss.doc_save:
                     res["saved"] = False
-                if not iss.doc_confirmation:
+                if not iss.time_confirmation:
                     res["confirmed"] = False
 
             if not res["cached"]:
@@ -77,7 +77,12 @@ def researches_get_one(request):
                         "options": val.options.split(","),
                         "type": val.variants.get_variants() if val.variants else [],
                         "type2": val.variants2.get_variants() if val.variants2 else [],
-                        "references": {"m": ref_m, "f": ref_f, "default": -1 if not val.default_ref else val.default_ref_id, "available": av,},
+                        "references": {
+                            "m": ref_m,
+                            "f": ref_f,
+                            "default": -1 if not val.default_ref else val.default_ref_id,
+                            "available": av,
+                        },
                         "num": val.sort_weight,
                         "formula": val.formula,
                     }

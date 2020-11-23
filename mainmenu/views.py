@@ -7,6 +7,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.db import IntegrityError
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import dateformat
@@ -152,7 +153,7 @@ def load_logs(request):
     if check_new == 0:
         offset = int(request.POST.get("offset", request.GET.get("offset", 0)))
         size = int(request.POST.get("size", request.GET.get("size", 0)))
-        rows = obj.order_by("-pk")[offset: size + offset]
+        rows = obj.order_by("-pk")[offset:size + offset]
     else:
         pkgt = int(request.POST.get("last_n", request.GET.get("last_n", 0)))
         rows = obj.filter(pk__gt=pkgt).order_by("pk")
@@ -192,7 +193,7 @@ def receive_journal_form(request):
     if not lab or lab.p_type != Podrazdeleniya.LABORATORY:
         lab = labs[0]
     groups = directory.ResearchGroup.objects.filter(lab=lab)
-    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True)).order_by("title")
     return render(request, 'dashboard/receive_journal.html', {"groups": groups, "podrazdeleniya": podrazdeleniya, "labs": labs, "lab": lab})
 
 
@@ -221,7 +222,7 @@ def confirm_reset(request):
                 or request.user.is_superuser
                 or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]
             ):
-                predoc = {"fio": 'не подтверждено' if cdid == -1 else iss.doc_confirmation.get_fio(), "pk": cdid, "direction": iss.napravleniye_id}
+                predoc = {"fio": iss.doc_confirmation_fio or 'не подтверждено', "pk": cdid, "direction": iss.napravleniye_id}
                 iss.doc_confirmation = iss.time_confirmation = None
                 iss.save()
                 if iss.napravleniye.result_rmis_send:
@@ -503,7 +504,13 @@ def discharge_search(request):
                 spq = split[3]
                 bdate = "%s-%s-%s" % (spq[4:8], spq[2:4], spq[0:2])
 
-        rows = discharge.Discharge.objects.filter(created_at__range=(date_start, date_end,), doc_fio__icontains=doc_fio)
+        rows = discharge.Discharge.objects.filter(
+            created_at__range=(
+                date_start,
+                date_end,
+            ),
+            doc_fio__icontains=doc_fio,
+        )
 
         if otd_pk > -1:
             rows = rows.filter(otd__pk=otd_pk)
@@ -552,16 +559,16 @@ def results_history_search(request):
 
     if type == "otd":
         collect = Napravleniya.objects.filter(
-            issledovaniya__doc_confirmation__isnull=False,
+            issledovaniya__time_confirmation__isnull=False,
             issledovaniya__time_confirmation__range=(day1, day2),
             doc__podrazdeleniye=request.user.doctorprofile.podrazdeleniye,
             issledovaniya__research__is_doc_refferal=False,
             issledovaniya__research__is_slave_hospital=False,
         )
     else:
-        collect = Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False, issledovaniya__time_confirmation__range=(day1, day2), doc=request.user.doctorprofile)
+        collect = Napravleniya.objects.filter(issledovaniya__time_confirmation__isnull=False, issledovaniya__time_confirmation__range=(day1, day2), doc=request.user.doctorprofile)
 
-    result = list(collect.order_by("doc", "client").exclude(issledovaniya__doc_confirmation__isnull=True).values_list('pk', flat=True))
+    result = list(collect.order_by("doc", "client").exclude(issledovaniya__time_confirmation__isnull=True).values_list('pk', flat=True))
 
     return JsonResponse(result, safe=False)
 
@@ -577,10 +584,14 @@ def dashboard_from(request):
     try:
         date_start, date_end = try_parse_range(date_start, date_end)
         if request.GET.get("get_labs", "false") == "true":
-            for lab in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации"):
+            for lab in (
+                Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
+                .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
+                .exclude(title="Внешние организации")
+            ):
                 tubes_list = TubesRegistration.objects.filter(
                     doc_get__podrazdeleniye__p_type=Podrazdeleniya.DEPARTMENT, time_get__range=(date_start, date_end), issledovaniya__research__podrazdeleniye=lab
-                )
+                ).filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
                 if filter_type == "not_received":
                     tubes_list = tubes_list.filter(doc_recive__isnull=True).exclude(notice="")
                 elif filter_type == "received":
@@ -590,12 +601,12 @@ def dashboard_from(request):
                 tubes = tubes_list.distinct().count()
                 result[lab.pk] = tubes
             return JsonResponse(result)
-        podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+        podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True)).order_by("title")
         lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
         i = 0
         for podrazledeniye in podrazdeleniya:
             i += 1
-            tubes_list = get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye)
+            tubes_list = get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye, request.user.doctorprofile)
             result[i] = {"tubes": tubes_list.distinct().count(), "title": podrazledeniye.title, "pk": podrazledeniye.pk}
     except ValueError:
         pass
@@ -603,8 +614,10 @@ def dashboard_from(request):
     return JsonResponse(result)
 
 
-def get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye):
-    tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye=podrazledeniye, time_get__range=(date_start, date_end), issledovaniya__research__podrazdeleniye=lab)
+def get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye, doctorprofile):
+    tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye=podrazledeniye, time_get__range=(date_start, date_end), issledovaniya__research__podrazdeleniye=lab).filter(
+        Q(issledovaniya__napravleniye__hospital=doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True)
+    )
     if filter_type == "not_received":
         tubes_list = tubes_list.filter(doc_recive__isnull=True).exclude(notice="")
     elif filter_type == "received":
@@ -671,7 +684,10 @@ def direction_info(request):
                 d = {
                     "type": "Посещение по направлению",
                     "events": [
-                        [["title", strdatetime(dir.visit_date) + " Регистрация посещения"], ["Регистратор", dir.visit_who_mark.fio + ", " + dir.visit_who_mark.podrazdeleniye.title],]
+                        [
+                            ["title", strdatetime(dir.visit_date) + " Регистрация посещения"],
+                            ["Регистратор", dir.visit_who_mark.fio + ", " + dir.visit_who_mark.podrazdeleniye.title],
+                        ]
                     ],
                 }
                 data.append(d)

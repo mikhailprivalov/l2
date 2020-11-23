@@ -25,7 +25,7 @@ from forms.forms_func import hosp_get_operation_data
 def form_01(c: Canvas, dir: Napravleniya):
     # Гистология - Учетная форма № 014/у Утверждена приказом Минздрава России от 24 марта 2016 г. № 179н
     def printForm():
-        hospital_name = SettingManager.get("org_title")
+        hospital_name = dir.hospital_short_title
         hospital_address = SettingManager.get("org_address")
         hospital_kod_ogrn = SettingManager.get("org_ogrn")
 
@@ -70,7 +70,15 @@ def form_01(c: Canvas, dir: Napravleniya):
         ]
 
         tbl = Table(opinion, 2 * [100 * mm])
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                    ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ]
+            )
+        )
 
         objs.append(tbl)
         objs.append(Spacer(1, 5 * mm))
@@ -87,7 +95,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph(f'{short_title.upper()}', styleCenterBold))
         objs.append(Spacer(1, 10 * mm))
         space_symbol = '&nbsp;'
-        objs.append(Paragraph(f'1. Отделение, направившее биопсийный (операционный) материал: {dir.doc.podrazdeleniye.title}', style))
+        objs.append(Paragraph(f'1. Отделение, направившее биопсийный (операционный) материал: {dir.get_doc_podrazdeleniye_title()}', style))
         objs.append(Paragraph(f'2. Фамилия, имя, отчество (при наличии) пациента: {dir.client.individual.fio()}', style))
         sex = dir.client.individual.sex
         if sex == "м":
@@ -159,7 +167,14 @@ def form_01(c: Canvas, dir: Napravleniya):
 
         cols_width = [20 * mm, 50 * mm, 100 * mm, 30 * mm]
         tbl = Table(opinion, colWidths=cols_width)
-        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.black), ('VALIGN', (0, 0), (-1, -1), 'TOP'),]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ]
+            )
+        )
         objs.append(Spacer(1, 5 * mm))
         objs.append(tbl)
         objs.append(Spacer(1, 5 * mm))

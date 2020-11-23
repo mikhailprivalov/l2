@@ -80,7 +80,7 @@
               </div>
               <div class="col-xs-9">
                 <treeselect :multiple="false" :disable-branch-nodes="true" :options="hospitals"
-                    placeholder="Больницв не выбрана" v-model="hospital"
+                    placeholder="Больница не выбрана" v-model="hospital"
                     :append-to-body="true"
                 />
               </div>
@@ -147,7 +147,7 @@
     },
     methods: {
       print() {
-        window.open(`/forms/pdf?type=109.02&date=${this.date}&time_start=${this.time_start}&time_end=${this.time_end}&district=${this.district || -1}&doc=${this.doc_assigned || -1}&purpose=${this.purpose || -1}&hospital=${this.hospital || -1}&external=${this.is_extrnal ? 0 : 1}&cancel=${this.is_canceled ? 0 : 1}`);
+        window.open(`/forms/pdf?type=109.02&date=${this.date}&time_start=${this.time_start}&time_end=${this.time_end}&district=${this.district || -1}&doc=${this.doc_assigned || -1}&purpose=${this.purpose || -1}&hospital_pk=${this.hospital || -1}&external=${this.is_extrnal ? 0 : 1}&cancel=${this.is_canceled ? 0 : 1}`);
       },
     }
   }

@@ -149,9 +149,7 @@ def form_02(request_data):
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(
-        buffer, pagesize=landscape(A4), leftMargin=20 * mm, rightMargin=12 * mm, topMargin=6 * mm, bottomMargin=4 * mm, allowSplitting=1, title="Форма – Вызов врача"
-    )
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), leftMargin=20 * mm, rightMargin=12 * mm, topMargin=6 * mm, bottomMargin=4 * mm, allowSplitting=1, title="Форма – Вызов врача")
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -183,7 +181,7 @@ def form_02(request_data):
     is_canceled = int(request_data["cancel"])
     doc_assigned = int(request_data.get("doc", -1) or -1)
     purpose_id = int(request_data.get("purpose", -1) or -1)
-    hospital = int(request_data.get("hospital", -1) or -1)
+    hospital = int(request_data.get("hospital_pk", -1) or -1)
     cancel = True if is_canceled == 0 else False
 
     is_external = int(request_data.get("external", 1))

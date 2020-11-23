@@ -47,3 +47,11 @@ def normalize_dash_date(s):
         s = s.split('-')
         s = '{}.{}.{}'.format(s[2], s[1], s[0])
     return s
+
+
+def valid_date(s):
+    try:
+        datetime.strptime(s, '%Y-%m-%d %H:%M')
+        return True
+    except ValueError:
+        return False

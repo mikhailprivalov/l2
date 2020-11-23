@@ -144,8 +144,8 @@ def send(request):
                 dpk -= 4600000000000
                 dpk //= 10
             tubes(request, direction_implict_id=dpk)
-            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).exists():
-                resdict["pk"] = directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).order_by("pk").first().pk
+            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__time_confirmation__isnull=True).exists():
+                resdict["pk"] = directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__time_confirmation__isnull=True).order_by("pk").first().pk
             else:
                 resdict["pk"] = False
         result["A"] = appkey
@@ -159,8 +159,8 @@ def send(request):
                     fractionRels = models.RelationFractionASTM.objects.filter(astm_field=key)
                     for fractionRel in fractionRels:
                         fraction = fractionRel.fraction
-                        if directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction.research, doc_confirmation__isnull=True).exists():
-                            issled = directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction.research, doc_confirmation__isnull=True).order_by("pk")[0]
+                        if directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction.research, time_confirmation__isnull=True).exists():
+                            issled = directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction.research, time_confirmation__isnull=True).order_by("pk")[0]
                             if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction).exists():
                                 fraction_result = directions.Result.objects.filter(issledovaniye=issled, fraction__pk=fraction.pk).order_by("-pk")[0]
                             else:
@@ -269,7 +269,9 @@ def endpoint(request):
                                     for fraction_rel in q:
                                         save_state = []
                                         issleds = []
-                                        for issled in directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction_rel.fraction.research, doc_confirmation__isnull=True):
+                                        for issled in directions.Issledovaniya.objects.filter(
+                                            napravleniye=direction, research=fraction_rel.fraction.research, time_confirmation__isnull=True
+                                        ):
                                             if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).exists():
                                                 fraction_result = directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).order_by("-pk")[0]
                                             else:
@@ -342,7 +344,11 @@ def endpoint(request):
                                                 a_name_parts = a_name.split()
                                                 a_name = a_name_parts[-2] + ' ' + a_name_parts[-1]
                                                 anti_result = directions.MicrobiologyResultCultureAntibiotic(
-                                                    result_culture=culture_result, antibiotic=anti_obj, sensitivity=anti_r.get('RSI'), dia=anti_r.get('dia', ''), antibiotic_amount=a_name,
+                                                    result_culture=culture_result,
+                                                    antibiotic=anti_obj,
+                                                    sensitivity=anti_r.get('RSI'),
+                                                    dia=anti_r.get('dia', ''),
+                                                    antibiotic_amount=a_name,
                                                 )
                                                 anti_result.save()
                     result["body"] = "{} {} {} {} {}".format(dw, pk, iss_pk, json.dumps(oks), direction is not None)
@@ -385,11 +391,28 @@ def endpoint(request):
 
 @login_required
 def departments(request):
-    from podrazdeleniya.models import Podrazdeleniya
+    req = json.loads(request.body)
+    method = req.get('method', 'GET')
+    without_default = req.get('withoutDefault', False)
+    current_user_hospital_id = request.user.doctorprofile.hospital_id or -1
+    hospital_pk = req.get('hospital', current_user_hospital_id)
 
-    can_edit = request.user.is_superuser or request.user.doctorprofile.has_group('Создание и редактирование пользователей')
-    if request.method == "GET":
-        deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "updated": False} for x in Podrazdeleniya.objects.all().order_by("pk")]
+    su = request.user.is_superuser
+
+    if hospital_pk == -1:
+        hospital_pk = None
+
+    if hospital_pk != current_user_hospital_id and not su:
+        return JsonResponse({"ok": False})
+
+    can_edit = su or request.user.doctorprofile.has_group('Создание и редактирование пользователей')
+
+    if method == "GET":
+        if without_default:
+            qs = Podrazdeleniya.objects.filter(hospital_id=hospital_pk).order_by("pk")
+        else:
+            qs = Podrazdeleniya.objects.filter(Q(hospital_id=hospital_pk) | Q(hospital__isnull=True)).order_by("pk")
+        deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type)} for x in qs]
         en = SettingManager.en()
         more_types = []
         if SettingManager.is_morfology_enabled(en):
@@ -397,11 +420,11 @@ def departments(request):
         return JsonResponse(
             {"departments": deps, "can_edit": can_edit, "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] != 8 and en.get(x[0], True)], *more_types]}
         )
-    elif can_edit:
+
+    if can_edit:
         ok = False
         message = ""
         try:
-            req = json.loads(request.body)
             data_type = req.get("type", "update")
             rows = req.get("data", [])
             if data_type == "update":
@@ -412,6 +435,7 @@ def departments(request):
                         department = Podrazdeleniya.objects.get(pk=row["pk"])
                         department.title = title
                         department.p_type = int(row["type"])
+                        department.hospital_id = hospital_pk
                         department.save()
                         ok = True
             elif data_type == "insert":
@@ -419,7 +443,7 @@ def departments(request):
                 for row in rows:
                     title = row["title"].strip()
                     if len(title) > 0:
-                        department = Podrazdeleniya(title=title, p_type=int(row["type"]))
+                        department = Podrazdeleniya(title=title, p_type=int(row["type"]), hospital_id=hospital_pk)
                         department.save()
                         ok = True
         finally:
@@ -453,8 +477,9 @@ def bases(request):
 
 
 def current_user_info(request):
+    user = request.user
     ret = {
-        "auth": request.user.is_authenticated,
+        "auth": user.is_authenticated,
         "doc_pk": -1,
         "username": "",
         "fio": "",
@@ -464,20 +489,23 @@ def current_user_info(request):
         "user_services": [],
         "rmis_enabled": SettingManager.get("rmis_enabled", default='false', default_type='b'),
     }
+    doctorprofile = request.user.doctorprofile
     if ret["auth"]:
-        ret["username"] = request.user.username
-        ret["fio"] = request.user.doctorprofile.fio
-        ret["groups"] = list(request.user.groups.values_list('name', flat=True))
-        if request.user.is_superuser:
+        ret["username"] = user.username
+        ret["fio"] = doctorprofile.fio
+        ret["groups"] = list(user.groups.values_list('name', flat=True))
+        if user.is_superuser:
             ret["groups"].append("Admin")
-        ret["doc_pk"] = request.user.doctorprofile.pk
-        ret["rmis_location"] = request.user.doctorprofile.rmis_location
-        ret["rmis_login"] = request.user.doctorprofile.rmis_login
-        ret["rmis_password"] = request.user.doctorprofile.rmis_password
-        ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye_id, "title": request.user.doctorprofile.podrazdeleniye.title}
-        ret["restricted"] = [x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]
-        ret["user_services"] = [x.pk for x in request.user.doctorprofile.users_services.all() if x not in ret["restricted"]]
-        ret["su"] = request.user.is_superuser
+        ret["doc_pk"] = doctorprofile.pk
+        ret["rmis_location"] = doctorprofile.rmis_location
+        ret["rmis_login"] = doctorprofile.rmis_login
+        ret["rmis_password"] = doctorprofile.rmis_password
+        ret["department"] = {"pk": doctorprofile.podrazdeleniye_id, "title": doctorprofile.podrazdeleniye.title}
+        ret["restricted"] = [x.pk for x in doctorprofile.restricted_to_direct.all()]
+        ret["user_services"] = [x.pk for x in doctorprofile.users_services.all() if x not in ret["restricted"]]
+        ret["su"] = user.is_superuser
+        ret["hospital"] = doctorprofile.get_hospital_id()
+        ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
 
         en = SettingManager.en()
         ret["extended_departments"] = {}
@@ -519,7 +547,15 @@ def directive_from(request):
     data = []
     for dep in (
         Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)
-        .prefetch_related(Prefetch('doctorprofile_set', queryset=users.DoctorProfile.objects.filter(user__groups__name="Лечащий врач").order_by("fio")))
+        .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
+        .prefetch_related(
+            Prefetch(
+                'doctorprofile_set',
+                queryset=(
+                    users.DoctorProfile.objects.filter(user__groups__name="Лечащий врач").filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True)).order_by("fio")
+                ),
+            )
+        )
         .order_by('title')
     ):
         d = {
@@ -577,7 +613,16 @@ def statistics_tickets_get(request):
     request_data = json.loads(request.body)
     date_start, date_end = try_parse_range(request_data["date"])
     n = 0
-    for row in StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(date__range=(date_start, date_end,)).order_by('pk'):
+    for row in (
+        StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile))
+        .filter(
+            date__range=(
+                date_start,
+                date_end,
+            )
+        )
+        .order_by('pk')
+    ):
         if not row.invalid_ticket:
             n += 1
         response["data"].append(
@@ -593,9 +638,11 @@ def statistics_tickets_get(request):
                 "first_time": row.first_time,
                 "primary": row.primary_visit,
                 "info": row.info,
-                "disp": row.get_dispensary_registration_display()
-                + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
-                + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
+                "disp": (
+                    row.get_dispensary_registration_display()
+                    + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
+                    + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else "")
+                ),
                 "result": row.result.title if row.result else "",
                 "outcome": row.outcome.title if row.outcome else "",
                 "invalid": row.invalid_ticket,
@@ -888,17 +935,23 @@ def load_docprofile_by_group(request):
 @login_required
 @group_required("Создание и редактирование пользователей")
 def users_view(request):
+    request_data = json.loads(request.body)
+    hospital_pk = request_data.get('selected_hospital', request.user.doctorprofile.hospital_id)
+
+    can_edit = request.user.is_superuser or request.user.doctorprofile.all_hospitals_users_control or hospital_pk == request.user.doctorprofile.hospital_id
+
     data = []
 
-    podr = Podrazdeleniya.objects.all().order_by("title")
-    for x in podr:
-        otd = {"pk": x.pk, "title": x.title, "users": []}
-        docs = users.DoctorProfile.objects.filter(podrazdeleniye=x).order_by('fio')
-        if not request.user.is_superuser:
-            docs = docs.filter(user__is_superuser=False)
-        for y in docs:
-            otd["users"].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username})
-        data.append(otd)
+    if can_edit:
+        podr = Podrazdeleniya.objects.filter(Q(hospital_id=hospital_pk) | Q(hospital__isnull=True)).exclude(p_type=Podrazdeleniya.HIDDEN, hospital__isnull=True).order_by("title")
+        for x in podr:
+            otd = {"pk": x.pk, "title": x.title, "users": []}
+            docs = users.DoctorProfile.objects.filter(podrazdeleniye=x, hospital_id=hospital_pk).order_by('fio')
+            if not request.user.is_superuser:
+                docs = docs.filter(user__is_superuser=False)
+            for y in docs:
+                otd["users"].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username})
+            data.append(otd)
 
     spec = users.Speciality.objects.all().order_by("title")
     spec_data = []
@@ -948,7 +1001,7 @@ def user_view(request):
             "rmis_password": '',
             "doc_pk": doc.user.pk,
             "personal_code": doc.personal_code,
-            "speciality": doc.specialities_id
+            "speciality": doc.specialities_id,
         }
 
     return JsonResponse({"user": data})
@@ -968,6 +1021,12 @@ def user_save_view(request):
     rmis_password = ud["rmis_password"].strip() or None
     personal_code = ud.get("personal_code", 0)
     rmis_resource_id = ud["rmis_resource_id"].strip() or None
+    hospital_pk = request_data.get('hospital_pk', request.user.doctorprofile.hospital_id)
+
+    can_edit = request.user.is_superuser or request.user.doctorprofile.all_hospitals_users_control or hospital_pk == request.user.doctorprofile.hospital_id
+
+    if not can_edit:
+        return JsonResponse({"ok": False})
 
     npk = pk
     if pk == -1:
@@ -1017,6 +1076,7 @@ def user_save_view(request):
             doc.rmis_location = rmis_location
             doc.personal_code = personal_code
             doc.rmis_resource_id = rmis_resource_id
+            doc.hospital_id = hospital_pk
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:
@@ -1191,8 +1251,24 @@ def actual_districts(request):
     purposes = DoctorCall.PURPOSES
     purposes = [{'id': row[0], 'label': row[1]} for row in purposes]
 
-    hospitals = Hospitals.objects.all().filter(hide=False).order_by('short_title').values('pk', 'short_title', 'title')
+    hospitals = Hospitals.objects.filter(hide=False).order_by('short_title').values('pk', 'short_title', 'title')
     hospitals = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["short_title"] or x["title"]} for x in hospitals]]
 
     data = {'rows': rows, 'docs': users, 'purposes': purposes, 'hospitals': hospitals}
     return JsonResponse(data)
+
+
+def hospitals(request):
+    rows = Hospitals.objects.filter(hide=False).order_by('-is_default', 'short_title').values('pk', 'short_title', 'title', 'code_tfoms')
+    return JsonResponse(
+        {
+            "hospitals": [
+                {
+                    "id": x['pk'],
+                    "label": x["short_title"] or x["title"],
+                    "code_tfoms": x["code_tfoms"],
+                }
+                for x in rows
+            ]
+        }
+    )

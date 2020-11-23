@@ -25,7 +25,7 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directions_napravleniya.doc_who_create_id,
             directions_issledovaniya.napravleniye_id,
             directions_napravleniya.cancel,
-            directions_issledovaniya.doc_confirmation_id, 
+            directions_issledovaniya.time_confirmation, 
             directions_issledovaniya.maybe_onco,
             to_char(directions_issledovaniya.time_save AT TIME ZONE %(tz)s, 'DD.MM.YYYY-HH24:MI:SS') as ch_time_save,
             directions_issledovaniya.study_instance_uid,
@@ -63,7 +63,7 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
         
         SELECT napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title,
         to_char(data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YY') as date_create,
-        doc_confirmation_id,
+        time_confirmation,
         to_char(time_recive AT TIME ZONE %(tz)s, 'DD.MM.YY HH24:MI:SS.US'), 
         ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs, is_slave_hospital,
         is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid, parent_slave_hosp_id
@@ -142,8 +142,7 @@ def get_confirm_direction(d_s, d_e, lab_podr, is_lab=False, is_paraclinic=False,
         )
         
         """,
-            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'is_lab': is_lab, 'is_paraclinic': is_paraclinic, 'is_doc_refferal': is_doc_refferal,
-                    'lab_podr': lab_podr},
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'is_lab': is_lab, 'is_paraclinic': is_paraclinic, 'is_doc_refferal': is_doc_refferal, 'lab_podr': lab_podr},
         )
         row = cursor.fetchall()
     return row
