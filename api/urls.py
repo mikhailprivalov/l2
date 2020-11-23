@@ -49,4 +49,5 @@ urlpatterns = [
     path('plans/', include('api.plans.urls')),
     path('doctor-call/', include('api.doctor_call.urls')),
     path('list-wait/', include('api.list_wait.urls')),
+    path('procedural-list/', include('api.procedure_list.urls')),
 ]

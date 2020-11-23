@@ -9,7 +9,11 @@ class Drugs(models.Model):
     trade_name = models.CharField(max_length=255, default="", null=True, blank=True, help_text='Торговое наименование препарата')
 
     def __str__(self):
-        return self.mnn if self.mnn else self.trade_name
+        if self.trade_name and self.mnn:
+            return f"{self.trade_name} ({self.mnn})"
+        if self.mnn:
+            return self.mnn
+        return self.trade_name
 
     class Meta:
         verbose_name = 'МНН'

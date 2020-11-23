@@ -1,36 +1,71 @@
 import simplejson as json
+from django.db.models import Prefetch
 from django.http import JsonResponse
 
 from api.stationar.stationar_func import forbidden_edit_dir
-from directions.models import Napravleniya
-from pharmacotherapy.models import ProcedureList, ProcedureListTimes
+from laboratory.utils import strfdatetime
+from pharmacotherapy.models import ProcedureList, ProcedureListTimes, FormRelease, MethodsReception
 from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
+from utils.dates import date_iter_range
 
+
+TIMES = [
+    f"{8 + x * 4:02d}:00"
+    for x in range(4)
+]
 
 @login_required
 @group_required("Врач стационара", "t, ad, p")
 def get_procedure_by_dir(request):
     request_data = json.loads(request.body)
-    result = []
-    procedures_obj = None
-    if request_data["histoty"] > -1:
-        history = Napravleniya.objects.filter(pk=request_data["histoty"]).first()
-        procedures_obj = ProcedureList.objects.filter(pk=history)
-    if procedures_obj:
-        for procedure in procedures_obj:
-            drug = procedure.drug.mnn if procedure.drug.mnn else procedure.trade_name
-            form_release = procedure.form_release.title
-            method = procedure.method.title
-            dosage = procedure.dosage
-            units = procedure.units
-            procedure_times = ProcedureListTimes.objects.filter(prescription=procedure)
-            times = []
-            for proc_time in procedure_times:
-                times.append({"time": proc_time.times_medication, "executor": proc_time.executor, "cancel": proc_time.cancel})
-            result.append({"drug": drug, "form_release": form_release, "method": method, "dosage": dosage, "units": units, "times": times})
+    dates = set()
+    rows = []
+    procedure: ProcedureList
+    for procedure in (
+        ProcedureList.objects.filter(history_id=request_data["direction"])
+        .prefetch_related(Prefetch('procedurelisttimes_set', queryset=ProcedureListTimes.objects.filter(cancel=False)))
+    ):
+        row = {
+            "drug": str(procedure.drug),
+            "form_release": str(procedure.form_release.title),
+            "method": str(procedure.method.title),
+            "dosage": f"{procedure.dosage} {procedure.units}".strip(),
+            "dates": {},
+        }
+        pt: ProcedureListTimes
+        for pt in procedure.procedurelisttimes_set.all():
+            date_str = strfdatetime(pt.times_medication, "%d.%m.%Y")
+            time_str = strfdatetime(pt.times_medication, "%H:%M")
+            dates.add(pt.times_medication.date())
+            if date_str not in row["dates"]:
+                row["dates"][date_str] = {}
+            row["dates"][date_str][time_str] = {
+                "empty": False,
+                "ok": bool(pt.executor),
+                "cancel": bool(pt.cancel),
+            }
+        rows.append(row)
 
-    return JsonResponse({"result": result})
+    dates_all = []
+
+    if dates:
+        min_date = min(dates)
+        max_date = max(dates)
+
+        dates_all = [strfdatetime(x, "%d.%m.%Y") for x in date_iter_range(min_date, max_date, more_1=True)]
+
+        for row in rows:
+            for date in dates_all:
+                if date not in row["dates"]:
+                    row["dates"][date] = {}
+                for t in TIMES:
+                    if t not in row["dates"][date]:
+                        row["dates"][date][t] = {
+                            "empty": True,
+                        }
+
+    return JsonResponse({"result": rows, "dates": dates_all, "times": TIMES})
 
 
 @login_required
@@ -55,3 +90,14 @@ def procedure_cancel(request):
         return JsonResponse({"message": "Удалено"})
 
     return JsonResponse({"message": f"Отменоно время {canceled} записей"})
+
+
+def params(request):
+    return JsonResponse({
+        "formReleases": list(FormRelease.objects.all().order_by('title').values('pk', 'title')),
+        "methods": list(MethodsReception.objects.all().order_by('title').values('pk', 'title')),
+        "times": TIMES,
+        "units": [
+            "мл", "мг", "мкг", "ед",
+        ]
+    })
