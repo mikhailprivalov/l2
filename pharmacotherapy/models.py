@@ -55,6 +55,8 @@ class ProcedureList(models.Model):
     date_end = models.DateField(help_text="Дата окончания включительно")
     doc_create = models.ForeignKey(DoctorProfile, related_name="doc_create_prescription", help_text='Создатель назначения', on_delete=models.CASCADE)
     time_create = models.DateTimeField(auto_now_add=True, help_text='Дата создания')
+    cancel = models.BooleanField(default=False, blank=True, help_text='Отмена времени приема')
+    who_cancel = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="pl_who_cancel", help_text='Кто отменил', on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = 'Назначение'

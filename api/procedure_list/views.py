@@ -15,6 +15,7 @@ TIMES = [
     for x in range(4)
 ]
 
+
 @login_required
 @group_required("Врач стационара", "t, ad, p")
 def get_procedure_by_dir(request):
@@ -23,14 +24,20 @@ def get_procedure_by_dir(request):
     rows = []
     procedure: ProcedureList
     for procedure in (
-        ProcedureList.objects.filter(history_id=request_data["direction"])
-        .prefetch_related(Prefetch('procedurelisttimes_set', queryset=ProcedureListTimes.objects.filter(cancel=False)))
+        ProcedureList.objects
+        .filter(history_id=request_data["direction"], diary__issledovaniya__time_confirmation__isnull=False)
+        .order_by('pk')
+        .prefetch_related(Prefetch('procedurelisttimes_set', queryset=ProcedureListTimes.objects.all().order_by('times_medication')))
     ):
         row = {
+            "pk": procedure.pk,
             "drug": str(procedure.drug),
+            "created_at": strfdatetime(procedure.time_create, "%d.%m.%Y"),
             "form_release": str(procedure.form_release.title),
             "method": str(procedure.method.title),
             "dosage": f"{procedure.dosage} {procedure.units}".strip(),
+            "cancel": bool(procedure.cancel),
+            "who_cancel": None if not procedure.who_cancel else procedure.who_cancel.get_fio(),
             "dates": {},
         }
         pt: ProcedureListTimes
@@ -41,9 +48,13 @@ def get_procedure_by_dir(request):
             if date_str not in row["dates"]:
                 row["dates"][date_str] = {}
             row["dates"][date_str][time_str] = {
+                "datetime": f"{date_str} {time_str}",
+                "pk": pt.pk,
                 "empty": False,
                 "ok": bool(pt.executor),
-                "cancel": bool(pt.cancel),
+                "executor": None if not pt.executor else pt.executor.get_fio(),
+                "cancel": bool(pt.cancel) or row["cancel"],
+                "who_cancel": (None if not pt.who_cancel else pt.who_cancel.get_fio()) or row["who_cancel"],
             }
         rows.append(row)
 
@@ -72,24 +83,32 @@ def get_procedure_by_dir(request):
 @group_required("Врач стационара", "t, ad, p")
 def procedure_cancel(request):
     request_data = json.loads(request.body)
-    forbidden_edit = forbidden_edit_dir(request_data["history"])
+    proc_obj = ProcedureList.objects.get(pk=request_data["pk"])
+    forbidden_edit = forbidden_edit_dir(proc_obj.history_id)
     if forbidden_edit:
-        return JsonResponse({"message": "Редактирование запрещено"})
-    proc_obj = ProcedureList.objects.filter(pk=request_data["pk"])
-    proc_times = ProcedureListTimes.objects.filter(prescription=proc_obj)
-    executed = 0
+        return JsonResponse({"message": "Редактирование запрещено", "ok": False})
+    proc_times = ProcedureListTimes.objects.filter(prescription=proc_obj, executor__isnull=True)
     canceled = 0
     for proc_time in proc_times:
-        if proc_time.executor:
-            executed += 1
-        proc_time.cancel = True
-        proc_time.who_cancel = request.user.doctorprofile
+        if request_data["cancel"]:
+            proc_time.cancel = True
+            proc_time.who_cancel = request.user.doctorprofile
+            proc_time.save()
+        else:
+            proc_time.cancel = False
+            proc_time.who_cancel = None
+            proc_time.save()
         canceled += 1
-    if executed == 0:
-        ProcedureListTimes.objects.filter(prescription=proc_obj).delete()
-        return JsonResponse({"message": "Удалено"})
 
-    return JsonResponse({"message": f"Отменоно время {canceled} записей"})
+    if request_data["cancel"]:
+        proc_obj.cancel = True
+        proc_obj.who_cancel = request.user.doctorprofile
+    else:
+        proc_obj.cancel = False
+        proc_obj.who_cancel = None
+    proc_obj.save()
+
+    return JsonResponse({"message": f"{'Отменено' if request_data['cancel'] else 'Возвращено'} {canceled} записей времени", "ok": True})
 
 
 def params(request):
@@ -101,3 +120,25 @@ def params(request):
             "мл", "мг", "мкг", "ед",
         ]
     })
+
+
+@login_required
+@group_required("Врач стационара", "t, ad, p")
+def procedure_execute(request):
+    request_data = json.loads(request.body)
+    proc_obj = ProcedureListTimes.objects.get(pk=request_data["pk"])
+    forbidden_edit = forbidden_edit_dir(proc_obj.prescription.history_id)
+    if forbidden_edit:
+        return JsonResponse({"message": "Редактирование запрещено", "ok": False})
+    if not proc_obj.cancel and not proc_obj.prescription.cancel:
+        if request_data["status"]:
+            proc_obj.executor = request.user.doctorprofile
+            proc_obj.save()
+            return JsonResponse({"message": "Приём записан", "ok": True})
+
+        proc_obj.executor = None
+        proc_obj.save()
+
+        return JsonResponse({"message": "Приём убран", "ok": True})
+
+    return JsonResponse({"message": "Приём не записан", "ok": False})

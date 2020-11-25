@@ -1140,7 +1140,7 @@ def directions_paraclinic_form(request):
                             }
                         )
 
-                for procedure in ProcedureList.objects.filter(diary=d).distinct():
+                for procedure in ProcedureList.objects.filter(diary=d, cancel=False).distinct():
                     drug = procedure.drug
                     procedure_times = ProcedureListTimes.objects.filter(prescription=procedure).order_by("-times_medication")
                     times = []
@@ -1424,18 +1424,18 @@ def directions_paraclinic_result(request):
                         proc_obj.units = units
                         proc_obj.date_start = date_start
                         proc_obj.date_end = date_end
+                        proc_obj.cancel = False
+                        proc_obj.who_cancel = None
                         proc_obj.save()
                     ProcedureListTimes.objects.filter(prescription=proc_obj, executor__isnull=True).delete()
-                    if ProcedureListTimes.objects.filter(prescription=proc_obj).exists():
-                        pt = ProcedureListTimes.objects.filter(prescription=proc_obj).order_by('-times_medication')[0]
-                        if pt.times_medication.date() > date_start.date():
-                            date_start = pt.times_medication.replace(minute=0, hour=0) + timedelta(days=1)
                     for date in date_iter_range(date_start, date_end):
                         for pc_time in times:
-                            ProcedureListTimes.objects.create(
-                                prescription=proc_obj,
-                                times_medication=datetime.strptime(f"{date:%Y-%m-%d} {pc_time}", '%Y-%m-%d %H:%M').astimezone(user_timezone)
-                            )
+                            times_medication = datetime.strptime(f"{date:%Y-%m-%d} {pc_time}", '%Y-%m-%d %H:%M').astimezone(user_timezone)
+                            if not ProcedureListTimes.objects.filter(prescription=proc_obj, times_medication=times_medication).exists():
+                                ProcedureListTimes.objects.create(
+                                    prescription=proc_obj,
+                                    times_medication=times_medication
+                                )
 
         recipe_no_remove = []
 
