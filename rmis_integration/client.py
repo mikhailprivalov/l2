@@ -1067,6 +1067,9 @@ class Directions(BaseRequester):
                                     continue
                                 service_rend_id = sended_ids.get(code, None)
                                 sended_codes.append(code)
+                                send_case = self.gen_case_rmis(direction, rindiv, x)
+                                # case_rmis_id = self.main_client.rendered_services.client.sendCase(**send_case)
+
                                 send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv, service_rend_id, stdout, x)
                                 if ssd is not None and x.field.group.research_id not in sended_researches:
                                     RmisServices.objects.filter(napravleniye=direction, rmis_id=service_rend_id).delete()
@@ -1259,6 +1262,27 @@ class Directions(BaseRequester):
             "plannedTime",
         ]:
             send_data[p] = service_old_data.get(p, None) or send_data.get(p, None)
+    def gen_case_rmis(self, direction: Napravleniya, rindiv, x):
+
+        if direction.fin_title.lower() == 'омс':
+            funding_source = '1'
+        elif direction.fin_title.lower() == 'платно':
+            funding_source = '3'
+
+
+        new_case_data = {
+            "uid": f"МСЧ2-{direction}",
+            "patientUid": rindiv,
+            "caseTypeId": "1",
+            "medicalOrganizationId": self.main_client.get_org_id_for_direction(direction),
+            "fundingSourceTypeId": "1",
+            "careLevelId": "8",
+            "paymentMethodId": "26",
+            "initGoalId": "4", #цель
+            "careRegimenId": "1", #условия оказания медпомощи
+            "createdDate": ndate(x.issledovaniye.time_confirmation),
+        }
+        # new_case_id = send_case(new_case_data)
 
     def gen_rmis_direction_data(self, code, direction: Napravleniya, rid, rindiv, service_rend_id, stdout, x):
         ssd = self.main_client.services.get_service_id_for_direction(code, direction)
