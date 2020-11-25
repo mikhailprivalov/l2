@@ -3,7 +3,7 @@
 
   </div>
   <div v-else-if="data.ok" @click="setExecute(false)" class="root ok" :class="{hoverable: !data.cancel}"
-       :title="`${data.datetime}: Исполнитель: ${data.executor}. Отменить исполение`" v-tippy>
+       :title="`${data.datetime}: Исполнитель: ${data.executor}${data.cancel ? '' : '. Отменить исполение'}`" v-tippy>
     ✓
   </div>
   <div v-else-if="data.cancel" class="root cancel"
