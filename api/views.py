@@ -27,6 +27,7 @@ from external_system.models import FsliRefbookTest
 from hospitals.models import Hospitals
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
+from pharmacotherapy.models import Drugs
 from podrazdeleniya.models import Podrazdeleniya
 from slog import models as slog
 from slog.models import Log
@@ -907,6 +908,18 @@ def autocomplete(request):
             p = p.filter(active=True).distinct('code_fsli').order_by('code_fsli', 'ordering')[:limit]
             if p.exists():
                 data = [{"code_fsli": x.code_fsli, "short_title": x.short_title, "title": x.title, "sample": x.sample, "synonym": x.synonym, "nmu": x.code_nmu} for x in p]
+        elif t == "drugs":
+            data = [
+                {
+                    "title": str(x),
+                    "pk": x.pk,
+                }
+                for x in
+                Drugs.objects
+                .filter(Q(mnn__istartswith=v) | Q(trade_name__istartswith=v))
+                .order_by('mnn', 'trade_name')
+                .distinct('mnn', 'trade_name')[:limit]
+            ]
     return JsonResponse({"data": data})
 
 

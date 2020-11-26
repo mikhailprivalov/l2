@@ -12,6 +12,8 @@ from laboratory.decorators import group_required
 from appconf.manager import SettingManager
 from django.db.models import Q
 
+from pharmacotherapy.models import ProcedureList
+
 
 @login_required
 @group_required("Врач стационара", "t, ad, p")
@@ -107,6 +109,7 @@ def counts(request):
             .distinct()
             .count()
         )
+        result["pharmacotherapy"] = ProcedureList.objects.filter(history=i.napravleniye, cancel=False, diary__issledovaniya__time_confirmation__isnull=False).count()
         result["all"] += Napravleniya.objects.filter(parent=i).count()
     return JsonResponse(dict(result))
 
