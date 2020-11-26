@@ -63,7 +63,6 @@ INSTALLED_APPS = (
     'list_wait',
     'doctor_call',
     'hospitals.apps.HospitalsConfig',
-    'pharmacotherapy',
 )
 
 MIDDLEWARE = [
@@ -268,8 +267,6 @@ DICOM_SERVER = ""
 
 SENTRY_DSN = "https://4a6968777ec240b190abd11cbf1c96e1@sentry.io/3083440"
 
-QUERY_TIMEOUT = 120
-
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
@@ -291,7 +288,3 @@ MANIFEST_LOADER = {
     'output_dir': 'webpack_bundles/',
     'manifest_file': os.path.join(BASE_DIR, 'assets/webpack_bundles/manifest.json'),
 }
-
-db = DATABASES.get('default', {})
-db['OPTIONS'] = db.get('OPTIONS', {})
-db['OPTIONS']['options'] = f'-c statement_timeout={QUERY_TIMEOUT * 1000}'

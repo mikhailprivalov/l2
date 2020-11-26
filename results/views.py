@@ -1198,7 +1198,7 @@ def result_print(request):
                             for i in add_research:
                                 fwb.append(Paragraph('{}-{}'.format(i.research.code, i.research.title), style))
 
-                # Добавить выписанные направления для стационарных дневников
+                # Добавить выписанные направления для стационарныхдневников
                 if iss.research.is_slave_hospital:
                     # Найти все направления где данное исследование родитель
                     napr_child = Napravleniya.objects.filter(parent_slave_hosp=iss, cancel=False)
