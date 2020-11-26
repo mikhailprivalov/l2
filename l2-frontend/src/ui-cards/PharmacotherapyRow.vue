@@ -1,6 +1,10 @@
 <template>
   <tr>
     <td>
+      <button class="btn btn-blue-nb" v-if="data.isNew" @click="delete_row" v-tippy="{ placement : 'bottom'}"
+              title="Удалить назначение">
+        <i class="fa fa-times"/>
+      </button>
       {{ data.drug }}
     </td>
     <td class="cl-td">
@@ -106,6 +110,11 @@ export default {
       td: moment().format('YYYY-MM-DD'),
     }
   },
+  methods: {
+    delete_row() {
+      this.data.remove = true;
+    },
+  }
 }
 </script>
 

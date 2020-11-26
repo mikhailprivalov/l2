@@ -27,7 +27,8 @@
         </tr>
         </thead>
         <tbody>
-        <PharmacotherapyRow :data="v" :confirmed="confirmed" :params="params" v-for="v in value" />
+        <PharmacotherapyRow :data="v" :confirmed="confirmed" :params="params" v-for="v in value" :key="v.pk"
+                            v-if="!v.remove" />
         <tr v-if="value.length === 0">
           <td class="text-center" colspan="9">нет назначений</td>
         </tr>
@@ -56,7 +57,6 @@
 </template>
 
 <script>
-  import TypeAhead from 'vue2-typeahead'
   import * as action_types from '@/store/action-types'
   import api from '@/api'
   import PharmacotherapyRow from "@/ui-cards/PharmacotherapyRow";
@@ -64,7 +64,7 @@
 
   export default {
     name: 'PharmacotherapyInput',
-    components: {PharmacotherapyRow, TypeAhead},
+    components: {PharmacotherapyRow},
     props: {
       value: {
         type: Array,
@@ -103,6 +103,7 @@
           countDays: 1,
           units: null,
         })
+        this.search = '';
       },
     },
     watch: {

@@ -2,7 +2,7 @@ import collections
 import operator
 import re
 import time
-from datetime import datetime, time as dtime, timedelta
+from datetime import datetime, time as dtime
 from operator import itemgetter
 
 import pytz
@@ -1372,7 +1372,7 @@ def directions_paraclinic_result(request):
         if procedure_list:
             with transaction.atomic():
                 for proc_data in procedure_list:
-                    if not iss.napravleniye or not iss.napravleniye.parent:
+                    if not iss.napravleniye or not iss.napravleniye.parent or proc_data.get('remove'):
                         continue
                     user_timezone = pytz.timezone(TIME_ZONE)
                     history = iss.napravleniye.parent.napravleniye

@@ -490,7 +490,6 @@
   import RadioField from '@/fields/RadioField'
   import Favorite from "./Favorite";
   import Treeselect from '@riophae/vue-treeselect'
-  import AggregatePharmacotherapy from "@/fields/AggregatePharmacotherapy";
 
   export default {
     mixins: [menuMixin],
