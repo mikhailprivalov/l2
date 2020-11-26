@@ -1,9 +1,9 @@
 <template>
-  <div class="root">
-    <table class="table table-responsive table-bordered table-condensed" style="table-layout: fixed;background-color: #fff">
+  <div class="root-agg">
+    <table class="table table-responsive table-bordered table-condensed">
       <colgroup>
-        <col width="300" />
-        <col v-for="d in dates" :key="d" width="100" />
+        <col style="width: 300px" />
+        <col v-for="d in dates" :key="d" />
       </colgroup>
       <thead>
       <tr>
@@ -12,7 +12,7 @@
       </tr>
       <tr>
         <th v-for="d in dates" :key="d" class="cl-td">
-          <div class="time" v-for="t in times" :key="t">
+          <div class="time" v-for="t in timesInDates[d]" :key="t">
             {{t.split(':')[0]}}
           </div>
         </th>
@@ -21,7 +21,7 @@
       <tbody>
       <tr v-for="r in rows">
         <td>
-          {{r.drug}}<br />
+          <div class="drug">{{r.drug}}</div>
           <span class="badge badge-primary" title="Форма выпуска" v-tippy>{{r.form_release}}</span>
           <span class="badge badge-primary" title="Способ применения" v-tippy>{{r.method}}</span>
           <span class="badge badge-info" title="Дозировка" v-tippy>{{r.dosage}}</span>
@@ -36,7 +36,7 @@
           </template>
         </td>
         <td v-for="d in dates" :key="d" class="cl-td">
-          <PharmacotherapyTime :data="r.dates[d][t]" v-for="t in times" :key="t" />
+          <PharmacotherapyTime :data="r.dates[d][t]" v-for="t in timesInDates[d]" :key="t" />
         </td>
       </tr>
       <tr v-if="rows.length === 0">
@@ -62,6 +62,7 @@
         rows: [],
         dates: [],
         times: [],
+        timesInDates: {},
       }
     },
     async mounted() {
@@ -85,10 +86,12 @@
           result,
           dates,
           times,
+          timesInDates,
         } = await api('procedural-list/get-procedure', this, 'direction');
         this.rows = result;
         this.dates = dates;
         this.times = times;
+        this.timesInDates = timesInDates;
         await this.$store.dispatch(action_types.DEC_LOADING);
       },
       async cancelRow(pk, cancel) {
@@ -123,12 +126,9 @@
 .time {
   display: inline-block;
   border-right: 1px solid #ddd;
+  width: 30px;
   text-align: center;
-  width: 25%;
-  min-width: 25%;
-  min-height: 21px;
-  margin-bottom: -5px;
-  margin-top: -2px;
+  height: 24px;
   font-weight: normal;
   font-size: 12px;
 
@@ -137,11 +137,25 @@
   }
 }
 
-.root {
+.root-agg {
   overflow-x: auto;
 }
 
 a.badge:hover {
   background-color: #5f6267;
+}
+
+table {
+  min-width: 100%;
+  max-width: none;
+  width: auto;
+
+  .cl-td {
+    white-space: nowrap;
+  }
+}
+
+.drug {
+  width: 296px;
 }
 </style>

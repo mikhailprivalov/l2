@@ -1146,7 +1146,7 @@ def directions_paraclinic_form(request):
                     times = []
                     if procedure_times.exists():
                         pt_orig = procedure_times[0]
-                        for pt in ProcedureListTimes.objects.filter(times_medication__date=pt_orig.times_medication.date()):
+                        for pt in ProcedureListTimes.objects.filter(prescription=procedure, times_medication__date=pt_orig.times_medication.date()).order_by('times_medication'):
                             t = pt.times_medication.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%H:%M")
                             if t not in times:
                                 times.append(t)

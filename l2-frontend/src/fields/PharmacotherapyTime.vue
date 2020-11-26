@@ -53,9 +53,10 @@ export default {
 <style scoped lang="scss">
   .root {
     display: inline-block;
-    width: 25%;
+    width: 30px;
     text-align: center;
     height: 24px;
+    vertical-align: middle;
   }
 
   .hoverable:hover {

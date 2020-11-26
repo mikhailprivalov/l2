@@ -11,8 +11,8 @@ from utils.dates import date_iter_range
 
 
 TIMES = [
-    f"{8 + x * 4:02d}:00"
-    for x in range(4)
+    f"{x:02d}:00"
+    for x in range(24)
 ]
 
 
@@ -22,6 +22,9 @@ def get_procedure_by_dir(request):
     request_data = json.loads(request.body)
     dates = set()
     rows = []
+
+    dates_times = {}
+
     procedure: ProcedureList
     for procedure in (
         ProcedureList.objects
@@ -40,10 +43,16 @@ def get_procedure_by_dir(request):
             "who_cancel": None if not procedure.who_cancel else procedure.who_cancel.get_fio(),
             "dates": {},
         }
+
         pt: ProcedureListTimes
         for pt in procedure.procedurelisttimes_set.all():
             date_str = strfdatetime(pt.times_medication, "%d.%m.%Y")
             time_str = strfdatetime(pt.times_medication, "%H:%M")
+            if date_str not in dates_times:
+                dates_times[date_str] = []
+            if time_str not in dates_times[date_str]:
+                dates_times[date_str].append(time_str)
+                dates_times[date_str] = list(sorted(dates_times[date_str]))
             dates.add(pt.times_medication.date())
             if date_str not in row["dates"]:
                 row["dates"][date_str] = {}
@@ -70,13 +79,13 @@ def get_procedure_by_dir(request):
             for date in dates_all:
                 if date not in row["dates"]:
                     row["dates"][date] = {}
-                for t in TIMES:
+                for t in dates_times[date]:
                     if t not in row["dates"][date]:
                         row["dates"][date][t] = {
                             "empty": True,
                         }
 
-    return JsonResponse({"result": rows, "dates": dates_all, "times": TIMES})
+    return JsonResponse({"result": rows, "dates": dates_all, "timesInDates": dates_times})
 
 
 @login_required
