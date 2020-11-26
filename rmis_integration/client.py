@@ -1262,12 +1262,27 @@ class Directions(BaseRequester):
             "plannedTime",
         ]:
             send_data[p] = service_old_data.get(p, None) or send_data.get(p, None)
-    def gen_case_rmis(self, direction: Napravleniya, rindiv, x):
 
-        if direction.fin_title.lower() == 'омс':
-            funding_source = '1'
-        elif direction.fin_title.lower() == 'платно':
+
+    def gen_case_rmis(self, direction: Napravleniya, rindiv, x):
+        if direction.fin_title.lower() == 'платно':
             funding_source = '3'
+        else:
+            funding_source = '1'
+
+        purpose = None
+        if x.issledovaniye.purpose:
+            purpose = x.issledovaniye.purpose.rmis_id
+
+        if purpose is None:
+            purpose = "1"
+
+        conditions_care = None
+        if x.issledovaniye.conditions_care:
+            conditions_care = x.issledovaniye.conditions_care.rmis_id
+
+        if conditions_care is None:
+            conditions_care = "1"
 
 
         new_case_data = {
@@ -1275,14 +1290,46 @@ class Directions(BaseRequester):
             "patientUid": rindiv,
             "caseTypeId": "1",
             "medicalOrganizationId": self.main_client.get_org_id_for_direction(direction),
-            "fundingSourceTypeId": "1",
+            "fundingSourceTypeId": funding_source,
             "careLevelId": "8",
             "paymentMethodId": "26",
-            "initGoalId": "4", #цель
-            "careRegimenId": "1", #условия оказания медпомощи
+            "initGoalId": purpose,
+            "careRegimenId": conditions_care,
             "createdDate": ndate(x.issledovaniye.time_confirmation),
         }
-        # new_case_id = send_case(new_case_data)
+        return new_case_data
+
+    def gen_visit_rmis(self, direction: Napravleniya, rindiv, x, case_rid):
+        profile = None
+        if x.issledovaniye.research.speciality:
+            profile = x.issledovaniye.research.speciality.rmis_id
+        if profile is None:
+            profile = "106"
+        visit_data = {
+            "caseId": case_rid,
+            "diagnoses": {
+                "stageId": "3",
+                "diagnosId": "2",
+                "establishmentDate": "2020-11-23+08:00",
+                "main": "true",
+            },
+            # "visitResultId": 9,
+            # "deseaseResultId": "1",
+            "admissionDate": "2020-10-15",
+            "admissionTime": "14:50:00",
+            "rendererDate": "2020-10-15",
+            "resourceGroupId": "151205615",
+            "goalId": "1",
+            "placeId": "1",
+            "profileId": "65",
+        }
+        return visit_data
+
+    def close_case_rmis(self):
+        pass
+
+
+
 
     def gen_rmis_direction_data(self, code, direction: Napravleniya, rid, rindiv, service_rend_id, stdout, x):
         ssd = self.main_client.services.get_service_id_for_direction(code, direction)

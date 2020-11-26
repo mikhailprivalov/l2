@@ -16,6 +16,7 @@ class Speciality(models.Model):
     title = models.CharField(max_length=255, help_text='Название')
     hide = models.BooleanField(help_text='Скрытие')
     spec_type = models.SmallIntegerField(choices=SPEC_TYPES, help_text='Тип специальности', default=0)
+    rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
 
     def __str__(self):
         return self.title
