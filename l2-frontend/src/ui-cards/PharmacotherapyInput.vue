@@ -27,8 +27,8 @@
         </tr>
         </thead>
         <tbody>
-        <PharmacotherapyRow :data="v" :confirmed="confirmed" :params="params" v-for="v in value" :key="v.pk"
-                            v-if="!v.remove" />
+        <PharmacotherapyRow :data="v" :confirmed="confirmed" :params="params" v-for="v in value"
+                            :key="`${v.pk}-${v.remove}`" v-if="!v.remove" />
         <tr v-if="value.length === 0">
           <td class="text-center" colspan="9">нет назначений</td>
         </tr>
@@ -92,6 +92,7 @@
         this.value.push({
           pk: Math.random() + Math.random(),
           isNew: true,
+          remove: false,
           drug,
           drugPk,
           timesSelected: [],

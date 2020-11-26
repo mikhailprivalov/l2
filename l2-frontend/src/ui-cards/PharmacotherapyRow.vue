@@ -1,5 +1,5 @@
 <template>
-  <tr>
+  <tr v-if="!data.remove">
     <td>
       <button class="btn btn-blue-nb" v-if="data.isNew" @click="delete_row" v-tippy="{ placement : 'bottom'}"
               title="Удалить назначение">
