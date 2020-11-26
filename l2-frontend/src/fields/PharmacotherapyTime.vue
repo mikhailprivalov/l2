@@ -57,6 +57,13 @@ export default {
     text-align: center;
     height: 24px;
     vertical-align: middle;
+
+    &:nth-child(odd) {
+      background-color: rgba(#000, .045);
+      &.ok {
+        background-color: rgba(#049372, .18);
+      }
+    }
   }
 
   .hoverable:hover {
@@ -68,7 +75,7 @@ export default {
     color: #049372;
     background-color: rgba(#049372, .12);
     &.hoverable:hover {
-      background-color: rgba(#049372, .2);
+      background-color: rgba(#049372, .22);
     }
   }
 

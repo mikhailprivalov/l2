@@ -21,7 +21,7 @@
       <tbody>
       <tr v-for="r in rows">
         <td>
-          <div class="drug">{{r.drug}}</div>
+          <div class="drug" :class="{cancel: r.cancel}">{{r.drug}}</div>
           <span class="badge badge-primary" title="Форма выпуска" v-tippy>{{r.form_release}}</span>
           <span class="badge badge-primary" title="Способ применения" v-tippy>{{r.method}}</span>
           <span class="badge badge-info" title="Дозировка" v-tippy>{{r.dosage}}</span>
@@ -125,15 +125,15 @@
 <style scoped lang="scss">
 .time {
   display: inline-block;
-  border-right: 1px solid #ddd;
   width: 30px;
   text-align: center;
   height: 24px;
   font-weight: normal;
   font-size: 12px;
+  vertical-align: bottom;
 
-  &:last-child {
-    border-right: none;
+  &:nth-child(odd) {
+    background-color: rgba(#000, .045);
   }
 }
 
@@ -157,5 +157,9 @@ table {
 
 .drug {
   width: 296px;
+
+  &.cancel:not(:hover) {
+    text-decoration: line-through;
+  }
 }
 </style>
