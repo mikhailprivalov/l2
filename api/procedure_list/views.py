@@ -77,6 +77,8 @@ def get_procedure_by_dir(request):
 
         for row in rows:
             for date in dates_all:
+                if date not in dates_times:
+                    continue
                 if date not in row["dates"]:
                     row["dates"][date] = {}
                 for t in dates_times[date]:
