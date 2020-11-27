@@ -385,6 +385,8 @@ class Napravleniya(models.Model):
     hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, on_delete=models.SET_NULL)
     id_in_hospital = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='Номер документа во внешней организации')
     is_external = models.BooleanField(default=False, blank=True, null=True)
+    rmis_case_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='ID случая в РМИС')
+    rmis_visit_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='ID посещения в РМИС')
 
     def get_doc_podrazdeleniye_title(self):
         if self.hospital and (self.is_external or not self.hospital.is_default):

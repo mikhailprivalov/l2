@@ -1051,6 +1051,9 @@ class Directions(BaseRequester):
         protocol_template = Settings.get("protocol_template")
         protocol_covid_template = Settings.get("protocol_covid_template") or ""
         protocol_row = Settings.get("protocol_template_row")
+        ambulatory_case = False
+        case_rmis_id = None
+        visit_rmis_id = None
         if not direction.result_rmis_send:
             if direction.rmis_number != "NONERMIS":
                 try:
@@ -1071,14 +1074,11 @@ class Directions(BaseRequester):
                                     continue
                                 service_rend_id = sended_ids.get(code, None)
                                 sended_codes.append(code)
-                                ambulatory_case = False
                                 if x.issledovaniye.research.is_doc_refferal:
                                     ambulatory_case = True
                                     if direction.parent:
                                         if direction.parent.research.is_hospital:
                                             ambulatory_case = False
-                                case_rmis_id = None
-                                visit_rmis_id = None
                                 if ambulatory_case:
                                     send_case_data = self.gen_case_rmis(direction, rindiv, x)
                                     case_rmis_id = self.main_client.case.client.sendCase(**send_case_data)
@@ -1242,6 +1242,9 @@ class Directions(BaseRequester):
                     else:
                         return False
             direction.result_rmis_send = True
+            if ambulatory_case:
+                direction.rmis_case_id = case_rmis_id
+                direction.rmis_visit_id = visit_rmis_id
             direction.save()
         return direction.result_rmis_send
 
@@ -1345,9 +1348,6 @@ class Directions(BaseRequester):
 
     def close_case_rmis(self):
         pass
-
-
-
 
     def gen_rmis_direction_data(self, code, direction: Napravleniya, rid, rindiv, service_rend_id, stdout, x, case_rmis_id=None, visit_rmis_id=None):
         ssd = self.main_client.services.get_service_id_for_direction(code, direction)
