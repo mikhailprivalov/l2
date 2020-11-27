@@ -157,7 +157,7 @@ class Client(object):
         if "case" in modules:
             self.case = CaseServices(self)
         if "visit" in modules:
-            self.case = VisitServices(self)
+            self.visit = VisitServices(self)
 
     def get_addr(self, address):
         return urllib.parse.urljoin(self.base_address, address)
@@ -1071,12 +1071,20 @@ class Directions(BaseRequester):
                                     continue
                                 service_rend_id = sended_ids.get(code, None)
                                 sended_codes.append(code)
-                                send_case_data = self.gen_case_rmis(direction, rindiv, x)
-                                case_rmis_id = self.main_client.case.client.sendCase(**send_case_data)
-                                send_visit_data = self.gen_visit_rmis(direction, rindiv, x, case_rmis_id)
-                                visit_rmis_id = self.main_client.visit.client.sendVisit(**send_visit_data)
-
-                                send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv, service_rend_id, stdout, x)
+                                ambulatory_case = False
+                                if x.issledovaniye.research.is_doc_refferal:
+                                    ambulatory_case = True
+                                    if direction.parent:
+                                        if direction.parent.research.is_hospital:
+                                            ambulatory_case = False
+                                case_rmis_id = None
+                                visit_rmis_id = None
+                                if ambulatory_case:
+                                    send_case_data = self.gen_case_rmis(direction, rindiv, x)
+                                    case_rmis_id = self.main_client.case.client.sendCase(**send_case_data)
+                                    send_visit_data = self.gen_visit_rmis(direction, rindiv, x, case_rmis_id)
+                                    visit_rmis_id = self.main_client.visit.client.sendVisit(**send_visit_data)
+                                send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv, service_rend_id, stdout, x, case_rmis_id, visit_rmis_id)
                                 if ssd is not None and x.field.group.research_id not in sended_researches:
                                     RmisServices.objects.filter(napravleniye=direction, rmis_id=service_rend_id).delete()
                                     self.main_client.rendered_services.delete_service(service_rend_id)
@@ -1287,7 +1295,7 @@ class Directions(BaseRequester):
                 conditions_care = x.issledovaniye.conditions_care.rmis_id
 
         new_case_data = {
-            "uid": f"МСЧ2-{direction}",
+            "uid": f"{direction}",
             "patientUid": rindiv,
             "caseTypeId": "1",
             "medicalOrganizationId": self.main_client.get_org_id_for_direction(direction),
@@ -1341,7 +1349,7 @@ class Directions(BaseRequester):
 
 
 
-    def gen_rmis_direction_data(self, code, direction: Napravleniya, rid, rindiv, service_rend_id, stdout, x):
+    def gen_rmis_direction_data(self, code, direction: Napravleniya, rid, rindiv, service_rend_id, stdout, x, case_rmis_id=None, visit_rmis_id=None):
         ssd = self.main_client.services.get_service_id_for_direction(code, direction)
         send_data = dict(
             referralId=rid,
@@ -1368,6 +1376,11 @@ class Directions(BaseRequester):
         send_data["dateFrom"] = ndate(send_data["dateFrom"]) if send_data["dateFrom"] and not isinstance(send_data["dateFrom"], str) else send_data["dateFrom"]
         send_data["timeFrom"] = strtime(send_data["timeFrom"]) if send_data["timeFrom"] and not isinstance(send_data["timeFrom"], str) else send_data["timeFrom"]
         send_data["dateTo"] = ndate(send_data["dateTo"]) if send_data["dateTo"] and not isinstance(send_data["dateTo"], str) else send_data["dateTo"]
+        if case_rmis_id:
+            send_data["medicalCaseId"] = case_rmis_id
+        if visit_rmis_id:
+            send_data["stepId"] = visit_rmis_id
+
         return send_data, ssd
 
     def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=MAX_RMIS_THREADS, slice_to_upload: bool = False, slice_to_upload_count=None):
