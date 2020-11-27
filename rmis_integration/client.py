@@ -128,7 +128,7 @@ class Client(object):
         if password is None:
             password = Settings.get("password")
         if modules is None:
-            modules = ["patients", "services", "directions", "rendered_services", "dirservices", "hosp", "department", "tc"]
+            modules = ["patients", "services", "directions", "rendered_services", "dirservices", "hosp", "department", "tc", "case", "visit"]
         self.base_address = Settings.get("address")
         self.session = Session()
         self.session.auth = HTTPBasicAuth(login, password)
@@ -154,6 +154,10 @@ class Client(object):
             self.individuals = Individuals(self)
         if "tc" in modules:
             self.localclient = TC(enforce_csrf_checks=False)
+        if "case" in modules:
+            self.case = CaseServices(self)
+        if "visit" in modules:
+            self.case = VisitServices(self)
 
     def get_addr(self, address):
         return urllib.parse.urljoin(self.base_address, address)
@@ -1067,11 +1071,10 @@ class Directions(BaseRequester):
                                     continue
                                 service_rend_id = sended_ids.get(code, None)
                                 sended_codes.append(code)
-                                send_case = self.gen_case_rmis(direction, rindiv, x)
-                                case_rmis_id = self.main_client.rendered_services.client.sendCase(**send_case)
-                                send_visit = self.gen_visit_rmis(direction, rindiv, x, case_rmis_id)
-                                visit_rmis_id = self.main_client.rendered_services.client.sendVisit(**send_visit)
-
+                                send_case_data = self.gen_case_rmis(direction, rindiv, x)
+                                case_rmis_id = self.main_client.case.client.sendCase(**send_case_data)
+                                send_visit_data = self.gen_visit_rmis(direction, rindiv, x, case_rmis_id)
+                                visit_rmis_id = self.main_client.visit.client.sendVisit(**send_visit_data)
 
                                 send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv, service_rend_id, stdout, x)
                                 if ssd is not None and x.field.group.research_id not in sended_researches:
@@ -1522,6 +1525,16 @@ class RenderedServices(BaseRequester):
             return self.client.deleteServiceRend(str(service_id))
         except Fault as e:
             return str(e)
+
+
+class CaseServices(BaseRequester):
+    def __init__(self, client: Client):
+        super().__init__(client, "path_caseservices")
+
+
+class VisitServices(BaseRequester):
+    def __init__(self, client: Client):
+        super().__init__(client, "path_visitservices")
 
 
 class DirServices(BaseRequester):
