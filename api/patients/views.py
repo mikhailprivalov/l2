@@ -185,7 +185,7 @@ def patients_search_card(request):
 
                     try:
                         connections.close_all()
-                        logger.exception(f"Closed db connections")
+                        logger.exception("Closed db connections")
                     except Exception as e:
                         logger.exception(f"Error closing connections {e}")
 

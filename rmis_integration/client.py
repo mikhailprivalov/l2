@@ -1280,7 +1280,6 @@ class Directions(BaseRequester):
         ]:
             send_data[p] = service_old_data.get(p, None) or send_data.get(p, None)
 
-
     def gen_case_rmis(self, direction: Napravleniya, rindiv, x):
         if direction.fin_title.lower() == 'платно':
             funding_source = '3'
@@ -1433,7 +1432,7 @@ class Directions(BaseRequester):
             try:
                 connections.close_all()
                 if out:
-                    out.write(f"Closed db connections")
+                    out.write("Closed db connections")
             except Exception as e:
                 if out:
                     out.write(f"Error closing connections {e}")
@@ -1451,7 +1450,7 @@ class Directions(BaseRequester):
             try:
                 connections.close_all()
                 if out:
-                    out.write(f"Closed db connections")
+                    out.write("Closed db connections")
             except Exception as e:
                 if out:
                     out.write(f"Error closing connection {e}")
@@ -1470,7 +1469,7 @@ class Directions(BaseRequester):
             try:
                 connections.close_all()
                 if out:
-                    out.write(f"Closed db connections")
+                    out.write("Closed db connections")
             except Exception as e:
                 if out:
                     out.write(f"Error closing connection {e}")

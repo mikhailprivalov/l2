@@ -30,7 +30,7 @@ class Command(BaseCommand):
             try:
                 connections.close_all()
                 if out:
-                    out.write(f"Closed db connections")
+                    out.write("Closed db connections")
             except Exception as e:
                 if out:
                     out.write(f"Error closing connections {e}")
