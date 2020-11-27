@@ -25,7 +25,7 @@ from zeep.transports import Transport
 import clients.models as clients_models
 import slog.models as slog
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, RMISServiceInactive, TubesRegistration
+from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, RMISServiceInactive, TubesRegistration, Diagnoses
 from directory.models import Fractions, ParaclinicInputGroups, Researches
 from hospitals.models import Hospitals
 from laboratory import settings as l2settings
@@ -1068,7 +1068,10 @@ class Directions(BaseRequester):
                                 service_rend_id = sended_ids.get(code, None)
                                 sended_codes.append(code)
                                 send_case = self.gen_case_rmis(direction, rindiv, x)
-                                # case_rmis_id = self.main_client.rendered_services.client.sendCase(**send_case)
+                                case_rmis_id = self.main_client.rendered_services.client.sendCase(**send_case)
+                                send_visit = self.gen_visit_rmis(direction, rindiv, x, case_rmis_id)
+                                visit_rmis_id = self.main_client.rendered_services.client.sendVisit(**send_visit)
+
 
                                 send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv, service_rend_id, stdout, x)
                                 if ssd is not None and x.field.group.research_id not in sended_researches:
@@ -1270,20 +1273,15 @@ class Directions(BaseRequester):
         else:
             funding_source = '1'
 
-        purpose = None
+        purpose = "1"
         if x.issledovaniye.purpose:
-            purpose = x.issledovaniye.purpose.rmis_id
+            if x.issledovaniye.purpose.rmis_id:
+                purpose = x.issledovaniye.purpose.rmis_id
 
-        if purpose is None:
-            purpose = "1"
-
-        conditions_care = None
+        conditions_care = "1"
         if x.issledovaniye.conditions_care:
-            conditions_care = x.issledovaniye.conditions_care.rmis_id
-
-        if conditions_care is None:
-            conditions_care = "1"
-
+            if x.issledovaniye.conditions_care.rmis_id:
+                conditions_care = x.issledovaniye.conditions_care.rmis_id
 
         new_case_data = {
             "uid": f"МСЧ2-{direction}",
@@ -1300,28 +1298,37 @@ class Directions(BaseRequester):
         return new_case_data
 
     def gen_visit_rmis(self, direction: Napravleniya, rindiv, x, case_rid):
-        profile = None
+        profile = "97"
         if x.issledovaniye.research.speciality:
             profile = x.issledovaniye.research.speciality.rmis_id
-        if profile is None:
-            profile = "106"
+
+        if x.issledovaniye.doc_confirmation.rmis_resource_id:
+            resource_group_id = x.issledovaniye.doc_confirmation.rmis_resource_id
+        else:
+            resource_group_id = Settings.get("resource_group_id", default="None")
+        if resource_group_id is None:
+            resource_group_id = "156805215"
+
+        diagnos = x.issledovaniye.diagnos.split(" ")[0]
+        diagnos_rmis_id = Diagnoses.objects.values('rmis_id').filter(code=diagnos)
+
         visit_data = {
             "caseId": case_rid,
             "diagnoses": {
                 "stageId": "3",
-                "diagnosId": "2",
-                "establishmentDate": "2020-11-23+08:00",
+                "diagnosId": diagnos_rmis_id,
+                "establishmentDate": f"{ndate(x.issledovaniye.time_confirmation)}+08:00",
                 "main": "true",
             },
             # "visitResultId": 9,
             # "deseaseResultId": "1",
-            "admissionDate": "2020-10-15",
-            "admissionTime": "14:50:00",
-            "rendererDate": "2020-10-15",
-            "resourceGroupId": "151205615",
+            "admissionDate": ndate(x.issledovaniye.time_confirmation),
+            "admissionTime": strtime(x.issledovaniye.time_confirmation),
+            "rendererDate": ndate(x.issledovaniye.time_confirmation),
+            "resourceGroupId": resource_group_id,
             "goalId": "1",
             "placeId": "1",
-            "profileId": "65",
+            "profileId": profile,
         }
         return visit_data
 
