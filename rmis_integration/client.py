@@ -1053,6 +1053,7 @@ class Directions(BaseRequester):
         protocol_row = Settings.get("protocol_template_row")
         case_rmis_id = None
         visit_rmis_id = None
+        send_visit_data = None
         if not direction.result_rmis_send:
             if direction.rmis_number != "NONERMIS":
                 try:
@@ -1077,8 +1078,10 @@ class Directions(BaseRequester):
                                     not direction.parent or not direction.parent.research.is_hospital) and not case_rmis_id and not visit_rmis_id:
                                     send_case_data = self.gen_case_rmis(direction, rindiv, x)
                                     case_rmis_id = self.main_client.case.client.sendCase(**send_case_data)
-                                    send_visit_data = self.gen_visit_rmis(direction, rindiv, x, case_rmis_id)
-                                    visit_rmis_id = self.main_client.visit.client.sendVisit(**send_visit_data)
+                                    if case_rmis_id:
+                                        send_visit_data = self.gen_visit_rmis(direction, rindiv, x, case_rmis_id)
+                                    if send_visit_data:
+                                        visit_rmis_id = self.main_client.visit.client.sendVisit(**send_visit_data)
                                 send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv, service_rend_id, stdout, x, case_rmis_id, visit_rmis_id)
                                 if ssd is not None and x.field.group.research_id not in sended_researches:
                                     RmisServices.objects.filter(napravleniye=direction, rmis_id=service_rend_id).delete()
@@ -1299,13 +1302,21 @@ class Directions(BaseRequester):
         return new_case_data
 
     def gen_visit_rmis(self, direction: Napravleniya, rindiv, x, case_rid):
-        profile = "97" if not x.issledovaniye.research.speciality else x.issledovaniye.research.speciality.rmis_id
-        resource_group_id = x.issledovaniye.doc_confirmation.rmis_resource_id or Settings.get("resource_group_id", default="156805215")
+        if not case_rid:
+            return None
+        profile = x.issledovaniye.research.speciality
+        if not profile or not profile.rmis_id:
+            return None
+        resource_group_id = x.issledovaniye.doc_confirmation.rmis_resource_id
+        if not resource_group_id:
+            return None
         diagnos = x.issledovaniye.diagnos.split(" ")[0]
+        if not diagnos:
+            return None
         diagnos_rmis_id = Diagnoses.objects.values_list('rmis_id', flat=True).filter(code=diagnos)
-
         if not diagnos_rmis_id:
             return None
+
         visit_data = {
             "caseId": case_rid,
             "diagnoses": {
