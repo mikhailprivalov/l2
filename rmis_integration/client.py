@@ -1283,11 +1283,6 @@ class Directions(BaseRequester):
             send_data[p] = service_old_data.get(p, None) or send_data.get(p, None)
 
     def gen_case_rmis(self, direction: Napravleniya, rindiv, x):
-        if direction.fin_title.lower() == 'платно':
-            funding_source = '3'
-        else:
-            funding_source = '1'
-
         purpose = "1" if not x.issledovaniye.purpose else x.issledovaniye.purpose.rmis_id or "1"
         conditions_care = "1" if not x.issledovaniye.conditions_care else x.issledovaniye.conditions_care.rmis_id or "1"
 
@@ -1296,7 +1291,7 @@ class Directions(BaseRequester):
             "patientUid": rindiv,
             "caseTypeId": "1",
             "medicalOrganizationId": self.main_client.get_org_id_for_direction(direction),
-            "fundingSourceTypeId": funding_source,
+            "fundingSourceTypeId": Utils.get_fin_src_id(direction.fin_title, self.main_client.get_fin_dict()),
             "careLevelId": "8",
             "paymentMethodId": "26",
             "initGoalId": purpose,
