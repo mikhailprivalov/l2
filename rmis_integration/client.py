@@ -1051,7 +1051,6 @@ class Directions(BaseRequester):
         protocol_template = Settings.get("protocol_template")
         protocol_covid_template = Settings.get("protocol_covid_template") or ""
         protocol_row = Settings.get("protocol_template_row")
-        ambulatory_case = False
         case_rmis_id = None
         visit_rmis_id = None
         if not direction.result_rmis_send:
@@ -1074,12 +1073,7 @@ class Directions(BaseRequester):
                                     continue
                                 service_rend_id = sended_ids.get(code, None)
                                 sended_codes.append(code)
-                                if x.issledovaniye.research.is_doc_refferal:
-                                    ambulatory_case = True
-                                    if direction.parent:
-                                        if direction.parent.research.is_hospital:
-                                            ambulatory_case = False
-                                if ambulatory_case:
+                                if x.issledovaniye.research.is_doc_refferal and (not direction.parent or not direction.parent.research.is_hospital) and not case_rmis_id and not visit_rmis_id:
                                     send_case_data = self.gen_case_rmis(direction, rindiv, x)
                                     case_rmis_id = self.main_client.case.client.sendCase(**send_case_data)
                                     send_visit_data = self.gen_visit_rmis(direction, rindiv, x, case_rmis_id)
@@ -1242,7 +1236,7 @@ class Directions(BaseRequester):
                     else:
                         return False
             direction.result_rmis_send = True
-            if ambulatory_case:
+            if case_rmis_id or visit_rmis_id:
                 direction.rmis_case_id = case_rmis_id
                 direction.rmis_visit_id = visit_rmis_id
             direction.save()
@@ -1286,15 +1280,8 @@ class Directions(BaseRequester):
         else:
             funding_source = '1'
 
-        purpose = "1"
-        if x.issledovaniye.purpose:
-            if x.issledovaniye.purpose.rmis_id:
-                purpose = x.issledovaniye.purpose.rmis_id
-
-        conditions_care = "1"
-        if x.issledovaniye.conditions_care:
-            if x.issledovaniye.conditions_care.rmis_id:
-                conditions_care = x.issledovaniye.conditions_care.rmis_id
+        purpose = "1" if not x.issledovaniye.purpose else x.issledovaniye.purpose.rmis_id or "1"
+        conditions_care = "1" if not x.issledovaniye.conditions_care else x.issledovaniye.conditions_care.rmis_id or "1"
 
         new_case_data = {
             "uid": f"{direction}",
@@ -1311,25 +1298,18 @@ class Directions(BaseRequester):
         return new_case_data
 
     def gen_visit_rmis(self, direction: Napravleniya, rindiv, x, case_rid):
-        profile = "97"
-        if x.issledovaniye.research.speciality:
-            profile = x.issledovaniye.research.speciality.rmis_id
-
-        if x.issledovaniye.doc_confirmation.rmis_resource_id:
-            resource_group_id = x.issledovaniye.doc_confirmation.rmis_resource_id
-        else:
-            resource_group_id = Settings.get("resource_group_id", default="None")
-        if resource_group_id is None:
-            resource_group_id = "156805215"
-
+        profile = "97" if not x.issledovaniye.research.speciality else x.issledovaniye.research.speciality.rmis_id
+        resource_group_id = x.issledovaniye.doc_confirmation.rmis_resource_id or Settings.get("resource_group_id", default="156805215")
         diagnos = x.issledovaniye.diagnos.split(" ")[0]
-        diagnos_rmis_id = Diagnoses.objects.values('rmis_id').filter(code=diagnos)
+        diagnos_rmis_id = Diagnoses.objects.values_list('rmis_id', flat=True).filter(code=diagnos)
 
+        if not diagnos_rmis_id:
+            return None
         visit_data = {
             "caseId": case_rid,
             "diagnoses": {
                 "stageId": "3",
-                "diagnosId": diagnos_rmis_id,
+                "diagnosId": diagnos_rmis_id[0],
                 "establishmentDate": f"{ndate(x.issledovaniye.time_confirmation)}+08:00",
                 "main": "true",
             },
