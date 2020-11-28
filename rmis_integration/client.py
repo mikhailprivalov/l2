@@ -1073,7 +1073,8 @@ class Directions(BaseRequester):
                                     continue
                                 service_rend_id = sended_ids.get(code, None)
                                 sended_codes.append(code)
-                                if x.issledovaniye.research.is_doc_refferal and (not direction.parent or not direction.parent.research.is_hospital) and not case_rmis_id and not visit_rmis_id:
+                                if x.issledovaniye.research.is_doc_refferal and (
+                                    not direction.parent or not direction.parent.research.is_hospital) and not case_rmis_id and not visit_rmis_id:
                                     send_case_data = self.gen_case_rmis(direction, rindiv, x)
                                     case_rmis_id = self.main_client.case.client.sendCase(**send_case_data)
                                     send_visit_data = self.gen_visit_rmis(direction, rindiv, x, case_rmis_id)
