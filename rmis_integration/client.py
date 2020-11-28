@@ -25,7 +25,7 @@ from zeep.transports import Transport
 import clients.models as clients_models
 import slog.models as slog
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, RMISServiceInactive, TubesRegistration
+from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, RMISServiceInactive, TubesRegistration, Diagnoses
 from directory.models import Fractions, ParaclinicInputGroups, Researches
 from hospitals.models import Hospitals
 from laboratory import settings as l2settings
@@ -128,7 +128,7 @@ class Client(object):
         if password is None:
             password = Settings.get("password")
         if modules is None:
-            modules = ["patients", "services", "directions", "rendered_services", "dirservices", "hosp", "department", "tc"]
+            modules = ["patients", "services", "directions", "rendered_services", "dirservices", "hosp", "department", "tc", "case", "visit"]
         self.base_address = Settings.get("address")
         self.session = Session()
         self.session.auth = HTTPBasicAuth(login, password)
@@ -154,6 +154,10 @@ class Client(object):
             self.individuals = Individuals(self)
         if "tc" in modules:
             self.localclient = TC(enforce_csrf_checks=False)
+        if "case" in modules:
+            self.case = CaseServices(self)
+        if "visit" in modules:
+            self.visit = VisitServices(self)
 
     def get_addr(self, address):
         return urllib.parse.urljoin(self.base_address, address)
@@ -1047,6 +1051,9 @@ class Directions(BaseRequester):
         protocol_template = Settings.get("protocol_template")
         protocol_covid_template = Settings.get("protocol_covid_template") or ""
         protocol_row = Settings.get("protocol_template_row")
+        case_rmis_id = None
+        visit_rmis_id = None
+        send_visit_data = None
         if not direction.result_rmis_send:
             if direction.rmis_number != "NONERMIS":
                 try:
@@ -1067,7 +1074,19 @@ class Directions(BaseRequester):
                                     continue
                                 service_rend_id = sended_ids.get(code, None)
                                 sended_codes.append(code)
-                                send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv, service_rend_id, stdout, x)
+                                if (
+                                    x.issledovaniye.research.is_doc_refferal
+                                    and (not direction.parent or not direction.parent.research.is_hospital)
+                                    and not case_rmis_id
+                                    and not visit_rmis_id
+                                ):
+                                    send_case_data = self.gen_case_rmis(direction, rindiv, x)
+                                    case_rmis_id = self.main_client.case.client.sendCase(**send_case_data)
+                                    if case_rmis_id:
+                                        send_visit_data = self.gen_visit_rmis(direction, rindiv, x, case_rmis_id)
+                                    if send_visit_data:
+                                        visit_rmis_id = self.main_client.visit.client.sendVisit(**send_visit_data)
+                                send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv, service_rend_id, stdout, x, case_rmis_id, visit_rmis_id)
                                 if ssd is not None and x.field.group.research_id not in sended_researches:
                                     RmisServices.objects.filter(napravleniye=direction, rmis_id=service_rend_id).delete()
                                     self.main_client.rendered_services.delete_service(service_rend_id)
@@ -1225,6 +1244,9 @@ class Directions(BaseRequester):
                     else:
                         return False
             direction.result_rmis_send = True
+            if case_rmis_id or visit_rmis_id:
+                direction.rmis_case_id = case_rmis_id
+                direction.rmis_visit_id = visit_rmis_id
             direction.save()
         return direction.result_rmis_send
 
@@ -1260,7 +1282,64 @@ class Directions(BaseRequester):
         ]:
             send_data[p] = service_old_data.get(p, None) or send_data.get(p, None)
 
-    def gen_rmis_direction_data(self, code, direction: Napravleniya, rid, rindiv, service_rend_id, stdout, x):
+    def gen_case_rmis(self, direction: Napravleniya, rindiv, x):
+        purpose = "1" if not x.issledovaniye.purpose else x.issledovaniye.purpose.rmis_id or "1"
+        conditions_care = "1" if not x.issledovaniye.conditions_care else x.issledovaniye.conditions_care.rmis_id or "1"
+
+        new_case_data = {
+            "uid": f"{direction}",
+            "patientUid": rindiv,
+            "caseTypeId": "1",
+            "medicalOrganizationId": self.main_client.get_org_id_for_direction(direction),
+            "fundingSourceTypeId": Utils.get_fin_src_id(direction.fin_title, self.main_client.get_fin_dict()),
+            "careLevelId": "8",
+            "paymentMethodId": "26",
+            "initGoalId": purpose,
+            "careRegimenId": conditions_care,
+            "createdDate": ndate(x.issledovaniye.time_confirmation),
+        }
+        return new_case_data
+
+    def gen_visit_rmis(self, direction: Napravleniya, rindiv, x, case_rid):
+        if not case_rid:
+            return None
+        profile = x.issledovaniye.research.speciality
+        if not profile or not profile.rmis_id:
+            return None
+        resource_group_id = x.issledovaniye.doc_confirmation.rmis_resource_id
+        if not resource_group_id:
+            return None
+        diagnos = x.issledovaniye.diagnos.split(" ")[0]
+        if not diagnos:
+            return None
+        diagnos_rmis_id = Diagnoses.objects.values_list('rmis_id', flat=True).filter(code=diagnos)
+        if not diagnos_rmis_id:
+            return None
+
+        visit_data = {
+            "caseId": case_rid,
+            "diagnoses": {
+                "stageId": "3",
+                "diagnosId": diagnos_rmis_id[0],
+                "establishmentDate": f"{ndate(x.issledovaniye.time_confirmation)}+08:00",
+                "main": "true",
+            },
+            # "visitResultId": 9,
+            # "deseaseResultId": "1",
+            "admissionDate": ndate(x.issledovaniye.time_confirmation),
+            "admissionTime": strtime(x.issledovaniye.time_confirmation),
+            "rendererDate": ndate(x.issledovaniye.time_confirmation),
+            "resourceGroupId": resource_group_id,
+            "goalId": "1",
+            "placeId": "1",
+            "profileId": profile,
+        }
+        return visit_data
+
+    def close_case_rmis(self):
+        pass
+
+    def gen_rmis_direction_data(self, code, direction: Napravleniya, rid, rindiv, service_rend_id, stdout, x, case_rmis_id=None, visit_rmis_id=None):
         ssd = self.main_client.services.get_service_id_for_direction(code, direction)
         send_data = dict(
             referralId=rid,
@@ -1287,6 +1366,11 @@ class Directions(BaseRequester):
         send_data["dateFrom"] = ndate(send_data["dateFrom"]) if send_data["dateFrom"] and not isinstance(send_data["dateFrom"], str) else send_data["dateFrom"]
         send_data["timeFrom"] = strtime(send_data["timeFrom"]) if send_data["timeFrom"] and not isinstance(send_data["timeFrom"], str) else send_data["timeFrom"]
         send_data["dateTo"] = ndate(send_data["dateTo"]) if send_data["dateTo"] and not isinstance(send_data["dateTo"], str) else send_data["dateTo"]
+        if case_rmis_id:
+            send_data["medicalCaseId"] = case_rmis_id
+        if visit_rmis_id:
+            send_data["stepId"] = visit_rmis_id
+
         return send_data, ssd
 
     def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=MAX_RMIS_THREADS, slice_to_upload: bool = False, slice_to_upload_count=None):
@@ -1339,7 +1423,7 @@ class Directions(BaseRequester):
             try:
                 connections.close_all()
                 if out:
-                    out.write(f"Closed db connections")
+                    out.write("Closed db connections")
             except Exception as e:
                 if out:
                     out.write(f"Error closing connections {e}")
@@ -1357,7 +1441,7 @@ class Directions(BaseRequester):
             try:
                 connections.close_all()
                 if out:
-                    out.write(f"Closed db connections")
+                    out.write("Closed db connections")
             except Exception as e:
                 if out:
                     out.write(f"Error closing connection {e}")
@@ -1376,7 +1460,7 @@ class Directions(BaseRequester):
             try:
                 connections.close_all()
                 if out:
-                    out.write(f"Closed db connections")
+                    out.write("Closed db connections")
             except Exception as e:
                 if out:
                     out.write(f"Error closing connection {e}")
@@ -1444,6 +1528,16 @@ class RenderedServices(BaseRequester):
             return self.client.deleteServiceRend(str(service_id))
         except Fault as e:
             return str(e)
+
+
+class CaseServices(BaseRequester):
+    def __init__(self, client: Client):
+        super().__init__(client, "path_caseservices")
+
+
+class VisitServices(BaseRequester):
+    def __init__(self, client: Client):
+        super().__init__(client, "path_visitservices")
 
 
 class DirServices(BaseRequester):

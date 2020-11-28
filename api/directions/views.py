@@ -1257,7 +1257,6 @@ def directions_paraclinic_form(request):
                 response["disp_data"] = disp_data
             response["medical_certificates"] = medical_certificates
 
-
             f = True
     if not f:
         response["message"] = "Направление не найдено"
