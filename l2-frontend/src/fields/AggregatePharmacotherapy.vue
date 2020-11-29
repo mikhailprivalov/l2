@@ -132,9 +132,9 @@
   font-size: 12px;
   vertical-align: bottom;
 
-  &:nth-child(odd) {
-    background-color: rgba(#000, .045);
-  }
+  //&:nth-child(odd) {
+  //  background-color: rgba(#000, .045);
+  //}
 }
 
 .root-agg {

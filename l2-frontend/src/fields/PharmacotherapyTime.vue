@@ -11,7 +11,7 @@
     отм
   </div>
   <div v-else class="root wait" :class="{hoverable: !data.cancel}" @click="setExecute(true)"
-       :title="`${data.datetime}: Приём не заполнен`" v-tippy>
+       :title="`${data.datetime}: не заполнено`" v-tippy>
     —
   </div>
 </template>
@@ -58,12 +58,12 @@ export default {
     height: 24px;
     vertical-align: middle;
 
-    &:nth-child(odd) {
-      background-color: rgba(#000, .045);
-      &.ok {
-        background-color: rgba(#049372, .18);
-      }
-    }
+    //&:nth-child(odd) {
+    //  background-color: rgba(#000, .045);
+    //  &.ok {
+    //    background-color: rgba(#049372, .18);
+    //  }
+    //}
   }
 
   .hoverable:hover {

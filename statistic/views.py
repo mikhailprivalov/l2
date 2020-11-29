@@ -5,7 +5,7 @@ import pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone, dateformat
 from django.views.decorators.csrf import csrf_exempt
@@ -100,9 +100,6 @@ def statistic_xls(request):
     date_type = request_data.get("date_type", "d")
     depart_o = request_data.get("department")
 
-    if date_start_o != "" and date_end_o != "":
-        slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
-
     symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")  # Словарь для транслитерации
     tr = {ord(a): ord(b) for a, b in zip(*symbols)}  # Перевод словаря для транслита
 
@@ -111,6 +108,20 @@ def statistic_xls(request):
     borders.right = xlwt.Borders.THIN
     borders.top = xlwt.Borders.THIN
     borders.bottom = xlwt.Borders.THIN
+
+    date_start, date_end = try_parse_range(date_start_o, date_end_o)
+
+    if date_start and date_end:
+        delta = date_end - date_start
+
+        if abs(delta.days) > 60:
+            slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
+            return JsonResponse({
+                "error": "Слишком широкий диапазон"
+            })
+
+    if date_start_o != "" and date_end_o != "":
+        slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
 
     # Отчет по динамике анализов
     if tp == "directions_list_dynamic":

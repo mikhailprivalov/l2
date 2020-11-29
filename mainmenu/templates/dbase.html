@@ -7,6 +7,7 @@
     {% load static %}
     {% load setting %}
     {% s_get "org_title" as org_title %}
+    {% s_get "extended_html" as extended_html %}
     <link rel="apple-touch-icon" sizes="57x57" href="{% static 'icon/apple-icon-57x57.png' %}">
     <link rel="apple-touch-icon" sizes="60x60" href="{% static 'icon/apple-icon-60x60.png' %}">
     <link rel="apple-touch-icon" sizes="72x72" href="{% static 'icon/apple-icon-72x72.png' %}">
@@ -50,6 +51,7 @@
         window.org_title = `{{ request.user.doctorprofile.hospital_safe_title |safe  }}`;
     </script>
     {% block head_cn %}{% endblock %}
+    {{ extended_html }}
 </head>
 <body>{% load has_group %}
 <div id="app" class="{% block container %}container{% endblock %}">

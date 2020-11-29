@@ -352,7 +352,7 @@
                 <researches-picker v-model="row.more" :hidetemplates="true"
                                    :readonly="row.confirmed"
                                    :just_search="true"
-                                   :filter_types="[2]"/>
+                                   :filter_types="[2, 7]"/>
               </div>
               <div :class="row.confirmed ? 'col-xs-12' : 'col-xs-6'"
                    :style="'height: 200px;' + (row.confirmed ? '' : 'padding-left: 0')">
@@ -593,7 +593,7 @@
           <div class="col-xs-6"
                style="height: 450px;border-right: 1px solid #eaeaea;padding-right: 0;">
             <researches-picker v-model="create_directions_data"
-                               kk="cd" style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"/>
+                               kk="cd" style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;" :filter_types="[7]" />
           </div>
           <div class="col-xs-6" style="height: 450px;padding-left: 0;">
             <selected-researches
