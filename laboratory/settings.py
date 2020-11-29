@@ -165,11 +165,7 @@ LOGGING = {
     },
     'handlers': {
         'file': {'level': 'WARNING', 'class': 'logging.FileHandler', 'filters': ['requestdata'], 'filename': os.path.join(BASE_DIR, 'logs') + '/log.txt', 'formatter': 'base'},
-        'pika': {
-            'level': 'WARNING',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs') + '/log-pika.txt',
-        },
+        'zeep': {'level': 'WARNING', 'class': 'logging.FileHandler', 'filename': os.path.join(BASE_DIR, 'logs') + '/zeep.txt', 'formatter': 'verbose'},
     },
     'loggers': {
         'django.request': {
@@ -177,10 +173,15 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
-        'pika': {
+        'rmis': {
             'handlers': ['pika'],
             'level': 'ERROR',
             'propagate': True,
+        },
+        'zeep.transports': {
+            'level': 'DEBUG',
+            'propagate': True,
+            'handlers': ['zeep'],
         },
     },
 }
