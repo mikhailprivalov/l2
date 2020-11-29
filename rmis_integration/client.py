@@ -178,8 +178,9 @@ class Client(object):
         return self.directories[title]
 
     def search_organization_id(self, q=None, check=False):
-        if not q and Hospitals.get_default_hospital().rmis_org_id:
-            return Hospitals.get_default_hospital().rmis_org_id
+        def_hosp = Hospitals.get_default_hospital()
+        if not q and def_hosp and def_hosp.rmis_org_id:
+            return def_hosp.rmis_org_id
         query = q or Settings.get("orgname")
         key = 'rmis_organization_id_' + get_md5(query)
         id = cache.get(key)

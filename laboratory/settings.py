@@ -160,7 +160,7 @@ LOGGING = {
     'formatters': {
         'base': {'format': '\n[%(asctime)s] [%(levelname)s] %(module)s\n' 'Request: %(path)s [%(method)s] %(user)s %(data)s\n' 'Body: %(body)s\n' '%(stack_info)s\n'},
         'verbose': {
-            'format': '[%(asctime)s] %(name)s',
+            'format': '[%(asctime)s] %(name)s: %(message)s',
         },
     },
     'filters': {
