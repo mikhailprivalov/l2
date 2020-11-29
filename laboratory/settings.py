@@ -292,6 +292,6 @@ MANIFEST_LOADER = {
     'manifest_file': os.path.join(BASE_DIR, 'assets/webpack_bundles/manifest.json'),
 }
 
-db = DATABASES.get('default', {})
-db['OPTIONS'] = db.get('OPTIONS', {})
-db['OPTIONS']['options'] = f'-c statement_timeout={QUERY_TIMEOUT * 1000}'
+# db = DATABASES.get('default', {})
+# db['OPTIONS'] = db.get('OPTIONS', {})
+# db['OPTIONS']['options'] = f'-c statement_timeout={QUERY_TIMEOUT * 1000}'
