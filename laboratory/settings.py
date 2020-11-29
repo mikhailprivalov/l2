@@ -165,7 +165,7 @@ LOGGING = {
     },
     'handlers': {
         'file': {'level': 'WARNING', 'class': 'logging.FileHandler', 'filters': ['requestdata'], 'filename': os.path.join(BASE_DIR, 'logs') + '/log.txt', 'formatter': 'base'},
-        'zeep': {'level': 'WARNING', 'class': 'logging.FileHandler', 'filename': os.path.join(BASE_DIR, 'logs') + '/zeep.txt', 'formatter': 'verbose'},
+        # 'zeep': {'level': 'WARNING', 'class': 'logging.FileHandler', 'filename': os.path.join(BASE_DIR, 'logs') + '/zeep.txt', 'formatter': 'verbose'},
     },
     'loggers': {
         'django.request': {
@@ -173,11 +173,11 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
-        'zeep.transports': {
-            'level': 'DEBUG',
-            'propagate': True,
-            'handlers': ['zeep'],
-        },
+        # 'zeep.transports': {
+        #     'level': 'DEBUG',
+        #     'propagate': True,
+        #     'handlers': ['zeep'],
+        # },
     },
 }
 DEBUG_TOOLBAR_PANELS = (
