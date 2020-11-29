@@ -38,7 +38,7 @@
         }
     </style>
     {% if extended_html != 'extended_html' %}
-        {{ extended_html }}
+        {{ extended_html |safe  }}
     {% endif %}
 </head>
 <body>

@@ -52,7 +52,7 @@
     </script>
     {% block head_cn %}{% endblock %}
     {% if extended_html != 'extended_html' %}
-        {{ extended_html }}
+        {{ extended_html |safe  }}
     {% endif %}
 </head>
 <body>{% load has_group %}
