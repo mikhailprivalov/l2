@@ -37,7 +37,9 @@
             height: 100%;
         }
     </style>
-    {{ extended_html }}
+    {% if extended_html != 'extended_html' %}
+        {{ extended_html }}
+    {% endif %}
 </head>
 <body>
 {% block content %}{% endblock %}

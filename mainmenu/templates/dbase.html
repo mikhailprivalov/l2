@@ -51,7 +51,9 @@
         window.org_title = `{{ request.user.doctorprofile.hospital_safe_title |safe  }}`;
     </script>
     {% block head_cn %}{% endblock %}
-    {{ extended_html }}
+    {% if extended_html != 'extended_html' %}
+        {{ extended_html }}
+    {% endif %}
 </head>
 <body>{% load has_group %}
 <div id="app" class="{% block container %}container{% endblock %}">
