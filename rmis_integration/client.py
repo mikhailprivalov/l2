@@ -165,7 +165,7 @@ class Client(object):
     def get_client(self, address_key: str, default_path=None) -> zeepClient:
         address = Settings.get(address_key, default_path)
         if address not in self.clients:
-            self.clients[address] = zeepClient(self.get_addr(address), transport=Transport(session=self.session, cache=DjangoCache(timeout=300)))
+            self.clients[address] = zeepClient(self.get_addr(address), transport=Transport(session=self.session, cache=DjangoCache(timeout=300), timeout=25))
         return self.clients[address]
 
     def load_directories(self, titles: list):
