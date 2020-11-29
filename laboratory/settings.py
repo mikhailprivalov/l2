@@ -178,7 +178,7 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
-        'zeep.transports': {
+        'zeep': {
             'level': 'DEBUG',
             'propagate': True,
             'handlers': ['zeep'],
