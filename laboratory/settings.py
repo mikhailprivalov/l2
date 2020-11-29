@@ -173,11 +173,6 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
-        'rmis': {
-            'handlers': ['pika'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
         'zeep.transports': {
             'level': 'DEBUG',
             'propagate': True,
