@@ -88,9 +88,7 @@ def get_researches(request):
 @group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Врач стационара")
 def researches_by_department(request):
     direction_form = DResearches.DIRECTION_FORMS
-    spec = users.Speciality.objects.all().order_by("title")
-    spec_data = [{"pk": s.pk, "title": s.title} for s in spec]
-    spec_data.append({"pk": -1, "title": "Не выбрано"})
+    spec_data = [{"pk": -1, "title": "Не выбрано"}, *list(users.Speciality.objects.all().values('pk', 'title').order_by("title"))]
     response = {"researches": [], "direction_forms": direction_form, "specialities": spec_data}
     request_data = json.loads(request.body)
     department_pk = int(request_data["department"])
@@ -172,8 +170,6 @@ def researches_update(request):
         internal_code = request_data.get("internal_code", "").strip()
         spec_pk = request_data.get("speciality", -1)
         speciality = Speciality.objects.filter(pk=spec_pk).first()
-        if not speciality:
-            speciality = None
         direction_current_form = request_data.get("direction_current_form", 0)
         if not direction_current_form:
             direction_current_form = 0
@@ -344,9 +340,7 @@ def researches_details(request):
         response["direction_current_form"] = res.direction_form
         response["conclusionTpl"] = res.bac_conclusion_templates
         response["cultureTpl"] = res.bac_culture_comments_templates
-        response["speciality"] = -1
-        if res.speciality:
-            response["speciality"] = res.speciality.pk
+        response["speciality"] = res.speciality_id or -1
 
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title, "hide": group.hide, "fields": [], "visibility": group.visibility}

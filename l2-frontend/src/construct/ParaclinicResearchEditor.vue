@@ -18,7 +18,7 @@
         <div class="input-group">
           <span class="input-group-addon">Краткое <small>(для создания направлений)</small></span>
           <input type="text" class="form-control" v-model="short_title">
-          <span class="input-group-addon"> Профиль </span>
+          <span class="input-group-addon">Профиль</span>
             <select class="form-control" v-model="speciality">
                   <option :value="d.pk" v-for="d in specialities">
                     {{d.title}}
