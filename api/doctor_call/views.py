@@ -10,7 +10,6 @@ from clients.models import Card
 from doctor_call.models import DoctorCall
 from laboratory.utils import current_time
 from utils.data_verification import data_parse
-import simplejson as json_simple
 
 
 @login_required
@@ -122,7 +121,7 @@ def cancel_row(request):
     Log(
         key=data[0],
         type=80004,
-        body=json_simple.dumps({"card_pk": row.client.pk, "status": row.cancel}),
+        body=json.dumps({"card_pk": row.client.pk, "status": row.cancel}),
         user=request.user.doctorprofile,
     ).save()
 
