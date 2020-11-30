@@ -240,7 +240,7 @@ def researches_update(request):
                 res.hide = hide
                 res.site_type_id = site_type
                 res.internal_code = internal_code
-                res.speciality=speciality
+                res.speciality = speciality
                 res.direction_form = direction_current_form
                 res.bac_conclusion_templates = conclusion_templates
                 res.bac_culture_comments_templates = culture_comments_templates
