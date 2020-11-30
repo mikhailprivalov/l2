@@ -1,9 +1,11 @@
 import datetime
+import json
 from typing import List
 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
+from slog.models import Log
 from clients.models import Card
 from doctor_call.models import DoctorCall
 from laboratory.utils import current_time
@@ -115,5 +117,12 @@ def cancel_row(request):
     row = DoctorCall.objects.get(pk=pk_row)
     row.cancel = not row.cancel
     row.save()
+
+    Log(
+        key=data[0],
+        type=80004,
+        body=json.dumps({"card_pk": row.client.pk, "status": row.cancel}),
+        user=request.user.doctorprofile,
+    ).save()
 
     return JsonResponse(True, safe=False)

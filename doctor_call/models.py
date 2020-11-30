@@ -20,6 +20,7 @@ class DoctorCall(models.Model):
         (5, 'Другое'),
         (6, 'Выписать рецепт'),
         (7, 'Заявка на отправку результата COVID-19'),
+        (8, 'Скорая помощь'),
     )
 
     client = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
