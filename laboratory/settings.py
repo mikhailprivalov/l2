@@ -159,8 +159,8 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'base': {'format': '\n[%(asctime)s] [%(levelname)s] %(module)s\n' 'Request: %(path)s [%(method)s] %(user)s %(data)s\n' 'Body: %(body)s\n' '%(stack_info)s\n'},
-        'verbose': {
-            'format': '[%(asctime)s] %(name)s: %(message)s',
+        'basic': {
+            'format': '[%(asctime)s] %(name)s',
         },
     },
     'filters': {
@@ -169,13 +169,13 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {'level': 'WARNING', 'class': 'logging.FileHandler', 'filters': ['requestdata'], 'filename': os.path.join(BASE_DIR, 'logs', 'log.txt'), 'formatter': 'base'},
-        'zeep': {'level': 'DEBUG', 'class': 'logging.FileHandler', 'filename': os.path.join(BASE_DIR, 'logs', 'zeep.txt'), 'formatter': 'verbose'},
+        'file': {'level': 'DEBUG', 'class': 'logging.FileHandler', 'filters': ['requestdata'], 'filename': os.path.join(BASE_DIR, 'logs', 'log.txt'), 'formatter': 'base'},
+        'zeep': {'level': 'DEBUG', 'class': 'logging.FileHandler', 'filename': os.path.join(BASE_DIR, 'logs', 'zeep.txt'), 'formatter': 'basic'},
     },
     'loggers': {
         'django.request': {
             'handlers': ['file'],
-            'level': 'ERROR',
+            'level': 'DEBUG',
             'propagate': True,
         },
         'zeep': {

@@ -55,7 +55,7 @@ class Individual(models.Model):
             c.save()
         b.delete()
 
-    def sync_with_rmis(self, out: OutputWrapper = None, c=None, force_print=False):
+    def sync_with_rmis(self, out: OutputWrapper = None, c=None, force_print=False, forced_data=None):
         if not SettingManager.get("rmis_enabled", default='false', default_type='b') or not CardBase.objects.filter(is_rmis=True).exists():
             return
         if self.primary_for_rmis:
@@ -94,7 +94,7 @@ class Individual(models.Model):
                     break
 
         if ok:
-            data = c.patients.get_data(rmis_uid)
+            data = c.patients.get_data(rmis_uid, forced_data=forced_data)
             upd = self.family != data["family"] or self.name != data["name"] or self.patronymic != data["patronymic"] or (self.birthday != data["birthday"] and data["birthday"] is not None)
 
             if upd:

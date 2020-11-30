@@ -404,11 +404,6 @@
         },
         immediate: true,
       },
-      query() {
-        this.query = this.query.split(' ')
-          .map((s) => s.split('-').map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
-          .join(' ')
-      },
       normalized_query() {
         this.keypress_other({keyCode: -1});
       },
@@ -461,7 +456,7 @@
         }
       },
       normalized_query() {
-        return this.query.trim()
+        return this.fixedQuery.trim()
       },
       tfoms_query() {
         return this.selected_base.internal_type && this.l2_tfoms && this.normalized_query.match(tfoms_re);
@@ -549,8 +544,16 @@
       allow_l2_card_edit() {
         return this.user_data.su || this.user_data.groups.includes('Картотека L2')
       },
+      fixedQuery() {
+        return this.query.split(' ')
+          .map((s) => s.split('-').map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
+          .join(' ');
+      }
     },
     methods: {
+      fixQuery() {
+        this.query = this.fixedQuery;
+      },
       keypress(e) {
         if(!this.keypress_arrow(e)) {
           this.keypress_other(e);
@@ -578,6 +581,7 @@
         }
       }, 200),
       blur() {
+        this.fixQuery();
         setTimeout(() => {
           this.suggests.open = false
         }, 200)
@@ -588,6 +592,9 @@
         }
         this.suggests.focused = -1;
         this.suggests.open = true;
+        if (this.selected_card.pk) {
+          this.$refs.q.setSelectionRange(0, this.query.length)
+        }
       },
       move_focus(d) {
         this.suggests.focused += d
@@ -636,9 +643,6 @@
         $(this.$refs.q).focus()
       },
       click_input() {
-        if (this.selected_card.pk) {
-          this.$refs.q.setSelectionRange(0, this.query.length)
-        }
         this.loadSuggests()
       },
       async inited() {

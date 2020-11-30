@@ -105,9 +105,7 @@ class DjangoCache(Base):
         return "zp_{}".format(str(hashlib.sha256(url.encode()).hexdigest()))
 
     def add(self, url, content):
-        if "patients" in url or "individuals" in url:
-            return
-        # print("Caching contents of %s", url)
+        logger.debug("Caching contents of %s", url)
         key = self.k(url)
         cache.set(key, pickle.dumps(content, protocol=4), self._timeout)
 
@@ -115,9 +113,9 @@ class DjangoCache(Base):
         key = self.k(url)
         r = cache.get(key)
         if r:
-            # print("Cache HIT for %s", url)
+            logger.debug("Cache HIT for %s", url)
             return pickle.loads(r, encoding="utf8")
-        # print("Cache MISS for %s", url)
+        logger.debug("Cache MISS for %s", url)
         return None
 
 
@@ -554,8 +552,8 @@ class Patients(BaseRequester):
                 break
         return patients
 
-    def get_data(self, uid):
-        from_rmis = self.client.getIndividual(uid)
+    def get_data(self, uid, forced_data=None):
+        from_rmis = forced_data or self.client.getIndividual(uid)
         return dict(
             family=(from_rmis["surname"] or "").title().strip(),
             name=(from_rmis["name"] or "").title().strip(),
@@ -564,11 +562,11 @@ class Patients(BaseRequester):
             sex={"1": "м", "2": "ж"}.get(from_rmis["gender"], "м"),
         )
 
-    def sync_data(self, card: clients_models.Card):
+    def sync_data(self, card: clients_models.Card, forced_data=None):
         if not card.base.is_rmis:
             return False
         q = card.number
-        data = self.get_data(q)
+        data = self.get_data(q, forced_data=forced_data)
         ind = card.individual
 
         def n(s):
@@ -693,6 +691,7 @@ class Patients(BaseRequester):
             qs = self.client.searchIndividual(**query)[:limit]
         else:
             qs = [query.upper()]
+        polis_type = clients_models.DocumentType.objects.filter(title="Полис ОМС")[0]
         for q in qs:
             individual_row = None
             if q != "":
@@ -715,17 +714,21 @@ class Patients(BaseRequester):
                     document_object = self.client.getDocument(document_id)
                     if document_object["type"] in self.polis_types_id_list and document_object["active"]:
                         q = dict(
-                            document_type=clients_models.DocumentType.objects.filter(title="Полис ОМС")[0],
+                            document_type=polis_type,
                             serial=document_object["series"] or "",
                             number=document_object["number"] or "",
                             individual=individual,
                             is_active=True,
                         )
                         if clients_models.Document.objects.filter(**q).exists():
+                            if q['number'] and not q['serial']:
+                                break
                             continue
                         doc = clients_models.Document(**q)
                         doc.save()
-                individual.sync_with_rmis(c=self.main_client)
+                        if q['number'] and not q['serial']:
+                            break
+                individual.sync_with_rmis(c=self.main_client, forced_data=individual_row)
                 return_rows.append(individual)
         return return_rows
 

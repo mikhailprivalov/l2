@@ -66,10 +66,13 @@ def full_patient_search_data(p, query):
     if len(split) > 3:
         if '.' in split[3]:
             btday = split[3].split(".")
+        elif len(split[3]) == 8 and split[3].isdigit():
+            btday = [split[3][0:2], split[3][2:4], split[3][4:8]]
         else:
-            btday = [query[0:2], query[2:5], query[5:9]]
-        btday = btday[2] + "-" + btday[1] + "-" + btday[0]
-        rmis_req["birthDate"] = btday
+            btday = None
+        if btday:
+            btday = btday[2] + "-" + btday[1] + "-" + btday[0]
+            rmis_req["birthDate"] = btday
     return f, n, p, rmis_req, split
 
 
@@ -99,10 +102,10 @@ def patients_search_card(request):
         if tfoms_module and not suggests:
             from_tfoms = match_enp(query)
 
-            if from_tfoms:
+            if from_tfoms and isinstance(from_tfoms, dict):
                 Individual.import_from_tfoms(from_tfoms)
 
-        objects = Individual.objects.filter(document__number=query, document__document_type__title='Полис ОМС')
+        objects = list(Individual.objects.filter(document__number=query, document__document_type__title='Полис ОМС'))
     elif not p4i:
         if inc_tfoms:
             t_parts = re.search(p_tfoms, query.lower()).groups()
@@ -110,8 +113,10 @@ def patients_search_card(request):
 
             from_tfoms = match_patient(t_parts[0], t_parts[1], t_parts[2], t_bd)
 
-            for t_row in from_tfoms:
-                Individual.import_from_tfoms(t_row, no_update=True)
+            if isinstance(from_tfoms, list):
+                for t_row in from_tfoms:
+                    if isinstance(t_row, dict):
+                        Individual.import_from_tfoms(t_row, no_update=True)
 
         if re.search(p, query.lower()):
             initials = query[0:3].upper()
@@ -119,12 +124,14 @@ def patients_search_card(request):
             if not pat_bd.match(btday):
                 return JsonResponse([], safe=False)
             try:
-                objects = Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1], patronymic__startswith=initials[2], birthday=btday, card__base=card_type)
+                objects = list(
+                    Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1], patronymic__startswith=initials[2], birthday=btday, card__base=card_type)
+                )
                 if ((card_type.is_rmis and len(objects) == 0) or (card_type.internal_type and inc_rmis)) and not suggests:
                     c = Client(modules="patients")
-                    objects = c.patients.import_individual_to_base({"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%", "birthDate": btday}, fio=True)
-            except ValidationError:
-                objects = []
+                    objects += c.patients.import_individual_to_base({"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%", "birthDate": btday}, fio=True)
+            except Exception as e:
+                logger.exception(e)
         elif re.search(p2, query):
             f, n, p, rmis_req, split = full_patient_search_data(p, query)
 
@@ -148,27 +155,27 @@ def patients_search_card(request):
                     if not c:
                         c = Client(modules="patients")
                     objects += c.patients.import_individual_to_base(rmis_req, fio=True, limit=10 - len(objects))
-                except ConnectionError:
-                    pass
+                except Exception as e:
+                    logger.exception(e)
 
         if (
             (re.search(p3, query) and not card_type.is_rmis)
-            or (len(list(objects)) == 0 and len(query) == 16 and not p_enp and card_type.internal_type)
+            or (len(objects) == 0 and len(query) == 16 and not p_enp and card_type.internal_type)
             or (card_type.is_rmis and not re.search(p3, query))
         ):
             resync = True
-            if len(list(objects)) == 0:
+            if len(objects) == 0:
                 resync = False
                 try:
-                    objects = Individual.objects.filter(card__number=query.upper(), card__is_archive=False, card__base=card_type)
-                except ValueError:
-                    pass
-                if (card_type.is_rmis or card_type.internal_type) and len(list(objects)) == 0 and len(query) == 16 and not suggests:
-                    if not c:
-                        c = Client(modules="patients")
-                    objects = c.patients.import_individual_to_base(query)
-                elif not suggests:
-                    resync = True
+                    objects = list(Individual.objects.filter(card__number=query.upper(), card__is_archive=False, card__base=card_type))
+                    if (card_type.is_rmis or card_type.internal_type) and len(objects) == 0 and len(query) == 16 and not suggests:
+                        if not c:
+                            c = Client(modules="patients")
+                        objects += c.patients.import_individual_to_base(query)
+                    elif not suggests:
+                        resync = True
+                except Exception as e:
+                    logger.exception(e)
             if resync and card_type.is_rmis and not suggests:
                 if not c:
                     c = Client(modules="patients")

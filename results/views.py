@@ -351,7 +351,7 @@ def result_print(request):
     else:
         response['Content-Disposition'] = 'attachment; filename="results.pdf"'
 
-    pk = json.loads(request.GET["pk"])
+    pk = [x for x in json.loads(request.GET["pk"]) if x is not None]
 
     show_norm = True  # request.GET.get("show_norm", "0") == "1"
 
