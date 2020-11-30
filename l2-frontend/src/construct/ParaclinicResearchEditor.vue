@@ -377,7 +377,7 @@
                 f_templates_open: false,
                 templates: [],
                 opened_template_data: {},
-                speciality: '',
+                speciality: -1,
             }
         },
         watch: {
