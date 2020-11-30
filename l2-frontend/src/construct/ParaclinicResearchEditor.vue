@@ -592,7 +592,7 @@
                 this.site_type = null
                 this.groups = []
                 this.direction_current_form = ''
-                this.speciality = ''
+                this.speciality = -1
                 if (this.pk >= 0) {
                     this.$store.dispatch(action_types.INC_LOADING)
                     construct_point.researchDetails(this, 'pk').then(data => {
