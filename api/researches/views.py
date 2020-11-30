@@ -12,6 +12,7 @@ from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from slog.models import Log
+from users.models import Speciality
 
 
 @login_required
@@ -87,7 +88,8 @@ def get_researches(request):
 @group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Врач стационара")
 def researches_by_department(request):
     direction_form = DResearches.DIRECTION_FORMS
-    response = {"researches": [], "direction_forms": direction_form}
+    spec_data = [{"pk": -1, "title": "Не выбрано"}, *list(users.Speciality.objects.all().values('pk', 'title').order_by("title"))]
+    response = {"researches": [], "direction_forms": direction_form, "specialities": spec_data}
     request_data = json.loads(request.body)
     department_pk = int(request_data["department"])
     if -500 >= department_pk > -600:
@@ -166,6 +168,8 @@ def researches_update(request):
         short_title = request_data.get("short_title", "").strip()
         code = request_data.get("code", "").strip()
         internal_code = request_data.get("internal_code", "").strip()
+        spec_pk = request_data.get("speciality", -1)
+        speciality = Speciality.objects.filter(pk=spec_pk).first()
         direction_current_form = request_data.get("direction_current_form", 0)
         if not direction_current_form:
             direction_current_form = 0
@@ -208,6 +212,7 @@ def researches_update(request):
                     site_type_id=site_type,
                     internal_code=internal_code,
                     direction_form=direction_current_form,
+                    speciality=speciality,
                     bac_conclusion_templates=conclusion_templates,
                     bac_culture_comments_templates=culture_comments_templates,
                 )
@@ -231,6 +236,7 @@ def researches_update(request):
                 res.hide = hide
                 res.site_type_id = site_type
                 res.internal_code = internal_code
+                res.speciality = speciality
                 res.direction_form = direction_current_form
                 res.bac_conclusion_templates = conclusion_templates
                 res.bac_culture_comments_templates = culture_comments_templates
@@ -334,6 +340,7 @@ def researches_details(request):
         response["direction_current_form"] = res.direction_form
         response["conclusionTpl"] = res.bac_conclusion_templates
         response["cultureTpl"] = res.bac_culture_comments_templates
+        response["speciality"] = res.speciality_id or -1
 
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title, "hide": group.hide, "fields": [], "visibility": group.visibility}

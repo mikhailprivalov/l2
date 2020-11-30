@@ -18,6 +18,12 @@
         <div class="input-group">
           <span class="input-group-addon">Краткое <small>(для создания направлений)</small></span>
           <input type="text" class="form-control" v-model="short_title">
+          <span class="input-group-addon">Профиль</span>
+            <select class="form-control" v-model="speciality">
+                  <option :value="d.pk" v-for="d in specialities">
+                    {{d.title}}
+                  </option>
+          </select>
         </div>
       </div>
       <div class="right" v-if="!simple">
@@ -332,11 +338,17 @@
                 required: false,
                 default: false,
             },
-          direction_forms: {
-              type: Array,
-              required: false,
-              default: () => [],
-          }
+            direction_forms: {
+                type: Array,
+                required: false,
+                default: () => []
+            },
+            specialities: {
+                type: Array,
+                required: false,
+                default: () => [],
+
+        }
         },
         created() {
             this.load()
@@ -365,6 +377,7 @@
                 f_templates_open: false,
                 templates: [],
                 opened_template_data: {},
+                speciality: -1,
             }
         },
         watch: {
@@ -579,6 +592,7 @@
                 this.site_type = null
                 this.groups = []
                 this.direction_current_form = ''
+                this.speciality = -1
                 if (this.pk >= 0) {
                     this.$store.dispatch(action_types.INC_LOADING)
                     construct_point.researchDetails(this, 'pk').then(data => {
@@ -587,6 +601,7 @@
                         this.code = data.code
                         this.internal_code = data.internal_code
                         this.direction_current_form = data.direction_current_form
+                        this.speciality = data.speciality
                         this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
                         this.hide = data.hide
                         this.site_type = data.site_type
@@ -622,6 +637,7 @@
                     'site_type',
                     'internal_code',
                     'direction_current_form',
+                    'speciality'
                 ]
                 const moreData = {
                     info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
