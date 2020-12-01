@@ -33,7 +33,7 @@ from directions.models import (
     ExternalOrganization,
     MicrobiologyResultCulture,
     MicrobiologyResultCultureAntibiotic,
-    DirectionToUserWatch,
+    DirectionToUserWatch, IstochnikiFinansirovaniya,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
@@ -46,8 +46,9 @@ from results.sql_func import get_not_confirm_direction
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
-from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
+from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, ConditionsCare
 from users.models import DoctorProfile
+from utils.common import non_selected_visible_type, none_if_minus_1
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
 from utils.xh import check_float_is_valid
@@ -1178,14 +1179,18 @@ def directions_paraclinic_form(request):
                 if not force_form and iss["research"]["is_doc_refferal"]:
                     iss = {
                         **iss,
-                        "purpose": i.purpose_id,
+                        "purpose": i.purpose_id or -1,
+                        "conditionscare": i.conditions_care_id or -1,
+                        "fin_source": i.fin_source_id or ((i.napravleniye.istochnik_f_id or -1) if i.napravleniye else -1),
                         "first_time": i.first_time,
-                        "result": i.result_reception_id,
-                        "outcome": i.outcome_illness_id,
+                        "result": i.result_reception_id or -1,
+                        "outcome": i.outcome_illness_id or -1,
                         "diagnos": i.diagnos,
-                        "purpose_list": [{"pk": x.pk, "title": x.title} for x in VisitPurpose.objects.filter(hide=False).order_by("pk")],
-                        "result_list": [{"pk": x.pk, "title": x.title} for x in ResultOfTreatment.objects.filter(hide=False).order_by("pk")],
-                        "outcome_list": [{"pk": x.pk, "title": x.title} for x in Outcomes.objects.filter(hide=False).order_by("pk")],
+                        "purpose_list": non_selected_visible_type(VisitPurpose),
+                        "fin_source_list": non_selected_visible_type(IstochnikiFinansirovaniya, {"base": i.napravleniye.client.base}) if i.napravleniye else [],
+                        "conditionscare_list": non_selected_visible_type(ConditionsCare),
+                        "result_list": non_selected_visible_type(ResultOfTreatment),
+                        "outcome_list": non_selected_visible_type(Outcomes),
                     }
 
                     if not force_form:
@@ -1565,10 +1570,12 @@ def directions_paraclinic_result(request):
                 MicrobiologyResultCulture.objects.filter(issledovaniye=iss).exclude(pk__in=has_bacteries).delete()
                 MicrobiologyResultCultureAntibiotic.objects.filter(result_culture__issledovaniye=iss).exclude(pk__in=has_anti).delete()
 
-        iss.purpose_id = request_data.get("purpose")
+        iss.purpose_id = none_if_minus_1(request_data.get("purpose"))
+        iss.conditions_care_id = none_if_minus_1(request_data.get("conditionscare"))
         iss.first_time = request_data.get("first_time", False)
-        iss.result_reception_id = request_data.get("result")
-        iss.outcome_illness_id = request_data.get("outcome")
+        iss.result_reception_id = none_if_minus_1(request_data.get("result"))
+        iss.outcome_illness_id = none_if_minus_1(request_data.get("outcome"))
+        iss.fin_source_id = none_if_minus_1(request_data.get("fin_source"))
         iss.maybe_onco = request_data.get("maybe_onco", False)
         iss.diagnos = request_data.get("diagnos", "")
         iss.lab_comment = request_data.get("lab_comment", "")

@@ -159,9 +159,6 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'base': {'format': '\n[%(asctime)s] [%(levelname)s] %(module)s\n' 'Request: %(path)s [%(method)s] %(user)s %(data)s\n' 'Body: %(body)s\n' '%(stack_info)s\n'},
-        'basic': {
-            'format': '[%(asctime)s] %(name)s',
-        },
     },
     'filters': {
         'requestdata': {
@@ -170,18 +167,12 @@ LOGGING = {
     },
     'handlers': {
         'file': {'level': 'DEBUG', 'class': 'logging.FileHandler', 'filters': ['requestdata'], 'filename': os.path.join(BASE_DIR, 'logs', 'log.txt'), 'formatter': 'base'},
-        'zeep': {'level': 'DEBUG', 'class': 'logging.FileHandler', 'filename': os.path.join(BASE_DIR, 'logs', 'zeep.txt'), 'formatter': 'basic'},
     },
     'loggers': {
         'django.request': {
             'handlers': ['file'],
             'level': 'DEBUG',
             'propagate': True,
-        },
-        'zeep': {
-            'level': 'DEBUG',
-            'propagate': True,
-            'handlers': ['zeep'],
         },
     },
 }
