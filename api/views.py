@@ -32,6 +32,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from slog import models as slog
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, ExcludePurposes
+from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from .sql_func import users_by_group
 
@@ -572,10 +573,10 @@ def directive_from(request):
 @group_required("Оформление статталонов", "Лечащий врач", "Оператор лечащего врача")
 def statistics_tickets_types(request):
     result = {
-        "visit": [{"pk": x.pk, "title": x.title} for x in VisitPurpose.objects.filter(hide=False).order_by("pk")],
-        "result": [{"pk": x.pk, "title": x.title} for x in ResultOfTreatment.objects.filter(hide=False).order_by("pk")],
-        "outcome": [{"pk": x.pk, "title": x.title} for x in Outcomes.objects.filter(hide=False).order_by("pk")],
-        "exclude": [{"pk": x.pk, "title": x.title} for x in ExcludePurposes.objects.filter(hide=False).order_by("pk")],
+        "visit": non_selected_visible_type(VisitPurpose),
+        "result": non_selected_visible_type(ResultOfTreatment),
+        "outcome": non_selected_visible_type(Outcomes),
+        "exclude": non_selected_visible_type(ExcludePurposes),
     }
     return JsonResponse(result)
 
