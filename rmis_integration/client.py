@@ -1291,7 +1291,7 @@ class Directions(BaseRequester):
         conditions_care = "1" if not x.issledovaniye.conditions_care else x.issledovaniye.conditions_care.rmis_id or "1"
 
         new_case_data = {
-            "uid": f"{direction}",
+            "uid": direction.pk,
             "patientUid": rindiv,
             "caseTypeId": "1",
             "medicalOrganizationId": self.main_client.get_org_id_for_direction(direction),
@@ -1336,7 +1336,7 @@ class Directions(BaseRequester):
             "resourceGroupId": resource_group_id,
             "goalId": "1",
             "placeId": "1",
-            "profileId": profile,
+            "profileId": profile.rmis_id,
         }
         return visit_data
 
