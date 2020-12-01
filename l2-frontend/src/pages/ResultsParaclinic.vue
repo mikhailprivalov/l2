@@ -516,8 +516,8 @@
                   Место оказания
                 </div>
                 <div class="field-value">
-                  <select v-model="row.conditionscare" :disabled="row.confirmed">
-                    <option v-for="o in row.conditionscare_list" :value="o.pk">
+                  <select v-model="row.place" :disabled="row.confirmed">
+                    <option v-for="o in row.place_list" :value="o.pk">
                       {{o.title}}
                     </option>
                   </select>

@@ -46,7 +46,7 @@ from results.sql_func import get_not_confirm_direction
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
-from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, ConditionsCare
+from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, Place
 from users.models import DoctorProfile
 from utils.common import non_selected_visible_type, none_if_minus_1
 from utils.dates import normalize_date, date_iter_range, try_strptime
@@ -1180,7 +1180,7 @@ def directions_paraclinic_form(request):
                     iss = {
                         **iss,
                         "purpose": i.purpose_id or -1,
-                        "conditionscare": i.conditions_care_id or -1,
+                        "place": i.place_id or -1,
                         "fin_source": i.fin_source_id or ((i.napravleniye.istochnik_f_id or -1) if i.napravleniye else -1),
                         "first_time": i.first_time,
                         "result": i.result_reception_id or -1,
@@ -1188,7 +1188,7 @@ def directions_paraclinic_form(request):
                         "diagnos": i.diagnos,
                         "purpose_list": non_selected_visible_type(VisitPurpose),
                         "fin_source_list": non_selected_visible_type(IstochnikiFinansirovaniya, {"base": i.napravleniye.client.base}) if i.napravleniye else [],
-                        "conditionscare_list": non_selected_visible_type(ConditionsCare),
+                        "place_list": non_selected_visible_type(Place),
                         "result_list": non_selected_visible_type(ResultOfTreatment),
                         "outcome_list": non_selected_visible_type(Outcomes),
                     }
@@ -1571,7 +1571,7 @@ def directions_paraclinic_result(request):
                 MicrobiologyResultCultureAntibiotic.objects.filter(result_culture__issledovaniye=iss).exclude(pk__in=has_anti).delete()
 
         iss.purpose_id = none_if_minus_1(request_data.get("purpose"))
-        iss.conditions_care_id = none_if_minus_1(request_data.get("conditionscare"))
+        iss.place_id = none_if_minus_1(request_data.get("place"))
         iss.first_time = request_data.get("first_time", False)
         iss.result_reception_id = none_if_minus_1(request_data.get("result"))
         iss.outcome_illness_id = none_if_minus_1(request_data.get("outcome"))

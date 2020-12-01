@@ -73,6 +73,19 @@ class ConditionsCare(models.Model):
         verbose_name_plural = 'Условия оказания медпомощи'
 
 
+class Place(models.Model):
+    title = models.CharField(max_length=255)
+    hide = models.BooleanField()
+    rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Место оказания'
+        verbose_name_plural = 'Место оказания'
+
+
 class StatisticsTicket(models.Model):
     DISPENSARY_NO = 0
     DISPENSARY_IN = 1
