@@ -460,30 +460,6 @@
                 </div>
               </div>
               <div class="field">
-                <div class="field-title">
-                  Место оказания
-                </div>
-                <div class="field-value">
-                  <select v-model="row.conditionscare" :disabled="row.confirmed">
-                    <option v-for="o in row.conditionscare_list" :value="o.pk">
-                      {{o.title}}
-                    </option>
-                  </select>
-                </div>
-              </div>
-              <div class="field">
-                <div class="field-title">
-                  Источник финансирования
-                </div>
-                <div class="field-value">
-                  <select v-model="row.fin_source" :disabled="row.confirmed">
-                    <option v-for="o in row.fin_source_list" :value="o.pk">
-                      {{o.title}}
-                    </option>
-                  </select>
-                </div>
-              </div>
-              <div class="field">
                 <label class="field-title" for="first-time">
                   Впервые
                 </label>
@@ -534,6 +510,30 @@
                   <input :max="tdm()" :min="td_m_year" :readonly="row.confirmed" class="form-control"
                          required style="width: 160px" type="date" v-model="row.examination_date"/>
                 </label>
+              </div>
+              <div class="field">
+                <div class="field-title">
+                  Место оказания
+                </div>
+                <div class="field-value">
+                  <select v-model="row.conditionscare" :disabled="row.confirmed">
+                    <option v-for="o in row.conditionscare_list" :value="o.pk">
+                      {{o.title}}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-title">
+                  Источник финансирования
+                </div>
+                <div class="field-value">
+                  <select v-model="row.fin_source" :disabled="row.confirmed">
+                    <option v-for="o in row.fin_source_list" :value="o.pk">
+                      {{o.title}}
+                    </option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
