@@ -2,12 +2,14 @@ import simplejson as json
 from django.db.models import Prefetch
 from django.http import JsonResponse
 
+from api.procedure_list.sql_func import get_procedure_by_params
 from api.stationar.stationar_func import forbidden_edit_dir
 from laboratory.utils import strfdatetime
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, FormRelease, MethodsReception
 from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
 from utils.dates import date_iter_range
+from datetime import datetime, time as dtime
 
 
 TIMES = [
@@ -86,7 +88,7 @@ def get_procedure_by_dir(request):
                         row["dates"][date][t] = {
                             "empty": True,
                         }
-
+    print(rows)
     return JsonResponse({"result": rows, "dates": dates_all, "timesInDates": dates_times})
 
 
@@ -153,3 +155,15 @@ def procedure_execute(request):
         return JsonResponse({"message": "Приём убран", "ok": True})
 
     return JsonResponse({"message": "Приём не записан", "ok": False})
+
+@login_required
+@group_required("Врач стационара", "t, ad, p")
+def procedure_execute(request):
+    request_data = json.loads(request.body)
+    start_date = datetime.strptime(request_data['start_date'], '%Y-%m-%d')
+    start_date = datetime.combine(start_date, dtime.min)
+    end_date = datetime.strptime(request_data['end_date'], '%Y-%m-%d')
+    end_date = datetime.combine(end_date, dtime.max)
+    research_pk = request_data.get('research_pk', -1)
+    all_times = get_procedure_all_times(start_date, end_date)
+    get_procedure_by_params(start_date, end_date, research_pk)
