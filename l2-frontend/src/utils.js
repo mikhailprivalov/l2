@@ -10,8 +10,10 @@ export const CalculateFormula = (fields, formula, patient = {}, strict = false) 
 
   try {
     if (!FUNCTION_CACHE[s]) {
-      FUNCTION_CACHE[s] = (new Function(s)()) || 0;
+      const result = (new Function(s)());
+      FUNCTION_CACHE[s] = (typeof result === 'boolean' || result) ? result : 0;
     }
+    console.log(FUNCTION_CACHE);
     return FUNCTION_CACHE[s];
   } catch (e) {
     FUNCTION_CACHE[s] = null;
