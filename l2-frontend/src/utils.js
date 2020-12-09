@@ -1,3 +1,5 @@
+const FUNCTION_CACHE = {};
+
 export const CalculateVisibility = (fields, rule, patient = {}) => {
   return Boolean(CalculateFormula(fields, rule, patient, true))
 };
@@ -5,9 +7,16 @@ export const CalculateVisibility = (fields, rule, patient = {}) => {
 
 export const CalculateFormula = (fields, formula, patient = {}, strict = false) => {
   let s = PrepareFormula(fields, formula, patient, strict);
+
   try {
-    return (new Function(s)()) || 0
+    if (!FUNCTION_CACHE[s]) {
+      const result = (new Function(s)());
+      FUNCTION_CACHE[s] = (typeof result === 'boolean' || result) ? result : 0;
+    }
+    console.log(FUNCTION_CACHE);
+    return FUNCTION_CACHE[s];
   } catch (e) {
+    FUNCTION_CACHE[s] = null;
     console.log(s);
     console.error(e);
     return ''
