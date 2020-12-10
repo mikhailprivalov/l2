@@ -57,7 +57,7 @@
   ],
   "devDependencies": {
     "@babel/core": "^7.12.0",
-    "@babel/preset-env": "^7.12.0",
+    "@babel/preset-env": "^7.12.10",
     "autoprefixer": "^10.0.1",
     "babel-loader": "^8.1.0",
     "clean-webpack-plugin": "^3.0.0",
