@@ -12,9 +12,7 @@ def extract_text_from_pdf(pdf_path):
     page_interpreter = PDFPageInterpreter(resource_manager, converter)
 
     with open(pdf_path, 'rb') as fh:
-        for page in PDFPage.get_pages(fh,
-                                      caching=True,
-                                      check_extractable=True):
+        for page in PDFPage.get_pages(fh, caching=True, check_extractable=True):
             page_interpreter.process_page(page)
 
         text = fake_file_handle.getvalue()
@@ -24,3 +22,5 @@ def extract_text_from_pdf(pdf_path):
 
     if text:
         return text
+    else:
+        return None
