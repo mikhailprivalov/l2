@@ -7,28 +7,9 @@ from api.views import endpoint
 
 def dnk_covid(request):
     prefixes = []
-    var_A = [f"A{i}" for i in range(1, 13)]
-    prefixes.extend(var_A)
-    var_B = [f"B{i}" for i in range(1, 13)]
-    prefixes.extend(var_B)
-    var_C = [f"C{i}" for i in range(1, 13)]
-    prefixes.extend(var_C)
-    var_D = [f"D{i}" for i in range(1, 13)]
-    prefixes.extend(var_D)
-    var_E = [f"E{i}" for i in range(1, 13)]
-    prefixes.extend(var_E)
-    var_F = [f"F{i}" for i in range(1, 13)]
-    prefixes.extend(var_F)
-    var_G = [f"G{i}" for i in range(1, 13)]
-    prefixes.extend(var_G)
-    var_H = [f"H{i}" for i in range(1, 13)]
-    prefixes.extend(var_H)
-    var_I = [f"I{i}" for i in range(1, 13)]
-    prefixes.extend(var_I)
-    var_J = [f"J{i}" for i in range(1, 13)]
-    prefixes.extend(var_J)
-    var_K = [f"K{i}" for i in range(1, 13)]
-    prefixes.extend(var_K)
+    for x in "ABCDEF":
+        for i in range(1, 13):
+            prefixes.append(f"{x}{i}")
 
     req = json.loads(request.body)
     file_data = req.get('file_data', False)
