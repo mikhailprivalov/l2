@@ -27,3 +27,7 @@ def http_func(data, user):
     http_obj.POST.update(data)
     http_obj.user = user
     endpoint(http_obj)
+
+
+def load_file(request):
+    pass
