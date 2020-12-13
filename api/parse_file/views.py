@@ -8,9 +8,7 @@ from api.views import endpoint
 def dnk_covid(request):
     prefixes = []
     for x in "ABCDEF":
-        for i in range(1, 13):
-            prefixes.append(f"{x}{i}")
-
+        prefixes.extend([f"{x}{i}" for i in range(1, 13)])
     req = json.loads(request.body)
     file_data = req.get('file_data', False)
     if file_data:
@@ -18,19 +16,14 @@ def dnk_covid(request):
         if text:
             text.replace("\n", "").split("Коронавирусы подобные SARS-CoVВККоронавирус SARS-CoV-2")
         for i in text:
-            if "+" in i:
-                k = i.split("N")
-                if k[1].split(" ")[0].isdigit():
-                    http_func({"pk": k[1].split(" ")[0], "result": "Положительно"}, request.user)
-            else:
-                k = i.split("N")
-                if k[1].split(" ")[0].isdigit():
-                    http_func({"pk": k[1].split(" ")[0], "result": "Отрицательно"}, request.user)
+            k = i.split("N")
+            if len(k) > 1 and k[1].split(" ")[0].isdigit():
+                result = json.dumps({"pk": k[1].split(" ")[0], "result": [{"dnk_SARS": "Положительно" if "+" in i else "Отрицательно"}]})
+                http_func({"key": 'xxxx', "result": result}, request.user)
 
 
 def http_func(data, user):
-    json_data = json.dumps(data)
     http_obj = HttpRequest()
-    http_obj._body = json_data
+    http_obj.POST.update(data)
     http_obj.user = user
     endpoint(http_obj)
