@@ -2,7 +2,7 @@ import simplejson as json
 from django.db.models import Prefetch
 from django.http import JsonResponse
 
-from api.procedure_list.sql_func import get_procedure_by_params
+from api.procedure_list.sql_func import get_procedure_by_params, get_procedure_all_times
 from api.stationar.stationar_func import forbidden_edit_dir
 from laboratory.utils import strfdatetime
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, FormRelease, MethodsReception
@@ -89,6 +89,12 @@ def get_procedure_by_dir(request):
                             "empty": True,
                         }
     print(rows)
+    start_date = datetime.strptime('2020-11-11', '%Y-%m-%d')
+    start_date = datetime.combine(start_date, dtime.min)
+    end_date = datetime.strptime('2020-12-15', '%Y-%m-%d')
+    end_date = datetime.combine(end_date, dtime.max)
+    a = get_procedure_by_params(start_date, end_date, 525)
+    print(a)
     return JsonResponse({"result": rows, "dates": dates_all, "timesInDates": dates_times})
 
 
@@ -158,7 +164,7 @@ def procedure_execute(request):
 
 @login_required
 @group_required("Врач стационара", "t, ad, p")
-def procedure_execute(request):
+def procedure_aggregate(request):
     request_data = json.loads(request.body)
     start_date = datetime.strptime(request_data['start_date'], '%Y-%m-%d')
     start_date = datetime.combine(start_date, dtime.min)

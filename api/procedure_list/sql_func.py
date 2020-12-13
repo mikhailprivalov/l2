@@ -2,20 +2,22 @@ from django.db import connection
 from laboratory.settings import TIME_ZONE
 
 
-def get_procedure_by_params(d_s, d_e, research_pk):
+def get_procedure_by_params(d_s, d_e, research_pk=-1):
     with connection.cursor() as cursor:
         cursor.execute(
         """SELECT 
             pharmacotherapy_procedurelist.id, 
             pharmacotherapy_drugs.mnn,
-            pharmacotherapy_procedurelist.time_create,
+            to_char(pharmacotherapy_procedurelist.time_create AT TIME ZONE %(tz)s, 'DD.MM.YYYY-HH24:MI:SS') AS create_procedure,
             pharmacotherapy_formrelease.title,
             pharmacotherapy_methodsreception.title,
             pharmacotherapy_procedurelist.dosage,
-            clients_individual.family, 
-            clients_individual.name, 
+            pharmacotherapy_procedurelist.units,
+            clients_individual.id,
+            concat_ws(' ', clients_individual.family, clients_individual.name, clients_individual.patronymic),
             pharmacotherapy_procedurelist.history_id,
-            pl.times_medication,
+            to_char(pl.times_medication AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_execute,
+            to_char(pl.times_medication AT TIME ZONE %(tz)s, 'HH24:MI') AS time_execute,
             pl.cancel,
             pl.executor_id,
             pl.prescription_id,
@@ -44,9 +46,9 @@ def get_procedure_by_params(d_s, d_e, research_pk):
                                 WHEN %(research_pk)s > -1 THEN 
                                     research_id = %(research_pk)s
                                  WHEN %(research_pk)s = -1 THEN 
-                                     EXISTS (SELECT id pharmacotherapy_formrelease)
+                                     EXISTS (SELECT id from pharmacotherapy_formrelease)
                             END       
-            ORDER BY clients_individual.family, pharmacotherapy_drugs.mnn, pl.times_medication   
+            ORDER BY clients_individual.family, clients_individual.id, pharmacotherapy_drugs.mnn, pl.times_medication   
         """,
             params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'research_pk': research_pk},
         )
