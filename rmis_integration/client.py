@@ -1288,7 +1288,7 @@ class Directions(BaseRequester):
 
     def gen_case_rmis(self, direction: Napravleniya, rindiv, x):
         purpose = "1" if not x.issledovaniye.purpose else x.issledovaniye.purpose.rmis_id or "1"
-        conditions_care = "1" if not x.issledovaniye.conditions_care else x.issledovaniye.conditions_care.rmis_id or "1"
+        place = "1" if not x.issledovaniye.place else x.issledovaniye.place.rmis_id or "1"
 
         new_case_data = {
             "uid": direction.pk,
@@ -1299,7 +1299,7 @@ class Directions(BaseRequester):
             "careLevelId": "8",
             "paymentMethodId": "26",
             "initGoalId": purpose,
-            "careRegimenId": conditions_care,
+            "careRegimenId": place,
             "createdDate": ndate(x.issledovaniye.time_confirmation),
         }
         return new_case_data
