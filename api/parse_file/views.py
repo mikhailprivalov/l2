@@ -1,4 +1,4 @@
-from django.http import HttpRequest
+from django.http import HttpRequest, JsonResponse
 
 from api.parse_file.pdf import extract_text_from_pdf
 import simplejson as json
@@ -30,4 +30,11 @@ def http_func(data, user):
 
 
 def load_file(request):
-    pass
+    file = request.FILES['sars_report']
+    if file.content_type == 'application/pdf' and file.size < 10000:
+        with open('/Users/sergejkasanenko/Documents/tmp/2222222222.pdf', 'wb') as f:
+            f.write(file.read())
+        text = extract_text_from_pdf('/Users/sergejkasanenko/Documents/tmp/2222222222.pdf')
+        print(text)
+
+    return JsonResponse({"ok": True})
