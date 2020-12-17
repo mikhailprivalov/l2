@@ -788,10 +788,17 @@ class Services(BaseRequester):
 
     def get_service_ids(self, direction: Napravleniya):
         services_tmp = []
+        rmis_id_rend = []
         for iss in Issledovaniya.objects.filter(napravleniye=direction):
+            if iss.research.rmis_id:
+                rmis_id_rend.append(iss.research.rmis_id)
+                continue
             services_tmp.append(iss.research.code)
             for f in Fractions.objects.filter(research=iss.research):
                 services_tmp.append(f.code)
+
+        if len(rmis_id_rend) > 0:
+            return rmis_id_rend
         return [y for y in [self.get_service_id_for_direction(x, direction) for x in list(set(services_tmp))] if y is not None]
 
 
