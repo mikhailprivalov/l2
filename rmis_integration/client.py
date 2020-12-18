@@ -797,9 +797,7 @@ class Services(BaseRequester):
             for f in Fractions.objects.filter(research=iss.research):
                 services_tmp.append(f.code)
 
-        if len(rmis_id_rend) > 0:
-            return rmis_id_rend
-        return [y for y in [self.get_service_id_for_direction(x, direction) for x in list(set(services_tmp))] if y is not None]
+        return rmis_id_rend + [y for y in [self.get_service_id_for_direction(x, direction) for x in list(set(services_tmp))] if y is not None]
 
 
 def ndate(d: Union[datetime.datetime, datetime.date]):
