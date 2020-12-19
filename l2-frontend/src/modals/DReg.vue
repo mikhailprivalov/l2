@@ -180,6 +180,15 @@
             <label for="de-f6">Причина прекращения:</label>
             <input class="form-control" id="de-f6" v-model="edit_data.why_stop">
           </div>
+
+          <div class="checkbox" style="padding-left: 15px;">
+            <label>
+              <input type="checkbox" v-model="enable_construct"> услуги и периодичность:
+            </label>
+          </div>
+          <div class="form-group">
+            <ConfigureDispenseryResearch v-if="enable_construct && edit_data.diagnos" :diagnos_code="edit_data.diagnos"/>
+          </div>
         </div>
         <div slot="footer">
           <div class="row">
@@ -221,6 +230,7 @@
   import RadioField from '../fields/RadioField'
   import moment from 'moment';
   import {cloneDeep} from 'lodash';
+  import ConfigureDispenseryResearch from "@/fields/ConfigureDispenseryResearch";
 
   const years = [];
 
@@ -255,7 +265,7 @@
 
   export default {
     name: 'd-reg',
-    components: {Modal, MKBFieldForm, RadioField,},
+    components: {Modal, MKBFieldForm, RadioField, ConfigureDispenseryResearch,},
     props: {
       card_pk: {
         type: Number,
@@ -293,6 +303,8 @@
         how_identified: '',
         variant_is_first_time: ['не указано', 'впервые', 'повторно'],
         variant_identified: ['не указано', 'обращении за лечением', 'профилактическом осмотре'],
+        variant_construct: ['скрыть', 'показать'],
+        enable_construct: false,
       }
     },
     created() {
