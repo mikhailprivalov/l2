@@ -183,7 +183,7 @@
 
           <div class="checkbox" style="padding-left: 15px;">
             <label>
-              <input type="checkbox" v-model="enable_construct"> услуги и периодичность:
+              <input type="checkbox" v-model="enable_construct"> конструктор обследований:
             </label>
           </div>
           <div class="form-group">
@@ -303,7 +303,6 @@
         how_identified: '',
         variant_is_first_time: ['не указано', 'впервые', 'повторно'],
         variant_identified: ['не указано', 'обращении за лечением', 'профилактическом осмотре'],
-        variant_construct: ['скрыть', 'показать'],
         enable_construct: false,
       }
     },

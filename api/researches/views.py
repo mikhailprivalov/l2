@@ -7,8 +7,16 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 import users.models as users
-from directory.models import Researches as DResearches, ParaclinicInputGroups, Fractions, ParaclinicTemplateName, ParaclinicInputField, ParaclinicTemplateField, HospitalService, \
-    DispensaryPlan
+from directory.models import (
+    Researches as DResearches,
+    ParaclinicInputGroups,
+    Fractions,
+    ParaclinicTemplateName,
+    ParaclinicInputField,
+    ParaclinicTemplateField,
+    HospitalService,
+    DispensaryPlan,
+)
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
@@ -556,11 +564,28 @@ def research_specialities(request):
 @login_required
 def save_dispensary_data(request):
     request_data = json.loads(request.body)
-    tb_data = request_data.get('tb_data',)
-    print(tb_data)
-    return JsonResponse({'ok': 'ok'})
+    tb_data = request_data.get('tb_data', '')
+    diagnos = request_data.get('diagnos', '')
+    diagnos = diagnos.split(' ')[0]
+    for t_b in tb_data:
+        if int(t_b.get('count', 0)) < 1:
+            return JsonResponse({'message': 'Ошибка в количестве'})
+
+    DispensaryPlan.objects.filter(diagnos=diagnos).delete()
+    for t_b in tb_data:
+        research_obj = None
+        speciality_obj = None
+        if t_b.get('type') == 'Услуга':
+            research_obj = DResearches.objects.get(pk=t_b['current_researches'])
+        else:
+            speciality_obj = Speciality.objects.get(pk=t_b['current_researches'])
+        d = DispensaryPlan(diagnos=diagnos, research=research_obj, repeat=t_b['count'], speciality=speciality_obj, is_visit=t_b.get('is_visit', False))
+        d.save()
+
+    return JsonResponse({'ok':True, 'message': 'Сохранено'})
 
 
+@login_required
 def load_research_by_diagnos(request):
     request_data = json.loads(request.body)
     diagnos_code = request_data.get('diagnos_code', '')

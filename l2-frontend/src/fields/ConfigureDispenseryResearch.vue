@@ -2,7 +2,7 @@
   <div style="margin-top: 10px">
     <table class="table table-bordered">
       <colgroup>
-        <col width='90'/>
+        <col width='110'/>
         <col />
         <col width='70'/>
         <col width='30'/>
@@ -19,11 +19,11 @@
       <tbody>
       <tr v-for="(val, index) in tb_data">
         <td class="cl-td">
-          <select class="form-control nbr" v-model="val.type">
+          <select class="form-control" style="border: none" v-model="val.type">
             <option :value="t" v-for="t in types">{{t}}</option>
           </select>
         </td>
-        <td class="cl-td-my">
+        <td class="cl-td">
             <treeselect v-if="val.type==='Услуга'"  class="treeselect-noborder" :multiple="false" :options="researches"
                     placeholder="Не выбран" v-model="val.current_researches"
             />
@@ -33,7 +33,7 @@
         </td>
         <td class="cl-td">
           <div class="input-group">
-            <input type="text" class="form-control nbr" v-model="val.count" placeholder="Кол-во в год">
+            <input type="number" class="form-control" style="border: none" v-model="val.count" placeholder="Кол-во в год">
           </div>
         </td>
         <td class="text-center cl-td">
@@ -68,18 +68,13 @@
 </template>
 
 <script>
-    import * as action_types from "../store/action-types";
-    // import researchesPoint from '@/api/researches-point';
     import Treeselect from '@riophae/vue-treeselect'
     import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+    import * as action_types from "@/store/action-types";
     import api from '@/api';
 
-    const types = [
-    'Услуга',
-    'Врач',
-  ]
-
-  const makeDefaultRow = (type = null) => ({type: type || types[0], is_visit: false});
+    const types = ["Услуга","Врач"]
+    const makeDefaultRow = (type = null) => ({type: type || types[0], is_visit: false});
 
   export default {
     name: "ConfigureDispenseryResearch",
@@ -96,8 +91,6 @@
         types,
         researches: [],
         specialities: [],
-        tb_temp: [],
-
       }
     },
     mounted() {
@@ -106,31 +99,23 @@
       api('researches/load-research-by-diagnos', {'diagnos_code': this.diagnos_code}).then(rows => this.tb_data = rows);
     },
     methods: {
-      async load_researches_dispensary() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {researches_disp} = await researchesPoint.getResearchesDispensary()
-        this.researches = researches_disp
-        console.log(this.researches)
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
       async save_dispensary_data(tb_data) {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const {ok, message} = await api('researches/save-dispensary-data', {'tb_data': tb_data})
+        const {ok, message} = await api('researches/save-dispensary-data', {'diagnos':this.diagnos_code, 'tb_data': tb_data})
+        if (ok) {
+          okmessage(message);
+        } else {
+          errmessage(message);
+        }
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
+
       add_new_row() {
         const tl = this.tb_data.length;
         this.tb_data.push(makeDefaultRow(tl > 0 ? this.tb_data[tl - 1].type : null));
-        console.log(this.tb_data)
       },
       delete_row(index) {
         this.tb_data.splice(index, 1);
-      },
-      is_first_in_template(i) {
-        return i === 0
-      },
-      is_last_in_template(i) {
-        return i === this.tb_data.length - 1
       },
       changeValue(newVal) {
         this.$emit('modified', newVal)
@@ -155,36 +140,9 @@
     float: right;
   }
 
-  .cl-td-my {
-  padding: 0 !important;
-
-  button {
-    border-radius: 0;
-  }
-
-  input, textarea {
-    border-radius: 0;
-    width: 100%;
-    min-height: 100%;
-  }
-
+  .cl-td /deep/ {
   label {
-    display: flex;
-    margin-bottom: 0;
-    height: 100%;
-    min-height: 34px;
     justify-content: left;
-    align-items: center;
-    cursor: pointer;
-
-    &:hover {
-      background-color: rgba(0, 0, 0, .1);
-    }
-
-    input {
-      margin: 0;
-      cursor: pointer;
-    }
   }
 }
 
