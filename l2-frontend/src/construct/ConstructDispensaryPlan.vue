@@ -1,5 +1,5 @@
 <template>
-  <div class="form-group mkb10" style="width: 100%">
+  <div class="form-group mkb10" style="width: 100%; margin-top: 40px">
     <label>Диагноз в полной форме (код по МКБ и название):</label>
     <MKBFieldForm v-model="diagnos" :short="false"/>
     <ConfigureDispenseryResearch v-if="diagnos.length >= 5" :diagnos_code="diagnos"/>
