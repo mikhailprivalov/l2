@@ -183,7 +183,7 @@
 
           <div class="checkbox" style="padding-left: 15px;">
             <label>
-              <input type="checkbox" v-model="enable_construct"> конструктор обследований:
+              <input type="checkbox" v-model="enable_construct"> настройка обследований для диагноза:
             </label>
           </div>
           <div class="form-group">

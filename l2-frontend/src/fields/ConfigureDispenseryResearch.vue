@@ -1,5 +1,6 @@
 <template>
   <div style="margin-top: 10px">
+     <h5 style="text-align: center">Глобальная настройка для всей системы</h5>
     <table class="table table-bordered">
       <colgroup>
         <col width='110'/>
