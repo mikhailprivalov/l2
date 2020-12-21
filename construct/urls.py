@@ -17,4 +17,5 @@ urlpatterns = [
     path('consults', views.construct_consults),
     path('templates', views.construct_templates),
     path('bacteria', views.construct_bacteria),
+    path('dplan', views.construct_dispensary_plan),
 ]

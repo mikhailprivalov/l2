@@ -28,6 +28,7 @@ def menu(request):
         {"url": "/construct/uets", "title": "Настройка УЕТов", "access": ["Конструктор: Настройка УЕТов"], "module": None},
         {"url": "/construct/templates", "title": "Настройка шаблонов", "access": ["Конструктор: Настройка шаблонов"], "module": None},
         {"url": "/construct/bacteria", "title": "Бактерии и антибиотики", "access": ["Конструктор: Бактерии и антибиотики"], "module": None},
+        {"url": "/construct/dplan", "title": "Д-учет", "access": ["Конструктор: Д-учет"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -191,3 +192,9 @@ def construct_templates(request):
 @group_required("Оператор", "Конструктор: Настройка микробиологии")
 def construct_bacteria(request):
     return render(request, 'construct_bacteria.html')
+
+
+@login_required
+@group_required("Конструктор: Д-учет")
+def construct_dispensary_plan(request):
+    return render(request, 'construct_dplan.html')

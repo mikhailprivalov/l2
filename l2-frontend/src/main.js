@@ -58,6 +58,7 @@ new Vue({
     'ConstructParaclinic': () => import('@/construct/ConstructParaclinic'),
     'ConstructTemplates': () => import('@/construct/ConstructTemplates'),
     'ConstructBacteria': () => import('@/construct/ConstructBacteria'),
+    'ConstructDispensaryPlan': () => import('@/construct/ConstructDispensaryPlan'),
     'ResultsParaclinic': () => import('@/pages/ResultsParaclinic'),
     'StatisticsTickets': () => import('@/pages/StatisticsTickets'),
     'DirectionVisit': () => import('@/pages/DirectionVisit'),

@@ -36,4 +36,7 @@ export default generator({
   getFieldsAndGroups: {
     url: 'researches/fields-and-groups-titles'
   },
+  getResearchesDispensary: {
+    url: 'researches/research-dispensary'
+  },
 })
