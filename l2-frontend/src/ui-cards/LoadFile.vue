@@ -13,7 +13,8 @@
             <input type="file" ref="file" class="form-control-file" id="fileInput" :readonly="loading"
                    @change="handleFileUpload()">
           </div>
-          <button type="button" class="btn btn-primary" @click="submit()" :disabled="!Boolean(file) || loading">
+          <button style="width: 200px;"
+                  type="button" class="btn btn-primary" @click="submit()" :disabled="!Boolean(file) || loading">
             <i class="fa fa-spinner" v-if="loading"></i>
             <span v-else>Загрузить</span>
           </button>
