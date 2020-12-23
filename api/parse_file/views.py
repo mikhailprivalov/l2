@@ -30,11 +30,17 @@ def http_func(data, user):
 
 
 def load_file(request):
-    file = request.FILES['sars_report']
-    if file.content_type == 'application/pdf' and file.size < 10000:
-        with open('/Users/sergejkasanenko/Documents/tmp/2222222222.pdf', 'wb') as f:
-            f.write(file.read())
-        text = extract_text_from_pdf('/Users/sergejkasanenko/Documents/tmp/2222222222.pdf')
-        print(text)
+    file = request.FILES['file']
+    # if file.content_type == 'application/pdf' and file.size < 10000:
+    #     with open('/Users/sergejkasanenko/Documents/tmp/2222222222.pdf', 'wb') as f:
+    #         f.write(file.read())
+    #     text = extract_text_from_pdf('/Users/sergejkasanenko/Documents/tmp/2222222222.pdf')
+    #     print(text)
 
-    return JsonResponse({"ok": True})
+    return JsonResponse({"ok": True, "results": [
+        {"pk": 1111, "result": "Отрицательно"},
+        {"pk": 1112, "result": "Положительно"},
+        {"pk": 1113, "result": "Отрицательно"},
+        {"pk": 1114, "result": "Отрицательно"},
+        {"pk": 1115, "result": "Положительно"},
+    ]})
