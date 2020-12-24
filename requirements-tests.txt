@@ -45,7 +45,7 @@ psycopg2==2.8.2
 pyaml==20.4.0
 pyasn1==0.4.8
 pycodestyle==2.6.0
-Pygments==2.7.1
+Pygments==2.7.3
 pymongo==3.11.0
 pymorphy2==0.9.1
 pymorphy2-dicts==2.4.393442.3710985
