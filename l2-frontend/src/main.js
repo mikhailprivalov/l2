@@ -74,6 +74,7 @@ new Vue({
     'Stationar': () => import('@/pages/Stationar'),
     'DocCall': () => import('@/pages/DocCall'),
     'ListWait': () => import('@/pages/ListWait'),
+    'LoadFile': () => import('@/ui-cards/LoadFile'),
   },
   data: {
     timeouts: {},
