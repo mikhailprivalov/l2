@@ -40,7 +40,6 @@
 <script>
 import Modal from "@/ui-cards/Modal";
 import axios from "axios";
-import * as action_types from "@/store/action-types";
 
 export default {
   components: {Modal},
