@@ -58,6 +58,7 @@ new Vue({
     'ConstructParaclinic': () => import('@/construct/ConstructParaclinic'),
     'ConstructTemplates': () => import('@/construct/ConstructTemplates'),
     'ConstructBacteria': () => import('@/construct/ConstructBacteria'),
+    'ConstructDispensaryPlan': () => import('@/construct/ConstructDispensaryPlan'),
     'ResultsParaclinic': () => import('@/pages/ResultsParaclinic'),
     'StatisticsTickets': () => import('@/pages/StatisticsTickets'),
     'DirectionVisit': () => import('@/pages/DirectionVisit'),
@@ -73,6 +74,7 @@ new Vue({
     'Stationar': () => import('@/pages/Stationar'),
     'DocCall': () => import('@/pages/DocCall'),
     'ListWait': () => import('@/pages/ListWait'),
+    'LoadFile': () => import('@/ui-cards/LoadFile'),
   },
   data: {
     timeouts: {},

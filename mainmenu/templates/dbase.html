@@ -214,10 +214,13 @@
     <script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
     <script src="{% static 'locales/bootstrap-datepicker.ru.min.js' %}"></script>
     <script src="{% static 'js/underscore-min.js' %}"></script>
+    <script src="{% static 'js/jquery.idle.min.js' %}"></script>
     <script>
         let ajax_cache_token = (new Date()) + ''
         let $body = $('body')
         let $loader = {}
+        let userIsIdle = false;
+        let aliveTimer = null;
         const today = new Date()
 
         const card_bases = {{ card_bases|safe }};
@@ -510,6 +513,9 @@
         }
 
         function alive() {
+            if (aliveTimer) {
+                clearTimeout(aliveTimer);
+            }
             $.ajax({
                 method: 'GET', url: '/mainmenu/', cache: false, statusCode: {
                     500: function () {
@@ -582,9 +588,25 @@
                     hl()
                 }
             }).always(function () {
-                setTimeout(alive, 20000)
+                aliveTimer = setTimeout(alive, userIsIdle ? 300000 : 20000)
             })
         }
+
+        $(document).idle({
+          onIdle: function(){
+            userIsIdle = true;
+            console.log('IDLE');
+          },
+          onActive: function(){
+            console.log('ACTIVE');
+            userIsIdle = false;
+            if (aliveTimer) {
+                clearTimeout(aliveTimer);
+            }
+            aliveTimer = setTimeout(alive, 5000);
+          },
+          idle: 100000,
+        });
 
         $(document).ajaxComplete(checkSession)
 

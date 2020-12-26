@@ -7,7 +7,16 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 import users.models as users
-from directory.models import Researches as DResearches, ParaclinicInputGroups, Fractions, ParaclinicTemplateName, ParaclinicInputField, ParaclinicTemplateField, HospitalService
+from directory.models import (
+    Researches as DResearches,
+    ParaclinicInputGroups,
+    Fractions,
+    ParaclinicTemplateName,
+    ParaclinicInputField,
+    ParaclinicTemplateField,
+    HospitalService,
+    DispensaryPlan,
+)
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
@@ -535,4 +544,57 @@ def fields_and_groups_titles(request):
 def descriptive_research(request):
     rows = DResearches.objects.filter(hide=False).filter(Q(is_paraclinic=True) | Q(is_doc_refferal=True)).order_by('title').values('pk', 'title')
     rows = [{"id": -1, "label": "НЕ ВЫБРАНО"}, *[{"id": x['pk'], "label": x["title"]} for x in rows]]
+    return JsonResponse(rows, safe=False)
+
+
+@login_required
+def research_dispensary(request):
+    rows = DResearches.objects.filter(hide=False, is_slave_hospital=False, is_hospital=False).order_by('title').values('pk', 'title')
+    rows = [{"id": -1, "label": "НЕ ВЫБРАНО"}, *[{"id": x['pk'], "label": x["title"]} for x in rows]]
+    return JsonResponse(rows, safe=False)
+
+
+@login_required
+def research_specialities(request):
+    rows = Speciality.objects.filter(hide=False).order_by('title').values('pk', 'title')
+    rows = [{"id": -1, "label": "НЕ ВЫБРАНО"}, *[{"id": x['pk'], "label": x["title"]} for x in rows]]
+    return JsonResponse(rows, safe=False)
+
+
+@login_required
+def save_dispensary_data(request):
+    request_data = json.loads(request.body)
+    tb_data = request_data.get('tb_data', '')
+    diagnos = request_data.get('diagnos', '')
+    diagnos = diagnos.split(' ')[0]
+    for t_b in tb_data:
+        if int(t_b.get('count', 0)) < 1:
+            return JsonResponse({'message': 'Ошибка в количестве'})
+
+    DispensaryPlan.objects.filter(diagnos=diagnos).delete()
+    for t_b in tb_data:
+        research_obj = None
+        speciality_obj = None
+        if t_b.get('type') == 'Услуга':
+            research_obj = DResearches.objects.get(pk=t_b['current_researches'])
+        else:
+            speciality_obj = Speciality.objects.get(pk=t_b['current_researches'])
+        d = DispensaryPlan(diagnos=diagnos, research=research_obj, repeat=t_b['count'], speciality=speciality_obj, is_visit=t_b.get('is_visit', False))
+        d.save()
+
+    return JsonResponse({'ok':True, 'message': 'Сохранено'})
+
+
+@login_required
+def load_research_by_diagnos(request):
+    request_data = json.loads(request.body)
+    diagnos_code = request_data.get('diagnos_code', '')
+    diagnos = diagnos_code.split(' ')[0]
+    d_plan = DispensaryPlan.objects.filter(diagnos=diagnos)
+    rows = []
+    for d_p in d_plan:
+        type = 'Услуга' if d_p.research else 'Врач'
+        code_id = d_p.research.pk if d_p.research else d_p.speciality.pk
+        rows.append({'type': type, 'is_visit': d_p.is_visit, 'current_researches': code_id, 'count': d_p.repeat})
+
     return JsonResponse(rows, safe=False)
