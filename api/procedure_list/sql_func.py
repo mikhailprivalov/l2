@@ -5,7 +5,7 @@ from laboratory.settings import TIME_ZONE
 def get_procedure_by_params(d_s, d_e, research_pk=-1):
     with connection.cursor() as cursor:
         cursor.execute(
-        """SELECT 
+            """SELECT 
             pharmacotherapy_procedurelist.id, 
             pharmacotherapy_drugs.mnn,
             to_char(pharmacotherapy_procedurelist.time_create AT TIME ZONE %(tz)s, 'DD.MM.YYYY-HH24:MI:SS') AS create_procedure,
@@ -61,7 +61,7 @@ def get_procedure_by_params(d_s, d_e, research_pk=-1):
 def get_procedure_all_times(d_s, d_e):
     with connection.cursor() as cursor:
         cursor.execute(
-        """ SELECT 
+            """ SELECT 
             DISTINCT ON (times_medication) to_char(pharmacotherapy_procedurelisttimes.times_medication AT TIME ZONE %(tz)s, 'HH24:MI') as times_medication
             FROM pharmacotherapy_procedurelisttimes
             WHERE pharmacotherapy_procedurelisttimes.times_medication AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s

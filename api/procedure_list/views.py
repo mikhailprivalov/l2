@@ -158,6 +158,7 @@ def procedure_execute(request):
 
     return JsonResponse({"message": "Приём не записан", "ok": False})
 
+
 @login_required
 @group_required("Врач стационара", "t, ad, p")
 def procedure_aggregate(request):
