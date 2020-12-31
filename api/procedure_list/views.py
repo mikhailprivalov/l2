@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import simplejson as json
 from django.db.models import Prefetch
 from django.http import JsonResponse
@@ -88,13 +90,7 @@ def get_procedure_by_dir(request):
                         row["dates"][date][t] = {
                             "empty": True,
                         }
-    print(rows)
-    start_date = datetime.strptime('2020-11-11', '%Y-%m-%d')
-    start_date = datetime.combine(start_date, dtime.min)
-    end_date = datetime.strptime('2020-12-15', '%Y-%m-%d')
-    end_date = datetime.combine(end_date, dtime.max)
-    a = get_procedure_by_params(start_date, end_date, 525)
-    print(a)
+
     return JsonResponse({"result": rows, "dates": dates_all, "timesInDates": dates_times})
 
 
@@ -171,5 +167,43 @@ def procedure_aggregate(request):
     end_date = datetime.strptime(request_data['end_date'], '%Y-%m-%d')
     end_date = datetime.combine(end_date, dtime.max)
     research_pk = request_data.get('research_pk', -1)
+
+    patient_procedures = get_procedure_by_params(start_date, end_date, research_pk)
     all_times = get_procedure_all_times(start_date, end_date)
-    get_procedure_by_params(start_date, end_date, research_pk)
+
+    pk_card, new_patient, drug, from_release, method, unit, dosage = None, None, None, None, None, None, None
+    empty = {k[0]: {'empty': True} for k in all_times}
+    unique_dates = sorted(set([i[11] for i in patient_procedures]))
+    current_petient_drugs = 0
+    data = []
+    for i in patient_procedures:
+        if pk_card != i[10]:
+            pk_card = i[10]
+            data.append(new_patient)
+            new_patient = {"patient": {"pk_card": pk_card, "fio": i[8]}}
+            new_patient['drugs'] = []
+
+        if drug != i[1] or from_release != i[3] or method != i[4] or unit != i[6] or dosage != i[5]:
+            drug = i[1]
+            from_release = i[3]
+            method = i[4]
+            unit = i[6]
+            dosage = i[5]
+            new_patient['drugs'].append({'pk': i[0],
+                                         'drug': drug,
+                                         'created_at': i[2],
+                                         'form_release': from_release,
+                                         'method': method,
+                                         'dosage': dosage,
+                                         'unit': unit,
+                                         'cancel': i[13],
+                                         'who_cancel': None,
+                                         'dates': {j: deepcopy(empty) for j in unique_dates}})
+            current_petient_drugs = len(new_patient['drugs'])
+
+        new_patient['drugs'][current_petient_drugs - 1]['dates'][i[11]][i[12]] = {'datetime': f'{i[11]} {i[12]}', 'pk': 81, 'empty': False, 'ok': True if i[16] else False, 'executor': i[16],
+                                                                                  'cancel': False, 'who_cancel': None, 'history_num': i[17]}
+    data.append(new_patient)
+    data.pop(0)
+
+    return JsonResponse({"result": data, "dates": unique_dates, "timesInDates": all_times})

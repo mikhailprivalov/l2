@@ -16,12 +16,14 @@ def get_procedure_by_params(d_s, d_e, research_pk=-1):
             clients_individual.id,
             concat_ws(' ', clients_individual.family, clients_individual.name, clients_individual.patronymic),
             pharmacotherapy_procedurelist.history_id,
+            pharmacotherapy_procedurelist.card_id,
             to_char(pl.times_medication AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_execute,
             to_char(pl.times_medication AT TIME ZONE %(tz)s, 'HH24:MI') AS time_execute,
             pl.cancel,
             pl.executor_id,
             pl.prescription_id,
-            pl.fio
+            pl.fio,
+            pharmacotherapy_procedurelist.history_id
             FROM public.pharmacotherapy_procedurelist
                 LEFT JOIN pharmacotherapy_drugs ON (pharmacotherapy_procedurelist.drug_id=pharmacotherapy_drugs.id)
                 LEFT JOIN pharmacotherapy_formrelease ON (pharmacotherapy_procedurelist.form_release_id=pharmacotherapy_formrelease.id)
@@ -62,6 +64,7 @@ def get_procedure_all_times(d_s, d_e):
         """ SELECT 
             DISTINCT ON (times_medication) to_char(pharmacotherapy_procedurelisttimes.times_medication AT TIME ZONE %(tz)s, 'HH24:MI') as times_medication
             FROM pharmacotherapy_procedurelisttimes
+            WHERE pharmacotherapy_procedurelisttimes.times_medication AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
             ORDER BY times_medication
         """,
             params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
