@@ -5,7 +5,7 @@ from hospitals.models import Hospitals
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strfdatetime
 from results.prepare_data import text_to_bold
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, SimpleDocTemplate, PageBreak
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, SimpleDocTemplate, PageBreak, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from copy import deepcopy
@@ -15,6 +15,8 @@ from reportlab.lib.pagesizes import A4, landscape, A5, portrait
 import os.path
 import directory.models as directory
 from reportlab.lib.units import mm
+
+from utils.dates import normalize_date
 
 
 def form_04(request_data):
@@ -157,6 +159,8 @@ def form_04_data_result_(iss):
         'Заключение по приказу N302н',
         'Дата осмотра',
         'Цех, участок ОПУ',
+        'Выявлено',
+        'Дополнительные сведения'
     ]
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
@@ -635,3 +639,325 @@ def form_05_06_data_result_(iss):
                     title = r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')
                 result.append({"title": title, "value": v})
     return result
+
+
+def form_07(request_data):
+    # Справка на госслужбу а № 001-ГС/у от 14.12.2009 № 984н
+    direction = request_data["dir"]
+
+    buffer = BytesIO()
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm, topMargin=10 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Заключение"))
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.leading = 15
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+
+    hospital: Hospitals = request_data["hospital"]
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+
+    fwb = []
+    opinion = [
+        [
+            Paragraph('', styleT),
+            Paragraph('<font size=10>Учетная форма № 001-ГС/у <br/>Утверждена Приказом Минздравсоцразвития России<br/>от 14.12.2009 № 984н</font>', styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, 2 * [105 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 5 * mm))
+
+    styleCenterBold = deepcopy(style)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 11.5
+    styleCenterBold.leading = 15
+    styleCenterBold.fontName = 'PTAstraSerifBold'
+
+    patient = Napravleniya.objects.get(pk=direction)
+    fio = patient.client.individual.fio()
+    patient_data = patient.client.get_data_individual()
+
+    iss = Issledovaniya.objects.filter(napravleniye__pk=direction).order_by("research__pk", "research__sort_weight").first()
+    if not iss.time_confirmation:
+        return ""
+
+    result = form_04_data_result_(iss)
+    work_place, identified = "", ""
+    for i in result:
+        if i["title"] == "Место работы":
+            work_place = i["value"]
+        elif i["title"] == "Выявлено":
+            identified = i["value"]
+
+    fwb.append(Paragraph(f'Заключение № {direction}', styleCenterBold))
+    fwb.append(Paragraph(
+        'медицинского учреждения о наличии (отсутствии) заболевания, препятствующего поступлению на государственную гражданскую службу Российской Федерации и муниципальную службу или ее прохождению',
+        styleCenterBold))
+    date_medical_examination = iss.medical_examination.strftime("%Y-%m-%d")
+    date_medical_examination = normalize_date(date_medical_examination)
+
+    fwb.append(Paragraph(f'от {date_medical_examination} г', styleCenterBold))
+    fwb.append(Spacer(1, 8 * mm))
+    fwb.append(Paragraph(f'1. Выдано:  {hospital_name}', style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'2. Наименование, почтовый адрес государственного органа, органа муниципального образования, куда представляется Заключение: <u>{work_place}</u>', style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'3. Фамилия, имя, отчество:  {fio}', style))
+    sex = "мужской" if patient_data["sex"] == "м" else "женский"
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'4. Пол:  {sex}', style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'5. Дата рождения: {patient_data["born"]}', style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'6. Адрес места жительства: {patient_data["main_address"]}', style))
+    fwb.append(Spacer(1, 4 * mm))
+    fwb.append(Paragraph(f'7. Заключение<br/>'
+                         f'Выявлено {identified}, препятствующего поступлению на государственную гражданскую службу Российской Федерации (муниципальную службу) или ее прохождению'
+                         f'', style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Spacer(1, 8 * mm))
+    space_symbol = '&nbsp;'
+    fwb.append(Paragraph(f"____________________________________ {space_symbol * 10} ________________ {space_symbol * 10} __________________", style))
+    fwb.append(Paragraph(f"(должность врача, выдавшего заключение){space_symbol * 13} (подпись) {space_symbol * 30}(Ф.И.О.)", style))
+    fwb.append(Spacer(1, 7 * mm))
+    fwb.append(Paragraph(f"Главный врач учреждения здравоохранения {space_symbol * 7} ________________ {space_symbol * 10} __________________ ", style))
+    fwb.append(Paragraph(f"{space_symbol * 87} (подпись) {space_symbol * 30}(Ф.И.О.)", style))
+
+    fwb.append(Paragraph('М.П. "___" ________________ 20__ г.', style))
+
+    doc.build(fwb)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
+
+
+def form_08(request_data):
+    # Форма Судья == N 086-1/у от 21 февраля 2002 г. N 61
+    direction = request_data["dir"]
+
+    buffer = BytesIO()
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A5), leftMargin=15 * mm, rightMargin=10 * mm, topMargin=5 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Заключение"))
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.leading = 12
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+
+    hospital: Hospitals = request_data["hospital"]
+    hospital_name = hospital.safe_short_title
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+
+    fwb = []
+    opinion = [
+        [
+            Paragraph(f'<font size=10>Министерство здравоохранения<br/>Российской Федерации<br/>{hospital_name}</font>', styleT),
+            Paragraph('<font size=10>Медицинская документация<br/>Форма N 086-1/у<br/>Утверждена приказом Минздрава России<br/>21 февраля 2002 г. N 61</font>', styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, 2 * [105 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 3 * mm))
+
+    styleCenterBold = deepcopy(style)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 11.5
+    styleCenterBold.leading = 15
+    styleCenterBold.fontName = 'PTAstraSerifBold'
+
+    patient = Napravleniya.objects.get(pk=direction)
+    fio = patient.client.individual.fio()
+    patient_data = patient.client.get_data_individual()
+
+    iss = Issledovaniya.objects.filter(napravleniye__pk=direction).order_by("research__pk", "research__sort_weight").first()
+    if not iss.time_confirmation:
+        return ""
+
+    result = form_04_data_result_(iss)
+    work_place, identified_fianl = "", ""
+    for i in result:
+        if i["title"] == "Место работы":
+            work_place = i["value"]
+        elif i["title"] == "Заключение по приказу N302н":
+            identified_fianl = i["value"]
+
+    fwb.append(Paragraph(f'Медицинское освидетельствование № {direction}', styleCenterBold))
+    fwb.append(Paragraph('претендента на должность судьи', styleCenterBold))
+    date_medical_examination = iss.medical_examination.strftime("%Y-%m-%d")
+    date_medical_examination = normalize_date(date_medical_examination)
+
+    fwb.append(Paragraph(f'от {date_medical_examination} г', styleCenterBold))
+    fwb.append(Spacer(1, 4 * mm))
+    fwb.append(Paragraph(f'1. Выдано:  {hospital_name}', style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f'2. Наименование учреждения, куда представляется освидетельствование: <u>{work_place}</u>', style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f'3. Фамилия, имя, отчество:  {fio}', style))
+    fwb.append(Spacer(1, 2 * mm))
+    space_symbol = '&nbsp;'
+    fwb.append(Paragraph(f'4. Пол:  {patient_data["sex"]} {space_symbol * 10} 5. Дата рождения: {patient_data["born"]}', style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f'6. Адрес места жительства: {patient_data["main_address"]}', style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f'7. Врачебное  заключение о   профессиональной   пригодности: <u>{identified_fianl}</u>', style))
+    fwb.append(Paragraph(
+        '<font size=9>(дается в соответствии с перечнем заболеваний, препятствующих  назначению на  должность  судьи,  утвержденным  решением  Совета  судей  Российской Федерации)</font>',
+        style))
+    fwb.append(Spacer(1, 4 * mm))
+    fwb.append(Paragraph("Подпись лица, заполнившего освидетельствование ________________________", style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph("Подпись главного врача лечебно-", style))
+    fwb.append(Paragraph("профилактического учреждения __________________________________________", style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph('Место печати', style))
+    doc.build(fwb)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
+
+
+def form_09(request_data):
+    # Форма Судья == N 086-1/у от 21 февраля 2002 г. N 61
+    direction = request_data["dir"]
+
+    buffer = BytesIO()
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A5), leftMargin=15 * mm, rightMargin=10 * mm, topMargin=5 * mm, bottomMargin=5 * mm, allowSplitting=1,
+                            title="Форма {}".format("Прикрепление"))
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.leading = 12
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+
+    hospital: Hospitals = request_data["hospital"]
+    hospital_name = hospital.safe_full_title
+    hospital_short_title = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_phones = hospital.safe_phones
+    hospital_email = hospital.safe_email
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+
+    styleCenterBold = deepcopy(style)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 11.5
+    styleCenterBold.leading = 15
+    styleCenterBold.fontName = 'PTAstraSerifBold'
+
+    fwb = []
+    fwb.append(Paragraph(f'{hospital_name}', styleCenterBold))
+    fwb.append(HRFlowable(width=200 * mm, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.black))
+
+    iss = Issledovaniya.objects.filter(napravleniye__pk=direction).order_by("research__pk", "research__sort_weight").first()
+    date_medical_examination = iss.medical_examination.strftime("%Y-%m-%d")
+    date_medical_examination = normalize_date(date_medical_examination)
+    opinion = [
+        [
+            Paragraph(f'<font size=10>Юридический адрес:<br/>{hospital_address}<br/>тел: {hospital_phones}<br/>e-mail: {hospital_email}<br/><br/>{date_medical_examination} г.</font>', styleT),
+            Paragraph('', styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, 2 * [105 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 3 * mm))
+
+    patient = Napravleniya.objects.get(pk=direction)
+    fio = patient.client.individual.fio()
+    patient_data = patient.client.get_data_individual()
+
+
+    if not iss.time_confirmation:
+        return ""
+
+    fwb.append(Paragraph(f'Врачебная справка № {direction}', styleCenterBold))
+    fwb.append(Spacer(1, 4 * mm))
+    result = form_04_data_result_(iss)
+    data = ""
+    for i in result:
+        if i["title"] == "Дополнительные сведения":
+            data = i["value"]
+    fwb.append(Paragraph(f'Дана {fio} {patient_data["born"]}. в том, что она прикреплен(а) в: {hospital_name}. {data}', style))
+    fwb.append(Spacer(1, 8 * mm))
+    space_symbol = '&nbsp;'
+    fwb.append(Paragraph(f'Лечащий врач {space_symbol * 80} {iss.doc_confirmation_fio}', style))
+
+    doc.build(fwb)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
