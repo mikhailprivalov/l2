@@ -35,7 +35,7 @@ from directions.models import (
     MicrobiologyResultCultureAntibiotic,
     DirectionToUserWatch, IstochnikiFinansirovaniya,
 )
-from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
+from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService
 from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
@@ -1794,7 +1794,12 @@ def directions_patient_history(request):
 
     is_same_parent = request_data.get("isSameParent", False)
 
-    if is_same_parent:
+    hospital_research = HospitalService.objects.filter(slave_research=iss.research).first()
+    site_type = -1
+    if hospital_research:
+        site_type = hospital_research.site_type
+
+    if is_same_parent and site_type == 1:
         filtered = filtered.filter(napravleniye__parent=iss.napravleniye.parent)
 
     for i in filtered.order_by('-time_confirmation').exclude(pk=request_data["pk"]):

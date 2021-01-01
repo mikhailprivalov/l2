@@ -707,6 +707,7 @@ def hosp_patient_movement(hosp_nums_obj):
                     None if not Issledovaniya.objects.get(pk=extract_data['extract_iss']) else Issledovaniya.objects.get(pk=extract_data['extract_iss']).doc_confirmation.personal_code
                 )
 
+        list_values = None
         epicrisis_data = hosp_get_data_direction(hosp_dir, site_type=6, type_service='None', level=2)
         if epicrisis_data:
             result_check = check_transfer_epicrisis(epicrisis_data)
