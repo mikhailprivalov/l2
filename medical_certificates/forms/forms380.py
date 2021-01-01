@@ -160,7 +160,7 @@ def form_04_data_result_(iss):
         'Дата осмотра',
         'Цех, участок ОПУ',
         'Выявлено',
-        'Дополнительные сведения'
+        'Дополнительные сведения',
     ]
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
@@ -717,9 +717,12 @@ def form_07(request_data):
             identified = i["value"]
 
     fwb.append(Paragraph(f'Заключение № {direction}', styleCenterBold))
-    fwb.append(Paragraph(
-        'медицинского учреждения о наличии (отсутствии) заболевания, препятствующего поступлению на государственную гражданскую службу Российской Федерации и муниципальную службу или ее прохождению',
-        styleCenterBold))
+    fwb.append(
+        Paragraph(
+            'медицинского учреждения о наличии (отсутствии) заболевания, препятствующего поступлению на государственную гражданскую службу Российской Федерации и муниципальную службу или ее прохождению',
+            styleCenterBold,
+        )
+    )
     date_medical_examination = iss.medical_examination.strftime("%Y-%m-%d")
     date_medical_examination = normalize_date(date_medical_examination)
 
@@ -738,9 +741,14 @@ def form_07(request_data):
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'6. Адрес места жительства: {patient_data["main_address"]}', style))
     fwb.append(Spacer(1, 4 * mm))
-    fwb.append(Paragraph(f'7. Заключение<br/>'
-                         f'Выявлено {identified}, препятствующего поступлению на государственную гражданскую службу Российской Федерации (муниципальную службу) или ее прохождению'
-                         f'', style))
+    fwb.append(
+        Paragraph(
+            f'7. Заключение<br/>'
+            f'Выявлено {identified}, препятствующего поступлению на государственную гражданскую службу Российской Федерации (муниципальную службу) или ее прохождению'
+            f'',
+            style,
+        )
+    )
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Spacer(1, 8 * mm))
     space_symbol = '&nbsp;'
@@ -767,7 +775,9 @@ def form_08(request_data):
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
-    doc = SimpleDocTemplate(buffer, pagesize=landscape(A5), leftMargin=15 * mm, rightMargin=10 * mm, topMargin=5 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Заключение"))
+    doc = SimpleDocTemplate(
+        buffer, pagesize=landscape(A5), leftMargin=15 * mm, rightMargin=10 * mm, topMargin=5 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Заключение")
+    )
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -851,9 +861,12 @@ def form_08(request_data):
     fwb.append(Paragraph(f'6. Адрес места жительства: {patient_data["main_address"]}', style))
     fwb.append(Spacer(1, 2 * mm))
     fwb.append(Paragraph(f'7. Врачебное  заключение о   профессиональной   пригодности: <u>{identified_fianl}</u>', style))
-    fwb.append(Paragraph(
-        '<font size=9>(дается в соответствии с перечнем заболеваний, препятствующих  назначению на  должность  судьи,  утвержденным  решением  Совета  судей  Российской Федерации)</font>',
-        style))
+    fwb.append(
+        Paragraph(
+            '<font size=9>(дается в соответствии с перечнем заболеваний, препятствующих  назначению на  должность  судьи,  утвержденным  решением  Совета  судей  Российской Федерации)</font>',
+            style,
+        )
+    )
     fwb.append(Spacer(1, 4 * mm))
     fwb.append(Paragraph("Подпись лица, заполнившего освидетельствование ________________________", style))
     fwb.append(Spacer(1, 2 * mm))
@@ -876,8 +889,9 @@ def form_09(request_data):
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
-    doc = SimpleDocTemplate(buffer, pagesize=landscape(A5), leftMargin=15 * mm, rightMargin=10 * mm, topMargin=5 * mm, bottomMargin=5 * mm, allowSplitting=1,
-                            title="Форма {}".format("Прикрепление"))
+    doc = SimpleDocTemplate(
+        buffer, pagesize=landscape(A5), leftMargin=15 * mm, rightMargin=10 * mm, topMargin=5 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Прикрепление")
+    )
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -916,7 +930,9 @@ def form_09(request_data):
     date_medical_examination = normalize_date(date_medical_examination)
     opinion = [
         [
-            Paragraph(f'<font size=10>Юридический адрес:<br/>{hospital_address}<br/>тел: {hospital_phones}<br/>e-mail: {hospital_email}<br/><br/>{date_medical_examination} г.</font>', styleT),
+            Paragraph(
+                f'<font size=10>Юридический адрес:<br/>{hospital_address}<br/>тел: {hospital_phones}<br/>e-mail: {hospital_email}<br/><br/>{date_medical_examination} г.</font>', styleT
+            ),
             Paragraph('', styleT),
         ],
     ]
@@ -939,7 +955,6 @@ def form_09(request_data):
     patient = Napravleniya.objects.get(pk=direction)
     fio = patient.client.individual.fio()
     patient_data = patient.client.get_data_individual()
-
 
     if not iss.time_confirmation:
         return ""
