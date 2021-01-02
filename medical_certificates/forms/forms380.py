@@ -125,8 +125,8 @@ def form_04(request_data):
 
     result = form_04_data_result_(iss)
     work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date, department, recommendation = ("", "", "", "", "", "", "", "", "")
-    dispensary_group = "____________________________________________________________"
-    name_disease = "____________________________________________________________"
+    dispensary_group = "__________________________________________________________"
+    name_disease = "____________________________________________________"
     patalogy, type_med_examination_padeg = "", ""
     for i in result:
         if i["title"] == "Место работы":
