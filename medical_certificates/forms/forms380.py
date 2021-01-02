@@ -69,23 +69,23 @@ def form_04(request_data):
             ]
         )
     )
-    kod_ogrn = list(hospital_kod_ogrn)
+
     opinion = [
         [
             Paragraph('Код ОГРН', styleT),
-            Paragraph(f"{kod_ogrn[0]}", styleT),
-            Paragraph(f"{kod_ogrn[1]}", styleT),
-            Paragraph(f"{kod_ogrn[2]}", styleT),
-            Paragraph(f"{kod_ogrn[3]}", styleT),
-            Paragraph(f"{kod_ogrn[4]}", styleT),
-            Paragraph(f"{kod_ogrn[5]}", styleT),
-            Paragraph(f"{kod_ogrn[6]}", styleT),
-            Paragraph(f"{kod_ogrn[7]}", styleT),
-            Paragraph(f"{kod_ogrn[8]}", styleT),
-            Paragraph(f"{kod_ogrn[9]}", styleT),
-            Paragraph(f"{kod_ogrn[10]}", styleT),
-            Paragraph(f"{kod_ogrn[11]}", styleT),
-            Paragraph(f"{kod_ogrn[12]}", styleT),
+            Paragraph(f"{hospital_kod_ogrn[0]}", styleT),
+            Paragraph(f"{hospital_kod_ogrn[1]}", styleT),
+            Paragraph(f"{hospital_kod_ogrn[2]}", styleT),
+            Paragraph(f"{hospital_kod_ogrn[3]}", styleT),
+            Paragraph(f"{hospital_kod_ogrn[4]}", styleT),
+            Paragraph(f"{hospital_kod_ogrn[5]}", styleT),
+            Paragraph(f"{hospital_kod_ogrn[6]}", styleT),
+            Paragraph(f"{hospital_kod_ogrn[7]}", styleT),
+            Paragraph(f"{hospital_kod_ogrn[8]}", styleT),
+            Paragraph(f"{hospital_kod_ogrn[9]}", styleT),
+            Paragraph(f"{hospital_kod_ogrn[10]}", styleT),
+            Paragraph(f"{hospital_kod_ogrn[11]}", styleT),
+            Paragraph(f"{hospital_kod_ogrn[12]}", styleT),
         ],
     ]
     fwb.append(tbl)
@@ -342,7 +342,7 @@ def form_05(request_data):
 
     hospital_name = hospital.safe_short_title
     hospital_address = hospital.safe_address
-    hospital_kod_ogrn = hospital.safe_ogrn
+    hospital_hospital_kod_ogrn = hospital.safe_ogrn
 
     styleT = deepcopy(style)
     styleT.alignment = TA_LEFT
@@ -352,7 +352,7 @@ def form_05(request_data):
     fwb = []
     opinion = [
         [
-            Paragraph('<font size=10>{}<br/>Адрес: {}<br/>ОГРН: {}</font>'.format(hospital_name, hospital_address, hospital_kod_ogrn), styleT),
+            Paragraph('<font size=10>{}<br/>Адрес: {}<br/>ОГРН: {}</font>'.format(hospital_name, hospital_address, hospital_hospital_kod_ogrn), styleT),
             Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО:<br/>Медицинская документация<br/>Учетная форма N 058/у</font>', styleT),
         ],
     ]
