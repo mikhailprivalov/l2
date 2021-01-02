@@ -70,7 +70,6 @@ def form_04(request_data):
         )
     )
     kod_ogrn = list(hospital_kod_ogrn)
-    print(kod_ogrn)
     opinion = [
         [
             Paragraph('Код ОГРН', styleT),
