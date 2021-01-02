@@ -1056,7 +1056,7 @@ def form_10(request_data):
     fwb.append(Paragraph('(врачебное профессионально-консультативное заключение)', styleCenterBold))
     fwb.append(Spacer(1, 4 * mm))
     result = form_04_data_result_(iss)
-    data, was_ill, vaccinations, therapy_doc, hirurg_doc, nevrolog_doc, lor_doc, ophtalmolog_doc, fluorograph, laboratory, final_examination = '', '', '', '', '', '', '', '', '', '', ''
+    was_ill, vaccinations, therapy_doc, hirurg_doc, nevrolog_doc, lor_doc, ophtalmolog_doc, fluorograph, laboratory, final_examination = '', '', '', '', '', '', '', '', '', ''
     for i in result:
         if i["title"] == "Перенесенные заболевания":
             was_ill = i["value"]
