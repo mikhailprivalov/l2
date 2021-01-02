@@ -53,7 +53,7 @@ def form_04(request_data):
     fwb = []
     opinion = [
         [
-            Paragraph(f'<font size=10>{hospital_name}<br/>Адрес: {hospital_address}<br/>Код ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
+            Paragraph(f'<font size=10>{hospital_name}<br/>Адрес: {hospital_address}<br/></font>', styleT),
             Paragraph('', styleT),
         ],
     ]
@@ -66,6 +66,43 @@ def form_04(request_data):
                 ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
                 ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+    kod_ogrn = list(hospital_kod_ogrn)
+    print(kod_ogrn)
+    opinion = [
+        [
+            Paragraph('Код ОГРН', styleT),
+            Paragraph(f"{kod_ogrn[0]}", styleT),
+            Paragraph(f"{kod_ogrn[1]}", styleT),
+            Paragraph(f"{kod_ogrn[2]}", styleT),
+            Paragraph(f"{kod_ogrn[3]}", styleT),
+            Paragraph(f"{kod_ogrn[4]}", styleT),
+            Paragraph(f"{kod_ogrn[5]}", styleT),
+            Paragraph(f"{kod_ogrn[6]}", styleT),
+            Paragraph(f"{kod_ogrn[7]}", styleT),
+            Paragraph(f"{kod_ogrn[8]}", styleT),
+            Paragraph(f"{kod_ogrn[9]}", styleT),
+            Paragraph(f"{kod_ogrn[10]}", styleT),
+            Paragraph(f"{kod_ogrn[11]}", styleT),
+            Paragraph(f"{kod_ogrn[12]}", styleT),
+        ],
+    ]
+    fwb.append(tbl)
+    col_width = [6 * mm for i in range(13)]
+    col_width.insert(0, 21 * mm)
+    tbl = Table(opinion, hAlign='LEFT', rowHeights=6 * mm, colWidths=tuple(col_width))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (0, 0), 0.75, colors.white),
+                ('GRID', (1, 0), (-1, -1), 0.75, colors.black),
+                ('LEFTPADDING', (1, 0), (-1, -1), 2 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 1 * mm),
+                ('LEFTPADDING', (0, 0), (0, 0), 3 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 3.5 * mm),
             ]
         )
     )
@@ -88,7 +125,10 @@ def form_04(request_data):
         return ""
 
     result = form_04_data_result_(iss)
-    work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date, department = ("", "", "", "", "", "", "", "")
+    work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date, department, recommendation = ("", "", "", "", "", "", "", "", "")
+    dispensary_group = "____________________________________________________________"
+    name_disease = "____________________________________________________________"
+    patalogy, type_med_examination_padeg = "", ""
     for i in result:
         if i["title"] == "Место работы":
             work_place = i["value"]
@@ -99,9 +139,9 @@ def form_04(request_data):
         elif i["title"] == "Тип медосмотра":
             type_med_examination = i["value"]
             if type_med_examination.lower() == 'предварительный':
-                type_med_examination = 'предварительного'
+                type_med_examination_padeg = 'предварительного'
             if type_med_examination.lower() == 'периодический':
-                type_med_examination = 'периодического'
+                type_med_examination_padeg = 'периодического'
         elif i["title"] == "Медицинские противопоказания к работе":
             restrictions = i["value"]
         elif i["title"] == "Заключение по приказу N302н":
@@ -110,9 +150,18 @@ def form_04(request_data):
             date = i["value"]
         elif i["title"] == "Цех, участок ОПУ":
             department = i["value"]
+        elif i["title"] == "Рекомендации":
+            recommendation = i["value"]
+        elif i["title"] == "Диспансерная группа":
+            dispensary_group = i["value"]
+        elif i["title"] == "Наименование заболевания":
+            name_disease = i["value"]
+        elif i["title"] == "Патология":
+            patalogy = i["value"]
 
-    fwb.append(Paragraph(f'Заключение № {direction}', styleCenterBold))
-    fwb.append(Paragraph(f'{type_med_examination} медицинского осмотра (обследования)', styleCenterBold))
+
+    fwb.append(Paragraph(f'Медицинское заключение по результатам', styleCenterBold))
+    fwb.append(Paragraph(f'{type_med_examination_padeg} медицинского осмотра (обследования) № {direction}', styleCenterBold))
     fwb.append(Spacer(1, 8 * mm))
     fwb.append(Paragraph(f'1. Ф.И.О:  {fio}', style))
     fwb.append(Spacer(1, 3 * mm))
@@ -123,19 +172,66 @@ def form_04(request_data):
     fwb.append(Paragraph(f"3 Профессия (должность) (в настоящее время): {work_position}", style))
     fwb.append(Paragraph(f"Вредный производственный фактор или вид работы: {harmful_factor}", style))
     fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f"4. <u>{type_med_examination.capitalize()}</u> медицинский осмотр (обследование)", style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f"5. Результат медицинского осмотра (обследования): {patalogy}", style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f"6. Наименование заболевания: {name_disease}", style))
+    fwb.append(Spacer(1, 3 * mm))
     fwb.append(
         Paragraph(
-            f"4. Согласно результатам проведенного <u>{type_med_examination}</u> медицинского осмотра (обследования): "
-            f"<u>{restrictions}</u> медицинские противопоказания к работе с вредными и/или опасными веществами и производственными факторами, "
-            f"заключение <u>{med_report}</u> ",
-            style,
+            f"7. Согласно результатам проведенного <u>{type_med_examination_padeg}</u> медицинского осмотра (обследования): "
+            f"<u>{restrictions}</u> медицинские противопоказания к работе с вредными и/или опасными веществами и производственными факторами заключение <u>{med_report}</u> ", style
+        )
+    )
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(
+        f"8. Рекомендации по результатам <u>{type_med_examination_padeg}</u> медицинского осмотра (обсле-дования) (направление в специализированную или профпатологическую медицинскую "
+        f"организацию; использование средств индивидуальной защиты, или др.): {recommendation}", style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f"9. Диспансерная группа: {dispensary_group}", style))
+    fwb.append(Spacer(1, 3 * mm))
+    notice = "_____________________________"
+    fwb.append(Paragraph(f"10. Дата и номер извещения об установлении предварительного диагноза острого или хронического профессионального заболевания (отравления): {notice}", style))
+    fwb.append(Spacer(1, 3 * mm))
+    space_symbol = '&nbsp;'
+    date_diagnos = iss.medical_examination
+    date_diagnos = date_diagnos.strftime("%d.%m.%Y")
+    opinion = [
+        [
+            Paragraph('11. Председатель врачебной комиссии:', style),
+            Paragraph('12. Члены врачебной комиссии:', style),
+        ],
+        [
+            Paragraph(f'_________________________ {space_symbol * 3} ____________', style),
+            Paragraph(f'_________________________ {space_symbol * 3} ____________', style),
+        ],
+        [
+            Paragraph(f'', style),
+            Paragraph(f'_________________________ {space_symbol * 3} ____________', style),
+        ],
+        [
+            Paragraph(f'{date_diagnos} г.', style),
+            Paragraph(f'_________________________ {space_symbol * 3} ____________', style),
+        ],
+    ]
+
+    tbl = Table(opinion, colWidths=(100 * mm, 90 * mm))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 2 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 7 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
         )
     )
 
-    fwb.append(Spacer(1, 8 * mm))
-    fwb.append(Paragraph("Председатель врачебной комиссии ____________________________ (__________)", style))
-    fwb.append(Spacer(1, 6 * mm))
-    fwb.append(Paragraph('М.П. "___" ________________ 20__ г.', style))
+    fwb.append(tbl)
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph('М.П.', style))
     fwb.append(Spacer(1, 8 * mm))
     fwb.append(Paragraph(f'_______________________({fio_short}) {date} г.', style))
     fwb.append(Paragraph('(подпись работника<br/>освидетельствуемого)', style))
@@ -171,6 +267,10 @@ def form_04_data_result_(iss):
         'Данные флюорографии',
         'Данные лабораторных исследований',
         'Заключение о профессиональной пригодности',
+        'Рекомендации',
+        'Диспансерная группа',
+        'Наименование заболевания',
+        'Патология'
     ]
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
