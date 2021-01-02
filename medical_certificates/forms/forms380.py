@@ -159,8 +159,7 @@ def form_04(request_data):
         elif i["title"] == "Патология":
             patalogy = i["value"]
 
-
-    fwb.append(Paragraph(f'Медицинское заключение по результатам', styleCenterBold))
+    fwb.append(Paragraph('Медицинское заключение по результатам', styleCenterBold))
     fwb.append(Paragraph(f'{type_med_examination_padeg} медицинского осмотра (обследования) № {direction}', styleCenterBold))
     fwb.append(Spacer(1, 8 * mm))
     fwb.append(Paragraph(f'1. Ф.И.О:  {fio}', style))
@@ -207,7 +206,7 @@ def form_04(request_data):
             Paragraph(f'_________________________ {space_symbol * 3} ____________', style),
         ],
         [
-            Paragraph(f'', style),
+            Paragraph('', style),
             Paragraph(f'_________________________ {space_symbol * 3} ____________', style),
         ],
         [
