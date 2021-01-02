@@ -57,6 +57,7 @@ class Hospitals(models.Model):
 
     @property
     def safe_email(self):
+        # если отсутствует email то адрес сайта
         return self.email or SettingManager.get("org_www")
 
     def __str__(self):
