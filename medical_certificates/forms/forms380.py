@@ -726,7 +726,8 @@ def form_07(request_data):
 
     fwb.append(Paragraph(f'Заключение № {direction}', styleCenterBold))
     fwb.append(Paragraph(
-        'медицинского учреждения о наличии (отсутствии) заболевания, препятствующего поступлению на государственную гражданскую службу Российской Федерации и муниципальную службу или ее прохождению',
+        'медицинского учреждения о наличии (отсутствии) заболевания, препятствующего поступлению на государственную '
+        'гражданскую службу Российской Федерации и муниципальную службу или ее прохождению',
         styleCenterBold))
     date_medical_examination = iss.medical_examination.strftime("%Y-%m-%d")
     date_medical_examination = normalize_date(date_medical_examination)
