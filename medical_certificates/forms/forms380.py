@@ -725,12 +725,9 @@ def form_07(request_data):
             identified = i["value"]
 
     fwb.append(Paragraph(f'Заключение № {direction}', styleCenterBold))
-    fwb.append(
-        Paragraph(
-            'медицинского учреждения о наличии (отсутствии) заболевания, препятствующего поступлению на государственную гражданскую службу Российской Федерации и муниципальную службу или ее прохождению',
-            styleCenterBold,
-        )
-    )
+    fwb.append(Paragraph(
+        'медицинского учреждения о наличии (отсутствии) заболевания, препятствующего поступлению на государственную гражданскую службу Российской Федерации и муниципальную службу или ее прохождению',
+        styleCenterBold))
     date_medical_examination = iss.medical_examination.strftime("%Y-%m-%d")
     date_medical_examination = normalize_date(date_medical_examination)
 
@@ -869,12 +866,9 @@ def form_08(request_data):
     fwb.append(Paragraph(f'6. Адрес места жительства: {patient_data["main_address"]}', style))
     fwb.append(Spacer(1, 2 * mm))
     fwb.append(Paragraph(f'7. Врачебное  заключение о   профессиональной   пригодности: <u>{identified_fianl}</u>', style))
-    fwb.append(
-        Paragraph(
-            '<font size=9>(дается в соответствии с перечнем заболеваний, препятствующих  назначению на  должность  судьи,  утвержденным  решением  Совета  судей  Российской Федерации)</font>',
-            style,
-        )
-    )
+    fwb.append(Paragraph(
+        '<font size=9>(дается в соответствии с перечнем заболеваний, препятствующих  назначению на  должность  судьи,  утвержденным  решением  Совета  судей  Российской Федерации)</font>',
+        style, ))
     fwb.append(Spacer(1, 4 * mm))
     fwb.append(Paragraph("Подпись лица, заполнившего освидетельствование ________________________", style))
     fwb.append(Spacer(1, 2 * mm))
@@ -913,7 +907,6 @@ def form_09(request_data):
 
     hospital: Hospitals = request_data["hospital"]
     hospital_name = hospital.safe_full_title
-    hospital_short_title = hospital.safe_short_title
     hospital_address = hospital.safe_address
     hospital_phones = hospital.safe_phones
     hospital_email = hospital.safe_email
@@ -1009,11 +1002,9 @@ def form_10(request_data):
     styleBold.fontName = "PTAstraSerifBold"
 
     hospital: Hospitals = request_data["hospital"]
-    hospital_name = hospital.safe_full_title
     hospital_short_title = hospital.safe_short_title
     hospital_address = hospital.safe_address
     hospital_phones = hospital.safe_phones
-    hospital_email = hospital.safe_email
 
     styleT = deepcopy(style)
     styleT.alignment = TA_LEFT
@@ -1034,7 +1025,7 @@ def form_10(request_data):
     opinion = [
         [
             Paragraph(f'<font size=10>{hospital_short_title}<br/>{hospital_address}<br/>тел: {hospital_phones}</font>', styleT),
-            Paragraph(f'<font size=10>Медицинская документация<br/>Форма N 086/у<br/>Утверждена приказом Минздрава России<br/>от 15 декабря 2014 г. N 834н</font>', styleT),
+            Paragraph('<font size=10>Медицинская документация<br/>Форма N 086/у<br/>Утверждена приказом Минздрава России<br/>от 15 декабря 2014 г. N 834н</font>', styleT),
         ],
     ]
 
@@ -1066,8 +1057,6 @@ def form_10(request_data):
     result = form_04_data_result_(iss)
     data, was_ill, vaccinations, therapy_doc, hirurg_doc, nevrolog_doc, lor_doc, ophtalmolog_doc, fluorograph, laboratory, final_examination = '', '', '', '', '', '', '', '', '', '', ''
     for i in result:
-        if i["title"] == "Дополнительные сведения":
-            data = i["value"]
         if i["title"] == "Перенесенные заболевания":
             was_ill = i["value"]
         if i["title"] == "Профилактические прививки":
@@ -1103,7 +1092,7 @@ def form_10(request_data):
     fwb.append(Spacer(1, 2 * mm))
     fwb.append(Paragraph(f'6. Профилактические прививки: {vaccinations}', style))
     fwb.append(PageBreak())
-    fwb.append(Paragraph(f'7. Объективные данные и состояние здоровья:', style))
+    fwb.append(Paragraph('7. Объективные данные и состояние здоровья:', style))
     fwb.append(Paragraph(f'Врач-терапевт: {therapy_doc}', style))
     fwb.append(Paragraph(f'Врач-хирург: {hirurg_doc}', style))
     fwb.append(Paragraph(f'Врач-невролог: {nevrolog_doc}', style))
