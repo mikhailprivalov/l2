@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import PriceName, PriceCoast, Contract, Company
+from .models import PriceName, PriceCoast, Contract, Company, PlanExaminationCompany
 
 
 class ResPriceCoast(admin.ModelAdmin):
@@ -73,7 +73,23 @@ class ResContract(admin.ModelAdmin):
     )
 
 
+class ResPlanExaminationCompany(admin.ModelAdmin):
+    list_display = (
+        'company',
+        'date_start',
+        'date_end',
+        'active',
+    )
+    list_display_links = ('company',)
+    list_filter = (
+        'company',
+        'active',
+    )
+    search_fields = ('company__title',)
+
+
 admin.site.register(PriceName)
 admin.site.register(Contract, ResContract)
 admin.site.register(Company, ResCompany)
 admin.site.register(PriceCoast, ResPriceCoast)
+admin.site.register(PlanExaminationCompany, ResPlanExaminationCompany)

@@ -98,3 +98,19 @@ class Company(models.Model):
             return "{}".format(self.contract.modifier)
         else:
             return ""
+
+
+class PlanExaminationCompany(models.Model):
+    company = models.ForeignKey(Company, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
+    number_man = models.PositiveSmallIntegerField(default=0, blank=True, null=True, help_text='Количество мужчин')
+    number_woman = models.PositiveSmallIntegerField(default=0, blank=True, null=True, help_text='Количество мужчин')
+    date_start = models.DateField(help_text="Дата начала медосмотров", blank=True, null=True)
+    date_end = models.DateField(help_text="Дата окончания медосмотров", blank=True, null=True)
+    active = models.BooleanField(default=True, help_text='Показывать при выборе', db_index=True)
+
+    def __str__(self):
+        return "{}".format(self.company.title)
+
+    class Meta:
+        verbose_name = 'План медосмотра'
+        verbose_name_plural = 'Планы медосмотров'

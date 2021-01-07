@@ -29,6 +29,7 @@ def menu(request):
         {"url": "/construct/templates", "title": "Настройка шаблонов", "access": ["Конструктор: Настройка шаблонов"], "module": None},
         {"url": "/construct/bacteria", "title": "Бактерии и антибиотики", "access": ["Конструктор: Бактерии и антибиотики"], "module": None},
         {"url": "/construct/dplan", "title": "Д-учет", "access": ["Конструктор: Д-учет"], "module": None},
+        {"url": "/construct/dplan", "title": "Контрагенты", "access": ["Конструктор: Д-учет"], "module": None},
     ]
 
     from context_processors.utils import make_menu
