@@ -51,6 +51,7 @@ new Vue({
     'JournalGetMaterialModal': () => import('@/modals/JournalGetMaterialModal'),
     'StatisticsTicketsPrintModal': () => import('@/modals/StatisticsTicketsPrintModal'),
     'StatisticsResearchesPrintModal': () => import('@/modals/StatisticsResearchesPrintModal'),
+    'StatisticsCompanyPrintModal': () => import('@/modals/StatisticsCompanyPrintModal'),
     'DepartmentsForm': () => import('@/forms/DepartmentsForm'),
     'LaboratoryTune': () => import('@/forms/LaboratoryTune'),
     'Directions': () => import('@/pages/Directions'),

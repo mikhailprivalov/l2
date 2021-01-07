@@ -85,6 +85,11 @@
                                             :researches='{{ statistics_researches_res|safe }}'>
             </statistics-researches-print-modal>
 
+            <statistics-company-print-modal id="statistics-company-print-modal"
+                                            :researches='{{ statistics_researches_res|safe }}'>
+            </statistics-company-print-modal>
+
+
         {% endif %}
         {% if request.user|has_group:"Просмотр статистики" or request.user.is_superuser %}
             <div class="col-xs-6">
@@ -102,6 +107,9 @@
                             По услуге
                         </li>
                         <li class="list-group-item" onclick="gen_passed('statistics-onco')">Онкоподозрение</li>
+                        <li class="list-group-item" onclick="$('#statistics-company-print-modal').modal('show')">
+                            Контрагенты (профосмотры)
+                        </li>
                     </ul>
                 </div>
             </div>
