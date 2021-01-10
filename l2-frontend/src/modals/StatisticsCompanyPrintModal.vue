@@ -9,13 +9,13 @@
         <div class="modal-body">
           <div class="row" style="margin-top: 10px; margin-bottom: 10px">
             <div class="col-xs-6 text-left" style="display: inline">
-              <input id="date1" type="date" value="2017-06-01" style="height: 35px">
+              <input id="date1" type="date" style="height: 35px" v-model="date1">
                &mdash;
-              <input id="date2" type="date" value="2017-06-01" style="height: 35px">
+              <input id="date2" type="date" style="height: 35px" v-model="date2">
             </div>
             <div class="col-xs-6">
-               <treeselect class="treeselect" :multiple="false" :disable-branch-nodes="true" :options="hirurgs"
-                    placeholder="Хирург не выбран" v-model="current_hirurg"
+               <treeselect :multiple="false" :disable-branch-nodes="true" :options="companies"
+                    placeholder="Хирург не выбран" v-model="current_company"
                />
             </div>
           </div>
@@ -25,7 +25,7 @@
             <div class="col-xs-3"></div>
             <div class="col-xs-6">
               <button type="button" @click="make_report"
-                      :disabled="(user === '-1' || user === '') && research === '-1'"
+                      :disabled="(user === '-1' || user === '') || current_company === '-1' || date1 === '' || date2 === ''"
                       class="btn btn-primary-nb btn-blue-nb2">
                 Печать
               </button>
@@ -41,16 +41,14 @@
 </template>
 
 <script>
-  import DateSelector from '../fields/DateSelector.vue'
-  import SelectPicker from '../fields/SelectPicker'
   import Treeselect from '@riophae/vue-treeselect'
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
   export default {
     name: 'statistics-company-print-modal',
-    components: {DateSelector, SelectPicker, Treeselect,},
+    components: {Treeselect},
     props: {
-      researches: {
+      companies: {
         type: Array,
         required: false,
         default() {
@@ -60,17 +58,14 @@
     },
     data() {
       return {
-        research: '-1',
-        hirurgs: [{"id": "-1", "label": "not found"}, {"id": "1", "label": "Большая компания"},
-          {"id": "2", "label": "Не большая компания"},
-          {"id": "3", "label": "Очень Большая компания"},
-          {"id": "4", "label": "маленькая  компания"}],
-        current_hirurg:  '',
+        current_company: '-1',
+        date1: '',
+        date2: '',
       }
     },
     methods: {
       make_report() {
-        window.open(`forms/docx?type=200.04&card_pk=199555`, '_blank')
+        window.open(`forms/docx?type=200.01&company=${this.current_company}&date1=${this.date1}&date2=${this.date2}`, '_blank')
       }
     },
   }
