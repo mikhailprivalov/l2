@@ -187,16 +187,3 @@ def get_confirm_direction_pathology(d_s, d_e):
         )
         row = cursor.fetchall()
     return row
-
-
-def filter_direction_company(list_dirs, company_title):
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-        SELECT DISTINCT ON (id) id FROM public.directions_napravleniya
-        WHERE id = ANY(ARRAY[%(num_dirs)s]) AND workplace ILIKE %%(company)s'%'
-        """,
-            params={'num_dirs': list_dirs, 'company': company_title},
-        )
-        row = cursor.fetchall()
-    return row
