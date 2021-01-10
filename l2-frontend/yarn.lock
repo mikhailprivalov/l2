@@ -7076,6 +7076,11 @@ vuejs-dialog@^1.4.1:
   resolved "https://registry.yarnpkg.com/vuejs-dialog/-/vuejs-dialog-1.4.2.tgz#33ef5a7669291c1bb09f2e958c4a438e54cdd293"
   integrity sha512-6kRse144WXDFBMKdeuqE43rHy0ZJ81uLOFh62r2d80ICKavQYHIvr+GlTFmoR23190lC4f2w+ZJ8cS4ljkCDMw==
 
+vuejs-paginate@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/vuejs-paginate/-/vuejs-paginate-2.1.0.tgz#93e1ad1539b713a688c7a2d3080bda60fcc6c77d"
+  integrity sha512-gnwyXlmCiDOu9MLWxN5UJ4PGijKGNOMpHG8ujsrynCzTJljn/rp7Jq0WiDGDAMi5/u0AHuYIHhced+tUW4jblA==
+
 vuex@^3.5.1:
   version "3.5.1"
   resolved "https://registry.yarnpkg.com/vuex/-/vuex-3.5.1.tgz#f1b8dcea649bc25254cf4f4358081dbf5da18b3d"
