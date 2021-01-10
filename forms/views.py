@@ -33,12 +33,12 @@ def docx(request):
     t = request.GET.get("type")
     f = import_string('forms.forms' + t[0:3] + '.form_' + t[4:6])
     document = f(
-            request_data={
-                **dict(request.GET.items()),
-                "user": request.user,
-                "hospital": request.user.doctorprofile.get_hospital(),
-            }
-        )
+        request_data={
+            **dict(request.GET.items()),
+            "user": request.user,
+            "hospital": request.user.doctorprofile.get_hospital(),
+        }
+    )
     response['Content-Disposition'] = 'attachment; filename="form-' + t + '.docx"'
     document.save(response)
 
