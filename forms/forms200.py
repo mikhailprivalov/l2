@@ -33,7 +33,7 @@ def form_01(request_data):
 
     date1 = normalize_date(d1)
     date2 = normalize_date(d2)
-    company_objs = Company.objects.filter(pk=company_pk).first()
+    company_objs = Company.objects.get(pk=company_pk)
     d1 = datetime.strptime(date1, '%d.%m.%Y')
     d2 = datetime.strptime(date2, '%d.%m.%Y')
     start_date = datetime.combine(d1, dtime.min)
@@ -420,37 +420,37 @@ def form_01(request_data):
     objs.append(tbl)
 
     objs = add_needs_text(objs, 'Число лиц, постоянно профнепригодных к работе с вредными и (или) опасными веществами и производственными факторами, к видам работ*', styleT)
-    objs = add_fio_spec_diagnoz(objs, styleT)
+    objs = add_fio_spec_diagnosis(objs, styleT)
 
     objs = add_needs_text(objs, 'Число лиц нуждающихся в дообследовании (заключение не дано)', styleT)
-    objs = add_fio_spec_diagnoz(objs, styleT)
+    objs = add_fio_spec_diagnosis(objs, styleT)
 
     objs = add_needs_text(objs, 'Число лиц с подозрением на профессиональное заболевание', styleT)
-    objs = add_fio_spec_diagnoz(objs, styleT)
+    objs = add_fio_spec_diagnosis(objs, styleT)
 
     objs = add_needs_text(objs, 'Число лиц, нуждающихся в обследовании в центре профпатологии', styleT)
-    objs = add_fio_spec_diagnoz(objs, styleT)
+    objs = add_fio_spec_diagnosis(objs, styleT)
 
     objs = add_needs_text(objs, 'Люди', styleT)
-    objs = add_fio_spec_diagnoz(objs, styleT)
+    objs = add_fio_spec_diagnosis(objs, styleT)
 
     objs = add_needs_text(objs, 'Число лиц, нуждающихся в амбулаторном обследовании и лечении', styleT)
-    objs = add_fio_spec_diagnoz(objs, styleT)
+    objs = add_fio_spec_diagnosis(objs, styleT)
 
     objs = add_needs_text(objs, 'Число лиц, нуждающихся в стационарном обследовании и лечении: (оперативное лечение)', styleT)
-    objs = add_fio_spec_diagnoz(objs, styleT)
+    objs = add_fio_spec_diagnosis(objs, styleT)
 
     objs = add_needs_text(objs, 'Число лиц, нуждающихся в санаторно-курортном лечении', styleT)
-    objs = add_fio_spec_diagnoz(objs, styleT)
+    objs = add_fio_spec_diagnosis(objs, styleT)
 
     objs = add_needs_text(objs, 'Число лиц, нуждающихся в лечебно-профилактическом питании', styleT)
-    objs = add_fio_spec_diagnoz(objs, styleT)
+    objs = add_fio_spec_diagnosis(objs, styleT)
 
     objs = add_needs_text(objs, 'Число лиц, нуждающихся в диспансерном наблюдении', styleT)
-    objs = add_fio_spec_diagnoz(objs, styleT)
+    objs = add_fio_spec_diagnosis(objs, styleT)
 
     objs = add_needs_text(objs, 'Число лиц, нуждающихся в направлении на медико-социальную экспертизу', styleT)
-    objs = add_fio_spec_diagnoz(objs, styleT)
+    objs = add_fio_spec_diagnosis(objs, styleT)
 
     objs.append(Spacer(1, 5 * mm))
     objs.append(Paragraph('8.3 Выявлено лиц с подозрением на профессиональное заболевание:', style))
@@ -683,7 +683,7 @@ def add_needs_text(objs, text, styleT):
     return objs
 
 
-def add_fio_spec_diagnoz(objs, styleT):
+def add_fio_spec_diagnosis(objs, styleT):
     objs.append(Spacer(1, 0 * mm))
     opinion = [
         [

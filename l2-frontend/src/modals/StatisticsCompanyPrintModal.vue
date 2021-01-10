@@ -9,9 +9,9 @@
         <div class="modal-body">
           <div class="row" style="margin-top: 10px; margin-bottom: 10px">
             <div class="col-xs-6 text-left" style="display: inline">
-              <input id="date1" type="date" style="height: 35px" v-model="date1">
+              <input type="date" style="height: 35px" v-model="date1">
                &mdash;
-              <input id="date2" type="date" style="height: 35px" v-model="date2">
+              <input type="date" style="height: 35px" v-model="date2">
             </div>
             <div class="col-xs-6">
                <treeselect :multiple="false" :disable-branch-nodes="true" :options="companies"
@@ -25,7 +25,7 @@
             <div class="col-xs-3"></div>
             <div class="col-xs-6">
               <button type="button" @click="make_report"
-                      :disabled="(user === '-1' || user === '') || current_company === '-1' || date1 === '' || date2 === ''"
+                      :disabled="current_company === '-1' || date1 === '' || date2 === ''"
                       class="btn btn-primary-nb btn-blue-nb2">
                 Печать
               </button>
