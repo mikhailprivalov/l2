@@ -869,6 +869,9 @@ class Card(models.Model):
     def number_with_type(self):
         return "{}{}".format(self.number, (" " + self.base.short_title) if not self.base.is_rmis else "")
 
+    def number_with_type_and_fio(self):
+        return f"{self.number_with_type()} {self.individual.fio(short=False, full=True)}"
+
     def get_phones(self):
         return list(
             set([y for y in [x.normalize_number() for x in Phones.objects.filter(card__individual=self.individual, card__is_archive=False)] + [Phones.nn(self.phone)] if y and len(y) > 1])

@@ -1738,6 +1738,18 @@ input[type=date].form-control {
   }
 }
 
+.treeselect-noborder-left .vue-treeselect {
+  &__control {
+    border-left: none !important;
+    border-radius: 0 4px 4px 0 !important;
+    height: 32px !important;
+  }
+
+  &__placeholder, &__single-value {
+    line-height: 32px !important;
+  }
+}
+
 .treeselect-noborder .vue-treeselect__control {
   border: none !important;
   border-radius: 0 !important;
@@ -1946,4 +1958,14 @@ input[type=date].form-control {
   .visible-small {
     display: none !important;
   }
+}
+
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus {
+  background-color: #049372 !important;
+  border-color: #049372 !important;
 }

@@ -3,8 +3,10 @@ import json
 from typing import List
 
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 
+from appconf.manager import SettingManager
 from slog.models import Log
 from clients.models import Card
 from doctor_call.models import DoctorCall
@@ -126,3 +128,57 @@ def cancel_row(request):
     ).save()
 
     return JsonResponse(True, safe=False)
+
+
+@login_required
+def search(request):
+    request_data = json.loads(request.body)
+    district = int(request_data.get("district", -1))
+    cancel = request_data["is_canceled"]
+    doc_assigned = int(request_data.get("doc", -1))
+    purpose_id = int(request_data.get("purpose", -1))
+    hospital = int(request_data.get("hospital_pk", -1))
+    external = request_data.get("is_external")
+    page = max(int(request_data.get("page", 1)), 1)
+
+    date = request_data["date"]
+    time_start = f'{date} {request_data.get("time_start", "00:00")}:00'
+    time_end = f'{date} {request_data.get("time_end", "23:59")}:59'
+    datetime_start = datetime.datetime.strptime(time_start, '%Y-%m-%d %H:%M:%S')
+    datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S')
+
+    if external:
+        doc_call = DoctorCall.objects.filter(
+            create_at__range=[datetime_start, datetime_end],
+        )
+    else:
+        doc_call = DoctorCall.objects.filter(create_at__range=[datetime_start, datetime_end])
+    doc_call = doc_call.filter(is_external=external, cancel=cancel)
+
+    if hospital > -1:
+        doc_call = doc_call.filter(hospital__pk=hospital)
+    if doc_assigned > -1:
+        doc_call = doc_call.filter(doc_assigned__pk=doc_assigned)
+    if district > -1:
+        doc_call = doc_call.filter(district_id__pk=district)
+    if purpose_id > -1:
+        doc_call = doc_call.filter(purpose=purpose_id)
+
+    if external:
+        doc_call = doc_call.order_by('hospital', 'pk')
+    elif hospital + doc_assigned + district + purpose_id > -4:
+        doc_call = doc_call.order_by("pk")
+    else:
+        doc_call = doc_call.order_by("district__title")
+
+    p = Paginator(doc_call, SettingManager.get("doc_call_page_size", default='30', default_type='i'))
+
+    return JsonResponse({
+        "rows": [
+            x.json
+            for x in p.page(page).object_list
+        ],
+        "page": page,
+        "pages": p.num_pages,
+        "total": p.count,
+    })
