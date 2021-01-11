@@ -55,6 +55,8 @@ pymorphy2-dicts-ru==2.4.417127.4579844
 PyPDF2==1.26.0
 python-dateutil==2.8.1
 python3-memcached==1.51
+python-docx=0.8.10
+pdf2docx=0.5.0
 pytils==0.3
 pytz==2020.4
 PyYAML==5.3.1

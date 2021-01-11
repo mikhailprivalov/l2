@@ -1,4 +1,3 @@
-
 from datetime import datetime, time as dtime
 import locale
 import os.path

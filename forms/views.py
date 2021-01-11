@@ -1,10 +1,10 @@
 import os
-import docx as my_docx
 from django.http import HttpResponse
 from django.utils.module_loading import import_string
 from io import BytesIO
 from datetime import datetime
 from pdf2docx import Converter
+from docx import Document
 
 from appconf.manager import SettingManager
 
@@ -64,7 +64,7 @@ def docx(request):
         cv.convert(docx_file, start=0, end=None)
         cv.close()
         os.remove(file_dir)
-        doc = my_docx.Document(docx_file)
+        doc = Document(docx_file)
         os.remove(docx_file)
         buffer.close()
 
