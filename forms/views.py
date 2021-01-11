@@ -45,31 +45,29 @@ def docx(request):
             "hospital": request.user.doctorprofile.get_hospital(),
         }
     )
-    doc = None
-    if pdf:
-        buffer = BytesIO()
-        buffer.write(pdf)
-        buffer.seek(0)
 
-        today = datetime.now()
-        date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
-        date_now_str = str(date_now1)
-        dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
-        file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
+    buffer = BytesIO()
+    buffer.write(pdf)
+    buffer.seek(0)
 
-        save(buffer, filename=file_dir)
-        docx_file = os.path.join(dir_param, date_now_str + '_dir.docx')
-        cv = Converter(file_dir)
-        cv.convert(docx_file, start=0, end=None)
-        cv.close()
-        os.remove(file_dir)
-        doc = Document(docx_file)
-        os.remove(docx_file)
-        buffer.close()
+    today = datetime.now()
+    date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+    date_now_str = str(date_now1)
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
+
+    save(buffer, filename=file_dir)
+    docx_file = os.path.join(dir_param, date_now_str + '_dir.docx')
+    cv = Converter(file_dir)
+    cv.convert(docx_file, start=0, end=None)
+    cv.close()
+    os.remove(file_dir)
+    doc = Document(docx_file)
+    os.remove(docx_file)
+    buffer.close()
 
     response['Content-Disposition'] = 'attachment; filename="form-' + t + '.docx"'
-    if doc:
-        doc.save(response)
+    doc.save(response)
 
     return response
 
