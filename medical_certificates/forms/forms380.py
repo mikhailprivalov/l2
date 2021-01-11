@@ -123,7 +123,7 @@ def form_04(request_data):
     if not iss.time_confirmation:
         return ""
 
-    result = form_04_data_result_(iss)
+    result = protocol_fields_result(iss)
     work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date, department, recommendation = ("", "", "", "", "", "", "", "", "")
     dispensary_group = "__________________________________________________________"
     name_disease = "____________________________________________________"
@@ -241,7 +241,7 @@ def form_04(request_data):
     return pdf
 
 
-def form_04_data_result_(iss):
+def protocol_fields_result(iss):
     result = []
     title = ''
     title_fields = [
@@ -814,7 +814,7 @@ def form_07(request_data):
     if not iss.time_confirmation:
         return ""
 
-    result = form_04_data_result_(iss)
+    result = protocol_fields_result(iss)
     work_place, identified = "", ""
     for i in result:
         if i["title"] == "Место работы":
@@ -938,7 +938,7 @@ def form_08(request_data):
     if not iss.time_confirmation:
         return ""
 
-    result = form_04_data_result_(iss)
+    result = protocol_fields_result(iss)
     work_place, identified_fianl = "", ""
     for i in result:
         if i["title"] == "Место работы":
@@ -1061,7 +1061,7 @@ def form_09(request_data):
 
     fwb.append(Paragraph(f'Врачебная справка № {direction}', styleCenterBold))
     fwb.append(Spacer(1, 4 * mm))
-    result = form_04_data_result_(iss)
+    result = protocol_fields_result(iss)
     data = ""
     for i in result:
         if i["title"] == "Дополнительные сведения":
@@ -1153,7 +1153,7 @@ def form_10(request_data):
     fwb.append(Paragraph(f'МЕДИЦИНСКАЯ СПРАВКА № {direction}', styleCenterBold))
     fwb.append(Paragraph('(врачебное профессионально-консультативное заключение)', styleCenterBold))
     fwb.append(Spacer(1, 4 * mm))
-    result = form_04_data_result_(iss)
+    result = protocol_fields_result(iss)
     was_ill, vaccinations, therapy_doc, hirurg_doc, nevrolog_doc, lor_doc, ophtalmolog_doc, fluorograph, laboratory, final_examination = '', '', '', '', '', '', '', '', '', ''
     for i in result:
         if i["title"] == "Перенесенные заболевания":
