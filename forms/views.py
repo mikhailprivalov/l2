@@ -5,7 +5,6 @@ from io import BytesIO
 from datetime import datetime
 from pdf2docx import Converter
 from docx import Document
-
 from appconf.manager import SettingManager
 
 
