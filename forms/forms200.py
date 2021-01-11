@@ -1,5 +1,4 @@
-import docx
-from pdf2docx import Converter
+
 from datetime import datetime, time as dtime
 import locale
 import os.path
@@ -16,7 +15,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from api.directions.sql_func import get_confirm_direction_pathology
-from appconf.manager import SettingManager
 from contracts.models import Company
 from directions.models import Napravleniya, Issledovaniya
 from hospitals.models import Hospitals
@@ -112,24 +110,9 @@ def form_01(request_data):
     )
 
     objs.append(tbl)
-    opinion = [
-        [
-            Paragraph('Код ОГРН', styleT),
-            Paragraph(f"{hospital_kod_ogrn[0]}", styleT),
-            Paragraph(f"{hospital_kod_ogrn[1]}", styleT),
-            Paragraph(f"{hospital_kod_ogrn[2]}", styleT),
-            Paragraph(f"{hospital_kod_ogrn[3]}", styleT),
-            Paragraph(f"{hospital_kod_ogrn[4]}", styleT),
-            Paragraph(f"{hospital_kod_ogrn[5]}", styleT),
-            Paragraph(f"{hospital_kod_ogrn[6]}", styleT),
-            Paragraph(f"{hospital_kod_ogrn[7]}", styleT),
-            Paragraph(f"{hospital_kod_ogrn[8]}", styleT),
-            Paragraph(f"{hospital_kod_ogrn[9]}", styleT),
-            Paragraph(f"{hospital_kod_ogrn[10]}", styleT),
-            Paragraph(f"{hospital_kod_ogrn[11]}", styleT),
-            Paragraph(f"{hospital_kod_ogrn[12]}", styleT),
-        ],
-    ]
+
+    opinion = [[Paragraph('Код ОГРН', styleT)]]
+    opinion[0].extend([Paragraph(f"{hospital_kod_ogrn[i]}", styleT) for i in range(13)])
     col_width = [6 * mm for i in range(13)]
     col_width.insert(0, 22 * mm)
     tbl = Table(opinion, hAlign='LEFT', rowHeights=6 * mm, colWidths=tuple(col_width))
@@ -640,25 +623,10 @@ def form_01(request_data):
     )
 
     doc.build(objs)
-    buffer.seek(0)
-
-    today = datetime.now()
-    date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
-    date_now_str = str(date_now1)
-    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
-    file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
-
-    save(buffer, filename=file_dir)
-    docx_file = os.path.join(dir_param, date_now_str + '_dir.docx')
-    cv = Converter(file_dir)
-    cv.convert(docx_file, start=0, end=None)
-    cv.close()
-    os.remove(file_dir)
-    doc = docx.Document(docx_file)
-    os.remove(docx_file)
+    pdf = buffer.getvalue()
     buffer.close()
 
-    return doc
+    return pdf
 
 
 def add_needs_text(objs, text, styleT):
@@ -742,8 +710,3 @@ def all_and_women(objs, styleT):
     )
     objs.append(tbl)
     return objs
-
-
-def save(form, filename: str):
-    with open(filename, 'wb') as f:
-        f.write(form.read())
