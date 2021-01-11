@@ -38,7 +38,7 @@ ldap3==2.8.1
 lxml==4.6.2
 Markdown==3.3.3
 MarkupSafe==1.1.0
-numpy==1.20.0rc2
+numpy==1.19.5
 openpyxl==3.0.5
 pdfrw==0.4
 pdfminer==20191125
