@@ -5,6 +5,8 @@ from io import BytesIO
 from datetime import datetime
 from pdf2docx import Converter
 from docx import Document
+import fitz
+from pdf2docx import Page
 from appconf.manager import SettingManager
 
 
@@ -54,14 +56,10 @@ def docx(request):
     date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
     date_now_str = str(date_now1)
     dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
-    file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
-
-    save(buffer, filename=file_dir)
     docx_file = os.path.join(dir_param, date_now_str + '_dir.docx')
-    cv = Converter(file_dir)
+    cv = MyConverter(buffer)
     cv.convert(docx_file, start=0, end=None)
     cv.close()
-    os.remove(file_dir)
     doc = Document(docx_file)
     os.remove(docx_file)
     buffer.close()
@@ -75,3 +73,10 @@ def docx(request):
 def save(form, filename: str):
     with open(filename, 'wb') as f:
         f.write(form.read())
+
+
+class MyConverter(Converter):
+    def __init__(self, buffer):
+        self.filename_pdf = 'xx.pdf'
+        self._fitz_doc = fitz.Document(stream=buffer, filename=self.filename_pdf)
+        self._pages = [Page(fitz_page) for fitz_page in self._fitz_doc]
