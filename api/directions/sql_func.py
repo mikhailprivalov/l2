@@ -173,3 +173,17 @@ def filter_direction_doctor(list_dirs, doc_id):
         )
         row = cursor.fetchall()
     return row
+
+
+def get_confirm_direction_pathology(d_s, d_e):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """     
+        SELECT DISTINCT ON (napravleniye_id) napravleniye_id FROM public.directions_issledovaniya
+        WHERE time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+        AND research_id IN (SELECT id FROM public.directory_researches where title ILIKE '%%профпатолог%%')
+        """,
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+        row = cursor.fetchall()
+    return row

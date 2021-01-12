@@ -55,7 +55,7 @@ from utils.xh import check_float_is_valid
 from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
-from medical_certificates.models import ResearchesCertificate
+from medical_certificates.models import ResearchesCertificate, MedicalCertificates
 
 
 @login_required
@@ -1059,10 +1059,13 @@ def directions_paraclinic_form(request):
                 forbidden_edit = forbidden_edit_dir(d.pk)
                 more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
                 cert_researches = ResearchesCertificate.objects.filter(research=i.research)
+                general_certificate = MedicalCertificates.objects.filter(general=True)
                 for cert in cert_researches:
                     if cert.medical_certificate.certificate_form not in tmp_certificates:
                         tmp_certificates.append(cert.medical_certificate.certificate_form)
                         medical_certificates.append({"form": cert.medical_certificate.certificate_form, "title": cert.medical_certificate.title})
+                for cert in general_certificate:
+                    medical_certificates.append({"form": cert.certificate_form, "title": cert.title})
 
                 iss = {
                     "pk": i.pk,

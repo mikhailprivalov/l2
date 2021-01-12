@@ -7,7 +7,7 @@ import slog.models as slog
 from clients.models import Card, District
 from directory.models import Researches
 from hospitals.models import Hospitals
-from laboratory.utils import current_time
+from laboratory.utils import current_time, strfdatetime
 from users.models import DoctorProfile
 
 
@@ -43,6 +43,29 @@ class DoctorCall(models.Model):
     class Meta:
         verbose_name = 'Вызов'
         verbose_name_plural = 'Вызова на дом'
+
+    @property
+    def json(self):
+        return {
+            "pk": self.pk,
+            "card": self.client.number_with_type_and_fio(),
+            "cardPk": self.client_id,
+            "phone": self.phone,
+            "email": self.email,
+            "address": self.address,
+            "purpose": self.get_purpose_display(),
+            "comment": self.comment,
+            "research": self.research.get_title(),
+            "district": self.district.title if self.district else "",
+            "hospital": self.hospital.safe_short_title if self.hospital else "",
+            "docAssigned": self.doc_assigned.get_fio() if self.doc_assigned else "",
+            "execAt": strfdatetime(self.exec_at, "%d.%m.%Y"),
+            "isCancel": self.cancel,
+            "isExternal": self.is_external,
+            "externalNum": self.external_num,
+            "createdAt": strfdatetime(self.create_at, "%d.%m.%Y"),
+            "createdAtTime": strfdatetime(self.create_at, "%X"),
+        }
 
     @staticmethod
     def doctor_call_save(data, doc_who_create=None):

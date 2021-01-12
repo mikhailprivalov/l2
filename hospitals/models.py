@@ -17,6 +17,7 @@ class Hospitals(models.Model):
     ogrn = models.CharField(max_length=16, blank=True, default='', help_text="ОГРН больницы")
     www = models.CharField(max_length=128, blank=True, default='', help_text="Сайт больницы")
     rmis_org_id = models.CharField(max_length=12, blank=True, default='', help_text="ID организации в РМИС")
+    email = models.CharField(max_length=12, blank=True, default='', help_text="email")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
@@ -29,6 +30,10 @@ class Hospitals(models.Model):
                 hosp.save()
 
         return hosp
+
+    @property
+    def safe_full_title(self):
+        return self.title or self.short_title
 
     @property
     def safe_short_title(self):
@@ -49,6 +54,11 @@ class Hospitals(models.Model):
     @property
     def safe_www(self):
         return self.www or SettingManager.get("org_www")
+
+    @property
+    def safe_email(self):
+        # если отсутствует email то адрес сайта
+        return self.email or SettingManager.get("org_www")
 
     def __str__(self):
         return f"{self.short_title} – {self.code_tfoms}"

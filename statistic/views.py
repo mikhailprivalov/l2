@@ -13,6 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 import directory.models as directory
 import slog.models as slog
 from clients.models import CardBase
+from contracts.models import Company
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
 from laboratory import settings
@@ -37,6 +38,7 @@ def statistic_page(request):
     statistics_tickets_users = DoctorProfile.objects.filter(user__groups__name__in=['Оформление статталонов', 'Лечащий врач', 'Лаборант', 'Врач-лаборант']).distinct()
     statistics_tickets_deps = Podrazdeleniya.objects.all().order_by('title')
     statistics_researches_res = Researches.objects.filter(hide=False, is_slave_hospital=False, is_hospital=False).order_by('title')
+    companies_res = Company.objects.filter(active_status=True).order_by('short_title')
 
     type_by_key_extract = HospitalService.TYPES_BY_KEYS.get('extracts', -1)
     extract_research = None
@@ -71,6 +73,9 @@ def statistic_page(request):
             "statistics_researches_res": json.dumps(
                 [{"pk": -1, "title": 'Услуга не выбрана'}, *[{"pk": str(x.pk), "title": x.title} for x in statistics_researches_res], *extract_data, *epicris_transfer_data]
             ),
+            "companies_res": json.dumps(
+                [{"id": "-1", "label": "Компания не выбрана"}, *[{"id": str(x.pk), "label": x.short_title if x.short_title else x.title} for x in companies_res]]
+            )
         },
     )
 
