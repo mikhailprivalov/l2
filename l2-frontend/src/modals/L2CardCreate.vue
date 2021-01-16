@@ -350,6 +350,15 @@
             </div>
           </div>
         </div>
+        <div class="input-group" style="margin-bottom: 10px">
+          <div class="input-group-btn">
+            <button type="button" class="btn btn-blue-nb nbr">
+              Перенести все услуги в другую карту
+              <i class="glyphicon glyphicon-arrow-right"></i>
+            </button>
+          </div>
+          <input type="text" class="form-control nbr" placeholder="Введите номер карты">
+        </div>
       </div>
       <modal v-if="document_to_edit > -2" ref="modalDocEdit" @close="hide_modal_doc_edit" show-footer="true"
              white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
