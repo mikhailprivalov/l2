@@ -1653,3 +1653,12 @@ class Result(models.Model):
 class DirectionToUserWatch(models.Model):
     direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE)
     doc = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE)
+
+
+class DirectionHistory(models.Model):
+    direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE)
+    old_card = models.ForeignKey(Clients.Card, related_name='old_card', help_text="Старая карта", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    new_card = models.ForeignKey(Clients.Card, related_name='new_card', help_text="Новая карта", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    old_fio_born = models.CharField(max_length=300, blank=True, help_text="ФИО д.р старой карты")
+    new_fio_born = models.CharField(max_length=300, blank=True, help_text="ФИО д.р новой карты")
+    date_change = models.DateTimeField(default=timezone.now, null=True, blank=True, help_text='Время изменения владельца направления')
