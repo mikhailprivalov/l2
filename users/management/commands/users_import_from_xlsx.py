@@ -21,6 +21,7 @@ class Command(BaseCommand):
         fio = 0
         rgt = 1
         otd = 2
+        login = 3
         otds = {}
         for row in ws.rows:
             cells = [str(x.value) for x in row]
@@ -30,11 +31,13 @@ class Command(BaseCommand):
                     fio = cells.index("Сотрудник")
                     rgt = cells.index("Должность")
                     otd = cells.index("Подразделение")
+                    login = cells.index("Логин")
                     continue
             else:
                 f = cells[fio].replace("   ", " ").replace("  ", " ").replace("  ", " ").strip().title()
                 r = cells[rgt].replace(" ", "").replace(".", ",").split(",")
                 o = fixF(cells[otd].replace("   ", " ").replace("  ", " ").replace("  ", " ").strip())
+                l = cells[login]
 
                 fs = f.split(" ")
                 if len(fs) == 0:
@@ -59,6 +62,12 @@ class Command(BaseCommand):
                     otds[o] = ps
                 o = otds[o]
                 username = translit(''.join(fso).lower())
+
+                if l and len(l) > 0:
+                    if '@' in l:
+                        username = l.split('@')[0]
+                    else:
+                        username = l
 
                 us = users.DoctorProfile.objects.filter(fio=f, podrazdeleniye=o, user__username=username).first()
                 if not us:
