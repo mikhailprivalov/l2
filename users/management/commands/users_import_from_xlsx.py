@@ -37,7 +37,7 @@ class Command(BaseCommand):
                 f = cells[fio].replace("   ", " ").replace("  ", " ").replace("  ", " ").strip().title()
                 r = cells[rgt].replace(" ", "").replace(".", ",").split(",")
                 o = fixF(cells[otd].replace("   ", " ").replace("  ", " ").replace("  ", " ").strip())
-                l = cells[login]
+                account = cells[login]
 
                 fs = f.split(" ")
                 if len(fs) == 0:
@@ -63,11 +63,11 @@ class Command(BaseCommand):
                 o = otds[o]
                 username = translit(''.join(fso).lower())
 
-                if l and len(l) > 0:
-                    if '@' in l:
-                        username = l.split('@')[0]
+                if account and len(account) > 0:
+                    if '@' in account:
+                        username = account.split('@')[0]
                     else:
-                        username = l
+                        username = account
 
                 us = users.DoctorProfile.objects.filter(fio=f, podrazdeleniye=o, user__username=username).first()
                 if not us:
