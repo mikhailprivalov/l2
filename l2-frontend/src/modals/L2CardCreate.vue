@@ -508,6 +508,7 @@
   import {normalizeNamePart, swapLayouts, validateSnils} from "@/utils";
   import {GENDERS} from "@/constants";
   import users_point from "../api/user-point";
+  import api from '@/api';
 
   export default {
     name: 'l2-card-create',
@@ -960,16 +961,27 @@
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async change_directions_owner(){
-        try {
-          //проверить существоание номера карты
-          await this.$dialog.confirm(`Перенести все услуги из карты № ${this.card.number}-${this.card.family} ${this.card.name} ${this.card.patronymic}) в карту № ${this.new_card_num} ?`)
-          //сохранить для направлений новую запись атомарно транзакцию и в направления и в модель истории
+          const {ok, individual_fio} = await api('patients/is-card', {
+            'number': this.new_card_num,
+          })
+          if (!ok) {
+            errmessage("Карта не найдены")
+            return
+          }
+          try {
+            await this.$dialog.confirm(`Перенести все услуги из карты № ${this.card.number}-${this.card.family} ${this.card.name} ${this.card.patronymic}) в карту № ${this.new_card_num} -${individual_fio} ?`)
+          } catch (_) {
+            return
+          }
           await this.$store.dispatch(action_types.INC_LOADING)
-        } catch (_) {
-          await this.$store.dispatch(action_types.DEC_LOADING)
-        }
+          const data = await api('directions/change-owner-direction', {
+            'old_card_number': this.card.number,
+            'new_card_number': this.new_card_num,
+          })
+          console.log(data)
+          okmessage('Номера направлений: ', data.directions)
 
-        await this.$store.dispatch(action_types.DEC_LOADING)
+          await this.$store.dispatch(action_types.DEC_LOADING)
       }
     }
   }

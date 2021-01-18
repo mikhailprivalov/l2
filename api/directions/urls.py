@@ -35,4 +35,5 @@ urlpatterns = [
     path('direction-in-favorites', views.direction_in_favorites),
     path('all-directions-in-favorites', views.all_directions_in_favorites),
     path('directions-type-date', views.directions_type_date),
+    path('change-owner-direction', views.change_owner_direction),
 ]

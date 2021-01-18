@@ -1202,3 +1202,12 @@ def create_l2_individual_from_card(request):
         )
 
     return JsonResponse({"ok": True})
+
+
+def is_l2_card(request):
+    request_data = json.loads(request.body)
+    card = Card.objects.filter(number=request_data.get('number', -1), base__internal_type=True).first()
+    if card:
+        return JsonResponse({"ok": True, "individual_fio": card.individual.fio()})
+    else:
+        return JsonResponse({"ok": False})
