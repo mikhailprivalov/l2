@@ -16,6 +16,7 @@ from .models import (
     KeyValue,
     PersonContract,
     ExternalOrganization,
+    DirectionsHistory,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -89,6 +90,28 @@ class ResPersonContract(admin.ModelAdmin):
     search_fields = ('num_contract',)
 
 
+class ResDirectionsHistory(admin.ModelAdmin):
+    raw_id_fields = (
+        'direction',
+        'old_card',
+        'new_card',
+    )
+    list_display = (
+        'direction_num',
+        'old_fio_born',
+        'new_fio_born',
+        'date_change',
+        'who_change',
+    )
+    search_fields = ('direction__pk',)
+
+    def direction_num(self, obj):
+        if obj.direction:
+            return obj.direction.pk
+        else:
+            return ""
+
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
 admin.site.register(FrequencyOfUseResearches)
@@ -101,3 +124,4 @@ admin.site.register(TypeJob, ResTypeJob)
 admin.site.register(EmployeeJob, ResEmployeeJob)
 admin.site.register(KeyValue, ResKeyValue)
 admin.site.register(PersonContract, ResPersonContract)
+admin.site.register(DirectionsHistory, ResDirectionsHistory)
