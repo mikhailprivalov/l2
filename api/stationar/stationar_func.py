@@ -544,8 +544,10 @@ def get_temperature_list(hosp_num_dir):
 
 
 def get_date_time_tl(dict_data):
+    import re
     time = dict_data.get('Время измерения', 'Нет поля "Время измерения"')
-    date = dict_data.get('Дата измерения', 'Нет поля "Дата измерения"').replace('.2020', '')
+    date = dict_data.get('Дата измерения', 'Нет поля "Дата измерения"')
+    date = re.sub(r'.\d{4}', '', date)
     return f'{date} {time}'
 
 

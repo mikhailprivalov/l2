@@ -32,4 +32,5 @@ urlpatterns = [
     path('individuals/save-ambulatory-data', views.save_ambulatory_data),
     path('individuals/save-benefit', views.save_benefit),
     path('individuals/save-anamnesis', views.save_anamnesis),
+    path('is-card', views.is_l2_card),
 ]

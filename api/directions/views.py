@@ -34,6 +34,7 @@ from directions.models import (
     MicrobiologyResultCulture,
     MicrobiologyResultCultureAntibiotic,
     DirectionToUserWatch, IstochnikiFinansirovaniya,
+    DirectionsHistory,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService
 from laboratory import settings
@@ -2076,6 +2077,7 @@ def all_directions_in_favorites(request):
     return JsonResponse({"data": data})
 
 
+@login_required
 def directions_type_date(request):
     podr = request.user.doctorprofile.podrazdeleniye
     doc_pk = request.user.doctorprofile.pk
@@ -2116,3 +2118,16 @@ def directions_type_date(request):
     result_direction = list(set(confirm_direction) - set(not_confirm_direction))
 
     return JsonResponse({"results": result_direction})
+
+
+@login_required
+@group_required("Управление иерархией истории")
+def change_owner_direction(request):
+    user = request.user.doctorprofile
+    request_data = json.loads(request.body)
+    new_card_number = request_data['new_card_number']
+    old_card_number = request_data['old_card_number']
+    directions = DirectionsHistory.move_directions(old_card_number, new_card_number, user)
+    directions = ', '.join([str(d.pk) for d in directions])
+
+    return JsonResponse({"directions": directions})
