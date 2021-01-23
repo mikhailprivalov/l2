@@ -2126,6 +2126,5 @@ def change_owner_direction(request):
     old_card_number = request_data.get('old_card_number', None)
     directions = DirectionsHistory.save_data(old_card_number, new_card_number, user)
     directions = ', '.join([str(d.pk) for d in directions])
-    print(directions)
 
     return JsonResponse({"directions": directions})

@@ -965,7 +965,7 @@
             'number': this.new_card_num,
           })
           if (!ok) {
-            errmessage("Карта не найдены")
+            errmessage("Карта не найдена")
             return
           }
           try {
@@ -980,7 +980,6 @@
           })
           console.log(data)
           okmessage('Номера направлений: ', data.directions)
-
           await this.$store.dispatch(action_types.DEC_LOADING)
       }
     }
