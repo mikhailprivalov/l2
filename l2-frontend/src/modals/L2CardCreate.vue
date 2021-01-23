@@ -980,8 +980,8 @@
             'old_card_number': this.card.number,
             'new_card_number': this.new_card_num,
           })
-          console.log(data)
-          okmessage('Номера направлений: ', data.directions)
+          okmessage('Направления успешно перенесены')
+          okmessage('Номера: ', data.directions)
           await this.$store.dispatch(action_types.DEC_LOADING)
       }
     }

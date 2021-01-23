@@ -20,7 +20,7 @@ import podrazdeleniya.models as pod
 import slog.models as slog
 from appconf.manager import SettingManager
 from clients.models import CardBase
-from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya
+from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya, DirectionsHistory
 from laboratory import settings
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime

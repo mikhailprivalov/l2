@@ -2125,9 +2125,9 @@ def directions_type_date(request):
 def change_owner_direction(request):
     user = request.user.doctorprofile
     request_data = json.loads(request.body)
-    new_card_number = request_data.get('new_card_number', None)
-    old_card_number = request_data.get('old_card_number', None)
-    directions = DirectionsHistory.save_data(old_card_number, new_card_number, user)
+    new_card_number = request_data['new_card_number']
+    old_card_number = request_data['old_card_number']
+    directions = DirectionsHistory.move_directions(old_card_number, new_card_number, user)
     directions = ', '.join([str(d.pk) for d in directions])
 
     return JsonResponse({"directions": directions})

@@ -1669,13 +1669,13 @@ class DirectionsHistory(models.Model):
         verbose_name_plural = 'Принадлежности направления'
 
     @staticmethod
-    def save_data(old_card_number, new_card_number, user):
+    def move_directions(old_card_number, new_card_number, user):
         old_card = Clients.Card.objects.filter(number=old_card_number, base__internal_type=True)[0]
         old_fio_born = old_card.get_fio_w_card()
         new_card = Clients.Card.objects.filter(number=new_card_number, base__internal_type=True)[0]
         new_fio_born = new_card.get_fio_w_card()
-        directions = Napravleniya.objects.select_for_update().filter(client=old_card)
         with transaction.atomic():
+            directions = Napravleniya.objects.select_for_update().filter(client=old_card)
             for dir in directions:
                 dir.client = new_card
                 dir.save()
