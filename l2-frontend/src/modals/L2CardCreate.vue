@@ -507,7 +507,6 @@
   import forms from '../forms'
   import {normalizeNamePart, swapLayouts, validateSnils} from "@/utils";
   import {GENDERS} from "@/constants";
-  import users_point from "../api/user-point";
   import api from '@/api';
 
   export default {
