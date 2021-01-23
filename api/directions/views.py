@@ -2077,6 +2077,7 @@ def all_directions_in_favorites(request):
     return JsonResponse({"data": data})
 
 
+@login_required
 def directions_type_date(request):
     podr = request.user.doctorprofile.podrazdeleniye
     doc_pk = request.user.doctorprofile.pk
@@ -2119,6 +2120,8 @@ def directions_type_date(request):
     return JsonResponse({"results": result_direction})
 
 
+@login_required
+@group_required("Управление иерархией истории")
 def change_owner_direction(request):
     user = request.user.doctorprofile
     request_data = json.loads(request.body)
