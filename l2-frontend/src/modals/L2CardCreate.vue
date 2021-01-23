@@ -350,14 +350,14 @@
             </div>
           </div>
         </div>
-        <div class="input-group" style="margin-bottom: 10px">
+        <div class="input-group" style="margin-bottom: 10px" v-if="can_change_owner_directions">
           <div class="input-group-btn">
             <button type="button" class="btn btn-blue-nb nbr" @click="change_directions_owner()">
               Перенести все услуги в другую карту
               <i class="glyphicon glyphicon-arrow-right"></i>
             </button>
           </div>
-          <input type="text" class="form-control nbr" placeholder="Введите номер карты" v-model="new_card_num">
+          <input type="text" class="form-control" placeholder="Введите номер карты" v-model="new_card_num">
         </div>
       </div>
       <modal v-if="document_to_edit > -2" ref="modalDocEdit" @close="hide_modal_doc_edit" show-footer="true"
@@ -678,6 +678,9 @@
             })
           }
         });
+      },
+      can_change_owner_directions() {
+        return (this.$store.getters.user_data.groups || []).includes('Управление иерархией истории')
       },
     },
     watch: {
