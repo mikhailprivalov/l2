@@ -326,11 +326,6 @@ def update_parent(request):
     g = [str(x) for x in request.user.groups.all()]
     forbidden = "Управление иерархией истории" not in g
 
-    iss_slave_dirs = Issledovaniya.objects.filter(napravleniye__in=slave_dirs)
-    for iss in iss_slave_dirs:
-        if iss.research.is_doc_refferal and forbidden:
-            return JsonResponse({"ok": False, "message": "Нет прав для изменения консультаций"})
-
     iss = Issledovaniya.objects.filter(napravleniye__in=slave_dirs)
     for r in iss:
         if r.research.is_hospital and forbidden:
