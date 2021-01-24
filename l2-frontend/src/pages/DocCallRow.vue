@@ -68,7 +68,7 @@ export default {
   methods: {
     async onChangeStatus() {
       await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message, status, executor_fio} = await api(
+      const {ok, message, status, executor, executor_fio} = await api(
         'doctor-call/change-status', this.r, ['pk', 'status'], {prevStatus: this.status}
       );
       if (!ok) {
@@ -76,6 +76,7 @@ export default {
       } else {
         okmessage('Статус обновлён успешно');
       }
+      this.r.executor = executor;
       this.r.executor_fio = executor_fio;
       this.status = this.r.status = status;
       await this.$store.dispatch(action_types.DEC_LOADING);
@@ -91,6 +92,7 @@ export default {
         okmessage('Исполнитель обновлён успешно');
       }
       this.r.executor = executor;
+      this.r.executor_fio = executor_fio;
       this.status = this.r.status = status;
       await this.$store.dispatch(action_types.DEC_LOADING);
     },

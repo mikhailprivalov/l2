@@ -206,6 +206,7 @@ def change_status(request):
     return JsonResponse({
         "ok": True,
         "status": status,
+        "executor": call.executor_id,
         "executor_fio": call.executor.get_fio() if call.executor else None,
     })
 
