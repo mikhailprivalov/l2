@@ -3,10 +3,19 @@ from django.http import HttpResponse
 from django.utils.module_loading import import_string
 from io import BytesIO
 from datetime import datetime
-from pdf2docx import Converter
+import platform
+
+if platform.processor() != 'arm':
+    import fitz
+    from pdf2docx import Converter, Page
+else:
+    class Converter:
+        pass
+
+    class Page:
+        pass
+
 from docx import Document
-import fitz
-from pdf2docx import Page
 from appconf.manager import SettingManager
 
 

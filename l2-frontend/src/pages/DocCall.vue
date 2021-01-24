@@ -78,16 +78,21 @@
       <div class="founded">
         Найдено записей: <strong>{{ params.total }}</strong>
       </div>
-      <paginate
-        v-model="params.page"
-        :page-count="params.pages"
-        :page-range="4"
-        :margin-pages="2"
-        :click-handler="load"
-        prev-text="Назад"
-        next-text="Вперёд"
-        container-class="pagination"
-      />
+      <div>
+        <button class="btn btn-blue-nb pull-right" @click="load(params.page)">
+          <i class="fa fa-refresh"></i>
+        </button>
+        <paginate
+          v-model="params.page"
+          :page-count="params.pages"
+          :page-range="4"
+          :margin-pages="2"
+          :click-handler="load"
+          prev-text="Назад"
+          next-text="Вперёд"
+          container-class="pagination"
+        />
+      </div>
       <table class="table table-bordered table-condensed">
         <colgroup>
           <col>
@@ -95,10 +100,12 @@
           <col style="width: 95px">
           <col>
           <col>
+          <col style="width: 90px">
           <col>
           <col>
           <col>
-          <col>
+          <col style="width: 120px">
+          <col style="width: 95px">
         </colgroup>
         <thead>
         <tr>
@@ -111,45 +118,31 @@
           <td>Цель</td>
           <td>Услуга, врач</td>
           <td>Примечания</td>
+          <td>Исполнитель</td>
+          <td>Статус</td>
         </tr>
         </thead>
         <tbody>
         <tr v-for="r in rows">
-          <td>{{ r.pk }}{{ r.externalNum ? ` — ${r.externalNum}` : '' }}</td>
-          <td>
-            {{ r.createdAt }}<br/>
-            {{ r.createdAtTime }}
-          </td>
-          <td>{{ r.execAt }}</td>
-          <td>
-            {{ r.card }}
-            <br/>
-            {{ r.address }}
-          </td>
-          <td>
-            {{ r.hospital }}<br/>
-            {{ r.district }}
-          </td>
-          <td>{{ r.phone }}</td>
-          <td>{{ r.purpose }}</td>
-          <td>
-            {{ r.research }}<br/>
-            {{ r.docAssigned }}
-          </td>
-          <td>{{ r.comment }}</td>
+          <DocCallRow :r="r"/>
         </tr>
         </tbody>
       </table>
-      <paginate
-        v-model="params.page"
-        :page-count="params.pages"
-        :page-range="4"
-        :margin-pages="2"
-        :click-handler="load"
-        prev-text="Назад"
-        next-text="Вперёд"
-        container-class="pagination"
-      />
+      <div>
+        <button class="btn btn-blue-nb pull-right" @click="load(params.page)">
+          <i class="fa fa-refresh"></i>
+        </button>
+        <paginate
+          v-model="params.page"
+          :page-count="params.pages"
+          :page-range="4"
+          :margin-pages="2"
+          :click-handler="load"
+          prev-text="Назад"
+          next-text="Вперёд"
+          container-class="pagination"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -163,12 +156,14 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import Paginate from 'vuejs-paginate';
 import api from '@/api';
 import * as action_types from '@/store/action-types';
+import DocCallRow from "@/pages/DocCallRow";
 
 export default {
   name: 'DocCall',
-  components: {Treeselect, Paginate},
+  components: {DocCallRow, Treeselect, Paginate},
   data() {
     return {
+      columnDefs: null,
       districts: [],
       purposes: [],
       docs_assigned: [],
@@ -190,6 +185,19 @@ export default {
         total: 0,
       },
     };
+  },
+  beforeMount() {
+    this.columnDefs = [
+      {headerName: 'Номер', field: 'numbers'},
+      {headerName: 'Создан', field: 'createdAt'},
+      {headerName: 'На дату', field: 'execAt'},
+      {headerName: 'Пациент', field: 'patient'},
+      {headerName: 'Больница, участок', field: 'hospital'},
+      {headerName: 'Телефон', field: 'phone'},
+      {headerName: 'Цель', field: 'purpose'},
+      {headerName: 'Услуга, врач', field: 'research'},
+      {headerName: 'Примечания', field: 'comment'},
+    ];
   },
   computed: {
     watchParams() {

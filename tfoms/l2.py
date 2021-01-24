@@ -41,3 +41,8 @@ def check_l2_enp(enp) -> dict:
 def check_l2_patient(family, name, patronymic, bd) -> dict:
     data = make_request("check-enp", {"family": family, "name": name, "patronymic": patronymic, "bd": bd, "check_mode": "l2-enp-full"})
     return data
+
+
+def update_doc_call_status(external_num, status, oid, code_tfoms) -> dict:
+    data = make_request("doc-call-update-status", {"externalNum": external_num, "status": status, "org": {"oid": oid, "codeTFOMS": code_tfoms}})
+    return data

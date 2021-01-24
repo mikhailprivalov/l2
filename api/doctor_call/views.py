@@ -4,6 +4,7 @@ from typing import List
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.http import JsonResponse
 
 from appconf.manager import SettingManager
@@ -143,9 +144,9 @@ def search(request):
 
     date = request_data["date"]
     time_start = f'{date} {request_data.get("time_start", "00:00")}:00'
-    time_end = f'{date} {request_data.get("time_end", "23:59")}:59'
+    time_end = f'{date} {request_data.get("time_end", "23:59")}:59:999999'
     datetime_start = datetime.datetime.strptime(time_start, '%Y-%m-%d %H:%M:%S')
-    datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S')
+    datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S:%f')
 
     if external:
         doc_call = DoctorCall.objects.filter(
@@ -181,4 +182,51 @@ def search(request):
         "page": page,
         "pages": p.num_pages,
         "total": p.count,
+    })
+
+
+@login_required
+def change_status(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    status = request_data["status"]
+    prev_status = request_data["prevStatus"]
+    with transaction.atomic():
+        call: DoctorCall = DoctorCall.objects.select_for_update().get(pk=pk)
+        if call.status != prev_status:
+            return JsonResponse({
+                "ok": False,
+                "message": "Статус уже обновлён",
+                "status": call.status,
+            })
+        call.status = status
+        if call.is_external:
+            call.need_send_status = True
+        call.save(update_fields=['status', 'need_send_status'])
+    return JsonResponse({
+        "ok": True,
+        "status": status,
+        "executor_fio": call.executor.get_fio() if call.executor else None,
+    })
+
+
+@login_required
+def change_executor(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    prev_executor = request_data["prevExecutor"]
+    with transaction.atomic():
+        call = DoctorCall.objects.select_for_update().get(pk=pk)
+        if call.executor_id != prev_executor:
+            return JsonResponse({
+                "ok": False,
+                "message": "Исполнитель уже обновлён",
+                "status": call.status,
+            })
+        call.executor_id = request.user.doctorprofile.pk
+        call.save(update_fields=['executor'])
+    return JsonResponse({
+        "ok": True,
+        "executor": call.executor_id,
+        "executor_fio": call.executor.get_fio() if call.executor else None,
     })
