@@ -350,6 +350,15 @@
             </div>
           </div>
         </div>
+        <div class="input-group" style="margin-bottom: 10px" v-if="can_change_owner_directions">
+          <div class="input-group-btn">
+            <button type="button" class="btn btn-blue-nb nbr" @click="change_directions_owner()">
+              Перенести все услуги в другую карту
+              <i class="glyphicon glyphicon-arrow-right"></i>
+            </button>
+          </div>
+          <input type="text" class="form-control" placeholder="Введите номер карты" v-model="new_card_num">
+        </div>
       </div>
       <modal v-if="document_to_edit > -2" ref="modalDocEdit" @close="hide_modal_doc_edit" show-footer="true"
              white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
@@ -498,6 +507,7 @@
   import forms from '../forms'
   import {normalizeNamePart, swapLayouts, validateSnils} from "@/utils";
   import {GENDERS} from "@/constants";
+  import api from '@/api';
 
   export default {
     name: 'l2-card-create',
@@ -573,6 +583,7 @@
         agent_doc: '',
         agent_clear: false,
         loading: false,
+        new_card_num: '',
       }
     },
     created() {
@@ -666,6 +677,9 @@
             })
           }
         });
+      },
+      can_change_owner_directions() {
+        return (this.$store.getters.user_data.groups || []).includes('Управление иерархией истории')
       },
     },
     watch: {
@@ -947,6 +961,28 @@
         await this.load_data();
         this.hide_modal_agent_edit();
         await this.$store.dispatch(action_types.DEC_LOADING)
+      },
+      async change_directions_owner(){
+          const {ok, individual_fio} = await api('patients/is-card', {
+            'number': this.new_card_num,
+          })
+          if (!ok) {
+            errmessage("Карта не найдена")
+            return
+          }
+          try {
+            await this.$dialog.confirm(`Перенести все услуги из карты № ${this.card.number}-${this.card.family} ${this.card.name} ${this.card.patronymic}) в карту № ${this.new_card_num} -${individual_fio} ?`)
+          } catch (_) {
+            return
+          }
+          await this.$store.dispatch(action_types.INC_LOADING)
+          const data = await api('directions/change-owner-direction', {
+            'old_card_number': this.card.number,
+            'new_card_number': this.new_card_num,
+          })
+          okmessage('Направления успешно перенесены')
+          okmessage('Номера: ', data.directions)
+          await this.$store.dispatch(action_types.DEC_LOADING)
       }
     }
   }
