@@ -206,7 +206,7 @@ def change_status(request):
         Log(
             key=call.pk,
             type=90001,
-            body=json.dumps({"pk": call.pk , "card_pk": call.client.pk, "status": status, }),
+            body=json.dumps({"pk": call.pk, "card_pk": call.client.pk, "status": status}),
             user=request.user.doctorprofile,
         ).save()
 
@@ -236,7 +236,7 @@ def change_executor(request):
         Log(
             key=call.pk,
             type=90002,
-            body=json.dumps({"pk": call.pk , "card_pk": call.client.pk, "status": call.status, "executor": call.executor_id}),
+            body=json.dumps({"pk": call.pk, "card_pk": call.client.pk, "status": call.status, "executor": call.executor_id}),
             user=request.user.doctorprofile,
         ).save()
 
