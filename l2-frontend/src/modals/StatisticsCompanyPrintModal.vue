@@ -65,7 +65,7 @@
     },
     methods: {
       make_report() {
-        window.open(`forms/docx?type=200.01&company=${this.current_company}&date1=${this.date1}&date2=${this.date2}`, '_blank')
+        window.open(`forms/pdf?type=200.01&company=${this.current_company}&date1=${this.date1}&date2=${this.date2}`, '_blank')
       }
     },
   }
