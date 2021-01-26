@@ -203,6 +203,13 @@ def change_status(request):
         if call.is_external:
             call.need_send_status = True
         call.save(update_fields=['status', 'need_send_status'])
+        Log(
+            key=call.pk,
+            type=90001,
+            body=json.dumps({"pk": call.pk , "card_pk": call.client.pk, "status": status, }),
+            user=request.user.doctorprofile,
+        ).save()
+
     return JsonResponse({
         "ok": True,
         "status": status,
@@ -226,6 +233,14 @@ def change_executor(request):
             })
         call.executor_id = request.user.doctorprofile.pk
         call.save(update_fields=['executor'])
+        Log(
+            key=call.pk,
+            type=90002,
+            body=json.dumps({"pk": call.pk , "card_pk": call.client.pk, "status": call.status, "executor": call.executor_id}),
+            user=request.user.doctorprofile,
+        ).save()
+
+
     return JsonResponse({
         "ok": True,
         "executor": call.executor_id,
