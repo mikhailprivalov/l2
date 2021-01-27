@@ -1326,8 +1326,8 @@ def form_11(request_data):
         return ""
 
     result = protocol_fields_result(iss)
-    work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date, department, recommendation = ("", "", "", "", "", "", "", "", "")
-    patalogy, type_med_examination_padeg = "", ""
+    work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date, department = ("", "", "", "", "", "", "", "")
+    type_med_examination_padeg = ""
     for i in result:
         if i["title"] == "Место работы":
             work_place = i["value"]
