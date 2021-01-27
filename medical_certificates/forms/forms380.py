@@ -1349,14 +1349,6 @@ def form_11(request_data):
             date = i["value"]
         elif i["title"] == "Цех, участок ОПУ":
             department = i["value"]
-        elif i["title"] == "Рекомендации":
-            recommendation = i["value"]
-        elif i["title"] == "Диспансерная группа":
-            dispensary_group = i["value"]
-        elif i["title"] == "Наименование заболевания":
-            name_disease = i["value"]
-        elif i["title"] == "Патология":
-            patalogy = i["value"]
 
     fwb.append(Paragraph('Заключение по результатам', styleCenterBold))
     fwb.append(Paragraph(f'{type_med_examination_padeg} медицинского осмотра (обследования) № {direction}', styleCenterBold))
