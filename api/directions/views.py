@@ -1323,7 +1323,7 @@ def directions_anesthesia_load(request):
                                 v = v.replace(',', '.')
                                 if check_float_is_valid(v):
                                     sum += float(v)
-                    current_param.append(sum or '')
+                    current_param.append(round(sum, 4) or '')
                     current_param_temp = set([current_param[i] for i in range(1, len(current_param))])
                     if len(current_param_temp) == 1 and '' in current_param_temp:
                         continue
