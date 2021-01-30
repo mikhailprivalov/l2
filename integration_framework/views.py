@@ -530,7 +530,7 @@ def external_doc_call_send(request):
     email = form.get('email')
     external_num = form.get('num')
 
-    logger.exception(f'external_doc_call_send: {json.dumps(patient_data)} {json.dumps(form)} {idp} {enp} {comment} {purpose} {email} {external_num}')
+    logger.exception(f'external_doc_call_send: {json.dumps(patient_data)} {json.dumps(form)} {enp} {comment} {purpose} {email} {external_num}')
 
     individuals = Individual.objects.filter(tfoms_enp=enp)
     if not individuals.exists():

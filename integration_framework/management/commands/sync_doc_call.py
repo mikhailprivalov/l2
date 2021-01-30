@@ -33,7 +33,7 @@ class Command(BaseCommand):
                         data = call.json()
                         send_doc_call(base, token, {
                             "patientData": {
-                                'enp':  call.client.individual.get_enp(),
+                                'enp': call.client.individual.get_enp(),
                             },
                             "form": data,
                         })
