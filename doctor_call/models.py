@@ -138,7 +138,7 @@ class DoctorCall(models.Model):
             is_main_external=bool(is_main_external),
             external_num=data.get('external_num') or '',
             email=None if not email else email[:64],
-            need_send_to_external=SettingManager.l2('send_doc_calls'),
+            need_send_to_external=SettingManager.l2('send_doc_calls') and not is_main_external,
         )
         doc_call.save()
 
