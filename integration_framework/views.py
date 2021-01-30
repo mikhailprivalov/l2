@@ -12,6 +12,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 import directions.models as directions
+from appconf.manager import SettingManager
 from clients.models import Individual, Card
 from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
@@ -452,9 +453,11 @@ def external_doc_call_create(request):
     )
     if is_main_external:
         doc_call.external_num = doc_call.num
+    elif SettingManager.l2('send_doc_calls'):
+        doc_call.external_num = f"{org_id}{doc_call.pk}"
     doc_call.save()
 
-    return Response({"ok": True, "number": doc_call.num})
+    return Response({"ok": True, "number": doc_call.doc_call.external_num})
 
 
 @api_view(['POST'])
