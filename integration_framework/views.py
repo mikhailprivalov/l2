@@ -451,7 +451,7 @@ def external_doc_call_create(request):
         }
     )
     if is_main_external:
-        doc_call.external_num = f"{org_id}{doc_call.pk}"
+        doc_call.external_num = doc_call.num
     doc_call.save()
 
     return Response({"ok": True, "number": doc_call.num})
