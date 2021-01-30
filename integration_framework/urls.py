@@ -16,5 +16,7 @@ urlpatterns = [
     path('get-patient-results-covid19', views.patient_results_covid19),
     path('log', views.make_log),
     path('doc-call-create', views.external_doc_call_create),
+    path('doc-call-update-status', views.external_doc_call_update_status),
+    path('doc-call-send', views.external_doc_call_send),
     path('send-result', views.external_research_create),
 ]

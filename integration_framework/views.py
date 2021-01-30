@@ -408,11 +408,13 @@ def external_doc_call_create(request):
     comment = form.get('comment')
     purpose = form.get('purpose')
     email = form.get('email')
+    external_num = form.get('external_num')
+    is_main_external = form.get('is_main_external')
 
     if email == 'undefined':
         email = None
 
-    logger.exception(f'external_doc_call_create: {org_id} {json.dumps(patient_data)} {json.dumps(form)} {idp} {enp} {comment} {purpose} {email}')
+    logger.exception(f'external_doc_call_create: {org_id} {json.dumps(patient_data)} {json.dumps(form)} {idp} {enp} {comment} {purpose} {email} {external_num}')
 
     Individual.import_from_tfoms(patient_data)
     individuals = Individual.objects.filter(Q(tfoms_enp=enp or '###$fakeenp$###') | Q(tfoms_idp=idp or '###$fakeidp$###'))
@@ -444,12 +446,135 @@ def external_doc_call_create(request):
             'hospital': hospital.pk,
             'external': True,
             'email': email,
+            'external_num': external_num,
+            'is_main_external': is_main_external,
         }
     )
-    doc_call.external_num = f"{org_id}{doc_call.pk}"
+    if is_main_external:
+        doc_call.external_num = f"{org_id}{doc_call.pk}"
     doc_call.save()
 
-    return Response({"ok": True, "number": doc_call.pk})
+    return Response({"ok": True, "number": doc_call.num})
+
+
+@api_view(['POST'])
+def external_doc_call_update_status(request):
+    if not hasattr(request.user, 'hospitals'):
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+
+    body = json.loads(request.body)
+
+    external_num = body.get("externalNum")
+    status = body.get("status")
+    org = body.get("org")
+    code_tfoms = org.get("codeTFOMS")
+    oid_org = org.get("oid")
+
+    if not external_num:
+        return Response({"ok": False, 'message': 'externalNum не указан'})
+
+    if not status:
+        return Response({"ok": False, 'message': 'status не указан'})
+
+    if not code_tfoms and not oid_org:
+        return Response({"ok": False, 'message': 'Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid'})
+
+    if code_tfoms:
+        hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
+    else:
+        hospital = Hospitals.objects.filter(oid=oid_org).first()
+
+    if not hospital:
+        return Response({"ok": False, 'message': 'Организация не найдена'})
+
+    if not request.user.hospitals.filter(pk=hospital.pk).exists():
+        return Response({"ok": False, 'message': 'Нет доступа в переданную организацию'})
+
+    if not hospital:
+        return Response({"ok": False, 'message': 'Организация не найдена'})
+
+    status = str(status)
+    if not status.isdigit():
+        return Response({"ok": False, 'message': 'Некорректный status'})
+
+    status = int(status)
+    if status not in [x[0] for x in DoctorCall.STATUS]:
+        return Response({"ok": False, 'message': 'Некорректный status'})
+
+    num = str(external_num)
+    if not num.startswith('XR'):
+        return Response({"ok": False, 'message': 'Некорректный externalNum'})
+
+    num = num.replace('XR', '')
+    if not num.isdigit():
+        return Response({"ok": False, 'message': 'Некорректный externalNum'})
+
+    call: DoctorCall = DoctorCall.objects.filter(pk=num).first()
+    if not call:
+        return Response({"ok": False, 'message': f'Заявка с номером {num} не найдена'})
+
+    call.status = status
+    call.save(update_fields=['status'])
+    return Response({"ok": True})
+
+
+@api_view(['POST'])
+def external_doc_call_send(request):
+    data = json.loads(request.body)
+    patient_data = data.get('patient_data')
+    form = data.get('form')
+    enp = patient_data.get('enp')
+    address = patient_data.get('address')
+    comment = form.get('comment')
+    purpose = form.get('purpose_id')
+    email = form.get('email')
+    external_num = form.get('num')
+
+    logger.exception(f'external_doc_call_send: {json.dumps(patient_data)} {json.dumps(form)} {enp} {comment} {purpose} {email} {external_num}')
+
+    individuals = Individual.objects.filter(tfoms_enp=enp)
+    if not individuals.exists():
+        individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title='Полис ОМС') | Q(document__document_type__title='ЕНП'))
+    if not individuals.exists():
+        tfoms_data = match_enp(enp)
+        if not tfoms_data:
+            return Response({"ok": False, 'message': 'Неверные данные полиса, в базе ТФОМС нет такого пациента'})
+        Individual.import_from_tfoms(tfoms_data)
+        individuals = Individual.objects.filter(tfoms_enp=enp)
+
+    individual = individuals.first()
+    if not individual:
+        return Response({"ok": False, 'message': 'Физлицо не найдено'})
+
+    card = Card.objects.filter(individual=individual, base__internal_type=True).first()
+    research = Researches.objects.filter(title='Обращение пациента').first()
+    hospital = Hospitals.get_default_hospital()
+
+    if not card or not research or not hospital:
+        return JsonResponse({"ok": False, "number": None})
+
+    research_pk = research.pk
+
+    doc_call = DoctorCall.doctor_call_save(
+        {
+            'card': card,
+            'research': research_pk,
+            'address': address,
+            'district': -1,
+            'date': current_time(),
+            'comment': comment,
+            'phone': form.get('phone'),
+            'doc': -1,
+            'purpose': int(purpose),
+            'hospital': hospital.pk,
+            'external': True,
+            'email': email,
+            'external_num': external_num,
+            'is_main_external': False,
+        }
+    )
+
+    return Response({"ok": True, "number": doc_call.num})
 
 
 @api_view(['POST'])

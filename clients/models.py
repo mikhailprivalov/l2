@@ -462,6 +462,12 @@ class Individual(models.Model):
             return Card.objects.filter(base__is_rmis=True, is_archive=False, individual=self)[0].number
         return ""
 
+    def get_enp(self):
+        enp_doc: [Document, None] = Document.objects.filter(document_type__title__startswith="Полис ОМС", individual=self).first()
+        if enp_doc and enp_doc.number:
+            return enp_doc.number
+        return None
+
     def sync_with_tfoms(self):
         is_new = False
         updated = []

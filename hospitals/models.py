@@ -18,6 +18,8 @@ class Hospitals(models.Model):
     www = models.CharField(max_length=128, blank=True, default='', help_text="Сайт больницы")
     rmis_org_id = models.CharField(max_length=12, blank=True, default='', help_text="ID организации в РМИС")
     email = models.CharField(max_length=12, blank=True, default='', help_text="email")
+    remote_url = models.CharField(max_length=128, blank=True, default='', help_text="Адрес L2")
+    remote_token = models.CharField(max_length=128, blank=True, default='', help_text="Токен L2")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:

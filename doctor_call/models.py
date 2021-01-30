@@ -1,9 +1,11 @@
 import datetime
+from typing import Optional
 
 import simplejson as json
 from django.db import models
 
 import slog.models as slog
+from appconf.manager import SettingManager
 from clients.models import Card, District
 from directory.models import Researches
 from hospitals.models import Hospitals
@@ -23,6 +25,13 @@ class DoctorCall(models.Model):
         (8, 'Скорая помощь'),
     )
 
+    STATUS = (
+        (1, 'Новая заявка'),
+        (2, 'В работе'),
+        (3, 'Выполнено'),
+        (4, 'Отмена'),
+    )
+
     client = models.ForeignKey(Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
     research = models.ForeignKey(Researches, null=True, blank=True, help_text='Вид исследования из справочника', on_delete=models.CASCADE)
     create_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания')
@@ -37,23 +46,29 @@ class DoctorCall(models.Model):
     doc_assigned = models.ForeignKey(DoctorProfile, db_index=True, null=True, related_name="doc_assigned", help_text='Лечащий врач', on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospitals, db_index=True, null=True, help_text='Больница', on_delete=models.CASCADE)
     is_external = models.BooleanField(default=False, blank=True, help_text='Внешняя заявка')
+    is_main_external = models.BooleanField(default=False, blank=True, help_text='Центральная заявка')
+    need_send_status = models.BooleanField(default=False, blank=True, help_text='Требуется синхронизировать статус с центральной системой')
+    need_send_to_external = models.BooleanField(default=False, blank=True, help_text='Требуется отправить в удалённую систему')
     external_num = models.CharField(max_length=128, blank=True, default='', help_text='Номер внешней заявки')
     email = models.CharField(max_length=64, blank=True, default=None, null=True, help_text='Email заявки на результат covid')
+    executor = models.ForeignKey(DoctorProfile, db_index=True, null=True, related_name="executor", help_text='Исполнитель заявки', on_delete=models.CASCADE)
+    status = models.PositiveSmallIntegerField(choices=STATUS, db_index=True, default=STATUS[0][0], blank=True)
 
     class Meta:
         verbose_name = 'Вызов'
         verbose_name_plural = 'Вызова на дом'
 
-    @property
-    def json(self):
+    def json(self, doc: Optional[DoctorProfile] = None):
         return {
             "pk": self.pk,
+            "num": self.num,
             "card": self.client.number_with_type_and_fio(),
             "cardPk": self.client_id,
             "phone": self.phone,
             "email": self.email,
             "address": self.address,
             "purpose": self.get_purpose_display(),
+            "purpose_id": self.purpose,
             "comment": self.comment,
             "research": self.research.get_title(),
             "district": self.district.title if self.district else "",
@@ -62,10 +77,21 @@ class DoctorCall(models.Model):
             "execAt": strfdatetime(self.exec_at, "%d.%m.%Y"),
             "isCancel": self.cancel,
             "isExternal": self.is_external,
+            "isMainExternal": self.is_main_external,
             "externalNum": self.external_num,
             "createdAt": strfdatetime(self.create_at, "%d.%m.%Y"),
             "createdAtTime": strfdatetime(self.create_at, "%X"),
+            "status": self.status,
+            "executor": self.executor_id,
+            "executor_fio": self.executor.get_fio() if self.executor else None,
+            "canEdit": not doc or not self.hospital or self.hospital == doc.get_hospital(),
         }
+
+    @property
+    def num(self):
+        if self.is_main_external:
+            return f"XR{self.pk}"
+        return str(self.pk)
 
     @staticmethod
     def doctor_call_save(data, doc_who_create=None):
@@ -107,7 +133,10 @@ class DoctorCall(models.Model):
             doc_assigned=doc_obj,
             hospital=hospital_obj,
             is_external=data['external'],
+            is_main_external=data.get('is_main_external', False) or SettingManager.l2('send_doc_calls'),
+            external_num=data.get('external_num', ''),
             email=None if not email else email[:64],
+            need_send_to_external=SettingManager.l2('send_doc_calls'),
         )
         doc_call.save()
 
@@ -126,6 +155,7 @@ class DoctorCall(models.Model):
                     "date": str(data['date']),
                     "comment": data['comment'],
                     "is_external": data['external'],
+                    "external_num": data['external_num'],
                     "email": email,
                 }
             ),
