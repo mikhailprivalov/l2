@@ -155,7 +155,8 @@ class DoctorCall(models.Model):
                     "date": str(data['date']),
                     "comment": data['comment'],
                     "is_external": data['external'],
-                    "external_num": data['external_num'],
+                    "external_num": data.get('external_num'),
+                    "is_main_external": data.get('is_main_external'),
                     "email": email,
                 }
             ),
