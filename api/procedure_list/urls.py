@@ -7,4 +7,5 @@ urlpatterns = [
     path('procedure-cancel', views.procedure_cancel),
     path('procedure-time-execute', views.procedure_execute),
     path('params', views.params),
+    path('department-procedures', views.procedure_aggregate),
 ]

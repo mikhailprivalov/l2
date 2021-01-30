@@ -6,8 +6,7 @@ admin.site.register(models.FormRelease)
 admin.site.register(models.MethodsReception)
 
 
-@admin.register(models.ProcedureList)
-class CardAdmin(admin.ModelAdmin):
+class ResProcedureList(admin.ModelAdmin):
     raw_id_fields = (
         'history',
         'diary',
@@ -19,4 +18,12 @@ class CardAdmin(admin.ModelAdmin):
         'doc_create',
         'who_cancel',
     )
+    list_display = (
+        'history',
+        'card',
+    )
+
     search_fields = ('pk',)
+
+
+admin.site.register(models.ProcedureList, ResProcedureList)

@@ -90,7 +90,11 @@ def get_procedure_by_dir(request):
                         row["dates"][date][t] = {
                             "empty": True,
                         }
-
+    print('1111111')
+    print(rows)
+    print(dates_all)
+    print(dates_times)
+    print('1111111')
     return JsonResponse({"result": rows, "dates": dates_all, "timesInDates": dates_times})
 
 
@@ -163,12 +167,14 @@ def procedure_execute(request):
 @group_required("Врач стационара", "t, ad, p")
 def procedure_aggregate(request):
     request_data = json.loads(request.body)
-    start_date = datetime.strptime(request_data['start_date'], '%Y-%m-%d')
+    print(request_data)
+    # start_date = datetime.strptime(request_data['start_date'], '%Y-%m-%d')
+    start_date = datetime.strptime('2021-01-30', '%Y-%m-%d')
     start_date = datetime.combine(start_date, dtime.min)
-    end_date = datetime.strptime(request_data['end_date'], '%Y-%m-%d')
+    # end_date = datetime.strptime(request_data['end_date'], '%Y-%m-%d')
+    end_date = datetime.strptime('2021-01-31', '%Y-%m-%d')
     end_date = datetime.combine(end_date, dtime.max)
     research_pk = request_data.get('research_pk', -1)
-
     patient_procedures = get_procedure_by_params(start_date, end_date, research_pk)
     all_times = get_procedure_all_times(start_date, end_date)
 
@@ -207,4 +213,12 @@ def procedure_aggregate(request):
     data.append(new_patient)
     data.pop(0)
 
-    return JsonResponse({"result": data, "dates": unique_dates, "timesInDates": all_times})
+    ds = [datetime.strptime(u, '%d.%m.%Y') for u in unique_dates]
+    ds = sorted(ds)
+    ds = [datetime.strftime(u, '%d.%m.%Y') for u in ds]
+
+    all_times1 = {}
+    for i in unique_dates:
+        all_times1[i] = [k[0]for k in all_times]
+
+    return JsonResponse({"result": data, "dates": ds, "timesInDates": all_times1})
