@@ -24,7 +24,7 @@
       <tbody>
         <tr v-for="r in rr.drugs">
           <td>
-            <div class="patient" >{{rr.patient.fio}}</div>
+            <div class="patient" >{{rr.patient.fio}} {{r.history_num}}</div>
           </td>
           <td>
             <div class="drug" :class="{cancel: r.cancel}">{{r.drug}}</div>

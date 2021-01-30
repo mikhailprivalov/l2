@@ -205,6 +205,7 @@ def procedure_aggregate(request):
                                          'unit': unit,
                                          'cancel': i[13],
                                          'who_cancel': None,
+                                         'history_num': i[17],
                                          'dates': {j: deepcopy(empty) for j in unique_dates}})
             current_petient_drugs = len(new_patient['drugs'])
 
@@ -220,5 +221,7 @@ def procedure_aggregate(request):
     all_times1 = {}
     for i in unique_dates:
         all_times1[i] = [k[0]for k in all_times]
+
+    print(data)
 
     return JsonResponse({"result": data, "dates": ds, "timesInDates": all_times1})
