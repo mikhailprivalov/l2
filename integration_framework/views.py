@@ -457,7 +457,7 @@ def external_doc_call_create(request):
         doc_call.external_num = f"{org_id}{doc_call.pk}"
     doc_call.save()
 
-    return Response({"ok": True, "number": doc_call.doc_call.external_num})
+    return Response({"ok": True, "number": doc_call.external_num})
 
 
 @api_view(['POST'])
