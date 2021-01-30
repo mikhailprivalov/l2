@@ -87,7 +87,12 @@ def form_01(request_data):
         doc_fio = ''
         if i[6]:
             doc_fio = i[6].split(' ')
-            doc_fio = f"{doc_fio[0]} {doc_fio[1][0]}.{doc_fio[2][0]}."
+            if len(doc_fio) == 1:
+                doc_fio = doc_fio[0]
+            elif len(doc_fio) == 2:
+                doc_fio = f"{doc_fio[0]} {doc_fio[1]}"
+            else:
+                doc_fio = f"{doc_fio[0]} {doc_fio[1][0]}.{doc_fio[2][0]}."
         anesthetist_fio = ''
         if i[9]:
             anesthetist_fio = i[9].split(' ')

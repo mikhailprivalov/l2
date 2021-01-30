@@ -326,11 +326,6 @@ def update_parent(request):
     g = [str(x) for x in request.user.groups.all()]
     forbidden = "Управление иерархией истории" not in g
 
-    iss_slave_dirs = Issledovaniya.objects.filter(napravleniye__in=slave_dirs)
-    for iss in iss_slave_dirs:
-        if iss.research.is_doc_refferal and forbidden:
-            return JsonResponse({"ok": False, "message": "Нет прав для изменения консультаций"})
-
     iss = Issledovaniya.objects.filter(napravleniye__in=slave_dirs)
     for r in iss:
         if r.research.is_hospital and forbidden:
@@ -1328,7 +1323,7 @@ def directions_anesthesia_load(request):
                                 v = v.replace(',', '.')
                                 if check_float_is_valid(v):
                                     sum += float(v)
-                    current_param.append(sum or '')
+                    current_param.append(round(sum, 4) or '')
                     current_param_temp = set([current_param[i] for i in range(1, len(current_param))])
                     if len(current_param_temp) == 1 and '' in current_param_temp:
                         continue

@@ -960,8 +960,7 @@
           for (const f of g.fields) {
             n++
             if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value) &&
-              (f.field_type !== 3 ||
-                vField(g, research.research.groups, f.visibility, this.data.patient))) {
+              (vField(g, research.research.groups, f.visibility, this.data.patient))) {
               l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title))
             }
           }
