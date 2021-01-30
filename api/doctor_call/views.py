@@ -157,7 +157,7 @@ def search(request):
         if number.startswith('XR'):
             doc_call = doc_call.filter(Q(external_num=number) | Q(pk=just_number, is_main_external=True))
         else:
-            doc_call = doc_call.filter(pk=just_number)
+            doc_call = doc_call.filter(Q(pk=just_number) | Q(external_num=number))
     else:
         if external:
             doc_call = DoctorCall.objects.filter(
