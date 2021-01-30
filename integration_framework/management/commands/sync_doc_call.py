@@ -36,7 +36,10 @@ class Command(BaseCommand):
                                 "patientData": {
                                     'enp': call.client.individual.get_enp(),
                                 },
-                                "form": data,
+                                "form": {
+                                    **data,
+                                    "is_main_external": True,
+                                },
                             })
                     except Exception as e:
                         self.stdout.write(str(e))
