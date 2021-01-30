@@ -30,13 +30,14 @@ class Command(BaseCommand):
                     try:
                         base = call.hospital.remote_url
                         token = call.hospital.remote_token
-                        data = call.json()
-                        send_doc_call(base, token, {
-                            "patientData": {
-                                'enp': call.client.individual.get_enp(),
-                            },
-                            "form": data,
-                        })
+                        if base and token:
+                            data = call.json()
+                            send_doc_call(base, token, {
+                                "patientData": {
+                                    'enp': call.client.individual.get_enp(),
+                                },
+                                "form": data,
+                            })
                     except Exception as e:
                         self.stdout.write(str(e))
                     call.need_send_to_external = False
