@@ -35,12 +35,12 @@
       <div v-else>
         не назначен
       </div>
-      <div v-if="!r.isMainExternal">
+      <div v-if="!r.isMainExternal && !r.canEdit">
         <a href="#" @click.prevent="setMeAsExecutor" class="a-under">назначить меня</a>
       </div>
     </td>
     <td>
-      <select v-model="r.status" @change="onChangeStatus" :readonly="r.isMainExternal">
+      <select v-model="r.status" @change="onChangeStatus" :readonly="r.isMainExternal || !r.canEdit">
         <option :value="1">Новая заявка</option>
         <option :value="2">В работе</option>
         <option :value="3">Выполнено</option>
@@ -83,7 +83,7 @@ export default {
     },
     async setMeAsExecutor() {
       await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message, executor, executor_fio} = await api(
+      const {ok, message, status, executor, executor_fio} = await api(
         'doctor-call/change-executor', this.r, ['pk'], {prevExecutor: this.r.executor}
       );
       if (!ok) {

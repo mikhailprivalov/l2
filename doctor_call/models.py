@@ -1,9 +1,11 @@
 import datetime
+from typing import Optional
 
 import simplejson as json
 from django.db import models
 
 import slog.models as slog
+from appconf.manager import SettingManager
 from clients.models import Card, District
 from directory.models import Researches
 from hospitals.models import Hospitals
@@ -46,6 +48,7 @@ class DoctorCall(models.Model):
     is_external = models.BooleanField(default=False, blank=True, help_text='Внешняя заявка')
     is_main_external = models.BooleanField(default=False, blank=True, help_text='Центральная заявка')
     need_send_status = models.BooleanField(default=False, blank=True, help_text='Требуется синхронизировать статус с центральной системой')
+    need_send_to_external = models.BooleanField(default=False, blank=True, help_text='Требуется отправить в удалённую систему')
     external_num = models.CharField(max_length=128, blank=True, default='', help_text='Номер внешней заявки')
     email = models.CharField(max_length=64, blank=True, default=None, null=True, help_text='Email заявки на результат covid')
     executor = models.ForeignKey(DoctorProfile, db_index=True, null=True, related_name="executor", help_text='Исполнитель заявки', on_delete=models.CASCADE)
@@ -55,8 +58,7 @@ class DoctorCall(models.Model):
         verbose_name = 'Вызов'
         verbose_name_plural = 'Вызова на дом'
 
-    @property
-    def json(self):
+    def json(self, doc: Optional[DoctorProfile] = None):
         return {
             "pk": self.pk,
             "num": self.num,
@@ -66,6 +68,7 @@ class DoctorCall(models.Model):
             "email": self.email,
             "address": self.address,
             "purpose": self.get_purpose_display(),
+            "purpose_id": self.purpose,
             "comment": self.comment,
             "research": self.research.get_title(),
             "district": self.district.title if self.district else "",
@@ -81,6 +84,7 @@ class DoctorCall(models.Model):
             "status": self.status,
             "executor": self.executor_id,
             "executor_fio": self.executor.get_fio() if self.executor else None,
+            "canEdit": not doc or not self.hospital or self.hospital == doc.get_hospital(),
         }
 
     @property
@@ -129,9 +133,10 @@ class DoctorCall(models.Model):
             doc_assigned=doc_obj,
             hospital=hospital_obj,
             is_external=data['external'],
-            is_main_external=data['is_main_external'],
-            external_num=data['external_num'],
+            is_main_external=data.get('is_main_external', False) or SettingManager.l2('send_doc_calls'),
+            external_num=data.get('external_num', ''),
             email=None if not email else email[:64],
+            need_send_to_external=SettingManager.l2('send_doc_calls'),
         )
         doc_call.save()
 
