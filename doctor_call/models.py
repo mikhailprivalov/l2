@@ -84,7 +84,7 @@ class DoctorCall(models.Model):
             "status": self.status,
             "executor": self.executor_id,
             "executor_fio": self.executor.get_fio() if self.executor else None,
-            "canEdit": not doc or not self.hospital or self.hospital == doc.get_hospital(),
+            "canEdit": not self.need_send_to_external and (not doc or not self.hospital or self.hospital == doc.get_hospital()),
         }
 
     @property
