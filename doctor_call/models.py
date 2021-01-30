@@ -119,6 +119,8 @@ class DoctorCall(models.Model):
 
         email = data.get('email')
 
+        is_main_external = data.get('is_main_external', SettingManager.l2('send_doc_calls'))
+
         doc_call = DoctorCall(
             client=patient_card,
             research=research_obj,
@@ -133,7 +135,7 @@ class DoctorCall(models.Model):
             doc_assigned=doc_obj,
             hospital=hospital_obj,
             is_external=data['external'],
-            is_main_external=data.get('is_main_external', SettingManager.l2('send_doc_calls')),
+            is_main_external=bool(is_main_external),
             external_num=data.get('external_num') or '',
             email=None if not email else email[:64],
             need_send_to_external=SettingManager.l2('send_doc_calls'),
