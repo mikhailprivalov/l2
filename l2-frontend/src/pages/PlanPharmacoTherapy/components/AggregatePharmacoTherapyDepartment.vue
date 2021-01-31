@@ -91,14 +91,12 @@
     },
     methods: {
       async load() {
-        console.log(this.start_date)
-        console.log(this.end_date)
         const {
           result,
           dates,
           times,
           timesInDates,
-        } = await api('procedural-list/department-procedures', {'start_date': '2021-01-30', 'end_date': '2021-02-06', 'research_pk': 525} );
+        } = await api('procedural-list/department-procedures', {'start_date': '2021-01-30', 'end_date': '2021-02-06', 'research_pk': 525});
         this.rows = result;
         this.dates = dates;
         this.times = times;
