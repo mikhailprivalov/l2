@@ -4,6 +4,8 @@ from typing import List
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Q
 from django.http import JsonResponse
 
 from appconf.manager import SettingManager
@@ -137,32 +139,42 @@ def search(request):
     cancel = request_data["is_canceled"]
     doc_assigned = int(request_data.get("doc", -1))
     purpose_id = int(request_data.get("purpose", -1))
-    hospital = int(request_data.get("hospital_pk", -1))
+    hospital = int(request_data.get("hospital", -1))
     external = request_data.get("is_external")
     page = max(int(request_data.get("page", 1)), 1)
+    number = request_data.get("number")
 
     date = request_data["date"]
     time_start = f'{date} {request_data.get("time_start", "00:00")}:00'
-    time_end = f'{date} {request_data.get("time_end", "23:59")}:59'
+    time_end = f'{date} {request_data.get("time_end", "23:59")}:59:999999'
     datetime_start = datetime.datetime.strptime(time_start, '%Y-%m-%d %H:%M:%S')
-    datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S')
+    datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S:%f')
 
-    if external:
-        doc_call = DoctorCall.objects.filter(
-            create_at__range=[datetime_start, datetime_end],
-        )
+    if number:
+        number = str(number)
+        just_number = number.replace('XR', '')
+        doc_call = DoctorCall.objects.all()
+        if number.startswith('XR'):
+            doc_call = doc_call.filter(Q(external_num=number) | Q(pk=just_number, is_main_external=True))
+        else:
+            doc_call = doc_call.filter(Q(pk=just_number) | Q(external_num=number))
     else:
-        doc_call = DoctorCall.objects.filter(create_at__range=[datetime_start, datetime_end])
-    doc_call = doc_call.filter(is_external=external, cancel=cancel)
+        if external:
+            doc_call = DoctorCall.objects.filter(
+                create_at__range=[datetime_start, datetime_end],
+            )
+        else:
+            doc_call = DoctorCall.objects.filter(create_at__range=[datetime_start, datetime_end])
+        doc_call = doc_call.filter(is_external=external, cancel=cancel)
 
-    if hospital > -1:
-        doc_call = doc_call.filter(hospital__pk=hospital)
-    if doc_assigned > -1:
-        doc_call = doc_call.filter(doc_assigned__pk=doc_assigned)
-    if district > -1:
-        doc_call = doc_call.filter(district_id__pk=district)
-    if purpose_id > -1:
-        doc_call = doc_call.filter(purpose=purpose_id)
+        if hospital > -1:
+            doc_call = doc_call.filter(hospital__pk=hospital)
+        if doc_assigned > -1:
+            doc_call = doc_call.filter(doc_assigned__pk=doc_assigned)
+        if district > -1:
+            doc_call = doc_call.filter(district_id__pk=district)
+        if purpose_id > -1:
+            doc_call = doc_call.filter(purpose=purpose_id)
 
     if external:
         doc_call = doc_call.order_by('hospital', 'pk')
@@ -171,14 +183,63 @@ def search(request):
     else:
         doc_call = doc_call.order_by("district__title")
 
-    p = Paginator(doc_call, SettingManager.get("doc_call_page_size", default='30', default_type='i'))
+    p = Paginator(doc_call.distinct(), SettingManager.get("doc_call_page_size", default='30', default_type='i'))
 
     return JsonResponse({
         "rows": [
-            x.json
+            x.json(request.user.doctorprofile)
             for x in p.page(page).object_list
         ],
         "page": page,
         "pages": p.num_pages,
         "total": p.count,
+    })
+
+
+@login_required
+def change_status(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    status = request_data["status"]
+    prev_status = request_data["prevStatus"]
+    with transaction.atomic():
+        call: DoctorCall = DoctorCall.objects.select_for_update().get(pk=pk)
+        if call.status != prev_status:
+            return JsonResponse({
+                "ok": False,
+                "message": "Статус уже обновлён",
+                "status": call.status,
+            })
+        call.status = status
+        if call.is_external:
+            call.need_send_status = True
+        call.save(update_fields=['status', 'need_send_status'])
+    return JsonResponse({
+        "ok": True,
+        "status": status,
+        "executor": call.executor_id,
+        "executor_fio": call.executor.get_fio() if call.executor else None,
+    })
+
+
+@login_required
+def change_executor(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    prev_executor = request_data["prevExecutor"]
+    with transaction.atomic():
+        call = DoctorCall.objects.select_for_update().get(pk=pk)
+        if call.executor_id != prev_executor:
+            return JsonResponse({
+                "ok": False,
+                "message": "Исполнитель уже обновлён",
+                "status": call.status,
+            })
+        call.executor_id = request.user.doctorprofile.pk
+        call.save(update_fields=['executor'])
+    return JsonResponse({
+        "ok": True,
+        "status": call.status,
+        "executor": call.executor_id,
+        "executor_fio": call.executor.get_fio() if call.executor else None,
     })

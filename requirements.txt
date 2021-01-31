@@ -9,7 +9,7 @@ chardet==3.0.4
 DAWG==0.8.0
 DAWG-Python==0.7.2
 defusedxml==0.6.0
-Django==3.1.4
+Django==3.1.5
 django-ajax-selects==2.1.0
 django-cors-middleware==1.5.0
 django-debug-panel==0.8.3
@@ -38,7 +38,7 @@ ldap3==2.8.1
 lxml==4.6.2
 Markdown==3.3.3
 MarkupSafe==1.1.0
-numpy==1.19.5
+numpy>=1.19.5
 openpyxl==3.0.5
 pdfrw==0.4
 pdfminer==20191125
@@ -56,7 +56,7 @@ PyPDF2==1.26.0
 python-dateutil==2.8.1
 python3-memcached==1.51
 python-docx
-pdf2docx
+#pdf2docx
 pytils==0.3
 pytz==2020.4
 PyYAML==5.3.1
