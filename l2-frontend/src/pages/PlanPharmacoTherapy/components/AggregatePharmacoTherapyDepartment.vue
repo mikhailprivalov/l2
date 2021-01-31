@@ -46,12 +46,7 @@
           <td v-for="d in dates" :key="d" class="cl-td">
             <PharmacotherapyTime :data="r.dates[d][t]" v-for="t in timesInDates[d]" :key="t" />
           </td>
-
         </tr>
-
-<!--      <tr v-if="rows.length === 0">-->
-<!--        <td>Нет данных</td>-->
-<!--      </tr>-->
       </tbody>
     </table>
     </div>
@@ -96,7 +91,6 @@
     },
     methods: {
       async load() {
-        // await this.$store.dispatch(action_types.INC_LOADING);
         console.log(this.start_date)
         console.log(this.end_date)
         const {
@@ -104,13 +98,12 @@
           dates,
           times,
           timesInDates,
-        // } = await api('procedural-list/get-procedure', this, 'direction');
         } = await api('procedural-list/department-procedures', {'start_date': '2021-01-30', 'end_date': '2021-02-06', 'research_pk': 525} );
         this.rows = result;
         this.dates = dates;
         this.times = times;
         this.timesInDates = timesInDates;
-        // await this.$store.dispatch(action_types.DEC_LOADING);
+        await this.$store.dispatch(action_types.DEC_LOADING);
       },
       async cancelRow(pk, cancel) {
         if (cancel) {
@@ -149,10 +142,6 @@
   font-weight: normal;
   font-size: 12px;
   vertical-align: bottom;
-
-  //&:nth-child(odd) {
-  //  background-color: rgba(#000, .045);
-  //}
 }
 
 .root-agg {

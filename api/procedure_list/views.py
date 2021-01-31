@@ -90,11 +90,7 @@ def get_procedure_by_dir(request):
                         row["dates"][date][t] = {
                             "empty": True,
                         }
-    print('1111111')
-    print(rows)
-    print(dates_all)
-    print(dates_times)
-    print('1111111')
+
     return JsonResponse({"result": rows, "dates": dates_all, "timesInDates": dates_times})
 
 
@@ -145,12 +141,15 @@ def params(request):
 @group_required("Врач стационара", "t, ad, p")
 def procedure_execute(request):
     request_data = json.loads(request.body)
+    print(request_data)
     proc_obj = ProcedureListTimes.objects.get(pk=request_data["pk"])
+    print(proc_obj)
     forbidden_edit = forbidden_edit_dir(proc_obj.prescription.history_id)
     if forbidden_edit:
         return JsonResponse({"message": "Редактирование запрещено", "ok": False})
     if not proc_obj.cancel and not proc_obj.prescription.cancel:
         if request_data["status"]:
+            print(request.user.doctorprofile)
             proc_obj.executor = request.user.doctorprofile
             proc_obj.save()
             return JsonResponse({"message": "Приём записан", "ok": True})
@@ -167,7 +166,7 @@ def procedure_execute(request):
 @group_required("Врач стационара", "t, ad, p")
 def procedure_aggregate(request):
     request_data = json.loads(request.body)
-    print(request_data)
+    # print(request_data)
     # start_date = datetime.strptime(request_data['start_date'], '%Y-%m-%d')
     start_date = datetime.strptime('2021-01-30', '%Y-%m-%d')
     start_date = datetime.combine(start_date, dtime.min)
@@ -221,7 +220,5 @@ def procedure_aggregate(request):
     all_times1 = {}
     for i in unique_dates:
         all_times1[i] = [k[0]for k in all_times]
-
-    print(data)
 
     return JsonResponse({"result": data, "dates": ds, "timesInDates": all_times1})
