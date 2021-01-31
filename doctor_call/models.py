@@ -140,6 +140,9 @@ class DoctorCall(models.Model):
             email=None if not email else email[:64],
             need_send_to_external=SettingManager.l2('send_doc_calls') and not is_main_external,
         )
+        if data.get('as_executed'):
+            doc_call.status = 3
+            doc_call.executor = doc_who_create
         doc_call.save()
 
         slog.Log(
@@ -160,6 +163,7 @@ class DoctorCall(models.Model):
                     "external_num": data.get('external_num'),
                     "is_main_external": data.get('is_main_external'),
                     "email": email,
+                    "as_executed": data.get('as_executed'),
                 }
             ),
             user=doc_who_create,

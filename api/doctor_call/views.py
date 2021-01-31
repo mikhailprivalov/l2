@@ -31,6 +31,7 @@ def create(request):
             'doc': int,
             'purpose': int,
             'hospital': int,
+            'asExecuted': bool,
         },
     )
 
@@ -44,6 +45,7 @@ def create(request):
     doc: int = data[7]
     purpose: int = data[8]
     hospital: int = data[9]
+    as_executed: bool = data[10]
 
     card_updates = []
     if district != (card.district_id or -1):
@@ -75,6 +77,7 @@ def create(request):
                 'purpose': purpose,
                 'hospital': hospital,
                 'external': False,
+                'as_executed': as_executed,
                 'num_book': -1,
             },
             request.user.doctorprofile,
