@@ -1409,8 +1409,11 @@ def directions_paraclinic_result(request):
                         return JsonResponse(response)
                     date_start = try_strptime(proc_data['dateStart'], ('%d.%m.%Y', '%Y-%m-%d')).astimezone(user_timezone)
                     date_end = try_strptime(proc_data['dateEnd'], ('%d.%m.%Y', '%Y-%m-%d')).astimezone(user_timezone)
+                    parent_child_data = rb.get('parent_child_data', None)
                     if proc_data.get('isNew'):
+                        iss_hosp = Issledovaniya.objects.get(napravleniye_id=parent_child_data['current_direction'])
                         proc_obj = ProcedureList(
+                            research=iss_hosp.research,
                             history=history,
                             diary=diary,
                             card=card,
