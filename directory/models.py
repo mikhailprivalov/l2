@@ -455,7 +455,7 @@ class ParaclinicTemplateName(models.Model):
                 p.save()
                 for f in ParaclinicInputField.objects.filter(group__research=research):
                     ParaclinicTemplateField(template_name=p, input_field=f, value=f.default_value).save()
-        return ParaclinicTemplateName.objects.get(research=research, title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE)
+        return ParaclinicTemplateName.objects.filter(research=research, title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE)[0]
 
 
 class ParaclinicTemplateField(models.Model):
