@@ -1812,11 +1812,11 @@ input[type=date].form-control {
     overflow: visible;
   }
 
-  input, .row-v, select {
+  input:not([type="checkbox"]), .row-v, select {
     height: 34px;
   }
 
-  input, .row-v, select, textarea {
+  input:not([type="checkbox"]), .row-v, select, textarea {
     background: #fff;
     border: none;
     border-radius: 0 !important;
@@ -1869,8 +1869,12 @@ input[type=date].form-control {
     }
   }
 
-  input {
+  input:not([type="checkbox"]) {
     width: 100% !important;
+  }
+
+  label input[type="checkbox"] {
+    vertical-align: text-top;
   }
 
   .row-v {

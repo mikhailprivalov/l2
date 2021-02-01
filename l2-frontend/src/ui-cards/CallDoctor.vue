@@ -80,8 +80,9 @@
         </div>
       </div>
       <template v-if="researches.length > 0">
-        <div class="form-row sm-header">
-          Услуги
+        <div class="form-row sm-header" style="justify-content: space-between">
+          <span>Услуги</span>
+          <label style="margin-bottom: 0;"><input type="checkbox" v-model="asExecuted" /> отметить как "выполнено"</label>
         </div>
         <div class="researches">
           <research-display v-for="(res, idx) in disp_researches" :simple="true"
@@ -186,6 +187,7 @@
           phone: "",
         },
         loaded: true,
+        asExecuted: false,
         date: moment().format('YYYY-MM-DD'),
         td: moment().format('YYYY-MM-DD'),
         comment: '',
@@ -266,7 +268,7 @@
         await this.$store.dispatch(action_types.INC_LOADING)
         const result = await api(
           'doctor-call/create', this,
-          ['card_pk', 'researches', 'date', 'comment'],
+          ['card_pk', 'researches', 'date', 'comment', 'asExecuted'],
           {
             fact_address: this.card.fact_address,
             district: this.card.district,
@@ -282,6 +284,7 @@
           okmessage('Записи для вызова на дом созданы');
           this.date = this.td = moment().format('YYYY-MM-DD');
           this.comment = '';
+          this.asExecuted = false;
           this.$root.$emit('researches-picker:clear_all');
         }
       },
