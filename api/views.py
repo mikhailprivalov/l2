@@ -32,6 +32,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from slog import models as slog
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, ExcludePurposes
+from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from .sql_func import users_by_group
@@ -1256,6 +1257,8 @@ def reader_status_update(request):
 
 
 def actual_districts(request):
+    data = json.loads(request.body)
+    card_pk = data.get('card_pk')
     rows = District.objects.all().order_by('-sort_weight', '-id').values('pk', 'title', 'is_ginekolog')
     rows = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["title"] if not x['is_ginekolog'] else "Гинекология: {}".format(x['title'])} for x in rows]]
 
@@ -1265,10 +1268,26 @@ def actual_districts(request):
     purposes = DoctorCall.PURPOSES
     purposes = [{'id': row[0], 'label': row[1]} for row in purposes]
 
-    hospitals = Hospitals.objects.filter(hide=False).order_by('short_title').values('pk', 'short_title', 'title')
-    hospitals = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["short_title"] or x["title"]} for x in hospitals]]
+    hospitals = Hospitals.objects.filter(hide=False).order_by('short_title').values('pk', 'short_title', 'title', 'code_tfoms')
+    hospitals = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["short_title"] or x["title"], "code_tfoms": x["code_tfoms"]} for x in hospitals]]
 
-    data = {'rows': rows, 'docs': users, 'purposes': purposes, 'hospitals': hospitals}
+    if card_pk is not None:
+        card_hospital_id = -1
+        if SettingManager.l2('tfoms'):
+            card = Card.objects.get(pk=data['card_pk'])
+            enp = card.individual.get_enp()
+            if enp:
+                from_tfoms = match_enp(card.individual.get_enp())
+
+                if from_tfoms and from_tfoms.get('unit_code'):
+                    card_hospital_id = {x['code_tfoms']: x['id'] for x in hospitals if x.get("code_tfoms")}.get(from_tfoms['unit_code']) or -1
+    else:
+        card_hospital_id = -1
+
+    if card_hospital_id == -1 and len(hospitals) == 2:
+        card_hospital_id = hospitals[1]['id']
+
+    data = {'rows': rows, 'docs': users, 'purposes': purposes, 'hospitals': hospitals, 'hospitalId': card_hospital_id}
     return JsonResponse(data)
 
 

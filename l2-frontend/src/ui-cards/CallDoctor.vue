@@ -248,9 +248,9 @@
         }
         this.loaded = false
         await this.$store.dispatch(action_types.INC_LOADING)
-        const [card, {docs, purposes, hospitals}, rows] = await Promise.all([
+        const [card, {docs, purposes, hospitals, hospitalId}, rows] = await Promise.all([
           patients_point.getCard(this, 'card_pk'),
-          api('actual-districts'),
+          api('actual-districts', this, 'card_pk'),
           api('doctor-call/actual-rows', this, 'card_pk'),
         ])
         this.card = card
@@ -258,7 +258,7 @@
         this.card.docs = docs
         this.card.purpose = (purposes.find(p => p.label === 'Другое') || {id: purposes[0].id}).id
         this.card.purposes = purposes
-        this.card.hospital = -1
+        this.card.hospital = hospitalId
         this.card.hospitals = hospitals
         this.rows = rows;
         this.loaded = true
