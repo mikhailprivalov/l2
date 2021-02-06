@@ -63,8 +63,8 @@
     components: {PharmacotherapyTime},
     props: {
       direction: {},
-      department_pk: '',
-      dateRange: '',
+      department_pk: null,
+      dateRange: null,
     },
     data() {
       return {

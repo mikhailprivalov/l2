@@ -225,6 +225,7 @@ def procedure_aggregate(request):
     all_times1 = {}
     for i in unique_dates:
         all_times1[i] = [k[0]for k in all_times]
+    print(data)
 
     return JsonResponse({"result": data, "dates": ds, "timesInDates": all_times1})
 

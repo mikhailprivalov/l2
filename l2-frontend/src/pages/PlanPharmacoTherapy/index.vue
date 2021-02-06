@@ -19,8 +19,6 @@
   import moment from "moment";
   import Filters from "./components/Filters";
   import AggregatePharmacoTherapyDepartment from "./components/AggregatePharmacoTherapyDepartment";
-  import api from '@/api';
-  import * as action_types from "../../store/action-types";
 
   export default {
     components: {
@@ -56,15 +54,6 @@
       },
       deapartment(){
         return this.filters.department_pk
-      }
-    },
-    watch: {
-      filters: {
-        handler() {
-          if (this.departments.length > 0) {
-          }
-        },
-        deep: true,
       }
     },
     methods: {
