@@ -63,9 +63,8 @@
     components: {PharmacotherapyTime},
     props: {
       direction: {},
-      start_date: '',
-      end_date: '',
-      department: '',
+      department_pk: '',
+      dateRange: '',
     },
     data() {
       return {
@@ -73,11 +72,26 @@
         dates: [],
         times: [],
         timesInDates: {},
+        dates_aggregate: '',
       }
     },
     async mounted() {
-      await this.load()
+      this.dates_aggregate = this.dateRange.split('x');
+      this.load()
       this.$root.$on('pharmacotherapy-aggregation:reload', () => this.load());
+    },
+    watch: {
+      dateRange: {
+        handler() {
+          this.dates_aggregate = this.dateRange.split('x');
+          this.load()
+        },
+      },
+      department_pk: {
+        handler(){
+          this.load()
+        }
+      }
     },
     computed: {
       can_cancel() {
@@ -96,7 +110,7 @@
           dates,
           times,
           timesInDates,
-        } = await api('procedural-list/department-procedures', {'start_date': this.start_date, 'end_date': this.end_date, 'research_pk': 525});
+        } = await api('procedural-list/department-procedures', {'start_date': this.dates_aggregate[0], 'end_date': this.dates_aggregate[1], 'department_pk': this.department_pk, 'research_pk': 525});
         this.rows = result;
         this.dates = dates;
         this.times = times;

@@ -3,14 +3,11 @@
     <h3>{{title}}</h3>
     <Filters :filters="filters" :departments="departments"/>
     <div class="buttons">
-      <button class="btn btn-blue-nb" @click="load_data">
-        Обновить
-      </button>
       <button class="btn btn-blue-nb" type="button">
         Печать
       </button>
     </div>
-    <aggregate-pharmaco-therapy-department :start_date="'2021-01-01'" :end_date="'2021-02-25'"/>
+    <aggregate-pharmaco-therapy-department :dateRange="dateRange" :department_pk="deapartment"/>
 
   </div>
 
@@ -57,12 +54,14 @@
         d2 = `${d2[2]}-${d2[1]}-${d2[0]}`;
         return `${d1}x${d2}`;
       },
+      deapartment(){
+        return this.filters.department_pk
+      }
     },
     watch: {
       filters: {
         handler() {
           if (this.departments.length > 0) {
-            this.load_data();
           }
         },
         deep: true,
@@ -72,11 +71,7 @@
       async init() {
         const {data} = await plans_point.getDepartmentsOperate()
         this.departments = [{id: -1, label: 'Отделение не выбрано'}, ...data];
-        await this.load_data();
       },
-      async load_data(){
-        [this.start_date, this.end_date] = this.dateRange.split('x');
-      }
     }
   }
 </script>

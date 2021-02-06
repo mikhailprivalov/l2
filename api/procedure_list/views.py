@@ -166,6 +166,7 @@ def procedure_execute(request):
 @group_required("Врач стационара", "t, ad, p")
 def procedure_aggregate(request):
     request_data = json.loads(request.body)
+    print(request_data)
     start_date = datetime.strptime(request_data['start_date'], '%Y-%m-%d')
     start_date = datetime.combine(start_date, dtime.min)
     end_date = datetime.strptime(request_data['end_date'], '%Y-%m-%d')
@@ -180,7 +181,6 @@ def procedure_aggregate(request):
     current_petient_drugs = 0
     data = []
     for i in patient_procedures:
-        print(i[0])
         if pk_card != i[10]:
             pk_card = i[10]
             data.append(new_patient)
@@ -218,9 +218,5 @@ def procedure_aggregate(request):
     all_times1 = {}
     for i in unique_dates:
         all_times1[i] = [k[0]for k in all_times]
-
-    print(data)
-    print(ds)
-    print(all_times1)
 
     return JsonResponse({"result": data, "dates": ds, "timesInDates": all_times1})
