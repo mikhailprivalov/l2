@@ -173,6 +173,7 @@ def researches_update(request):
     pk = request_data.get("pk", -2)
     if pk > -2:
         department_pk = request_data.get("department")
+        print(department_pk)
         title = request_data.get("title", "").strip()
         short_title = request_data.get("short_title", "").strip()
         code = request_data.get("code", "").strip()
@@ -193,6 +194,7 @@ def researches_update(request):
         conclusion_templates = request_data.get("conclusionTpl", "")
         culture_comments_templates = request_data.get("cultureTpl", "")
         hide_main = request_data.get("hide_main", False)
+        hospital_research_departmnet_pk = request_data.get("hospital_research_departmnet_pk", -1)
         if tube == -1:
             tube = None
         stationar_slave = is_simple and -500 >= department_pk > -600 and main_service_pk != 1
@@ -200,6 +202,8 @@ def researches_update(request):
         if len(title) > 0 and (desc or Podrazdeleniya.objects.filter(pk=department_pk).exists()):
             department = None if desc else Podrazdeleniya.objects.filter(pk=department_pk)[0]
             res = None
+            if int(hospital_research_departmnet_pk) > -1:
+                department = Podrazdeleniya.objects.filter(pk=int(hospital_research_departmnet_pk))[0]
             if pk == -1:
                 res = DResearches(
                     title=title,

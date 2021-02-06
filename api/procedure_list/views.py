@@ -12,7 +12,8 @@ from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
 from utils.dates import date_iter_range
 from datetime import datetime, time as dtime
-
+from utils.xh import get_hospitals_podrazdeleniya
+from directory.models import Researches
 
 TIMES = [
     f"{x:02d}:00"
@@ -170,8 +171,17 @@ def procedure_aggregate(request):
     start_date = datetime.combine(start_date, dtime.min)
     end_date = datetime.strptime(request_data['end_date'], '%Y-%m-%d')
     end_date = datetime.combine(end_date, dtime.max)
-    research_pk = request_data.get('research_pk', -1)
-    patient_procedures = get_procedure_by_params(start_date, end_date, research_pk)
+    department_pk = request_data.get('department_pk', -1)
+    reseraches_pks = Researches.objects.values_list('pk').filter(podrazdeleniye_id=int(department_pk))
+    is_array = -1
+    reseraches_pk = [-1]
+    if len(reseraches_pks) > 0:
+        reseraches_pk = [i[0] for i in reseraches_pks]
+        is_array = 0
+    if is_array == -1:
+        return JsonResponse({"result": '', "dates": '', "timesInDates": ''})
+
+    patient_procedures = get_procedure_by_params(start_date, end_date, reseraches_pk, is_array)
     all_times = get_procedure_all_times(start_date, end_date)
 
     pk_card, new_patient, drug, from_release, method, unit, dosage = None, None, None, None, None, None, None
@@ -222,7 +232,5 @@ def procedure_aggregate(request):
 
 
 def get_podrazdeleniya_pl(request):
-    from utils.xh import get_hospitals_podrazdeleniya
     pdr = get_hospitals_podrazdeleniya()
-    print(pdr)
     return JsonResponse({"data": pdr})

@@ -110,7 +110,7 @@
           dates,
           times,
           timesInDates,
-        } = await api('procedural-list/department-procedures', {'start_date': this.dates_aggregate[0], 'end_date': this.dates_aggregate[1], 'department_pk': this.department_pk, 'research_pk': 525});
+        } = await api('procedural-list/department-procedures', {'start_date': this.dates_aggregate[0], 'end_date': this.dates_aggregate[1], 'department_pk': this.department_pk});
         this.rows = result;
         this.dates = dates;
         this.times = times;
