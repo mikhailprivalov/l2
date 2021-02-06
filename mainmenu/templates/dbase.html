@@ -60,12 +60,17 @@
     {% block nav %}
         {% load setting_default %}
         {% s_default "show_l2_logo" "true" "b" as show_l2_logo %}
+        {% s_default "l2_logo_class" "default" "s" as l2_logo_class %}
+        {% s_default "l2_logo_addonational_text" "" "s" as l2_logo_addonational_text %}
         <nav class="navbar navbar-inverse {% block navbar_classes %}{% endblock %}">
             <div class="nav-cont">
                 <div class="navbar-header">
                     {% if show_l2_logo %}
-                        <a href="/mainmenu" class="navbar-left logo">
+                        <a href="/mainmenu" class="navbar-left logo {{ l2_logo_class }}">
                             L<sup>2</sup>
+                            {% if l2_logo_addonational_text %}
+                                <span>{{ l2_logo_addonational_text |safe }}</span>
+                            {% endif %}
                         </a>
                     {% endif %}
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
@@ -118,8 +123,11 @@
             <div class="nav-loader center">
                 <div class="navbar-header">
                     {% if show_l2_logo %}
-                        <div class="navbar-left logo">
+                        <div class="navbar-left logo {{ l2_logo_class }}">
                             L<sup>2</sup>
+                            {% if l2_logo_addonational_text %}
+                                <span>{{ l2_logo_addonational_text |safe }}</span>
+                            {% endif %}
                         </div>
                     {% endif %}
                     <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>

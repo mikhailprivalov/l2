@@ -4,7 +4,7 @@ from django.template.defaultfilters import truncatechars
 
 class Setting(models.Model):
     name = models.CharField(max_length=100, unique=True, db_index=True)
-    value = models.TextField()
+    value = models.TextField(blank=True, default='')
     value_type = models.CharField(max_length=1, choices=(('s', 'string'), ('i', 'integer'), ('f', 'float'), ('b', 'boolean')))
     hide_value_in_list = models.BooleanField(default=False)
 

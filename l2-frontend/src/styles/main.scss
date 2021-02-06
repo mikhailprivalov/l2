@@ -1679,7 +1679,8 @@ input[type=date].form-control {
 
 .logo {
   display: inline-block;
-  width: 36px;
+  width: auto;
+  min-width: 36px;
   height: 36px;
   background: #049372;
   color: #fff !important;
@@ -1688,9 +1689,39 @@ input[type=date].form-control {
   font-style: italic;
   text-align: center;
 
+  span {
+    font-style: normal;
+    font-size: 20px;
+    vertical-align: top;
+    display: inline-block;
+    margin-top: 5px;
+  }
+
+  &.padding {
+    padding: 0 5px;
+  }
+
   &:hover {
     box-shadow: 0 0 5px #0c8b6e;
     background-color: #0c8b6e !important;
+  }
+
+  &.red {
+    background: #932a04;
+
+    &:hover {
+      box-shadow: 0 0 5px #8b2e0c;
+      background-color: #8b2e0c !important;
+    }
+  }
+
+  &.blue {
+    background: #046d93;
+
+    &:hover {
+      box-shadow: 0 0 5px #0c698b;
+      background-color: #0c698b !important;
+    }
   }
 
   sup {
