@@ -212,8 +212,9 @@ def procedure_aggregate(request):
                                          'dates': {j: deepcopy(empty) for j in unique_dates}})
             current_petient_drugs = len(new_patient['drugs'])
 
-        new_patient['drugs'][current_petient_drugs - 1]['dates'][i[11]][i[12]] = {'datetime': f'{i[11]} {i[12]}', 'pk': i[0], 'empty': False, 'ok': True if i[16] else False, 'executor': i[16],
-                                                                                  'cancel': False, 'who_cancel': None, 'history_num': i[17]}
+        new_patient['drugs'][current_petient_drugs - 1]['dates'][i[11]][i[12]] = {'datetime': f'{i[11]} {i[12]}',
+                                                                                  'pk': i[0], 'empty': False, 'ok': True if i[16] else False,
+                                                                                  'executor': i[16], 'cancel': False, 'who_cancel': None, 'history_num': i[17]}
     data.append(new_patient)
     data.pop(0)
 
