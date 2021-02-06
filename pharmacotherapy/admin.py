@@ -4,6 +4,8 @@ from pharmacotherapy import models
 admin.site.register(models.Drugs)
 admin.site.register(models.FormRelease)
 admin.site.register(models.MethodsReception)
+
+
 # admin.site.register(models.ProcedureListTimes)
 
 
@@ -25,6 +27,7 @@ class ResProcedureList(admin.ModelAdmin):
     )
 
     search_fields = ('pk',)
+
 
 class ResProcedureListTimes(admin.ModelAdmin):
     raw_id_fields = (

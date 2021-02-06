@@ -2,6 +2,7 @@ from django.db import models
 from clients.models import Card
 from directions.models import Napravleniya
 from directory.models import Researches
+from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 
 
@@ -75,3 +76,12 @@ class ProcedureListTimes(models.Model):
     class Meta:
         verbose_name = 'Время из процедурного листа'
         verbose_name_plural = 'Время из процедурного листа'
+
+
+# class HospitalResearchesPodrazdeleniya(models.Model):
+#     podrazdeleniye = models.ForeignKey(Podrazdeleniya, related_name="department", help_text="Подразделение", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
+#     hospital_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE, db_index=True)
+#
+#     class Meta:
+#         verbose_name = 'Подразделение + стационарная услуга'
+#         verbose_name_plural = 'Подразделение + стационарные услуги '

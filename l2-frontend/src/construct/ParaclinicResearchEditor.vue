@@ -78,6 +78,12 @@
         <span class="input-group-addon">Информация на направлении</span>
         <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
       </div>
+      <div v-if="ex_dep === 7">
+        <treeselect :multiple="false" :disable-branch-nodes="true" :options="departments"
+                    placeholder="Отделение не выбрано" v-model="department_pk"/>
+<!--                    :append-to-body="true"-->
+
+      </div>
       <template v-if="ex_dep !== 7">
         <div v-for="group in orderBy(groups, 'order')" class="ed-group">
           <div class="input-group">
@@ -299,6 +305,10 @@
     import FieldHelper from "@/ui-cards/FieldHelper";
 
     import FastTemplatesEditor from './FastTemplatesEditor'
+    import api from '@/api';
+
+    import Treeselect from "@riophae/vue-treeselect";
+    import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
     Vue.use(Vue2Filters)
 
@@ -306,7 +316,7 @@
         name: 'paraclinic-research-editor',
         components: {
           FieldHelper,
-          NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor, ConfigureAnesthesiaField
+          NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor, ConfigureAnesthesiaField, Treeselect,
         },
         mixins: [Vue2Filters.mixin],
         props: {
@@ -352,6 +362,7 @@
         },
         created() {
             this.load()
+            this.load_deparments()
         },
         data() {
             return {
@@ -378,6 +389,8 @@
                 templates: [],
                 opened_template_data: {},
                 speciality: -1,
+                departments: [],
+                department_pk: -1,
             }
         },
         watch: {
@@ -654,6 +667,10 @@
                     this.$store.dispatch(action_types.DEC_LOADING)
                 })
             },
+          async load_deparments() {
+            const {data} = await api('procedural-list/department-all');
+            this.departments = [{id: -1, label: 'Отделение не выбрано'}, ...data];
+          }
         }
     }
 </script>

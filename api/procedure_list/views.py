@@ -166,7 +166,6 @@ def procedure_execute(request):
 @group_required("Врач стационара", "t, ad, p")
 def procedure_aggregate(request):
     request_data = json.loads(request.body)
-    print(request_data)
     start_date = datetime.strptime(request_data['start_date'], '%Y-%m-%d')
     start_date = datetime.combine(start_date, dtime.min)
     end_date = datetime.strptime(request_data['end_date'], '%Y-%m-%d')
@@ -220,3 +219,10 @@ def procedure_aggregate(request):
         all_times1[i] = [k[0]for k in all_times]
 
     return JsonResponse({"result": data, "dates": ds, "timesInDates": all_times1})
+
+
+def get_podrazdeleniya_pl(request):
+    from utils.xh import get_hospitals_podrazdeleniya
+    pdr = get_hospitals_podrazdeleniya()
+    print(pdr)
+    return JsonResponse({"data": pdr})

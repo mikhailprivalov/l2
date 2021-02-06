@@ -11,9 +11,7 @@
       />
     </td>
     <td width="50px">
-      <a v-if="department.type ==='7'" href="#" class="btn btn-blue-nb" style="margin-top: 2px">
-          <i class="fa fa-bed"/>
-      </a>
+          <i v-if="department.type ==='7'" class="fa fa-bed" style="margin-top: 10px; margin-left: 7px"/>
     </td>
   </tr>
 </template>
