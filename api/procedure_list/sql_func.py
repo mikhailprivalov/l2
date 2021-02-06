@@ -6,7 +6,7 @@ def get_procedure_by_params(d_s, d_e, research_pk=-1):
     with connection.cursor() as cursor:
         cursor.execute(
             """SELECT 
-            pharmacotherapy_procedurelist.id, 
+            pl.plid,
             pharmacotherapy_drugs.mnn,
             to_char(pharmacotherapy_procedurelist.time_create AT TIME ZONE %(tz)s, 'DD.MM.YYYY-HH24:MI:SS') AS create_procedure,
             pharmacotherapy_formrelease.title,
@@ -32,6 +32,7 @@ def get_procedure_by_params(d_s, d_e, research_pk=-1):
                 LEFT JOIN clients_individual ON (clients_card.individual_id=clients_individual.id)
                 RIGHT JOIN  
                     (SELECT 
+                        pharmacotherapy_procedurelisttimes.id as plid, 
                         pharmacotherapy_procedurelisttimes.times_medication, 
                         pharmacotherapy_procedurelisttimes.cancel, 
                         pharmacotherapy_procedurelisttimes.executor_id,

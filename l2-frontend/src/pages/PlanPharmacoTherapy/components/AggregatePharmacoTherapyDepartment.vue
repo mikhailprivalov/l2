@@ -96,7 +96,7 @@
           dates,
           times,
           timesInDates,
-        } = await api('procedural-list/department-procedures', {'start_date': '2021-01-30', 'end_date': '2021-02-06', 'research_pk': 525});
+        } = await api('procedural-list/department-procedures', {'start_date': this.start_date, 'end_date': this.end_date, 'research_pk': 525});
         this.rows = result;
         this.dates = dates;
         this.times = times;

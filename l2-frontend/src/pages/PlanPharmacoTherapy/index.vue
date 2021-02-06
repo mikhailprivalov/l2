@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="min-height: 500px">
     <h3>{{title}}</h3>
     <Filters :filters="filters" :departments="departments"/>
     <div class="buttons">
@@ -10,7 +10,7 @@
         Печать
       </button>
     </div>
-    <aggregate-pharmaco-therapy-department :direction="226131" :start_date="start_date" :end_date="end_date"/>
+    <aggregate-pharmaco-therapy-department :start_date="'2021-01-01'" :end_date="'2021-02-25'"/>
 
   </div>
 
