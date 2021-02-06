@@ -142,15 +142,12 @@ def params(request):
 @group_required("Врач стационара", "t, ad, p")
 def procedure_execute(request):
     request_data = json.loads(request.body)
-    print(request_data)
     proc_obj = ProcedureListTimes.objects.get(pk=request_data["pk"])
-    print(proc_obj)
     forbidden_edit = forbidden_edit_dir(proc_obj.prescription.history_id)
     if forbidden_edit:
         return JsonResponse({"message": "Редактирование запрещено", "ok": False})
     if not proc_obj.cancel and not proc_obj.prescription.cancel:
         if request_data["status"]:
-            print(request.user.doctorprofile)
             proc_obj.executor = request.user.doctorprofile
             proc_obj.save()
             return JsonResponse({"message": "Приём записан", "ok": True})
@@ -173,15 +170,15 @@ def procedure_aggregate(request):
     end_date = datetime.combine(end_date, dtime.max)
     department_pk = request_data.get('department_pk', -1)
     reseraches_pks = Researches.objects.values_list('pk').filter(podrazdeleniye_id=int(department_pk))
-    is_array = -1
-    reseraches_pk = [-1]
+    is_reseraches_pk = False
+    reseraches_pk = []
     if len(reseraches_pks) > 0:
         reseraches_pk = [i[0] for i in reseraches_pks]
-        is_array = 0
-    if is_array == -1:
+        is_reseraches_pk = True
+    if not is_reseraches_pk:
         return JsonResponse({"result": '', "dates": '', "timesInDates": ''})
 
-    patient_procedures = get_procedure_by_params(start_date, end_date, reseraches_pk, is_array)
+    patient_procedures = get_procedure_by_params(start_date, end_date, reseraches_pk)
     all_times = get_procedure_all_times(start_date, end_date)
 
     pk_card, new_patient, drug, from_release, method, unit, dosage = None, None, None, None, None, None, None

@@ -2,7 +2,7 @@ from django.db import connection
 from laboratory.settings import TIME_ZONE
 
 
-def get_procedure_by_params(d_s, d_e, reseraches_pk, is_array):
+def get_procedure_by_params(d_s, d_e, reseraches_pk):
     with connection.cursor() as cursor:
         cursor.execute(
             """SELECT 
@@ -44,16 +44,10 @@ def get_procedure_by_params(d_s, d_e, reseraches_pk, is_array):
                             ON pl.prescription_id=pharmacotherapy_procedurelist.id
                     WHERE 
                         pl.times_medication AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
-                        AND
-                            CASE
-                                WHEN %(is_array)s > -1 THEN 
-                                    research_id = ANY(ARRAY[%(id_researches)s]) 
-                                 WHEN %(is_array)s = -1 THEN 
-                                     EXISTS (SELECT id from pharmacotherapy_formrelease)
-                            END       
+                        AND research_id = ANY(ARRAY[%(id_researches)s])                                   
             ORDER BY clients_individual.family, clients_individual.id, pharmacotherapy_drugs.mnn, pl.times_medication   
         """,
-            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'id_researches': reseraches_pk, 'is_array': is_array},
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'id_researches': reseraches_pk},
         )
         row = cursor.fetchall()
     return row
