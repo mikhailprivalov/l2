@@ -7040,10 +7040,10 @@ vue2-collapse@^1.0.11:
   resolved "https://registry.yarnpkg.com/vue2-collapse/-/vue2-collapse-1.0.15.tgz#d80c242f7ba2f5c70515e00dfcfc298f5137cbea"
   integrity sha512-XLzUxkYKVZqmHRSdirgqXyUYeytsAKNJSjP1dLcVtEIhgP4xUHSbzU7ycuQm/egRgjMCsDzILv5wr0uhS9cXvQ==
 
-vue2-filters@^0.11.0:
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/vue2-filters/-/vue2-filters-0.11.0.tgz#32fff5a95e55159a93d6fecbaf69b58f0e056e99"
-  integrity sha512-/sL1slXSxbFkrk9acgRSbykwcs7EmdTVxDcmdb5WHmpQG9cFb//LTaJy4EiH/e58nnD6ZHw2B5k+Gz0mTaQszA==
+vue2-filters@^0.11.1:
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/vue2-filters/-/vue2-filters-0.11.1.tgz#eaf899549d768cdead534d7c4866fdd8e7578b9f"
+  integrity sha512-eKFVfFGocv/zOUDh1ZI0dE407RMeI3M5T+kUXpE8v+PMP/aVLkK024wgg0DA9/VX/GV4UdgYt29kwLEdlZMAqQ==
 
 vue2-timepicker@^1.1.2:
   version "1.1.5"
