@@ -1,5 +1,4 @@
 from podrazdeleniya.models import Podrazdeleniya
-from hospitals.models import Hospitals
 
 
 def fix(s: str):
