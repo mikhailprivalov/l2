@@ -34,7 +34,6 @@ def check_float_is_valid(val):
         return False
 
 
-def get_hospitals_podrazdeleniya():
-    default_hospital = Hospitals.objects.filter(is_default=True)[0]
-    podrazdeleniya = Podrazdeleniya.objects.values('pk', 'short_title', 'title').filter(p_type=7, hide=False, hospital=default_hospital).order_by('title')
+def get_hospitals_podrazdeleniya(hospital_pk):
+    podrazdeleniya = Podrazdeleniya.objects.values('pk', 'short_title', 'title').filter(p_type=7, hide=False, hospital=hospital_pk).order_by('title')
     return [{"id": x.pk, "label": x['short_title'] or x['title']} for x in podrazdeleniya]
