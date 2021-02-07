@@ -10,8 +10,8 @@
                   :disabled="!can_edit"
       />
     </td>
-    <td width="50px">
-          <i v-if="department.type ==='7'" class="fa fa-bed" style="margin-top: 10px; margin-left: 7px"/>
+    <td>
+      <i v-if="department.type ==='7'" class="fa fa-bed" style="margin-top: 10px; margin-left: 7px"/>
     </td>
   </tr>
 </template>
