@@ -213,13 +213,13 @@ def procedure_aggregate(request):
     data.append(new_patient)
     data.pop(0)
 
-    ds = unique_dates.sort(key=lambda x: datetime.strptime(x, '%d.%m.%Y'))
+    unique_dates.sort(key=lambda x: datetime.strptime(x, '%d.%m.%Y'))
 
     times_in_dates = {}
     for i in unique_dates:
         times_in_dates[i] = [k[0]for k in all_times]
 
-    return JsonResponse({"result": data, "dates": ds, "timesInDates": times_in_dates})
+    return JsonResponse({"result": data, "dates": unique_dates, "timesInDates": times_in_dates})
 
 
 def get_podrazdeleniya_predural_list(request):
