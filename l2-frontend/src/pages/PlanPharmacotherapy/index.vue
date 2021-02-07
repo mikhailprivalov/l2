@@ -2,11 +2,6 @@
   <div style="min-height: 500px">
     <h3>{{title}}</h3>
     <Filters :filters="filters" :departments="departments"/>
-    <div class="buttons">
-      <button class="btn btn-blue-nb" type="button">
-        Печать
-      </button>
-    </div>
     <aggregate-pharmaco-therapy-department :dateRange="dateRange" :department_pk="deapartment"/>
   </div>
 </template>

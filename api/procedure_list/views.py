@@ -169,57 +169,64 @@ def procedure_aggregate(request):
     end_date = datetime.strptime(request_data['end_date'], '%Y-%m-%d')
     end_date = datetime.combine(end_date, dtime.max)
     department_pk = request_data.get('department_pk', -1)
-    reseraches_pk = list(Researches.objects.values_list('pk', flat=True).filter(podrazdeleniye_id=int(department_pk)))
-    if not reseraches_pk:
-        return JsonResponse({"result":[], "dates":[], "timesInDates": {}})
+    researches_pk = list(Researches.objects.values_list('pk', flat=True).filter(podrazdeleniye_id=int(department_pk)))
+    if not researches_pk:
+        return JsonResponse({"result": [], "dates": [], "timesInDates": {}})
 
-    patient_procedures = get_procedure_by_params(start_date, end_date, reseraches_pk)
+    patient_procedures = get_procedure_by_params(start_date, end_date, researches_pk)
     all_times = get_procedure_all_times(start_date, end_date)
 
-    pk_card, new_patient, drug, from_release, method, unit, dosage = None, None, None, None, None, None, None
     empty = {k[0]: {'empty': True} for k in all_times}
     unique_dates = sorted(set([i[11] for i in patient_procedures]))
-    current_petient_drugs = 0
-    data = []
+    data = {}
     for i in patient_procedures:
-        if pk_card != i[10]:
-            pk_card = i[10]
-            data.append(new_patient)
-            new_patient = {"patient": {"pk_card": pk_card, "fio": i[8]}}
-            new_patient['drugs'] = []
+        card_pk = i[10]
+        if card_pk not in data:
+            data[card_pk] = {
+                "patient": {"fio": i[8]},
+                "drugs": {},
+            }
 
-        if drug != i[1] or from_release != i[3] or method != i[4] or unit != i[6] or dosage != i[5]:
-            drug = i[1]
-            from_release = i[3]
-            method = i[4]
-            unit = i[6]
-            dosage = i[5]
-            new_patient['drugs'].append({'pk': '',
-                                         'drug': drug,
-                                         'created_at': i[2],
-                                         'form_release': from_release,
-                                         'method': method,
-                                         'dosage': dosage,
-                                         'unit': unit,
-                                         'cancel': i[13],
-                                         'who_cancel': None,
-                                         'history_num': i[17],
-                                         'dates': {j: deepcopy(empty) for j in unique_dates}})
-            current_petient_drugs = len(new_patient['drugs'])
+        drug = i[1]
+        form_release = i[3]
+        method = i[4]
+        unit = i[6]
+        dosage = i[5]
 
-        new_patient['drugs'][current_petient_drugs - 1]['dates'][i[11]][i[12]] = {'datetime': f'{i[11]} {i[12]}',
-                                                                                  'pk': i[0], 'empty': False, 'ok': bool(i[16]),
-                                                                                  'executor': i[16], 'cancel': False, 'who_cancel': None, 'history_num': i[17]}
-    data.append(new_patient)
-    data.pop(0)
+        k = (drug, form_release, method, unit, dosage)
+
+        if k not in data[card_pk]['drugs']:
+            data[card_pk]['drugs'][k] = {
+                'drug': drug,
+                'created_at': i[2],
+                'form_release': form_release,
+                'method': method,
+                'dosage': dosage,
+                'unit': unit,
+                'cancel': i[13],
+                'who_cancel': None,
+                'history_num': i[17],
+                'dates': {d: deepcopy(empty) for d in unique_dates}
+            }
+        data[card_pk]['drugs'][k]['dates'][i[11]][i[12]] = {
+            'datetime': f'{i[11]} {i[12]}',
+            'pk': i[0],
+            'empty': False,
+            'ok': bool(i[16]),
+            'executor': i[16],
+            'cancel': False,
+            'who_cancel': None,
+            'history_num': i[17],
+        }
+
+    for card_pk in data:
+        data[card_pk]['drugs'] = list(data[card_pk]['drugs'].values())
 
     unique_dates.sort(key=lambda x: datetime.strptime(x, '%d.%m.%Y'))
 
-    times_in_dates = {}
-    for i in unique_dates:
-        times_in_dates[i] = [k[0]for k in all_times]
+    times_in_dates = {d: [k[0] for k in all_times] for d in unique_dates}
 
-    return JsonResponse({"result": data, "dates": unique_dates, "timesInDates": times_in_dates})
+    return JsonResponse({"result": list(data.values()), "dates": unique_dates, "timesInDates": times_in_dates})
 
 
 def get_suitable_departments(request):

@@ -338,9 +338,9 @@ def researches_details(request):
     request_data = json.loads(request.body)
     pk = request_data.get("pk")
     if DResearches.objects.filter(pk=pk).exists():
-        res = DResearches.objects.filter(pk=pk)[0]
+        res: DResearches = DResearches.objects.get(pk=pk)
         response["pk"] = res.pk
-        response["department"] = res.podrazdeleniye_id or -2
+        response["department"] = res.podrazdeleniye_id or (-2 if not res.is_hospital else -1)
         response["title"] = res.title
         response["short_title"] = res.short_title
         response["code"] = res.code

@@ -78,7 +78,7 @@
         <span class="input-group-addon">Информация на направлении</span>
         <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
       </div>
-      <div v-if="ex_dep === 7">
+      <div v-if="ex_dep === 7" class="department-select">
         <treeselect :multiple="false" :disable-branch-nodes="true" :options="departments"
                     placeholder="Отделение не выбрано" v-model="hospital_research_department_pk"/>
       </div>
@@ -669,7 +669,7 @@
                 })
             },
           async load_deparments() {
-            const {data} = await api('procedural-list/department-all');
+            const {data} = await api('procedural-list/suitable-departments');
             this.departments = [{id: -1, label: 'Отделение не выбрано'}, ...data];
           }
         }
@@ -859,5 +859,9 @@
     &.v-collapse-content-end {
       display: block;
     }
+  }
+
+  .department-select {
+    margin-top: 5px;
   }
 </style>

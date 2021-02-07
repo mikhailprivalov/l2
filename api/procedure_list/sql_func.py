@@ -1,12 +1,13 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE
+from utils.db import namedtuplefetchall
 
 
-def get_procedure_by_params(d_s, d_e, reseraches_pk):
+def get_procedure_by_params(d_s, d_e, researches_pk):
     with connection.cursor() as cursor:
         cursor.execute(
             """SELECT 
-            pl.plid,
+            pl.id,
             pharmacotherapy_drugs.mnn,
             to_char(pharmacotherapy_procedurelist.time_create AT TIME ZONE %(tz)s, 'DD.MM.YYYY-HH24:MI:SS') AS create_procedure,
             pharmacotherapy_formrelease.title,
@@ -24,7 +25,7 @@ def get_procedure_by_params(d_s, d_e, reseraches_pk):
             pl.prescription_id,
             pl.fio,
             pharmacotherapy_procedurelist.history_id
-            FROM public.pharmacotherapy_procedurelist
+            FROM pharmacotherapy_procedurelist
                 LEFT JOIN pharmacotherapy_drugs ON (pharmacotherapy_procedurelist.drug_id=pharmacotherapy_drugs.id)
                 LEFT JOIN pharmacotherapy_formrelease ON (pharmacotherapy_procedurelist.form_release_id=pharmacotherapy_formrelease.id)
                 LEFT JOIN pharmacotherapy_methodsreception ON (pharmacotherapy_procedurelist.method_id=pharmacotherapy_methodsreception.id)
@@ -32,7 +33,7 @@ def get_procedure_by_params(d_s, d_e, reseraches_pk):
                 LEFT JOIN clients_individual ON (clients_card.individual_id=clients_individual.id)
                 RIGHT JOIN  
                     (SELECT 
-                        pharmacotherapy_procedurelisttimes.id as plid, 
+                        pharmacotherapy_procedurelisttimes.id, 
                         pharmacotherapy_procedurelisttimes.times_medication, 
                         pharmacotherapy_procedurelisttimes.cancel, 
                         pharmacotherapy_procedurelisttimes.executor_id,
@@ -44,13 +45,13 @@ def get_procedure_by_params(d_s, d_e, reseraches_pk):
                             ON pl.prescription_id=pharmacotherapy_procedurelist.id
                     WHERE 
                         pl.times_medication AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
-                        AND research_id = ANY(ARRAY[%(id_researches)s])                                   
-            ORDER BY clients_individual.family, clients_individual.id, pharmacotherapy_drugs.mnn, pl.times_medication   
+                        AND research_id = ANY(%(id_researches)s)
+            ORDER BY clients_individual.family, clients_individual.id, pharmacotherapy_drugs.mnn, pl.times_medication
         """,
-            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'id_researches': reseraches_pk},
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'id_researches': researches_pk},
         )
-        row = cursor.fetchall()
-    return row
+        rows = cursor.fetchall()
+    return rows
 
 
 def get_procedure_all_times(d_s, d_e):
