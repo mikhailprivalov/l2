@@ -13,10 +13,10 @@
 
 
 <script>
-  import plans_point from '@/api/plans-point'
   import moment from "moment";
   import Filters from "./components/Filters";
   import AggregatePharmacoTherapyDepartment from "./components/AggregatePharmacoTherapyDepartment";
+  import api from "@/api";
 
   export default {
     components: {
@@ -25,17 +25,11 @@
     name: "PlanPharmacotherapy",
     data() {
       return {
-        title: 'Процедурный лист',
-        pk_plan: '',
-        data: [],
         departments: [],
         filters: {
           date: [moment().format('DD.MM.YYYY'), moment().add(7, 'days').format('DD.MM.YYYY')],
           department_pk: -1,
         },
-        start_date: '',
-        end_date: ''
-
       }
     },
     mounted() {
@@ -56,7 +50,7 @@
     },
     methods: {
       async init() {
-        const {data} = await plans_point.getDepartmentsOperate()
+        const {data} = await api('procedural-list/suitable-departments')
         this.departments = [{id: -1, label: 'Отделение не выбрано'}, ...data];
       },
     }

@@ -26,7 +26,7 @@
 <script>
   import Treeselect from "@riophae/vue-treeselect";
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-  import DateRange from "../../../ui-cards/DateRange"
+  import DateRange from "@/ui-cards/DateRange"
 
   export default {
     name: 'Filters',

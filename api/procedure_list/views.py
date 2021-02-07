@@ -222,7 +222,7 @@ def procedure_aggregate(request):
     return JsonResponse({"result": data, "dates": unique_dates, "timesInDates": times_in_dates})
 
 
-def get_podrazdeleniya_predural_list(request):
-    hospital_pk = request.user.doctorprofile.get_hospital()
+def get_suitable_departments(request):
+    hospital_pk = request.user.doctorprofile.get_hospital_id()
     pdr = get_hospitals_podrazdeleniya(hospital_pk)
     return JsonResponse({"data": pdr})

@@ -6,9 +6,6 @@ admin.site.register(models.FormRelease)
 admin.site.register(models.MethodsReception)
 
 
-# admin.site.register(models.ProcedureListTimes)
-
-
 class ResProcedureList(admin.ModelAdmin):
     raw_id_fields = (
         'history',
