@@ -173,7 +173,6 @@ def researches_update(request):
     pk = request_data.get("pk", -2)
     if pk > -2:
         department_pk = request_data.get("department")
-        print(department_pk)
         title = request_data.get("title", "").strip()
         short_title = request_data.get("short_title", "").strip()
         code = request_data.get("code", "").strip()
