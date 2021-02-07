@@ -1,6 +1,5 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE
-from utils.db import namedtuplefetchall
 
 
 def get_procedure_by_params(d_s, d_e, researches_pk):
