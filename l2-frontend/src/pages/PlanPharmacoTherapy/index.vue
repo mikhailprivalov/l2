@@ -8,14 +8,12 @@
       </button>
     </div>
     <aggregate-pharmaco-therapy-department :dateRange="dateRange" :department_pk="deapartment"/>
-
   </div>
-
 </template>
 
 
 <script>
-  import plans_point from '../../api/plans-point'
+  import plans_point from '@/api/plans-point'
   import moment from "moment";
   import Filters from "./components/Filters";
   import AggregatePharmacoTherapyDepartment from "./components/AggregatePharmacoTherapyDepartment";
@@ -24,7 +22,7 @@
     components: {
       Filters, AggregatePharmacoTherapyDepartment,
     },
-    name: "PlanPharmacoTherapy",
+    name: "PlanPharmacotherapy",
     data() {
       return {
         title: 'Процедурный лист',

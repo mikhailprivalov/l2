@@ -91,7 +91,7 @@ export default {
       return moment(this.data.dateStart).add(this.data.countDays, 'days').format('DD.MM.YYYY');
     },
     dateEndVisible() {
-      return moment(this.data.dateStart).add(this.data.countDays-1, 'days').format('DD.MM.YYYY');
+      return moment(this.data.dateStart).add(this.data.countDays - 1, 'days').format('DD.MM.YYYY');
 
     },
     timesToSelect() {

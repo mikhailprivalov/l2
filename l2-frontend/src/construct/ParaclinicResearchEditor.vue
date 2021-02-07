@@ -80,7 +80,7 @@
       </div>
       <div v-if="ex_dep === 7">
         <treeselect :multiple="false" :disable-branch-nodes="true" :options="departments"
-                    placeholder="Отделение не выбрано" v-model="hospital_research_departmnet_pk"/>
+                    placeholder="Отделение не выбрано" v-model="hospital_research_department_pk"/>
       </div>
       <template v-if="ex_dep !== 7">
         <div v-for="group in orderBy(groups, 'order')" class="ed-group">
@@ -388,7 +388,7 @@
                 opened_template_data: {},
                 speciality: -1,
                 departments: [],
-                hospital_research_departmnet_pk: -1,
+                hospital_research_department_pk: -1,
             }
         },
         watch: {
@@ -604,7 +604,7 @@
                 this.groups = []
                 this.direction_current_form = ''
                 this.speciality = -1
-                this.hospital_research_departmnet_pk = -1
+                this.hospital_research_department_pk = -1
                 if (this.pk >= 0) {
                     this.$store.dispatch(action_types.INC_LOADING)
                     construct_point.researchDetails(this, 'pk').then(data => {
@@ -614,7 +614,7 @@
                         this.internal_code = data.internal_code
                         this.direction_current_form = data.direction_current_form
                         this.speciality = data.speciality
-                        this.hospital_research_departmnet_pk = data.department
+                        this.hospital_research_department_pk = data.department
                         this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
                         this.hide = data.hide
                         this.site_type = data.site_type
@@ -651,7 +651,7 @@
                     'internal_code',
                     'direction_current_form',
                     'speciality',
-                    'hospital_research_departmnet_pk',
+                    'hospital_research_department_pk',
                 ]
                 const moreData = {
                     info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
