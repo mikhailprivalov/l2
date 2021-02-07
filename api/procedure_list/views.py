@@ -169,13 +169,8 @@ def procedure_aggregate(request):
     end_date = datetime.strptime(request_data['end_date'], '%Y-%m-%d')
     end_date = datetime.combine(end_date, dtime.max)
     department_pk = request_data.get('department_pk', -1)
-    reseraches_pks = Researches.objects.values_list('pk').filter(podrazdeleniye_id=int(department_pk))
-    is_reseraches_pk = False
-    reseraches_pk = []
-    if len(reseraches_pks) > 0:
-        reseraches_pk = [i[0] for i in reseraches_pks]
-        is_reseraches_pk = True
-    if not is_reseraches_pk:
+    reseraches_pk = list(Researches.objects.values_list('pk', flat=True).filter(podrazdeleniye_id=int(department_pk)))
+    if not reseraches_pk:
         return JsonResponse({"result": '', "dates": '', "timesInDates": ''})
 
     patient_procedures = get_procedure_by_params(start_date, end_date, reseraches_pk)
