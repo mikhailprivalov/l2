@@ -8,5 +8,5 @@ urlpatterns = [
     path('procedure-time-execute', views.procedure_execute),
     path('params', views.params),
     path('department-procedures', views.procedure_aggregate),
-    path('department-all', views.get_podrazdeleniya_pl),
+    path('department-all', views.get_podrazdeleniya_predural_list),
 ]

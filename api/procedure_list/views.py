@@ -213,17 +213,15 @@ def procedure_aggregate(request):
     data.append(new_patient)
     data.pop(0)
 
-    ds = [datetime.strptime(u, '%d.%m.%Y') for u in unique_dates]
-    ds = sorted(ds)
-    ds = [datetime.strftime(u, '%d.%m.%Y') for u in ds]
+    ds = unique_dates.sort(key=lambda x: datetime.strptime(x, '%d.%m.%Y'))
 
-    all_times1 = {}
+    times_in_dates = {}
     for i in unique_dates:
-        all_times1[i] = [k[0]for k in all_times]
+        times_in_dates[i] = [k[0]for k in all_times]
 
-    return JsonResponse({"result": data, "dates": ds, "timesInDates": all_times1})
+    return JsonResponse({"result": data, "dates": ds, "timesInDates": times_in_dates})
 
 
-def get_podrazdeleniya_pl(request):
+def get_podrazdeleniya_predural_list(request):
     pdr = get_hospitals_podrazdeleniya()
     return JsonResponse({"data": pdr})
