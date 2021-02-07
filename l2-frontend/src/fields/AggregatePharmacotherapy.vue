@@ -26,14 +26,6 @@
           <span class="badge badge-primary" title="Способ применения" v-tippy>{{r.method}}</span>
           <span class="badge badge-info" title="Дозировка" v-tippy>{{r.dosage}}</span>
           <span class="badge badge-light" title="Дата создания" v-tippy>{{r.created_at}}</span>
-          <template v-if="can_cancel">
-            <a class="badge badge-secondary" href="#" v-if="!r.cancel" @click.prevent="cancelRow(r.pk, true)">
-              <i class="fa fa-circle"/> отменить ЛП
-            </a>
-            <a class="badge badge-secondary" href="#" v-else @click.prevent="cancelRow(r.pk, false)">
-              <i class="fa fa-circle"/> вернуть ЛП
-            </a>
-          </template>
         </td>
         <td v-for="d in dates" :key="d" class="cl-td">
           <PharmacotherapyTime :data="r.dates[d][t]" v-for="t in timesInDates[d]" :key="t" />

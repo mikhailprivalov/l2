@@ -10,9 +10,13 @@
                   :disabled="!can_edit"
       />
     </td>
+    <td>
+      <i v-if="department.type ==='7'" class="fa fa-bed" style="margin-top: 10px; margin-left: 7px"/>
+    </td>
   </tr>
 </template>
 <script>
+
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import departments_directory from '@/api/departments-directory';
@@ -21,7 +25,7 @@ import _ from 'lodash';
 
 export default {
   name: 'DepartmentEditRow',
-  components: {Treeselect},
+  components: {Treeselect, },
   props: {
     can_edit: {
       type: Boolean,
@@ -76,7 +80,6 @@ export default {
         type: 'update',
         data: [{pk: this.department.pk, title: this.department_title, type: this.department_type}]
       });
-
       if (ok) {
         okmessage('Сохранено');
         this.updated = true;

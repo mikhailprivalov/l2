@@ -1,14 +1,19 @@
+from copy import deepcopy
+
 import simplejson as json
 from django.db.models import Prefetch
 from django.http import JsonResponse
 
+from api.procedure_list.sql_func import get_procedure_by_params, get_procedure_all_times
 from api.stationar.stationar_func import forbidden_edit_dir
 from laboratory.utils import strfdatetime
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, FormRelease, MethodsReception
 from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
 from utils.dates import date_iter_range
-
+from datetime import datetime, time as dtime
+from utils.xh import get_hospitals_podrazdeleniya
+from directory.models import Researches
 
 TIMES = [
     f"{x:02d}:00"
@@ -153,3 +158,78 @@ def procedure_execute(request):
         return JsonResponse({"message": "Приём убран", "ok": True})
 
     return JsonResponse({"message": "Приём не записан", "ok": False})
+
+
+@login_required
+@group_required("Врач стационара", "t, ad, p")
+def procedure_aggregate(request):
+    request_data = json.loads(request.body)
+    start_date = datetime.strptime(request_data['start_date'], '%Y-%m-%d')
+    start_date = datetime.combine(start_date, dtime.min)
+    end_date = datetime.strptime(request_data['end_date'], '%Y-%m-%d')
+    end_date = datetime.combine(end_date, dtime.max)
+    department_pk = request_data.get('department_pk', -1)
+    researches_pk = list(Researches.objects.values_list('pk', flat=True).filter(podrazdeleniye_id=int(department_pk)))
+    if not researches_pk:
+        return JsonResponse({"result": [], "dates": [], "timesInDates": {}})
+
+    patient_procedures = get_procedure_by_params(start_date, end_date, researches_pk)
+    all_times = get_procedure_all_times(start_date, end_date)
+
+    empty = {k[0]: {'empty': True} for k in all_times}
+    unique_dates = sorted(set([i[11] for i in patient_procedures]))
+    data = {}
+    for i in patient_procedures:
+        card_pk = i[10]
+        if card_pk not in data:
+            data[card_pk] = {
+                "patient": {"fio": i[8]},
+                "drugs": {},
+            }
+
+        drug = i[1]
+        form_release = i[3]
+        method = i[4]
+        unit = i[6]
+        dosage = i[5]
+
+        k = (drug, form_release, method, unit, dosage)
+
+        if k not in data[card_pk]['drugs']:
+            data[card_pk]['drugs'][k] = {
+                'drug': drug,
+                'created_at': i[2],
+                'form_release': form_release,
+                'method': method,
+                'dosage': dosage,
+                'unit': unit,
+                'cancel': i[13],
+                'who_cancel': None,
+                'history_num': i[17],
+                'dates': {d: deepcopy(empty) for d in unique_dates}
+            }
+        data[card_pk]['drugs'][k]['dates'][i[11]][i[12]] = {
+            'datetime': f'{i[11]} {i[12]}',
+            'pk': i[0],
+            'empty': False,
+            'ok': bool(i[16]),
+            'executor': i[16],
+            'cancel': False,
+            'who_cancel': None,
+            'history_num': i[17],
+        }
+
+    for card_pk in data:
+        data[card_pk]['drugs'] = list(data[card_pk]['drugs'].values())
+
+    unique_dates.sort(key=lambda x: datetime.strptime(x, '%d.%m.%Y'))
+
+    times_in_dates = {d: [k[0] for k in all_times] for d in unique_dates}
+
+    return JsonResponse({"result": list(data.values()), "dates": unique_dates, "timesInDates": times_in_dates})
+
+
+def get_suitable_departments(request):
+    hospital_pk = request.user.doctorprofile.get_hospital_id()
+    pdr = get_hospitals_podrazdeleniya(hospital_pk)
+    return JsonResponse({"data": pdr})

@@ -193,6 +193,7 @@ def researches_update(request):
         conclusion_templates = request_data.get("conclusionTpl", "")
         culture_comments_templates = request_data.get("cultureTpl", "")
         hide_main = request_data.get("hide_main", False)
+        hospital_research_department_pk = request_data.get("hospital_research_department_pk", -1)
         if tube == -1:
             tube = None
         stationar_slave = is_simple and -500 >= department_pk > -600 and main_service_pk != 1
@@ -200,6 +201,8 @@ def researches_update(request):
         if len(title) > 0 and (desc or Podrazdeleniya.objects.filter(pk=department_pk).exists()):
             department = None if desc else Podrazdeleniya.objects.filter(pk=department_pk)[0]
             res = None
+            if int(hospital_research_department_pk) > -1:
+                department = Podrazdeleniya.objects.filter(pk=int(hospital_research_department_pk))[0]
             if pk == -1:
                 res = DResearches(
                     title=title,
@@ -335,9 +338,9 @@ def researches_details(request):
     request_data = json.loads(request.body)
     pk = request_data.get("pk")
     if DResearches.objects.filter(pk=pk).exists():
-        res = DResearches.objects.filter(pk=pk)[0]
+        res: DResearches = DResearches.objects.get(pk=pk)
         response["pk"] = res.pk
-        response["department"] = res.podrazdeleniye_id or -2
+        response["department"] = res.podrazdeleniye_id or (-2 if not res.is_hospital else -1)
         response["title"] = res.title
         response["short_title"] = res.short_title
         response["code"] = res.code

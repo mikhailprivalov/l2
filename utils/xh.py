@@ -1,3 +1,6 @@
+from podrazdeleniya.models import Podrazdeleniya
+
+
 def fix(s: str):
     return s.replace('<br>', '<br/>')
 
@@ -28,3 +31,8 @@ def check_float_is_valid(val):
         return True
     except ValueError:
         return False
+
+
+def get_hospitals_podrazdeleniya(hospital):
+    podrazdeleniya = Podrazdeleniya.objects.values('pk', 'short_title', 'title').filter(p_type=7, hide=False, hospital_id=hospital).order_by('title')
+    return [{"id": x["pk"], "label": x['short_title'] or x['title']} for x in podrazdeleniya]

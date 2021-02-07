@@ -902,7 +902,8 @@
           this.pk = this.direction
           this.newTransfer = true
           this.$store.dispatch(action_types.DEC_LOADING)
-        })
+        }
+        )
       },
       async reset_confirm(iss) {
         this.hide_results();

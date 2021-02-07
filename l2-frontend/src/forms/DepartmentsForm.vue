@@ -14,6 +14,7 @@
         <col width="40">
         <col>
         <col width="300">
+        <col width="50">
       </colgroup>
       <tbody>
       <DepartmentEditRow :can_edit="can_edit" :department="department" :types_options="types_options"

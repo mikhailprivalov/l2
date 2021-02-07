@@ -1,6 +1,7 @@
 from django.db import models
 from clients.models import Card
 from directions.models import Napravleniya
+from directory.models import Researches
 from users.models import DoctorProfile
 
 
@@ -57,6 +58,7 @@ class ProcedureList(models.Model):
     time_create = models.DateTimeField(auto_now_add=True, help_text='Дата создания')
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена времени приема')
     who_cancel = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="pl_who_cancel", help_text='Кто отменил', on_delete=models.SET_NULL)
+    research = models.ForeignKey(Researches, null=True, blank=True, help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Назначение'

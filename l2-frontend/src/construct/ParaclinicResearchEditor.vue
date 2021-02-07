@@ -78,6 +78,10 @@
         <span class="input-group-addon">Информация на направлении</span>
         <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
       </div>
+      <div v-if="ex_dep === 7" class="department-select">
+        <treeselect :multiple="false" :disable-branch-nodes="true" :options="departments"
+                    placeholder="Отделение не выбрано" v-model="hospital_research_department_pk"/>
+      </div>
       <template v-if="ex_dep !== 7">
         <div v-for="group in orderBy(groups, 'order')" class="ed-group">
           <div class="input-group">
@@ -299,6 +303,10 @@
     import FieldHelper from "@/ui-cards/FieldHelper";
 
     import FastTemplatesEditor from './FastTemplatesEditor'
+    import api from '@/api';
+
+    import Treeselect from "@riophae/vue-treeselect";
+    import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
     Vue.use(Vue2Filters)
 
@@ -306,7 +314,7 @@
         name: 'paraclinic-research-editor',
         components: {
           FieldHelper,
-          NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor, ConfigureAnesthesiaField
+          NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor, ConfigureAnesthesiaField, Treeselect,
         },
         mixins: [Vue2Filters.mixin],
         props: {
@@ -352,6 +360,7 @@
         },
         created() {
             this.load()
+            this.load_deparments()
         },
         data() {
             return {
@@ -378,6 +387,8 @@
                 templates: [],
                 opened_template_data: {},
                 speciality: -1,
+                departments: [],
+                hospital_research_department_pk: -1,
             }
         },
         watch: {
@@ -593,6 +604,7 @@
                 this.groups = []
                 this.direction_current_form = ''
                 this.speciality = -1
+                this.hospital_research_department_pk = -1
                 if (this.pk >= 0) {
                     this.$store.dispatch(action_types.INC_LOADING)
                     construct_point.researchDetails(this, 'pk').then(data => {
@@ -602,6 +614,7 @@
                         this.internal_code = data.internal_code
                         this.direction_current_form = data.direction_current_form
                         this.speciality = data.speciality
+                        this.hospital_research_department_pk = data.department
                         this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
                         this.hide = data.hide
                         this.site_type = data.site_type
@@ -637,7 +650,8 @@
                     'site_type',
                     'internal_code',
                     'direction_current_form',
-                    'speciality'
+                    'speciality',
+                    'hospital_research_department_pk',
                 ]
                 const moreData = {
                     info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
@@ -654,6 +668,10 @@
                     this.$store.dispatch(action_types.DEC_LOADING)
                 })
             },
+          async load_deparments() {
+            const {data} = await api('procedural-list/suitable-departments');
+            this.departments = [{id: -1, label: 'Отделение не выбрано'}, ...data];
+          }
         }
     }
 </script>
@@ -841,5 +859,9 @@
     &.v-collapse-content-end {
       display: block;
     }
+  }
+
+  .department-select {
+    margin-top: 5px;
   }
 </style>

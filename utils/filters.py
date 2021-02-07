@@ -11,3 +11,4 @@ class RequestDataFilter(logging.Filter):
         record.data = dict(record.request.GET if record.request.method == "GET" else record.request.POST)
         record.user = record.request.user.username if record.request.user.is_authenticated else 'GUEST'
         return True
+

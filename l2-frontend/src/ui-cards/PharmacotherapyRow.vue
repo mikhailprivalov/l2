@@ -43,7 +43,7 @@
       <input class="form-control" v-model.number="data.countDays" type="number" min="1" step="1" :readonly="confirmed"/>
     </td>
     <td>
-      {{dateEnd}}
+      {{dateEndVisible}}
     </td>
   </tr>
 </template>
@@ -90,6 +90,10 @@ export default {
     dateEnd() {
       return moment(this.data.dateStart).add(this.data.countDays, 'days').format('DD.MM.YYYY');
     },
+    dateEndVisible() {
+      return moment(this.data.dateStart).add(this.data.countDays - 1, 'days').format('DD.MM.YYYY');
+
+    },
     timesToSelect() {
       return (this.params.times || []).map(t => ({
         id: t,
@@ -103,7 +107,7 @@ export default {
       handler() {
         this.data.dateEnd = this.dateEnd;
       },
-    }
+    },
   },
   data() {
     return {
