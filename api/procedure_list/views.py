@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+import pytz
 import simplejson as json
 from django.db.models import Prefetch
 from django.http import JsonResponse
@@ -14,6 +15,7 @@ from utils.dates import date_iter_range
 from datetime import datetime, time as dtime
 from utils.xh import get_hospitals_podrazdeleniya
 from directory.models import Researches
+from laboratory.settings import TIME_ZONE
 
 TIMES = [
     f"{x:02d}:00"
@@ -51,14 +53,14 @@ def get_procedure_by_dir(request):
 
         pt: ProcedureListTimes
         for pt in procedure.procedurelisttimes_set.all():
-            date_str = strfdatetime(pt.times_medication, "%d.%m.%Y")
-            time_str = strfdatetime(pt.times_medication, "%H:%M")
+            date_str = strfdatetime(pt.times_medication.astimezone(pytz.timezone(TIME_ZONE)), "%d.%m.%Y")
+            time_str = strfdatetime(pt.times_medication.astimezone(pytz.timezone(TIME_ZONE)), "%H:%M")
             if date_str not in dates_times:
                 dates_times[date_str] = []
             if time_str not in dates_times[date_str]:
                 dates_times[date_str].append(time_str)
                 dates_times[date_str] = list(sorted(dates_times[date_str]))
-            dates.add(pt.times_medication.date())
+            dates.add(pt.times_medication.astimezone(pytz.timezone(TIME_ZONE)).date())
             if date_str not in row["dates"]:
                 row["dates"][date_str] = {}
             row["dates"][date_str][time_str] = {
