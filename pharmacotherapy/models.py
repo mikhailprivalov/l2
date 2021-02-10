@@ -59,6 +59,7 @@ class ProcedureList(models.Model):
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена времени приема')
     who_cancel = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="pl_who_cancel", help_text='Кто отменил', on_delete=models.SET_NULL)
     research = models.ForeignKey(Researches, null=True, blank=True, help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
+    comment = models.CharField(max_length=70, help_text='Комментарий', default='', blank=True)
 
     class Meta:
         verbose_name = 'Назначение'

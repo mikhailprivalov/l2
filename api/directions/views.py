@@ -1168,6 +1168,7 @@ def directions_paraclinic_form(request):
                             "method": procedure.method_id or -1,
                             "dosage": procedure.dosage,
                             "units": procedure.units,
+                            "comment": procedure.comment,
                             "timesSelected": list(reversed(times)),
                             "dateStart": date_start,
                             "dateEnd": date_end,
@@ -1407,6 +1408,7 @@ def directions_paraclinic_result(request):
                     if not times:
                         response["message"] = f"У назначения {drug} не выбрано ни одного времени приёма"
                         return JsonResponse(response)
+                    comment = proc_data.get("comment", "")
                     date_start = try_strptime(proc_data['dateStart'], ('%d.%m.%Y', '%Y-%m-%d')).astimezone(user_timezone)
                     date_end = try_strptime(proc_data['dateEnd'], ('%d.%m.%Y', '%Y-%m-%d')).astimezone(user_timezone)
                     parent_child_data = rb.get('parent_child_data', None)
@@ -1422,6 +1424,7 @@ def directions_paraclinic_result(request):
                             method=method,
                             dosage=dosage,
                             units=units,
+                            comment=comment,
                             date_start=date_start,
                             date_end=date_end,
                             doc_create=request.user.doctorprofile,
@@ -1433,6 +1436,7 @@ def directions_paraclinic_result(request):
                         proc_obj.method = method
                         proc_obj.dosage = dosage
                         proc_obj.units = units
+                        proc_obj.comment = comment
                         proc_obj.date_start = date_start
                         proc_obj.date_end = date_end
                         proc_obj.cancel = False

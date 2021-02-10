@@ -26,6 +26,9 @@
           <span class="badge badge-primary" title="Способ применения" v-tippy>{{r.method}}</span>
           <span class="badge badge-info" title="Дозировка" v-tippy>{{r.dosage}}</span>
           <span class="badge badge-light" title="Дата создания" v-tippy>{{r.created_at}}</span>
+          <div v-if="r.comment">
+            <strong>Комментарий:</strong>&nbsp;{{r.comment}}
+          </div>
         </td>
         <td v-for="d in dates" :key="d" class="cl-td">
           <PharmacotherapyTime :data="r.dates[d][t]" v-for="t in timesInDates[d]" :key="t" />

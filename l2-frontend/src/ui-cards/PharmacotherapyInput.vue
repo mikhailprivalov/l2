@@ -103,6 +103,7 @@
           dateEnd: null,
           countDays: 1,
           units: null,
+          comment: '',
         })
         this.search = '';
       },

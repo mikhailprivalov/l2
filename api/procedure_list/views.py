@@ -48,6 +48,7 @@ def get_procedure_by_dir(request):
             "dosage": f"{procedure.dosage} {procedure.units}".strip(),
             "cancel": bool(procedure.cancel),
             "who_cancel": None if not procedure.who_cancel else procedure.who_cancel.get_fio(),
+            "comment": procedure.comment or None,
             "dates": {},
         }
 
@@ -208,6 +209,7 @@ def procedure_aggregate(request):
                 'cancel': i[13],
                 'who_cancel': None,
                 'history_num': i[17],
+                'comment': i[18],
                 'dates': {d: deepcopy(empty) for d in unique_dates}
             }
         data[card_pk]['drugs'][k]['dates'][i[11]][i[12]] = {
