@@ -18,6 +18,7 @@ class Command(BaseCommand):
         ws = wb[wb.sheetnames[0]]
         print(ws)
         starts = False
+        mnn, torg = '', ''
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
