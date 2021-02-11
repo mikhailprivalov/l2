@@ -42,6 +42,9 @@
                 <i class="fa fa-circle"/> вернуть ЛП
               </a>
             </template>
+            <div v-if="r.comment">
+              <strong>Комментарий:</strong>&nbsp;{{r.comment}}
+            </div>
           </td>
           <td v-for="d in dates" :key="d" class="cl-td">
             <PharmacotherapyTime :data="r.dates[d][t]" v-for="t in timesInDates[d]" :key="t"/>
