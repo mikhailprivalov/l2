@@ -4,6 +4,7 @@ import sys
 from copy import deepcopy
 from io import BytesIO
 import simplejson as json
+from django.http import HttpRequest
 from reportlab.lib.colors import black
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.pagesizes import A4, landscape
@@ -13,6 +14,8 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Indenter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, KeepTogether
+
+from api.procedure_list.views import get_procedure_by_dir
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
 from laboratory.settings import FONTS_FOLDER
@@ -307,3 +310,138 @@ def draw_pressure(value, step, x_coord, y_coord):
     lc.valueAxis.labels.fontSize = 9
     drawing.add(lc)
     return drawing
+
+
+def form_02(request_data):
+    """
+    Процедурный лист
+    """
+
+    num_dir = json.loads(request_data["hosp_pk"])
+    print(num_dir)
+    ind_card = Napravleniya.objects.get(pk=num_dir)
+    patient_data = ind_card.client.get_data_individual()
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=landscape(A4), leftMargin=15 * mm, rightMargin=5 * mm, topMargin=13 * mm, bottomMargin=10 * mm, allowSplitting=1, title="Форма {}".format("Лист показателей")
+    )
+    width, height = landscape(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.leading = 15
+    style.spaceAfter = 0.5 * mm
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 12
+    styleCenter.leading = 15
+    styleCenter.spaceAfter = 1 * mm
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 15
+    styleCenterBold.face = 'PTAstraSerifBold'
+    styleCenterBold.borderColor = black
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    objs = []
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+    styleT.face = 'PTAstraSerifReg'
+
+    title_page = [
+        Indenter(left=0 * mm),
+        Spacer(1, 2 * mm),
+        Paragraph('<font fontname="PTAstraSerifBold" size=13>ПРОЦЕДУРНЫЙ ЛИСТ</font><br/>', styleCenter),
+
+    ]
+
+    objs.extend(title_page)
+    space_symbol = '&nbsp;'
+    objs.append(Paragraph(f'{patient_data["fio"]} № {num_dir} {space_symbol*150} Палата______', style))
+    objs.append(Spacer(1, 3 * mm))
+
+    procedural = json.dumps({'direction': num_dir})
+    procedural_obj = HttpRequest()
+    procedural_obj._body = procedural
+    procedural_obj.user = request_data["user"]
+    data = get_procedure_by_dir(procedural_obj)
+    result = json.loads(data.content.decode('utf-8'))
+    print(result['result'])
+    print(result['dates'])
+    print(result['timesInDates'])
+
+    # result = get_temperature_list(num_dir[0])
+    # titles = json.loads(request_data["titles"])
+    # count_in_graph = 26
+    # if 'Температура (°C)' in titles:
+    #     result_data = result['Температура (°C)']
+    #     min_max = result_data['min_max']
+    #     count_param = count_len_param(result_data, count_in_graph)
+    #     for i in range(count_param):
+    #         elements = count_graph_el(count_in_graph, result_data)
+    #         temp_obj = [
+    #             Paragraph(' <u>Температура (°C)</u>', style),
+    #             Spacer(1, 2 * mm),
+    #             draw_temper_pulse({'data': elements[0], 'xtext': elements[1], 'min_max': min_max}, 1, 250 * mm, 27 * mm),
+    #             Spacer(1, 10 * mm),
+    #         ]
+    #         objs.append(KeepTogether(temp_obj))
+    #
+    # if 'Пульс (уд/с)' in titles:
+    #     result_data = result['Пульс (уд/с)']
+    #     min_max = result_data['min_max']
+    #     count_param = count_len_param(result_data, count_in_graph)
+    #     for i in range(count_param):
+    #         elements = count_graph_el(count_in_graph, result_data)
+    #         temp_obj = [
+    #             Paragraph(' <u>Пульс (уд/с)</u>', style),
+    #             Spacer(1, 2 * mm),
+    #             draw_temper_pulse({'data': elements[0], 'xtext': elements[1], 'min_max': min_max}, 10, 250 * mm, 27 * mm),
+    #             Spacer(1, 10 * mm),
+    #         ]
+    #         objs.append(KeepTogether(temp_obj))
+    #
+    # if 'Давление' in titles:
+    #     diastolic = 'Диастолическое давление (мм рт.с)'
+    #     systolic = 'Систолическое давление (мм рт.с)'
+    #     result_data = {diastolic: result[diastolic], systolic: result[systolic]}
+    #     min_max_diastolic = result_data[diastolic]['min_max']
+    #     min_max_systolic = result_data[systolic]['min_max']
+    #     count_param = count_len_param(result_data[diastolic], count_in_graph)
+    #     for i in range(count_param):
+    #         elements = count_graph_el_pressure(count_in_graph, result_data, diastolic, systolic, min_max_diastolic, min_max_systolic)
+    #         temp_obj = [
+    #             Paragraph(
+    #                 '<u>Давление:</u> (<img src="forms/img/squreline.png" width="20" height="10" />  систолическое, '
+    #                 '<img src="forms/img/strokedot.png" width="20" height="10" />  диастолическое)',
+    #                 style,
+    #             ),
+    #             Spacer(1, 2 * mm),
+    #             draw_pressure(elements, 10, 250 * mm, 45 * mm),
+    #             Spacer(1, 10 * mm),
+    #         ]
+    #         objs.append(KeepTogether(temp_obj))
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
