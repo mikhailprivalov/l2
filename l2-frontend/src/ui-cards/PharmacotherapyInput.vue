@@ -115,7 +115,7 @@
           return
         }
         await this.$store.dispatch(action_types.INC_LOADING)
-        const {data} = await fetch(`/api/autocomplete?type=drugs&value=${this.search}`).then(r => r.json())
+        const {data} = await fetch(`/api/autocomplete?type=drugs&value=${this.search}&limit=60`).then(r => r.json())
         this.variants = []
         const lowerSearch = this.search.trim().toLowerCase()
         const l = lowerSearch.length
