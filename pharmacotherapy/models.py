@@ -11,7 +11,7 @@ class Drugs(models.Model):
 
     def __str__(self):
         if self.trade_name and self.mnn:
-            return f"{self.trade_name} ({self.mnn})"
+            return f"{self.mnn} ({self.trade_name})"
         if self.mnn:
             return self.mnn
         return self.trade_name
