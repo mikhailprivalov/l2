@@ -16,7 +16,6 @@ from datetime import datetime, time as dtime
 from utils.xh import get_hospitals_podrazdeleniya
 from directory.models import Researches
 from laboratory.settings import TIME_ZONE
-from users.models import DoctorProfile
 
 TIMES = [
     f"{x:02d}:00"
