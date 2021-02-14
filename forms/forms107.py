@@ -4,6 +4,7 @@ import sys
 from copy import deepcopy
 from io import BytesIO
 import simplejson as json
+from django.http import HttpRequest
 from reportlab.lib.colors import black
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.pagesizes import A4, landscape
@@ -11,8 +12,10 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Indenter
+from reportlab.platypus import Indenter, Table, TableStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, KeepTogether
+
+from api.procedure_list.views import get_procedure_by_dir
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
 from laboratory.settings import FONTS_FOLDER
@@ -21,6 +24,8 @@ from reportlab.lib import colors
 from reportlab.graphics.charts.linecharts import HorizontalLineChart
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.widgets.markers import makeMarker
+from datetime import datetime
+from math import ceil
 
 
 def form_01(request_data):
@@ -307,3 +312,167 @@ def draw_pressure(value, step, x_coord, y_coord):
     lc.valueAxis.labels.fontSize = 9
     drawing.add(lc)
     return drawing
+
+
+def form_02(request_data):
+    """
+    Процедурный лист
+    """
+
+    num_dir = json.loads(request_data["hosp_pk"])
+    ind_card = Napravleniya.objects.get(pk=num_dir)
+    patient_data = ind_card.client.get_data_individual()
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=landscape(A4), leftMargin=15 * mm, rightMargin=5 * mm, topMargin=13 * mm, bottomMargin=10 * mm, allowSplitting=1, title="Форма {}".format("Лист процедурный")
+    )
+    width, height = landscape(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.leading = 15
+    style.spaceAfter = 0.5 * mm
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 12
+    styleCenter.leading = 15
+    styleCenter.spaceAfter = 1 * mm
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 15
+    styleCenterBold.face = 'PTAstraSerifBold'
+    styleCenterBold.borderColor = black
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    objs = []
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 3.5 * mm
+    styleT.face = 'PTAstraSerifReg'
+
+    styleTtime = deepcopy(styleT)
+    styleTtime.fontSize = 8.5
+    styleTtime.leading = 2.5 * mm
+    styleTtime.spaceAfter = 1.0 * mm
+
+    styleTCBold = deepcopy(style)
+    styleTCBold.fontSize = 9
+    styleTCBold.fontName = "PTAstraSerifBold"
+    space_symbol = '&nbsp;'
+    title_page = [
+        Indenter(left=0 * mm),
+        Spacer(1, 2 * mm),
+        Paragraph(f'<font fontname="PTAstraSerifBold" size=13>ПРОЦЕДУРНЫЙ ЛИСТ {space_symbol*3} № {num_dir}</font> ', styleCenter),
+    ]
+
+    objs.extend(title_page)
+    objs.append(Paragraph(f'{patient_data["fio"]}  {space_symbol*150} Палата______', style))
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('V - выполнено, Х - не выполнено, О - отменено', styleT))
+    objs.append(Spacer(1, 1 * mm))
+    procedural = json.dumps({'direction': num_dir})
+    procedural_obj = HttpRequest()
+    procedural_obj._body = procedural
+    procedural_obj.user = request_data["user"]
+    data = get_procedure_by_dir(procedural_obj)
+    results_json = json.loads(data.content.decode('utf-8'))
+
+    timesInDates = results_json['timesInDates']
+    unique_dates = sorted(set([k for k in timesInDates.keys()]))
+    unique_dates.sort(key=lambda x: datetime.strptime(x, '%d.%m.%Y'))
+
+    count_table = 1
+    slice_count = 14
+    if len(unique_dates) > slice_count:
+        count_table = ceil(len(unique_dates) / slice_count)
+
+    start = 0
+    for v_table in range(count_table):
+        v_table = []
+        end = start + slice_count
+
+        if len(unique_dates) > slice_count:
+            dates_record = [[Paragraph(f'{date[0:8]}', styleTCBold)] for date in unique_dates[start:end]]
+        else:
+            dates_record = [[Paragraph(f'{date[0:8]}', styleTCBold)] for date in unique_dates]
+        dates_record.insert(0, [Paragraph("Наименование", styleTCBold)])
+
+        v_table.append(dates_record)
+
+        for record in results_json['result']:
+            temp_time = [[Paragraph(" ", styleTtime)] for i in range(len(dates_record) - 1)]
+            comment = ''
+            for date, times in record['dates'].items():
+                if len(unique_dates) > slice_count:
+                    if date not in unique_dates[start:end]:
+                        continue
+                    index = unique_dates[start:end].index(date)
+                else:
+                    index = unique_dates.index(date)
+                temp_time_index = temp_time[index]
+                for time, value in times.items():
+                    strike_o = ""
+                    strike_cl = ""
+                    if value['empty']:
+                        continue
+                    status = 'X'
+                    if value['cancel']:
+                        strike_o = "<strike>"
+                        strike_cl = "</strike>"
+                        status = 'О'
+                    if value['ok']:
+                        strike_o = ""
+                        strike_cl = ""
+                        status = 'V'
+                    temp_time_index.append([Paragraph(f"{strike_o}{time}{strike_cl}-{status}", styleTtime)])
+                    temp_time[index] = temp_time_index.copy()
+
+            if record['comment']:
+                comment = record['comment']
+            temp_time.insert(0, [Paragraph(f"{record['drug']} {record['form_release']} {record['method']} {record['dosage']} "
+                                           f"{comment}", styleT)])
+            v_table.append(temp_time)
+
+        cols_width = [15.5 * mm for i in range(len(dates_record))]
+        cols_width[0] = 50 * mm
+
+        tbl = Table(v_table, repeatRows=1, colWidths=cols_width, hAlign='LEFT')
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
+                    ('TOPPADDING', (0, 0), (-1, -1), 1 * mm),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ]
+            )
+        )
+
+        objs.append(tbl)
+        objs.append(Spacer(1, 15 * mm))
+        start = end
+        end += slice_count
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf

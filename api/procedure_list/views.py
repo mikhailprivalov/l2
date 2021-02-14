@@ -218,8 +218,8 @@ def procedure_aggregate(request):
             'empty': False,
             'ok': bool(i[16]),
             'executor': i[16],
-            'cancel': False,
-            'who_cancel': None,
+            'cancel': i[13],
+            'who_cancel': i[20] or "",
             'history_num': i[17],
         }
 
