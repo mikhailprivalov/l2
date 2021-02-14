@@ -1,5 +1,8 @@
 <template>
   <div class="root-agg">
+    <button style="margin-right: 5px; border-radius: 0" class="btn btn-blue-nb" @click="print_form">
+      Печать
+    </button>
     <table class="table table-responsive table-bordered table-condensed">
       <colgroup>
         <col style="width: 300px" />
@@ -120,6 +123,9 @@
           errmessage(message);
         }
         await this.$store.dispatch(action_types.DEC_LOADING);
+      },
+      print_form(pk) {
+        window.open(`/forms/pdf?type=107.02&&hosp_pk=${this.direction}`);
       },
     },
   }
