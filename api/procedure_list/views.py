@@ -220,7 +220,7 @@ def procedure_aggregate(request):
             'ok': bool(i[16]),
             'executor': i[16],
             'cancel': i[13],
-            'who_cancel': DoctorProfile.objects.get(pk=i[19]).get_fio() if i[19] else '',
+            'who_cancel': i[20] if i[20] else '',
             'history_num': i[17],
         }
 
