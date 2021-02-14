@@ -1,6 +1,5 @@
 import locale
 import os.path
-import re
 import sys
 from copy import deepcopy
 from io import BytesIO
@@ -27,8 +26,6 @@ from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.widgets.markers import makeMarker
 from datetime import datetime
 from math import ceil
-
-from utils.dates import normalize_date
 
 
 def form_01(request_data):
@@ -336,7 +333,7 @@ def form_02(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
-        buffer, pagesize=landscape(A4), leftMargin=15 * mm, rightMargin=5 * mm, topMargin=13 * mm, bottomMargin=10 * mm, allowSplitting=1, title="Форма {}".format("Лист показателей")
+        buffer, pagesize=landscape(A4), leftMargin=15 * mm, rightMargin=5 * mm, topMargin=13 * mm, bottomMargin=10 * mm, allowSplitting=1, title="Форма {}".format("Лист процедурный")
     )
     width, height = landscape(A4)
     styleSheet = getSampleStyleSheet()
@@ -390,7 +387,7 @@ def form_02(request_data):
     objs.extend(title_page)
     objs.append(Paragraph(f'{patient_data["fio"]}  {space_symbol*150} Палата______', style))
     objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph(f'V - выполнено, Х - не выполнено, О - отменено', styleT))
+    objs.append(Paragraph('V - выполнено, Х - не выполнено, О - отменено', styleT))
     objs.append(Spacer(1, 1 * mm))
     procedural = json.dumps({'direction': num_dir})
     procedural_obj = HttpRequest()
