@@ -22,9 +22,10 @@ def get_procedure_by_params(d_s, d_e, researches_pk):
             pl.cancel,
             pl.executor_id,
             pl.prescription_id,
-            pl.fio,
+            pl.exec_fio,
             pharmacotherapy_procedurelist.history_id,
-            pharmacotherapy_procedurelist.comment
+            pharmacotherapy_procedurelist.comment,
+            pl.who_cancel_id
             FROM pharmacotherapy_procedurelist
                 LEFT JOIN pharmacotherapy_drugs ON (pharmacotherapy_procedurelist.drug_id=pharmacotherapy_drugs.id)
                 LEFT JOIN pharmacotherapy_formrelease ON (pharmacotherapy_procedurelist.form_release_id=pharmacotherapy_formrelease.id)
@@ -38,7 +39,8 @@ def get_procedure_by_params(d_s, d_e, researches_pk):
                         pharmacotherapy_procedurelisttimes.cancel, 
                         pharmacotherapy_procedurelisttimes.executor_id,
                         pharmacotherapy_procedurelisttimes.prescription_id,
-                        users_doctorprofile.fio
+                        users_doctorprofile.fio as exec_fio,
+                        pharmacotherapy_procedurelisttimes.who_cancel_id
                     FROM pharmacotherapy_procedurelisttimes
                     LEFT JOIN users_doctorprofile ON (pharmacotherapy_procedurelisttimes.executor_id=users_doctorprofile.id)
                         ) as pl

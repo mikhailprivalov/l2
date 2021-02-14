@@ -16,6 +16,7 @@ from datetime import datetime, time as dtime
 from utils.xh import get_hospitals_podrazdeleniya
 from directory.models import Researches
 from laboratory.settings import TIME_ZONE
+from users.models import DoctorProfile
 
 TIMES = [
     f"{x:02d}:00"
@@ -218,8 +219,8 @@ def procedure_aggregate(request):
             'empty': False,
             'ok': bool(i[16]),
             'executor': i[16],
-            'cancel': False,
-            'who_cancel': None,
+            'cancel': i[13],
+            'who_cancel': DoctorProfile.objects.get(pk=i[19]).get_fio() if i[19] else '',
             'history_num': i[17],
         }
 
