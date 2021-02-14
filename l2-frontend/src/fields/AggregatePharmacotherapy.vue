@@ -1,6 +1,6 @@
 <template>
   <div class="root-agg">
-    <button style="margin-right: 5px; border-radius: 0" class="btn btn-blue-nb" @click="print_form">
+    <button style="margin-bottom: 5px" class="btn btn-blue-nb" @click="print_form">
       Печать
     </button>
     <table class="table table-responsive table-bordered table-condensed">

@@ -219,7 +219,7 @@ def procedure_aggregate(request):
             'ok': bool(i[16]),
             'executor': i[16],
             'cancel': i[13],
-            'who_cancel': i[20] if i[20] else '',
+            'who_cancel': i[20] or "",
             'history_num': i[17],
         }
 
