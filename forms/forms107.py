@@ -406,14 +406,10 @@ def form_02(request_data):
         count_table = ceil(len(unique_dates) / slice_count)
 
     start = 0
-    temp_count_table = 0
-
     for v_table in range(count_table):
         v_table = []
-        temp_count_table += 1
         end = start + slice_count
 
-        step = 1
         if len(unique_dates) > slice_count:
             dates_record = [[Paragraph(f'{date[0:8]}', styleTCBold)] for date in unique_dates[start:end]]
         else:
@@ -455,8 +451,6 @@ def form_02(request_data):
             temp_time.insert(0, [Paragraph(f"{record['drug']} {record['form_release']} {record['method']} {record['dosage']} "
                                            f"{comment}", styleT)])
             v_table.append(temp_time)
-
-        step += 1
 
         cols_width = [15.5 * mm for i in range(len(dates_record))]
         cols_width[0] = 50 * mm
