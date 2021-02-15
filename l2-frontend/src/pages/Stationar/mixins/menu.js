@@ -31,7 +31,7 @@ export default {
         operation: true,
         bl: true,
         physiotherapy: true,
-        pharmacotherapy: true,
+        pharmacotherapy: false,
         't, ad, p sheet': true,
         epicrisis: true,
         extracts: true,
