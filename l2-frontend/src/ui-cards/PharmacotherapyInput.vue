@@ -6,12 +6,13 @@
           <col width="240">
           <col>
           <col>
-          <col>
+          <col width="90">
           <col width="70">
-          <col width="180">
-          <col width="140">
-          <col>
-          <col>
+          <col width="160">
+          <col width="130">
+          <col width="70">
+          <col width="60">
+          <col width="96">
         </colgroup>
         <thead>
         <tr>
@@ -22,7 +23,8 @@
           <th>Ед.изм</th>
           <th>Режим приёма</th>
           <th>Дата начала</th>
-          <th>Количество дней</th>
+          <th>Кол-во дней</th>
+          <th>Шаг, дней</th>
           <th>Дата окончания</th>
         </tr>
         </thead>
@@ -30,7 +32,7 @@
         <PharmacotherapyRow :data="v" :confirmed="confirmed" :params="params" v-for="v in value"
                             :key="`${v.pk}-${v.remove}`" v-if="!v.remove" />
         <tr v-if="value.length === 0">
-          <td class="text-center" colspan="9">нет назначений</td>
+          <td class="text-center" colspan="10">нет назначений</td>
         </tr>
         </tbody>
       </table>
@@ -99,6 +101,7 @@
           form_release: -1,
           method: -1,
           dosage: 1,
+          step: 1,
           dateStart: moment().format('YYYY-MM-DD'),
           dateEnd: null,
           countDays: 1,

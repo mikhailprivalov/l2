@@ -1,6 +1,5 @@
 <template>
-  <div style="min-height: 500px">
-    <h3>{{title}}</h3>
+  <div style="min-height: 500px;margin-top: 25px">
     <Filters :filters="filters" :departments="departments"/>
     <aggregate-pharmaco-therapy-department :dateRange="dateRange" :department_pk="deapartment"/>
   </div>

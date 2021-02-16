@@ -53,6 +53,7 @@ class ProcedureList(models.Model):
     dosage = models.FloatField(help_text='Дозировка')
     units = models.CharField(max_length=8, help_text='Единицы измерения')
     date_start = models.DateField(help_text="Дата начала")
+    step = models.PositiveSmallIntegerField(default=1, blank=True, help_text='Шаг (для генерации)')
     date_end = models.DateField(help_text="Дата окончания включительно")
     doc_create = models.ForeignKey(DoctorProfile, related_name="doc_create_prescription", help_text='Создатель назначения', on_delete=models.CASCADE)
     time_create = models.DateTimeField(auto_now_add=True, help_text='Дата создания')

@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 import pytz
 import simplejson as json
 from django.db.models import Prefetch
@@ -49,6 +47,7 @@ def get_procedure_by_dir(request):
             "cancel": bool(procedure.cancel),
             "who_cancel": None if not procedure.who_cancel else procedure.who_cancel.get_fio(),
             "comment": procedure.comment or None,
+            "step": procedure.step or 1,
             "dates": {},
         }
 
@@ -93,6 +92,7 @@ def get_procedure_by_dir(request):
                     if t not in row["dates"][date]:
                         row["dates"][date][t] = {
                             "empty": True,
+                            "datetime": f"{date} {t}",
                         }
 
     return JsonResponse({"result": rows, "dates": dates_all, "timesInDates": dates_times})
@@ -195,22 +195,28 @@ def procedure_aggregate(request):
         method = i[4]
         unit = i[6]
         dosage = i[5]
+        step = i[21]
 
-        k = (drug, form_release, method, unit, dosage)
+        k = (drug, form_release, method, unit, dosage, step)
 
         if k not in data[card_pk]['drugs']:
             data[card_pk]['drugs'][k] = {
+                'pk': i[22],
                 'drug': drug,
                 'created_at': i[2],
                 'form_release': form_release,
                 'method': method,
                 'dosage': dosage,
+                'step': step,
                 'unit': unit,
-                'cancel': i[13],
+                'cancel': i[23],
                 'who_cancel': None,
                 'history_num': i[17],
                 'comment': i[18],
-                'dates': {d: deepcopy(empty) for d in unique_dates}
+                'dates': {d: {t: {
+                    **empty[t],
+                    "datetime": f"{d} {t}",
+                } for t in empty} for d in unique_dates}
             }
         data[card_pk]['drugs'][k]['dates'][i[11]][i[12]] = {
             'datetime': f'{i[11]} {i[12]}',

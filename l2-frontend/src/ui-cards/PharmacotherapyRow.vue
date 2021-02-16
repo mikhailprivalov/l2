@@ -38,17 +38,20 @@
                 :append-to-body="true" :disabled="confirmed" />
       </td>
       <td class="cl-td">
-        <input class="form-control" v-model="data.dateStart" style="padding-right: 0;" type="date" :min="td" step="1" :readonly="confirmed"/>
+        <input class="form-control" v-model="data.dateStart" style="padding-left: 5px;padding-right: 0;" type="date" :min="td" step="1" :readonly="confirmed"/>
       </td>
       <td class="cl-td">
         <input class="form-control" v-model.number="data.countDays" type="number" min="1" step="1" :readonly="confirmed"/>
+      </td>
+      <td class="cl-td">
+        <input class="form-control" v-model.number="data.step" type="number" min="1" max="5" step="1" :readonly="confirmed"/>
       </td>
       <td>
         {{dateEndVisible}}
       </td>
     </tr>
     <tr>
-      <td colspan="9" class="cl-td">
+      <td colspan="10" class="cl-td">
         <input class="form-control" v-model="data.comment" :readonly="confirmed"
                placeholder="Комментарий" maxlength="70"/>
       </td>
@@ -99,6 +102,15 @@ export default {
       return moment(this.data.dateStart).add(this.data.countDays, 'days').format('DD.MM.YYYY');
     },
     dateEndVisible() {
+      if (this.data.step > 1) {
+        const dates = [];
+        for (let i = 0; i < this.data.countDays; i += this.data.step) {
+          dates.push(
+            moment(this.data.dateStart).add(i, 'days').format('DD.MM.YYYY')
+          );
+        }
+        return dates.join(' ');
+      }
       return moment(this.data.dateStart).add(this.data.countDays - 1, 'days').format('DD.MM.YYYY');
 
     },

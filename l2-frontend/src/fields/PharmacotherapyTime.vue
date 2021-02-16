@@ -1,17 +1,22 @@
 <template>
-  <div v-if="data.empty" class="root">
-
+  <div v-if="data.empty" class="root" :data-datetime='data.datetime'>
+    &nbsp;
   </div>
   <div v-else-if="data.ok" @click="setExecute(false)" class="root ok" :class="{hoverable: !data.cancel}"
-       :title="`${data.datetime}: Исполнитель: ${data.executor}${data.cancel ? '' : '. Отменить исполение'}`" v-tippy>
+       :data-datetime='data.datetime'
+       :title="`${data.datetime}: Исполнитель: ${data.executor}${data.cancel ? '' : '. Отменить исполение'}`"
+       v-tippy="{placement: 'top', arrow: true, animateFill: false}">
     ✓
   </div>
   <div v-else-if="data.cancel" class="root cancel"
-       :title="`${data.datetime}: Кто отменил: ${data.who_cancel}`" v-tippy>
+       :data-datetime='data.datetime'
+       :title="`${data.datetime}: Кто отменил: ${data.who_cancel}`"
+       v-tippy="{placement: 'top', arrow: true, animateFill: false}">
     отм
   </div>
   <div v-else class="root wait" :class="{hoverable: !data.cancel}" @click="setExecute(true)"
-       :title="`${data.datetime}: не заполнено`" v-tippy>
+       :data-datetime='data.datetime'
+       :title="`${data.datetime}: не заполнено`" v-tippy="{placement: 'top', arrow: true, animateFill: false}">
     —
   </div>
 </template>

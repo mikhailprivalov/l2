@@ -1171,6 +1171,7 @@ def directions_paraclinic_form(request):
                             "comment": procedure.comment,
                             "timesSelected": list(reversed(times)),
                             "dateStart": date_start,
+                            "step": procedure.step or 1,
                             "dateEnd": date_end,
                             "countDays": count_days,
                         }
@@ -1410,6 +1411,11 @@ def directions_paraclinic_result(request):
                         return JsonResponse(response)
                     comment = proc_data.get("comment", "")
                     date_start = try_strptime(proc_data['dateStart'], ('%d.%m.%Y', '%Y-%m-%d')).astimezone(user_timezone)
+                    step = int(proc_data['step'])
+                    if step < 1:
+                        step = 1
+                    elif step > 5:
+                        step = 5
                     date_end = try_strptime(proc_data['dateEnd'], ('%d.%m.%Y', '%Y-%m-%d')).astimezone(user_timezone)
                     parent_child_data = rb.get('parent_child_data', None)
                     if proc_data.get('isNew'):
@@ -1426,6 +1432,7 @@ def directions_paraclinic_result(request):
                             units=units,
                             comment=comment,
                             date_start=date_start,
+                            step=step,
                             date_end=date_end,
                             doc_create=request.user.doctorprofile,
                         )
@@ -1438,12 +1445,13 @@ def directions_paraclinic_result(request):
                         proc_obj.units = units
                         proc_obj.comment = comment
                         proc_obj.date_start = date_start
+                        proc_obj.step = step
                         proc_obj.date_end = date_end
                         proc_obj.cancel = False
                         proc_obj.who_cancel = None
                         proc_obj.save()
                     ProcedureListTimes.objects.filter(prescription=proc_obj, executor__isnull=True).delete()
-                    for date in date_iter_range(date_start, date_end):
+                    for date in date_iter_range(date_start, date_end, step=step):
                         for pc_time in times:
                             times_medication = datetime.strptime(f"{date:%Y-%m-%d} {pc_time}", '%Y-%m-%d %H:%M').astimezone(user_timezone)
                             if not ProcedureListTimes.objects.filter(prescription=proc_obj, times_medication=times_medication).exists():

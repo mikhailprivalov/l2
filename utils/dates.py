@@ -57,6 +57,6 @@ def valid_date(s):
         return False
 
 
-def date_iter_range(start_date, end_date, more_1=False):
-    for n in range(int((end_date - start_date).days) + (1 if more_1 else 0)):
+def date_iter_range(start_date, end_date, more_1=False, step=1):
+    for n in range(0, int((end_date - start_date).days) + (1 if more_1 else 0), step):
         yield start_date + timedelta(n)
