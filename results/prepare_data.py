@@ -673,9 +673,8 @@ def procedural_text_for_result(direction, fwb, napr_child):
     if not napr_child:
         fwb.append(Paragraph("Назначено:", style))
     for p in procedurals_diary:
-        text = f"{text} {p.drug.mnn} {p.form_release.title} {p.method.title} {p.dosage} {p.units}"
+        text = f"{text} <font face=\"FreeSansBold\"> {p.drug.mnn} {p.form_release.title} {p.method.title} {p.dosage} {p.units}: </font>"
         dates = {}
-        temp_time = ''
         for pt in ProcedureListTimes.objects.filter(prescription=p):
             date_str = strfdatetime(pt.times_medication.astimezone(pytz.timezone(TIME_ZONE)), "%d.%m.%Y")
             if dates.get(date_str, None) is None:
