@@ -1,3 +1,4 @@
+import pytz
 from api.stationar.stationar_func import hosp_get_lab_iss, hosp_get_text
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -8,7 +9,7 @@ from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 import os.path
-from laboratory.settings import FONTS_FOLDER
+from laboratory.settings import FONTS_FOLDER, TIME_ZONE
 from pyvirtualdisplay import Display
 import imgkit
 import sys
@@ -20,6 +21,7 @@ from appconf.manager import SettingManager
 import simplejson as json
 
 from laboratory.utils import strfdatetime
+from pharmacotherapy.models import ProcedureList, ProcedureListTimes
 from utils.xh import check_valid_square_brackets
 
 
@@ -654,3 +656,41 @@ def text_to_bold(v):
         v = v.replace(']', '</font>')
 
     return v
+
+
+def procedural_text_for_result(direction, fwb, napr_child):
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "FreeSans"
+    style.fontSize = 9
+    style.alignment = TA_JUSTIFY
+
+    pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
+    pdfmetrics.registerFont(TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))
+
+    procedurals_diary = ProcedureList.objects.filter(diary=direction)
+    text = ''
+    if not napr_child:
+        fwb.append(Paragraph("Назначено:", style))
+    for p in procedurals_diary:
+        text = f"{text} {p.drug.mnn} {p.form_release.title} {p.method.title} {p.dosage} {p.units}"
+        dates = {}
+        temp_time = ''
+        for pt in ProcedureListTimes.objects.filter(prescription=p):
+            date_str = strfdatetime(pt.times_medication.astimezone(pytz.timezone(TIME_ZONE)), "%d.%m.%Y")
+            if dates.get(date_str, None) is None:
+                dates[date_str] = ''
+            time_str = strfdatetime(pt.times_medication.astimezone(pytz.timezone(TIME_ZONE)), "%H:%M")
+            temp_time = dates[date_str]
+            if temp_time:
+                temp_time = f"{temp_time}, {time_str}"
+            else:
+                temp_time = f"{time_str}"
+            dates[date_str] = temp_time
+        text = f"{text} <br/>"
+        for k, v in dates.items():
+            text = f"{text} {k} - {v}; "
+        text = f"{text} <br/>"
+    fwb.append(Paragraph(text, style))
+
+    return fwb
