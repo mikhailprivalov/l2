@@ -72,7 +72,7 @@
           Печать
         </div>
 
-        <div class="btn btn-blue-nb" @click="load(null)">
+        <div class="btn btn-blue-nb" @click="load(null)" style="margin-top: 5px;">
           Загрузить данные
         </div>
       </div>
