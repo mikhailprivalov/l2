@@ -56,7 +56,8 @@
     </div>
     <div class="f gutter gutter-col gutter-column-2"></div>
     <div class="g" :class="{noMoreModules: !l2_doc_call && !l2_list_wait}">
-      <DirectAndPlanSwitcher v-model="mode" :bages="this.modes_counts" v-if="l2_doc_call || l2_list_wait" />
+      <DirectAndPlanSwitcher v-model="mode" :bages="this.modes_counts"
+                             v-if="(l2_doc_call || l2_list_wait) && !l2_only_doc_call" />
       <div v-show="mode === DIRECTION_MODE_DIRECTION"
            :style="(l2_doc_call || l2_list_wait) && 'border-top: 1px solid #434a54'">
         <selected-researches :operator="selected_card.operator" :ofname="selected_card.ofname"
@@ -147,6 +148,16 @@
           [DIRECTION_MODE_WAIT]: 0,
         },
       }
+    },
+    watch: {
+      l2_only_doc_call: {
+        handler() {
+          if (this.l2_only_doc_call) {
+            this.mode = DIRECTION_MODE_CALL;
+          }
+        },
+        immediate: true,
+      },
     },
     created() {
       this.$root.$on('show_results', (pk) => {
@@ -248,6 +259,9 @@
       },
       l2_doc_call() {
         return this.$store.getters.modules.l2_doc_call
+      },
+      l2_only_doc_call() {
+        return this.$store.getters.modules.l2_only_doc_call && this.l2_doc_call;
       },
     },
   }

@@ -278,8 +278,6 @@
             phone: this.card.phone,
           }
         )
-        await this.load_data();
-        await this.$store.dispatch(action_types.DEC_LOADING)
         if (result.ok) {
           okmessage('Записи для вызова на дом созданы');
           this.date = this.td = moment().format('YYYY-MM-DD');
@@ -287,6 +285,8 @@
           this.asExecuted = false;
           this.$root.$emit('researches-picker:clear_all');
         }
+        await this.load_data();
+        await this.$store.dispatch(action_types.DEC_LOADING);
       },
       async cancel_doc_call(pk) {
         await this.$store.dispatch(action_types.INC_LOADING)

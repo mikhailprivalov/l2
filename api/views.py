@@ -1269,7 +1269,7 @@ def actual_districts(request):
     purposes = [{'id': row[0], 'label': row[1]} for row in purposes]
 
     hospitals = Hospitals.objects.filter(hide=False).order_by('short_title').values('pk', 'short_title', 'title', 'code_tfoms')
-    hospitals = [{"id": -1, "label": "НЕ ВЫБРАН"}, *[{"id": x['pk'], "label": x["short_title"] or x["title"], "code_tfoms": x["code_tfoms"]} for x in hospitals]]
+    hospitals = [{"id": -1, "label": "НЕ ВЫБРАНО"}, *[{"id": x['pk'], "label": x["short_title"] or x["title"], "code_tfoms": x["code_tfoms"]} for x in hospitals]]
 
     if card_pk is not None:
         card_hospital_id = -1

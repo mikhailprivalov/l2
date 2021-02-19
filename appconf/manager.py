@@ -51,6 +51,7 @@ class SettingManager:
                     "force_rmis_search",
                     "load_file",
                     "send_doc_calls",
+                    "only_doc_call",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

@@ -20,13 +20,13 @@ def get_headers():
     return {"Authorization": "Bearer {}".format(SettingManager.get("tfoms_api_token", default='token', default_type='s'))}
 
 
-def make_request(path, query=None):
+def make_request(path, query=None, **kwargs):
     if query is None:
         query = {}
     try:
         url = get_url(path, query=query)
         headers = get_headers()
-        data = requests.post(url, headers=headers).json()
+        data = requests.post(url, headers=headers, **kwargs).json()
         return data
     except Exception as e:
         print(e)
@@ -63,7 +63,7 @@ def match_enp(enp) -> Optional[dict]:
         if not isinstance(resp, dict) or not resp.get('ok') or not resp.get('patient_data'):
             return None
         return resp.get('patient_data')
-    data = make_request("match-patient-by-enp-set2", {"enp": enp})
+    data = make_request("match-patient-by-enp-set2", {"enp": enp}, timeout=5)
     if isinstance(data, list) and len(data) > 0:
         return data[0]
     return data

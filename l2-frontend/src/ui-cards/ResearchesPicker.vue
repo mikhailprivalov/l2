@@ -239,6 +239,14 @@
       }
     },
     watch: {
+      l2_only_doc_call: {
+        handler() {
+          if (this.l2_only_doc_call) {
+            this.select_type('4');
+          }
+        },
+        immediate: true,
+      },
       value(v) {
         if (v instanceof Array) {
           this.checked_researches = v
@@ -270,16 +278,17 @@
       },
     },
     computed: {
+      l2_only_doc_call() {
+        return this.$store.getters.modules.l2_only_doc_call;
+      },
       types() {
-        let t = []
-        for (let row of this.$store.getters.allTypes) {
-          if (row.pk !== '0' && row.pk !== '1' && !this.filter_types.includes(parseInt(row.pk))) {
-            if (this.typesOnly.length === 0 || this.typesOnly.includes(parseInt(row.pk))) {
-              t.push(row)
-            }
-          }
-        }
-        return t
+        return this.$store.getters.allTypes.filter(row => {
+          return (
+              (row.pk !== '0' && row.pk !== '1' && !this.filter_types.includes(parseInt(row.pk))) &&
+              (this.typesOnly.length === 0 || this.typesOnly.includes(parseInt(row.pk))) &&
+              (!this.l2_only_doc_call || row.pk === '4')
+          );
+        });
       },
       selected_type() {
         for (let t of this.types) {
