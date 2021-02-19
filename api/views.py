@@ -1305,3 +1305,23 @@ def hospitals(request):
             ]
         }
     )
+
+
+def doc_call_hospitals(request):
+    if request.user.doctorprofile.all_hospitals_users_control:
+        rows = Hospitals.objects.filter(hide=False).order_by('-is_default', 'short_title').values('pk', 'short_title', 'title', 'code_tfoms')
+    else:
+        hospital_id = request.user.doctorprofile.hospital_id
+        rows = Hospitals.objects.filter(hide=False, pk=hospital_id).order_by('-is_default', 'short_title').values('pk', 'short_title', 'title', 'code_tfoms')
+    return JsonResponse(
+        {
+            "hospitals": [
+                {
+                    "id": x['pk'],
+                    "label": x["short_title"] or x["title"],
+                    "code_tfoms": x["code_tfoms"],
+                }
+                for x in rows
+            ]
+        }
+    )
