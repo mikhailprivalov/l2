@@ -40,7 +40,6 @@ urlpatterns = [
     path('reader-status-update', views.reader_status_update),
     path('actual-districts', views.actual_districts),
     path('hospitals', views.hospitals),
-    path('doc-call-hospitals', views.doc_call_hospitals),
     path('researches/', include('api.researches.urls')),
     path('patients/', include('api.patients.urls')),
     path('directions/', include('api.directions.urls')),

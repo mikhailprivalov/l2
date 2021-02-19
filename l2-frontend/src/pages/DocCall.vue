@@ -225,7 +225,7 @@ export default {
   async mounted() {
     await this.$store.dispatch(action_types.INC_LOADING);
     const data = await api('actual-districts');
-    const hospitals = await api('doc-call-hospitals');
+    const hospitals = await api('hospitals',{filterByUserHospital: true});
 
     this.districts = data.rows;
     this.docs_assigned = data.docs;
