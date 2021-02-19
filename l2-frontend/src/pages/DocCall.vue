@@ -72,7 +72,7 @@
           Печать
         </div>
 
-        <div class="btn btn-blue-nb" @click="load(null)">
+        <div class="btn btn-blue-nb" @click="load(null)" style="margin-top: 5px;">
           Загрузить данные
         </div>
       </div>
@@ -225,11 +225,12 @@ export default {
   async mounted() {
     await this.$store.dispatch(action_types.INC_LOADING);
     const data = await api('actual-districts');
+    const {hospitals} = await api('hospitals', {filterByUserHospital: true});
 
     this.districts = data.rows;
     this.docs_assigned = data.docs;
     this.purposes = [{id: -1, label: 'Не выбрана'}, ...data.purposes];
-    this.hospitals = data.hospitals;
+    this.hospitals = hospitals;
     await this.$store.dispatch(action_types.DEC_LOADING);
   },
   methods: {

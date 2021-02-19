@@ -1292,7 +1292,11 @@ def actual_districts(request):
 
 
 def hospitals(request):
-    rows = Hospitals.objects.filter(hide=False).order_by('-is_default', 'short_title').values('pk', 'short_title', 'title', 'code_tfoms')
+    data = json.loads(request.body)
+    filters = {}
+    if data.get('filterByUserHospital') and not request.user.doctorprofile.all_hospitals_users_control:
+        filters['pk'] = request.user.doctorprofile.hospital_id
+    rows = Hospitals.objects.filter(hide=False, **filters).order_by('-is_default', 'short_title').values('pk', 'short_title', 'title', 'code_tfoms')
     return JsonResponse(
         {
             "hospitals": [

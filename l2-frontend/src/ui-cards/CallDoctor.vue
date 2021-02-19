@@ -92,7 +92,7 @@
                             :nof="disp_researches.length"/>
         </div>
         <div class="controls">
-          <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save">Создать записи для вызова на дом
+          <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save">Создать записи для обращения
           </button>
         </div>
       </template>
