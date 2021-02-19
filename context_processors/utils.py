@@ -129,7 +129,8 @@ def menu(request):
             pages.append({"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница", "nt": True, "access": ["*"]})
 
         if SettingManager.get("support", default="false") != "false":
-            pages.append({"url": SettingManager.get(key="support", default="false"), "title": "Техническая поддержка", "nt": True, "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача"]})
+            pages.append({"url": SettingManager.get(key="support", default="false"), "title": "Техническая поддержка", "nt": True,
+                          "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача"]})
         if SettingManager.get("vks", default="false") != "false":
             pages.append({"url": SettingManager.get(key="vks", default="false"), "title": "ВКС", "nt": True, "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача"]})
 
