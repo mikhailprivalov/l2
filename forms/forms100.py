@@ -562,12 +562,12 @@ def form_03(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
-        buffer, pagesize=landscape(A5), leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("Профосомотры")
+        buffer, pagesize=portrait(A4), leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("Профосомотры")
     )
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
-    style.fontSize = 10
+    style.fontSize = 12
     style.leading = 12
     style.spaceAfter = 0.5 * mm
     styleBold = deepcopy(style)
@@ -670,7 +670,7 @@ def form_03(request_data):
     objs.extend(content_title)
 
     work_p = patient_data['work_place_db'] if patient_data['work_place_db'] else patient_data['work_place']
-    objs.append(Paragraph(f"11. Место работы: {work_p}", style))
+    objs.append(Paragraph(f'11. Место работы: <font fontname="PTAstraSerifBold" size=12> {work_p}</font>', style))
     objs.append(Paragraph(f"12. Должность: {patient_data['work_position']}", style))
     objs.append(Paragraph(f"13. Вредность: {patient_data['harmful_factor']}", style))
 
