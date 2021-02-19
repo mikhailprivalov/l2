@@ -50,7 +50,7 @@ from refprocessor.common import RANGE_NOT_IN, RANGE_IN
 from utils.dates import try_parse_range
 from utils.flowable import InteractiveTextField
 from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll
-from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result
+from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result, procedural_text_for_result
 from django.utils.module_loading import import_string
 
 
@@ -1215,6 +1215,8 @@ def result_print(request):
                             n += "{}; {} ".format(iss_research_str, br)
                             s_napr = s_napr + n + '\n'
                         fwb.append(Paragraph("{}".format(s_napr), style))
+                    fwb = procedural_text_for_result(iss.napravleniye, fwb, napr_child)
+
 
                 fwb.append(Spacer(1, 3 * mm))
                 if not hosp and not iss.research.is_slave_hospital:
