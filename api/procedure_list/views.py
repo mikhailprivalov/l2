@@ -29,7 +29,6 @@ def get_procedure_by_dir(request):
     rows = []
 
     dates_times = {}
-
     procedure: ProcedureList
     for procedure in (
         ProcedureList.objects
