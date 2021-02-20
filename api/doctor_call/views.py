@@ -163,8 +163,11 @@ def search(request):
             doc_call = doc_call.filter(Q(pk=just_number) | Q(external_num=number))
     else:
         if external:
+            filters = {}
+            if not request.user.doctorprofile.all_hospitals_users_control:
+                filters['hospital_id'] = request.user.doctorprofile.hospital_id
             doc_call = DoctorCall.objects.filter(
-                create_at__range=[datetime_start, datetime_end],
+                create_at__range=[datetime_start, datetime_end], **filters
             )
         else:
             doc_call = DoctorCall.objects.filter(create_at__range=[datetime_start, datetime_end])
