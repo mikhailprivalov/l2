@@ -2,7 +2,6 @@ import os.path
 from datetime import date, datetime
 from io import BytesIO
 
-import numpy as np
 import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -39,6 +38,8 @@ from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
 from utils.dates import try_parse_range
 from django.utils.module_loading import import_string
+
+from utils.matrix import transpose
 
 w, h = A4
 
@@ -141,7 +142,7 @@ def gen_pdf_execlist(request):
             s = getSampleStyleSheet()
             s = s["BodyText"]
             s.wordWrap = 'LTR'
-            data = np.array(data).T
+            data = transpose(data)
             data2 = [[Paragraph('<font face="OpenSans" size="7">' + cell + "</font>", s) for cell in row] for row in data]
             tw = lw - 90
             t = Table(data2, colWidths=[int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8)])
