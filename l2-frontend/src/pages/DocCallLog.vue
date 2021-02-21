@@ -1,0 +1,159 @@
+<template>
+  <div>
+    <div class="log-form">
+      <div class="left">
+        <textarea class="form-control" placeholder="Запись в журнале" v-model="text"></textarea>
+      </div>
+      <div class="right">
+        <button class="btn btn-blue-nb btn-block" type="button" @click="createLog" :disabled="!text && status === -1">
+          Сохранить
+        </button>
+        <select v-model="status" class="form-control" style="margin-top: 5px">
+          <option :value="-1">Не обновлять статус</option>
+          <option :value="1" v-if="r.status !== 1">Статус: Новая заявка</option>
+          <option :value="2" v-if="r.status !== 2">Статус: В работе</option>
+          <option :value="3" v-if="r.status !== 3">Статус: Выполнено</option>
+          <option :value="4" v-if="r.status !== 4">Статус: Отмена</option>
+        </select>
+      </div>
+    </div>
+    <div class="log-rows">
+      <div v-if="rows.length === 0" class="log-row-empty">Нет записей</div>
+      <div class="log-row" v-for="row in rows">
+        <div class="log-row-author">{{ row.author }}</div>
+        <div class="log-row-time">{{ row.createdAt }}</div>
+        <div class="log-row-text" v-if="row.text">{{ row.text }}</div>
+        <div class="log-row-system" v-if="row.executorFrom || row.executorTo">Изменение исполнителя:
+          {{ row.executorFrom || 'нет' }} → <strong>{{ row.executorTo || 'нет' }}</strong></div>
+        <div class="log-row-system" v-if="row.statusFrom || row.statusTo">Изменение статуса:
+          {{ row.statusFrom || 'нет' }} → <strong>{{ row.statusTo || 'нет' }}</strong></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import * as action_types from "@/store/action-types";
+import api from "@/api";
+
+export default {
+  name: "DocCallLog",
+  props: {
+    r: {
+      type: Object,
+    }
+  },
+  data() {
+    return {
+      text: '',
+      status: -1,
+      rows: [],
+    };
+  },
+  mounted() {
+    this.loadRows();
+    this.$root.$on('doc-call:log:update', () => this.loadRows());
+  },
+  methods: {
+    async createLog() {
+      await this.$store.dispatch(action_types.INC_LOADING);
+      const {ok, message, status, executor, executor_fio, inLog} = await api(
+        'doctor-call/add-log', this.r, ['pk', 'status'], {text: this.text, newStatus: this.status}
+      );
+      if (!ok) {
+        errmessage(message);
+      } else {
+        okmessage('Сохранено');
+        this.status = -1;
+        this.text = '';
+      }
+      this.r.executor = executor;
+      this.r.executor_fio = executor_fio;
+      this.r.status = status;
+      this.r.inLog = inLog;
+      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.loadRows();
+    },
+    async loadRows() {
+      await this.$store.dispatch(action_types.INC_LOADING);
+      const {rows} = await api('doctor-call/log', this.r, 'pk');
+      this.rows = rows;
+      this.r.inLog = rows.length;
+      await this.$store.dispatch(action_types.DEC_LOADING);
+    }
+  },
+}
+</script>
+
+<style scoped lang="scss">
+.log-form {
+  display: flex;
+
+  .left, .right {
+    display: inline-block;
+    height: 73px;
+  }
+
+  .left {
+    width: calc(100% - 200px);
+    padding-right: 5px;
+  }
+
+  .right {
+    width: 200px;
+  }
+
+  textarea {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.log-row {
+  padding: 5px;
+  position: relative;
+  background-color: #f7f1e4;
+  border-radius: 5px;
+  color: #5e5149;
+
+  &s {
+    margin-top: 10px;
+  }
+
+  &-empty {
+    text-align: center;
+    padding: 50px;
+    color: gray;
+  }
+
+  &-author {
+    font-weight: bold;
+  }
+
+  &-time {
+    position: absolute;
+    top: 3px;
+    right: 5px;
+  }
+
+  &-text {
+    white-space: pre-wrap;
+    word-break: keep-all;
+    padding: 3px;
+    border-radius: 5px;
+    border: 1px solid #eadcbd;
+    background-color: #fbfbfb;
+  }
+
+  &-system {
+    padding: 2px;
+    margin-left: 2px;
+    margin-top: 5px;
+    border-left: 3px solid #decda3;
+  }
+
+  & + & {
+    margin-top: 10px;
+  }
+}
+</style>

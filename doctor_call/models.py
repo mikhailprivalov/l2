@@ -59,6 +59,14 @@ class DoctorCall(models.Model):
         verbose_name = 'Вызов'
         verbose_name_plural = 'Вызова на дом'
 
+    def get_status_data(self):
+        return {
+            "status": self.status,
+            "executor": self.executor_id,
+            "executor_fio": self.executor.get_fio() if self.executor else None,
+            "inLog": DoctorCallLog.objects.filter(call=self).count(),
+        }
+
     def json(self, doc: Optional[DoctorProfile] = None):
         return {
             "pk": self.pk,
@@ -86,6 +94,7 @@ class DoctorCall(models.Model):
             "executor": self.executor_id,
             "executor_fio": self.executor.get_fio() if self.executor else None,
             "canEdit": not self.need_send_to_external and (not doc or not self.hospital or self.hospital == doc.get_hospital()) and not self.is_main_external,
+            "inLog": DoctorCallLog.objects.filter(call=self).count(),
         }
 
     @property
@@ -208,3 +217,14 @@ class DoctorCall(models.Model):
             result = DoctorCall.objects.filter(exec_at__range=(start_date, end_date)).order_by("exec_at, district")
 
         return result
+
+
+class DoctorCallLog(models.Model):
+    call = models.ForeignKey(DoctorCall, db_index=True, on_delete=models.CASCADE)
+    author = models.ForeignKey(DoctorProfile, related_name="doc_call_log_author", help_text='Автор записи', on_delete=models.CASCADE)
+    text = models.TextField(blank=True, default='')
+    status_update_from = models.PositiveSmallIntegerField(choices=DoctorCall.STATUS, null=True, blank=True, default=None)
+    status_update_to = models.PositiveSmallIntegerField(choices=DoctorCall.STATUS, null=True, blank=True, default=None)
+    executor_update_from = models.ForeignKey(DoctorProfile, related_name="doc_call_executor_update_from", on_delete=models.SET_NULL, null=True, blank=True, default=None)
+    executor_update_to = models.ForeignKey(DoctorProfile, related_name="doc_call_executor_update_to", on_delete=models.SET_NULL, null=True, blank=True, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)

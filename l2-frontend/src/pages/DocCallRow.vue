@@ -12,7 +12,14 @@
     <td>
       <div>{{ r.card }}</div>
       <div>{{ r.address }}</div>
-      <div v-if="r.email">{{r.email}}</div>
+      <div v-if="r.email">{{ r.email }}</div>
+      <div>
+        <button type="button" class="btn btn-blue-nb btn-sm" @click="showModal = true"
+                v-if="!r.isMainExternal && r.canEdit" style="margin-top: 3px;">
+          Редактирование (в журнале: {{r.inLog}})
+        </button>
+        <DocCallModal :r="r" v-if="showModal"/>
+      </div>
     </td>
     <td>
       {{ r.hospital }}<br/>
@@ -30,12 +37,12 @@
         внешняя больница
       </div>
       <div v-else-if="r.executor_fio">
-        {{r.executor_fio}}
+        {{ r.executor_fio }}
       </div>
       <div v-else>
         не назначен
       </div>
-      <div v-if="!r.isMainExternal && !r.canEdit">
+      <div v-if="!r.isMainExternal && r.canEdit">
         <a href="#" @click.prevent="setMeAsExecutor" class="a-under">назначить меня</a>
       </div>
     </td>
@@ -52,9 +59,11 @@
 <script>
 import api from '@/api';
 import * as action_types from "@/store/action-types";
+import DocCallModal from "@/pages/DocCallModal";
 
 export default {
   name: 'DocCallRow',
+  components: {DocCallModal},
   props: {
     r: {
       type: Object,
@@ -63,12 +72,18 @@ export default {
   data() {
     return {
       status: this.r.status,
+      showModal: false,
     }
+  },
+  mounted() {
+    this.$root.$on('doc-call:row:modal:hide', () => {
+      this.showModal = false
+    });
   },
   methods: {
     async onChangeStatus() {
       await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message, status, executor, executor_fio} = await api(
+      const {ok, message, status, executor, executor_fio, inLog} = await api(
         'doctor-call/change-status', this.r, ['pk', 'status'], {prevStatus: this.status}
       );
       if (!ok) {
@@ -78,12 +93,13 @@ export default {
       }
       this.r.executor = executor;
       this.r.executor_fio = executor_fio;
+      this.r.inLog = inLog;
       this.status = this.r.status = status;
       await this.$store.dispatch(action_types.DEC_LOADING);
     },
     async setMeAsExecutor() {
       await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message, status, executor, executor_fio} = await api(
+      const {ok, message, status, executor, executor_fio, inLog} = await api(
         'doctor-call/change-executor', this.r, ['pk'], {prevExecutor: this.r.executor}
       );
       if (!ok) {
@@ -93,6 +109,7 @@ export default {
       }
       this.r.executor = executor;
       this.r.executor_fio = executor_fio;
+      this.r.inLog = inLog;
       this.status = this.r.status = status;
       await this.$store.dispatch(action_types.DEC_LOADING);
     },

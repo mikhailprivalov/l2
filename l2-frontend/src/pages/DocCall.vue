@@ -1,12 +1,15 @@
 <template>
   <div>
-    <div class="panel panel-default panel-flt" style="margin: 20px;">
+    <form class="panel panel-default panel-flt" style="margin: 20px;" @submit.prevent="load(null)">
       <div class="panel-body">
         <div class="row">
           <div class="col-xs-6">
             <div class="input-group">
               <span class="input-group-addon">Дата и время</span>
-              <input v-model="params.date" type="date" class="form-control" :disabled="Boolean(params.number)"/>
+              <span class="input-group-addon" style="padding: 0;border: none;">
+                <date-field-nav-2 v-model="params.date" right :disabled="Boolean(params.number)"
+                                  w="100%" :brn="false"/>
+              </span>
               <span class="input-group-addon" style="background-color: #fff;height: 34px;width: 1px"></span>
               <input v-model="params.time_start" type="time" class="form-control" :disabled="Boolean(params.number)"/>
               <span class="input-group-addon" style="background-color: #fff;color: #000; height: 34px">&mdash;</span>
@@ -25,7 +28,7 @@
           <div class="col-xs-3">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Номер</span>
-              <input v-model.trim="params.number" class="form-control" placeholder="без других параметров" />
+              <input v-model.trim="params.number" class="form-control" placeholder="без других параметров"/>
             </div>
           </div>
         </div>
@@ -37,6 +40,16 @@
                           placeholder="Больница не выбрана" v-model="params.hospital"
                           :append-to-body="true" :disabled="Boolean(params.number)"
               />
+            </div>
+
+            <div style="margin-top: 5px">
+              <button type="button" class="btn btn-blue-nb" @click="load(null)">
+                Загрузить данные
+              </button>
+
+              <div class="btn btn-link" @click="print">
+                <i class="fa fa-print"></i> Печать
+              </div>
             </div>
           </div>
           <div class="col-xs-3">
@@ -61,22 +74,20 @@
             <label>
               <input type="checkbox" v-model="params.is_external" :disabled="Boolean(params.number)"> Внешние заявки
             </label>
+            <br/>
             <label>
               <input type="checkbox" v-model="params.is_canceled"
                      :disabled="Boolean(params.number)"> Показать отмененные
             </label>
+            <br/>
+            <label>
+              <input type="checkbox" v-model="params.my_requests"
+                     :disabled="Boolean(params.number)"> Мои заявки
+            </label>
           </div>
         </div>
-
-        <div class="btn btn-blue-nb" @click="print" style="float: right;">
-          Печать
-        </div>
-
-        <div class="btn btn-blue-nb" @click="load(null)" style="margin-top: 5px;">
-          Загрузить данные
-        </div>
       </div>
-    </div>
+    </form>
     <div class="not-loaded" v-if="!loaded">
       Данные не загружены<br/>
       <a class="a-under" href="#" @click.prevent="load(null)">загрузить</a>
@@ -164,10 +175,11 @@ import Paginate from 'vuejs-paginate';
 import api from '@/api';
 import * as action_types from '@/store/action-types';
 import DocCallRow from "@/pages/DocCallRow";
+import DateFieldNav2 from "@/fields/DateFieldNav2";
 
 export default {
   name: 'DocCall',
-  components: {DocCallRow, Treeselect, Paginate},
+  components: {DateFieldNav2, DocCallRow, Treeselect, Paginate},
   data() {
     return {
       districts: [],
@@ -180,6 +192,7 @@ export default {
         date: moment().format('YYYY-MM-DD'),
         district: -1,
         is_canceled: false,
+        my_requests: false,
         is_external: false,
         purpose: -1,
         doc_assigned: -1,
@@ -205,6 +218,7 @@ export default {
         'date',
         'district',
         'is_canceled',
+        'my_requests',
         'is_external',
         'purpose',
         'doc_assigned',
@@ -218,7 +232,7 @@ export default {
     watchParams: {
       deep: true,
       handler() {
-        this.loaded = false;
+        this.load(null);
       },
     },
   },

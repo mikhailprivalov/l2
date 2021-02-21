@@ -252,7 +252,8 @@
       <div slot="body" class="an-body">
         <div class="an-sidebar">
           <div class="an-s" :class="{active: an_state.tab === 'text'}" @click="an_tab('text')">Анамнез</div>
-          <div class="an-s" :class="{active: an_state.tab === 'history'}" @click="an_tab('history')">История изменений
+          <div class="an-s" :class="{active: an_state.tab === 'history'}" @click="an_tab('history')">
+            История изменений
           </div>
         </div>
         <div class="an-content">
@@ -1107,99 +1108,6 @@
         .filter-option {
           text-overflow: ellipsis;
         }
-      }
-    }
-  }
-
-  .an {
-    align-items: stretch !important;
-    justify-content: stretch !important;
-
-    /deep/ .panel-flt {
-      margin: 41px;
-      align-self: stretch !important;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /deep/ .panel-body {
-      flex: 1;
-      padding: 0;
-      height: calc(100% - 91px);
-      min-height: 200px;
-      position: relative;
-    }
-
-    &-body {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: stretch;
-      flex-direction: row;
-      flex-wrap: nowrap;
-      align-content: stretch;
-
-      & > div {
-        align-self: stretch;
-      }
-    }
-
-    &-sidebar {
-      width: 100px;
-      background: rgba(0, 0, 0, .04);
-      border-right: 1px solid rgba(0, 0, 0, .16);
-      overflow-y: auto;
-      overflow-x: hidden;
-    }
-
-    &-content {
-      display: flex;
-      flex-direction: column;
-      width: calc(100% - 100px);
-
-      & > div {
-        flex: 1;
-        padding: 5px 10px;
-        overflow-y: auto;
-      }
-    }
-
-    &-history > div {
-      margin-bottom: 10px;
-      padding: 5px;
-      background: rgba(#000, .1);
-      border-radius: 5px;
-    }
-
-    &-s {
-      padding: 5px;
-      margin: 5px;
-      border-radius: 5px;
-      border: 1px solid rgba(0, 0, 0, 0.14);
-      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.07) 100%);
-
-      &:not(.active) {
-        cursor: pointer;
-        transition: all .2s cubic-bezier(.25, .8, .25, 1);
-      }
-
-      position: relative;
-
-      &.active {
-        background-image: linear-gradient(#6C7A89, #56616c);
-        color: #fff;
-      }
-
-      &:not(.active):hover {
-        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-        z-index: 1;
-        transform: scale(1.008);
       }
     }
   }
