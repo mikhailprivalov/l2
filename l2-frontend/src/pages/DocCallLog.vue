@@ -71,6 +71,7 @@ export default {
       this.r.executor_fio = executor_fio;
       this.r.status = status;
       this.r.inLog = inLog;
+      this.$root.$emit('doc-call:status:updated', this.r.pk);
       await this.$store.dispatch(action_types.DEC_LOADING);
       await this.loadRows();
     },

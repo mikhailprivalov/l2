@@ -219,14 +219,13 @@ def change_status(request):
             return JsonResponse({
                 "ok": False,
                 "message": "Редактирование запрещено",
+                **call.get_status_data(),
             })
         if call.status != prev_status:
             return JsonResponse({
                 "ok": False,
                 "message": "Статус уже обновлён",
-                "status": call.status,
-                "executor": call.executor_id,
-                "executor_fio": call.executor.get_fio() if call.executor else None,
+                **call.get_status_data(),
             })
         if call.status != status:
             log: DoctorCallLog = DoctorCallLog(call=call, author=request.user.doctorprofile, status_update_from=call.status, status_update_to=status)
@@ -237,9 +236,7 @@ def change_status(request):
             call.save(update_fields=['status', 'need_send_status'])
     return JsonResponse({
         "ok": True,
-        "status": status,
-        "executor": call.executor_id,
-        "executor_fio": call.executor.get_fio() if call.executor else None,
+        **call.get_status_data(),
     })
 
 

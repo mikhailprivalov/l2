@@ -110,6 +110,13 @@ export default {
       status: this.r.status,
     }
   },
+  mounted() {
+    this.$root.$on('doc-call:status:updated', pk => {
+      if (pk === this.r.pk) {
+        this.status = this.r.status;
+      }
+    });
+  },
   methods: {
     async onChangeStatus() {
       await this.$store.dispatch(action_types.INC_LOADING);
@@ -123,9 +130,10 @@ export default {
       }
       this.r.executor = executor;
       this.r.executor_fio = executor_fio;
-      this.status = this.r.status = status;
+      this.r.status = status;
       this.r.inLog = inLog;
       this.$root.$emit('doc-call:log:update');
+      this.$root.$emit('doc-call:status:updated', this.r.pk);
       await this.$store.dispatch(action_types.DEC_LOADING);
     },
     async setMeAsExecutor() {
@@ -140,9 +148,10 @@ export default {
       }
       this.r.executor = executor;
       this.r.executor_fio = executor_fio;
-      this.status = this.r.status = status;
+      this.r.status = status;
       this.r.inLog = inLog;
       this.$root.$emit('doc-call:log:update');
+      this.$root.$emit('doc-call:status:updated', this.r.pk);
       await this.$store.dispatch(action_types.DEC_LOADING);
     },
     hide() {

@@ -79,6 +79,11 @@ export default {
     this.$root.$on('doc-call:row:modal:hide', () => {
       this.showModal = false
     });
+    this.$root.$on('doc-call:status:updated', pk => {
+      if (pk === this.r.pk) {
+        this.status = this.r.status;
+      }
+    });
   },
   methods: {
     async onChangeStatus() {
@@ -94,7 +99,8 @@ export default {
       this.r.executor = executor;
       this.r.executor_fio = executor_fio;
       this.r.inLog = inLog;
-      this.status = this.r.status = status;
+      this.r.status = status;
+      this.$root.$emit('doc-call:status:updated', this.r.pk);
       await this.$store.dispatch(action_types.DEC_LOADING);
     },
     async setMeAsExecutor() {
@@ -110,7 +116,8 @@ export default {
       this.r.executor = executor;
       this.r.executor_fio = executor_fio;
       this.r.inLog = inLog;
-      this.status = this.r.status = status;
+      this.r.status = status;
+      this.$root.$emit('doc-call:status:updated', this.r.pk);
       await this.$store.dispatch(action_types.DEC_LOADING);
     },
   },
