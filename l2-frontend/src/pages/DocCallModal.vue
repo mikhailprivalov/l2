@@ -65,13 +65,7 @@
           </div>
           <div class="an-sidebar-content-row">
             <div class="an-sidebar-content-row-header">Статус:</div>
-            <select v-model="r.status" @change="onChangeStatus" :readonly="r.isMainExternal || !r.canEdit"
-                    class="form-control">
-              <option :value="1">Новая заявка</option>
-              <option :value="2">В работе</option>
-              <option :value="3">Выполнено</option>
-              <option :value="4">Отмена</option>
-            </select>
+            <div>{{statusText}}</div>
           </div>
         </div>
       </div>
@@ -105,37 +99,17 @@ export default {
       type: Object,
     }
   },
-  data() {
-    return {
-      status: this.r.status,
-    }
-  },
-  mounted() {
-    this.$root.$on('doc-call:status:updated', pk => {
-      if (pk === this.r.pk) {
-        this.status = this.r.status;
-      }
-    });
+  computed: {
+    statusText() {
+      return {
+        1: 'Новая заявка',
+        2: 'В работе',
+        3: 'Выполнено',
+        4: 'Отмена',
+      }[this.r.status];
+    },
   },
   methods: {
-    async onChangeStatus() {
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message, status, executor, executor_fio, inLog} = await api(
-        'doctor-call/change-status', this.r, ['pk', 'status'], {prevStatus: this.status}
-      );
-      if (!ok) {
-        errmessage(message);
-      } else {
-        okmessage('Статус обновлён успешно');
-      }
-      this.r.executor = executor;
-      this.r.executor_fio = executor_fio;
-      this.r.status = status;
-      this.r.inLog = inLog;
-      this.$root.$emit('doc-call:log:update');
-      this.$root.$emit('doc-call:status:updated', this.r.pk);
-      await this.$store.dispatch(action_types.DEC_LOADING);
-    },
     async setMeAsExecutor() {
       await this.$store.dispatch(action_types.INC_LOADING);
       const {ok, message, status, executor, executor_fio, inLog} = await api(

@@ -1,38 +1,22 @@
 <template>
   <fragment>
-    <td>
+    <td v-tippy="{html: '#template-' + r.pk + '-1', ...commonTippy}">
       {{ r.num }}{{ r.externalNum ? ` — ${r.externalNum}` : '' }}
       <div v-if="r.isMainExternal">в больнице</div>
     </td>
-    <td>
+    <td v-tippy="{html: '#template-' + r.pk + '-2', ...commonTippy}">
       {{ r.createdAt }}<br/>
       {{ r.createdAtTime }}
     </td>
-    <td>{{ r.execAt }}</td>
-    <td>
+    <td v-tippy="{html: '#template-' + r.pk + '-3', ...commonTippy}">
       <div>{{ r.card }}</div>
       <div>{{ r.address }}</div>
       <div v-if="r.email">{{ r.email }}</div>
-      <div>
-        <button type="button" class="btn btn-blue-nb btn-sm" @click="showModal = true"
-                v-if="!r.isMainExternal && r.canEdit" style="margin-top: 3px;">
-          Редактирование (в журнале: {{r.inLog}})
-        </button>
-        <DocCallModal :r="r" v-if="showModal"/>
-      </div>
     </td>
-    <td>
-      {{ r.hospital }}<br/>
-      {{ r.district }}
-    </td>
-    <td>{{ r.phone }}</td>
-    <td>{{ r.purpose }}</td>
-    <td>
-      {{ r.research }}<br/>
-      {{ r.docAssigned }}
-    </td>
-    <td>{{ r.comment }}</td>
-    <td>
+    <td v-tippy="{html: '#template-' + r.pk + '-4', ...commonTippy}">{{ r.phone }}</td>
+    <td v-tippy="{html: '#template-' + r.pk + '-5', ...commonTippy}">{{ r.purpose }}</td>
+    <td v-tippy="{html: '#template-' + r.pk + '-6', ...commonTippy}">{{ r.comment }}</td>
+    <td v-tippy="{html: '#template-' + r.pk + '-7', ...commonTippy}">
       <div v-if="r.isMainExternal">
         внешняя больница
       </div>
@@ -46,7 +30,7 @@
         <a href="#" @click.prevent="setMeAsExecutor" class="a-under">назначить меня</a>
       </div>
     </td>
-    <td>
+    <td v-tippy="{html: '#template-' + r.pk + '-8', ...commonTippy}">
       <select v-model="r.status" @change="onChangeStatus" :readonly="r.isMainExternal || !r.canEdit">
         <option :value="1">Новая заявка</option>
         <option :value="2">В работе</option>
@@ -54,6 +38,31 @@
         <option :value="4">Отмена</option>
       </select>
     </td>
+    <td>
+      <button type="button" class="btn btn-blue-nb btn-sm" @click="showModal = true"
+              v-if="!r.isMainExternal && r.canEdit" style="margin-top: 3px;">
+        История заявки
+      </button>
+
+      <div>Записей: {{ r.inLog }}</div>
+
+      <DocCallModal :r="r" v-if="showModal"/>
+    </td>
+
+    <div :id="`template-${r.pk}-${t}`" class="tp" v-for="t in tpls">
+      <div>
+        Больница: {{ r.hospital || 'нет' }}
+      </div>
+      <div>
+        Участок: {{ r.district || 'нет' }}
+      </div>
+      <div>
+        Услуга: {{ r.research || 'нет' }}
+      </div>
+      <div>
+        Врач: {{ r.docAssigned || 'нет' }}
+      </div>
+    </div>
   </fragment>
 </template>
 <script>
@@ -70,9 +79,17 @@ export default {
     }
   },
   data() {
+    const tpls = [];
+    for (let i = 1; i <= 8; i++) {
+      tpls.push(i);
+    }
     return {
       status: this.r.status,
       showModal: false,
+      tpls,
+      commonTippy: {
+        reactive: true, animateFill: false, duration: 200, delay: [250, 0],
+      },
     }
   },
   mounted() {
@@ -123,3 +140,11 @@ export default {
   },
 }
 </script>
+
+<style scoped lang="scss">
+.tp {
+  text-align: left;
+  line-height: 1.1;
+  font-size: 14px;
+}
+</style>

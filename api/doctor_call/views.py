@@ -139,8 +139,10 @@ def cancel_row(request):
 def search(request):
     request_data = json.loads(request.body)
     district = int(request_data.get("district", -1))
+    status = int(request_data.get("status", -1))
     cancel = request_data["is_canceled"]
     my_requests = request_data.get('my_requests', False)
+    without_date = request_data.get('without_date', False)
     doc_assigned = int(request_data.get("doc", -1))
     purpose_id = int(request_data.get("purpose", -1))
     hospital = int(request_data.get("hospital", -1))
@@ -163,33 +165,40 @@ def search(request):
         else:
             doc_call = doc_call.filter(Q(pk=just_number) | Q(external_num=number))
     else:
-        if external:
-            filters = {}
-            if not request.user.doctorprofile.all_hospitals_users_control:
-                filters['hospital_id'] = request.user.doctorprofile.get_hospital_id() or -1
-            doc_call = DoctorCall.objects.filter(
-                create_at__range=[datetime_start, datetime_end], **filters
-            )
-        else:
-            doc_call = DoctorCall.objects.filter(create_at__range=[datetime_start, datetime_end])
+        filters = {
+            'is_external': external,
+            'cancel': cancel,
+        }
+
+        if not without_date:
+            filters['create_at__range'] = [datetime_start, datetime_end]
+
+        if status != -1:
+            filters['status'] = status
+
+        if external and not request.user.doctorprofile.all_hospitals_users_control:
+            filters['hospital_id'] = request.user.doctorprofile.get_hospital_id() or -1
 
         if my_requests:
-            doc_call = doc_call.filter(executor=request.user.doctorprofile)
-
-        doc_call = doc_call.filter(is_external=external, cancel=cancel)
+            filters['executor'] = request.user.doctorprofile
 
         if hospital > -1:
-            doc_call = doc_call.filter(hospital__pk=hospital)
+            filters['hospital_id'] = hospital
+        elif hospital == -2:
+            filters['hospital_id'] = None
+
         if doc_assigned > -1:
-            doc_call = doc_call.filter(doc_assigned__pk=doc_assigned)
+            filters['doc_assigned__pk'] = doc_assigned
         if district > -1:
-            doc_call = doc_call.filter(district_id__pk=district)
+            filters['district_id'] = district
         if purpose_id > -1:
-            doc_call = doc_call.filter(purpose=purpose_id)
+            filters['purpose'] = purpose_id
+
+        doc_call = DoctorCall.objects.filter(**filters)
 
     if external:
         doc_call = doc_call.order_by('hospital', 'pk')
-    elif hospital + doc_assigned + district + purpose_id > -4:
+    elif (hospital if hospital >= -1 else 1) + doc_assigned + district + purpose_id > -4:
         doc_call = doc_call.order_by("pk")
     else:
         doc_call = doc_call.order_by("district__title")
