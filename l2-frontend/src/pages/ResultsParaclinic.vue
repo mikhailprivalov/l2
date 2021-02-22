@@ -253,7 +253,7 @@
                   <a href="#"
                      class="btn btn-blue-nb"
                      v-if="data.status_disp === 'need'"
-                     @click.prevent="add_researches(data.researches[0], data.disp_data.filter(d => !d[2]).map(d => d[0]), true)">
+                     @click.prevent="add_researches(data.researches[0], data.disp_data.filter(d => !d[2]).map(d => d[0]))">
                     Выбрать требуемые
                   </a>
                   <a href="#"
