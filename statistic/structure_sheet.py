@@ -569,8 +569,6 @@ def statistic_message_ticket_base(ws1, d1, d2):
     ws1.cell(row=1, column=1).value = 'Обращения'
     ws1.cell(row=2, column=1).value = 'Период:'
     ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
-
-
     columns = [
         ('МО', 20),
         ('Номер', 20),
@@ -600,8 +598,6 @@ def statistic_message_ticket_data(ws1, message_ticket_sql):
     style_border_res.font = Font(bold=False, size=11)
     style_border_res.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
     r = 4
-
-
     purposes = dict(DoctorCall.PURPOSES)
     statuses = dict(DoctorCall.STATUS)
     for ticket in message_ticket_sql:
