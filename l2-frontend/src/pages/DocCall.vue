@@ -11,9 +11,11 @@
                                   w="100%" :brn="false"/>
               </span>
               <span class="input-group-addon" style="background-color: #fff;height: 34px;width: 1px"></span>
-              <input v-model="params.time_start" type="time" class="form-control" :disabled="Boolean(params.number|| params.without_date)"/>
+              <input v-model="params.time_start" type="time" class="form-control"
+                     :disabled="Boolean(params.number|| params.without_date)"/>
               <span class="input-group-addon" style="background-color: #fff;color: #000; height: 34px">&mdash;</span>
-              <input v-model="params.time_end" type="time" class="form-control" :disabled="Boolean(params.number|| params.without_date)"/>
+              <input v-model="params.time_end" type="time" class="form-control"
+                     :disabled="Boolean(params.number|| params.without_date)"/>
             </div>
           </div>
           <div class="col-xs-3">
@@ -84,7 +86,8 @@
             <input type="checkbox" v-model="params.is_external" :disabled="Boolean(params.number)"> Внешние заявки
           </label>
           <label class="checkbox-inline">
-            <input type="checkbox" v-model="params.without_date" :disabled="Boolean(params.number)"> Искать по всем датам
+            <input type="checkbox" v-model="params.without_date" :disabled="Boolean(params.number)"> Искать по всем
+            датам
           </label>
           <label class="checkbox-inline">
             <input type="checkbox" v-model="params.is_canceled"
@@ -304,6 +307,12 @@ export default {
 
 </script>
 
+<style>
+.pagination {
+  margin-top: 0 !important;
+}
+</style>
+
 <style lang="scss" scoped>
 .not-loaded {
   text-align: center;
@@ -317,5 +326,6 @@ export default {
 .founded {
   text-align: center;
   padding: 5px;
+  margin-top: -5px;
 }
 </style>
