@@ -987,7 +987,6 @@ def form_08(request_data):
     else:
         locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
 
-    # Генерировать pdf-Лист на оплату
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
