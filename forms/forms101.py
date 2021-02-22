@@ -897,7 +897,6 @@ def form_06(request_data):
         )
     )
 
-    objs.append(FrameBreak())
 
     objs.append(Spacer(1, 1.5 * mm))
     objs.append(
