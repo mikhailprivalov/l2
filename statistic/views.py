@@ -1494,12 +1494,12 @@ def statistic_xls(request):
                     font_style.alignment.horz = 3
                 ws.write(row_num, col_num, row[col_num], font_style)
     elif tp == "message-ticket":
-        response['Content-Disposition'] = str.translate("attachment; filename=\"Обращения.xlsx\"", tr)
+        filters = {'pk': int(request_data.get("hospital"))}
         any_hospital = request.user.doctorprofile.all_hospitals_users_control
-        filters = {}
-        filters['pk'] = int(request_data.get("hospital"))
         if not any_hospital:
             filters['pk'] = request.user.doctorprofile.get_hospital_id()
+
+        response['Content-Disposition'] = str.translate(f"attachment; filename=\"Обращения {date_start_o.replace('.', '')} {date_end_o.replace('.', '')} {filters['pk']}.xlsx\"", tr)
 
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))

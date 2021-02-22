@@ -7,13 +7,18 @@
             <div class="input-group">
               <span class="input-group-addon">Дата и время</span>
               <span class="input-group-addon" style="padding: 0;border: none;">
-                <date-field-nav-2 v-model="params.date" right :disabled="Boolean(params.number || params.without_date)"
+                <date-field-nav-2 v-model="params.date" right
+                                  :disabled="Boolean(params.number || params.without_date)"
                                   w="100%" :brn="false"/>
               </span>
-              <span class="input-group-addon" style="background-color: #fff;height: 34px;width: 1px"></span>
+              <span class="input-group-addon addon-splitter"
+                    :class="{disabled: Boolean(params.number || params.without_date)}"
+                    style="height: 34px;width: 1px"></span>
               <input v-model="params.time_start" type="time" class="form-control"
                      :disabled="Boolean(params.number|| params.without_date)"/>
-              <span class="input-group-addon" style="background-color: #fff;color: #000; height: 34px">&mdash;</span>
+              <span class="input-group-addon addon-splitter"
+                    :class="{disabled: Boolean(params.number || params.without_date)}"
+                    style="color: #000; height: 34px">&mdash;</span>
               <input v-model="params.time_end" type="time" class="form-control"
                      :disabled="Boolean(params.number|| params.without_date)"/>
             </div>
@@ -340,5 +345,12 @@ export default {
   text-align: center;
   padding: 5px;
   margin-top: -5px;
+}
+
+.addon-splitter {
+  background-color: #fff;
+  &.disabled {
+    opacity: .4;
+  }
 }
 </style>
