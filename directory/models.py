@@ -369,10 +369,9 @@ class ParaclinicInputGroups(models.Model):
     order = models.IntegerField()
     hide = models.BooleanField()
     visibility = models.TextField(default='', blank=True)
-    attached = models.CharField(max_length=20, help_text='Скреплено с группой другой слуги', blank=True, default=None, null=True, db_index=True)
 
     def __str__(self):
-        return f"{self.research.title}-{self.title}"
+        return f"{self.research.title} – {self.title}"
 
     class Meta:
         verbose_name = 'Группы'
@@ -447,7 +446,7 @@ class ParaclinicInputField(models.Model):
         return title
 
     def __str__(self):
-        return f"{self.group.research.title}-{self.title}"
+        return f"{self.group.research.title} - {self.title}"
 
     class Meta:
         verbose_name = 'Поля'
