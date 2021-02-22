@@ -1246,7 +1246,7 @@ def form_09(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
-        buffer, pagesize=A4, leftMargin=13 * mm, rightMargin=4 * mm, topMargin=4 * mm, bottomMargin=4 * mm, allowSplitting=1, title="Форма {}".format("ИНФОРМИРОВАННОЕ СОГЛАСИЕ ПАЦИЕНТА на медикаментозное прерывание беременности в I триместре")
+        buffer, pagesize=A4, leftMargin=13 * mm, rightMargin=4 * mm, topMargin=4 * mm, bottomMargin=4 * mm, allowSplitting=1, title="Форма {}".format("СОГЛАСИЕ ПАЦИЕНТА на прерывание беременности в I триместре")
     )
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
