@@ -897,7 +897,6 @@ def form_06(request_data):
         )
     )
 
-
     objs.append(Spacer(1, 1.5 * mm))
     objs.append(
         Paragraph(
@@ -952,6 +951,7 @@ def form_06(request_data):
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
+
 
 def form_08(request_data):
     """
@@ -1041,6 +1041,8 @@ def form_08(request_data):
     styleT = deepcopy(style)
     styleT.firstLineIndent = 0
 
+    objs = []
+                          
     opinion = [
         [
             Paragraph('', style),
@@ -1062,7 +1064,10 @@ def form_08(request_data):
     objs.append(tbl)
 
     objs.append(
-        Paragraph('СОГЛАСИЕ <br/> Инфорованное добровольное согласие на виды <br/> медицинских вмешательств, включенные в Перечень определенных <br/> видов медицинских вмешательств, на которые граждане дают <br/> информированное добровольное согласие при выборе врача <br/> И медицинской организации для получения первичной <br/> медико-санитарной помощи {}'.format(who_patient), styleCenterBold),
+        Paragraph(
+            'СОГЛАСИЕ <br/> Инфорованное добровольное согласие на виды <br/> медицинских вмешательств, включенные в Перечень определенных <br/> видов медицинских вмешательств, на которые граждане дают <br/> информированное добровольное согласие при выборе врача <br/> И медицинской организации для получения первичной <br/> медико-санитарной помощи {}'.format(who_patient), 
+            styleCenterBold
+        ),
     )
 
     d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
@@ -1086,7 +1091,6 @@ def form_08(request_data):
     hospital: Hospitals = request_data["hospital"]
 
     hospital_name = hospital.safe_short_title
-    hospital_address = hospital.safe_address
 
     if agent_status:
         opinion = [
@@ -1114,7 +1118,6 @@ def form_08(request_data):
 
         objs.extend(opinion)
 
-    
     objs.append(
         Paragraph(
             'Даю информированное добровольное согласие на виды медицинских вмешательств, включенные в" '
@@ -1136,8 +1139,6 @@ def form_08(request_data):
     objs.append(Paragraph(f"<u>{hospital_name}</u>", styleSign))
     objs.append(Paragraph('<br/>_____________________________________________________________________________________', styleSign))
     objs.append(Paragraph('(должность, фамилия, имя, отчество медицинского работника)', styleCenter))
-
-
 
     objs.append(
         Paragraph(
@@ -1166,11 +1167,6 @@ def form_08(request_data):
     )
     space_bottom = ' &nbsp;'
 
-    sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
-    sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
-    sign_fio_doc = '(Ф.И.О. медицинского работника)'
-
-
     objs.append(Spacer(1, 9 * mm))
     objs.append(Paragraph('', style))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
@@ -1179,14 +1175,13 @@ def form_08(request_data):
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('{}'.format(person_data['fio']), styleCenter))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph('(подпись){0}(Ф.И.О. гражданина или законного представителя гражданина){1}'.format(22*space_bottom, 30*space_bottom), styleCenter))
+    objs.append(Paragraph('(подпись){0}(Ф.И.О. гражданина или законного представителя гражданина){1}'.format(22 * space_bottom, 30 * space_bottom), styleCenter))
 
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('{}'.format(space_bottom), style))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph('(подпись){0}(Ф.И.О. медицинского работника){1}'.format(33*space_bottom, 43*space_bottom), styleCenter))
+    objs.append(Paragraph('(подпись){0}(Ф.И.О. медицинского работника){1}'.format(33 * space_bottom, 43 * space_bottom), styleCenter))
 
-    date_year = datetime.datetime.now().strftime('%Y')
     objs.append(Spacer(1, 5 * mm))
 
     styleSign = deepcopy(style)
@@ -1197,7 +1192,6 @@ def form_08(request_data):
     objs.append(Paragraph('{} г.'.format(date_now), style))
     objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
     objs.append(Paragraph('{}(дата оформления)'.format(3 * space_bottom), styleSign))
-
 
     objs.append(Paragraph('', style))
     objs.append(Paragraph('', style))
@@ -1215,6 +1209,7 @@ def form_08(request_data):
     buffer.close()
     return pdf
 
+                          
 def form_09(request_data):
     """
     ИНФОРМИРОВАННОЕ СОГЛАСИЕ ПАЦИЕНТА
@@ -1308,9 +1303,6 @@ def form_09(request_data):
     styleLeft.alignment = TA_LEFT
 
     hospital: Hospitals = request_data["hospital"]
-
-    hospital_name = hospital.safe_short_title
-    hospital_address = hospital.safe_address
 
     objs.append(
         Paragraph(
@@ -1420,14 +1412,17 @@ def form_09(request_data):
                   'Я, {}  хочу прервать беременость,'
                   'медикаментозным способом. Я прочитала и понимаю все, о чем говорится в данном '
                   'информационном согласии. На все свои вопросы я получила ответы. Я знаю, куда я могу обратиться в '
-                  'случае, если мне понадобится неотложная медицинская помощь'.format(person_data['fio'], date_individual_born), style))
+                  'случае, если мне понадобится неотложная медицинская помощь'.format(person_data['fio'], date_individual_born), 
+            style
+        )
+    )
 
     space_bottom = ' &nbsp;'
 
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('Пациент {0} {1}'.format(20*space_bottom, person_data['fio']), style))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph('<font size=9 >{0}(Ф.И.О.){1}(Подпись)</font size>'.format(38*space_bottom, 40*space_bottom), style))
+    objs.append(Paragraph('<font size=9 >{0}(Ф.И.О.){1}(Подпись)</font size>'.format(38 * space_bottom, 40 * space_bottom), style))
 
     objs.append(
         Paragraph(
@@ -1440,22 +1435,20 @@ def form_09(request_data):
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('Врач', style))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph('<font size=9 >{0}(Ф.И.О.){1}(Подпись)</font size>'.format(38*space_bottom, 40*space_bottom), style))
+    objs.append(Paragraph('<font size=9 >{0}(Ф.И.О.){1}(Подпись)</font size>'.format(38 * space_bottom, 40 * space_bottom), style))
 
     date_year = datetime.datetime.now().strftime('%Y')
     objs.append(Spacer(1, 5 * mm))
 
-
-
     styleSign = deepcopy(style)
     styleSign.firstLineIndent = 0
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('\"___\"____________{} '.format(date_year, 30 * space_bottom), styleSign))
+    objs.append(Paragraph('\"___\"____________{} '.format(date_year), styleSign))
  
-    objs.append(PageBreak()) # Генерировать втрое согласие pdf-Лист 
+    objs.append(PageBreak())  # Генерировать втрое согласие pdf-Лист 
 
     objs.append(
-        Paragraph('ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА <br/> ПРОВЕДЕНИЕ ИСКУССТВЕННОГО ПРЕРЫВАНИЯ  <br/> БЕРЕМЕННОСТИ ПО ЖЕЛАНИЮ ЖЕНЩИНЫ'.format(who_patient), styleCenterBold),
+        Paragraph('ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА <br/> ПРОВЕДЕНИЕ ИСКУССТВЕННОГО ПРЕРЫВАНИЯ  <br/> БЕРЕМЕННОСТИ ПО ЖЕЛАНИЮ ЖЕНЩИНЫ', styleCenterBold),
     )
 
     objs.append(Spacer(1, 3 * mm))
@@ -1566,7 +1559,6 @@ def form_09(request_data):
             style,
         )
     )
-
 
     objs.append(
         Paragraph(
@@ -1701,7 +1693,7 @@ def form_09(request_data):
         )
     )
 
-    objs.append(PageBreak()) # Генерировать третью страницу
+    objs.append(PageBreak())  # Генерировать третью страницу
 
     objs.append(
         Paragraph(
@@ -1736,10 +1728,10 @@ def form_09(request_data):
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('Пациент {0} {1}'.format(20*space_bottom, person_data['fio']), style))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph('<font size=9 >{0}(Ф.И.О.){1}(Подпись)</font size>'.format(38*space_bottom, 40*space_bottom), style))
+    objs.append(Paragraph('<font size=9 >{0}(Ф.И.О.){1}(Подпись)</font size>'.format(38 * space_bottom, 40 * space_bottom), style))
 
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('Дата \"___\"____________{} '.format(date_year, 30 * space_bottom), styleSign))
+    objs.append(Paragraph('Дата \"___\"____________{} '.format(date_year), styleSign))
 
     objs.append(
         Paragraph(
@@ -1751,7 +1743,6 @@ def form_09(request_data):
         )
     )
 
-
     objs.append(
         Paragraph(
             '7. Подтверждаю, что рекомендовал пациентке проведение УЗИ органов малого таза для '
@@ -1761,14 +1752,14 @@ def form_09(request_data):
     )
 
     objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph('Врач акушер-гинеколог {0}'.format(20*space_bottom), style))
+    objs.append(Paragraph('Врач акушер-гинеколог {0}'.format(20 * space_bottom), style))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph('<font size=9 >{0}(Ф.И.О.){1}(Подпись)</font size>'.format(38*space_bottom, 40*space_bottom), style))
+    objs.append(Paragraph('<font size=9 >{0}(Ф.И.О.){1}(Подпись)</font size>'.format(38 * space_bottom, 40 * space_bottom), style))
 
     styleSign = deepcopy(style)
     styleSign.firstLineIndent = 0
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('\"___\"____________{} '.format(date_year, 30 * space_bottom), styleSign))
+    objs.append(Paragraph('\"___\"____________{} '.format(date_year), styleSign))
 
     objs.append(Paragraph('', style))
     objs.append(Paragraph('', style))
