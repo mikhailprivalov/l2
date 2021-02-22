@@ -1803,9 +1803,8 @@ def directions_patient_history(request):
     data = []
     request_data = json.loads(request.body)
 
-    researches_pk = []
     iss = Issledovaniya.objects.get(pk=request_data["pk"])
-    researches_pk.append(iss.research.pk)
+    researches_pk = [iss.research.pk]
     if iss.research.speciality:
         reserches_speciality = list(Researches.objects.values_list('pk', flat=True).filter(speciality=iss.research.speciality))
         if len(reserches_speciality) > 0:
@@ -1847,8 +1846,6 @@ def directions_data_by_fields(request):
                             data[field_dest.pk] = ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value
                             break
             return JsonResponse({"data": data})
-
-    return JsonResponse({"data": ''})
 
 
 @login_required
