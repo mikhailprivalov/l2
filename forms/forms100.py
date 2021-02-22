@@ -22,7 +22,7 @@ from appconf.manager import SettingManager
 from clients.models import Card, DispensaryReg, DispensaryRegPlans
 from directory.models import DispensaryPlan, Researches
 from hospitals.models import Hospitals
-from laboratory.settings import FONTS_FOLDER, CUSTOM_FORM_100_08_FORMAT
+from laboratory.settings import FONTS_FOLDER, FORM_100_08_A4_FORMAT
 from laboratory.utils import strdate
 from statistics_tickets.models import VisitPurpose
 from utils.dates import normalize_date
@@ -561,7 +561,7 @@ def form_03(request_data):
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
     buffer = BytesIO()
-    if CUSTOM_FORM_100_08_FORMAT:
+    if FORM_100_08_A4_FORMAT:
         doc = SimpleDocTemplate(
             buffer, pagesize=portrait(A4), leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("Профосомотры")
         )
@@ -572,7 +572,7 @@ def form_03(request_data):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
-    style.fontSize = 12 if CUSTOM_FORM_100_08_FORMAT else 10
+    style.fontSize = 12 if FORM_100_08_A4_FORMAT else 10
     style.leading = 12
     style.spaceAfter = 0.5 * mm
     styleBold = deepcopy(style)
@@ -675,7 +675,7 @@ def form_03(request_data):
     objs.extend(content_title)
 
     work_p = patient_data['work_place_db'] if patient_data['work_place_db'] else patient_data['work_place']
-    if CUSTOM_FORM_100_08_FORMAT:
+    if FORM_100_08_A4_FORMAT:
         objs.append(Paragraph(f'11. Место работы: <font fontname="PTAstraSerifBold" size=12> {work_p}</font>', style))
     else:
         objs.append(Paragraph(f"11. Место работы: {work_p}", style))
