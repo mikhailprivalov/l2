@@ -80,7 +80,7 @@
         </div>
         <div style="margin-top: 5px">
           <a href="#" class="a-under pull-right" @click.prevent="print">
-            <i class="fa fa-print"></i>Печать
+            Печать
           </a>
           <a href="#" class="a-under pull-right" @click.prevent="show_statistics_message_tickets" style="padding-right: 10px">
              Статистика
