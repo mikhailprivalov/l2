@@ -453,7 +453,6 @@ class ParaclinicInputField(models.Model):
         verbose_name_plural = 'Поля'
 
 
-
 class ParaclinicTemplateName(models.Model):
     DEFAULT_TEMPLATE_TITLE = 'По умолчанию'
 
