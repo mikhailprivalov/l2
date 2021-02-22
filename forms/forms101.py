@@ -1418,7 +1418,7 @@ def form_09(request_data):
     space_bottom = ' &nbsp;'
 
     objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph('Пациент {0} {1}'.format(20*space_bottom, person_data['fio']), style))
+    objs.append(Paragraph('Пациент {0} {1}'.format(20 * space_bottom, person_data['fio']), style))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
     objs.append(Paragraph('<font size=9 >{0}(Ф.И.О.){1}(Подпись)</font size>'.format(38 * space_bottom, 40 * space_bottom), style))
 
