@@ -1302,7 +1302,6 @@ def form_09(request_data):
     styleLeft = deepcopy(style)
     styleLeft.alignment = TA_LEFT
 
-
     objs.append(
         Paragraph(
             'Я проинформирована врачом о нижеследующем: ',
