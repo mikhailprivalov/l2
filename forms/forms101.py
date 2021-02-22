@@ -1043,10 +1043,6 @@ def form_08(request_data):
     styleT = deepcopy(style)
     styleT.firstLineIndent = 0
 
-    objs = []
-
-    objs = [
-    ]
     opinion = [
         [
             Paragraph('', style),
@@ -1297,10 +1293,6 @@ def form_09(request_data):
     styleJustified = deepcopy(style)
     styleJustified.alignment = TA_JUSTIFY
     styleJustified.spaceAfter = 4.5 * mm
-    styleJustified.fontSize = 12
-    styleJustified.leading = 4.5 * mm
-
-    objs = []
 
     objs = [
         Paragraph('ИНФОРМИРОВАННОЕ СОГЛАСИЕ ПАЦИЕНТА <br/> на медикаментозное прерывание беременности в I триместре {}'.format(who_patient), styleCenterBold),
