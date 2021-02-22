@@ -1,5 +1,6 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE
+from utils.db import namedtuplefetchall
 
 
 def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
@@ -288,3 +289,46 @@ def disp_diagnos(diagnos, d_s, d_e):
         )
         row = cursor.fetchall()
     return row
+
+
+def message_ticket(hospitals_id, d_s, d_e):
+    """
+    :return:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """ 
+            SELECT 
+                doctor_call_doctorcall.id as num,
+                doctor_call_doctorcall.external_num,
+                to_char(doctor_call_doctorcall.create_at AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_create,
+                doctor_call_doctorcall.comment,
+                doctor_call_doctorcall.phone,
+                doctor_call_doctorcall.address,
+                doctor_call_doctorcall.email,	  
+                hospitals_hospitals.title as hospital_title,
+                hospitals_hospitals.short_title as hospital_short_title,
+                doctor_call_doctorcall.purpose,
+                doctor_call_doctorcall.status,
+                clients_individual.name,
+                clients_individual.family,
+                clients_individual.patronymic,
+                to_char(clients_individual.birthday, 'DD.MM.YYYY') as birthday,
+                doctor_call_doctorcall.hospital_id as hospital_id 
+                FROM doctor_call_doctorcall
+                LEFT JOIN hospitals_hospitals ON
+                hospitals_hospitals.id=doctor_call_doctorcall.hospital_id
+                LEFT JOIN clients_card ON
+                clients_card.id=doctor_call_doctorcall.client_id
+                LEFT JOIN clients_individual ON
+                clients_individual.id=clients_card.individual_id
+                WHERE doctor_call_doctorcall.create_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
+                AND hospital_id = ANY(%(hospitals_id)s)
+                ORDER BY doctor_call_doctorcall.hospital_id, doctor_call_doctorcall.create_at 
+ 
+            """,
+            params={'hospitals_id': hospitals_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows

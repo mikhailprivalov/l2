@@ -16,12 +16,13 @@ from clients.models import CardBase
 from contracts.models import Company
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
+from hospitals.models import Hospitals
 from laboratory import settings
 from laboratory import utils
 from researches.models import Tubes
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
-from utils.dates import try_parse_range
+from utils.dates import try_parse_range, normalize_date
 from . import sql_func
 from . import structure_sheet
 from directory.models import HospitalService
@@ -114,15 +115,18 @@ def statistic_xls(request):
     borders.top = xlwt.Borders.THIN
     borders.bottom = xlwt.Borders.THIN
 
+    if "-" in date_start_o:
+        date_start_o = normalize_date(date_start_o)
+        date_end_o = normalize_date(date_end_o)
+
     date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
     if date_start and date_end:
         delta = date_end - date_start
-
         if abs(delta.days) > 60:
             slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
             return JsonResponse({
-                "error": "Слишком широкий диапазон"
+                "error": "period max - 60 days"
             })
 
     if date_start_o != "" and date_end_o != "":
@@ -1489,6 +1493,27 @@ def statistic_xls(request):
                     font_style.alignment.wrap = 3
                     font_style.alignment.horz = 3
                 ws.write(row_num, col_num, row[col_num], font_style)
+    elif tp == "message-ticket":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Обращения.xlsx\"", tr)
+        any_hospital = request.user.doctorprofile.all_hospitals_users_control
+        filters = {}
+        filters['pk'] = int(request_data.get("hospital"))
+        if not any_hospital:
+            filters['pk'] = request.user.doctorprofile.get_hospital_id()
+
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Обращения")
+        if int(filters['pk']) == -1 and any_hospital:
+            filters = {}
+        rows_hosp = list(Hospitals.objects.values_list('pk', flat=True).filter(hide=False, **filters))
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        ws = structure_sheet.statistic_message_ticket_base(ws, date_start_o, date_end_o)
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        message_ticket_sql = sql_func.message_ticket(rows_hosp, start_date, end_date)
+        ws = structure_sheet.statistic_message_ticket_data(ws, message_ticket_sql)
 
     wb.save(response)
     return response

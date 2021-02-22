@@ -1305,12 +1305,12 @@ def hospitals(request):
         default_hospital = [
             {
                 "id": -1,
-                "label": "Любая",
+                "label": "Все",
                 "code_tfoms": "000000",
             },
             {
                 "id": -2,
-                "label": "Пустая",
+                "label": "Не выбрано",
                 "code_tfoms": "000001",
             },
         ]
