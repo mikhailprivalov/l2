@@ -1172,21 +1172,6 @@ def form_08(request_data):
     )
     space_bottom = ' &nbsp;'
 
-    """
-    objs.append(Paragraph('<br/>_____________________________________________________________________________________', styleSign))
-    objs.append(Paragraph('(Ф.И.О. гражданина, контактный телефон)', styleCenter))
-
-    objs.append(Paragraph('<br/>_____________   ________________________________________________________________________', styleSign))
-    objs.append(Paragraph('(подпись){0}(Ф.И.О. гражданина или законного представителя гражданина){1}'.format(22*space_bottom, 30*space_bottom), styleCenter))
-
-    objs.append(Paragraph('<br/>_____________   ________________________________________________________________________', styleSign))
-    objs.append(Paragraph('(подпись){0}(Ф.И.О. медицинского работника){1}'.format(33*space_bottom, 43*space_bottom), styleCenter))
-
-    #objs.append(Paragraph('<br/>______________     _______________________________________________________________________', styleSign))
-    #objs.append(Paragraph('(подпись){0}(Ф.И.О. медицинского работника){1}'.format(10*space_bottom, 30*space_bottom), styleCenter))
-    """
-
-
     sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
     sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
     sign_fio_doc = '(Ф.И.О. медицинского работника)'
@@ -1212,12 +1197,7 @@ def form_08(request_data):
 
     styleSign = deepcopy(style)
     styleSign.firstLineIndent = 0
-
-    """
-    objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('\"___\"____________{} '.format(date_year), styleSign))
-    """
-
+                          
     date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
     objs.append(Spacer(1, 5 * mm))
     objs.append(Paragraph('{} г.'.format(date_now), style))
