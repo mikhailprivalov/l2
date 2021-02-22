@@ -132,7 +132,7 @@
                   <div class="input-group">
                     <span class="input-group-addon">Название поля ({{row.pk === -1 ? 'новое' : row.pk}})</span>
                     <input type="text" class="form-control" v-model="row.title">
-                     <span class="input-group-addon">Наименование скрепки</span>
+                     <span class="input-group-addon">Скрепка</span>
                     <input type="text" class="form-control" v-model="row.attached">
                   </div>
                   <div v-if="row.field_type === 0">
