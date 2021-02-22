@@ -446,6 +446,14 @@ class ParaclinicInputField(models.Model):
         title = ', '.join([t for t in titles if t])
         return title
 
+    def __str__(self):
+        return f"{self.group.research.title}-{self.title}"
+
+    class Meta:
+        verbose_name = 'Поля'
+        verbose_name_plural = 'Поля'
+
+
 
 class ParaclinicTemplateName(models.Model):
     DEFAULT_TEMPLATE_TITLE = 'По умолчанию'

@@ -165,8 +165,8 @@ class ResParaclinicInputField(admin.ModelAdmin):
         'title',
         'group',
     )
-    list_filter = ('group',)
-    search_fields = ('group__pk',)
+    list_filter = ('group__research',)
+    search_fields = ('group__research__title',)
 
 
 class ResParaclinicInputGroups(admin.ModelAdmin):

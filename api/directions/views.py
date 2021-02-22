@@ -1831,16 +1831,22 @@ def directions_patient_history(request):
 def directions_data_by_fields(request):
     data = {}
     request_data = json.loads(request.body)
-    print(request_data["pk"])
-    print(request_data["pk_dest"])
     i = Issledovaniya.objects.get(pk=request_data["pk"])
     i_dest = Issledovaniya.objects.get(pk=request_data["pk_dest"])
-    if i.research == i_dest.research:
-        if i.time_confirmation:
+    if i.time_confirmation:
+        if i.research == i_dest.research:
             for field in ParaclinicInputField.objects.filter(group__research=i.research, group__hide=False, hide=False):
                 if ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists():
                     data[field.pk] = ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value
-        return JsonResponse({"data": data})
+            return JsonResponse({"data": data})
+        else:
+            for field in ParaclinicInputField.objects.filter(group__research=i.research, group__hide=False, hide=False):
+                if ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists():
+                    for field_dest in ParaclinicInputField.objects.filter(group__research=i_dest.research, group__hide=False, hide=False):
+                        if field_dest.attached == field.attached:
+                            data[field_dest.pk] = ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value
+                            break
+            return JsonResponse({"data": data})
 
     return JsonResponse({"data": ''})
 
