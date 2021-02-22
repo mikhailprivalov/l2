@@ -266,7 +266,7 @@ SENTRY_DSN = "https://4a6968777ec240b190abd11cbf1c96e1@sentry.io/3083440"
 
 QUERY_TIMEOUT = 120
 
-CUSTOM_FORM_100_08_FORMAT = False
+FORM_100_08_A4_FORMAT = False
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
