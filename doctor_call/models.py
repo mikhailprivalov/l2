@@ -73,7 +73,7 @@ class DoctorCall(models.Model):
             "num": self.num,
             "card": self.client.number_with_type_and_fio(),
             "cardPk": self.client_id,
-            "phone": self.phone,
+            "phone":  self.phone ,
             "email": self.email,
             "address": self.address,
             "purpose": self.get_purpose_display(),
