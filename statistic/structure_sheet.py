@@ -5,6 +5,7 @@ from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils.cell import get_column_letter
 
 from directions.models import IstochnikiFinansirovaniya
+from doctor_call.models import DoctorCall
 
 month_dict = {1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Май', 6: 'Июнь', 7: 'Июль', 8: 'Август', 9: 'Сентябрь', 10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь'}
 
@@ -551,6 +552,71 @@ def statistic_research_data(ws1, researches):
         ws1.cell(row=r, column=13).value = current_num_card
 
         rows = ws1[f'A{r}:M{r}']
+        for row in rows:
+            for cell in row:
+                cell.style = style_border_res
+
+    return ws1
+
+
+def statistic_message_ticket_base(ws1, d1, d2):
+    style_border = NamedStyle(name="style_border")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.cell(row=1, column=1).value = 'Обращения'
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+
+
+    columns = [
+        ('МО', 20),
+        ('Номер', 20),
+        ('Создано', 15),
+        ('Физ. лицо', 26),
+        ('Телефон', 20),
+        ('Адрес', 20),
+        ('Цель', 20),
+        ('Примечания', 26),
+        ('Статус', 16),
+    ]
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=4, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=4, column=idx).style = style_border
+
+    return ws1
+
+
+def statistic_message_ticket_data(ws1, message_ticket_sql):
+    """
+    :return:
+    """
+    style_border_res = NamedStyle(name="style_border_res")
+    bd = Side(style='thin', color="000000")
+    style_border_res.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border_res.font = Font(bold=False, size=11)
+    style_border_res.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+    r = 4
+
+
+    purposes = dict(DoctorCall.PURPOSES)
+    statuses = dict(DoctorCall.STATUS)
+    for ticket in message_ticket_sql:
+        r += 1
+        ws1.cell(row=r, column=1).value = ticket.hospital_short_title or ticket.hospital_title
+        ws1.cell(row=r, column=2).value = ticket.external_num or ticket.num
+        ws1.cell(row=r, column=3).value = ticket.date_create
+        ws1.cell(row=r, column=4).value = f'{ticket.family} {ticket.name} {ticket.patronymic}'
+        ws1.cell(row=r, column=5).value = ticket.phone
+        ws1.cell(row=r, column=6).value = ticket.address
+        ws1.cell(row=r, column=7).value = purposes.get(ticket.purpose, '')
+        ws1.cell(row=r, column=8).value = ticket.comment
+        ws1.cell(row=r, column=9).value = statuses.get(ticket.status, '')
+
+        rows = ws1[f'A{r}:I{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res

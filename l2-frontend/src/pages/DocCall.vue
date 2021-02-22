@@ -80,7 +80,10 @@
         </div>
         <div style="margin-top: 5px">
           <a href="#" class="a-under pull-right" @click.prevent="print">
-            <i class="fa fa-print"></i> Печать
+            <i class="fa fa-print"></i>Печать
+          </a>
+          <a href="#" class="a-under pull-right" @click.prevent="show_statistics_message_tickets" style="padding-right: 10px">
+             Статистика
           </a>
           <label class="checkbox-inline">
             <input type="checkbox" v-model="params.is_external" :disabled="Boolean(params.number)"> Внешние заявки
@@ -170,6 +173,7 @@
         Найдено записей: <strong>{{ params.total }}</strong>
       </div>
     </div>
+    <statistics-message-print-modal v-if="statistics_tickets" :hospitals="hospitals"/>
   </div>
 </template>
 
@@ -184,10 +188,11 @@ import api from '@/api';
 import * as action_types from '@/store/action-types';
 import DocCallRow from "@/pages/DocCallRow";
 import DateFieldNav2 from "@/fields/DateFieldNav2";
+import StatisticsMessagePrintModal from '@/modals/StatisticsMessagePrintModal'
 
 export default {
   name: 'DocCall',
-  components: {DateFieldNav2, DocCallRow, Treeselect, Paginate},
+  components: {DateFieldNav2, DocCallRow, Treeselect, Paginate, StatisticsMessagePrintModal},
   data() {
     return {
       districts: [],
@@ -214,6 +219,7 @@ export default {
         total: 0,
         number: '',
       },
+      statistics_tickets: false,
     };
   },
   beforeMount() {
@@ -280,6 +286,7 @@ export default {
     this.docs_assigned = data.docs;
     this.purposes = [{id: -1, label: 'Не выбрана'}, ...data.purposes];
     this.hospitals = hospitals;
+    this.$root.$on('hide_message_tickets', () => this.hide_statistcs())
     await this.$store.dispatch(action_types.DEC_LOADING);
   },
   methods: {
@@ -302,6 +309,12 @@ export default {
       await this.$store.dispatch(action_types.DEC_LOADING);
       this.loaded = true;
     },
+    show_statistics_message_tickets() {
+      this.statistics_tickets = true
+    },
+    hide_statistcs() {
+      this.statistics_tickets = false
+    }
   },
 };
 
