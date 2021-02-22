@@ -1302,7 +1302,6 @@ def form_09(request_data):
     styleLeft = deepcopy(style)
     styleLeft.alignment = TA_LEFT
 
-    hospital: Hospitals = request_data["hospital"]
 
     objs.append(
         Paragraph(
