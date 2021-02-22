@@ -1,4 +1,6 @@
 export default [
+  {url: '/forms/pdf?type=101.08&card_pk={card}', title: 'Согласие на медицинское вмешательство, для получения медико-санитарной помощи'},
+  {url: '/forms/pdf?type=101.09&card_pk={card}', title: 'Согласие на прерывание беремености'},
   {url: '/forms/pdf?type=101.05&card_pk={card}', title: 'История изменений данных пациента'},
   {url: '/forms/pdf?type=101.06&card_pk={card}', title: 'Согласие COVID-19'},
   {url: '/forms/pdf?type=101.02&card_pk={card}', title: 'Согласие на обработку персональных данных'},
