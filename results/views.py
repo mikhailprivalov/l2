@@ -1217,7 +1217,6 @@ def result_print(request):
                         fwb.append(Paragraph("{}".format(s_napr), style))
                     fwb = procedural_text_for_result(iss.napravleniye, fwb, napr_child)
 
-
                 fwb.append(Spacer(1, 3 * mm))
                 if not hosp and not iss.research.is_slave_hospital:
                     if iss.research.is_doc_refferal:
