@@ -1,68 +1,50 @@
 <template>
   <div class="row">
-    <div class="input-group col-xs-5" style="margin-left: 20px">
-      <div class="input-group-btn">
-        <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" type="button"
-                style="max-width: 200px;text-align: left!important;" v-tippy="{ placement : 'bottom'}"
-                title="Очистить">X
-        </button>
-      </div>
-      <div class="autocomplete">
-        <input type="text" class="form-control bob" v-model="query" placeholder="Поиск по пациенту" ref="q"
-               maxlength="255" @keyup.enter="search" @keypress="keypress" @keydown="keypress_arrow"
-               @click="click_input" @blur="blur"
-               @keyup.esc="suggests.open = false"
-               @focus="suggests_focus">
-        <div class="clear-input" :class="{display: query.length > 0}" @click="clear_input">
-          <i class="fa fa-times"></i>
+    <div class="col-xs-5">
+      <div class="input-group" >
+        <div class="input-group-btn">
+          <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" type="button"
+                  style="max-width: 200px;text-align: left!important;" v-tippy="{ placement : 'bottom'}"
+                  title="Очистить">X
+          </button>
         </div>
-        <div class="suggestions" v-if="(suggests.open && normalized_query.length > 0) || suggests.loading">
-          <div class="item" v-if="suggests.loading && suggests.data.length === 0">поиск...</div>
-          <div class="item" v-else-if="suggests.data.length === 0">не найдено карт в L2</div>
-          <template v-else>
-            <div class="item item-selectable" :class="{'item-selectable-focused': i === suggests.focused}"
-                 v-for="(row, i) in suggests.data"
-                 @mouseover="suggests.focused = i"
-                 @click.stop="select_suggest(i)">
-              {{ row.family }} {{ row.name }} {{ row.twoname }}, {{ row.sex }}, {{ row.birthday }} ({{ row.age }})
-              <div>
+        <div class="autocomplete">
+          <input type="text" class="form-control bob" v-model="query" placeholder="Поиск по пациенту" ref="q"
+                 maxlength="255" @keyup.enter="search" @keypress="keypress" @keydown="keypress_arrow"
+                 @click="click_input" @blur="blur"
+                 @keyup.esc="suggests.open = false"
+                 @focus="suggests_focus">
+          <div class="suggestions" v-if="(suggests.open && normalized_query.length > 0) || suggests.loading">
+            <div class="item" v-if="suggests.loading && suggests.data.length === 0">поиск...</div>
+            <div class="item" v-else-if="suggests.data.length === 0">не найдено карт в L2</div>
+            <template v-else>
+              <div class="item item-selectable" :class="{'item-selectable-focused': i === suggests.focused}"
+                   v-for="(row, i) in suggests.data"
+                   @mouseover="suggests.focused = i"
+                   @click.stop="select_suggest(i)">
+                {{ row.family }} {{ row.name }} {{ row.twoname }}, {{ row.sex }}, {{ row.birthday }} ({{ row.age }})
+                <div>
                   <span class="b" style="display: inline-block;margin-right: 4px;">
                     {{ row.type_title }} {{ row.num }}
                   </span>
-                <span class="item-doc" v-for="d in row.docs">
+                  <span class="item-doc" v-for="d in row.docs">
                     {{ d.type_title }}: {{ d.serial }} {{ d.number }};
                   </span>
+                </div>
               </div>
-            </div>
-          </template>
+            </template>
+          </div>
         </div>
-      </div>
-      <span class="input-group-btn">
+        <span class="input-group-btn">
           <button class="btn last btn-blue-nb nbr" type="button" :disabled="!query_valid || inLoading" @click="search">
             Поиск
           </button>
         </span>
+      </div>
     </div>
-    <div class="col-xs-5" style="padding-left: 20px;padding-right: 5px;">
-      <table class="table table-bordered">
-        <colgroup>
-          <col width="80">
-          <col>
-          <col width="40">
-        </colgroup>
-        <tbody>
-        <tr>
-          <td style="max-width: 100px;" class="table-header-row">ФИО:</td>
-          <td style="max-width: 99%;" class="table-content-row">
-            {{ selected_card.family }} {{ selected_card.name }} {{ selected_card.twoname }} {{ selected_card.birthday }}
-            {{ selected_card.age }}
-          </td>
-          <td class="table-content-row">
-            {{ selected_card.sex }}
-          </td>
-        </tr>
-        </tbody>
-      </table>
+    <div class="col-xs-6" style="padding-left: 20px; padding-bottom: 20px;">
+      <h5>{{ selected_card.family }} {{ selected_card.name }} {{ selected_card.twoname }} {{ selected_card.birthday }}
+            {{ selected_card.age }} {{ selected_card.sex }}</h5>
     </div>
     <modal ref="modal" v-if="showModal" @close="hide_modal" show-footer="true">
       <span slot="header">Найдено несколько карт</span>
