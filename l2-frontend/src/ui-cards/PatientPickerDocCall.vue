@@ -49,7 +49,6 @@
 </template>
 
 <script>
-import Modal from './Modal'
 import * as action_types from '../store/action-types'
 import patients_point from '../api/patients-point'
 import {mapGetters} from 'vuex'
@@ -59,7 +58,6 @@ const tfoms_re = /^([А-яЁё\-]+) ([А-яЁё\-]+)( ([А-яЁё\-]+))? (([0-9]
 
 export default {
   name: 'PatientPickerDocCall',
-  components: {Modal},
   props: {
     value: {},
     disabled: {},
