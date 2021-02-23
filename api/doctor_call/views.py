@@ -300,7 +300,7 @@ def add_log(request):
                 **call.get_status_data(),
             })
 
-        if DoctorCallLog.objects.filter(call=call, uploaded_file__isnull=False).count() >= 10:
+        if file and DoctorCallLog.objects.filter(call=call, uploaded_file__isnull=False).count() >= 10:
             return JsonResponse({
                 "ok": False,
                 "message": "Вы добавили слишком много файлов в одну заявку",
