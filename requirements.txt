@@ -13,7 +13,7 @@ Django==3.1.5
 django-ajax-selects==2.1.0
 django-cors-middleware==1.5.0
 django-debug-panel==0.8.3
-django-debug-toolbar==3.1.1
+django-debug-toolbar==3.2
 django-extensions==3.0.9
 django-filter==2.4.0
 django-logtail==0.3.0
