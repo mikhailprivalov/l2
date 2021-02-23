@@ -14,10 +14,6 @@
             <div class="an-sidebar-content-row-header">Дата и время создания:</div>
             {{ r.createdAt }}&nbsp;{{ r.createdAtTime }}
           </div>
-<!--          <div class="an-sidebar-content-row">
-            <div class="an-sidebar-content-row-header">На дату:</div>
-            {{ r.execAt }}
-          </div>-->
           <div class="an-sidebar-content-row">
             <div>{{ r.card }}, <strong>{{ r.phone }}</strong></div>
           </div>

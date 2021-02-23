@@ -1653,6 +1653,14 @@ body > .container-fluid {
   }
 }
 
+.a-under-reversed {
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 input[type=date].form-control {
   line-height: 1;
 }

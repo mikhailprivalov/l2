@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 from typing import List
 
 from django.contrib.auth.decorators import login_required
@@ -281,25 +282,40 @@ def change_executor(request):
 
 @login_required
 def add_log(request):
-    request_data = json.loads(request.body)
+    file = request.FILES.get('file')
+    form = request.FILES['form'].read()
+    request_data = json.loads(form)
     pk = request_data["pk"]
     status = request_data["newStatus"]
     prev_status = request_data["status"]
     text = request_data["text"].strip() or ''
-    call: DoctorCall = DoctorCall.objects.get(pk=pk)
 
-    if not call.json(doc=request.user.doctorprofile)['canEdit']:
-        return JsonResponse({
-            "ok": False,
-            "message": "Редактирование запрещено",
-            **call.get_status_data(),
-        })
+    with transaction.atomic():
+        call: DoctorCall = DoctorCall.objects.select_for_update().get(pk=pk)
 
-    log: DoctorCallLog = DoctorCallLog(call=call, author=request.user.doctorprofile, text=text)
+        if not call.json(doc=request.user.doctorprofile)['canEdit']:
+            return JsonResponse({
+                "ok": False,
+                "message": "Редактирование запрещено",
+                **call.get_status_data(),
+            })
 
-    if status != -1 and call.status != status:
-        with transaction.atomic():
-            call: DoctorCall = DoctorCall.objects.select_for_update().get(pk=pk)
+        if DoctorCallLog.objects.filter(call=call, uploaded_file__isnull=False).count() >= 10:
+            return JsonResponse({
+                "ok": False,
+                "message": "Вы добавили слишком много файлов в одну заявку",
+                **call.get_status_data(),
+            })
+
+        if file and file.size > 5242880:
+            return JsonResponse({
+                "ok": False,
+                "message": "Файл слишком большой",
+                **call.get_status_data(),
+            })
+        log: DoctorCallLog = DoctorCallLog(call=call, author=request.user.doctorprofile, text=text)
+
+        if status != -1 and call.status != status:
             if call.status != prev_status:
                 return JsonResponse({
                     "ok": False,
@@ -313,10 +329,12 @@ def add_log(request):
                 call.need_send_status = True
             call.save(update_fields=['status', 'need_send_status'])
 
-    log.save()
+        log.uploaded_file = file
+        log.save()
+
     return JsonResponse({
         "ok": True,
-        **call.get_status_data(),
+        **DoctorCall.objects.get(pk=pk).get_status_data(),
     })
 
 
@@ -336,6 +354,8 @@ def log_rows(request):
             'executorFrom': row.executor_update_from.get_fio() if row.executor_update_from else None,
             'executorTo': row.executor_update_to.get_fio() if row.executor_update_to else None,
             'createdAt': strfdatetime(row.created_at, "%d.%m.%Y %X"),
+            'file': row.uploaded_file.url if row.uploaded_file else None,
+            'fileName': os.path.basename(row.uploaded_file.name) if row.uploaded_file else None,
         })
     return JsonResponse({
         "rows": rows,

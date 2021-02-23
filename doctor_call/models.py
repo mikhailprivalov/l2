@@ -1,4 +1,6 @@
 import datetime
+import os
+import uuid
 from typing import Optional
 
 import simplejson as json
@@ -219,6 +221,10 @@ class DoctorCall(models.Model):
         return result
 
 
+def get_file_path(instance: 'DoctorCallLog', filename):
+    return os.path.join('doc_call_uploads', str(instance.call.pk), str(uuid.uuid4()), filename)
+
+
 class DoctorCallLog(models.Model):
     call = models.ForeignKey(DoctorCall, db_index=True, on_delete=models.CASCADE)
     author = models.ForeignKey(DoctorProfile, related_name="doc_call_log_author", help_text='Автор записи', on_delete=models.CASCADE)
@@ -227,4 +233,5 @@ class DoctorCallLog(models.Model):
     status_update_to = models.PositiveSmallIntegerField(choices=DoctorCall.STATUS, null=True, blank=True, default=None)
     executor_update_from = models.ForeignKey(DoctorProfile, related_name="doc_call_executor_update_from", on_delete=models.SET_NULL, null=True, blank=True, default=None)
     executor_update_to = models.ForeignKey(DoctorProfile, related_name="doc_call_executor_update_to", on_delete=models.SET_NULL, null=True, blank=True, default=None)
+    uploaded_file = models.FileField(upload_to=get_file_path, blank=True, null=True, default=None)
     created_at = models.DateTimeField(auto_now_add=True)

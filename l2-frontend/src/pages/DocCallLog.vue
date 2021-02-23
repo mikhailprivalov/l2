@@ -5,7 +5,8 @@
         <textarea class="form-control" placeholder="Запись в журнале" v-model="text"></textarea>
       </div>
       <div class="right">
-        <button class="btn btn-blue-nb btn-block" type="button" @click="createLog" :disabled="!text && status === -1">
+        <button class="btn btn-blue-nb btn-block" type="button" @click="createLog"
+                :disabled="!text && status === -1 && !file">
           Сохранить
         </button>
         <select v-model="status" class="form-control" style="margin-top: 5px">
@@ -17,16 +18,45 @@
         </select>
       </div>
     </div>
+    <div class="log-file">
+      <input type="file" ref="file" style="display: none"
+             @change="fileChange($event.target.files)"/>
+      <template v-if="!file">
+        <a href="#" @click.prevent="$refs.file.click()" class="a-under-reversed">
+          <i class="fa fa-folder"></i> добавить файл
+        </a>
+        (не более 5 МБ, не более 10 штук на одну заявку)
+      </template>
+      <template v-else>
+        <a href="#" @click.prevent="file = ''; fileName = ''" class="a-under-reversed" title="Удалить файл" v-tippy>
+          <i class="fa fa-file"></i>
+          <span class="black">
+            {{ fileName }} ({{ fileSize }} МБ)
+          </span>
+          &nbsp;&nbsp;<i class="fa fa-times"></i>
+        </a>
+      </template>
+    </div>
     <div class="log-rows">
       <div v-if="rows.length === 0" class="log-row-empty">Нет записей</div>
       <div class="log-row" v-for="row in rows">
         <div class="log-row-author">{{ row.author }}</div>
         <div class="log-row-time">{{ row.createdAt }}</div>
         <div class="log-row-text" v-if="row.text">{{ row.text }}</div>
-        <div class="log-row-system" v-if="row.executorFrom || row.executorTo">Изменение исполнителя:
-          {{ row.executorFrom || 'нет' }} → <strong>{{ row.executorTo || 'нет' }}</strong></div>
-        <div class="log-row-system" v-if="row.statusFrom || row.statusTo">Изменение статуса:
-          {{ row.statusFrom || 'нет' }} → <strong>{{ row.statusTo || 'нет' }}</strong></div>
+        <div class="log-row-system" v-if="row.executorFrom || row.executorTo">
+          Изменение исполнителя:
+          {{ row.executorFrom || 'нет' }} → <strong>{{ row.executorTo || 'нет' }}</strong>
+        </div>
+        <div class="log-row-system" v-if="row.statusFrom || row.statusTo">
+          Изменение статуса:
+          {{ row.statusFrom || 'нет' }} → <strong>{{ row.statusTo || 'нет' }}</strong>
+        </div>
+        <div class="log-row-system log-row-file" v-if="row.file">
+          Прикреплённый файл:
+          <a :href="row.file" target="_blank" class="a-under">
+            {{ row.fileName }}
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -35,6 +65,7 @@
 <script>
 import * as action_types from "@/store/action-types";
 import api from "@/api";
+import axios from "axios";
 
 export default {
   name: "DocCallLog",
@@ -45,6 +76,9 @@ export default {
   },
   data() {
     return {
+      file: '',
+      fileName: '',
+      fileSize: '',
       text: '',
       status: -1,
       rows: [],
@@ -55,17 +89,62 @@ export default {
     this.$root.$on('doc-call:log:update', () => this.loadRows());
   },
   methods: {
+    fileChange(fileList) {
+      const [file] = fileList;
+      if (!file) {
+        this.file = '';
+        this.fileName = '';
+        this.fileSize = '';
+        return;
+      }
+      const size = Number(file.size);
+      if (size > 5242880) {
+        errmessage('Файл больше 5 МБ');
+        return;
+      }
+      this.file = file;
+      this.fileName = file.name;
+      this.fileSize = Math.round((size / 1024 / 1024) * 100) / 100;
+    },
     async createLog() {
       await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message, status, executor, executor_fio, inLog} = await api(
-        'doctor-call/add-log', this.r, ['pk', 'status'], {text: this.text, newStatus: this.status}
-      );
+
+      const json = JSON.stringify({
+        pk: this.r.pk,
+        status: this.r.status,
+        text: this.text,
+        newStatus: this.status,
+      });
+      const blob = new Blob([json], {
+        type: 'application/json'
+      });
+
+      const formData = new FormData();
+      formData.append('file', this.file);
+      formData.append('form', blob);
+
+      const {
+        data: {ok, message, status, executor, executor_fio, inLog},
+      } =
+        await axios.post('/api/doctor-call/add-log',
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
+
       if (!ok) {
         errmessage(message);
       } else {
         okmessage('Сохранено');
         this.status = -1;
         this.text = '';
+        this.file = '';
+        this.fileName = '';
+        this.fileSize = '';
+        this.$refs.file.value = '';
       }
       this.r.executor = executor;
       this.r.executor_fio = executor_fio;
@@ -153,8 +232,28 @@ export default {
     border-left: 3px solid #decda3;
   }
 
+  &-file a {
+    color: #5e5149 !important;
+  }
+
   & + & {
     margin-top: 10px;
+  }
+}
+
+.log-file {
+  margin-top: 3px;
+  margin-left: 3px;
+  font-size: 90%;
+
+  a {
+    .fa {
+      margin-right: 3px;
+    }
+
+    .black {
+      color: #000;
+    }
   }
 }
 </style>
