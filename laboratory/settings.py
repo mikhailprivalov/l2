@@ -25,7 +25,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admindocs',
-    'django_extensions',
     'ajax_select',
     'health',
     'appconf.apps.AppconfConfig',
