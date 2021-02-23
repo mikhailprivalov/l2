@@ -18,7 +18,7 @@
           </div>
           <div class="suggestions" v-if="(suggests.open && normalized_query.length > 0) || suggests.loading">
             <div class="item" v-if="suggests.loading && suggests.data.length === 0">поиск...</div>
-            <div class="item" v-else-if="suggests.data.length === 0">не найдено карт в L2, попробуйте произвести поиск по ТФОМС или РМИС</div>
+            <div class="item" v-else-if="suggests.data.length === 0">не найдено карт в L2</div>
             <template v-else>
               <div class="item item-selectable" :class="{'item-selectable-focused': i === suggests.focused}"
                    v-for="(row, i) in suggests.data"
