@@ -106,6 +106,7 @@
                    :disabled="Boolean(params.number)"> Мои заявки
           </label>
         </div>
+        <patient-picker-doc-call v-model="selected_card" style="margin-top: 10px; margin-bottom: 10px; padding-bottom: 10px"></patient-picker-doc-call>
       </div>
     </form>
     <div class="not-loaded" v-if="!loaded">
@@ -194,12 +195,15 @@ import * as action_types from '@/store/action-types';
 import DocCallRow from "@/pages/DocCallRow";
 import DateFieldNav2 from "@/fields/DateFieldNav2";
 import StatisticsMessagePrintModal from '@/modals/StatisticsMessagePrintModal'
+import PatientPickerDocCall from '@/ui-cards/PatientPickerDocCall'
+
 
 export default {
   name: 'DocCall',
-  components: {DateFieldNav2, DocCallRow, Treeselect, Paginate, StatisticsMessagePrintModal},
+  components: {DateFieldNav2, DocCallRow, Treeselect, Paginate, StatisticsMessagePrintModal, PatientPickerDocCall},
   data() {
     return {
+      selected_card: '',
       districts: [],
       purposes: [],
       docs_assigned: [],
