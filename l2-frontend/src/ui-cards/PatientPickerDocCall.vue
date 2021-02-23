@@ -5,7 +5,7 @@
         <div class="input-group-btn">
           <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" type="button"
                   style="max-width: 200px;text-align: left!important;" v-tippy="{ placement : 'bottom'}"
-                  title="Очистить">X
+                  title="Очистить" @click="clear_selected_card">X
           </button>
         </div>
         <div class="autocomplete">
@@ -313,6 +313,9 @@ export default {
     clear_input() {
       this.query = ''
       $(this.$refs.q).focus()
+    },
+    clear_selected_card(){
+      this.selected_card = {}
     },
     click_input() {
       this.loadSuggests()
