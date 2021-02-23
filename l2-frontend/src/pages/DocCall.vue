@@ -1,7 +1,7 @@
 <template>
   <div>
     <form class="panel panel-default panel-flt" style="margin: 20px;" @submit.prevent="load(null)">
-      <div class="panel-body">
+      <div class="panel-body" style="overflow: visible;">
         <div class="row">
           <div class="col-xs-6">
             <div class="input-group">
@@ -83,6 +83,10 @@
             </div>
           </div>
         </div>
+        <div style="margin: 5px 0">
+          <patient-picker-doc-call v-model="params.card_pk"
+                                   :disabled="Boolean(params.number || params.without_date)"/>
+        </div>
         <div style="margin-top: 5px">
           <a href="#" class="a-under pull-right" @click.prevent="print">
             Печать
@@ -106,7 +110,6 @@
                    :disabled="Boolean(params.number)"> Мои заявки
           </label>
         </div>
-        <patient-picker-doc-call v-model="selected_card" style="margin-top: 10px; margin-bottom: 10px;"></patient-picker-doc-call>
       </div>
     </form>
     <div class="not-loaded" v-if="!loaded">
@@ -203,7 +206,6 @@ export default {
   components: {DateFieldNav2, DocCallRow, Treeselect, Paginate, StatisticsMessagePrintModal, PatientPickerDocCall},
   data() {
     return {
-      selected_card: '',
       districts: [],
       purposes: [],
       docs_assigned: [],
@@ -212,6 +214,7 @@ export default {
       loaded: false,
       params: {
         date: moment().format('YYYY-MM-DD'),
+        card_pk: -1,
         status: -1,
         district: -1,
         is_canceled: false,
@@ -241,6 +244,7 @@ export default {
     watchParams() {
       return _.pick(this.params, [
         'date',
+        'card_pk',
         'status',
         'district',
         'without_date',

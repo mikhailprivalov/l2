@@ -1,18 +1,13 @@
 <template>
-  <div class="row">
-    <div class="col-xs-5">
-      <div class="input-group" >
-        <div class="input-group-btn">
-          <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" type="button"
-                  style="max-width: 200px;text-align: left!important;" v-tippy="{ placement : 'bottom'}"
-                  title="Очистить" @click="clear_selected_card">X
-          </button>
-        </div>
+  <div>
+    <div class="input-group" style="width: 100%;">
+      <template v-if="!selected_card.pk || selected_card.pk === -1">
         <div class="autocomplete">
           <input type="text" class="form-control bob" v-model="query" placeholder="Поиск по пациенту" ref="q"
                  maxlength="255" @keyup.enter="search" @keypress="keypress" @keydown="keypress_arrow"
                  @click="click_input" @blur="blur"
                  @keyup.esc="suggests.open = false"
+                 :disabled="disabled"
                  @focus="suggests_focus">
           <div class="suggestions" v-if="(suggests.open && normalized_query.length > 0) || suggests.loading">
             <div class="item" v-if="suggests.loading && suggests.data.length === 0">поиск...</div>
@@ -35,35 +30,21 @@
             </template>
           </div>
         </div>
-        <span class="input-group-btn">
-          <button class="btn last btn-blue-nb nbr" type="button" :disabled="!query_valid || inLoading" @click="search">
-            Поиск
+      </template>
+      <template v-else>
+        <span class="input-group-btn bcl">
+          <button class="btn last btn-blue-nb nbr" type="button"
+                  v-tippy="{ placement : 'bottom'}"
+                  title="Очистить" @click="clear_selected_card">
+            X
           </button>
         </span>
-      </div>
+        <span class="input-group-addon" style="width: 100%;">
+          {{ selected_card.family }} {{ selected_card.name }} {{ selected_card.twoname }},
+          {{ selected_card.birthday }}, {{ selected_card.age }}, {{ selected_card.sex }}
+        </span>
+      </template>
     </div>
-    <div class="col-xs-6" style="padding-left: 20px; padding-bottom: 20px;">
-      <h5>{{ selected_card.family }} {{ selected_card.name }} {{ selected_card.twoname }} {{ selected_card.birthday }}
-            {{ selected_card.age }} {{ selected_card.sex }}</h5>
-    </div>
-    <modal ref="modal" v-if="showModal" @close="hide_modal" show-footer="true">
-      <span slot="header">Найдено несколько карт</span>
-      <div slot="body">
-        <div class="founded" v-for="(row, i) in founded_cards" @click="select_card(i)">
-          <div class="founded-row">Карта <span class="b">{{ row.type_title }} {{ row.num }}</span></div>
-          <div class="founded-row">
-            <span class="b">ФИО, пол:</span> {{ row.family }} {{ row.name }} {{ row.twoname }}, {{ row.sex }}
-          </div>
-          <div class="founded-row"><span class="b">Дата рождения:</span> {{ row.birthday }} ({{ row.age }})</div>
-          <div class="founded-row" v-for="d in row.docs">
-            <span class="b">{{ d.type_title }}:</span> {{ d.serial }} {{ d.number }}
-          </div>
-        </div>
-      </div>
-      <div slot="footer" class="text-center">
-        <small>Показано не более 10 карт</small>
-      </div>
-    </modal>
   </div>
 </template>
 
@@ -81,6 +62,7 @@ export default {
   components: {Modal},
   props: {
     value: {},
+    disabled: {},
   },
   data() {
     return {
@@ -128,7 +110,6 @@ export default {
       this.base = data.base_pk
       this.query = `card_pk:${data.card_pk}`
       this.search_after_loading = true
-      $(this.$refs.q).focus()
       this.emit_input()
       if (!data.hide) {
         this.editor_pk = data.card_pk
@@ -222,6 +203,9 @@ export default {
         .join(' ');
     }
   },
+  model: {
+    event: 'modified'
+  },
   methods: {
     fixQuery() {
       this.query = this.fixedQuery;
@@ -312,10 +296,9 @@ export default {
     },
     clear_input() {
       this.query = ''
-      $(this.$refs.q).focus()
     },
-    clear_selected_card(){
-      this.selected_card = {}
+    clear_selected_card() {
+      this.clear();
     },
     click_input() {
       this.loadSuggests()
@@ -435,6 +418,7 @@ export default {
         }
       }, 10)
       this.emit_input()
+      this.query = '';
       this.loaded = true
       this.$root.$emit('patient-picker:select_card')
     },
@@ -497,45 +481,18 @@ export default {
         } else {
           this.base = this.bases[0].pk
         }
-        $(this.$refs.q).focus()
         this.emit_input()
       }
     },
-    emit_input(from_hn = false) {
-      let pk = -1
-      if ('pk' in this.selected_card)
-        pk = this.selected_card.pk
-      let individual_pk = -1
-      if ('individual_pk' in this.selected_card)
-        individual_pk = this.selected_card.individual_pk
-      this.$emit('input', {
-        pk: pk,
-        individual_pk: individual_pk,
-        base: this.selected_base,
-        ofname_dep: parseInt(this.directive_department),
-        ofname: parseInt(this.directive_doc),
-        operator: this.is_operator,
-        history_num: this.history_num,
-        is_rmis: this.selected_card.is_rmis,
-        family: this.selected_card.family,
-        name: this.selected_card.name,
-        twoname: this.selected_card.twoname,
-        birthday: this.selected_card.birthday,
-        age: this.selected_card.age,
-        main_diagnosis: this.selected_card.main_diagnosis,
-      })
-      if (pk !== -1 && !from_hn) {
-        $('#fndsrc').focus()
-      }
+    emit_input() {
+      this.$emit('modified', this.selected_card.pk || -1);
     },
     clear() {
       this.loaded = false
       this.selected_card = {}
       this.history_num = ''
       this.founded_cards = []
-      if (this.query.toLowerCase().includes('card_pk:')) {
-        this.query = ''
-      }
+      this.query = '';
       this.emit_input()
     },
     open_as_l2_card() {
@@ -732,9 +689,7 @@ td:not(.select-td) {
   max-width: 350px;
   min-width: 1%;
 }
-</style>
 
-<style lang="scss">
 .select-td {
   padding: 0 !important;
 
@@ -792,9 +747,16 @@ td:not(.select-td) {
 }
 
 .bob {
-  border-left: none !important;
-  border-top: none !important;
-  border-right: none !important;
+  border-radius: 5px !important;
+}
+
+.bcl {
+  margin: 0 !important;
+
+  button {
+    border-top-left-radius: 5px !important;
+    border-bottom-left-radius: 5px !important;
+  }
 }
 
 .internal_type {
