@@ -85,7 +85,7 @@
         </div>
         <div style="margin: 5px 0">
           <patient-picker-doc-call v-model="params.card_pk"
-                                   :disabled="Boolean(params.number || params.without_date)"/>
+                                   :disabled="Boolean(params.number)"/>
         </div>
         <div style="margin-top: 5px">
           <a href="#" class="a-under pull-right" @click.prevent="print">
