@@ -1842,7 +1842,7 @@ def directions_data_by_fields(request):
             for field in ParaclinicInputField.objects.filter(group__research=i.research, group__hide=False, hide=False):
                 if ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists():
                     for field_dest in ParaclinicInputField.objects.filter(group__research=i_dest.research, group__hide=False, hide=False):
-                        if field_dest.attached == field.attached:
+                        if field_dest.attached and field_dest.attached == field.attached:
                             data[field_dest.pk] = ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value
                             break
             return JsonResponse({"data": data})
