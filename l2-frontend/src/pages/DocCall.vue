@@ -1,7 +1,7 @@
 <template>
   <div>
     <form class="panel panel-default panel-flt" style="margin: 20px;" @submit.prevent="load(null)">
-      <div class="panel-body">
+      <div class="panel-body" style="overflow: visible;">
         <div class="row">
           <div class="col-xs-6">
             <div class="input-group">
@@ -82,6 +82,10 @@
               />
             </div>
           </div>
+        </div>
+        <div style="margin: 5px 0">
+          <patient-picker-doc-call v-model="params.card_pk"
+                                   :disabled="Boolean(params.number || params.without_date)"/>
         </div>
         <div style="margin-top: 5px">
           <a href="#" class="a-under pull-right" @click.prevent="print">
@@ -194,10 +198,12 @@ import * as action_types from '@/store/action-types';
 import DocCallRow from "@/pages/DocCallRow";
 import DateFieldNav2 from "@/fields/DateFieldNav2";
 import StatisticsMessagePrintModal from '@/modals/StatisticsMessagePrintModal'
+import PatientPickerDocCall from '@/ui-cards/PatientPickerDocCall'
+
 
 export default {
   name: 'DocCall',
-  components: {DateFieldNav2, DocCallRow, Treeselect, Paginate, StatisticsMessagePrintModal},
+  components: {DateFieldNav2, DocCallRow, Treeselect, Paginate, StatisticsMessagePrintModal, PatientPickerDocCall},
   data() {
     return {
       districts: [],
@@ -208,6 +214,7 @@ export default {
       loaded: false,
       params: {
         date: moment().format('YYYY-MM-DD'),
+        card_pk: -1,
         status: -1,
         district: -1,
         is_canceled: false,
@@ -237,6 +244,7 @@ export default {
     watchParams() {
       return _.pick(this.params, [
         'date',
+        'card_pk',
         'status',
         'district',
         'without_date',

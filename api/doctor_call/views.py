@@ -150,6 +150,7 @@ def search(request):
     external = request_data.get("is_external")
     page = max(int(request_data.get("page", 1)), 1)
     number = request_data.get("number")
+    card_pk = request_data.get("card_pk", -1)
 
     date = request_data["date"]
     time_start = f'{date} {request_data.get("time_start", "00:00")}:00'
@@ -170,6 +171,10 @@ def search(request):
             'is_external': external,
             'cancel': cancel,
         }
+
+        if card_pk != -1:
+            card = Card.objects.get(pk=card_pk)
+            filters['client__individual_id'] = card.individual_id
 
         if not without_date:
             filters['create_at__range'] = [datetime_start, datetime_end]
