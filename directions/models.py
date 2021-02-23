@@ -314,6 +314,9 @@ class Napravleniya(models.Model):
     PURPOSE_DRIVE_EXAMINATION = 'DRIVE_EXAMINATION'
     PURPOSE_WEAPON_EXAMINATION = 'WEAPON_EXAMINATION'
     PURPOSE_PERIODIC_EXAMINATION = 'PERIODIC_EXAMINATION'
+    PURPOSE_CONSULTATION = 'CONSULTATION'
+    PURPOSE_SIMPLE_EXAMINATION = 'SIMPLE_EXAMINATION'
+    PURPOSE_HOSPITALIZATION = 'OSPITALIZATION'
 
     PURPOSES = (
         (PURPOSE_PRELIMINARY_EXAMINATION, 'Предварительный медосмотр'),
@@ -321,6 +324,9 @@ class Napravleniya(models.Model):
         (PURPOSE_DRIVE_EXAMINATION, 'На водительское'),
         (PURPOSE_WEAPON_EXAMINATION, 'На оружие'),
         (PURPOSE_PERIODIC_EXAMINATION, 'Периодический медосмотр'),
+        (PURPOSE_CONSULTATION, 'Консультация'),
+        (PURPOSE_SIMPLE_EXAMINATION, 'Обследование'),
+        (PURPOSE_HOSPITALIZATION, 'Госпитализация'),
     )
 
     data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
