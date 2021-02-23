@@ -106,7 +106,7 @@
                    :disabled="Boolean(params.number)"> Мои заявки
           </label>
         </div>
-        <patient-picker-doc-call v-model="selected_card" style="margin-top: 10px; margin-bottom: 10px; padding-bottom: 10px"></patient-picker-doc-call>
+        <patient-picker-doc-call v-model="selected_card" style="margin-top: 10px; margin-bottom: 10px;"></patient-picker-doc-call>
       </div>
     </form>
     <div class="not-loaded" v-if="!loaded">
