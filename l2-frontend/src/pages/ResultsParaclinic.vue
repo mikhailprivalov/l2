@@ -253,7 +253,7 @@
                   <a href="#"
                      class="btn btn-blue-nb"
                      v-if="data.status_disp === 'need'"
-                     @click.prevent="add_researches(data.researches[0], data.disp_data.filter(d => !d[2]).map(d => d[0]), true)">
+                     @click.prevent="add_researches(data.researches[0], data.disp_data.filter(d => !d[2]).map(d => d[0]))">
                     Выбрать требуемые
                   </a>
                   <a href="#"
@@ -1202,7 +1202,7 @@
       },
       copy_results(row, pk) {
         this.$store.dispatch(action_types.INC_LOADING)
-        directions_point.paraclinicDataByFields({pk}).then(({data}) => {
+        directions_point.paraclinicDataByFields({pk, 'pk_dest': row['pk']}).then(({data}) => {
           this.hide_results()
           this.replace_fields_values(row, data)
         }).finally(() => {

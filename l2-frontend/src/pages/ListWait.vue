@@ -37,7 +37,7 @@
               <div class="col-xs-9"></div>
               <div class="col-xs-3">
                 <div class="btn btn-blue-nb" style="margin-bottom: 5px;margin-top: 15px; margin-left: 20px;"
-                     @click="print(true)">
+                     @click="print()">
                   Печать
                 </div>
               </div>
@@ -71,7 +71,6 @@
     },
     methods: {
       print() {
-        console.log(this.date)
         window.open(`/forms/pdf?type=109.03&date=${this.date}&research_pk=${this.research}`);
       },
     }

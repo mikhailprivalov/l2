@@ -397,7 +397,7 @@ def departments(request):
     req = json.loads(request.body)
     method = req.get('method', 'GET')
     without_default = req.get('withoutDefault', False)
-    current_user_hospital_id = request.user.doctorprofile.hospital_id or -1
+    current_user_hospital_id = request.user.doctorprofile.get_hospital_id() or -1
     hospital_pk = req.get('hospital', current_user_hospital_id)
 
     su = request.user.is_superuser
@@ -951,9 +951,10 @@ def load_docprofile_by_group(request):
 @group_required("Создание и редактирование пользователей")
 def users_view(request):
     request_data = json.loads(request.body)
-    hospital_pk = request_data.get('selected_hospital', request.user.doctorprofile.hospital_id)
+    user_hospital_pk = request.user.doctorprofile.get_hospital_id()
+    hospital_pk = request_data.get('selected_hospital', user_hospital_pk)
 
-    can_edit = request.user.is_superuser or request.user.doctorprofile.all_hospitals_users_control or hospital_pk == request.user.doctorprofile.hospital_id
+    can_edit = request.user.is_superuser or request.user.doctorprofile.all_hospitals_users_control or hospital_pk == user_hospital_pk
 
     data = []
 
@@ -1036,9 +1037,10 @@ def user_save_view(request):
     rmis_password = ud["rmis_password"].strip() or None
     personal_code = ud.get("personal_code", 0)
     rmis_resource_id = ud["rmis_resource_id"].strip() or None
-    hospital_pk = request_data.get('hospital_pk', request.user.doctorprofile.hospital_id)
+    user_hospital_pk = request.user.doctorprofile.get_hospital_id()
+    hospital_pk = request_data.get('hospital_pk', user_hospital_pk)
 
-    can_edit = request.user.is_superuser or request.user.doctorprofile.all_hospitals_users_control or hospital_pk == request.user.doctorprofile.hospital_id
+    can_edit = request.user.is_superuser or request.user.doctorprofile.all_hospitals_users_control or hospital_pk == user_hospital_pk
 
     if not can_edit:
         return JsonResponse({"ok": False})
@@ -1293,19 +1295,37 @@ def actual_districts(request):
 
 def hospitals(request):
     data = json.loads(request.body)
+    any_hospital = request.user.doctorprofile.all_hospitals_users_control
     filters = {}
-    if data.get('filterByUserHospital') and not request.user.doctorprofile.all_hospitals_users_control:
-        filters['pk'] = request.user.doctorprofile.hospital_id
+    if data.get('filterByUserHospital') and not any_hospital:
+        filters['pk'] = request.user.doctorprofile.get_hospital_id()
     rows = Hospitals.objects.filter(hide=False, **filters).order_by('-is_default', 'short_title').values('pk', 'short_title', 'title', 'code_tfoms')
+    default_hospital = []
+    if any_hospital:
+        default_hospital = [
+            {
+                "id": -1,
+                "label": "Все",
+                "code_tfoms": "000000",
+            },
+            {
+                "id": -2,
+                "label": "Не выбрано",
+                "code_tfoms": "000001",
+            },
+        ]
     return JsonResponse(
         {
             "hospitals": [
-                {
-                    "id": x['pk'],
-                    "label": x["short_title"] or x["title"],
-                    "code_tfoms": x["code_tfoms"],
-                }
-                for x in rows
+                *[
+                    {
+                        "id": x['pk'],
+                        "label": x["short_title"] or x["title"],
+                        "code_tfoms": x["code_tfoms"],
+                    }
+                    for x in rows
+                ],
+                *default_hospital,
             ]
         }
     )

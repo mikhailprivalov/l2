@@ -165,8 +165,8 @@ class ResParaclinicInputField(admin.ModelAdmin):
         'title',
         'group',
     )
-    list_filter = ('group',)
-    search_fields = ('group__pk',)
+    list_filter = ('group__research',)
+    search_fields = ('group__research__title',)
 
 
 class ResParaclinicInputGroups(admin.ModelAdmin):
@@ -238,4 +238,3 @@ admin.site.register(models.GroupAntibiotic)
 admin.site.register(models.Localization, TitleFsli)
 admin.site.register(models.ServiceLocation, TitleHide)
 admin.site.register(models.HospitalService, ResHospitalService)
-admin.site.register(models.AntibioticSets, ResAntibioticSets)

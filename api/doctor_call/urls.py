@@ -9,4 +9,6 @@ urlpatterns = [
     path('search', views.search),
     path('change-status', views.change_status),
     path('change-executor', views.change_executor),
+    path('add-log', views.add_log),
+    path('log', views.log_rows),
 ]
