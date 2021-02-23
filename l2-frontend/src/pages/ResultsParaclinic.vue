@@ -1202,7 +1202,7 @@
       },
       copy_results(row, pk) {
         this.$store.dispatch(action_types.INC_LOADING)
-        directions_point.paraclinicDataByFields({pk}).then(({data}) => {
+        directions_point.paraclinicDataByFields({pk, 'pk_dest': row['pk']}).then(({data}) => {
           this.hide_results()
           this.replace_fields_values(row, data)
         }).finally(() => {

@@ -36,7 +36,7 @@ from directions.models import (
     DirectionToUserWatch, IstochnikiFinansirovaniya,
     DirectionsHistory,
 )
-from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService
+from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
@@ -1804,7 +1804,12 @@ def directions_patient_history(request):
     request_data = json.loads(request.body)
 
     iss = Issledovaniya.objects.get(pk=request_data["pk"])
-    filtered = Issledovaniya.objects.filter(time_confirmation__isnull=False, research=iss.research, napravleniye__client__individual=iss.napravleniye.client.individual)
+    researches_pk = [iss.research.pk]
+    if iss.research.speciality:
+        reserches_speciality = list(Researches.objects.values_list('pk', flat=True).filter(speciality=iss.research.speciality))
+        if len(reserches_speciality) > 0:
+            researches_pk.extend(reserches_speciality)
+    filtered = Issledovaniya.objects.filter(time_confirmation__isnull=False, research_id__in=researches_pk, napravleniye__client__individual=iss.napravleniye.client.individual)
 
     is_same_parent = request_data.get("isSameParent", False)
 
@@ -1817,7 +1822,7 @@ def directions_patient_history(request):
         filtered = filtered.filter(napravleniye__parent=iss.napravleniye.parent)
 
     for i in filtered.order_by('-time_confirmation').exclude(pk=request_data["pk"]):
-        data.append({"pk": i.pk, "direction": i.napravleniye_id, "date": strdate(i.time_confirmation)})
+        data.append({"pk": i.pk, "direction": i.napravleniye_id, "date": strdate(i.time_confirmation) + ' ' + i.research.short_title})
 
     return JsonResponse({"data": data})
 
@@ -1825,13 +1830,22 @@ def directions_patient_history(request):
 def directions_data_by_fields(request):
     data = {}
     request_data = json.loads(request.body)
-
     i = Issledovaniya.objects.get(pk=request_data["pk"])
+    i_dest = Issledovaniya.objects.get(pk=request_data["pk_dest"])
     if i.time_confirmation:
-        for field in ParaclinicInputField.objects.filter(group__research=i.research, group__hide=False, hide=False):
-            if ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists():
-                data[field.pk] = ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value
-    return JsonResponse({"data": data})
+        if i.research == i_dest.research:
+            for field in ParaclinicInputField.objects.filter(group__research=i.research, group__hide=False, hide=False):
+                if ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists():
+                    data[field.pk] = ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value
+            return JsonResponse({"data": data})
+        else:
+            for field in ParaclinicInputField.objects.filter(group__research=i.research, group__hide=False, hide=False):
+                if ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists():
+                    for field_dest in ParaclinicInputField.objects.filter(group__research=i_dest.research, group__hide=False, hide=False):
+                        if field_dest.attached and field_dest.attached == field.attached:
+                            data[field_dest.pk] = ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value
+                            break
+            return JsonResponse({"data": data})
 
 
 @login_required

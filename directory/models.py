@@ -196,6 +196,7 @@ class Researches(models.Model):
     speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальность услуги', on_delete=models.SET_NULL)
     rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
 
+
     @staticmethod
     def filter_type(t):
         ts = {
@@ -369,6 +370,13 @@ class ParaclinicInputGroups(models.Model):
     hide = models.BooleanField()
     visibility = models.TextField(default='', blank=True)
 
+    def __str__(self):
+        return f"{self.research.title} – {self.title}"
+
+    class Meta:
+        verbose_name = 'Группы'
+        verbose_name_plural = 'Группы'
+
 
 class ParaclinicInputField(models.Model):
     TYPES = (
@@ -412,6 +420,7 @@ class ParaclinicInputField(models.Model):
     helper = models.CharField(max_length=999, blank=True, default='')
     for_extract_card = models.BooleanField(default=False, help_text='В выписку', blank=True)
     for_med_certificate = models.BooleanField(default=False, help_text='В справку', blank=True)
+    attached = models.CharField(max_length=20, help_text='Скреплено с полем другой услуги', blank=True, default=None, null=True, db_index=True)
 
     def get_title(self, force_type=None, recursive=False):
         field_type = force_type or self.field_type
@@ -435,6 +444,13 @@ class ParaclinicInputField(models.Model):
                     titles[-1] = titles[-1] + ' – ' + ft
         title = ', '.join([t for t in titles if t])
         return title
+
+    def __str__(self):
+        return f"{self.group.research.title} - {self.title}"
+
+    class Meta:
+        verbose_name = 'Поля'
+        verbose_name_plural = 'Поля'
 
 
 class ParaclinicTemplateName(models.Model):
