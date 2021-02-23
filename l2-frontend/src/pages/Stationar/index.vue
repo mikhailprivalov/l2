@@ -900,7 +900,6 @@
           }
         }).finally(() => {
           this.pk = this.direction
-          this.newTransfer = true
           this.$store.dispatch(action_types.DEC_LOADING)
         }
         )
@@ -1113,10 +1112,7 @@
         bases: 'bases',
       }),
       newTransfer() {
-        if (this.typeTransfer == "Новый перевод") {
-          return true
-        }
-        return false
+        return this.typeTransfer === "Новый перевод";
       },
       navState() {
         if (!this.direction) {

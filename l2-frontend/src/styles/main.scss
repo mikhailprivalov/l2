@@ -1653,6 +1653,14 @@ body > .container-fluid {
   }
 }
 
+.a-under-reversed {
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 input[type=date].form-control {
   line-height: 1;
 }
@@ -2007,4 +2015,128 @@ input[type=date].form-control {
 
 .datetime-hover {
   background-color: rgba(50, 200, 200, .1);
+}
+
+
+.an {
+  align-items: stretch !important;
+  justify-content: stretch !important;
+
+  .panel-flt {
+    margin: 41px;
+    align-self: stretch !important;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-body {
+    flex: 1;
+    padding: 0;
+    height: calc(100% - 91px);
+    min-height: 200px;
+    position: relative;
+  }
+
+  &-body {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: stretch;
+
+    & > div {
+      align-self: stretch;
+    }
+  }
+
+  &-sidebar {
+    width: 100px;
+    background: rgba(0, 0, 0, .04);
+    border-right: 1px solid rgba(0, 0, 0, .16);
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &.wide {
+      width: 400px;
+    }
+  }
+
+  &-content {
+    display: flex;
+    flex-direction: column;
+    width: calc(100% - 100px);
+
+    &.with-wide-sidebar {
+      width: calc(100% - 400px);
+    }
+
+    & > div {
+      flex: 1;
+      padding: 5px 10px;
+      overflow-y: auto;
+    }
+  }
+
+  &-history > div {
+    margin-bottom: 10px;
+    padding: 5px;
+    background: rgba(#000, .1);
+    border-radius: 5px;
+  }
+
+  &-sidebar-content, &-s {
+    padding: 5px;
+    margin: 5px;
+    border-radius: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    position: relative;
+  }
+
+  &-sidebar-content {
+    background: #fff;
+
+    &-row {
+      padding: 4px 0;
+
+      & + & {
+        border-top: 1px solid rgba(0, 0, 0, 0.28);
+      }
+
+      &-header {
+        font-weight: bold;
+      }
+
+      &:first-child {
+        padding-top: 0;
+      }
+    }
+  }
+
+  &-s {
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.07) 100%);
+
+    &:not(.active) {
+      cursor: pointer;
+      transition: all .2s cubic-bezier(.25, .8, .25, 1);
+    }
+
+    &.active {
+      background-image: linear-gradient(#6C7A89, #56616c);
+      color: #fff;
+    }
+
+    &:not(.active):hover {
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+      z-index: 1;
+      transform: scale(1.008);
+    }
+  }
 }
