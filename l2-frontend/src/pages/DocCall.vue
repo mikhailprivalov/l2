@@ -137,7 +137,7 @@
           <col>
           <col style="width: 95px">
           <col>
-          <col style="width: 120px">
+          <col style="width: 125px">
           <col style="width: 150px">
           <col>
           <col style="width: 150px">
