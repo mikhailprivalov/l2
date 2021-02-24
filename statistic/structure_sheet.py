@@ -579,6 +579,8 @@ def statistic_message_ticket_base(ws1, d1, d2):
         ('Цель', 20),
         ('Примечания', 26),
         ('Статус', 16),
+        ('Источник', 16),
+        ('Создатель', 26),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]
@@ -611,8 +613,13 @@ def statistic_message_ticket_data(ws1, message_ticket_sql):
         ws1.cell(row=r, column=7).value = purposes.get(ticket.purpose, '')
         ws1.cell(row=r, column=8).value = ticket.comment
         ws1.cell(row=r, column=9).value = statuses.get(ticket.status, '')
+        ws1.cell(row=r, column=10).value = 'интернет' if statuses.get(ticket.is_external) else 'оператор'
+        who_create = ""
+        if ticket.fio and ticket.short_title:
+            who_create = f"{ticket.fio}-{ticket.short_title}"
+        ws1.cell(row=r, column=11).value = who_create
 
-        rows = ws1[f'A{r}:I{r}']
+        rows = ws1[f'A{r}:K{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res
