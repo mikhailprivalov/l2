@@ -17,7 +17,7 @@ from clients.models import Individual, Card
 from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
-from laboratory.settings import AFTER_DATE
+from laboratory.settings import AFTER_DATE, MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY
 from laboratory.utils import current_time
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
@@ -431,6 +431,16 @@ def external_doc_call_create(request):
     if not card or not research or not hospital:
         return JsonResponse({"ok": False, "number": None})
 
+    date = current_time()
+
+    count = DoctorCall.objects.filter(
+        card=card, is_external=True,
+        exec_at__date=date.date()
+    ).count()
+    if count >= MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY:
+        logger.exception(f'TOO MANY REQUESTS PER DAY: already have {count} calls at {date:%d.%m.%Y}')
+        return JsonResponse({"ok": False, "number": None})
+
     research_pk = research.pk
 
     doc_call = DoctorCall.doctor_call_save(
@@ -439,7 +449,7 @@ def external_doc_call_create(request):
             'research': research_pk,
             'address': card.main_address,
             'district': -1,
-            'date': current_time(),
+            'date': date,
             'comment': comment,
             'phone': form.get('phone'),
             'doc': -1,
