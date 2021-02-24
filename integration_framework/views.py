@@ -458,7 +458,7 @@ def external_doc_call_create(request):
             'external': True,
             'email': email,
             'external_num': external_num,
-            'is_main_external': is_main_external,
+            'is_main_external': bool(is_main_external),
         }
     )
     if is_main_external:
