@@ -18,7 +18,6 @@
           />
         </div>
       </div>
-
     </div>
     <div slot="footer">
       <div class="row">
@@ -48,7 +47,7 @@ import moment from "moment";
 
 export default {
   name: 'statistics-message-print-modal',
-  components: {Treeselect, Modal},
+  components: {Treeselect, Modal,},
   props: {
     hospitals: {
       type: Array,
@@ -63,7 +62,7 @@ export default {
       current_hospital: '-1',
       date1: moment().format('YYYY-MM-DD'),
       date2: moment().format('YYYY-MM-DD'),
-
+      card_pk: ''
     }
   },
   watch: {
