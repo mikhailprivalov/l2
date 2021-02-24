@@ -142,7 +142,7 @@ class DoctorCall(models.Model):
 
         email = data.get('email')
 
-        has_external_org = hospital_obj and hospital_obj.remote_url
+        has_external_org = bool(hospital_obj and hospital_obj.remote_url)
 
         is_main_external = has_external_org and data.get('is_main_external', SettingManager.l2('send_doc_calls'))
 
