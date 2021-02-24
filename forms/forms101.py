@@ -1524,6 +1524,7 @@ def form_09(request_data):
     buffer.close()
     return pdf
                           
+                          
 def form_10(request_data):
     """
     Отказ от видов медицинских вмешательств, включенных
@@ -1768,6 +1769,7 @@ def form_10(request_data):
     buffer.close()
     return pdf
 
+                          
 def form_11(request_data):
     """
     Информированное добровольное согласие
@@ -1959,7 +1961,6 @@ def form_11(request_data):
             style,
         )
     )  
-
 
     space_bottom = ' &nbsp;'
 
