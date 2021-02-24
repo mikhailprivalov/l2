@@ -109,7 +109,8 @@ def patients_search_card(request):
         objects = list(Individual.objects.filter(
             Q(card__phones__normalized_number__in=normalized_phones) |
             Q(card__phones__number__in=normalized_phones) |
-            Q(card__phone__in=normalized_phones)
+            Q(card__phone__in=normalized_phones) |
+            Q(card__doctorcall__phone__in=normalized_phones)
         ))
     elif p_enp:
         if tfoms_module and not suggests:
