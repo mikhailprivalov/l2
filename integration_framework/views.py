@@ -439,7 +439,7 @@ def external_doc_call_create(request):
     ).count()
     if count >= MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY:
         logger.exception(f'TOO MANY REQUESTS PER DAY: already have {count} calls at {date:%d.%m.%Y}')
-        return JsonResponse({"ok": False, "number": None})
+        return JsonResponse({"ok": False, "number": None, "tooManyRequests": True})
 
     research_pk = research.pk
 

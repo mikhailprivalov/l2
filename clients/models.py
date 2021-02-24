@@ -1221,6 +1221,20 @@ class Phones(models.Model):
             n = "8" + n[1:]
         return n
 
+    @staticmethod
+    def normalize_to_search(n):
+        nn = Phones.nn(n)
+
+        r = [
+            n,
+            nn,
+        ]
+
+        if len(nn) == 11:
+            r.append(f"{nn[0]} {nn[1:4]} {nn[4:]}")
+
+        return r
+
     def __str__(self):
         return "{0}: {1}".format(self.card, self.number)
 

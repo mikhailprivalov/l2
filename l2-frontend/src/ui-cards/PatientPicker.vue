@@ -803,6 +803,7 @@
           let rmis_uid = params.get('rmis_uid')
           let base_pk = params.get('base_pk')
           let card_pk = params.get('card_pk')
+          let phone = params.get('phone')
           let open_edit = params.get('open_edit') === 'true'
           let ofname = params.get('ofname')
           let ofname_dep = params.get('ofname_dep')
@@ -856,6 +857,12 @@
           } else {
             this.base = this.bases[0].pk
           }
+          if (phone) {
+            window.history.pushState('', '', window.location.href.split('?')[0])
+            this.query = `phone:${phone}`
+            this.search_after_loading = true
+            this.open_edit_after_loading = open_edit
+          }
           $(this.$refs.q).focus()
           this.emit_input()
         }
@@ -892,7 +899,10 @@
         this.selected_card = {}
         this.history_num = ''
         this.founded_cards = []
-        if (this.query.toLowerCase().includes('card_pk:')) {
+        if (
+          this.query.toLowerCase().includes('card_pk:')
+          || this.query.toLowerCase().includes('phone:')
+        ) {
           this.query = ''
         }
         this.emit_input()

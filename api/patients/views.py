@@ -9,7 +9,7 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction, connections
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.forms import model_to_dict
 from django.http import JsonResponse
 
@@ -96,6 +96,8 @@ def patients_search_card(request):
     p_enp = bool(re.search(p_enp_re, query))
     p4 = re.compile(r'card_pk:\d+', flags=re.IGNORECASE)
     p4i = bool(re.search(p4, query.lower()))
+    p5 = re.compile(r'phone:.+')
+    p5i = bool(re.search(p5, query))
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     c = None
     if p_enp:
@@ -106,6 +108,14 @@ def patients_search_card(request):
                 Individual.import_from_tfoms(from_tfoms)
 
         objects = list(Individual.objects.filter(document__number=query, document__document_type__title='Полис ОМС'))
+    elif p5i:
+        phone = query.replace('phone:', '')
+        normalized_phones = Phones.normalize_to_search(phone)
+        objects = list(Individual.objects.filter(
+            Q(card__phones__normalized_number__in=normalized_phones) |
+            Q(card__phones__number__in=normalized_phones) |
+            Q(card__phone__in=normalized_phones)
+        ))
     elif not p4i:
         if inc_tfoms:
             t_parts = re.search(p_tfoms, query.lower()).groups()
