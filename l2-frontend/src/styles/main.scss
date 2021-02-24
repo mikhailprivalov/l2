@@ -1777,6 +1777,16 @@ input[type=date].form-control {
   }
 }
 
+.treeselect-wide .vue-treeselect {
+  &__menu {
+    overflow: auto !important;
+  }
+
+  &__label {
+    overflow: initial !important;
+  }
+}
+
 .treeselect-noborder-left .vue-treeselect {
   &__control {
     border-left: none !important;

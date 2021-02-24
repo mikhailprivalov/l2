@@ -23,7 +23,16 @@
                      :disabled="Boolean(params.number|| params.without_date)"/>
             </div>
           </div>
-          <div class="col-xs-3">
+          <div class="col-xs-2">
+            <div class="input-group treeselect-noborder-left">
+              <span class="input-group-addon">Цель</span>
+              <treeselect :multiple="false" :disable-branch-nodes="true" :options="purposes"
+                          placeholder="Цель не казана" v-model="params.purpose" :disabled="Boolean(params.number)"
+                          :append-to-body="true" :clearable="false"
+              />
+            </div>
+          </div>
+          <div class="col-xs-2">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Статус</span>
               <select v-model="params.status" :readonly="Boolean(params.number)" class="form-control">
@@ -35,7 +44,7 @@
               </select>
             </div>
           </div>
-          <div class="col-xs-3">
+          <div class="col-xs-2">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Номер</span>
               <input v-model.trim="params.number" class="form-control" placeholder="без других параметров"/>
@@ -43,22 +52,13 @@
           </div>
         </div>
         <div class="row" style="margin-top:5px;">
-          <div class="col-xs-3">
-            <div class="input-group treeselect-noborder-left">
-              <span class="input-group-addon">Цель</span>
-              <treeselect :multiple="false" :disable-branch-nodes="true" :options="purposes"
-                          placeholder="Цель не казана" v-model="params.purpose" :disabled="Boolean(params.number)"
-                          :append-to-body="true" :clearable="false"
-              />
-            </div>
-          </div>
-          <div class="col-xs-3">
+          <div class="col-xs-6">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Больница</span>
               <treeselect :multiple="false" :disable-branch-nodes="true" :options="hospitals"
                           placeholder="Больница не выбрана" v-model="params.hospital"
-                          :append-to-body="true" :disabled="Boolean(params.number)"
-                          :clearable="false"
+                          :disabled="Boolean(params.number)"
+                          :clearable="false" class="treeselect-wide"
               />
             </div>
           </div>

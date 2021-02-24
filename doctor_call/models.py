@@ -124,6 +124,8 @@ class DoctorCall(models.Model):
         else:
             purpose = int(data['purpose'])
 
+        hospital_obj: Optional[Hospitals]
+
         if int(data['hospital']) < 0:
             hospital_obj = None
         else:
@@ -131,7 +133,7 @@ class DoctorCall(models.Model):
 
         email = data.get('email')
 
-        is_main_external = data.get('is_main_external', SettingManager.l2('send_doc_calls'))
+        is_main_external = hospital_obj and hospital_obj.remote_url and data.get('is_main_external', SettingManager.l2('send_doc_calls'))
 
         doc_call = DoctorCall(
             client=patient_card,

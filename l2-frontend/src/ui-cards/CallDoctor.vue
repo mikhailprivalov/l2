@@ -39,23 +39,6 @@
       </div>
       <div class="row">
         <div class="col-xs-6 col-form left" style="padding-bottom: 0">
-          <div class="form-row sm-f" style="border-top: none">
-            <div class="row-t">Дата</div>
-            <input class="form-control" readonly type="date" v-model="date" :min="td">
-          </div>
-        </div>
-        <div class="col-xs-6 col-form right" style="padding-bottom: 0">
-          <div class="form-row sm-f" style="border-top: none">
-            <div class="row-t">Больница</div>
-            <treeselect class="treeselect-noborder"
-              :multiple="false" :disable-branch-nodes="true" :options="card.hospitals"
-              :append-to-body="true" placeholder="Больница не выбрана" v-model="card.hospital"
-            />
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-6 col-form left" style="padding-bottom: 0">
           <div class="form-row sm-f border-right" style="border-top: none">
             <div class="row-t">Цель вызова</div>
             <select v-model="card.purpose" class="form-control">
@@ -64,7 +47,9 @@
               </option>
             </select>
           </div>
-          <div class="form-row sm-f border-right">
+        </div>
+        <div class="col-xs-6 col-form" style="padding-bottom: 0">
+          <div class="form-row sm-f" style="border-top: none">
             <div class="row-t">Лечащий врач</div>
             <treeselect class="treeselect-noborder"
               :multiple="false" :disable-branch-nodes="true" :options="card.docs"
@@ -72,10 +57,19 @@
             />
           </div>
         </div>
-        <div class="col-xs-6 col-form right" style="padding-bottom: 0">
+      </div>
+      <div class="form-row sm-f" style="border-top: none">
+        <div class="row-t">Больница</div>
+        <treeselect class="treeselect-noborder treeselect-wide"
+          :multiple="false" :disable-branch-nodes="true" :options="card.hospitals"
+          placeholder="Больница не выбрана" v-model="card.hospital"
+        />
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
           <div class="form-row sm-f" style="border-top: none">
             <div class="row-t">Комментарий</div>
-            <textarea class="form-control" v-model="comment"></textarea>
+            <textarea class="form-control" v-autosize="comment" v-model="comment"></textarea>
           </div>
         </div>
       </div>
@@ -246,8 +240,8 @@
           this.rows = await api('doctor-call/actual-rows', this, 'card_pk')
           return;
         }
-        this.loaded = false
         await this.$store.dispatch(action_types.INC_LOADING)
+        this.loaded = false
         const [card, {docs, purposes, hospitals, hospitalId}, rows] = await Promise.all([
           patients_point.getCard(this, 'card_pk'),
           api('actual-districts', this, 'card_pk'),
