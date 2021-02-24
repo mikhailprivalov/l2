@@ -89,6 +89,7 @@ class DoctorCall(models.Model):
             "isCancel": self.cancel,
             "isExternal": self.is_external,
             "isMainExternal": self.is_main_external,
+            "needSendToExternal": self.need_send_to_external,
             "externalNum": self.external_num,
             "createdAt": strfdatetime(self.create_at, "%d.%m.%Y"),
             "createdAtTime": strfdatetime(self.create_at, "%X"),
@@ -133,7 +134,9 @@ class DoctorCall(models.Model):
 
         email = data.get('email')
 
-        is_main_external = hospital_obj and hospital_obj.remote_url and data.get('is_main_external', SettingManager.l2('send_doc_calls'))
+        has_external_org = hospital_obj and hospital_obj.remote_url
+
+        is_main_external = has_external_org and data.get('is_main_external', SettingManager.l2('send_doc_calls'))
 
         doc_call = DoctorCall(
             client=patient_card,
@@ -152,7 +155,7 @@ class DoctorCall(models.Model):
             is_main_external=bool(is_main_external),
             external_num=data.get('external_num') or '',
             email=None if not email else email[:64],
-            need_send_to_external=SettingManager.l2('send_doc_calls') and not is_main_external,
+            need_send_to_external=has_external_org and SettingManager.l2('send_doc_calls') and not is_main_external,
         )
         if data.get('as_executed'):
             doc_call.status = 3
