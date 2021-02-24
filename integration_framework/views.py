@@ -434,7 +434,7 @@ def external_doc_call_create(request):
     date = current_time()
 
     count = DoctorCall.objects.filter(
-        card=card, is_external=True,
+        client=card, is_external=True,
         exec_at__date=date.date()
     ).count()
     if count >= MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY:
