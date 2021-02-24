@@ -82,6 +82,7 @@ def patients_search_card(request):
     data = []
     d = json.loads(request.body)
     inc_rmis = d.get('inc_rmis')
+    always_phone_search = d.get('always_phone_search')
     tfoms_module = SettingManager.l2('tfoms')
     birthday_order = SettingManager.l2('birthday_order')
     inc_tfoms = d.get('inc_tfoms') and tfoms_module
@@ -100,15 +101,9 @@ def patients_search_card(request):
     p5i = bool(re.search(p5, query))
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     c = None
-    if p_enp:
-        if tfoms_module and not suggests:
-            from_tfoms = match_enp(query)
-
-            if from_tfoms and isinstance(from_tfoms, dict):
-                Individual.import_from_tfoms(from_tfoms)
-
-        objects = list(Individual.objects.filter(document__number=query, document__document_type__title='Полис ОМС'))
-    elif p5i:
+    has_phone_search = False
+    if p5i or (always_phone_search and len(query) == 11 and query.isdigit()):
+        has_phone_search = True
         phone = query.replace('phone:', '')
         normalized_phones = Phones.normalize_to_search(phone)
         objects = list(Individual.objects.filter(
@@ -116,6 +111,14 @@ def patients_search_card(request):
             Q(card__phones__number__in=normalized_phones) |
             Q(card__phone__in=normalized_phones)
         ))
+    elif p_enp:
+        if tfoms_module and not suggests:
+            from_tfoms = match_enp(query)
+
+            if from_tfoms and isinstance(from_tfoms, dict):
+                Individual.import_from_tfoms(from_tfoms)
+
+        objects = list(Individual.objects.filter(document__number=query, document__document_type__title='Полис ОМС'))
     elif not p4i:
         if inc_tfoms:
             t_parts = re.search(p_tfoms, query.lower()).groups()
@@ -215,7 +218,7 @@ def patients_search_card(request):
         cards = Card.objects.filter(pk=int(query.split(":")[1]))
     else:
         cards = Card.objects.filter(base=card_type, individual__in=objects, is_archive=False)
-        if re.match(p3, query):
+        if not has_phone_search and re.match(p3, query):
             cards = cards.filter(number=query)
 
     if p_enp and cards:
