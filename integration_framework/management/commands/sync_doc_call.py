@@ -24,6 +24,8 @@ class Command(BaseCommand):
                 self.stdout.write(f"Sync status {call.num}:{call.external_num} -> {call.status}")
                 resp = update_doc_call_status(call.external_num, call.status, hospital.oid, hospital.code_tfoms)
                 self.stdout.write(f"Result: {resp}")
+                call.need_send_status = False
+                call.save(update_fields=['need_send_status'])
             if SettingManager.l2('send_doc_calls'):
                 call: DoctorCall
                 for call in DoctorCall.objects.filter(need_send_to_external=True, hospital__isnull=False).exclude(hospital__remote_url='').exclude(hospital__remote_token=''):
