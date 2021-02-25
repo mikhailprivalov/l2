@@ -45,6 +45,7 @@ urlpatterns = [
     path('cases/', include('cases.urls')),
     path('tubes/get', receivematerial.views.tubes_get),
     path('results/', include('results.urls')),
+    path('laboratory/', include('results.urls')),
     path('statistic', statistic.views.statistic_page),
     path('statistic/xls', statistic.views.statistic_xls),
     path('ajax_select/', include(ajax_select_urls)),

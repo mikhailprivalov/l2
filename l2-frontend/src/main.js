@@ -77,6 +77,7 @@ new Vue({
     'ListWait': () => import('@/pages/ListWait'),
     'LoadFile': () => import('@/ui-cards/LoadFile'),
     'PlanPharmacotherapy': () => import('@/pages/PlanPharmacotherapy'),
+    'LaboratoryResults': () => import('@/pages/LaboratoryResults'),
   },
   data: {
     timeouts: {},

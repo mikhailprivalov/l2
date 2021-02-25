@@ -1,0 +1,32 @@
+{% extends "dbase.html" %}
+{% block title %}Лабораторные результаты{% endblock %}
+{% block container %}container-fluid{% endblock %}
+
+{% block navbar_classes %}fluid-nav-cont{% endblock %}
+
+{% load static %}
+
+{% block content %}
+    <laboratory-results />
+{% endblock %}
+
+{% block head_cn %}
+    <style>
+        body, html {
+            height: 100%;
+        }
+
+        body {
+            padding-bottom: 0;
+        }
+
+        .container-fluid {
+            height: 100%;
+            width: 100%;
+        }
+
+        .navbar {
+            margin-bottom: 3px;
+        }
+    </style>
+{% endblock %}
