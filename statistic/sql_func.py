@@ -306,24 +306,26 @@ def message_ticket(hospitals_id, d_s, d_e):
                 doctor_call_doctorcall.phone,
                 doctor_call_doctorcall.address,
                 doctor_call_doctorcall.email,	  
-                hospitals_hospitals.title as hospital_title,
-                hospitals_hospitals.short_title as hospital_short_title,
+                doc_call_hospital.title as hospital_title,
+                doc_call_hospital.short_title as hospital_short_title,
                 doctor_call_doctorcall.purpose,
                 doctor_call_doctorcall.status,
                 clients_individual.name,
                 clients_individual.family,
                 clients_individual.patronymic,
                 to_char(clients_individual.birthday, 'DD.MM.YYYY') as birthday,
-                doctor_call_doctorcall.hospital_id as hospital_id 
+                doctor_call_doctorcall.hospital_id as hospital_id,
+                doctor_call_doctorcall.is_external,
+                users_doctorprofile.fio,
+                who_create_hospital.short_title
                 FROM doctor_call_doctorcall
-                LEFT JOIN hospitals_hospitals ON
-                hospitals_hospitals.id=doctor_call_doctorcall.hospital_id
-                LEFT JOIN clients_card ON
-                clients_card.id=doctor_call_doctorcall.client_id
-                LEFT JOIN clients_individual ON
-                clients_individual.id=clients_card.individual_id
+                LEFT JOIN hospitals_hospitals as doc_call_hospital ON (doc_call_hospital.id=doctor_call_doctorcall.hospital_id)
+                LEFT JOIN clients_card ON clients_card.id=doctor_call_doctorcall.client_id
+                LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
+                LEFT JOIN users_doctorprofile ON users_doctorprofile.id=doctor_call_doctorcall.doc_who_create_id
+                LEFT JOIN hospitals_hospitals as who_create_hospital ON (who_create_hospital.id=users_doctorprofile.hospital_id)
                 WHERE doctor_call_doctorcall.create_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
-                AND hospital_id = ANY(%(hospitals_id)s)
+                AND doctor_call_doctorcall.hospital_id = ANY(%(hospitals_id)s)
                 ORDER BY doctor_call_doctorcall.hospital_id, doctor_call_doctorcall.create_at 
  
             """,

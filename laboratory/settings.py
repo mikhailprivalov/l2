@@ -215,6 +215,8 @@ RMIS_PROXY = None
 AFTER_DATE = None
 AFTER_DATE_HOLTER = None
 
+MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY = 3
+
 
 class DisableMigrations(object):
     def __contains__(self, item):

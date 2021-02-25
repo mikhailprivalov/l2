@@ -861,7 +861,7 @@ class Card(models.Model):
 
     anamnesis_of_life = models.TextField(default='', blank=True, help_text='Анамнез жизни')
     number_poliklinika = models.CharField(max_length=20, blank=True, default='', help_text="Идетификатор карты поликлиника", db_index=True)
-    phone = models.CharField(max_length=20, blank=True, default='')
+    phone = models.CharField(max_length=20, blank=True, default='', db_index=True)
     harmful_factor = models.CharField(max_length=255, blank=True, default='', help_text="Фактор вредности")
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
@@ -1197,8 +1197,8 @@ class DispensaryRegPlans(models.Model):
 
 class Phones(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
-    number = models.CharField(max_length=20, help_text='Номер телефона')
-    normalized_number = models.CharField(max_length=20, blank=True, default='', help_text='(NORMALIZED) Номер телефона')
+    number = models.CharField(max_length=20, help_text='Номер телефона', db_index=True)
+    normalized_number = models.CharField(max_length=20, blank=True, default='', help_text='(NORMALIZED) Номер телефона', db_index=True)
 
     def normalize_number(self):
         n = self.nn(self.number)
@@ -1220,6 +1220,20 @@ class Phones(models.Model):
         if len(n) == 11 and n[0] == "7":
             n = "8" + n[1:]
         return n
+
+    @staticmethod
+    def normalize_to_search(n):
+        nn = Phones.nn(n)
+
+        r = [
+            n,
+            nn,
+        ]
+
+        if len(nn) == 11:
+            r.append(f"{nn[0]} {nn[1:4]} {nn[4:]}")
+
+        return r
 
     def __str__(self):
         return "{0}: {1}".format(self.card, self.number)

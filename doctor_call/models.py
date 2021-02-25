@@ -44,7 +44,7 @@ class DoctorCall(models.Model):
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель вызова на дом', on_delete=models.SET_NULL)
     district = models.ForeignKey(District, default=None, null=True, blank=True, db_index=True, help_text="Участок", on_delete=models.SET_NULL)
     address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес")
-    phone = models.CharField(max_length=20, blank=True, default='')
+    phone = models.CharField(max_length=20, blank=True, default='', db_index=True)
     purpose = models.IntegerField(default=5, blank=True, db_index=True, choices=PURPOSES, help_text="Цель вызова")
     doc_assigned = models.ForeignKey(DoctorProfile, db_index=True, null=True, related_name="doc_assigned", help_text='Лечащий врач', on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospitals, db_index=True, null=True, help_text='Больница', on_delete=models.CASCADE)
@@ -89,13 +89,22 @@ class DoctorCall(models.Model):
             "isCancel": self.cancel,
             "isExternal": self.is_external,
             "isMainExternal": self.is_main_external,
+            "needSendToExternal": self.need_send_to_external,
             "externalNum": self.external_num,
             "createdAt": strfdatetime(self.create_at, "%d.%m.%Y"),
             "createdAtTime": strfdatetime(self.create_at, "%X"),
             "status": self.status,
             "executor": self.executor_id,
             "executor_fio": self.executor.get_fio() if self.executor else None,
-            "canEdit": not self.need_send_to_external and (not doc or not self.hospital or self.hospital == doc.get_hospital()) and not self.is_main_external,
+            "canEdit": (
+                not self.need_send_to_external
+                and (
+                    not doc
+                    or doc.all_hospitals_users_control
+                    or not self.hospital or self.hospital == doc.get_hospital()
+                )
+                and not self.is_main_external
+            ),
             "inLog": DoctorCallLog.objects.filter(call=self).count(),
         }
 
@@ -124,6 +133,8 @@ class DoctorCall(models.Model):
         else:
             purpose = int(data['purpose'])
 
+        hospital_obj: Optional[Hospitals]
+
         if int(data['hospital']) < 0:
             hospital_obj = None
         else:
@@ -131,7 +142,9 @@ class DoctorCall(models.Model):
 
         email = data.get('email')
 
-        is_main_external = data.get('is_main_external', SettingManager.l2('send_doc_calls'))
+        has_external_org = bool(hospital_obj and hospital_obj.remote_url)
+
+        is_main_external = has_external_org and data.get('is_main_external', SettingManager.l2('send_doc_calls'))
 
         doc_call = DoctorCall(
             client=patient_card,
@@ -150,7 +163,7 @@ class DoctorCall(models.Model):
             is_main_external=bool(is_main_external),
             external_num=data.get('external_num') or '',
             email=None if not email else email[:64],
-            need_send_to_external=SettingManager.l2('send_doc_calls') and not is_main_external,
+            need_send_to_external=has_external_org and SettingManager.l2('send_doc_calls') and not is_main_external,
         )
         if data.get('as_executed'):
             doc_call.status = 3

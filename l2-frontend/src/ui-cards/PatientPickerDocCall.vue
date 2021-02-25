@@ -275,6 +275,7 @@ export default {
         inc_rmis: false,
         inc_tfoms: false,
         suggests: true,
+        always_phone_search: true,
       })).results
 
       if (this.suggests.data.length === 0) {
@@ -535,6 +536,7 @@ export default {
         list_all_cards: false,
         inc_rmis: this.inc_rmis || this.search_after_loading,
         inc_tfoms: this.inc_tfoms && this.tfoms_query,
+        always_phone_search: true,
       }).then((result) => {
         this.clear()
         if (result.results) {

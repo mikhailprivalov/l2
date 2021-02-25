@@ -47,18 +47,22 @@
       </patient-picker>
     </div>
     <div class="b gutter gutter-col gutter-column-1"></div>
-    <div class="c">
+    <div class="c" v-if="!l2_only_doc_call">
       <directions-history :patient_pk="selected_card.pk"/>
     </div>
-    <div class="d gutter gutter-row gutter-row-1"></div>
+    <div v-else-if="!hasGrid" class="c">
+      <div></div>
+    </div>
+    <div class="d gutter gutter-row gutter-row-1" :class="{onlyDocCall: l2_only_doc_call}"></div>
     <div class="e">
       <researches-picker v-model="selected_researches"/>
     </div>
     <div class="f gutter gutter-col gutter-column-2"></div>
-    <div class="g" :class="{noMoreModules: !l2_doc_call && !l2_list_wait}">
+    <div class="g" :class="{noMoreModules: !l2_doc_call && !l2_list_wait, onlyDocCall: l2_only_doc_call}">
       <DirectAndPlanSwitcher v-model="mode" :bages="this.modes_counts"
                              v-if="(l2_doc_call || l2_list_wait) && !l2_only_doc_call" />
       <div v-show="mode === DIRECTION_MODE_DIRECTION"
+           v-if="!l2_only_doc_call"
            :style="(l2_doc_call || l2_list_wait) && 'border-top: 1px solid #434a54'">
         <selected-researches :operator="selected_card.operator" :ofname="selected_card.ofname"
                              :visible="mode === DIRECTION_MODE_DIRECTION"
@@ -70,7 +74,7 @@
         <CallDoctor :card_pk="selected_card.pk" :researches="selected_researches"
                     :visible="mode === DIRECTION_MODE_CALL" />
       </div>
-      <div v-show="mode === DIRECTION_MODE_WAIT" v-if="l2_list_wait">
+      <div v-show="mode === DIRECTION_MODE_WAIT" v-if="l2_list_wait && !l2_only_doc_call">
         <ListWaitCreator :card_pk="selected_card.pk" :researches="selected_researches"
           :visible="mode === DIRECTION_MODE_WAIT" />
       </div>
@@ -349,7 +353,14 @@
     .g {
       grid-area: 3 / 3 / 4 / 4;
 
-      padding-top: 0;
+      &.onlyDocCall {
+        grid-area: 1 / 3 / 4 / 4;
+      }
+
+      &:not(.onlyDocCall) {
+        padding-top: 0;
+      }
+
       padding-left: 0;
       text-align: left;
       background: #fff;
@@ -474,7 +485,7 @@
         content: " ";
       }
 
-      &::after {
+      &:not(.onlyDocCall)::after {
         position: absolute;
         height: 1px;
         width: 10px;
@@ -497,14 +508,22 @@
         height: 34px;
         flex: 1 1 34px;
         width: 100%;
-        border: none !important;
       }
 
       > div:not(:first-child) {
         flex: 1 calc(100% - 34px);
         height: calc(100% - 34px);
         width: 100%;
-        border-top: none;
+      }
+
+      &:not(.onlyDocCall) {
+        > div:first-child {
+          border: none !important;
+        }
+
+        > div:not(:first-child) {
+          border-top: none;
+        }
       }
     }
 

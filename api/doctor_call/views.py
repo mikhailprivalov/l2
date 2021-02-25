@@ -168,9 +168,11 @@ def search(request):
             doc_call = doc_call.filter(Q(pk=just_number) | Q(external_num=number))
     else:
         filters = {
-            'is_external': external,
             'cancel': cancel,
         }
+
+        if external:
+            filters['is_external'] = True
 
         if card_pk != -1:
             card = Card.objects.get(pk=card_pk)

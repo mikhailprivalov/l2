@@ -9,7 +9,7 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction, connections
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.forms import model_to_dict
 from django.http import JsonResponse
 
@@ -82,6 +82,7 @@ def patients_search_card(request):
     data = []
     d = json.loads(request.body)
     inc_rmis = d.get('inc_rmis')
+    always_phone_search = d.get('always_phone_search')
     tfoms_module = SettingManager.l2('tfoms')
     birthday_order = SettingManager.l2('birthday_order')
     inc_tfoms = d.get('inc_tfoms') and tfoms_module
@@ -96,9 +97,22 @@ def patients_search_card(request):
     p_enp = bool(re.search(p_enp_re, query))
     p4 = re.compile(r'card_pk:\d+', flags=re.IGNORECASE)
     p4i = bool(re.search(p4, query.lower()))
+    p5 = re.compile(r'phone:.+')
+    p5i = bool(re.search(p5, query))
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     c = None
-    if p_enp:
+    has_phone_search = False
+    if p5i or (always_phone_search and len(query) == 11 and query.isdigit()):
+        has_phone_search = True
+        phone = query.replace('phone:', '')
+        normalized_phones = Phones.normalize_to_search(phone)
+        objects = list(Individual.objects.filter(
+            Q(card__phones__normalized_number__in=normalized_phones) |
+            Q(card__phones__number__in=normalized_phones) |
+            Q(card__phone__in=normalized_phones) |
+            Q(card__doctorcall__phone__in=normalized_phones)
+        ))
+    elif p_enp:
         if tfoms_module and not suggests:
             from_tfoms = match_enp(query)
 
@@ -205,7 +219,7 @@ def patients_search_card(request):
         cards = Card.objects.filter(pk=int(query.split(":")[1]))
     else:
         cards = Card.objects.filter(base=card_type, individual__in=objects, is_archive=False)
-        if re.match(p3, query):
+        if not has_phone_search and re.match(p3, query):
             cards = cards.filter(number=query)
 
     if p_enp and cards:
