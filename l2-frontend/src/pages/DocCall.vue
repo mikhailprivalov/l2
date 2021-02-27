@@ -4,12 +4,12 @@
       <div class="panel-body" style="overflow: visible;">
         <div class="row">
           <div class="col-xs-6">
-            <div class="input-group">
+            <div class="input-group date-time">
               <span class="input-group-addon">Дата и время</span>
               <span class="input-group-addon" style="padding: 0;border: none;">
                 <date-field-nav-2 v-model="params.date" right
                                   :disabled="Boolean(params.number || params.without_date)"
-                                  w="100%" :brn="false"/>
+                                  w="140px" :brn="false"/>
               </span>
               <span class="input-group-addon addon-splitter"
                     :class="{disabled: Boolean(params.number || params.without_date)}"
@@ -359,6 +359,12 @@ export default {
   background-color: #fff;
   &.disabled {
     opacity: .4;
+  }
+}
+
+.date-time {
+  input {
+    line-height: 1;
   }
 }
 </style>
