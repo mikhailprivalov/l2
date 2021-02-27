@@ -334,3 +334,24 @@ def message_ticket(hospitals_id, d_s, d_e):
 
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def message_ticket_purpose_total(hospitals_id, d_s, d_e):
+    """
+    :return:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """ 
+            SELECT purpose, COUNT(purpose) FROM doctor_call_doctorcall 
+            WHERE create_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s AND doctor_call_doctorcall.hospital_id = ANY(%(hospitals_id)s)
+            GROUP BY purpose
+            """,
+            params={'hospitals_id': hospitals_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+
