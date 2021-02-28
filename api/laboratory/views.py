@@ -299,9 +299,9 @@ def search(request):
                 },
                 "issledovaniya": issledovaniya,
                 "labs": labs,
+                "q": {"text": pk, "mode": t},
             }
             result["ok"] = True
-        result["q"] = {"text": pk, "type": t}
     return JsonResponse(result)
 
 
@@ -312,6 +312,9 @@ def form(request):
     research: Researches = iss.research
     data = {
         "pk": pk,
+        "confirmed": bool(iss.time_confirmation),
+        "saved": bool(iss.time_save),
+        "allow_reset_confirm": iss.allow_reset_confirm(request.user),
         "research": {
             "title": research.title,
             "can_comment": research.can_lab_result_comment,

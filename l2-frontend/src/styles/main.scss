@@ -2252,3 +2252,22 @@ input[type=date].form-control {
     }
   }
 }
+
+.bottom-buttons {
+  height: 34px;
+  background-color: #AAB2BD;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  .btn {
+    width: auto;
+    text-align: center;
+    border-radius: 0;
+
+    &-right {
+      float: right;
+    }
+  }
+}

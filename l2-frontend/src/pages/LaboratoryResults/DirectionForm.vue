@@ -77,6 +77,11 @@
         </li>
       </ul>
     </div>
+    <div class="bottom-buttons">
+      <button class="btn btn-blue-nb btn-right" @click="reload" v-if="loaded">
+        Перезагрузить данные
+      </button>
+    </div>
   </div>
 </template>
 
@@ -92,6 +97,7 @@ export default {
       issledovaniya: [],
       loaded: false,
       active: -1,
+      q: {},
     };
   },
   mounted() {
@@ -99,6 +105,7 @@ export default {
       this.direction = data.direction;
       this.patient = data.patient;
       this.issledovaniya = data.issledovaniya;
+      this.q = data.q;
       this.loaded = true;
       this.select(-1);
       const tubesInGroups = {};
@@ -148,7 +155,10 @@ export default {
     select(pk) {
       this.active = pk;
       this.$root.$emit('laboratory:results:open-form', pk);
-    }
+    },
+    reload() {
+      this.$root.$emit('laboratory:results:search', this.q.mode, String(this.q.text));
+    },
   },
 }
 </script>
@@ -180,7 +190,7 @@ table {
     top: 155px;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: 34px;
   }
 
   li {

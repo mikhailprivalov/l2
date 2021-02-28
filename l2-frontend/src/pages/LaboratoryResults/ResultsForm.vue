@@ -1,42 +1,69 @@
 <template>
-  <div class="root">
-    <table class="table table-bordered table-sm-pd" v-if="loaded">
-      <thead>
-      <tr>
-        <th colspan="4">
-          {{ research.title }}
-        </th>
-      </tr>
-      <tr class="table-header">
-        <th style="width: 29%">Фракция</th>
-        <th>Значение</th>
-        <th style="width: 23%">Нормы М</th>
-        <th style="width: 23%">Нормы Ж</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr v-for="r in result">
-        <td>
-          <label class="fraction-title" :for="`fraction-${r.fraction.pk}`">{{ r.fraction.title }}</label>
-        </td>
-        <td class="val">
-          <input type="text" class="form-control" :class="r.fraction.units.length > 0 && 'with-units'"
-                 v-model="r.value" :id="`fraction-${r.fraction.pk}`" :data-x="Math.min(r.fraction.units.length, 9)">
-          <div class="unit">{{ r.fraction.units }}</div>
-        </td>
-        <Ref :data="r.ref.m"/>
-        <Ref :data="r.ref.f"/>
-      </tr>
-      <tr v-if="research.can_comment">
-        <td><label class="fraction-title" for="result_comment">Комментарий</label></td>
-        <td colspan="3">
+  <fragment>
+    <div class="root">
+      <table class="table table-bordered table-sm-pd" v-if="loaded">
+        <thead>
+        <tr>
+          <th colspan="3">
+            {{ research.title }}
+          </th>
+          <td class="cl-td">
+            <button class="btn btn-blue-nb header-button" @click="clearAll">
+              Очистить всё
+            </button>
+          </td>
+        </tr>
+        <tr class="table-header">
+          <th style="width: 29%">Фракция</th>
+          <th>Значение</th>
+          <th style="width: 23%">Нормы М</th>
+          <th style="width: 23%">Нормы Ж</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="r in result">
+          <td>
+            <label class="fraction-title" :for="`fraction-${r.fraction.pk}`">{{ r.fraction.title }}</label>
+          </td>
+          <td class="val">
+            <input type="text" class="form-control" :class="r.fraction.units.length > 0 && 'with-units'"
+                   v-model="r.value" :id="`fraction-${r.fraction.pk}`" :data-x="Math.min(r.fraction.units.length, 9)">
+            <div class="unit">{{ r.fraction.units }}</div>
+          </td>
+          <Ref :data="r.ref.m"/>
+          <Ref :data="r.ref.f"/>
+        </tr>
+        <tr v-if="research.can_comment">
+          <td><label class="fraction-title" for="result_comment">Комментарий</label></td>
+          <td colspan="3">
             <textarea class="noresize form-control"
                       v-autosize="comment" v-model="comment" id="result_comment"></textarea>
-        </td>
-      </tr>
-      </tbody>
-    </table>
-  </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="bottom-buttons">
+      <template v-if="loaded">
+        <template v-if="!confirmed">
+          <button class="btn btn-blue-nb btn-right">
+            Сохранить и подтвердить
+          </button>
+          <button class="btn btn-blue-nb btn-right" :disabled="!saved">
+            Подтвердить
+          </button>
+          <button class="btn btn-blue-nb btn-right">
+            Сохранить
+          </button>
+        </template>
+        <template v-else>
+          <button class="btn btn-blue-nb btn-right" :disabled="!allow_reset_confirm">
+            Сброс подтверждения
+          </button>
+        </template>
+      </template>
+    </div>
+  </fragment>
 </template>
 <script>
 import * as action_types from "@/store/action-types";
@@ -52,6 +79,9 @@ export default {
   data() {
     return {
       loaded: false,
+      confirmed: false,
+      saved: false,
+      allow_reset_confirm: false,
       pk: null,
       research: {},
       comment: '',
@@ -70,8 +100,21 @@ export default {
       this.research = data.research;
       this.comment = data.comment;
       this.result = data.result;
+      this.confirmed = data.confirmed;
+      this.saved = data.saved;
+      this.allow_reset_confirm = data.allow_reset_confirm;
       this.loaded = true;
       await this.$store.dispatch(action_types.DEC_LOADING);
+    },
+    async clearAll() {
+      try {
+        await this.$dialog.confirm('Вы действительно очистить все значения?')
+      } catch (_) {
+        return
+      }
+      for (const i of this.result) {
+        i.value = '';
+      }
     },
   },
 }
@@ -83,7 +126,7 @@ export default {
   top: 0 !important;
   right: 0;
   left: 0;
-  bottom: 0;
+  bottom: 34px !important;
   overflow-x: visible;
   overflow-y: auto;
 }
@@ -168,7 +211,16 @@ export default {
   cursor: pointer !important;
 }
 
+.header-button {
+  width: 100%;
+}
+
 .table-header th {
   padding: 2px 2px 2px 8px;
+  position: sticky;
+  top: -1px;
+  background-color: white;
+  z-index: 2;
+  box-shadow: 2px 0 2px rgba(0, 0, 0, .1);
 }
 </style>
