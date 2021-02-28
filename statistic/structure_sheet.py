@@ -627,6 +627,7 @@ def statistic_message_purpose_total_data(ws1, message_total, d1, d2, style_borde
     columns = [
         ('Цель', 20),
         ('Всего', 20),
+        ('Выполнено', 20),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=5, column=idx).value = column[0]
@@ -634,14 +635,23 @@ def statistic_message_purpose_total_data(ws1, message_total, d1, d2, style_borde
         ws1.cell(row=5, column=idx).style = style_border_res
 
     r = 5
+    r1 = r
     purposes = dict(DoctorCall.PURPOSES)
     for p in message_total:
         r += 1
-        ws1.cell(row=r, column=1).value = purposes.get(p.purpose, '')
-        ws1.cell(row=r, column=2).value = p.count
-        rows = ws1[f'A{r}:B{r}']
+        ws1.cell(row=r, column=1).value = purposes.get(p.total_purpose, '')
+        ws1.cell(row=r, column=2).value = p.sum_total_purpose
+        ws1.cell(row=r, column=3).value = p.sum_execute_purpose or ''
+        rows = ws1[f'A{r}:C{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res
+
+    ws1.cell(row=r + 1, column=1).value = 'Итого'
+    ws1.cell(row=r + 1, column=1).style = style_border_res
+    ws1.cell(row=r + 1, column=2).value = f'=SUM(B{r1 + 1}:B{r})'
+    ws1.cell(row=r + 1, column=2).style = style_border_res
+    ws1.cell(row=r + 1, column=3).value = f'=SUM(C{r1 + 1}:C{r})'
+    ws1.cell(row=r + 1, column=3).style = style_border_res
 
     return ws1

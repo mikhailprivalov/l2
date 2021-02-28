@@ -1517,7 +1517,7 @@ def statistic_xls(request):
         message_ticket_sql = sql_func.message_ticket(rows_hosp, start_date, end_date)
         ws = structure_sheet.statistic_message_ticket_data(ws, message_ticket_sql, styles_obj[3])
         ws = wb.create_sheet("Итоги-Обращения")
-        message_total_purpose_sql = sql_func.message_ticket_purpose_total(rows_hosp, start_date, end_date)
+        message_total_purpose_sql = sql_func.message_ticket_purpose_total1(rows_hosp, start_date, end_date)
         ws = structure_sheet.statistic_message_purpose_total_data(ws, message_total_purpose_sql, date_start_o, date_end_o, styles_obj[3])
 
     wb.save(response)

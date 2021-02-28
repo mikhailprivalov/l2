@@ -354,4 +354,39 @@ def message_ticket_purpose_total(hospitals_id, d_s, d_e):
     return rows
 
 
+def message_ticket_purpose_total1(hospitals_id, d_s, d_e):
+    """
+    :return:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """ 
+            WITH 
+                total_doc_call AS (
+                  SELECT
+                  purpose as total_purpose, 
+                  COUNT(purpose) as sum_total_purpose
+                  FROM doctor_call_doctorcall as total_dc
+                  WHERE create_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s AND total_dc.hospital_id = ANY(%(hospitals_id)s)
+                  GROUP BY purpose
+                ),
+                
+                execut_doc_call AS (
+                  SELECT purpose as execute_purpose, 
+                  COUNT(purpose) as sum_execute_purpose
+                  FROM doctor_call_doctorcall as exec_dc
+                  WHERE create_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s AND STATUS=3 AND exec_dc.hospital_id = ANY(%(hospitals_id)s)
+                  GROUP BY purpose)
+                
+                SELECT total_purpose, sum_total_purpose, execute_purpose, sum_execute_purpose
+                    FROM total_doc_call
+                    LEFT JOIN execut_doc_call ON execut_doc_call.execute_purpose = total_doc_call.total_purpose
+            """,
+            params={'hospitals_id': hospitals_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 
