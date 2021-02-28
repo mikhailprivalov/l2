@@ -61,12 +61,15 @@
 </template>
 
 <script>
+import _ from 'lodash';
+
 export default {
   name: "DirectionForm",
   data() {
     return {
       direction: {},
       patient: {},
+      issledovaniya: [],
       loaded: false,
     };
   },
@@ -74,7 +77,21 @@ export default {
     this.$root.$on('laboratory:results:show-direction', data => {
       this.direction = data.direction;
       this.patient = data.patient;
+      this.issledovaniya = data.issledovaniya;
       this.loaded = true;
+      const tubesInGroups = {};
+
+      for (const i of data.issledovaniya) {
+        for (const t of i.tubes) {
+          tubesInGroups[t.pk] = i.group;
+        }
+      }
+
+      this.$root.$emit('laboratory:results:activate-pks',
+        [data.direction.pk],
+        _.uniq(_.flatten(data.issledovaniya.map(i => i.tubes.map(t => t.pk)))),
+        tubesInGroups
+      );
     })
   },
   computed: {

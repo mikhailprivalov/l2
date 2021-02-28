@@ -109,7 +109,7 @@ def ready(request):
                 dates_cache[tube.time_recive.date()] = dateformat.format(tube.time_recive, 'd.m.y')
             tubes.add(tube.pk)
             dicttube = {
-                "id": tube.pk,
+                "pk": tube.pk,
                 "direction": direction.pk,
                 "date": dates_cache[tube.time_recive.date()],
                 "tube": {"title": tube.type.tube.title, "color": tube.type.tube.color},
@@ -122,11 +122,11 @@ def ready(request):
             if direction.data_sozdaniya.date() not in dates_cache:
                 dates_cache[direction.data_sozdaniya.date()] = dateformat.format(direction.data_sozdaniya, 'd.m.y')
             dirs.add(direction.pk)
-            dictdir = {"id": direction.pk, "date": dates_cache[direction.data_sozdaniya.date()]}
+            dictdir = {"pk": direction.pk, "date": dates_cache[direction.data_sozdaniya.date()]}
             result["directions"].append(dictdir)
 
-    result["tubes"].sort(key=lambda k: k['id'])
-    result["directions"].sort(key=lambda k: k['id'])
+    result["tubes"].sort(key=lambda k: k['pk'])
+    result["directions"].sort(key=lambda k: k['pk'])
     return JsonResponse(result)
 
 

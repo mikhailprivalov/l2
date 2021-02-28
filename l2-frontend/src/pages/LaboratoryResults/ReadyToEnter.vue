@@ -17,7 +17,9 @@
           </thead>
           <tbody>
           <tr v-for="d in directions">
-            <td class='num' @click="searchDirection(d.id)"><span>{{ d.date }}</span> {{ d.id }}</td>
+            <td class='num' @click="searchDirection(d.pk)" :class="activeDirections.includes(d.pk) && 'num-active'">
+              <span>{{ d.date }}</span> {{ d.pk }}
+            </td>
           </tr>
           </tbody>
         </table>
@@ -34,10 +36,14 @@
           </thead>
           <tbody>
           <tr class='select-tube' :title='t.tube.title' v-for="t in tubes">
-            <td class='num' @click="searchTube(t.id)">
+            <td class='num' @click="searchTube(t.pk)"
+                :class="[
+                  activeTubes.includes(t.pk) && 'num-active',
+                  tubesInGroups[t.pk] && `tb-group-big-${tubesInGroups[t.pk]}`,
+              ]">
               <span>{{ t.date }}</span>
               <div :style='`background-color: ${t.tube.color};color: ${t.tube.color};`' class='circle'></div>
-              {{ t.id }}
+              {{ t.pk }}
             </td>
           </tr>
           </tbody>
@@ -69,7 +75,17 @@ export default {
       date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       directions: [],
       tubes: [],
+      activeDirections: [],
+      activeTubes: [],
+      tubesInGroups: {},
     };
+  },
+  mounted() {
+    this.$root.$on('laboratory:results:activate-pks', (directions, tubes, tubesInGroups) => {
+      this.activeDirections = directions;
+      this.activeTubes = tubes;
+      this.tubesInGroups = tubesInGroups;
+    })
   },
   computed: {
     watchParams() {
@@ -180,9 +196,13 @@ export default {
     float: right;
   }
 
-  &:hover {
+  &:not(&-active):hover {
     background-color: #f5f5f5 !important;
-    z-index: 10;
+  }
+
+  &-active {
+    background-color: #6C7A89 !important;
+    color: #fff;
   }
 }
 
