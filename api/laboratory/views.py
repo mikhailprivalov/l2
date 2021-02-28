@@ -1,5 +1,6 @@
 import collections
 import itertools
+from typing import Optional
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -135,7 +136,7 @@ def search(request):
 
     request_data = json.loads(request.body)
 
-    direction = None
+    direction: Optional[Napravleniya] = None
     pk = request_data["q"].strip()
     laboratory_pk = request_data["laboratory"]
     t = request_data["mode"]
@@ -285,6 +286,7 @@ def search(request):
                     "age": direction.client.individual.age_s(direction=direction),
                     "history_num": direction.history_num,
                     "card": direction.client.number_with_type(),
+                    "diagnosis": direction.diagnos,
                 },
                 "direction": {
                     "pk": direction.pk,
