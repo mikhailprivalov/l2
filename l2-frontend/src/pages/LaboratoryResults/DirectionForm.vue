@@ -60,20 +60,22 @@
       </tr>
       </tbody>
     </table>
-    <ul class="issledovaniya">
-      <li
-        :class='[
+    <div class="issledovaniya-scroll-wrapper">
+      <ul class="issledovaniya">
+        <li
+          :class='[
           `tb-group-full-${i.group} issledovaniya-isnorm-${i.is_norm}`,
           active === i.pk && `tb-group-active-${i.group} active`
         ]'
-        @click="select(i.pk)"
-        v-for="i in issledovaniya">
-        <div :class='`status status-${getStatusClass(i)}`'>{{ getStatus(i) }}</div>
-        {{ i.title }}
-        <br/>
-        <small v-if="i.tubes.length > 0">Ёмкость: {{ i.tubes.map(t => t.pk).join(', ') }}</small>
-      </li>
-    </ul>
+          @click="select(i.pk)"
+          v-for="i in issledovaniya">
+          <div :class='`status status-${getStatusClass(i)}`'>{{ getStatus(i) }}</div>
+          {{ i.title }}
+          <br/>
+          <small v-if="i.tubes.length > 0">Ёмкость: {{ i.tubes.map(t => t.pk).join(', ') }}</small>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -144,6 +146,7 @@ export default {
     },
     select(pk) {
       this.active = pk;
+      this.$root.$emit('laboratory:results:open-form', pk);
     }
   },
 }
@@ -169,10 +172,21 @@ table {
   margin: 0 3px;
   padding: 0;
 
+  &-scroll-wrapper {
+    overflow-x: visible;
+    overflow-y: auto;
+    position: absolute;
+    top: 155px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
   li {
     list-style: none;
     cursor: pointer;
-    margin: 3px;
+    margin: 3px 0;
+    width: calc(100% - 3px);
     background-color: #f8fcfd;
     border-left-width: 3px;
     border-radius: 3px;

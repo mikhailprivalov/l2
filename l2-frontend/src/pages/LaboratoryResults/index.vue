@@ -7,7 +7,9 @@
     <div class="direction-form">
       <DirectionForm/>
     </div>
-    <div class="results-form">c</div>
+    <div class="results-form">
+      <ResultsForm/>
+    </div>
   </div>
 </template>
 
@@ -15,9 +17,10 @@
 import SearchToEnter from "@/pages/LaboratoryResults/SearchToEnter";
 import ReadyToEnter from "@/pages/LaboratoryResults/ReadyToEnter";
 import DirectionForm from "@/pages/LaboratoryResults/DirectionForm";
+import ResultsForm from "@/pages/LaboratoryResults/ResultsForm";
 
 export default {
-  components: {DirectionForm, ReadyToEnter, SearchToEnter},
+  components: {ResultsForm, DirectionForm, ReadyToEnter, SearchToEnter},
   name: 'laboratory-results',
   data() {
     return {

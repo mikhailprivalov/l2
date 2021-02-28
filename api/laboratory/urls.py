@@ -9,4 +9,5 @@ urlpatterns = [
     path('laboratories', views.laboratories),
     path('ready', views.ready),
     path('search', views.search),
+    path('form', views.form),
 ]

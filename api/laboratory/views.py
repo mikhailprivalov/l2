@@ -8,8 +8,8 @@ from django.http import JsonResponse
 import simplejson as json
 from django.utils import dateformat
 
-from directions.models import TubesRegistration, Issledovaniya, Napravleniya
-from directory.models import Fractions, Researches
+from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result
+from directory.models import Fractions, Researches, References
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 
@@ -243,7 +243,7 @@ def search(request):
                                 "doc_save_fio": doc_save_fio,
                                 "doc_save_id": doc_save_id,
                                 "current_doc_save": current_doc_save,
-                                "allow_disable_confirm": issledovaniye.allow_reset_confirm(request.user),
+                                "allow_reset_confirm": issledovaniye.allow_reset_confirm(request.user),
                                 "group": groups[tb],
                             }
                         )
@@ -303,3 +303,76 @@ def search(request):
             result["ok"] = True
         result["q"] = {"text": pk, "type": t}
     return JsonResponse(result)
+
+
+def form(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    iss: Issledovaniya = Issledovaniya.objects.get(pk=pk)
+    research: Researches = iss.research
+    data = {
+        "pk": pk,
+        "research": {
+            "title": research.title,
+            "can_comment": research.can_lab_result_comment,
+            "no_units_and_ref": research.no_units_and_ref,
+            "co_executor_mode": research.co_executor_mode or 0,
+            "co_executor_title": research.co_executor_2_title,
+        },
+        "result": [],
+        "comment": iss.lab_comment or "",
+    }
+
+    f: Fractions
+    for f in Fractions.objects.filter(research=research).order_by("pk", "sort_weight").prefetch_related('references_set'):
+        r: Optional[Result] = Result.objects.filter(issledovaniye=iss, fraction=f).first()
+
+        if not r and f.hide:
+            continue
+
+        ref_m = f.ref_m
+        ref_f = f.ref_f
+        if isinstance(ref_m, str):
+            ref_m = json.loads(ref_m)
+        if isinstance(ref_f, str):
+            ref_f = json.loads(ref_f)
+        av = {}
+
+        def_ref_pk = -1 if not f.default_ref else f.default_ref_id
+
+        for avref in f.references_set.all():
+            av[avref.pk] = {
+                "title": avref.title,
+                "about": avref.about,
+                "m": json.loads(avref.ref_m) if isinstance(avref.ref_m, str) else avref.ref_m,
+                "f": json.loads(avref.ref_f) if isinstance(avref.ref_f, str) else avref.ref_f,
+            }
+
+        empty_ref = {
+            "m": ref_m,
+            "f": ref_f,
+        }
+
+        data["result"].append({
+            "fraction": {
+                "pk": f.pk,
+                "title": f.title,
+                "units": f.units,
+                "render_type": f.render_type,
+                "options": f.options,
+                "type": f.variants.get_variants() if f.variants else [],
+                "type2": f.variants2.get_variants() if f.variants2 else [],
+                "references": {
+                    **empty_ref,
+                    "default": def_ref_pk,
+                    "available": av,
+                },
+            },
+            "ref": r.get_ref(full=True) if r else (empty_ref if ref_m else av.get(def_ref_pk, {})),
+            "norm": r.get_is_norm(recalc=True)[0] if r else None,
+            "value": r.value if r else '',
+        })
+
+    return JsonResponse({
+        "data": data,
+    })
