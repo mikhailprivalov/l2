@@ -64,8 +64,9 @@
       <ul class="issledovaniya">
         <li
           :class='[
-          `tb-group-full-${i.group} issledovaniya-isnorm-${i.is_norm}`,
-          active === i.pk && `tb-group-active-${i.group} active`
+          `issledovaniya-isnorm-${i.is_norm}`,
+          active !== i.pk && `tb-group-${i.group}`,
+          active === i.pk && `tb-group-full-${i.group} tb-group-active-${i.group} active`
         ]'
           @click="select(i.pk)"
           v-for="i in issledovaniya">
@@ -221,6 +222,10 @@ table {
     &.active {
       background-color: #fff !important;
       color: #000 !important;
+    }
+
+    &:not(.active) {
+      border: 1px solid #ECF0F1;
     }
 
     &:not(.issledovaniya-isnorm-maybe):not(.issledovaniya-isnorm-not_normal) {

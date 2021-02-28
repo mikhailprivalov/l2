@@ -368,7 +368,7 @@ def form(request):
                     "available": av,
                 },
             },
-            "ref": r.get_ref(full=True) if r else (empty_ref if ref_m else av.get(def_ref_pk, {})),
+            "ref": r.get_ref(full=True) if r else (empty_ref if def_ref_pk == -1 else av.get(def_ref_pk, {})),
             "norm": r.get_is_norm(recalc=True)[0] if r else None,
             "value": r.value if r else '',
         })
