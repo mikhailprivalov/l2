@@ -1504,16 +1504,21 @@ def statistic_xls(request):
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Обращения")
+        styles_obj = structure_sheet.style_sheet()
+        wb.add_named_style(styles_obj[0])
         if int(filters['pk']) == -1 and any_hospital:
             filters = {}
         rows_hosp = list(Hospitals.objects.values_list('pk', flat=True).filter(hide=False, **filters))
         d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
         d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
-        ws = structure_sheet.statistic_message_ticket_base(ws, date_start_o, date_end_o)
+        ws = structure_sheet.statistic_message_ticket_base(ws, date_start_o, date_end_o, styles_obj[3])
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         message_ticket_sql = sql_func.message_ticket(rows_hosp, start_date, end_date)
-        ws = structure_sheet.statistic_message_ticket_data(ws, message_ticket_sql)
+        ws = structure_sheet.statistic_message_ticket_data(ws, message_ticket_sql, styles_obj[3])
+        ws = wb.create_sheet("Итоги-Обращения")
+        message_total_purpose_sql = sql_func.message_ticket_purpose_total(rows_hosp, start_date, end_date)
+        ws = structure_sheet.statistic_message_purpose_total_data(ws, message_total_purpose_sql, date_start_o, date_end_o, styles_obj[3])
 
     wb.save(response)
     return response

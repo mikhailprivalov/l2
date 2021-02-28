@@ -237,7 +237,13 @@ def style_sheet():
     style_o = NamedStyle(name="style_o")
     style_o.font = Font(bold=True, size=11)
 
-    return (style_border, style_o, style_border1)
+    style_border_res = NamedStyle(name="style_border_res")
+    bd = Side(style='thin', color="000000")
+    style_border_res.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border_res.font = Font(bold=False, size=11)
+    style_border_res.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    return (style_border, style_o, style_border1, style_border_res)
 
 
 def statistics_tickets_base(ws1, i_obj, type_fin, d1, d2, style_border, style_o):
@@ -559,13 +565,7 @@ def statistic_research_data(ws1, researches):
     return ws1
 
 
-def statistic_message_ticket_base(ws1, d1, d2):
-    style_border = NamedStyle(name="style_border")
-    bd = Side(style='thin', color="000000")
-    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-    style_border.font = Font(bold=True, size=11)
-    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
-
+def statistic_message_ticket_base(ws1, d1, d2, style_border):
     ws1.cell(row=1, column=1).value = 'Обращения'
     ws1.cell(row=2, column=1).value = 'Период:'
     ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
@@ -590,15 +590,7 @@ def statistic_message_ticket_base(ws1, d1, d2):
     return ws1
 
 
-def statistic_message_ticket_data(ws1, message_ticket_sql):
-    """
-    :return:
-    """
-    style_border_res = NamedStyle(name="style_border_res")
-    bd = Side(style='thin', color="000000")
-    style_border_res.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-    style_border_res.font = Font(bold=False, size=11)
-    style_border_res.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+def statistic_message_ticket_data(ws1, message_ticket_sql, style_border_res):
     r = 4
     purposes = dict(DoctorCall.PURPOSES)
     statuses = dict(DoctorCall.STATUS)
@@ -623,5 +615,43 @@ def statistic_message_ticket_data(ws1, message_ticket_sql):
         for row in rows:
             for cell in row:
                 cell.style = style_border_res
+
+    return ws1
+
+
+def statistic_message_purpose_total_data(ws1, message_total, d1, d2, style_border_res):
+    ws1.cell(row=1, column=1).value = 'Обращения'
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+
+    columns = [
+        ('Цель', 20),
+        ('Всего', 20),
+        ('Выполнено', 20),
+    ]
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=5, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=5, column=idx).style = style_border_res
+
+    r = 5
+    r1 = r
+    purposes = dict(DoctorCall.PURPOSES)
+    for p in message_total:
+        r += 1
+        ws1.cell(row=r, column=1).value = purposes.get(p.total_purpose, '')
+        ws1.cell(row=r, column=2).value = p.sum_total_purpose
+        ws1.cell(row=r, column=3).value = p.sum_execute_purpose or ''
+        rows = ws1[f'A{r}:C{r}']
+        for row in rows:
+            for cell in row:
+                cell.style = style_border_res
+
+    ws1.cell(row=r + 1, column=1).value = 'Итого'
+    ws1.cell(row=r + 1, column=1).style = style_border_res
+    ws1.cell(row=r + 1, column=2).value = f'=SUM(B{r1 + 1}:B{r})'
+    ws1.cell(row=r + 1, column=2).style = style_border_res
+    ws1.cell(row=r + 1, column=3).value = f'=SUM(C{r1 + 1}:C{r})'
+    ws1.cell(row=r + 1, column=3).style = style_border_res
 
     return ws1
