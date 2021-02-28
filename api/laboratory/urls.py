@@ -8,4 +8,5 @@ urlpatterns = [
     path('save-fsli', views.save_fsli),
     path('laboratories', views.laboratories),
     path('ready', views.ready),
+    path('search', views.search),
 ]

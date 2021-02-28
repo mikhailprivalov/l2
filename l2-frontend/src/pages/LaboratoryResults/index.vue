@@ -4,7 +4,9 @@
       <SearchToEnter :laboratory="currentLaboratory"/>
       <ReadyToEnter :laboratory="currentLaboratory" class="ready-to-enter"/>
     </div>
-    <div class="direction-form">b</div>
+    <div class="direction-form">
+      <DirectionForm/>
+    </div>
     <div class="results-form">c</div>
   </div>
 </template>
@@ -12,9 +14,10 @@
 <script>
 import SearchToEnter from "@/pages/LaboratoryResults/SearchToEnter";
 import ReadyToEnter from "@/pages/LaboratoryResults/ReadyToEnter";
+import DirectionForm from "@/pages/LaboratoryResults/DirectionForm";
 
 export default {
-  components: {ReadyToEnter, SearchToEnter},
+  components: {DirectionForm, ReadyToEnter, SearchToEnter},
   name: 'laboratory-results',
   data() {
     return {
@@ -46,25 +49,25 @@ export default {
   top: 0;
   bottom: 0;
   overflow-x: visible;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .search-place {
   left: 0;
-  width: 350px;
-  border-right: 1px solid #b1b1b1;
+  width: 354px;
+  border-right: 5px solid #e2e2e2;
   overflow-y: visible;
 }
 
 .direction-form {
-  left: 350px;
-  width: 360px;
-  border-right: 1px solid #b1b1b1;
+  left: 354px;
+  width: 365px;
+  border-right: 5px solid #e2e2e2;
 }
 
 .results-form {
   right: 0;
-  left: 710px;
+  left: 719px;
 }
 
 .ready-to-enter {

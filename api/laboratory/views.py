@@ -1,10 +1,13 @@
+import collections
+import itertools
+
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse
 import simplejson as json
 from django.utils import dateformat
 
-from directions.models import TubesRegistration
+from directions.models import TubesRegistration, Issledovaniya, Napravleniya
 from directory.models import Fractions, Researches
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
@@ -124,4 +127,177 @@ def ready(request):
 
     result["tubes"].sort(key=lambda k: k['id'])
     result["directions"].sort(key=lambda k: k['id'])
+    return JsonResponse(result)
+
+
+def search(request):
+    result = {"ok": False, "msg": None}
+
+    request_data = json.loads(request.body)
+
+    direction = None
+    pk = request_data["q"].strip()
+    laboratory_pk = request_data["laboratory"]
+    t = request_data["mode"]
+    if pk.isdigit():
+        issledovaniya = []
+        labs = []
+        labs_titles = []
+        result["all_confirmed"] = True
+        pk = int(pk)
+        if pk >= 4600000000000:
+            pk -= 4600000000000
+            pk //= 10
+            t = "direction"
+        if t == "tube":
+            iss = Issledovaniya.objects.filter(tubes__id=pk)
+            if iss.count() != 0:
+                direction = iss.first().napravleniye
+            iss = iss.filter(research__podrazdeleniye__pk=laboratory_pk)
+        else:
+            try:
+                direction = Napravleniya.objects.get(pk=pk)
+                iss = Issledovaniya.objects.filter(napravleniye__pk=pk, research__podrazdeleniye__pk=laboratory_pk)
+            except Napravleniya.DoesNotExist:
+                direction = None
+                iss = None
+        if direction and direction.hospital and direction.hospital != request.user.doctorprofile.hospital:
+            direction = None
+            iss = None
+        mnext = False
+        for i in Issledovaniya.objects.filter(napravleniye=direction):
+            po = i.research.podrazdeleniye
+            p = "" if not po else po.title
+            if p not in labs_titles and po:
+                labs_titles.append(p)
+                labs.append({"pk": po.pk, "title": p, "islab": po.p_type == 2})
+            if po and not i.research.is_paraclinic and not i.research.is_doc_refferal:
+                mnext = True
+        if iss and iss.count() > 0:
+            if not mnext:
+                result["msg"] = f"Направление {pk} не предназначено для лаборатории! Проверьте назначения и номер"
+            else:
+                groups = {}
+                cnt = 0
+                researches_chk = []
+                for issledovaniye in iss.order_by("deferred", "-doc_save", "-doc_confirmation", "tubes__pk", "research__sort_weight"):
+                    if True:
+                        if issledovaniye.pk in researches_chk:
+                            continue
+                        researches_chk.append(issledovaniye.pk)
+
+                        tubes_list = issledovaniye.tubes.exclude(doc_recive__isnull=True).all()
+
+                        not_received_tubes_list = [str(x.pk) for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk")]
+
+                        not_received_why = [x.notice for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk") if x.notice]
+
+                        saved = True
+                        confirmed = True
+                        doc_save_fio = ""
+                        doc_save_id = -1
+                        current_doc_save = -1
+                        isnorm = "unknown"
+
+                        if not issledovaniye.doc_save:
+                            saved = False
+                        else:
+                            doc_save_id = issledovaniye.doc_save_id
+                            doc_save_fio = issledovaniye.doc_save.get_fio()
+                            if doc_save_id == request.user.doctorprofile.pk:
+                                current_doc_save = 1
+                            else:
+                                current_doc_save = 0
+                            isnorm = "normal"
+                            if issledovaniye.result_set.count() > 0:
+                                if any([x.get_is_norm()[0] == "not_normal" for x in issledovaniye.result_set.all()]):
+                                    isnorm = "not_normal"
+                                elif any([x.get_is_norm()[0] == "maybe" for x in issledovaniye.result_set.all()]):
+                                    isnorm = "maybe"
+
+                        if not issledovaniye.time_confirmation:
+                            confirmed = False
+                            if not issledovaniye.deferred:
+                                result["all_confirmed"] = False
+                        tb = ','.join(str(v.pk) for v in tubes_list)
+
+                        if tb not in groups.keys():
+                            cnt += 1
+                            groups[tb] = cnt
+                        issledovaniya.append(
+                            {
+                                "pk": issledovaniye.pk,
+                                "title": issledovaniye.research.title,
+                                "research_pk": issledovaniye.research_id,
+                                "sort": issledovaniye.research.sort_weight,
+                                "saved": saved,
+                                "is_norm": isnorm,
+                                "confirmed": confirmed,
+                                "status_key": str(saved) + str(confirmed) + str(issledovaniye.deferred and not confirmed),
+                                "not_received_tubes": ", ".join(not_received_tubes_list),
+                                "not_received_why": ", ".join(not_received_why),
+                                "tubes": [{"pk": x.pk, "title": x.type.tube.title, "color": x.type.tube.color} for x in tubes_list],
+                                "template": str(issledovaniye.research.template),
+                                "deff": issledovaniye.deferred and not confirmed,
+                                "doc_save_fio": doc_save_fio,
+                                "doc_save_id": doc_save_id,
+                                "current_doc_save": current_doc_save,
+                                "allow_disable_confirm": issledovaniye.allow_reset_confirm(request.user),
+                                "group": groups[tb],
+                            }
+                        )
+
+                statuses = collections.defaultdict(lambda: collections.defaultdict(list))
+
+                for d in issledovaniya:
+                    statuses[d['status_key']][d['group']].append(d)
+                    statuses[d['status_key']][d['group']] = sorted(statuses[d['status_key']][d['group']], key=lambda k: k['sort'])
+
+                issledovaniya = []
+
+                def concat(dic):
+                    t = [dic[x] for x in dic.keys()]
+
+                    return itertools.chain(*t)
+
+                if "FalseFalseFalse" in statuses.keys():
+                    issledovaniya += concat(statuses["FalseFalseFalse"])
+
+                if "TrueFalseFalse" in statuses.keys():
+                    issledovaniya += concat(statuses["TrueFalseFalse"])
+
+                if "FalseFalseTrue" in statuses.keys():
+                    issledovaniya += concat(statuses["FalseFalseTrue"])
+
+                if "TrueFalseTrue" in statuses.keys():
+                    issledovaniya += concat(statuses["TrueFalseTrue"])
+
+                if "FalseTrueFalse" in statuses.keys():
+                    issledovaniya += concat(statuses["FalseTrueFalse"])
+
+                if "TrueTrueFalse" in statuses.keys():
+                    issledovaniya += concat(statuses["TrueTrueFalse"])
+        if direction:
+            result["data"] = {
+                "patient": {
+                    "fio": direction.client.individual.fio(),
+                    "sex": direction.client.individual.sex,
+                    "age": direction.client.individual.age_s(direction=direction),
+                    "history_num": direction.history_num,
+                    "card": direction.client.number_with_type(),
+                },
+                "direction": {
+                    "pk": direction.pk,
+                    "imported_from_rmis": direction.imported_from_rmis,
+                    "imported_org": None if not direction.imported_org else direction.imported_org.title,
+                    "directioner": None if direction.imported_from_rmis or not direction.doc else direction.doc.fio,
+                    "otd": None if direction.imported_from_rmis else direction.get_doc_podrazdeleniye_title(),
+                    "fin_source": None if direction.imported_from_rmis else direction.fin_title,
+                    "in_rmis": direction.result_rmis_send,
+                },
+                "issledovaniya": issledovaniya,
+                "labs": labs,
+            }
+            result["ok"] = True
+        result["q"] = {"text": pk, "type": t}
     return JsonResponse(result)

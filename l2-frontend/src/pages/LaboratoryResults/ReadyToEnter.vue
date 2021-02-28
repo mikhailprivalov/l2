@@ -17,7 +17,7 @@
           </thead>
           <tbody>
           <tr v-for="d in directions">
-            <td class='num'><span>{{ d.date }}</span> {{ d.id }}</td>
+            <td class='num' @click="searchDirection(d.id)"><span>{{ d.date }}</span> {{ d.id }}</td>
           </tr>
           </tbody>
         </table>
@@ -34,7 +34,7 @@
           </thead>
           <tbody>
           <tr class='select-tube' :title='t.tube.title' v-for="t in tubes">
-            <td class='num'>
+            <td class='num' @click="searchTube(t.id)">
               <span>{{ t.date }}</span>
               <div :style='`background-color: ${t.tube.color};color: ${t.tube.color};`' class='circle'></div>
               {{ t.id }}
@@ -53,6 +53,7 @@ import DateRange from "@/ui-cards/DateRange";
 import api from "@/api";
 import * as action_types from "@/store/action-types";
 import _ from "lodash";
+import {SEARCH_MODES} from "@/pages/LaboratoryResults/constants";
 
 export default {
   name: "ReadyToEnter",
@@ -95,6 +96,15 @@ export default {
       this.tubes = tubes;
       await this.$store.dispatch(action_types.DEC_LOADING);
     },
+    search(mode, pk) {
+      this.$root.$emit('laboratory:results:search', mode, pk);
+    },
+    searchDirection(pk) {
+      this.search(SEARCH_MODES.DIRECTION, pk);
+    },
+    searchTube(pk) {
+      this.search(SEARCH_MODES.TUBE, pk);
+    },
   },
 }
 </script>
@@ -110,14 +120,6 @@ export default {
   ::v-deep .form-control {
     width: 100% !important;
     border-radius: 0 !important;
-
-    &:first-child {
-      border-left: none;
-    }
-
-    &:last-child {
-      border-right: none;
-    }
   }
 }
 
