@@ -62,7 +62,8 @@
         <div class="row-t">Больница</div>
         <treeselect class="treeselect-noborder treeselect-wide"
           :multiple="false" :disable-branch-nodes="true" :options="card.hospitals"
-          placeholder="Больница не выбрана" v-model="card.hospital"
+          @input="updateCard"
+          placeholder="Больница не выбрана" v-model="card.hospital" :clearable="false"
         />
       </div>
       <div class="row">
@@ -85,9 +86,13 @@
                             :title="res.title" :pk="res.pk" :n="idx"
                             :nof="disp_researches.length"/>
         </div>
-        <div class="controls">
-          <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save">Создать записи для обращения
+        <div class="controls" :key="card.hospital">
+          <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save" :disabled="disabled">
+            Создать записи для обращения
           </button>
+          <div v-if="noHospital" class="no-hospital">
+            Больница не выбрана
+          </div>
         </div>
       </template>
       <div v-else style="padding: 10px;color: gray;text-align: center">
@@ -292,9 +297,18 @@
         )
         await this.load_data();
         await this.$store.dispatch(action_types.DEC_LOADING)
-      }
+      },
+      updateCard() {
+        this.card = {...this.card};
+      },
     },
     computed: {
+      noHospital() {
+        return this.card.hospital === -1;
+      },
+      disabled() {
+        return this.noHospital;
+      },
       disp_researches() {
         return this.researches.map(id => {
           return this.$store.getters.researches_obj[id];
@@ -359,6 +373,13 @@
 
   .controls {
     padding-top: 0;
+  }
+
+  .no-hospital {
+    margin: 5px 0;
+    background-color: rgba(#000, .2);
+    padding: 5px;
+    border-radius: 5px;
   }
 
   .rows {

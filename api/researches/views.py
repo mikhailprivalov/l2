@@ -302,7 +302,7 @@ def researches_update(request):
                                     field_type=field.get("field_type", 0),
                                     helper=field.get("helper", ''),
                                     required=field.get("required", False),
-                                    attached=field["attached"]
+                                    attached=field.get("attached", '')
                                 )
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
@@ -320,7 +320,7 @@ def researches_update(request):
                                 f.for_talon = field.get("for_talon", False)
                                 f.for_med_certificate = field.get("for_med_certificate", False)
                                 f.helper = field.get("helper", '')
-                                f.attached = field["attached"]
+                                f.attached = field.get("attached", '')
                             if f:
                                 f.save()
 

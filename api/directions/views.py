@@ -1831,7 +1831,8 @@ def directions_data_by_fields(request):
     data = {}
     request_data = json.loads(request.body)
     i = Issledovaniya.objects.get(pk=request_data["pk"])
-    i_dest = Issledovaniya.objects.get(pk=request_data["pk_dest"])
+    pk_dest = request_data.get("pk_dest", request_data["pk"])
+    i_dest = Issledovaniya.objects.get(pk=pk_dest)
     if i.time_confirmation:
         if i.research == i_dest.research:
             for field in ParaclinicInputField.objects.filter(group__research=i.research, group__hide=False, hide=False):
