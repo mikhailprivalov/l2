@@ -4,6 +4,15 @@
 
 {% block navbar_classes %}fluid-nav-cont{% endblock %}
 
+{% block extended_header %}
+    <ul class="nav navbar-nav">
+        <li class="dropdown">
+            <laboratory-selector />
+        </li>
+        <load-file />
+    </ul>
+{% endblock %}
+
 {% load static %}
 
 {% block content %}

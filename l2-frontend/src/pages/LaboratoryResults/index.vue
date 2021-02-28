@@ -1,7 +1,8 @@
 <template>
   <div class="root">
-    <div class="search-form">
-      <SearchToEnter/>
+    <div class="search-place">
+      <SearchToEnter :laboratory="currentLaboratory"/>
+      <ReadyToEnter :laboratory="currentLaboratory" class="ready-to-enter"/>
     </div>
     <div class="direction-form">b</div>
     <div class="results-form">c</div>
@@ -10,17 +11,21 @@
 
 <script>
 import SearchToEnter from "@/pages/LaboratoryResults/SearchToEnter";
+import ReadyToEnter from "@/pages/LaboratoryResults/ReadyToEnter";
 
 export default {
-  components: {SearchToEnter},
+  components: {ReadyToEnter, SearchToEnter},
   name: 'laboratory-results',
   data() {
-    return {}
+    return {
+      currentLaboratory: -1,
+    };
   },
   watch: {},
-  created() {
-  },
   mounted() {
+    this.$root.$on('change-laboratory', pk => {
+      this.currentLaboratory = pk;
+    });
   },
   methods: {},
   computed: {},
@@ -36,7 +41,7 @@ export default {
   bottom: 0;
 }
 
-.search-form, .direction-form, .results-form {
+.search-place, .direction-form, .results-form, .ready-to-enter {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -44,10 +49,11 @@ export default {
   overflow-y: auto;
 }
 
-.search-form {
+.search-place {
   left: 0;
   width: 350px;
   border-right: 1px solid #b1b1b1;
+  overflow-y: visible;
 }
 
 .direction-form {
@@ -59,5 +65,12 @@ export default {
 .results-form {
   right: 0;
   left: 710px;
+}
+
+.ready-to-enter {
+  position: absolute;
+  top: 34px;
+  left: 0;
+  right: 0;
 }
 </style>

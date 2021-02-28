@@ -76,6 +76,7 @@ new Vue({
     'DocCall': () => import('@/pages/DocCall'),
     'ListWait': () => import('@/pages/ListWait'),
     'LoadFile': () => import('@/ui-cards/LoadFile'),
+    'LaboratorySelector': () => import('@/ui-cards/LaboratorySelector'),
     'PlanPharmacotherapy': () => import('@/pages/PlanPharmacotherapy'),
     'LaboratoryResults': () => import('@/pages/LaboratoryResults'),
   },

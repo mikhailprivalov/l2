@@ -6,4 +6,6 @@ urlpatterns = [
     path('fractions', views.fractions),
     path('fraction', views.fraction),
     path('save-fsli', views.save_fsli),
+    path('laboratories', views.laboratories),
+    path('ready', views.ready),
 ]
