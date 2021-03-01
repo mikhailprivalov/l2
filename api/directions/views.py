@@ -53,7 +53,7 @@ from utils.common import non_selected_visible_type, none_if_minus_1
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
 from utils.xh import check_float_is_valid
-from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor
+from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor, get_confirm_direction_patient_year
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
@@ -256,6 +256,7 @@ def directions_history(request):
         )
 
     res['directions'] = final_result
+    print(res)
     return JsonResponse(res)
 
 
@@ -2156,3 +2157,44 @@ def change_owner_direction(request):
     directions = ', '.join([str(d.pk) for d in directions])
 
     return JsonResponse({"directions": directions})
+
+
+@login_required
+def directions_result_year(request):
+    request_data = json.loads(request.body)
+    print(request_data)
+    is_lab = request_data.get('is_lab', False)
+    is_lab = True
+    is_paraclinic = request_data.get('is_paraclinic', False)
+    is_doc_refferal = request_data.get('is_doc_refferal', False)
+    year = request_data['current_year']
+    d1 = datetime.strptime(f'01.01.{year}', '%d.%m.%Y')
+    start_date = datetime.combine(d1, dtime.min)
+    d2 = datetime.strptime(f'31.12.{year}', '%d.%m.%Y')
+    end_date = datetime.combine(d2, dtime.max)
+    card_pk = request_data.get('card_pk', -1)
+    print(card_pk, start_date, end_date)
+
+    if not is_lab and not is_doc_refferal and not is_paraclinic or card_pk == -1:
+        return JsonResponse({"results": []})
+
+    if is_lab:
+        lab_podr = get_lab_podr()
+        lab_podr = [i[0] for i in lab_podr]
+    else:
+        lab_podr = [-1]
+
+    card_pk = int(card_pk)
+    confirm_direction = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card_pk, is_lab, is_paraclinic, is_doc_refferal)
+    if not confirm_direction:
+        return JsonResponse({"results": []})
+
+    confirm_direction = [i[0] for i in confirm_direction]
+
+    not_confirm_direction = get_not_confirm_direction(confirm_direction)
+    not_confirm_direction = [i[0] for i in not_confirm_direction]
+    result_direction = list(set(confirm_direction) - set(not_confirm_direction))
+    print('#####')
+    print(result_direction)
+
+    return JsonResponse({"results": result_direction})

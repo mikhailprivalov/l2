@@ -1,5 +1,6 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE
+from utils.db import namedtuplefetchall
 
 
 def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk, is_parent, for_slave_hosp):
@@ -187,3 +188,43 @@ def get_confirm_direction_pathology(d_s, d_e):
         )
         row = cursor.fetchall()
     return row
+
+
+def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=False, is_paraclinic=False, is_doc_refferal=False):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """  
+        SELECT DISTINCT ON (napravleniye_id) napravleniye_id
+        FROM public.directions_issledovaniya
+        WHERE time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+        AND napravleniye_id IN (SELECT id FROM directions_napravleniya WHERE client_id=%(card_pk)s and data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
+
+        AND research_id IN (SELECT id FROM directory_researches WHERE CASE
+
+        WHEN  %(is_lab)s = FALSE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = FALSE THEN
+          is_paraclinic = TRUE
+        WHEN %(is_lab)s = FALSE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = TRUE THEN
+          is_doc_refferal = TRUE
+
+        WHEN  %(is_lab)s = FALSE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = TRUE  THEN 
+          is_paraclinic = TRUE or is_doc_refferal = TRUE
+
+        WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = FALSE THEN
+            podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
+
+        WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = FALSE THEN
+          is_paraclinic = TRUE and is_doc_refferal = FALSE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
+
+        WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = TRUE THEN
+          is_paraclinic = FALSE and is_doc_refferal = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
+
+        WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = TRUE THEN
+          is_paraclinic = TRUE or is_doc_refferal = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
+        END
+        )
+
+        """,
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'is_lab': is_lab, 'is_paraclinic': is_paraclinic, 'is_doc_refferal': is_doc_refferal, 'lab_podr': lab_podr, 'card_pk': card_pk1},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

@@ -6,6 +6,7 @@ urlpatterns = [
     path('rmis-directions', views.directions_rmis_directions),
     path('rmis-direction', views.directions_rmis_direction),
     path('history', views.directions_history),
+    path('result-patient-year', views.directions_result_year),
     path('hosp_set_parent', views.hosp_set_parent),
     path('update_parent', views.update_parent),
     path('cancel', views.directions_cancel),

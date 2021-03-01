@@ -265,6 +265,19 @@
                 </div>
               </div>
               <medical-certificates :med_certificates="data.medical_certificates" :direction="data.direction.pk"/>
+              <a style="font-weight: normal; padding-left: 3px;"
+                 href="#" @click.prevent="open_results(row.pk)">
+                 <i class="fa fa-vials"></i>
+              </a>
+              <a style="font-weight: normal;padding-left: 3px;"
+                 href="#" @click.prevent="open_results(row.pk)">
+                 <i class="fa fa-user-md"></i>
+              </a>
+              <a style="font-weight: normal; padding-left: 3px;"
+                 href="#" @click.prevent="open_results(row.pk)">
+                 <i class="fa fa-file-medical-alt"></i>
+              </a>
+              <results-laboratory :card_pk="data.patient.card_pk"/>
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
@@ -291,6 +304,18 @@
                 <a style="font-weight: normal"
                    href="#" @click.prevent="open_results(row.pk)">
                   (другие результаты)
+                </a>
+                <a style="font-weight: normal; padding-left: 5px; float: right;"
+                   href="#" @click.prevent="open_results(row.pk)">
+                  Анализы
+                </a>
+                <a style="font-weight: normal; padding-left: 5px; float: right;"
+                   href="#" @click.prevent="open_results(row.pk)">
+                  Параклиника
+                </a>
+                <a style="font-weight: normal; padding-left: 5px; float: right;"
+                   href="#" @click.prevent="open_results(row.pk)">
+                  Консультации
                 </a>
                 <div class="results-history" slot="dropdown">
                   <ul>
@@ -744,6 +769,7 @@
   import {enter_field, leave_field} from "@/forms/utils";
   import FastTemplates from "../forms/FastTemplates";
   import api from "@/api";
+  import ResultsLaboratory from '../ui-cards/PatientResults/ResultsLaboratory'
 
   export default {
     name: 'results-paraclinic',
@@ -753,7 +779,7 @@
       DescriptiveForm,
       DateFieldNav, Modal, MKBField, ResearchesPicker, SelectedResearches,
       dropdown, SelectPickerM, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-      LastResult, RecipeInput, IssStatus, MedicalCertificates,
+      LastResult, RecipeInput, IssStatus, MedicalCertificates, ResultsLaboratory,
     },
     data() {
       return {
