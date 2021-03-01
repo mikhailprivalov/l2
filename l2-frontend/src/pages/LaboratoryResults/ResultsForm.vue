@@ -1,14 +1,14 @@
 <template>
   <fragment>
-    <div class="root">
-      <table class="table table-bordered table-sm-pd" v-if="loaded">
+    <div class="root" ref="root">
+      <table class="table table-bordered table-sm-pd">
         <thead>
         <tr>
           <th colspan="3">
             {{ research.title }}
           </th>
           <td class="cl-td">
-            <button class="btn btn-blue-nb header-button" @click="clearAll">
+            <button class="btn btn-blue-nb header-button" @click="clearAll" :disabled="confirmed">
               Очистить всё
             </button>
           </td>
@@ -26,7 +26,13 @@
             <label class="fraction-title" :for="`fraction-${r.fraction.pk}`">{{ r.fraction.title }}</label>
           </td>
           <td class="val">
-            <input type="text" class="form-control" :class="r.fraction.units.length > 0 && 'with-units'"
+            <input type="text" class="form-control result-field"
+                   :class="[
+                     r.fraction.units.length > 0 && 'with-units',
+                     `isnorm_${r.norm}`,
+                   ]"
+                   :readonly="!loaded || confirmed"
+                   @keyup.enter="moveFocusNext"
                    v-model="r.value" :id="`fraction-${r.fraction.pk}`" :data-x="Math.min(r.fraction.units.length, 9)">
             <div class="unit">{{ r.fraction.units }}</div>
           </td>
@@ -36,7 +42,7 @@
         <tr v-if="research.can_comment">
           <td><label class="fraction-title" for="result_comment">Комментарий</label></td>
           <td colspan="3">
-            <textarea class="noresize form-control"
+            <textarea class="noresize form-control result-field"
                       v-autosize="comment" v-model="comment" id="result_comment"></textarea>
           </td>
         </tr>
@@ -46,13 +52,13 @@
     <div class="bottom-buttons">
       <template v-if="loaded">
         <template v-if="!confirmed">
-          <button class="btn btn-blue-nb btn-right">
+          <button class="btn btn-blue-nb btn-right" @click="saveAndConfirm()">
             Сохранить и подтвердить
           </button>
-          <button class="btn btn-blue-nb btn-right" :disabled="!saved">
+          <button class="btn btn-blue-nb btn-right" :disabled="!saved" @click="confirm()">
             Подтвердить
           </button>
-          <button class="btn btn-blue-nb btn-right">
+          <button class="btn btn-blue-nb btn-right" @click="save()">
             Сохранить
           </button>
         </template>
@@ -104,6 +110,18 @@ export default {
       this.saved = data.saved;
       this.allow_reset_confirm = data.allow_reset_confirm;
       this.loaded = true;
+      $(this.$refs.root).scrollTop(0);
+      if (!data.confirmed) {
+        setTimeout(() => {
+          const $rf = $('.result-field');
+          if ($rf.length) {
+            const idx = data.result.findIndex(r => !Boolean(r.value));
+            if (idx !== -1) {
+              $rf.eq(idx).focus();
+            }
+          }
+        }, 0);
+      }
       await this.$store.dispatch(action_types.DEC_LOADING);
     },
     async clearAll() {
@@ -116,6 +134,49 @@ export default {
         i.value = '';
       }
     },
+    async save(withoutReloading = false) {
+      await this.$store.dispatch(action_types.INC_LOADING);
+      const {ok, message} = await api('laboratory/save', this, ['pk', 'result', 'comment']);
+      if (!ok) {
+        errmessage(message);
+      } else {
+        okmessage('Сохранено');
+      }
+      if (!withoutReloading) {
+        this.$root.$emit('laboratory:reload-direction:with-open-first');
+      }
+      await this.$store.dispatch(action_types.DEC_LOADING);
+      return ok;
+    },
+    async confirm() {
+      await this.$store.dispatch(action_types.INC_LOADING);
+      const {ok, message} = await api('laboratory/confirm', this, 'pk');
+      if (!ok) {
+        errmessage(message);
+      } else {
+        okmessage('Подтверждено');
+      }
+      this.$root.$emit('laboratory:reload-direction:with-open-first');
+      await this.$store.dispatch(action_types.DEC_LOADING);
+      return ok;
+    },
+    async saveAndConfirm() {
+      const saveResult = await this.save(true);
+      if (!saveResult) {
+        return;
+      }
+
+      await this.confirm();
+    },
+    moveFocusNext(e) {
+      const $rf = $('.result-field');
+      const index = $rf.index(e.target) + 1;
+      if ($rf.eq(index).length) {
+        $rf.eq(index).focus();
+      } else {
+        this.save();
+      }
+    }
   },
 }
 </script>
@@ -222,5 +283,15 @@ export default {
   background-color: white;
   z-index: 2;
   box-shadow: 2px 0 2px rgba(0, 0, 0, .1);
+}
+
+.isnorm_maybe {
+  border-color: darkgoldenrod;
+  box-shadow: 0 0 4px darkgoldenrod;
+}
+
+.isnorm_not_normal {
+  border-color: darkred;
+  box-shadow: 0 0 4px darkred;
 }
 </style>

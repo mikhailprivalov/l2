@@ -10,4 +10,7 @@ urlpatterns = [
     path('ready', views.ready),
     path('search', views.search),
     path('form', views.form),
+    path('save', views.save),
+    path('confirm', views.confirm),
+    path('confirm-list', views.confirm_list),
 ]

@@ -1,16 +1,19 @@
 import collections
 import itertools
+from decimal import Decimal
 from typing import Optional
 
+import bleach
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 import simplejson as json
-from django.utils import dateformat
+from django.utils import dateformat, timezone
 
 from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result
 from directory.models import Fractions, Researches, References
 from podrazdeleniya.models import Podrazdeleniya
+from slog.models import Log
 from utils.dates import try_parse_range
 
 
@@ -144,7 +147,8 @@ def search(request):
         issledovaniya = []
         labs = []
         labs_titles = []
-        result["all_confirmed"] = True
+        all_confirmed = True
+        all_saved = True
         pk = int(pk)
         if pk >= 4600000000000:
             pk -= 4600000000000
@@ -218,8 +222,10 @@ def search(request):
 
                         if not issledovaniye.time_confirmation:
                             confirmed = False
-                            if not issledovaniye.deferred:
-                                result["all_confirmed"] = False
+                            if all_confirmed and not issledovaniye.deferred:
+                                all_confirmed = False
+                        if all_saved and not issledovaniye.time_save and not issledovaniye.deferred:
+                            all_saved = False
                         tb = ','.join(str(v.pk) for v in tubes_list)
 
                         if tb not in groups.keys():
@@ -300,6 +306,8 @@ def search(request):
                 "issledovaniya": issledovaniya,
                 "labs": labs,
                 "q": {"text": pk, "mode": t},
+                "allConfirmed": all_confirmed,
+                "allSaved": all_saved,
             }
             result["ok"] = True
     return JsonResponse(result)
@@ -308,8 +316,13 @@ def search(request):
 def form(request):
     request_data = json.loads(request.body)
     pk = request_data["pk"]
-    iss: Issledovaniya = Issledovaniya.objects.get(pk=pk)
-    research: Researches = iss.research
+    iss: Issledovaniya = Issledovaniya.objects.prefetch_related('result_set').get(pk=pk)
+    research: Researches = Researches.objects.prefetch_related(
+        Prefetch(
+            'fractions_set',
+            queryset=Fractions.objects.all().order_by("pk", "sort_weight").prefetch_related('references_set')
+        )
+    ).get(pk=iss.research_id)
     data = {
         "pk": pk,
         "confirmed": bool(iss.time_confirmation),
@@ -327,8 +340,8 @@ def form(request):
     }
 
     f: Fractions
-    for f in Fractions.objects.filter(research=research).order_by("pk", "sort_weight").prefetch_related('references_set'):
-        r: Optional[Result] = Result.objects.filter(issledovaniye=iss, fraction=f).first()
+    for f in research.fractions_set.all():
+        r: Optional[Result] = iss.result_set.filter(fraction=f).first()
 
         if not r and f.hide:
             continue
@@ -378,4 +391,123 @@ def form(request):
 
     return JsonResponse({
         "data": data,
+    })
+
+
+def save(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    iss: Issledovaniya = Issledovaniya.objects.get(pk=pk)
+    if iss.time_confirmation:
+        return JsonResponse({
+            "ok": False,
+            "message": 'Редактирование запрещено. Результат уже подтверждён.',
+        })
+    for t in TubesRegistration.objects.filter(issledovaniya=iss):
+        if not t.rstatus():
+            t.set_r(request.user.doctorprofile)
+    for r in request_data["result"]:
+        result_q = {
+            "issledovaniye": iss,
+            "fraction_id": r["fraction"]["pk"]
+        }
+        if Result.objects.filter(**result_q).exists():
+            fraction_result = Result.objects.filter(**result_q).order_by("-pk")[0]
+            created = False
+        else:
+            fraction_result = Result(**result_q)
+            created = True
+
+        value = bleach.clean(r["value"], tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div']).replace("<br>", "<br/>")
+
+        if not created or value:
+            fraction_result.value = value
+            fraction_result.get_units(needsave=False)
+            fraction_result.iteration = 1
+
+            ref = r.get("ref", {})
+            fraction_result.ref_title = ref.get("title", "Default")
+            fraction_result.ref_about = ref.get("about", "")
+            fraction_result.ref_m = ref.get("m")
+            fraction_result.ref_f = ref.get("f")
+
+            if not fraction_result.ref_m or not fraction_result.ref_f:
+                fraction_result.get_ref(re_save=True, needsave=False)
+
+            fraction_result.save()
+        elif not created:
+            fraction_result.delete()
+    iss.doc_save = request.user.doctorprofile
+    iss.time_save = timezone.now()
+    iss.lab_comment = request_data.get("comment", "")
+    iss.def_uet = 0
+    iss.co_executor_id = None if request_data.get("co_executor", '-1') == '-1' else request_data["co_executor"]
+    iss.co_executor_uet = 0
+
+    if not request.user.doctorprofile.has_group("Врач-лаборант"):
+        for r in Result.objects.filter(issledovaniye=iss):
+            iss.def_uet += r.fraction.uet_co_executor_1
+    else:
+        for r in Result.objects.filter(issledovaniye=iss):
+            iss.def_uet += r.fraction.uet_doc
+        if iss.co_executor_id:
+            for r in Result.objects.filter(issledovaniye=iss):
+                iss.co_executor_uet += r.fraction.uet_co_executor_1
+
+    iss.co_executor2_id = None if request_data.get("co_executor2", '-1') == '-1' else request_data["co_executor2"]
+    iss.co_executor2_uet = 0
+    if iss.co_executor2_id:
+        for r in Result.objects.filter(issledovaniye=iss):
+            iss.co_executor2_uet += r.fraction.uet_co_executor_2
+    iss.save()
+    Log.log(str(pk), 13, body=request_data, user=request.user.doctorprofile)
+    return JsonResponse({
+        "ok": True,
+    })
+
+
+def confirm(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    iss: Issledovaniya = Issledovaniya.objects.get(pk=pk)
+    if iss.time_confirmation:
+        return JsonResponse({
+            "ok": False,
+            "message": 'Редактирование запрещено. Результат уже подтверждён.',
+        })
+    if iss.doc_save:
+        iss.doc_confirmation = request.user.doctorprofile
+        for r in Result.objects.filter(issledovaniye=iss):
+            r.get_ref()
+        iss.time_confirmation = timezone.now()
+        iss.save()
+        Log.log(str(pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
+    else:
+        return JsonResponse({
+            "ok": False,
+            "message": 'Невозможно подтвердить, результат не сохранён',
+        })
+    return JsonResponse({
+        "ok": True,
+    })
+
+
+def confirm_list(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    n: Napravleniya = Napravleniya.objects.prefetch_related('issledovaniya_set').get(pk=pk)
+    for iss in n.issledovaniya_set.all():
+        if iss.doc_save and not iss.time_confirmation:
+            for r in Result.objects.filter(issledovaniye=iss):
+                r.get_ref()
+            iss.doc_confirmation = request.user.doctorprofile
+            iss.time_confirmation = timezone.now()
+            if not request.user.doctorprofile.has_group("Врач-лаборант"):
+                iss.co_executor = request.user.doctorprofile
+                for r in Result.objects.filter(issledovaniye=iss):
+                    iss.def_uet += Decimal(r.fraction.uet_co_executor_1)
+            iss.save()
+            Log.log(str(iss.pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
+    return JsonResponse({
+        "ok": True,
     })

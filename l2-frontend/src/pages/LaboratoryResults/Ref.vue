@@ -1,7 +1,7 @@
 <template>
   <td class="ref">
-    <table v-if="data" :class="bordered && 'table table-bordered table-condensed'">
-      <tr v-for="(v, k) in data">
+    <table v-if="parsedData" :class="bordered && 'table table-bordered table-condensed'">
+      <tr v-for="(v, k) in parsedData">
         <td>{{k}}</td>
         <td v-html="v"></td>
       </tr>
@@ -13,12 +13,27 @@
 export default {
   name: 'Ref',
   props: {
-    data: {
-      type: Object,
-    },
+    data: {},
     bordered: {
       type: Boolean,
       default: false,
+    },
+  },
+  computed: {
+    parsedData() {
+      if (!this.data) {
+        return null;
+      }
+      let r = this.data;
+      if (typeof r === 'string') {
+          try {
+              r = JSON.parse(r);
+          } catch (e) {
+              r = {};
+          }
+      }
+
+      return r;
     },
   },
 }

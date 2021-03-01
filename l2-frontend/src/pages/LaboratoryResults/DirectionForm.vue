@@ -78,15 +78,27 @@
       </ul>
     </div>
     <div class="bottom-buttons">
-      <button class="btn btn-blue-nb btn-right" @click="reload" v-if="loaded">
-        Перезагрузить данные
-      </button>
+      <template v-if="loaded">
+        <button class="btn btn-blue-nb" :disabled="allConfirmed || !allSaved" @click="confirmAll">
+          Подтвердить всё
+        </button>
+
+        <button class="btn btn-blue-nb btn-right" @click="reload" title="Перезагрузить данные" v-tippy>
+          <i class="fa fa-refresh"></i>
+        </button>
+        <button class="btn btn-blue-nb btn-right" :disabled="!allConfirmed" @click="print"
+                title="Печать результатов" v-tippy>
+          <i class="fa fa-print"></i>
+        </button>
+      </template>
     </div>
   </div>
 </template>
 
 <script>
 import _ from 'lodash';
+import * as action_types from "@/store/action-types";
+import api from "@/api";
 
 export default {
   name: "DirectionForm",
@@ -96,6 +108,8 @@ export default {
       patient: {},
       issledovaniya: [],
       loaded: false,
+      allConfirmed: false,
+      allSaved: false,
       active: -1,
       q: {},
     };
@@ -105,6 +119,8 @@ export default {
       this.direction = data.direction;
       this.patient = data.patient;
       this.issledovaniya = data.issledovaniya;
+      this.allConfirmed = data.allConfirmed;
+      this.allSaved = data.allSaved;
       this.q = data.q;
       this.loaded = true;
       this.select(-1);
@@ -124,7 +140,9 @@ export default {
         _.uniq(_.flatten(data.issledovaniya.map(i => i.tubes.map(t => t.pk)))),
         tubesInGroups
       );
-    })
+    });
+
+    this.$root.$on('laboratory:reload-direction:with-open-first', () => this.reload());
   },
   computed: {
     fromRmis() {
@@ -158,6 +176,20 @@ export default {
     },
     reload() {
       this.$root.$emit('laboratory:results:search', this.q.mode, String(this.q.text));
+    },
+    print() {
+      this.$root.$emit('print:results', [this.direction.pk])
+    },
+    async confirmAll() {
+      await this.$store.dispatch(action_types.INC_LOADING);
+      const {ok, message} = await api('laboratory/confirm-list', this.direction, 'pk');
+      if (!ok) {
+        errmessage(message);
+      } else {
+        okmessage('Подтверждено');
+      }
+      this.$root.$emit('laboratory:reload-direction:with-open-first');
+      await this.$store.dispatch(action_types.DEC_LOADING);
     },
   },
 }

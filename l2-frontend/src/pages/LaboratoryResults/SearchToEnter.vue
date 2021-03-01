@@ -11,7 +11,7 @@
             </a>
           </span>
           <input type="text" maxlength="13" class="form-control" autofocus
-                 ref="q" v-model="q"
+                 ref="q" v-model="q" @keyup.enter="search"
                  :placeholder="mode === 'direction' ? 'номер направления' : 'номер ёмкости'"/>
           <span class="input-group-btn">
             <button style="margin-right: -1px;" type="button"
