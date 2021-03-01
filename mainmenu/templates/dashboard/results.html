@@ -20,6 +20,13 @@
 {% endblock %}
 
 {% block head_cn %}
+    <script>
+        $(document).ready(function () {
+            setTimeout(function () {
+                $('.context-st').show();
+            }, 300);
+        });
+    </script>
     <style>
         body, html {
             height: 100%;
