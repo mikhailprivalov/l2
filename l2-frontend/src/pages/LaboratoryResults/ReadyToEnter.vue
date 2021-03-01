@@ -141,7 +141,10 @@ export default {
     },
     focus(ref, pk) {
       const $ref = $(ref);
-      $ref.scrollTo($(`[data-pk="${pk}"]`, $ref), 100, {offset: -31});
+      const $to = $(`[data-pk="${pk}"]`, $ref);
+      if ($to.length > 0) {
+        $ref.scrollTo($to, 100, {offset: -31});
+      }
     },
   },
 }

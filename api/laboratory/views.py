@@ -143,6 +143,8 @@ def search(request):
     pk = request_data["q"].strip()
     laboratory_pk = request_data["laboratory"]
     t = request_data["mode"]
+    doc = request.user.doctorprofile
+    doc_pk = request.user.doctorprofile.pk
     if pk.isdigit():
         issledovaniya = []
         labs = []
@@ -166,11 +168,11 @@ def search(request):
             except Napravleniya.DoesNotExist:
                 direction = None
                 iss = None
-        if direction and direction.hospital and direction.hospital != request.user.doctorprofile.hospital:
+        if direction and direction.hospital and direction.hospital != doc.hospital:
             direction = None
             iss = None
         mnext = False
-        for i in Issledovaniya.objects.filter(napravleniye=direction):
+        for i in Issledovaniya.objects.filter(napravleniye=direction).select_related('research', 'research__podrazdeleniye'):
             po = i.research.podrazdeleniye
             p = "" if not po else po.title
             if p not in labs_titles and po:
@@ -185,7 +187,11 @@ def search(request):
                 groups = {}
                 cnt = 0
                 researches_chk = []
-                for issledovaniye in iss.order_by("deferred", "-doc_save", "-doc_confirmation", "tubes__pk", "research__sort_weight"):
+                for issledovaniye in (
+                    iss.order_by("deferred", "-doc_save", "-doc_confirmation", "tubes__pk", "research__sort_weight")
+                    .prefetch_related('tubes', 'result_set')
+                    .select_related('research', 'doc_save')
+                ):
                     if True:
                         if issledovaniye.pk in researches_chk:
                             continue
@@ -209,7 +215,7 @@ def search(request):
                         else:
                             doc_save_id = issledovaniye.doc_save_id
                             doc_save_fio = issledovaniye.doc_save.get_fio()
-                            if doc_save_id == request.user.doctorprofile.pk:
+                            if doc_save_id == doc_pk:
                                 current_doc_save = 1
                             else:
                                 current_doc_save = 0
