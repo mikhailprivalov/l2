@@ -1,5 +1,6 @@
 import collections
 import itertools
+import time
 from decimal import Decimal
 from typing import Optional
 
@@ -89,7 +90,6 @@ def ready(request):
     request_data = json.loads(request.body)
     dates = request_data['date_range']
     laboratory_pk = request_data['laboratory']
-    laboratory = Podrazdeleniya.objects.get(pk=laboratory_pk)
     result = {"tubes": [], "directions": []}
 
     date_start, date_end = try_parse_range(*dates)
@@ -101,16 +101,14 @@ def ready(request):
         doc_recive__isnull=False,
         time_recive__range=(date_start, date_end),
         issledovaniya__time_confirmation__isnull=True,
-        issledovaniya__research__podrazdeleniye=laboratory,
+        issledovaniya__research__podrazdeleniye_id=laboratory_pk,
         issledovaniya__isnull=False,
-    )
-
-    tlist = tlist.filter(
-        Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) |
+    ).filter(
+        Q(issledovaniya__napravleniye__hospital_id=request.user.doctorprofile.hospital_id) |
         Q(issledovaniya__napravleniye__hospital__isnull=True)
     )
 
-    for tube in tlist.prefetch_related('issledovaniya_set__napravleniye'):
+    for tube in tlist.distinct().prefetch_related('issledovaniya_set__napravleniye').select_related('type', 'type__tube'):
         direction = None
         if tube.pk not in tubes:
             if not direction:
@@ -316,6 +314,10 @@ def search(request):
                     "otd": None if direction.imported_from_rmis else direction.get_doc_podrazdeleniye_title(),
                     "fin_source": None if direction.imported_from_rmis else direction.fin_title,
                     "in_rmis": direction.result_rmis_send,
+                    "dirData": {
+                        "client_sex": direction.client.individual.sex,
+                        "client_vozrast": direction.client.individual.age_s(direction=direction),
+                    },
                 },
                 "issledovaniya": issledovaniya,
                 "labs": labs,
@@ -393,6 +395,7 @@ def form(request):
                 "units": f.units,
                 "render_type": f.render_type,
                 "options": f.options,
+                "formula": f.formula,
                 "type": f.variants.get_variants() if f.variants else [],
                 "type2": f.variants2.get_variants() if f.variants2 else [],
                 "references": {

@@ -177,7 +177,11 @@ export default {
     },
     select(pk) {
       this.active = pk;
-      this.$root.$emit('laboratory:results:open-form', pk);
+      this.$root.$emit('laboratory:results:open-form', pk, this.issledovaniya.map(i => ({
+        pk: i.pk,
+        research_pk: i.research_pk,
+        title: i.title,
+      })), this.direction.dirData);
     },
     reload(pk) {
       this.$root.$emit('laboratory:results:search', this.q.mode, String(this.q.text), pk);

@@ -35,6 +35,8 @@
             :readonly="confirmed || !loaded"
             :move-focus-next="moveFocusNext"
             :r="r"
+            :allDirPks="allDirPks"
+            :dirData="dirData"
           />
           <Ref :data="r.ref.m" v-if="!noRefs"/>
           <Ref :data="r.ref.f" v-if="!noRefs"/>
@@ -84,7 +86,11 @@ export default {
   name: 'ResultsForm',
   components: {TextInputField, BloodTypeField, Ref},
   mounted() {
-    this.$root.$on('laboratory:results:open-form', pk => this.loadForm(pk))
+    this.$root.$on('laboratory:results:open-form', (pk, allDirPks, dirData) => {
+      this.loadForm(pk);
+      this.allDirPks = allDirPks;
+      this.dirData = dirData;
+    });
   },
   data() {
     return {
@@ -96,6 +102,8 @@ export default {
       research: {},
       comment: '',
       result: [],
+      allDirPks: [],
+      dirData: {},
     };
   },
   computed: {
@@ -122,7 +130,7 @@ export default {
       $(this.$refs.root).scrollTop(0);
       if (!data.confirmed) {
         setTimeout(() => {
-          const $rf = $('.result-field');
+          const $rf = $('.result-field:not([readonly]):not([disabled])');
           if ($rf.length) {
             const idx = data.result.findIndex(r => !Boolean(r.value));
             if (idx !== -1) {
@@ -194,7 +202,7 @@ export default {
       await this.$store.dispatch(action_types.DEC_LOADING);
     },
     moveFocusNext(e) {
-      const $rf = $('.result-field');
+      const $rf = $('.result-field:not([readonly]):not([disabled])');
       const index = $rf.index(e.target) + 1;
       if ($rf.eq(index).length) {
         $rf.eq(index).focus();

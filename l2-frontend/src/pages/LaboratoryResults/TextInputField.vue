@@ -1,24 +1,170 @@
 <template>
   <td class="val">
-    <typeahead
-      class="form-control result-field"
-      :class="[
+    <div class="input-group">
+      <span class="input-group-btn" v-if="!readonly && r.fraction.formula">
+        <button type="button"
+                @click="calcFormula"
+                class="btn btn-default btn-primary-nb btn30"
+                title="Рассчитать результат"
+                v-tippy>
+          <i class="fa fa-circle"></i>
+        </button>
+      </span>
+      <typeahead
+        class="form-control result-field"
+        :class="[
                r.fraction.units.length > 0 && 'with-units',
                `isnorm_${r.norm}`,
              ]"
-      :readonly="readonly"
-      :keyup-enter="moveFocusNext"
-      v-model="r.value"
-      :id="`fraction-${r.fraction.pk}`"
-      :data-x="Math.min(r.fraction.units.length, 9)"
-      :local="options"
-      defaultSuggestion
-    />
+        :readonly="readonly"
+        :keyup-enter="moveFocusNext"
+        v-model="r.value"
+        :id="`fraction-${r.fraction.pk}`"
+        :data-x="Math.min(r.fraction.units.length, 9)"
+        :local="options"
+        defaultSuggestion
+      />
+    </div>
     <div class="unit">{{ r.fraction.units }}</div>
   </td>
 </template>
 <script>
 import Typeahead from './Typeahead';
+import * as action_types from "@/store/action-types";
+
+function is_float(str) {
+  return /^-?\d+\.\d+$/.test(str);
+}
+
+function is_n(str) {
+  return /^-?\d+$/.test(str);
+}
+
+function is_lnum(str) {
+  return /^-?\d+(\.\d+)?$/.test(str);
+}
+
+function exec_formula(dir_data, allDirPks, formulaString, resolve) {
+  const formula = {};
+  formula.body = formulaString;
+  formula.necessary = formula.body.match(/{(\d{1,})}/g);
+  formula.necessary_complex = formula.body.match(/{\d{1,}\|\d+}/g);
+  formula.tmp = formula.body;
+  formula.str = formula.body;
+
+  if (formula.necessary !== null) {
+    for (let i = 0; i < formula.necessary.length; i++) {
+      formula.necessary[i] = formula.necessary[i].replace(/[{}]/g, "");
+      let fval = 0;
+      try {
+        fval = parseFloat($(`#fraction-${formula.necessary[i]}`).val().trim().replace(",", "."));
+      } catch (e) {
+      }
+      if (!fval) {
+        fval = 0;
+      }
+      formula.tmp = formula.tmp.replace(`{${formula.necessary[i]}}`, fval);
+    }
+  }
+
+  function perform_complex(k) {
+    formula.necessary_complex[k] = formula.necessary_complex[k].split("|");
+
+    formula.necessary_complex[k][0] = parseInt(formula.necessary_complex[k][0].replace(/[{}]/g, ""));
+    formula.necessary_complex[k][1] = parseInt(formula.necessary_complex[k][1].replace(/[{}]/g, ""));
+
+    const iss_obj = allDirPks.find(i => i.research_pk === formula.necessary_complex[k][0]);
+    if (iss_obj) {
+      formula.str = formula.str.replace(`{${formula.necessary_complex[k][0]}|${formula.necessary_complex[k][1]}}`, iss_obj.title);
+      const fraction = formula.necessary_complex[k][1];
+      $.ajax({url: "/results/get", data: {iss_id: iss_obj.pk}}).done(function (data) {
+        let fval = "0";
+        if (data.results[fraction]) {
+          const g = data.results[fraction] + "";
+          fval = g.replace(",", ".").trim();
+          if (!is_lnum(fval)) {
+            fval = "0";
+          }
+        }
+        formula.tmp = formula.tmp.replace(`{${iss_obj.research_pk}|${fraction}}`, fval);
+        if (k === formula.necessary_complex.length - 1) {
+          ready_formula(formula, resolve, dir_data);
+        } else {
+          perform_complex(k + 1);
+        }
+      });
+    } else {
+      formula.tmp = formula.tmp.replace(`{${formula.necessary_complex[k][0]}|${formula.necessary_complex[k][1]}}`, fval);
+      if (k === formula.necessary_complex.length - 1) {
+        ready_formula(formula, resolve, dir_data);
+      } else {
+        perform_complex(k + 1);
+      }
+    }
+  }
+
+  if (formula.necessary_complex != null) {
+    perform_complex(0);
+  } else {
+    ready_formula(formula, resolve, dir_data);
+  }
+}
+
+function ready_formula(formula, resolve, dir_data) {
+  function get_age(s_age) {
+    return parseInt(s_age.split(' ')[0])
+  }
+
+  let v = new Function('dir_data', 'get_age', "return " + formula.tmp + ";")(dir_data, get_age);
+  if (is_float(v)) {
+    v = Math.round(parseFloat(v) * 1000) / 1000;
+  }
+  if (!isNaN(v) && isFinite(v)) {
+    resolve(v);
+    $.amaran({
+      'theme': 'awesome ok',
+      'content': {
+        title: 'Результат посчитан',
+        message: "Формула:<br/>" + formula.str + "<br/>Процесс подсчета:<br/>" + formula.tmp,
+        info: '',
+        icon: 'fa fa-exclamation'
+      },
+      'position': 'bottom right',
+      delay: 10000
+    });
+    return;
+  }
+
+  if (!isFinite(v) && !isNaN(v)) {
+    $.amaran({
+      'theme': 'awesome wrn',
+      closeButton: true,
+      sticky: true,
+      'content': {
+        title: 'Ошибка',
+        message: "Произошло деление на ноль.<br/>Формула:<br/>" + formula.str + "<br/>Процесс подсчета:<br/>" + formula.tmp,
+        info: '',
+        icon: 'fa fa-exclamation'
+      },
+      'position': 'bottom right'
+    });
+  } else {
+    $.amaran({
+      'theme': 'awesome wrn',
+      closeButton: true,
+      sticky: true,
+      'content': {
+        title: 'Ошибка',
+        message: "Возможно, не все необходимые исследования были назначены",
+        info: '',
+        icon: 'fa fa-exclamation'
+      },
+      'position': 'bottom right'
+    });
+  }
+
+  resolve(null);
+}
 
 export default {
   name: 'TextInputField',
@@ -26,7 +172,9 @@ export default {
   props: {
     readonly: {},
     moveFocusNext: {},
-    r: {}
+    r: {},
+    allDirPks: {},
+    dirData: {},
   },
   computed: {
     options() {
@@ -38,6 +186,24 @@ export default {
       return type;
     },
   },
+  methods: {
+    async calcFormula() {
+      await this.$store.dispatch(action_types.INC_LOADING);
+      try {
+        const r = await new Promise(resolve =>
+          exec_formula(this.dirData, this.allDirPks, this.r.fraction.formula, resolve)
+        );
+        if (r !== null) {
+          this.r.value = String(r);
+          $(`#fraction-${this.r.fraction.pk}`).focus();
+        }
+      } catch (e) {
+        console.error(e);
+        errmessage('Произошла ошибка рассчёта');
+      }
+      await this.$store.dispatch(action_types.DEC_LOADING);
+    },
+  }
 }
 </script>
 
@@ -54,16 +220,12 @@ export default {
 }
 
 .val .unit:not(:empty) {
-  z-index: 1;
+  right: 5px;
+  position: absolute;
+  z-index: 2;
   word-break: keep-all;
   white-space: nowrap;
-  height: 20px;
-  margin-top: -24px;
-  padding-bottom: 4px;
-  padding-right: 5px;
-  float: right;
-  text-align: right;
-  box-sizing: border-box;
+  top: 11px;
   overflow: hidden;
   font-size: 12px;
   max-width: 64px;
@@ -124,6 +286,5 @@ export default {
 
 ::v-deep .twitter-typeahead {
   position: relative;
-  z-index: 0;
 }
 </style>

@@ -74,7 +74,10 @@ export default {
         this.defaultSuggestions = [...newVal];
       }
       this.resetTypeahead();
-    }
+    },
+    value(val) {
+      $('#' + this.id).typeahead('val', val);
+    },
   },
   mounted() {
     this.initTypeahead();
@@ -157,7 +160,7 @@ export default {
       return this.defaultSuggestion ? source : engine;
     },
     resetTypeahead() {
-      $(document).find('#' + this.id).typeahead('destroy');
+      $('#' + this.id).typeahead('destroy');
       this.initTypeahead();
     },
     initTypeahead() {
@@ -173,7 +176,7 @@ export default {
         limit: Infinity,
         templates
       };
-      $(document).find('#' + self.id).typeahead({
+      $('#' + self.id).typeahead({
         minLength: 0,
         highlight: true
       }, dataset)
