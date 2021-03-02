@@ -2164,9 +2164,10 @@ def directions_result_year(request):
     request_data = json.loads(request.body)
     print(request_data)
     is_lab = request_data.get('is_lab', False)
-    is_lab = True
+    is_lab = False
     is_paraclinic = request_data.get('is_paraclinic', False)
     is_doc_refferal = request_data.get('is_doc_refferal', False)
+    is_doc_refferal = True
     year = request_data['current_year']
     d1 = datetime.strptime(f'01.01.{year}', '%d.%m.%Y')
     start_date = datetime.combine(d1, dtime.min)
