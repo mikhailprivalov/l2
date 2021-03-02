@@ -188,3 +188,9 @@ export default {
   }
 }
 </script>
+
+<style scoped lang="scss">
+.tt-hint {
+  opacity: 0 !important;
+}
+</style>
