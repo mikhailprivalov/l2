@@ -5,7 +5,7 @@
       <ReadyToEnter :laboratory="currentLaboratory" class="ready-to-enter"/>
     </div>
     <div class="direction-form">
-      <DirectionForm/>
+      <DirectionForm :laboratory="currentLaboratory"/>
     </div>
     <div class="results-form">
       <ResultsForm/>

@@ -113,10 +113,17 @@ export default {
   },
   methods: {
     async loadForm(pk) {
+      this.loaded = false;
       if (pk === -1) {
+        this.pk = null;
+        this.research = {};
+        this.comment = '';
+        this.result = [];
+        this.confirmed = false;
+        this.saved = false;
+        this.allow_reset_confirm = false;
         return;
       }
-      this.loaded = false;
       await this.$store.dispatch(action_types.INC_LOADING);
       const {data} = await api('laboratory/form', {pk});
       this.pk = data.pk;

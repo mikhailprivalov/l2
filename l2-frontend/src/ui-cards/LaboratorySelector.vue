@@ -27,6 +27,14 @@ export default {
     this.laboratory = active;
     this.laboratories = rows;
     await this.$store.dispatch(action_types.DEC_LOADING);
+    this.$root.$on('external-change-laboratory', (pk, cb) => {
+      this.laboratory = pk;
+      if (cb) {
+        setTimeout(() => {
+          cb();
+        }, 300);
+      }
+    });
   },
   data() {
     return {

@@ -232,7 +232,7 @@ export default {
 }
 
 .val input.with-units {
-  padding-right: calc(64px / 9 * var(--x) + 7px);
+  padding-right: calc(64px / 9 * var(--x) + 5px);
   top: 0;
   left: 0;
   display: block;

@@ -60,22 +60,42 @@
       </tr>
       </tbody>
     </table>
-    <div class="issledovaniya-scroll-wrapper">
-      <ul class="issledovaniya">
-        <li
-          :class='[
-          `issledovaniya-isnorm-${i.is_norm}`,
-          active !== i.pk && `tb-group-${i.group}`,
-          active === i.pk && `tb-group-full-${i.group} tb-group-active-${i.group} active`
-        ]'
-          @click="select(i.pk)"
-          v-for="i in issledovaniya">
-          <div :class='`status status-${getStatusClass(i)}`'>{{ getStatus(i) }}</div>
-          {{ i.title }}
-          <br/>
-          <small v-if="i.tubes.length > 0">Ёмкость: {{ i.tubes.map(t => t.pk).join(', ') }}</small>
-        </li>
-      </ul>
+    <div class="issledovaniya-scroll-wrapper" v-if="loaded">
+      <div class="empty-issledovaniya" v-if="issledovaniya.length === 0">
+        Нет исследований для выбранной лаборатории.<br/><br/>
+        Назначения в направлении:
+        <ul>
+          <li v-for="l in labs">
+            <a v-if="l.islab" href="#" @click.prevent="selectOtherLab(l.pk)">{{ l.title }}</a>
+            <span v-else>{{ l.title }}</span>
+          </li>
+        </ul>
+      </div>
+      <template v-else>
+        <ul class="issledovaniya">
+          <li
+            :class='[
+            `issledovaniya-isnorm-${i.is_norm}`,
+            active !== i.pk && `tb-group-${i.group}`,
+            active === i.pk && `tb-group-full-${i.group} tb-group-active-${i.group} active`
+          ]'
+            @click="select(i.pk)"
+            v-for="i in issledovaniya">
+            <div :class='`status status-${getStatusClass(i)}`'>{{ getStatus(i) }}</div>
+            {{ i.title }}
+            <br/>
+            <small v-if="i.tubes.length > 0">Ёмкость: {{ i.tubes.map(t => t.pk).join(', ') }}</small>
+          </li>
+        </ul>
+        <div class="other-issledovaniya" v-if="otherLabs.length > 0 && showOtherLabs">
+          Другие лаборатории в направлении:
+          <ul>
+            <li v-for="l in otherLabs">
+              <a href="#" @click.prevent="selectOtherLab(l.pk)">{{ l.title }}</a>
+            </li>
+          </ul>
+        </div>
+      </template>
     </div>
     <div class="bottom-buttons">
       <template v-if="loaded">
@@ -83,7 +103,7 @@
           Подтвердить всё
         </button>
 
-        <button class="btn btn-blue-nb btn-right" @click="reload" title="Перезагрузить данные" v-tippy>
+        <button class="btn btn-blue-nb btn-right" @click="reload()" title="Перезагрузить данные" v-tippy>
           <i class="fa fa-refresh"></i>
         </button>
         <button class="btn btn-blue-nb btn-right" :disabled="!allConfirmed" @click="print"
@@ -102,12 +122,17 @@ import api from "@/api";
 
 export default {
   name: "DirectionForm",
+  props: {
+    laboratory: {},
+  },
   data() {
     return {
       direction: {},
       patient: {},
       issledovaniya: [],
+      labs: [],
       loaded: false,
+      showOtherLabs: false,
       allConfirmed: false,
       allSaved: false,
       active: -1,
@@ -121,7 +146,9 @@ export default {
       this.issledovaniya = data.issledovaniya;
       this.allConfirmed = data.allConfirmed;
       this.allSaved = data.allSaved;
+      this.labs = data.labs;
       this.q = data.q;
+      this.showOtherLabs = false;
       this.loaded = true;
       if (!pk) {
         this.select(-1);
@@ -144,6 +171,12 @@ export default {
         _.uniq(_.flatten(data.issledovaniya.map(i => i.tubes.map(t => t.pk)))),
         tubesInGroups
       );
+
+      setTimeout(() => {
+        if (this.otherLabs.length > 0) {
+          this.showOtherLabs = true;
+        }
+      }, 300);
     });
 
     this.$root.$on('laboratory:reload-direction:with-open-first', () => this.reload());
@@ -152,6 +185,9 @@ export default {
   computed: {
     fromRmis() {
       return this.loaded && this.direction && this.direction.imported_from_rmis;
+    },
+    otherLabs() {
+      return this.labs.filter(l => l.islab && l.pk !== this.laboratory);
     },
   },
   methods: {
@@ -199,6 +235,11 @@ export default {
       }
       this.$root.$emit('laboratory:reload-direction:with-open-first');
       await this.$store.dispatch(action_types.DEC_LOADING);
+    },
+    selectOtherLab(pk) {
+      this.$root.$emit('external-change-laboratory', pk, () => {
+        this.reload();
+      });
     },
   },
 }
@@ -324,5 +365,17 @@ table {
       color: #F7CA18;
     }
   }
+}
+
+.empty-issledovaniya {
+  padding: 20px;
+  color: #7a7a7a;
+  text-align: left;
+}
+
+.other-issledovaniya {
+  padding: 20px;
+  color: #7a7a7a;
+  text-align: left;
 }
 </style>
