@@ -65,6 +65,7 @@ def fraction(request):
     return JsonResponse({"title": None})
 
 
+@login_required
 def laboratories(request):
     rows = []
     active = -1
@@ -79,6 +80,8 @@ def laboratories(request):
     return JsonResponse({"rows": rows, "active": active})
 
 
+@login_required
+@group_required("Врач-лаборант", "Лаборант")
 def ready(request):
     request_data = json.loads(request.body)
     dates = request_data['date_range']
@@ -134,6 +137,8 @@ def ready(request):
     return JsonResponse(result)
 
 
+@login_required
+@group_required("Врач-лаборант", "Лаборант")
 def search(request):
     result = {"ok": False, "msg": None}
 
@@ -319,6 +324,8 @@ def search(request):
     return JsonResponse(result)
 
 
+@login_required
+@group_required("Врач-лаборант", "Лаборант")
 def form(request):
     request_data = json.loads(request.body)
     pk = request_data["pk"]
@@ -400,6 +407,8 @@ def form(request):
     })
 
 
+@login_required
+@group_required("Врач-лаборант", "Лаборант")
 def save(request):
     request_data = json.loads(request.body)
     pk = request_data["pk"]
@@ -472,6 +481,8 @@ def save(request):
     })
 
 
+@login_required
+@group_required("Врач-лаборант", "Лаборант")
 def confirm(request):
     request_data = json.loads(request.body)
     pk = request_data["pk"]
@@ -498,6 +509,8 @@ def confirm(request):
     })
 
 
+@login_required
+@group_required("Врач-лаборант", "Лаборант")
 def confirm_list(request):
     request_data = json.loads(request.body)
     pk = request_data["pk"]
