@@ -12,6 +12,7 @@ from django.utils import dateformat, timezone
 
 from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result
 from directory.models import Fractions, Researches, References
+from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 from slog.models import Log
 from utils.dates import try_parse_range
