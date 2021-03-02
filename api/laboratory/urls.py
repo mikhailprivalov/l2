@@ -13,4 +13,5 @@ urlpatterns = [
     path('save', views.save),
     path('confirm', views.confirm),
     path('confirm-list', views.confirm_list),
+    path('reset-confirm', views.reset_confirm),
 ]

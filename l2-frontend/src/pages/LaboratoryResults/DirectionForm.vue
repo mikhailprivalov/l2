@@ -115,7 +115,7 @@ export default {
     };
   },
   mounted() {
-    this.$root.$on('laboratory:results:show-direction', data => {
+    this.$root.$on('laboratory:results:show-direction', (data, pk) => {
       this.direction = data.direction;
       this.patient = data.patient;
       this.issledovaniya = data.issledovaniya;
@@ -123,7 +123,11 @@ export default {
       this.allSaved = data.allSaved;
       this.q = data.q;
       this.loaded = true;
-      this.select(-1);
+      if (!pk) {
+        this.select(-1);
+      } else {
+        this.select(pk);
+      }
       const tubesInGroups = {};
 
       for (const i of data.issledovaniya) {
@@ -143,6 +147,7 @@ export default {
     });
 
     this.$root.$on('laboratory:reload-direction:with-open-first', () => this.reload());
+    this.$root.$on('laboratory:reload-direction:with-open-pk', pk => this.reload(pk));
   },
   computed: {
     fromRmis() {
@@ -174,8 +179,8 @@ export default {
       this.active = pk;
       this.$root.$emit('laboratory:results:open-form', pk);
     },
-    reload() {
-      this.$root.$emit('laboratory:results:search', this.q.mode, String(this.q.text));
+    reload(pk) {
+      this.$root.$emit('laboratory:results:search', this.q.mode, String(this.q.text), pk);
     },
     print() {
       this.$root.$emit('print:results', [this.direction.pk])

@@ -42,12 +42,14 @@ export default {
       mode: SEARCH_MODES.DIRECTION,
       modes: SEARCH_MODES_TITLES,
       q: '',
+      pkAfterSearch: null,
     };
   },
   mounted() {
-    this.$root.$on('laboratory:results:search', (mode, pk) => {
+    this.$root.$on('laboratory:results:search', (mode, pk, pkAfterSearch) => {
       this.mode = mode;
       this.q = String(pk);
+      this.pkAfterSearch = pkAfterSearch;
       this.search();
     })
   },
@@ -65,7 +67,8 @@ export default {
       const {ok, data, msg} = await api('laboratory/search', this, ['q', 'mode', 'laboratory']);
       if (ok) {
         this.q = '';
-        this.$root.$emit('laboratory:results:show-direction', data);
+        this.$root.$emit('laboratory:results:show-direction', data, this.pkAfterSearch);
+        this.pkAfterSearch = null;
       } else {
         errmessage(msg || 'Не найдено');
       }

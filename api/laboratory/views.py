@@ -10,10 +10,12 @@ from django.http import JsonResponse
 import simplejson as json
 from django.utils import dateformat, timezone
 
+from appconf.manager import SettingManager
 from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result
 from directory.models import Fractions, Researches, References
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
+from rmis_integration.client import Client
 from slog.models import Log
 from utils.dates import try_parse_range
 
@@ -195,8 +197,8 @@ def search(request):
                 researches_chk = []
                 for issledovaniye in (
                     iss.order_by("deferred", "-doc_save", "-doc_confirmation", "tubes__pk", "research__sort_weight")
-                    .prefetch_related('tubes', 'result_set')
-                    .select_related('research', 'doc_save')
+                        .prefetch_related('tubes', 'result_set')
+                        .select_related('research', 'doc_save')
                 ):
                     if True:
                         if issledovaniye.pk in researches_chk:
@@ -531,3 +533,26 @@ def confirm_list(request):
     return JsonResponse({
         "ok": True,
     })
+
+
+@login_required
+@group_required("Сброс подтверждений результатов", "Врач-лаборант", "Лаборант")
+def reset_confirm(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    result = {"ok": False, "message": "Неизвестная ошибка"}
+    if Issledovaniya.objects.filter(pk=pk).exists():
+        iss: Issledovaniya = Issledovaniya.objects.get(pk=pk)
+
+        if iss.allow_reset_confirm(request.user):
+            predoc = {"fio": iss.doc_confirmation_fio or 'не подтверждено', "pk": pk, "direction": iss.napravleniye_id}
+            iss.doc_confirmation = iss.time_confirmation = None
+            iss.save()
+            if iss.napravleniye.result_rmis_send:
+                c = Client()
+                c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)
+            result = {"ok": True}
+            Log.log(str(pk), 24, body=predoc, user=request.user.doctorprofile)
+        else:
+            result["message"] = f"Сброс подтверждения разрешен в течении {str(SettingManager.get('lab_reset_confirm_time_min'))} минут"
+    return JsonResponse(result)

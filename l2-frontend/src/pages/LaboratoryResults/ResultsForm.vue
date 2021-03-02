@@ -1,6 +1,6 @@
 <template>
   <fragment>
-    <div class="root" ref="root">
+    <div class="root" ref="root" v-if="pk" :key="pk">
       <table class="table table-bordered table-sm-pd">
         <thead>
         <tr>
@@ -25,17 +25,7 @@
           <td>
             <label class="fraction-title" :for="`fraction-${r.fraction.pk}`">{{ r.fraction.title }}</label>
           </td>
-          <td class="val">
-            <input type="text" class="form-control result-field"
-                   :class="[
-                     r.fraction.units.length > 0 && 'with-units',
-                     `isnorm_${r.norm}`,
-                   ]"
-                   :readonly="!loaded || confirmed"
-                   @keyup.enter="moveFocusNext"
-                   v-model="r.value" :id="`fraction-${r.fraction.pk}`" :data-x="Math.min(r.fraction.units.length, 9)">
-            <div class="unit">{{ r.fraction.units }}</div>
-          </td>
+          <TextInputField :readonly="confirmed || !loaded" :move-focus-next="moveFocusNext" :r="r"/>
           <Ref :data="r.ref.m"/>
           <Ref :data="r.ref.f"/>
         </tr>
@@ -43,6 +33,7 @@
           <td><label class="fraction-title" for="result_comment">Комментарий</label></td>
           <td colspan="3">
             <textarea class="noresize form-control result-field"
+                      :readonly="confirmed || !loaded"
                       v-autosize="comment" v-model="comment" id="result_comment"></textarea>
           </td>
         </tr>
@@ -63,7 +54,7 @@
           </button>
         </template>
         <template v-else>
-          <button class="btn btn-blue-nb btn-right" :disabled="!allow_reset_confirm">
+          <button class="btn btn-blue-nb btn-right" :disabled="!allow_reset_confirm" @click="resetConfirm()">
             Сброс подтверждения
           </button>
         </template>
@@ -74,11 +65,13 @@
 <script>
 import * as action_types from "@/store/action-types";
 import api from "@/api";
+
 import Ref from "@/pages/LaboratoryResults/Ref";
+import TextInputField from "@/pages/LaboratoryResults/TextInputField";
 
 export default {
   name: 'ResultsForm',
-  components: {Ref},
+  components: {TextInputField, Ref},
   mounted() {
     this.$root.$on('laboratory:results:open-form', pk => this.loadForm(pk))
   },
@@ -168,6 +161,22 @@ export default {
 
       await this.confirm();
     },
+    async resetConfirm() {
+      try {
+        await this.$dialog.confirm('Подтвердите сброс')
+      } catch (_) {
+        return
+      }
+      await this.$store.dispatch(action_types.INC_LOADING);
+      const {ok, message} = await api('laboratory/reset-confirm', this, 'pk');
+      if (!ok) {
+        errmessage(message);
+      } else {
+        okmessage('Подтверждение сброшено');
+      }
+      this.$root.$emit('laboratory:reload-direction:with-open-pk', this.pk);
+      await this.$store.dispatch(action_types.DEC_LOADING);
+    },
     moveFocusNext(e) {
       const $rf = $('.result-field');
       const index = $rf.index(e.target) + 1;
@@ -192,76 +201,6 @@ export default {
   overflow-y: auto;
 }
 
-.val {
-  position: relative;
-}
-
-.val .unit {
-  color: #888;
-  top: 1px;
-  right: 2px;
-  display: block;
-}
-
-.val .unit:not(:empty) {
-  z-index: 1;
-  word-break: keep-all;
-  white-space: nowrap;
-  height: 20px;
-  margin-top: -24px;
-  padding-bottom: 4px;
-  padding-right: 5px;
-  float: right;
-  text-align: right;
-  box-sizing: border-box;
-  overflow: hidden;
-  font-size: 12px;
-  max-width: 64px;
-}
-
-.val input.with-units {
-  padding-right: calc(64px / 9 * var(--x) + 7px);
-  top: 0;
-  left: 0;
-  display: block;
-}
-
-[data-x="1"] {
-  --x: 1;
-}
-
-[data-x="2"] {
-  --x: 2;
-}
-
-[data-x="3"] {
-  --x: 3;
-}
-
-[data-x="4"] {
-  --x: 4;
-}
-
-[data-x="5"] {
-  --x: 5;
-}
-
-[data-x="6"] {
-  --x: 6;
-}
-
-[data-x="7"] {
-  --x: 7;
-}
-
-[data-x="8"] {
-  --x: 8;
-}
-
-[data-x="9"] {
-  --x: 9;
-}
-
 .fraction-title {
   font-weight: normal;
   font-size: 14px;
@@ -283,15 +222,5 @@ export default {
   background-color: white;
   z-index: 2;
   box-shadow: 2px 0 2px rgba(0, 0, 0, .1);
-}
-
-.isnorm_maybe {
-  border-color: darkgoldenrod;
-  box-shadow: 0 0 4px darkgoldenrod;
-}
-
-.isnorm_not_normal {
-  border-color: darkred;
-  box-shadow: 0 0 4px darkred;
 }
 </style>
