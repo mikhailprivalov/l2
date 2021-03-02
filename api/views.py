@@ -549,7 +549,7 @@ def current_user_info(request):
 def directive_from(request):
     data = []
     for dep in (
-        Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)
+        Podrazdeleniya.objects.filter(Q(p_type=Podrazdeleniya.DEPARTMENT) | Q(p_type=Podrazdeleniya.HOSP))
         .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
         .prefetch_related(
             Prefetch(

@@ -39,7 +39,7 @@
         </tr>
         <tr  v-for="row in 5">
           <td>
-            <a href="#" @click.prevent="load">{{row}}-2021</a>
+            <a href="#" @click.prevent="load">{{row}}-2021 Дальнобойщик неверно рассчитал ширину проезжей части и застрял правой стороной большегруза.</a>
           </td>
           <td class="nopd"><input type="checkbox"/></td>
         </tr>
