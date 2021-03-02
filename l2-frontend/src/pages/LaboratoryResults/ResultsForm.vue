@@ -4,20 +4,20 @@
       <table class="table table-bordered table-sm-pd">
         <thead>
         <tr>
-          <th colspan="3">
-            {{ research.title }}
-          </th>
-          <td class="cl-td">
+          <td colspan="4" class="cl-td">
             <button class="btn btn-blue-nb header-button" @click="clearAll" :disabled="confirmed">
               Очистить всё
             </button>
+            <div style="padding: 5px;font-weight: bold;">
+              {{ research.title }}
+            </div>
           </td>
         </tr>
         <tr class="table-header">
           <th style="width: 29%">Фракция</th>
-          <th>Значение</th>
-          <th style="width: 23%">Нормы М</th>
-          <th style="width: 23%">Нормы Ж</th>
+          <th :colspan="noRefs ? 3 : 1">Значение</th>
+          <th style="width: 23%" v-if="!noRefs">Нормы М</th>
+          <th style="width: 23%" v-if="!noRefs">Нормы Ж</th>
         </tr>
         </thead>
         <tbody>
@@ -25,9 +25,19 @@
           <td>
             <label class="fraction-title" :for="`fraction-${r.fraction.pk}`">{{ r.fraction.title }}</label>
           </td>
-          <TextInputField :readonly="confirmed || !loaded" :move-focus-next="moveFocusNext" :r="r"/>
-          <Ref :data="r.ref.m"/>
-          <Ref :data="r.ref.f"/>
+          <BloodTypeField
+            v-if="research.template === 2"
+            :readonly="confirmed || !loaded"
+            :r="r"
+          />
+          <TextInputField
+            v-else
+            :readonly="confirmed || !loaded"
+            :move-focus-next="moveFocusNext"
+            :r="r"
+          />
+          <Ref :data="r.ref.m" v-if="!noRefs"/>
+          <Ref :data="r.ref.f" v-if="!noRefs"/>
         </tr>
         <tr v-if="research.can_comment">
           <td><label class="fraction-title" for="result_comment">Комментарий</label></td>
@@ -68,10 +78,11 @@ import api from "@/api";
 
 import Ref from "@/pages/LaboratoryResults/Ref";
 import TextInputField from "@/pages/LaboratoryResults/TextInputField";
+import BloodTypeField from "@/pages/LaboratoryResults/BloodTypeField";
 
 export default {
   name: 'ResultsForm',
-  components: {TextInputField, Ref},
+  components: {TextInputField, BloodTypeField, Ref},
   mounted() {
     this.$root.$on('laboratory:results:open-form', pk => this.loadForm(pk))
   },
@@ -86,6 +97,11 @@ export default {
       comment: '',
       result: [],
     };
+  },
+  computed: {
+    noRefs() {
+      return this.research.no_units_and_ref || this.research.template === 2;
+    },
   },
   methods: {
     async loadForm(pk) {
@@ -213,6 +229,8 @@ export default {
 
 .header-button {
   width: 100%;
+  max-width: 150px;
+  float: right;
 }
 
 .table-header th {

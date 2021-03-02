@@ -350,6 +350,7 @@ def form(request):
             "no_units_and_ref": research.no_units_and_ref,
             "co_executor_mode": research.co_executor_mode or 0,
             "co_executor_title": research.co_executor_2_title,
+            "template": research.template,
         },
         "result": [],
         "comment": iss.lab_comment or "",
