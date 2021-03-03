@@ -2164,10 +2164,10 @@ def directions_result_year(request):
     request_data = json.loads(request.body)
     print(request_data)
     is_lab = request_data.get('is_lab', False)
-    is_lab = False
+    is_lab = True
     is_paraclinic = request_data.get('is_paraclinic', False)
     is_doc_refferal = request_data.get('is_doc_refferal', False)
-    is_doc_refferal = True
+    # is_doc_refferal = True
     year = request_data['current_year']
     d1 = datetime.strptime(f'01.01.{year}', '%d.%m.%Y')
     start_date = datetime.combine(d1, dtime.min)
@@ -2185,17 +2185,17 @@ def directions_result_year(request):
     else:
         lab_podr = [-1]
 
+    print(lab_podr)
     card_pk = int(card_pk)
     confirm_direction = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card_pk, is_lab, is_paraclinic, is_doc_refferal)
     if not confirm_direction:
         return JsonResponse({"results": []})
 
-    confirm_direction = [i[0] for i in confirm_direction]
+    for i in confirm_direction:
+        print(i.direction, i.ch_time_save, i.research_id, i.research_title)
 
-    not_confirm_direction = get_not_confirm_direction(confirm_direction)
-    not_confirm_direction = [i[0] for i in not_confirm_direction]
-    result_direction = list(set(confirm_direction) - set(not_confirm_direction))
+
     print('#####')
-    print(result_direction)
+    # print(result_direction)
 
-    return JsonResponse({"results": result_direction})
+    return JsonResponse({"results": ''})

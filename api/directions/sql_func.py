@@ -193,36 +193,30 @@ def get_confirm_direction_pathology(d_s, d_e):
 def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=False, is_paraclinic=False, is_doc_refferal=False):
     with connection.cursor() as cursor:
         cursor.execute(
-            """  
-        SELECT DISTINCT ON (napravleniye_id) napravleniye_id
-        FROM public.directions_issledovaniya
-        WHERE time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
-        AND napravleniye_id IN (SELECT id FROM directions_napravleniya WHERE client_id=%(card_pk)s and data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s)
-
-        AND research_id IN (SELECT id FROM directory_researches WHERE CASE
-
-        WHEN  %(is_lab)s = FALSE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = FALSE THEN
-          is_paraclinic = TRUE
-        WHEN %(is_lab)s = FALSE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = TRUE THEN
-          is_doc_refferal = TRUE
-
-        WHEN  %(is_lab)s = FALSE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = TRUE  THEN 
-          is_paraclinic = TRUE or is_doc_refferal = TRUE
-
-        WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = FALSE THEN
-            podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
-
-        WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = FALSE THEN
-          is_paraclinic = TRUE and is_doc_refferal = FALSE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
-
-        WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = TRUE THEN
-          is_paraclinic = FALSE and is_doc_refferal = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
-
-        WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = TRUE THEN
-          is_paraclinic = TRUE or is_doc_refferal = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
-        END
-        )
-
+            """   
+        Select 
+            directions_napravleniya.id as direction,
+            directions_issledovaniya.time_confirmation,
+            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/Irkutsk', 'DD.MM.YYYY') as ch_time_save,
+            directions_issledovaniya.research_id,
+            directory_researches.title as research_title
+            FROM directions_napravleniya
+            INNER JOIN directions_issledovaniya ON (directions_napravleniya.id = directions_issledovaniya.napravleniye_id)
+            AND directions_issledovaniya.research_id IN 
+            (SELECT directory_researches.id FROM directory_researches WHERE CASE 
+             WHEN %(is_lab)s = TRUE THEN directory_researches.podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
+             WHEN %(is_doc_refferal)s = TRUE THEN is_doc_refferal = TRUE
+             WHEN %(is_paraclinic)s = TRUE THEN is_paraclinic = TRUE
+             END
+            )
+            LEFT JOIN directory_researches ON
+            directions_issledovaniya.research_id=directory_researches.id
+            WHERE directions_issledovaniya.time_confirmation IS NOT NULL
+            AND directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/Irkutsk' BETWEEN '2021-01-01 00:00:00' AND '2021-12-31 23:59:59'
+            AND NOT EXISTS (SELECT directions_issledovaniya.napravleniye_id FROM directions_issledovaniya 
+                            WHERE time_confirmation IS NULL AND directions_issledovaniya.napravleniye_id = directions_napravleniya.id)
+            AND client_id=199554
+            ORDER BY directions_issledovaniya.time_confirmation DESC, directions_napravleniya.id
         """,
             params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'is_lab': is_lab, 'is_paraclinic': is_paraclinic, 'is_doc_refferal': is_doc_refferal, 'lab_podr': lab_podr, 'card_pk': card_pk1},
         )
