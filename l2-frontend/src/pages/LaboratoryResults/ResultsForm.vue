@@ -49,6 +49,47 @@
                       v-autosize="comment" v-model="comment" id="result_comment"></textarea>
           </td>
         </tr>
+        <template v-if="research.co_executor_mode > 0 && laborants.length > 0">
+          <tr>
+            <td colspan="4">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label for="laborant">Лаборант</label>
+            </td>
+            <td colspan="3">
+              <treeselect :multiple="false"
+                          :disable-branch-nodes="true"
+                          :options="laborants"
+                          placeholder="Лаборант не выбран"
+                          v-model="co_executor"
+                          :append-to-body="true"
+                          :clearable="false"
+                          id="laborant"
+                          :disabled="confirmed"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label for="co_executor2">{{ research.co_executor_title }}</label>
+            </td>
+            <td colspan="3">
+              <treeselect :multiple="false"
+                          :disable-branch-nodes="true"
+                          :options="laborants"
+                          placeholder="Соисполнитель не выбран"
+                          v-model="co_executor2"
+                          :append-to-body="true"
+                          :clearable="false"
+                          id="co_executor2"
+                          :disabled="confirmed"
+              />
+            </td>
+          </tr>
+        </template>
         </tbody>
       </table>
     </div>
@@ -78,13 +119,16 @@
 import * as action_types from "@/store/action-types";
 import api from "@/api";
 
+import Treeselect from "@riophae/vue-treeselect";
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+
 import Ref from "@/pages/LaboratoryResults/Ref";
 import TextInputField from "@/pages/LaboratoryResults/TextInputField";
 import BloodTypeField from "@/pages/LaboratoryResults/BloodTypeField";
 
 export default {
   name: 'ResultsForm',
-  components: {TextInputField, BloodTypeField, Ref},
+  components: {TextInputField, BloodTypeField, Ref, Treeselect},
   mounted() {
     this.$root.$on('laboratory:results:open-form', (pk, allDirPks, dirData) => {
       this.loadForm(pk);
@@ -104,6 +148,9 @@ export default {
       result: [],
       allDirPks: [],
       dirData: {},
+      laborants: [],
+      co_executor: -1,
+      co_executor2: -1,
     };
   },
   computed: {
@@ -132,6 +179,9 @@ export default {
       this.result = data.result;
       this.confirmed = data.confirmed;
       this.saved = data.saved;
+      this.laborants = data.laborants;
+      this.co_executor = data.co_executor;
+      this.co_executor2 = data.co_executor2;
       this.allow_reset_confirm = data.allow_reset_confirm;
       this.loaded = true;
       $(this.$refs.root).scrollTop(0);
@@ -160,7 +210,11 @@ export default {
     },
     async save(withoutReloading = false) {
       await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message} = await api('laboratory/save', this, ['pk', 'result', 'comment']);
+      const {ok, message} = await api(
+        'laboratory/save',
+        this,
+        ['pk', 'result', 'comment', 'co_executor', 'co_executor2']
+      );
       if (!ok) {
         errmessage(message);
       } else {

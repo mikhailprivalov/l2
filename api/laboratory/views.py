@@ -18,6 +18,7 @@ from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.client import Client
 from slog.models import Log
+from users.models import DoctorProfile
 from utils.dates import try_parse_range
 
 
@@ -356,6 +357,17 @@ def form(request):
         },
         "result": [],
         "comment": iss.lab_comment or "",
+        "laborants": (
+            [{"id": -1, "label": 'Не выбрано'}, *[
+                {"id": x.pk, "label": x.fio}
+                for x in
+                DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by('fio')
+            ]]
+            if SettingManager.l2('results_laborants') else
+            []
+        ),
+        "co_executor": iss.co_executor_id or -1,
+        "co_executor2": iss.co_executor2_id or -1,
     }
 
     f: Fractions
