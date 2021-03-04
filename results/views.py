@@ -47,12 +47,11 @@ from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.common import RANGE_NOT_IN, RANGE_IN
-from utils.dates import try_parse_range
+from utils.dates import try_parse_range, try_strptime
 from utils.flowable import InteractiveTextField
 from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result, procedural_text_for_result
 from django.utils.module_loading import import_string
-
 
 pdfmetrics.registerFont(TTFont('FreeSans', os.path.join(FONTS_FOLDER, 'FreeSans.ttf')))
 pdfmetrics.registerFont(TTFont('FreeSansBold', os.path.join(FONTS_FOLDER, 'FreeSansBold.ttf')))
@@ -526,8 +525,8 @@ def result_print(request):
 
     dirs = (
         Napravleniya.objects.filter(pk__in=pk)
-        .select_related('client')
-        .prefetch_related(
+            .select_related('client')
+            .prefetch_related(
             Prefetch(
                 'issledovaniya_set',
                 queryset=(
@@ -537,8 +536,8 @@ def result_print(request):
                 ),
             )
         )
-        .annotate(results_count=Count('issledovaniya__result'))
-        .distinct()
+            .annotate(results_count=Count('issledovaniya__result'))
+            .distinct()
     )
 
     count_direction = 0
@@ -1542,7 +1541,7 @@ class TTR(Flowable):
 @login_required
 def result_journal_table_print(request):
     dateo = request.GET["date"]
-    date = datetime.date(int(dateo.split(".")[2]), int(dateo.split(".")[1]), int(dateo.split(".")[0]))
+    date = try_strptime(dateo, formats=('%d.%m.%Y', '%Y-%m-%d',))
     end_date = date + datetime.timedelta(days=1)
     onlyjson = False
 
@@ -1705,7 +1704,7 @@ def result_journal_print(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="journal.pdf"'
     dateo = request.GET["date"]
-    date = datetime.date(int(dateo.split(".")[2]), int(dateo.split(".")[1]), int(dateo.split(".")[0]))
+    date = try_strptime(dateo, formats=('%d.%m.%Y', '%Y-%m-%d',))
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
 
     ist_f = json.loads(request.GET.get("ist_f", "[]"))
@@ -1782,9 +1781,9 @@ def result_journal_print(request):
                 "directions": {},
                 "ist_f": iss.napravleniye.fin_title,
                 "fio": iss.napravleniye.client.individual.fio(short=True, dots=True)
-                + "<br/>Карта: "
-                + iss.napravleniye.client.number_with_type()
-                + (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else ""),
+                       + "<br/>Карта: "
+                       + iss.napravleniye.client.number_with_type()
+                       + (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else ""),
             }
         if iss.napravleniye_id not in clientresults[key]["directions"]:
             clientresults[key]["directions"][iss.napravleniye_id] = {"researches": {}}
@@ -1969,7 +1968,7 @@ def get_day_results(request):
         day = request.GET["date"]
         otd = request.GET.get("otd", "-1")
 
-    day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]), int(day.split(".")[0]))
+    day1 = try_strptime(day, formats=('%d.%m.%Y', '%Y-%m-%d',))
     day2 = day1 + datetime.timedelta(days=1)
     directions = collections.defaultdict(list)
     otd = int(otd)

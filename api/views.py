@@ -20,7 +20,7 @@ from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document, District
-from directory.models import Fractions, ParaclinicInputField, ResearchSite, Culture, Antibiotic
+from directory.models import Fractions, ParaclinicInputField, ResearchSite, Culture, Antibiotic, ResearchGroup
 from directory.models import Researches as DResearches
 from doctor_call.models import DoctorCall
 from external_system.models import FsliRefbookTest
@@ -454,6 +454,34 @@ def departments(request):
     return JsonResponse(0)
 
 
+@login_required
+def otds(request):
+    return JsonResponse({
+        "rows": [{"id": -1, "label": "Все отделения"}, *[
+            {"id": x.pk, "label": x.title}
+            for x in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+        ]]
+    })
+
+
+@login_required
+def laboratory_journal_params(request):
+    return JsonResponse({
+        "fin": [
+            {"id": x.pk, "label": f"{x.base.title} – {x.title}"}
+            for x in directions.IstochnikiFinansirovaniya.objects.all().order_by("pk").order_by("base")
+        ],
+        "groups": [
+            {"id": -2, "label": "Все исследования"},
+            {"id": -1, "label": "Без группы"},
+            *[
+                {"id": x.pk, "label": f"{x.lab.get_title()} – {x.title}"}
+                for x in ResearchGroup.objects.all()
+            ]
+        ],
+    })
+
+
 def bases(request):
     k = f'view:bases:{request.user.pk}'
     ret = cache.get(k)
@@ -550,8 +578,8 @@ def directive_from(request):
     data = []
     for dep in (
         Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)
-        .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
-        .prefetch_related(
+            .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
+            .prefetch_related(
             Prefetch(
                 'doctorprofile_set',
                 queryset=(
@@ -559,7 +587,7 @@ def directive_from(request):
                 ),
             )
         )
-        .order_by('title')
+            .order_by('title')
     ):
         d = {
             "pk": dep.pk,
@@ -618,13 +646,13 @@ def statistics_tickets_get(request):
     n = 0
     for row in (
         StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile))
-        .filter(
+            .filter(
             date__range=(
                 date_start,
                 date_end,
             )
         )
-        .order_by('pk')
+            .order_by('pk')
     ):
         if not row.invalid_ticket:
             n += 1
@@ -738,9 +766,9 @@ def rmis_confirm_list(request):
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
     d = (
         directions.Napravleniya.objects.filter(istochnik_f__rmis_auto_send=False, force_rmis_send=False, issledovaniya__time_confirmation__range=(date_start, date_end))
-        .exclude(issledovaniya__time_confirmation__isnull=True)
-        .distinct()
-        .order_by("pk")
+            .exclude(issledovaniya__time_confirmation__isnull=True)
+            .distinct()
+            .order_by("pk")
     )
     data["directions"] = [{"pk": x.pk, "patient": {"fiodr": x.client.individual.fio(full=True), "card": x.client.number_with_type()}, "fin": x.fin_title} for x in d]
     return JsonResponse(data)
@@ -918,9 +946,9 @@ def autocomplete(request):
                 }
                 for x in
                 Drugs.objects
-                .filter(Q(mnn__istartswith=v) | Q(trade_name__istartswith=v))
-                .order_by('mnn', 'trade_name')
-                .distinct('mnn', 'trade_name')[:limit]
+                    .filter(Q(mnn__istartswith=v) | Q(trade_name__istartswith=v))
+                    .order_by('mnn', 'trade_name')
+                    .distinct('mnn', 'trade_name')[:limit]
             ]
     return JsonResponse({"data": data})
 
