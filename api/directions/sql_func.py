@@ -197,7 +197,7 @@ def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=Fals
         Select 
             directions_napravleniya.id as direction,
             directions_issledovaniya.time_confirmation,
-            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/Irkutsk', 'DD.MM.YYYY') as ch_time_save,
+            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/Irkutsk', 'DD.MM.YYYY') as ch_time_confirmation,
             directions_issledovaniya.research_id,
             directory_researches.title as research_title
             FROM directions_napravleniya
@@ -212,7 +212,7 @@ def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=Fals
             LEFT JOIN directory_researches ON
             directions_issledovaniya.research_id=directory_researches.id
             WHERE directions_issledovaniya.time_confirmation IS NOT NULL
-            AND directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/Irkutsk' BETWEEN '2021-01-01 00:00:00' AND '2021-12-31 23:59:59'
+            AND directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/Irkutsk' BETWEEN %(d_start)s AND %(d_end)s
             AND NOT EXISTS (SELECT directions_issledovaniya.napravleniye_id FROM directions_issledovaniya 
                             WHERE time_confirmation IS NULL AND directions_issledovaniya.napravleniye_id = directions_napravleniya.id)
             AND client_id=199554

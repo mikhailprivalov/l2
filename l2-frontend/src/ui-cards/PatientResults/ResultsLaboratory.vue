@@ -28,18 +28,36 @@
 
     <div id="favorites-view" class="tp">
       <table class="table">
+        <colgroup>
+          <col width='40'/>
+          <col width='100'/>
+          <col width='300'/>
+          <col width='20'/>
+        </colgroup>
         <tbody>
         <tr>
+          <td>
+          </td>
           <td>
             <a href="#" @click.prevent="minus_year"><i class="fa fa-angle-double-left"></i></a>
             <a href="#">{{ current_year }}</a>
             <a href="#" @click.prevent="plus_year"><i class="fa fa-angle-double-right"></i></a>
             <a href="#" @click.prevent="set_current_year" style="padding-left: 5px"><i class="fa fa-circle"></i></a>
           </td>
-        </tr>
-        <tr  v-for="row in 5">
           <td>
-            <a href="#" @click.prevent="load">{{row}}-2021 Дальнобойщик неверно рассчитал ширину проезжей части и застрял правой стороной большегруза.</a>
+          </td>
+          <td>
+          </td>
+        </tr>
+        <tr  v-for="row in data">
+          <td>
+            <a href="#" @click.prevent="load">{{row.dir}}</a>
+          </td>
+          <td>
+            <a href="#" @click.prevent="load">{{row.date}}</a>
+          </td>
+          <td>
+            <a href="#" @click.prevent="load">{{row.reserches}}</a>
           </td>
           <td class="nopd"><input type="checkbox"/></td>
         </tr>
@@ -64,7 +82,9 @@
     data() {
       return {
         data: '',
-        current_year: moment().format('YYYY')
+        current_year: moment().format('YYYY'),
+        is_lab: true,
+
       }
     },
     mounted() {
@@ -73,8 +93,9 @@
     },
     methods: {
       async load() {
-        const {data} = await api('directions/result-patient-year', this,['card_pk','current_year']);
-        // console.log(data)
+        const result = await api('directions/result-patient-year', this,['card_pk','current_year', 'is_lab']);
+        this.data = [...result.results]
+        console.log(this.data)
       },
       print_med_certificate(type_form, direction) {
         window.open(`/medical_certificates/pdf?type=${type_form}&dir=${direction}`, '_blank')
@@ -87,6 +108,7 @@
       },
       set_current_year() {
         this.current_year = moment().format('YYYY')
+        this.load()
       }
     },
   }

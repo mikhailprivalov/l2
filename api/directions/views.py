@@ -2164,7 +2164,6 @@ def directions_result_year(request):
     request_data = json.loads(request.body)
     print(request_data)
     is_lab = request_data.get('is_lab', False)
-    is_lab = True
     is_paraclinic = request_data.get('is_paraclinic', False)
     is_doc_refferal = request_data.get('is_doc_refferal', False)
     # is_doc_refferal = True
@@ -2174,7 +2173,6 @@ def directions_result_year(request):
     d2 = datetime.strptime(f'31.12.{year}', '%d.%m.%Y')
     end_date = datetime.combine(d2, dtime.max)
     card_pk = request_data.get('card_pk', -1)
-    print(card_pk, start_date, end_date)
 
     if not is_lab and not is_doc_refferal and not is_paraclinic or card_pk == -1:
         return JsonResponse({"results": []})
@@ -2185,17 +2183,36 @@ def directions_result_year(request):
     else:
         lab_podr = [-1]
 
-    print(lab_podr)
     card_pk = int(card_pk)
     confirm_direction = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card_pk, is_lab, is_paraclinic, is_doc_refferal)
     if not confirm_direction:
         return JsonResponse({"results": []})
 
+    # data = {}
+    # temp_dir = ''
+    # for i in confirm_direction:
+    #     if temp_dir != i.direction:
+    #         temp_dir = i.direction
+    #         data[temp_dir] = {'date': i.ch_time_confirmation, 'reserches': ''}
+    #     temp_researches = data[temp_dir]['reserches']
+    #     temp_researches = f"{temp_researches} {i.research_title}"
+    #     data[temp_dir]['reserches'] = temp_researches
+
+    data = {}
+    temp_dir = ''
+    objs = []
+    count = 0
     for i in confirm_direction:
-        print(i.direction, i.ch_time_save, i.research_id, i.research_title)
+        if temp_dir != i.direction:
+            objs.append({'dir': i.direction, 'date': i.ch_time_confirmation, 'reserches': ''})
+            count = len(objs)
+            temp_dir = i.direction
+        temp_reserches = objs[count - 1].get('reserches')
+        temp_reserches = f"{temp_reserches} {i.research_title}"
+        objs[count - 1]['reserches'] = temp_reserches
 
 
-    print('#####')
-    # print(result_direction)
+    print(objs)
+    data = objs
 
-    return JsonResponse({"results": ''})
+    return JsonResponse({"results": data})
