@@ -43,7 +43,7 @@ from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE
 from laboratory.utils import strdatetime, strdate, tsdatetime, start_end_year, strfdatetime, current_time
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
-from results.sql_func import get_not_confirm_direction
+from results.sql_func import get_not_confirm_direction, get_laboratory_results
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
@@ -2188,31 +2188,31 @@ def directions_result_year(request):
     if not confirm_direction:
         return JsonResponse({"results": []})
 
-    # data = {}
-    # temp_dir = ''
-    # for i in confirm_direction:
-    #     if temp_dir != i.direction:
-    #         temp_dir = i.direction
-    #         data[temp_dir] = {'date': i.ch_time_confirmation, 'reserches': ''}
-    #     temp_researches = data[temp_dir]['reserches']
-    #     temp_researches = f"{temp_researches} {i.research_title}"
-    #     data[temp_dir]['reserches'] = temp_researches
+    # temp_dir, objs_result, count = '', [], 0
 
-    data = {}
+    directions_obj = {d.direction for d in confirm_direction}
+    directions_obj = list(directions_obj)
+    direction_result = get_laboratory_results(directions_obj)
+
+    # for r in direction_result:
+    #     if temp_dir != r.direction:
+    #         objs_result.append({'dir': r.direction, 'research': '', 'result': ''})
+    #         count = len(objs_result)
+    #         temp_dir = r.direction
+    #     temp_reserches = objs_result[count - 1].get('reserches')
+    #     temp_reserches = f"{temp_reserches} {r.research_title}"
+    #     objs_result[count - 1]['reserches'] = temp_reserches
+
     temp_dir = ''
     objs = []
     count = 0
     for i in confirm_direction:
         if temp_dir != i.direction:
-            objs.append({'dir': i.direction, 'date': i.ch_time_confirmation, 'reserches': ''})
+            objs.append({'dir': i.direction, 'date': i.ch_time_confirmation, 'researches': ''})
             count = len(objs)
             temp_dir = i.direction
-        temp_reserches = objs[count - 1].get('reserches')
+        temp_reserches = objs[count - 1].get('researches', '')
         temp_reserches = f"{temp_reserches} {i.research_title}"
-        objs[count - 1]['reserches'] = temp_reserches
+        objs[count - 1]['researches'] = temp_reserches
 
-
-    print(objs)
-    data = objs
-
-    return JsonResponse({"results": data})
+    return JsonResponse({"results": objs})

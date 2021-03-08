@@ -305,18 +305,6 @@
                    href="#" @click.prevent="open_results(row.pk)">
                   (другие результаты)
                 </a>
-                <a style="font-weight: normal; padding-left: 5px; float: right;"
-                   href="#" @click.prevent="open_results(row.pk)">
-                  Анализы
-                </a>
-                <a style="font-weight: normal; padding-left: 5px; float: right;"
-                   href="#" @click.prevent="open_results(row.pk)">
-                  Параклиника
-                </a>
-                <a style="font-weight: normal; padding-left: 5px; float: right;"
-                   href="#" @click.prevent="open_results(row.pk)">
-                  Консультации
-                </a>
                 <div class="results-history" slot="dropdown">
                   <ul>
                     <li v-for="r in research_history">

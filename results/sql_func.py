@@ -1,5 +1,7 @@
 from django.db import connection
 
+from utils.db import namedtuplefetchall
+
 
 def get_confirm_direction(list_dirs):
     with connection.cursor() as cursor:
@@ -37,3 +39,31 @@ def get_direction_by_client(list_dirs):
         )
         row = cursor.fetchall()
     return row
+
+
+def get_laboratory_results(list_dirs):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT 
+                directions_issledovaniya.id,
+                directions_issledovaniya.napravleniye_id as direction,
+                directions_issledovaniya.research_id,
+                directory_researches.title as research_title,
+                directions_result.value as value,
+                directions_result.fraction_id,
+                directory_fractions.title as fraction_title,
+                directions_result.units as units
+                from directions_issledovaniya
+                INNER JOIN directions_result ON (directions_result.issledovaniye_id = directions_issledovaniya.id)
+                LEFT JOIN directory_researches ON
+                directions_issledovaniya.research_id=directory_researches.id
+                LEFT JOIN directory_fractions ON
+                directions_result.fraction_id=directory_fractions.id
+                WHERE directions_issledovaniya.napravleniye_id = ANY(ARRAY[%(num_dirs)s])
+
+        """,
+            params={'num_dirs': list_dirs},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
