@@ -1,6 +1,6 @@
 <template>
   <fragment>
-    <a href="#" class="dropdown-toggle" style="color: #049372" @click.prevent
+    <a href="#" class="dropdown-toggle" @click.prevent
        v-tippy="{
                 html: '#favorites-view',
                 reactive: true,
@@ -24,8 +24,9 @@
                 },
              }">
 
-      <i v-if="is_lab" class="fa fa-vials"></i>
-      <i v-else class="fa fa-user-md"></i>
+      <i v-if= "is_doc_refferal"class="fa fa-user-md" style="color: #046f8f; padding-left: 1px"></i>
+      <i v-if="is_paraclinic" class="fa fa-file-medical-alt" style="color: #6d0493; padding-left: 1px"></i>
+      <i v-if="is_lab" class="fa fa-vials" style="color: #a5005a; padding-left: 1px"></i>
     </a>
 
     <div id="favorites-view" class="tp">
@@ -83,14 +84,27 @@ export default {
     card_pk: {
       type: Number,
       required: true,
-    }
+    },
+    is_lab: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    is_doc_refferal: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    is_paraclinic: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
   },
   data() {
     return {
       data: '',
       current_year: moment().format('YYYY'),
-      is_lab: false,
-
     }
   },
   mounted() {
@@ -102,7 +116,8 @@ export default {
       this.$root.$emit('show_results', pk)
     },
     async load() {
-      const result = await api('directions/result-patient-year', this, ['card_pk', 'current_year', 'is_lab']);
+      const result = await api('directions/result-patient-year', this, ['card_pk', 'current_year',
+        'is_lab', 'is_doc_refferal', 'is_paraclinic']);
       this.data = [...result.results]
       console.log(this.data)
     },

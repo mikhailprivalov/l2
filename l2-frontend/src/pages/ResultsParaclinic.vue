@@ -265,19 +265,17 @@
                 </div>
               </div>
               <medical-certificates :med_certificates="data.medical_certificates" :direction="data.direction.pk"/>
-              <a style="font-weight: normal; padding-left: 3px;"
-                 href="#" @click.prevent="open_results(row.pk)">
-                 <i class="fa fa-vials"></i>
-              </a>
-              <a style="font-weight: normal;padding-left: 3px;"
-                 href="#" @click.prevent="open_results(row.pk)">
-                 <i class="fa fa-user-md"></i>
-              </a>
-              <a style="font-weight: normal; padding-left: 3px;"
-                 href="#" @click.prevent="open_results(row.pk)">
-                 <i class="fa fa-file-medical-alt"></i>
-              </a>
-              <results-laboratory :card_pk="data.patient.card_pk"/>
+<!--              <a style="font-weight: normal;padding-left: 3px;"-->
+<!--                 href="#" @click.prevent="open_results(row.pk)">-->
+<!--                 <i class="fa fa-user-md"></i>-->
+<!--              </a>-->
+<!--              <a style="font-weight: normal; padding-left: 3px;"-->
+<!--                 href="#" @click.prevent="open_results(row.pk)">-->
+<!--                 <i class="fa fa-file-medical-alt"></i>-->
+<!--              </a>-->
+              <results-laboratory :card_pk="data.patient.card_pk" :is_doc_refferal="true"/>
+              <results-laboratory :card_pk="data.patient.card_pk" :is_paraclinic="true"/>
+              <results-laboratory :card_pk="data.patient.card_pk" :is_lab="true"/>
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
