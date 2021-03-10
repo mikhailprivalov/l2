@@ -1,6 +1,5 @@
 import collections
 import itertools
-import time
 from decimal import Decimal
 from typing import Optional
 
@@ -13,7 +12,7 @@ from django.utils import dateformat, timezone
 
 from appconf.manager import SettingManager
 from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result
-from directory.models import Fractions, Researches, References
+from directory.models import Fractions, Researches
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.client import Client
