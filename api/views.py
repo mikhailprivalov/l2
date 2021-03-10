@@ -497,10 +497,15 @@ def bases(request):
                     "internal_type": x.internal_type,
                     "fin_sources": [
                         {"pk": y.pk, "title": y.title, "default_diagnos": y.default_diagnos}
-                        for y in directions.IstochnikiFinansirovaniya.objects.filter(base=x, hide=False).order_by('-order_weight')
+                        for y in x.istochnikifinansirovaniya_set.all()
                     ],
                 }
-                for x in CardBase.objects.all().order_by('-order_weight')
+                for x in CardBase.objects.all().prefetch_related(
+                    Prefetch(
+                        'istochnikifinansirovaniya_set',
+                        directions.IstochnikiFinansirovaniya.objects.filter(hide=False).order_by('-order_weight')
+                    )
+                ).order_by('-order_weight')
             ]
         }
         cache.set(k, ret, 100)
@@ -532,8 +537,8 @@ def current_user_info(request):
         ret["rmis_login"] = doctorprofile.rmis_login
         ret["rmis_password"] = doctorprofile.rmis_password
         ret["department"] = {"pk": doctorprofile.podrazdeleniye_id, "title": doctorprofile.podrazdeleniye.title}
-        ret["restricted"] = [x.pk for x in doctorprofile.restricted_to_direct.all()]
-        ret["user_services"] = [x.pk for x in doctorprofile.users_services.all() if x not in ret["restricted"]]
+        ret["restricted"] = [x['pk'] for x in doctorprofile.restricted_to_direct.all().values('pk')]
+        ret["user_services"] = [x['pk'] for x in doctorprofile.users_services.all().values('pk') if x not in ret["restricted"]]
         ret["su"] = user.is_superuser
         ret["hospital"] = doctorprofile.get_hospital_id()
         ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
