@@ -7,15 +7,17 @@ import appconf.models as appconf
 class SettingManager:
     @staticmethod
     def get(key, default=None, default_type='s'):
+        no_cache = '#no-cache#' in key
         k = 'setting_manager_' + key
-        cv = cache.get(k)
+        cv = cache.get(k) if not no_cache else None
         if cv:
             return simplejson.loads(cv)
         row = appconf.Setting.objects.filter(name=key).first()
         if not row:
             row = appconf.Setting.objects.create(name=key, value=key if default is None else default, value_type=default_type)
         value = row.get_value()
-        cache.set(k, simplejson.dumps(value), 20)
+        if not no_cache:
+            cache.set(k, simplejson.dumps(value), 20)
         return value
 
     @staticmethod
