@@ -93,17 +93,20 @@
         </tbody>
       </table>
     </div>
-    <div class="bottom-buttons">
+    <div class="bottom-buttons" :class="!confirmed && 'bottom-buttons-full'">
       <template v-if="loaded">
         <template v-if="!confirmed">
-          <button class="btn btn-blue-nb btn-right" @click="saveAndConfirm()">
-            Сохранить и подтвердить
+          <button class="btn btn-blue-nb btn-ell" @click="openRefSettings()">
+            Настройка референсов
           </button>
-          <button class="btn btn-blue-nb btn-right" :disabled="!saved" @click="confirm()">
+          <button class="btn btn-blue-nb btn-ell" @click="save()">
+            Сохранить
+          </button>
+          <button class="btn btn-blue-nb btn-ell" :disabled="!saved" @click="confirm()">
             Подтвердить
           </button>
-          <button class="btn btn-blue-nb btn-right" @click="save()">
-            Сохранить
+          <button class="btn btn-blue-nb btn-ell" @click="saveAndConfirm()">
+            Сохранить и подтвердить
           </button>
         </template>
         <template v-else>
@@ -113,6 +116,7 @@
         </template>
       </template>
     </div>
+    <RefSettings v-if="showRefSettings" :close="hideRefSettings" :result="result" />
   </fragment>
 </template>
 <script>
@@ -125,10 +129,11 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import Ref from "@/pages/LaboratoryResults/Ref";
 import TextInputField from "@/pages/LaboratoryResults/TextInputField";
 import BloodTypeField from "@/pages/LaboratoryResults/BloodTypeField";
+import RefSettings from "@/pages/LaboratoryResults/RefSettings";
 
 export default {
   name: 'ResultsForm',
-  components: {TextInputField, BloodTypeField, Ref, Treeselect},
+  components: {RefSettings, TextInputField, BloodTypeField, Ref, Treeselect},
   mounted() {
     this.$root.$on('laboratory:results:open-form', (pk, allDirPks, dirData) => {
       this.loadForm(pk);
@@ -142,6 +147,7 @@ export default {
       confirmed: false,
       saved: false,
       allow_reset_confirm: false,
+      showRefSettings: false,
       pk: null,
       research: {},
       comment: '',
@@ -270,7 +276,13 @@ export default {
       } else {
         this.save();
       }
-    }
+    },
+    openRefSettings() {
+      this.showRefSettings = true;
+    },
+    hideRefSettings() {
+      this.showRefSettings = false;
+    },
   },
 }
 </script>

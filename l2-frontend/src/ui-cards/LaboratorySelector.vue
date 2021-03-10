@@ -27,6 +27,10 @@ export default {
     this.laboratory = active;
     this.laboratories = rows;
     await this.$store.dispatch(action_types.DEC_LOADING);
+    this.$root.$on('emit-laboratory', () => {
+      this.emit();
+    });
+
     this.$root.$on('external-change-laboratory', (pk, cb) => {
       this.laboratory = pk;
       if (cb) {
@@ -42,9 +46,17 @@ export default {
       laboratory: -1,
     };
   },
-  watch: {
-    laboratory() {
+  methods: {
+    emit() {
       this.$root.$emit('change-laboratory', this.laboratory);
+    },
+  },
+  watch: {
+    laboratory: {
+      handler() {
+        this.emit();
+      },
+      immediate: true,
     },
   },
   computed: {

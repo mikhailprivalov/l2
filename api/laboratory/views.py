@@ -400,6 +400,26 @@ def form(request):
             "f": ref_f,
         }
 
+        selected_reference = r.selected_reference if r else def_ref_pk
+
+        current_ref = r.get_ref(full=True) if r else (empty_ref if def_ref_pk == -1 else av.get(def_ref_pk, {}))
+
+        av[-1] = {
+            "title": "Основной референс",
+            "about": "",
+            **empty_ref,
+        }
+
+        if selected_reference == -2:
+            av[-2] = current_ref
+
+        av[-3] = {
+            "title": "Настраиваемый референс",
+            "about": "",
+            "m": {},
+            "f": {},
+        }
+
         data["result"].append({
             "fraction": {
                 "pk": f.pk,
@@ -416,7 +436,8 @@ def form(request):
                     "available": av,
                 },
             },
-            "ref": r.get_ref(full=True) if r else (empty_ref if def_ref_pk == -1 else av.get(def_ref_pk, {})),
+            "ref": current_ref,
+            "selectedReference": selected_reference,
             "norm": r.get_is_norm(recalc=True)[0] if r else None,
             "value": r.value if r else '',
         })
@@ -464,8 +485,9 @@ def save(request):
             fraction_result.ref_about = ref.get("about", "")
             fraction_result.ref_m = ref.get("m")
             fraction_result.ref_f = ref.get("f")
+            fraction_result.selected_reference = r.get("selectedReference", -2)
 
-            if not fraction_result.ref_m or not fraction_result.ref_f:
+            if not fraction_result.ref_m and not fraction_result.ref_f:
                 fraction_result.get_ref(re_save=True, needsave=False)
 
             fraction_result.save()

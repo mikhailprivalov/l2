@@ -2270,4 +2270,21 @@ input[type=date].form-control {
       float: right;
     }
   }
+
+  &-full {
+    display: flex;
+    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: stretch;
+
+    & > .btn {
+      align-self: stretch;
+      width: 100%;
+    }
+  }
+}
+
+.mt5 {
+  margin-top: 5px;
 }

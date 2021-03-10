@@ -32,6 +32,7 @@ export default {
     this.$root.$on('change-laboratory', pk => {
       this.currentLaboratory = pk;
     });
+    this.$root.$emit('emit-laboratory');
   },
   methods: {},
   computed: {},

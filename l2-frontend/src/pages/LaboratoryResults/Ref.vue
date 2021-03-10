@@ -1,8 +1,8 @@
 <template>
-  <td class="ref">
+  <td class="ref" :class="{withoutBorderRight: !withBorderRight}">
     <table v-if="parsedData" :class="bordered && 'table table-bordered table-condensed'">
       <tr v-for="(v, k) in parsedData">
-        <td>{{k}}</td>
+        <td>{{ k }}</td>
         <td v-html="v"></td>
       </tr>
     </table>
@@ -18,6 +18,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    withBorderRight: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     parsedData() {
@@ -26,11 +30,11 @@ export default {
       }
       let r = this.data;
       if (typeof r === 'string') {
-          try {
-              r = JSON.parse(r);
-          } catch (e) {
-              r = {};
-          }
+        try {
+          r = JSON.parse(r);
+        } catch (e) {
+          r = {};
+        }
       }
 
       return r;
@@ -96,8 +100,19 @@ export default {
 
     tr td {
       border-left: 0 !important;
-      border-right: 0 !important;
       line-height: 1.2;
+
+      &:first-child {
+        border-right: 0 !important;
+      }
+    }
+  }
+
+  &.withoutBorderRight {
+    table {
+      tr td {
+        border-right: 0 !important;
+      }
     }
   }
 }
