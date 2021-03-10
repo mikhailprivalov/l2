@@ -30,7 +30,8 @@ def menu(request):
             {"url": "/mainmenu/", "title": "Начальная страница", "nt": False, "access": ["*"], "not_show_home": True},
             {"url": "/logout", "title": "Выход из профиля", "nt": False, "access": ["*"], "not_show_home": True},
             {"hr": True, "access": ["*"]},
-            {"url": "/mainmenu/directions", "title": "Направления и картотека", "nt": False, "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача"]},
+            {"url": "/mainmenu/directions", "title": "Направления и картотека", "nt": False,
+             "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Оператор Контакт-центра"]},
             {
                 "url": "/mainmenu/direction/info",
                 "title": "История направления",
