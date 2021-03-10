@@ -525,8 +525,8 @@ def result_print(request):
 
     dirs = (
         Napravleniya.objects.filter(pk__in=pk)
-            .select_related('client')
-            .prefetch_related(
+        .select_related('client')
+        .prefetch_related(
             Prefetch(
                 'issledovaniya_set',
                 queryset=(
@@ -536,8 +536,8 @@ def result_print(request):
                 ),
             )
         )
-            .annotate(results_count=Count('issledovaniya__result'))
-            .distinct()
+        .annotate(results_count=Count('issledovaniya__result'))
+        .distinct()
     )
 
     count_direction = 0
@@ -1781,9 +1781,9 @@ def result_journal_print(request):
                 "directions": {},
                 "ist_f": iss.napravleniye.fin_title,
                 "fio": iss.napravleniye.client.individual.fio(short=True, dots=True)
-                       + "<br/>Карта: "
-                       + iss.napravleniye.client.number_with_type()
-                       + (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else ""),
+                + "<br/>Карта: "
+                + iss.napravleniye.client.number_with_type()
+                + (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else ""),
             }
         if iss.napravleniye_id not in clientresults[key]["directions"]:
             clientresults[key]["directions"][iss.napravleniye_id] = {"researches": {}}
