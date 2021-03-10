@@ -45,8 +45,8 @@ def menu(request):
             {"url": "/mainmenu/statistics-tickets", "title": "Статталоны", "nt": False, "access": ["Оформление статталонов", "Лечащий врач", "Оператор лечащего врача"]},
             {"url": "/mainmenu/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
             {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
-            {"url": "/results/enter", "title": "Ввод результатов", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
-            {"url": "/laboratory/results", "title": "Лабораторные результаты", "nt": False, "access": []},
+            {"url": "/laboratory/results", "title": "Лабораторные результаты", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
+            {"url": "/results/enter", "title": "Ввод результатов (устаревший)", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
             {
                 "url": "/mainmenu/employee-job",
                 "title": "Учёт косвенных услуг по лаборатории",
