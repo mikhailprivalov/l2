@@ -36,10 +36,6 @@ function is_float(str) {
   return /^-?\d+\.\d+$/.test(str);
 }
 
-function is_n(str) {
-  return /^-?\d+$/.test(str);
-}
-
 function is_lnum(str) {
   return /^-?\d+(\.\d+)?$/.test(str);
 }

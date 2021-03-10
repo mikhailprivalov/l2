@@ -771,9 +771,9 @@ def rmis_confirm_list(request):
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
     d = (
         directions.Napravleniya.objects.filter(istochnik_f__rmis_auto_send=False, force_rmis_send=False, issledovaniya__time_confirmation__range=(date_start, date_end))
-            .exclude(issledovaniya__time_confirmation__isnull=True)
-            .distinct()
-            .order_by("pk")
+        .exclude(issledovaniya__time_confirmation__isnull=True)
+        .distinct()
+        .order_by("pk")
     )
     data["directions"] = [{"pk": x.pk, "patient": {"fiodr": x.client.individual.fio(full=True), "card": x.client.number_with_type()}, "fin": x.fin_title} for x in d]
     return JsonResponse(data)
@@ -951,9 +951,9 @@ def autocomplete(request):
                 }
                 for x in
                 Drugs.objects
-                    .filter(Q(mnn__istartswith=v) | Q(trade_name__istartswith=v))
-                    .order_by('mnn', 'trade_name')
-                    .distinct('mnn', 'trade_name')[:limit]
+                .filter(Q(mnn__istartswith=v) | Q(trade_name__istartswith=v))
+                .order_by('mnn', 'trade_name')
+                .distinct('mnn', 'trade_name')[:limit]
             ]
     return JsonResponse({"data": data})
 
