@@ -2,7 +2,7 @@
   <fragment>
     <a href="#" class="dropdown-toggle" @click.prevent
        v-tippy="{
-                html: '#favorites-view',
+                html: '#operations-view',
                 reactive: true,
                 interactive: true,
                 arrow: true,
@@ -26,7 +26,7 @@
       План операций пациента <span class="badge badge-light">{{data.length}}</span>
     </a>
 
-    <div id="favorites-view" class="tp">
+    <div id="operations-view" class="tp">
       <table class="table table-condensed table-bordered">
         <thead>
         <tr>

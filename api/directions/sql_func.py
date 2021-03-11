@@ -193,11 +193,11 @@ def get_confirm_direction_pathology(d_s, d_e):
 def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=False, is_paraclinic=False, is_doc_refferal=False):
     with connection.cursor() as cursor:
         cursor.execute(
-            """   
-        Select 
+            """
+        SELECT 
             directions_napravleniya.id as direction,
             directions_issledovaniya.time_confirmation,
-            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/Irkutsk', 'DD.MM.YYYY') as ch_time_confirmation,
+            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as ch_time_confirmation,
             directions_issledovaniya.research_id,
             directory_researches.title as research_title
             FROM directions_napravleniya

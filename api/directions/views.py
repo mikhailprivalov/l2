@@ -2162,9 +2162,9 @@ def change_owner_direction(request):
 @login_required
 def directions_result_year(request):
     request_data = json.loads(request.body)
-    is_lab = request_data.get('is_lab', False)
-    is_paraclinic = request_data.get('is_paraclinic', False)
-    is_doc_refferal = request_data.get('is_doc_refferal', False)
+    is_lab = request_data.get('isLab', False)
+    is_paraclinic = request_data.get('isParaclinic', False)
+    is_doc_refferal = request_data.get('isDocReferral', False)
     year = request_data['current_year']
     d1 = datetime.strptime(f'01.01.{year}', '%d.%m.%Y')
     start_date = datetime.combine(d1, dtime.min)
@@ -2182,41 +2182,35 @@ def directions_result_year(request):
         lab_podr = [-1]
 
     card_pk = int(card_pk)
-    confirm_direction = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card_pk, is_lab, is_paraclinic, is_doc_refferal)
-    if not confirm_direction:
+    confirmed_directions = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card_pk, is_lab, is_paraclinic, is_doc_refferal)
+    if not confirmed_directions:
         return JsonResponse({"results": []})
 
-    temp_dir, objs_result, count = '', [], 0
+    directions = {}
 
-    directions_obj = {d.direction for d in confirm_direction}
-    directions_obj = list(directions_obj)
+    for d in confirmed_directions:
+        if d.direction not in directions:
+            directions[d.direction] = {
+                'dir': d.direction,
+                'date': d.ch_time_confirmation,
+                'researches': [],
+            }
 
-    for k in objs_result:
-        print(k)
-    temp_dir = ''
-    objs = []
-    count = 0
-    for i in confirm_direction:
-        if temp_dir != i.direction:
-            objs.append({'dir': i.direction, 'date': i.ch_time_confirmation, 'researches': ''})
-            count = len(objs)
-            temp_dir = i.direction
-        temp_reserches = objs[count - 1].get('researches', '')
-        temp_reserches = f"{temp_reserches} {i.research_title}"
-        objs[count - 1]['researches'] = temp_reserches
+        directions[d.direction]['researches'].append(d.research_title)
 
-    return JsonResponse({"results": objs})
+    return JsonResponse({"results": list(directions.values())})
 
 
 @login_required
 def results_by_direction(request):
     request_data = json.loads(request.body)
     is_lab = request_data.get('isLab', False)
-    is_paraclinic = request_data.get('is_paraclinic', False)
-    is_doc_refferal = request_data.get('is_doc_refferal', False)
-    directions = request_data.get('dir',)
-    obj_directions = [directions]
-    print(obj_directions)
+    is_paraclinic = request_data.get('isParaclinic', False)
+    is_doc_refferal = request_data.get('isDocReferral', False)
+    direction = request_data.get('dir')
+    directions = request_data.get('directions', [])
+    if not directions and direction:
+        directions = [direction]
 
     old_research_id = ''
     count_researches = 0
@@ -2224,9 +2218,8 @@ def results_by_direction(request):
     objs_result = []
     count = 0
     if is_lab:
-        direction_result = get_laboratory_results_by_directions(obj_directions)
+        direction_result = get_laboratory_results_by_directions(directions)
         for r in direction_result:
-            print(r)
             if temp_dir != r.direction:
                 objs_result.append({'dir': r.direction, 'researches': [{'title': r.research_title, 'fractions': [{'title': r.fraction_title, 'value': r.value, 'units': r.units}]}]})
                 count = len(objs_result)
@@ -2242,6 +2235,6 @@ def results_by_direction(request):
             temp_fractions = objs_result[count - 1].get('researches')[count_researches - 1].get('fractions')
             temp_fractions.append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
             objs_result[count - 1].get('researches')[count_researches - 1]['fractions'] = temp_fractions
-    print(objs_result)
+
 
     return JsonResponse({"results": objs_result})
