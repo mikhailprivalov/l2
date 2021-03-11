@@ -53,7 +53,10 @@
         </tr>
         <tr v-for="row in data">
           <td>
-            <a href="#" @click.prevent="show_results(row.dir)">{{ row.dir }}</a>
+            <laboratory-show-tippy :direction="row.dir" :is-lab="true"/>
+<!--            <a href="#" @click.prevent="load" v-tippy="{ placement: 'bottom'}" :title="`${'dfd'}`">-->
+<!--            {{row.dir}}-->
+<!--            </a>-->
           </td>
           <td>
             {{ row.date }}
@@ -77,9 +80,12 @@
 <script>
 import api from '@/api'
 import moment from "moment";
+import LaboratoryShowTippy from "./LaboratoryShowTippy";
+
 
 export default {
   name: "ResultsLaboratory",
+  components: {LaboratoryShowTippy,},
   props: {
     card_pk: {
       type: Number,
@@ -87,39 +93,40 @@ export default {
     },
     is_lab: {
       type: Boolean,
-      required: true,
+      required: false,
       default: false,
     },
     is_doc_refferal: {
       type: Boolean,
-      required: true,
       default: false,
     },
     is_paraclinic: {
       type: Boolean,
-      required: true,
       default: false,
     },
   },
   data() {
     return {
       data: '',
+      result: '',
       current_year: moment().format('YYYY'),
+      current_direction: ''
     }
   },
   mounted() {
     this.load();
-    console.log(this.year)
   },
   methods: {
-    show_results(pk) {
-      this.$root.$emit('show_results', pk)
+    async show_results(dir) {
+      // this.$root.$emit('show_results', pk)
+      const result_data = await api('directions/result-patient-by-direction',
+      this, ['is_lab', 'is_doc_refferal', 'is_paraclinic'], {'dir':[dir]});
+      this.result = [...result_data.results]
     },
     async load() {
       const result = await api('directions/result-patient-year', this, ['card_pk', 'current_year',
         'is_lab', 'is_doc_refferal', 'is_paraclinic']);
       this.data = [...result.results]
-      console.log(this.data)
     },
     print_med_certificate(type_form, direction) {
       window.open(`/medical_certificates/pdf?type=${type_form}&dir=${direction}`, '_blank')

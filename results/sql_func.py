@@ -41,7 +41,7 @@ def get_direction_by_client(list_dirs):
     return row
 
 
-def get_laboratory_results(list_dirs):
+def get_laboratory_results_by_directions(list_dirs):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -61,6 +61,7 @@ def get_laboratory_results(list_dirs):
                 LEFT JOIN directory_fractions ON
                 directions_result.fraction_id=directory_fractions.id
                 WHERE directions_issledovaniya.napravleniye_id = ANY(ARRAY[%(num_dirs)s])
+                ORDER BY directions_issledovaniya.napravleniye_id
 
         """,
             params={'num_dirs': list_dirs},

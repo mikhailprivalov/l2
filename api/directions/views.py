@@ -43,7 +43,7 @@ from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE
 from laboratory.utils import strdatetime, strdate, tsdatetime, start_end_year, strfdatetime, current_time
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
-from results.sql_func import get_not_confirm_direction, get_laboratory_results
+from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
@@ -2162,11 +2162,9 @@ def change_owner_direction(request):
 @login_required
 def directions_result_year(request):
     request_data = json.loads(request.body)
-    print(request_data)
     is_lab = request_data.get('is_lab', False)
     is_paraclinic = request_data.get('is_paraclinic', False)
     is_doc_refferal = request_data.get('is_doc_refferal', False)
-    # is_doc_refferal = True
     year = request_data['current_year']
     d1 = datetime.strptime(f'01.01.{year}', '%d.%m.%Y')
     start_date = datetime.combine(d1, dtime.min)
@@ -2188,21 +2186,13 @@ def directions_result_year(request):
     if not confirm_direction:
         return JsonResponse({"results": []})
 
-    # temp_dir, objs_result, count = '', [], 0
+    temp_dir, objs_result, count = '', [], 0
 
     directions_obj = {d.direction for d in confirm_direction}
     directions_obj = list(directions_obj)
-    direction_result = get_laboratory_results(directions_obj)
 
-    # for r in direction_result:
-    #     if temp_dir != r.direction:
-    #         objs_result.append({'dir': r.direction, 'research': '', 'result': ''})
-    #         count = len(objs_result)
-    #         temp_dir = r.direction
-    #     temp_reserches = objs_result[count - 1].get('reserches')
-    #     temp_reserches = f"{temp_reserches} {r.research_title}"
-    #     objs_result[count - 1]['reserches'] = temp_reserches
-
+    for k in objs_result:
+        print(k)
     temp_dir = ''
     objs = []
     count = 0
@@ -2216,3 +2206,42 @@ def directions_result_year(request):
         objs[count - 1]['researches'] = temp_reserches
 
     return JsonResponse({"results": objs})
+
+
+@login_required
+def results_by_direction(request):
+    request_data = json.loads(request.body)
+    is_lab = request_data.get('isLab', False)
+    is_paraclinic = request_data.get('is_paraclinic', False)
+    is_doc_refferal = request_data.get('is_doc_refferal', False)
+    directions = request_data.get('dir',)
+    obj_directions = [directions]
+    print(obj_directions)
+
+    old_research_id = ''
+    count_researches = 0
+    temp_dir = ''
+    objs_result = []
+    count = 0
+    if is_lab:
+        direction_result = get_laboratory_results_by_directions(obj_directions)
+        for r in direction_result:
+            print(r)
+            if temp_dir != r.direction:
+                objs_result.append({'dir': r.direction, 'researches': [{'title': r.research_title, 'fractions': [{'title': r.fraction_title, 'value': r.value, 'units': r.units}]}]})
+                count = len(objs_result)
+                count_researches = 1
+                temp_dir = r.direction
+                old_research_id = r.research_id
+                continue
+            if r.research_id != old_research_id:
+                temp_reserches = objs_result[count - 1].get('researches')
+                temp_reserches.append({'title': r.research_title, 'fractions': [{'title': r.fraction_title, 'value': r.value, 'units': r.units}]})
+                count_researches = len(temp_reserches)
+                continue
+            temp_fractions = objs_result[count - 1].get('researches')[count_researches - 1].get('fractions')
+            temp_fractions.append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
+            objs_result[count - 1].get('researches')[count_researches - 1]['fractions'] = temp_fractions
+    print(objs_result)
+
+    return JsonResponse({"results": objs_result})
