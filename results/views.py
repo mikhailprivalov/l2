@@ -16,7 +16,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q, Prefetch, Count
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils import dateformat
 from django.utils import timezone
 from django.utils.text import Truncator
@@ -104,22 +104,23 @@ def results_search(request):
 @group_required("Врач-лаборант", "Лаборант")
 def enter(request):
     """ Представление для страницы ввода результатов """
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
-    if lab.p_type != Podrazdeleniya.LABORATORY:
-        lab = labs[0]
-    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
-    return render(
-        request,
-        'dashboard/resultsenter.html',
-        {
-            "podrazdeleniya": podrazdeleniya,
-            "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("pk").order_by("base"),
-            "groups": directory.ResearchGroup.objects.filter(lab=lab),
-            "lab": lab,
-            "labs": labs,
-        },
-    )
+    # lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
+    # labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
+    # if lab.p_type != Podrazdeleniya.LABORATORY:
+    #     lab = labs[0]
+    # podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+    # return render(
+    #     request,
+    #     'dashboard/resultsenter.html',
+    #     {
+    #         "podrazdeleniya": podrazdeleniya,
+    #         "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("pk").order_by("base"),
+    #         "groups": directory.ResearchGroup.objects.filter(lab=lab),
+    #         "lab": lab,
+    #         "labs": labs,
+    #     },
+    # )
+    return redirect('/laboratory/results')
 
 
 @csrf_exempt
