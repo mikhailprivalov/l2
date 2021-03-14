@@ -576,8 +576,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                     previous_laboratory = previous_laboratory_result(v)
                     fwb.extend(previous_laboratory)
                     continue
-                if field_type != 24:
-                    v = text_to_bold(v)
+                v = text_to_bold(v)
                 if r.field.get_title(force_type=field_type) != "":
                     vals.append("{}:&nbsp;{}".format(r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
                 else:
