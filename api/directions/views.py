@@ -2197,10 +2197,6 @@ def directions_result_year(request):
             }
 
         directions[d.direction]['researches'].append(d.research_title)
-    print('#####')
-    print(directions)
-    print(list(directions.values()))
-    print('#####')
     return JsonResponse({"results": list(directions.values())})
 
 
