@@ -2222,8 +2222,6 @@ def results_by_direction(request):
             if r.research_title not in objs_result[r.direction]['researches']:
                 objs_result[r.direction]['researches'].append({'title': r.research_title, 'fio': r.fio, 'dateConfirm': r.date_confirm, 'fractions': []})
 
-            len_research = len(objs_result[r.direction]['researches'])
-
-            objs_result[r.direction]['researches'][len_research - 1]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
+            objs_result[r.direction]['researches'][-1]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
 
     return JsonResponse({"results": list(objs_result.values())})

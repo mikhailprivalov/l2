@@ -170,15 +170,12 @@
                   </div>
                   <div v-if="row.field_type === 24">
                     <strong>Результаты лабораторные:</strong>
-                    <input v-model="row.default" class="form-control" style="display: none"/>
                   </div>
                   <div v-if="row.field_type === 25">
                     <strong>Результаты диагностические:</strong>
-                    <input v-model="row.default" class="form-control" style="display: none"/>
                   </div>
                   <div v-if="row.field_type === 26">
                     <strong>Результаты консультационные:</strong>
-                    <input v-model="row.default" class="form-control" style="display: none"/>
                   </div>
                   <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23].includes(row.field_type)">
                     <div class="header" v-collapse-toggle>
