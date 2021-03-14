@@ -1331,6 +1331,7 @@ class Result(models.Model):
     value = models.TextField(null=True, blank=True, help_text='Значение')
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
     is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")
+    selected_reference = models.IntegerField(default=-2, blank=True, help_text="Выбранный референс")
     ref_sign = models.CharField(max_length=3, default="", null=True, blank=True, help_text="Направление отклонения от нормы")
     ref_m = JSONField(default=None, blank=True, null=True, help_text="Референсы М")
     ref_f = JSONField(default=None, blank=True, null=True, help_text="Референсы Ж")
