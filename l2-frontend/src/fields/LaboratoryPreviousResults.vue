@@ -103,7 +103,7 @@ export default {
             "fractionTitle": f.title,
             "value": f.value,
             "units": f.units,
-            "date": r.timeConfirm,
+            "date": r.dateConfirm,
             "docConfirm": r.fio
           })
         }

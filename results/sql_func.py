@@ -57,7 +57,7 @@ def get_laboratory_results_by_directions(list_dirs):
                 directory_fractions.title as fraction_title,
                 directions_result.units as units,
                 users_doctorprofile.fio as fio,
-                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as time_confirm
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm
                 from directions_issledovaniya
                 INNER JOIN directions_result ON (directions_result.issledovaniye_id = directions_issledovaniya.id)
                 LEFT JOIN directory_researches ON

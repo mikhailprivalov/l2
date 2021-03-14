@@ -256,7 +256,7 @@ def directions_history(request):
         )
 
     res['directions'] = final_result
-    print(res)
+
     return JsonResponse(res)
 
 
@@ -2197,7 +2197,10 @@ def directions_result_year(request):
             }
 
         directions[d.direction]['researches'].append(d.research_title)
-
+    print('#####')
+    print(directions)
+    print(list(directions.values()))
+    print('#####')
     return JsonResponse({"results": list(directions.values())})
 
 
@@ -2208,32 +2211,23 @@ def results_by_direction(request):
     is_paraclinic = request_data.get('isParaclinic', False)
     is_doc_refferal = request_data.get('isDocReferral', False)
     direction = request_data.get('dir')
+
     directions = request_data.get('directions', [])
     if not directions and direction:
         directions = [direction]
-
-    old_research_id = ''
-    count_researches = 0
-    temp_dir = ''
-    objs_result = []
-    count = 0
+    objs_result = {}
     if is_lab:
         direction_result = get_laboratory_results_by_directions(directions)
-        for r in direction_result:
-            if temp_dir != r.direction:
-                objs_result.append({'dir': r.direction, 'researches': [{'title': r.research_title, 'fio': r.fio, 'timeConfirm': r.time_confirm, 'fractions': [{'title': r.fraction_title, 'value': r.value, 'units': r.units}]}]})
-                count = len(objs_result)
-                count_researches = 1
-                temp_dir = r.direction
-                old_research_id = r.research_id
-                continue
-            if r.research_id != old_research_id:
-                temp_reserches = objs_result[count - 1].get('researches')
-                temp_reserches.append({'title': r.research_title, 'fio': r.fio, 'timeConfirm': r.time_confirm, 'fractions': [{'title': r.fraction_title, 'value': r.value, 'units': r.units}]})
-                count_researches = len(temp_reserches)
-                continue
-            temp_fractions = objs_result[count - 1].get('researches')[count_researches - 1].get('fractions')
-            temp_fractions.append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
-            objs_result[count - 1].get('researches')[count_researches - 1]['fractions'] = temp_fractions
 
-    return JsonResponse({"results": objs_result})
+        for r in direction_result:
+            if r.direction not in objs_result:
+                objs_result[r.direction] = {'dir': r.direction, 'date': r.date_confirm, 'researches': [],}
+
+            if r.research_title not in objs_result[r.direction]['researches']:
+                objs_result[r.direction]['researches'].append({'title': r.research_title, 'fio': r.fio, 'dateConfirm': r.date_confirm, 'fractions': []})
+
+            len_research = len(objs_result[r.direction]['researches'])
+
+            objs_result[r.direction]['researches'][len_research - 1]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
+
+    return JsonResponse({"results": list(objs_result.values())})
