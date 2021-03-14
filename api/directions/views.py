@@ -2204,8 +2204,8 @@ def directions_result_year(request):
 def results_by_direction(request):
     request_data = json.loads(request.body)
     is_lab = request_data.get('isLab', False)
-    is_paraclinic = request_data.get('isParaclinic', False)
-    is_doc_refferal = request_data.get('isDocReferral', False)
+    # is_paraclinic = request_data.get('isParaclinic', False)
+    # is_doc_refferal = request_data.get('isDocReferral', False)
     direction = request_data.get('dir')
 
     directions = request_data.get('directions', [])

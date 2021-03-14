@@ -80,7 +80,7 @@ export default {
   methods: {
     add_new_row() {
       const tl = this.tb_data.length;
-      this.tb_data.push(makeDefaultRow(tl > 0 ? this.tb_data[tl - 1] : null));
+      this.tb_data.push(makeDefaultRow());
     },
     delete_row(index) {
         this.tb_data.splice(index, 1);
