@@ -14,6 +14,7 @@ urlpatterns = [
     path('confirm/list', views.result_confirm_list),
     path('pdf', views.result_print),
     path('preview', TemplateView.as_view(template_name='dashboard/results_preview.html')),
+    path('results', TemplateView.as_view(template_name='dashboard/results.html')),
     path('journal', views.result_journal_print),
     path('journal_table', views.result_journal_table_print),
     path('filter', views.result_filter),

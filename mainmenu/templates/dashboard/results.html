@@ -1,0 +1,88 @@
+{% extends "dbase.html" %}
+{% block title %}Лабораторные результаты{% endblock %}
+{% block container %}container-fluid{% endblock %}
+
+{% block navbar_classes %}fluid-nav-cont{% endblock %}
+
+{% block extended_header %}
+    <ul class="nav navbar-nav">
+        <li class="dropdown">
+            <laboratory-selector/>
+        </li>
+    </ul>
+    <ul class="nav navbar-nav">
+        <li class="dropdown">
+            <div>
+                <button class="btn btn-blue-nb btn-ell dropdown-toggle bt2"
+                        type="button" data-toggle="dropdown">
+                    Печатные формы
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" style="margin-top: 1px">
+                    <li>
+                        <execution-list/>
+                    </li>
+                    <li>
+                        <laboratory-journal/>
+                    </li>
+                    <li>
+                        <laboratory-print-results/>
+                    </li>
+                </ul>
+            </div>
+        </li>
+    </ul>
+    <ul class="nav navbar-nav">
+        <load-file/>
+    </ul>
+{% endblock %}
+
+{% load static %}
+
+{% block content %}
+    <laboratory-results/>
+{% endblock %}
+
+{% block portal %}
+    <div id="portal-place"></div>
+{% endblock %}
+
+{% block head_cn %}
+    <script>
+        $(document).ready(function () {
+            setTimeout(function () {
+                $('.context-st').show();
+            }, 300);
+        });
+    </script>
+    <style>
+        body, html {
+            height: 100%;
+        }
+
+        body {
+            padding-bottom: 0;
+        }
+
+        .container-fluid {
+            height: 100%;
+            width: 100%;
+        }
+
+        .navbar {
+            margin-bottom: 3px;
+        }
+
+        .bt2 {
+            border-radius: 0;
+            height: 36px;
+            background-color: #656D78 !important;
+            border: none !important;
+        }
+
+        .bt2:hover, .bt2:active, .bt2:focus {
+            background: #049372 !important;
+            border: none !important;
+        }
+    </style>
+{% endblock %}

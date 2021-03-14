@@ -4,7 +4,7 @@
       <a href="#" @click.prevent="doOpen">
         Загрузка файла
       </a>
-      <modal v-if="open" @close="open = loading" show-footer="true" white-bg="true"
+      <modal v-if="open" @close="open = false" show-footer="true" white-bg="true"
              max-width="710px" width="100%" marginLeftRight="auto">
         <span slot="header">Загрузка файла</span>
         <div slot="body">

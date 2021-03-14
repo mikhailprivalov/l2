@@ -2150,3 +2150,141 @@ input[type=date].form-control {
     }
   }
 }
+
+.tb-group {
+  &-1 {
+    border-left: 3px #16a085 solid !important;
+  }
+
+  &-2 {
+    border-left: 3px #8e44ad solid !important;
+  }
+
+  &-3 {
+    border-left: 3px #2e8dcd solid !important;
+  }
+
+  &-4 {
+    border-left: 3px #2c3e50 solid !important;
+  }
+
+  &-5 {
+    border-left: 3px #27ae60 solid !important;
+  }
+
+  &-6 {
+    border-left: 3px #f1c40f solid !important;
+  }
+
+  &-7 {
+    border-left: 3px #e67e22 solid !important;
+  }
+
+  &-8 {
+    border-left: 3px #e74c3c solid !important;
+  }
+
+  &-big, &-active {
+    &-1 {
+      border-left: 7px #16a085 solid !important;
+    }
+
+    &-2 {
+      border-left: 7px #8e44ad solid !important;
+    }
+
+    &-3 {
+      border-left: 7px #2e8dcd solid !important;
+    }
+
+    &-4 {
+      border-left: 7px #2c3e50 solid !important;
+    }
+
+    &-5 {
+      border-left: 7px #27ae60 solid !important;
+    }
+
+    &-6 {
+      border-left: 7px #f1c40f solid !important;
+    }
+
+    &-7 {
+      border-left: 7px #e67e22 solid !important;
+    }
+
+    &-8 {
+      border-left: 7px #e74c3c solid !important;
+    }
+  }
+
+  &-full {
+    &-1 {
+      border: 1px #16a085 solid;
+    }
+
+    &-2 {
+      border: 1px #8e44ad solid;
+    }
+
+    &-3 {
+      border: 1px #2e8dcd solid;
+    }
+
+    &-4 {
+      border: 1px #2c3e50 solid;
+    }
+
+    &-5 {
+      border: 1px #27ae60 solid;
+    }
+
+    &-6 {
+      border: 1px #f1c40f solid;
+    }
+
+    &-7 {
+      border: 1px #e67e22 solid;
+    }
+
+    &-8 {
+      border: 1px #e74c3c solid;
+    }
+  }
+}
+
+.bottom-buttons {
+  height: 34px;
+  background-color: #AAB2BD;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  .btn {
+    width: auto;
+    text-align: center;
+    border-radius: 0;
+
+    &-right {
+      float: right;
+    }
+  }
+
+  &-full {
+    display: flex;
+    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: stretch;
+
+    & > .btn {
+      align-self: stretch;
+      width: 100%;
+    }
+  }
+}
+
+.mt5 {
+  margin-top: 5px;
+}
