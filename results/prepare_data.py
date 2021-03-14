@@ -745,7 +745,5 @@ def previous_laboratory_result(value):
             ]
         )
     )
-    prepare_fwb = []
-    prepare_fwb.append(tbl)
 
-    return prepare_fwb
+    return [tbl]

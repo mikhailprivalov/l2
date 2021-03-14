@@ -108,9 +108,7 @@ export default {
   data() {
     return {
       data: '',
-      result: '',
       current_year: moment().format('YYYY'),
-      current_direction: ''
     }
   },
   computed: {
@@ -130,11 +128,6 @@ export default {
     this.load();
   },
   methods: {
-    async show_results(dir) {
-      const result_data = await api('directions/result-patient-by-direction',
-        this, ['isLab', 'isDocReferral', 'isParaclinic'], {'dir': [dir]});
-      this.result = [...result_data.results]
-    },
     async load() {
       const result = await api('directions/result-patient-year', this, ['card_pk', 'current_year',
         'isLab', 'isDocReferral', 'isParaclinic']);
