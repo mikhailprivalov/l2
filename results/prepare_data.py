@@ -22,7 +22,7 @@ import simplejson as json
 
 from laboratory.utils import strfdatetime
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes
-from utils.xh import check_valid_square_brackets
+from utils.xh import check_valid_square_brackets, short_fio_dots
 
 
 def lab_iss_to_pdf(data1):
@@ -457,6 +457,14 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                         fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
                         fwb.extend(aggr_lab)
                         continue
+                    if field_type == 24:
+                        previous_laboratory = previous_laboratory_result(v)
+                        if not previous_laboratory:
+                            continue
+                        fwb.append(Spacer(1, 2 * mm))
+                        fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
+                        fwb.extend(previous_laboratory)
+                        continue
                     if field_type == 17:
                         if v:
                             v = json.loads(v)
@@ -558,7 +566,18 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                         if not v['directions']:
                             continue
                         v = text_iss_to_pdf(v, protocol_plain_text)
-                v = text_to_bold(v)
+                if field_type == 24:
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    fwb.append(Spacer(1, 2 * mm))
+                    fwb.append(Paragraph(r.field.get_title(), styleBold))
+                    previous_laboratory = previous_laboratory_result(v)
+                    fwb.extend(previous_laboratory)
+                    continue
+                if field_type != 24:
+                    v = text_to_bold(v)
                 if r.field.get_title(force_type=field_type) != "":
                     vals.append("{}:&nbsp;{}".format(r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
                 else:
@@ -693,3 +712,40 @@ def procedural_text_for_result(direction, fwb, napr_child):
     fwb.append(Paragraph(text, style))
 
     return fwb
+
+
+def previous_laboratory_result(value):
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "FreeSans"
+    style.fontSize = 8
+    style.alignment = TA_JUSTIFY
+
+    opinion = [
+        [Paragraph('Анализ', style), Paragraph('Тест', style), Paragraph('Значение', style), Paragraph('Ед.изм', style),
+         Paragraph('Дата', style), Paragraph('Исполнитель', style)]
+    ]
+
+    value = json.loads(value)
+    temp_data = [[Paragraph(f"{data.get('researchTitle', '')}", style),
+                  Paragraph(f"{data.get('fractionTitle', '')}", style),
+                  Paragraph(f"{data.get('value', '')}", style),
+                  Paragraph(f"{data.get('units', '')}", style),
+                  Paragraph(f"{data.get('date', '')}", style),
+                  Paragraph(f"{short_fio_dots(data.get('docConfirm', ''))}", style)
+                  ] for data in value]
+    opinion.extend(temp_data)
+
+    tbl = Table(opinion, colWidths=(50 * mm, 35 * mm, 20 * mm, 15 * mm, 20 * mm, 30 * mm,))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+            ]
+        )
+    )
+    prepare_fwb = []
+    prepare_fwb.append(tbl)
+
+    return prepare_fwb
