@@ -79,7 +79,6 @@ export default {
   },
   methods: {
     add_new_row() {
-      const tl = this.tb_data.length;
       this.tb_data.push(makeDefaultRow());
     },
     delete_row(index) {
