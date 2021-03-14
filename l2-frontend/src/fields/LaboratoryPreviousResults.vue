@@ -1,0 +1,129 @@
+<template>
+  <div>
+    <table class="table table-bordered table-condensed">
+      <colgroup>
+        <col width='500'/>
+        <col width='500'/>
+        <col width='300'/>
+        <col width='300'/>
+        <col width='300'/>
+        <col width='200'/>
+        <col />
+      </colgroup>
+      <thead>
+      <tr>
+        <th>Анализ</th>
+        <th>Тест</th>
+        <th>Значение</th>
+        <th>Ед. изм</th>
+        <th>Дата</th>
+        <th>Исполнитель</th>
+        <th class="cl-td">
+          <button class="btn btn-blue-nb" @click="delete_rows" :disabled="disabled" v-tippy="{ placement : 'bottom'}"
+                  title="Очистить строки" >
+            <i class="fa fa-times"/>
+          </button>
+        </th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr v-for="(val, index) in tb_data">
+        <td class="cl-td"><input type="text" class="form-control" :disabled=disabled placeholder="Анализ-наименование" v-model="val.researchTitle"></td>
+        <td class="cl-td"><input type="text" class="form-control" :disabled=disabled placeholder="Тест-наименование" v-model="val.fractionTitle"></td>
+        <td class="cl-td"><input type="text" class="form-control" :disabled=disabled placeholder="Значение" v-model="val.value"></td>
+        <td class="cl-td"><input type="text" class="form-control" :disabled=disabled placeholder="Ед. изм" v-model="val.units"></td>
+        <td class="cl-td"><input type="text" class="form-control" :disabled=disabled placeholder="Дата" v-model="val.date"></td>
+        <td class="cl-td"><input type="text" class="form-control" :disabled=disabled placeholder="Исполнитель" v-model="val.docConfirm"></td>
+        <td class="cl-td">
+          <button class="btn btn-blue-nb" @click="delete_row(index)" :disabled="disabled" v-tippy="{ placement : 'bottom'}"
+                  title="Удалить строку" >
+            <i class="fa fa-times"/>
+          </button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <button class="btn btn-blue-nb add-row" @click="add_new_row" :disabled="disabled">
+      Добавить
+    </button>
+  </div>
+</template>
+
+<script>
+import api from "@/api";
+
+const makeDefaultRow = () => ({"researchTitle": "", "fractionTitle": "", "value": "", "units": "", "date": "", "docConfirm": ""});
+
+export default {
+  name: "LaboratoryPreviousResults",
+  props: {
+    value: {
+      required: false,
+    },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
+    }
+  },
+  data() {
+    return {
+      tb_data: JSON.parse(this.value) || [makeDefaultRow()],
+      result: [],
+    }
+  },
+  mounted() {
+    this.$root.$on('protocol:laboratoryResult', (direction) => {
+        this.insertLaboratoryResult(direction)
+      })
+  },
+  methods: {
+    add_new_row() {
+      const tl = this.tb_data.length;
+      this.tb_data.push(makeDefaultRow(tl > 0 ? this.tb_data[tl - 1] : null));
+    },
+    delete_row(index) {
+        this.tb_data.splice(index, 1);
+      },
+    delete_rows(){
+      this.tb_data = []
+    },
+    changeValue(newVal) {
+        this.$emit('modified', newVal)
+      },
+    async insertLaboratoryResult(direction){
+       const result_data = await api('directions/result-patient-by-direction',
+         {'isLab': true, 'isDocReferral': false, 'isParaclinic': false, 'dir': direction});
+      this.result = result_data.results[0] || [];
+
+      for (let r of this.result.researches) {
+        for (let f of r.fractions) {
+          this.tb_data.push({
+            "researchTitle": r.title,
+            "fractionTitle": f.title,
+            "value": f.value,
+            "units": f.units,
+            "date": r.timeConfirm,
+            "docConfirm": r.fio
+          })
+        }
+      }
+    }
+  },
+  watch: {
+    tb_data: {
+      handler() {
+        this.changeValue(JSON.stringify(this.tb_data))
+      },
+      immediate: true,
+    },
+  },
+  model: {
+    event: `modified`
+  },
+}
+</script>
+
+<style scoped>
+
+</style>

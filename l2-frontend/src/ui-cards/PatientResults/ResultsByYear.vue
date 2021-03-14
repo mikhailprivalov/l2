@@ -36,7 +36,7 @@
             <col width='50'/>
             <col width='80'/>
             <col width='300'/>
-            <col/>
+            <col width='80'/>
           </colgroup>
           <tbody>
           <tr>
@@ -65,7 +65,7 @@
             </td>
             <td>
               <a href="#" @click.prevent="plus_year"><i class="fa fa-print"></i></a>
-              <a href="#" @click.prevent="load" v-tippy="{ placement: 'bottom'}"
+              <a href="#" @click.prevent="sendToProtocol(row.dir)" v-tippy="{ placement: 'bottom'}"
                  title="Перенести в протокол"><i class="fa fa-file-import"></i>
               </a>
             </td>
@@ -131,7 +131,6 @@ export default {
   },
   methods: {
     async show_results(dir) {
-      // this.$root.$emit('show_results', pk)
       const result_data = await api('directions/result-patient-by-direction',
         this, ['isLab', 'isDocReferral', 'isParaclinic'], {'dir': [dir]});
       this.result = [...result_data.results]
@@ -153,6 +152,9 @@ export default {
     set_current_year() {
       this.current_year = moment().format('YYYY')
       this.load()
+    },
+    sendToProtocol(direction){
+      this.$root.$emit('protocol:laboratoryResult', direction)
     }
   },
   watch: {
@@ -173,6 +175,7 @@ i {
 
 
 .tp {
+  min-height: 300px;
   text-align: left;
   padding: 1px;
 

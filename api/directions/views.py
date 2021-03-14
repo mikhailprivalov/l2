@@ -2221,7 +2221,7 @@ def results_by_direction(request):
         direction_result = get_laboratory_results_by_directions(directions)
         for r in direction_result:
             if temp_dir != r.direction:
-                objs_result.append({'dir': r.direction, 'researches': [{'title': r.research_title, 'fractions': [{'title': r.fraction_title, 'value': r.value, 'units': r.units}]}]})
+                objs_result.append({'dir': r.direction, 'researches': [{'title': r.research_title, 'fio': r.fio, 'timeConfirm': r.time_confirm, 'fractions': [{'title': r.fraction_title, 'value': r.value, 'units': r.units}]}]})
                 count = len(objs_result)
                 count_researches = 1
                 temp_dir = r.direction
@@ -2229,12 +2229,11 @@ def results_by_direction(request):
                 continue
             if r.research_id != old_research_id:
                 temp_reserches = objs_result[count - 1].get('researches')
-                temp_reserches.append({'title': r.research_title, 'fractions': [{'title': r.fraction_title, 'value': r.value, 'units': r.units}]})
+                temp_reserches.append({'title': r.research_title, 'fio': r.fio, 'timeConfirm': r.time_confirm, 'fractions': [{'title': r.fraction_title, 'value': r.value, 'units': r.units}]})
                 count_researches = len(temp_reserches)
                 continue
             temp_fractions = objs_result[count - 1].get('researches')[count_researches - 1].get('fractions')
             temp_fractions.append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
             objs_result[count - 1].get('researches')[count_researches - 1]['fractions'] = temp_fractions
-
 
     return JsonResponse({"results": objs_result})

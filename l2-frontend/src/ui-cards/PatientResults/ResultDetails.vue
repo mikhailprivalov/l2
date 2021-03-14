@@ -12,13 +12,15 @@
           <colgroup>
             <col width='50'/>
             <col width='80'/>
-            <col/>
+            <col width='50'/>
+            <col width='50'/>
           </colgroup>
           <thead>
           <tr>
             <th>Анализ</th>
             <th>Тест</th>
             <th>Значение</th>
+            <th>Ед. изм</th>
           </tr>
           </thead>
           <tbody>
@@ -28,8 +30,8 @@
               <td>{{ f.title }}</td>
               <td>
                 <span v-html="f.value"></span>
-                {{ f.units }}
               </td>
+              <td>{{ f.units }}</td>
             </tr>
           </template>
           </tbody>
