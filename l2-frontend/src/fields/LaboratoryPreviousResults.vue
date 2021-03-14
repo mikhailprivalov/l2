@@ -8,7 +8,7 @@
         <col width='300'/>
         <col width='300'/>
         <col width='200'/>
-        <col />
+        <col/>
       </colgroup>
       <thead>
       <tr>
@@ -20,7 +20,7 @@
         <th>Исполнитель</th>
         <th class="cl-td">
           <button class="btn btn-blue-nb" @click="delete_rows" :disabled="disabled" v-tippy="{ placement : 'bottom'}"
-                  title="Очистить строки" >
+                  title="Очистить строки">
             <i class="fa fa-times"/>
           </button>
         </th>
@@ -28,15 +28,22 @@
       </thead>
       <tbody>
       <tr v-for="(val, index) in tb_data">
-        <td class="cl-td"><input type="text" class="form-control" :disabled=disabled placeholder="Анализ-наименование" v-model="val.researchTitle"></td>
-        <td class="cl-td"><input type="text" class="form-control" :disabled=disabled placeholder="Тест-наименование" v-model="val.fractionTitle"></td>
-        <td class="cl-td"><input type="text" class="form-control" :disabled=disabled placeholder="Значение" v-model="val.value"></td>
-        <td class="cl-td"><input type="text" class="form-control" :disabled=disabled placeholder="Ед. изм" v-model="val.units"></td>
-        <td class="cl-td"><input type="text" class="form-control" :disabled=disabled placeholder="Дата" v-model="val.date"></td>
-        <td class="cl-td"><input type="text" class="form-control" :disabled=disabled placeholder="Исполнитель" v-model="val.docConfirm"></td>
+        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Анализ-наименование"
+                                 v-model="val.researchTitle"></td>
+        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Тест-наименование"
+                                 v-model="val.fractionTitle"></td>
+        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Значение"
+                                 v-model="val.value"></td>
+        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Ед. изм"
+                                 v-model="val.units"></td>
+        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Дата"
+                                 v-model="val.date"></td>
+        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Исполнитель"
+                                 v-model="val.docConfirm"></td>
         <td class="cl-td">
-          <button class="btn btn-blue-nb" @click="delete_row(index)" :disabled="disabled" v-tippy="{ placement : 'bottom'}"
-                  title="Удалить строку" >
+          <button class="btn btn-blue-nb" @click="delete_row(index)" :disabled="disabled"
+                  v-tippy="{ placement : 'bottom'}"
+                  title="Удалить строку">
             <i class="fa fa-times"/>
           </button>
         </td>
@@ -52,7 +59,7 @@
 <script>
 import api from "@/api";
 
-const makeDefaultRow = () => ({"researchTitle": "", "fractionTitle": "", "value": "", "units": "", "date": "", "docConfirm": ""});
+const makeDefaultRow = () => ({researchTitle: "", fractionTitle: "", value: "", units: "", date: "", docConfirm: ""});
 
 export default {
   name: "LaboratoryPreviousResults",
@@ -74,25 +81,25 @@ export default {
   },
   mounted() {
     this.$root.$on('protocol:laboratoryResult', (direction) => {
-        this.insertLaboratoryResult(direction)
-      })
+      this.insertLaboratoryResult(direction)
+    })
   },
   methods: {
     add_new_row() {
       this.tb_data.push(makeDefaultRow());
     },
     delete_row(index) {
-        this.tb_data.splice(index, 1);
-      },
-    delete_rows(){
+      this.tb_data.splice(index, 1);
+    },
+    delete_rows() {
       this.tb_data = []
     },
     changeValue(newVal) {
-        this.$emit('modified', newVal)
-      },
-    async insertLaboratoryResult(direction){
-       const result_data = await api('directions/result-patient-by-direction',
-         {'isLab': true, 'isDocReferral': false, 'isParaclinic': false, 'dir': direction});
+      this.$emit('modified', newVal)
+    },
+    async insertLaboratoryResult(direction) {
+      const result_data = await api('directions/result-patient-by-direction',
+        {'isLab': true, 'isDocReferral': false, 'isParaclinic': false, 'dir': direction});
       this.result = result_data.results[0] || [];
 
       for (let r of this.result.researches) {
@@ -122,7 +129,3 @@ export default {
   },
 }
 </script>
-
-<style scoped>
-
-</style>
