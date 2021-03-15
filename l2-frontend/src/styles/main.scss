@@ -2285,6 +2285,38 @@ input[type=date].form-control {
   }
 }
 
+.top-buttons {
+  height: 34px;
+  background-color: #AAB2BD;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+
+  .btn {
+    width: auto;
+    text-align: center;
+    border-radius: 0;
+
+    &-right {
+      float: right;
+    }
+  }
+
+  &-full {
+    display: flex;
+    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: stretch;
+
+    & > .btn {
+      align-self: stretch;
+      width: 100%;
+    }
+  }
+}
+
 .mt5 {
   margin-top: 5px;
 }

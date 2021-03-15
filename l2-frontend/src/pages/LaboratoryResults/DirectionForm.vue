@@ -1,103 +1,6 @@
 <template>
-  <div class="root">
-    <table class="table table-bordered table-condensed table-responsive">
-      <colgroup>
-        <col width="26%">
-        <col width="32%">
-        <col width="21%">
-        <col width="21%">
-      </colgroup>
-      <tbody>
-      <tr>
-        <th>№ направл.</th>
-        <td>
-          <a v-if="direction.pk" :href='`/directions/pdf?napr_id=[${direction.pk}]`' target='_blank' class="a-under">
-            {{ direction.pk }}
-          </a>
-        </td>
-        <th>Финанс.</th>
-        <td>
-          {{ direction.fin_source }}
-          <template v-if="fromRmis">внеш.орг</template>
-        </td>
-      </tr>
-      <tr>
-        <th>Пациент</th>
-        <td :colspan="patient.diagnosis ? 2 : 3">
-          {{ patient.fio }}
-        </td>
-        <td v-if="patient.diagnosis" title="Диагноз" v-tippy>
-          {{ patient.diagnosis }}
-        </td>
-      </tr>
-      <tr>
-        <th>Пол</th>
-        <td>{{ patient.sex }}</td>
-        <th>Возраст</th>
-        <td>{{ patient.age }}</td>
-      </tr>
-      <tr v-if="patient.history_num">
-        <th>Карта</th>
-        <td>{{ patient.card }}</td>
-        <th>Истор.</th>
-        <td title="Номер истории" v-tippy>{{ patient.history_num }}</td>
-      </tr>
-      <tr v-else>
-        <th>Карта</th>
-        <td colspan="3">{{ patient.card }}</td>
-      </tr>
-      <tr title="Лечащий врач" v-if="!fromRmis" v-tippy>
-        <th>Леч. врач</th>
-        <td colspan="3">{{ direction.directioner }}</td>
-      </tr>
-      <tr v-if="!fromRmis">
-        <th>Отделение</th>
-        <td colspan="3">{{ direction.otd }}</td>
-      </tr>
-      <tr v-if="fromRmis">
-        <th>Организация</th>
-        <td colspan="3">{{ direction.imported_org }}</td>
-      </tr>
-      </tbody>
-    </table>
-    <div class="issledovaniya-scroll-wrapper" v-if="loaded">
-      <div class="empty-issledovaniya" v-if="issledovaniya.length === 0">
-        Нет исследований для выбранной лаборатории.<br/><br/>
-        Назначения в направлении:
-        <ul>
-          <li v-for="l in labs">
-            <a v-if="l.islab" href="#" @click.prevent="selectOtherLab(l.pk)">{{ l.title }}</a>
-            <span v-else>{{ l.title }}</span>
-          </li>
-        </ul>
-      </div>
-      <template v-else>
-        <ul class="issledovaniya">
-          <li
-            :class='[
-            `issledovaniya-isnorm-${i.is_norm}`,
-            active !== i.pk && `tb-group-${i.group}`,
-            active === i.pk && `tb-group-full-${i.group} tb-group-active-${i.group} active`
-          ]'
-            @click="select(i.pk)"
-            v-for="i in issledovaniya">
-            <div :class='`status status-${getStatusClass(i)}`'>{{ getStatus(i) }}</div>
-            {{ i.title }}
-            <br/>
-            <small v-if="i.tubes.length > 0">Ёмкость: {{ i.tubes.map(t => t.pk).join(', ') }}</small>
-          </li>
-        </ul>
-        <div class="other-issledovaniya" v-if="otherLabs.length > 0 && showOtherLabs">
-          Другие лаборатории в направлении:
-          <ul>
-            <li v-for="l in otherLabs">
-              <a href="#" @click.prevent="selectOtherLab(l.pk)">{{ l.title }}</a>
-            </li>
-          </ul>
-        </div>
-      </template>
-    </div>
-    <div class="bottom-buttons">
+  <fragment>
+    <div class="top-buttons">
       <template v-if="loaded">
         <button class="btn btn-blue-nb" :disabled="allConfirmed || !allSaved" @click="confirmAll">
           Подтвердить всё
@@ -112,7 +15,106 @@
         </button>
       </template>
     </div>
-  </div>
+    <div class="root">
+      <table class="table table-bordered table-condensed table-responsive">
+        <colgroup>
+          <col width="26%">
+          <col width="32%">
+          <col width="21%">
+          <col width="21%">
+        </colgroup>
+        <tbody>
+        <tr>
+          <th>№ направл.</th>
+          <td>
+            <a v-if="direction.pk" :href='`/directions/pdf?napr_id=[${direction.pk}]`' target='_blank' class="a-under">
+              {{ direction.pk }}
+            </a>
+          </td>
+          <th>Финанс.</th>
+          <td>
+            {{ direction.fin_source }}
+            <template v-if="fromRmis">внеш.орг</template>
+          </td>
+        </tr>
+        <tr>
+          <th>Пациент</th>
+          <td :colspan="patient.diagnosis ? 2 : 3">
+            {{ patient.fio }}
+          </td>
+          <td v-if="patient.diagnosis" title="Диагноз" v-tippy>
+            {{ patient.diagnosis }}
+          </td>
+        </tr>
+        <tr>
+          <th>Пол</th>
+          <td>{{ patient.sex }}</td>
+          <th>Возраст</th>
+          <td>{{ patient.age }}</td>
+        </tr>
+        <tr v-if="patient.history_num">
+          <th>Карта</th>
+          <td>{{ patient.card }}</td>
+          <th>Истор.</th>
+          <td title="Номер истории" v-tippy>{{ patient.history_num }}</td>
+        </tr>
+        <tr v-else>
+          <th>Карта</th>
+          <td colspan="3">{{ patient.card }}</td>
+        </tr>
+        <tr title="Лечащий врач" v-if="!fromRmis" v-tippy>
+          <th>Леч. врач</th>
+          <td colspan="3">{{ direction.directioner }}</td>
+        </tr>
+        <tr v-if="!fromRmis">
+          <th>Отделение</th>
+          <td colspan="3">{{ direction.otd }}</td>
+        </tr>
+        <tr v-if="fromRmis">
+          <th>Организация</th>
+          <td colspan="3">{{ direction.imported_org }}</td>
+        </tr>
+        </tbody>
+      </table>
+      <div class="issledovaniya-scroll-wrapper" v-if="loaded">
+        <div class="empty-issledovaniya" v-if="issledovaniya.length === 0">
+          Нет исследований для выбранной лаборатории.<br/><br/>
+          Назначения в направлении:
+          <ul>
+            <li v-for="l in labs">
+              <a v-if="l.islab" href="#" @click.prevent="selectOtherLab(l.pk)">{{ l.title }}</a>
+              <span v-else>{{ l.title }}</span>
+            </li>
+          </ul>
+        </div>
+        <template v-else>
+          <ul class="issledovaniya">
+            <li
+              :class='[
+            `issledovaniya-isnorm-${i.is_norm}`,
+            active !== i.pk && `tb-group-${i.group}`,
+            active === i.pk && `tb-group-full-${i.group} tb-group-active-${i.group} active`
+          ]'
+              @click="select(i.pk)"
+              v-for="i in issledovaniya">
+              <div :class='`status status-${getStatusClass(i)}`'>{{ getStatus(i) }}</div>
+              {{ i.title }}
+              <br/>
+              <small v-if="i.tubes.length > 0">Ёмкость: {{ i.tubes.map(t => t.pk).join(', ') }}</small>
+            </li>
+          </ul>
+          <div class="other-issledovaniya" v-if="otherLabs.length > 0 && showOtherLabs">
+            Другие лаборатории в направлении:
+            <ul>
+              <li v-for="l in otherLabs">
+                <a href="#" @click.prevent="selectOtherLab(l.pk)">{{ l.title }}</a>
+              </li>
+            </ul>
+          </div>
+        </template>
+      </div>
+    </div>
+  </fragment>
 </template>
 
 <script>
@@ -248,7 +250,7 @@ export default {
 <style scoped lang="scss">
 .root {
   position: absolute;
-  top: 0 !important;
+  top: 34px !important;
   right: 0;
   left: 0;
   bottom: 0;
@@ -272,7 +274,7 @@ table {
     top: 155px;
     left: 0;
     right: 0;
-    bottom: 34px;
+    bottom: 0;
   }
 
   li {

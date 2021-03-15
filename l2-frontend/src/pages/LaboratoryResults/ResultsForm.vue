@@ -1,5 +1,28 @@
 <template>
   <fragment>
+    <div class="top-buttons" :class="!confirmed && 'top-buttons-full'">
+      <template v-if="loaded">
+        <template v-if="!confirmed">
+          <button class="btn btn-blue-nb btn-ell" @click="openRefSettings()">
+            Настройка референсов
+          </button>
+          <button class="btn btn-blue-nb btn-ell" @click="save()">
+            Сохранить
+          </button>
+          <button class="btn btn-blue-nb btn-ell" :disabled="!saved" @click="confirm()">
+            Подтвердить
+          </button>
+          <button class="btn btn-blue-nb btn-ell" @click="saveAndConfirm()">
+            Сохранить и подтвердить
+          </button>
+        </template>
+        <template v-else>
+          <button class="btn btn-blue-nb btn-right" :disabled="!allow_reset_confirm" @click="resetConfirm()">
+            Сброс подтверждения
+          </button>
+        </template>
+      </template>
+    </div>
     <div class="root" ref="root" v-if="pk" :key="pk">
       <table class="table table-bordered table-sm-pd">
         <thead>
@@ -290,7 +313,7 @@ export default {
 <style scoped lang="scss">
 .root {
   position: absolute;
-  top: 0 !important;
+  top: 34px !important;
   right: 0;
   left: 0;
   bottom: 34px !important;
