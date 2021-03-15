@@ -1,6 +1,6 @@
 <template>
   <td class="val">
-    <div class="input-group">
+    <div class="input-group" :class="(readonly || !r.fraction.formula) && 'val-full'">
       <span class="input-group-btn" v-if="!readonly && r.fraction.formula">
         <button type="button"
                 @click="calcFormula"
@@ -206,6 +206,9 @@ export default {
 <style scoped lang="scss">
 .val {
   position: relative;
+  &-full {
+    width: 100%;
+  }
 }
 
 .val .unit {
