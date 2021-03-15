@@ -1,14 +1,14 @@
 <template>
   <div>
-    <table class="table table-bordered table-condensed">
+    <table class="table table-bordered table-condensed" style="table-layout: fixed">
       <colgroup>
-        <col width='500'/>
-        <col width='500'/>
-        <col width='300'/>
-        <col width='300'/>
-        <col width='300'/>
-        <col width='200'/>
-        <col/>
+        <col width='14%'/>
+        <col />
+        <col width='14%'/>
+        <col width='14%'/>
+        <col width='14%'/>
+        <col width='14%'/>
+        <col width='36'/>
       </colgroup>
       <thead>
       <tr>
@@ -100,9 +100,9 @@ export default {
     async insertLaboratoryResult(direction) {
       const result_data = await api('directions/result-patient-by-direction',
         {'isLab': true, 'isDocReferral': false, 'isParaclinic': false, 'dir': direction});
-      this.result = result_data.results[0] || [];
+      this.result = result_data.results[0] || {};
 
-      for (let r of this.result.researches) {
+      for (let r of Object.values(this.result.researches)) {
         for (let f of r.fractions) {
           this.tb_data.push({
             "researchTitle": r.title,

@@ -47,7 +47,7 @@ def get_laboratory_results_by_directions(list_dirs):
         cursor.execute(
             """
         SELECT 
-                directions_issledovaniya.id,
+                directions_issledovaniya.id as iss_id,
                 directions_issledovaniya.napravleniye_id as direction,
                 directions_issledovaniya.research_id,
                 directory_researches.title as research_title,
