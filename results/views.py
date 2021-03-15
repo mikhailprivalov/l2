@@ -16,7 +16,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q, Prefetch, Count
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils import dateformat
 from django.utils import timezone
 from django.utils.text import Truncator
@@ -47,12 +47,11 @@ from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.common import RANGE_NOT_IN, RANGE_IN
-from utils.dates import try_parse_range
+from utils.dates import try_parse_range, try_strptime
 from utils.flowable import InteractiveTextField
 from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result, procedural_text_for_result
 from django.utils.module_loading import import_string
-
 
 pdfmetrics.registerFont(TTFont('FreeSans', os.path.join(FONTS_FOLDER, 'FreeSans.ttf')))
 pdfmetrics.registerFont(TTFont('FreeSansBold', os.path.join(FONTS_FOLDER, 'FreeSansBold.ttf')))
@@ -105,22 +104,23 @@ def results_search(request):
 @group_required("Врач-лаборант", "Лаборант")
 def enter(request):
     """ Представление для страницы ввода результатов """
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
-    if lab.p_type != Podrazdeleniya.LABORATORY:
-        lab = labs[0]
-    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
-    return render(
-        request,
-        'dashboard/resultsenter.html',
-        {
-            "podrazdeleniya": podrazdeleniya,
-            "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("pk").order_by("base"),
-            "groups": directory.ResearchGroup.objects.filter(lab=lab),
-            "lab": lab,
-            "labs": labs,
-        },
-    )
+    # lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
+    # labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
+    # if lab.p_type != Podrazdeleniya.LABORATORY:
+    #     lab = labs[0]
+    # podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+    # return render(
+    #     request,
+    #     'dashboard/resultsenter.html',
+    #     {
+    #         "podrazdeleniya": podrazdeleniya,
+    #         "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("pk").order_by("base"),
+    #         "groups": directory.ResearchGroup.objects.filter(lab=lab),
+    #         "lab": lab,
+    #         "labs": labs,
+    #     },
+    # )
+    return redirect('/laboratory/results')
 
 
 @csrf_exempt
@@ -1542,7 +1542,7 @@ class TTR(Flowable):
 @login_required
 def result_journal_table_print(request):
     dateo = request.GET["date"]
-    date = datetime.date(int(dateo.split(".")[2]), int(dateo.split(".")[1]), int(dateo.split(".")[0]))
+    date = try_strptime(dateo, formats=('%d.%m.%Y', '%Y-%m-%d',))
     end_date = date + datetime.timedelta(days=1)
     onlyjson = False
 
@@ -1705,7 +1705,7 @@ def result_journal_print(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="journal.pdf"'
     dateo = request.GET["date"]
-    date = datetime.date(int(dateo.split(".")[2]), int(dateo.split(".")[1]), int(dateo.split(".")[0]))
+    date = try_strptime(dateo, formats=('%d.%m.%Y', '%Y-%m-%d',))
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
 
     ist_f = json.loads(request.GET.get("ist_f", "[]"))
@@ -1969,7 +1969,7 @@ def get_day_results(request):
         day = request.GET["date"]
         otd = request.GET.get("otd", "-1")
 
-    day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]), int(day.split(".")[0]))
+    day1 = try_strptime(day, formats=('%d.%m.%Y', '%Y-%m-%d',))
     day2 = day1 + datetime.timedelta(days=1)
     directions = collections.defaultdict(list)
     otd = int(otd)

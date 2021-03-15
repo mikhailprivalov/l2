@@ -123,6 +123,8 @@ def hosp_get_hosp_direction(num_dir):
     # возвращает дерево направлений-отделений, у к-рых тип улуги только is_hosp
     # [{'direction': номер направления, 'research_title': значение}, {'direction': номер направления, 'research_title': значение}]
     root_dir = tree_directions.root_direction(num_dir)
+    if not root_dir or not root_dir[-1]:
+        return {}
     num_root_dir = root_dir[-1][-3]
     result = tree_directions.get_research_by_dir(num_root_dir)
     num_iss = result[0][0]

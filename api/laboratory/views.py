@@ -1,8 +1,24 @@
+import collections
+import itertools
+from decimal import Decimal
+from typing import Optional
+
+import bleach
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 import simplejson as json
+from django.utils import dateformat, timezone
 
+from appconf.manager import SettingManager
+from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result
 from directory.models import Fractions, Researches
+from laboratory.decorators import group_required
+from podrazdeleniya.models import Podrazdeleniya
+from rmis_integration.client import Client
+from slog.models import Log
+from users.models import DoctorProfile
+from utils.dates import try_parse_range
 
 
 @login_required
@@ -51,3 +67,529 @@ def fraction(request):
         return JsonResponse({"title": f"{rt} – {ft}" if ft != rt and ft else rt})
 
     return JsonResponse({"title": None})
+
+
+@login_required
+def laboratories(request):
+    rows = []
+    active = -1
+    r: Podrazdeleniya
+    for r in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title"):
+        rows.append({
+            "pk": r.pk,
+            "title": r.get_title(),
+        })
+        if active == -1 or request.user.doctorprofile.podrazdeleniye_id == r.pk:
+            active = r.pk
+    return JsonResponse({"rows": rows, "active": active})
+
+
+@login_required
+@group_required("Врач-лаборант", "Лаборант")
+def ready(request):
+    request_data = json.loads(request.body)
+    dates = request_data['date_range']
+    laboratory_pk = request_data['laboratory']
+    result = {"tubes": [], "directions": []}
+
+    date_start, date_end = try_parse_range(*dates)
+    dates_cache = {}
+    tubes = set()
+    dirs = set()
+
+    tlist = TubesRegistration.objects.filter(
+        doc_recive__isnull=False,
+        time_recive__range=(date_start, date_end),
+        issledovaniya__time_confirmation__isnull=True,
+        issledovaniya__research__podrazdeleniye_id=laboratory_pk,
+        issledovaniya__isnull=False,
+    ).filter(
+        Q(issledovaniya__napravleniye__hospital_id=request.user.doctorprofile.hospital_id) |
+        Q(issledovaniya__napravleniye__hospital__isnull=True)
+    )
+
+    for tube in tlist.distinct().prefetch_related('issledovaniya_set__napravleniye').select_related('type', 'type__tube'):
+        direction = None
+        if tube.pk not in tubes:
+            if not direction:
+                direction = tube.issledovaniya_set.first().napravleniye
+            if tube.time_recive.date() not in dates_cache:
+                dates_cache[tube.time_recive.date()] = dateformat.format(tube.time_recive, 'd.m.y')
+            tubes.add(tube.pk)
+            dicttube = {
+                "pk": tube.pk,
+                "direction": direction.pk,
+                "date": dates_cache[tube.time_recive.date()],
+                "tube": {"title": tube.type.tube.title, "color": tube.type.tube.color},
+            }
+            result["tubes"].append(dicttube)
+
+        if tube.issledovaniya_set.first().napravleniye_id not in dirs:
+            if not direction:
+                direction = tube.issledovaniya_set.first().napravleniye
+            if direction.data_sozdaniya.date() not in dates_cache:
+                dates_cache[direction.data_sozdaniya.date()] = dateformat.format(direction.data_sozdaniya, 'd.m.y')
+            dirs.add(direction.pk)
+            dictdir = {"pk": direction.pk, "date": dates_cache[direction.data_sozdaniya.date()]}
+            result["directions"].append(dictdir)
+
+    result["tubes"].sort(key=lambda k: k['pk'])
+    result["directions"].sort(key=lambda k: k['pk'])
+    return JsonResponse(result)
+
+
+@login_required
+@group_required("Врач-лаборант", "Лаборант")
+def search(request):
+    result = {"ok": False, "msg": None}
+
+    request_data = json.loads(request.body)
+
+    direction: Optional[Napravleniya] = None
+    pk = request_data["q"].strip()
+    laboratory_pk = request_data["laboratory"]
+    t = request_data["mode"]
+    doc = request.user.doctorprofile
+    doc_pk = request.user.doctorprofile.pk
+    if pk.isdigit():
+        issledovaniya = []
+        labs = []
+        labs_titles = []
+        all_confirmed = True
+        all_saved = True
+        pk = int(pk)
+        if pk >= 4600000000000:
+            pk -= 4600000000000
+            pk //= 10
+            t = "direction"
+        if t == "tube":
+            iss = Issledovaniya.objects.filter(tubes__id=pk)
+            if iss.count() != 0:
+                direction = iss.first().napravleniye
+            iss = iss.filter(research__podrazdeleniye__pk=laboratory_pk)
+        else:
+            try:
+                direction = Napravleniya.objects.get(pk=pk)
+                iss = Issledovaniya.objects.filter(napravleniye__pk=pk, research__podrazdeleniye__pk=laboratory_pk)
+            except Napravleniya.DoesNotExist:
+                direction = None
+                iss = None
+        if direction and direction.hospital and direction.hospital != doc.hospital:
+            direction = None
+            iss = None
+        mnext = False
+        for i in Issledovaniya.objects.filter(napravleniye=direction).select_related('research', 'research__podrazdeleniye'):
+            po = i.research.podrazdeleniye
+            p = "" if not po else po.title
+            if p not in labs_titles and po:
+                labs_titles.append(p)
+                labs.append({"pk": po.pk, "title": p, "islab": po.p_type == 2})
+            if po and not i.research.is_paraclinic and not i.research.is_doc_refferal:
+                mnext = True
+        if iss and iss.count() > 0:
+            if not mnext:
+                result["msg"] = f"Направление {pk} не предназначено для лаборатории! Проверьте назначения и номер"
+            else:
+                groups = {}
+                cnt = 0
+                researches_chk = []
+                for issledovaniye in (
+                    iss.order_by("deferred", "-doc_save", "-doc_confirmation", "tubes__pk", "research__sort_weight")
+                        .prefetch_related('tubes', 'result_set')
+                        .select_related('research', 'doc_save')
+                ):
+                    if True:
+                        if issledovaniye.pk in researches_chk:
+                            continue
+                        researches_chk.append(issledovaniye.pk)
+
+                        tubes_list = issledovaniye.tubes.exclude(doc_recive__isnull=True).all()
+
+                        not_received_tubes_list = [str(x.pk) for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk")]
+
+                        not_received_why = [x.notice for x in issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk") if x.notice]
+
+                        saved = True
+                        confirmed = True
+                        doc_save_fio = ""
+                        doc_save_id = -1
+                        current_doc_save = -1
+                        isnorm = "unknown"
+
+                        if not issledovaniye.doc_save:
+                            saved = False
+                        else:
+                            doc_save_id = issledovaniye.doc_save_id
+                            doc_save_fio = issledovaniye.doc_save.get_fio()
+                            if doc_save_id == doc_pk:
+                                current_doc_save = 1
+                            else:
+                                current_doc_save = 0
+                            isnorm = "normal"
+                            if issledovaniye.result_set.count() > 0:
+                                if any([x.get_is_norm()[0] == "not_normal" for x in issledovaniye.result_set.all()]):
+                                    isnorm = "not_normal"
+                                elif any([x.get_is_norm()[0] == "maybe" for x in issledovaniye.result_set.all()]):
+                                    isnorm = "maybe"
+
+                        if not issledovaniye.time_confirmation:
+                            confirmed = False
+                            if all_confirmed and not issledovaniye.deferred:
+                                all_confirmed = False
+                        if all_saved and not issledovaniye.time_save and not issledovaniye.deferred:
+                            all_saved = False
+                        tb = ','.join(str(v.pk) for v in tubes_list)
+
+                        if tb not in groups.keys():
+                            cnt += 1
+                            groups[tb] = cnt
+                        issledovaniya.append(
+                            {
+                                "pk": issledovaniye.pk,
+                                "title": issledovaniye.research.title,
+                                "research_pk": issledovaniye.research_id,
+                                "sort": issledovaniye.research.sort_weight,
+                                "saved": saved,
+                                "is_norm": isnorm,
+                                "confirmed": confirmed,
+                                "status_key": str(saved) + str(confirmed) + str(issledovaniye.deferred and not confirmed),
+                                "not_received_tubes": ", ".join(not_received_tubes_list),
+                                "not_received_why": ", ".join(not_received_why),
+                                "tubes": [{"pk": x.pk, "title": x.type.tube.title, "color": x.type.tube.color} for x in tubes_list],
+                                "template": str(issledovaniye.research.template),
+                                "deff": issledovaniye.deferred and not confirmed,
+                                "doc_save_fio": doc_save_fio,
+                                "doc_save_id": doc_save_id,
+                                "current_doc_save": current_doc_save,
+                                "allow_reset_confirm": issledovaniye.allow_reset_confirm(request.user),
+                                "group": groups[tb],
+                            }
+                        )
+
+                statuses = collections.defaultdict(lambda: collections.defaultdict(list))
+
+                for d in issledovaniya:
+                    statuses[d['status_key']][d['group']].append(d)
+                    statuses[d['status_key']][d['group']] = sorted(statuses[d['status_key']][d['group']], key=lambda k: k['sort'])
+
+                issledovaniya = []
+
+                def concat(dic):
+                    t = [dic[x] for x in dic.keys()]
+
+                    return itertools.chain(*t)
+
+                if "FalseFalseFalse" in statuses.keys():
+                    issledovaniya += concat(statuses["FalseFalseFalse"])
+
+                if "TrueFalseFalse" in statuses.keys():
+                    issledovaniya += concat(statuses["TrueFalseFalse"])
+
+                if "FalseFalseTrue" in statuses.keys():
+                    issledovaniya += concat(statuses["FalseFalseTrue"])
+
+                if "TrueFalseTrue" in statuses.keys():
+                    issledovaniya += concat(statuses["TrueFalseTrue"])
+
+                if "FalseTrueFalse" in statuses.keys():
+                    issledovaniya += concat(statuses["FalseTrueFalse"])
+
+                if "TrueTrueFalse" in statuses.keys():
+                    issledovaniya += concat(statuses["TrueTrueFalse"])
+        if direction:
+            result["data"] = {
+                "patient": {
+                    "fio": direction.client.individual.fio(),
+                    "sex": direction.client.individual.sex,
+                    "age": direction.client.individual.age_s(direction=direction),
+                    "history_num": direction.history_num,
+                    "card": direction.client.number_with_type(),
+                    "diagnosis": direction.diagnos,
+                },
+                "direction": {
+                    "pk": direction.pk,
+                    "imported_from_rmis": direction.imported_from_rmis,
+                    "imported_org": None if not direction.imported_org else direction.imported_org.title,
+                    "directioner": None if direction.imported_from_rmis or not direction.doc else direction.doc.fio,
+                    "otd": None if direction.imported_from_rmis else direction.get_doc_podrazdeleniye_title(),
+                    "fin_source": None if direction.imported_from_rmis else direction.fin_title,
+                    "in_rmis": direction.result_rmis_send,
+                    "dirData": {
+                        "client_sex": direction.client.individual.sex,
+                        "client_vozrast": direction.client.individual.age_s(direction=direction),
+                    },
+                },
+                "issledovaniya": issledovaniya,
+                "labs": labs,
+                "q": {"text": pk, "mode": t},
+                "allConfirmed": all_confirmed,
+                "allSaved": all_saved,
+            }
+            result["ok"] = True
+    return JsonResponse(result)
+
+
+@login_required
+@group_required("Врач-лаборант", "Лаборант")
+def form(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    iss: Issledovaniya = Issledovaniya.objects.prefetch_related('result_set').get(pk=pk)
+    research: Researches = Researches.objects.prefetch_related(
+        Prefetch(
+            'fractions_set',
+            queryset=Fractions.objects.all().order_by("pk", "sort_weight").prefetch_related('references_set')
+        )
+    ).get(pk=iss.research_id)
+    data = {
+        "pk": pk,
+        "confirmed": bool(iss.time_confirmation),
+        "saved": bool(iss.time_save),
+        "allow_reset_confirm": iss.allow_reset_confirm(request.user),
+        "research": {
+            "title": research.title,
+            "can_comment": research.can_lab_result_comment,
+            "no_units_and_ref": research.no_units_and_ref,
+            "co_executor_mode": research.co_executor_mode or 0,
+            "co_executor_title": research.co_executor_2_title,
+            "template": research.template,
+        },
+        "result": [],
+        "comment": iss.lab_comment or "",
+        "laborants": (
+            [{"id": -1, "label": 'Не выбрано'}, *[
+                {"id": x.pk, "label": x.fio}
+                for x in
+                DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by('fio')
+            ]]
+            if SettingManager.l2('results_laborants') else
+            []
+        ),
+        "co_executor": iss.co_executor_id or -1,
+        "co_executor2": iss.co_executor2_id or -1,
+    }
+
+    f: Fractions
+    for f in research.fractions_set.all():
+        r: Optional[Result] = iss.result_set.filter(fraction=f).first()
+
+        if not r and f.hide:
+            continue
+
+        ref_m = f.ref_m
+        ref_f = f.ref_f
+        if isinstance(ref_m, str):
+            ref_m = json.loads(ref_m)
+        if isinstance(ref_f, str):
+            ref_f = json.loads(ref_f)
+        av = {}
+
+        def_ref_pk = -1 if not f.default_ref else f.default_ref_id
+
+        for avref in f.references_set.all():
+            av[avref.pk] = {
+                "title": avref.title,
+                "about": avref.about,
+                "m": json.loads(avref.ref_m) if isinstance(avref.ref_m, str) else avref.ref_m,
+                "f": json.loads(avref.ref_f) if isinstance(avref.ref_f, str) else avref.ref_f,
+            }
+
+        empty_ref = {
+            "m": ref_m,
+            "f": ref_f,
+        }
+
+        selected_reference = r.selected_reference if r else def_ref_pk
+
+        current_ref = r.get_ref(full=True) if r else (empty_ref if def_ref_pk == -1 else av.get(def_ref_pk, {}))
+
+        av[-1] = {
+            "title": "Основной референс",
+            "about": "",
+            **empty_ref,
+        }
+
+        if selected_reference == -2:
+            av[-2] = current_ref
+
+        av[-3] = {
+            "title": "Настраиваемый референс",
+            "about": "",
+            "m": {},
+            "f": {},
+        }
+
+        data["result"].append({
+            "fraction": {
+                "pk": f.pk,
+                "title": f.title,
+                "units": f.units,
+                "render_type": f.render_type,
+                "options": f.options,
+                "formula": f.formula,
+                "type": f.variants.get_variants() if f.variants else [],
+                "type2": f.variants2.get_variants() if f.variants2 else [],
+                "references": {
+                    **empty_ref,
+                    "default": def_ref_pk,
+                    "available": av,
+                },
+            },
+            "ref": current_ref,
+            "selectedReference": selected_reference,
+            "norm": r.get_is_norm(recalc=True)[0] if r else None,
+            "value": r.value if r else '',
+        })
+
+    return JsonResponse({
+        "data": data,
+    })
+
+
+@login_required
+@group_required("Врач-лаборант", "Лаборант")
+def save(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    iss: Issledovaniya = Issledovaniya.objects.get(pk=pk)
+    if iss.time_confirmation:
+        return JsonResponse({
+            "ok": False,
+            "message": 'Редактирование запрещено. Результат уже подтверждён.',
+        })
+    for t in TubesRegistration.objects.filter(issledovaniya=iss):
+        if not t.rstatus():
+            t.set_r(request.user.doctorprofile)
+    for r in request_data["result"]:
+        result_q = {
+            "issledovaniye": iss,
+            "fraction_id": r["fraction"]["pk"]
+        }
+        if Result.objects.filter(**result_q).exists():
+            fraction_result = Result.objects.filter(**result_q).order_by("-pk")[0]
+            created = False
+        else:
+            fraction_result = Result(**result_q)
+            created = True
+
+        value = bleach.clean(r["value"], tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div']).replace("<br>", "<br/>")
+
+        if not created or value:
+            fraction_result.value = value
+            fraction_result.get_units(needsave=False)
+            fraction_result.iteration = 1
+
+            ref = r.get("ref", {})
+            fraction_result.ref_title = ref.get("title", "Default")
+            fraction_result.ref_about = ref.get("about", "")
+            fraction_result.ref_m = ref.get("m")
+            fraction_result.ref_f = ref.get("f")
+            fraction_result.selected_reference = r.get("selectedReference", -2)
+
+            if not fraction_result.ref_m and not fraction_result.ref_f:
+                fraction_result.get_ref(re_save=True, needsave=False)
+
+            fraction_result.save()
+        elif not created:
+            fraction_result.delete()
+    iss.doc_save = request.user.doctorprofile
+    iss.time_save = timezone.now()
+    iss.lab_comment = request_data.get("comment", "")
+    iss.def_uet = 0
+    iss.co_executor_id = None if request_data.get("co_executor", '-1') == '-1' else request_data["co_executor"]
+    iss.co_executor_uet = 0
+
+    if not request.user.doctorprofile.has_group("Врач-лаборант"):
+        for r in Result.objects.filter(issledovaniye=iss):
+            iss.def_uet += r.fraction.uet_co_executor_1
+    else:
+        for r in Result.objects.filter(issledovaniye=iss):
+            iss.def_uet += r.fraction.uet_doc
+        if iss.co_executor_id:
+            for r in Result.objects.filter(issledovaniye=iss):
+                iss.co_executor_uet += r.fraction.uet_co_executor_1
+
+    iss.co_executor2_id = None if request_data.get("co_executor2", '-1') == '-1' else request_data["co_executor2"]
+    iss.co_executor2_uet = 0
+    if iss.co_executor2_id:
+        for r in Result.objects.filter(issledovaniye=iss):
+            iss.co_executor2_uet += r.fraction.uet_co_executor_2
+    iss.save()
+    Log.log(str(pk), 13, body=request_data, user=request.user.doctorprofile)
+    return JsonResponse({
+        "ok": True,
+    })
+
+
+@login_required
+@group_required("Врач-лаборант", "Лаборант")
+def confirm(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    iss: Issledovaniya = Issledovaniya.objects.get(pk=pk)
+    if iss.time_confirmation:
+        return JsonResponse({
+            "ok": False,
+            "message": 'Редактирование запрещено. Результат уже подтверждён.',
+        })
+    if iss.doc_save:
+        iss.doc_confirmation = request.user.doctorprofile
+        for r in Result.objects.filter(issledovaniye=iss):
+            r.get_ref()
+        iss.time_confirmation = timezone.now()
+        iss.save()
+        Log.log(str(pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
+    else:
+        return JsonResponse({
+            "ok": False,
+            "message": 'Невозможно подтвердить, результат не сохранён',
+        })
+    return JsonResponse({
+        "ok": True,
+    })
+
+
+@login_required
+@group_required("Врач-лаборант", "Лаборант")
+def confirm_list(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    n: Napravleniya = Napravleniya.objects.prefetch_related('issledovaniya_set').get(pk=pk)
+    for iss in n.issledovaniya_set.all():
+        if iss.doc_save and not iss.time_confirmation:
+            for r in Result.objects.filter(issledovaniye=iss):
+                r.get_ref()
+            iss.doc_confirmation = request.user.doctorprofile
+            iss.time_confirmation = timezone.now()
+            if not request.user.doctorprofile.has_group("Врач-лаборант"):
+                iss.co_executor = request.user.doctorprofile
+                for r in Result.objects.filter(issledovaniye=iss):
+                    iss.def_uet += Decimal(r.fraction.uet_co_executor_1)
+            iss.save()
+            Log.log(str(iss.pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
+    return JsonResponse({
+        "ok": True,
+    })
+
+
+@login_required
+@group_required("Сброс подтверждений результатов", "Врач-лаборант", "Лаборант")
+def reset_confirm(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    result = {"ok": False, "message": "Неизвестная ошибка"}
+    if Issledovaniya.objects.filter(pk=pk).exists():
+        iss: Issledovaniya = Issledovaniya.objects.get(pk=pk)
+
+        if iss.allow_reset_confirm(request.user):
+            predoc = {"fio": iss.doc_confirmation_fio or 'не подтверждено', "pk": pk, "direction": iss.napravleniye_id}
+            iss.doc_confirmation = iss.time_confirmation = None
+            iss.save()
+            if iss.napravleniye.result_rmis_send:
+                c = Client()
+                c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)
+            result = {"ok": True}
+            Log.log(str(pk), 24, body=predoc, user=request.user.doctorprofile)
+        else:
+            result["message"] = f"Сброс подтверждения разрешен в течении {str(SettingManager.get('lab_reset_confirm_time_min'))} минут"
+    return JsonResponse(result)

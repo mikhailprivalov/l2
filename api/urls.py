@@ -6,6 +6,8 @@ urlpatterns = [
     path('send', views.send),
     path('endpoint', views.endpoint),
     path('departments', views.departments),
+    path('otds', views.otds),
+    path('laboratory-journal-params', views.laboratory_journal_params),
     path('bases', views.bases),
     path('laborants', views.laborants),
     path('current-user-info', views.current_user_info),

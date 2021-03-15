@@ -155,9 +155,9 @@
         </nav>
     {% endblock %}
     {% block content %}{% endblock %}
-    {% block foot %}
-    {% endblock %}
+    {% block foot %}{% endblock %}
 </div>
+{% block portal %}{% endblock %}
 <ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none;z-index: 100000">
     <li class="context-st"><a class="noclick" onclick="return false"><label>Число:<input type="number" value="10"
                                                                                          id="contextNumber"
@@ -466,7 +466,7 @@
             const $contextSt = $('#contextSt')
             const $recalcValue = $('#recalcValue')
             $.contextMenu({
-                elementSelector: 'input.form-control:not(.tt-hint):not(.no-context)[data-pk],textarea:not(.no-context)[data-pk]',
+                elementSelector: 'input.form-control:not(.tt-hint):not(.no-context)[data-pk],textarea:not(.no-context)[data-pk],.result-field:not([readonly]):not([disabled])',
                 menuSelector: '#contextMenu',
                 menuSelected: function (invokedOn, selectedMenu) {
                     let val

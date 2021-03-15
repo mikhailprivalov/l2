@@ -5,6 +5,7 @@ import VueCollapse from 'vue2-collapse'
 import Fragment from 'vue-fragment'
 import VuejsDialog from 'vuejs-dialog';
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min'
+import PortalVue from 'portal-vue';
 
 import store from './store'
 import * as action_types from './store/action-types'
@@ -29,6 +30,7 @@ Vue.use(VueInputMask)
 Vue.use(VueCollapse)
 Vue.use(Tippy)
 Vue.use(Fragment.Plugin)
+Vue.use(PortalVue)
 
 Vue.directive('click-outside', {
   bind: function (el, binding, vnode) {
@@ -90,7 +92,12 @@ new Vue({
     'DocCall': () => import('@/pages/DocCall'),
     'ListWait': () => import('@/pages/ListWait'),
     'LoadFile': () => import('@/ui-cards/LoadFile'),
+    'LaboratorySelector': () => import('@/ui-cards/LaboratorySelector'),
+    'ExecutionList': () => import('@/ui-cards/ExecutionList'),
+    'LaboratoryJournal': () => import('@/ui-cards/LaboratoryJournal'),
+    'LaboratoryPrintResults': () => import('@/ui-cards/LaboratoryPrintResults'),
     'PlanPharmacotherapy': () => import('@/pages/PlanPharmacotherapy'),
+    'LaboratoryResults': () => import('@/pages/LaboratoryResults'),
   },
   data: {
     timeouts: {},
