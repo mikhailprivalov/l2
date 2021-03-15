@@ -404,6 +404,9 @@ class ParaclinicInputField(models.Model):
         (21, 'Anesthesia table'),
         (22, 'Текст с автозаполнением'),
         (23, 'Raw field without autoload'),
+        (24, 'Laboratory result test value units'),
+        (25, 'Diagnostic result'),
+        (26, 'Consultation result')
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')

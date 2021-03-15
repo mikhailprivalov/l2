@@ -126,6 +126,10 @@
                   v-model="field.value"
                 />
               </div>
+              <div class="field-value" v-else-if="field.field_type === 24">
+                <LaboratoryPreviousResults v-model="field.value" :disabled="confirmed"/>
+              </div>
+
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
                     placement: 'left',
@@ -170,6 +174,7 @@ export default {
       AnesthesiaProcess: () => import('../fields/AnesthesiaProcess'),
       MKBFieldForm: () => import('../fields/MKBFieldForm'),
       FormulaField: () => import('../fields/FormulaField'),
+      LaboratoryPreviousResults: () => import('../fields/LaboratoryPreviousResults'),
     },
     props: {
       research: {

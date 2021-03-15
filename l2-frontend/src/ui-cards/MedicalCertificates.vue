@@ -2,7 +2,7 @@
   <fragment>
     <a v-if="is_med_certificates" href="#" class="dropdown-toggle" style="color: #049372" @click.prevent
        v-tippy="{
-                html: '#favorites-view',
+                html: '#certificates-view',
                 reactive: true,
                 interactive: true,
                 arrow: true,
@@ -26,7 +26,7 @@
       Справки
     </a>
 
-    <div id="favorites-view" class="tp">
+    <div id="certificates-view" class="tp" v-if="is_med_certificates">
       <table class="table">
         <tbody>
         <tr v-for="row in med_certificates">
@@ -61,10 +61,7 @@
     },
     computed: {
       is_med_certificates() {
-        if (this.med_certificates.length > 0) {
-          return true
-        }
-        return false
+        return this.med_certificates.length > 0;
       }
     },
   }

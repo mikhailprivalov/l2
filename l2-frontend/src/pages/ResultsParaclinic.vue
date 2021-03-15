@@ -265,6 +265,9 @@
                 </div>
               </div>
               <medical-certificates :med_certificates="data.medical_certificates" :direction="data.direction.pk"/>
+              <ResultsByYear :card_pk="data.patient.card_pk" isDocReferral/>
+              <ResultsByYear :card_pk="data.patient.card_pk" isParaclinic/>
+              <ResultsByYear :card_pk="data.patient.card_pk" isLab/>
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
@@ -744,6 +747,7 @@
   import {enter_field, leave_field} from "@/forms/utils";
   import FastTemplates from "../forms/FastTemplates";
   import api from "@/api";
+  import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear'
 
   export default {
     name: 'results-paraclinic',
@@ -753,7 +757,7 @@
       DescriptiveForm,
       DateFieldNav, Modal, MKBField, ResearchesPicker, SelectedResearches,
       dropdown, SelectPickerM, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-      LastResult, RecipeInput, IssStatus, MedicalCertificates,
+      LastResult, RecipeInput, IssStatus, MedicalCertificates, ResultsByYear,
     },
     data() {
       return {

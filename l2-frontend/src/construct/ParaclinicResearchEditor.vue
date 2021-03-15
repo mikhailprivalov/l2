@@ -168,6 +168,15 @@
                   <div v-if="row.field_type === 21">
                     <ConfigureAnesthesiaField v-model="row.values_to_input"/>
                   </div>
+                  <div v-if="row.field_type === 24">
+                    <strong>Результаты лабораторные:</strong>
+                  </div>
+                  <div v-if="row.field_type === 25">
+                    <strong>Результаты диагностические:</strong>
+                  </div>
+                  <div v-if="row.field_type === 26">
+                    <strong>Результаты консультационные:</strong>
+                  </div>
                   <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23].includes(row.field_type)">
                     <div class="header" v-collapse-toggle>
                       <a href="#" class="a-under" @click.prevent v-if="row.field_type === 0">
@@ -265,6 +274,9 @@
                       <option value="21">Течение анестезии (таблица)</option>
                       <option value="22">Текст с автозаполнением</option>
                       <option value="23">Ссылка без автозагрузки</option>
+                      <option value="24">Результаты лабораторные</option>
+                      <option value="25">Результаты диагностические</option>
+                      <option value="26">Результаты консультаций</option>
                     </select>
                   </label>
                 </div>

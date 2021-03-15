@@ -496,7 +496,7 @@ def save(request):
     iss.time_save = timezone.now()
     iss.lab_comment = request_data.get("comment", "")
     iss.def_uet = 0
-    iss.co_executor_id = None if request_data.get("co_executor", '-1') == '-1' else request_data["co_executor"]
+    iss.co_executor_id = None if request_data.get("co_executor", -1) == -1 else request_data["co_executor"]
     iss.co_executor_uet = 0
 
     if not request.user.doctorprofile.has_group("Врач-лаборант"):
@@ -509,7 +509,7 @@ def save(request):
             for r in Result.objects.filter(issledovaniye=iss):
                 iss.co_executor_uet += r.fraction.uet_co_executor_1
 
-    iss.co_executor2_id = None if request_data.get("co_executor2", '-1') == '-1' else request_data["co_executor2"]
+    iss.co_executor2_id = None if request_data.get("co_executor2", -1) == -1 else request_data["co_executor2"]
     iss.co_executor2_uet = 0
     if iss.co_executor2_id:
         for r in Result.objects.filter(issledovaniye=iss):

@@ -43,7 +43,7 @@ from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE
 from laboratory.utils import strdatetime, strdate, tsdatetime, start_end_year, strfdatetime, current_time
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
-from results.sql_func import get_not_confirm_direction
+from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
@@ -52,8 +52,8 @@ from users.models import DoctorProfile
 from utils.common import non_selected_visible_type, none_if_minus_1
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
-from utils.xh import check_float_is_valid
-from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor
+from utils.xh import check_float_is_valid, short_fio_dots
+from .sql_func import get_history_dir, get_confirm_direction, filter_direction_department, get_lab_podr, filter_direction_doctor, get_confirm_direction_patient_year
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
@@ -256,6 +256,7 @@ def directions_history(request):
         )
 
     res['directions'] = final_result
+
     return JsonResponse(res)
 
 
@@ -2156,3 +2157,71 @@ def change_owner_direction(request):
     directions = ', '.join([str(d.pk) for d in directions])
 
     return JsonResponse({"directions": directions})
+
+
+@login_required
+def directions_result_year(request):
+    request_data = json.loads(request.body)
+    is_lab = request_data.get('isLab', False)
+    is_paraclinic = request_data.get('isParaclinic', False)
+    is_doc_refferal = request_data.get('isDocReferral', False)
+    year = request_data['current_year']
+    d1 = datetime.strptime(f'01.01.{year}', '%d.%m.%Y')
+    start_date = datetime.combine(d1, dtime.min)
+    d2 = datetime.strptime(f'31.12.{year}', '%d.%m.%Y')
+    end_date = datetime.combine(d2, dtime.max)
+    card_pk = request_data.get('card_pk', -1)
+
+    if not is_lab and not is_doc_refferal and not is_paraclinic or card_pk == -1:
+        return JsonResponse({"results": []})
+
+    if is_lab:
+        lab_podr = get_lab_podr()
+        lab_podr = [i[0] for i in lab_podr]
+    else:
+        lab_podr = [-1]
+
+    card_pk = int(card_pk)
+    confirmed_directions = get_confirm_direction_patient_year(start_date, end_date, lab_podr, card_pk, is_lab, is_paraclinic, is_doc_refferal)
+    if not confirmed_directions:
+        return JsonResponse({"results": []})
+
+    directions = {}
+
+    for d in confirmed_directions:
+        if d.direction not in directions:
+            directions[d.direction] = {
+                'dir': d.direction,
+                'date': d.ch_time_confirmation,
+                'researches': [],
+            }
+
+        directions[d.direction]['researches'].append(d.research_title)
+    return JsonResponse({"results": list(directions.values())})
+
+
+@login_required
+def results_by_direction(request):
+    request_data = json.loads(request.body)
+    is_lab = request_data.get('isLab', False)
+    # is_paraclinic = request_data.get('isParaclinic', False)
+    # is_doc_refferal = request_data.get('isDocReferral', False)
+    direction = request_data.get('dir')
+
+    directions = request_data.get('directions', [])
+    if not directions and direction:
+        directions = [direction]
+    objs_result = {}
+    if is_lab:
+        direction_result = get_laboratory_results_by_directions(directions)
+
+        for r in direction_result:
+            if r.direction not in objs_result:
+                objs_result[r.direction] = {'dir': r.direction, 'date': r.date_confirm, 'researches': {}}
+
+            if r.iss_id not in objs_result[r.direction]['researches']:
+                objs_result[r.direction]['researches'][r.iss_id] = {'title': r.research_title, 'fio': short_fio_dots(r.fio), 'dateConfirm': r.date_confirm, 'fractions': []}
+
+            objs_result[r.direction]['researches'][r.iss_id]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
+
+    return JsonResponse({"results": list(objs_result.values())})
