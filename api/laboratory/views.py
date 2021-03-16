@@ -14,6 +14,7 @@ from appconf.manager import SettingManager
 from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result
 from directory.models import Fractions, Researches
 from laboratory.decorators import group_required
+from laboratory.utils import strfdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.client import Client
 from slog.models import Log
@@ -345,6 +346,13 @@ def form(request):
         "pk": pk,
         "confirmed": bool(iss.time_confirmation),
         "saved": bool(iss.time_save),
+        "execData": {
+            "timeSave": strfdatetime(iss.time_save, '%d.%m.%Y %X') or None,
+            "docSave": iss.doc_save.get_fio() if iss.doc_save else None,
+            "timeConfirm": strfdatetime(iss.time_confirmation, '%d.%m.%Y %X') or None,
+            "docConfirmation": iss.doc_confirmation.get_fio() if iss.doc_confirmation else None,
+            "app": iss.api_app.name if iss.api_app else None,
+        },
         "allow_reset_confirm": iss.allow_reset_confirm(request.user),
         "research": {
             "title": research.title,

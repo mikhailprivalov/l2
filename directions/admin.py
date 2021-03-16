@@ -39,6 +39,8 @@ class IssAdmin(admin.ModelAdmin):
     raw_id_fields = (
         'napravleniye',
         'research',
+        'parent',
+        'tubes',
     )
     search_fields = ('napravleniye__pk',)
 

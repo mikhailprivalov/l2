@@ -115,6 +115,18 @@
         </template>
         </tbody>
       </table>
+      <table class="table table-bordered table-condensed" v-if="execParams.length > 0">
+        <colgroup>
+          <col width="208"/>
+          <col />
+        </colgroup>
+        <tbody>
+          <tr v-for="r in execParams">
+            <th>{{r[0]}}</th>
+            <td>{{r[1]}}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <div class="bottom-buttons" :class="!confirmed && 'bottom-buttons-full'">
       <template v-if="loaded">
@@ -173,6 +185,7 @@ export default {
       showRefSettings: false,
       pk: null,
       research: {},
+      execData: {},
       comment: '',
       result: [],
       allDirPks: [],
@@ -186,6 +199,25 @@ export default {
     noRefs() {
       return this.research.no_units_and_ref || this.research.template === 2;
     },
+    execParams() {
+      const r = [];
+      if (this.execData.timeSave) {
+        r.push(['Время сохранения', this.execData.timeSave]);
+      }
+      if (this.execData.docSave) {
+        r.push(['Сохранил', this.execData.docSave]);
+      }
+      if (this.execData.timeConfirm) {
+        r.push(['Время подтверждения', this.execData.timeConfirm]);
+      }
+      if (this.execData.docConfirmation) {
+        r.push(['Подтвердил', this.execData.docConfirmation]);
+      }
+      if (this.execData.app) {
+        r.push(['Анализатор', this.execData.app]);
+      }
+      return r;
+    },
   },
   methods: {
     async loadForm(pk) {
@@ -193,6 +225,7 @@ export default {
       if (pk === -1) {
         this.pk = null;
         this.research = {};
+        this.execData = {};
         this.comment = '';
         this.result = [];
         this.confirmed = false;
@@ -204,6 +237,7 @@ export default {
       const {data} = await api('laboratory/form', {pk});
       this.pk = data.pk;
       this.research = data.research;
+      this.execData = data.execData;
       this.comment = data.comment;
       this.result = data.result;
       this.confirmed = data.confirmed;
