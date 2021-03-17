@@ -56,9 +56,6 @@
                 <i class="glyphicon glyphicon-arrow-right nbr" style="padding-bottom: 5px"></i>
               </button>
             </td>
-            <td></td>
-            <td></td>
-            <td></td>
           </tr>
           <tr v-for="row in data">
             <td>
@@ -71,7 +68,7 @@
             <td>
               {{ row.researches.join('; ') }}
             </td>
-            <td>
+            <td class="right-buttons">
               <a href="#" @click.prevent="print_result(row.dir)" v-tippy="{ placement: 'bottom'}"
                  title="Печать результата"><i class="fa fa-print"></i></a>
               <a href="#" @click.prevent="sendToProtocol(row.dir)" v-tippy="{ placement: 'bottom'}"
@@ -202,5 +199,9 @@ i {
   i {
     padding-left: 1px;
   }
+}
+
+.right-buttons {
+  text-align: right;
 }
 </style>
