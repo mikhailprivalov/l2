@@ -24,9 +24,9 @@
                 },
              }">
 
-      <i v-if="isDocReferral" class="fa fa-user-md" style="color: #046f8f"></i>
-      <i v-if="isParaclinic" class="fa fa-file-medical-alt" style="color: #6d0493"></i>
-      <i v-if="isLab" class="fa fa-vials" style="color: #a5005a"></i>
+      <i v-if="isDocReferral" class="fa fa-user-md" style="color: #6f6f72"></i>
+      <i v-if="isParaclinic" class="fa fa-file-medical-alt" style="color: #6f6f72"></i>
+      <i v-if="isLab" class="fa fa-vials" style="color: #6f6f72"></i>
     </a>
 
     <div :id="tippyId" class="tp">
@@ -40,15 +40,23 @@
           </colgroup>
           <tbody>
           <tr>
-            <td>
-              <a href="#" @click.prevent="set_current_year" style="padding-left: 5px" v-tippy="{ placement: 'bottom'}"
-                 title="Текущий год"><i class="fa fa-circle"></i></a>
+            <td colspan="4">
+              <button class="btn btn-blue-nb add-row btn-xs nbr" @click="set_current_year">
+                Текущий год
+              </button>
+              <button class="btn btn-blue-nb btn-xs nbr" @click="minus_year"
+                  v-tippy="{ placement : 'bottom'}"
+                  title="Год назад">
+                <i class="glyphicon glyphicon-arrow-left" style="padding-bottom: 5px"></i>
+              </button>
+              {{ current_year }}
+              <button class="btn btn-blue-nb btn-xs nbr" @click="plus_year"
+                  v-tippy="{ placement : 'bottom'}"
+                  title="Год вперед">
+                <i class="glyphicon glyphicon-arrow-right nbr" style="padding-bottom: 5px"></i>
+              </button>
             </td>
-            <td>
-              <a href="#" @click.prevent="minus_year"><i class="fa fa-angle-double-left"></i></a>
-              <a href="#">{{ current_year }}</a>
-              <a href="#" @click.prevent="plus_year"><i class="fa fa-angle-double-right"></i></a>
-            </td>
+            <td></td>
             <td></td>
             <td></td>
           </tr>
@@ -64,7 +72,8 @@
               {{ row.researches.join('; ') }}
             </td>
             <td>
-              <a href="#" @click.prevent="plus_year"><i class="fa fa-print"></i></a>
+              <a href="#" @click.prevent="print_result(row.dir)" v-tippy="{ placement: 'bottom'}"
+                 title="Печать результата"><i class="fa fa-print"></i></a>
               <a href="#" @click.prevent="sendToProtocol(row.dir)" v-tippy="{ placement: 'bottom'}"
                  title="Перенести в протокол"><i class="fa fa-file-import"></i>
               </a>
@@ -148,7 +157,10 @@ export default {
     },
     sendToProtocol(direction){
       this.$root.$emit('protocol:laboratoryResult', direction)
-    }
+    },
+    print_result(pk) {
+      this.$root.$emit('print:results', [pk])
+    },
   },
   watch: {
     current_year() {
@@ -165,7 +177,6 @@ i {
   display: inline-block;
   margin-right: 3px;
 }
-
 
 .tp {
   min-height: 300px;
