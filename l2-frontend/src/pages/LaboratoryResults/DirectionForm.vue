@@ -101,6 +101,9 @@
               {{ i.title }}
               <br/>
               <small v-if="i.tubes.length > 0">Ёмкость: {{ i.tubes.map(t => t.pk).join(', ') }}</small>
+              <div class="fastlinks hiddenlinks" v-if="i.confirmed && i.allow_reset_confirm">
+                <a href="#" @click.prevent.stop="resetConfirmation(i)">сброс подтверждения</a>
+              </div>
             </li>
           </ul>
           <div class="other-issledovaniya" v-if="otherLabs.length > 0 && showOtherLabs">
@@ -243,6 +246,22 @@ export default {
         this.reload();
       });
     },
+    async resetConfirmation(iss) {
+      try {
+        await this.$dialog.confirm(`Подтвердите сброс: ${iss.title}`)
+      } catch (_) {
+        return
+      }
+      await this.$store.dispatch(action_types.INC_LOADING);
+      const {ok, message} = await api('laboratory/reset-confirm', iss, 'pk');
+      if (!ok) {
+        errmessage(message);
+      } else {
+        okmessage('Подтверждение сброшено');
+      }
+      this.$root.$emit('laboratory:reload-form');
+      await this.$store.dispatch(action_types.DEC_LOADING);
+    },
   },
 }
 </script>
@@ -299,6 +318,17 @@ table {
     .hiddenlinks {
       opacity: 0;
       transition: .1s linear;
+    }
+
+    .fastlinks {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      margin: 0;
+
+      a {
+        font-size: 12px;
+      }
     }
 
     &:hover {

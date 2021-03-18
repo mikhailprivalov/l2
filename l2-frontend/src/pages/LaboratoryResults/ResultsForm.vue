@@ -27,18 +27,21 @@
       <table class="table table-bordered table-sm-pd">
         <thead>
         <tr>
-          <td colspan="4" class="cl-td">
-            <button class="btn btn-blue-nb header-button" @click="clearAll" :disabled="confirmed">
-              Очистить всё
-            </button>
-            <div style="padding: 5px;font-weight: bold;">
+          <td colspan="4">
+            <strong>
               {{ research.title }}
-            </div>
+            </strong>
           </td>
         </tr>
         <tr class="table-header">
           <th style="width: 29%">Фракция</th>
-          <th :colspan="noRefs ? 3 : 1">Значение</th>
+          <td :colspan="noRefs ? 3 : 1" class="cl-td">
+            <button class="btn btn-blue-nb btn-sm"
+                    @click.prevent="clearAll" v-if="!confirmed" title="Очистить все значения" v-tippy>
+              <i class="fa fa-times"></i>
+            </button>
+            <strong>Значение</strong>
+          </td>
           <th style="width: 23%" v-if="!noRefs">Нормы М</th>
           <th style="width: 23%" v-if="!noRefs">Нормы Ж</th>
         </tr>
@@ -118,13 +121,13 @@
       <table class="table table-bordered table-condensed" v-if="execParams.length > 0">
         <colgroup>
           <col width="208"/>
-          <col />
+          <col/>
         </colgroup>
         <tbody>
-          <tr v-for="r in execParams">
-            <th>{{r[0]}}</th>
-            <td>{{r[1]}}</td>
-          </tr>
+        <tr v-for="r in execParams">
+          <th>{{ r[0] }}</th>
+          <td>{{ r[1] }}</td>
+        </tr>
         </tbody>
       </table>
     </div>
@@ -151,7 +154,7 @@
         </template>
       </template>
     </div>
-    <RefSettings v-if="showRefSettings" :close="hideRefSettings" :result="result" />
+    <RefSettings v-if="showRefSettings" :close="hideRefSettings" :result="result"/>
   </fragment>
 </template>
 <script>
@@ -175,6 +178,7 @@ export default {
       this.allDirPks = allDirPks;
       this.dirData = dirData;
     });
+    this.$root.$on('laboratory:reload-form', () => this.reloadForm());
   },
   data() {
     return {
@@ -322,8 +326,11 @@ export default {
       } else {
         okmessage('Подтверждение сброшено');
       }
-      this.$root.$emit('laboratory:reload-direction:with-open-pk', this.pk);
+      this.reloadForm();
       await this.$store.dispatch(action_types.DEC_LOADING);
+    },
+    reloadForm() {
+      this.$root.$emit('laboratory:reload-direction:with-open-pk', this.pk);
     },
     moveFocusNext(e) {
       const $rf = $('.result-field:not([readonly]):not([disabled])');
@@ -371,12 +378,30 @@ export default {
   float: right;
 }
 
-.table-header th {
-  padding: 2px 2px 2px 8px;
-  position: sticky;
-  top: -1px;
-  background-color: white;
-  z-index: 3;
-  box-shadow: 2px 0 2px rgba(0, 0, 0, .1);
+
+.table-header {
+  th, td {
+    position: sticky;
+    top: -1px;
+    background-color: white;
+    z-index: 101;
+    box-shadow: 2px 0 2px rgba(0, 0, 0, .1);
+  }
+
+  th {
+    padding: 2px 2px 2px 8px;
+  }
+
+  td {
+    strong {
+      padding: 2px 2px 2px 8px;
+    }
+
+    .btn {
+      float: right;
+      height: 24px;
+      line-height: 1;
+    }
+  }
 }
 </style>
