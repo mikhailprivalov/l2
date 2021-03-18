@@ -574,6 +574,8 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                     fwb.append(Spacer(1, 2 * mm))
                     fwb.append(Paragraph(r.field.get_title(), styleBold))
                     previous_laboratory = previous_laboratory_result(v)
+                    if not previous_laboratory:
+                        continue
                     fwb.extend(previous_laboratory)
                     continue
                 v = text_to_bold(v)
@@ -714,6 +716,10 @@ def procedural_text_for_result(direction, fwb, napr_child):
 
 
 def previous_laboratory_result(value):
+    value = json.loads(value)
+    if len(value) == 0:
+        return None
+
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "FreeSans"
@@ -725,13 +731,12 @@ def previous_laboratory_result(value):
          Paragraph('Дата', style), Paragraph('Исполнитель', style)]
     ]
 
-    value = json.loads(value)
     temp_data = [[Paragraph(f"{data.get('researchTitle', '')}", style),
                   Paragraph(f"{data.get('fractionTitle', '')}", style),
                   Paragraph(f"{data.get('value', '')}", style),
                   Paragraph(f"{data.get('units', '')}", style),
                   Paragraph(f"{data.get('date', '')}", style),
-                  Paragraph(f"{short_fio_dots(data.get('docConfirm', ''))}", style)
+                  Paragraph(f"{data.get('docConfirm', '')}", style)
                   ] for data in value]
     opinion.extend(temp_data)
 
