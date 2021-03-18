@@ -75,7 +75,7 @@ export default {
   },
   data() {
     return {
-      tb_data: JSON.parse(this.value) || [makeDefaultRow()],
+      tb_data: ((this.value && this.value !== 'undefined') ? JSON.parse(this.value) : null) || [],
       result: [],
     }
   },
