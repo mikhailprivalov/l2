@@ -281,7 +281,6 @@ export default {
 }
 
 table {
-  flex: 1 1 auto;
   margin-bottom: 0;
   min-height: 145px;
 
@@ -298,7 +297,7 @@ table {
   &-scroll-wrapper {
     overflow-x: visible;
     overflow-y: auto;
-    flex: 1 1 100%;
+    flex: 1 1;
   }
 
   li {
