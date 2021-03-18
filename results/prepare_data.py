@@ -717,7 +717,7 @@ def procedural_text_for_result(direction, fwb, napr_child):
 
 def previous_laboratory_result(value):
     value = json.loads(value)
-    if len(value) == 0:
+    if not value:
         return None
 
     styleSheet = getSampleStyleSheet()
