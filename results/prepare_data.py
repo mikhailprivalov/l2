@@ -716,7 +716,11 @@ def procedural_text_for_result(direction, fwb, napr_child):
 
 
 def previous_laboratory_result(value):
-    value = json.loads(value)
+    try:
+        value = json.loads(value)
+    except:
+        return None
+
     if not value:
         return None
 
