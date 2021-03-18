@@ -80,7 +80,6 @@ export default {
     }
   },
   mounted() {
-    console.log(typeof this.value)
     this.$root.$on('protocol:laboratoryResult', (direction) => {
       this.insertLaboratoryResult(direction)
     })
