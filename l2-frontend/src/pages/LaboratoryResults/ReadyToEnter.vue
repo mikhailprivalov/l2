@@ -187,6 +187,10 @@ export default {
     bottom: 0;
     overflow: auto;
 
+    .table {
+      margin-bottom: 40px;
+    }
+
     th {
       text-align: center;
       white-space: nowrap;

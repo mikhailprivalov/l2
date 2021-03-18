@@ -273,9 +273,18 @@ export default {
   right: 0;
   left: 0;
   bottom: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  align-items: stretch;
 }
 
 table {
+  flex: 1 1 auto;
+  margin-bottom: 0;
+  min-height: 145px;
+
   td, th {
     padding: 3px !important;
     font-size: 12px;
@@ -289,11 +298,7 @@ table {
   &-scroll-wrapper {
     overflow-x: visible;
     overflow-y: auto;
-    position: absolute;
-    top: 155px;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    flex: 1 1 100%;
   }
 
   li {
