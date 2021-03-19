@@ -4,11 +4,14 @@
          :id="id"
          :value="value"
          @input="updateValue($event.target.value)"
+         @change="updateValue($event.target.value)"
+         @focus="updateValue($event.target.value)"
          @blur="formatValue"
          @keyup.enter="keyupEnter"
          :placeholder="placeholder"
   >
 </template>
+
 <script>
 import Bloodhound from 'typeahead.js';
 

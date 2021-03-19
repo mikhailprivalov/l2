@@ -486,7 +486,7 @@
                             if (r !== '') {
                                 r = ' ' + r
                             }
-                            val = `${invokedOn.val()} (пересчитано${r})`
+                            val = `${invokedOn.val()} (пересчитано${r})`.trim();
                             $(invokedOn).val(val)
                             $(invokedOn).typeahead('val', val)
                             $recalcValue.val('')

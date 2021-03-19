@@ -1,7 +1,18 @@
 <template>
   <div>
     <div class="filters">
-      <div class="filters-header">Дата приёма материала:</div>
+      <div class="filters-header">
+        <a
+          href="#"
+          class="a-under-reversed"
+          @click.prevent="load"
+          title="Перезагрузить направления и ёмкости"
+          v-tippy
+        >
+          <i class="fa fa-refresh"></i> обновить
+        </a>
+        Дата приёма материала:
+      </div>
       <date-range v-model="date_range"/>
     </div>
     <div class="work-list">
@@ -156,6 +167,15 @@ export default {
 
   &-header {
     margin: 5px 5px 0 5px;
+
+    a {
+      float: right;
+      font-size: 90%;
+
+      .fa {
+        font-size: 90%;
+      }
+    }
   }
 
   ::v-deep .form-control {
