@@ -54,10 +54,12 @@ class SettingManager:
                     "load_file",
                     "send_doc_calls",
                     "only_doc_call",
+                    "eds",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
             "morfology": SettingManager.is_morfology_enabled(SettingManager.en()),
+            "eds_base_url": SettingManager.get("eds_base_url", default='http://empty', default_type='s'),
         }
 
     @staticmethod

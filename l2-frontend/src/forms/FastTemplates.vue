@@ -22,7 +22,6 @@ export default {
       required: true,
     },
     value: {
-      type: String,
       required: true,
     },
     values: {
@@ -43,8 +42,12 @@ export default {
       default: '',
     }
   },
+  mounted() {
+    this.value = String(this.value);
+  },
   methods: {
     append_value(value) {
+      this.value = String(this.value);
       let add_val = value;
       if (add_val !== ',' && add_val !== '.') {
         if (this.value.length > 0 && this.value[this.value.length - 1] !== ' ' && this.value[this.value.length - 1] !== '\n') {
