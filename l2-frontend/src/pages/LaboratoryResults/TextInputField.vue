@@ -191,7 +191,9 @@ export default {
         );
         if (r !== null) {
           this.r.value = String(r);
-          $(`#fraction-${this.r.fraction.pk}`).focus();
+          setTimeout(() => {
+            $(`#fraction-${this.r.fraction.pk}`).focus();
+          }, 50);
         }
       } catch (e) {
         console.error(e);
