@@ -1612,7 +1612,6 @@ def form_10(request_data):
     styleT = deepcopy(style)
     styleT.firstLineIndent = 0
 
-
     styleSingBold = deepcopy(styleSign)
     styleSingBold.fontName = "PTAstraSerifBold"
 
