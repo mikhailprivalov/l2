@@ -1785,15 +1785,21 @@ def form_10(request_data):
 
 
 
-    objs.append(Paragraph('12. Сведения о проведенных приёмах (осмотрах, консультациях), исследованиях и иных медицинских'
-    ' вмешательствах при профилактическом медицинском осмотре (на первом этапе диспансеризации)', style))
+    objs.append(Paragraph(
+        '12. Сведения о проведенных приёмах (осмотрах, консультациях), исследованиях и иных медицинских'
+        ' вмешательствах при профилактическом медицинском осмотре (на первом этапе диспансеризации)', 
+        style
+    ))
     objs.append(Spacer(1, 2 * mm))
 
 
     opinion = [
         [
-            Paragraph('<font size=9 >Приём (осмотр, консультация), исследование и иное медицинское вмешательство, входящее'
-            ' в объем профилактического медицинского осмотра / первого этапа диспансеризации</font>', styleTCenter),
+            Paragraph(
+                '<font size=9 >Приём (осмотр, консультация), исследование и иное медицинское вмешательство, входящее'
+                ' в объем профилактического медицинского осмотра / первого этапа диспансеризации</font>', 
+                styleTCenter
+            ),
             Paragraph('<font size=9 ></font>', styleTCenter),
             Paragraph('<font size=9 >N строки</font>', styleTCenter),
             Paragraph('<font size=9 >Отметка о проведении (дата/(-)</font>', styleTCenter),
@@ -1962,11 +1968,13 @@ def form_10(request_data):
                 ('SPAN', (0, 16), (0, 17)),
                 ('SPAN', (0, 23), (0, 24)),
                 ('SPAN', (0, 25), (1, 25)),
-            ] + [
-            ('SPAN', (0, i+1), (1, i+1)) for i in range(15)
-                ] + [
-            ('SPAN', (0, i+18), (1, i+18)) for i in range(5)
-                    ]
+            ] + \
+            [
+                ('SPAN', (0, i + 1), (1, i + 1)) for i in range(15)
+            ] + \
+            [
+                ('SPAN', (0, i + 18), (1, i + 18)) for i in range(5)
+            ]
         )
     )
 
@@ -2134,7 +2142,6 @@ def form_10(request_data):
         )
     )
 
-
     opinion = [
         [
             Paragraph('<font size=9 >Наименование фактора риска, другого патологического состояния и заболевания</font>', styleTCenter),
@@ -2273,11 +2280,13 @@ def form_10(request_data):
                 ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
                 ('SPAN', (0, 11), (0, 12)),
                 ('SPAN', (0, 13), (0, 14)),
-            ] + [
-            ('SPAN', (0, i), (1, i)) for i in range(11)
-           ] + [
-            ('SPAN', (0, i+15), (1, i+15)) for i in range(5)
-           ]
+            ] + \
+            [
+                ('SPAN', (0, i), (1, i)) for i in range(11)
+            ] + \
+            [
+                ('SPAN', (0, i + 15), (1, i + 15)) for i in range(5)
+            ]
         )
     )
 
@@ -2294,7 +2303,6 @@ def form_10(request_data):
             '18. Заболевания, выявленные при проведении профилактического медицинского осмотра (диспансеризации),установление диспансерного наблюдения', style,
         )
     )
-
 
     opinion = [
         [
@@ -2511,7 +2519,11 @@ def form_10(request_data):
             Paragraph('<font size=9 >J00-J99</font>', styleTCenter),
         ],        
         [
-            Paragraph('<font size=9 >Бронхит, не уточненный как острый и хронический, простой и слизисто-гнойный хронический бронхит, хронический бронхит неуточненный, эмфизема</font>', styleSign),
+            Paragraph(
+                '<font size=9 >Бронхит, не уточненный как острый и хронический, '
+                'простой и слизисто-гнойный хронический бронхит, хронический бронхит неуточненный, эмфизема</font>', 
+                styleSign
+            ),
             Paragraph('<font size=9 >10.1</font>', styleTCenter),
             Paragraph('<font size=9 >J40-J43</font>', styleTCenter),
         ],        
@@ -2534,7 +2546,7 @@ def form_10(request_data):
             Paragraph('<font size=9 >гастрит и дуоденит</font>', styleSign),
             Paragraph('<font size=9 >12</font>', styleTCenter),
             Paragraph('<font size=9 >К29</font>', styleTCenter),
-        ],        
+        ],
         [
             Paragraph('<font size=9 >Прочие</font>', styleSign),
             Paragraph('<font size=9 >13</font>', styleTCenter),
@@ -2554,10 +2566,11 @@ def form_10(request_data):
                 ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
                 ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
                 ('SPAN',  (2, 20), (2, 22)),
-                ('SPAN',  (2, 23), (2, 25))
-            ] + [
-                ('SPAN', (2, 4+(i*2)), (2, 4+(i*2)+1)) for i in range(8)
-           ]
+                ('SPAN',  (2, 23), (2, 25)),
+            ] + \
+            [
+                ('SPAN', (2, 4 + (i * 2)), (2, 4 + (i * 2) + 1)) for i in range(8)
+            ]
         )
     )
     objs.append(tbl)
