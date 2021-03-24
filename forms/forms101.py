@@ -1555,7 +1555,14 @@ def form_10(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
-        buffer, pagesize=A4, leftMargin=13 * mm, rightMargin=4 * mm, topMargin=4 * mm, bottomMargin=4 * mm, allowSplitting=1, title="Форма {}".format("Карта учета профилактического медицинского осмотра (диспансеризации)")
+        buffer,
+        pagesize=A4,
+        leftMargin=13 * mm,
+        rightMargin=4 * mm,
+        topMargin=4 * mm,
+        bottomMargin=4 * mm,
+        allowSplitting=1,
+        title="Форма {}".format("Карта учета профилактического медицинского осмотра (диспансеризации)")
     )
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
@@ -1612,7 +1619,6 @@ def form_10(request_data):
         [
             Paragraph('', style),
             Paragraph('<b>Приложение №1<br/> к приказу Министерства здравоохранения<br/>Российской Федерации<br/>от 10 ноября 2020 г. N 1207н</b>', styleSingBold),
-	    
         ],
     ]
     tbl = Table(opinion, 2 * [90 * mm])
@@ -1657,8 +1663,8 @@ def form_10(request_data):
 
     objs.append(
         Paragraph(
-         	'Карта учета <br/> профилактического медицинского осмотра (диспансеризации)', styleCenterBold
-        ),
+            'Карта учета <br/> профилактического медицинского осмотра (диспансеризации)', styleCenterBold,
+        )
     )
     objs.append(
         Paragraph(
@@ -1746,7 +1752,11 @@ def form_10(request_data):
         ],
         [
             Paragraph('<font size=9 >прием гиполипидемических лекарственных препаратов: да      нет</font>', styleSign),
-            Paragraph('<font size=9 >относительный сердечно-сосудистый риск (от 18 лет до 39 лет) _____ %<br/>абсолютный сердечно-сосудистый риск (от 40 лет до 64 лет включительно) _____ %</font>', styleSign),
+            Paragraph(
+                '<font size=9 >относительный сердечно-сосудистый риск (от 18 лет до 39 лет) _____ %<br/>'
+                'абсолютный сердечно-сосудистый риск (от 40 лет до 64 лет включительно) _____ %</font>', 
+                styleSign
+            ),
         ],
     ]
 
@@ -1943,29 +1953,33 @@ def form_10(request_data):
 
     tbl = Table(opinion, colWidths=(45 * mm, 45 * mm, 15 * mm, 20 * mm, 20 * mm, 20 * mm, 25 * mm), rowHeights=row_height)
 
-    tbl.setStyle(
-        TableStyle(
-            [
-                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-                ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
-                ('SPAN', (4, 0), (5, 0)),
-                ('SPAN', (0, 0), (0, 1)),
-                ('SPAN', (1, 0), (1, 1)),
-                ('SPAN', (2, 0), (2, 1)),
-                ('SPAN', (3, 0), (3, 1)),
-                ('SPAN', (0, 0), (1, 1)),
-                ('SPAN', (0, 16), (0, 17)),
-                ('SPAN', (0, 23), (0, 24)),
-                ('SPAN', (0, 25), (1, 25)),
-            ] + \
-            [
-                ('SPAN', (0, i + 1), (1, i + 1)) for i in range(15)
-            ] + \
-            [
-                ('SPAN', (0, i + 18), (1, i + 18)) for i in range(5)
-            ]
-        )
+    table_style = [
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+        ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+        ('SPAN', (4, 0), (5, 0)),
+        ('SPAN', (0, 0), (0, 1)),
+        ('SPAN', (1, 0), (1, 1)),
+        ('SPAN', (2, 0), (2, 1)),
+        ('SPAN', (3, 0), (3, 1)),
+        ('SPAN', (0, 0), (1, 1)),
+        ('SPAN', (0, 16), (0, 17)),
+        ('SPAN', (0, 23), (0, 24)),
+        ('SPAN', (0, 25), (1, 25)),
+    ]
+                          
+    table_style.append(
+        [
+            ('SPAN', (0, i + 1), (1, i + 1)) for i in range(15)
+        ]
     )
+                          
+    table_style.append(
+        [
+            ('SPAN', (0, i + 18), (1, i + 18)) for i in range(5)
+        ]
+    )
+                          
+    tbl.setStyle(TableStyle(table_style))
 
     objs.append(tbl)
     objs.append(
