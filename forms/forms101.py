@@ -2562,19 +2562,18 @@ def form_10(request_data):
 
     tbl = Table(opinion, colWidths=(60 * mm, 10 * mm, 20 * mm, 20 * mm, 25 * mm, 30 * mm, 30 * mm,), rowHeights=row_height)
 
-    tbl.setStyle(
-        TableStyle(
-            [
-                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-                ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
-                ('SPAN', (2, 20), (2, 22)),
-                ('SPAN', (2, 23), (2, 25)),
-            ] + \
-            [
-                ('SPAN', (2, 4 + (i * 2)), (2, 4 + (i * 2) + 1)) for i in range(8)
-            ]
-        )
+    table_style = [
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+        ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+        ('SPAN', (2, 20), (2, 22)),
+        ('SPAN', (2, 23), (2, 25)),
+    ] 
+    table_style.append(
+        [
+            ('SPAN', (2, 4 + (i * 2)), (2, 4 + (i * 2) + 1)) for i in range(8)
+        ]
     )
+    tbl.setStyle(TableStyle(table_style))
     objs.append(tbl)
 
     objs.append(
