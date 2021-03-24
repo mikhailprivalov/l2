@@ -2678,7 +2678,8 @@ def form_10(request_data):
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
-                          
+
+
 def form_11(request_data):
     """
     Отказ от видов медицинских вмешательств, включенных
