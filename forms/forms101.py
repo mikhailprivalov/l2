@@ -1526,20 +1526,16 @@ def form_09(request_data):
 
 
 def form_10(request_data):
-                          
     """
 	Карта учета профилактического медицинского осмотра (диспансеризации)
-    """
-                          
+    """                      
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
 
     hospital: Hospitals = request_data["hospital"]
-
     hospital_name = hospital.safe_short_title
     hospital_address = hospital.safe_address
     hospital_kod_ogrn = hospital.safe_ogrn
-
     agent_status = False
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
