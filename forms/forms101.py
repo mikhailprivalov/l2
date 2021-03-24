@@ -1525,9 +1525,11 @@ def form_09(request_data):
     return pdf
 
 def form_10(request_data):
+                          
     """
 	Карта учета профилактического медицинского осмотра (диспансеризации)
     """
+                          
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
 
@@ -2677,7 +2679,7 @@ def form_10(request_data):
     buffer.close()
     return pdf
                           
-    def form_11(request_data):
+def form_11(request_data):
     """
     Отказ от видов медицинских вмешательств, включенных
     в Перечень определенных видов медицинских вмешательств,
