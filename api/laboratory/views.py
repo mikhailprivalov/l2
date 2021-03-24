@@ -339,7 +339,7 @@ def form(request):
     research: Researches = Researches.objects.prefetch_related(
         Prefetch(
             'fractions_set',
-            queryset=Fractions.objects.all().order_by("pk", "sort_weight").prefetch_related('references_set')
+            queryset=Fractions.objects.all().order_by("sort_weight", "pk").prefetch_related('references_set')
         )
     ).get(pk=iss.research_id)
     data = {
