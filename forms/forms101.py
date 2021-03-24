@@ -1964,9 +1964,9 @@ def form_10(request_data):
                 ('SPAN', (0, 25), (1, 25)),
             ] + [
             ('SPAN', (0, i+1), (1, i+1)) for i in range(15)
-           ] + [
+                ] + [
             ('SPAN', (0, i+18), (1, i+18)) for i in range(5)
-           ]
+                    ]
         )
     )
 
