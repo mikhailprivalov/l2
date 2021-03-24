@@ -1527,7 +1527,7 @@ def form_09(request_data):
 
 def form_10(request_data):
     """
-	Карта учета профилактического медицинского осмотра (диспансеризации)
+    Карта учета профилактического медицинского осмотра (диспансеризации)
     """                      
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
@@ -1535,18 +1535,10 @@ def form_10(request_data):
     hospital: Hospitals = request_data["hospital"]
     hospital_name = hospital.safe_short_title
     hospital_address = hospital.safe_address
-    hospital_kod_ogrn = hospital.safe_ogrn
     agent_status = False
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
         agent_status = True
-
-    # Если владельцу карты меньше 18 лет и не передан представитель, то вернуть ошибку
-    who_patient = 'пациента'
-    if patient_data['age'] < SettingManager.get("child_age_before", default='18', default_type='i') and not agent_status:
-        return False
-    elif patient_data['age'] < SettingManager.get("child_age_before", default='18', default_type='i') and agent_status:
-        who_patient = 'ребёнка'
 
     if agent_status:
         person_data = p_agent.get_data_individual()
@@ -1783,15 +1775,12 @@ def form_10(request_data):
     styleLeft = deepcopy(style)
     styleLeft.alignment = TA_LEFT
 
-
-
     objs.append(Paragraph(
         '12. Сведения о проведенных приёмах (осмотрах, консультациях), исследованиях и иных медицинских'
         ' вмешательствах при профилактическом медицинском осмотре (на первом этапе диспансеризации)', 
         style
     ))
     objs.append(Spacer(1, 2 * mm))
-
 
     opinion = [
         [
@@ -2272,23 +2261,22 @@ def form_10(request_data):
         row_height.append(None)
 
     tbl = Table(opinion, colWidths=(70 * mm, 50 * mm, 20 * mm, 20 * mm, 30 * mm), rowHeights=row_height)
-
-    tbl.setStyle(
-        TableStyle(
-            [
-                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-                ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
-                ('SPAN', (0, 11), (0, 12)),
-                ('SPAN', (0, 13), (0, 14)),
-            ] + \
-            [
-                ('SPAN', (0, i), (1, i)) for i in range(11)
-            ] + \
-            [
-                ('SPAN', (0, i + 15), (1, i + 15)) for i in range(5)
-            ]
-        )
-    )
+    table_style = [
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+        ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+        ('SPAN', (0, 11), (0, 12)),
+        ('SPAN', (0, 13), (0, 14)),
+    ]
+        
+    table_style.append([
+        ('SPAN', (0, i), (1, i)) for i in range(11)
+    ])
+                          
+    table_style.append([
+        ('SPAN', (0, i + 15), (1, i + 15)) for i in range(5)
+    ])
+                          
+    tbl.setStyle(TableStyle(table_style))
 
     objs.append(tbl)
 
@@ -2565,8 +2553,8 @@ def form_10(request_data):
             [
                 ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
                 ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
-                ('SPAN',  (2, 20), (2, 22)),
-                ('SPAN',  (2, 23), (2, 25)),
+                ('SPAN', (2, 20), (2, 22)),
+                ('SPAN', (2, 23), (2, 25)),
             ] + \
             [
                 ('SPAN', (2, 4 + (i * 2)), (2, 4 + (i * 2) + 1)) for i in range(8)
