@@ -49,7 +49,6 @@ urlpatterns = [
     path('statistic', statistic.views.statistic_page),
     path('statistic/xls', statistic.views.statistic_xls),
     path('ajax_select/', include(ajax_select_urls)),
-    path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
     path('construct/', include('construct.urls')),
     path('api/', include('api.urls')),

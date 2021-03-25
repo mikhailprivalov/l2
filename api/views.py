@@ -521,6 +521,7 @@ def current_user_info(request):
         "fio": "",
         "department": {"pk": -1, "title": ""},
         "groups": [],
+        "eds_token": None,
         "modules": SettingManager.l2_modules(),
         "user_services": [],
         "rmis_enabled": SettingManager.get("rmis_enabled", default='false', default_type='b'),
@@ -542,6 +543,7 @@ def current_user_info(request):
         ret["su"] = user.is_superuser
         ret["hospital"] = doctorprofile.get_hospital_id()
         ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
+        ret["eds_token"] = doctorprofile.get_eds_token()
 
         en = SettingManager.en()
         ret["extended_departments"] = {}

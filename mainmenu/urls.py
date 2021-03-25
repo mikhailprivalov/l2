@@ -1,6 +1,6 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.urls import path
+from django.urls import path, re_path
 from django.views.generic import TemplateView
 
 import receivematerial.views
@@ -52,6 +52,7 @@ urlpatterns = [
     path('rmq/messages', views.rmq_messages),
     path('rmq/count', views.rmq_count),
     path('rmq/send', views.rmq_send),
+    re_path('^eds/(?P<path>.*)', views.eds),
     path('employee-job', login_required(TemplateView.as_view(template_name="dashboard/employee-jobs.html"))),
     path('stationar', login_required(TemplateView.as_view(template_name="dashboard/stationar.html"))),
     path('list_wait', TemplateView.as_view(template_name="dashboard/list_wait.html")),
