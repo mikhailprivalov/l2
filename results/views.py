@@ -371,6 +371,7 @@ def result_print(request):
         allowSplitting=1,
         _pageBreakQuick=1,
         title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])),
+        invariant=1
     )
     p_frame = Frame(
         0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=16 * mm, id='portrait_frame', showBoundary=0
