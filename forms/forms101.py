@@ -332,7 +332,6 @@ def form_03(request_data):
      отказа от медицинского вмешательства в отношении определенных видов медицинских вмешательств,
      форм информированного добровольного согласия на медицинское вмешательство и форм отказа
      от медицинского вмешательства" (с изменениями и дополнениями).
-
      Приказ Министерства здравоохранения и социального развития РФ от 23 апреля 2012 г. N 390н
     "Об утверждении Перечня определенных видов медицинских вмешательств, на которые граждане дают информированное добровольное
      согласие при выборе врача и медицинской организации для получения первичной медико-санитарной помощи
@@ -1967,18 +1966,14 @@ def form_10(request_data):
         ('SPAN', (0, 25), (1, 25)),
     ]
                           
-    table_style.append(
-        [
-            ('SPAN', (0, i + 1), (1, i + 1)) for i in range(15)
-        ]
-    )
+    table_style += [
+        ('SPAN', (0, i + 1), (1, i + 1)) for i in range(15)
+    ]
                           
-    table_style.append(
-        [
-            ('SPAN', (0, i + 18), (1, i + 18)) for i in range(5)
-        ]
-    )
-                          
+    table_style += [
+      ('SPAN', (0, i + 18), (1, i + 18)) for i in range(5)
+    ]
+
     tbl.setStyle(TableStyle(table_style))
 
     objs.append(tbl)
@@ -2282,13 +2277,13 @@ def form_10(request_data):
         ('SPAN', (0, 13), (0, 14)),
     ]
         
-    table_style.append([
+    table_style += [
         ('SPAN', (0, i), (1, i)) for i in range(11)
-    ])
+    ]
                           
-    table_style.append([
+    table_style += [
         ('SPAN', (0, i + 15), (1, i + 15)) for i in range(5)
-    ])
+    ]
                           
     tbl.setStyle(TableStyle(table_style))
 
@@ -2568,11 +2563,10 @@ def form_10(request_data):
         ('SPAN', (2, 20), (2, 22)),
         ('SPAN', (2, 23), (2, 25)),
     ] 
-    table_style.append(
-        [
-            ('SPAN', (2, 4 + (i * 2)), (2, 4 + (i * 2) + 1)) for i in range(8)
-        ]
-    )
+    table_style += [
+        ('SPAN', (2, 4 + (i * 2)), (2, 4 + (i * 2) + 1)) for i in range(8)
+    ]
+    
     tbl.setStyle(TableStyle(table_style))
     objs.append(tbl)
 
