@@ -1971,7 +1971,7 @@ def form_10(request_data):
     ]
                           
     table_style += [
-      ('SPAN', (0, i + 18), (1, i + 18)) for i in range(5)
+        ('SPAN', (0, i + 18), (1, i + 18)) for i in range(5)
     ]
 
     tbl.setStyle(TableStyle(table_style))
