@@ -97,7 +97,7 @@ export default {
     changeValue(newVal) {
       this.$emit('modified', newVal)
     },
-    async insertLaboratoryResult(direction) {
+    async insertLaboratoryResult(direction, ) {
       const result_data = await api('directions/result-patient-by-direction',
         {'isLab': true, 'isDocReferral': false, 'isParaclinic': false, 'dir': direction});
       this.result = result_data.results[0] || {};

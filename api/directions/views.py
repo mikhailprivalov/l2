@@ -43,7 +43,7 @@ from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE
 from laboratory.utils import strdatetime, strdate, tsdatetime, start_end_year, strfdatetime, current_time
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
-from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
+from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions, get_paraclinic_results_by_directions
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
@@ -2204,7 +2204,7 @@ def directions_result_year(request):
 def results_by_direction(request):
     request_data = json.loads(request.body)
     is_lab = request_data.get('isLab', False)
-    # is_paraclinic = request_data.get('isParaclinic', False)
+    is_paraclinic = request_data.get('isParaclinic', False)
     # is_doc_refferal = request_data.get('isDocReferral', False)
     direction = request_data.get('dir')
 
@@ -2223,5 +2223,11 @@ def results_by_direction(request):
                 objs_result[r.direction]['researches'][r.iss_id] = {'title': r.research_title, 'fio': short_fio_dots(r.fio), 'dateConfirm': r.date_confirm, 'fractions': []}
 
             objs_result[r.direction]['researches'][r.iss_id]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
+
+    if is_paraclinic:
+        direction_result = get_paraclinic_results_by_directions(directions, only_extract=True)
+        for r in direction_result:
+            print(r)
+
 
     return JsonResponse({"results": list(objs_result.values())})

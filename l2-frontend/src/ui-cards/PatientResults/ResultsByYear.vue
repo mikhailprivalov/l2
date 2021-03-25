@@ -153,7 +153,15 @@ export default {
       this.load()
     },
     sendToProtocol(direction){
-      this.$root.$emit('protocol:laboratoryResult', direction)
+      if (this.isLab) {
+        this.$root.$emit('protocol:laboratoryResult', direction)
+      }
+      else if (this.isParaclinic){
+        this.$root.$emit('protocol:paraclinicResult', direction)
+      }
+      else if (this.isDocReferral){
+        this.$root.$emit('protocol:isDocReferralResult', direction)
+      }
     },
     print_result(pk) {
       this.$root.$emit('print:results', [pk])
