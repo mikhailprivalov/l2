@@ -74,39 +74,3 @@ def get_laboratory_results_by_directions(list_dirs):
         )
         rows = namedtuplefetchall(cursor)
     return rows
-
-def get_paraclinic_results_by_directions(list_dirs, only_extract=False):
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-        SELECT 
-                directions_issledovaniya.id as iss_id,
-                directions_issledovaniya.napravleniye_id as direction,
-                directions_issledovaniya.research_id,
-                directory_researches.title as research_title,
-                directions_paraclinicresult.value as value,
-                directions_paraclinicresult.field_type as field_type,
-                directions_paraclinicresult.field_id as field,
-                dp.for_extract_card as for_extract_card,
-                dp.title as field_title,
-                users_doctorprofile.fio as fio,
-                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm
-                from directions_issledovaniya
-                INNER JOIN directions_paraclinicresult ON (directions_paraclinicresult.issledovaniye_id = directions_issledovaniya.id)
-                LEFT JOIN directory_researches ON
-                directions_issledovaniya.research_id=directory_researches.id
-                LEFT JOIN users_doctorprofile ON
-                users_doctorprofile.id=directions_issledovaniya.doc_confirmation_id
-                LEFT JOIN directory_paraclinicinputfield dp on directions_paraclinicresult.field_id = dp.id
-                WHERE CASE
-                    WHEN %(only_extract)s = TRUE THEN
-                        directions_issledovaniya.napravleniye_id = ANY(ARRAY[%(num_dirs)s]) and dp.for_extract_card = true
-                    WHEN %(only_extract)s = FALSE THEN
-                        directions_issledovaniya.napravleniye_id = ANY(ARRAY[%(num_dirs)s])
-                END
-                ORDER BY directions_issledovaniya.napravleniye_id
-        """,
-            params={'num_dirs': list_dirs, 'tz': TIME_ZONE, 'only_extract': only_extract},
-        )
-        rows = namedtuplefetchall(cursor)
-    return rows

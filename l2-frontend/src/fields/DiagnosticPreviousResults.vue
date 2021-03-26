@@ -81,14 +81,11 @@ name: "DiagnosticPreviousResults",
       this.result = result_data.results[0] || {};
 
       for (let r of Object.values(this.result.researches)) {
-        for (let f of r.fractions) {
           this.tb_data.push({
             "researchTitle": r.title,
             "date": r.dateConfirm,
             "docConfirm": r.fio,
-            "value": f.value
           })
-        }
       }
     }
   },
