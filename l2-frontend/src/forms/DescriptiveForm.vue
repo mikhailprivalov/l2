@@ -132,6 +132,9 @@
               <div class="field-value" v-else-if="field.field_type === 25">
                 <DiagnosticPreviousResults v-model="field.value" :disabled="confirmed"/>
               </div>
+              <div class="field-value" v-else-if="field.field_type === 26">
+                <DocRefferallPreviousResults v-model="field.value" :disabled="confirmed"/>
+              </div>
 
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
@@ -179,6 +182,7 @@ export default {
       FormulaField: () => import('../fields/FormulaField'),
       LaboratoryPreviousResults: () => import('../fields/LaboratoryPreviousResults'),
       DiagnosticPreviousResults: () => import('../fields/DiagnosticPreviousResults'),
+      DocRefferallPreviousResults: () => import('../fields/DocRefferallPreviousResults'),
     },
     props: {
       research: {

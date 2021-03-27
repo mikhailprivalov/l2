@@ -23,6 +23,7 @@ import simplejson as json
 from laboratory.utils import strfdatetime
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes
 from utils.xh import check_valid_square_brackets
+from reportlab.platypus.flowables import HRFlowable
 
 
 def lab_iss_to_pdf(data1):
@@ -809,6 +810,43 @@ def previous_diagnostic_result(value):
             ]
         )
     )
+
+    return [tbl]
+
+
+def previous_doc_refferal_result(value, fwb):
+    try:
+        value = json.loads(value)
+    except:
+        return fwb
+
+    if not value:
+        return fwb
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "FreeSans"
+    style.fontSize = 8
+    style.alignment = TA_JUSTIFY
+
+    for data in value:
+        opinion = [[Paragraph(f"{data.get('date', '')}", style), Paragraph(f"{data.get('researchTitle', '')}", style), Paragraph(f"{data.get('researchTitle', '')}", style),]]
+
+        temp_data = [[Paragraph(f"{data.get('date', '')}", style),
+                      Paragraph(f"{data.get('researchTitle', '')}", style),
+                      Paragraph(f"{text_to_bold(data.get('value', ''))}", style),
+                      ] for data in value]
+
+        opinion.extend(temp_data)
+
+        tbl = Table(opinion, colWidths=(18 * mm, 42 * mm, 110 * mm,))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+                ]
+            )
+        )
 
     return [tbl]
 

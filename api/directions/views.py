@@ -2205,7 +2205,7 @@ def results_by_direction(request):
     request_data = json.loads(request.body)
     is_lab = request_data.get('isLab', False)
     is_paraclinic = request_data.get('isParaclinic', False)
-    # is_doc_refferal = request_data.get('isDocReferral', False)
+    is_doc_refferal = request_data.get('isDocReferral', False)
     direction = request_data.get('dir')
 
     directions = request_data.get('directions', [])
@@ -2226,7 +2226,7 @@ def results_by_direction(request):
 
     # 'fractions': [{'title': 'Креатинин', 'value': '1212', 'units': 'мкмоль/л'}]
 
-    if is_paraclinic:
+    if is_paraclinic or is_doc_refferal:
         results = desc_to_data(directions, force_all_fields=True)
         print(results)
         for i in results:
@@ -2247,7 +2247,7 @@ def values_from_structure_data(data):
     s = ''
     for v in data:
         if v['group_title']:
-            s = f"[{v['group_title']}]:"
+            s = f"{s} [{v['group_title']}]:"
         for field in v['fields']:
             if field['value']:
                 if field['title_field']:

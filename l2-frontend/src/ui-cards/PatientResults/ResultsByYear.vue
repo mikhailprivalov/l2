@@ -160,7 +160,7 @@ export default {
         this.$root.$emit('protocol:paraclinicResult', direction)
       }
       else if (this.isDocReferral){
-        this.$root.$emit('protocol:isDocReferralResult', direction)
+        this.$root.$emit('protocol:docReferralResults', direction)
       }
     },
     print_result(pk) {
