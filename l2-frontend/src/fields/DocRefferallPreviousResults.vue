@@ -22,7 +22,7 @@
       </tr>
       <tr>
         <td colspan="4" class="cl-td">
-          <textarea rows="3" name="text" class="form-control" :readonly="disabled" placeholder="Описание"
+          <textarea rows="4" name="text" class="form-control" :readonly="disabled" placeholder="Описание"
            v-model="val.value"></textarea></td>
       </tr>
       </tbody>

@@ -22,7 +22,7 @@
       </tr>
       <tr>
         <td colspan="4" class="cl-td">
-          <textarea rows="3" name="text" class="form-control" :readonly="disabled" placeholder="Описание"
+          <textarea rows="4" name="text" class="form-control" :readonly="disabled" placeholder="Описание"
            v-model="val.value"></textarea></td>
       </tr>
       </tbody>
@@ -36,6 +36,7 @@
 
 <script>
 import api from "@/api";
+import {debounce} from 'lodash'
 
 const makeDefaultRow = () => ({researchTitle: "", date: "", docConfirm: "", value: ""});
 
@@ -72,9 +73,12 @@ name: "DiagnosticPreviousResults",
     delete_rows() {
       this.tb_data = []
     },
-    changeValue(newVal) {
-      this.$emit('modified', newVal)
+    changeValue() {
+      this.$emit('modified', JSON.stringify(this.tb_data))
     },
+    changeValueDebounce: debounce(function (){
+      this.changeValue()
+    }, 500),
     async insertParaclinicResult(direction) {
       const result_data = await api('directions/result-patient-by-direction',
         {'isLab': false, 'isDocReferral': false, 'isParaclinic': true, 'dir': direction});
@@ -95,9 +99,10 @@ name: "DiagnosticPreviousResults",
   watch: {
     tb_data: {
       handler() {
-        this.changeValue(JSON.stringify(this.tb_data))
+        this.changeValueDebounce();
       },
       immediate: true,
+      deep: true,
     },
   },
   model: {

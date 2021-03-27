@@ -466,13 +466,11 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                         fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
                         fwb.extend(previous_laboratory)
                         continue
-                    if field_type == 25:
-                        previous_diagnostic = previous_diagnostic_result(v)
-                        if not previous_diagnostic:
-                            continue
-                        fwb.append(Spacer(1, 2 * mm))
-                        fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
-                        fwb.extend(previous_diagnostic)
+                    if field_type == 26 or 25:
+                        if v:
+                            fwb.append(Spacer(1, 2 * mm))
+                            fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
+                            fwb = previous_doc_refferal_result(v, fwb)
                         continue
                     if field_type == 17:
                         if v:
@@ -587,17 +585,15 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                         continue
                     fwb.extend(previous_laboratory)
                     continue
-                if field_type == 25:
+                if field_type == 26 or 25:
                     txt += "; ".join(vals)
                     fwb.append(Paragraph(txt, style))
                     txt = ''
                     vals = []
                     fwb.append(Spacer(1, 2 * mm))
-                    fwb.append(Paragraph(r.field.get_title(), styleBold))
-                    previous_diagnostic = previous_diagnostic_result(v)
-                    if not previous_diagnostic:
-                        continue
-                    fwb.extend(previous_diagnostic)
+                    if v:
+                        fwb.append(Paragraph(r.field.get_title(), styleBold))
+                        fwb = previous_doc_refferal_result(v, fwb)
                     continue
                 v = text_to_bold(v)
                 if r.field.get_title(force_type=field_type) != "":
@@ -828,26 +824,13 @@ def previous_doc_refferal_result(value, fwb):
     style.fontSize = 8
     style.alignment = TA_JUSTIFY
 
+    space_symbol = '&nbsp;'
     for data in value:
-        opinion = [[Paragraph(f"{data.get('date', '')}", style), Paragraph(f"{data.get('researchTitle', '')}", style), Paragraph(f"{data.get('researchTitle', '')}", style),]]
+        fwb.append(HRFlowable(width=180 * mm, spaceAfter=1 * mm, spaceBefore=1 * mm, color=colors.black))
+        fwb.append(Paragraph(f"{data.get('date', '')} {5 * space_symbol} {data.get('researchTitle', '')} {5 * space_symbol} {data.get('docConfirm', '')}", style))
+        fwb.append(HRFlowable(width=180 * mm, spaceAfter=1 * mm, spaceBefore=1 * mm, color=colors.black))
+        fwb.append(Paragraph(f"{text_to_bold(data.get('value', ''))}", style))
 
-        temp_data = [[Paragraph(f"{data.get('date', '')}", style),
-                      Paragraph(f"{data.get('researchTitle', '')}", style),
-                      Paragraph(f"{text_to_bold(data.get('value', ''))}", style),
-                      ] for data in value]
-
-        opinion.extend(temp_data)
-
-        tbl = Table(opinion, colWidths=(18 * mm, 42 * mm, 110 * mm,))
-        tbl.setStyle(
-            TableStyle(
-                [
-                    ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-                ]
-            )
-        )
-
-    return [tbl]
+    return fwb
 
 

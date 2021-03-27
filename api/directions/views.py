@@ -2224,8 +2224,6 @@ def results_by_direction(request):
 
             objs_result[r.direction]['researches'][r.iss_id]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
 
-    # 'fractions': [{'title': 'Креатинин', 'value': '1212', 'units': 'мкмоль/л'}]
-
     if is_paraclinic or is_doc_refferal:
         results = desc_to_data(directions, force_all_fields=True)
         print(results)
@@ -2236,10 +2234,9 @@ def results_by_direction(request):
             if i['result'][0]["iss_id"] not in objs_result[direction_data[1]]['researches']:
                 objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]] = {'title': i['title_research'], 'fio': short_fio_dots(i['result'][0]["docConfirm"]), 'dateConfirm': direction_data[0], 'fractions': []}
 
-            k_data = values_from_structure_data(i['result'][0]["data"])
-            objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]]["fractions"].append({'value': k_data})
+            values = values_from_structure_data(i['result'][0]["data"])
+            objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]]["fractions"].append({'value': values})
 
-    print(objs_result.values())
     return JsonResponse({"results": list(objs_result.values())})
 
 
@@ -2251,7 +2248,7 @@ def values_from_structure_data(data):
         for field in v['fields']:
             if field['value']:
                 if field['title_field']:
-                    s = f"{s} {field['title_field']}:"
+                    s = f"{s} {field['title_field']}"
                 s = f"{s} {field['value']};"
-    return s
+    return s.strip()
 
