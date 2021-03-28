@@ -33,7 +33,8 @@ from directions.models import (
     ExternalOrganization,
     MicrobiologyResultCulture,
     MicrobiologyResultCultureAntibiotic,
-    DirectionToUserWatch, IstochnikiFinansirovaniya,
+    DirectionToUserWatch,
+    IstochnikiFinansirovaniya,
     DirectionsHistory,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
@@ -579,10 +580,10 @@ def directions_services(request):
             receive_datetime = None
             for i in (
                 Issledovaniya.objects.filter(napravleniye=n)
-                    .filter(
+                .filter(
                     Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True) | Q(research__is_microbiology=True) | Q(research__is_citology=True) | Q(research__is_gistology=True)
                 )
-                    .distinct()
+                .distinct()
             ):
                 researches.append(
                     {
@@ -785,8 +786,8 @@ def directions_last_result(request):
     u = Issledovaniya.objects.filter(**filter, time_confirmation__isnull=True).order_by("-napravleniye__data_sozdaniya").first()
     v = (
         Issledovaniya.objects.filter(**filter, research__is_paraclinic=True, time_confirmation__isnull=True, napravleniye__visit_date__isnull=False)
-            .order_by("-napravleniye__visit_date")
-            .first()
+        .order_by("-napravleniye__visit_date")
+        .first()
     )
     if i:
         if not u or i.time_confirmation >= u.napravleniye.data_sozdaniya:
@@ -964,8 +965,8 @@ def directions_paraclinic_form(request):
 
     dn = (
         Napravleniya.objects.filter(pk=pk)
-            .select_related('client', 'client__base', 'client__individual', 'doc', 'doc__podrazdeleniye')
-            .prefetch_related(
+        .select_related('client', 'client__base', 'client__individual', 'doc', 'doc__podrazdeleniye')
+        .prefetch_related(
             Prefetch(
                 'issledovaniya_set',
                 queryset=(
@@ -981,17 +982,17 @@ def directions_paraclinic_form(request):
                         | Q(research__is_gistology=True)
                     )
                 )
-                    .select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')
-                    .prefetch_related(
+                .select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')
+                .prefetch_related(
                     Prefetch(
                         'research__paraclinicinputgroups_set',
                         queryset=ParaclinicInputGroups.objects.filter(hide=False)
-                            .order_by("order")
-                            .prefetch_related(Prefetch('paraclinicinputfield_set', queryset=ParaclinicInputField.objects.filter(hide=False).order_by("order"))),
+                        .order_by("order")
+                        .prefetch_related(Prefetch('paraclinicinputfield_set', queryset=ParaclinicInputField.objects.filter(hide=False).order_by("order"))),
                     ),
                     Prefetch('recipe_set', queryset=Recipe.objects.all().order_by('pk')),
                 )
-                    .distinct(),
+                .distinct(),
             )
         )
     )
@@ -1362,13 +1363,13 @@ def directions_paraclinic_result(request):
     if (
         force
         or diss.filter(
-        Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
-        | Q(research__is_doc_refferal=True)
-        | Q(research__is_treatment=True)
-        | Q(research__is_gistology=True)
-        | Q(research__is_stom=True)
-        | Q(research__is_gistology=True)
-    ).exists()
+            Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
+            | Q(research__is_doc_refferal=True)
+            | Q(research__is_treatment=True)
+            | Q(research__is_gistology=True)
+            | Q(research__is_stom=True)
+            | Q(research__is_gistology=True)
+        ).exists()
         or request.user.is_staff
     ):
         iss = Issledovaniya.objects.get(pk=pk)
@@ -1456,10 +1457,7 @@ def directions_paraclinic_result(request):
                         for pc_time in times:
                             times_medication = datetime.strptime(f"{date:%Y-%m-%d} {pc_time}", '%Y-%m-%d %H:%M').astimezone(user_timezone)
                             if not ProcedureListTimes.objects.filter(prescription=proc_obj, times_medication=times_medication).exists():
-                                ProcedureListTimes.objects.create(
-                                    prescription=proc_obj,
-                                    times_medication=times_medication
-                                )
+                                ProcedureListTimes.objects.create(prescription=proc_obj, times_medication=times_medication)
 
         recipe_no_remove = []
 
@@ -1772,8 +1770,8 @@ def directions_paraclinic_history(request):
 
     for direction in (
         Napravleniya.objects.filter(Q(issledovaniya__doc_save=request.user.doctorprofile) | Q(issledovaniya__doc_confirmation=request.user.doctorprofile))
-            .filter(Q(issledovaniya__time_confirmation__range=(date_start, date_end)) | Q(issledovaniya__time_save__range=(date_start, date_end)))
-            .order_by("-issledovaniya__time_save", "-issledovaniya__time_confirmation")
+        .filter(Q(issledovaniya__time_confirmation__range=(date_start, date_end)) | Q(issledovaniya__time_save__range=(date_start, date_end)))
+        .order_by("-issledovaniya__time_save", "-issledovaniya__time_confirmation")
     ):
         if direction.pk in has_dirs:
             continue
@@ -2232,8 +2230,12 @@ def results_by_direction(request):
             if direction_data[1] not in objs_result:
                 objs_result[direction_data[1]] = {'dir': direction_data[1], 'date': direction_data[0], 'researches': {}}
             if i['result'][0]["iss_id"] not in objs_result[direction_data[1]]['researches']:
-                objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]] = {'title': i['title_research'], 'fio': short_fio_dots(i['result'][0]["docConfirm"]),
-                                                                                          'dateConfirm': direction_data[0], 'fractions': []}
+                objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]] = {
+                    'title': i['title_research'],
+                    'fio': short_fio_dots(i['result'][0]["docConfirm"]),
+                    'dateConfirm': direction_data[0],
+                    'fractions': [],
+                }
 
             values = values_from_structure_data(i['result'][0]["data"])
             objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]]["fractions"].append({'value': values})
