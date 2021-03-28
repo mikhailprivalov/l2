@@ -2224,7 +2224,6 @@ def results_by_direction(request):
 
     if is_paraclinic or is_doc_refferal:
         results = desc_to_data(directions, force_all_fields=True)
-        print(results)
         for i in results:
             direction_data = i['result'][0]["date"].split(' ')
             if direction_data[1] not in objs_result:
