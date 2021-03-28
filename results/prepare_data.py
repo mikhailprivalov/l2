@@ -465,7 +465,7 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                         fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
                         fwb.extend(previous_laboratory)
                         continue
-                    if field_type == 26 or 25:
+                    if field_type in [26, 25]:
                         if v:
                             fwb.append(Spacer(1, 2 * mm))
                             fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
@@ -584,7 +584,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                         continue
                     fwb.extend(previous_laboratory)
                     continue
-                if field_type == 26 or 25:
+                if field_type in [26, 25]:
                     txt += "; ".join(vals)
                     fwb.append(Paragraph(txt, style))
                     txt = ''
@@ -794,8 +794,6 @@ def previous_doc_refferal_result(value, fwb):
 
     styleBold = deepcopy(style)
     styleBold.fontName = 'FreeSansBold'
-
-
     space_symbol = '&nbsp;'
     for data in value:
         fwb.append(Paragraph(f"{data.get('date', '')} {5 * space_symbol} {data.get('researchTitle', '')} {5 * space_symbol} {data.get('docConfirm', '')}", styleBold))
