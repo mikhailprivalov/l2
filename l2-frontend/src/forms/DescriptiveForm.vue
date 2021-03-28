@@ -133,7 +133,7 @@
                 <DiagnosticPreviousResults v-model="field.value" :disabled="confirmed"/>
               </div>
               <div class="field-value" v-else-if="field.field_type === 26">
-                <DocRefferallPreviousResults v-model="field.value" :disabled="confirmed"/>
+                <DocReferralPreviousResults v-model="field.value" :disabled="confirmed"/>
               </div>
 
               <div :title="field.helper" class="field-helper" v-if="field.helper"
@@ -182,7 +182,7 @@ export default {
       FormulaField: () => import('../fields/FormulaField'),
       LaboratoryPreviousResults: () => import('../fields/LaboratoryPreviousResults'),
       DiagnosticPreviousResults: () => import('../fields/DiagnosticPreviousResults'),
-      DocRefferallPreviousResults: () => import('../fields/DocRefferallPreviousResults'),
+      DocReferralPreviousResults: () => import('../fields/DocReferralPreviousResults'),
     },
     props: {
       research: {

@@ -94,7 +94,6 @@ def lab_iss_to_pdf(data1):
                     if values_final:
                         row_count = len(values_final) - 1
                         tbl = gen_table(result_values_for_research, const_width_vertical, row_count, type_disposition)
-                        # prepare_fwb.append(Spacer(1, 1 * mm))
                         prepare_fwb.append(tbl)
                         prepare_fwb.append(Spacer(1, 2 * mm))
 
@@ -774,42 +773,6 @@ def previous_laboratory_result(value):
     return [tbl]
 
 
-def previous_diagnostic_result(value):
-    try:
-        value = json.loads(value)
-    except:
-        return None
-
-    if not value:
-        return None
-    styleSheet = getSampleStyleSheet()
-    style = styleSheet["Normal"]
-    style.fontName = "FreeSans"
-    style.fontSize = 8
-    style.alignment = TA_JUSTIFY
-
-    opinion = [[Paragraph('Дата', style), Paragraph('Исследование', style), Paragraph('Результаты', style)]]
-
-    temp_data = [[Paragraph(f"{data.get('date', '')}", style),
-                  Paragraph(f"{data.get('researchTitle', '')}", style),
-                  Paragraph(f"{text_to_bold(data.get('value', ''))}", style),
-                  ] for data in value]
-
-    opinion.extend(temp_data)
-
-    tbl = Table(opinion, colWidths=(18 * mm, 42 * mm, 110 * mm,))
-    tbl.setStyle(
-        TableStyle(
-            [
-                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-            ]
-        )
-    )
-
-    return [tbl]
-
-
 def previous_doc_refferal_result(value, fwb):
     try:
         value = json.loads(value)
@@ -818,19 +781,26 @@ def previous_doc_refferal_result(value, fwb):
 
     if not value:
         return fwb
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "FreeSans"
     style.fontSize = 8
     style.alignment = TA_JUSTIFY
+    style.spaceAfter = 0.1 * mm
+
+    styleLeftIndent = deepcopy(style)
+    styleLeftIndent.leftIndent = 12 * mm
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = 'FreeSansBold'
+
 
     space_symbol = '&nbsp;'
     for data in value:
-        fwb.append(HRFlowable(width=180 * mm, spaceAfter=1 * mm, spaceBefore=1 * mm, color=colors.black))
-        fwb.append(Paragraph(f"{data.get('date', '')} {5 * space_symbol} {data.get('researchTitle', '')} {5 * space_symbol} {data.get('docConfirm', '')}", style))
-        fwb.append(HRFlowable(width=180 * mm, spaceAfter=1 * mm, spaceBefore=1 * mm, color=colors.black))
-        fwb.append(Paragraph(f"{text_to_bold(data.get('value', ''))}", style))
+        fwb.append(Paragraph(f"{data.get('date', '')} {5 * space_symbol} {data.get('researchTitle', '')} {5 * space_symbol} {data.get('docConfirm', '')}", styleBold))
+        fwb.append(Paragraph(f"{text_to_bold(data.get('value', ''))}", styleLeftIndent))
+        fwb.append(HRFlowable(width=180 * mm, spaceAfter=0 * mm, spaceBefore=0.1 * mm, color=colors.black))
+        fwb.append(Spacer(1, 2 * mm))
 
     return fwb
-
-

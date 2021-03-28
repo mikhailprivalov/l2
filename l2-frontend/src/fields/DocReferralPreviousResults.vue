@@ -36,11 +36,12 @@
 
 <script>
 import api from "@/api";
+import {debounce} from "lodash";
 
 const makeDefaultRow = () => ({researchTitle: "", date: "", docConfirm: "", value: ""});
 
 export default {
-name: "DocRefferallPreviousResults",
+name: "DocReferralPreviousResults",
    props: {
     value: {
       required: false,
@@ -72,9 +73,12 @@ name: "DocRefferallPreviousResults",
     delete_rows() {
       this.tb_data = []
     },
-    changeValue(newVal) {
-      this.$emit('modified', newVal)
+    changeValue() {
+      this.$emit('modified', JSON.stringify(this.tb_data))
     },
+    changeValueDebounce: debounce(function (){
+      this.changeValue()
+    }, 500),
     async insertParaclinicResult(direction) {
       const result_data = await api('directions/result-patient-by-direction',
         {'isLab': false, 'isDocReferral': true, 'isParaclinic': false, 'dir': direction});
@@ -95,9 +99,10 @@ name: "DocRefferallPreviousResults",
   watch: {
     tb_data: {
       handler() {
-        this.changeValue(JSON.stringify(this.tb_data))
+        this.changeValueDebounce();
       },
       immediate: true,
+      deep: true,
     },
   },
   model: {
