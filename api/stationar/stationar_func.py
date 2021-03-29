@@ -381,7 +381,7 @@ def desc_to_data(num_dirs: List[int], force_all_fields: bool = False):
             date = f'{i[1]} {i[2]}'
             link_dicom = search_dicom_study(i[2]) if not force_all_fields else None
             group = i[3]
-            fields = {'title_field': i[4], 'value': i[5]}
+            fields = {'title_field': i[4], 'value': i[5], 'field_type': i[8]}
 
             if date != last_date:
                 if new_date_data:
@@ -390,6 +390,8 @@ def desc_to_data(num_dirs: List[int], force_all_fields: bool = False):
                 new_date_data = dict()
                 new_date_data['date'] = date
                 new_date_data['link_dicom'] = link_dicom if link_dicom else ''
+                new_date_data['iss_id'] = i[6]
+                new_date_data['docConfirm'] = i[7]
                 new_date_data['data'] = [{'group_title': group, 'fields': [fields.copy()]}]
                 last_date = date
                 last_group = group

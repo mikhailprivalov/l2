@@ -19,7 +19,7 @@ from api import sql_func
 from api.dicom import search_dicom_study
 from api.patients.views import save_dreg
 from api.sql_func import get_fraction_result, get_field_result
-from api.stationar.stationar_func import forbidden_edit_dir
+from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
@@ -33,7 +33,8 @@ from directions.models import (
     ExternalOrganization,
     MicrobiologyResultCulture,
     MicrobiologyResultCultureAntibiotic,
-    DirectionToUserWatch, IstochnikiFinansirovaniya,
+    DirectionToUserWatch,
+    IstochnikiFinansirovaniya,
     DirectionsHistory,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
@@ -1456,10 +1457,7 @@ def directions_paraclinic_result(request):
                         for pc_time in times:
                             times_medication = datetime.strptime(f"{date:%Y-%m-%d} {pc_time}", '%Y-%m-%d %H:%M').astimezone(user_timezone)
                             if not ProcedureListTimes.objects.filter(prescription=proc_obj, times_medication=times_medication).exists():
-                                ProcedureListTimes.objects.create(
-                                    prescription=proc_obj,
-                                    times_medication=times_medication
-                                )
+                                ProcedureListTimes.objects.create(prescription=proc_obj, times_medication=times_medication)
 
         recipe_no_remove = []
 
@@ -2204,8 +2202,8 @@ def directions_result_year(request):
 def results_by_direction(request):
     request_data = json.loads(request.body)
     is_lab = request_data.get('isLab', False)
-    # is_paraclinic = request_data.get('isParaclinic', False)
-    # is_doc_refferal = request_data.get('isDocReferral', False)
+    is_paraclinic = request_data.get('isParaclinic', False)
+    is_doc_refferal = request_data.get('isDocReferral', False)
     direction = request_data.get('dir')
 
     directions = request_data.get('directions', [])
@@ -2224,4 +2222,36 @@ def results_by_direction(request):
 
             objs_result[r.direction]['researches'][r.iss_id]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
 
+    if is_paraclinic or is_doc_refferal:
+        results = desc_to_data(directions, force_all_fields=True)
+        for i in results:
+            direction_data = i['result'][0]["date"].split(' ')
+            if direction_data[1] not in objs_result:
+                objs_result[direction_data[1]] = {'dir': direction_data[1], 'date': direction_data[0], 'researches': {}}
+            if i['result'][0]["iss_id"] not in objs_result[direction_data[1]]['researches']:
+                objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]] = {
+                    'title': i['title_research'],
+                    'fio': short_fio_dots(i['result'][0]["docConfirm"]),
+                    'dateConfirm': direction_data[0],
+                    'fractions': [],
+                }
+
+            values = values_from_structure_data(i['result'][0]["data"])
+            objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]]["fractions"].append({'value': values})
+
     return JsonResponse({"results": list(objs_result.values())})
+
+
+def values_from_structure_data(data):
+    s = ''
+    for v in data:
+        if v['group_title']:
+            s = f"{s} [{v['group_title']}]:"
+        for field in v['fields']:
+            if field['field_type'] in [24, 25, 26]:
+                continue
+            if field['value']:
+                if field['title_field']:
+                    s = f"{s} {field['title_field']}"
+                s = f"{s} {field['value']};"
+    return s.strip()
