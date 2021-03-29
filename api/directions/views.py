@@ -1749,6 +1749,9 @@ def directions_paraclinic_confirm_reset(request):
                 i.doc_confirmation = None
                 i.time_confirmation = None
                 i.save()
+            if iss.napravleniye:
+                iss.napravleniye.need_resend_amd = False
+                iss.napravleniye.save()
             Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
         else:
             response["message"] = "Сброс подтверждения разрешен в течении %s минут" % (str(SettingManager.get("lab_reset_confirm_time_min")))
