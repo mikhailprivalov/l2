@@ -58,6 +58,7 @@
 
 <script>
 import api from "@/api";
+import {debounce} from "lodash";
 
 const makeDefaultRow = () => ({researchTitle: "", fractionTitle: "", value: "", units: "", date: "", docConfirm: ""});
 
@@ -94,10 +95,13 @@ export default {
     delete_rows() {
       this.tb_data = []
     },
-    changeValue(newVal) {
-      this.$emit('modified', newVal)
+    changeValue() {
+      this.$emit('modified', JSON.stringify(this.tb_data))
     },
-    async insertLaboratoryResult(direction) {
+    changeValueDebounce: debounce(function (){
+      this.changeValue()
+    }, 500),
+    async insertLaboratoryResult(direction, ) {
       const result_data = await api('directions/result-patient-by-direction',
         {'isLab': true, 'isDocReferral': false, 'isParaclinic': false, 'dir': direction});
       this.result = result_data.results[0] || {};
@@ -119,9 +123,10 @@ export default {
   watch: {
     tb_data: {
       handler() {
-        this.changeValue(JSON.stringify(this.tb_data))
+        this.changeValueDebounce();
       },
       immediate: true,
+      deep: true,
     },
   },
   model: {
