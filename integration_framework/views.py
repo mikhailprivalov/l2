@@ -87,6 +87,7 @@ def resend_dir_l2(request):
 
 @api_view()
 def result_amd_send(request):
+    print(request.GET.get("result"))
     result = json.loads(request.GET.get("result"))
     resp = {"ok": False}
     if result['error']:
