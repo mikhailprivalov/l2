@@ -2798,18 +2798,6 @@ def form_12(request_data):
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
 
-    agent_status = False
-    if ind_card.who_is_agent:
-        p_agent = getattr(ind_card, ind_card.who_is_agent)
-        agent_status = True
-
-    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
-    who_patient = 'пациента'
-    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
-        return False
-    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
-        who_patient = 'ребёнка'
-
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:
@@ -2921,7 +2909,11 @@ def form_12(request_data):
     objs.append(Paragraph('Номер СНИЛС: <u>{}</u>'.format(patient_data['oms']['polis_num']), style))
     objs.append(Paragraph('Место работы <u>{}</u>'.format(work_p), style))
     objs.append(Paragraph('Профессия/должность (в настоящее время) <u>{}</u>'.format(work_position), style))
-    objs.append(Paragraph('Наименование вредных производственных факторов, видов работ с указанием пункта приказа Министерства здравоохранения РФ от 28.01.21г. №29н <u>{}</u>'.format(patient_data['harmful_factor']), style))
+    objs.append(
+        Paragraph(
+            'Наименование вредных производственных факторов, видов работ с указанием пункта приказа Министерства здравоохранения РФ от 28.01.21г. №29н <u>{}</u>'.format(patient_data['harmful_factor']), style
+        )
+    )
     styleLeft = deepcopy(style)
     styleLeft.alignment = TA_LEFT
     objs.append(Spacer(1, 2 * mm))
@@ -2930,8 +2922,7 @@ def form_12(request_data):
     styleTCenter.alignment = TA_CENTER
     styleTCenter.leading = 3.5 * mm
 
-    objs.append(Paragraph('<u>Заключение врачей специалистов</u>',style,))  
-
+    objs.append(Paragraph('<u>Заключение врачей специалистов</u>',style,))
     objs.append(Spacer(1, 2 * mm))
 
     opinion = [
