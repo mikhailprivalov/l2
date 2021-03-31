@@ -77,10 +77,6 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
     fwb.append(Paragraph(f'№ {direction.pk}', styleCenter))
     fwb.append(Paragraph(f'по результатам обследования водителя<br/>транспартнго средства (кандидата в водители траспортного средства)<br/><u>врачом-психиатром</u>', styleCenter))
 
-
-    open_bold_tag = "<font face =\"FreeSansBold\">"
-    close_tag_bold = "</font>"
-
     fwb.append(Spacer(1, 4 * mm))
     result = protocol_fields_result(iss)
     main_address, identified_final = '', ''
@@ -95,5 +91,28 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
     fwb.append(Paragraph(f'2. Дата рождения: {direction.client.individual.bd()}', style_ml))
     fwb.append(Paragraph(f'3. Место регистрации: {main_address}', style_ml))
     fwb.append(Paragraph(f'4. Медицинское заключение: {identified_final}', style_ml))
+
+    opinion = [
+        [
+            Paragraph(f'<font size=10>{hospital_full_name}<br/>{hospital_short_name}<br/>Адрес: {hospital_doc_confirm.address}, '
+                      f'{hospital_doc_confirm.phones}<br/>Лицензия на осуществление медицинской деятельности <br/> {hospital_doc_confirm.license_data}</font>', styleT),
+            Paragraph('', styleT),
+        ],
+    ]
+    tbl = Table(opinion,  colWidths=[130 * mm, 60 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+                ('LEFTPADDING', (1, 0), (-1, -1), 2 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 2 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    fwb.append(tbl)
+
+
 
     return fwb

@@ -578,12 +578,6 @@ def result_print(request):
         current_size_form = None
         temp_iss = None
 
-        def local_mark_pages(c, _):
-            mark_pages(c, direction)
-
-        portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
-        landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)
-
         for iss in direction.issledovaniya_set.all():
             if iss.time_save:
                 dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
@@ -615,6 +609,14 @@ def result_print(request):
 
             current_size_form = iss.research.size_form
             temp_iss = iss
+
+
+        def local_mark_pages(c, _):
+            if not has_own_form_result:
+                mark_pages(c, direction)
+
+        portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
+        landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)
 
         if link_files:
             continue
