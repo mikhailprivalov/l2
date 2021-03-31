@@ -2790,6 +2790,7 @@ def form_11(request_data):
     buffer.close()
     return pdf
 
+ 
 def form_12(request_data):
     """
     ВЫПИСКА ИЗ АМБУЛАТОРНОЙ КАРТЫ
@@ -2875,7 +2876,6 @@ def form_12(request_data):
 
     work_data = patient_data['work_position']
     work_data = work_data.split(';')
-    work_department, work_position = "", ""
     if len(work_data) >= 2:
         work_department = work_data[1]
 
@@ -2896,7 +2896,11 @@ def form_12(request_data):
     objs = []
 
     objs.append(
-        Paragraph('Министерство здравоохранения Российской Федераци <br/> <u>{}</u> <br/> {} <br/> Код ОГРН {} <br/> <u>ВЫПИСКА ИЗ АМБУЛАТОРНОЙ КАРТЫ</u>'.format(hospital_name, hospital_address, hospital_kod_ogrn), styleCenterBold))
+        Paragraph(
+            'Министерство здравоохранения Российской Федераци <br/> <u>{}</u> <br/> {} <br/>'
+            'Код ОГРН {} <br/> <u>ВЫПИСКА ИЗ АМБУЛАТОРНОЙ КАРТЫ</u>'.format(hospital_name, hospital_address, hospital_kod_ogrn), styleCenterBold
+        )
+    )
 
     objs.append(Spacer(1, 3 * mm))
 
@@ -2906,6 +2910,22 @@ def form_12(request_data):
             style,
         )
     )
+
+    objs.append(
+        Paragraph(
+            'в доступной для меня форме мне разъяснены возможные последствия отказа от '
+            'вышеуказанных видов медицинских вмешательств, в том числе вероятность '
+            'развития осложнений заболевания (состояния). Мне разъяснено, что при '
+            'возникновении необходимости в осуществлении одного или нескольких видов '
+            'медицинских вмешательств, в отношении которых оформлен настоящий отказ, я'
+            'имею право оформить информированное добровольное согласие на такой вид '
+            '(такие виды) медицинского вмешательства.',
+            style,
+        )
+    )                     
+                          
+                          
+    
 
     objs.append(Paragraph('Адрес регистрации по месту жительства (пребывания): <u>{}</u>'.format(patient_data['fact_address']), style))
     objs.append(Paragraph('Номер СНИЛС: <u>{}</u>'.format(patient_data['oms']['polis_num']), style))
