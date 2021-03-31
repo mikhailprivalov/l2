@@ -2713,8 +2713,8 @@ def form_11(request_data):
 
     objs.append(
         Paragraph(
-            'Отказываюсь от следующих видов медицинских вмешательств, включенных в '								
-            'Перечень определенных видов медицинских вмешательств, на которые граждане дают '	 	 	 	 				
+            'Отказываюсь от следующих видов медицинских вмешательств, включенных в '                                
+            'Перечень определенных видов медицинских вмешательств, на которые граждане дают '                               
             'информированное добровольное согласие при выборе врача и медицинской организации'
             'для получения первичной медико-санитарной помощи, утвержденный приказом'
             'Министерства здравоохранения и социального развития Российской Федера-ции'
@@ -2810,11 +2810,6 @@ def form_12(request_data):
     elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
         who_patient = 'ребёнка'
 
-    if agent_status:
-        person_data = p_agent.get_data_individual()
-    else:
-        person_data = patient_data
-
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:
@@ -2876,8 +2871,6 @@ def form_12(request_data):
 
     work_data = patient_data['work_position']
     work_data = work_data.split(';')
-    if len(work_data) >= 2:
-        work_department = work_data[1]
 
     if len(work_data) >= 1:
         work_position = work_data[0]
@@ -2923,9 +2916,6 @@ def form_12(request_data):
             style,
         )
     )                     
-                          
-                          
-    
 
     objs.append(Paragraph('Адрес регистрации по месту жительства (пребывания): <u>{}</u>'.format(patient_data['fact_address']), style))
     objs.append(Paragraph('Номер СНИЛС: <u>{}</u>'.format(patient_data['oms']['polis_num']), style))
