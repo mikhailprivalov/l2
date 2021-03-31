@@ -517,6 +517,7 @@ def result_print(request):
 
     client_prev = -1
     link_result = []
+    has_own_form_result = False
     fwb = []
     hosp_nums_obj = hosp_get_hosp_direction(pk[0])
     hosp_nums = ''
@@ -574,7 +575,6 @@ def result_print(request):
         link_files = False
         is_extract = False
         is_gistology = False
-        has_own_form_result = False
         current_size_form = None
         temp_iss = None
 
@@ -612,6 +612,7 @@ def result_print(request):
                 is_gistology = True
             if iss.research.has_own_form_result:
                 has_own_form_result = True
+
             current_size_form = iss.research.size_form
             temp_iss = iss
 
@@ -1221,7 +1222,7 @@ def result_print(request):
                     fwb = procedural_text_for_result(iss.napravleniye, fwb, napr_child)
 
                 fwb.append(Spacer(1, 3 * mm))
-                if not hosp and not iss.research.is_slave_hospital:
+                if not hosp and not iss.research.is_slave_hospital and not iss.research.has_own_form_result:
                     if iss.research.is_doc_refferal:
                         fwb.append(Paragraph("Дата осмотра: {}".format(strdate(iss.get_medical_examination())), styleBold))
                     else:
@@ -1229,20 +1230,21 @@ def result_print(request):
                             fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                     fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
 
-                if iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
-                    fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
-                else:
-                    if iss.doc_confirmation:
-                        doc_execute = "фельдшер" if request.user.is_authenticated and request.user.doctorprofile.has_group("Фельдшер") else "врач"
-                        fwb.append(Paragraph("Исполнитель: {} {}, {}".format(doc_execute, iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                if not iss.research.has_own_form_result:
+                    if iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
+                        fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
                     else:
-                        fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation_string, iss.napravleniye.hospital.short_title or iss.napravleniye.hospital.title), styleBold))
+                        if iss.doc_confirmation:
+                            doc_execute = "фельдшер" if request.user.is_authenticated and request.user.doctorprofile.has_group("Фельдшер") else "врач"
+                            fwb.append(Paragraph("Исполнитель: {} {}, {}".format(doc_execute, iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                        else:
+                            fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation_string, iss.napravleniye.hospital.short_title or iss.napravleniye.hospital.title), styleBold))
 
-                    if iss.research.is_doc_refferal and SettingManager.get("agree_diagnos", default='True', default_type='b'):
-                        fwb.append(Spacer(1, 3.5 * mm))
-                        fwb.append(Paragraph("С диагнозом, планом обследования и лечения ознакомлен и согласен _________________________", style))
+                        if iss.research.is_doc_refferal and SettingManager.get("agree_diagnos", default='True', default_type='b'):
+                            fwb.append(Spacer(1, 3.5 * mm))
+                            fwb.append(Paragraph("С диагнозом, планом обследования и лечения ознакомлен и согласен _________________________", style))
 
-                    fwb.append(Spacer(1, 2.5 * mm))
+                        fwb.append(Spacer(1, 2.5 * mm))
 
         if client_prev == direction.client.individual_id and not split and not is_different_form:
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
@@ -1262,7 +1264,9 @@ def result_print(request):
     num_card = hosp_nums
     if not hosp:
         num_card = pk[0]
-    if len(pk) == 1 and not link_result and not hosp and fwb:
+    if len(pk) == 1 and has_own_form_result:
+        doc.build(fwb)
+    elif len(pk) == 1 and not link_result and not hosp and fwb:
         doc.build(fwb, canvasmaker=PageNumCanvas)
     elif len(pk) == 1 and not link_result and hosp:
         doc.build(fwb, canvasmaker=PageNumCanvasPartitionAll)
