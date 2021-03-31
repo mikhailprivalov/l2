@@ -574,6 +574,7 @@ def result_print(request):
         link_files = False
         is_extract = False
         is_gistology = False
+        has_own_form_result = False
         current_size_form = None
         temp_iss = None
 
@@ -609,6 +610,8 @@ def result_print(request):
                 is_extract = True
             if iss.research.is_gistology:
                 is_gistology = True
+            if iss.research.has_own_form_result:
+                has_own_form_result = True
             current_size_form = iss.research.size_form
             temp_iss = iss
 
@@ -650,8 +653,8 @@ def result_print(request):
 
         number_poliklinika = f' ({direction.client.number_poliklinika})' if direction.client.number_poliklinika else ''
         individual_birthday = f'({strdate(direction.client.individual.birthday)})'
-        t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
-        if not hosp and not is_gistology or is_extract:
+        if not hosp and not is_gistology and not has_own_form_result or is_extract:
+            t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
             fwb.append(t)
             fwb.append(Spacer(1, 5 * mm))
         if not has_paraclinic:
@@ -1122,7 +1125,7 @@ def result_print(request):
             iss: Issledovaniya
             for iss in direction.issledovaniya_set.all().order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
-                if not hosp and not is_gistology:
+                if not hosp and not is_gistology and not has_own_form_result:
                     fwb.append(InteractiveTextField())
                     fwb.append(Spacer(1, 2 * mm))
                     if (
@@ -1140,7 +1143,7 @@ def result_print(request):
                         iss_title = "Услуга: " + iss.research.title
                     fwb.append(Paragraph(f"<para align='center'><font size='9'>{iss_title}</font></para>", styleBold))
                 else:
-                    if not is_gistology:
+                    if not is_gistology and not has_own_form_result:
                         fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
 
                 type_form = iss.research.result_form
