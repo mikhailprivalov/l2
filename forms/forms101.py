@@ -2911,7 +2911,8 @@ def form_12(request_data):
     objs.append(Paragraph('Профессия/должность (в настоящее время) <u>{}</u>'.format(work_position), style))
     objs.append(
         Paragraph(
-            'Наименование вредных производственных факторов, видов работ с указанием пункта приказа Министерства здравоохранения РФ от 28.01.21г. №29н <u>{}</u>'.format(patient_data['harmful_factor']), style
+            'Наименование вредных производственных факторов, видов работ с '
+            'указанием пункта приказа Министерства здравоохранения РФ от 28.01.21г. №29н <u>{}</u>'.format(patient_data['harmful_factor']), style
         )
     )
     styleLeft = deepcopy(style)
