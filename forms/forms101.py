@@ -1665,7 +1665,6 @@ def form_10(request_data):
     d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
     date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
 
-    objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('2. Фамилия, имя, отчество (при наличии): {}&nbsp; {} г. рождения'.format(person_data['fio'], date_individual_born), style))
     objs.append(Paragraph('3. Пол: <u>{}</u> '.format(patient_data['sex']), style,))
     objs.append(Paragraph('4. Дата рождения  <u>{}</u> '.format(date_individual_born), style,))
@@ -2520,7 +2519,7 @@ def form_10(request_data):
         'за организацию и проведение профилактического медицинского осмотра (диспансеризации) на участке<sup>2</sup>.', style,
     ))
 
-    objs.append(Spacer(1, 95 * mm))
+    objs.append(Spacer(1, 65 * mm))
 
     objs.append(Paragraph(
         '<font size=9 ><sup>1</sup> Международная статистическая классификация болезней и проблем, связанных со здоровьем, 10-го пересмотра (далее - МКБ - 10).</font>', style,))
@@ -2714,7 +2713,7 @@ def form_11(request_data):
 
     objs.append(
         Paragraph(
-            'Отказываюсь от следующих видов медицинских вмешательств, включенных в'								
+            'Отказываюсь от следующих видов медицинских вмешательств, включенных в '								
             'Перечень определенных видов медицинских вмешательств, на которые граждане дают '	 	 	 	 				
             'информированное добровольное согласие при выборе врача и медицинской организации'
             'для получения первичной медико-санитарной помощи, утвержденный приказом'
@@ -2777,6 +2776,277 @@ def form_11(request_data):
 
     objs.append(Paragraph('', style))
     objs.append(Paragraph('', style))
+
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+def form_12(request_data):
+    """
+    ВЫПИСКА ИЗ АМБУЛАТОРНОЙ КАРТЫ
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = True
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4, leftMargin=13 * mm, rightMargin=4 * mm, topMargin=4 * mm, bottomMargin=4 * mm, allowSplitting=1, title="ВЫПИСКА ИЗ АМБУЛАТОРНОЙ КАРТЫ"
+    )
+    width, height = portrait(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 11
+    style.leading = 12
+    style.spaceAfter = 0 * mm
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+
+    styleFL = deepcopy(style)
+    styleFL.firstLineIndent = 0
+
+    styleSign = deepcopy(style)
+    styleSign.firstLineIndent = 0
+    styleSign.alignment = TA_LEFT
+    styleSign.leading = 13
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleBold.firstLineIndent = 0
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 9
+    styleCenter.leading = 10
+    styleCenter.spaceAfter = 0 * mm
+
+    styleRight = deepcopy(style)
+    styleRight.aligment = TA_RIGHT
+
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.firstLineIndent = 0
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 13
+    styleCenterBold.face = 'PTAstraSerifBold'
+
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    styleT = deepcopy(style)
+    styleT.firstLineIndent = 0
+
+    work_data = patient_data['work_position']
+    work_data = work_data.split(';')
+    work_department, work_position = "", ""
+    if len(work_data) >= 2:
+        work_department = work_data[1]
+
+    if len(work_data) >= 1:
+        work_position = work_data[0]
+    else:
+        work_position = work_data
+
+    hospital: Hospitals = request_data["hospital"]
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
+    hospital_name = hospital.safe_short_title
+
+    work_p = patient_data['work_place_db'] if patient_data['work_place_db'] else patient_data['work_place']
+
+    card = Card.objects.get(pk=request_data["card_pk"])
+
+    objs = []
+
+    objs.append(
+        Paragraph('Министерство здравоохранения Российской Федераци <br/> <u>{}</u> <br/> {} <br/> Код ОГРН {} <br/> <u>ВЫПИСКА ИЗ АМБУЛАТОРНОЙ КАРТЫ</u>'.format(hospital_name, hospital_address, hospital_kod_ogrn), styleCenterBold))
+
+    objs.append(Spacer(1, 3 * mm))
+
+    objs.append(
+        Paragraph(
+            f'<u>{card.individual.fio(full=True)}</u>',
+            style,
+        )
+    )
+
+    objs.append(Paragraph('Адрес регистрации по месту жительства (пребывания): <u>{}</u>'.format(patient_data['fact_address']), style))
+    objs.append(Paragraph('Номер СНИЛС: <u>{}</u>'.format(patient_data['oms']['polis_num']), style))
+    objs.append(Paragraph('Место работы <u>{}</u>'.format(work_p), style))
+    objs.append(Paragraph('Профессия/должность (в настоящее время) <u>{}</u>'.format(work_position), style))
+    objs.append(Paragraph('Наименование вредных производственных факторов, видов работ с указанием пункта приказа Министерства здравоохранения РФ от 28.01.21г. №29н <u>{}</u>'.format(patient_data['harmful_factor']), style))
+    styleLeft = deepcopy(style)
+    styleLeft.alignment = TA_LEFT
+    objs.append(Spacer(1, 2 * mm))
+
+    styleTCenter = deepcopy(styleT)
+    styleTCenter.alignment = TA_CENTER
+    styleTCenter.leading = 3.5 * mm
+
+    objs.append(Paragraph('<u>Заключение врачей специалистов</u>',style,))  
+
+    objs.append(Spacer(1, 2 * mm))
+
+    opinion = [
+        [
+            Paragraph('<font size=9 >п/п</font>', styleTCenter),
+            Paragraph('<font size=9 >Врач</font>', styleTCenter),
+            Paragraph('<font size=9 >Дата осмотра</font>', styleTCenter),
+            Paragraph('<font size=9 >Диагноз(код МКБ)</font>', styleTCenter),
+            Paragraph('<font size=9 >Медицинские противопоказания к работе</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >Подпись врача</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >1</font>', styleTCenter),
+            Paragraph('<font size=9 >Акушер-гинеколог</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >НЕ выявлены</font>', styleTCenter),
+            Paragraph('<font size=9 >Выявлены:</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >2</font>', styleTCenter),
+            Paragraph('<font size=9 >Дерматовенеролог</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >НЕ выявлены</font>', styleTCenter),
+            Paragraph('<font size=9 >Выявлены:</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >3</font>', styleTCenter),
+            Paragraph('<font size=9 >Невролог </font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >НЕ выявлены</font>', styleTCenter),
+            Paragraph('<font size=9 >Выявлены:</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >4</font>', styleTCenter),
+            Paragraph('<font size=9 >Психиатр, психиатр-нарколог</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >НЕ выявлены</font>', styleTCenter),
+            Paragraph('<font size=9 >Выявлены:</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >5</font>', styleTCenter),
+            Paragraph('<font size=9 >Офтальмолог</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >НЕ выявлены</font>', styleTCenter),
+            Paragraph('<font size=9 >Выявлены:</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >6</font>', styleTCenter),
+            Paragraph('<font size=9 >Оториноларинголог</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >НЕ выявлены</font>', styleTCenter),
+            Paragraph('<font size=9 >Выявлены:</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >7</font>', styleTCenter),
+            Paragraph('<font size=9 >Стоматолог</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >НЕ выявлены</font>', styleTCenter),
+            Paragraph('<font size=9 >Выявлены:</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >8</font>', styleTCenter),
+            Paragraph('<font size=9 >Хирург</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >НЕ выявлены</font>', styleTCenter),
+            Paragraph('<font size=9 >Выявлены:</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >9</font>', styleTCenter),
+            Paragraph('<font size=9 >Терапевт</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >НЕ выявлены</font>', styleTCenter),
+            Paragraph('<font size=9 >Выявлены:</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >10</font>', styleTCenter),
+            Paragraph('<font size=9 >Профпатолог</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >НЕ выявлены</font>', styleTCenter),
+            Paragraph('<font size=9 >Выявлены:</font>', styleTCenter),
+        ],
+    ]
+
+    row_height = []
+    for i in opinion:
+        row_height.append(None)
+
+    tbl = Table(opinion, colWidths=(8 * mm, 35 * mm, 30 * mm, 30 * mm, 30 * mm, 30 * mm, 30 * mm), rowHeights=row_height)
+
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+                ('SPAN', (4, 0), (5, 0)),
+            ]
+        )
+    )
+
+    objs.append(tbl)
+
+    objs.append(Paragraph('<u>Результаты обследования:</u>',style,))
+    objs.append(Paragraph('Рост:_______см, вес:______кг, ИМТ:_____, АД_______________мм.рт.ст.',style,))
+    objs.append(Paragraph('Результаты лабораторных и инструментальных методов обследования:',style,))
+    objs.append(Paragraph('ФЛГ от ________20    г.__________________________________________________',style,))
+    objs.append(Paragraph('Маммография от ______20   г._____________________________________________',style,))
+    objs.append(Paragraph('ОАК от ______20  г. гемоглобин ____г/л, Эр____*10-12; Тр___*10-9; Лей___*10-9; СОЭ___мм/ч',style,))
+    objs.append(Paragraph('ОАМ от _____20  г. Ph___, уд.вес_____, белок_____, лей____в п.з., эр_____в п.з.,',style,))
+    objs.append(Paragraph('глюкоза____ммоль/л, соли__________',style,))
+    objs.append(Paragraph('Биохимия от _____20  г. глюкоза______ммоль/л, холестерин______ммоль/л, АЛТ_____, АСТ______, билирубин________',style,))
+    objs.append(Paragraph('ЭКГ от _____20  г._______________________________________________________',style,))
+    objs.append(Paragraph('Спирография от _____20   г.______________________________________________',style,))
+    objs.append(Paragraph('ВГД (40 лет и старше): от ______20  г. OD=_____,OS=________',style,))
+    objs.append(Paragraph('Сердечно-сосудистый риск SCORE от______20  г.____________________________',style,))
 
     def first_pages(canvas, document):
         canvas.saveState()
