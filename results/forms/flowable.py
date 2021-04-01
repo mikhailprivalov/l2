@@ -13,7 +13,7 @@ import os.path
 
 
 class FrameData(Flowable):
-    def __init__(self, x=0, y=0, width=0, height=0, text="", style=""):
+    def __init__(self, x=0, y=0, width=0, height=0, text="", style="", tbl=None):
         Flowable.__init__(self)
         self.x = x
         self.y = y
@@ -21,6 +21,7 @@ class FrameData(Flowable):
         self.height = height
         self.text = text
         self.style = style
+        self.tbl = tbl
 
     def draw(self):
         pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
@@ -30,8 +31,10 @@ class FrameData(Flowable):
         style.fontName = "PTAstraSerifReg"
         style.fontSize = 10
         style.alignment = TA_JUSTIFY
-        # self.canv.saveState()
+        self.canv.saveState()
         near_diagnos_text = [Paragraph(f'{self.text}', self.style)]
+        if self.tbl:
+            near_diagnos_text = [self.tbl]
         near_diagnos_frame = Frame(self.x * mm, self.y, self.width * mm, self.height * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
         near_diagnos_inframe = KeepInFrame(
             self.width * mm,
@@ -41,13 +44,18 @@ class FrameData(Flowable):
             fakeWidth=False,
         )
         near_diagnos_frame.addFromList([near_diagnos_inframe], self.canv)
-        # self.canv.restoreState()
+        self.canv.restoreState()
 
 
-class FrameDataExt(Flowable):
-    def __init__(self, x=0, y=0, width=0, height=0, text="", tbl=None):
+class FrameDataStamp(Flowable):
+    def __init__(self, x=0, y=0, width=0, height=0, text="", style="", tbl=None):
         Flowable.__init__(self)
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
         self.text = text
+        self.style = style
         self.tbl = tbl
 
 
@@ -60,9 +68,7 @@ class FrameDataExt(Flowable):
         style.fontSize = 10
         style.alignment = TA_JUSTIFY
         # self.canv.saveState()
-        near_diagnos_text = [Paragraph(f'{self.text}', style)]
-        if self.tbl:
-            near_diagnos_text = [self.tbl]
+        near_diagnos_text = [self.tbl]
         near_diagnos_frame = Frame(0 * mm, -70 * mm, 175 * mm, 20 * mm, leftPadding=2, bottomPadding=2, rightPadding=2, topPadding=2, showBoundary=1)
         near_diagnos_inframe = KeepInFrame(
             175 * mm,
