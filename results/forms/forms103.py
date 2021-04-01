@@ -27,7 +27,7 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None, canv=None):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
-    style.fontSize = 10
+    style.fontSize = 12
     style.alignment = TA_JUSTIFY
 
     style_ml = deepcopy(style)
@@ -63,12 +63,11 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None, canv=None):
     styleCenter.fontName = 'PTAstraSerifReg'
 
     fwb.append(FrameData(0, -15 * mm, 120, 28, text=text, style=style))
-    fwb.append(FrameData(0, -20 * mm, 180, 8, text=f'Медицинская справка', style=styleCenterBold))
-    # fwb.append(Paragraph(f'Медицинская справка', styleCenterBold))
-    # fwb.append(Paragraph(f'№ {direction.pk}', styleCenter))
-    # fwb.append(Paragraph(f'по результатам обследования водителя<br/>транспартнго средства (кандидата в водители траспортного средства)<br/><u>врачом-психиатром</u>', styleCenter))
-
-    fwb.append(Spacer(1, 4 * mm))
+    fwb.append(FrameData(0, -20 * mm, 180, 5, text=f'Медицинская справка', style=styleCenterBold))
+    fwb.append(FrameData(0, -23 * mm, 180, 5, text=f'№ {direction.pk}', style=styleCenter))
+    fwb.append(
+        FrameData(0, -32 * mm, 180, 15, text=f'по результатам обследования водителя<br/>транспартнго средства (кандидата в водители траспортного средства)<br/><u>врачом-психиатром</u>',
+                  style=styleCenter))
     result = protocol_fields_result(iss)
     main_address, identified_final = '', ''
     for i in result:
@@ -76,11 +75,11 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None, canv=None):
             identified_final = i["value"].replace('<', '&lt;').replace('>', '&gt;')
         elif i["title"] == "Место регистрации":
             main_address = i["value"]
-
-    # fwb.append(Paragraph(f'1. Фамилия, имя, отчество (при наличии): {direction.client.individual.fio()}', style))
-    # fwb.append(Paragraph(f'2. Дата рождения: {direction.client.individual.bd()}', style))
-    # fwb.append(Paragraph(f'3. Место регистрации: {main_address}', style))
-    # fwb.append(Paragraph(f'4. Медицинское заключение: {identified_final}', style))
+    text = f'1. Фамилия, имя, отчество (при наличии): {direction.client.individual.fio()}<br/><br/>' \
+           f'2. Дата рождения: {direction.client.individual.bd()}<br/><br/>' \
+           f'3. Место регистрации: {main_address}<br/><br/>' \
+           f'4. Медицинское заключение: {identified_final}'
+    fwb.append(FrameData(0, -80 * mm, 180, 70, text=text, style=style))
 
     # medical_text_frame = Frame(5 * mm, 181 * mm, 175 * mm, 20 * mm, id='med_text', leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=1)
     # fwb.append(FrameData(0, -15 * mm, 120, 28, text=identified_final))
