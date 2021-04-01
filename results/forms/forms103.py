@@ -1,11 +1,9 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
 from medical_certificates.forms.forms380 import protocol_fields_result
-from utils.dates import normalize_date
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import Paragraph, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
@@ -19,7 +17,6 @@ from directions.models import Issledovaniya
 
 def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     # Справка-вождение
-
     template = add_template(iss, direction, 0)
     fwb.extend(template)
     template = add_template(iss, direction, 100)
@@ -111,4 +108,3 @@ def add_template(iss: Issledovaniya, direction, offset=0):
     obj.append(FrameData(0, (-75-offset) * mm, 180, 20, text=text, style=style, tbl=tbl))
 
     return obj
-
