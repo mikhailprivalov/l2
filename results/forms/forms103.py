@@ -17,7 +17,7 @@ from results.prepare_data import text_to_bold
 import os.path
 
 from utils.flowable import InteractiveTextField
-from .flowable import insertOwnFrame
+from .flowable import FrameData, FrameDataExt
 
 
 def form_01(direction, iss, fwb, doc, leftnone, user=None, canv=None):
@@ -46,26 +46,12 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None, canv=None):
     styleT.fontSize = 10
     styleT.leading = 4.5 * mm
 
-    opinion = [
-        [
-            Paragraph(f'<font size=10>{hospital_full_name}<br/>{hospital_short_name}<br/>Адрес: {hospital_doc_confirm.address}, '
-                      f'{hospital_doc_confirm.phones}<br/>Лицензия на осуществление медицинской деятельности <br/> {hospital_doc_confirm.license_data}</font>', styleT),
-            Paragraph('', styleT),
-        ],
-    ]
-    tbl = Table(opinion,  colWidths=[130 * mm, 60 * mm])
-    tbl.setStyle(
-        TableStyle(
-            [
-                ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
-                ('LEFTPADDING', (1, 0), (-1, -1), 2 * mm),
-                ('LEFTPADDING', (0, 0), (0, -1), 2 * mm),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ]
-        )
-    )
+    text = f'<font size=10>{hospital_full_name}<br/>{hospital_short_name}<br/>Адрес: {hospital_doc_confirm.address}' \
+           f'{hospital_doc_confirm.phones}<br/>Лицензия на осуществление медицинской деятельности <br/> {hospital_doc_confirm.license_data}<br/>' \
+           f'</font>'
 
-    fwb.append(tbl)
+    # fwb.append(FrameData(text="")
+    # fwb.append(tbl)
 
     styleCenterBold = deepcopy(style)
     styleCenterBold.alignment = TA_CENTER
@@ -76,9 +62,11 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None, canv=None):
     styleCenter = deepcopy(styleCenterBold)
     styleCenter.fontName = 'PTAstraSerifReg'
 
-    fwb.append(Paragraph(f'Медицинская справка', styleCenterBold))
-    fwb.append(Paragraph(f'№ {direction.pk}', styleCenter))
-    fwb.append(Paragraph(f'по результатам обследования водителя<br/>транспартнго средства (кандидата в водители траспортного средства)<br/><u>врачом-психиатром</u>', styleCenter))
+    fwb.append(FrameData(0, -15 * mm, 120, 28, text=text, style=style))
+    fwb.append(FrameData(0, -20 * mm, 180, 8, text=f'Медицинская справка', style=styleCenterBold))
+    # fwb.append(Paragraph(f'Медицинская справка', styleCenterBold))
+    # fwb.append(Paragraph(f'№ {direction.pk}', styleCenter))
+    # fwb.append(Paragraph(f'по результатам обследования водителя<br/>транспартнго средства (кандидата в водители траспортного средства)<br/><u>врачом-психиатром</u>', styleCenter))
 
     fwb.append(Spacer(1, 4 * mm))
     result = protocol_fields_result(iss)
@@ -89,13 +77,13 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None, canv=None):
         elif i["title"] == "Место регистрации":
             main_address = i["value"]
 
-    fwb.append(Paragraph(f'1. Фамилия, имя, отчество (при наличии): {direction.client.individual.fio()}', style))
-    fwb.append(Paragraph(f'2. Дата рождения: {direction.client.individual.bd()}', style))
-    fwb.append(Paragraph(f'3. Место регистрации: {main_address}', style))
+    # fwb.append(Paragraph(f'1. Фамилия, имя, отчество (при наличии): {direction.client.individual.fio()}', style))
+    # fwb.append(Paragraph(f'2. Дата рождения: {direction.client.individual.bd()}', style))
+    # fwb.append(Paragraph(f'3. Место регистрации: {main_address}', style))
     # fwb.append(Paragraph(f'4. Медицинское заключение: {identified_final}', style))
 
     # medical_text_frame = Frame(5 * mm, 181 * mm, 175 * mm, 20 * mm, id='med_text', leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=1)
-    box = insertOwnFrame(text=identified_final)
-    fwb.append(box)
+    # fwb.append(FrameData(0, -15 * mm, 120, 28, text=identified_final))
+    # fwb.append(FrameDataExt(0, -28, 175, 28, text=identified_final))
 
     return fwb
