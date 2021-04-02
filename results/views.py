@@ -517,7 +517,6 @@ def result_print(request):
 
     client_prev = -1
     link_result = []
-    has_own_form_result = False
     fwb = []
     hosp_nums_obj = hosp_get_hosp_direction(pk[0])
     hosp_nums = ''
@@ -577,6 +576,7 @@ def result_print(request):
         is_gistology = False
         current_size_form = None
         temp_iss = None
+        has_own_form_result = False
 
         for iss in direction.issledovaniya_set.all():
             if iss.time_save:
