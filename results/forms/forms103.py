@@ -66,7 +66,7 @@ def add_template(iss: Issledovaniya, direction, offset=0):
     styleCenter.fontName = 'PTAstraSerifReg'
     obj = []
     obj.append(FrameData(0, (-15 - offset) * mm, 120, 28, text=text, style=style))
-    obj.append(FrameData(0, (-20 - offset) * mm, 180, 5, text=f'Медицинская справка', style=styleCenterBold))
+    obj.append(FrameData(0, (-20 - offset) * mm, 180, 5, text='Медицинская справка', style=styleCenterBold))
     obj.append(FrameData(0, (-23 - offset) * mm, 180, 5, text=f'№ {direction.pk}', style=styleCenter))
     obj.append(
         FrameData(
@@ -74,7 +74,7 @@ def add_template(iss: Issledovaniya, direction, offset=0):
             (-32 - offset) * mm,
             180,
             15,
-            text=f'по результатам обследования водителя<br/>транспартнго средства (кандидата в водители траспортного средства)<br/><u>врачом-психиатром</u>',
+            text='по результатам обследования водителя<br/>транспартнго средства (кандидата в водители траспортного средства)<br/><u>врачом-психиатром</u>',
             style=styleCenter,
         )
     )
@@ -101,8 +101,8 @@ def add_template(iss: Issledovaniya, direction, offset=0):
             Paragraph(f'<u>врач-психиатр, {iss.doc_confirmation.fio}</u>', styleCenter),
         ],
         [
-            Paragraph(f'(Дата)', styleCenter),
-            Paragraph(f'Должность (ФИО)', styleCenter),
+            Paragraph('(Дата)', styleCenter),
+            Paragraph('Должность (ФИО)', styleCenter),
         ],
     ]
     tbl = Table(opinion, colWidths=(90 * mm, 90 * mm))
