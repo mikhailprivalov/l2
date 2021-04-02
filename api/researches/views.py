@@ -72,6 +72,7 @@ def get_researches(request):
                 "doc_refferal": r.is_doc_refferal,
                 "treatment": r.is_treatment,
                 "is_hospital": r.is_hospital,
+                "is_form": r.is_form,
                 "stom": r.is_stom,
                 "need_vich_code": r.need_vich_code,
                 "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
@@ -87,7 +88,6 @@ def get_researches(request):
         )
 
     tubes = list(Tubes.objects.values('pk', 'title', 'color'))
-
     result = {"researches": deps, "tubes": tubes}
 
     return JsonResponse(result)
