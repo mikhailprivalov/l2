@@ -610,7 +610,6 @@ def result_print(request):
             current_size_form = iss.research.size_form
             temp_iss = iss
 
-
         def local_mark_pages(c, _):
             if not has_own_form_result:
                 mark_pages(c, direction)
@@ -1240,7 +1239,9 @@ def result_print(request):
                             doc_execute = "фельдшер" if request.user.is_authenticated and request.user.doctorprofile.has_group("Фельдшер") else "врач"
                             fwb.append(Paragraph("Исполнитель: {} {}, {}".format(doc_execute, iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
                         else:
-                            fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation_string, iss.napravleniye.hospital.short_title or iss.napravleniye.hospital.title), styleBold))
+                            fwb.append(
+                                Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation_string, iss.napravleniye.hospital.short_title or iss.napravleniye.hospital.title), styleBold)
+                            )
 
                         if iss.research.is_doc_refferal and SettingManager.get("agree_diagnos", default='True', default_type='b'):
                             fwb.append(Spacer(1, 3.5 * mm))
@@ -1551,7 +1552,13 @@ class TTR(Flowable):
 @login_required
 def result_journal_table_print(request):
     dateo = request.GET["date"]
-    date = try_strptime(dateo, formats=('%d.%m.%Y', '%Y-%m-%d',))
+    date = try_strptime(
+        dateo,
+        formats=(
+            '%d.%m.%Y',
+            '%Y-%m-%d',
+        ),
+    )
     end_date = date + datetime.timedelta(days=1)
     onlyjson = False
 
@@ -1714,7 +1721,13 @@ def result_journal_print(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="journal.pdf"'
     dateo = request.GET["date"]
-    date = try_strptime(dateo, formats=('%d.%m.%Y', '%Y-%m-%d',))
+    date = try_strptime(
+        dateo,
+        formats=(
+            '%d.%m.%Y',
+            '%Y-%m-%d',
+        ),
+    )
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
 
     ist_f = json.loads(request.GET.get("ist_f", "[]"))
@@ -1978,7 +1991,13 @@ def get_day_results(request):
         day = request.GET["date"]
         otd = request.GET.get("otd", "-1")
 
-    day1 = try_strptime(day, formats=('%d.%m.%Y', '%Y-%m-%d',))
+    day1 = try_strptime(
+        day,
+        formats=(
+            '%d.%m.%Y',
+            '%Y-%m-%d',
+        ),
+    )
     day2 = day1 + datetime.timedelta(days=1)
     directions = collections.defaultdict(list)
     otd = int(otd)
