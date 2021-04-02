@@ -66,6 +66,7 @@ class ResearchSite(models.Model):
         (2, 'Стоматалогия'),
         (3, 'Стационар'),
         (4, 'Микробиология'),
+        (5, 'Формы'),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
@@ -167,6 +168,7 @@ class Researches(models.Model):
     is_microbiology = models.BooleanField(default=False, blank=True, help_text="Это микробиологическое исследование")
     is_citology = models.BooleanField(default=False, blank=True, help_text="Это цитологическое исследование")
     is_gistology = models.BooleanField(default=False, blank=True, help_text="Это гистологическое исследование")
+    is_form = models.BooleanField(default=False, blank=True, help_text="Это формы, cправки, направления")
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
 
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
