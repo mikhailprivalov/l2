@@ -417,8 +417,6 @@ def form_01(request_data):
     styleTCcenter = deepcopy(styleTC)
     styleTCcenter.alignment = TA_CENTER
 
-    opinion = []
-
     # Всегда заголовки одинаково со скидкой
     opinion = [
         [

@@ -42,7 +42,7 @@
             <template v-if="direction.amd !== 'not_need'">
               <div v-if="direction.amd === 'need'" class="amd amd-need">АМД: не отправлено</div>
               <div v-else-if="direction.amd === 'ok'" class="amd amd-ok">АМД: отправлено
-                ({{data.direction.amd_number}})
+                ({{direction.amd_number}})
               </div>
               <div v-else-if="direction.amd === 'error'" class="amd amd-error">АМД: ошибка</div>
               <div v-else-if="direction.amd === 'planned'" class="amd amd-planned">АМД: запланировано</div>

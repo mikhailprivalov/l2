@@ -1,4 +1,6 @@
 export default [
+  {url: '/forms/pdf?type=101.11&card_pk={card}', title: 'Отказ от видов медицинских вмешательств'},
+  {url: '/forms/pdf?type=101.10&card_pk={card}', title: 'Карта для диспансеризации'},
   {url: '/forms/pdf?type=101.09&card_pk={card}', title: 'Согласие на прерывание беремености'},
   {url: '/forms/pdf?type=101.05&card_pk={card}', title: 'История изменений данных пациента'},
   {url: '/forms/pdf?type=101.06&card_pk={card}', title: 'Согласие COVID-19'},
