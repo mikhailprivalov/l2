@@ -576,12 +576,7 @@ def result_print(request):
         is_gistology = False
         current_size_form = None
         temp_iss = None
-
-        def local_mark_pages(c, _):
-            mark_pages(c, direction)
-
-        portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
-        landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)
+        has_own_form_result = False
 
         for iss in direction.issledovaniya_set.all():
             if iss.time_save:
@@ -609,8 +604,18 @@ def result_print(request):
                 is_extract = True
             if iss.research.is_gistology:
                 is_gistology = True
+            if iss.research.has_own_form_result:
+                has_own_form_result = True
+
             current_size_form = iss.research.size_form
             temp_iss = iss
+
+        def local_mark_pages(c, _):
+            if not has_own_form_result:
+                mark_pages(c, direction)
+
+        portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
+        landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)
 
         if link_files:
             continue
@@ -650,8 +655,8 @@ def result_print(request):
 
         number_poliklinika = f' ({direction.client.number_poliklinika})' if direction.client.number_poliklinika else ''
         individual_birthday = f'({strdate(direction.client.individual.birthday)})'
-        t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
-        if not hosp and not is_gistology or is_extract:
+        if not hosp and not is_gistology and not has_own_form_result or is_extract:
+            t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract)
             fwb.append(t)
             fwb.append(Spacer(1, 5 * mm))
         if not has_paraclinic:
@@ -1122,7 +1127,7 @@ def result_print(request):
             iss: Issledovaniya
             for iss in direction.issledovaniya_set.all().order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
-                if not hosp and not is_gistology:
+                if not hosp and not is_gistology and not has_own_form_result:
                     fwb.append(InteractiveTextField())
                     fwb.append(Spacer(1, 2 * mm))
                     if (
@@ -1140,7 +1145,7 @@ def result_print(request):
                         iss_title = "Услуга: " + iss.research.title
                     fwb.append(Paragraph(f"<para align='center'><font size='9'>{iss_title}</font></para>", styleBold))
                 else:
-                    if not is_gistology:
+                    if not is_gistology and not has_own_form_result:
                         fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
 
                 type_form = iss.research.result_form
@@ -1218,7 +1223,7 @@ def result_print(request):
                     fwb = procedural_text_for_result(iss.napravleniye, fwb, napr_child)
 
                 fwb.append(Spacer(1, 3 * mm))
-                if not hosp and not iss.research.is_slave_hospital:
+                if not hosp and not iss.research.is_slave_hospital and not iss.research.has_own_form_result:
                     if iss.research.is_doc_refferal:
                         fwb.append(Paragraph("Дата осмотра: {}".format(strdate(iss.get_medical_examination())), styleBold))
                     else:
@@ -1226,20 +1231,23 @@ def result_print(request):
                             fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                     fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
 
-                if iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
-                    fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
-                else:
-                    if iss.doc_confirmation:
-                        doc_execute = "фельдшер" if request.user.is_authenticated and request.user.doctorprofile.has_group("Фельдшер") else "врач"
-                        fwb.append(Paragraph("Исполнитель: {} {}, {}".format(doc_execute, iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                if not iss.research.has_own_form_result:
+                    if iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
+                        fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
                     else:
-                        fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation_string, iss.napravleniye.hospital.short_title or iss.napravleniye.hospital.title), styleBold))
+                        if iss.doc_confirmation:
+                            doc_execute = "фельдшер" if request.user.is_authenticated and request.user.doctorprofile.has_group("Фельдшер") else "врач"
+                            fwb.append(Paragraph("Исполнитель: {} {}, {}".format(doc_execute, iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                        else:
+                            fwb.append(
+                                Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation_string, iss.napravleniye.hospital.short_title or iss.napravleniye.hospital.title), styleBold)
+                            )
 
-                    if iss.research.is_doc_refferal and SettingManager.get("agree_diagnos", default='True', default_type='b'):
-                        fwb.append(Spacer(1, 3.5 * mm))
-                        fwb.append(Paragraph("С диагнозом, планом обследования и лечения ознакомлен и согласен _________________________", style))
+                        if iss.research.is_doc_refferal and SettingManager.get("agree_diagnos", default='True', default_type='b'):
+                            fwb.append(Spacer(1, 3.5 * mm))
+                            fwb.append(Paragraph("С диагнозом, планом обследования и лечения ознакомлен и согласен _________________________", style))
 
-                    fwb.append(Spacer(1, 2.5 * mm))
+                        fwb.append(Spacer(1, 2.5 * mm))
 
         if client_prev == direction.client.individual_id and not split and not is_different_form:
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
@@ -1259,7 +1267,9 @@ def result_print(request):
     num_card = hosp_nums
     if not hosp:
         num_card = pk[0]
-    if len(pk) == 1 and not link_result and not hosp and fwb:
+    if len(pk) == 1 and has_own_form_result:
+        doc.build(fwb)
+    elif len(pk) == 1 and not link_result and not hosp and fwb:
         doc.build(fwb, canvasmaker=PageNumCanvas)
     elif len(pk) == 1 and not link_result and hosp:
         doc.build(fwb, canvasmaker=PageNumCanvasPartitionAll)
@@ -1542,7 +1552,13 @@ class TTR(Flowable):
 @login_required
 def result_journal_table_print(request):
     dateo = request.GET["date"]
-    date = try_strptime(dateo, formats=('%d.%m.%Y', '%Y-%m-%d',))
+    date = try_strptime(
+        dateo,
+        formats=(
+            '%d.%m.%Y',
+            '%Y-%m-%d',
+        ),
+    )
     end_date = date + datetime.timedelta(days=1)
     onlyjson = False
 
@@ -1705,7 +1721,13 @@ def result_journal_print(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="journal.pdf"'
     dateo = request.GET["date"]
-    date = try_strptime(dateo, formats=('%d.%m.%Y', '%Y-%m-%d',))
+    date = try_strptime(
+        dateo,
+        formats=(
+            '%d.%m.%Y',
+            '%Y-%m-%d',
+        ),
+    )
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
 
     ist_f = json.loads(request.GET.get("ist_f", "[]"))
@@ -1969,7 +1991,13 @@ def get_day_results(request):
         day = request.GET["date"]
         otd = request.GET.get("otd", "-1")
 
-    day1 = try_strptime(day, formats=('%d.%m.%Y', '%Y-%m-%d',))
+    day1 = try_strptime(
+        day,
+        formats=(
+            '%d.%m.%Y',
+            '%Y-%m-%d',
+        ),
+    )
     day2 = day1 + datetime.timedelta(days=1)
     directions = collections.defaultdict(list)
     otd = int(otd)

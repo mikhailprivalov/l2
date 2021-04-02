@@ -128,6 +128,7 @@ class Researches(models.Model):
         (10002, '100.02 - Реанимационная карта - 1 день'),
         (10101, '101.01 - Дневник в 3 колонки'),
         (10201, '102.01 - Гистология'),
+        (10301, '103.01 - Справка-вождение'),
     )
 
     CO_EXECUTOR_MODES = (
@@ -195,6 +196,7 @@ class Researches(models.Model):
     bac_culture_comments_templates = models.TextField(blank=True, default="", help_text="Шаблоны ввода для комментария в культуре")
     speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальность услуги', on_delete=models.SET_NULL)
     rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
+    has_own_form_result = models.BooleanField(blank=True, default=False, help_text="Собственная форма результатов")
 
 
     @staticmethod
