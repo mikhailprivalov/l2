@@ -19,7 +19,7 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     # Справка-вождение
     template = add_template(iss, direction, 0)
     fwb.extend(template)
-    template = add_template(iss, direction, 100)
+    template = add_template(iss, direction, 107)
     fwb.extend(template)
 
     return fwb
