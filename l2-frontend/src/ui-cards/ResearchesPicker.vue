@@ -472,6 +472,7 @@
           }
         }
         this.dep = this.departments_of_type.length > 0 ? this.departments_of_type[0].pk : -1
+
       },
       check_template() {
         if (this.template === -1 && this.templates.length > 0) {

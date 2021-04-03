@@ -71,6 +71,7 @@ class SettingManager:
             8: SettingManager.l2('microbiology'),
             9: SettingManager.l2('citology'),
             10: SettingManager.l2('gistology'),
+            11: SettingManager.l2('forms'),
         }
 
     @staticmethod

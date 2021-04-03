@@ -420,7 +420,7 @@ def departments(request):
         more_types = []
         if SettingManager.is_morfology_enabled(en):
             more_types.append({"pk": str(Podrazdeleniya.MORFOLOGY), "title": "Морфология"})
-            more_types.append({"pk": str(Podrazdeleniya.FORMS), "title": "Формы"})
+            # more_types.append({"pk": str(Podrazdeleniya.FORMS), "title": "Формы"})
         return JsonResponse(
             {"departments": deps, "can_edit": can_edit, "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] != 8 and en.get(x[0], True)], *more_types]}
         )

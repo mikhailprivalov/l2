@@ -212,6 +212,7 @@ class Researches(models.Model):
             9: dict(is_microbiology=True),
             10: dict(is_citology=True),
             11: dict(is_gistology=True),
+            12: dict(is_form=True),
         }
         return ts.get(t + 1, {})
 
@@ -227,13 +228,16 @@ class Researches(models.Model):
             return -4
         if self.is_hospital:
             return -5
+        if self.is_form:
+            return -6
         if self.is_microbiology or self.is_citology or self.is_gistology:
             return 2 - Podrazdeleniya.MORFOLOGY
         return self.podrazdeleniye_id or -2
 
     @property
     def desc(self):
-        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology or self.is_hospital or self.is_citology or self.is_gistology
+        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology or self.is_hospital or self.is_citology or self.is_gistology or \
+               self.is_form
 
     @property
     def can_transfer(self):
@@ -254,6 +258,9 @@ class Researches(models.Model):
 
         if self.is_doc_referral:
             return "consultation"
+
+        if self.is_form:
+            return "is_form"
 
         hs = HospitalService.objects.filter(slave_research=self).first()
 

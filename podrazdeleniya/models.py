@@ -24,6 +24,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         (STOM, "Стоматология"),
         (HOSP, "Стационар"),
         (MICROBIOLOGY, "Микробиология"),
+        (FORMS, "Формы"),
     )
 
     title = models.CharField(max_length=255)  # Название подразделения
