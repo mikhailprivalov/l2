@@ -118,6 +118,9 @@
           if (this.modules.l2_stom) {
             d.push({value: -4, label: 'Стоматология'})
           }
+          if (this.modules.l2_forms) {
+            d.push({value: -9, label: 'Формы'})
+          }
 
           if (this.modules.l2_hosp && this.can_edit_stationar) {
             d.push({value: -5, label: 'Стационар'});

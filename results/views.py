@@ -593,6 +593,7 @@ def result_print(request):
                 or iss.research.is_microbiology
                 or iss.research.is_citology
                 or iss.research.is_gistology
+                or iss.research.is_form
             ):
                 has_paraclinic = True
             if directory.HospitalService.objects.filter(slave_research=iss.research).exists():
@@ -2253,7 +2254,7 @@ def results_search_directions(request):
             iss_dir = iss_dir.filter(research__pk__in=rq_researches)
 
         for r in iss_dir:
-            if not r.research.is_paraclinic and not r.research.is_doc_refferal:
+            if not r.research.is_paraclinic and not r.research.is_doc_refferal and not r.research.is_form:
                 if not Result.objects.filter(issledovaniye=r).exists():
                     continue
                 tmp_r = {"title": r.research.title}

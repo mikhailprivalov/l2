@@ -54,6 +54,7 @@ class SettingManager:
                     "load_file",
                     "send_doc_calls",
                     "only_doc_call",
+                    "forms",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
