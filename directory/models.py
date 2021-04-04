@@ -229,7 +229,7 @@ class Researches(models.Model):
         if self.is_hospital:
             return -5
         if self.is_form:
-            return -6
+            return -9
         if self.is_microbiology or self.is_citology or self.is_gistology:
             return 2 - Podrazdeleniya.MORFOLOGY
         return self.podrazdeleniye_id or -2

@@ -395,6 +395,7 @@
       },
       researches_dep_display(dep = this.dep) {
         let r = []
+        console.log(this.rev_t)
         if (this.rev_t === -2) {
           for (const d of Object.keys(this.$store.getters.researches)) {
             for (const row of (this.$store.getters.researches[d] || [])) {

@@ -624,7 +624,7 @@
           '-4': {title: 'Стоматология'},
           '-5': {title: 'Стационар'},
           '-9998': {title: 'Морфология'},
-          '-9999': {title: 'Документы'}
+          '-9': {title: 'Формы'}
         }
         for (let dep of this.$store.getters.allDepartments) {
           deps[dep.pk] = dep
