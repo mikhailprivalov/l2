@@ -221,6 +221,7 @@ def researches_update(request):
                     is_microbiology=department_pk == -6,
                     is_citology=department_pk == -7,
                     is_gistology=department_pk == -8,
+                    is_form=department_pk == -9,
                     is_slave_hospital=stationar_slave,
                     microbiology_tube_id=tube if department_pk == -6 else None,
                     site_type_id=site_type,
