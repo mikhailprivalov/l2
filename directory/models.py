@@ -200,7 +200,6 @@ class Researches(models.Model):
     rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
     has_own_form_result = models.BooleanField(blank=True, default=False, help_text="Собственная форма результатов")
 
-
     @staticmethod
     def filter_type(t):
         ts = {
@@ -236,8 +235,17 @@ class Researches(models.Model):
 
     @property
     def desc(self):
-        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology or self.is_hospital or self.is_citology or self.is_gistology or \
-               self.is_form
+        return (
+            self.is_treatment
+            or self.is_stom
+            or self.is_doc_refferal
+            or self.is_paraclinic
+            or self.is_microbiology
+            or self.is_hospital
+            or self.is_citology
+            or self.is_gistology
+            or self.is_form
+        )
 
     @property
     def can_transfer(self):
@@ -417,7 +425,7 @@ class ParaclinicInputField(models.Model):
         (23, 'Raw field without autoload'),
         (24, 'Laboratory result test value units'),
         (25, 'Diagnostic result'),
-        (26, 'Consultation result')
+        (26, 'Consultation result'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
