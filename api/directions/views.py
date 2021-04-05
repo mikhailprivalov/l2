@@ -1876,6 +1876,7 @@ def last_field_result(request):
     result = None
 
     c = Card.objects.get(pk=client_pk)
+    data = c.get_data_individual()
     if request_data["fieldPk"].find('%work_place') != -1:
         if c.work_place:
             work_place = c.work_place
@@ -1886,6 +1887,10 @@ def last_field_result(request):
         result = {"value": work_place}
     elif request_data["fieldPk"].find('%main_address') != -1:
         result = {"value": c.main_address}
+    elif request_data["fieldPk"].find('%snils') != -1:
+        result = {"value": data['snils']}
+    elif request_data["fieldPk"].find('%polis_enp') != -1:
+        result = {"value": data['enp']}
     elif request_data["fieldPk"].find('%fact_address') != -1:
         result = {"value": c.fact_address}
     elif request_data["fieldPk"].find('%phone') != -1:
