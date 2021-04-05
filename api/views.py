@@ -415,7 +415,7 @@ def departments(request):
             qs = Podrazdeleniya.objects.filter(hospital_id=hospital_pk).order_by("pk")
         else:
             qs = Podrazdeleniya.objects.filter(Q(hospital_id=hospital_pk) | Q(hospital__isnull=True)).order_by("pk")
-        deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "oid": x.oid } for x in qs]
+        deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "oid": x.oid} for x in qs]
         en = SettingManager.en()
         more_types = []
         if SettingManager.is_morfology_enabled(en):
