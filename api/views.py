@@ -415,7 +415,7 @@ def departments(request):
             qs = Podrazdeleniya.objects.filter(hospital_id=hospital_pk).order_by("pk")
         else:
             qs = Podrazdeleniya.objects.filter(Q(hospital_id=hospital_pk) | Q(hospital__isnull=True)).order_by("pk")
-        deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type)} for x in qs]
+        deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "oid": x.oid } for x in qs]
         en = SettingManager.en()
         more_types = []
         if SettingManager.is_morfology_enabled(en):
@@ -439,6 +439,7 @@ def departments(request):
                         department.title = title
                         department.p_type = int(row["type"])
                         department.hospital_id = hospital_pk
+                        department.oid = row["oid"]
                         department.save()
                         ok = True
             elif data_type == "insert":
@@ -446,7 +447,7 @@ def departments(request):
                 for row in rows:
                     title = row["title"].strip()
                     if len(title) > 0:
-                        department = Podrazdeleniya(title=title, p_type=int(row["type"]), hospital_id=hospital_pk)
+                        department = Podrazdeleniya(title=title, p_type=int(row["type"]), hospital_id=hospital_pk, oid=row["oid"])
                         department.save()
                         ok = True
         finally:
