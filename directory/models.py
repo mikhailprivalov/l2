@@ -72,6 +72,7 @@ class ResearchSite(models.Model):
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
     title = models.CharField(max_length=255, help_text='Подраздел')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие подраздела', db_index=True)
+    order = models.IntegerField(default=-999, help_text='Порядок')
 
     def __str__(self):
         return "%s" % self.title
