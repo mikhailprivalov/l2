@@ -231,7 +231,7 @@ def directions_history(request):
             title_podr = ''
         if title_podr not in lab:
             lab.add(title_podr)
-        if i[14] or i[15] or i[16] or i[17] or i[18] or i[19]:
+        if i[14] or i[15] or i[16] or i[17] or i[18] or i[19] or i[23]:
             has_descriptive = True
 
     status = min(status_set)
@@ -980,6 +980,7 @@ def directions_paraclinic_form(request):
                         | Q(research__is_microbiology=True)
                         | Q(research__is_citology=True)
                         | Q(research__is_gistology=True)
+                        | Q(research__is_form=True)
                     )
                 )
                 .select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')

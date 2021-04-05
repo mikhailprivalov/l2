@@ -54,6 +54,7 @@ class SettingManager:
                     "load_file",
                     "send_doc_calls",
                     "only_doc_call",
+                    "forms",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
@@ -71,6 +72,7 @@ class SettingManager:
             8: SettingManager.l2('microbiology'),
             9: SettingManager.l2('citology'),
             10: SettingManager.l2('gistology'),
+            11: SettingManager.l2('forms'),
         }
 
     @staticmethod
