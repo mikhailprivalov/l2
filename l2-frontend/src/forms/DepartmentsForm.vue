@@ -12,6 +12,7 @@
     <table class="table table-bordered table-responsive">
       <colgroup>
         <col width="40">
+        <col width="500">
         <col>
         <col width="300">
         <col width="50">
