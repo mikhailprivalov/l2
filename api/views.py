@@ -547,7 +547,7 @@ def current_user_info(request):
         en = SettingManager.en()
         ret["extended_departments"] = {}
 
-        st_base = ResearchSite.objects.filter(hide=False).order_by('title')
+        st_base = ResearchSite.objects.filter(hide=False).order_by('order', 'title')
         for e in en:
             if e < 4 or not en[e]:
                 continue
