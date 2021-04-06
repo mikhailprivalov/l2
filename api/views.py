@@ -439,7 +439,7 @@ def departments(request):
                         department.title = title
                         department.p_type = int(row["type"])
                         department.hospital_id = hospital_pk
-                        department.oid = row["oid"]
+                        department.oid = row.get("oid", '')
                         department.save()
                         ok = True
             elif data_type == "insert":
@@ -447,7 +447,7 @@ def departments(request):
                 for row in rows:
                     title = row["title"].strip()
                     if len(title) > 0:
-                        department = Podrazdeleniya(title=title, p_type=int(row["type"]), hospital_id=hospital_pk, oid=row["oid"])
+                        department = Podrazdeleniya(title=title, p_type=int(row["type"]), hospital_id=hospital_pk, oid=row.get("oid", ''))
                         department.save()
                         ok = True
         finally:

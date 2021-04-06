@@ -1370,6 +1370,7 @@ def directions_paraclinic_result(request):
             | Q(research__is_gistology=True)
             | Q(research__is_stom=True)
             | Q(research__is_gistology=True)
+            | Q(research__is_form=True)
         ).exists()
         or request.user.is_staff
     ):
