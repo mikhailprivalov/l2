@@ -215,6 +215,7 @@ class Researches(models.Model):
             10: dict(is_citology=True),
             11: dict(is_gistology=True),
             12: dict(is_form=True),
+            13: dict(is_direction_params=True),
         }
         return ts.get(t + 1, {})
 
