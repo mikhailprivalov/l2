@@ -75,8 +75,18 @@
     </div>
     <div class="content-editor">
       <div class="input-group" v-if="!simple">
-        <span class="input-group-addon">Информация на направлении</span>
-        <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
+            <span class="input-group-addon nbr">Информация на направлении</span>
+            <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
+      </div>
+      <div class="input-group">
+        <span class="input-group-addon nbr">Параметры для направления</span>
+        <treeselect class="treeselect-noborder treeselect-wide"
+                    :multiple="false" :disable-branch-nodes="true"
+                    :options="direction_params_all"
+                    placeholder="Параметр не выбран" v-model="direction_current_params"
+                    :append-to-body="true"
+                    :clearable="false"
+        />
       </div>
       <div v-if="ex_dep === 7" class="department-select">
         <treeselect :multiple="false" :disable-branch-nodes="true" :options="departments"
@@ -403,6 +413,8 @@
                 speciality: -1,
                 departments: [],
                 hospital_research_department_pk: -1,
+                direction_params_all: [],
+                direction_current_params: -1
             }
         },
         watch: {
@@ -636,6 +648,8 @@
                         this.site_type = data.site_type
                         this.loaded_pk = this.pk
                         this.groups = data.groups
+                        this.direction_params_all = data.direction_params_all
+                        this.direction_current_params = data.direction_current_params
                         if (this.groups.length === 0) {
                             this.add_group()
                         }
@@ -668,6 +682,7 @@
                     'direction_current_form',
                     'speciality',
                     'hospital_research_department_pk',
+                    'direction_current_params'
                 ]
                 const moreData = {
                     info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),

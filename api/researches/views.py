@@ -184,6 +184,10 @@ def researches_update(request):
         spec_pk = request_data.get("speciality", -1)
         speciality = Speciality.objects.filter(pk=spec_pk).first()
         direction_current_form = request_data.get("direction_current_form", 0)
+        direction_current_params = request_data.get("direction_current_params", -1)
+        researche_direction_current_params = None
+        if int(direction_current_params) > -1:
+            researche_direction_current_params = DResearches.objects.filter(pk=int(direction_current_params), is_direction_params=True)[0]
         if not direction_current_form:
             direction_current_form = 0
         info = request_data.get("info", "").strip()
@@ -233,6 +237,7 @@ def researches_update(request):
                     speciality=speciality,
                     bac_conclusion_templates=conclusion_templates,
                     bac_culture_comments_templates=culture_comments_templates,
+                    direction_params=researche_direction_current_params,
                 )
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
@@ -260,6 +265,7 @@ def researches_update(request):
                 res.direction_form = direction_current_form
                 res.bac_conclusion_templates = conclusion_templates
                 res.bac_culture_comments_templates = culture_comments_templates
+                res.direction_params = researche_direction_current_params
             if res:
                 res.save()
                 if main_service_pk != 1 and stationar_slave:
@@ -347,6 +353,11 @@ def researches_details(request):
     response = {"pk": -1, "department": -1, "title": '', "short_title": '', "code": '', "info": '', "hide": False, "groups": []}
     request_data = json.loads(request.body)
     pk = request_data.get("pk")
+    direction_params_all = [{"id": -1, "label": "Пусто"}, *[
+            {"id": x.pk, "label": x.title}
+            for x in DResearches.objects.filter(is_direction_params=True).order_by("title")
+        ]]
+    response["direction_params_all"] = direction_params_all
     if DResearches.objects.filter(pk=pk).exists():
         res: DResearches = DResearches.objects.get(pk=pk)
         response["pk"] = res.pk
@@ -363,6 +374,7 @@ def researches_details(request):
         response["conclusionTpl"] = res.bac_conclusion_templates
         response["cultureTpl"] = res.bac_culture_comments_templates
         response["speciality"] = res.speciality_id or -1
+        response["direction_current_params"] = res.direction_params.pk if res.direction_params else -1
 
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title, "hide": group.hide, "fields": [], "visibility": group.visibility}
