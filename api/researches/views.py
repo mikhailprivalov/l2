@@ -187,7 +187,7 @@ def researches_update(request):
         direction_current_params = request_data.get("direction_current_params", -1)
         researche_direction_current_params = None
         if int(direction_current_params) > -1:
-            researche_direction_current_params = DResearches.objects.filter(pk=int(direction_current_params), is_direction_params=True)[0]
+            researche_direction_current_params = DResearches.objects.get(pk=int(direction_current_params))
         if not direction_current_form:
             direction_current_form = 0
         info = request_data.get("info", "").strip()
