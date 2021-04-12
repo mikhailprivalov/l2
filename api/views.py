@@ -414,15 +414,18 @@ def departments(request):
         if without_default:
             qs = Podrazdeleniya.objects.filter(hospital_id=hospital_pk).order_by("pk")
         else:
-            qs = Podrazdeleniya.objects.filter(Q(hospital_id=hospital_pk) |
-                                               Q(hospital__isnull=True)).order_by("pk")
+            qs = Podrazdeleniya.objects.filter(Q(hospital_id=hospital_pk) | Q(hospital__isnull=True)).order_by("pk")
         deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "oid": x.oid} for x in qs]
         en = SettingManager.en()
         more_types = []
         if SettingManager.is_morfology_enabled(en):
             more_types.append({"pk": str(Podrazdeleniya.MORFOLOGY), "title": "Морфология"})
         return JsonResponse(
-            {"departments": deps, "can_edit": can_edit, "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] not in [8, 12] and en.get(x[0], True)], *more_types]}
+            {
+                "departments": deps,
+                "can_edit": can_edit,
+                "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] not in [8, 12] and en.get(x[0], True)], *more_types],
+            }
         )
 
     if can_edit:
@@ -458,30 +461,23 @@ def departments(request):
 
 @login_required
 def otds(request):
-    return JsonResponse({
-        "rows": [{"id": -1, "label": "Все отделения"}, *[
-            {"id": x.pk, "label": x.title}
-            for x in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
-        ]]
-    })
+    return JsonResponse(
+        {"rows": [{"id": -1, "label": "Все отделения"}, *[{"id": x.pk, "label": x.title} for x in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")]]}
+    )
 
 
 @login_required
 def laboratory_journal_params(request):
-    return JsonResponse({
-        "fin": [
-            {"id": x.pk, "label": f"{x.base.title} – {x.title}"}
-            for x in directions.IstochnikiFinansirovaniya.objects.all().order_by("pk").order_by("base")
-        ],
-        "groups": [
-            {"id": -2, "label": "Все исследования"},
-            {"id": -1, "label": "Без группы"},
-            *[
-                {"id": x.pk, "label": f"{x.lab.get_title()} – {x.title}"}
-                for x in ResearchGroup.objects.all()
-            ]
-        ],
-    })
+    return JsonResponse(
+        {
+            "fin": [{"id": x.pk, "label": f"{x.base.title} – {x.title}"} for x in directions.IstochnikiFinansirovaniya.objects.all().order_by("pk").order_by("base")],
+            "groups": [
+                {"id": -2, "label": "Все исследования"},
+                {"id": -1, "label": "Без группы"},
+                *[{"id": x.pk, "label": f"{x.lab.get_title()} – {x.title}"} for x in ResearchGroup.objects.all()],
+            ],
+        }
+    )
 
 
 def bases(request):
@@ -497,17 +493,11 @@ def bases(request):
                     "hide": x.hide,
                     "history_number": x.history_number,
                     "internal_type": x.internal_type,
-                    "fin_sources": [
-                        {"pk": y.pk, "title": y.title, "default_diagnos": y.default_diagnos}
-                        for y in x.istochnikifinansirovaniya_set.all()
-                    ],
+                    "fin_sources": [{"pk": y.pk, "title": y.title, "default_diagnos": y.default_diagnos} for y in x.istochnikifinansirovaniya_set.all()],
                 }
-                for x in CardBase.objects.all().prefetch_related(
-                    Prefetch(
-                        'istochnikifinansirovaniya_set',
-                        directions.IstochnikiFinansirovaniya.objects.filter(hide=False).order_by('-order_weight')
-                    )
-                ).order_by('-order_weight')
+                for x in CardBase.objects.all()
+                .prefetch_related(Prefetch('istochnikifinansirovaniya_set', directions.IstochnikiFinansirovaniya.objects.filter(hide=False).order_by('-order_weight')))
+                .order_by('-order_weight')
             ]
         }
         cache.set(k, ret, 100)
@@ -556,7 +546,7 @@ def current_user_info(request):
             t = e - 4
             has_def = DResearches.objects.filter(hide=False, site_type__isnull=True, **DResearches.filter_type(e)).exists()
 
-            if has_def and e !=12:
+            if has_def and e != 12:
                 d = [{"pk": None, "title": 'Общие', 'type': t, "extended": True}]
             else:
                 d = []
@@ -594,7 +584,7 @@ def directive_from(request):
                 ),
             )
         )
-            .order_by('title')
+        .order_by('title')
     ):
         d = {
             "pk": dep.pk,
@@ -653,13 +643,13 @@ def statistics_tickets_get(request):
     n = 0
     for row in (
         StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile))
-            .filter(
+        .filter(
             date__range=(
                 date_start,
                 date_end,
             )
         )
-            .order_by('pk')
+        .order_by('pk')
     ):
         if not row.invalid_ticket:
             n += 1
@@ -951,11 +941,7 @@ def autocomplete(request):
                     "title": str(x),
                     "pk": x.pk,
                 }
-                for x in
-                Drugs.objects
-                .filter(Q(mnn__istartswith=v) | Q(trade_name__istartswith=v))
-                .order_by('mnn', 'trade_name')
-                .distinct('mnn', 'trade_name')[:limit]
+                for x in Drugs.objects.filter(Q(mnn__istartswith=v) | Q(trade_name__istartswith=v)).order_by('mnn', 'trade_name').distinct('mnn', 'trade_name')[:limit]
             ]
     return JsonResponse({"data": data})
 
