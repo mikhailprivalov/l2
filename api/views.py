@@ -414,14 +414,15 @@ def departments(request):
         if without_default:
             qs = Podrazdeleniya.objects.filter(hospital_id=hospital_pk).order_by("pk")
         else:
-            qs = Podrazdeleniya.objects.filter(Q(hospital_id=hospital_pk) | Q(hospital__isnull=True)).order_by("pk")
+            qs = Podrazdeleniya.objects.filter(Q(hospital_id=hospital_pk) |
+                                               Q(hospital__isnull=True)).order_by("pk")
         deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "oid": x.oid} for x in qs]
         en = SettingManager.en()
         more_types = []
         if SettingManager.is_morfology_enabled(en):
             more_types.append({"pk": str(Podrazdeleniya.MORFOLOGY), "title": "Морфология"})
         return JsonResponse(
-            {"departments": deps, "can_edit": can_edit, "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] != 8 and en.get(x[0], True)], *more_types]}
+            {"departments": deps, "can_edit": can_edit, "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] not in [8, 12] and en.get(x[0], True)], *more_types]}
         )
 
     if can_edit:
@@ -555,7 +556,7 @@ def current_user_info(request):
             t = e - 4
             has_def = DResearches.objects.filter(hide=False, site_type__isnull=True, **DResearches.filter_type(e)).exists()
 
-            if has_def:
+            if has_def and e !=12:
                 d = [{"pk": None, "title": 'Общие', 'type': t, "extended": True}]
             else:
                 d = []

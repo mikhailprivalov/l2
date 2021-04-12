@@ -13,7 +13,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     MICROBIOLOGY = 8
     MORFOLOGY = 10000  # Не добавлять в типы
     FORMS = 11
-    PARAMS = 12
+    DIRECTIONPARAMS = 12
 
     TYPES = (
         (HIDDEN, "Скрыто"),
@@ -26,7 +26,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         (HOSP, "Стационар"),
         (MICROBIOLOGY, "Микробиология"),
         (FORMS, "Формы"),
-        (PARAMS, "Параметры"),
+        (DIRECTIONPARAMS, "Параметры для направления"),
     )
 
     title = models.CharField(max_length=255)  # Название подразделения

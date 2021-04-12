@@ -232,6 +232,8 @@ class Researches(models.Model):
             return -5
         if self.is_form:
             return -9
+        if self.is_direction_params:
+            return -10
         if self.is_microbiology or self.is_citology or self.is_gistology:
             return 2 - Podrazdeleniya.MORFOLOGY
         return self.podrazdeleniye_id or -2
@@ -248,6 +250,7 @@ class Researches(models.Model):
             or self.is_citology
             or self.is_gistology
             or self.is_form
+            or self.is_direction_params
         )
 
     @property

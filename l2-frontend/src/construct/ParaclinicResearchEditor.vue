@@ -459,6 +459,7 @@
                     '-5': 7,
                     '-6': 8,
                     '-9': 11,
+                    '-10': 12,
                 }[this.department] || this.department
             },
             ex_deps() {
