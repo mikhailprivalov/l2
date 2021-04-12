@@ -94,7 +94,7 @@
       </div>
       <template v-if="ex_dep !== 7">
         <div v-for="group in orderBy(groups, 'order')" class="ed-group">
-          <div class="input-group">
+          <div class="input-group" v-if="ex_dep != 12">
             <span class="input-group-btn">
               <button class="btn btn-blue-nb lob" :disabled="is_first_group(group)" @click="dec_group_order(group)">
                 <i class="glyphicon glyphicon-arrow-up"></i>
@@ -110,7 +110,7 @@
             <span class="input-group-addon">Условие видимости</span>
             <input type="text" class="form-control" placeholder="Условие" v-model="group.visibility">
           </div>
-          <div class="row">
+          <div class="row" v-if="ex_dep != 12">
             <div class="col-xs-6">
               <label v-if="!group.hide">Отображать название <input type="checkbox" v-model="group.show_title"/></label>
               <div v-else>
@@ -297,7 +297,7 @@
             </div>
           </template>
         </div>
-        <div>
+        <div v-if="ex_dep != 12">
           <button class="btn btn-blue-nb" @click="add_group">Добавить группу</button>
         </div>
       </template>
@@ -431,7 +431,7 @@
                     }
                 },
                 deep: true
-            }
+            },
         },
         mounted() {
             $(window).on('beforeunload', () => {

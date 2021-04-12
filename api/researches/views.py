@@ -241,6 +241,8 @@ def researches_update(request):
                 )
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
+                if res == researche_direction_current_params:
+                    return JsonResponse(response)
                 res.title = title
                 res.short_title = short_title
                 res.podrazdeleniye = department
