@@ -318,7 +318,7 @@ def researches_update(request):
                                     field_type=field.get("field_type", 0),
                                     helper=field.get("helper", ''),
                                     required=field.get("required", False),
-                                    attached=field.get("attached", '')
+                                    attached=field.get("attached", ''),
                                 )
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
@@ -355,10 +355,7 @@ def researches_details(request):
     response = {"pk": -1, "department": -1, "title": '', "short_title": '', "code": '', "info": '', "hide": False, "groups": []}
     request_data = json.loads(request.body)
     pk = request_data.get("pk")
-    direction_params_all = [{"id": -1, "label": "Пусто"}, *[
-            {"id": x.pk, "label": x.title}
-            for x in DResearches.objects.filter(is_direction_params=True).order_by("title")
-        ]]
+    direction_params_all = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": x.title} for x in DResearches.objects.filter(is_direction_params=True).order_by("title")]]
     response["direction_params_all"] = direction_params_all
     if DResearches.objects.filter(pk=pk).exists():
         res: DResearches = DResearches.objects.get(pk=pk)
@@ -398,7 +395,7 @@ def researches_details(request):
                         "for_med_certificate": field.for_med_certificate,
                         "helper": field.helper,
                         "new_value": "",
-                        "attached": field.attached
+                        "attached": field.attached,
                     }
                 )
             response["groups"].append(g)
@@ -610,7 +607,7 @@ def save_dispensary_data(request):
         d = DispensaryPlan(diagnos=diagnos, research=research_obj, repeat=t_b['count'], speciality=speciality_obj, is_visit=t_b.get('is_visit', False))
         d.save()
 
-    return JsonResponse({'ok':True, 'message': 'Сохранено'})
+    return JsonResponse({'ok': True, 'message': 'Сохранено'})
 
 
 @login_required
