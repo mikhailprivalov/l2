@@ -1277,6 +1277,16 @@ class ParaclinicResult(models.Model):
         return paraclinic_result_obj
 
 
+class DirectionParamsResult(models.Model):
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранены параметры направлени', on_delete=models.CASCADE)
+    field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
+    field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
+    value = models.TextField()
+
+    def get_field_type(self):
+        return self.field_type if self.field_type is not None else self.field.field_type
+
+
 class MicrobiologyResultCulture(models.Model):
     issledovaniye = models.ForeignKey(
         Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат', on_delete=models.CASCADE, related_name='culture_results'
