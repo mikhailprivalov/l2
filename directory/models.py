@@ -171,6 +171,7 @@ class Researches(models.Model):
     is_citology = models.BooleanField(default=False, blank=True, help_text="Это цитологическое исследование")
     is_gistology = models.BooleanField(default=False, blank=True, help_text="Это гистологическое исследование")
     is_form = models.BooleanField(default=False, blank=True, help_text="Это формы, cправки, направления")
+    is_direction_params = models.BooleanField(default=False, blank=True, help_text="Суррогатная услуга - параметры направления")
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
 
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
@@ -200,6 +201,7 @@ class Researches(models.Model):
     speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальность услуги', on_delete=models.SET_NULL)
     rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
     has_own_form_result = models.BooleanField(blank=True, default=False, help_text="Собственная форма результатов")
+    direction_params = models.ForeignKey('self', related_name='direction_params_p', help_text="Параметры направления", blank=True, null=True, default=None, on_delete=models.SET_NULL)
 
     @staticmethod
     def filter_type(t):
@@ -213,6 +215,7 @@ class Researches(models.Model):
             10: dict(is_citology=True),
             11: dict(is_gistology=True),
             12: dict(is_form=True),
+            13: dict(is_direction_params=True),
         }
         return ts.get(t + 1, {})
 
@@ -230,6 +233,8 @@ class Researches(models.Model):
             return -5
         if self.is_form:
             return -9
+        if self.is_direction_params:
+            return -10
         if self.is_microbiology or self.is_citology or self.is_gistology:
             return 2 - Podrazdeleniya.MORFOLOGY
         return self.podrazdeleniye_id or -2
@@ -246,6 +251,7 @@ class Researches(models.Model):
             or self.is_citology
             or self.is_gistology
             or self.is_form
+            or self.is_direction_params
         )
 
     @property

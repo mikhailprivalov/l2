@@ -58,6 +58,7 @@ class SettingManager:
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
+            "directions_params": SettingManager.get("directions_params", default='false', default_type='b'),
             "morfology": SettingManager.is_morfology_enabled(SettingManager.en()),
         }
 
@@ -73,6 +74,7 @@ class SettingManager:
             9: SettingManager.l2('citology'),
             10: SettingManager.l2('gistology'),
             11: SettingManager.l2('forms'),
+            12: SettingManager.get("directions_params", default='false', default_type='b'),
         }
 
     @staticmethod

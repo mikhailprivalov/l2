@@ -75,8 +75,18 @@
     </div>
     <div class="content-editor">
       <div class="input-group" v-if="!simple">
-        <span class="input-group-addon">Информация на направлении</span>
-        <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
+            <span class="input-group-addon nbr">Информация на направлении</span>
+            <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
+      </div>
+      <div class="input-group">
+        <span class="input-group-addon nbr">Параметры для направления</span>
+        <treeselect class="treeselect-noborder treeselect-wide"
+                    :multiple="false" :disable-branch-nodes="true"
+                    :options="direction_params_all"
+                    placeholder="Параметр не выбран" v-model="direction_current_params"
+                    :append-to-body="true"
+                    :clearable="false"
+        />
       </div>
       <div v-if="ex_dep === 7" class="department-select">
         <treeselect :multiple="false" :disable-branch-nodes="true" :options="departments"
@@ -84,7 +94,7 @@
       </div>
       <template v-if="ex_dep !== 7">
         <div v-for="group in orderBy(groups, 'order')" class="ed-group">
-          <div class="input-group">
+          <div class="input-group" v-if="ex_dep != 12">
             <span class="input-group-btn">
               <button class="btn btn-blue-nb lob" :disabled="is_first_group(group)" @click="dec_group_order(group)">
                 <i class="glyphicon glyphicon-arrow-up"></i>
@@ -100,7 +110,7 @@
             <span class="input-group-addon">Условие видимости</span>
             <input type="text" class="form-control" placeholder="Условие" v-model="group.visibility">
           </div>
-          <div class="row">
+          <div class="row" v-if="ex_dep != 12">
             <div class="col-xs-6">
               <label v-if="!group.hide">Отображать название <input type="checkbox" v-model="group.show_title"/></label>
               <div v-else>
@@ -287,7 +297,7 @@
             </div>
           </template>
         </div>
-        <div>
+        <div v-if="ex_dep != 12">
           <button class="btn btn-blue-nb" @click="add_group">Добавить группу</button>
         </div>
       </template>
@@ -403,6 +413,8 @@
                 speciality: -1,
                 departments: [],
                 hospital_research_department_pk: -1,
+                direction_params_all: [],
+                direction_current_params: -1
             }
         },
         watch: {
@@ -419,7 +431,7 @@
                     }
                 },
                 deep: true
-            }
+            },
         },
         mounted() {
             $(window).on('beforeunload', () => {
@@ -459,6 +471,7 @@
                     '-5': 7,
                     '-6': 8,
                     '-9': 11,
+                    '-10': 12,
                 }[this.department] || this.department
             },
             ex_deps() {
@@ -635,6 +648,8 @@
                         this.site_type = data.site_type
                         this.loaded_pk = this.pk
                         this.groups = data.groups
+                        this.direction_params_all = data.direction_params_all
+                        this.direction_current_params = data.direction_current_params
                         if (this.groups.length === 0) {
                             this.add_group()
                         }
@@ -667,6 +682,7 @@
                     'direction_current_form',
                     'speciality',
                     'hospital_research_department_pk',
+                    'direction_current_params'
                 ]
                 const moreData = {
                     info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
