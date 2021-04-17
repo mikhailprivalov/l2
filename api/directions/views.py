@@ -2270,7 +2270,6 @@ def values_from_structure_data(data):
 
 
 def get_research_for_direction_params(pk):
-    print(pk)
     response = {}
     if int(pk) > -1:
         research_obj = Researches.objects.get(pk=int(pk))

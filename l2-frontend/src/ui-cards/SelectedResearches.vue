@@ -126,6 +126,7 @@
            v-show="visible && need_update_comment.length > 0 && !hide_window_update && !simple">
       <span slot="header">Настройка назначений</span>
       <div slot="body" class="overflow-unset">
+        <div v-for="(row, i) in need_update_object">
         <table class="table table-bordered table-responsive"
                style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
           <colgroup>
@@ -146,13 +147,13 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="(row, i) in need_update_object">
+          <tr>
             <td>
               <div v-if="row.direction_params > -1">
-                <a href="#" @click.prevent="hide_descriptive">
+                <a href="#" @click.prevent="show_descriptive(row.research_data)">
                   <i class="fas fa-arrow-up fa-1x" style="color: grey; padding-left: 10px"></i>
                 </a>
-                <a href="#" @click.prevent="show_descriptive">
+                <a href="#" @click.prevent="row.show_research_data=!row.show_research_data">
                   <i class="fas fa-arrow-down fa-1x" style="color: grey; padding-left: 10px"></i>
                 </a>
               </div>
@@ -186,16 +187,19 @@
             <td>
               <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
             </td>
-            <td colspan="5">
-              <DescriptiveForm v-if="is_show_descriptive"
+          </tr>
+          <tr>
+            <td colspan="6">
+              <DescriptiveForm
                 :research="row.research_data"
                 :confirmed="false"
-                :patient="data.patient"
+                :patient="simulated_patient"
                 />
             </td>
           </tr>
           </tbody>
-        </table>
+         </table>
+        </div>
       </div>
       <div slot="footer" class="text-center">
         <button @click="cancel_update" class="btn btn-blue-nb">Сохранить</button>
@@ -315,6 +319,21 @@
         external_organization: 'NONE',
         directions_count: '1',
         is_show_descriptive: false,
+        simulated_patient: {
+              age: 51,
+              base: 5,
+              card: "1 L2",
+              card_pk: 199554,
+              doc: "Администратор L.2, Травматологическое отделение",
+              fio_age: "Котова Аделия Ивановна, ж, 01.01.1970 (51 год)",
+              has_benefit: false,
+              has_dreg: true,
+              imported_from_rmis: false,
+              imported_org: "",
+              individual_pk: 209197,
+              sex: "ж",
+        },
+        temp_reserash_data: {}
       }
     },
     watch: {
@@ -361,8 +380,6 @@
             comments[pk] = ''
             if (pk in this.$store.getters.researches_obj) {
               let res = this.$store.getters.researches_obj[pk]
-              console.log('res1', res)
-              console.log(typeof res.direction_params)
               if (res.comment_variants.length > 0) {
                 comments[pk] = JSON.parse(JSON.stringify(res.comment_variants[0]))
 
@@ -631,12 +648,6 @@
         this.externalOrganizations = organizations
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
-      show_descriptive(){
-        this.is_show_descriptive = true
-      },
-      hide_descriptive(){
-        this.is_show_descriptive = false
-      }
     },
     computed: {
       direction_purpose_enabled() {
@@ -718,6 +729,7 @@
               service_locations: res.service_locations,
               direction_params: res.direction_params,
               research_data: res.research_data,
+              show_research_data: false
             })
           }
         }
