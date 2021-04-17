@@ -150,7 +150,7 @@
           <tr>
             <td>
               <div v-if="row.direction_params > -1">
-                <a href="#" @click.prevent="show_descriptive(row.research_data)">
+                <a href="#" @click.prevent="row.show_research_data=!row.show_research_data">
                   <i class="fas fa-arrow-up fa-1x" style="color: grey; padding-left: 10px"></i>
                 </a>
                 <a href="#" @click.prevent="row.show_research_data=!row.show_research_data">
@@ -188,7 +188,7 @@
               <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
             </td>
           </tr>
-          <tr>
+          <tr v-if="row.direction_params > -1">
             <td colspan="6">
               <DescriptiveForm
                 :research="row.research_data"
@@ -333,7 +333,6 @@
               individual_pk: 209197,
               sex: "ж",
         },
-        temp_reserash_data: {}
       }
     },
     watch: {
@@ -729,7 +728,6 @@
               service_locations: res.service_locations,
               direction_params: res.direction_params,
               research_data: res.research_data,
-              show_research_data: false
             })
           }
         }
