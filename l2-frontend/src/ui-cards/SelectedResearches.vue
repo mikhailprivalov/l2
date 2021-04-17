@@ -138,7 +138,7 @@
           </colgroup>
           <thead>
           <tr>
-            <th><i class="fa fa-keyboard fa-2x"></i></th>
+            <th>Текст</th>
             <th colspan="2">Назначение</th>
             <th>Комментарий</th>
             <th>Место</th>
@@ -186,15 +186,14 @@
             <td>
               <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
             </td>
+            <td colspan="5">
+              <DescriptiveForm v-if="is_show_descriptive"
+                :research="row.research_data"
+                :confirmed="false"
+                :patient="data.patient"
+                />
+            </td>
           </tr>
-          <div v-if="is_show_descriptive">
-            <DescriptiveForm
-            :research="row.research"
-            :confirmed="false"
-            :patient="data.patient"
-            :change_mkb="change_mkb(row)"
-          />
-          </div>
           </tbody>
         </table>
       </div>
@@ -227,6 +226,7 @@
       vSelect,
       TypeAhead,
       MKBField,
+      DescriptiveForm,
     },
     props: {
       simple: {
@@ -632,10 +632,10 @@
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       show_descriptive(){
-        is_show_descriptive: true
+        this.is_show_descriptive = true
       },
       hide_descriptive(){
-        is_show_descriptive: false
+        this.is_show_descriptive = false
       }
     },
     computed: {
@@ -717,11 +717,12 @@
               localizations: res.localizations,
               service_locations: res.service_locations,
               direction_params: res.direction_params,
+              research_data: res.research_data,
             })
           }
         }
         return r
-      }
+      },
     }
   }
 </script>

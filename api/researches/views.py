@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 import users.models as users
+from api.directions.views import get_research_for_direction_params
 from directory.models import (
     Researches as DResearches,
     ParaclinicInputGroups,
@@ -62,6 +63,7 @@ def get_researches(request):
         autoadd = [x.b_id for x in r.a.all()]
         addto = [x.a_id for x in r.b.all()]
 
+        direction_params_pk = r.direction_params.pk if r.direction_params else -1
         deps[r.reversed_type].append(
             {
                 "pk": r.pk,
@@ -84,7 +86,8 @@ def get_researches(request):
                 "site_type_raw": r.site_type_id,
                 "localizations": [{"code": x.pk, "label": x.title} for x in r.localization.all()],
                 "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location.all()],
-                "direction_params": r.direction_params.pk if r.direction_params else -1
+                "direction_params": direction_params_pk,
+                "research_data": get_research_for_direction_params(direction_params_pk),
             }
         )
 

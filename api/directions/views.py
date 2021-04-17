@@ -2269,15 +2269,13 @@ def values_from_structure_data(data):
     return s.strip()
 
 
-def get_research_for_direction_params(request):
-    request_data = json.loads(request.body)
-    pk = request_data.get("pk", -1) or -1
-    data = {}
-    if pk > -1:
-        research_obj = Researches.objects.get(pk=pk)
-    else:
-        return
+def get_research_for_direction_params(pk):
+    print(pk)
     response = {}
+    if int(pk) > -1:
+        research_obj = Researches.objects.get(pk=int(pk))
+    else:
+        return response
     response["research"] = {
         "title": research_obj.title,
         "version": research_obj.pk * 10000,
@@ -2287,11 +2285,7 @@ def get_research_for_direction_params(request):
         "is_treatment": research_obj.is_treatment,
         "is_stom": research_obj.is_stom,
         "wide_headers": research_obj.wide_headers,
-        "comment": research_obj.localization.title if research_obj.localization else research_obj.comment,
         "groups": [],
-        "can_transfer": research_obj.can_transfer,
-        "is_extract": research_obj.is_extract,
-        "r_type": research_obj.r_type,
     }
     for group in research_obj.paraclinicinputgroups_set.all():
         g = {
@@ -2305,8 +2299,7 @@ def get_research_for_direction_params(request):
             "visibility": group.visibility,
         }
         for field in group.paraclinicinputfield_set.all():
-            result_field: ParaclinicResult = ParaclinicResult.objects.filter(issledovaniye=i, field=field).first()
-            field_type = field.field_type if not result_field else result_field.get_field_type()
+            field_type = field.field_type
             g["fields"].append(
                 {
                     "pk": field.pk,
@@ -2315,9 +2308,9 @@ def get_research_for_direction_params(request):
                     "title": field.title,
                     "hide": field.hide,
                     "values_to_input": ([] if not field.required or field_type not in [10, 12] else ['- Не выбрано']) + json.loads(field.input_templates),
-                    "value": ((field.default_value if field_type not in [3, 11, 13, 14] else '') if not result_field else result_field.value)
+                    "value": (field.default_value if field_type not in [3, 11, 13, 14] else '')
                     if field_type not in [1, 20]
-                    else (get_default_for_field(field_type) if not result_field else result_field.value),
+                    else (get_default_for_field(field_type)),
                     "field_type": field_type,
                     "default_value": field.default_value,
                     "visibility": field.visibility,
@@ -2327,4 +2320,4 @@ def get_research_for_direction_params(request):
             )
         response["research"]["groups"] = g
 
-    return JsonResponse(response)
+    return response
