@@ -84,6 +84,7 @@ def get_researches(request):
                 "site_type_raw": r.site_type_id,
                 "localizations": [{"code": x.pk, "label": x.title} for x in r.localization.all()],
                 "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location.all()],
+                "direction_params": r.direction_params.pk if r.direction_params else -1
             }
         )
 

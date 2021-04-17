@@ -278,6 +278,7 @@
         need_update_comment: [],
         need_update_localization: [],
         need_update_service_location: [],
+        need_update_direction_params: [],
         hide_window_update: false,
         delayTime: 300,
         minChars: 1,
@@ -330,12 +331,15 @@
         this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1)
         this.need_update_localization = this.need_update_localization.filter(e => this.researches.indexOf(e) !== -1)
         this.need_update_service_location = this.need_update_service_location.filter(e => this.researches.indexOf(e) !== -1)
+        // this.need_update_direction_params = this.need_update_direction_params.filter(e => this.researches.indexOf(e) !== -1)
         let needShowWindow = false
         for (let pk of this.researches) {
+          console.log('pk1', pk)
           if (!this.comments[pk] && !this.localizations[pk] && !this.service_locations[pk]) {
             comments[pk] = ''
             if (pk in this.$store.getters.researches_obj) {
               let res = this.$store.getters.researches_obj[pk]
+              console.log('res1', res)
               if (res.comment_variants.length > 0) {
                 comments[pk] = JSON.parse(JSON.stringify(res.comment_variants[0]))
 
