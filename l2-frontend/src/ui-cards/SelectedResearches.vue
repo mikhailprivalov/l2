@@ -138,7 +138,7 @@
           </colgroup>
           <thead>
           <tr>
-            <th></th>
+            <th><i class="fa fa-keyboard fa-2x"></i></th>
             <th colspan="2">Назначение</th>
             <th>Комментарий</th>
             <th>Место</th>
@@ -149,11 +149,11 @@
           <tr v-for="(row, i) in need_update_object">
             <td>
               <div v-if="row.direction_params > -1">
-                <a href="#" @click.prevent="">
-                  <i class="fa fa-angle-double-up fa-1.5x" style="color: grey"></i>
+                <a href="#" @click.prevent="hide_descriptive">
+                  <i class="fas fa-arrow-up fa-1x" style="color: grey; padding-left: 10px"></i>
                 </a>
-                <a href="#" @click.prevent="">
-                  <i class="fa fa-angle-double-down fa-1.5x" style="color: grey; padding-left: 10px"></i>
+                <a href="#" @click.prevent="show_descriptive">
+                  <i class="fas fa-arrow-down fa-1x" style="color: grey; padding-left: 10px"></i>
                 </a>
               </div>
             </td>
@@ -187,6 +187,14 @@
               <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
             </td>
           </tr>
+          <div v-if="is_show_descriptive">
+            <DescriptiveForm
+            :research="row.research"
+            :confirmed="false"
+            :patient="data.patient"
+            :change_mkb="change_mkb(row)"
+          />
+          </div>
           </tbody>
         </table>
       </div>
@@ -207,6 +215,8 @@
   import TypeAhead from 'vue2-typeahead'
   import MKBField from '../fields/MKBField'
   import SelectFieldTitled from '../fields/SelectFieldTitled'
+  import DescriptiveForm from '../forms/DescriptiveForm'
+
 
   export default {
     name: 'selected-researches',
@@ -304,6 +314,7 @@
         direction_purpose: 'NONE',
         external_organization: 'NONE',
         directions_count: '1',
+        is_show_descriptive: false,
       }
     },
     watch: {
@@ -620,6 +631,12 @@
         this.externalOrganizations = organizations
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
+      show_descriptive(){
+        is_show_descriptive: true
+      },
+      hide_descriptive(){
+        is_show_descriptive: false
+      }
     },
     computed: {
       direction_purpose_enabled() {
