@@ -129,6 +129,7 @@
         <table class="table table-bordered table-responsive"
                style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
           <colgroup>
+            <col width="50">
             <col width="240">
             <col width="40">
             <col width="300">
@@ -137,6 +138,7 @@
           </colgroup>
           <thead>
           <tr>
+            <th></th>
             <th colspan="2">Назначение</th>
             <th>Комментарий</th>
             <th>Место</th>
@@ -145,6 +147,16 @@
           </thead>
           <tbody>
           <tr v-for="(row, i) in need_update_object">
+            <td>
+              <div v-if="row.direction_params > -1">
+                <a href="#" @click.prevent="">
+                  <i class="fa fa-angle-double-up fa-1.5x" style="color: grey"></i>
+                </a>
+                <a href="#" @click.prevent="">
+                  <i class="fa fa-angle-double-down fa-1.5x" style="color: grey; padding-left: 10px"></i>
+                </a>
+              </div>
+            </td>
             <td :colspan="(need_update_object.length > 1 && i === 0) ? 1 : 2">
               <div style="width:100%; overflow: hidden;text-overflow: ellipsis;" :title="row.title">{{row.title}}</div>
             </td>
@@ -331,15 +343,15 @@
         this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1)
         this.need_update_localization = this.need_update_localization.filter(e => this.researches.indexOf(e) !== -1)
         this.need_update_service_location = this.need_update_service_location.filter(e => this.researches.indexOf(e) !== -1)
-        // this.need_update_direction_params = this.need_update_direction_params.filter(e => this.researches.indexOf(e) !== -1)
+        this.need_update_direction_params = this.need_update_direction_params.filter(e => this.researches.indexOf(e) !== -1)
         let needShowWindow = false
         for (let pk of this.researches) {
-          console.log('pk1', pk)
           if (!this.comments[pk] && !this.localizations[pk] && !this.service_locations[pk]) {
             comments[pk] = ''
             if (pk in this.$store.getters.researches_obj) {
               let res = this.$store.getters.researches_obj[pk]
               console.log('res1', res)
+              console.log(typeof res.direction_params)
               if (res.comment_variants.length > 0) {
                 comments[pk] = JSON.parse(JSON.stringify(res.comment_variants[0]))
 
@@ -365,6 +377,11 @@
                   this.need_update_service_location.push(pk)
                   needShowWindow = true
                 }
+              }
+
+              if (res.direction_params > -1 && !this.need_update_direction_params.includes(pk)){
+                this.need_update_direction_params.push(pk)
+                  needShowWindow = true
               }
             }
             counts[pk] = 1
@@ -668,7 +685,7 @@
       need_update_object() {
         let r = []
         const toUpd = [...this.need_update_comment]
-        for (const pk of [...this.need_update_localization, ...this.need_update_service_location]) {
+        for (const pk of [...this.need_update_localization, ...this.need_update_service_location, ...this.need_update_direction_params]) {
           if (!toUpd.includes(pk)) {
             toUpd.push(pk)
           }
@@ -682,6 +699,7 @@
               options: res.comment_variants,
               localizations: res.localizations,
               service_locations: res.service_locations,
+              direction_params: res.direction_params,
             })
           }
         }
