@@ -2317,6 +2317,6 @@ def get_research_for_direction_params(pk):
                     "helper": field.helper,
                 }
             )
-        response["research"]["groups"] = g
+        response["research"]["groups"] = [g]
 
     return response

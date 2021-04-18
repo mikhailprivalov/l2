@@ -150,7 +150,7 @@
           <tr>
             <td>
               <div v-if="row.direction_params > -1">
-                <a href="#" @click.prevent="row.show_research_data=!row.show_research_data">
+                <a href="#" @click.prevent="show_descriptive_modal">
                   <i class="fas fa-arrow-up fa-1x" style="color: grey; padding-left: 10px"></i>
                 </a>
                 <a href="#" @click.prevent="row.show_research_data=!row.show_research_data">
@@ -196,6 +196,7 @@
                 :patient="simulated_patient"
                 />
             </td>
+
           </tr>
           </tbody>
          </table>
@@ -205,6 +206,8 @@
         <button @click="cancel_update" class="btn btn-blue-nb">Сохранить</button>
       </div>
     </modal>
+
+
   </div>
 </template>
 
@@ -647,6 +650,9 @@
         this.externalOrganizations = organizations
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
+      show_descriptive_modal(){
+        this.is_show_descriptive = true
+      }
     },
     computed: {
       direction_purpose_enabled() {
@@ -727,7 +733,7 @@
               localizations: res.localizations,
               service_locations: res.service_locations,
               direction_params: res.direction_params,
-              research_data: res.research_data,
+              research_data: res.research_data.research,
             })
           }
         }
