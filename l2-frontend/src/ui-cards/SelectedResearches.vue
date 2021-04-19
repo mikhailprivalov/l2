@@ -161,16 +161,17 @@
             <tr>
               <td>
                 <div class="input-group-btn" v-if="row.direction_params > -1">
-                  <button type="button" class="btn btn-blue-nb nbr" @click="hide_direction_params(row.pk)">
+                  <button type="button" class="btn btn-blue-nb nbr" @click="row.show_params=false">
                     <i class="glyphicon glyphicon-arrow-up"></i>
                   </button>
-                  <button type="button" class="btn btn-blue-nb" @click="show_direction_params(row.pk)">
+                  <button type="button" class="btn btn-blue-nb" @click="row.show_params=true">
                     <i class="glyphicon glyphicon-arrow-down"></i>
                   </button>
                 </div>
               </td>
               <td :colspan="(need_update_object.length > 1 && i === 0) ? 1 : 2">
-                <div style="width:100%; overflow: hidden;text-overflow: ellipsis;" :title="row.title">{{ row.title }}
+                <div style="width:100%; overflow: hidden; text-overflow: ellipsis;" :title="row.title">{{ row.title }}
+                  <span v-if="!r(row.research_data)" style="color: #f00"> *назначение не будет создано</span>
                 </div>
               </td>
               <td v-if="need_update_object.length > 1 && i === 0">
@@ -200,7 +201,7 @@
                 <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
               </td>
             </tr>
-            <tr v-if="true">
+            <tr v-if="row.show_params">
               <td colspan="6">
                 <DescriptiveForm
                   :research="row.research_data"
@@ -208,18 +209,12 @@
                   :patient="simulated_patient"/>
               </td>
             </tr>
-            <tr v-if="true">
-              <td colspan="6">
-                <button @click="cancel_update" class="btn btn-blue-nb" :disabled="!r(row.research_data)">Сохранить
-                </button>
-              </td>
-            </tr>
             </tbody>
           </table>
         </div>
       </div>
       <div slot="footer" class="text-center">
-        <button @click="cancel_update" class="btn btn-blue-nb">Сохранить</button>
+        <button @click="cancel_update" class="btn btn-blue-nb">Закрыть</button>
       </div>
     </modal>
   </div>
@@ -319,7 +314,6 @@ export default {
       localizations: {},
       counts: {},
       service_locations: {},
-      extension_params: {},
       need_update_comment: [],
       need_update_localization: [],
       need_update_service_location: [],
@@ -337,7 +331,6 @@ export default {
       direction_purpose: 'NONE',
       external_organization: 'NONE',
       directions_count: '1',
-      is_show_descriptive: false,
       simulated_patient: {
         age: 51,
         base: 5,
@@ -389,7 +382,6 @@ export default {
       let service_locations = {}
       let localizations = {}
       let counts = {}
-      let extension_params = {}
       this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1)
       this.need_update_localization = this.need_update_localization.filter(e => this.researches.indexOf(e) !== -1)
       this.need_update_service_location = this.need_update_service_location.filter(e => this.researches.indexOf(e) !== -1)
@@ -438,13 +430,11 @@ export default {
           localizations[pk] = this.localizations[pk]
           service_locations[pk] = this.service_locations[pk]
           counts[pk] = this.counts[pk]
-          extension_params[pk] = this.extension_params[pk]
         }
       }
       this.comments = comments
       this.localizations = localizations
       this.service_locations = service_locations
-      this.extension_params = extension_params
       this.counts = counts
       if (needShowWindow) {
         this.show_window()
@@ -678,6 +668,7 @@ export default {
     },
     r(research) {
       return this.r_list(research).length === 0
+
     },
     r_list(research) {
       const l = []
@@ -777,6 +768,7 @@ export default {
             service_locations: res.service_locations,
             direction_params: res.direction_params,
             research_data: res.research_data.research,
+            show_params: false,
           })
         }
       }
