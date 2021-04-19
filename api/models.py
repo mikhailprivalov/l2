@@ -32,6 +32,8 @@ class Application(models.Model):
     places_type = models.CharField(max_length=10, default=PLACES_FRACTION, choices=PLACES)
     hospitals = models.ManyToManyField('hospitals.Hospitals', blank=True)
     is_superuser = False
+    tube_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами пробирок")
+
 
     def auto_set_places(self, rel: "RelationFractionASTM", value: [str, float, int]) -> str:
         if rel.full_round:
