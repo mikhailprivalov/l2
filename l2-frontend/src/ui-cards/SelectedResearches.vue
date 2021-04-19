@@ -126,11 +126,10 @@
            v-show="visible && need_update_comment.length > 0 && !hide_window_update && !simple">
       <span slot="header">Настройка назначений</span>
       <div slot="body" class="overflow-unset">
-<!--        <div v-for="(row, i) in need_update_object">-->
         <table class="table table-bordered table-responsive"
                style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
           <colgroup>
-            <col width="50">
+            <col width="65">
             <col width="240">
             <col width="40">
             <col width="300">
@@ -151,7 +150,7 @@
         <table class="table table-bordered table-responsive"
                style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
           <colgroup>
-            <col width="50">
+            <col width="65">
             <col width="240">
             <col width="40">
             <col width="300">
@@ -161,19 +160,17 @@
           <tbody>
           <tr>
             <td>
-              <div v-if="row.direction_params > -1">
-                 <button class="btn btn-default btn-sm btn-block"
-                          @click="show_direction_params(row.pk)">
-                    <i class="glyphicon glyphicon-arrow-up"></i>
-                  </button>
-                  <button class="btn btn-default btn-sm btn-block"
-                          @click="hide_direction_params(row.pk)">
-                    <i class="glyphicon glyphicon-arrow-down"></i>
-                  </button>
+              <div class="input-group-btn" v-if="row.direction_params > -1">
+                <button type="button" class="btn btn-blue-nb nbr" @click="hide_direction_params(row.pk)">
+                  <i class="glyphicon glyphicon-arrow-up"></i>
+                </button>
+                <button type="button" class="btn btn-blue-nb" @click="show_direction_params(row.pk)">
+                  <i class="glyphicon glyphicon-arrow-down"></i>
+                </button>
               </div>
             </td>
             <td :colspan="(need_update_object.length > 1 && i === 0) ? 1 : 2">
-              <div style="width:100%; overflow: hidden;text-overflow: ellipsis;" :title="row.title">{{row.title}} {{direction_params_is_show[row.pk]}}</div>
+              <div style="width:100%; overflow: hidden;text-overflow: ellipsis;" :title="row.title">{{row.title}}</div>
             </td>
             <td v-if="need_update_object.length > 1 && i === 0">
               <button class="btn last btn-blue-nb nbr" type="button"
@@ -202,15 +199,13 @@
               <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
             </td>
           </tr>
-          <tr v-if="direction_params_is_show[row.pk]">
+          <tr v-if="true">
             <td colspan="6">
               <DescriptiveForm
                 :research="row.research_data"
                 :confirmed="false"
-                :patient="simulated_patient"
-                />
+                :patient="simulated_patient"/>
             </td>
-
           </tr>
           </tbody>
          </table>
@@ -316,6 +311,7 @@
         localizations: {},
         counts: {},
         service_locations: {},
+        extension_params: {},
         need_update_comment: [],
         need_update_localization: [],
         need_update_service_location: [],
@@ -385,6 +381,7 @@
         let service_locations = {}
         let localizations = {}
         let counts = {}
+        let extension_params = {}
         this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1)
         this.need_update_localization = this.need_update_localization.filter(e => this.researches.indexOf(e) !== -1)
         this.need_update_service_location = this.need_update_service_location.filter(e => this.researches.indexOf(e) !== -1)
@@ -425,7 +422,6 @@
               if (res.direction_params > -1 && !this.need_update_direction_params.includes(pk)){
                 this.need_update_direction_params.push(pk)
                   needShowWindow = true
-                this.direction_params_is_show[pk] = false
               }
             }
             counts[pk] = 1
@@ -434,11 +430,13 @@
             localizations[pk] = this.localizations[pk]
             service_locations[pk] = this.service_locations[pk]
             counts[pk] = this.counts[pk]
+            extension_params[pk] = this.extension_params[pk]
           }
         }
         this.comments = comments
         this.localizations = localizations
         this.service_locations = service_locations
+        this.extension_params = extension_params
         this.counts = counts
         if (needShowWindow) {
           this.show_window()
@@ -753,7 +751,6 @@
               service_locations: res.service_locations,
               direction_params: res.direction_params,
               research_data: res.research_data.research,
-
             })
           }
         }
