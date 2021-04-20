@@ -188,6 +188,7 @@
                 <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
               </td>
             </tr>
+
             <SelectedRsearchesParams v-if="form_params[row.pk]"
               :research="form_params[row.pk]"
               :selected_card="selected_card"
@@ -617,6 +618,7 @@ export default {
         direction_purpose: this.direction_purpose,
         external_organization: this.external_organization,
         directions_count: Number(this.directions_count) || 1,
+        direction_form_params: this.form_params
       })
     },
     clear_all() {

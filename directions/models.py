@@ -1278,7 +1278,7 @@ class ParaclinicResult(models.Model):
 
 
 class DirectionParamsResult(models.Model):
-    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранены параметры направлени', on_delete=models.CASCADE)
+    napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление для которого сохранены дополнительные параметры', db_index=True, on_delete=models.CASCADE)
     field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
     field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
     value = models.TextField()

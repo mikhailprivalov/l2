@@ -148,7 +148,7 @@ new Vue({
                                              discount, need_contract,
                                              parent_iss = null, kk = '', localizations = {}, service_locations = {},
                                              direction_purpose = 'NONE', directions_count = 1,
-                                             external_organization = 'NONE', parent_slave_hosp = null,
+                                             external_organization = 'NONE', parent_slave_hosp = null, direction_form_params = {},
                                            }) => {
       if (card_pk === -1) {
         errmessage('Не выбрана карта')
@@ -171,7 +171,7 @@ new Vue({
         card_pk, diagnos, fin_source: fin_source_pk, history_num,
         ofname_pk: ofname, researches, comments, for_rmis,
         rmis_data, vich_code, count, discount, parent_iss, counts, localizations, service_locations,
-        direction_purpose, directions_count, external_organization, parent_slave_hosp,
+        direction_purpose, directions_count, external_organization, parent_slave_hosp, direction_form_params,
       }).then(data => {
         this.$store.dispatch(action_types.DEC_LOADING)
 
