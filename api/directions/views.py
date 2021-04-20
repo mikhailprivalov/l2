@@ -2285,6 +2285,7 @@ def get_research_for_direction_params(pk):
         "is_stom": research_obj.is_stom,
         "wide_headers": research_obj.wide_headers,
         "groups": [],
+        "show": False,
     }
     for group in research_obj.paraclinicinputgroups_set.all():
         g = {

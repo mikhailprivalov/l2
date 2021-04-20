@@ -125,7 +125,7 @@
            overflow-unset="true"
            v-show="visible && need_update_comment.length > 0 && !hide_window_update && !simple">
       <span slot="header">Настройка назначений</span>
-      <div slot="body" class="overflow-unset">
+      <div slot="body" class="overflow-unset results-editor">
         <table class="table table-bordered table-responsive"
                style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
           <colgroup>
@@ -145,33 +145,20 @@
             <th>Количество</th>
           </tr>
           </thead>
-        </table>
-        <div v-for="(row, i) in need_update_object">
-          <table class="table table-bordered table-responsive"
-                 style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
-            <colgroup>
-              <col width="65">
-              <col width="240">
-              <col width="40">
-              <col width="300">
-              <col width="300">
-              <col width="80">
-            </colgroup>
             <tbody>
+            <template v-for="(row,i) in need_update_object">
             <tr>
               <td>
                 <div class="input-group-btn" v-if="row.direction_params > -1">
-                  <button type="button" class="btn btn-blue-nb nbr" @click="row.show_params=false">
-                    <i class="glyphicon glyphicon-arrow-up"></i>
-                  </button>
-                  <button type="button" class="btn btn-blue-nb" @click="row.show_params=true">
-                    <i class="glyphicon glyphicon-arrow-down"></i>
+                  <button type="button" class="btn btn-blue-nb nbr" @click="form_params[row.pk].show=!form_params[row.pk].show">
+                    <i v-if="form_params[row.pk].show" class="glyphicon glyphicon-arrow-up"></i>
+                    <i v-else class="glyphicon glyphicon-arrow-down"></i>
                   </button>
                 </div>
               </td>
               <td :colspan="(need_update_object.length > 1 && i === 0) ? 1 : 2">
                 <div style="width:100%; overflow: hidden; text-overflow: ellipsis;" :title="row.title">{{ row.title }}
-                  <span v-if="!r(row.research_data)" style="color: #f00"> *назначение не будет создано</span>
+                  <span v-if="row.direction_params > -1 && !r(form_params[row.pk])" style="color: #f00"> *назначение не будет создано</span>
                 </div>
               </td>
               <td v-if="need_update_object.length > 1 && i === 0">
@@ -199,20 +186,18 @@
               </td>
               <td>
                 <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
+
               </td>
             </tr>
-            <tr v-if="row.show_params">
-              <td colspan="6">
-                <DescriptiveForm
-                  :research="row.research_data"
-                  :confirmed="false"
-                  :patient="simulated_patient"/>
-              </td>
-            </tr>
+            <SelectedRsearchesParams v-if="form_params[row.pk]"
+              :research="form_params[row.pk]"
+              :patient="simulated_patient"
+            />
+            </template>
             </tbody>
           </table>
+
         </div>
-      </div>
       <div slot="footer" class="text-center">
         <button @click="cancel_update" class="btn btn-blue-nb">Закрыть</button>
       </div>
@@ -231,6 +216,7 @@ import TypeAhead from 'vue2-typeahead'
 import MKBField from '../fields/MKBField'
 import SelectFieldTitled from '../fields/SelectFieldTitled'
 import DescriptiveForm from '../forms/DescriptiveForm'
+import SelectedRsearchesParams from '../ui-cards/SelectedRsearchesParams'
 import {vField, vGroup} from "@/components/visibility-triggers";
 
 
@@ -244,6 +230,7 @@ export default {
     TypeAhead,
     MKBField,
     DescriptiveForm,
+    SelectedRsearchesParams,
   },
   props: {
     simple: {
@@ -311,6 +298,7 @@ export default {
       diagnos: '',
       fin: -1,
       comments: {},
+      form_params: {},
       localizations: {},
       counts: {},
       service_locations: {},
@@ -346,6 +334,7 @@ export default {
         sex: "ж",
       },
       direction_params_is_show: {},
+      show_params: false
     }
   },
   watch: {
@@ -379,6 +368,7 @@ export default {
     },
     researches() {
       let comments = {}
+      let form_params = {}
       let service_locations = {}
       let localizations = {}
       let counts = {}
@@ -388,7 +378,7 @@ export default {
       this.need_update_direction_params = this.need_update_direction_params.filter(e => this.researches.indexOf(e) !== -1)
       let needShowWindow = false
       for (let pk of this.researches) {
-        if (!this.comments[pk] && !this.localizations[pk] && !this.service_locations[pk]) {
+        if (!this.comments[pk] && !this.localizations[pk] && !this.service_locations[pk] && !this.form_params[pk]) {
           comments[pk] = ''
           if (pk in this.$store.getters.researches_obj) {
             let res = this.$store.getters.researches_obj[pk]
@@ -419,20 +409,26 @@ export default {
               }
             }
 
-            if (res.direction_params > -1 && !this.need_update_direction_params.includes(pk)) {
+            if (res.direction_params > -1 && !this.need_update_direction_params.includes(pk) && !this.form_params[pk]) {
               this.need_update_direction_params.push(pk)
               needShowWindow = true
+              form_params[pk] = JSON.parse(JSON.stringify(res.research_data.research))
+            } else if (this.form_params[pk]) {
+              form_params[pk] = this.form_params[pk]
             }
           }
+
           counts[pk] = 1
         } else {
           comments[pk] = this.comments[pk]
           localizations[pk] = this.localizations[pk]
           service_locations[pk] = this.service_locations[pk]
           counts[pk] = this.counts[pk]
+          form_params[pk] = this.form_params[pk]
         }
       }
       this.comments = comments
+      this.form_params = form_params
       this.localizations = localizations
       this.service_locations = service_locations
       this.counts = counts
@@ -498,6 +494,10 @@ export default {
     if (this.initial_fin) {
       this.select_fin(this.initial_fin)
     }
+    for (let row of this.need_update_object){
+      this.direction_params_is_show[row.pk] = true
+    }
+
   },
   methods: {
     applyAllFromFirst() {
@@ -530,6 +530,7 @@ export default {
       this.need_update_comment = []
       this.need_update_localization = []
       this.need_update_service_location = []
+      this.need_update_direction_params = []
       this.hide_window()
     },
     onHit(item) {
@@ -667,6 +668,9 @@ export default {
       this.direction_params_is_show[pk] = false
     },
     r(research) {
+      if (!research){
+        return false
+      }
       return this.r_list(research).length === 0
 
     },
@@ -687,6 +691,12 @@ export default {
       }
       return l.slice(0, 2)
     },
+    func_show_params(current){
+      current.show_params = true
+    },
+    func_hide_params(current){
+      current.show_params = true
+    }
   },
   computed: {
     direction_purpose_enabled() {
@@ -768,7 +778,6 @@ export default {
             service_locations: res.service_locations,
             direction_params: res.direction_params,
             research_data: res.research_data.research,
-            show_params: false,
           })
         }
       }
