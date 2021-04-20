@@ -129,7 +129,6 @@
         <table class="table table-bordered table-responsive"
                style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
           <colgroup>
-            <col width="65">
             <col width="240">
             <col width="40">
             <col width="300">
@@ -138,7 +137,6 @@
           </colgroup>
           <thead>
           <tr>
-            <th>Текст</th>
             <th colspan="2">Назначение</th>
             <th>Комментарий</th>
             <th>Место</th>
@@ -148,27 +146,26 @@
             <tbody>
             <template v-for="(row,i) in need_update_object">
             <tr>
-              <td>
-                <div class="input-group-btn" v-if="row.direction_params > -1">
-                  <button type="button" class="btn btn-blue-nb nbr" @click="form_params[row.pk].show=!form_params[row.pk].show">
+              <td class="cl-td" :colspan="(need_update_object.length > 1 && i === 0) ? 1 : 2">
+                <div style="width:100%; overflow: hidden; text-overflow: ellipsis;" :title="row.title">
+                  <span v-if="row.direction_params > -1">
+                    <button type="button" class="btn btn-blue-nb nbr" @click="form_params[row.pk].show=!form_params[row.pk].show">
                     <i v-if="form_params[row.pk].show" class="glyphicon glyphicon-arrow-up"></i>
-                    <i v-else class="glyphicon glyphicon-arrow-down"></i>
-                  </button>
-                </div>
-              </td>
-              <td :colspan="(need_update_object.length > 1 && i === 0) ? 1 : 2">
-                <div style="width:100%; overflow: hidden; text-overflow: ellipsis;" :title="row.title">{{ row.title }}
+                      <i v-else class="glyphicon glyphicon-arrow-down"></i>
+                    </button>
+                  </span>
+                  {{ row.title }}
                   <span v-if="row.direction_params > -1 && !r(form_params[row.pk])" style="color: #f00"> *назначение не будет создано</span>
                 </div>
               </td>
-              <td v-if="need_update_object.length > 1 && i === 0">
+              <td class="cl-td" v-if="need_update_object.length > 1 && i === 0">
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
                         title="Назначить всем исследованиям те же параметры" @click="applyAllFromFirst">
                   <i class="fa fa-circle"></i>
                 </button>
               </td>
-              <td>
+              <td class="cl-td">
                 <v-select :clearable="false" :options="row.localizations"
                           :searchable="false" v-if="row.localizations && row.localizations.length > 0"
                           v-model="localizations[row.pk]"/>
@@ -176,7 +173,7 @@
                   <div slot="no-options">Нет вариантов по умолчанию</div>
                 </v-select>
               </td>
-              <td>
+              <td class="cl-td">
                 <v-select :clearable="false" :options="row.service_locations"
                           :searchable="false" v-if="row.service_locations && row.service_locations.length > 0"
                           v-model="service_locations[row.pk]"/>
@@ -184,14 +181,13 @@
                   нет доступных вариантов
                 </div>
               </td>
-              <td>
+              <td class="cl-td">
                 <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
-
               </td>
             </tr>
             <SelectedRsearchesParams v-if="form_params[row.pk]"
               :research="form_params[row.pk]"
-              :patient="simulated_patient"
+              :selected_card="selected_card"
             />
             </template>
             </tbody>
@@ -215,7 +211,6 @@ import 'vue-select/dist/vue-select.css';
 import TypeAhead from 'vue2-typeahead'
 import MKBField from '../fields/MKBField'
 import SelectFieldTitled from '../fields/SelectFieldTitled'
-import DescriptiveForm from '../forms/DescriptiveForm'
 import SelectedRsearchesParams from '../ui-cards/SelectedRsearchesParams'
 import {vField, vGroup} from "@/components/visibility-triggers";
 
@@ -229,7 +224,6 @@ export default {
     vSelect,
     TypeAhead,
     MKBField,
-    DescriptiveForm,
     SelectedRsearchesParams,
   },
   props: {
@@ -246,6 +240,9 @@ export default {
     },
     card_pk: {
       type: Number
+    },
+    selected_card:{
+      type: Object
     },
     visible: {
       type: Boolean,
@@ -319,22 +316,6 @@ export default {
       direction_purpose: 'NONE',
       external_organization: 'NONE',
       directions_count: '1',
-      simulated_patient: {
-        age: 51,
-        base: 5,
-        card: "1 L2",
-        card_pk: 199554,
-        doc: "Администратор L.2, Травматологическое отделение",
-        fio_age: "Котова Аделия Ивановна, ж, 01.01.1970 (51 год)",
-        has_benefit: false,
-        has_dreg: true,
-        imported_from_rmis: false,
-        imported_org: "",
-        individual_pk: 209197,
-        sex: "ж",
-      },
-      direction_params_is_show: {},
-      show_params: false
     }
   },
   watch: {
@@ -494,10 +475,6 @@ export default {
     if (this.initial_fin) {
       this.select_fin(this.initial_fin)
     }
-    for (let row of this.need_update_object){
-      this.direction_params_is_show[row.pk] = true
-    }
-
   },
   methods: {
     applyAllFromFirst() {

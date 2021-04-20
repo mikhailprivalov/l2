@@ -68,7 +68,8 @@
                              :visible="mode === DIRECTION_MODE_DIRECTION"
                              :main_diagnosis="selected_card.main_diagnosis"
                              :history_num="selected_card.history_num" :valid="patient_valid"
-                             :researches="selected_researches" :base="selected_card.base" :card_pk="selected_card.pk"/>
+                             :researches="selected_researches" :base="selected_card.base" :card_pk="selected_card.pk"
+                             :selected_card="selected_card"/>
       </div>
       <div v-show="mode === DIRECTION_MODE_CALL" v-if="l2_doc_call">
         <CallDoctor :card_pk="selected_card.pk" :researches="selected_researches"
