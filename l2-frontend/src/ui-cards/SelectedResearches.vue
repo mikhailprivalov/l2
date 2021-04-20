@@ -155,7 +155,10 @@
                     </button>
                   </span>
                   {{ row.title }}
-                  <span v-if="row.direction_params > -1 && !r(form_params[row.pk])" style="color: #f00"> *назначение не будет создано</span>
+                  <div class="status-list" v-if="row.direction_params > -1 && !r(form_params[row.pk])">
+                    <div class="status status-none">Не заполнены:&nbsp</div>
+                    <div class="status status-none" v-for="rl in r_list(form_params[row.pk])">{{rl}};</div>
+                  </div>
                 </div>
               </td>
               <td class="cl-td" v-if="need_update_object.length > 1 && i === 0">
@@ -998,4 +1001,20 @@ export default {
     border: none;
   }
 }
+  .status-list {
+    display: flex;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status {
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status-none {
+    color: #CF3A24
+  }
 </style>

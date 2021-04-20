@@ -37,7 +37,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.results {
-  z-index: 1000;
+ .results {
+   z-index: 1000;
 }
 </style>
