@@ -192,7 +192,7 @@ i {
     margin: 0;
   }
 
-  max-height: 600px;
+  max-height: 500px;
   width: 500px;
   overflow-y: auto;
 

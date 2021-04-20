@@ -725,7 +725,7 @@ class Napravleniya(models.Model):
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                         )
-                        DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], direction_form_params)
+
                         result["list_id"].append(directions_for_researches[dir_group].pk)
                     if dir_group == -1:
                         dir_group = "id" + str(research.pk)
@@ -747,7 +747,6 @@ class Napravleniya(models.Model):
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                         )
-                        DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], direction_form_params)
                         result["list_id"].append(directions_for_researches[dir_group].pk)
 
                     # получить по прайсу и услуге: текущую цену
@@ -766,6 +765,10 @@ class Napravleniya(models.Model):
                     issledovaniye = Issledovaniya(
                         napravleniye=directions_for_researches[dir_group], research=research, coast=research_coast, discount=research_discount, how_many=research_howmany, deferred=False
                     )
+
+                    research_data_params = direction_form_params.pop(str(v), None)
+                    if research_data_params:
+                        status = DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], research_data_params)
                     loc = ""
                     if str(research.pk) in localizations:
                         localization = directory.Localization.objects.get(pk=localizations[str(research.pk)]["code"])
@@ -1283,29 +1286,46 @@ class DirectionParamsResult(models.Model):
     field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
     field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
     value = models.TextField()
+    order = models.SmallIntegerField(default=None, blank=True, null=True)
 
     def get_field_type(self):
         return self.field_type if self.field_type is not None else self.field.field_type
 
     @staticmethod
+    def check_required_value(fields):
+        for f in fields:
+            required = f.get('required', False)
+            value = f.get('value', '')
+            if required and not value:
+                return False
+        return True
+
+    @staticmethod
     def save_direction_params(direction_obj, data):
-        print(direction_obj)
-        print(direction_obj.pk)
-        if data.get("groups", False):
-            for i in data.get("groups"):
-                print(i)
-    #         field_obj = directory.ParaclinicInputField.objects.get(pk=field_pk)
-    #
-    #
-    #
-    #
-    #     paraclinic_result_obj = ParaclinicResult.objects.filter(issledovaniye=iss_obj, field=field_obj).first()
-    #     if paraclinic_result_obj:
-    #         paraclinic_result_obj.value = previus_result
-    #         paraclinic_result_obj.field_type = 21
-    #     else:
-    #         paraclinic_result_obj = ParaclinicResult(issledovaniye=iss_obj, field=field_obj, field_type=21, value=previus_result)
-    #     paraclinic_result_obj.save()
+        required, field_obj = None, None
+        value = ''
+        order = None
+        field_type = None
+        if data.get('groups', None):
+            groups_data = data.get('groups')
+            for i in groups_data:
+                fields = i.get('fields', None)
+                if not DirectionParamsResult.check_required_value(fields):
+                    return False
+                for f in fields:
+                    for k, v in f.items():
+                        if k == 'pk':
+                            field_obj = directory.ParaclinicInputField.objects.get(pk=v)
+                        if k == 'order':
+                            order = v
+                        if k == 'value':
+                            value = v
+                        if k == 'field_type':
+                            field_type = v
+                    print(field_obj, field_type, value, direction_obj)
+                    direction_params_obj = DirectionParamsResult(napravleniye=direction_obj, field=field_obj, field_type=field_type, value=value)
+                    direction_params_obj.save()
+        return True
 
 
 class MicrobiologyResultCulture(models.Model):
