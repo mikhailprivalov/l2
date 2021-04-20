@@ -135,12 +135,15 @@ def send(request):
             appkey = request.GET.get("key", "")
 
         astm_user = users.DoctorProfile.objects.filter(user__username="astm").first()
+        app = models.Application.objects.filter(key=appkey, active=True).first()
+
         resdict["pk"] = int(resdict.get("pk", -111))
         if "LYMPH%" in resdict["result"]:
             resdict["orders"] = {}
 
         dpk = -1
-        if "bydirection" in request.POST or "bydirection" in request.GET:
+
+        if ("bydirection" in request.POST or "bydirection" in request.GET) and not app.tube_work:
             dpk = resdict["pk"]
 
             if dpk >= 4600000000000:
@@ -152,10 +155,14 @@ def send(request):
             else:
                 resdict["pk"] = False
         result["A"] = appkey
-        app = models.Application.objects.filter(key=appkey, active=True).first()
-        if resdict["pk"] and app and directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
-            tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
-            direction = tubei.issledovaniya_set.first().napravleniye
+
+        direction = None
+        if resdict["pk"] and app:
+            if app.tube_work:
+                direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__pk=resdict["pk"]).first()
+            elif directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
+                tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
+                direction = tubei.issledovaniya_set.first().napravleniye
             pks = []
             for key in resdict["result"].keys():
                 if models.RelationFractionASTM.objects.filter(astm_field=key).exists():
