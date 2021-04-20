@@ -619,6 +619,7 @@ class Napravleniya(models.Model):
         parent_auto_gen=None,
         direction_purpose="NONE",
         external_organization="NONE",
+        direction_form_params=None
     ):
         if not visited:
             visited = []
@@ -724,7 +725,7 @@ class Napravleniya(models.Model):
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                         )
-
+                        DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], direction_form_params)
                         result["list_id"].append(directions_for_researches[dir_group].pk)
                     if dir_group == -1:
                         dir_group = "id" + str(research.pk)
@@ -746,7 +747,7 @@ class Napravleniya(models.Model):
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                         )
-
+                        DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], direction_form_params)
                         result["list_id"].append(directions_for_researches[dir_group].pk)
 
                     # получить по прайсу и услуге: текущую цену
@@ -1285,6 +1286,26 @@ class DirectionParamsResult(models.Model):
 
     def get_field_type(self):
         return self.field_type if self.field_type is not None else self.field.field_type
+
+    @staticmethod
+    def save_direction_params(direction_obj, data):
+        print(direction_obj)
+        print(direction_obj.pk)
+        if data.get("groups", False):
+            for i in data.get("groups"):
+                print(i)
+    #         field_obj = directory.ParaclinicInputField.objects.get(pk=field_pk)
+    #
+    #
+    #
+    #
+    #     paraclinic_result_obj = ParaclinicResult.objects.filter(issledovaniye=iss_obj, field=field_obj).first()
+    #     if paraclinic_result_obj:
+    #         paraclinic_result_obj.value = previus_result
+    #         paraclinic_result_obj.field_type = 21
+    #     else:
+    #         paraclinic_result_obj = ParaclinicResult(issledovaniye=iss_obj, field=field_obj, field_type=21, value=previus_result)
+    #     paraclinic_result_obj.save()
 
 
 class MicrobiologyResultCulture(models.Model):

@@ -11,7 +11,7 @@
                 theme: 'light',
                 placement: 'bottom',
                 trigger: 'click mouseenter',
-                zIndex: 4999,
+                zIndex: 104999,
                 popperOptions: {
                   modifiers: {
                     preventOverflow: {
