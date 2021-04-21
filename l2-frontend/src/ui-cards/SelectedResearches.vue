@@ -189,20 +189,24 @@
               <td class="cl-td">
                 <treeselect :multiple="false" :disable-branch-nodes="true" :options="options"
                       placeholder="Тип не выбран" :clearable="false" v-model="custom_direction_params[row.pk]"/>
+                {{custom_direction_params[row.pk]}}
               </td>
               <td class="cl-td">
                 <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
               </td>
             </tr>
-            <SelectedRsearchesParams v-if="custom_direction_params[row.pk] > -1"
+            <SelectedRsearchesParams v-if="custom_direction_params[row.pk] === -1"
               :research="form_params[row.pk]"
               :selected_card="selected_card"
+              :show="form_params[row.pk].show"
+            />
+            <SelectedRsearchesParams v-else
+              :research="get_custom_direction_params(custom_direction_params[row.pk])"
+              :selected_card="selected_card"
+              :show="form_params[row.pk].show"
             />
 
-            <SelectedRsearchesParams v-if="form_params[row.pk]"
-              :research="form_params[row.pk]"
-              :selected_card="selected_card"
-            />
+
             </template>
             </tbody>
           </table>
@@ -505,12 +509,13 @@ export default {
   methods: {
     async load_direction_params(){
       const data = await api('researches/by-direction-params')
-      console.log(data.researches)
       for (let i of data.researches){
         this.options.push({id: i.pk, label: i.title})
         this.researches_direction_params[i.pk] = i.research_data
       }
-      console.log(this.researches_direction_params)
+    },
+    get_custom_direction_params(pk){
+      return this.researches_direction_params[pk].research
     },
     applyAllFromFirst() {
       const {pk: fpk} = this.need_update_object[0];
