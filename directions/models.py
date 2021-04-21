@@ -706,6 +706,10 @@ class Napravleniya(models.Model):
                     if research.direction:
                         dir_group = research.direction_id
 
+                    research_data_params = direction_form_params.get(str(v), None)
+                    if research_data_params:
+                        dir_group = -1
+
                     if dir_group > -1 and dir_group not in directions_for_researches.keys():
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(
                             client_id,
@@ -766,9 +770,8 @@ class Napravleniya(models.Model):
                         napravleniye=directions_for_researches[dir_group], research=research, coast=research_coast, discount=research_discount, how_many=research_howmany, deferred=False
                     )
 
-                    research_data_params = direction_form_params.pop(str(v), None)
                     if research_data_params:
-                        status = DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], research_data_params)
+                        DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], research_data_params)
                     loc = ""
                     if str(research.pk) in localizations:
                         localization = directory.Localization.objects.get(pk=localizations[str(research.pk)]["code"])
@@ -1283,6 +1286,7 @@ class ParaclinicResult(models.Model):
 
 class DirectionParamsResult(models.Model):
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление для которого сохранены дополнительные параметры', db_index=True, on_delete=models.CASCADE)
+    title = models.CharField(default='', max_length=400, help_text='Название поля ввода')
     field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
     field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
     value = models.TextField()
@@ -1294,9 +1298,9 @@ class DirectionParamsResult(models.Model):
 
     @staticmethod
     def save_direction_params(direction_obj, data):
-        required, field_obj = None, None
-        value = ''
-        order = None
+        field_obj = None, None
+        value, title = '', ''
+        order = -1
         field_type = None
         if data.get('groups', None):
             groups_data = data.get('groups')
@@ -1312,10 +1316,11 @@ class DirectionParamsResult(models.Model):
                             value = v
                         if k == 'field_type':
                             field_type = v
-                    print(field_obj, field_type, value, direction_obj)
-                    direction_params_obj = DirectionParamsResult(napravleniye=direction_obj, field=field_obj, field_type=field_type, value=value)
+                        if k == 'title':
+                            title = v
+                    print(field_obj, field_type, value, direction_obj, title, order)
+                    direction_params_obj = DirectionParamsResult(napravleniye=direction_obj, title=title, field=field_obj, field_type=field_type, value=value, order=order)
                     direction_params_obj.save()
-        return True
 
 
 class MicrobiologyResultCulture(models.Model):
