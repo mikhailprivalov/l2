@@ -189,7 +189,6 @@
               <td class="cl-td">
                 <treeselect :multiple="false" :disable-branch-nodes="true" :options="options"
                       placeholder="Тип не выбран" :clearable="false" v-model="custom_direction_params[row.pk]"/>
-                {{custom_direction_params[row.pk]}}
               </td>
               <td class="cl-td">
                 <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
