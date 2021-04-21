@@ -59,6 +59,7 @@ def get_researches(request):
     )
 
     r: DResearches
+
     for r in res:
         autoadd = [x.b_id for x in r.a.all()]
         addto = [x.a_id for x in r.b.all()]
@@ -95,6 +96,23 @@ def get_researches(request):
     result = {"researches": deps, "tubes": tubes}
 
     return JsonResponse(result)
+
+
+def by_direction_params(request):
+    data = []
+    res = DResearches.objects.filter(hide=False, is_direction_params=True).distinct().order_by('title')
+    r: DResearches
+    for r in res:
+        data.append(
+            {
+                "pk": r.pk,
+                "title": r.get_title(),
+                "full_title": r.title,
+                "research_data": get_research_for_direction_params(r.pk),
+            }
+        )
+
+    return JsonResponse({"researches": data})
 
 
 @login_required

@@ -129,10 +129,11 @@
         <table class="table table-bordered table-responsive"
                style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
           <colgroup>
-            <col width="240">
+            <col width="230">
             <col width="40">
-            <col width="300">
-            <col width="300">
+            <col width="230">
+            <col width="230">
+            <col width="180">
             <col width="80">
           </colgroup>
           <thead>
@@ -140,6 +141,7 @@
             <th colspan="2">Назначение</th>
             <th>Комментарий</th>
             <th>Место</th>
+            <th>Параметры</th>
             <th>Количество</th>
           </tr>
           </thead>
@@ -185,6 +187,10 @@
                 </div>
               </td>
               <td class="cl-td">
+                <treeselect :multiple="false" :disable-branch-nodes="true" :options="row.data_is_direction_params"
+                      placeholder="Тип не выбран" :clearable="false" :append-to-body="true"/>
+              </td>
+              <td class="cl-td">
                 <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
               </td>
             </tr>
@@ -217,6 +223,9 @@ import MKBField from '../fields/MKBField'
 import SelectFieldTitled from '../fields/SelectFieldTitled'
 import SelectedRsearchesParams from '../ui-cards/SelectedRsearchesParams'
 import {vField, vGroup} from "@/components/visibility-triggers";
+import api from '@/api'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
 
 export default {
@@ -229,6 +238,7 @@ export default {
     TypeAhead,
     MKBField,
     SelectedRsearchesParams,
+    Treeselect,
   },
   props: {
     simple: {
@@ -320,6 +330,7 @@ export default {
       direction_purpose: 'NONE',
       external_organization: 'NONE',
       directions_count: '1',
+      options: [{id: '750', label: 'rfrfrf rfrf'}],
     }
   },
   watch: {
@@ -479,8 +490,17 @@ export default {
     if (this.initial_fin) {
       this.select_fin(this.initial_fin)
     }
+    this.load_direction_params()
   },
   methods: {
+    async load_direction_params(){
+      const data = await api('researches/by-direction-params')
+      console.log(data.researches)
+      for (let i of data.researches){
+        console.log(i.pk, i.title)
+        // this.researches_directon_params.push({id: i.pk, label: i.title})
+      }
+    },
     applyAllFromFirst() {
       const {pk: fpk} = this.need_update_object[0];
       for (const row of this.need_update_object.slice(1)) {

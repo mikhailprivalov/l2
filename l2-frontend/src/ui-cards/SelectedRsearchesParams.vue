@@ -1,6 +1,6 @@
 <template>
   <tr v-if="research.show">
-    <td colspan="5">
+    <td colspan="6">
       <ResultsByYear :card_pk="selected_card.pk" isDocReferral/>
       <ResultsByYear :card_pk="selected_card.pk" isParaclinic/>
       <ResultsByYear :card_pk="selected_card.pk" isLab/>
