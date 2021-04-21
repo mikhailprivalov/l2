@@ -187,13 +187,17 @@
                 </div>
               </td>
               <td class="cl-td">
-                <treeselect :multiple="false" :disable-branch-nodes="true" :options="row.data_is_direction_params"
-                      placeholder="Тип не выбран" :clearable="false" :append-to-body="true"/>
+                <treeselect :multiple="false" :disable-branch-nodes="true" :options="options"
+                      placeholder="Тип не выбран" :clearable="false" v-model="custom_direction_params[row.pk]"/>
               </td>
               <td class="cl-td">
                 <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
               </td>
             </tr>
+            <SelectedRsearchesParams v-if="custom_direction_params[row.pk] > -1"
+              :research="form_params[row.pk]"
+              :selected_card="selected_card"
+            />
 
             <SelectedRsearchesParams v-if="form_params[row.pk]"
               :research="form_params[row.pk]"
@@ -312,6 +316,7 @@ export default {
       form_params: {},
       localizations: {},
       counts: {},
+      custom_direction_params: {},
       service_locations: {},
       need_update_comment: [],
       need_update_localization: [],
@@ -330,7 +335,8 @@ export default {
       direction_purpose: 'NONE',
       external_organization: 'NONE',
       directions_count: '1',
-      options: [{id: '750', label: 'rfrfrf rfrf'}],
+      options: [{id: -1, label: 'Не выбрано'}],
+      researches_direction_params: {}
     }
   },
   watch: {
@@ -368,6 +374,7 @@ export default {
       let service_locations = {}
       let localizations = {}
       let counts = {}
+      let custom_direction_params = {}
       this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1)
       this.need_update_localization = this.need_update_localization.filter(e => this.researches.indexOf(e) !== -1)
       this.need_update_service_location = this.need_update_service_location.filter(e => this.researches.indexOf(e) !== -1)
@@ -415,11 +422,13 @@ export default {
           }
 
           counts[pk] = 1
+          custom_direction_params[pk] = -1
         } else {
           comments[pk] = this.comments[pk]
           localizations[pk] = this.localizations[pk]
           service_locations[pk] = this.service_locations[pk]
           counts[pk] = this.counts[pk]
+          custom_direction_params[pk] = this.custom_direction_params[pk]
           form_params[pk] = this.form_params[pk]
         }
       }
@@ -428,6 +437,7 @@ export default {
       this.localizations = localizations
       this.service_locations = service_locations
       this.counts = counts
+      this.custom_direction_params = custom_direction_params
       if (needShowWindow) {
         this.show_window()
         this.$forceUpdate()
@@ -497,9 +507,10 @@ export default {
       const data = await api('researches/by-direction-params')
       console.log(data.researches)
       for (let i of data.researches){
-        console.log(i.pk, i.title)
-        // this.researches_directon_params.push({id: i.pk, label: i.title})
+        this.options.push({id: i.pk, label: i.title})
+        this.researches_direction_params[i.pk] = i.research_data
       }
+      console.log(this.researches_direction_params)
     },
     applyAllFromFirst() {
       const {pk: fpk} = this.need_update_object[0];
