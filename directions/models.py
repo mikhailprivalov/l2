@@ -1291,14 +1291,6 @@ class DirectionParamsResult(models.Model):
     def get_field_type(self):
         return self.field_type if self.field_type is not None else self.field.field_type
 
-    @staticmethod
-    def check_required_value(fields):
-        for f in fields:
-            required = f.get('required', False)
-            value = f.get('value', '')
-            if required and not value:
-                return False
-        return True
 
     @staticmethod
     def save_direction_params(direction_obj, data):
@@ -1310,8 +1302,6 @@ class DirectionParamsResult(models.Model):
             groups_data = data.get('groups')
             for i in groups_data:
                 fields = i.get('fields', None)
-                if not DirectionParamsResult.check_required_value(fields):
-                    return False
                 for f in fields:
                     for k, v in f.items():
                         if k == 'pk':
