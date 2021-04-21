@@ -377,7 +377,10 @@ def researches_details(request):
         response["conclusionTpl"] = res.bac_conclusion_templates
         response["cultureTpl"] = res.bac_culture_comments_templates
         response["speciality"] = res.speciality_id or -1
-        response["direction_current_params"] = res.direction_params.pk if res.direction_params else -1
+        response["direction_current_params"] = res.direction_params_id or -1
+        response["assigned_to_params"] = []
+        if res.is_direction_params:
+            response["assigned_to_params"] = [f'{x.pk} – {x.get_full_short_title()}' for x in DResearches.objects.filter(direction_params=res)]
 
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title, "hide": group.hide, "fields": [], "visibility": group.visibility}

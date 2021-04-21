@@ -37,13 +37,15 @@
           <td>{{ row.title }}</td>
           <td class="pb0">
             <research-display v-for="(res, idx) in row.researches" :simple="simple"
-                              :key="res.pk"
+                              :key="`${res.pk}_${hasNotFilled(res.pk)}`"
                               :title="res.title" :pk="res.pk" :n="idx"
                               :kk="kk"
                               :comment="(localizations[res.pk] || {}).label || comments[res.pk]"
                               :count="counts[res.pk]"
                               :service_location="(service_locations[res.pk] || {}).label"
                               :category="categories[res.site_type_raw]"
+                              :has_not_filled="hasNotFilled(res.pk)"
+                              :not_filled_fields="hasNotFilled(res.pk) ? r_list(form_params[res.pk]) : []"
                               :nof="row.researches.length"/>
           </td>
           <td v-if="!readonly" class="cl-td">
@@ -144,18 +146,18 @@
           </tr>
           </thead>
             <tbody>
-            <template v-for="(row,i) in need_update_object">
+            <template v-for="(row, i) in need_update_object">
             <tr>
               <td class="cl-td" :colspan="(need_update_object.length > 1 && i === 0) ? 1 : 2">
                 <div style="width:100%; overflow: hidden; text-overflow: ellipsis;" :title="row.title">
-                  <span v-if="row.direction_params > -1">
+                  <span v-if="row.direction_params > -1" title="Параметры направления" v-tippy>
                     <button type="button" class="btn btn-blue-nb nbr" @click="form_params[row.pk].show=!form_params[row.pk].show">
                     <i v-if="form_params[row.pk].show" class="glyphicon glyphicon-arrow-up"></i>
                       <i v-else class="glyphicon glyphicon-arrow-down"></i>
                     </button>
                   </span>
                   {{ row.title }}
-                  <div class="status-list" v-if="row.direction_params > -1 && !r(form_params[row.pk])">
+                  <div class="status-list empty-block" v-if="row.direction_params > -1 && !r(form_params[row.pk])">
                     <div class="status status-none">Не заполнены:&nbsp</div>
                     <div class="status status-none" v-for="rl in r_list(form_params[row.pk])">{{rl}};</div>
                   </div>
@@ -188,7 +190,7 @@
                 <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
               </td>
             </tr>
-            <SelectedRsearchesParams v-if="form_params[row.pk]"
+            <SelectedResearchesParams v-if="form_params[row.pk]"
               :research="form_params[row.pk]"
               :selected_card="selected_card"
             />
@@ -214,7 +216,7 @@ import 'vue-select/dist/vue-select.css';
 import TypeAhead from 'vue2-typeahead'
 import MKBField from '../fields/MKBField'
 import SelectFieldTitled from '../fields/SelectFieldTitled'
-import SelectedRsearchesParams from '../ui-cards/SelectedRsearchesParams'
+import SelectedResearchesParams from './SelectedResearchesParams'
 import {vField, vGroup} from "@/components/visibility-triggers";
 
 
@@ -227,7 +229,7 @@ export default {
     vSelect,
     TypeAhead,
     MKBField,
-    SelectedRsearchesParams,
+    SelectedResearchesParams,
   },
   props: {
     simple: {
@@ -397,6 +399,9 @@ export default {
               this.need_update_direction_params.push(pk)
               needShowWindow = true
               form_params[pk] = JSON.parse(JSON.stringify(res.research_data.research))
+              if (!this.r(form_params[pk])) {
+                form_params[pk].show = true;
+              }
             } else if (this.form_params[pk]) {
               form_params[pk] = this.form_params[pk]
             }
@@ -480,6 +485,9 @@ export default {
     }
   },
   methods: {
+    hasNotFilled(pk) {
+      return this.form_params[pk] && !this.r(this.form_params[pk])
+    },
     applyAllFromFirst() {
       const {pk: fpk} = this.need_update_object[0];
       for (const row of this.need_update_object.slice(1)) {
@@ -649,7 +657,7 @@ export default {
     },
     r(research) {
       if (!research){
-        return false
+        return true
       }
       return this.r_list(research).length === 0
 
@@ -1016,5 +1024,13 @@ export default {
 
   .status-none {
     color: #CF3A24
+  }
+
+  .empty-block {
+    border-radius: 4px;
+    border: 1px solid #CF3A24;
+    background: rgba(#CF3A24, .1);
+    padding: 3px;
+    margin: 3px;
   }
 </style>

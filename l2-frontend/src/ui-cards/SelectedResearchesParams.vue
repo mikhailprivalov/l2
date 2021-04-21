@@ -15,7 +15,7 @@
 <script>
 
 export default {
-  name: "SelectedRsearchesParams",
+  name: "SelectedResearchesParams",
   components: {
     'DescriptiveForm': () => import('@/forms/DescriptiveForm'),
     'ResultsByYear': () => import('@/ui-cards/PatientResults/ResultsByYear'),
