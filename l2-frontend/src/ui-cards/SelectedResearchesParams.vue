@@ -1,9 +1,9 @@
 <template>
-  <tr v-if="research.show">
-    <td colspan="5">
-      <ResultsByYear class="results" :card_pk="selected_card.pk" isDocReferral/>
-      <ResultsByYear class="results" :card_pk="selected_card.pk" isParaclinic/>
-      <ResultsByYear class="results" :card_pk="selected_card.pk" isLab/>
+  <tr v-if="show">
+    <td colspan="6">
+      <ResultsByYear :card_pk="selected_card.pk" isDocReferral/>
+      <ResultsByYear :card_pk="selected_card.pk" isParaclinic/>
+      <ResultsByYear :card_pk="selected_card.pk" isLab/>
       <DescriptiveForm
         :research="research"
         :confirmed="false"
@@ -27,12 +27,19 @@ export default {
     },
     selected_card: {
       type: Object,
+    },
+    show:{
+      type: Boolean,
+      required: true,
     }
   },
   data(){
     return {
     }
   },
+  mounted() {
+    console.log(this.research)
+  }
 }
 </script>
 

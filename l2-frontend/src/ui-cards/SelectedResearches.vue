@@ -131,10 +131,11 @@
         <table class="table table-bordered table-responsive"
                style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
           <colgroup>
-            <col width="240">
+            <col width="230">
             <col width="40">
-            <col width="300">
-            <col width="300">
+            <col width="230">
+            <col width="230">
+            <col width="180">
             <col width="80">
           </colgroup>
           <thead>
@@ -142,6 +143,7 @@
             <th colspan="2">Назначение</th>
             <th>Комментарий</th>
             <th>Место</th>
+            <th>Параметры</th>
             <th>Количество</th>
           </tr>
           </thead>
@@ -187,13 +189,25 @@
                 </div>
               </td>
               <td class="cl-td">
+                <treeselect :multiple="false" :disable-branch-nodes="true" :options="options"
+                      placeholder="Тип не выбран" :clearable="false" v-model="custom_direction_params[row.pk]"/>
+              </td>
+              <td class="cl-td">
                 <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
               </td>
             </tr>
-            <SelectedResearchesParams v-if="form_params[row.pk]"
+            <SelectedResearchesParams v-if="custom_direction_params[row.pk] === -1"
               :research="form_params[row.pk]"
               :selected_card="selected_card"
+              :show="form_params[row.pk].show"
             />
+            <SelectedRsearchesParams v-else
+              :research="get_custom_direction_params(custom_direction_params[row.pk])"
+              :selected_card="selected_card"
+              :show="form_params[row.pk].show"
+            />
+
+
             </template>
             </tbody>
           </table>
@@ -218,6 +232,9 @@ import MKBField from '../fields/MKBField'
 import SelectFieldTitled from '../fields/SelectFieldTitled'
 import SelectedResearchesParams from './SelectedResearchesParams'
 import {vField, vGroup} from "@/components/visibility-triggers";
+import api from '@/api'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
 
 export default {
@@ -230,6 +247,7 @@ export default {
     TypeAhead,
     MKBField,
     SelectedResearchesParams,
+    Treeselect,
   },
   props: {
     simple: {
@@ -303,6 +321,7 @@ export default {
       form_params: {},
       localizations: {},
       counts: {},
+      custom_direction_params: {},
       service_locations: {},
       need_update_comment: [],
       need_update_localization: [],
@@ -321,6 +340,8 @@ export default {
       direction_purpose: 'NONE',
       external_organization: 'NONE',
       directions_count: '1',
+      options: [{id: -1, label: 'Не выбрано'}],
+      researches_direction_params: {}
     }
   },
   watch: {
@@ -358,6 +379,7 @@ export default {
       let service_locations = {}
       let localizations = {}
       let counts = {}
+      let custom_direction_params = {}
       this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1)
       this.need_update_localization = this.need_update_localization.filter(e => this.researches.indexOf(e) !== -1)
       this.need_update_service_location = this.need_update_service_location.filter(e => this.researches.indexOf(e) !== -1)
@@ -408,11 +430,13 @@ export default {
           }
 
           counts[pk] = 1
+          custom_direction_params[pk] = -1
         } else {
           comments[pk] = this.comments[pk]
           localizations[pk] = this.localizations[pk]
           service_locations[pk] = this.service_locations[pk]
           counts[pk] = this.counts[pk]
+          custom_direction_params[pk] = this.custom_direction_params[pk]
           form_params[pk] = this.form_params[pk]
         }
       }
@@ -421,6 +445,7 @@ export default {
       this.localizations = localizations
       this.service_locations = service_locations
       this.counts = counts
+      this.custom_direction_params = custom_direction_params
       if (needShowWindow) {
         this.show_window()
         this.$forceUpdate()
@@ -483,8 +508,19 @@ export default {
     if (this.initial_fin) {
       this.select_fin(this.initial_fin)
     }
+    this.load_direction_params()
   },
   methods: {
+    async load_direction_params(){
+      const data = await api('researches/by-direction-params')
+      for (let i of data.researches){
+        this.options.push({id: i.pk, label: i.title})
+        this.researches_direction_params[i.pk] = i.research_data
+      }
+    },
+    get_custom_direction_params(pk){
+      return this.researches_direction_params[pk].research
+    },
     hasNotFilled(pk) {
       return this.form_params[pk] && !this.r(this.form_params[pk])
     },
@@ -625,6 +661,7 @@ export default {
         direction_purpose: this.direction_purpose,
         external_organization: this.external_organization,
         directions_count: Number(this.directions_count) || 1,
+        direction_form_params: this.form_params
       })
     },
     clear_all() {
