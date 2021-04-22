@@ -1334,7 +1334,7 @@ body > .container-fluid {
     border-radius: 0;
   }
 
-  input, textarea {
+  input:not(.vs__search), textarea {
     border-radius: 0;
     width: 100%;
     min-height: 100%;

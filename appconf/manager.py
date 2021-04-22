@@ -1,15 +1,34 @@
 import simplejson
 from django.core.cache import cache
+from django.db.models.signals import post_save
 
 import appconf.models as appconf
 
 
 class SettingManager:
+    WARMUP_TEST_KEY = 'SettingManager:test-warmup'
+
     @staticmethod
-    def get(key, default=None, default_type='s'):
+    def warmup():
+        cache.set(SettingManager.WARMUP_TEST_KEY, True, 1)
+
+        if not cache.get(SettingManager.WARMUP_TEST_KEY):
+            print('SettingManager: cache is disabled')
+
+        post_save.disconnect(save_setting, sender=appconf.Setting)
+        print('SettingManager: warming up')
+
+        s: appconf.Setting
+        for s in appconf.Setting.objects.all():
+            SettingManager.get(s.name, rebuild=True)
+
+        post_save.connect(save_setting, sender=appconf.Setting)
+
+    @staticmethod
+    def get(key, default=None, default_type='s', rebuild=False):
         no_cache = '#no-cache#' in key
         k = 'setting_manager_' + key
-        cv = cache.get(k) if not no_cache else None
+        cv = cache.get(k) if not no_cache and not rebuild else None
         if cv:
             return simplejson.loads(cv)
         row = appconf.Setting.objects.filter(name=key).first()
@@ -17,7 +36,7 @@ class SettingManager:
             row = appconf.Setting.objects.create(name=key, value=key if default is None else default, value_type=default_type)
         value = row.get_value()
         if not no_cache:
-            cache.set(k, simplejson.dumps(value), 20)
+            cache.set(k, simplejson.dumps(value), 60 * 60 * 24)
         return value
 
     @staticmethod
@@ -80,3 +99,10 @@ class SettingManager:
     @staticmethod
     def is_morfology_enabled(en: dict):
         return bool(en.get(8)) or bool(en.get(9)) or bool(en.get(10))
+
+
+def save_setting(sender, instance, **kwargs):
+    SettingManager.warmup()
+
+
+post_save.connect(save_setting, sender=appconf.Setting)

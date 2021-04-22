@@ -268,6 +268,7 @@ SENTRY_DSN = "https://4a6968777ec240b190abd11cbf1c96e1@sentry.io/3083440"
 QUERY_TIMEOUT = 120
 
 FORM_100_08_A4_FORMAT = False
+FORCE_CACHALOT = False
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
@@ -281,7 +282,8 @@ if PROFILING:
 MIDDLEWARE += MIDDLEWARE_ADD
 MIDDLEWARE = list(OrderedDict.fromkeys(MIDDLEWARE))
 INSTALLED_APPS += INSTALLED_APPS_ADD
-INSTALLED_APPS = [x for x in OrderedDict.fromkeys(INSTALLED_APPS_PRE_ADD + INSTALLED_APPS) if x not in ['cachalot']]
+if not FORCE_CACHALOT:
+    INSTALLED_APPS = [x for x in OrderedDict.fromkeys(INSTALLED_APPS_PRE_ADD + INSTALLED_APPS) if x not in ['cachalot']]
 
 WS_URL = "ws://{}:{}/".format(WS_BASE, WS_PORT)
 

@@ -37,16 +37,18 @@
           <td>{{ row.title }}</td>
           <td class="pb0">
             <research-display v-for="(res, idx) in row.researches" :simple="simple"
-                              :key="res.pk"
+                              :key="`${res.pk}_${hasNotFilled(res.pk)}`"
                               :title="res.title" :pk="res.pk" :n="idx"
                               :kk="kk"
                               :comment="(localizations[res.pk] || {}).label || comments[res.pk]"
                               :count="counts[res.pk]"
                               :service_location="(service_locations[res.pk] || {}).label"
                               :category="categories[res.site_type_raw]"
+                              :has_not_filled="hasNotFilled(res.pk)"
+                              :not_filled_fields="hasNotFilled(res.pk) ? r_list(form_params[res.pk]) : []"
                               :nof="row.researches.length"/>
           </td>
-          <td v-if="!readonly" class="cl-td">
+          <td v-if="!readonly" class="cl-td clean-btn-td">
             <button class="btn last btn-blue-nb nbr" type="button"
                     v-tippy="{ placement : 'bottom', arrow: true }"
                     :title="`Очистить категорию ${row.title}`" @click.prevent="clear_department(parseInt(key))">
@@ -56,7 +58,7 @@
         </tr>
         <tr v-if="Object.keys(researches_departments).length > 1 && !readonly">
           <td colspan="2"></td>
-          <td class="cl-td">
+          <td class="cl-td clean-btn-td">
             <button class="btn last btn-blue-nb nbr" type="button"
                     v-tippy="{ placement : 'bottom', arrow: true }"
                     title="Очистить всё" @click.prevent="clear_all">
@@ -91,8 +93,9 @@
                    style="max-width: 165px;display: inline-block;" class="form-control" type="number" step="1"
             />
             <span v-if="directions_count > 1" class="small">
-              &nbsp;&nbsp;
-              выбранное&nbsp;будет&nbsp;назначено&nbsp;{{ directions_count }}&nbsp;раз{{ directions_count > 1 && directions_count < 5 ? 'а' : '' }}
+              выбранное&nbsp;будет&nbsp;назначено&nbsp;{{
+                directions_count
+              }}&nbsp;раз{{ directions_count > 1 && directions_count < 5 ? 'а' : '' }}
             </span>
           </td>
         </tr>
@@ -122,10 +125,10 @@
     </div>
 
     <modal ref="modal" @close="cancel_update" show-footer="true"
-           overflow-unset="true"
+           overflow-unset="true" resultsEditor
            v-show="visible && need_update_comment.length > 0 && !hide_window_update && !simple">
       <span slot="header">Настройка назначений</span>
-      <div slot="body" class="overflow-unset results-editor">
+      <div slot="body" class="overflow-unset">
         <table class="table table-bordered table-responsive"
                style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
           <colgroup>
@@ -145,21 +148,24 @@
             <th>Количество</th>
           </tr>
           </thead>
-            <tbody>
-            <template v-for="(row,i) in need_update_object">
+          <tbody>
+          <template v-for="(row, i) in need_update_object">
             <tr>
               <td class="cl-td" :colspan="(need_update_object.length > 1 && i === 0) ? 1 : 2">
                 <div style="width:100%; overflow: hidden; text-overflow: ellipsis;" :title="row.title">
-                  <span v-if="row.direction_params > -1">
-                    <button type="button" class="btn btn-blue-nb nbr" @click="form_params[row.pk].show=!form_params[row.pk].show">
+                  <span v-if="row.direction_params > -1" title="Параметры направления" v-tippy>
+                    <button type="button" class="btn btn-blue-nb nbr"
+                            @click="form_params[row.pk].show=!form_params[row.pk].show">
                     <i v-if="form_params[row.pk].show" class="glyphicon glyphicon-arrow-up"></i>
                       <i v-else class="glyphicon glyphicon-arrow-down"></i>
                     </button>
                   </span>
-                  {{ row.title }}
-                  <div class="status-list" v-if="row.direction_params > -1 && !r(form_params[row.pk])">
+                  <div style="display: inline-block; margin: 0 5px;">
+                    {{ row.title }}
+                  </div>
+                  <div class="status-list empty-block" v-if="row.direction_params > -1 && !r(form_params[row.pk])">
                     <div class="status status-none">Не заполнены:&nbsp</div>
-                    <div class="status status-none" v-for="rl in r_list(form_params[row.pk])">{{rl}};</div>
+                    <div class="status status-none" v-for="rl in r_list(form_params[row.pk])">{{ rl }};</div>
                   </div>
                 </div>
               </td>
@@ -188,29 +194,29 @@
               </td>
               <td class="cl-td">
                 <treeselect :multiple="false" :disable-branch-nodes="true" :options="options"
-                      placeholder="Тип не выбран" :clearable="false" v-model="custom_direction_params[row.pk]"/>
+                            placeholder="Тип не выбран" :clearable="false" v-model="custom_direction_params[row.pk]"/>
               </td>
               <td class="cl-td">
                 <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
               </td>
             </tr>
-            <SelectedRsearchesParams v-if="custom_direction_params[row.pk] === -1"
-              :research="form_params[row.pk]"
-              :selected_card="selected_card"
-              :show="form_params[row.pk].show"
-            />
-            <SelectedRsearchesParams v-else
-              :research="get_custom_direction_params(custom_direction_params[row.pk])"
-              :selected_card="selected_card"
-              :show="form_params[row.pk].show"
-            />
-
-
+            <template v-if="form_params[row.pk]">
+              <SelectedResearchesParams v-if="custom_direction_params[row.pk] === -1"
+                                        :research="form_params[row.pk]"
+                                        :selected_card="selected_card"
+                                        :show="form_params[row.pk].show"
+              />
+              <SelectedResearchesParams v-else
+                                       :research="get_custom_direction_params(custom_direction_params[row.pk])"
+                                       :selected_card="selected_card"
+                                       :show="form_params[row.pk].show"
+              />
             </template>
-            </tbody>
-          </table>
+          </template>
+          </tbody>
+        </table>
 
-        </div>
+      </div>
       <div slot="footer" class="text-center">
         <button @click="cancel_update" class="btn btn-blue-nb">Закрыть</button>
       </div>
@@ -228,7 +234,7 @@ import 'vue-select/dist/vue-select.css';
 import TypeAhead from 'vue2-typeahead'
 import MKBField from '../fields/MKBField'
 import SelectFieldTitled from '../fields/SelectFieldTitled'
-import SelectedRsearchesParams from '../ui-cards/SelectedRsearchesParams'
+import SelectedResearchesParams from './SelectedResearchesParams'
 import {vField, vGroup} from "@/components/visibility-triggers";
 import api from '@/api'
 import Treeselect from '@riophae/vue-treeselect'
@@ -244,7 +250,7 @@ export default {
     vSelect,
     TypeAhead,
     MKBField,
-    SelectedRsearchesParams,
+    SelectedResearchesParams,
     Treeselect,
   },
   props: {
@@ -262,7 +268,7 @@ export default {
     card_pk: {
       type: Number
     },
-    selected_card:{
+    selected_card: {
       type: Object
     },
     visible: {
@@ -419,6 +425,7 @@ export default {
               this.need_update_direction_params.push(pk)
               needShowWindow = true
               form_params[pk] = JSON.parse(JSON.stringify(res.research_data.research))
+              form_params[pk].show = true;
             } else if (this.form_params[pk]) {
               form_params[pk] = this.form_params[pk]
             }
@@ -506,15 +513,18 @@ export default {
     this.load_direction_params()
   },
   methods: {
-    async load_direction_params(){
+    async load_direction_params() {
       const data = await api('researches/by-direction-params')
-      for (let i of data.researches){
+      for (let i of data.researches) {
         this.options.push({id: i.pk, label: i.title})
         this.researches_direction_params[i.pk] = i.research_data
       }
     },
-    get_custom_direction_params(pk){
+    get_custom_direction_params(pk) {
       return this.researches_direction_params[pk].research
+    },
+    hasNotFilled(pk) {
+      return this.form_params[pk] && !this.r(this.form_params[pk])
     },
     applyAllFromFirst() {
       const {pk: fpk} = this.need_update_object[0];
@@ -685,8 +695,8 @@ export default {
       this.direction_params_is_show[pk] = false
     },
     r(research) {
-      if (!research){
-        return false
+      if (!research) {
+        return true
       }
       return this.r_list(research).length === 0
 
@@ -708,10 +718,10 @@ export default {
       }
       return l.slice(0, 2)
     },
-    func_show_params(current){
+    func_show_params(current) {
       current.show_params = true
     },
-    func_hide_params(current){
+    func_hide_params(current) {
       current.show_params = true
     }
   },
@@ -1038,20 +1048,33 @@ export default {
     border: none;
   }
 }
-  .status-list {
-    display: flex;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
 
-  .status {
-    font-weight: bold;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+.status-list {
+  display: flex;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  .status-none {
-    color: #CF3A24
-  }
+.status {
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-none {
+  color: #CF3A24
+}
+
+.empty-block {
+  border-radius: 4px;
+  border: 1px solid #CF3A24;
+  background: rgba(#CF3A24, .1);
+  padding: 3px;
+  margin: 3px;
+}
+
+.clean-btn-td .btn {
+  width: 40px;
+}
 </style>
