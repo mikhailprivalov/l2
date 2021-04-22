@@ -194,28 +194,21 @@
               </td>
               <td class="cl-td">
                 <treeselect :multiple="false" :disable-branch-nodes="true" :options="options"
-                            placeholder="Тип не выбран" :clearable="false" v-model="custom_direction_params[row.pk]"/>
+                            placeholder="Тип не выбран" :clearable="false"/>
               </td>
               <td class="cl-td">
                 <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
               </td>
             </tr>
             <template v-if="form_params[row.pk]">
-              <SelectedResearchesParams v-if="custom_direction_params[row.pk] === -1"
-                                        :research="form_params[row.pk]"
-                                        :selected_card="selected_card"
-                                        :show="form_params[row.pk].show"
-              />
-              <SelectedResearchesParams v-else
-                                       :research="get_custom_direction_params(custom_direction_params[row.pk])"
-                                       :selected_card="selected_card"
-                                       :show="form_params[row.pk].show"
+              <SelectedResearchesParams
+                :research="form_params[row.pk]"
+                :selected_card="selected_card"
               />
             </template>
           </template>
           </tbody>
         </table>
-
       </div>
       <div slot="footer" class="text-center">
         <button @click="cancel_update" class="btn btn-blue-nb">Закрыть</button>
@@ -383,7 +376,6 @@ export default {
       let service_locations = {}
       let localizations = {}
       let counts = {}
-      let custom_direction_params = {}
       this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1)
       this.need_update_localization = this.need_update_localization.filter(e => this.researches.indexOf(e) !== -1)
       this.need_update_service_location = this.need_update_service_location.filter(e => this.researches.indexOf(e) !== -1)
@@ -432,14 +424,13 @@ export default {
           }
 
           counts[pk] = 1
-          custom_direction_params[pk] = -1
         } else {
           comments[pk] = this.comments[pk]
           localizations[pk] = this.localizations[pk]
           service_locations[pk] = this.service_locations[pk]
           counts[pk] = this.counts[pk]
-          custom_direction_params[pk] = this.custom_direction_params[pk]
           form_params[pk] = this.form_params[pk]
+
         }
       }
       this.comments = comments
@@ -447,7 +438,6 @@ export default {
       this.localizations = localizations
       this.service_locations = service_locations
       this.counts = counts
-      this.custom_direction_params = custom_direction_params
       if (needShowWindow) {
         this.show_window()
         this.$forceUpdate()
@@ -519,9 +509,6 @@ export default {
         this.options.push({id: i.pk, label: i.title})
         this.researches_direction_params[i.pk] = i.research_data
       }
-    },
-    get_custom_direction_params(pk) {
-      return this.researches_direction_params[pk].research
     },
     hasNotFilled(pk) {
       return this.form_params[pk] && !this.r(this.form_params[pk])

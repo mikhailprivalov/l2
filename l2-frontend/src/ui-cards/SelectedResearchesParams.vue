@@ -1,5 +1,6 @@
 <template>
-  <tr v-if="show">
+<!--  <tr v-if="research.show">-->
+  <tr v-if="true">
     <td colspan="6">
       <ResultsByYear :card_pk="selected_card.pk" isDocReferral/>
       <ResultsByYear :card_pk="selected_card.pk" isParaclinic/>
@@ -28,10 +29,6 @@ export default {
     selected_card: {
       type: Object,
     },
-    show:{
-      type: Boolean,
-      required: true,
-    }
   },
   data(){
     return {
