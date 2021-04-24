@@ -224,7 +224,6 @@
             :selected_card="selected_card"
           />
         </template>
-
       </div>
       <div slot="footer" class="text-center">
         <button @click="cancel_update" class="btn btn-blue-nb">Закрыть</button>
@@ -672,7 +671,8 @@ export default {
         direction_purpose: this.direction_purpose,
         external_organization: this.external_organization,
         directions_count: Number(this.directions_count) || 1,
-        direction_form_params: this.form_params
+        direction_form_params: this.form_params,
+        current_global_direction_params: this.global_research_direction_param
       })
     },
     clear_all() {
