@@ -99,6 +99,19 @@
             </span>
           </td>
         </tr>
+        <tr>
+          <th>
+            <a href="#" @click.prevent="show_global_direction_params=true" style="color: #4b6075">
+              Параметры
+               <i class="fas fa-edit"></i>
+           </a>
+          </th>
+          <td class="cl-td">
+            <treeselect :multiple="false" :disable-branch-nodes="true" :options="global_direction_params"
+                        placeholder="Тип не выбран" :clearable="false" v-model="global_current_direction_param"
+            @select="changeSelect"/>
+          </td>
+        </tr>
         </tbody>
       </table>
     </div>
@@ -126,10 +139,10 @@
 
     <modal ref="modal" @close="cancel_update" show-footer="true"
            overflow-unset="true" resultsEditor
-           v-show="visible && need_update_comment.length > 0 && !hide_window_update && !simple">
+           v-show="visible && need_update_comment.length > 0 && !hide_window_update && !simple || show_global_direction_params">
       <span slot="header">Настройка назначений</span>
       <div slot="body" class="overflow-unset">
-        <table class="table table-bordered table-responsive"
+        <table v-if="!show_global_direction_params" class="table table-bordered table-responsive"
                style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
           <colgroup>
             <col width="230">
@@ -193,10 +206,6 @@
                 </div>
               </td>
               <td class="cl-td">
-                <treeselect :multiple="false" :disable-branch-nodes="true" :options="options"
-                            placeholder="Тип не выбран" :clearable="false"/>
-              </td>
-              <td class="cl-td">
                 <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
               </td>
             </tr>
@@ -209,6 +218,13 @@
           </template>
           </tbody>
         </table>
+        <template v-if="show_global_direction_params">
+          <SelectedResearchesParams
+            :research="global_research_direction_param"
+            :selected_card="selected_card"
+          />
+        </template>
+
       </div>
       <div slot="footer" class="text-center">
         <button @click="cancel_update" class="btn btn-blue-nb">Закрыть</button>
@@ -318,7 +334,10 @@ export default {
       form_params: {},
       localizations: {},
       counts: {},
-      custom_direction_params: {},
+      global_direction_params: [{id: -1, label: 'Не выбрано'}],
+      global_current_direction_param: -1,
+      global_research_direction_param: {},
+      show_global_direction_params: false,
       service_locations: {},
       need_update_comment: [],
       need_update_localization: [],
@@ -337,7 +356,6 @@ export default {
       direction_purpose: 'NONE',
       external_organization: 'NONE',
       directions_count: '1',
-      options: [{id: -1, label: 'Не выбрано'}],
       researches_direction_params: {}
     }
   },
@@ -430,7 +448,6 @@ export default {
           service_locations[pk] = this.service_locations[pk]
           counts[pk] = this.counts[pk]
           form_params[pk] = this.form_params[pk]
-
         }
       }
       this.comments = comments
@@ -503,12 +520,16 @@ export default {
     this.load_direction_params()
   },
   methods: {
+    changeSelect(node, status){
+      this.global_research_direction_param = this.researches_direction_params[node.id].research_data.research
+      this.global_research_direction_param.show = true
+    },
     async load_direction_params() {
       const data = await api('researches/by-direction-params')
-      for (let i of data.researches) {
-        this.options.push({id: i.pk, label: i.title})
-        this.researches_direction_params[i.pk] = i.research_data
+      for (let key in data) {
+        this.global_direction_params.push({id: key, label: data[key].title})
       }
+      this.researches_direction_params = {...data}
     },
     hasNotFilled(pk) {
       return this.form_params[pk] && !this.r(this.form_params[pk])
@@ -545,6 +566,7 @@ export default {
       this.need_update_service_location = []
       this.need_update_direction_params = []
       this.hide_window()
+      this.show_global_direction_params = false
     },
     onHit(item) {
       this.diagnos = item.split(' ')[0] || ''
@@ -675,12 +697,6 @@ export default {
       this.externalOrganizations = organizations
       await this.$store.dispatch(action_types.DEC_LOADING)
     },
-    show_direction_params(pk) {
-      this.direction_params_is_show[pk] = true
-    },
-    hide_direction_params(pk) {
-      this.direction_params_is_show[pk] = false
-    },
     r(research) {
       if (!research) {
         return true
@@ -705,12 +721,6 @@ export default {
       }
       return l.slice(0, 2)
     },
-    func_show_params(current) {
-      current.show_params = true
-    },
-    func_hide_params(current) {
-      current.show_params = true
-    }
   },
   computed: {
     direction_purpose_enabled() {

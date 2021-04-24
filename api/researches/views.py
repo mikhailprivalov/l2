@@ -99,20 +99,13 @@ def get_researches(request):
 
 
 def by_direction_params(request):
-    data = []
+    data = {}
     res = DResearches.objects.filter(hide=False, is_direction_params=True).distinct().order_by('title')
     r: DResearches
     for r in res:
-        data.append(
-            {
-                "pk": r.pk,
-                "title": r.get_title(),
-                "full_title": r.title,
-                "research_data": get_research_for_direction_params(r.pk),
-            }
-        )
+        data[r.pk] = {"title": r.get_title(), "full_title": r.title, "research_data": get_research_for_direction_params(r.pk)}
 
-    return JsonResponse({"researches": data})
+    return JsonResponse(data)
 
 
 @login_required
