@@ -6,6 +6,9 @@
           <span class="input-group-addon" v-if="ex_dep === 12">Название шаблона параметров направления</span>
           <span class="input-group-addon" v-else>Полное наименование</span>
           <input type="text" class="form-control" v-model="title">
+          <label v-if="ex_dep === 12" class="input-group-addon" style="height: 34px;text-align: left;">
+            <input type="checkbox" v-model="is_global_direction_params"/> Глобальный
+          </label>
           <span class="input-group-btn" v-if="(ex_dep === 12 || simple) && fte">
             <button class="btn btn-blue-nb"
                     type="button"
@@ -400,6 +403,7 @@
             return {
                 title: '',
                 short_title: '',
+                is_global_direction_params: false,
                 code: '',
                 internal_code: '',
                 direction_current_form: '',
@@ -636,6 +640,7 @@
             load() {
                 this.title = ''
                 this.short_title = ''
+                this.is_global_direction_params = false,
                 this.code = ''
                 this.info = ''
                 this.hide = false
@@ -649,6 +654,7 @@
                     construct_point.researchDetails(this, 'pk').then(data => {
                         this.title = data.title
                         this.short_title = data.short_title
+                        this.is_global_direction_params = data.is_global_direction_params
                         this.code = data.code
                         this.internal_code = data.internal_code
                         this.direction_current_form = data.direction_current_form
@@ -686,6 +692,7 @@
                     'department',
                     'title',
                     'short_title',
+                    'is_global_direction_params',
                     'code',
                     'hide',
                     'groups',
