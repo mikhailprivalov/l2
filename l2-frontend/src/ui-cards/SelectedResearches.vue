@@ -554,7 +554,10 @@ export default {
     },
     async load_direction_params() {
       const data = await api('researches/by-direction-params');
-      this.global_direction_params = Object.keys(data).map(id => ({id, label: data[id].title}));
+      this.global_direction_params = [
+        {id: -1, label: 'Не выбрано'},
+        ...Object.keys(data).map(id => ({id, label: data[id].title})),
+      ];
       this.researches_direction_params = data;
     },
     hasNotFilled(pk) {
