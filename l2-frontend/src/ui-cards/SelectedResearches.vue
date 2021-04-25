@@ -553,11 +553,9 @@ export default {
       this.global_research_direction_param.show = true
     },
     async load_direction_params() {
-      const data = await api('researches/by-direction-params')
-      for (let key in data) {
-        this.global_direction_params.push({id: key, label: data[key].title})
-      }
-      this.researches_direction_params = {...data}
+      const data = await api('researches/by-direction-params');
+      this.global_direction_params = Object.keys(data).map(id => ({id, label: data[id].title}));
+      this.researches_direction_params = data;
     },
     hasNotFilled(pk) {
       return this.form_params[pk] && !this.r(this.form_params[pk])
