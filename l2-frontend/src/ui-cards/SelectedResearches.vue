@@ -139,13 +139,19 @@
       </div>
     </div>
     <div class="bottom-picker" v-if="!simple">
-      <div class="top-inner-select" :class="{ disabled: !can_save }" @click="generate('direction')"
-           title="Сохранить и распечатать направления"><span>Сохранить и распечатать направления</span></div>
-      <div class="top-inner-select hidden-small" :class="{ disabled: !can_save }"
+      <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('direction')"
+           title="Сохранить и распечатать направления">
+        <span>Сохранить и распечатать направления</span>
+      </button>
+      <button class="btn btn-blue-nb top-inner-select hidden-small" :disabled="!can_save"
            @click="generate('barcode')"
-           title="Сохранить и распечатать штрих-коды"><span>Сохранить и распечатать штрих-коды</span></div>
-      <div class="top-inner-select" :class="{ disabled: !can_save }" @click="generate('just-save')"
-           title="Сохранить без печати"><span>Сохранить без печати</span></div>
+           title="Сохранить и распечатать штрих-коды">
+        <span>Сохранить и распечатать штрих-коды</span>
+      </button>
+      <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('just-save')"
+           title="Сохранить без печати">
+        <span>Сохранить без печати</span>
+      </button>
     </div>
 
     <modal ref="modal" @close="cancel_update" show-footer="true"
@@ -178,7 +184,7 @@
                 <div style="width:100%; overflow: hidden; text-overflow: ellipsis;" :title="row.title">
                   <span v-if="row.direction_params > -1" title="Параметры направления" v-tippy>
                     <button type="button" class="btn btn-blue-nb nbr"
-                            @click="form_params[row.pk].show=!form_params[row.pk].show">
+                            @click="form_params[row.pk].show = !form_params[row.pk].show">
                     <i v-if="form_params[row.pk].show" class="glyphicon glyphicon-arrow-up"></i>
                       <i v-else class="glyphicon glyphicon-arrow-down"></i>
                     </button>
@@ -221,7 +227,7 @@
             </tr>
             <template v-if="form_params[row.pk]">
               <tr>
-                <td colspan="6">
+                <td colspan="5">
                   <SelectedResearchesParams
                     :research="form_params[row.pk]"
                     :selected_card="selected_card"
@@ -812,7 +818,21 @@ export default {
       return false
     },
     can_save() {
-      return this.fin !== -1 && this.researches.length > 0 && this.card_pk !== -1
+      if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1) {
+        return false;
+      }
+
+      if (!this.r(this.global_research_direction_param)) {
+        return false;
+      }
+
+      return !this.researches.find(pk => {
+        if (!this.form_params[pk]) {
+          return false;
+        }
+
+        return !this.r(this.form_params[pk]);
+      });
     },
     need_update_object() {
       let r = []
@@ -938,7 +958,9 @@ export default {
   }
 }
 
-.top-inner-select {
+.top-inner-select, .top-inner-select.btn {
+  border-radius: 0;
+  border: none!important;
   align-self: stretch;
   display: flex;
   align-items: center;
@@ -961,7 +983,7 @@ export default {
     color: #fff;
   }
 
-  &.disabled {
+  &:disabled {
     color: #fff;
     cursor: not-allowed;
     opacity: .8;

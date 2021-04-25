@@ -39,8 +39,7 @@ export default {
 }
 
 .root {
-  width: 100vw;
-  max-width: 1024px;
-  min-width: 600px;
+  width: 100%;
+  min-width: 1000px;
 }
 </style>
