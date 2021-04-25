@@ -10,6 +10,8 @@ const TerserJSPlugin = require('terser-webpack-plugin');
 
 const isDev = process.env.NODE_ENV !== 'production';
 
+console.log('NODE VERSION:', process.version);
+
 const config = {
   entry: './src/main.js',
   output: {
