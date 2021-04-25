@@ -707,14 +707,15 @@ export default {
       })
     },
     clear_all() {
-      this.$root.$emit('researches-picker:deselect_all' + this.kk)
-      this.clear_fin()
-      this.direction_purpose = 'NONE'
-      this.external_organization = 'NONE'
-      this.directions_count = '1'
+      this.$root.$emit('researches-picker:deselect_all' + this.kk);
+      this.clear_fin();
+      this.direction_purpose = 'NONE';
+      this.external_organization = 'NONE';
+      this.directions_count = '1';
+      this.global_current_direction_param = -1;
     },
     clear_fin() {
-      this.select_fin(-1)
+      this.select_fin(-1);
     },
     async load_direction_purposes() {
       await this.$store.dispatch(action_types.INC_LOADING)
