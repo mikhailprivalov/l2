@@ -149,7 +149,6 @@
             <col width="40">
             <col width="230">
             <col width="230">
-            <col width="180">
             <col width="80">
           </colgroup>
           <thead>
@@ -157,7 +156,6 @@
             <th colspan="2">Назначение</th>
             <th>Комментарий</th>
             <th>Место</th>
-            <th>Параметры</th>
             <th>Количество</th>
           </tr>
           </thead>

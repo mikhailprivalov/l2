@@ -134,7 +134,7 @@ const config = {
       publicPath: 'webpack_bundles/',
     }),
   ],
-  devtool: 'eval-module-source-map',
+  devtool: 'eval-source-map',
   stats: 'normal',
 };
 
