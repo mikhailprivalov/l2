@@ -100,16 +100,27 @@
           </td>
         </tr>
         <tr>
-          <th>
-            <a href="#" @click.prevent="show_global_direction_params=true" style="color: #4b6075">
-              Параметры
-               <i class="fas fa-edit"></i>
-           </a>
-          </th>
           <td class="cl-td">
-            <treeselect :multiple="false" :disable-branch-nodes="true" :options="global_direction_params"
-                        placeholder="Тип не выбран" :clearable="false" v-model="global_current_direction_param"
-            @select="changeSelect"/>
+            <button class="btn btn-blue-nb nbr full-inner-btn" @click="global_research_direction_param.show = true">
+              Параметры
+              <i class="fas fa-edit"></i>
+            </button>
+          </td>
+          <td class="cl-td">
+            <treeselect :multiple="false" :disable-branch-nodes="true"
+                        class="treeselect-noborder"
+                        :options="global_direction_params" :append-to-body="true"
+                        placeholder="Тип не выбран" :clearable="false"
+                        v-model="global_current_direction_param"
+            />
+          </td>
+        </tr>
+        <tr v-if="!r(global_research_direction_param)">
+          <td colspan="2">
+            <div class="status-list empty-block">
+              <div class="status status-none">Не заполнены:&nbsp</div>
+              <div class="status status-none" v-for="rl in r_list(global_research_direction_param)">{{ rl }};</div>
+            </div>
           </td>
         </tr>
         </tbody>
@@ -140,7 +151,8 @@
     <modal ref="modal" @close="cancel_update" show-footer="true"
            overflow-unset="true" resultsEditor
            v-show="visible && need_update_comment.length > 0 && !hide_window_update && !simple || show_global_direction_params">
-      <span slot="header">Настройка назначений</span>
+      <span v-if="show_global_direction_params" slot="header">Настройка общих параметров для направления</span>
+      <span v-else slot="header">Настройка назначений</span>
       <div slot="body" class="overflow-unset">
         <table v-if="!show_global_direction_params" class="table table-bordered table-responsive"
                style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
@@ -208,15 +220,19 @@
               </td>
             </tr>
             <template v-if="form_params[row.pk]">
-              <SelectedResearchesParams
-                :research="form_params[row.pk]"
-                :selected_card="selected_card"
-              />
+              <tr>
+                <td colspan="6">
+                  <SelectedResearchesParams
+                    :research="form_params[row.pk]"
+                    :selected_card="selected_card"
+                  />
+                </td>
+              </tr>
             </template>
           </template>
           </tbody>
         </table>
-        <template v-if="show_global_direction_params">
+        <template v-else>
           <SelectedResearchesParams
             :research="global_research_direction_param"
             :selected_card="selected_card"
@@ -236,6 +252,7 @@ import * as action_types from '../store/action-types'
 import ResearchDisplay from './ResearchDisplay'
 import Modal from './Modal'
 import vSelect from 'vue-select'
+import _ from 'lodash'
 import 'vue-select/dist/vue-select.css';
 import TypeAhead from 'vue2-typeahead'
 import MKBField from '../fields/MKBField'
@@ -334,7 +351,6 @@ export default {
       global_direction_params: [{id: -1, label: 'Не выбрано'}],
       global_current_direction_param: -1,
       global_research_direction_param: {},
-      show_global_direction_params: false,
       service_locations: {},
       need_update_comment: [],
       need_update_localization: [],
@@ -506,6 +522,9 @@ export default {
         }
       },
     },
+    global_current_direction_param() {
+      this.changeSelectGlobalResearchDirectionParam(this.global_current_direction_param);
+    },
   },
   mounted() {
     this.$root.$on('researches-picker:clear_all' + this.kk, this.clear_all)
@@ -517,8 +536,14 @@ export default {
     this.load_direction_params()
   },
   methods: {
-    changeSelect(node, status){
-      this.global_research_direction_param = this.researches_direction_params[node.id].research_data.research
+    changeSelectGlobalResearchDirectionParam(pk) {
+      if (!this.researches_direction_params[pk]) {
+        this.global_research_direction_param = {};
+        return;
+      }
+      this.global_research_direction_param = _.cloneDeep(
+        this.researches_direction_params[pk].research_data.research
+      );
       this.global_research_direction_param.show = true
     },
     async load_direction_params() {
@@ -563,7 +588,9 @@ export default {
       this.need_update_service_location = []
       this.need_update_direction_params = []
       this.hide_window()
-      this.show_global_direction_params = false
+      if (this.global_research_direction_param) {
+        this.global_research_direction_param.show = false;
+      }
     },
     onHit(item) {
       this.diagnos = item.split(' ')[0] || ''
@@ -703,6 +730,9 @@ export default {
 
     },
     r_list(research) {
+      if (!research.groups) {
+        return [];
+      }
       const l = []
       for (const g of research.groups) {
         if (!vGroup(g, research.groups, this.simulated_patient)) {
@@ -721,6 +751,9 @@ export default {
     },
   },
   computed: {
+    show_global_direction_params() {
+      return this.global_research_direction_param && this.global_research_direction_param.show;
+    },
     direction_purpose_enabled() {
       return this.$store.getters.modules.l2_direction_purpose && this.kk !== 'stationar'
     },
@@ -1071,5 +1104,11 @@ export default {
 
 .clean-btn-td .btn {
   width: 40px;
+}
+
+.full-inner-btn {
+  display: block;
+  width: 100%;
+  height: 37px;
 }
 </style>
