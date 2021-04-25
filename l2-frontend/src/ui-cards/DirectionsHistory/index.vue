@@ -403,7 +403,7 @@
     top: 0;
     white-space: nowrap;
 
-    /deep/ {
+    ::v-deep {
       input {
         border-radius: 0;
         border: none;
@@ -616,7 +616,7 @@
     }
   }
 
-  .top-select /deep/ {
+  .top-select ::v-deep {
     .btn {
       border-radius: 0;
       border-top: 0;

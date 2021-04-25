@@ -33,8 +33,8 @@
     </title>
     {% load manifest %}
 
-    <link rel="stylesheet" href="{% manifest 'vendors.css' %}" />
-    <link rel="stylesheet" href="{% manifest 'main.css' %}" />
+    <link rel="stylesheet" href="{% manifest 'vendors.css' %}"/>
+    <link rel="stylesheet" href="{% manifest 'main.css' %}"/>
 
     <script src="{% static 'js/jquery.min.js' %}"></script>
 
@@ -52,7 +52,7 @@
     </script>
     {% block head_cn %}{% endblock %}
     {% if extended_html != 'extended_html' %}
-        {{ extended_html |safe  }}
+        {{ extended_html |safe }}
     {% endif %}
 </head>
 <body>{% load has_group %}
@@ -148,7 +148,8 @@
                         <div class="sk-circle12 sk-circle"></div>
                     </div>
                     {% verbatim %}
-                    <span class="loading-text" style="color: #fff; font-size: 14pt;font-weight: 200;margin-left: 10px;vertical-align: middle;display: inline-block">{{ loadingLabel.toUpperCase() }}</span>
+                    <span class="loading-text"
+                          style="color: #fff; font-size: 14pt;font-weight: 200;margin-left: 10px;vertical-align: middle;display: inline-block">{{ loadingLabel.toUpperCase() }}</span>
                     {% endverbatim %}
                 </div>
             </div>
@@ -221,7 +222,6 @@
     <script src="{% static 'js/context.jq.bs.js' %}"></script>
     <script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
     <script src="{% static 'locales/bootstrap-datepicker.ru.min.js' %}"></script>
-    <script src="{% static 'js/underscore-min.js' %}"></script>
     <script src="{% static 'js/jquery.idle.min.js' %}"></script>
     <script>
         let ajax_cache_token = (new Date()) + ''
@@ -410,6 +410,10 @@
             callback_loader = cb
         }
 
+        function isFunction(functionToCheck) {
+            return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
+        }
+
         function hl() {
             document.title = document.title.replace(lang.loading, '')
             inload = false
@@ -419,7 +423,7 @@
             exitLoop = true
             stopped = true
             $preloader.stop(true, true)
-            if (_.isFunction(callback_loader)) {
+            if (isFunction(callback_loader)) {
                 callback_loader()
             }
         }
@@ -601,19 +605,19 @@
         }
 
         $(document).idle({
-          onIdle: function(){
-            userIsIdle = true;
-            console.log('IDLE');
-          },
-          onActive: function(){
-            console.log('ACTIVE');
-            userIsIdle = false;
-            if (aliveTimer) {
-                clearTimeout(aliveTimer);
-            }
-            aliveTimer = setTimeout(alive, 5000);
-          },
-          idle: 100000,
+            onIdle: function () {
+                userIsIdle = true;
+                console.log('IDLE');
+            },
+            onActive: function () {
+                console.log('ACTIVE');
+                userIsIdle = false;
+                if (aliveTimer) {
+                    clearTimeout(aliveTimer);
+                }
+                aliveTimer = setTimeout(alive, 5000);
+            },
+            idle: 100000,
         });
 
         $(document).ajaxComplete(checkSession)

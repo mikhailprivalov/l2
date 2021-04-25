@@ -4,10 +4,9 @@ const {VueLoaderPlugin} = require('vue-loader');
 const LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
-const ManifestPlugin = require('webpack-manifest-plugin');
+const {WebpackManifestPlugin} = require('webpack-manifest-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const TerserJSPlugin = require('terser-webpack-plugin');
-const WebpackBar = require('webpackbar');
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -23,10 +22,26 @@ const config = {
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        loader: 'babel-loader',
+        use: [
+          {
+            loader: 'cache-loader',
+            options: {}
+          },
+          {
+            loader: 'babel-loader'
+          }
+        ],
       }, {
         test: /.vue$/,
-        loader: 'vue-loader'
+        use: [
+          {
+            loader: 'cache-loader',
+            options: {}
+          },
+          {
+            loader: 'vue-loader',
+          }
+        ],
       },
       {
         test: /\.css$/,
@@ -53,18 +68,7 @@ const config = {
         ],
       },
       {
-        test: /\.svg$/i,
-        use: [
-          {
-            loader: 'url-loader',
-            options: {
-              esModule: false,
-            },
-          },
-        ],
-      },
-      {
-        test: /\.(png|jpg|ttf|eot|gif|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+        test: /\.(png|jpg|ttf|eot|gif|woff|woff2|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
         loader: 'file-loader',
         options: {
           name: '[name].[ext]?[contenthash]'
@@ -76,27 +80,37 @@ const config = {
     alias: {
       'vue$': 'vue/dist/vue.esm.js',
       '@': path.resolve(__dirname, 'src'),
+      '../bootflat/img/check_flat/default.png': path.resolve(__dirname, 'node_modules/bootflat/bootflat/img/check_flat/default.png'),
     },
     extensions: ['*', '.js', '.vue', '.json'],
   },
   optimization: {
     minimize: !isDev,
     runtimeChunk: 'single',
+    moduleIds: 'deterministic',
     splitChunks: {
-      chunks: 'all',
-      maxInitialRequests: Infinity,
-      minSize: 0,
+      chunks: 'async',
+      minSize: 20000,
+      minChunks: 1,
+      maxAsyncRequests: 30,
+      maxInitialRequests: 30,
+      enforceSizeThreshold: 50000,
       cacheGroups: {
-        vendor: {
+        vendors: {
           test: /[\\/]node_modules[\\/]/,
           name: 'vendors',
-          chunks: 'all'
+          priority: -10,
+          reuseExistingChunk: true,
+        },
+        default: {
+          minChunks: 2,
+          priority: -20,
+          reuseExistingChunk: true,
         },
       }
     },
     minimizer: isDev ? [] : [
       new TerserJSPlugin({
-        cache: true,
         parallel: true,
       }),
       new OptimizeCSSAssetsPlugin({
@@ -110,27 +124,22 @@ const config = {
   plugins: [
     new VueLoaderPlugin(),
     new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /ru/),
-    new webpack.HashedModuleIdsPlugin(),
-    new LodashModuleReplacementPlugin,
+    ...(isDev ? [] : [new LodashModuleReplacementPlugin()]),
     new MiniCssExtractPlugin({
       filename: '[name].[contenthash].css',
       chunkFilename: '[id].[contenthash].css',
     }),
     new CleanWebpackPlugin(),
-    new ManifestPlugin({
+    new WebpackManifestPlugin({
       publicPath: 'webpack_bundles/',
     }),
-    new WebpackBar({
-      profile: isDev,
-      name: 'L2 Frontend',
-    }),
   ],
-  devtool: '#eval-source-map',
-  stats: 'minimal',
+  devtool: 'eval-module-source-map',
+  stats: 'normal',
 };
 
 if (!isDev) {
-  config.devtool = '#source-map'
+  config.devtool = 'source-map'
   config.plugins = (config.plugins || []).concat([
     new webpack.DefinePlugin({
       'process.env': {

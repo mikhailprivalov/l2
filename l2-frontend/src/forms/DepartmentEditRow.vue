@@ -26,7 +26,7 @@ import _ from 'lodash';
 
 export default {
   name: 'DepartmentEditRow',
-  components: {Treeselect, },
+  components: {Treeselect},
   props: {
     can_edit: {
       type: Boolean,

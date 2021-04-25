@@ -6,6 +6,7 @@ import Fragment from 'vue-fragment'
 import VuejsDialog from 'vuejs-dialog';
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min'
 import PortalVue from 'portal-vue';
+import Inputmask from 'inputmask';
 
 import store from './store'
 import * as action_types from './store/action-types'
@@ -16,8 +17,15 @@ import './styles/index.scss';
 
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
 
-
-const VueInputMask = require('vue-inputmask').default;
+const VueInputMask = {
+    install: function(Vue, options) {
+        Vue.directive('mask', {
+            bind: function(el, binding) {
+                Inputmask(binding.value).mask(el);
+            }
+        });
+    }
+};
 
 Vue.use(VuejsDialog, {
   okText: 'Подтвердить',

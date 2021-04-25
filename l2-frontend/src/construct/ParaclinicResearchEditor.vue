@@ -303,11 +303,11 @@
             </div>
           </template>
         </div>
-        <div v-if="ex_dep != 12">
+        <div v-if="ex_dep !== 12">
           <button class="btn btn-blue-nb" @click="add_group">Добавить группу</button>
         </div>
       </template>
-      <div v-if="ex_dep === 12">
+      <div v-if="ex_dep === 12 && pk > -1">
         <div><strong>Назначения, где используется этот шаблон параметров:</strong></div>
         <ul>
           <li v-for="a in assigned_to_params">{{a}}</li>

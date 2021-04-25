@@ -508,6 +508,7 @@
   import {normalizeNamePart, swapLayouts, validateSnils} from "@/utils";
   import {GENDERS} from "@/constants";
   import api from '@/api';
+  import _ from 'lodash';
 
   export default {
     name: 'l2-card-create',

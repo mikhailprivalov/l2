@@ -145,7 +145,7 @@ export default {
   float: right;
 }
 
-.cl-td /deep/ {
+.cl-td ::v-deep {
   label {
     justify-content: left;
   }

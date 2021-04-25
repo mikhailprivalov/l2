@@ -270,6 +270,8 @@ QUERY_TIMEOUT = 120
 FORM_100_08_A4_FORMAT = False
 FORCE_CACHALOT = False
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
