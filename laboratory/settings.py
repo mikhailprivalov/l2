@@ -293,6 +293,7 @@ MANIFEST_LOADER = {
     'cache': not DEBUG,
     'output_dir': 'webpack_bundles/',
     'manifest_file': os.path.join(BASE_DIR, 'assets/webpack_bundles/manifest.json'),
+    'ignore_missing_assets': DEBUG,
 }
 
 # db = DATABASES.get('default', {})

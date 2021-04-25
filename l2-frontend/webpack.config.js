@@ -45,7 +45,7 @@ const config = {
         test: /\.css$/,
         use: [
           'vue-style-loader',
-          MiniCssExtractPlugin.loader,
+          isDevServer ? 'style-loader' : MiniCssExtractPlugin.loader,
           'css-loader',
         ]
       },
@@ -53,7 +53,7 @@ const config = {
         test: /\.scss$/,
         use: [
           'vue-style-loader',
-          MiniCssExtractPlugin.loader,
+          isDevServer ? 'style-loader' : MiniCssExtractPlugin.loader,
           'css-loader',
           {
             loader: 'sass-loader',
