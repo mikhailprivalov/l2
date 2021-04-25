@@ -142,6 +142,7 @@ const config = {
     headers: {
       'Access-Control-Allow-Origin': '*'
     },
+    compress: true,
     hot: true,
     writeToDisk: true,
     watchOptions: {
