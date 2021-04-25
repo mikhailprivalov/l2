@@ -587,7 +587,8 @@ def directive_from(request):
             Prefetch(
                 'doctorprofile_set',
                 queryset=(
-                    users.DoctorProfile.objects.filter(user__groups__name__in=["Лечащий врач", "Врач параклиники"]).distinct().filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True)).order_by("fio")
+                    users.DoctorProfile.objects.filter(user__groups__name__in=["Лечащий врач", "Врач параклиники"]).distinct().filter(
+                        Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True)).order_by("fio")
                 ),
             )
         )

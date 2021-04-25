@@ -1584,6 +1584,8 @@ class Hosp(BaseRequester):
         super().__init__(client, "path_hosp")
 
     def search_last_opened_hosp_record(self, patient_uid, orgid=None):
+        if not SettingManager.get("rmis_fill_hosp", default='false', default_type='b'):
+            return None, None
         resp = self.client.searchHspRecord(medicalOrganizationId=orgid or self.main_client.search_organization_id(), patientUid=patient_uid)
         last_id = None
         last_case_id = None
