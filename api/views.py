@@ -581,13 +581,14 @@ def current_user_info(request):
 def directive_from(request):
     data = []
     for dep in (
-        Podrazdeleniya.objects.filter(Q(p_type=Podrazdeleniya.DEPARTMENT) | Q(p_type=Podrazdeleniya.HOSP))
+        Podrazdeleniya.objects.filter(Q(p_type=Podrazdeleniya.DEPARTMENT) | Q(p_type=Podrazdeleniya.HOSP) | Q(p_type=Podrazdeleniya.PARACLINIC))
         .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
         .prefetch_related(
             Prefetch(
                 'doctorprofile_set',
                 queryset=(
-                    users.DoctorProfile.objects.filter(user__groups__name="Лечащий врач").filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True)).order_by("fio")
+                    users.DoctorProfile.objects.filter(user__groups__name__in=["Лечащий врач", "Врач параклиники"]).distinct().filter(
+                        Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True)).order_by("fio")
                 ),
             )
         )
