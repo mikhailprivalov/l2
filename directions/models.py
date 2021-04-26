@@ -1318,7 +1318,6 @@ class DirectionParamsResult(models.Model):
                             field_type = v
                         if k == 'title':
                             title = v
-                    print(field_obj, field_type, value, direction_obj, title, order)
                     direction_params_obj = DirectionParamsResult(napravleniye=direction_obj, title=title, field=field_obj, field_type=field_type, value=value, order=order)
                     direction_params_obj.save()
 
