@@ -6,6 +6,7 @@ import Fragment from 'vue-fragment'
 import VuejsDialog from 'vuejs-dialog';
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min'
 import PortalVue from 'portal-vue';
+import Inputmask from 'inputmask';
 
 import store from './store'
 import * as action_types from './store/action-types'
@@ -16,8 +17,15 @@ import './styles/index.scss';
 
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
 
-
-const VueInputMask = require('vue-inputmask').default;
+const VueInputMask = {
+    install: function(Vue, options) {
+        Vue.directive('mask', {
+            bind: function(el, binding) {
+                Inputmask(binding.value).mask(el);
+            }
+        });
+    }
+};
 
 Vue.use(VuejsDialog, {
   okText: 'Подтвердить',
@@ -148,7 +156,8 @@ new Vue({
                                              discount, need_contract,
                                              parent_iss = null, kk = '', localizations = {}, service_locations = {},
                                              direction_purpose = 'NONE', directions_count = 1,
-                                             external_organization = 'NONE', parent_slave_hosp = null,
+                                             external_organization = 'NONE', parent_slave_hosp = null, direction_form_params = {},
+                                             current_global_direction_params ={},
                                            }) => {
       if (card_pk === -1) {
         errmessage('Не выбрана карта')
@@ -171,7 +180,7 @@ new Vue({
         card_pk, diagnos, fin_source: fin_source_pk, history_num,
         ofname_pk: ofname, researches, comments, for_rmis,
         rmis_data, vich_code, count, discount, parent_iss, counts, localizations, service_locations,
-        direction_purpose, directions_count, external_organization, parent_slave_hosp,
+        direction_purpose, directions_count, external_organization, parent_slave_hosp, direction_form_params, current_global_direction_params
       }).then(data => {
         this.$store.dispatch(action_types.DEC_LOADING)
 

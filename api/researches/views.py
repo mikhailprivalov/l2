@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 import users.models as users
+from api.directions.views import get_research_for_direction_params
 from directory.models import (
     Researches as DResearches,
     ParaclinicInputGroups,
@@ -58,10 +59,12 @@ def get_researches(request):
     )
 
     r: DResearches
+
     for r in res:
         autoadd = [x.b_id for x in r.a.all()]
         addto = [x.a_id for x in r.b.all()]
 
+        direction_params_pk = r.direction_params.pk if r.direction_params else -1
         deps[r.reversed_type].append(
             {
                 "pk": r.pk,
@@ -84,6 +87,8 @@ def get_researches(request):
                 "site_type_raw": r.site_type_id,
                 "localizations": [{"code": x.pk, "label": x.title} for x in r.localization.all()],
                 "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location.all()],
+                "direction_params": direction_params_pk,
+                "research_data": get_research_for_direction_params(direction_params_pk),
             }
         )
 
@@ -91,6 +96,16 @@ def get_researches(request):
     result = {"researches": deps, "tubes": tubes}
 
     return JsonResponse(result)
+
+
+def by_direction_params(request):
+    data = {}
+    res = DResearches.objects.filter(hide=False, is_direction_params=True, is_global_direction_params=True).distinct().order_by('title')
+    r: DResearches
+    for r in res:
+        data[r.pk] = {"title": r.get_title(), "full_title": r.title, "research_data": get_research_for_direction_params(r.pk)}
+
+    return JsonResponse(data)
 
 
 @login_required
@@ -179,6 +194,7 @@ def researches_update(request):
         department_pk = request_data.get("department")
         title = request_data.get("title", "").strip()
         short_title = request_data.get("short_title", "").strip()
+        is_global_direction_params = request_data.get("is_global_direction_params", False)
         code = request_data.get("code", "").strip()
         internal_code = request_data.get("internal_code", "").strip()
         spec_pk = request_data.get("speciality", -1)
@@ -238,6 +254,7 @@ def researches_update(request):
                     bac_conclusion_templates=conclusion_templates,
                     bac_culture_comments_templates=culture_comments_templates,
                     direction_params=researche_direction_current_params,
+                    is_global_direction_params=is_global_direction_params,
                 )
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
@@ -268,6 +285,7 @@ def researches_update(request):
                 res.bac_conclusion_templates = conclusion_templates
                 res.bac_culture_comments_templates = culture_comments_templates
                 res.direction_params = researche_direction_current_params
+                res.is_global_direction_params = is_global_direction_params
             if res:
                 res.save()
                 if main_service_pk != 1 and stationar_slave:
@@ -373,7 +391,11 @@ def researches_details(request):
         response["conclusionTpl"] = res.bac_conclusion_templates
         response["cultureTpl"] = res.bac_culture_comments_templates
         response["speciality"] = res.speciality_id or -1
-        response["direction_current_params"] = res.direction_params.pk if res.direction_params else -1
+        response["direction_current_params"] = res.direction_params_id or -1
+        response["is_global_direction_params"] = res.is_global_direction_params
+        response["assigned_to_params"] = []
+        if res.is_direction_params:
+            response["assigned_to_params"] = [f'{x.pk} – {x.get_full_short_title()}' for x in DResearches.objects.filter(direction_params=res)]
 
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title, "hide": group.hide, "fields": [], "visibility": group.visibility}

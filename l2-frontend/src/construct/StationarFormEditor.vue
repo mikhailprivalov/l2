@@ -100,7 +100,7 @@
 
     .left {
       flex: 0 0 calc(100% - 100px);
-      /deep/ .form-control {
+      ::v-deep .form-control {
         width: 100%;
       }
     }
@@ -116,7 +116,7 @@
       border-radius: 0;
     }
 
-    /deep/ .form-control {
+    ::v-deep .form-control {
       border-top: none;
       border-radius: 0;
     }

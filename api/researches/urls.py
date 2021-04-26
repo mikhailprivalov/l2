@@ -21,4 +21,5 @@ urlpatterns = [
     path('research-specialities', views.research_specialities),
     path('save-dispensary-data', views.save_dispensary_data),
     path('load-research-by-diagnos', views.load_research_by_diagnos),
+    path('by-direction-params', views.by_direction_params),
 ]

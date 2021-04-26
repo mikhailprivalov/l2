@@ -160,6 +160,7 @@ import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper'
 import FastTemplates from "./FastTemplates";
 import {enter_field, leave_field} from "./utils";
 
+
 export default {
     name: 'DescriptiveForm',
     components: {

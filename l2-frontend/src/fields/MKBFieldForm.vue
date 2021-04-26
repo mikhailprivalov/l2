@@ -69,7 +69,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-/deep/ .typeahead-dropdown-container {
+::v-deep .typeahead-dropdown-container {
   top: -28px;
 }
 </style>

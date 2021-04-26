@@ -225,7 +225,7 @@
     top: 0;
     white-space: nowrap;
 
-    /deep/ {
+    ::v-deep {
       input {
         border-radius: 0;
         border: none;

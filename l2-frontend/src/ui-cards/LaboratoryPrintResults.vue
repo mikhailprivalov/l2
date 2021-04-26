@@ -47,6 +47,7 @@
 
 <script>
 import moment from "moment";
+import _ from 'lodash';
 
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';

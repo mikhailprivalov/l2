@@ -206,7 +206,7 @@
     justify-content: center !important;
   }
 
-  /deep/ .panel-flt {
+  ::v-deep .panel-flt {
     margin: 41px;
     align-self: stretch !important;
     width: 100%;
@@ -214,7 +214,7 @@
     flex-direction: column;
   }
 
-  /deep/ .panel-body {
+  ::v-deep .panel-body {
     flex: 1;
     padding: 0;
     height: calc(100% - 144px);
@@ -508,7 +508,7 @@
     justify-content: flex-start;
     align-items: center;
 
-    /deep/ .form-control {
+    ::v-deep .form-control {
       border-radius: 0;
       border-top: none;
       border-left: none;
@@ -726,22 +726,22 @@
     margin-right: -1px;
   }
 
-  .mkb10 /deep/ .input-group {
+  .mkb10 ::v-deep .input-group {
     border-radius: 0;
     width: 100%;
   }
 
-  .mkb10 /deep/ input {
+  .mkb10 ::v-deep input {
     border-radius: 0!important;
   }
 
-  .mkb10 /deep/ ul {
+  .mkb10 ::v-deep ul {
     width: auto;
     right: -250px;
     font-size: 13px;
   }
 
-  .mkb10 /deep/ ul li {
+  .mkb10 ::v-deep ul li {
     overflow: hidden;
     text-overflow: ellipsis;
     padding: 2px .25rem;

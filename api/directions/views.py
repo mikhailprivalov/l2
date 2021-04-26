@@ -95,7 +95,10 @@ def directions_generate(request):
             service_locations=p.get("service_locations", {}),
             direction_purpose=p.get("direction_purpose", "NONE"),
             external_organization=p.get("external_organization", "NONE"),
+            direction_form_params=p.get("direction_form_params", {}),
+            current_global_direction_params=p.get("current_global_direction_params", {})
         )
+
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
             result["ok"] = rc["r"]
@@ -2267,3 +2270,57 @@ def values_from_structure_data(data):
                     s = f"{s} {field['title_field']}"
                 s = f"{s} {field['value']};"
     return s.strip()
+
+
+def get_research_for_direction_params(pk):
+    response = {}
+    if int(pk) > -1:
+        research_obj = Researches.objects.get(pk=int(pk))
+    else:
+        return response
+    response["research"] = {
+        "title": research_obj.title,
+        "version": research_obj.pk * 10000,
+        "is_paraclinic": research_obj.is_paraclinic or research_obj.is_citology or research_obj.is_gistology,
+        "is_doc_refferal": research_obj.is_doc_refferal,
+        "is_microbiology": research_obj.is_microbiology,
+        "is_treatment": research_obj.is_treatment,
+        "is_stom": research_obj.is_stom,
+        "wide_headers": research_obj.wide_headers,
+        "groups": [],
+        "show": False,
+    }
+    for group in research_obj.paraclinicinputgroups_set.all():
+        g = {
+            "pk": group.pk,
+            "order": group.order,
+            "title": group.title,
+            "show_title": group.show_title,
+            "hide": group.hide,
+            "display_hidden": False,
+            "fields": [],
+            "visibility": group.visibility,
+        }
+        for field in group.paraclinicinputfield_set.all():
+            field_type = field.field_type
+            g["fields"].append(
+                {
+                    "pk": field.pk,
+                    "order": field.order,
+                    "lines": field.lines,
+                    "title": field.title,
+                    "hide": field.hide,
+                    "values_to_input": ([] if not field.required or field_type not in [10, 12] else ['- Не выбрано']) + json.loads(field.input_templates),
+                    "value": (field.default_value if field_type not in [3, 11, 13, 14] else '')
+                    if field_type not in [1, 20]
+                    else (get_default_for_field(field_type)),
+                    "field_type": field_type,
+                    "default_value": field.default_value,
+                    "visibility": field.visibility,
+                    "required": field.required,
+                    "helper": field.helper,
+                }
+            )
+        response["research"]["groups"] = [g]
+
+    return response

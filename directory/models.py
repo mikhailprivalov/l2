@@ -172,6 +172,7 @@ class Researches(models.Model):
     is_gistology = models.BooleanField(default=False, blank=True, help_text="Это гистологическое исследование")
     is_form = models.BooleanField(default=False, blank=True, help_text="Это формы, cправки, направления")
     is_direction_params = models.BooleanField(default=False, blank=True, help_text="Суррогатная услуга - параметры направления")
+    is_global_direction_params = models.BooleanField(default=False, blank=True, help_text="Глобальные параметры")
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
 
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")

@@ -11,7 +11,7 @@
                 theme: 'light',
                 placement: 'bottom',
                 trigger: 'click mouseenter',
-                zIndex: 4999,
+                zIndex: 104999,
                 popperOptions: {
                   modifiers: {
                     preventOverflow: {
@@ -192,7 +192,7 @@ i {
     margin: 0;
   }
 
-  max-height: 600px;
+  max-height: 500px;
   width: 500px;
   overflow-y: auto;
 
