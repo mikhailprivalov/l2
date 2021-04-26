@@ -3,7 +3,9 @@
     <div class="top-editor" :class="{simpleEditor: simple, formEditor: ex_dep === 12}">
       <div class="left">
         <div class="input-group">
-          <span class="input-group-addon" v-if="ex_dep === 12">Название шаблона параметров направления</span>
+          <span class="input-group-addon" v-if="ex_dep === 12">
+            Название шаблона параметров направления ({{loaded_pk}})
+          </span>
           <span class="input-group-addon" v-else>Полное наименование</span>
           <input type="text" class="form-control" v-model="title">
           <label v-if="ex_dep === 12" class="input-group-addon" style="height: 34px;text-align: left;">

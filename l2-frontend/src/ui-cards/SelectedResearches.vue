@@ -99,17 +99,31 @@
             </span>
           </td>
         </tr>
-        <tr>
-          <th>
-            <a href="#" @click.prevent="show_global_direction_params=true" style="color: #4b6075">
+        <tr v-if="directions_params_enabled">
+          <td class="cl-td" v-if="global_current_direction_param !== -1">
+            <button class="btn btn-blue-nb nbr full-inner-btn" @click="global_research_direction_param.show = true">
               Параметры
-               <i class="fas fa-edit"></i>
-           </a>
+              <i class="fas fa-edit"></i>
+            </button>
+          </td>
+          <th v-else>
+            Параметры:
           </th>
           <td class="cl-td">
-            <treeselect :multiple="false" :disable-branch-nodes="true" :options="global_direction_params"
-                        placeholder="Тип не выбран" :clearable="false" v-model="global_current_direction_param"
-            @select="changeSelect"/>
+            <treeselect :multiple="false" :disable-branch-nodes="true"
+                        class="treeselect-noborder"
+                        :options="global_direction_params" :append-to-body="true"
+                        placeholder="Тип не выбран" :clearable="false"
+                        v-model="global_current_direction_param"
+            />
+          </td>
+        </tr>
+        <tr v-if="directions_params_enabled && !r(global_research_direction_param)">
+          <td colspan="2">
+            <div class="status-list empty-block">
+              <div class="status status-none">Не заполнены:&nbsp</div>
+              <div class="status status-none" v-for="rl in r_list(global_research_direction_param)">{{ rl }};</div>
+            </div>
           </td>
         </tr>
         </tbody>
@@ -128,19 +142,26 @@
       </div>
     </div>
     <div class="bottom-picker" v-if="!simple">
-      <div class="top-inner-select" :class="{ disabled: !can_save }" @click="generate('direction')"
-           title="Сохранить и распечатать направления"><span>Сохранить и распечатать направления</span></div>
-      <div class="top-inner-select hidden-small" :class="{ disabled: !can_save }"
+      <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('direction')"
+           title="Сохранить и распечатать направления">
+        <span>Сохранить и распечатать направления</span>
+      </button>
+      <button class="btn btn-blue-nb top-inner-select hidden-small" :disabled="!can_save"
            @click="generate('barcode')"
-           title="Сохранить и распечатать штрих-коды"><span>Сохранить и распечатать штрих-коды</span></div>
-      <div class="top-inner-select" :class="{ disabled: !can_save }" @click="generate('just-save')"
-           title="Сохранить без печати"><span>Сохранить без печати</span></div>
+           title="Сохранить и распечатать штрих-коды">
+        <span>Сохранить и распечатать штрих-коды</span>
+      </button>
+      <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('just-save')"
+           title="Сохранить без печати">
+        <span>Сохранить без печати</span>
+      </button>
     </div>
 
     <modal ref="modal" @close="cancel_update" show-footer="true"
            overflow-unset="true" resultsEditor
            v-show="visible && need_update_comment.length > 0 && !hide_window_update && !simple || show_global_direction_params">
-      <span slot="header">Настройка назначений</span>
+      <span v-if="show_global_direction_params" slot="header">Настройка общих параметров для направления</span>
+      <span v-else slot="header">Настройка назначений</span>
       <div slot="body" class="overflow-unset">
         <table v-if="!show_global_direction_params" class="table table-bordered table-responsive"
                style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
@@ -166,7 +187,7 @@
                 <div style="width:100%; overflow: hidden; text-overflow: ellipsis;" :title="row.title">
                   <span v-if="row.direction_params > -1" title="Параметры направления" v-tippy>
                     <button type="button" class="btn btn-blue-nb nbr"
-                            @click="form_params[row.pk].show=!form_params[row.pk].show">
+                            @click="form_params[row.pk].show = !form_params[row.pk].show">
                     <i v-if="form_params[row.pk].show" class="glyphicon glyphicon-arrow-up"></i>
                       <i v-else class="glyphicon glyphicon-arrow-down"></i>
                     </button>
@@ -208,15 +229,19 @@
               </td>
             </tr>
             <template v-if="form_params[row.pk]">
-              <SelectedResearchesParams
-                :research="form_params[row.pk]"
-                :selected_card="selected_card"
-              />
+              <tr>
+                <td colspan="5">
+                  <SelectedResearchesParams
+                    :research="form_params[row.pk]"
+                    :selected_card="selected_card"
+                  />
+                </td>
+              </tr>
             </template>
           </template>
           </tbody>
         </table>
-        <template v-if="show_global_direction_params">
+        <template v-else>
           <SelectedResearchesParams
             :research="global_research_direction_param"
             :selected_card="selected_card"
@@ -236,6 +261,7 @@ import * as action_types from '../store/action-types'
 import ResearchDisplay from './ResearchDisplay'
 import Modal from './Modal'
 import vSelect from 'vue-select'
+import _ from 'lodash'
 import 'vue-select/dist/vue-select.css';
 import TypeAhead from 'vue2-typeahead'
 import MKBField from '../fields/MKBField'
@@ -334,7 +360,6 @@ export default {
       global_direction_params: [{id: -1, label: 'Не выбрано'}],
       global_current_direction_param: -1,
       global_research_direction_param: {},
-      show_global_direction_params: false,
       service_locations: {},
       need_update_comment: [],
       need_update_localization: [],
@@ -428,13 +453,15 @@ export default {
               }
             }
 
-            if (res.direction_params > -1 && !this.need_update_direction_params.includes(pk) && !this.form_params[pk]) {
-              this.need_update_direction_params.push(pk)
-              needShowWindow = true
-              form_params[pk] = JSON.parse(JSON.stringify(res.research_data.research))
-              form_params[pk].show = true;
-            } else if (this.form_params[pk]) {
-              form_params[pk] = this.form_params[pk]
+            if (this.directions_params_enabled) {
+              if (res.direction_params > -1 && !this.need_update_direction_params.includes(pk) && !this.form_params[pk]) {
+                this.need_update_direction_params.push(pk)
+                needShowWindow = true
+                form_params[pk] = JSON.parse(JSON.stringify(res.research_data.research))
+                form_params[pk].show = true;
+              } else if (this.form_params[pk]) {
+                form_params[pk] = this.form_params[pk]
+              }
             }
           }
 
@@ -506,6 +533,24 @@ export default {
         }
       },
     },
+    global_current_direction_param() {
+      this.changeSelectGlobalResearchDirectionParam(this.global_current_direction_param);
+    },
+    external_organization(a) {
+      if (!this.directions_params_enabled) {
+        return;
+      }
+      const paramsPk = Number(this.directions_params_org_form_default_pk);
+      const params = this.global_direction_params.find(({id}) => Number(id) === paramsPk);
+      if (!params) {
+        return;
+      }
+      if (a !== 'NONE') {
+        this.global_current_direction_param = params.id;
+      } else if (this.global_current_direction_param === params.id) {
+        this.global_current_direction_param = -1;
+      }
+    },
   },
   mounted() {
     this.$root.$on('researches-picker:clear_all' + this.kk, this.clear_all)
@@ -517,16 +562,23 @@ export default {
     this.load_direction_params()
   },
   methods: {
-    changeSelect(node, status){
-      this.global_research_direction_param = this.researches_direction_params[node.id].research_data.research
+    changeSelectGlobalResearchDirectionParam(pk) {
+      if (!this.researches_direction_params[pk]) {
+        this.global_research_direction_param = {};
+        return;
+      }
+      this.global_research_direction_param = _.cloneDeep(
+        this.researches_direction_params[pk].research_data.research
+      );
       this.global_research_direction_param.show = true
     },
     async load_direction_params() {
-      const data = await api('researches/by-direction-params')
-      for (let key in data) {
-        this.global_direction_params.push({id: key, label: data[key].title})
-      }
-      this.researches_direction_params = {...data}
+      const data = await api('researches/by-direction-params');
+      this.global_direction_params = [
+        {id: -1, label: 'Не выбрано'},
+        ...Object.keys(data).map(id => ({id, label: data[id].title})),
+      ];
+      this.researches_direction_params = data;
     },
     hasNotFilled(pk) {
       return this.form_params[pk] && !this.r(this.form_params[pk])
@@ -563,7 +615,9 @@ export default {
       this.need_update_service_location = []
       this.need_update_direction_params = []
       this.hide_window()
-      this.show_global_direction_params = false
+      if (this.global_research_direction_param) {
+        this.global_research_direction_param.show = false;
+      }
     },
     onHit(item) {
       this.diagnos = item.split(' ')[0] || ''
@@ -674,14 +728,15 @@ export default {
       })
     },
     clear_all() {
-      this.$root.$emit('researches-picker:deselect_all' + this.kk)
-      this.clear_fin()
-      this.direction_purpose = 'NONE'
-      this.external_organization = 'NONE'
-      this.directions_count = '1'
+      this.$root.$emit('researches-picker:deselect_all' + this.kk);
+      this.clear_fin();
+      this.direction_purpose = 'NONE';
+      this.external_organization = 'NONE';
+      this.directions_count = '1';
+      this.global_current_direction_param = -1;
     },
     clear_fin() {
-      this.select_fin(-1)
+      this.select_fin(-1);
     },
     async load_direction_purposes() {
       await this.$store.dispatch(action_types.INC_LOADING)
@@ -690,6 +745,9 @@ export default {
       await this.$store.dispatch(action_types.DEC_LOADING)
     },
     async load_external_organizations() {
+      if (!this.external_organizations_enabled) {
+        return;
+      }
       await this.$store.dispatch(action_types.INC_LOADING)
       const {organizations} = await directions_point.getExternalOrgranizations()
       this.externalOrganizations = organizations
@@ -703,6 +761,9 @@ export default {
 
     },
     r_list(research) {
+      if (!research.groups) {
+        return [];
+      }
       const l = []
       for (const g of research.groups) {
         if (!vGroup(g, research.groups, this.simulated_patient)) {
@@ -721,11 +782,23 @@ export default {
     },
   },
   computed: {
+    show_global_direction_params() {
+      return this.global_research_direction_param && this.global_research_direction_param.show;
+    },
     direction_purpose_enabled() {
       return this.$store.getters.modules.l2_direction_purpose && this.kk !== 'stationar'
     },
     external_organizations_enabled() {
       return this.$store.getters.modules.l2_external_organizations && this.kk !== 'stationar'
+    },
+    directions_params_enabled() {
+      return this.$store.getters.modules.directions_params && this.kk !== 'stationar'
+    },
+    l2_user_data() {
+      return this.$store.getters.user_data || {};
+    },
+    directions_params_org_form_default_pk() {
+      return this.l2_user_data.directions_params_org_form_default_pk;
     },
     show_additions() {
       return this.researches.length > 0
@@ -779,7 +852,21 @@ export default {
       return false
     },
     can_save() {
-      return this.fin !== -1 && this.researches.length > 0 && this.card_pk !== -1
+      if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1) {
+        return false;
+      }
+
+      if (!this.r(this.global_research_direction_param)) {
+        return false;
+      }
+
+      return !this.researches.find(pk => {
+        if (!this.form_params[pk]) {
+          return false;
+        }
+
+        return !this.r(this.form_params[pk]);
+      });
     },
     need_update_object() {
       let r = []
@@ -905,7 +992,9 @@ export default {
   }
 }
 
-.top-inner-select {
+.top-inner-select, .top-inner-select.btn {
+  border-radius: 0;
+  border: none!important;
   align-self: stretch;
   display: flex;
   align-items: center;
@@ -928,7 +1017,7 @@ export default {
     color: #fff;
   }
 
-  &.disabled {
+  &:disabled {
     color: #fff;
     cursor: not-allowed;
     opacity: .8;
@@ -1071,5 +1160,11 @@ export default {
 
 .clean-btn-td .btn {
   width: 40px;
+}
+
+.full-inner-btn {
+  display: block;
+  width: 100%;
+  height: 37px;
 }
 </style>

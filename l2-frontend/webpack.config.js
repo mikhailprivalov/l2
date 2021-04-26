@@ -9,15 +9,19 @@ const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const TerserJSPlugin = require('terser-webpack-plugin');
 
 const isDev = process.env.NODE_ENV !== 'production';
+const isDevServer = process.argv.includes('serve');
+const assetsPath = path.resolve(__dirname, '../assets/');
 
 console.log('NODE VERSION:', process.version);
+console.log('DEV SERVER:', isDevServer);
 
 const config = {
+  target: 'web',
   entry: './src/main.js',
   output: {
-    path: path.resolve(__dirname, '../assets/webpack_bundles/'),
+    path: path.resolve(assetsPath, 'webpack_bundles'),
     filename: '[name].[contenthash].js',
-    publicPath: '/static/webpack_bundles/',
+    publicPath: isDevServer ? 'http://localhost:9000/webpack_bundles/' : '/static/webpack_bundles/',
   },
   module: {
     rules: [
@@ -26,20 +30,12 @@ const config = {
         exclude: /node_modules/,
         use: [
           {
-            loader: 'cache-loader',
-            options: {}
-          },
-          {
             loader: 'babel-loader'
           }
         ],
       }, {
         test: /.vue$/,
         use: [
-          {
-            loader: 'cache-loader',
-            options: {}
-          },
           {
             loader: 'vue-loader',
           }
@@ -49,7 +45,7 @@ const config = {
         test: /\.css$/,
         use: [
           'vue-style-loader',
-          MiniCssExtractPlugin.loader,
+          isDevServer ? 'style-loader' : MiniCssExtractPlugin.loader,
           'css-loader',
         ]
       },
@@ -57,7 +53,7 @@ const config = {
         test: /\.scss$/,
         use: [
           'vue-style-loader',
-          MiniCssExtractPlugin.loader,
+          isDevServer ? 'style-loader' : MiniCssExtractPlugin.loader,
           'css-loader',
           {
             loader: 'sass-loader',
@@ -124,6 +120,7 @@ const config = {
     ],
   },
   plugins: [
+    ...(isDevServer ? [new webpack.HotModuleReplacementPlugin()] : []),
     new VueLoaderPlugin(),
     new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /ru/),
     ...(isDev ? [] : [new LodashModuleReplacementPlugin()]),
@@ -134,8 +131,27 @@ const config = {
     new CleanWebpackPlugin(),
     new WebpackManifestPlugin({
       publicPath: 'webpack_bundles/',
+      writeToFileEmit: isDevServer,
+      fileName: path.resolve(assetsPath, 'webpack_bundles/manifest.json'),
     }),
   ],
+  devServer: isDevServer ? {
+    disableHostCheck: true,
+    contentBase: assetsPath,
+    port: 9000,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    },
+    compress: true,
+    hot: true,
+    writeToDisk: true,
+    watchOptions: {
+      poll: true
+    },
+  } : {},
+  cache: (isDevServer || !isDev) ? undefined : {
+    type: "filesystem",
+  },
   devtool: 'eval-source-map',
   stats: 'normal',
 };

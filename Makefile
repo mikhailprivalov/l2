@@ -6,6 +6,9 @@ front_prod: build_prod collect
 install: pip_install_upgrade npm_install
 install_prod: pip_install_upgrade_prod npm_install
 
+watch:
+	yarn --cwd l2-frontend watch
+
 build:
 	yarn --cwd l2-frontend build
 
