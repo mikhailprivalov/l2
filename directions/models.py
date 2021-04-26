@@ -893,7 +893,7 @@ class Napravleniya(models.Model):
     def rmis_referral_title(self) -> str:
         if self.is_external:
             return "КДЛ"
-        return self.doc.podrazdeleniye.rmis_department_title
+        return None if not self.doc.podrazdeleniye else self.doc.podrazdeleniye.rmis_department_title
 
     def get_attr(self):
         """
