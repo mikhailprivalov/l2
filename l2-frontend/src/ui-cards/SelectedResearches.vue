@@ -99,13 +99,16 @@
             </span>
           </td>
         </tr>
-        <tr>
-          <td class="cl-td">
+        <tr v-if="directions_params_enabled">
+          <td class="cl-td" v-if="global_current_direction_param !== -1">
             <button class="btn btn-blue-nb nbr full-inner-btn" @click="global_research_direction_param.show = true">
               Параметры
               <i class="fas fa-edit"></i>
             </button>
           </td>
+          <th v-else>
+            Параметры:
+          </th>
           <td class="cl-td">
             <treeselect :multiple="false" :disable-branch-nodes="true"
                         class="treeselect-noborder"
@@ -115,7 +118,7 @@
             />
           </td>
         </tr>
-        <tr v-if="!r(global_research_direction_param)">
+        <tr v-if="directions_params_enabled && !r(global_research_direction_param)">
           <td colspan="2">
             <div class="status-list empty-block">
               <div class="status status-none">Не заполнены:&nbsp</div>
@@ -450,13 +453,15 @@ export default {
               }
             }
 
-            if (res.direction_params > -1 && !this.need_update_direction_params.includes(pk) && !this.form_params[pk]) {
-              this.need_update_direction_params.push(pk)
-              needShowWindow = true
-              form_params[pk] = JSON.parse(JSON.stringify(res.research_data.research))
-              form_params[pk].show = true;
-            } else if (this.form_params[pk]) {
-              form_params[pk] = this.form_params[pk]
+            if (this.directions_params_enabled) {
+              if (res.direction_params > -1 && !this.need_update_direction_params.includes(pk) && !this.form_params[pk]) {
+                this.need_update_direction_params.push(pk)
+                needShowWindow = true
+                form_params[pk] = JSON.parse(JSON.stringify(res.research_data.research))
+                form_params[pk].show = true;
+              } else if (this.form_params[pk]) {
+                form_params[pk] = this.form_params[pk]
+              }
             }
           }
 
@@ -530,6 +535,21 @@ export default {
     },
     global_current_direction_param() {
       this.changeSelectGlobalResearchDirectionParam(this.global_current_direction_param);
+    },
+    external_organization(a) {
+      if (!this.directions_params_enabled) {
+        return;
+      }
+      const paramsPk = Number(this.directions_params_org_form_default_pk);
+      const params = this.global_direction_params.find(({id}) => Number(id) === paramsPk);
+      if (!params) {
+        return;
+      }
+      if (a !== 'NONE') {
+        this.global_current_direction_param = params.id;
+      } else if (this.global_current_direction_param === params.id) {
+        this.global_current_direction_param = -1;
+      }
     },
   },
   mounted() {
@@ -725,6 +745,9 @@ export default {
       await this.$store.dispatch(action_types.DEC_LOADING)
     },
     async load_external_organizations() {
+      if (!this.external_organizations_enabled) {
+        return;
+      }
       await this.$store.dispatch(action_types.INC_LOADING)
       const {organizations} = await directions_point.getExternalOrgranizations()
       this.externalOrganizations = organizations
@@ -767,6 +790,15 @@ export default {
     },
     external_organizations_enabled() {
       return this.$store.getters.modules.l2_external_organizations && this.kk !== 'stationar'
+    },
+    directions_params_enabled() {
+      return this.$store.getters.modules.directions_params && this.kk !== 'stationar'
+    },
+    l2_user_data() {
+      return this.$store.getters.user_data || {};
+    },
+    directions_params_org_form_default_pk() {
+      return this.l2_user_data.directions_params_org_form_default_pk;
     },
     show_additions() {
       return this.researches.length > 0

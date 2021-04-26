@@ -523,6 +523,7 @@ def current_user_info(request):
         "modules": SettingManager.l2_modules(),
         "user_services": [],
         "rmis_enabled": SettingManager.get("rmis_enabled", default='false', default_type='b'),
+        "directions_params_org_form_default_pk": SettingManager.get("directions_params_org_form_default_pk", default='', default_type='s'),
     }
     doctorprofile = request.user.doctorprofile
     if ret["auth"]:
