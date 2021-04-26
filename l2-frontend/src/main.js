@@ -60,7 +60,7 @@ promiseFinally.shim();
 
 
 function printForm(tpl, pks) {
-  if (!pks || pks.length === 0) {
+  if (!pks || !Array.isArray(pks) || pks.length === 0) {
     return;
   }
   window.open(tpl.replace('{pks}', JSON.stringify(pks)), '_blank')
@@ -158,6 +158,7 @@ new Vue({
                                              direction_purpose = 'NONE', directions_count = 1,
                                              external_organization = 'NONE', parent_slave_hosp = null, direction_form_params = {},
                                              current_global_direction_params ={},
+                                             hospital_department_override=-1,
                                            }) => {
       if (card_pk === -1) {
         errmessage('Не выбрана карта')
@@ -180,7 +181,8 @@ new Vue({
         card_pk, diagnos, fin_source: fin_source_pk, history_num,
         ofname_pk: ofname, researches, comments, for_rmis,
         rmis_data, vich_code, count, discount, parent_iss, counts, localizations, service_locations,
-        direction_purpose, directions_count, external_organization, parent_slave_hosp, direction_form_params, current_global_direction_params
+        direction_purpose, directions_count, external_organization, parent_slave_hosp, direction_form_params,
+        current_global_direction_params, hospital_department_override,
       }).then(data => {
         this.$store.dispatch(action_types.DEC_LOADING)
 
@@ -193,7 +195,7 @@ new Vue({
             }
           }
           if (type === 'barcode') {
-            this.$root.$emit('print:barcodes', data.directions)
+            this.$root.$emit('print:barcodes', data.directions, data.directionsStationar)
           }
           if (type === 'just-save' || type === 'barcode') {
             okmessage('Направления созданы', 'Номера: ' + data.directions.join(', '))

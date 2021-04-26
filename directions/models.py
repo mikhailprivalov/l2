@@ -17,6 +17,7 @@ import cases.models as cases
 from api.models import Application
 from hospitals.models import Hospitals
 from laboratory.utils import strdate, localtime, current_time
+from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
 import contracts.models as contracts
@@ -620,7 +621,8 @@ class Napravleniya(models.Model):
         direction_purpose="NONE",
         external_organization="NONE",
         direction_form_params=None,
-        current_global_direction_params=None
+        current_global_direction_params=None,
+        hospital_department_override=-1,
     ):
         if not visited:
             visited = []
@@ -639,7 +641,7 @@ class Napravleniya(models.Model):
         childrens = {}
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         i = 0
-        result = {"r": False, "list_id": []}
+        result = {"r": False, "list_id": [], "list_stationar_id": []}
         ofname_id = ofname_id or -1
         ofname = None
         if not Clients.Card.objects.filter(pk=client_id).exists():
@@ -707,7 +709,7 @@ class Napravleniya(models.Model):
                     if research.direction:
                         dir_group = research.direction_id
 
-                    research_data_params = direction_form_params.get(str(v), None)
+                    research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
                     if research_data_params:
                         dir_group = -1
 
@@ -730,8 +732,10 @@ class Napravleniya(models.Model):
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                         )
-
-                        result["list_id"].append(directions_for_researches[dir_group].pk)
+                        npk = directions_for_researches[dir_group].pk
+                        result["list_id"].append(npk)
+                        if research.is_hospital:
+                            result["list_stationar_id"].append(npk)
                     if dir_group == -1:
                         dir_group = "id" + str(research.pk)
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(
@@ -752,7 +756,10 @@ class Napravleniya(models.Model):
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                         )
-                        result["list_id"].append(directions_for_researches[dir_group].pk)
+                        npk = directions_for_researches[dir_group].pk
+                        result["list_id"].append(npk)
+                        if research.is_hospital:
+                            result["list_stationar_id"].append(npk)
 
                     # получить по прайсу и услуге: текущую цену
                     research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
@@ -782,6 +789,8 @@ class Napravleniya(models.Model):
                         s = directory.ServiceLocation.objects.get(pk=service_locations[str(research.pk)]["code"])
                         issledovaniye.service_location = s
                     issledovaniye.comment = loc or (comments.get(str(research.pk), "") or "")[:40]
+                    if hospital_department_override != -1 and research.is_hospital and Podrazdeleniya.objects.filter(pk=hospital_department_override).exists():
+                        issledovaniye.hospital_department_override_id = hospital_department_override
                     issledovaniye.save()
                     if issledovaniye.pk not in childrens:
                         childrens[issledovaniye.pk] = {}
@@ -1033,6 +1042,7 @@ class Issledovaniya(models.Model):
     aggregate_lab = JSONField(null=True, blank=True, default=None, help_text='ID направлений лаборатории, привязаных к стационарному случаю')
     aggregate_desc = JSONField(null=True, blank=True, default=None, help_text='ID направлений описательных, привязаных к стационарному случаю')
     microbiology_conclusion = models.TextField(default=None, null=True, blank=True, help_text='Заключение по микробиологии')
+    hospital_department_override = models.ForeignKey(Podrazdeleniya, blank=True, null=True, default=None, help_text="Отделение стационара", on_delete=models.SET_NULL)
 
     @property
     def time_save_local(self):
@@ -1044,6 +1054,14 @@ class Issledovaniya(models.Model):
 
     def get_stat_diagnosis(self):
         pass
+
+    @property
+    def hospital_department_replaced_title(self):
+        if not self.research or not self.research.is_hospital:
+            return None
+        if self.hospital_department_override:
+            return self.hospital_department_override.get_title()
+        return None
 
     @property
     def doc_confirmation_fio(self):

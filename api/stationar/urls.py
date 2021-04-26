@@ -11,4 +11,5 @@ urlpatterns = [
     path('aggregate-laboratory', views.aggregate_laboratory),
     path('aggregate-desc', views.aggregate_desc),
     path('aggregate-tadp', views.aggregate_tadp),
+    path('change-department', views.change_department),
 ]
