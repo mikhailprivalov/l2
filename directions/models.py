@@ -1296,7 +1296,6 @@ class DirectionParamsResult(models.Model):
     def get_field_type(self):
         return self.field_type if self.field_type is not None else self.field.field_type
 
-
     @staticmethod
     def save_direction_params(direction_obj, data):
         field_obj = None, None
