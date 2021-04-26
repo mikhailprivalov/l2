@@ -13,10 +13,10 @@ class SettingManager:
         cache.set(SettingManager.WARMUP_TEST_KEY, True, 1)
 
         if not cache.get(SettingManager.WARMUP_TEST_KEY):
-            print('SettingManager: cache is disabled')
+            print('SettingManager: cache is disabled')  # noqa: T001
 
         post_save.disconnect(save_setting, sender=appconf.Setting)
-        print('SettingManager: warming up')
+        print('SettingManager: warming up')  # noqa: T001
 
         s: appconf.Setting
         for s in appconf.Setting.objects.all():

@@ -66,7 +66,6 @@ def directions_generate(request):
     result = {"ok": False, "directions": [], "message": ""}
     if request.method == "POST":
         p = json.loads(request.body)
-        print(p.get("direction_form_params"))
         type_card = Card.objects.get(pk=p.get("card_pk"))
         if type_card.base.forbidden_create_napr:
             result["message"] = "Для данного типа карт нельзя создать направления"
@@ -96,8 +95,10 @@ def directions_generate(request):
             service_locations=p.get("service_locations", {}),
             direction_purpose=p.get("direction_purpose", "NONE"),
             external_organization=p.get("external_organization", "NONE"),
-            direction_form_params=p.get("direction_form_params", {})
+            direction_form_params=p.get("direction_form_params", {}),
+            current_global_direction_params=p.get("current_global_direction_params", {})
         )
+
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
             result["ok"] = rc["r"]

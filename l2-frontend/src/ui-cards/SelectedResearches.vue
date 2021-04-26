@@ -102,7 +102,7 @@
         <tr v-if="directions_params_enabled">
           <td class="cl-td" v-if="global_current_direction_param !== -1">
             <button class="btn btn-blue-nb nbr full-inner-btn" @click="global_research_direction_param.show = true">
-              Заполнить
+              Заполнить параметры
             </button>
           </td>
           <th v-else>

@@ -619,7 +619,8 @@ class Napravleniya(models.Model):
         parent_auto_gen=None,
         direction_purpose="NONE",
         external_organization="NONE",
-        direction_form_params=None
+        direction_form_params=None,
+        current_global_direction_params=None
     ):
         if not visited:
             visited = []
