@@ -1019,7 +1019,7 @@ class Directions(BaseRequester):
         )
         if not direction.imported_from_rmis:
             send_data["fundingSourceTypeId"] = Utils.get_fin_src_id(direction.fin_title, self.main_client.get_fin_dict())
-        if direction.rmis_case_id not in [None, ""] and direction.rmis_hosp_id not in [None, ""]:
+        if direction.rmis_case_id not in [None, ""] and direction.rmis_hosp_id not in [None, ""] and SettingManager.get("rmis_fill_hosp", default='false', default_type='b'):
             send_data["medicalCaseId"] = direction.rmis_case_id
             send_data["stepId"] = direction.rmis_hosp_id
         rendered_id = None
