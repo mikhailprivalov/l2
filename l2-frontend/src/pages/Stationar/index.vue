@@ -76,14 +76,30 @@
                class="a-under" style="float: right"
                @click.prevent="open_ambulatory_data">112-ф</a>
           </div>
-          <div class="inner-card inner-card-select" v-if="!every">
+          <div class="inner-card" v-if="!every">
+            <div>
+              <a href="#"
+                 :title="change_department ? 'Отмена' : 'Сменить отделение'"
+                 v-tippy
+                 class="a-under-reversed float-right a-icon-btn"
+                 @click.prevent="changeDepartmentToggle"
+              >
+                <i class="fa fa-pencil" v-if="!change_department"></i>
+                <i class="fa fa-times" v-else></i>
+              </a>
+              Отделение:
+            </div>
+            <div v-if="!change_department">
+              {{ getDepartmentTitle(department_id) }}
+            </div>
             <treeselect :multiple="false" :disable-branch-nodes="true"
-                        class="treeselect-wide treeselect-noborder"
+                        class="treeselect-wide"
                         :options="departments"
                         placeholder="Отделение не выбрано" :clearable="false"
                         v-model="department_id"
                         @select="updateDepartment"
                         :disabled="forbidden_edit"
+                        v-else
             />
           </div>
           <div class="sidebar-btn-wrapper"
@@ -585,6 +601,8 @@ export default {
       direcions_order: {},
       department_id: -1,
       departments: [],
+      prev_department: '',
+      change_department: false,
     }
   },
   watch: {
@@ -633,20 +651,39 @@ export default {
     });
   },
   methods: {
+    getDepartmentTitle(pk) {
+      return (this.departments.find(d => d.id === pk)).label || ''
+    },
+    async changeDepartmentToggle() {
+      if (!this.change_department) {
+        this.change_department = true;
+        this.prev_department = this.getDepartmentTitle(this.department_id);
+        return;
+      }
+
+      await this.saveUpdatedDepartment(false);
+    },
     async updateDepartment(node) {
       let needUpdate = false;
       try {
-        await this.$dialog.confirm('Вы действительно хотите сменить отделение?');
+        await this.$dialog.confirm(`Вы действительно хотите сменить отделение с "${this.prev_department}" на "${this.getDepartmentTitle(node.id)}"?`);
         needUpdate = true;
       } catch (_) {
       }
+
+      return this.saveUpdatedDepartment(needUpdate, node.id);
+    },
+    async saveUpdatedDepartment(needUpdate, department_id) {
       await this.$store.dispatch(action_types.INC_LOADING)
       const {newDepartment, ok, from: dep_from, to: dep_to} = await stationar_point.changeDepartment(
-        this, 'iss', {needUpdate, department_id: node.id}
+        this, 'iss', {needUpdate, department_id: department_id || this.department_id}
       );
       this.department_id = newDepartment;
-      if (ok) {
+      if (!department_id) {
+        this.change_department = false;
+      } else if (ok) {
         okmessage('Отделение успешно изменено', `${dep_from} → ${dep_to}`);
+        this.change_department = false;
       } else if (needUpdate) {
         errmessage('Не удалось сменить отделение!');
       }
