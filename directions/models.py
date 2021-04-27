@@ -700,7 +700,10 @@ class Napravleniya(models.Model):
                 for v in res:
                     research = directory.Researches.objects.get(pk=v)
                     research_coast = None
-
+                    if hospital_department_override == -1 and research.is_hospital:
+                        if research.podrazdeleniye is None:
+                            result["message"] = "Не указано отделение"
+                            return result
                     # пользователю добавлять данные услуги в направления(не будут добавлены)
                     if research in doc_current.restricted_to_direct.all():
                         continue
@@ -791,6 +794,8 @@ class Napravleniya(models.Model):
                     issledovaniye.comment = loc or (comments.get(str(research.pk), "") or "")[:40]
                     if hospital_department_override != -1 and research.is_hospital and Podrazdeleniya.objects.filter(pk=hospital_department_override).exists():
                         issledovaniye.hospital_department_override_id = hospital_department_override
+                    elif hospital_department_override == -1 and research.is_hospital and Podrazdeleniya.objects.filter(pk=research.podrazdeleniye.pk).exists():
+                        issledovaniye.hospital_department_override_id = research.podrazdeleniye.pk
                     issledovaniye.save()
                     if issledovaniye.pk not in childrens:
                         childrens[issledovaniye.pk] = {}

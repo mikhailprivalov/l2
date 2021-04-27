@@ -97,7 +97,7 @@ def directions_generate(request):
             external_organization=p.get("external_organization", "NONE"),
             direction_form_params=p.get("direction_form_params", {}),
             current_global_direction_params=p.get("current_global_direction_params", {}),
-            hospital_department_override=p.get("hospital_department_override", {}),
+            hospital_department_override=p.get("hospital_department_override", -1),
         )
 
         for _ in range(p.get("directions_count", 1)):
