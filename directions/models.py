@@ -640,6 +640,8 @@ class Napravleniya(models.Model):
 
         childrens = {}
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
+        lab_podrazdeleniye_pk = list(Podrazdeleniya.objects.values_list('pk', flat=True).filter(p_type=2))
+
         i = 0
         result = {"r": False, "list_id": [], "list_stationar_id": []}
         ofname_id = ofname_id or -1
@@ -682,11 +684,16 @@ class Napravleniya(models.Model):
                 i += 1
 
             res = []
+            only_lab_researches = []
+            dir_group_onlylab = ''
             for v in researches_grouped_by_lab:  # цикл перевода листа в словарь
                 for key in v.keys():
                     res += v[key]
+                    if int(key) in lab_podrazdeleniye_pk:
+                        only_lab_researches += v[key]
                     # {5:[0,2,5,7],6:[8]}
-
+            if only_lab_researches or external_organization != "NONE":
+                dir_group_onlylab = -9999999
             if not no_attach:
                 directions_for_researches = {}  # Словарь для временной записи направлений.
                 # Исследования привязываются к направлению по группе
@@ -709,14 +716,18 @@ class Napravleniya(models.Model):
                         continue
 
                     dir_group = -1
-                    if research.direction:
+                    if research.direction and external_organization == "NONE":
                         dir_group = research.direction_id
+
+                    if v in only_lab_researches and external_organization != "NONE":
+                        dir_group = dir_group_onlylab
 
                     research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
                     if research_data_params:
                         dir_group = -1
 
-                    if dir_group > -1 and dir_group not in directions_for_researches.keys():
+                    if (dir_group > -1 and dir_group not in directions_for_researches.keys()) or \
+                        (dir_group == dir_group_onlylab and dir_group not in directions_for_researches.keys()):
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(
                             client_id,
                             doc_current if not for_rmis else None,
