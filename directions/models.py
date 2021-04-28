@@ -726,8 +726,7 @@ class Napravleniya(models.Model):
                     if research_data_params:
                         dir_group = -1
 
-                    if (dir_group > -1 and dir_group not in directions_for_researches.keys()) or \
-                        (dir_group == dir_group_onlylab and dir_group not in directions_for_researches.keys()):
+                    if (dir_group > -1 and dir_group not in directions_for_researches.keys()) or (dir_group == dir_group_onlylab and dir_group not in directions_for_researches.keys()):
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(
                             client_id,
                             doc_current if not for_rmis else None,
