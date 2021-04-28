@@ -292,6 +292,8 @@ def endpoint(request):
                                                 fraction_result.value = 'Отрицательно'
 
                                             find = re.findall(r"\d+.\d+", fraction_result.value)
+                                            if len(find) == 0 and fraction_result.value.isdigit():
+                                                find = [fraction_result.value]
                                             if len(find) > 0:
                                                 val_str = fraction_result.value
                                                 for f in find:
