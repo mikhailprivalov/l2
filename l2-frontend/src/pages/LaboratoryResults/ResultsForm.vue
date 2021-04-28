@@ -23,7 +23,7 @@
         </template>
       </template>
     </div>
-    <div class="root" ref="root" v-if="pk" :key="pk">
+    <div class="root" ref="root" v-show="pk">
       <table class="table table-bordered table-sm-pd">
         <thead>
         <tr>
