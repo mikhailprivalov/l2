@@ -88,11 +88,10 @@ const config = {
     moduleIds: 'deterministic',
     splitChunks: {
       chunks: 'async',
-      minSize: 20000,
+      minSize: 15000,
       minChunks: 1,
-      maxAsyncRequests: 30,
-      maxInitialRequests: 30,
-      enforceSizeThreshold: 50000,
+      maxAsyncRequests: 150,
+      maxInitialRequests: 20,
       cacheGroups: {
         vendors: {
           test: /[\\/]node_modules[\\/]/,
