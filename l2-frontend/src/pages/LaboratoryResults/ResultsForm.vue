@@ -24,7 +24,7 @@
       </template>
     </div>
     <div class="root" ref="root" v-show="pk">
-      <table class="table table-bordered table-sm-pd">
+      <table class="table table-bordered table-sm-pd" v-if="pk">
         <thead>
         <tr>
           <td colspan="4">
@@ -118,7 +118,7 @@
         </template>
         </tbody>
       </table>
-      <table class="table table-bordered table-condensed" v-if="execParams.length > 0">
+      <table class="table table-bordered table-condensed" v-if="pk && execParams.length > 0">
         <colgroup>
           <col width="208"/>
           <col/>
