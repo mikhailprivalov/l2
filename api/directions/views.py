@@ -63,7 +63,7 @@ from medical_certificates.models import ResearchesCertificate, MedicalCertificat
 @login_required
 @group_required("Лечащий врач", "Врач-лаборант", "Оператор лечащего врача")
 def directions_generate(request):
-    result = {"ok": False, "directions": [], "message": ""}
+    result = {"ok": False, "directions": [], "directionsStationar": [], "message": ""}
     if request.method == "POST":
         p = json.loads(request.body)
         type_card = Card.objects.get(pk=p.get("card_pk"))
@@ -96,7 +96,8 @@ def directions_generate(request):
             direction_purpose=p.get("direction_purpose", "NONE"),
             external_organization=p.get("external_organization", "NONE"),
             direction_form_params=p.get("direction_form_params", {}),
-            current_global_direction_params=p.get("current_global_direction_params", {})
+            current_global_direction_params=p.get("current_global_direction_params", {}),
+            hospital_department_override=p.get("hospital_department_override", -1),
         )
 
         for _ in range(p.get("directions_count", 1)):
@@ -105,6 +106,7 @@ def directions_generate(request):
             if "message" in rc:
                 result["message"] = rc["message"]
             result["directions"].extend(rc["list_id"])
+            result["directionsStationar"].extend(rc["list_stationar_id"])
             if not result["ok"]:
                 break
     return JsonResponse(result)

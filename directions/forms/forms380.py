@@ -595,15 +595,21 @@ def form_05(c: Canvas, dir: Napravleniya):
         pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
         try:
-            issledovaniye = Issledovaniya.objects.get(napravleniye=dir.pk)
+            issledovaniye = Issledovaniya.objects.filter(napravleniye=dir.pk)
         except ObjectDoesNotExist:
             issledovaniye = None
         title_research = ""
         is_doc_refferal = False
-        if issledovaniye:
-            title_research = issledovaniye.research.title
-            if issledovaniye.research.is_doc_refferal:
+        step = 0
+        for i in issledovaniye:
+            if step > 0:
+                title_research = f"{title_research}; - {i.research.title}"
+            else:
+                title_research = f"{i.research.title}"
+            if i.research.is_doc_refferal:
                 is_doc_refferal = True
+            step += 1
+
 
         styleSheet = getSampleStyleSheet()
         style = styleSheet["Normal"]

@@ -13,6 +13,9 @@ from appconf.manager import SettingManager
 from django.db.models import Q
 
 from pharmacotherapy.models import ProcedureList
+from podrazdeleniya.models import Podrazdeleniya
+from slog.models import Log
+from utils.xh import get_hospitals_podrazdeleniya
 
 
 @login_required
@@ -23,8 +26,10 @@ def load(request):
     if pk >= 4600000000000:
         pk -= 4600000000000
         pk //= 10
+    hospital_pk = request.user.doctorprofile.get_hospital_id()
     tree_direction = hosp_get_hosp_direction(pk)
     result = {"ok": False, "message": "Нет данных", "data": {}}
+    i: Issledovaniya
     for i in Issledovaniya.objects.filter(napravleniye__pk=pk, research__is_hospital=True):
         direction: Napravleniya = i.napravleniye
         card: Card = direction.client
@@ -61,6 +66,8 @@ def load(request):
                 "card_pk": card.pk,
                 "individual_pk": card.individual_id,
             },
+            "department_id": i.hospital_department_override_id or i.research.podrazdeleniye_id,
+            "departments": get_hospitals_podrazdeleniya(hospital_pk),
             "tree": list(
                 map(
                     lambda dirc: {
@@ -231,3 +238,37 @@ def merge_sub_tadp(a, b):
         a['xtext'].extend(b['xtext'])
     except:
         pass
+
+
+@login_required
+@group_required("Врач стационара")
+def change_department(request):
+    data = json.loads(request.body)
+    iss = data.get('iss', -1)
+    need_update = data.get('needUpdate', False)
+    dep_id = data.get('department_id', -1)
+    ok = False
+    dep_from = ""
+    dep_to = ""
+    if Issledovaniya.objects.filter(pk=iss, research__is_hospital=True).exists():
+        i = Issledovaniya.objects.filter(pk=iss, research__is_hospital=True)[0]
+        forbidden_edit = forbidden_edit_dir(i.napravleniye_id)
+        old_dep = i.hospital_department_override_id or i.research.podrazdeleniye_id
+        if not forbidden_edit and need_update and Podrazdeleniya.objects.filter(pk=dep_id, p_type=Podrazdeleniya.HOSP).exists():
+            i.hospital_department_override_id = dep_id
+            i.save(update_fields=['hospital_department_override_id'])
+            Log.log(iss, 100000, request.user.doctorprofile, {
+                "direction": i.napravleniye_id,
+                "old_dep": old_dep,
+                "dep": dep_id,
+            })
+            ok = True
+            dep_from = Podrazdeleniya.objects.get(pk=old_dep).get_title()
+            dep_to = Podrazdeleniya.objects.get(pk=dep_id).get_title()
+        dep_id = i.hospital_department_override_id or i.research.podrazdeleniye_id
+    return JsonResponse({
+        "newDepartment": dep_id,
+        "ok": ok,
+        "from": dep_from,
+        "to": dep_to,
+    })

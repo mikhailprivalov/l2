@@ -86,7 +86,7 @@
             <SelectFieldTitled v-model="external_organization" :variants="externalOrganizations"/>
           </td>
         </tr>
-        <tr>
+        <tr v-if="!has_only_stationar">
           <th>Кол-во повторений:</th>
           <td class="cl-td">
             <input v-model="directions_count" min="1" max="10"
@@ -97,6 +97,17 @@
                 directions_count
               }}&nbsp;раз{{ directions_count > 1 && directions_count < 5 ? 'а' : '' }}
             </span>
+          </td>
+        </tr>
+        <tr v-else>
+          <th>Отделение стационара</th>
+          <td class="cl-td">
+            <treeselect :multiple="false" :disable-branch-nodes="true"
+                        class="treeselect-noborder treeselect-wide"
+                        :options="hospital_department_overrides" :append-to-body="true"
+                        placeholder="По умолчанию" :clearable="false"
+                        v-model="hospital_department_override"
+            />
           </td>
         </tr>
         <tr v-if="directions_params_enabled">
@@ -142,16 +153,16 @@
     </div>
     <div class="bottom-picker" v-if="!simple">
       <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('direction')"
-           title="Сохранить и распечатать направления">
+              title="Сохранить и распечатать направления">
         <span>Сохранить и распечатать направления</span>
       </button>
       <button class="btn btn-blue-nb top-inner-select hidden-small" :disabled="!can_save"
-           @click="generate('barcode')"
-           title="Сохранить и распечатать штрих-коды">
+              @click="generate('barcode')"
+              title="Сохранить и распечатать штрих-коды">
         <span>Сохранить и распечатать штрих-коды</span>
       </button>
       <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('just-save')"
-           title="Сохранить без печати">
+              title="Сохранить без печати">
         <span>Сохранить без печати</span>
       </button>
     </div>
@@ -359,6 +370,8 @@ export default {
       global_direction_params: [{id: -1, label: 'Не выбрано'}],
       global_current_direction_param: -1,
       global_research_direction_param: {},
+      hospital_department_overrides: [{id: -1, label: 'По умолчанию'}],
+      hospital_department_override: -1,
       service_locations: {},
       need_update_comment: [],
       need_update_localization: [],
@@ -559,6 +572,7 @@ export default {
       this.select_fin(this.initial_fin)
     }
     this.load_direction_params()
+    this.load_stationar_deparments()
   },
   methods: {
     changeSelectGlobalResearchDirectionParam(pk) {
@@ -723,7 +737,8 @@ export default {
         external_organization: this.external_organization,
         directions_count: Number(this.directions_count) || 1,
         direction_form_params: this.form_params,
-        current_global_direction_params: this.global_research_direction_param
+        current_global_direction_params: this.global_research_direction_param,
+        hospital_department_override: this.hospital_department_override,
       })
     },
     clear_all() {
@@ -733,6 +748,7 @@ export default {
       this.external_organization = 'NONE';
       this.directions_count = '1';
       this.global_current_direction_param = -1;
+      this.hospital_department_override = -1;
     },
     clear_fin() {
       this.select_fin(-1);
@@ -779,8 +795,32 @@ export default {
       }
       return l.slice(0, 2)
     },
+    is_stationar(pk) {
+      const res = this.$store.getters.researches_obj[pk] || {};
+      return res.department_pk === -5;
+    },
+    async load_stationar_deparments() {
+      const {data} = await api('procedural-list/suitable-departments');
+      this.hospital_department_overrides = [{id: -1, label: 'По умолчанию'}, ...data];
+    }
   },
   computed: {
+    has_stationar() {
+      for (let pk of this.researches) {
+        if (this.is_stationar(pk)) {
+          return true;
+        }
+      }
+      return false;
+    },
+    has_only_stationar() {
+      for (let pk of this.researches) {
+        if (!this.is_stationar(pk)) {
+          return false;
+        }
+      }
+      return true;
+    },
     show_global_direction_params() {
       return this.global_research_direction_param && this.global_research_direction_param.show;
     },
@@ -823,9 +863,9 @@ export default {
       }
 
       for (let pk of this.researches) {
-        if (pk in this.$store.getters.researches_obj) {
+        if (this.$store.getters.researches_obj[pk]) {
           let res = this.$store.getters.researches_obj[pk]
-          let d = res.department_pk && !res.doc_refferal ? res.department_pk : -2
+          let d = (res.department_pk && !res.doc_refferal) ? res.department_pk : -2
           if (!(d in r)) {
             r[d] = {
               pk: d,
@@ -993,7 +1033,7 @@ export default {
 
 .top-inner-select, .top-inner-select.btn {
   border-radius: 0;
-  border: none!important;
+  border: none !important;
   align-self: stretch;
   display: flex;
   align-items: center;

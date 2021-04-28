@@ -33,4 +33,8 @@ export default generator({
     url: 'stationar/aggregate-tadp',
     onReject: {}
   },
+  changeDepartment: {
+    url: 'stationar/change-department',
+    onReject: {}
+  },
 })
