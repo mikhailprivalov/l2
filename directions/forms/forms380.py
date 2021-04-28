@@ -598,18 +598,15 @@ def form_05(c: Canvas, dir: Napravleniya):
             issledovaniye = Issledovaniya.objects.filter(napravleniye=dir.pk)
         except ObjectDoesNotExist:
             issledovaniye = None
-        title_research = ""
+        title_research = []
         is_doc_refferal = False
-        step = 0
+
         for i in issledovaniye:
-            if step > 0:
-                title_research = f"{title_research}; - {i.research.title}"
-            else:
-                title_research = f"{i.research.title}"
+            title_research.append(i.research.title)
             if i.research.is_doc_refferal:
                 is_doc_refferal = True
-            step += 1
 
+        title_research = "<br/>".join(title_research)
 
         styleSheet = getSampleStyleSheet()
         style = styleSheet["Normal"]
