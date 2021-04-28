@@ -1,6 +1,8 @@
 <template>
   <div class="root-c" @click.left="update_comment"
-       v-tippy="no_tooltip ? null : {html: '#research-display-' + pk, reactive: true, interactive: true, theme: 'light', arrow: true,
+       v-tippy="no_tooltip ? null : {html: '#research-display-' + pk, reactive: true, interactive: true, theme: 'light',
+                arrow: true,
+                placement: 'bottom',
                 popperOptions: {
                   modifiers: {
                     preventOverflow: {
