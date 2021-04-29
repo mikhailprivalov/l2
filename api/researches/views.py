@@ -1,9 +1,10 @@
+import time
 from collections import defaultdict
 
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 
 import users.models as users
@@ -16,7 +17,7 @@ from directory.models import (
     ParaclinicInputField,
     ParaclinicTemplateField,
     HospitalService,
-    DispensaryPlan,
+    DispensaryPlan, Localization, ServiceLocation, AutoAdd,
 )
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
@@ -48,23 +49,54 @@ def get_researches_templates(request):
 
 def get_researches(request):
     deps = defaultdict(list)
-
     res = (
         DResearches.objects.filter(hide=False)
-        .exclude(pk__in=[x.pk for x in request.user.doctorprofile.restricted_to_direct.all()])
+        .exclude(pk__in=[x['pk'] for x in request.user.doctorprofile.restricted_to_direct.all().values('pk')])
         .select_related('podrazdeleniye', 'comment_variants')
-        .prefetch_related('localization', 'service_location', 'a', 'b')
-        .distinct()
+        .prefetch_related(
+            Prefetch('localization', queryset=Localization.objects.only('pk', 'title'), to_attr='localization_list'),
+            Prefetch('service_location', queryset=ServiceLocation.objects.only('pk', 'title'), to_attr='service_location_list'),
+            Prefetch('a', queryset=AutoAdd.objects.only('b_id'), to_attr='a_list'),
+            Prefetch('b', queryset=AutoAdd.objects.only('a_id'), to_attr='b_list'),
+            Prefetch(
+                'direction_params__paraclinicinputgroups_set',
+                queryset=ParaclinicInputGroups.objects.filter(hide=False).prefetch_related(
+                    Prefetch('paraclinicinputfield_set', queryset=ParaclinicInputField.objects.filter(hide=False))
+                )
+            ),
+        )
+        .distinct('title', 'pk')
         .order_by('title')
+        .defer(
+            "preparation",
+            "paraclinic_info",
+            "instructions",
+            "internal_code",
+            "co_executor_2_title",
+            "bac_conclusion_templates",
+            "bac_culture_comments_templates",
+            "rmis_id",
+            "podrazdeleniye__title",
+            "podrazdeleniye__short_title",
+            "podrazdeleniye__gid_n",
+            "podrazdeleniye__hide",
+            "podrazdeleniye__vaccine",
+            "podrazdeleniye__rmis_id",
+            "podrazdeleniye__rmis_direction_type",
+            "podrazdeleniye__rmis_department_title",
+            "podrazdeleniye__can_has_pacs",
+            "podrazdeleniye__oid",
+            "podrazdeleniye__hospital_id",
+        )
     )
 
     r: DResearches
 
     for r in res:
-        autoadd = [x.b_id for x in r.a.all()]
-        addto = [x.a_id for x in r.b.all()]
+        autoadd = [x.b_id for x in r.a_list]
+        addto = [x.a_id for x in r.b_list]
 
-        direction_params_pk = r.direction_params.pk if r.direction_params else -1
+        direction_params_pk = r.direction_params_id or -1
         deps[r.reversed_type].append(
             {
                 "pk": r.pk,
@@ -85,10 +117,10 @@ def get_researches(request):
                 "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
                 "site_type": r.get_site_type_id(),
                 "site_type_raw": r.site_type_id,
-                "localizations": [{"code": x.pk, "label": x.title} for x in r.localization.all()],
-                "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location.all()],
+                "localizations": [{"code": x.pk, "label": x.title} for x in r.localization_list],
+                "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location_list],
                 "direction_params": direction_params_pk,
-                "research_data": get_research_for_direction_params(direction_params_pk),
+                "research_data": get_research_for_direction_params(r.direction_params),
             }
         )
 

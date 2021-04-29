@@ -2276,7 +2276,9 @@ def values_from_structure_data(data):
 
 def get_research_for_direction_params(pk):
     response = {}
-    if int(pk) > -1:
+    if isinstance(pk, Researches):
+        research_obj = pk
+    elif isinstance(pk, (int, str)) and int(pk) > -1:
         research_obj = Researches.objects.get(pk=int(pk))
     else:
         return response
@@ -2324,5 +2326,6 @@ def get_research_for_direction_params(pk):
                 }
             )
         response["research"]["groups"] = [g]
+        break
 
     return response

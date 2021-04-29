@@ -217,6 +217,9 @@ AFTER_DATE_HOLTER = None
 
 MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY = 3
 
+PREFETCH_ENABLED = False
+PREFETCH_MAX_THREADS = 15
+
 
 class DisableMigrations(object):
     def __contains__(self, item):

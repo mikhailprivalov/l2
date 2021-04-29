@@ -7,9 +7,10 @@ import appconf.models as appconf
 
 class SettingManager:
     WARMUP_TEST_KEY = 'SettingManager:test-warmup'
+    LOC_MEM_CACHE = {}
 
     @staticmethod
-    def warmup():
+    def warmup(place_in_locmem=False):
         cache.set(SettingManager.WARMUP_TEST_KEY, True, 1)
 
         if not cache.get(SettingManager.WARMUP_TEST_KEY):
@@ -20,22 +21,26 @@ class SettingManager:
 
         s: appconf.Setting
         for s in appconf.Setting.objects.all():
-            SettingManager.get(s.name, rebuild=True)
+            SettingManager.get(s.name, rebuild=True, place_in_locmem=place_in_locmem)
 
         post_save.connect(save_setting, sender=appconf.Setting)
 
     @staticmethod
-    def get(key, default=None, default_type='s', rebuild=False):
+    def get(key, default=None, default_type='s', rebuild=False, place_in_locmem=False):
         no_cache = '#no-cache#' in key
         k = 'setting_manager_' + key
+        if k in SettingManager.LOC_MEM_CACHE:
+            return SettingManager.LOC_MEM_CACHE[k]
         cv = cache.get(k) if not no_cache and not rebuild else None
         if cv:
-            return simplejson.loads(cv)
+            SettingManager.LOC_MEM_CACHE[k] = simplejson.loads(cv)
+            return SettingManager.LOC_MEM_CACHE[k]
         row = appconf.Setting.objects.filter(name=key).first()
         if not row:
             row = appconf.Setting.objects.create(name=key, value=key if default is None else default, value_type=default_type)
         value = row.get_value()
         if not no_cache:
+            SettingManager.LOC_MEM_CACHE[k] = value
             cache.set(k, simplejson.dumps(value), 60 * 60 * 24)
         return value
 

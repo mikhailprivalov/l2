@@ -37,3 +37,7 @@
         }
     </style>
 {% endblock %}
+
+{% block scripts_pre_webpack %}
+    {% include 'prefetch.html' with prefetched=prefetched %}
+{% endblock %}
