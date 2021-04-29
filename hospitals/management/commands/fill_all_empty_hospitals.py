@@ -11,7 +11,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         default_h = Hospitals.get_default_hospital()
         if not default_h:
-            print('Не настроена организация по умолчанию')
+            print('Не настроена организация по умолчанию')  # noqa: T001
             return
         Podrazdeleniya.objects.filter(hospital__isnull=True, p_type=Podrazdeleniya.DEPARTMENT).update(hospital=default_h)
         Podrazdeleniya.objects.filter(hospital__isnull=False).exclude(p_type=Podrazdeleniya.DEPARTMENT).update(hospital=None)

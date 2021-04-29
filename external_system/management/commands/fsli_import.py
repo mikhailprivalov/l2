@@ -87,7 +87,7 @@ class Command(BaseCommand):
                         ordering=cells[sort_num],
                         active=active,
                     ).save()
-                    print('сохранено', cells[code_fsli])
+                    print('сохранено', cells[code_fsli])  # noqa: T001
                 elif r.exists():
                     r = r[0]
                     updated = []
@@ -113,6 +113,6 @@ class Command(BaseCommand):
                         updated.append('ordering')
                     if updated:
                         r.save(update_fields=updated)
-                        print('обновлено', cells[code_fsli])
+                        print('обновлено', cells[code_fsli])  # noqa: T001
                     else:
-                        print('не обновлено', cells[code_fsli])
+                        print('не обновлено', cells[code_fsli])  # noqa: T001

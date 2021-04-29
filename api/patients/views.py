@@ -594,7 +594,7 @@ def edit_doc(request):
     try:
         d.sync_rmis()
     except Exception as e:
-        print('RMIS error', e)
+        print('RMIS error', e)  # noqa: T001
 
     return JsonResponse({"ok": True})
 

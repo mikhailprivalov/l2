@@ -16,7 +16,7 @@ class Command(BaseCommand):
         self.stdout.write("Path: " + fp)
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
-        print(ws)
+        print(ws)  # noqa: T001
         starts = False
         mnn, trade_name = '', ''
         for row in ws.rows:
@@ -27,8 +27,8 @@ class Command(BaseCommand):
                     trade_name = cells.index("торг")
                     mnn = cells.index("мнн")
             else:
-                print(cells[mnn])
+                print(cells[mnn])  # noqa: T001
                 if cells[mnn] == "~":
                     continue
                 Drugs.objects.create(mnn=cells[mnn][:255], trade_name=cells[trade_name][:255])
-                print(f'добавлен МНН:{cells[mnn]}:{cells[trade_name]}')
+                print(f'добавлен МНН:{cells[mnn]}:{cells[trade_name]}')  # noqa: T001

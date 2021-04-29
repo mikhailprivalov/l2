@@ -1,4 +1,3 @@
-import time
 from collections import defaultdict
 
 import simplejson as json
@@ -17,7 +16,7 @@ from directory.models import (
     ParaclinicInputField,
     ParaclinicTemplateField,
     HospitalService,
-    DispensaryPlan, Localization, ServiceLocation, AutoAdd,
+    DispensaryPlan, Localization, ServiceLocation,
 )
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya

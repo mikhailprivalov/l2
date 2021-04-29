@@ -41,7 +41,7 @@ import slog.models as slog
 from api.stationar.stationar_func import hosp_get_hosp_direction
 from appconf.manager import SettingManager
 from clients.models import CardBase
-from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, ParaclinicResult, Recipe
+from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe
 from laboratory.decorators import group_required, logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime

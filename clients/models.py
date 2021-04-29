@@ -541,7 +541,7 @@ class Individual(models.Model):
                 i = indv[0]
                 ce = Card.objects.filter(individual=i, base__internal_type=True).first()
                 if no_update and ce:
-                    print('No update')
+                    print('No update')  # noqa: T001
                     polis = i.add_or_update_doc(enp_type, '', enp)
                     if polis:
                         cdu = CardDocUsage.objects.filter(card=ce, document__document_type=polis.document_type)
@@ -552,7 +552,7 @@ class Individual(models.Model):
                                 c.document = polis
                                 c.save(update_fields=["document"])
                     return
-                print('Update patient data')
+                print('Update patient data')  # noqa: T001
                 updated = []
 
                 if i.family != family:
@@ -589,32 +589,32 @@ class Individual(models.Model):
                     updated.append('tfoms_enp')
 
                 if updated:
-                    print('Updated:', updated)
+                    print('Updated:', updated)  # noqa: T001
                     i.save(update_fields=updated)
 
-            print(i)
+            print(i)  # noqa: T001
 
-            print('Sync documents')
+            print('Sync documents')  # noqa: T001
 
             enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
             snils_type = DocumentType.objects.filter(title__startswith="СНИЛС").first()
             passport_type = DocumentType.objects.filter(title__startswith="Паспорт гражданина РФ").first()
 
             if snils_type and snils:
-                print('Sync SNILS')
+                print('Sync SNILS')  # noqa: T001
                 i.add_or_update_doc(snils_type, '', snils)
 
             if passport_type and passport_seria and passport_number:
-                print('Sync PASSPORT')
+                print('Sync PASSPORT')  # noqa: T001
                 i.add_or_update_doc(passport_type, passport_seria, passport_number)
 
             enp_doc = None
             if enp_type and enp:
-                print('Sync ENP')
+                print('Sync ENP')  # noqa: T001
                 enp_doc = i.add_or_update_doc(enp_type, '', enp)
 
-            print('Sync L2 card')
-            print(Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True, updated_data=updated_data))
+            print('Sync L2 card')  # noqa: T001
+            print(Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True, updated_data=updated_data))  # noqa: T001
 
             i.time_tfoms_last_sync = timezone.now()
             i.save(update_fields=['time_tfoms_last_sync'])
@@ -1013,7 +1013,7 @@ class Card(models.Model):
                     updated_data.append('Основной полис')
 
             if updated:
-                print('Updated:', updated)
+                print('Updated:', updated)  # noqa: T001
                 c.save(update_fields=updated)
 
             if polis:
@@ -1043,7 +1043,7 @@ class Card(models.Model):
             c.save()
             if polis:
                 CardDocUsage(card=c, document=polis).save()
-            print('Created card')
+            print('Created card')  # noqa: T001
             return c
 
     class Meta:
@@ -1097,7 +1097,7 @@ def on_obj_pre_save_log(sender, instance: Union[Document, CardDocUsage, Card, In
                 k = 30010
             slog.Log.log(instance.pk, k, doctorprofile, {"updates": list(updated_data.values())})
     except Exception as e:
-        print(e)
+        print(e)  # noqa: T001
         logger.exception(e)
 
 
@@ -1192,7 +1192,8 @@ class DispensaryRegPlans(models.Model):
                         else:
                             DispensaryRegPlans.objects.create(card=card, research_id=research_pk, speciality_id=speciality_pk, date=f'{year}-{m + 1}-{new_plans[m]}')
                     except Exception as e:
-                        print(e)  # Возможно косячные даты с фронтенда вроде "99" или "абв", временное решение просто проигнорить
+                        # Возможно косячные даты с фронтенда вроде "99" или "абв", временное решение просто проигнорить
+                        print(e)  # noqa: T001
 
 
 class Phones(models.Model):

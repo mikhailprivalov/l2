@@ -27,4 +27,4 @@ class Command(BaseCommand):
                     Diagnoses.objects.filter(d_type='mkb10.4').delete()
             else:
                 Diagnoses.objects.create(d_type='mkb10.4', m_type=2, code=cells[code], title=cells[title])
-                print(f'добавлен MKB:{cells[code]}:{cells[title]}')
+                print(f'добавлен MKB:{cells[code]}:{cells[title]}')  # noqa: T001

@@ -32,9 +32,9 @@ class Command(BaseCommand):
                 group_culture = GroupAntibiotic.objects.filter(title=cells[group])
                 if not group_culture.exists():
                     GroupAntibiotic(title=cells[group]).save()
-                    print('группа создана', cells[group])
+                    print('группа создана', cells[group])  # noqa: T001
                 antibiotic = Antibiotic.objects.filter(title=cells[title])
                 if not antibiotic.exists():
                     group_antibiotic = GroupAntibiotic.objects.filter(title=cells[group]).first()
                     Antibiotic(title=cells[title], group_antibiotic=group_antibiotic, lis=cells[lis]).save()
-                    print('антибиотик сохранен', cells[group])
+                    print('антибиотик сохранен', cells[group])  # noqa: T001

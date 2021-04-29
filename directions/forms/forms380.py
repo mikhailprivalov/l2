@@ -610,7 +610,6 @@ def form_05(c: Canvas, dir: Napravleniya):
                 is_doc_refferal = True
             step += 1
 
-
         styleSheet = getSampleStyleSheet()
         style = styleSheet["Normal"]
         style.fontName = "PTAstraSerifReg"
