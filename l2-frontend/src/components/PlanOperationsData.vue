@@ -130,8 +130,14 @@
       }
     },
     watch: {
-      card_pk_initial() {
-        this.card_pk = this.card_pk_initial;
+      card_pk_initial: {
+        handler() {
+          this.card_pk = this.card_pk_initial;
+          if (this.patient_fio && this.card_pk) {
+            this.patient_data = this.patient_fio
+          }
+        },
+        immediate: true,
       },
     },
     created() {
