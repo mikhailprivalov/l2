@@ -91,14 +91,8 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'templates'),
-            os.path.join(BASE_DIR, '..', 'mainmenu', 'templates'),
-            os.path.join(BASE_DIR, '..', 'construct', 'templates'),
-            os.path.join(BASE_DIR, '..', 'directions', 'templates'),
-            os.path.join(BASE_DIR, '..', 'reports', 'templates'),
-            os.path.join(BASE_DIR, '..', 'results', 'templates'),
-            os.path.join(BASE_DIR, '..', 'statistics', 'templates'),
-            os.path.join(BASE_DIR, '..', 'users', 'templates'),
         ],
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -109,12 +103,6 @@ TEMPLATES = [
                 'context_processors.utils.ws',
                 'context_processors.utils.menu',
                 'context_processors.utils.profile',
-            ],
-            'loaders': [
-                ('django.template.loaders.cached.Loader', [
-                    'django.template.loaders.filesystem.Loader',
-                    'django.template.loaders.app_directories.Loader',
-                ]),
             ],
         },
     },
