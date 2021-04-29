@@ -19,7 +19,7 @@ gunicorn==20.0.4
 isodate==0.6.0
 jsonfield==3.1.0
 jsonpickle==1.4.1
-openpyxl==3.0.5
+openpyxl==3.0.7
 pdfrw==0.4
 pdfminer==20191125
 pika==1.1.0
