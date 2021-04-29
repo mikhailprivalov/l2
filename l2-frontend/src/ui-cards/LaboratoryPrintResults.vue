@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <a href="#" @click.prevent="doOpen">
       Печать результатов
     </a>
@@ -42,7 +42,7 @@
         </div>
       </modal>
     </MountingPortal>
-  </fragment>
+  </div>
 </template>
 
 <script>

@@ -56,7 +56,7 @@
       },
       cancel_operation: {
         type: Boolean,
-        required: true
+        required: false
       },
     },
     data() {

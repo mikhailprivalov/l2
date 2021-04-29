@@ -38,7 +38,7 @@
     "vue": "^2.6.12",
     "vue-apexcharts": "^1.6.0",
     "vue-autosize": "^1.0.2",
-    "vue-fragment": "^1.5.1",
+    "vue-frag": "^1.1.5",
     "vue-full-loading": "^1.2.1",
     "vue-input-tag": "^2.0.7",
     "vue-longpress": "git+https://github.com/moodpulse/vuelongpress.git",

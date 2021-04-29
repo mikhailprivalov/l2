@@ -1,7 +1,8 @@
 <template>
   <div>
     <div class="form-row">
-      <div class="row-t">Пациент (карта)
+      <div class="row-t">
+        Пациент (карта)
         <a @click.prevent="open_patient_picker" :class="{unvisible: patient_fio}" href="#"
            style="float: right; padding-right: 5px; color: #ffffff;">Найти</a>
       </div>
@@ -63,9 +64,7 @@
         </div>
       </div>
     </modal>
-
   </div>
-
 </template>
 
 <script>
@@ -83,7 +82,7 @@
     name: "PlanOperationsData",
     components: {Treeselect, PatientSmallPicker, Modal},
     props: {
-      card_pk: {
+      card_pk_initial: {
         type: Number,
         required: false
       },
@@ -118,6 +117,7 @@
     },
     data() {
       return {
+        cart_pk: this.card_pk_initial,
         hirurgs: [],
         patient_to_edit: false,
         patient_data: '',
@@ -128,6 +128,11 @@
         type_operation: this.operation,
         base_pk: -1,
       }
+    },
+    watch: {
+      card_pk_initial() {
+        this.card_pk = this.card_pk_initial;
+      },
     },
     created() {
       this.$store.watch(state => state.bases, () => {

@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <select v-model="num" class="form-control" style="z-index: 0">
       <option value="0">0</option>
       <option value="1">1</option>
@@ -34,7 +34,7 @@
     <span class="input-group-addon">
       ({{num}}&nbsp;×&nbsp;10<sup style="top: -.3em">{{power}}</sup>)
     </span>
-  </fragment>
+  </div>
 </template>
 
 <script>

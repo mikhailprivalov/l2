@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <div class="result-link"
          :class="!active && 'result-link-hidden'"
          @mouseover="show_results_debounce()"
@@ -41,7 +41,7 @@
         </div>
       </div>
     </div>
-  </fragment>
+  </div>
 </template>
 
 <script>

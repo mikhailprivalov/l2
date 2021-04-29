@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <a v-if="is_med_certificates" href="#" class="dropdown-toggle" style="color: #049372" @click.prevent
        v-tippy="{
                 html: '#certificates-view',
@@ -38,7 +38,7 @@
         </tbody>
       </table>
     </div>
-  </fragment>
+  </div>
 </template>
 
 <script>

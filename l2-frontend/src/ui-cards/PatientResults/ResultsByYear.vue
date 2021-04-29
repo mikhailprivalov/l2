@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <a href="#" class="main-link" @click.prevent
        v-tippy="{
                 html: `#${tippyId}`,
@@ -80,7 +80,7 @@
         </table>
       </div>
     </div>
-  </fragment>
+  </div>
 </template>
 
 <script>

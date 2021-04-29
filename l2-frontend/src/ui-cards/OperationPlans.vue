@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <a href="#" class="dropdown-toggle" @click.prevent
        v-tippy="{
                 html: '#operations-view',
@@ -60,23 +60,22 @@
       <br/>
       <a href="#" style="float: right" @click.prevent="add_data" v-if="can_edit_operations">Добавить</a>
     </div>
-    <plan-operation-edit v-if="edit_plan_operations_old || edit_plan_operations " :card_pk="card_pk"
+    <plan-operation-edit v-if="edit_plan_operations_old || edit_plan_operations" :card_pk="card_pk"
                          :patient_fio="patient_fio"
                          :direction="current_direction" :pk_plan="pk_plan" :pk_hirurg="pk_hirurg" :date="date"
                          :operation="operation"
                          :cancel_operation="cancel"
     />
-  </fragment>
+  </div>
 </template>
 
 <script>
   import plans_point from "../api/plans-point";
   import LinkPlanOperations from "../pages/Stationar/LinkPlanOperations";
-  import PlanOperationEdit from '../modals/PlanOperationEdit';
 
   export default {
     name: "OperationPlans",
-    components: {LinkPlanOperations, PlanOperationEdit},
+    components: {LinkPlanOperations, PlanOperationEdit: () => import('@/modals/PlanOperationEdit')},
     data() {
       return {
         data: [],
@@ -90,7 +89,7 @@
         pk_hirurg: null,
         date: null,
         operation: '',
-        cancel: null
+        cancel: false,
       }
     },
     mounted() {

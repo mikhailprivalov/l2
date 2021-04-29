@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <div class="row">
       <div class="col-xs-6" style="padding-right: 0;">
         <table class="table table-bordered table-condensed">
@@ -43,7 +43,7 @@
     <button class="btn btn-default btn-primary-nb btn-sm mt5" @click="addRefEmptyRow">
       <i class="fa fa-plus"></i>
     </button>
-  </fragment>
+  </div>
 </template>
 <script>
 export default {

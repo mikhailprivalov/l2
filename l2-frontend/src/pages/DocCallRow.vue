@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <td v-tippy="{html: '#template-' + r.pk + '-1', ...commonTippy}">
       {{ r.num }}{{ r.externalNum ? ` — ${r.externalNum}` : '' }}
       <div v-if="r.isMainExternal">в больнице</div>
@@ -63,7 +63,7 @@
         Врач: {{ r.docAssigned || 'нет' }}
       </div>
     </div>
-  </fragment>
+  </div>
 </template>
 <script>
 import api from '@/api';
