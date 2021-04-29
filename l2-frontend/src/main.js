@@ -12,7 +12,6 @@ import store from './store'
 import * as action_types from './store/action-types'
 import directions_point from './api/directions-point'
 
-import '@openfonts/open-sans_all';
 import './styles/index.scss';
 
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
