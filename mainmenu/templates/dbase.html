@@ -3,11 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    {% load static %}
-    {% load setting %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">{% spaceless %}
+    {% load static setting manifest %}
     {% s_get "org_title" as org_title %}
-    {% s_get "extended_html" as extended_html %}
+    {% s_get "extended_html" as extended_html %}{% endspaceless %}
     <link rel="apple-touch-icon" sizes="57x57" href="{% static 'icon/apple-icon-57x57.png' %}">
     <link rel="apple-touch-icon" sizes="60x60" href="{% static 'icon/apple-icon-60x60.png' %}">
     <link rel="apple-touch-icon" sizes="72x72" href="{% static 'icon/apple-icon-72x72.png' %}">
@@ -25,14 +24,7 @@
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="{% static 'icon/ms-icon-144x144.png' %}">
     <meta name="theme-color" content="#ffffff">
-
-    <title>
-        {% block title %}{% endblock %}
-        &mdash;
-        {% firstof request.user.doctorprofile.hospital_safe_title org_title %}
-    </title>
-    {% load manifest %}
-
+    <title>{% block title %}{% endblock %} &mdash; {% firstof request.user.doctorprofile.hospital_safe_title org_title %}</title>
     <link rel="stylesheet" href="{% manifest 'vendors.css' %}"/>
     <link rel="stylesheet" href="{% manifest 'main.css' %}"/>
 
@@ -58,6 +50,7 @@
 <body>{% load has_group %}
 <div id="app" class="{% block container %}container{% endblock %}">
     {% block nav %}
+        {% spaceless %}
         {% load setting_default %}
         {% s_default "show_l2_logo" "true" "b" as show_l2_logo %}
         {% s_default "l2_logo_class" "default" "s" as l2_logo_class %}
@@ -66,7 +59,7 @@
             <div class="nav-cont">
                 <div class="navbar-header">
                     {% if show_l2_logo %}
-                        <a href="/mainmenu" class="navbar-left logo {{ l2_logo_class }}">
+                        <a href="/mainmenu" class="navbar-left logo {{ l2_logo_class|safe }}">
                             L<sup>2</sup>
                             {% if l2_logo_addonational_text %}
                                 <span>{{ l2_logo_addonational_text |safe }}</span>
@@ -79,58 +72,57 @@
                         <span class="icon-bar"></span>
                     </button>
                     <a href="/mainmenu">
-                        <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>
+                        <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio|safe }}</small></span>
                     </a>
                 </div>
                 <div id="navbar" class="navbar-collapse collapse">
-                    <ul class="nav navbar-nav">
-                        <li class="dropdown dropdown-large">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                Меню <b class="caret"></b>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-large">
-                                <div class="dash-buttons text-center">
-                                    {% for item in mainmenu %}
-                                        {% if item.hr %}
-                                            </div>
-                                            <div class="dash-buttons text-center">
-                                        {% else %}
-                                            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn{% if item.active %} dash-active{% endif %}">
-                                                <a href="{{ item.url }}"{% if item.nt %} target="_blank"{% endif %}
-                                                   class="panel-body">
-                                                    <span>{{ item.title }}</span>
-                                                </a>
-                                            </div>
-                                        {% endif %}
-                                    {% endfor %}
+                        <ul class="nav navbar-nav">
+                            <li class="dropdown dropdown-large">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    Меню <b class="caret"></b>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-large">
+                                    <div class="dash-buttons text-center">
+                                        {% for item in mainmenu %}
+                                            {% if item.hr %}
+                                                </div>
+                                                <div class="dash-buttons text-center">
+                                            {% else %}
+                                                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn{% if item.active %} dash-active{% endif %}">
+                                                    <a href="{{ item.url|safe }}"{% if item.nt %} target="_blank"{% endif %} class="panel-body">
+                                                        <span>{{ item.title|safe }}</span>
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                        </div>
+                                    <div class="info">
+                                        L2 {{ version|safe }}
                                     </div>
-                                <div class="info">
-                                    L2 {{ version }}
                                 </div>
-                            </div>
-                        </li>
-                    </ul>
-                    {% block extended_header %}{% endblock %}
-                    <ul class="nav navbar-right navbar-nav">
-                        <li>
+                            </li>
+                        </ul>
+                        {% block extended_header %}{% endblock %}
+                        <ul class="nav navbar-right navbar-nav">
+                            <li>
                             <span class="navbar-brand" style="font-size: 14px">
-                                Организация: {{ request.user.doctorprofile.hospital_safe_title }}
+                                Организация: {{ request.user.doctorprofile.hospital_safe_title|safe }}
                             </span>
-                        </li>
-                    </ul>
+                            </li>
+                        </ul>
                 </div>
             </div>
             <div class="nav-loader center">
                 <div class="navbar-header">
                     {% if show_l2_logo %}
-                        <div class="navbar-left logo {{ l2_logo_class }}">
+                        <div class="navbar-left logo {{ l2_logo_class|safe }}">
                             L<sup>2</sup>
                             {% if l2_logo_addonational_text %}
                                 <span>{{ l2_logo_addonational_text |safe }}</span>
                             {% endif %}
                         </div>
                     {% endif %}
-                    <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>
+                    <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio|safe }}</small></span>
                 </div>
                 <div class="din-spinner" style="text-align: center">
                     <div class="sk-fading-circle">
@@ -154,6 +146,7 @@
                 </div>
             </div>
         </nav>
+        {% endspaceless %}
     {% endblock %}
     {% block content %}{% endblock %}
     {% block foot %}{% endblock %}
@@ -856,7 +849,7 @@
             this.log('addRouteCache', {currentState: this.routes, args: {route, params, data}});
         };
 
-        Prefetch.prototype.addBatchRoutes = function(data) {
+        Prefetch.prototype.addBatchRoutes = function (data) {
             this.log('addBatchRoutes', {data});
             const prevLogging = this.logging;
             this.logging = false;
@@ -878,7 +871,7 @@
             if (key) {
                 delete this.routes[route][key];
             }
-            this.log('popRouteCache', result ? 'HIT' : 'MISS' , key, 'Result:', result);
+            this.log('popRouteCache', result ? 'HIT' : 'MISS', key, 'Result:', result);
             return result;
         };
 

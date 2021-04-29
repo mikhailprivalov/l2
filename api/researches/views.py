@@ -43,21 +43,24 @@ def get_researches_templates(request):
                 "for_users_department": t.podrazdeleniye_id is not None,
             }
         )
-
-    return JsonResponse({"templates": templates})
+    result = {"templates": templates}
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return result
+    return JsonResponse(result)
 
 
 def get_researches(request):
     deps = defaultdict(list)
+    doctorprofile = request.user.doctorprofile
     res = (
         DResearches.objects.filter(hide=False)
-        .exclude(pk__in=[x['pk'] for x in request.user.doctorprofile.restricted_to_direct.all().values('pk')])
+        .exclude(pk__in=[x['pk'] for x in doctorprofile.restricted_to_direct.all().values('pk')])
         .select_related('podrazdeleniye', 'comment_variants')
         .prefetch_related(
             Prefetch('localization', queryset=Localization.objects.only('pk', 'title'), to_attr='localization_list'),
             Prefetch('service_location', queryset=ServiceLocation.objects.only('pk', 'title'), to_attr='service_location_list'),
-            Prefetch('a', queryset=AutoAdd.objects.only('b_id'), to_attr='a_list'),
-            Prefetch('b', queryset=AutoAdd.objects.only('a_id'), to_attr='b_list'),
+            'a',
+            'b',
             Prefetch(
                 'direction_params__paraclinicinputgroups_set',
                 queryset=ParaclinicInputGroups.objects.filter(hide=False).prefetch_related(
@@ -93,8 +96,8 @@ def get_researches(request):
     r: DResearches
 
     for r in res:
-        autoadd = [x.b_id for x in r.a_list]
-        addto = [x.a_id for x in r.b_list]
+        autoadd = [x.b_id for x in r.a.all()]
+        addto = [x.a_id for x in r.b.all()]
 
         direction_params_pk = r.direction_params_id or -1
         deps[r.reversed_type].append(
@@ -126,7 +129,8 @@ def get_researches(request):
 
     tubes = list(Tubes.objects.values('pk', 'title', 'color'))
     result = {"researches": deps, "tubes": tubes}
-
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return result
     return JsonResponse(result)
 
 
@@ -137,6 +141,8 @@ def by_direction_params(request):
     for r in res:
         data[r.pk] = {"title": r.get_title(), "full_title": r.title, "research_data": get_research_for_direction_params(r.pk)}
 
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return data
     return JsonResponse(data)
 
 

@@ -429,13 +429,14 @@ def departments(request):
         more_types = []
         if SettingManager.is_morfology_enabled(en):
             more_types.append({"pk": str(Podrazdeleniya.MORFOLOGY), "title": "Морфология"})
-        return JsonResponse(
-            {
-                "departments": deps,
-                "can_edit": can_edit,
-                "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] not in [8, 12] and en.get(x[0], True)], *more_types],
-            }
-        )
+        data = {
+            "departments": deps,
+            "can_edit": can_edit,
+            "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] not in [8, 12] and en.get(x[0], True)], *more_types],
+        }
+        if hasattr(request, 'plain_response') and request.plain_response:
+            return data
+        return JsonResponse(data)
 
     if can_edit:
         ok = False
@@ -510,6 +511,8 @@ def bases(request):
             ]
         }
         cache.set(k, ret, 100)
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return ret
     return JsonResponse(ret)
 
 
@@ -528,7 +531,19 @@ def current_user_info(request):
         "directions_params_org_form_default_pk": SettingManager.get("directions_params_org_form_default_pk", default='', default_type='s'),
     }
     if ret["auth"]:
-        doctorprofile = request.user.doctorprofile
+        doctorprofile = users.DoctorProfile.objects.prefetch_related(
+            Prefetch(
+                'restricted_to_direct',
+                queryset=DResearches.objects.only('pk'),
+            ),
+            Prefetch(
+                'users_services',
+                queryset=DResearches.objects.only('pk'),
+            ),
+        ).select_related(
+            'podrazdeleniye'
+        ).get(user_id=user.pk)
+
         ret["username"] = user.username
         ret["fio"] = doctorprofile.fio
         ret["groups"] = list(user.groups.values_list('name', flat=True))
@@ -539,8 +554,8 @@ def current_user_info(request):
         ret["rmis_login"] = doctorprofile.rmis_login
         ret["rmis_password"] = doctorprofile.rmis_password
         ret["department"] = {"pk": doctorprofile.podrazdeleniye_id, "title": doctorprofile.podrazdeleniye.title}
-        ret["restricted"] = [x['pk'] for x in doctorprofile.restricted_to_direct.all().values('pk')]
-        ret["user_services"] = [x['pk'] for x in doctorprofile.users_services.all().values('pk') if x not in ret["restricted"]]
+        ret["restricted"] = [x.pk for x in doctorprofile.restricted_to_direct.all()]
+        ret["user_services"] = [x.pk for x in doctorprofile.users_services.all() if x not in ret["restricted"]]
         ret["su"] = user.is_superuser
         ret["hospital"] = doctorprofile.get_hospital_id()
         ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
@@ -549,6 +564,13 @@ def current_user_info(request):
         ret["extended_departments"] = {}
 
         st_base = ResearchSite.objects.filter(hide=False).order_by('order', 'title')
+
+        sites_by_types = {}
+        for s in st_base:
+            if s.site_type not in sites_by_types:
+                sites_by_types[s.site_type] = []
+            sites_by_types[s.site_type].append({"pk": s.pk, "title": s.title, "type": s.site_type, "extended": True, 'e': s.site_type + 4})
+
         for e in en:
             if e < 4 or not en[e]:
                 continue
@@ -561,7 +583,7 @@ def current_user_info(request):
             else:
                 d = []
 
-            ret["extended_departments"][e] = [*d, *[{"pk": x.pk, "title": x.title, "type": t, "extended": True, 'e': e} for x in st_base.filter(site_type=t)]]
+            ret["extended_departments"][e] = [*d, *sites_by_types.get(t, [])]
 
         if SettingManager.is_morfology_enabled(en):
             ret["extended_departments"][Podrazdeleniya.MORFOLOGY] = []
@@ -577,21 +599,24 @@ def current_user_info(request):
                 ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
                     {"pk": Podrazdeleniya.MORFOLOGY + 3, "title": "Гистология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
                 )
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return ret
     return JsonResponse(ret)
 
 
 @login_required
 def directive_from(request):
     data = []
+    hospital = request.user.doctorprofile.hospital
     for dep in (
         Podrazdeleniya.objects.filter(Q(p_type=Podrazdeleniya.DEPARTMENT) | Q(p_type=Podrazdeleniya.HOSP) | Q(p_type=Podrazdeleniya.PARACLINIC))
-        .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
+        .filter(Q(hospital=hospital) | Q(hospital__isnull=True))
         .prefetch_related(
             Prefetch(
                 'doctorprofile_set',
                 queryset=(
                     users.DoctorProfile.objects.filter(user__groups__name__in=["Лечащий врач", "Врач параклиники"]).distinct().filter(
-                        Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True)).order_by("fio")
+                        Q(hospital=hospital) | Q(hospital__isnull=True)).order_by("fio")
                 ),
             )
         )
@@ -604,7 +629,10 @@ def directive_from(request):
         }
         data.append(d)
 
-    return JsonResponse({"data": data})
+    result = {"data": data}
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return result
+    return JsonResponse(result)
 
 
 @group_required("Оформление статталонов", "Лечащий врач", "Оператор лечащего врача")
@@ -1346,18 +1374,19 @@ def hospitals(request):
                 "code_tfoms": "000001",
             },
         ]
-    return JsonResponse(
-        {
-            "hospitals": [
-                *[
-                    {
-                        "id": x['pk'],
-                        "label": x["short_title"] or x["title"],
-                        "code_tfoms": x["code_tfoms"],
-                    }
-                    for x in rows
-                ],
-                *default_hospital,
-            ]
-        }
-    )
+    result = {
+        "hospitals": [
+            *[
+                {
+                    "id": x['pk'],
+                    "label": x["short_title"] or x["title"],
+                    "code_tfoms": x["code_tfoms"],
+                }
+                for x in rows
+            ],
+            *default_hospital,
+        ]
+    }
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return result
+    return JsonResponse(result)
