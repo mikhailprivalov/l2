@@ -200,11 +200,23 @@
           </tr>
           <tr v-if="directive_from_need === 'true'">
             <td class="table-header-row" style="line-height: 1;">Работа от имени:</td>
-            <td class="table-content-row select-td">
-              <select-picker-b v-model="directive_department" :options="directive_departments_select"/>
+            <td class="cl-td">
+              <treeselect class="treeselect-noborder treeselect-wide"
+                          :multiple="false" :disable-branch-nodes="true"
+                          :options="directive_departments_select"
+                          placeholder="Подразделение не выбрано" v-model="directive_department"
+                          :append-to-body="true"
+                          :clearable="false"
+              />
             </td>
-            <td class="table-content-row select-td" colspan="2">
-              <select-picker-b v-model="directive_doc" :options="directive_docs_select"/>
+            <td class=" cl-td" colspan="2">
+              <treeselect class="treeselect-noborder treeselect-wide"
+                          :multiple="false" :disable-branch-nodes="true"
+                          :options="directive_docs_select"
+                          placeholder="Исполнитель не выбран" v-model="directive_doc"
+                          :append-to-body="true"
+                          :clearable="false"
+              />
             </td>
           </tr>
           </tbody>
@@ -282,7 +294,8 @@
 </template>
 
 <script>
-  import SelectPickerB from '../fields/SelectPickerB'
+  import Treeselect from "@riophae/vue-treeselect";
+  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   import L2CardCreate from '../modals/L2CardCreate'
   import DReg from '../modals/DReg'
   import Benefit from '../modals/Benefit'
@@ -297,7 +310,7 @@
 
   export default {
     name: 'patient-picker',
-    components: {Vaccine, SelectPickerB, Modal, L2CardCreate, DReg, Benefit},
+    components: {Vaccine, Treeselect, Modal, L2CardCreate, DReg, Benefit},
     props: {
       directive_from_need: {
         default: 'false',
@@ -321,10 +334,10 @@
       return {
         base: -1,
         query: '',
-        directive_department: '-1',
-        directive_doc: '-1',
-        ofname_to_set: '-1',
-        ofname_to_set_dep: '-1',
+        directive_department: -1,
+        directive_doc: -1,
+        ofname_to_set: -1,
+        ofname_to_set_dep: -1,
         local_directive_departments: [],
         directive_departments_select: [],
         showModal: false,
@@ -412,7 +425,7 @@
         this.check_base()
       },
       directive_department() {
-        this.update_ofname(this.directive_department !== '-1')
+        this.update_ofname(this.directive_department !== -1)
       },
       directive_doc() {
         this.emit_input()
@@ -424,7 +437,7 @@
         this.emit_input(true)
       },
       inLoading() {
-        if (!this.inLoading && (this.directive_department === '-1' || this.directive_doc === '-1')) {
+        if (!this.inLoading && (this.directive_department === -1 || this.directive_doc === -1)) {
           this.update_ofname()
         }
         if (!this.inLoading && this.search_after_loading) {
@@ -522,13 +535,13 @@
       },
       directive_docs_select() {
         let o = []
-        if (this.directive_department in this.directive_from_departments) {
+        if (this.directive_from_departments[this.directive_department]) {
           for (let d of this.directive_from_departments[this.directive_department].docs) {
-            o.push({label: d.fio, value: d.pk})
+            o.push({label: d.fio, id: d.pk})
           }
         }
         if (!this.is_doc && o.length > 0) {
-          o = [{label: 'Выберите врача', value: -2}, ...o]
+          o = [{label: 'Выберите врача', id: -2}, ...o]
         }
         return o
       },
@@ -655,20 +668,20 @@
           this.local_directive_departments = this.$store.getters.directive_from
           this.directive_departments_select = []
           for (let dep of this.local_directive_departments) {
-            this.directive_departments_select.push({label: dep.title, value: dep.pk})
+            this.directive_departments_select.push({label: dep.title, id: dep.pk})
           }
 
           if (this.$store.getters.user_data &&
             this.$store.getters.user_data.department &&
-            this.local_directive_departments.length > 0 && this.ofname_to_set === '-1') {
+            this.local_directive_departments.length > 0 && this.ofname_to_set === -1) {
             for (let dep of this.local_directive_departments) {
               if (dep.pk === this.$store.getters.user_data.department.pk) {
-                this.directive_department = dep.pk + ''
+                this.directive_department = dep.pk
                 this.check_base()
                 return
               }
             }
-            this.directive_department = this.local_directive_departments[0].pk.toString()
+            this.directive_department = this.local_directive_departments[0].pk
           }
 
           this.check_base()
@@ -727,29 +740,29 @@
           this.$refs.modal.$el.style.display = 'none'
       },
       update_ofname(force) {
-        if (this.ofname_to_set === '-2' || (this.inLoading && !force))
+        if (this.ofname_to_set === -2 || (this.inLoading && !force))
           return
-        if (this.ofname_to_set !== '-1') {
-          if (this.ofname_to_set_dep !== '-1') {
+        if (this.ofname_to_set !== -1) {
+          if (this.ofname_to_set_dep !== -1) {
             this.directive_department = this.ofname_to_set_dep
             this.directive_doc = this.ofname_to_set
             this.$root.$emit('resync')
             this.emit_input()
-            this.ofname_to_set = '-2'
+            this.ofname_to_set = -2
             return
           }
           let dps = Object.keys(this.directive_from_departments)
           if (dps.length > 0 && !this.inLoading) {
             let onts = this.ofname_to_set
-            this.ofname_to_set = '-1'
+            this.ofname_to_set = -1
             for (let d of dps) {
               let users = this.directive_from_departments[d].docs
               for (let u of users) {
-                if (u.pk.toString() === onts.toString()) {
-                  this.directive_department = d.toString()
+                if (Number(u.pk) === Number(onts)) {
+                  this.directive_department = Number(d)
                   this.directive_doc = onts
                   this.emit_input()
-                  this.ofname_to_set = '-2'
+                  this.ofname_to_set = -2
                   return
                 }
               }
@@ -758,18 +771,18 @@
           return
         }
         let dpk = -1
-        if (this.directive_department !== '-1') {
+        if (this.directive_department !== -1) {
           for (let d of this.directive_docs_select) {
-            if (d.value === this.$store.getters.user_data.doc_pk) {
-              dpk = d.value
+            if (d.id === this.$store.getters.user_data.doc_pk) {
+              dpk = d.id
               break
             }
           }
           if (dpk === -1 && this.directive_docs_select.length > 0) {
-            dpk = this.directive_docs_select[0].value
+            dpk = this.directive_docs_select[0].id
           }
         }
-        this.directive_doc = dpk.toString()
+        this.directive_doc = dpk
       },
       select_base(pk) {
         this.base = pk
@@ -1002,7 +1015,7 @@
     margin: 5px 0 0;
   }
 
-  td:not(.select-td) {
+  td:not(.select-td):not(.cl-td) {
     padding: 2px !important;
   }
 
@@ -1013,7 +1026,7 @@
     vertical-align: middle;
   }
 
-  .table-content-row {
+  .table-content-row:not(.cl-td) {
     overflow: hidden;
     text-overflow: ellipsis;
     vertical-align: middle;

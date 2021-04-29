@@ -69,9 +69,9 @@
         if (!this.inited) {
           if (!this.strictNotReady && this.options.length > 0 && this.lv === '-1') {
             this.inited = true;
-            setTimeout(() =>this.init_el(), 100);
+            setTimeout(() => this.init_el(), 40);
           } else {
-            setTimeout(() => this.check_init(), 150);
+            setTimeout(() => this.check_init(), 40);
           }
         }
       },
