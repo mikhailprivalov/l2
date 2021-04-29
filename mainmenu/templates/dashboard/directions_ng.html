@@ -17,7 +17,6 @@
 {% endblock %}
 
 {% block head_cn %}
-    <script src="{% static 'js/modernizr.cssgrid.js' %}"></script>
     <style>
         body, html {
             height: 100%;
@@ -40,4 +39,5 @@
 
 {% block scripts_pre_webpack %}
     {% include 'prefetch.html' with prefetched=prefetched %}
+    <script src="{% static 'js/modernizr.cssgrid.js' %}"></script>
 {% endblock %}

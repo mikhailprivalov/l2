@@ -25,6 +25,13 @@
     <meta name="msapplication-TileImage" content="{% static 'icon/ms-icon-144x144.png' %}">
     <meta name="theme-color" content="#ffffff">
     <title>{% block title %}{% endblock %} &mdash; {% firstof request.user.doctorprofile.hospital_safe_title org_title %}</title>
+
+    <link rel="preload" href="{% manifest 'vendors.css' %}" as="style"/>
+    <link rel="preload" href="{% manifest 'main.css' %}" as="style"/>
+    <link rel="preload" href="{% manifest 'vendors.js' %}" as="script"/>
+    <link rel="preload" href="{% manifest 'main.js' %}" as="script"/>
+    <link rel="preload" href="{% manifest 'runtime.js' %}" as="script"/>
+
     <link rel="stylesheet" href="{% manifest 'vendors.css' %}"/>
     <link rel="stylesheet" href="{% manifest 'main.css' %}"/>
 
@@ -203,12 +210,8 @@
     <script src="{% static 'js/bootbox.min.js' %}"></script>
     <script src="{% static 'js/lang.ru.js' %}"></script>
     <script src="{% static 'perfect-scrollbar/js/perfect-scrollbar.jquery.min.js' %}"></script>
-    <script src="{% static 'js/jquery-ui.min.js' %}"></script>
     <script src="{% static 'js/jquery.isloading.min.js' %}"></script>
     <script src="{% static 'js/jquery.scrollTo.js' %}"></script>
-    <script src="{% static 'bootflat/js/jquery.fs.selecter.min.js' %}"></script>
-    <script src="{% static 'bootflat/js/jquery.fs.stepper.min.js' %}"></script>
-    <script src="{% static 'bootflat/js/icheck.min.js' %}"></script>
     <script src="{% static 'js/jquery.amaran.min.js' %}"></script>
     <script src="{% static 'js/jquery.tooltipster.min.js' %}"></script>
     <script src="{% static 'js/jquery.floatThead.min.js' %}"></script>
