@@ -126,6 +126,7 @@ const config = {
     new MiniCssExtractPlugin({
       filename: '[name].[contenthash].css',
       chunkFilename: '[id].[contenthash].css',
+      ignoreOrder: true,
     }),
     new CleanWebpackPlugin(),
     new WebpackManifestPlugin({
