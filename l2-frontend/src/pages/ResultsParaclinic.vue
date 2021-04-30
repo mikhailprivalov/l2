@@ -1200,6 +1200,7 @@
         this.dreg_rows = []
         this.benefit_rows_loading = false
         this.benefit_rows = []
+        this.$root.$emit('preselect-card', null);
       },
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])
