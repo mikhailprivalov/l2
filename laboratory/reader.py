@@ -18,4 +18,4 @@ for dname, dirs, files in os.walk(base):
                 s += f"{fpath_r}\n"
                 s += content
                 s += "\n\n"
-print(s)
+print(s)  # noqa: T001

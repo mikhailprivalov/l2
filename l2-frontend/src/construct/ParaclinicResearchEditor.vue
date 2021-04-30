@@ -85,7 +85,7 @@
               <span class="input-group-addon nbr">Информация на направлении</span>
               <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
         </div>
-        <div class="input-group">
+        <div class="input-group" v-if="direction_params_all.length > 1">
           <span class="input-group-addon nbr" style="width: 233px">Параметры для направления</span>
           <treeselect class="treeselect-noborder treeselect-wide"
                       :multiple="false" :disable-branch-nodes="true"

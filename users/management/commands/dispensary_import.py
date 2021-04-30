@@ -32,5 +32,5 @@ class Command(BaseCommand):
                     card = clients.Card.objects.filter(number_poliklinika=cells[num_card]).first()
                     day_start = datetime.datetime.strptime(cells[date_start], "%Y-%m-%d %H:%M:%S").date()
                     clients.DispensaryReg.objects.update_or_create(card=card, diagnos=cells[diag], defaults={'date_start': day_start})
-                    print('добавлен/обновлен Д-учет: \n')
-                    print(card, 'Диагноз:дата постановки: ', cells[diag], day_start)
+                    print('добавлен/обновлен Д-учет: \n')  # noqa: T001
+                    print(card, 'Диагноз:дата постановки: ', cells[diag], day_start)  # noqa: T001

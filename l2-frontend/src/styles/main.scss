@@ -1777,13 +1777,23 @@ input[type=date].form-control {
   }
 }
 
-.treeselect-wide .vue-treeselect {
-  &__menu {
-    overflow: auto !important;
+.treeselect-wide, .vue-treeselect__portal-target {
+  .vue-treeselect {
+    &__menu {
+      overflow: auto !important;
+    }
+
+    &__label {
+      overflow: initial !important;
+    }
   }
 
-  &__label {
-    overflow: initial !important;
+  .vue-treeselect__single-value {
+    padding-right: 0 !important;
+  }
+
+  .vue-treeselect__control-arrow-container {
+    width: 15px;
   }
 }
 

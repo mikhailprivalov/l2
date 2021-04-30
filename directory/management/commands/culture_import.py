@@ -32,9 +32,9 @@ class Command(BaseCommand):
                 group_culture = GroupCulture.objects.filter(title=cells[group])
                 if not group_culture.exists():
                     GroupCulture(title=cells[group]).save()
-                    print('группа создана', cells[group])
+                    print('группа создана', cells[group])  # noqa: T001
                 culture = Culture.objects.filter(title=cells[title])
                 if not culture.exists():
                     group_culture = GroupCulture.objects.filter(title=cells[group]).first()
                     Culture(title=cells[title], group_culture=group_culture, lis=cells[lis]).save()
-                    print('культура сохранена', cells[group])
+                    print('культура сохранена', cells[group])  # noqa: T001

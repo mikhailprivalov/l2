@@ -34,7 +34,6 @@ class Application(models.Model):
     is_superuser = False
     tube_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами пробирок")
 
-
     def auto_set_places(self, rel: "RelationFractionASTM", value: [str, float, int]) -> str:
         if rel.full_round:
             return str(round(value))

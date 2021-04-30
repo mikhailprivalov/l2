@@ -693,7 +693,7 @@ def external_research_create(request):
                 direction.id_in_hospital = id_in_hospital
                 direction.save()
                 direction.issledovaniya_set.all().delete()
-                print('Replacing all data for', old_pk)
+                print('Replacing all data for', old_pk)  # noqa: T001
             else:
                 direction = Napravleniya.objects.create(
                     client=card,

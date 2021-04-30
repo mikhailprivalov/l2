@@ -26,4 +26,4 @@ class Command(BaseCommand):
                     KeyValue.objects.filter(key='mnn').delete()
             else:
                 KeyValue.objects.create(key='mnn', value=cells[mnn].strip())
-                print(f'добавлен МНН:{cells[mnn]}')
+                print(f'добавлен МНН:{cells[mnn]}')  # noqa: T001

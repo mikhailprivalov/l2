@@ -100,7 +100,7 @@ const config = {
           reuseExistingChunk: true,
         },
         default: {
-          minChunks: 2,
+          minChunks: 1,
           priority: -20,
           reuseExistingChunk: true,
         },
@@ -126,6 +126,7 @@ const config = {
     new MiniCssExtractPlugin({
       filename: '[name].[contenthash].css',
       chunkFilename: '[id].[contenthash].css',
+      ignoreOrder: true,
     }),
     new CleanWebpackPlugin(),
     new WebpackManifestPlugin({

@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <a href="#" @click.prevent="doOpen">
       Журнал
     </a>
@@ -70,7 +70,7 @@
         </div>
       </modal>
     </MountingPortal>
-  </fragment>
+  </div>
 </template>
 
 <script>

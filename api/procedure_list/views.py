@@ -241,4 +241,7 @@ def procedure_aggregate(request):
 def get_suitable_departments(request):
     hospital_pk = request.user.doctorprofile.get_hospital_id()
     pdr = get_hospitals_podrazdeleniya(hospital_pk)
-    return JsonResponse({"data": pdr})
+    data = {"data": pdr}
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return data
+    return JsonResponse(data)

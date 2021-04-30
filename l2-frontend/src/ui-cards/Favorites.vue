@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <a href="#" class="dropdown-toggle" @click.prevent
        v-tippy="{
                 html: '#favorites-view',
@@ -48,7 +48,7 @@
         Нет избранных историй
       </div>
     </div>
-  </fragment>
+  </div>
 </template>
 
 <script>

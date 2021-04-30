@@ -2079,7 +2079,10 @@ def external_organizations(request):
                 "title": e.title,
             }
         )
-    return JsonResponse({"organizations": result})
+    data = {"organizations": result}
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return data
+    return JsonResponse(data)
 
 
 @login_required

@@ -44,7 +44,7 @@ class Command(BaseCommand):
                         diag.rmis_id = rmis_id
                     diag.m_type = m_type
                     diag.save()
-                    print(f"обновлено: {code}-{name}-{m_type}")
+                    print(f"обновлено: {code}-{name}-{m_type}")  # noqa: T001
                 if diag is None:
                     Diagnoses(code=code, title=name, m_type=m_type, d_type='mkb10.4', rmis_id=rmis_id).save()
-                    print(f"создано: {code}-{name}-{m_type}")
+                    print(f"создано: {code}-{name}-{m_type}")  # noqa: T001

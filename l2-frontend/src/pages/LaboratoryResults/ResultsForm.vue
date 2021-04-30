@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <div class="top-buttons" :class="!confirmed && 'top-buttons-full'">
       <template v-if="loaded">
         <template v-if="!confirmed">
@@ -155,7 +155,7 @@
       </template>
     </div>
     <RefSettings v-if="showRefSettings" :close="hideRefSettings" :result="result"/>
-  </fragment>
+  </div>
 </template>
 <script>
 import * as action_types from "@/store/action-types";

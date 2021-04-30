@@ -2,7 +2,7 @@ import Vue from 'vue'
 
 import VueAutosize from 'vue-autosize';
 import VueCollapse from 'vue2-collapse'
-import Fragment from 'vue-fragment'
+import frag from 'vue-frag';
 import VuejsDialog from 'vuejs-dialog';
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min'
 import PortalVue from 'portal-vue';
@@ -12,7 +12,6 @@ import store from './store'
 import * as action_types from './store/action-types'
 import directions_point from './api/directions-point'
 
-import '@openfonts/open-sans_all';
 import './styles/index.scss';
 
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
@@ -27,6 +26,7 @@ const VueInputMask = {
     }
 };
 
+Vue.directive('frag', frag);
 Vue.use(VuejsDialog, {
   okText: 'Подтвердить',
   cancelText: 'Отмена',
@@ -37,7 +37,6 @@ Vue.use(VueTippy)
 Vue.use(VueInputMask)
 Vue.use(VueCollapse)
 Vue.use(Tippy)
-Vue.use(Fragment.Plugin)
 Vue.use(PortalVue)
 
 Vue.directive('click-outside', {

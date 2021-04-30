@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <div class="top-buttons">
       <template v-if="loaded">
         <button class="btn btn-blue-nb" :disabled="allConfirmed || !allSaved" @click="confirmAll">
@@ -117,7 +117,7 @@
         </template>
       </div>
     </div>
-  </fragment>
+  </div>
 </template>
 
 <script>

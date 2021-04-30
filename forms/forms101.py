@@ -723,7 +723,7 @@ def form_05(request_data):
                     )
                 )
             except Exception as e:
-                print(e)
+                print(e)  # noqa: T001
                 pass
 
     doc.build(objs)
