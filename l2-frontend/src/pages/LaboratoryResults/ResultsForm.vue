@@ -47,12 +47,12 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="r in result">
+        <tr v-for="(r, i) in result">
           <td>
             <label class="fraction-title" :for="`fraction-${r.fraction.pk}`">{{ r.fraction.title }}</label>
           </td>
           <BloodTypeField
-            v-if="research.template === 2"
+            v-if="research.template === 2 && i === 0"
             :readonly="confirmed || !loaded"
             :r="r"
           />

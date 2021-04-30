@@ -92,7 +92,7 @@
             <td class="table-header-row">Пол:</td>
             <td class="table-content-row">{{selected_card.sex}}</td>
           </tr>
-          <tr>
+          <tr v-if="!hide_card_editor">
             <td class="table-header-row">
               <span class="hospital" style="display: block;line-height: 1.2;"
                     v-if="history_n === 'true'">Номер истории:</span>
@@ -221,7 +221,7 @@
           </tr>
           </tbody>
         </table>
-        <div v-if="phones.length > 0" class="hovershow">
+        <div v-if="phones.length > 0 && !hide_card_editor" class="hovershow">
           <div class="fastlinks hovershow1"><a href="#"><i class="glyphicon glyphicon-phone"/> Позвонить</a></div>
           <div class="fastlinks hovershow2" style="margin-top: 1px">
             <a :href="'sip:' + p" v-for="p in phones" style="display: inline-block">
@@ -327,6 +327,10 @@
       history_n: {
         default: 'true',
         type: String
+      },
+      hide_card_editor: {
+        type: Boolean,
+        default: false,
       },
       value: {},
     },
