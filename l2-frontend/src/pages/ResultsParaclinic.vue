@@ -1031,7 +1031,7 @@
             this.pk = ''
             this.data = data
             this.sidebarIsOpened = false;
-            this.$root.$emit('preselect-card', data.patient.card_pk);
+            setTimeout(() => this.$root.$emit('preselect-args', {card_pk: data.patient.card_pk, base_pk: data.patient.base}), 300);
             if (data.card_internal && data.status_disp === 'need' && data.has_doc_referral) {
               errmessage('Диспансеризация не пройдена')
             }

@@ -9,8 +9,8 @@
       <div slot="body" class="an-body">
         <div class="d-root">
           <div>
-            <div>
-              <patient-small-picker v-model="card_pk" :card="selected_card" :card.sync="selected_card" :base_pk="internal_base"/>
+            <div class="overflow-visible">
+              <patient-picker v-model="selected_card" history_n="false" :hide_card_editor="true"/>
             </div>
           </div>
           <div>
@@ -55,31 +55,44 @@
 </template>
 
 <script>
-import Modal from "@/ui-cards/Modal";
-import PatientSmallPicker from "@/ui-cards/PatientSmallPicker";
 import {mapGetters} from "vuex";
+import Modal from "@/ui-cards/Modal";
 import ResearchesPicker from "@/ui-cards/ResearchesPicker";
 import SelectedResearches from "@/ui-cards/SelectedResearches";
+import PatientPicker from "@/ui-cards/PatientPicker";
 
 export default {
-  components: {SelectedResearches, ResearchesPicker, PatientSmallPicker, Modal},
+  components: {PatientPicker, SelectedResearches, ResearchesPicker, Modal},
   name: 'CreateDescriptiveDirection',
   data() {
     return {
       open: false,
-      card_pk: null,
+      args_to_preselect: null,
       selected_card: {},
       research: null,
     };
   },
+  mounted() {
+    this.$root.$on('preselect-args', data => {
+      if (!data) {
+        this.args_to_preselect = null;
+      } else {
+        this.args_to_preselect = data;
+      }
+    })
+    this.$root.$on('open-direction-form', () => this.hide_window());
+  },
   methods: {
     doOpen() {
       this.open = true;
+      if (this.args_to_preselect) {
+        const data = {...this.args_to_preselect, hide: true};
+        setTimeout(() => this.$root.$emit('select_card', data), 100);
+      }
       this.$root.$emit('no-loader-in-header', true);
     },
     hide_window() {
       this.open = false;
-      this.card_pk = null;
       this.research = null;
       this.selected_card = {};
       this.$root.$emit('no-loader-in-header', false);
@@ -88,11 +101,10 @@ export default {
       }
     },
   },
-  mounted() {
-    this.$root.$on('preselect-card', card_pk => this.card_pk = card_pk);
-    this.$root.$on('open-direction-form', () => this.hide_window());
-  },
   computed: {
+      card_pk() {
+        return this.selected_card.pk || null;
+      },
       ...mapGetters({
         bases: 'bases',
       }),
@@ -145,6 +157,10 @@ export default {
       border: 1px solid rgba(0, 0, 0, .3);
       overflow-x: hidden;
       overflow-y: auto;
+
+      &.overflow-visible {
+        overflow: visible;
+      }
     }
   }
 }
