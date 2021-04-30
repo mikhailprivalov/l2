@@ -4,6 +4,12 @@
 
 {% load static %}
 
+{% block extended_header %}
+    <ul class="nav navbar-nav">
+        <create-descriptive-direction/>
+    </ul>
+{% endblock %}
+
 {% block content %}
     <results-paraclinic style="position: absolute;top: 36px; right: 0; bottom: 0; left: 0;"/>
 {% endblock %}

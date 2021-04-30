@@ -1153,15 +1153,15 @@ sup {
   box-sizing: border-box;
 }
 
-.sloader, .sloader * {
+.sloader.show-loader, .sloader.show-loader * {
   z-index: 100001;
 }
 
-.sloader .nav-loader {
+.sloader.show-loader .nav-loader {
   display: block;
 }
 
-.sloader .nav-cont {
+.sloader.show-loader .nav-cont {
   display: none;
 }
 

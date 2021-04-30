@@ -874,6 +874,8 @@
       } else {
         this.inited = true
       }
+
+      this.$root.$on('open-direction-form', pk => this.load_pk(pk));
     },
     methods: {
       async load_location() {
@@ -1029,6 +1031,7 @@
             this.pk = ''
             this.data = data
             this.sidebarIsOpened = false;
+            this.$root.$emit('preselect-card', data.patient.card_pk);
             if (data.card_internal && data.status_disp === 'need' && data.has_doc_referral) {
               errmessage('Диспансеризация не пройдена')
             }

@@ -1,5 +1,5 @@
 <template>
-  <div style="height: 100%;width: 100%;position: relative" :class="[pay_source && 'pay_source']">
+  <div style="height: 100%;width: 100%;position: relative" :class="[pay_source && !create_and_open && 'pay_source']">
     <div :class="['top-picker', need_vich_code && 'need-vich-code', hide_diagnosis && 'hide_diagnosis']" v-if="!simple">
       <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos"
               v-if="!hide_diagnosis"
@@ -74,19 +74,19 @@
           <col>
         </colgroup>
         <tbody>
-        <tr v-if="direction_purpose_enabled">
+        <tr v-if="direction_purpose_enabled && !hide_params">
           <th>Цель направления:</th>
           <td class="cl-td">
             <SelectFieldTitled v-model="direction_purpose" :variants="purposes"/>
           </td>
         </tr>
-        <tr v-if="external_organizations_enabled">
+        <tr v-if="external_organizations_enabled && !hide_params">
           <th>Внешняя организация:</th>
           <td class="cl-td">
             <SelectFieldTitled v-model="external_organization" :variants="externalOrganizations"/>
           </td>
         </tr>
-        <tr v-if="!has_only_stationar">
+        <tr v-if="!has_only_stationar && !hide_params">
           <th>Кол-во повторений:</th>
           <td class="cl-td">
             <input v-model="directions_count" min="1" max="10"
@@ -99,7 +99,7 @@
             </span>
           </td>
         </tr>
-        <tr v-else>
+        <tr v-else-if="!hide_params">
           <th>Отделение стационара</th>
           <td class="cl-td">
             <treeselect :multiple="false" :disable-branch-nodes="true"
@@ -139,7 +139,7 @@
         </tbody>
       </table>
     </div>
-    <div class="bottom-picker-inputs" v-if="pay_source">
+    <div class="bottom-picker-inputs" v-if="pay_source && !create_and_open">
       <input v-model="count" placeholder="Количество" title="Количество"
              v-tippy="{ placement : 'top', arrow: true, followCursor: true, distance : 15 }"
              type="number" min="1" max="1000" class="form-control"/>
@@ -152,19 +152,31 @@
       </div>
     </div>
     <div class="bottom-picker" v-if="!simple">
-      <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('direction')"
-              title="Сохранить и распечатать направления">
-        <span>Сохранить и распечатать направления</span>
-      </button>
-      <button class="btn btn-blue-nb top-inner-select hidden-small" :disabled="!can_save"
-              @click="generate('barcode')"
-              title="Сохранить и распечатать штрих-коды">
-        <span>Сохранить и распечатать штрих-коды</span>
-      </button>
-      <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('just-save')"
-              title="Сохранить без печати">
-        <span>Сохранить без печати</span>
-      </button>
+      <template v-if="create_and_open">
+        <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('create_and_open')"
+                title="Сохранить и распечатать направления">
+          <span>Сохранить и заполнить протокол</span>
+        </button>
+        <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('direction')"
+                title="Сохранить и распечатать направления">
+          <span>Сохранить и распечатать направления</span>
+        </button>
+      </template>
+      <template v-else>
+        <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('direction')"
+                title="Сохранить и распечатать направления">
+          <span>Сохранить и распечатать направления</span>
+        </button>
+        <button class="btn btn-blue-nb top-inner-select hidden-small" :disabled="!can_save"
+                @click="generate('barcode')"
+                title="Сохранить и распечатать штрих-коды">
+          <span>Сохранить и распечатать штрих-коды</span>
+        </button>
+        <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('just-save')"
+                title="Сохранить без печати">
+          <span>Сохранить без печати</span>
+        </button>
+      </template>
     </div>
 
     <modal ref="modal" @close="cancel_update" show-footer="true"
@@ -326,6 +338,14 @@ export default {
       default: false
     },
     hide_diagnosis: {
+      type: Boolean,
+      default: false
+    },
+    hide_params: {
+      type: Boolean,
+      default: false
+    },
+    create_and_open: {
       type: Boolean,
       default: false
     },
@@ -702,7 +722,7 @@ export default {
       this.$root.$emit('researches-picker:deselect_department' + this.kk, pk)
     },
     generate(type) {
-      if (this.diagnos === '' && this.current_fin !== 'Платно' && !this.pay_source) {
+      if (this.diagnos === '' && this.current_fin !== 'Платно' && !this.pay_source && !this.create_and_open) {
         $(this.$refs.d).focus()
         errmessage('Диагноз не указан', 'Если не требуется, то укажите прочерк ("-")')
         return

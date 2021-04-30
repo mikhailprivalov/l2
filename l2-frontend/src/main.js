@@ -103,6 +103,7 @@ new Vue({
     'ExecutionList': () => import('@/ui-cards/ExecutionList'),
     'LaboratoryJournal': () => import('@/ui-cards/LaboratoryJournal'),
     'LaboratoryPrintResults': () => import('@/ui-cards/LaboratoryPrintResults'),
+    'CreateDescriptiveDirection': () => import('@/ui-cards/CreateDescriptiveDirection'),
     'PlanPharmacotherapy': () => import('@/pages/PlanPharmacotherapy'),
     'LaboratoryResults': () => import('@/pages/LaboratoryResults'),
   },
@@ -115,7 +116,10 @@ new Vue({
     },
     loadingLabel() {
       return this.$store.getters.loadingLabel
-    }
+    },
+    loaderInHeader() {
+      return this.$store.getters.loaderInHeader
+    },
   },
   watch: {
     inLoading(n, o) {
@@ -137,6 +141,8 @@ new Vue({
     ]).then(() => {
       this.$store.dispatch(action_types.DEC_LOADING)
     })
+
+    this.$root.$on('no-loader-in-header', status => this.$store.dispatch(action_types.SET_LOADER_IN_HEADER, !status));
 
     this.$root.$on('print:directions', (pks) => printForm('/directions/pdf?napr_id={pks}', pks))
     this.$root.$on('print:hosp', (pks) => printForm('/barcodes/hosp?napr_id={pks}', pks))
@@ -186,17 +192,18 @@ new Vue({
         this.$store.dispatch(action_types.DEC_LOADING)
 
         if (data.ok) {
-          if (type === 'direction') {
+          if (type === 'create_and_open') {
+            this.$root.$emit('open-direction-form', data.directions[0]);
+            okmessage('Направления создано', 'Номер: ' + data.directions[0])
+          } else if (type === 'direction') {
             if (need_contract) {
               this.$root.$emit('print:directions:contract', data.directions)
             } else {
               this.$root.$emit('print:directions', data.directions)
             }
-          }
-          if (type === 'barcode') {
+          } else if (type === 'barcode') {
             this.$root.$emit('print:barcodes', data.directions, data.directionsStationar)
-          }
-          if (type === 'just-save' || type === 'barcode') {
+          } else if (type === 'just-save' || type === 'barcode') {
             okmessage('Направления созданы', 'Номера: ' + data.directions.join(', '))
           }
           this.$root.$emit('researches-picker:clear_all' + kk)

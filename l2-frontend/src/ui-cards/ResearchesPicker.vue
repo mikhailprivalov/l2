@@ -282,13 +282,19 @@
         return this.$store.getters.modules.l2_only_doc_call;
       },
       types() {
-        return this.$store.getters.allTypes.filter(row => {
+        let result = this.$store.getters.allTypes.filter(row => {
           return (
               (row.pk !== '0' && row.pk !== '1' && !this.filter_types.includes(parseInt(row.pk))) &&
               (this.typesOnly.length === 0 || this.typesOnly.includes(parseInt(row.pk))) &&
               (!this.l2_only_doc_call || row.pk === '4')
           );
         });
+
+        if (this.typesOnly && this.typesOnly.length > 0) {
+          result = this.typesOnly.map(t => result.find(r => Number(r.pk) === Number(t))).filter(Boolean);
+        }
+
+        return result;
       },
       selected_type() {
         for (let t of this.types) {

@@ -18,6 +18,7 @@ export default new Vuex.Store({
   },
   state: {
     inLoading: false,
+    loaderInHeader: true,
     loadingCounter: 0,
     loadingLabel: '',
     showMenuAnesthesiaStatus: false
@@ -35,6 +36,9 @@ export default new Vuex.Store({
     async [action_types.DEC_LOADING]({commit, state}) {
       commit(mutation_types.SET_LOADING_COUNTER, {loadingCounter: state.loadingCounter - 1})
     },
+    async [action_types.SET_LOADER_IN_HEADER]({commit}, status) {
+      commit(mutation_types.SET_LOADER_IN_HEADER, {loaderInHeader: Boolean(status)})
+    },
     async [action_types.CHANGE_STATUS_MENU_ANESTHESIA]({commit}){
       commit(mutation_types.TOGGLE_ANESTHESIA_MENU_SHOW)
     }
@@ -49,12 +53,16 @@ export default new Vuex.Store({
       state.inLoading = state.loadingCounter > 0
       state.loadingLabel = 'Загрузка'
     },
+    [mutation_types.SET_LOADER_IN_HEADER](state, {loaderInHeader}) {
+      state.loaderInHeader = loaderInHeader;
+    },
     [mutation_types.TOGGLE_ANESTHESIA_MENU_SHOW](state){
       state.showMenuAnesthesiaStatus = !state.showMenuAnesthesiaStatus
     }
   },
   getters: {
     inLoading: state => state.inLoading,
+    loaderInHeader: state => state.loaderInHeader,
     loadingLabel: state => state.loadingLabel,
     loadingCounter: state => state.loadingCounter,
   }
