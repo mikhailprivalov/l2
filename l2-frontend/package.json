@@ -61,7 +61,7 @@
     "not ie >= 0"
   ],
   "devDependencies": {
-    "@babel/core": "^7.12.10",
+    "@babel/core": "^7.14.0",
     "@babel/preset-env": "^7.14.0",
     "autoprefixer": "^10.2.5",
     "babel-loader": "^8.2.2",
