@@ -38,7 +38,7 @@ pytils==0.3
 pytz==2020.4
 PyYAML==5.4
 redis==3.5.3
-reportlab==3.5.59
+reportlab==3.5.67
 requests==2.25.1
 requests-toolbelt==0.9.1
 selenium==3.141.0
