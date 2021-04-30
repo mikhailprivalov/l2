@@ -791,6 +791,9 @@ class Napravleniya(models.Model):
                         napravleniye=directions_for_researches[dir_group], research=research, coast=research_coast, discount=research_discount, how_many=research_howmany, deferred=False
                     )
 
+                    print('Направление', directions_for_researches[dir_group], research_data_params)
+                    print('******************')
+                    print('global', current_global_direction_params)
                     if research_data_params:
                         DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], research_data_params)
                     loc = ""
