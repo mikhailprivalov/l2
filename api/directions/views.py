@@ -2297,7 +2297,7 @@ def get_research_for_direction_params(pk):
         "groups": [],
         "show": False,
     }
-    for group in research_obj.paraclinicinputgroups_set.all():
+    for group in research_obj.paraclinicinputgroups_set.all().filter(hide=False):
         g = {
             "pk": group.pk,
             "order": group.order,
@@ -2308,7 +2308,7 @@ def get_research_for_direction_params(pk):
             "fields": [],
             "visibility": group.visibility,
         }
-        for field in group.paraclinicinputfield_set.all():
+        for field in group.paraclinicinputfield_set.all().filter(hide=False).order_by("order"):
             field_type = field.field_type
             g["fields"].append(
                 {
