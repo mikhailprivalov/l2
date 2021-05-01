@@ -1,6 +1,6 @@
 import logging
 import threading
-# import time
+import time
 
 import simplejson
 from django.db import connections
@@ -9,7 +9,7 @@ from django.utils.module_loading import import_string
 
 from api.researches.views import get_researches
 from api.views import bases, current_user_info, departments, hospitals, directive_from
-from laboratory.settings import PREFETCH_ENABLED, PREFETCH_MAX_THREADS
+from laboratory.settings import PREFETCH_ENABLED, PREFETCH_MAX_THREADS, PREFETCH_DEBUG
 
 
 PRE_IMPORT = {
@@ -35,8 +35,9 @@ def prefetch(request, routes):
     result = {}
 
     def get_view_data(view_name, route):
-        # print(f"--- {view_name} start ---")
-        # start_time = time.time()
+        if PREFETCH_DEBUG:
+            print(f"--- {view_name} start ---")  # noqa: T001
+        start_time = time.time()
         sema.acquire()
         try:
             if view_name in PRE_IMPORT:
@@ -63,7 +64,8 @@ def prefetch(request, routes):
             connections.close_all()
         except Exception as e:
             logger.exception(f"Error closing connections {e}")
-        # print(f"--- {view_name}: {time.time() - start_time} seconds ---")
+        if PREFETCH_DEBUG:
+            print(f"--- {view_name}: {time.time() - start_time} seconds ---")  # noqa: T001
 
     for view_name in routes:
         result[view_name] = {}

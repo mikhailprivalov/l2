@@ -2,6 +2,7 @@ from collections import defaultdict
 
 import simplejson as json
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
@@ -21,6 +22,7 @@ from directory.models import (
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
+from rmis_integration.client import get_md5
 from slog.models import Log
 from users.models import Speciality
 
@@ -51,83 +53,111 @@ def get_researches_templates(request):
 def get_researches(request):
     deps = defaultdict(list)
     doctorprofile = request.user.doctorprofile
-    res = (
-        DResearches.objects.filter(hide=False)
-        .exclude(pk__in=[x['pk'] for x in doctorprofile.restricted_to_direct.all().values('pk')])
-        .select_related('podrazdeleniye', 'comment_variants')
-        .prefetch_related(
-            Prefetch('localization', queryset=Localization.objects.only('pk', 'title'), to_attr='localization_list'),
-            Prefetch('service_location', queryset=ServiceLocation.objects.only('pk', 'title'), to_attr='service_location_list'),
-            'a',
-            'b',
-            Prefetch(
-                'direction_params__paraclinicinputgroups_set',
-                queryset=ParaclinicInputGroups.objects.filter(hide=False).prefetch_related(
-                    Prefetch('paraclinicinputfield_set', queryset=ParaclinicInputField.objects.filter(hide=False))
-                )
-            ),
-        )
-        .distinct('title', 'pk')
-        .order_by('title')
-        .defer(
-            "preparation",
-            "paraclinic_info",
-            "instructions",
-            "internal_code",
-            "co_executor_2_title",
-            "bac_conclusion_templates",
-            "bac_culture_comments_templates",
-            "rmis_id",
-            "podrazdeleniye__title",
-            "podrazdeleniye__short_title",
-            "podrazdeleniye__gid_n",
-            "podrazdeleniye__hide",
-            "podrazdeleniye__vaccine",
-            "podrazdeleniye__rmis_id",
-            "podrazdeleniye__rmis_direction_type",
-            "podrazdeleniye__rmis_department_title",
-            "podrazdeleniye__can_has_pacs",
-            "podrazdeleniye__oid",
-            "podrazdeleniye__hospital_id",
-        )
-    )
-
-    r: DResearches
-
-    for r in res:
-        autoadd = [x.b_id for x in r.a.all()]
-        addto = [x.a_id for x in r.b.all()]
-
-        direction_params_pk = r.direction_params_id or -1
-        deps[r.reversed_type].append(
-            {
-                "pk": r.pk,
-                "onlywith": r.onlywith_id or -1,
-                "department_pk": r.reversed_type,
-                "title": r.get_title(),
-                "full_title": r.title,
-                "doc_refferal": r.is_doc_refferal,
-                "treatment": r.is_treatment,
-                "is_hospital": r.is_hospital,
-                "is_form": r.is_form,
-                "stom": r.is_stom,
-                "need_vich_code": r.need_vich_code,
-                "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
-                "autoadd": autoadd,
-                "addto": addto,
-                "code": r.code,
-                "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
-                "site_type": r.get_site_type_id(),
-                "site_type_raw": r.site_type_id,
-                "localizations": [{"code": x.pk, "label": x.title} for x in r.localization_list],
-                "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location_list],
-                "direction_params": direction_params_pk,
-                "research_data": get_research_for_direction_params(r.direction_params),
-            }
+    k = f'get_researches:restricted_to_direct:{doctorprofile.pk}'
+    restricted_to_direct = cache.get(k)
+    if not restricted_to_direct:
+        restricted_to_direct = [x['pk'] for x in doctorprofile.restricted_to_direct.all().values('pk')]
+        cache.set(k, json.dumps(restricted_to_direct), 30)
+    else:
+        restricted_to_direct = json.loads(restricted_to_direct)
+    mk = f'get_researches:result:{get_md5(";".join(restricted_to_direct))}'
+    result = cache.get(mk)
+    if not result:
+        res = (
+            DResearches.objects.filter(hide=False)
+            .exclude(pk__in=restricted_to_direct)
+            .select_related('podrazdeleniye', 'comment_variants')
+            .prefetch_related(
+                Prefetch('localization', queryset=Localization.objects.only('pk', 'title'), to_attr='localization_list'),
+                Prefetch('service_location', queryset=ServiceLocation.objects.only('pk', 'title'), to_attr='service_location_list'),
+                'a',
+                'b',
+                Prefetch(
+                    'direction_params__paraclinicinputgroups_set',
+                    queryset=ParaclinicInputGroups.objects.filter(hide=False).prefetch_related(
+                        Prefetch('paraclinicinputfield_set', queryset=ParaclinicInputField.objects.filter(hide=False))
+                    )
+                ),
+            )
+            .distinct('title', 'pk')
+            .order_by('title')
+            .defer(
+                "preparation",
+                "paraclinic_info",
+                "instructions",
+                "internal_code",
+                "co_executor_2_title",
+                "bac_conclusion_templates",
+                "bac_culture_comments_templates",
+                "rmis_id",
+                "podrazdeleniye__title",
+                "podrazdeleniye__short_title",
+                "podrazdeleniye__gid_n",
+                "podrazdeleniye__hide",
+                "podrazdeleniye__vaccine",
+                "podrazdeleniye__rmis_id",
+                "podrazdeleniye__rmis_direction_type",
+                "podrazdeleniye__rmis_department_title",
+                "podrazdeleniye__can_has_pacs",
+                "podrazdeleniye__oid",
+                "podrazdeleniye__hospital_id",
+            )
         )
 
-    tubes = list(Tubes.objects.values('pk', 'title', 'color'))
-    result = {"researches": deps, "tubes": tubes}
+        r: DResearches
+
+        for r in res:
+            k = f'get_researches:research:{r.pk}'
+            research_data = cache.get(k)
+
+            if not research_data:
+                autoadd = [x.b_id for x in r.a.all()]
+                addto = [x.a_id for x in r.b.all()]
+
+                direction_params_pk = r.direction_params_id or -1
+                research_data = {
+                    "pk": r.pk,
+                    "onlywith": r.onlywith_id or -1,
+                    "department_pk": r.reversed_type,
+                    "title": r.get_title(),
+                    "full_title": r.title,
+                    "doc_refferal": r.is_doc_refferal,
+                    "treatment": r.is_treatment,
+                    "is_hospital": r.is_hospital,
+                    "is_form": r.is_form,
+                    "stom": r.is_stom,
+                    "need_vich_code": r.need_vich_code,
+                    "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
+                    "autoadd": autoadd,
+                    "addto": addto,
+                    "code": r.code,
+                    "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
+                    "site_type": r.get_site_type_id(),
+                    "site_type_raw": r.site_type_id,
+                    "localizations": [{"code": x.pk, "label": x.title} for x in r.localization_list],
+                    "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location_list],
+                    "direction_params": direction_params_pk,
+                    "research_data": get_research_for_direction_params(r.direction_params),
+                }
+                cache.set(k, json.dumps(research_data), 30)
+            else:
+                research_data = json.loads(research_data)
+
+            deps[r.reversed_type].append(research_data)
+
+        k = 'get_researches:tubes'
+        tubes = cache.get(k)
+        if not tubes:
+            tubes = list(Tubes.objects.values('pk', 'title', 'color'))
+            cache.set(k, json.dumps(tubes), 60)
+        else:
+            tubes = json.loads(tubes)
+
+        result = {"researches": deps, "tubes": tubes}
+        cache.set(mk, json.dumps(result), 30)
+    else:
+        result = json.loads(result)
+
     if hasattr(request, 'plain_response') and request.plain_response:
         return result
     return JsonResponse(result)
