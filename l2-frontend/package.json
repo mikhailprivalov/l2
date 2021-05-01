@@ -61,8 +61,8 @@
     "not ie >= 0"
   ],
   "devDependencies": {
-    "@babel/core": "^7.12.10",
-    "@babel/preset-env": "^7.12.11",
+    "@babel/core": "^7.14.0",
+    "@babel/preset-env": "^7.14.0",
     "autoprefixer": "^10.2.5",
     "babel-loader": "^8.2.2",
     "clean-webpack-plugin": "^4.0.0-alpha.0",
@@ -74,7 +74,7 @@
     "lodash-webpack-plugin": "^0.11.5",
     "mini-css-extract-plugin": "^1.5.1",
     "optimize-css-assets-webpack-plugin": "^5.0.4",
-    "postcss": "^8.2.12",
+    "postcss": "^8.2.13",
     "postcss-loader": "^5.2.0",
     "sass": "^1.32.12",
     "sass-loader": "^11.0.1",
@@ -82,7 +82,7 @@
     "url-loader": "^4.1.1",
     "vue-loader": "^15.9.6",
     "vue-template-compiler": "^2.6.12",
-    "webpack": "^5.35.1",
+    "webpack": "^5.36.2",
     "webpack-cli": "^4.6.0",
     "webpack-dev-server": "^3.11.2",
     "webpack-manifest-plugin": "^3.1.1"

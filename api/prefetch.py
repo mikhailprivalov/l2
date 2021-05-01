@@ -1,15 +1,15 @@
 import logging
 import threading
-# import time
+import time
+from collections import namedtuple
 
 import simplejson
 from django.db import connections
-from django.http import HttpRequest
 from django.utils.module_loading import import_string
 
 from api.researches.views import get_researches
 from api.views import bases, current_user_info, departments, hospitals, directive_from
-from laboratory.settings import PREFETCH_ENABLED, PREFETCH_MAX_THREADS
+from laboratory.settings import PREFETCH_ENABLED, PREFETCH_MAX_THREADS, PREFETCH_DEBUG
 
 
 PRE_IMPORT = {
@@ -33,10 +33,12 @@ def prefetch(request, routes):
     threads = list()
 
     result = {}
+    request_tuple = namedtuple('HttpRequest', ('body', 'user', 'plain_response'))
 
     def get_view_data(view_name, route):
-        # print(f"--- {view_name} start ---")
-        # start_time = time.time()
+        if PREFETCH_DEBUG:
+            print(f"--- {view_name} start ---")  # noqa: T001
+        start_time = time.time()
         sema.acquire()
         try:
             if view_name in PRE_IMPORT:
@@ -47,11 +49,12 @@ def prefetch(request, routes):
             else:
                 view = import_string(f'api.views.{view_name}')
             data = route.get('data', {})
-            http_obj = HttpRequest()
-            http_obj._body = simplejson.dumps(data) if data else '{}'
-            http_obj.plain_response = True
-            http_obj.user = request.user
-            response = view(http_obj)
+            req = {
+                'body': simplejson.dumps(data) if data else '{}',
+                'user': request.user,
+                'plain_response': True,
+            }
+            response = view(request_tuple(**req))
             result[view_name] = {
                 'url': route.get('url') or view_name,
                 'params': data,
@@ -63,7 +66,8 @@ def prefetch(request, routes):
             connections.close_all()
         except Exception as e:
             logger.exception(f"Error closing connections {e}")
-        # print(f"--- {view_name}: {time.time() - start_time} seconds ---")
+        if PREFETCH_DEBUG:
+            print(f"--- {view_name}: {time.time() - start_time} seconds ---")  # noqa: T001
 
     for view_name in routes:
         result[view_name] = {}

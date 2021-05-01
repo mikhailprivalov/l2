@@ -62,7 +62,7 @@
         {% s_default "show_l2_logo" "true" "b" as show_l2_logo %}
         {% s_default "l2_logo_class" "default" "s" as l2_logo_class %}
         {% s_default "l2_logo_addonational_text" "" "s" as l2_logo_addonational_text %}
-        <nav class="navbar navbar-inverse {% block navbar_classes %}{% endblock %}">
+        <nav class="navbar navbar-inverse {% block navbar_classes %}{% endblock %}" :class="loaderInHeader && 'show-loader'">
             <div class="nav-cont">
                 <div class="navbar-header">
                     {% if show_l2_logo %}

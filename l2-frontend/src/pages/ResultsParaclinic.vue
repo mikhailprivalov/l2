@@ -874,6 +874,8 @@
       } else {
         this.inited = true
       }
+
+      this.$root.$on('open-direction-form', pk => this.load_pk(pk));
     },
     methods: {
       async load_location() {
@@ -1029,6 +1031,7 @@
             this.pk = ''
             this.data = data
             this.sidebarIsOpened = false;
+            setTimeout(() => this.$root.$emit('preselect-args', {card_pk: data.patient.card_pk, base_pk: data.patient.base}), 300);
             if (data.card_internal && data.status_disp === 'need' && data.has_doc_referral) {
               errmessage('Диспансеризация не пройдена')
             }
@@ -1197,6 +1200,7 @@
         this.dreg_rows = []
         this.benefit_rows_loading = false
         this.benefit_rows = []
+        this.$root.$emit('preselect-card', null);
       },
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])

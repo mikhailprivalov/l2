@@ -82,7 +82,6 @@
     </div>
     <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1"/>
     <rmis-directions-viewer v-if="show_rmis_directions && selected_card.is_rmis" :card="selected_card"/>
-    <!--<rmis-send-directions v-if="show_rmis_send_directions && selected_card.is_rmis" :card="selected_card"/>-->
   </div>
 </template>
 
