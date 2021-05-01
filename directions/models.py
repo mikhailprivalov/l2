@@ -605,14 +605,14 @@ class Napravleniya(models.Model):
                     fields = i.get('fields', None)
                     for f in fields:
                         status = False
-                        for k, v in f.items():
-                            if k == 'field_type' and v == 24:
+                        if f.get('field_type', None):
+                            if f['field_type'] == 24:
                                 LaboratoryPreviousResults = f.get('value', '')
                                 status = True
-                            elif k == 'field_type' and v == 25:
+                            elif f['field_type'] == 25:
                                 DiagnosticPreviousResults = f.get('value', '')
                                 status = True
-                            elif k == 'field_type' and v == 26:
+                            elif f['field_type'] == 26:
                                 DocReferralPreviousResults = f.get('value', '')
                                 status = True
                         if not status:
@@ -623,16 +623,14 @@ class Napravleniya(models.Model):
             if i.get('fields', None):
                 fields = i.get('fields', None)
                 for f in fields:
-                    for k, v in f.items():
-                        if k == 'field_type' and v == 24:
+                    if f.get('field_type', None):
+                        if f['field_type'] == 24:
                             f['value'] = LaboratoryPreviousResults
-                            continue
-                        elif k == 'field_type' and v == 25:
+                        elif f['field_type'] == 25:
                             f['value'] = DiagnosticPreviousResults
-                            continue
-                        elif k == 'field_type' and v == 26:
+                        elif f['field_type'] == 26:
                             f['value'] = DocReferralPreviousResults
-                            continue
+
         return res_data
 
     @staticmethod
