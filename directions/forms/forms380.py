@@ -697,7 +697,7 @@ def form_05(c: Canvas, dir: Napravleniya):
         direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
         descriptive_values = []
         laboratory_value, purpose = None, None
-        main_diagnos, near_diagnos, anamnes = '', '', ''
+        main_diagnos, near_diagnos, anamnes, other_purpose = '', '', '', ''
 
         for param in direction_params:
             if param.field_type == 24:
@@ -706,15 +706,17 @@ def form_05(c: Canvas, dir: Napravleniya):
                 descriptive_values.append(param.value)
             if param.title == 'Цель':
                 purpose = param.value
+            if param.title == 'Прочие цели':
+                other_purpose = param.value
             if param.title == 'Диагноз основной':
                 main_diagnos = param.value
             if param.title == 'Диагноз сопутствующий':
                 near_diagnos = f"{near_diagnos} {param.value}"
-            if param.title == 'Данные анамнеза, клиники':
+            if param.title == 'Данные анамнеза':
                 anamnes = param.value
 
         if purpose:
-            objs.append(Paragraph(f"{space_symbol * 10} {purpose}", style))
+            objs.append(Paragraph(f"{space_symbol * 10} {purpose} {other_purpose}", style))
         else:
             objs.append(Paragraph(f"{space_symbol * 10}01 - дообследование при неясном диагнозе;", style))
             objs.append(Paragraph(f"{space_symbol * 10}02 - уточнение диагноза;", style))
@@ -760,7 +762,6 @@ def form_05(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph("Согласие пациента на передачу сведений электронной почтой для осуществления предварительной записи и передачи заключения:", style))
 
         print_frame = Frame(0 * mm, mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
-
         for p in objs:
             while print_frame.add(p, c) == 0:
                 print_frame.split(p, c)
