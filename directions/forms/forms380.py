@@ -14,7 +14,7 @@ from reportlab.lib import colors
 
 from api.stationar.stationar_func import hosp_get_hosp_direction
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Issledovaniya
+from directions.models import Napravleniya, Issledovaniya, DirectionParamsResult
 from reportlab.platypus import Table, TableStyle, Paragraph, Frame, KeepInFrame, Spacer
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.pagesizes import A4
@@ -27,6 +27,8 @@ import sys
 import locale
 from laboratory.utils import current_year
 from reportlab.graphics.barcode import code128
+
+from results.prepare_data import previous_laboratory_result, previous_doc_refferal_result
 
 w, h = A4
 
@@ -692,22 +694,59 @@ def form_05(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph("3) госпитализацию", style))
         objs.append(Paragraph("____________________________________________________", style))
         objs.append(Paragraph("Цель консультации (и, или) исследования (нужное обвести):", style))
-        objs.append(Paragraph(f"{space_symbol * 10}01 - дообследование при неясном диагнозе;", style))
-        objs.append(Paragraph(f"{space_symbol * 10}02 - уточнение диагноза;", style))
-        objs.append(Paragraph(f"{space_symbol * 10}03 - для коррекции лечения;", style))
-        objs.append(Paragraph(f"{space_symbol * 10}04 - дообследование для госпитализации;", style))
-        objs.append(Paragraph(f"{space_symbol * 10}05 - и прочие цели (нужное вписать) __________________", style))
+        direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
+        descriptive_values = []
+        laboratory_value, purpose = None, None
+        main_diagnos, near_diagnos, anamnes = '', '', ''
+
+        for param in direction_params:
+            if param.field_type == 24:
+                laboratory_value = param.value
+            if param.field_type in [26, 25]:
+                descriptive_values.append(param.value)
+            if param.title == 'Цель':
+                purpose = param.value
+            if param.title == 'Диагноз основной':
+                main_diagnos = param.value
+            if param.title == 'Диагноз сопутствующий':
+                near_diagnos = f"{near_diagnos} {param.value}"
+            if param.title == 'Данные анамнеза, клиники':
+                anamnes = param.value
+
+        if purpose:
+            objs.append(Paragraph(f"{space_symbol * 10} {purpose}", style))
+        else:
+            objs.append(Paragraph(f"{space_symbol * 10}01 - дообследование при неясном диагнозе;", style))
+            objs.append(Paragraph(f"{space_symbol * 10}02 - уточнение диагноза;", style))
+            objs.append(Paragraph(f"{space_symbol * 10}03 - для коррекции лечения;", style))
+            objs.append(Paragraph(f"{space_symbol * 10}04 - дообследование для госпитализации;", style))
+            objs.append(Paragraph(f"{space_symbol * 10}05 - и прочие цели (нужное вписать) __________________", style))
         objs.append(Paragraph("Диагноз направившей медицинской организации (диагноз/ код диагноза в соответствии с МКБ10):", style))
-        objs.append(Paragraph("Основной ___________________________________________________________________________________________", style))
-        objs.append(Paragraph("Сопутствующий ______________________________________________________________________________________", style))
+        if main_diagnos:
+            objs.append(Paragraph(f"Основной{main_diagnos}", style))
+        else:
+            objs.append(Paragraph("Основной ______________________________________________________________________________________", style))
+        if near_diagnos:
+            objs.append(Paragraph(f"Сопутствующий {near_diagnos}", style))
+        else:
+            objs.append(Paragraph("Сопутствующий ______________________________________________________________________________________", style))
         objs.append(Spacer(1, 3 * mm))
         objs.append(Paragraph("Выписка из амбулаторной карты:", style))
         objs.append(Paragraph("(данные анамнеза, клиники, предварительного обследования и проведенного лечения)", style))
-        objs.append(Paragraph("______________________________________________________________________________________", style))
-        objs.append(Paragraph("______________________________________________________________________________________", style))
-        objs.append(Paragraph("______________________________________________________________________________________", style))
-        objs.append(Paragraph("______________________________________________________________________________________", style))
-        objs.append(Paragraph("______________________________________________________________________________________", style))
+        if anamnes:
+            objs.append(Paragraph(f"{anamnes}", style))
+        else:
+            objs.append(Paragraph("______________________________________________________________________________________", style))
+            objs.append(Paragraph("______________________________________________________________________________________", style))
+            objs.append(Paragraph("______________________________________________________________________________________", style))
+            objs.append(Paragraph("______________________________________________________________________________________", style))
+            objs.append(Paragraph("______________________________________________________________________________________", style))
+        for v in descriptive_values:
+            objs = previous_doc_refferal_result(v, objs)
+        if laboratory_value:
+            lab_values = previous_laboratory_result(laboratory_value)
+            if lab_values:
+                objs.extend(lab_values)
         objs.append(Paragraph("______________________________________________________________________________________", style))
         objs.append(Paragraph("Сведения о профилактических прививках (для детей до 18 лет) ________________________", style))
         objs.append(Paragraph("______________________________________________________________________________________", style))
@@ -720,8 +759,12 @@ def form_05(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph("Руководитель направившей медицинской организации", style))
         objs.append(Paragraph("Согласие пациента на передачу сведений электронной почтой для осуществления предварительной записи и передачи заключения:", style))
 
-        gistology_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
-        gistology_inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
-        gistology_frame.addFromList([gistology_inframe], c)
+        print_frame = Frame(0 * mm, mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+
+        for p in objs:
+            while print_frame.add(p, c) == 0:
+                print_frame.split(p, c)
+                c.showPage()
+                print_frame = Frame(0 * mm, mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
 
     printForm()
