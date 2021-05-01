@@ -1,10 +1,10 @@
 import logging
 import threading
 import time
+from collections import namedtuple
 
 import simplejson
 from django.db import connections
-from django.http import HttpRequest
 from django.utils.module_loading import import_string
 
 from api.researches.views import get_researches
@@ -33,6 +33,7 @@ def prefetch(request, routes):
     threads = list()
 
     result = {}
+    request_tuple = namedtuple('HttpRequest', ('body', 'user', 'plain_response'))
 
     def get_view_data(view_name, route):
         if PREFETCH_DEBUG:
@@ -48,11 +49,12 @@ def prefetch(request, routes):
             else:
                 view = import_string(f'api.views.{view_name}')
             data = route.get('data', {})
-            http_obj = HttpRequest()
-            http_obj._body = simplejson.dumps(data) if data else '{}'
-            http_obj.plain_response = True
-            http_obj.user = request.user
-            response = view(http_obj)
+            req = {
+                'body': simplejson.dumps(data) if data else '{}',
+                'user': request.user,
+                'plain_response': True,
+            }
+            response = view(request_tuple(**req))
             result[view_name] = {
                 'url': route.get('url') or view_name,
                 'params': data,

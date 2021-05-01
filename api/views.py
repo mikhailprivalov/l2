@@ -1,3 +1,4 @@
+import threading
 import time
 import re
 from collections import defaultdict
@@ -8,6 +9,7 @@ import yaml
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
+from django.db import connections
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 from django.utils import timezone
@@ -525,80 +527,103 @@ def current_user_info(request):
         "fio": "",
         "department": {"pk": -1, "title": ""},
         "groups": [],
-        "modules": SettingManager.l2_modules(),
         "user_services": [],
-        "rmis_enabled": SettingManager.get("rmis_enabled", default='false', default_type='b'),
-        "directions_params_org_form_default_pk": SettingManager.get("directions_params_org_form_default_pk", default='', default_type='s'),
     }
     if ret["auth"]:
-        doctorprofile = users.DoctorProfile.objects.prefetch_related(
-            Prefetch(
-                'restricted_to_direct',
-                queryset=DResearches.objects.only('pk'),
-            ),
-            Prefetch(
-                'users_services',
-                queryset=DResearches.objects.only('pk'),
-            ),
-        ).select_related(
-            'podrazdeleniye'
-        ).get(user_id=user.pk)
+        def fill_user_data():
+            doctorprofile = users.DoctorProfile.objects.prefetch_related(
+                Prefetch(
+                    'restricted_to_direct',
+                    queryset=DResearches.objects.only('pk'),
+                ),
+                Prefetch(
+                    'users_services',
+                    queryset=DResearches.objects.only('pk'),
+                ),
+            ).select_related(
+                'podrazdeleniye'
+            ).get(user_id=user.pk)
 
-        ret["username"] = user.username
-        ret["fio"] = doctorprofile.fio
-        ret["groups"] = list(user.groups.values_list('name', flat=True))
-        if user.is_superuser:
-            ret["groups"].append("Admin")
-        ret["doc_pk"] = doctorprofile.pk
-        ret["rmis_location"] = doctorprofile.rmis_location
-        ret["rmis_login"] = doctorprofile.rmis_login
-        ret["rmis_password"] = doctorprofile.rmis_password
-        ret["department"] = {"pk": doctorprofile.podrazdeleniye_id, "title": doctorprofile.podrazdeleniye.title}
-        ret["restricted"] = [x.pk for x in doctorprofile.restricted_to_direct.all()]
-        ret["user_services"] = [x.pk for x in doctorprofile.users_services.all() if x not in ret["restricted"]]
-        ret["su"] = user.is_superuser
-        ret["hospital"] = doctorprofile.get_hospital_id()
-        ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
+            ret["fio"] = doctorprofile.fio
+            ret["doc_pk"] = doctorprofile.pk
+            ret["rmis_location"] = doctorprofile.rmis_location
+            ret["rmis_login"] = doctorprofile.rmis_login
+            ret["rmis_password"] = doctorprofile.rmis_password
+            ret["department"] = {"pk": doctorprofile.podrazdeleniye_id, "title": doctorprofile.podrazdeleniye.title}
+            ret["restricted"] = [x.pk for x in doctorprofile.restricted_to_direct.all()]
+            ret["user_services"] = [x.pk for x in doctorprofile.users_services.all() if x not in ret["restricted"]]
+            ret["hospital"] = doctorprofile.get_hospital_id()
+            ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
 
-        en = SettingManager.en()
-        ret["extended_departments"] = {}
+            try:
+                connections.close_all()
+            except Exception as e:
+                print(f"Error closing connections {e}")  # noqa: T001
 
-        st_base = ResearchSite.objects.filter(hide=False).order_by('order', 'title')
+        def fill_settings():
+            ret["groups"] = list(user.groups.values_list('name', flat=True))
+            ret["su"] = user.is_superuser
+            ret["username"] = user.username
+            if user.is_superuser:
+                ret["groups"].append("Admin")
 
-        sites_by_types = {}
-        for s in st_base:
-            if s.site_type not in sites_by_types:
-                sites_by_types[s.site_type] = []
-            sites_by_types[s.site_type].append({"pk": s.pk, "title": s.title, "type": s.site_type, "extended": True, 'e': s.site_type + 4})
+            ret["modules"] = SettingManager.l2_modules()
+            ret["rmis_enabled"] = SettingManager.get("rmis_enabled", default='false', default_type='b')
+            ret["directions_params_org_form_default_pk"] = SettingManager.get("directions_params_org_form_default_pk", default='', default_type='s')
 
-        for e in en:
-            if e < 4 or not en[e]:
-                continue
+            en = SettingManager.en()
+            ret["extended_departments"] = {}
 
-            t = e - 4
-            has_def = DResearches.objects.filter(hide=False, site_type__isnull=True, **DResearches.filter_type(e)).exists()
+            st_base = ResearchSite.objects.filter(hide=False).order_by('order', 'title')
 
-            if has_def and e != 12:
-                d = [{"pk": None, "title": 'Общие', 'type': t, "extended": True}]
-            else:
-                d = []
+            sites_by_types = {}
+            for s in st_base:
+                if s.site_type not in sites_by_types:
+                    sites_by_types[s.site_type] = []
+                sites_by_types[s.site_type].append({"pk": s.pk, "title": s.title, "type": s.site_type, "extended": True, 'e': s.site_type + 4})
 
-            ret["extended_departments"][e] = [*d, *sites_by_types.get(t, [])]
+            for e in en:
+                if e < 4 or not en[e]:
+                    continue
 
-        if SettingManager.is_morfology_enabled(en):
-            ret["extended_departments"][Podrazdeleniya.MORFOLOGY] = []
-            if en.get(8):
-                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
-                    {"pk": Podrazdeleniya.MORFOLOGY + 1, "title": "Микробиология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
-                )
-            if en.get(9):
-                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
-                    {"pk": Podrazdeleniya.MORFOLOGY + 2, "title": "Цитология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
-                )
-            if en.get(10):
-                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
-                    {"pk": Podrazdeleniya.MORFOLOGY + 3, "title": "Гистология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
-                )
+                t = e - 4
+                has_def = DResearches.objects.filter(hide=False, site_type__isnull=True, **DResearches.filter_type(e)).exists()
+
+                if has_def and e != 12:
+                    d = [{"pk": None, "title": 'Общие', 'type': t, "extended": True}]
+                else:
+                    d = []
+
+                ret["extended_departments"][e] = [*d, *sites_by_types.get(t, [])]
+
+            if SettingManager.is_morfology_enabled(en):
+                ret["extended_departments"][Podrazdeleniya.MORFOLOGY] = []
+                if en.get(8):
+                    ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
+                        {"pk": Podrazdeleniya.MORFOLOGY + 1, "title": "Микробиология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
+                    )
+                if en.get(9):
+                    ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
+                        {"pk": Podrazdeleniya.MORFOLOGY + 2, "title": "Цитология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
+                    )
+                if en.get(10):
+                    ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
+                        {"pk": Podrazdeleniya.MORFOLOGY + 3, "title": "Гистология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
+                    )
+            try:
+                connections.close_all()
+            except Exception as e:
+                print(f"Error closing connections {e}")  # noqa: T001
+
+        t1 = threading.Thread(target=fill_user_data)
+        t2 = threading.Thread(target=fill_settings)
+
+        t1.start()
+        t2.start()
+
+        t1.join()
+        t2.join()
+
     if hasattr(request, 'plain_response') and request.plain_response:
         return ret
     return JsonResponse(ret)
@@ -609,18 +634,25 @@ def directive_from(request):
     data = []
     hospital = request.user.doctorprofile.hospital
     for dep in (
-        Podrazdeleniya.objects.filter(Q(p_type=Podrazdeleniya.DEPARTMENT) | Q(p_type=Podrazdeleniya.HOSP) | Q(p_type=Podrazdeleniya.PARACLINIC))
-        .filter(Q(hospital=hospital) | Q(hospital__isnull=True))
+        Podrazdeleniya.objects.filter(
+            p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.HOSP, Podrazdeleniya.PARACLINIC),
+            hospital__in=(hospital, None)
+        )
         .prefetch_related(
             Prefetch(
                 'doctorprofile_set',
                 queryset=(
-                    users.DoctorProfile.objects.filter(user__groups__name__in=["Лечащий врач", "Врач параклиники"]).distinct().filter(
-                        Q(hospital=hospital) | Q(hospital__isnull=True)).order_by("fio")
+                    users.DoctorProfile.objects.filter(user__groups__name__in=["Лечащий врач", "Врач параклиники"])
+                    .distinct('fio', 'pk')
+                    .filter(
+                        Q(hospital=hospital) | Q(hospital__isnull=True)
+                    )
+                    .order_by("fio")
                 ),
             )
         )
         .order_by('title')
+        .only('pk', 'title')
     ):
         d = {
             "pk": dep.pk,

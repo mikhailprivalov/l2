@@ -72,12 +72,6 @@ def get_researches(request):
                 Prefetch('service_location', queryset=ServiceLocation.objects.only('pk', 'title'), to_attr='service_location_list'),
                 'a',
                 'b',
-                Prefetch(
-                    'direction_params__paraclinicinputgroups_set',
-                    queryset=ParaclinicInputGroups.objects.filter(hide=False).prefetch_related(
-                        Prefetch('paraclinicinputfield_set', queryset=ParaclinicInputField.objects.filter(hide=False))
-                    )
-                ),
             )
             .distinct('title', 'pk')
             .order_by('title')
@@ -137,7 +131,7 @@ def get_researches(request):
                     "localizations": [{"code": x.pk, "label": x.title} for x in r.localization_list],
                     "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location_list],
                     "direction_params": direction_params_pk,
-                    "research_data": get_research_for_direction_params(r.direction_params),
+                    "research_data": {'research': {'status': 'NOT_LOADED'}},
                 }
                 cache.set(k, json.dumps(research_data), 30)
             else:
@@ -165,13 +159,24 @@ def get_researches(request):
 
 def by_direction_params(request):
     data = {}
-    res = DResearches.objects.filter(hide=False, is_direction_params=True, is_global_direction_params=True).distinct().order_by('title')
-    r: DResearches
+    res = (
+        DResearches.objects
+        .filter(hide=False, is_direction_params=True, is_global_direction_params=True)
+        .order_by('title')
+        .values('pk', 'title', 'short_title')
+    )
     for r in res:
-        data[r.pk] = {"title": r.get_title(), "full_title": r.title, "research_data": get_research_for_direction_params(r.pk)}
+        data[r['pk']] = {"title": r['short_title'] or r['title'], "full_title": r['title'], "research_data": {}}
 
     if hasattr(request, 'plain_response') and request.plain_response:
         return data
+    return JsonResponse(data)
+
+
+def get_direction_params(request):
+    request_data = json.loads(request.body)
+    pk = int(request_data["pk"])
+    data = get_research_for_direction_params(pk).get('research', {})
     return JsonResponse(data)
 
 

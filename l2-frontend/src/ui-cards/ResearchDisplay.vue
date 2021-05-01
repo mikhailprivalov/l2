@@ -22,6 +22,7 @@
       <span class="comment" v-if="comment !== '' && !simple">[{{ comment }}]</span>
       <span class="service_location" v-if="service_location !== '' && !simple">[{{ service_location }}]</span>
       <span class="has_not_filled" v-if="has_not_filled && !simple">[параметры не заполнены]</span>
+      <span class="has_params" v-else-if="has_params && !simple">[параметры]</span>
     </div>
     <div v-if="n + 1 < nof" class="root-div"></div>
     <div :id="`research-display-${pk}`" class="tp" v-if="!no_tooltip">
@@ -78,6 +79,10 @@ export default {
       default: false,
     },
     has_not_filled: {
+      type: Boolean,
+      default: false,
+    },
+    has_params: {
       type: Boolean,
       default: false,
     },
@@ -159,7 +164,13 @@ export default {
 
 .has_not_filled {
   margin-left: 3px;
-  color: #b00;
+  color: #a00;
+  font-weight: 600;
+}
+
+.has_params {
+  margin-left: 3px;
+  color: #0ab;
   font-weight: 600;
 }
 

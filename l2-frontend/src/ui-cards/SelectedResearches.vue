@@ -45,6 +45,7 @@
                               :service_location="(service_locations[res.pk] || {}).label"
                               :category="categories[res.site_type_raw]"
                               :has_not_filled="hasNotFilled(res.pk)"
+                              :has_params="form_params[res.pk]"
                               :not_filled_fields="hasNotFilled(res.pk) ? r_list(form_params[res.pk]) : []"
                               :nof="row.researches.length"/>
           </td>
@@ -442,7 +443,7 @@ export default {
     base() {
       this.fin = -1
     },
-    researches() {
+    async researches() {
       let comments = {}
       let form_params = {}
       let service_locations = {}
@@ -488,8 +489,11 @@ export default {
             if (this.directions_params_enabled) {
               if (res.direction_params > -1 && !this.need_update_direction_params.includes(pk) && !this.form_params[pk]) {
                 this.need_update_direction_params.push(pk)
+                this.form_params[pk] = {};
                 needShowWindow = true
-                form_params[pk] = JSON.parse(JSON.stringify(res.research_data.research))
+                form_params[pk] = _.cloneDeep(
+                  await this.load_direction_params_data(res.direction_params)
+                );
                 form_params[pk].show = true;
               } else if (this.form_params[pk]) {
                 form_params[pk] = this.form_params[pk]
@@ -595,13 +599,13 @@ export default {
     this.load_stationar_deparments()
   },
   methods: {
-    changeSelectGlobalResearchDirectionParam(pk) {
+    async changeSelectGlobalResearchDirectionParam(pk) {
       if (!this.researches_direction_params[pk]) {
         this.global_research_direction_param = {};
         return;
       }
       this.global_research_direction_param = _.cloneDeep(
-        this.researches_direction_params[pk].research_data.research
+        await this.load_direction_params_data(pk)
       );
       this.global_research_direction_param.show = true
     },
@@ -612,6 +616,26 @@ export default {
         ...Object.keys(data).map(id => ({id, label: data[id].title})),
       ];
       this.researches_direction_params = data;
+    },
+    async load_direction_params_data(pk) {
+      if (
+        this.researches_direction_params[pk]
+        && this.researches_direction_params[pk].research_data
+        && this.researches_direction_params[pk].research_data.research
+        && this.researches_direction_params[pk].research_data.research.status !== 'NOT_LOADED'
+      ) {
+        return this.researches_direction_params[pk].research_data.research;
+      }
+      await this.$store.dispatch(action_types.INC_LOADING);
+      if (!this.researches_direction_params[pk]) {
+        this.researches_direction_params[pk] = {};
+      }
+      if (!this.researches_direction_params[pk].research_data) {
+        this.researches_direction_params[pk].research_data = {};
+      }
+      this.researches_direction_params[pk].research_data.research = await api('researches/get-direction-params', {pk});
+      await this.$store.dispatch(action_types.DEC_LOADING);
+      return this.researches_direction_params[pk].research_data.research;
     },
     hasNotFilled(pk) {
       return this.form_params[pk] && !this.r(this.form_params[pk])
