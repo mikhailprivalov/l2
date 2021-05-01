@@ -607,13 +607,13 @@ class Napravleniya(models.Model):
                         status = False
                         if f.get('field_type', None):
                             if f['field_type'] == 24:
-                                laboratory_previous_results = f.get('value', '')
+                                laboratory_previous_results = f.get('value', None)
                                 status = True
                             elif f['field_type'] == 25:
-                                diagnostic_previous_results = f.get('value', '')
+                                diagnostic_previous_results = f.get('value', None)
                                 status = True
                             elif f['field_type'] == 26:
-                                doc_referral_previous_results = f.get('value', '')
+                                doc_referral_previous_results = f.get('value', None)
                                 status = True
                         if not status:
                             res_data['groups'][0]['fields'].append(f)
