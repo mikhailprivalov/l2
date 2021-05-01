@@ -597,7 +597,7 @@ class Napravleniya(models.Model):
 
     @staticmethod
     def check_and_change_special_field(res_data, global_data):
-        LaboratoryPreviousResults, DiagnosticPreviousResults, DocReferralPreviousResults = None, None, None
+        laboratory_previous_results, diagnostic_previous_results, doc_referral_previous_results = None, None, None
         if global_data.get('groups', None):
             groups_data = global_data.get('groups')
             for i in groups_data:
@@ -607,13 +607,13 @@ class Napravleniya(models.Model):
                         status = False
                         if f.get('field_type', None):
                             if f['field_type'] == 24:
-                                LaboratoryPreviousResults = f.get('value', '')
+                                laboratory_previous_results = f.get('value', '')
                                 status = True
                             elif f['field_type'] == 25:
-                                DiagnosticPreviousResults = f.get('value', '')
+                                diagnostic_previous_results = f.get('value', '')
                                 status = True
                             elif f['field_type'] == 26:
-                                DocReferralPreviousResults = f.get('value', '')
+                                doc_referral_previous_results = f.get('value', '')
                                 status = True
                         if not status:
                             res_data['groups'][0]['fields'].append(f)
@@ -625,11 +625,11 @@ class Napravleniya(models.Model):
                 for f in fields:
                     if f.get('field_type', None):
                         if f['field_type'] == 24:
-                            f['value'] = LaboratoryPreviousResults
+                            f['value'] = laboratory_previous_results
                         elif f['field_type'] == 25:
-                            f['value'] = DiagnosticPreviousResults
+                            f['value'] = diagnostic_previous_results
                         elif f['field_type'] == 26:
-                            f['value'] = DocReferralPreviousResults
+                            f['value'] = doc_referral_previous_results
 
         return res_data
 
