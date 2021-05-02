@@ -773,4 +773,3 @@ def form_05(c: Canvas, dir_obj):
         if count > 1:
             c.showPage()
         printForm(dir)
-

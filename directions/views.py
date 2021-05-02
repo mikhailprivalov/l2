@@ -198,8 +198,9 @@ def gen_pdf_dir(request):
         .order_by('pk')
     )
 
-    external_org_form = dn.filter(external_organization=not None)
-    donepage = dn.exclude(issledovaniya__research__direction_form=0, external_organization=None)
+    donepage = dn.exclude(issledovaniya__research__direction_form=0)
+    donepage = donepage.exclude(external_organization__isnull=False)
+    external_org_form = dn.filter(external_organization__isnull=False)
 
     buffer = BytesIO()
     count_direction = len(direction_id)
@@ -239,7 +240,7 @@ def gen_pdf_dir(request):
             framePage(c)  # Рисование разделительных линий для страницы
 
     if donepage.count() > 0 and has_def:
-        if not external_print_form and def_form_print:
+        if external_print_form or def_form_print:
             c.showPage()
     n = 0
     cntn = donepage.count()
