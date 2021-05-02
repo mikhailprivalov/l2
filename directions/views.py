@@ -198,7 +198,8 @@ def gen_pdf_dir(request):
         .order_by('pk')
     )
 
-    donepage = dn.exclude(issledovaniya__research__direction_form=0)
+    external_org_form = dn.filter(external_organization=not None)
+    donepage = dn.exclude(issledovaniya__research__direction_form=0, external_organization=None)
 
     buffer = BytesIO()
     count_direction = len(direction_id)
@@ -207,22 +208,30 @@ def gen_pdf_dir(request):
     c = canvas.Canvas(buffer, pagesize=page_size)
     c.setTitle('Направления {}'.format(', '.join([str(x) for x in direction_id])))
 
-    ddef = dn.filter(issledovaniya__research__direction_form=0).distinct()
+    # для внешних организацй
+    external_print_form = False
+    if external_org_form.count() > 0:
+        external_print_form = True
+        f = import_string('directions.forms.forms' + '380' + '.form_' + '05')
+        c = canvas.Canvas(buffer, pagesize=A4)
+        f(c, external_org_form)
+
+    ddef = dn.filter(issledovaniya__research__direction_form=0, external_organization=None).distinct()
     p = Paginator(ddef, 4)  # Деление списка направлений по 4
     instructions = []
     has_def = ddef.count() > 0
+    def_form_print = False
     if has_def and not format_A6:
+        if external_print_form:
+            def_form_print = True
+            c.showPage()
         framePage(c)
     for pg_num in p.page_range:
         pg = p.page(pg_num)
         i = 4  # Номер позиции направления на странице (4..1)
         for n_ob in pg.object_list:  # Перебор номеров направлений на странице
-            if not n_ob.external_organization:
-                print_direction(c, i, n_ob, format_A6)  # Вызов функции печати направления на указанную позицию
-            else:
-                f = import_string('directions.forms.forms' + '380' + '.form_' + '05')
-                c = canvas.Canvas(buffer, pagesize=A4)
-                f(c, n_ob)
+            def_form_print = True
+            print_direction(c, i, n_ob, format_A6)  # Вызов функции печати направления на указанную позицию
             instructions += n_ob.get_instructions()
             i -= 1
         if pg.has_next():  # Если есть следующая страница
@@ -230,7 +239,8 @@ def gen_pdf_dir(request):
             framePage(c)  # Рисование разделительных линий для страницы
 
     if donepage.count() > 0 and has_def:
-        c.showPage()
+        if not external_print_form and def_form_print:
+            c.showPage()
     n = 0
     cntn = donepage.count()
     for d in donepage:
@@ -245,6 +255,7 @@ def gen_pdf_dir(request):
             f(c, d)
         if n != cntn:
             c.showPage()
+
     instructions_pks = []
     instructions_filtered = []
     for i in instructions:
