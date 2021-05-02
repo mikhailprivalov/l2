@@ -268,6 +268,10 @@
               <ResultsByYear :card_pk="data.patient.card_pk" isDocReferral/>
               <ResultsByYear :card_pk="data.patient.card_pk" isParaclinic/>
               <ResultsByYear :card_pk="data.patient.card_pk" isLab/>
+              <a href="#" @click.prevent="open_sick">
+                ЭЛН
+              </a>
+
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
@@ -878,6 +882,19 @@
       this.$root.$on('open-direction-form', pk => this.load_pk(pk));
     },
     methods: {
+      open_sick() {
+        let myWindowURL = `https://38.is-mis.ru/cas/login?service=https://38.is-mis.ru/frontend/j_spring_cas_security_check&ajax=true&username=Redikaltseva&password=1cyCAG1Df`;
+        let openWindow = null;
+        openWindow = window.open(myWindowURL, '_blank');
+
+        setTimeout(function() {
+            openWindow.close()
+        }, 10);
+
+       setTimeout(function() {
+            window.open(`https://38.is-mis.ru/frontend/#sicklists.sicksheet_list`,);
+        }, 50);
+      },
       async load_location() {
         if (!this.has_loc) {
           return
