@@ -123,7 +123,7 @@
     position: relative;
   }
 
-  .sidebar-select /deep/ .btn {
+  .sidebar-select ::v-deep .btn {
     border-radius: 0;
     border-top: none;
     border-left: none;

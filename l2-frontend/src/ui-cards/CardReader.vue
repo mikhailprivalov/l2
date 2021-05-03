@@ -1,11 +1,11 @@
 <template>
-  <fragment>
+  <div v-frag>
     <li v-show="Boolean(readerId)">
       <a href="#" @click.prevent="clickPlus" v-tippy title="Найти или импортировать пациента">
         <i class="fa fa-circle status" :class="`status-${status}`"></i> {{textStatus}}
       </a>
     </li>
-  </fragment>
+  </div>
 </template>
 
 <script>

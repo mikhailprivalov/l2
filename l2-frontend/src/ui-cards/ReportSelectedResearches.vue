@@ -10,6 +10,7 @@
 </template>
 
 <script>
+  import _ from 'lodash';
   import ResearchParamsSelect from './ResearchParamsSelect'
 
   export default {

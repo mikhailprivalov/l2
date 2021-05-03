@@ -4,7 +4,7 @@
       <form autocomplete="off" @submit.prevent>
         <input autocomplete="false" name="hidden" type="text" style="display: none;"/>
         <div class="input-group">
-          <span class="input-group-btn" v-for="(title, key) in modes" :key="key">
+          <span class="input-group-btn" v-for="(title, key) in modes" :key="`${key}-${title}`">
             <a href="#" class="top-inner-select"
                :class="key === mode && 'active'" @click.prevent="mode = key">
               <span>{{ title }}</span>

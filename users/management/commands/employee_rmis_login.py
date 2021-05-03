@@ -31,4 +31,4 @@ class Command(BaseCommand):
                     doctor.rmis_login = cells[rmis_login]
                     doctor.rmis_password = cells[rmis_password]
                     doctor.save(update_fields=['rmis_login', 'rmis_password'])
-                    print("Обновлен", doctor)
+                    print("Обновлен", doctor)  # noqa: T001

@@ -5946,8 +5946,7 @@
     const datepicker = $.fn.datepicker = function (option) {
         const args = Array.apply(null, arguments);
         args.shift();
-        let internal_return,
-            this_return;
+        let internal_return, this_return;
         this.each(function () {
             const $this = $(this);
             let data = $this.data('datepicker');

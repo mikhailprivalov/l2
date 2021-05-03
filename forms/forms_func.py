@@ -760,6 +760,7 @@ def hosp_get_operation_data(num_dir):
         'Диагноз после оперативного лечения',
         'МКБ 10',
         'Оперировал',
+        'Код хирурга',
     ]
     list_values = []
 
@@ -785,6 +786,7 @@ def hosp_get_operation_data(num_dir):
                 'diagnos_after_operation': '',
                 'mkb10': '',
                 'category_difficult': '',
+                'doc_code': ''
             }
             iss_obj = Issledovaniya.objects.filter(pk=pk_iss_operation).first()
             if not iss_obj.time_confirmation:
@@ -837,6 +839,10 @@ def hosp_get_operation_data(num_dir):
                 if field[3] == 'Оперировал':
                     if field[2]:
                         operation_data['doc_fio'] = field[2]
+                    continue
+                if field[3] == 'Код хирурга':
+                    if field[2]:
+                        operation_data['doc_code'] = field[2]
                     continue
 
             operation_data['name_operation'] = f"{operation_data['name_operation']} {category_difficult}"

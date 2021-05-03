@@ -2,11 +2,13 @@ from collections import defaultdict
 
 import simplejson as json
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 
 import users.models as users
+from api.directions.views import get_research_for_direction_params
 from directory.models import (
     Researches as DResearches,
     ParaclinicInputGroups,
@@ -15,11 +17,12 @@ from directory.models import (
     ParaclinicInputField,
     ParaclinicTemplateField,
     HospitalService,
-    DispensaryPlan,
+    DispensaryPlan, Localization, ServiceLocation,
 )
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
+from rmis_integration.client import get_md5
 from slog.models import Log
 from users.models import Speciality
 
@@ -41,56 +44,140 @@ def get_researches_templates(request):
                 "for_users_department": t.podrazdeleniye_id is not None,
             }
         )
-
-    return JsonResponse({"templates": templates})
+    result = {"templates": templates}
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return result
+    return JsonResponse(result)
 
 
 def get_researches(request):
     deps = defaultdict(list)
-
-    res = (
-        DResearches.objects.filter(hide=False)
-        .exclude(pk__in=[x.pk for x in request.user.doctorprofile.restricted_to_direct.all()])
-        .select_related('podrazdeleniye', 'comment_variants')
-        .prefetch_related('localization', 'service_location', 'a', 'b')
-        .distinct()
-        .order_by('title')
-    )
-
-    r: DResearches
-    for r in res:
-        autoadd = [x.b_id for x in r.a.all()]
-        addto = [x.a_id for x in r.b.all()]
-
-        deps[r.reversed_type].append(
-            {
-                "pk": r.pk,
-                "onlywith": r.onlywith_id or -1,
-                "department_pk": r.reversed_type,
-                "title": r.get_title(),
-                "full_title": r.title,
-                "doc_refferal": r.is_doc_refferal,
-                "treatment": r.is_treatment,
-                "is_hospital": r.is_hospital,
-                "stom": r.is_stom,
-                "need_vich_code": r.need_vich_code,
-                "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
-                "autoadd": autoadd,
-                "addto": addto,
-                "code": r.code,
-                "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
-                "site_type": r.get_site_type_id(),
-                "site_type_raw": r.site_type_id,
-                "localizations": [{"code": x.pk, "label": x.title} for x in r.localization.all()],
-                "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location.all()],
-            }
+    doctorprofile = request.user.doctorprofile
+    k = f'get_researches:restricted_to_direct:{doctorprofile.pk}'
+    restricted_to_direct = cache.get(k)
+    if not restricted_to_direct:
+        restricted_to_direct = [x['pk'] for x in doctorprofile.restricted_to_direct.all().values('pk')]
+        cache.set(k, json.dumps(restricted_to_direct), 30)
+    else:
+        restricted_to_direct = json.loads(restricted_to_direct)
+    mk = f'get_researches:result:{get_md5(";".join(restricted_to_direct))}'
+    result = cache.get(mk)
+    if not result:
+        res = (
+            DResearches.objects.filter(hide=False)
+            .exclude(pk__in=restricted_to_direct)
+            .select_related('podrazdeleniye', 'comment_variants')
+            .prefetch_related(
+                Prefetch('localization', queryset=Localization.objects.only('pk', 'title'), to_attr='localization_list'),
+                Prefetch('service_location', queryset=ServiceLocation.objects.only('pk', 'title'), to_attr='service_location_list'),
+                'a',
+                'b',
+            )
+            .distinct('title', 'pk')
+            .order_by('title')
+            .defer(
+                "preparation",
+                "paraclinic_info",
+                "instructions",
+                "internal_code",
+                "co_executor_2_title",
+                "bac_conclusion_templates",
+                "bac_culture_comments_templates",
+                "rmis_id",
+                "podrazdeleniye__title",
+                "podrazdeleniye__short_title",
+                "podrazdeleniye__gid_n",
+                "podrazdeleniye__hide",
+                "podrazdeleniye__vaccine",
+                "podrazdeleniye__rmis_id",
+                "podrazdeleniye__rmis_direction_type",
+                "podrazdeleniye__rmis_department_title",
+                "podrazdeleniye__can_has_pacs",
+                "podrazdeleniye__oid",
+                "podrazdeleniye__hospital_id",
+            )
         )
 
-    tubes = list(Tubes.objects.values('pk', 'title', 'color'))
+        r: DResearches
 
-    result = {"researches": deps, "tubes": tubes}
+        for r in res:
+            k = f'get_researches:research:{r.pk}'
+            research_data = cache.get(k)
 
+            if not research_data:
+                autoadd = [x.b_id for x in r.a.all()]
+                addto = [x.a_id for x in r.b.all()]
+
+                direction_params_pk = r.direction_params_id or -1
+                research_data = {
+                    "pk": r.pk,
+                    "onlywith": r.onlywith_id or -1,
+                    "department_pk": r.reversed_type,
+                    "title": r.get_title(),
+                    "full_title": r.title,
+                    "doc_refferal": r.is_doc_refferal,
+                    "treatment": r.is_treatment,
+                    "is_hospital": r.is_hospital,
+                    "is_form": r.is_form,
+                    "stom": r.is_stom,
+                    "need_vich_code": r.need_vich_code,
+                    "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
+                    "autoadd": autoadd,
+                    "addto": addto,
+                    "code": r.code,
+                    "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
+                    "site_type": r.get_site_type_id(),
+                    "site_type_raw": r.site_type_id,
+                    "localizations": [{"code": x.pk, "label": x.title} for x in r.localization_list],
+                    "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location_list],
+                    "direction_params": direction_params_pk,
+                    "research_data": {'research': {'status': 'NOT_LOADED'}},
+                }
+                cache.set(k, json.dumps(research_data), 30)
+            else:
+                research_data = json.loads(research_data)
+
+            deps[r.reversed_type].append(research_data)
+
+        k = 'get_researches:tubes'
+        tubes = cache.get(k)
+        if not tubes:
+            tubes = list(Tubes.objects.values('pk', 'title', 'color'))
+            cache.set(k, json.dumps(tubes), 60)
+        else:
+            tubes = json.loads(tubes)
+
+        result = {"researches": deps, "tubes": tubes}
+        cache.set(mk, json.dumps(result), 30)
+    else:
+        result = json.loads(result)
+
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return result
     return JsonResponse(result)
+
+
+def by_direction_params(request):
+    data = {}
+    res = (
+        DResearches.objects
+        .filter(hide=False, is_direction_params=True, is_global_direction_params=True)
+        .order_by('title')
+        .values('pk', 'title', 'short_title')
+    )
+    for r in res:
+        data[r['pk']] = {"title": r['short_title'] or r['title'], "full_title": r['title'], "research_data": {}}
+
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return data
+    return JsonResponse(data)
+
+
+def get_direction_params(request):
+    request_data = json.loads(request.body)
+    pk = int(request_data["pk"])
+    data = get_research_for_direction_params(pk).get('research', {})
+    return JsonResponse(data)
 
 
 @login_required
@@ -128,6 +215,10 @@ def researches_by_department(request):
             q = DResearches.objects.filter(is_citology=True).order_by("title")
         elif department_pk == -8:
             q = DResearches.objects.filter(is_gistology=True).order_by("title")
+        elif department_pk == -9:
+            q = DResearches.objects.filter(is_form=True).order_by("title")
+        elif department_pk == -10:
+            q = DResearches.objects.filter(is_direction_params=True).order_by("title")
         else:
             q = DResearches.objects.filter(podrazdeleniye__pk=department_pk).order_by("title")
 
@@ -175,11 +266,16 @@ def researches_update(request):
         department_pk = request_data.get("department")
         title = request_data.get("title", "").strip()
         short_title = request_data.get("short_title", "").strip()
+        is_global_direction_params = request_data.get("is_global_direction_params", False)
         code = request_data.get("code", "").strip()
         internal_code = request_data.get("internal_code", "").strip()
         spec_pk = request_data.get("speciality", -1)
         speciality = Speciality.objects.filter(pk=spec_pk).first()
         direction_current_form = request_data.get("direction_current_form", 0)
+        direction_current_params = request_data.get("direction_current_params", -1)
+        researche_direction_current_params = None
+        if int(direction_current_params) > -1:
+            researche_direction_current_params = DResearches.objects.get(pk=int(direction_current_params))
         if not direction_current_form:
             direction_current_form = 0
         info = request_data.get("info", "").strip()
@@ -197,7 +293,7 @@ def researches_update(request):
         if tube == -1:
             tube = None
         stationar_slave = is_simple and -500 >= department_pk > -600 and main_service_pk != 1
-        desc = stationar_slave or department_pk in [-2, -3, -4, -5, -6, -7, -8]
+        desc = stationar_slave or department_pk in [-2, -3, -4, -5, -6, -7, -8, -9, -10]
         if len(title) > 0 and (desc or Podrazdeleniya.objects.filter(pk=department_pk).exists()):
             department = None if desc else Podrazdeleniya.objects.filter(pk=department_pk)[0]
             res = None
@@ -219,6 +315,8 @@ def researches_update(request):
                     is_microbiology=department_pk == -6,
                     is_citology=department_pk == -7,
                     is_gistology=department_pk == -8,
+                    is_form=department_pk == -9,
+                    is_direction_params=department_pk == -10,
                     is_slave_hospital=stationar_slave,
                     microbiology_tube_id=tube if department_pk == -6 else None,
                     site_type_id=site_type,
@@ -227,9 +325,13 @@ def researches_update(request):
                     speciality=speciality,
                     bac_conclusion_templates=conclusion_templates,
                     bac_culture_comments_templates=culture_comments_templates,
+                    direction_params=researche_direction_current_params,
+                    is_global_direction_params=is_global_direction_params,
                 )
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
+                if res == researche_direction_current_params:
+                    return JsonResponse(response)
                 res.title = title
                 res.short_title = short_title
                 res.podrazdeleniye = department
@@ -243,6 +345,8 @@ def researches_update(request):
                 res.is_microbiology = department_pk == -6
                 res.is_citology = department_pk == -7
                 res.is_gistology = department_pk == -8
+                res.is_form = department_pk == -9
+                res.is_direction_params = department_pk == -10
                 res.microbiology_tube_id = tube if department_pk == -6 else None
                 res.paraclinic_info = info
                 res.hide = hide
@@ -252,6 +356,8 @@ def researches_update(request):
                 res.direction_form = direction_current_form
                 res.bac_conclusion_templates = conclusion_templates
                 res.bac_culture_comments_templates = culture_comments_templates
+                res.direction_params = researche_direction_current_params
+                res.is_global_direction_params = is_global_direction_params
             if res:
                 res.save()
                 if main_service_pk != 1 and stationar_slave:
@@ -302,7 +408,7 @@ def researches_update(request):
                                     field_type=field.get("field_type", 0),
                                     helper=field.get("helper", ''),
                                     required=field.get("required", False),
-                                    attached=field.get("attached", '')
+                                    attached=field.get("attached", ''),
                                 )
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
@@ -339,6 +445,8 @@ def researches_details(request):
     response = {"pk": -1, "department": -1, "title": '', "short_title": '', "code": '', "info": '', "hide": False, "groups": []}
     request_data = json.loads(request.body)
     pk = request_data.get("pk")
+    direction_params_all = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": x.title} for x in DResearches.objects.filter(is_direction_params=True).order_by("title")]]
+    response["direction_params_all"] = direction_params_all
     if DResearches.objects.filter(pk=pk).exists():
         res: DResearches = DResearches.objects.get(pk=pk)
         response["pk"] = res.pk
@@ -355,6 +463,11 @@ def researches_details(request):
         response["conclusionTpl"] = res.bac_conclusion_templates
         response["cultureTpl"] = res.bac_culture_comments_templates
         response["speciality"] = res.speciality_id or -1
+        response["direction_current_params"] = res.direction_params_id or -1
+        response["is_global_direction_params"] = res.is_global_direction_params
+        response["assigned_to_params"] = []
+        if res.is_direction_params:
+            response["assigned_to_params"] = [f'{x.pk} – {x.get_full_short_title()}' for x in DResearches.objects.filter(direction_params=res)]
 
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title, "hide": group.hide, "fields": [], "visibility": group.visibility}
@@ -376,7 +489,7 @@ def researches_details(request):
                         "for_med_certificate": field.for_med_certificate,
                         "helper": field.helper,
                         "new_value": "",
-                        "attached": field.attached
+                        "attached": field.attached,
                     }
                 )
             response["groups"].append(g)
@@ -588,7 +701,7 @@ def save_dispensary_data(request):
         d = DispensaryPlan(diagnos=diagnos, research=research_obj, repeat=t_b['count'], speciality=speciality_obj, is_visit=t_b.get('is_visit', False))
         d.save()
 
-    return JsonResponse({'ok':True, 'message': 'Сохранено'})
+    return JsonResponse({'ok': True, 'message': 'Сохранено'})
 
 
 @login_required

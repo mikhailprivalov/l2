@@ -42,7 +42,7 @@
             <template v-if="direction.amd !== 'not_need'">
               <div v-if="direction.amd === 'need'" class="amd amd-need">АМД: не отправлено</div>
               <div v-else-if="direction.amd === 'ok'" class="amd amd-ok">АМД: отправлено
-                ({{data.direction.amd_number}})
+                ({{direction.amd_number}})
               </div>
               <div v-else-if="direction.amd === 'error'" class="amd amd-error">АМД: ошибка</div>
               <div v-else-if="direction.amd === 'planned'" class="amd amd-planned">АМД: запланировано</div>
@@ -877,6 +877,8 @@ export default {
       } else {
         this.inited = true
       }
+
+      this.$root.$on('open-direction-form', pk => this.load_pk(pk));
     },
     methods: {
       async load_location() {
@@ -1032,6 +1034,7 @@ export default {
             this.pk = ''
             this.data = data
             this.sidebarIsOpened = false;
+            setTimeout(() => this.$root.$emit('preselect-args', {card_pk: data.patient.card_pk, base_pk: data.patient.base}), 300);
             if (data.card_internal && data.status_disp === 'need' && data.has_doc_referral) {
               errmessage('Диспансеризация не пройдена')
             }
@@ -1200,6 +1203,7 @@ export default {
         this.dreg_rows = []
         this.benefit_rows_loading = false
         this.benefit_rows = []
+        this.$root.$emit('preselect-card', null);
       },
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])

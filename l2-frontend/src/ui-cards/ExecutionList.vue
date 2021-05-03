@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <a href="#" @click.prevent="doOpen">
       Лист исполнения
     </a>
@@ -44,7 +44,7 @@
         </div>
       </modal>
     </MountingPortal>
-  </fragment>
+  </div>
 </template>
 
 <script>

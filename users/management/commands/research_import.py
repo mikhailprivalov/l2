@@ -83,13 +83,13 @@ class Command(BaseCommand):
                             title=cells[research], site_type=s_t, internal_code=cells[int_code], is_treatment=treatment, is_doc_refferal=doc_refferal, is_hospital=hospital, is_stom=stom
                         )
                         insert_data(int(c.pk))
-                        print('добавлен услуга:', c.title, c.pk, c.internal_code)
+                        print('добавлен услуга:', c.title, c.pk, c.internal_code)  # noqa: T001
                 else:
                     pk_research = int(cells[identify])
                     res = Researches.objects.get(pk=pk_research)
                     if res:
                         Researches.objects.filter(pk=pk_research).update(internal_code=cells[int_code])
-                        print('обновлена услуга (title, pk, internal_code):', res.title, res.pk, cells[int_code])
+                        print('обновлена услуга (title, pk, internal_code):', res.title, res.pk, cells[int_code])  # noqa: T001
                         insert_data(int(res.pk))
 
         wb.save(fp + 'import')

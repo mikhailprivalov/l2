@@ -22,7 +22,8 @@ import simplejson as json
 
 from laboratory.utils import strfdatetime
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes
-from utils.xh import check_valid_square_brackets, short_fio_dots
+from utils.xh import check_valid_square_brackets
+from reportlab.platypus.flowables import HRFlowable
 
 
 def lab_iss_to_pdf(data1):
@@ -93,7 +94,6 @@ def lab_iss_to_pdf(data1):
                     if values_final:
                         row_count = len(values_final) - 1
                         tbl = gen_table(result_values_for_research, const_width_vertical, row_count, type_disposition)
-                        # prepare_fwb.append(Spacer(1, 1 * mm))
                         prepare_fwb.append(tbl)
                         prepare_fwb.append(Spacer(1, 2 * mm))
 
@@ -465,6 +465,12 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                         fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
                         fwb.extend(previous_laboratory)
                         continue
+                    if field_type in [26, 25]:
+                        if v:
+                            fwb.append(Spacer(1, 2 * mm))
+                            fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
+                            fwb = previous_doc_refferal_result(v, fwb)
+                        continue
                     if field_type == 17:
                         if v:
                             v = json.loads(v)
@@ -577,6 +583,16 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                     if not previous_laboratory:
                         continue
                     fwb.extend(previous_laboratory)
+                    continue
+                if field_type in [26, 25]:
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    fwb.append(Spacer(1, 2 * mm))
+                    if v:
+                        fwb.append(Paragraph(r.field.get_title(), styleBold))
+                        fwb = previous_doc_refferal_result(v, fwb)
                     continue
                 v = text_to_bold(v)
                 if r.field.get_title(force_type=field_type) != "":
@@ -755,3 +771,34 @@ def previous_laboratory_result(value):
     )
 
     return [tbl]
+
+
+def previous_doc_refferal_result(value, fwb):
+    try:
+        value = json.loads(value)
+    except:
+        return fwb
+
+    if not value:
+        return fwb
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "FreeSans"
+    style.fontSize = 8
+    style.alignment = TA_JUSTIFY
+    style.spaceAfter = 0.1 * mm
+
+    styleLeftIndent = deepcopy(style)
+    styleLeftIndent.leftIndent = 12 * mm
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = 'FreeSansBold'
+    space_symbol = '&nbsp;'
+    for data in value:
+        fwb.append(Paragraph(f"{data.get('date', '')} {5 * space_symbol} {data.get('researchTitle', '')} {5 * space_symbol} {data.get('docConfirm', '')}", styleBold))
+        fwb.append(Paragraph(f"{text_to_bold(data.get('value', ''))}", styleLeftIndent))
+        fwb.append(HRFlowable(width=180 * mm, spaceAfter=0 * mm, spaceBefore=0.1 * mm, color=colors.black))
+        fwb.append(Spacer(1, 2 * mm))
+
+    return fwb

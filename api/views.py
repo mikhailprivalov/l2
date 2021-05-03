@@ -1,3 +1,4 @@
+import threading
 import time
 import re
 from collections import defaultdict
@@ -8,6 +9,7 @@ import yaml
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
+from django.db import connections
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 from django.utils import timezone
@@ -135,12 +137,15 @@ def send(request):
             appkey = request.GET.get("key", "")
 
         astm_user = users.DoctorProfile.objects.filter(user__username="astm").first()
+        app = models.Application.objects.filter(key=appkey, active=True).first()
+
         resdict["pk"] = int(resdict.get("pk", -111))
         if "LYMPH%" in resdict["result"]:
             resdict["orders"] = {}
 
         dpk = -1
-        if "bydirection" in request.POST or "bydirection" in request.GET:
+
+        if ("bydirection" in request.POST or "bydirection" in request.GET) and not app.tube_work:
             dpk = resdict["pk"]
 
             if dpk >= 4600000000000:
@@ -152,10 +157,14 @@ def send(request):
             else:
                 resdict["pk"] = False
         result["A"] = appkey
-        app = models.Application.objects.filter(key=appkey, active=True).first()
-        if resdict["pk"] and app and directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
-            tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
-            direction = tubei.issledovaniya_set.first().napravleniye
+
+        direction = None
+        if resdict["pk"] and app:
+            if app.tube_work:
+                direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__pk=resdict["pk"]).first()
+            elif directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
+                tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
+                direction = tubei.issledovaniya_set.first().napravleniye
             pks = []
             for key in resdict["result"].keys():
                 if models.RelationFractionASTM.objects.filter(astm_field=key).exists():
@@ -285,6 +294,8 @@ def endpoint(request):
                                                 fraction_result.value = 'Отрицательно'
 
                                             find = re.findall(r"\d+.\d+", fraction_result.value)
+                                            if len(find) == 0 and fraction_result.value.isdigit():
+                                                find = [fraction_result.value]
                                             if len(find) > 0:
                                                 val_str = fraction_result.value
                                                 for f in find:
@@ -327,9 +338,9 @@ def endpoint(request):
                                         iss = iss.filter(pk=iss_pk)
                                     iss = iss.first()
                                     if not culture:
-                                        print('NO CULTURE', code, name)
+                                        print('NO CULTURE', code, name)  # noqa: T001
                                     elif not iss:
-                                        print('IGNORED')
+                                        print('IGNORED')  # noqa: T001
                                     else:
                                         directions.MicrobiologyResultCulture.objects.filter(issledovaniye=iss, culture=culture).delete()
 
@@ -415,14 +426,19 @@ def departments(request):
             qs = Podrazdeleniya.objects.filter(hospital_id=hospital_pk).order_by("pk")
         else:
             qs = Podrazdeleniya.objects.filter(Q(hospital_id=hospital_pk) | Q(hospital__isnull=True)).order_by("pk")
-        deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type)} for x in qs]
+        deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "oid": x.oid} for x in qs]
         en = SettingManager.en()
         more_types = []
         if SettingManager.is_morfology_enabled(en):
             more_types.append({"pk": str(Podrazdeleniya.MORFOLOGY), "title": "Морфология"})
-        return JsonResponse(
-            {"departments": deps, "can_edit": can_edit, "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] != 8 and en.get(x[0], True)], *more_types]}
-        )
+        data = {
+            "departments": deps,
+            "can_edit": can_edit,
+            "types": [*[{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if x[0] not in [8, 12] and en.get(x[0], True)], *more_types],
+        }
+        if hasattr(request, 'plain_response') and request.plain_response:
+            return data
+        return JsonResponse(data)
 
     if can_edit:
         ok = False
@@ -439,6 +455,7 @@ def departments(request):
                         department.title = title
                         department.p_type = int(row["type"])
                         department.hospital_id = hospital_pk
+                        department.oid = row.get("oid", '')
                         department.save()
                         ok = True
             elif data_type == "insert":
@@ -446,7 +463,7 @@ def departments(request):
                 for row in rows:
                     title = row["title"].strip()
                     if len(title) > 0:
-                        department = Podrazdeleniya(title=title, p_type=int(row["type"]), hospital_id=hospital_pk)
+                        department = Podrazdeleniya(title=title, p_type=int(row["type"]), hospital_id=hospital_pk, oid=row.get("oid", ''))
                         department.save()
                         ok = True
         finally:
@@ -456,30 +473,23 @@ def departments(request):
 
 @login_required
 def otds(request):
-    return JsonResponse({
-        "rows": [{"id": -1, "label": "Все отделения"}, *[
-            {"id": x.pk, "label": x.title}
-            for x in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
-        ]]
-    })
+    return JsonResponse(
+        {"rows": [{"id": -1, "label": "Все отделения"}, *[{"id": x.pk, "label": x.title} for x in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")]]}
+    )
 
 
 @login_required
 def laboratory_journal_params(request):
-    return JsonResponse({
-        "fin": [
-            {"id": x.pk, "label": f"{x.base.title} – {x.title}"}
-            for x in directions.IstochnikiFinansirovaniya.objects.all().order_by("pk").order_by("base")
-        ],
-        "groups": [
-            {"id": -2, "label": "Все исследования"},
-            {"id": -1, "label": "Без группы"},
-            *[
-                {"id": x.pk, "label": f"{x.lab.get_title()} – {x.title}"}
-                for x in ResearchGroup.objects.all()
-            ]
-        ],
-    })
+    return JsonResponse(
+        {
+            "fin": [{"id": x.pk, "label": f"{x.base.title} – {x.title}"} for x in directions.IstochnikiFinansirovaniya.objects.all().order_by("pk").order_by("base")],
+            "groups": [
+                {"id": -2, "label": "Все исследования"},
+                {"id": -1, "label": "Без группы"},
+                *[{"id": x.pk, "label": f"{x.lab.get_title()} – {x.title}"} for x in ResearchGroup.objects.all()],
+            ],
+        }
+    )
 
 
 def bases(request):
@@ -495,20 +505,16 @@ def bases(request):
                     "hide": x.hide,
                     "history_number": x.history_number,
                     "internal_type": x.internal_type,
-                    "fin_sources": [
-                        {"pk": y.pk, "title": y.title, "default_diagnos": y.default_diagnos}
-                        for y in x.istochnikifinansirovaniya_set.all()
-                    ],
+                    "fin_sources": [{"pk": y.pk, "title": y.title, "default_diagnos": y.default_diagnos} for y in x.istochnikifinansirovaniya_set.all()],
                 }
-                for x in CardBase.objects.all().prefetch_related(
-                    Prefetch(
-                        'istochnikifinansirovaniya_set',
-                        directions.IstochnikiFinansirovaniya.objects.filter(hide=False).order_by('-order_weight')
-                    )
-                ).order_by('-order_weight')
+                for x in CardBase.objects.all()
+                .prefetch_related(Prefetch('istochnikifinansirovaniya_set', directions.IstochnikiFinansirovaniya.objects.filter(hide=False).order_by('-order_weight')))
+                .order_by('-order_weight')
             ]
         }
         cache.set(k, ret, 100)
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return ret
     return JsonResponse(ret)
 
 
@@ -524,77 +530,132 @@ def current_user_info(request):
         "eds_token": None,
         "modules": SettingManager.l2_modules(),
         "user_services": [],
-        "rmis_enabled": SettingManager.get("rmis_enabled", default='false', default_type='b'),
     }
-    doctorprofile = request.user.doctorprofile
     if ret["auth"]:
-        ret["username"] = user.username
-        ret["fio"] = doctorprofile.fio
-        ret["groups"] = list(user.groups.values_list('name', flat=True))
-        if user.is_superuser:
-            ret["groups"].append("Admin")
-        ret["doc_pk"] = doctorprofile.pk
-        ret["rmis_location"] = doctorprofile.rmis_location
-        ret["rmis_login"] = doctorprofile.rmis_login
-        ret["rmis_password"] = doctorprofile.rmis_password
-        ret["department"] = {"pk": doctorprofile.podrazdeleniye_id, "title": doctorprofile.podrazdeleniye.title}
-        ret["restricted"] = [x['pk'] for x in doctorprofile.restricted_to_direct.all().values('pk')]
-        ret["user_services"] = [x['pk'] for x in doctorprofile.users_services.all().values('pk') if x not in ret["restricted"]]
-        ret["su"] = user.is_superuser
-        ret["hospital"] = doctorprofile.get_hospital_id()
-        ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
-        ret["eds_token"] = doctorprofile.get_eds_token()
+        def fill_user_data():
+            doctorprofile = users.DoctorProfile.objects.prefetch_related(
+                Prefetch(
+                    'restricted_to_direct',
+                    queryset=DResearches.objects.only('pk'),
+                ),
+                Prefetch(
+                    'users_services',
+                    queryset=DResearches.objects.only('pk'),
+                ),
+            ).select_related(
+                'podrazdeleniye'
+            ).get(user_id=user.pk)
 
-        en = SettingManager.en()
-        ret["extended_departments"] = {}
+            ret["fio"] = doctorprofile.fio
+            ret["doc_pk"] = doctorprofile.pk
+            ret["rmis_location"] = doctorprofile.rmis_location
+            ret["rmis_login"] = doctorprofile.rmis_login
+            ret["rmis_password"] = doctorprofile.rmis_password
+            ret["department"] = {"pk": doctorprofile.podrazdeleniye_id, "title": doctorprofile.podrazdeleniye.title}
+            ret["restricted"] = [x.pk for x in doctorprofile.restricted_to_direct.all()]
+            ret["user_services"] = [x.pk for x in doctorprofile.users_services.all() if x not in ret["restricted"]]
+            ret["hospital"] = doctorprofile.get_hospital_id()
+            ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
+            ret["eds_token"] = doctorprofile.get_eds_token()
 
-        st_base = ResearchSite.objects.filter(hide=False).order_by('title')
-        for e in en:
-            if e < 4 or not en[e]:
-                continue
+            try:
+                connections.close_all()
+            except Exception as e:
+                print(f"Error closing connections {e}")  # noqa: T001
 
-            t = e - 4
-            has_def = DResearches.objects.filter(hide=False, site_type__isnull=True, **DResearches.filter_type(e)).exists()
+        def fill_settings():
+            ret["groups"] = list(user.groups.values_list('name', flat=True))
+            ret["su"] = user.is_superuser
+            ret["username"] = user.username
+            if user.is_superuser:
+                ret["groups"].append("Admin")
 
-            if has_def:
-                d = [{"pk": None, "title": 'Общие', 'type': t, "extended": True}]
-            else:
-                d = []
+            ret["modules"] = SettingManager.l2_modules()
+            ret["rmis_enabled"] = SettingManager.get("rmis_enabled", default='false', default_type='b')
+            ret["directions_params_org_form_default_pk"] = SettingManager.get("directions_params_org_form_default_pk", default='', default_type='s')
 
-            ret["extended_departments"][e] = [*d, *[{"pk": x.pk, "title": x.title, "type": t, "extended": True, 'e': e} for x in st_base.filter(site_type=t)]]
+            en = SettingManager.en()
+            ret["extended_departments"] = {}
 
-        if SettingManager.is_morfology_enabled(en):
-            ret["extended_departments"][Podrazdeleniya.MORFOLOGY] = []
-            if en.get(8):
-                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
-                    {"pk": Podrazdeleniya.MORFOLOGY + 1, "title": "Микробиология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
-                )
-            if en.get(9):
-                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
-                    {"pk": Podrazdeleniya.MORFOLOGY + 2, "title": "Цитология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
-                )
-            if en.get(10):
-                ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
-                    {"pk": Podrazdeleniya.MORFOLOGY + 3, "title": "Гистология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
-                )
+            st_base = ResearchSite.objects.filter(hide=False).order_by('order', 'title')
+
+            sites_by_types = {}
+            for s in st_base:
+                if s.site_type not in sites_by_types:
+                    sites_by_types[s.site_type] = []
+                sites_by_types[s.site_type].append({"pk": s.pk, "title": s.title, "type": s.site_type, "extended": True, 'e': s.site_type + 4})
+
+            for e in en:
+                if e < 4 or not en[e]:
+                    continue
+
+                t = e - 4
+                has_def = DResearches.objects.filter(hide=False, site_type__isnull=True, **DResearches.filter_type(e)).exists()
+
+                if has_def and e != 12:
+                    d = [{"pk": None, "title": 'Общие', 'type': t, "extended": True}]
+                else:
+                    d = []
+
+                ret["extended_departments"][e] = [*d, *sites_by_types.get(t, [])]
+
+            if SettingManager.is_morfology_enabled(en):
+                ret["extended_departments"][Podrazdeleniya.MORFOLOGY] = []
+                if en.get(8):
+                    ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
+                        {"pk": Podrazdeleniya.MORFOLOGY + 1, "title": "Микробиология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
+                    )
+                if en.get(9):
+                    ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
+                        {"pk": Podrazdeleniya.MORFOLOGY + 2, "title": "Цитология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
+                    )
+                if en.get(10):
+                    ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
+                        {"pk": Podrazdeleniya.MORFOLOGY + 3, "title": "Гистология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
+                    )
+            try:
+                connections.close_all()
+            except Exception as e:
+                print(f"Error closing connections {e}")  # noqa: T001
+
+        t1 = threading.Thread(target=fill_user_data)
+        t2 = threading.Thread(target=fill_settings)
+
+        t1.start()
+        t2.start()
+
+        t1.join()
+        t2.join()
+
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return ret
     return JsonResponse(ret)
 
 
 @login_required
 def directive_from(request):
     data = []
+    hospital = request.user.doctorprofile.hospital
     for dep in (
-        Podrazdeleniya.objects.filter(Q(p_type=Podrazdeleniya.DEPARTMENT) | Q(p_type=Podrazdeleniya.HOSP))
-        .filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True))
+        Podrazdeleniya.objects.filter(
+            p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.HOSP, Podrazdeleniya.PARACLINIC),
+            hospital__in=(hospital, None)
+        )
         .prefetch_related(
             Prefetch(
                 'doctorprofile_set',
                 queryset=(
-                    users.DoctorProfile.objects.filter(user__groups__name="Лечащий врач").filter(Q(hospital=request.user.doctorprofile.hospital) | Q(hospital__isnull=True)).order_by("fio")
+                    users.DoctorProfile.objects.filter(user__groups__name__in=["Лечащий врач", "Врач параклиники"])
+                    .distinct('fio', 'pk')
+                    .filter(
+                        Q(hospital=hospital) | Q(hospital__isnull=True)
+                    )
+                    .order_by("fio")
                 ),
             )
         )
-            .order_by('title')
+        .order_by('title')
+        .only('pk', 'title')
     ):
         d = {
             "pk": dep.pk,
@@ -603,7 +664,10 @@ def directive_from(request):
         }
         data.append(d)
 
-    return JsonResponse({"data": data})
+    result = {"data": data}
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return result
+    return JsonResponse(result)
 
 
 @group_required("Оформление статталонов", "Лечащий врач", "Оператор лечащего врача")
@@ -653,13 +717,13 @@ def statistics_tickets_get(request):
     n = 0
     for row in (
         StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile))
-            .filter(
+        .filter(
             date__range=(
                 date_start,
                 date_end,
             )
         )
-            .order_by('pk')
+        .order_by('pk')
     ):
         if not row.invalid_ticket:
             n += 1
@@ -951,11 +1015,7 @@ def autocomplete(request):
                     "title": str(x),
                     "pk": x.pk,
                 }
-                for x in
-                Drugs.objects
-                .filter(Q(mnn__istartswith=v) | Q(trade_name__istartswith=v))
-                .order_by('mnn', 'trade_name')
-                .distinct('mnn', 'trade_name')[:limit]
+                for x in Drugs.objects.filter(Q(mnn__istartswith=v) | Q(trade_name__istartswith=v)).order_by('mnn', 'trade_name').distinct('mnn', 'trade_name')[:limit]
             ]
     return JsonResponse({"data": data})
 
@@ -1349,18 +1409,19 @@ def hospitals(request):
                 "code_tfoms": "000001",
             },
         ]
-    return JsonResponse(
-        {
-            "hospitals": [
-                *[
-                    {
-                        "id": x['pk'],
-                        "label": x["short_title"] or x["title"],
-                        "code_tfoms": x["code_tfoms"],
-                    }
-                    for x in rows
-                ],
-                *default_hospital,
-            ]
-        }
-    )
+    result = {
+        "hospitals": [
+            *[
+                {
+                    "id": x['pk'],
+                    "label": x["short_title"] or x["title"],
+                    "code_tfoms": x["code_tfoms"],
+                }
+                for x in rows
+            ],
+            *default_hospital,
+        ]
+    }
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return result
+    return JsonResponse(result)

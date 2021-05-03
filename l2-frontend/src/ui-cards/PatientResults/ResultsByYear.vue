@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <a href="#" class="main-link" @click.prevent
        v-tippy="{
                 html: `#${tippyId}`,
@@ -11,7 +11,7 @@
                 theme: 'light',
                 placement: 'bottom',
                 trigger: 'click mouseenter',
-                zIndex: 4999,
+                zIndex: 104999,
                 popperOptions: {
                   modifiers: {
                     preventOverflow: {
@@ -80,7 +80,7 @@
         </table>
       </div>
     </div>
-  </fragment>
+  </div>
 </template>
 
 <script>
@@ -153,7 +153,15 @@ export default {
       this.load()
     },
     sendToProtocol(direction){
-      this.$root.$emit('protocol:laboratoryResult', direction)
+      if (this.isLab) {
+        this.$root.$emit('protocol:laboratoryResult', direction)
+      }
+      else if (this.isParaclinic){
+        this.$root.$emit('protocol:paraclinicResult', direction)
+      }
+      else if (this.isDocReferral){
+        this.$root.$emit('protocol:docReferralResults', direction)
+      }
     },
     print_result(pk) {
       this.$root.$emit('print:results', [pk])
@@ -184,7 +192,7 @@ i {
     margin: 0;
   }
 
-  max-height: 600px;
+  max-height: 500px;
   width: 500px;
   overflow-y: auto;
 

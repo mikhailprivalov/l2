@@ -17,14 +17,13 @@
 {% endblock %}
 
 {% block head_cn %}
-    <script src="{% static 'js/modernizr.cssgrid.js' %}"></script>
     <style>
         body, html {
             height: 100%;
         }
 
         body {
-            padding-bottom: 0;
+            padding-bottom: 0 !important;
         }
 
         .container-fluid {
@@ -36,4 +35,9 @@
             margin-bottom: 3px;
         }
     </style>
+{% endblock %}
+
+{% block scripts_pre_webpack %}
+    {% include 'prefetch.html' with prefetched=prefetched %}
+    <script src="{% static 'js/modernizr.cssgrid.js' %}"></script>
 {% endblock %}

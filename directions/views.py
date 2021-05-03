@@ -482,6 +482,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                 -5: 'Стационар',
                 -6: 'Микробиология',
                 -9998: 'Морфология',
+                -9: 'Формы',
             }[rtp]
             # if rtp == -6:
             #     has_micro = True
@@ -542,6 +543,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                 "n": n,
                 "g": -1 if not v.research.fractions_set.exists() else v.research.fractions_set.first().relation_id,
                 "info": v.research.paraclinic_info,
+                "hospital_department_replaced_title": v.hospital_department_replaced_title,
             }
         )
 
@@ -567,6 +569,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                     + ("" if one_sl else "№{}: ".format(v["n"]))
                     + xh.fix(v["full_title"])
                     + ("" if not v["comment"] else " <font face=\"OpenSans\" size=\"" + str(font_size * 0.8) + "\">[{}]</font>".format(v["comment"]))
+                    + ("" if not v["hospital_department_replaced_title"] else f"<br/>Направлен в: {v['hospital_department_replaced_title']}")
                     + "</font>",
                     styleSheet["BodyText"],
                 ),

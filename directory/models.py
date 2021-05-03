@@ -66,11 +66,13 @@ class ResearchSite(models.Model):
         (2, 'Стоматалогия'),
         (3, 'Стационар'),
         (4, 'Микробиология'),
+        (7, 'Формы'),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
     title = models.CharField(max_length=255, help_text='Подраздел')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие подраздела', db_index=True)
+    order = models.IntegerField(default=-999, help_text='Порядок')
 
     def __str__(self):
         return "%s" % self.title
@@ -128,6 +130,7 @@ class Researches(models.Model):
         (10002, '100.02 - Реанимационная карта - 1 день'),
         (10101, '101.01 - Дневник в 3 колонки'),
         (10201, '102.01 - Гистология'),
+        (10301, '103.01 - Справка-вождение'),
     )
 
     CO_EXECUTOR_MODES = (
@@ -142,7 +145,7 @@ class Researches(models.Model):
     )
 
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления', on_delete=models.SET_NULL)
-    title = models.CharField(max_length=255, default="", help_text='Название исследования')
+    title = models.CharField(max_length=255, default="", help_text='Название исследования', db_index=True)
     short_title = models.CharField(max_length=255, default='', blank=True)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, related_name="department", help_text="Лаборатория", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
     quota_oms = models.IntegerField(default=-1, help_text='Квота по ОМС', blank=True)
@@ -158,15 +161,18 @@ class Researches(models.Model):
     onlywith = models.ForeignKey('self', null=True, blank=True, help_text='Без выбранного анализа не можеть быть назначено', on_delete=models.SET_NULL)
     can_lab_result_comment = models.BooleanField(default=False, blank=True, help_text='Возможность оставить комментарий лабораторией')
     code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
-    is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?")
-    is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление к врачу")
-    is_treatment = models.BooleanField(default=False, blank=True, help_text="Это лечение")
-    is_stom = models.BooleanField(default=False, blank=True, help_text="Это стоматология")
-    is_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационар")
-    is_slave_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационарный протокол")
-    is_microbiology = models.BooleanField(default=False, blank=True, help_text="Это микробиологическое исследование")
-    is_citology = models.BooleanField(default=False, blank=True, help_text="Это цитологическое исследование")
-    is_gistology = models.BooleanField(default=False, blank=True, help_text="Это гистологическое исследование")
+    is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?", db_index=True)
+    is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление к врачу", db_index=True)
+    is_treatment = models.BooleanField(default=False, blank=True, help_text="Это лечение", db_index=True)
+    is_stom = models.BooleanField(default=False, blank=True, help_text="Это стоматология", db_index=True)
+    is_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационар", db_index=True)
+    is_slave_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационарный протокол", db_index=True)
+    is_microbiology = models.BooleanField(default=False, blank=True, help_text="Это микробиологическое исследование", db_index=True)
+    is_citology = models.BooleanField(default=False, blank=True, help_text="Это цитологическое исследование", db_index=True)
+    is_gistology = models.BooleanField(default=False, blank=True, help_text="Это гистологическое исследование", db_index=True)
+    is_form = models.BooleanField(default=False, blank=True, help_text="Это формы, cправки, направления", db_index=True)
+    is_direction_params = models.BooleanField(default=False, blank=True, help_text="Суррогатная услуга - параметры направления", db_index=True)
+    is_global_direction_params = models.BooleanField(default=False, blank=True, help_text="Глобальные параметры", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
 
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
@@ -178,7 +184,7 @@ class Researches(models.Model):
     size_form = models.IntegerField(default=0, blank=True, choices=TYPE_SIZE_FORM, help_text="Размеры формы результат")
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
-    is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием")
+    is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием", db_index=True)
     internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True)
     co_executor_mode = models.SmallIntegerField(default=0, choices=CO_EXECUTOR_MODES, blank=True)
     co_executor_2_title = models.CharField(max_length=40, default='Со-исполнитель', blank=True)
@@ -195,7 +201,8 @@ class Researches(models.Model):
     bac_culture_comments_templates = models.TextField(blank=True, default="", help_text="Шаблоны ввода для комментария в культуре")
     speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальность услуги', on_delete=models.SET_NULL)
     rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
-
+    has_own_form_result = models.BooleanField(blank=True, default=False, help_text="Собственная форма результатов")
+    direction_params = models.ForeignKey('self', related_name='direction_params_p', help_text="Параметры направления", blank=True, null=True, default=None, on_delete=models.SET_NULL)
 
     @staticmethod
     def filter_type(t):
@@ -208,6 +215,8 @@ class Researches(models.Model):
             9: dict(is_microbiology=True),
             10: dict(is_citology=True),
             11: dict(is_gistology=True),
+            12: dict(is_form=True),
+            13: dict(is_direction_params=True),
         }
         return ts.get(t + 1, {})
 
@@ -223,13 +232,28 @@ class Researches(models.Model):
             return -4
         if self.is_hospital:
             return -5
+        if self.is_form:
+            return -9
+        if self.is_direction_params:
+            return -10
         if self.is_microbiology or self.is_citology or self.is_gistology:
             return 2 - Podrazdeleniya.MORFOLOGY
         return self.podrazdeleniye_id or -2
 
     @property
     def desc(self):
-        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology or self.is_hospital or self.is_citology or self.is_gistology
+        return (
+            self.is_treatment
+            or self.is_stom
+            or self.is_doc_refferal
+            or self.is_paraclinic
+            or self.is_microbiology
+            or self.is_hospital
+            or self.is_citology
+            or self.is_gistology
+            or self.is_form
+            or self.is_direction_params
+        )
 
     @property
     def can_transfer(self):
@@ -250,6 +274,9 @@ class Researches(models.Model):
 
         if self.is_doc_referral:
             return "consultation"
+
+        if self.is_form:
+            return "is_form"
 
         hs = HospitalService.objects.filter(slave_research=self).first()
 
@@ -406,7 +433,7 @@ class ParaclinicInputField(models.Model):
         (23, 'Raw field without autoload'),
         (24, 'Laboratory result test value units'),
         (25, 'Diagnostic result'),
-        (26, 'Consultation result')
+        (26, 'Consultation result'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')

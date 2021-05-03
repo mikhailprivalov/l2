@@ -4,14 +4,13 @@ import sys
 import warnings
 from collections import OrderedDict
 
-
 PROFILING = False
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
 DEBUG = "DLIS" in os.environ
 INTERNAL_IPS = ['127.0.0.1', '192.168.0.200', '192.168.0.101', '192.168.102.4', '192.168.0.128']
-ALLOWED_HOSTS = ['lis.fc-ismu.local', 'lis', '127.0.0.1', 'localhost', 'testserver']
+ALLOWED_HOSTS = ['lis', '127.0.0.1', 'localhost', 'testserver']
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_HSTS_SECONDS = 1
@@ -164,6 +163,10 @@ LOGGING = {
     },
     'handlers': {
         'file': {'level': 'DEBUG', 'class': 'logging.FileHandler', 'filters': ['requestdata'], 'filename': os.path.join(BASE_DIR, 'logs', 'log.txt'), 'formatter': 'base'},
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
     },
     'loggers': {
         'django.request': {
@@ -206,7 +209,6 @@ RMIS_UPLOAD_COUNT = 20
 DOC_CALL_SYNC_WAIT_TIME_SECS = 8
 DOC_CALL_SYNC_WAIT_LONG_TIME_SECS = 300
 
-
 RATELIMIT_VIEW = 'mainmenu.views.ratelimited'
 
 RMIS_PROXY = None
@@ -214,6 +216,12 @@ AFTER_DATE = None
 AFTER_DATE_HOLTER = None
 
 MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY = 3
+
+PREFETCH_DEBUG = False
+PREFETCH_ENABLED = False
+PREFETCH_MAX_THREADS = 15
+
+LOG_SQL = False
 
 
 class DisableMigrations(object):
@@ -266,6 +274,9 @@ SENTRY_DSN = "https://4a6968777ec240b190abd11cbf1c96e1@sentry.io/3083440"
 QUERY_TIMEOUT = 120
 
 FORM_100_08_A4_FORMAT = False
+FORCE_CACHALOT = False
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
@@ -279,14 +290,22 @@ if PROFILING:
 MIDDLEWARE += MIDDLEWARE_ADD
 MIDDLEWARE = list(OrderedDict.fromkeys(MIDDLEWARE))
 INSTALLED_APPS += INSTALLED_APPS_ADD
-INSTALLED_APPS = [x for x in OrderedDict.fromkeys(INSTALLED_APPS_PRE_ADD + INSTALLED_APPS) if x not in ['cachalot']]
+if not FORCE_CACHALOT:
+    INSTALLED_APPS = [x for x in OrderedDict.fromkeys(INSTALLED_APPS_PRE_ADD + INSTALLED_APPS) if x not in ['cachalot']]
 
 WS_URL = "ws://{}:{}/".format(WS_BASE, WS_PORT)
 
+if LOG_SQL:
+    LOGGING['loggers']['django.db.backends'] = {
+        'level': 'DEBUG',
+        'handlers': ['console'],
+    }
+
 MANIFEST_LOADER = {
-    'cache': not DEBUG,
+    'cache': False,
     'output_dir': 'webpack_bundles/',
     'manifest_file': os.path.join(BASE_DIR, 'assets/webpack_bundles/manifest.json'),
+    'ignore_missing_assets': DEBUG,
 }
 
 # db = DATABASES.get('default', {})

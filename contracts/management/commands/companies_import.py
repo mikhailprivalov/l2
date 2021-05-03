@@ -30,4 +30,4 @@ class Command(BaseCommand):
                 company = Company.objects.filter(Q(title=cells[title]) | Q(short_title=cells[short_title]))
                 if not company.exists():
                     Company(title=cells[title], short_title=cells[short_title]).save()
-                    print('компания создана', cells[title])
+                    print('компания создана', cells[title])  # noqa: T001

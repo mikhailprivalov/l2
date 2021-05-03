@@ -30,8 +30,8 @@ class Command(BaseCommand):
                         if col_value > 0:
                             age = ws.cell(row=1, column=c).value
                             if DispensaryRouteSheet.objects.filter(age_client=age, sex_client=sex, research=research_object).first():
-                                print(f'запись для {sex}-{age}-{research_object} существует')
+                                print(f'запись для {sex}-{age}-{research_object} существует')  # noqa: T001
                                 continue
                             dr = DispensaryRouteSheet(age_client=age, sex_client=sex, research=research_object)
                             dr.save()
-                            print(dr)
+                            print(dr)  # noqa: T001

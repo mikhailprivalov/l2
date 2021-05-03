@@ -94,6 +94,10 @@
         type: Number,
         required: true
       },
+      card: {
+        type: Object,
+        required: false,
+      },
       value: {},
     },
     data() {
@@ -277,6 +281,9 @@
         if ('pk' in this.selected_card)
           pk = this.selected_card.pk
         this.$emit('input', pk)
+        if (this.card) {
+          this.$emit('update:card', this.selected_card);
+        }
       },
       clear() {
         this.loaded = false

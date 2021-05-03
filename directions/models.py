@@ -17,6 +17,7 @@ import cases.models as cases
 from api.models import Application
 from hospitals.models import Hospitals
 from laboratory.utils import strdate, localtime, current_time
+from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
 import contracts.models as contracts
@@ -595,6 +596,44 @@ class Napravleniya(models.Model):
             dir.save()
 
     @staticmethod
+    def check_and_change_special_field(res_data, global_data):
+        laboratory_previous_results, diagnostic_previous_results, doc_referral_previous_results = None, None, None
+        if global_data.get('groups', None):
+            groups_data = global_data.get('groups')
+            for i in groups_data:
+                if i.get('fields', None):
+                    fields = i.get('fields', None)
+                    for f in fields:
+                        status = False
+                        if f.get('field_type', None):
+                            if f['field_type'] == 24:
+                                laboratory_previous_results = f.get('value', None)
+                                status = True
+                            elif f['field_type'] == 25:
+                                diagnostic_previous_results = f.get('value', None)
+                                status = True
+                            elif f['field_type'] == 26:
+                                doc_referral_previous_results = f.get('value', None)
+                                status = True
+                        if not status:
+                            res_data['groups'][0]['fields'].append(f)
+
+        groups_data = res_data.get('groups')
+        for i in groups_data:
+            if i.get('fields', None):
+                fields = i.get('fields', None)
+                for f in fields:
+                    if f.get('field_type', None):
+                        if f['field_type'] == 24:
+                            f['value'] = laboratory_previous_results
+                        elif f['field_type'] == 25:
+                            f['value'] = diagnostic_previous_results
+                        elif f['field_type'] == 26:
+                            f['value'] = doc_referral_previous_results
+
+        return res_data
+
+    @staticmethod
     def gen_napravleniya_by_issledovaniya(
         client_id,
         diagnos,
@@ -619,6 +658,9 @@ class Napravleniya(models.Model):
         parent_auto_gen=None,
         direction_purpose="NONE",
         external_organization="NONE",
+        direction_form_params=None,
+        current_global_direction_params=None,
+        hospital_department_override=-1,
     ):
         if not visited:
             visited = []
@@ -636,8 +678,10 @@ class Napravleniya(models.Model):
 
         childrens = {}
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
+        lab_podrazdeleniye_pk = list(Podrazdeleniya.objects.values_list('pk', flat=True).filter(p_type=2))
+
         i = 0
-        result = {"r": False, "list_id": []}
+        result = {"r": False, "list_id": [], "list_stationar_id": []}
         ofname_id = ofname_id or -1
         ofname = None
         if not Clients.Card.objects.filter(pk=client_id).exists():
@@ -678,11 +722,16 @@ class Napravleniya(models.Model):
                 i += 1
 
             res = []
+            only_lab_researches = []
+            dir_group_onlylab = ''
             for v in researches_grouped_by_lab:  # цикл перевода листа в словарь
                 for key in v.keys():
                     res += v[key]
+                    if int(key) in lab_podrazdeleniye_pk:
+                        only_lab_researches += v[key]
                     # {5:[0,2,5,7],6:[8]}
-
+            if only_lab_researches or external_organization != "NONE":
+                dir_group_onlylab = -9999999
             if not no_attach:
                 directions_for_researches = {}  # Словарь для временной записи направлений.
                 # Исследования привязываются к направлению по группе
@@ -696,16 +745,26 @@ class Napravleniya(models.Model):
                 for v in res:
                     research = directory.Researches.objects.get(pk=v)
                     research_coast = None
-
+                    if hospital_department_override == -1 and research.is_hospital:
+                        if research.podrazdeleniye is None:
+                            result["message"] = "Не указано отделение"
+                            return result
                     # пользователю добавлять данные услуги в направления(не будут добавлены)
                     if research in doc_current.restricted_to_direct.all():
                         continue
 
                     dir_group = -1
-                    if research.direction:
+                    if research.direction and external_organization == "NONE":
                         dir_group = research.direction_id
 
-                    if dir_group > -1 and dir_group not in directions_for_researches.keys():
+                    if v in only_lab_researches and external_organization != "NONE":
+                        dir_group = dir_group_onlylab
+
+                    research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
+                    if research_data_params:
+                        dir_group = -1
+
+                    if (dir_group > -1 and dir_group not in directions_for_researches.keys()) or (dir_group == dir_group_onlylab and dir_group not in directions_for_researches.keys()):
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(
                             client_id,
                             doc_current if not for_rmis else None,
@@ -724,8 +783,12 @@ class Napravleniya(models.Model):
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                         )
-
-                        result["list_id"].append(directions_for_researches[dir_group].pk)
+                        npk = directions_for_researches[dir_group].pk
+                        result["list_id"].append(npk)
+                        if research.is_hospital:
+                            result["list_stationar_id"].append(npk)
+                        if current_global_direction_params:
+                            DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], current_global_direction_params)
                     if dir_group == -1:
                         dir_group = "id" + str(research.pk)
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(
@@ -746,8 +809,21 @@ class Napravleniya(models.Model):
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                         )
+                        npk = directions_for_researches[dir_group].pk
+                        result["list_id"].append(npk)
+                        if research.is_hospital:
+                            result["list_stationar_id"].append(npk)
 
-                        result["list_id"].append(directions_for_researches[dir_group].pk)
+                        if not research_data_params and current_global_direction_params:
+                            DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], current_global_direction_params)
+
+                        if research_data_params and not current_global_direction_params:
+                            DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], research_data_params)
+                            research_data_params = None
+
+                        if research_data_params and current_global_direction_params:
+                            all_params_result = Napravleniya.check_and_change_special_field(research_data_params, current_global_direction_params)
+                            DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], all_params_result)
 
                     # получить по прайсу и услуге: текущую цену
                     research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
@@ -765,6 +841,7 @@ class Napravleniya(models.Model):
                     issledovaniye = Issledovaniya(
                         napravleniye=directions_for_researches[dir_group], research=research, coast=research_coast, discount=research_discount, how_many=research_howmany, deferred=False
                     )
+
                     loc = ""
                     if str(research.pk) in localizations:
                         localization = directory.Localization.objects.get(pk=localizations[str(research.pk)]["code"])
@@ -774,6 +851,10 @@ class Napravleniya(models.Model):
                         s = directory.ServiceLocation.objects.get(pk=service_locations[str(research.pk)]["code"])
                         issledovaniye.service_location = s
                     issledovaniye.comment = loc or (comments.get(str(research.pk), "") or "")[:40]
+                    if hospital_department_override != -1 and research.is_hospital and Podrazdeleniya.objects.filter(pk=hospital_department_override).exists():
+                        issledovaniye.hospital_department_override_id = hospital_department_override
+                    elif hospital_department_override == -1 and research.is_hospital and Podrazdeleniya.objects.filter(pk=research.podrazdeleniye.pk).exists():
+                        issledovaniye.hospital_department_override_id = research.podrazdeleniye.pk
                     issledovaniye.save()
                     if issledovaniye.pk not in childrens:
                         childrens[issledovaniye.pk] = {}
@@ -893,7 +974,7 @@ class Napravleniya(models.Model):
     def rmis_referral_title(self) -> str:
         if self.is_external:
             return "КДЛ"
-        return self.doc.podrazdeleniye.rmis_department_title
+        return None if not self.doc.podrazdeleniye else self.doc.podrazdeleniye.rmis_department_title
 
     def get_attr(self):
         """
@@ -1025,6 +1106,7 @@ class Issledovaniya(models.Model):
     aggregate_lab = JSONField(null=True, blank=True, default=None, help_text='ID направлений лаборатории, привязаных к стационарному случаю')
     aggregate_desc = JSONField(null=True, blank=True, default=None, help_text='ID направлений описательных, привязаных к стационарному случаю')
     microbiology_conclusion = models.TextField(default=None, null=True, blank=True, help_text='Заключение по микробиологии')
+    hospital_department_override = models.ForeignKey(Podrazdeleniya, blank=True, null=True, default=None, help_text="Отделение стационара", on_delete=models.SET_NULL)
 
     @property
     def time_save_local(self):
@@ -1036,6 +1118,14 @@ class Issledovaniya(models.Model):
 
     def get_stat_diagnosis(self):
         pass
+
+    @property
+    def hospital_department_replaced_title(self):
+        if not self.research or not self.research.is_hospital:
+            return None
+        if self.hospital_department_override:
+            return self.hospital_department_override.get_title()
+        return None
 
     @property
     def doc_confirmation_fio(self):
@@ -1275,6 +1365,44 @@ class ParaclinicResult(models.Model):
             paraclinic_result_obj.save()
 
         return paraclinic_result_obj
+
+
+class DirectionParamsResult(models.Model):
+    napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление для которого сохранены дополнительные параметры', db_index=True, on_delete=models.CASCADE)
+    title = models.CharField(default='', max_length=400, help_text='Название поля ввода')
+    field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
+    field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
+    value = models.TextField()
+    order = models.SmallIntegerField(default=None, blank=True, null=True)
+
+    def get_field_type(self):
+        return self.field_type if self.field_type is not None else self.field.field_type
+
+    @staticmethod
+    def save_direction_params(direction_obj, data):
+        if data.get('groups', None):
+            groups_data = data.get('groups')
+            for i in groups_data:
+                if i.get('fields', None):
+                    fields = i.get('fields', None)
+                    for f in fields:
+                        field_obj, field_type = None, None
+                        value, title = '', ''
+                        order = -1
+                        for k, v in f.items():
+                            if k == 'pk':
+                                field_obj = directory.ParaclinicInputField.objects.get(pk=v)
+                            if k == 'order':
+                                order = v
+                            if k == 'value':
+                                value = v
+                            if k == 'field_type':
+                                field_type = v
+                            if k == 'title':
+                                title = v
+                        if value:
+                            direction_params_obj = DirectionParamsResult(napravleniye=direction_obj, title=title, field=field_obj, field_type=field_type, value=value, order=order)
+                            direction_params_obj.save()
 
 
 class MicrobiologyResultCulture(models.Model):
@@ -1592,7 +1720,7 @@ class Result(models.Model):
                     rigthkk = rigths(kk)
 
                     if years == 0 and rigthkk and not has_years(k):
-                        print(days, monthes, years, k)
+                        print(days, monthes, years, k)  # noqa: T001
                         if monthes == 0:
                             if has_days(k):
                                 rigth = rigthkk

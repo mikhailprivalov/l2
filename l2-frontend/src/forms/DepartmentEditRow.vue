@@ -2,6 +2,7 @@
   <tr :class="updated && 'has-success'">
     <td>{{ department.pk }}</td>
     <td><input class="form-control" v-model="department.title" :disabled="!can_edit"/></td>
+    <td><input class="form-control" placeholder="oid - подразделения" v-model="department.oid" :disabled="!can_edit"/></td>
     <td>
       <treeselect :multiple="false" :disable-branch-nodes="true" :options="types_options"
                   placeholder="Тип не выбран" v-model="department.type"
@@ -25,7 +26,7 @@ import _ from 'lodash';
 
 export default {
   name: 'DepartmentEditRow',
-  components: {Treeselect, },
+  components: {Treeselect},
   props: {
     can_edit: {
       type: Boolean,
@@ -56,6 +57,9 @@ export default {
     department_type() {
       this.save_clear_deb();
     },
+    department_oid() {
+      this.save_clear_deb();
+    }
   },
   computed: {
     department_title() {
@@ -63,7 +67,10 @@ export default {
     },
     department_type() {
       return this.department.type;
-    }
+    },
+    department_oid() {
+      return this.department.oid;
+    },
   },
   methods: {
     save_clear_deb() {
@@ -78,7 +85,7 @@ export default {
         method: "POST",
         hospital: this.selected_hospital,
         type: 'update',
-        data: [{pk: this.department.pk, title: this.department_title, type: this.department_type}]
+        data: [{pk: this.department.pk, title: this.department_title, type: this.department_type, oid: this.department_oid}]
       });
       if (ok) {
         okmessage('Сохранено');

@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <li v-show="Boolean(l2_load_file)">
       <a href="#" @click.prevent="doOpen">
         Загрузка файла
@@ -34,7 +34,7 @@
         </div>
       </modal>
     </li>
-  </fragment>
+  </div>
 </template>
 
 <script>

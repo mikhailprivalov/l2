@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 import directory.models as directory
 import podrazdeleniya.models as pod
 import slog.models as slog
+from api.prefetch import prefetch
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya
@@ -811,6 +812,42 @@ def rmis_confirm(request):
 
 def l2queue(request):
     return render(request, 'dashboard/l2queue.html')
+
+
+@login_required
+def directions(request):
+    prefetched = prefetch(request, {
+        'researches.get_researches': {
+            'url': 'researches/all',
+        },
+        'departments': {
+            'data': {'method': 'GET'},
+        },
+        'bases': {},
+        'current_user_info': {
+            'url': 'current-user-info',
+        },
+        'hospitals': {},
+        'researches.by_direction_params': {
+            'url': 'researches/by-direction-params',
+        },
+        'procedure_list.get_suitable_departments': {
+            'url': 'procedural-list/suitable-departments',
+        },
+        'directive_from': {
+            'url': 'directive-from',
+        },
+        'directions.purposes': {
+            'url': 'directions/purposes',
+        },
+        'directions.external_organizations': {
+            'url': 'directions/external-organizations',
+        },
+        'researches.get_researches_templates': {
+            'url': 'researches/templates',
+        },
+    })
+    return render(request, 'dashboard/directions_ng.html', {"prefetched": prefetched})
 
 
 def eds(request, path):

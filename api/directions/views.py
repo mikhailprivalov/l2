@@ -19,7 +19,7 @@ from api import sql_func
 from api.dicom import search_dicom_study
 from api.patients.views import save_dreg
 from api.sql_func import get_fraction_result, get_field_result
-from api.stationar.stationar_func import forbidden_edit_dir
+from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
@@ -33,7 +33,8 @@ from directions.models import (
     ExternalOrganization,
     MicrobiologyResultCulture,
     MicrobiologyResultCultureAntibiotic,
-    DirectionToUserWatch, IstochnikiFinansirovaniya,
+    DirectionToUserWatch,
+    IstochnikiFinansirovaniya,
     DirectionsHistory,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
@@ -62,7 +63,7 @@ from medical_certificates.models import ResearchesCertificate, MedicalCertificat
 @login_required
 @group_required("Лечащий врач", "Врач-лаборант", "Оператор лечащего врача")
 def directions_generate(request):
-    result = {"ok": False, "directions": [], "message": ""}
+    result = {"ok": False, "directions": [], "directionsStationar": [], "message": ""}
     if request.method == "POST":
         p = json.loads(request.body)
         type_card = Card.objects.get(pk=p.get("card_pk"))
@@ -94,13 +95,18 @@ def directions_generate(request):
             service_locations=p.get("service_locations", {}),
             direction_purpose=p.get("direction_purpose", "NONE"),
             external_organization=p.get("external_organization", "NONE"),
+            direction_form_params=p.get("direction_form_params", {}),
+            current_global_direction_params=p.get("current_global_direction_params", {}),
+            hospital_department_override=p.get("hospital_department_override", -1),
         )
+
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
             result["ok"] = rc["r"]
             if "message" in rc:
                 result["message"] = rc["message"]
             result["directions"].extend(rc["list_id"])
+            result["directionsStationar"].extend(rc["list_stationar_id"])
             if not result["ok"]:
                 break
     return JsonResponse(result)
@@ -230,7 +236,7 @@ def directions_history(request):
             title_podr = ''
         if title_podr not in lab:
             lab.add(title_podr)
-        if i[14] or i[15] or i[16] or i[17] or i[18] or i[19]:
+        if i[14] or i[15] or i[16] or i[17] or i[18] or i[19] or i[23]:
             has_descriptive = True
 
     status = min(status_set)
@@ -979,6 +985,7 @@ def directions_paraclinic_form(request):
                         | Q(research__is_microbiology=True)
                         | Q(research__is_citology=True)
                         | Q(research__is_gistology=True)
+                        | Q(research__is_form=True)
                     )
                 )
                 .select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')
@@ -1370,6 +1377,7 @@ def directions_paraclinic_result(request):
             | Q(research__is_gistology=True)
             | Q(research__is_stom=True)
             | Q(research__is_gistology=True)
+            | Q(research__is_form=True)
         ).exists()
         or request.user.is_staff
     ):
@@ -1458,10 +1466,7 @@ def directions_paraclinic_result(request):
                         for pc_time in times:
                             times_medication = datetime.strptime(f"{date:%Y-%m-%d} {pc_time}", '%Y-%m-%d %H:%M').astimezone(user_timezone)
                             if not ProcedureListTimes.objects.filter(prescription=proc_obj, times_medication=times_medication).exists():
-                                ProcedureListTimes.objects.create(
-                                    prescription=proc_obj,
-                                    times_medication=times_medication
-                                )
+                                ProcedureListTimes.objects.create(prescription=proc_obj, times_medication=times_medication)
 
         recipe_no_remove = []
 
@@ -1753,6 +1758,9 @@ def directions_paraclinic_confirm_reset(request):
                 i.doc_confirmation = None
                 i.time_confirmation = None
                 i.save()
+            if iss.napravleniye:
+                iss.napravleniye.need_resend_amd = False
+                iss.napravleniye.save()
             Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
         else:
             response["message"] = "Сброс подтверждения разрешен в течении %s минут" % (str(SettingManager.get("lab_reset_confirm_time_min")))
@@ -1876,6 +1884,7 @@ def last_field_result(request):
     result = None
 
     c = Card.objects.get(pk=client_pk)
+    data = c.get_data_individual()
     if request_data["fieldPk"].find('%work_place') != -1:
         if c.work_place:
             work_place = c.work_place
@@ -1884,6 +1893,12 @@ def last_field_result(request):
         else:
             work_place = ""
         result = {"value": work_place}
+    elif request_data["fieldPk"].find('%main_address') != -1:
+        result = {"value": c.main_address}
+    elif request_data["fieldPk"].find('%snils') != -1:
+        result = {"value": data['snils']}
+    elif request_data["fieldPk"].find('%polis_enp') != -1:
+        result = {"value": data['enp']}
     elif request_data["fieldPk"].find('%fact_address') != -1:
         result = {"value": c.fact_address}
     elif request_data["fieldPk"].find('%phone') != -1:
@@ -2066,7 +2081,10 @@ def external_organizations(request):
                 "title": e.title,
             }
         )
-    return JsonResponse({"organizations": result})
+    data = {"organizations": result}
+    if hasattr(request, 'plain_response') and request.plain_response:
+        return data
+    return JsonResponse(data)
 
 
 @login_required
@@ -2206,8 +2224,8 @@ def directions_result_year(request):
 def results_by_direction(request):
     request_data = json.loads(request.body)
     is_lab = request_data.get('isLab', False)
-    # is_paraclinic = request_data.get('isParaclinic', False)
-    # is_doc_refferal = request_data.get('isDocReferral', False)
+    is_paraclinic = request_data.get('isParaclinic', False)
+    is_doc_refferal = request_data.get('isDocReferral', False)
     direction = request_data.get('dir')
 
     directions = request_data.get('directions', [])
@@ -2226,4 +2244,93 @@ def results_by_direction(request):
 
             objs_result[r.direction]['researches'][r.iss_id]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
 
+    if is_paraclinic or is_doc_refferal:
+        results = desc_to_data(directions, force_all_fields=True)
+        for i in results:
+            direction_data = i['result'][0]["date"].split(' ')
+            if direction_data[1] not in objs_result:
+                objs_result[direction_data[1]] = {'dir': direction_data[1], 'date': direction_data[0], 'researches': {}}
+            if i['result'][0]["iss_id"] not in objs_result[direction_data[1]]['researches']:
+                objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]] = {
+                    'title': i['title_research'],
+                    'fio': short_fio_dots(i['result'][0]["docConfirm"]),
+                    'dateConfirm': direction_data[0],
+                    'fractions': [],
+                }
+
+            values = values_from_structure_data(i['result'][0]["data"])
+            objs_result[direction_data[1]]['researches'][i['result'][0]["iss_id"]]["fractions"].append({'value': values})
+
     return JsonResponse({"results": list(objs_result.values())})
+
+
+def values_from_structure_data(data):
+    s = ''
+    for v in data:
+        if v['group_title']:
+            s = f"{s} [{v['group_title']}]:"
+        for field in v['fields']:
+            if field['field_type'] in [24, 25, 26]:
+                continue
+            if field['value']:
+                if field['title_field']:
+                    s = f"{s} {field['title_field']}"
+                s = f"{s} {field['value']};"
+    return s.strip()
+
+
+def get_research_for_direction_params(pk):
+    response = {}
+    if isinstance(pk, Researches):
+        research_obj = pk
+    elif isinstance(pk, (int, str)) and int(pk) > -1:
+        research_obj = Researches.objects.get(pk=int(pk))
+    else:
+        return response
+    response["research"] = {
+        "title": research_obj.title,
+        "version": research_obj.pk * 10000,
+        "is_paraclinic": research_obj.is_paraclinic or research_obj.is_citology or research_obj.is_gistology,
+        "is_doc_refferal": research_obj.is_doc_refferal,
+        "is_microbiology": research_obj.is_microbiology,
+        "is_treatment": research_obj.is_treatment,
+        "is_stom": research_obj.is_stom,
+        "wide_headers": research_obj.wide_headers,
+        "groups": [],
+        "show": False,
+    }
+    for group in research_obj.paraclinicinputgroups_set.all().filter(hide=False):
+        g = {
+            "pk": group.pk,
+            "order": group.order,
+            "title": group.title,
+            "show_title": group.show_title,
+            "hide": group.hide,
+            "display_hidden": False,
+            "fields": [],
+            "visibility": group.visibility,
+        }
+        for field in group.paraclinicinputfield_set.all().filter(hide=False).order_by("order"):
+            field_type = field.field_type
+            g["fields"].append(
+                {
+                    "pk": field.pk,
+                    "order": field.order,
+                    "lines": field.lines,
+                    "title": field.title,
+                    "hide": field.hide,
+                    "values_to_input": ([] if not field.required or field_type not in [10, 12] else ['- Не выбрано']) + json.loads(field.input_templates),
+                    "value": (field.default_value if field_type not in [3, 11, 13, 14] else '')
+                    if field_type not in [1, 20]
+                    else (get_default_for_field(field_type)),
+                    "field_type": field_type,
+                    "default_value": field.default_value,
+                    "visibility": field.visibility,
+                    "required": field.required,
+                    "helper": field.helper,
+                }
+            )
+        response["research"]["groups"] = [g]
+        break
+
+    return response

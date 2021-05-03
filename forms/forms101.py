@@ -332,7 +332,6 @@ def form_03(request_data):
      отказа от медицинского вмешательства в отношении определенных видов медицинских вмешательств,
      форм информированного добровольного согласия на медицинское вмешательство и форм отказа
      от медицинского вмешательства" (с изменениями и дополнениями).
-
      Приказ Министерства здравоохранения и социального развития РФ от 23 апреля 2012 г. N 390н
     "Об утверждении Перечня определенных видов медицинских вмешательств, на которые граждане дают информированное добровольное
      согласие при выборе врача и медицинской организации для получения первичной медико-санитарной помощи
@@ -724,7 +723,7 @@ def form_05(request_data):
                     )
                 )
             except Exception as e:
-                print(e)
+                print(e)  # noqa: T001
                 pass
 
     doc.build(objs)
@@ -1524,3 +1523,1270 @@ def form_09(request_data):
     buffer.close()
     return pdf
 
+
+def form_10(request_data):
+    """
+    Карта учета профилактического медицинского осмотра (диспансеризации)
+    """                      
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    hospital: Hospitals = request_data["hospital"]
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = True
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=13 * mm,
+        rightMargin=4 * mm,
+        topMargin=4 * mm,
+        bottomMargin=4 * mm,
+        allowSplitting=1,
+        title="Форма {}".format("Карта учета профилактического медицинского осмотра (диспансеризации)")
+    )
+    width, height = portrait(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 9
+    style.leading = 12
+    style.spaceAfter = 0 * mm
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+
+    styleFL = deepcopy(style)
+    styleFL.firstLineIndent = 0
+
+    styleSign = deepcopy(style)
+    styleSign.firstLineIndent = 0
+    styleSign.alignment = TA_LEFT
+    styleSign.leading = 13
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleBold.firstLineIndent = 0
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 9
+    styleCenter.leading = 10
+    styleCenter.spaceAfter = 0 * mm
+
+    styleRight = deepcopy(style)
+    styleRight.aligment = TA_RIGHT
+
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.firstLineIndent = 0
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 13
+    styleCenterBold.face = 'PTAstraSerifBold'
+
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    styleT = deepcopy(style)
+    styleT.firstLineIndent = 0
+
+    styleSingBold = deepcopy(styleSign)
+    styleSingBold.fontName = "PTAstraSerifBold"
+
+    objs = []
+    opinion = [
+        [
+            Paragraph('', style),
+            Paragraph('<b>Приложение №1<br/> к приказу Министерства здравоохранения<br/>Российской Федерации<br/>от 10 ноября 2020 г. N 1207н</b>', styleSingBold),
+        ],
+    ]
+    tbl = Table(opinion, 2 * [90 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 80),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )                   
+
+    objs.append(tbl)
+
+    opinion = [
+        [
+            Paragraph('Наименование медицинской организации', style),
+            Paragraph('Код формы по ОКУД _______________ <br/> Код организации по ОКПО __________', styleSign),
+        ],
+        [
+            Paragraph('{}»'.format(hospital_name), style),
+            Paragraph('Медицинская документация Учетная форма N 131/у', styleSign),
+        ],
+        [
+            Paragraph('Адрес: {}'.format(hospital_address), style),
+            Paragraph('Утверждена приказом Минздрава России от "__"___ 2020__ г. N ___', styleSign),
+        ],
+    ]
+    tbl = Table(opinion, 2 * [100 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )                   
+
+    objs.append(tbl)
+
+    objs.append(Paragraph('Карта учета <br/> профилактического медицинского осмотра (диспансеризации)', styleCenterBold,))
+    objs.append(Paragraph('1. Дата начала профилактического медицинского осмотра (диспансеризации) "___"___________ 20__ г. ', style,))
+
+    d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('2. Фамилия, имя, отчество (при наличии): {}&nbsp; {} г. рождения'.format(person_data['fio'], date_individual_born), style))
+    objs.append(Paragraph('3. Пол: <u>{}</u> '.format(patient_data['sex']), style,))
+    objs.append(Paragraph('4. Дата рождения  <u>{}</u> '.format(date_individual_born), style,))
+    objs.append(Paragraph('5. Местность: городская - 1, сельская - 2 ', style,))
+    objs.append(Paragraph('6. Адрес регистрации по месту жительства {}'.format(person_data['fact_address']), style,))
+    objs.append(Paragraph('7. Код категории льготы: _____________', style,))
+    objs.append(Paragraph('8. Принадлежность к коренным малочисленным народам Севера, Сибири и Дальнего Востока Российской Федерации:да - 1; нет - 2', style,))
+    objs.append(Paragraph('9. Занятость: 1 - работает; 2 - не работает; 3 - обучающийся в образовательной организации по очной форме', style,))
+    objs.append(Paragraph('10. Профилактический медицинский осмотр (первый этап диспансеризации) проводится мобильной медицинской бригадой: да - 1; нет – 2', style,))
+    objs.append(Paragraph('11. Результаты исследований и иных медицинских вмешательств, выполненных при проведении профилактического медицинского осмотра '
+                          '(первого этапа диспансеризации):', style))
+    objs.append(Spacer(1, 2 * mm))
+
+    styleTCenter = deepcopy(styleT)
+    styleTCenter.alignment = TA_CENTER
+    styleTCenter.leading = 3.5 * mm
+
+    opinion = [
+        [
+            Paragraph('<font size=9 >Рост ___см </font>', styleTCenter),
+            Paragraph('<font size=9 >Масса тела ____ кг</font>', styleTCenter),
+            Paragraph('<font size=9 >индекс массы тела _______ кг/м<sup><small>2</small></sup></font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >артериальное давление на периферических артериях __________ мм рт.ст. </font>', styleSign),
+            Paragraph('<font size=9 >прием гипотензивных лекарственных препаратов:да      нет</font>', styleSign),
+            Paragraph('<font size=9 >внутриглазное давление _____ мм рт.с</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >уровень общего холестери на в крови _____ ммоль/л </font>', styleSign),
+            Paragraph('<font size=9 >прием гипогликемических лекарственных препаратов: да      нет</font>', styleSign),
+            Paragraph('<font size=9 >уровень глюкозы в крови натощак _____ ммоль/л</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >прием гиполипидемических лекарственных препаратов: да      нет</font>', styleSign),
+            Paragraph(
+                '<font size=9 >относительный сердечно-сосудистый риск (от 18 лет до 39 лет) _____ %<br/>'
+                'абсолютный сердечно-сосудистый риск (от 40 лет до 64 лет включительно) _____ %</font>', 
+                styleSign
+            ),
+        ],
+    ]
+
+    row_height = []
+    for i in opinion:
+        row_height.append(16 * mm)
+    row_height[3] = None
+    row_height[2] = None
+    row_height[1] = None
+    row_height[0] = None
+
+    tbl = Table(opinion, colWidths=(40 * mm, 30 * mm, 75 * mm), rowHeights=row_height)
+
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+                ('SPAN', (1, 3), (2, 3)),
+            ]
+        )
+    )
+
+    objs.append(tbl)
+
+    styleLeft = deepcopy(style)
+    styleLeft.alignment = TA_LEFT
+
+    objs.append(Paragraph(
+        '12. Сведения о проведенных приёмах (осмотрах, консультациях), исследованиях и иных медицинских'
+        ' вмешательствах при профилактическом медицинском осмотре (на первом этапе диспансеризации)', 
+        style
+    ))
+    objs.append(Spacer(1, 2 * mm))
+
+    opinion = [
+        [
+            Paragraph(
+                '<font size=9 >Приём (осмотр, консультация), исследование и иное медицинское вмешательство, входящее'
+                ' в объем профилактического медицинского осмотра / первого этапа диспансеризации</font>', 
+                styleTCenter
+            ),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >N строки</font>', styleTCenter),
+            Paragraph('<font size=9 >Отметка о проведении (дата/(-)</font>', styleTCenter),
+            Paragraph('<font size=9 >Примечание</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >Выявлено патологическое состояние (+/-)</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >Отказ от проведения (+/-)</font>', styleTCenter),
+            Paragraph('<font size=9 >Проведено ранее (дата)</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >1</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >2</font>', styleTCenter),
+            Paragraph('<font size=9 >3</font>', styleTCenter),
+            Paragraph('<font size=9 >4</font>', styleTCenter),
+            Paragraph('<font size=9 >5</font>', styleTCenter),
+            Paragraph('<font size=9 >6</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Опрос (анкетирование), 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >01</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Расчет на основании антропометрии (измерение роста, массы тела, окружности талии) индекса массы тела, 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >02</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Измерение артериального давления на периферических артериях, 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >03</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Определение уровня общего холестерина в крови, 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >04</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Определение уровня глюкозы в крови натощак, 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >05</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Определение относительного сердечно-сосудистого риска у граждан в возрасте от 18 до 39 лет включительно, 1 раз год</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >06</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Определение абсолютного сердечно-сосудистого риска у граждан в возрасте от 40 до 64 лет включительно, 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >07</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Флюорография легких или рентгенография легких, 1 раз в 2 года</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >08</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Электрокардиография в покое (при первом прохождении профилактического медицинского осмотра, далее в возрасте 35 лет и старше),'
+                      ' 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >09</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Измерение внутриглазного давления (при первом прохождении профилактического медицинского осмотра, далее в возрасте'
+                      ' 40 лет и старше), 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >10</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Осмотр фельдшером (акушеркой) или врачом акушером-гинекологом женщин в возрасте от 18 лет и старше, 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >11</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Взятие с использованием щетки цитологической цервикальной мазка (соскоба) с поверхности шейки матки (наружного маточного зева) и '
+                      'цервикального канала на цитологическое исследование, цитологическое исследование мазка с шейки матки в возрасте от 18 до 64 лет,1 раз в 3 года</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >12</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Маммография обеих молочных желез в двух проекциях у женщин в возрасте от 40 до 75 лет включительно, 1 раз в 2 года</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >13</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Исследование кала на скрытую кровь иммунохимическим методом</font>', styleSign),
+            Paragraph('<font size=9 >а) в возрасте от 40 до 64 лет включительно, 1 раз в 2 года</font>', styleSign),
+            Paragraph('<font size=9 >14.1</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >б) в возрасте от 65 до 75 лет включительно, 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 >14.2</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Определение простат-специфического антигена в крови у мужчин в возрасте 45, 50, 55, 60 и 64 лет</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >15</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Эзофагогастродуоденоскопия в возрасте 45 лет однократно</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >16</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Общий анализ крови в возрасте 40 лет и старше, 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >17</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Краткое индивидуальное профилактическое консультирование в возрасте 18 лет и старше</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >18</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Прием (осмотр) по результатам профилактического медицинского осмотра фельдшером фельдшерского здравпункта или '
+                      'фельдшерско-акушерского пункта, врачом-терапевтом или врачом по медицинской профилактике отделения (кабинета) медицинской профилактики'
+                      'или центра здоровья граждан в возрасте 18 лет и старше, 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >19</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Прием (осмотр) врачом-терапевтом по результатам первого этапа диспансеризации</font>', styleSign),
+            Paragraph('<font size=9 >а) граждан в возрасте от 18 лет до 39 лет 1 раз в 3 года</font>', styleSign),
+            Paragraph('<font size=9 >20.1</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >б) граждан в возрасте 40 лет и старше 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 >20.2</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Осмотр на выявление визуальных и иных локализаций онкологических заболеваний, включающий осмотр кожных покровов, слизистых губ'
+                      'и ротовой полости, пальпацию щитовидной железы, лимфатических узлов, граждан в возрасте 18 лет и старше, 1 раз в год</font>', styleSign),
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >21</font>', styleTCenter),
+        ],
+    ]
+
+    row_height = []
+    for i in opinion:
+        row_height.append(None)
+
+    tbl = Table(opinion, colWidths=(45 * mm, 45 * mm, 15 * mm, 20 * mm, 20 * mm, 20 * mm, 25 * mm), rowHeights=row_height)
+
+    table_style = [
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+        ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+        ('SPAN', (4, 0), (5, 0)),
+        ('SPAN', (0, 0), (0, 1)),
+        ('SPAN', (1, 0), (1, 1)),
+        ('SPAN', (2, 0), (2, 1)),
+        ('SPAN', (3, 0), (3, 1)),
+        ('SPAN', (0, 0), (1, 1)),
+        ('SPAN', (0, 16), (0, 17)),
+        ('SPAN', (0, 23), (0, 24)),
+        ('SPAN', (0, 25), (1, 25)),
+    ]
+                          
+    table_style += [
+        ('SPAN', (0, i + 1), (1, i + 1)) for i in range(15)
+    ]
+                          
+    table_style += [
+        ('SPAN', (0, i + 18), (1, i + 18)) for i in range(5)
+    ]
+
+    tbl.setStyle(TableStyle(table_style))
+
+    objs.append(tbl)
+    objs.append(
+        Paragraph(
+            '13. Направлен на второй этап диспансеризации: да - 1, нет - 2', style,
+        )
+    )
+
+    objs.append(
+        Paragraph(
+            '14. Сведения о проведенных приёмах (осмотрах, консультациях), исследованиях и иных медицинских вмешательствах на втором этапе диспансеризации', style,
+        )
+    )
+
+    objs.append(PageBreak())
+    opinion = [
+        [
+            Paragraph('<font size=9 >Приём (осмотр, консультация), исследование и иное медицинское вмешательство, входящее в объем второго этапа диспансеризации</font>', styleTCenter),
+            Paragraph('<font size=9 >N строки</font>', styleTCenter),
+            Paragraph('<font size=9 >Выявлено медицинское показание в рамках первого этапа диспансеризации (+/-)</font>', styleTCenter),
+            Paragraph('<font size=9 >Дата проведения</font>', styleTCenter),
+            Paragraph('<font size=9 >Отказ (+/-)</font>', styleTCenter),
+            Paragraph('<font size=9 >Проведено ранее (дата)</font>', styleTCenter),
+            Paragraph('<font size=9 >Выявлено патологическое состояние (+/-)</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >1</font>', styleTCenter),
+            Paragraph('<font size=9 >2</font>', styleTCenter),
+            Paragraph('<font size=9 >3</font>', styleTCenter),
+            Paragraph('<font size=9 >4</font>', styleTCenter),
+            Paragraph('<font size=9 >5</font>', styleTCenter),
+            Paragraph('<font size=9 >6</font>', styleTCenter),
+            Paragraph('<font size=9 >7</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9> Осмотр (консультация) врачом-неврологом</font>', styleSign),
+            Paragraph('<font size=9 >01</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Дуплексное сканирование брахиоцефальных артерий </font>', styleSign),
+            Paragraph('<font size=9 >02</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Осмотр (консультация) врачом-хирургом или врачом-урологом</font>', styleSign),
+            Paragraph('<font size=9 >03</font>', styleSign),
+        ],
+
+        [
+            Paragraph('<font size=9 >Осмотр (консультация) врачом-хирургом или врачом-колопроктологом, включая проведение ректороманоскопии</font>', styleSign),
+            Paragraph('<font size=9 >04</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Колоноскопия</font>', styleSign),
+            Paragraph('<font size=9 >05</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Эзофагогастродуоденоскопия</font>', styleSign),
+            Paragraph('<font size=9 >06</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Рентгенография легких</font>', styleSign),
+            Paragraph('<font size=9 >07</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Компьютерная томография легких</font>', styleSign),
+            Paragraph('<font size=9 >08</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Спирометрия</font>', styleSign),
+            Paragraph('<font size=9 >09</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Осмотр (консультация) врачом-акушером-гинекологом</font>', styleSign),
+            Paragraph('<font size=9 >10</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Осмотр (консультация) врачом-оториноларингологом</font>', styleSign),
+            Paragraph('<font size=9 >11</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Осмотр (консультация) врачом-офтальмологом</font>', styleSign),
+            Paragraph('<font size=9 >12</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Индивидуальное или групповое (школа для пациентов) углубленное профилактическое консультирование для граждан:</font>', styleSign),
+            Paragraph('<font size=9 >13</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >с выявленной ишемической болезнью сердца, цереброваскулярными заболеваниями, хронической ишемией нижних конечностей атеросклеротического'
+                      'генеза или болезнями, характеризующимися повышенным кровяным давлением</font>', styleSign),
+            Paragraph('<font size=9 >13.1</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >с выявленным по результатам анкетирования риском пагубного потребления алкоголя и (или) потребления наркотических средств '
+                      'и психотропных веществ без назначения врача</font>', styleSign),
+            Paragraph('<font size=9 >13.2</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >в возрасте 65 лет и старше в целях коррекции выявленных факторов риска и (или) профилактики старческой астении</font>', styleSign),
+            Paragraph('<font size=9 >13.3</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >при выявлении высокого относительного, высокого и очень высокого абсолютного сердечно-сосудистого риска, и (или) ожирения,'
+                      'и (или) гиперхолестеринемии с уровнем общего холестерина 8 ммоль/л и более, а также установленном по результатам анкетирования курении более'
+                      '20 сигарет в день, риске пагубного потребления алкоголя и (или) риске немедицинского потребления наркотических средств и психотропных веществ</font>', styleSign),
+            Paragraph('<font size=9 >13.4</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Прием (осмотр) врачом-терапевтом по результатам второго этапа диспансеризации</font>', styleSign),
+            Paragraph('<font size=9 >14</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Направление на осмотр (консультацию) врачом-онкологом при подозрении на онкологические заболевания.</font>', styleSign),
+            Paragraph('<font size=9 >15</font>', styleSign),
+        ],
+    ]
+
+    row_height = []
+    for i in opinion:
+        row_height.append(None)
+
+    tbl = Table(opinion, colWidths=(70 * mm, 15 * mm, 25 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm), rowHeights=row_height)
+
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+            ]
+        )
+    )
+
+    objs.append(tbl)
+
+    objs.append(Paragraph('15. Дата окончания профилактического медицинского осмотра __________________', style,))
+    objs.append(Paragraph('Дата окончания первого этапа диспансеризации _________________', style,))
+    objs.append(Paragraph('Дата окончания второго этапа диспансеризации _________________', style,))
+    objs.append(Paragraph('16. Профилактический медицинский осмотр (диспансеризация) проведен(а): в полном объеме - 1, в неполном объеме - 2', style,))
+    objs.append(Paragraph(
+        '17. Выявленные при проведении профилактического медицинского осмотра (диспансеризации) факторы риска и другие патологические '
+        'состояния и заболевания, повышающие вероятность развития хронических неинфекционных заболеваний', style,))
+
+    opinion = [
+        [
+            Paragraph('<font size=9 >Наименование фактора риска, другого патологического состояния и заболевания</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+            Paragraph('<font size=9 >№ строки</font>', styleTCenter),
+            Paragraph('<font size=9 >Код МКБ-10<sup>1</sup></font>', styleTCenter),
+            Paragraph('<font size=9 >Выявлен фактор риска, другое патологическое состояние и заболевание (+/-)</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >1</font>', styleTCenter),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >2</font>', styleTCenter),
+            Paragraph('<font size=9 >3</font>', styleTCenter),
+            Paragraph('<font size=9 >4</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Гиперхолестеринемия</font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >01</font>', styleTCenter),
+            Paragraph('<font size=9 >Е78</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Гипергликемия </font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >02</font>', styleTCenter),
+            Paragraph('<font size=9 >R73.9</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Курение табака</font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >03</font>', styleTCenter),
+            Paragraph('<font size=9 >Z72.0</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Нерациональное питание </font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >04</font>', styleTCenter),
+            Paragraph('<font size=9 >Z72.4</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Избыточная масса тела</font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >05</font>', styleTCenter),
+            Paragraph('<font size=9 >R63.5</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Ожирение</font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >06</font>', styleTCenter),
+            Paragraph('<font size=9 >Е66</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Низкая физическая активность</font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >07</font>', styleTCenter),
+            Paragraph('<font size=9 >Z72.3</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Риск пагубного потребления алкоголя</font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >08</font>', styleTCenter),
+            Paragraph('<font size=9 >Z72.1</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Риск потребления наркотических средств и психотропных веществ без назначения врача</font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >09</font>', styleTCenter),
+            Paragraph('<font size=9 >Z72.2</font>', styleTCenter),
+        ],      
+        [
+            Paragraph('<font size=9 >Отягощенная наследственность по сердечно-сосудистым заболеваниям</font>', styleSign),
+            Paragraph('<font size=9 >инфаркт миокарда</font>', styleSign),
+            Paragraph('<font size=9 >10</font>', styleTCenter),
+            Paragraph('<font size=9 >Z82.4</font>', styleTCenter),
+        ],       
+        [
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >мозговой инсульт</font>', styleSign),
+            Paragraph('<font size=9 >11</font>', styleTCenter),
+            Paragraph('<font size=9 >Z82.3</font>', styleTCenter),
+        ],       
+        [
+            Paragraph('<font size=9 >Отягощенная наследственность по злокачественным новообразованиям</font>', styleSign),
+            Paragraph('<font size=9 >колоректальной области</font>', styleSign),
+            Paragraph('<font size=9 >12</font>', styleTCenter),
+            Paragraph('<font size=9 >Z80.0</font>', styleTCenter),
+        ],       
+        [
+            Paragraph('<font size=9 ></font>', styleSign),
+            Paragraph('<font size=9 >других локализации</font>', styleSign),
+            Paragraph('<font size=9 >13</font>', styleTCenter),
+            Paragraph('<font size=9 >Z80.9</font>', styleTCenter),
+        ],       
+        [
+            Paragraph('<font size=9 >Отягощенная наследственность по хроническим болезням нижних дыхательных путей</font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >14</font>', styleTCenter),
+            Paragraph('<font size=9 >Z82.5</font>', styleTCenter),
+        ],       
+        [
+            Paragraph('<font size=9 >Отягощенная наследственность по сахарному диабету</font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >15</font>', styleTCenter),
+            Paragraph('<font size=9 >Z83.3</font>', styleTCenter),
+        ],       
+        [
+            Paragraph('<font size=9 >Высокий (5% -10%) или очень высокий (10% и более) абсолютный сердечно-сосудистый риск</font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >16</font>', styleTCenter),
+            Paragraph('<font size=9 >-</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Высокий (более 1 ед.) относительный сердечно-сосудистый риск</font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >17</font>', styleTCenter),
+            Paragraph('<font size=9 >-</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Старческая астения</font>', styleSign),
+            Paragraph('', styleSign),
+            Paragraph('<font size=9 >18</font>', styleTCenter),
+            Paragraph('<font size=9 >R54</font>', styleTCenter),
+        ],
+    ]
+
+    row_height = []
+    for i in opinion:
+        row_height.append(None)
+
+    tbl = Table(opinion, colWidths=(70 * mm, 50 * mm, 20 * mm, 20 * mm, 30 * mm), rowHeights=row_height)
+    table_style = [
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+        ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+        ('SPAN', (0, 11), (0, 12)),
+        ('SPAN', (0, 13), (0, 14)),
+    ]
+        
+    table_style += [
+        ('SPAN', (0, i), (1, i)) for i in range(11)
+    ]
+                          
+    table_style += [
+        ('SPAN', (0, i + 15), (1, i + 15)) for i in range(5)
+    ]
+                          
+    tbl.setStyle(TableStyle(table_style))
+
+    objs.append(tbl)
+
+    objs.append(Paragraph('17.1. Все факторы риска, указанные в строках 03, 04, 07, 08, 09 настоящей таблицы: отсутствуют - 1,присутствуют - 2', style,))
+    objs.append(Paragraph('18. Заболевания, выявленные при проведении профилактического медицинского осмотра (диспансеризации),установление диспансерного наблюдения', style,))
+
+    opinion = [
+        [
+            Paragraph('<font size=9 >Наименование классов и отдельных заболеваний</font>', styleTCenter),
+            Paragraph('<font size=9 >№ строки</font>', styleTCenter),
+            Paragraph('<font size=9 >Код МКБ-10</font>', styleTCenter),
+            Paragraph('<font size=9 >Отметка о наличии заболевания (+/-)</font>', styleTCenter),
+            Paragraph('<font size=9 >Отметка об установлении диспансерного наблюдения (+/-)</font>', styleTCenter),
+            Paragraph('<font size=9 >Отметка о впервые выявленном заболевании (+/-)</font>', styleTCenter),
+            Paragraph('<font size=9 >Отметка о впервые установленном диспансерном наблюдении (+/-)</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >1</font>', styleTCenter),
+            Paragraph('<font size=9 >2</font>', styleTCenter),
+            Paragraph('<font size=9 >3</font>', styleTCenter),
+            Paragraph('<font size=9 >4</font>', styleTCenter),
+            Paragraph('<font size=9 >5</font>', styleTCenter),
+            Paragraph('<font size=9 >6</font>', styleTCenter),
+            Paragraph('<font size=9 >7</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Туберкулез органов дыхания</font>', styleSign),
+            Paragraph('<font size=9 >01</font>', styleTCenter),
+            Paragraph('<font size=9 >А15-А16</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Злокачественные новообразования</font>', styleSign),
+            Paragraph('<font size=9 >02</font>', styleTCenter),
+            Paragraph('<font size=9 >С00-С97</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Из них губы, полости рта и глотки</font>', styleSign),
+            Paragraph('<font size=9 >2.1</font>', styleTCenter),
+            Paragraph('<font size=9 >С00-С14</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >из них в 1-2 стадии</font>', styleSign),
+            Paragraph('<font size=9 >2.2</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >пищевода</font>', styleSign),
+            Paragraph('<font size=9 >2.3</font>', styleTCenter),
+            Paragraph('<font size=9 >С15</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >из них в 1-2 стадии</font>', styleSign),
+            Paragraph('<font size=9 >2.4</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],       
+        [
+            Paragraph('<font size=9 >желудка</font>', styleSign),
+            Paragraph('<font size=9 >2.5</font>', styleTCenter),
+            Paragraph('<font size=9 >С16</font>', styleTCenter),
+        ],          
+        [
+            Paragraph('<font size=9 >из них в 1-2 стадии</font>', styleSign),
+            Paragraph('<font size=9 >2.6</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >тонкого кишечника</font>', styleSign),
+            Paragraph('<font size=9 >2.7</font>', styleTCenter),
+            Paragraph('<font size=9 >С17</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >из них в 1-2 стадии</font>', styleSign),
+            Paragraph('<font size=9 >2.8</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >ободочной кишки</font>', styleSign),
+            Paragraph('<font size=9 >2.9</font>', styleTCenter),
+            Paragraph('<font size=9 >С18</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >из них в 1-2 стадии</font>', styleSign),
+            Paragraph('<font size=9 >2.10</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >ректосигмоидного соединения, прямой кишки, заднего прохода (ануса) и анального канала</font>', styleSign),
+            Paragraph('<font size=9 >2.11</font>', styleTCenter),
+            Paragraph('<font size=9 >С19-С21</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >из них в 1-2 стадии</font>', styleSign),
+            Paragraph('<font size=9 >2.12</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >трахеи, бронхов, легкого</font>', styleSign),
+            Paragraph('<font size=9 >2.13</font>', styleTCenter),
+            Paragraph('<font size=9 >С33, С34</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >из них в 1-2 стадии</font>', styleSign),
+            Paragraph('<font size=9 >2.14</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >кожи</font>', styleSign),
+            Paragraph('<font size=9 >2.15</font>', styleTCenter),
+            Paragraph('<font size=9 >С43-С44</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >из них в 1-2 стадии</font>', styleSign),
+            Paragraph('<font size=9 >2.16</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >молочной железы</font>', styleSign),
+            Paragraph('<font size=9 >2.17</font>', styleTCenter),
+            Paragraph('<font size=9 >С50</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >из них в 0-1 стадии</font>', styleSign),
+            Paragraph('<font size=9 >2.18</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >2 стадии</font>', styleSign),
+            Paragraph('<font size=9 >2.19</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >шейки матки</font>', styleSign),
+            Paragraph('<font size=9 >2.20</font>', styleTCenter),
+            Paragraph('<font size=9 >С53</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >из них в 0-1 стадии</font>', styleSign),
+            Paragraph('<font size=9 >2.21</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >2 стадии</font>', styleSign),
+            Paragraph('<font size=9 >2.22</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >предстательной железы</font>', styleSign),
+            Paragraph('<font size=9 >2.23</font>', styleTCenter),
+            Paragraph('<font size=9 >С61</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >из них в 1-2 стадии</font>', styleSign),
+            Paragraph('<font size=9 >2.24</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Сахарный диабет</font>', styleSign),
+            Paragraph('<font size=9 >03</font>', styleTCenter),
+            Paragraph('<font size=9 >Е10-Е14Е10-Е14</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >из него: инсулиннезависимый сахарный диабет</font>', styleSign),
+            Paragraph('<font size=9 >3.1</font>', styleTCenter),
+            Paragraph('<font size=9 >Е11</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Преходящие церебральные ишемические приступы (атаки) и родственные синдромыvv</font>', styleSign),
+            Paragraph('<font size=9 >04</font>', styleTCenter),
+            Paragraph('<font size=9 >G45</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Старческая катаракта и другие катаракты</font>', styleSign),
+            Paragraph('<font size=9 >05</font>', styleTCenter),
+            Paragraph('<font size=9 >Н25, Н26</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Глаукома</font>', styleSign),
+            Paragraph('<font size=9 >06</font>', styleTCenter),
+            Paragraph('<font size=9 >Н40</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Слепота и пониженное зрение</font>', styleSign),
+            Paragraph('<font size=9 >07</font>', styleTCenter),
+            Paragraph('<font size=9 >Н54</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Кондуктивная и нейросенсорная потеря слуха</font>', styleSign),
+            Paragraph('<font size=9 >08</font>', styleTCenter),
+            Paragraph('<font size=9 >Н90</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Болезни системы кровообращения</font>', styleSign),
+            Paragraph('<font size=9 >09</font>', styleTCenter),
+            Paragraph('<font size=9 >I00-I99</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >из них: болезни, характеризующиеся повышенным кровяным давлением</font>', styleSign),
+            Paragraph('<font size=9 >9.1</font>', styleTCenter),
+            Paragraph('<font size=9 >I10-I13</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >ишемические болезни сердца</font>', styleSign),
+            Paragraph('<font size=9 >9.2</font>', styleTCenter),
+            Paragraph('<font size=9 >I20-I25</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >цереброваскулярные болезни</font>', styleSign),
+            Paragraph('<font size=9 >9.3</font>', styleTCenter),
+            Paragraph('<font size=9 >I60-I69</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >из них: закупорка и стеноз прецеребральных и (или) церебральных артерий, не приводящие к инфаркту мозга</font>', styleSign),
+            Paragraph('<font size=9 >9.4</font>', styleTCenter),
+            Paragraph('<font size=9 >I65, I66</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Болезни органов дыхания</font>', styleSign),
+            Paragraph('<font size=9 >10</font>', styleTCenter),
+            Paragraph('<font size=9 >J00-J99</font>', styleTCenter),
+        ],        
+        [
+            Paragraph(
+                '<font size=9 >Бронхит, не уточненный как острый и хронический, '
+                'простой и слизисто-гнойный хронический бронхит, хронический бронхит неуточненный, эмфизема</font>', 
+                styleSign
+            ),
+            Paragraph('<font size=9 >10.1</font>', styleTCenter),
+            Paragraph('<font size=9 >J40-J43</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Другая хроническая обструктивная легочная болезнь, астма, астматический статус, бронхоэктатическая болезнь</font>', styleSign),
+            Paragraph('<font size=9 >10.2</font>', styleTCenter),
+            Paragraph('<font size=9 >J44-J47</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >Болезни органов пищеварения</font>', styleSign),
+            Paragraph('<font size=9 >11</font>', styleTCenter),
+            Paragraph('<font size=9 >К00-К93</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >язва желудка, язва двенадцатиперстной кишки</font>', styleSign),
+            Paragraph('<font size=9 >11.1</font>', styleTCenter),
+            Paragraph('<font size=9 >К25, К26</font>', styleTCenter),
+        ],        
+        [
+            Paragraph('<font size=9 >гастрит и дуоденит</font>', styleSign),
+            Paragraph('<font size=9 >12</font>', styleTCenter),
+            Paragraph('<font size=9 >К29</font>', styleTCenter),
+        ],
+        [
+            Paragraph('<font size=9 >Прочие</font>', styleSign),
+            Paragraph('<font size=9 >13</font>', styleTCenter),
+            Paragraph('<font size=9 ></font>', styleTCenter),
+        ],
+    ]
+
+    row_height = []
+    for i in opinion:
+        row_height.append(None)
+
+    tbl = Table(opinion, colWidths=(60 * mm, 10 * mm, 20 * mm, 20 * mm, 25 * mm, 30 * mm, 30 * mm,), rowHeights=row_height)
+
+    table_style = [
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+        ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+        ('SPAN', (2, 20), (2, 22)),
+        ('SPAN', (2, 23), (2, 25)),
+    ] 
+    table_style += [
+        ('SPAN', (2, 4 + (i * 2)), (2, 4 + (i * 2) + 1)) for i in range(8)
+    ]
+    
+    tbl.setStyle(TableStyle(table_style))
+    objs.append(tbl)
+
+    objs.append(Paragraph('19. Диспансерное наблюдение установлено:', style,))
+    objs.append(Paragraph('19.1. врачом (фельдшером) отделения (кабинета) медицинской профилактики или центра здоровья: да - 1; нет - 2.', style,))
+    objs.append(Paragraph('Если "да", N строки таблицы пункта 18 ________________', style,))
+    objs.append(Paragraph('19.2. врачом-терапевтом: да - 1; нет - 2. Если "да", N строки таблицы пункта 18 _______________________', style,))    
+    objs.append(Paragraph('19.3. врачом-специалистом: да - 1; нет - 2. Если "да", N строки таблицы пункта 18 _____________________', style,))    
+    objs.append(Paragraph(
+        '19.4. фельдшером фельдшерского здравпункта или фельдшерско-акушерского пункта: да - 1; нет - 2.'
+        'Если "да", N строки таблицы пункта 18 _________________________', style,
+    ))    
+    objs.append(Paragraph('20. Группа  здоровья:  I группа - 1,   II группа - 2,   IIIа  группа - 3,   IIIб группа - 4', style,))    
+    objs.append(Paragraph(
+        '21. Уровень артериального давления ниже 140/90 мм рт. ст. на фоне приема гипотензивных лекарственных препаратов'
+        'при наличии болезней, характеризующихся повышенным кровяным давлением (коды I10-I15 по МКБ-10): да- 1; нет - 2', style,
+    ))    
+    objs.append(Paragraph(
+        '22. Направлен   при  наличии  медицинских   показаний   на   дополнительное   обследование,   не  входящее  в объем'
+        'диспансеризации,  в том числе  направлен   на  осмотр (консультацию)  врачом-онкологом  при  подозрении на онкологическое заболевание: да - 1; нет - 2', style,
+    ))    
+    objs.append(Paragraph('Если "да", дата направления "___"___________ 20__ г', style,))    
+    objs.append(Paragraph('23. Направлен для получения специализированной, в том числе высокотехнологичной, медицинской помощи: да - 1; нет - 2', style,))
+    objs.append(Paragraph('Если "да", дата направления "___"___________ 20__ г', style,))    
+    objs.append(Paragraph('24. Направлен на санаторно-курортное лечение: да - 1; нет - 2', style,))
+
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+
+    objs.append(Paragraph(
+        'Ф.И.О. и подпись врача (фельдшера) отделения (кабинета) медицинской профилактики  (центра здоровья),   а    в случае  отсутствия в'
+        'медицинской  организации  отделения  (кабинета)  медицинской профилактики - фельдшера, врача-терапевта, являющегося ответственным'
+        'за организацию и проведение профилактического медицинского осмотра (диспансеризации) на участке<sup>2</sup>.', style,
+    ))
+
+    objs.append(Spacer(1, 95 * mm))
+
+    objs.append(Paragraph(
+        '<font size=9 ><sup>1</sup> Международная статистическая классификация болезней и проблем, связанных со здоровьем, 10-го пересмотра (далее - МКБ - 10).</font>', style,))
+
+    objs.append(Paragraph(
+        '<font size=9 ><sup>2</sup> Абзацы третий и четвертый пункта 12 порядка проведения профилактического медицинского осмотра и диспансеризации определенных групп</font>'
+        '<font size=9 >взрослого населения, утвержденного приказом Министерства здравоохранения Российской Федерации от 13 марта 2019 г. N 124н "Об утверждении порядка</font>'
+        '<font size=9 >проведения профилактического медицинского осмотра и диспансеризации определенных групп взрослого населения" (зарегистрирован Министерством</font>'
+        '<font size=9 >юстиции Российской Федерации 24 апреля 2019 г., регистрационный N 54495), с изменениями, внесенными приказом Министерства здравоохранения</font>'
+        '<font size=9 >Российской Федерации 2 сентября 2019 г. N 716н (зарегистрирован Министерством юстиции Российской Федерации 16 октября 2019 г., регистрационный </font>'
+        '<font size=9 >№ 56254).</font>', style,))
+
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_11(request_data):
+    """
+    Отказ от видов медицинских вмешательств, включенных
+    в Перечень определенных видов медицинских вмешательств,
+    на которые граждане дают информированное добровольное
+    согласие при выборе врача и медицинской организации
+    для получения первичной медико-санитарной помощи
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = True
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4, leftMargin=13 * mm, rightMargin=4 * mm, topMargin=4 * mm, bottomMargin=4 * mm, allowSplitting=1, title="Форма {}".format("Согласие на обработку ПДн")
+    )
+    width, height = portrait(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 11
+    style.leading = 12
+    style.spaceAfter = 0 * mm
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+
+    styleFL = deepcopy(style)
+    styleFL.firstLineIndent = 0
+
+    styleSign = deepcopy(style)
+    styleSign.firstLineIndent = 0
+    styleSign.alignment = TA_LEFT
+    styleSign.leading = 13
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleBold.firstLineIndent = 0
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 9
+    styleCenter.leading = 10
+    styleCenter.spaceAfter = 0 * mm
+
+    styleRight = deepcopy(style)
+    styleRight.aligment = TA_RIGHT
+
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.firstLineIndent = 0
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 13
+    styleCenterBold.face = 'PTAstraSerifBold'
+
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    styleT = deepcopy(style)
+    styleT.firstLineIndent = 0
+
+    objs = []
+
+    opinion = [
+        [
+            Paragraph('', style),
+            Paragraph('Приложение №3 к приказу Министерства здравоохранения <br/> Российской Федерации от 20 декабря 2012г.№ 117н', styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, 2 * [90 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 80),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    objs.append(tbl)
+
+    objs.append(
+        Paragraph(
+            'Отказ от видов медицинских вмешательств, включенных <br/> в Перечень определенных видов медицинских вмешательств, <br/> на которые граждане дают '
+            'информированное добровольное <br/> согласие при выборе врача и медицинской организации <br/> для получения первичной медико-санитарной помощи <br/>'
+            'помощи {}'.format(who_patient), 
+            styleCenterBold
+        ),
+    )
+
+    d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('Я, {}&nbsp; {} г. рождения'.format(person_data['fio'], date_individual_born), styleSign))
+
+    styleLeft = deepcopy(style)
+    styleLeft.alignment = TA_LEFT
+    objs.append(Paragraph('Зарегистрированный(ая) по адресу: {}'.format(person_data['main_address']), styleSign))
+    objs.append(Spacer(1, 2 * mm))
+
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+
+    if agent_status:
+        opinion = [
+            Paragraph('являюсь законным представителем ({}) {}:'.format(ind_card.get_who_is_agent_display(), who_patient), styleBold),
+            Paragraph('{}&nbsp; {} г. рождения'.format(patient_data['fio'], patient_data['born']), styleSign),
+            Paragraph('Зарегистрированный(ая) по адресу: {}'.format(patient_data['main_address']), styleSign),
+            Paragraph('Проживающий(ая) по адресу: {}'.format(patient_data['fact_address']), styleSign),
+        ]
+
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(
+                    'Документ, удостоверяющий личность {}: серия <u>{}</u> номер <u>{}</u>'.format(patient_data['type_doc'], patient_data['bc_serial'], patient_data['bc_num']), styleSign
+                )
+            )
+            opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["bc_date_start"], person_data['bc_issued']), styleSign))
+        else:
+            opinion.append(
+                Paragraph(
+                    'Документ, удостоверяющий личность {}: серия {} номер {}'.format(patient_data['type_doc'], patient_data['passport_serial'], patient_data['passport_num']), styleSign
+                )
+            )
+            opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["passport_date_start"], person_data['passport_issued']), styleSign))
+
+        objs.extend(opinion)
+
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+
+    objs.append(Paragraph(f" При оказании мне первичной медико-санитарной помощи в <u>{hospital_name}</u>", styleSign))
+
+    objs.append(
+        Paragraph(
+            'Отказываюсь от следующих видов медицинских вмешательств, включенных в'								
+            'Перечень определенных видов медицинских вмешательств, на которые граждане дают '	 	 	 	 				
+            'информированное добровольное согласие при выборе врача и медицинской организации'
+            'для получения первичной медико-санитарной помощи, утвержденный приказом'
+            'Министерства здравоохранения и социального развития Российской Федера-ции'
+            'от 23 апреля 2012 г. № 390н (зарегистрирован Министерством юстиции Российской'
+            'Федерации 5 мая 2012 г. № 24082) (далее — виды медицинских вмешательств):',
+            style,
+        )
+    )  
+
+    objs.append(Paragraph('<br/>_________________________________________________________________________________________________', styleSign))
+    objs.append(Paragraph('(наименование вида медицинского вмешательства)', styleCenter))
+    objs.append(Paragraph('_________________________________________________________________________________________________', styleSign))
+    objs.append(Paragraph('_________________________________________________________________________________________________', styleSign))
+    objs.append(Paragraph('_________________________________________________________________________________________________', styleSign))
+    objs.append(Paragraph('_________________________________________________________________________________________________', styleSign))
+    objs.append(Paragraph('_________________________________________________________________________________________________', styleSign))
+
+    objs.append(
+        Paragraph(
+            'Медицинским работником _______________________________________________________________________',
+            style,
+        )
+    )
+
+    objs.append(
+        Paragraph(
+            'в доступной для меня форме мне разъяснены возможные последствия отказа от '
+            'вышеуказанных видов медицинских вмешательств, в том числе вероятность '
+            'развития осложнений заболевания (состояния). Мне разъяснено, что при '
+            'возникновении необходимости в осуществлении одного или нескольких видов '
+            'медицинских вмешательств, в отношении которых оформлен настоящий отказ, я'
+            'имею право оформить информированное добровольное согласие на такой вид '
+            '(такие виды) медицинского вмешательства.',
+            style,
+        )
+    )
+    space_bottom = ' &nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('{}'.format(person_data['fio']), styleCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph('(подпись){0}(Ф.И.О. гражданина или законного представителя гражданина){1}'.format(22 * space_bottom, 30 * space_bottom), styleCenter))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('{}'.format(space_bottom), style))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph('(подпись){0}(Ф.И.О. медицинского работника){1}'.format(33 * space_bottom, 43 * space_bottom), styleCenter))
+
+    objs.append(Spacer(1, 5 * mm))
+
+    styleSign = deepcopy(style)
+    styleSign.firstLineIndent = 0
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph('{} г.'.format(date_now), style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph('{}(дата оформления)'.format(3 * space_bottom), styleSign))
+
+    objs.append(Paragraph('', style))
+    objs.append(Paragraph('', style))
+
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf

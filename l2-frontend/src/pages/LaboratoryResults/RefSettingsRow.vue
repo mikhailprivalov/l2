@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <td>
       {{ r.fraction.title }}
     </td>
@@ -21,7 +21,7 @@
         <RefEditor :reference="r.ref"/>
       </template>
     </td>
-  </fragment>
+  </div>
 </template>
 <script>
 import _ from 'lodash';

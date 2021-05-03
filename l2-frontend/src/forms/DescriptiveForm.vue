@@ -129,6 +129,12 @@
               <div class="field-value" v-else-if="field.field_type === 24">
                 <LaboratoryPreviousResults v-model="field.value" :disabled="confirmed"/>
               </div>
+              <div class="field-value" v-else-if="field.field_type === 25">
+                <DiagnosticPreviousResults v-model="field.value" :disabled="confirmed"/>
+              </div>
+              <div class="field-value" v-else-if="field.field_type === 26">
+                <DocReferralPreviousResults v-model="field.value" :disabled="confirmed"/>
+              </div>
 
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
@@ -154,6 +160,7 @@ import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper'
 import FastTemplates from "./FastTemplates";
 import {enter_field, leave_field} from "./utils";
 
+
 export default {
     name: 'DescriptiveForm',
     components: {
@@ -175,6 +182,8 @@ export default {
       MKBFieldForm: () => import('../fields/MKBFieldForm'),
       FormulaField: () => import('../fields/FormulaField'),
       LaboratoryPreviousResults: () => import('../fields/LaboratoryPreviousResults'),
+      DiagnosticPreviousResults: () => import('../fields/DiagnosticPreviousResults'),
+      DocReferralPreviousResults: () => import('../fields/DocReferralPreviousResults'),
     },
     props: {
       research: {

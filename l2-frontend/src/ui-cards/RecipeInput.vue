@@ -183,23 +183,23 @@
     z-index: 0;
   }
 
-  .prec /deep/ .input-group {
+  .prec ::v-deep .input-group {
     border-radius: 0;
     width: 100%;
     z-index: 0;
   }
 
-  .prec /deep/ input {
+  .prec ::v-deep input {
     border-radius: 0!important;
   }
 
-  .prec /deep/ ul {
+  .prec ::v-deep ul {
     position: relative;
     font-size: 13px;
     z-index: 1000;
   }
 
-  .prec /deep/ ul li {
+  .prec ::v-deep ul li {
     overflow: hidden;
     text-overflow: ellipsis;
     padding: 2px .25rem;

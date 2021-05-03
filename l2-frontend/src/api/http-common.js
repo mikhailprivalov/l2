@@ -7,15 +7,20 @@ export const HTTP = axios.create({
   headers: {
     'X-CSRF-Token': Cookies.get('csrftoken')
   },
-  params: {
-    _: Math.floor((new Date().getTime()) / 100000)
-  }
 })
 
 export const smartCall = async ({method = 'post', url, urlFmt = null, onReject = {}, ctx = null, moreData = {}, pickKeys}) => {
   const data = ctx
     ? (pickKeys ? merge(pick(ctx, Array.isArray(pickKeys) ? pickKeys : [pickKeys]), moreData) : ctx)
     : moreData;
+
+  if (window.prefetch) {
+    const prefetchedResult = window.prefetch.popRouteCache(url, data);
+    if (prefetchedResult) {
+      return prefetchedResult;
+    }
+  }
+
   try {
     let response
     if (urlFmt) {

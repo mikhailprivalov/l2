@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <div class="top-buttons" :class="!confirmed && 'top-buttons-full'">
       <template v-if="loaded">
         <template v-if="!confirmed">
@@ -23,8 +23,8 @@
         </template>
       </template>
     </div>
-    <div class="root" ref="root" v-if="pk" :key="pk">
-      <table class="table table-bordered table-sm-pd">
+    <div class="root" ref="root" v-show="pk">
+      <table class="table table-bordered table-sm-pd" v-if="pk">
         <thead>
         <tr>
           <td colspan="4">
@@ -47,12 +47,12 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="r in result">
+        <tr v-for="(r, i) in result">
           <td>
             <label class="fraction-title" :for="`fraction-${r.fraction.pk}`">{{ r.fraction.title }}</label>
           </td>
           <BloodTypeField
-            v-if="research.template === 2"
+            v-if="research.template === 2 && i === 0"
             :readonly="confirmed || !loaded"
             :r="r"
           />
@@ -118,7 +118,7 @@
         </template>
         </tbody>
       </table>
-      <table class="table table-bordered table-condensed" v-if="execParams.length > 0">
+      <table class="table table-bordered table-condensed" v-if="pk && execParams.length > 0">
         <colgroup>
           <col width="208"/>
           <col/>
@@ -155,7 +155,7 @@
       </template>
     </div>
     <RefSettings v-if="showRefSettings" :close="hideRefSettings" :result="result"/>
-  </fragment>
+  </div>
 </template>
 <script>
 import * as action_types from "@/store/action-types";

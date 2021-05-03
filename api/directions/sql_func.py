@@ -19,6 +19,7 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directory_researches.is_stom,
             directory_researches.is_doc_refferal,
             directory_researches.is_paraclinic,
+            directory_researches.is_form,
             directory_researches.is_microbiology,
             directory_researches.podrazdeleniye_id,
             directions_napravleniya.parent_id,
@@ -67,7 +68,7 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
         time_confirmation,
         to_char(time_recive AT TIME ZONE %(tz)s, 'DD.MM.YY HH24:MI:SS.US'), 
         ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs, is_slave_hospital,
-        is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid, parent_slave_hosp_id
+        is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid, parent_slave_hosp_id, is_form
         FROM t_iss_tubes
         LEFT JOIN t_recive
         ON t_iss_tubes.tubesregistration_id = t_recive.id_t_recive

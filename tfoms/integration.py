@@ -29,7 +29,7 @@ def make_request(path, query=None, **kwargs):
         data = requests.post(url, headers=headers, **kwargs).json()
         return data
     except Exception as e:
-        print(e)
+        print(e)  # noqa: T001
         return {}
 
 

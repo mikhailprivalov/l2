@@ -143,13 +143,15 @@ def get_result_text_research(research_pk, listdirs, force_all_fields=False):
                     ) or
                     (directory_paraclinicinputfield.group_id in (SELECT group_id from t_groups) and title ILIKE 'Заключение')),
             
-            t_iss AS (SELECT id as iss_id, time_confirmation,
+            t_iss AS (SELECT directions_issledovaniya.id as iss_id, time_confirmation,
                       to_char(time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YY') as date_confirm,
-                      napravleniye_id, t_research.research_title FROM directions_issledovaniya
+                      napravleniye_id, t_research.research_title, ud.fio FROM directions_issledovaniya
                 LEFT JOIN t_research on t_research.research_id = directions_issledovaniya.research_id
+                LEFT JOIN users_doctorprofile ud ON
+                ud.id=directions_issledovaniya.doc_confirmation_id
                 WHERE directions_issledovaniya.research_id=%(id_research)s and napravleniye_id = ANY(ARRAY[%(id_dirs)s]) and time_confirmation is not Null)
                      
-            SELECT research_title, date_confirm, napravleniye_id, group_title, title, "value" FROM directions_paraclinicresult
+            SELECT research_title, date_confirm, napravleniye_id, group_title, title, "value", t_iss.iss_id, t_iss.fio, field_type  FROM directions_paraclinicresult
             LEFT JOIN t_iss on directions_paraclinicresult.issledovaniye_id = t_iss.iss_id
             LEFT JOIN t_fields on directions_paraclinicresult.field_id = t_fields.field_id
             WHERE issledovaniye_id in (SELECT iss_id from t_iss) and 

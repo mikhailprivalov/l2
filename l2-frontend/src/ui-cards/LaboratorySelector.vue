@@ -1,5 +1,5 @@
 <template>
-  <fragment>
+  <div v-frag>
     <div>
       <button class="btn btn-blue-nb btn-ell dropdown-toggle bt1"
               type="button" data-toggle="dropdown">
@@ -12,7 +12,7 @@
         </li>
       </ul>
     </div>
-  </fragment>
+  </div>
 </template>
 
 <script>

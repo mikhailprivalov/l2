@@ -1153,15 +1153,15 @@ sup {
   box-sizing: border-box;
 }
 
-.sloader, .sloader * {
+.sloader.show-loader, .sloader.show-loader * {
   z-index: 100001;
 }
 
-.sloader .nav-loader {
+.sloader.show-loader .nav-loader {
   display: block;
 }
 
-.sloader .nav-cont {
+.sloader.show-loader .nav-cont {
   display: none;
 }
 
@@ -1334,7 +1334,7 @@ body > .container-fluid {
     border-radius: 0;
   }
 
-  input, textarea {
+  input:not(.vs__search), textarea {
     border-radius: 0;
     width: 100%;
     min-height: 100%;
@@ -1777,13 +1777,23 @@ input[type=date].form-control {
   }
 }
 
-.treeselect-wide .vue-treeselect {
-  &__menu {
-    overflow: auto !important;
+.treeselect-wide, .vue-treeselect__portal-target {
+  .vue-treeselect {
+    &__menu {
+      overflow: auto !important;
+    }
+
+    &__label {
+      overflow: initial !important;
+    }
   }
 
-  &__label {
-    overflow: initial !important;
+  .vue-treeselect__single-value {
+    padding-right: 0 !important;
+  }
+
+  .vue-treeselect__control-arrow-container {
+    width: 15px;
   }
 }
 
@@ -2319,4 +2329,14 @@ input[type=date].form-control {
 
 .mt5 {
   margin-top: 5px;
+}
+
+.float-right {
+  float: right;
+}
+
+.a-icon-btn {
+  display: inline-block;
+  padding: 2px 6px;
+  margin: -2px -6px;
 }

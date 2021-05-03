@@ -34,7 +34,7 @@ class Command(BaseCommand):
                     continue
             else:
                 distr[cells[code]] = cells[district_name]
-        print('загружены коды:участки' + '\n', distr)
+        print('загружены коды:участки' + '\n', distr)  # noqa: T001
 
         def get_district(uch='', gin_uch=''):
             """
@@ -51,14 +51,14 @@ class Command(BaseCommand):
                 if title_uch is not None:
                     obj_uch, created = clients.District.objects.get_or_create(code_poliklinika=uch, defaults={'title': title_uch, 'is_ginekolog': False, 'sort_weight': '0'})
                     if created:
-                        print('Добавлен участок' + '\n', obj_uch)
+                        print('Добавлен участок' + '\n', obj_uch)  # noqa: T001
 
             if gin_uch:
                 title_gin = distr.get(gin_uch)
                 if title_gin is not None:
                     obj_gin, gin_created = clients.District.objects.get_or_create(code_poliklinika=gin_uch, defaults={'title': title_gin, 'is_ginekolog': True, 'sort_weight': '0'})
                     if gin_created:
-                        print('Добавлен гинекологический участок' + '\n', obj_uch)
+                        print('Добавлен гинекологический участок' + '\n', obj_uch)  # noqa: T001
 
             return [obj_uch, obj_gin]
 
@@ -117,7 +117,7 @@ class Command(BaseCommand):
                             main_address=m_address,
                             fact_address=m_address,
                         )
-                        print('Добавлена карта: \n', c)
+                        print('Добавлена карта: \n', c)  # noqa: T001
                 else:
                     # создать индивидуал, документы, карты в l2.
                     ind = clients.Individual.objects.create(
@@ -152,4 +152,4 @@ class Command(BaseCommand):
                         main_address=m_address,
                         fact_address=m_address,
                     )
-                    print('Добавлена карта: \n', c)
+                    print('Добавлена карта: \n', c)  # noqa: T001

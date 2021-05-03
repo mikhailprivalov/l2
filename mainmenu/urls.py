@@ -15,7 +15,7 @@ urlpatterns = [
     path('from', views.dashboard_from),
     path('create_podr', views.create_pod),
     path('ldap_sync', views.ldap_sync),
-    path('directions', login_required(TemplateView.as_view(template_name="dashboard/directions_ng.html"))),
+    path('directions', views.directions),
     path('hosp', views.hosp),
     path('receive/journal_form', views.receive_journal_form),
     path('view_log', views.view_log),

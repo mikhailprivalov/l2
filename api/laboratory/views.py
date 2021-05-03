@@ -339,7 +339,7 @@ def form(request):
     research: Researches = Researches.objects.prefetch_related(
         Prefetch(
             'fractions_set',
-            queryset=Fractions.objects.all().order_by("pk", "sort_weight").prefetch_related('references_set')
+            queryset=Fractions.objects.all().order_by("sort_weight", "pk").prefetch_related('references_set')
         )
     ).get(pk=iss.research_id)
     data = {
@@ -596,6 +596,9 @@ def reset_confirm(request):
             if iss.napravleniye.result_rmis_send:
                 c = Client()
                 c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)
+            if iss.napravleniye:
+                iss.napravleniye.need_resend_amd = False
+                iss.napravleniye.save()
             result = {"ok": True}
             Log.log(str(pk), 24, body=predoc, user=request.user.doctorprofile)
         else:
