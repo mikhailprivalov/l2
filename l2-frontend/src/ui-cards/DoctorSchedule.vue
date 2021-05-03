@@ -1,7 +1,7 @@
 <template>
   <li>
     <a href="#" @click.prevent="open_schedule">
-      В регистратуру
+      Записать
     </a>
   </li>
 </template>
