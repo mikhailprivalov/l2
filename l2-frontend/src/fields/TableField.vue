@@ -100,7 +100,7 @@ export default {
       };
     },
     settings() {
-      return this.params.columns.settings;
+      return this.params.columns.settings || [];
     },
   },
   watch: {
@@ -177,6 +177,17 @@ export default {
           }
         } else if (r.length > c) {
           r.splice(c);
+        }
+      }
+
+      for (let i = 0; i < this.settings.length; i++) {
+        const t = this.settings[i].type;
+
+        if (t === 'rowNumber') {
+          for (let j = 0; j < this.rows.length; j++) {
+            const r = this.rows[j];
+            r[i] = `${j + 1}`;
+          }
         }
       }
     },

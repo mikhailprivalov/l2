@@ -255,7 +255,9 @@ export default {
         if (t !== 0) {
           for (let j = 0; j < this.rows.length; j++){
             const r = this.rows[j];
-            if (t === 1 || t === 'rowNumber') {
+            if (t === 1) {
+              r[i] = '';
+            } else if (t === 'rowNumber') {
               r[i] = `${j + 1}`;
             } else if (t === 18) {
               if (_.isNaN(Number(r[i]))) {
