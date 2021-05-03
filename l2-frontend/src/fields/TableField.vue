@@ -2,12 +2,12 @@
   <div style="max-width: 1024px;">
     <table class="table table-bordered table-condensed" style="table-layout: fixed;" v-if="settings">
       <colgroup>
-        <col width="36" v-if="params.dynamicRows">
+        <col width="36" v-if="params.dynamicRows && !disabled">
         <col v-for="(_, i) in params.columns.titles" :width="settings[i].width">
       </colgroup>
       <thead>
       <tr>
-        <td v-if="params.dynamicRows"></td>
+        <td v-if="params.dynamicRows && !disabled"></td>
         <th v-for="t in params.columns.titles">
           {{ t }}
         </th>
@@ -15,7 +15,7 @@
       </thead>
       <tbody>
       <tr v-for="(r, j) in rows">
-        <td class="cl-td" v-if="params.dynamicRows">
+        <td class="cl-td" v-if="params.dynamicRows && !disabled">
           <button class="btn btn-blue-nb nbr" @click="deleteRow(j)" title="Удалить строку" v-tippy>
             <i class="fa fa-times"></i>
           </button>
@@ -38,7 +38,7 @@
           <input class="form-control" v-else-if="settings[i].type === 18" v-model="r[i]" type="number"/>
         </td>
       </tr>
-      <tr v-if="params.dynamicRows">
+      <tr v-if="params.dynamicRows && !disabled">
         <td :colspan="params.columns.count + 1">
           <button class="btn btn-blue-nb" @click="addRow">добавить строку</button>
         </td>
