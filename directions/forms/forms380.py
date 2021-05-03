@@ -1,6 +1,9 @@
 import os
 from copy import deepcopy
+from typing import Union, List
+
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import QuerySet
 from django.utils.text import Truncator
 from reportlab.graphics import renderPDF
 from reportlab.graphics.barcode import eanbc, qr
@@ -585,9 +588,9 @@ def form_04(c: Canvas, dir: Napravleniya):
     printForm()
 
 
-def form_05(c: Canvas, dir: Napravleniya):
+def form_05(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
     # Утверждено Приказом Министерства здравоохранения Иркутской области от 22 мая 2013 г. N 83-МПР
-    def printForm():
+    def printForm(dir):
         if sys.platform == 'win32':
             locale.setlocale(locale.LC_ALL, 'rus_rus')
         else:
@@ -767,5 +770,9 @@ def form_05(c: Canvas, dir: Napravleniya):
                 print_frame.split(p, c)
                 c.showPage()
                 print_frame = Frame(0 * mm, mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
-
-    printForm()
+    count = 0
+    for dir in dir_obj:
+        count += 1
+        if count > 1:
+            c.showPage()
+        printForm(dir)
