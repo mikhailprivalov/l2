@@ -186,7 +186,9 @@ export default {
         if (t === 'rowNumber') {
           for (let j = 0; j < this.rows.length; j++) {
             const r = this.rows[j];
-            r[i] = `${j + 1}`;
+            if (!r[i]) {
+              r[i] = `${j + 1}`;
+            }
           }
         }
       }
