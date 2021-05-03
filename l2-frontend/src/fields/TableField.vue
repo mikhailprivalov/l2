@@ -1,15 +1,15 @@
 <template>
   <div style="max-width: 1024px;">
-    <table class="table table-bordered table-condensed" style="table-layout: fixed;">
+    <table class="table table-bordered table-condensed" style="table-layout: fixed;" v-if="settings">
       <colgroup>
         <col width="36" v-if="params.dynamicRows">
-        <col v-for="_ in params.columns.titles">
+        <col v-for="(_, i) in params.columns.titles" :width="settings[i].width">
       </colgroup>
       <thead>
       <tr>
         <td v-if="params.dynamicRows"></td>
         <th v-for="t in params.columns.titles">
-          {{t}}
+          {{ t }}
         </th>
       </tr>
       </thead>
@@ -21,7 +21,21 @@
           </button>
         </td>
         <td v-for="(_, i) in params.columns.titles" class="cl-td">
-          <input type="text" class="form-control" v-model="r[i]" placeholder="Значение по умолчанию">
+          <div v-if="settings[i].type === 'rowNumber' || disabled" class="just-val"
+               :class="settings[i].type === 'rowNumber' && 'rowNumber'">
+            {{ r[i] }}
+          </div>
+          <template v-else-if="settings[i].type === 0">
+            <textarea :rows="settings[i].lines" class="form-control"
+                      v-if="settings[i].lines > 1" v-model="r[i]"></textarea>
+            <input class="form-control" v-else v-model="r[i]"/>
+          </template>
+          <DateFieldWithNow v-else-if="settings[i].type === 1" v-model="r[i]"/>
+          <SelectField :variants="settings[i].variants" class="form-control fw"
+                       v-else-if="settings[i].type === 10" v-model="r[i]"/>
+          <RadioField :variants="settings[i].variants"
+                      v-else-if="settings[i].type === 12" v-model="r[i]"/>
+          <input class="form-control" v-else-if="settings[i].type === 18" v-model="r[i]" type="number"/>
         </td>
       </tr>
       <tr v-if="params.dynamicRows">
@@ -35,9 +49,20 @@
 </template>
 <script>
 import _ from 'lodash';
+import SelectField from "@/fields/SelectField";
+import RadioField from "@/fields/RadioField";
+import DateFieldWithNow from "@/fields/DateFieldWithNow";
+
+const DEFAULT_SETTINGS = () => ({
+  type: 0,
+  lines: 1,
+  variants: '',
+  width: '',
+});
 
 export default {
   name: 'TableField',
+  components: {DateFieldWithNow, RadioField, SelectField},
   props: {
     value: {
       required: false,
@@ -60,6 +85,7 @@ export default {
         columns: {
           count: 2,
           titles: [],
+          settings: [],
         },
         dynamicRows: true,
       },
@@ -72,6 +98,9 @@ export default {
         columns: this.params.columns,
         rows: this.rows,
       };
+    },
+    settings() {
+      return this.params.columns.settings;
     },
   },
   watch: {
@@ -109,6 +138,19 @@ export default {
         value.rows = params.rows;
       }
 
+      if (!Array.isArray(params.settings)) {
+        params.settings = [];
+      }
+
+      for (let i = 0; i < Math.max(params.columns.count - params.columns.settings.length, 0); i++) {
+        params.columns.settings.push({});
+      }
+
+      for (let i = 0; i < params.columns.settings.length; i++) {
+        const s = params.columns.settings[i];
+        params.columns.settings[i] = {...DEFAULT_SETTINGS(), ...s};
+      }
+
       value.rows = value.rows.filter(r => Array.isArray(r) && r.every(v => _.isString));
 
       this.params = params;
@@ -143,5 +185,11 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.just-val {
+  padding: 5px;
+}
 
+.rowNumber {
+  font-weight: bold;
+}
 </style>

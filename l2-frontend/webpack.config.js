@@ -152,7 +152,7 @@ const config = {
   cache: (isDevServer || !isDev) ? undefined : {
     type: "filesystem",
   },
-  devtool: 'eval-source-map',
+  devtool: 'source-map',
   stats: 'normal',
 };
 
