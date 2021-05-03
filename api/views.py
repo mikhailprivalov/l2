@@ -38,6 +38,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from .sql_func import users_by_group
+from laboratory.settings import ELN_LINK_AUTH, ELN_LINK_MADE
 
 
 def translit(locallangstring):
@@ -1422,3 +1423,8 @@ def hospitals(request):
     if hasattr(request, 'plain_response') and request.plain_response:
         return result
     return JsonResponse(result)
+
+
+def eln_link(request):
+    d = users.DoctorProfile.objects.filter(user=request.user).first()
+    return JsonResponse({'eln_auth': ELN_LINK_AUTH.replace('userlogin', d.rmis_login).replace('userpassword', d.rmis_password), 'eln_made': ELN_LINK_MADE})

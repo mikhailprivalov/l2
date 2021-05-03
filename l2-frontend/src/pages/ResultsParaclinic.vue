@@ -265,13 +265,12 @@
                 </div>
               </div>
               <medical-certificates :med_certificates="data.medical_certificates" :direction="data.direction.pk"/>
-              <ResultsByYear :card_pk="data.patient.card_pk" isDocReferral/>
-              <ResultsByYear :card_pk="data.patient.card_pk" isParaclinic/>
-              <ResultsByYear :card_pk="data.patient.card_pk" isLab/>
               <a href="#" @click.prevent="open_sick">
                 ЭЛН
               </a>
-
+              <ResultsByYear :card_pk="data.patient.card_pk" isDocReferral/>
+              <ResultsByYear :card_pk="data.patient.card_pk" isParaclinic/>
+              <ResultsByYear :card_pk="data.patient.card_pk" isLab/>
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
@@ -809,6 +808,8 @@
         inited: false,
         medical_certificatesicates_rows: [],
         sidebarIsOpened: false,
+        eln_link_auth: '',
+        eln_link_made: ''
       }
     },
     watch: {
@@ -853,6 +854,7 @@
           return 'Возможно имеются несохраненные изменения! Вы уверены, что хотите покинуть страницу?'
       })
       this.load_history()
+      this.get_eln()
       this.$root.$on('hide_dreg', () => {
         this.load_dreg_rows()
         this.dreg = false
@@ -883,17 +885,18 @@
     },
     methods: {
       open_sick() {
-        let myWindowURL = `https://38.is-mis.ru/cas/login?service=https://38.is-mis.ru/frontend/j_spring_cas_security_check&ajax=true&username=Redikaltseva&password=1cyCAG1Df`;
+        let myWindowURL = this.eln_link_auth;
+        let myWidowEln = this.eln_link_made
         let openWindow = null;
         openWindow = window.open(myWindowURL, '_blank');
 
         setTimeout(function() {
             openWindow.close()
-        }, 10);
+        }, 5);
 
        setTimeout(function() {
-            window.open(`https://38.is-mis.ru/frontend/#sicklists.sicksheet_list`,);
-        }, 50);
+            window.open(myWidowEln);
+        }, 10);
       },
       async load_location() {
         if (!this.has_loc) {
@@ -1021,6 +1024,11 @@
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING)
         })
+      },
+      async get_eln(){
+        const params = await api('eln-link');
+        this.eln_link_auth = params.eln_auth;
+        this.eln_link_made = params.eln_made;
       },
       reload_if_need() {
         if (this.date === moment().format('DD.MM.YYYY')) {
