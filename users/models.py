@@ -60,7 +60,7 @@ class DoctorProfile(models.Model):
         if not self.eds_token:
             self.eds_token = uuid.uuid4()
             self.save(update_fields=['eds_token'])
-        return self.eds_token
+        return str(self.eds_token)
 
     def get_hospital_id(self):
         hosp = self.get_hospital()
