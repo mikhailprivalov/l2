@@ -596,6 +596,44 @@ class Napravleniya(models.Model):
             dir.save()
 
     @staticmethod
+    def check_and_change_special_field(res_data, global_data):
+        laboratory_previous_results, diagnostic_previous_results, doc_referral_previous_results = None, None, None
+        if global_data.get('groups', None):
+            groups_data = global_data.get('groups')
+            for i in groups_data:
+                if i.get('fields', None):
+                    fields = i.get('fields', None)
+                    for f in fields:
+                        status = False
+                        if f.get('field_type', None):
+                            if f['field_type'] == 24:
+                                laboratory_previous_results = f.get('value', None)
+                                status = True
+                            elif f['field_type'] == 25:
+                                diagnostic_previous_results = f.get('value', None)
+                                status = True
+                            elif f['field_type'] == 26:
+                                doc_referral_previous_results = f.get('value', None)
+                                status = True
+                        if not status:
+                            res_data['groups'][0]['fields'].append(f)
+
+        groups_data = res_data.get('groups')
+        for i in groups_data:
+            if i.get('fields', None):
+                fields = i.get('fields', None)
+                for f in fields:
+                    if f.get('field_type', None):
+                        if f['field_type'] == 24:
+                            f['value'] = laboratory_previous_results
+                        elif f['field_type'] == 25:
+                            f['value'] = diagnostic_previous_results
+                        elif f['field_type'] == 26:
+                            f['value'] = doc_referral_previous_results
+
+        return res_data
+
+    @staticmethod
     def gen_napravleniya_by_issledovaniya(
         client_id,
         diagnos,
@@ -749,6 +787,8 @@ class Napravleniya(models.Model):
                         result["list_id"].append(npk)
                         if research.is_hospital:
                             result["list_stationar_id"].append(npk)
+                        if current_global_direction_params:
+                            DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], current_global_direction_params)
                     if dir_group == -1:
                         dir_group = "id" + str(research.pk)
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(
@@ -774,6 +814,17 @@ class Napravleniya(models.Model):
                         if research.is_hospital:
                             result["list_stationar_id"].append(npk)
 
+                        if not research_data_params and current_global_direction_params:
+                            DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], current_global_direction_params)
+
+                        if research_data_params and not current_global_direction_params:
+                            DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], research_data_params)
+                            research_data_params = None
+
+                        if research_data_params and current_global_direction_params:
+                            all_params_result = Napravleniya.check_and_change_special_field(research_data_params, current_global_direction_params)
+                            DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], all_params_result)
+
                     # получить по прайсу и услуге: текущую цену
                     research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
 
@@ -791,8 +842,6 @@ class Napravleniya(models.Model):
                         napravleniye=directions_for_researches[dir_group], research=research, coast=research_coast, discount=research_discount, how_many=research_howmany, deferred=False
                     )
 
-                    if research_data_params:
-                        DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], research_data_params)
                     loc = ""
                     if str(research.pk) in localizations:
                         localization = directory.Localization.objects.get(pk=localizations[str(research.pk)]["code"])
@@ -1331,28 +1380,29 @@ class DirectionParamsResult(models.Model):
 
     @staticmethod
     def save_direction_params(direction_obj, data):
-        field_obj = None, None
-        value, title = '', ''
-        order = -1
-        field_type = None
         if data.get('groups', None):
             groups_data = data.get('groups')
             for i in groups_data:
-                fields = i.get('fields', None)
-                for f in fields:
-                    for k, v in f.items():
-                        if k == 'pk':
-                            field_obj = directory.ParaclinicInputField.objects.get(pk=v)
-                        if k == 'order':
-                            order = v
-                        if k == 'value':
-                            value = v
-                        if k == 'field_type':
-                            field_type = v
-                        if k == 'title':
-                            title = v
-                    direction_params_obj = DirectionParamsResult(napravleniye=direction_obj, title=title, field=field_obj, field_type=field_type, value=value, order=order)
-                    direction_params_obj.save()
+                if i.get('fields', None):
+                    fields = i.get('fields', None)
+                    for f in fields:
+                        field_obj, field_type = None, None
+                        value, title = '', ''
+                        order = -1
+                        for k, v in f.items():
+                            if k == 'pk':
+                                field_obj = directory.ParaclinicInputField.objects.get(pk=v)
+                            if k == 'order':
+                                order = v
+                            if k == 'value':
+                                value = v
+                            if k == 'field_type':
+                                field_type = v
+                            if k == 'title':
+                                title = v
+                        if value:
+                            direction_params_obj = DirectionParamsResult(napravleniye=direction_obj, title=title, field=field_obj, field_type=field_type, value=value, order=order)
+                            direction_params_obj.save()
 
 
 class MicrobiologyResultCulture(models.Model):
