@@ -862,13 +862,17 @@ def eds_get_cda_data(request):
 
     n = Napravleniya.objects.get(pk=pk)
     i: directions.Issledovaniya = n.issledovaniya_set.all()[0]
+    card = n.client
     ind = n.client.individual
 
     return Response({
         "title": i.research.title,
         "patient": {
+            'pk': card.number,
             'family': ind.family,
             'name': ind.name,
             'patronymic': ind.patronymic,
+            'gender': ind.sex.lower(),
+            'birthdate': ind.birthday.strftime("%Y%m%d"),
         },
     })
