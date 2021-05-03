@@ -844,3 +844,31 @@ def eds_get_user_data(request):
         "fio": doc.fio,
         "department": doc.podrazdeleniye.title if doc.podrazdeleniye else None,
     })
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+def eds_get_cda_data(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    token = token.replace('Bearer ', '')
+
+    if not token or not DoctorProfile.objects.filter(eds_token=token).exists():
+        return Response({"ok": False})
+
+    body = json.loads(request.body)
+
+    pk = body.get("oldId")
+
+    n = Napravleniya.objects.get(pk=pk)
+    i: directions.Issledovaniya = n.issledovaniya_set.all()[0]
+    ind = n.client.individual
+
+    return Response({
+        "title": i.research.title,
+        "patient": {
+            'family': ind.family,
+            'name': ind.name,
+            'patronymic': ind.patronymic,
+        },
+    })

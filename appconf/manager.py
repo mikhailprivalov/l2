@@ -96,7 +96,7 @@ class SettingManager:
             "morfology": SettingManager.is_morfology_enabled(SettingManager.en()),
             "eds_base_url": SettingManager.get_eds_base_url(),
         }
-        cache.set(k, simplejson.dumps(result), 60 * 60 * 24)
+        cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
 
         return result
 
@@ -121,7 +121,7 @@ class SettingManager:
                 12: SettingManager.get("directions_params", default='false', default_type='b'),
             }
 
-            cache.set(k, simplejson.dumps(result), 60 * 60 * 24)
+            cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
 
         return {int(x): result[x] for x in result}
 
