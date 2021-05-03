@@ -854,7 +854,6 @@
           return 'Возможно имеются несохраненные изменения! Вы уверены, что хотите покинуть страницу?'
       })
       this.load_history()
-      this.get_eln()
       this.$root.$on('hide_dreg', () => {
         this.load_dreg_rows()
         this.dreg = false
@@ -884,7 +883,8 @@
       this.$root.$on('open-direction-form', pk => this.load_pk(pk));
     },
     methods: {
-      open_sick() {
+      async open_sick() {
+        await this.get_eln()
         let myWindowURL = this.eln_link_auth;
         let myWidowEln = this.eln_link_made
         let openWindow = null;
@@ -892,11 +892,11 @@
 
         setTimeout(function() {
             openWindow.close()
-        }, 5);
+        }, 200);
 
        setTimeout(function() {
             window.open(myWidowEln);
-        }, 10);
+        }, 500);
       },
       async load_location() {
         if (!this.has_loc) {

@@ -272,8 +272,7 @@ DICOM_PORT = None
 DICOM_SERVER = ""
 ELN_LINK_AUTH = ""
 ELN_LINK_MADE = ""
-
-
+DOCTOR_SCHEDULE = ""
 
 SENTRY_DSN = "https://4a6968777ec240b190abd11cbf1c96e1@sentry.io/3083440"
 
