@@ -36,8 +36,8 @@ export default {
           setTimeout(() => {
             window.open(this.urlAddress, '_blank');
             resolve();
-          }, 5);
-        }, 5);
+          }, 200);
+        }, 200);
       });
 
       await this.$store.dispatch(action_types.DEC_LOADING);
