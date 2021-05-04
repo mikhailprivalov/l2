@@ -23,8 +23,7 @@ export default {
   },
   methods: {
     async open_page() {
-      let openWindow = null;
-      this.$store.dispatch(action_types.INC_LOADING)
+      await this.$store.dispatch(action_types.INC_LOADING);
 
       if (!this.urlAuth) {
         await this.get_auth()
@@ -41,7 +40,7 @@ export default {
         }, 5);
       });
 
-      this.$store.dispatch(action_types.DEC_LOADING)
+      await this.$store.dispatch(action_types.DEC_LOADING);
     },
     async get_auth() {
       const params = await api('rmis-link');
