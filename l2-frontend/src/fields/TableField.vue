@@ -160,26 +160,17 @@ export default {
     },
     addRow() {
       this.rows.push([]);
-      this.validateRowsLength();
+      this.validate();
     },
     deleteRow(i) {
       this.rows.splice(i, 1);
+      this.validate();
     },
     validate() {
       this.validateRowsLength();
+      this.validateRowsValues();
     },
-    validateRowsLength() {
-      const c = this.params.columns.count;
-      for (const r of this.rows) {
-        if (r.length < c) {
-          for (let i = 0; i < c - r.length; i++) {
-            r.push('');
-          }
-        } else if (r.length > c) {
-          r.splice(c);
-        }
-      }
-
+    validateRowsValues() {
       for (let i = 0; i < this.settings.length; i++) {
         const t = this.settings[i].type;
 
@@ -190,6 +181,27 @@ export default {
               r[i] = `${j + 1}`;
             }
           }
+        } else if (t === 10 || t === 12) {
+          const v = (this.settings[i].variants || '').split('\n');
+          for (let j = 0; j < this.rows.length; j++) {
+            const r = this.rows[j];
+
+            if (!v.includes(r[i])) {
+              r[i] = v[0];
+            }
+          }
+        }
+      }
+    },
+    validateRowsLength() {
+      const c = this.params.columns.count;
+      for (const r of this.rows) {
+        if (r.length < c) {
+          for (let i = 0; i < c - r.length; i++) {
+            r.push('');
+          }
+        } else if (r.length > c) {
+          r.splice(c);
         }
       }
     },
