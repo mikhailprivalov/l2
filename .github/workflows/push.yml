@@ -11,3 +11,4 @@ jobs:
       env:
         PT_PROJECT_TOKEN: ${{ secrets.PT_PROJECT_TOKEN }}
         WEBPACK_CONFIG_PATH: ./l2-frontend/webpack.config.js
+        PT_PROJECT_ROOT: ./l2-frontend
