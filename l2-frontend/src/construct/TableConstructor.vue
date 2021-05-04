@@ -6,10 +6,11 @@
              min="1" max="8" placeholder="Название колонки">
     </div>
 
-    <table class="table table-bordered table-condensed" style="table-layout: fixed;" v-if="columns.settings">
+    <table class="table table-bordered table-condensed" style="table-layout: fixed;"
+           v-if="columns.settings && columns.settings.length === columns.count">
       <colgroup>
         <col width="36">
-        <col v-for="(_, i) in columns.titles" :width="columns.settings[i].width">
+        <col v-for="(_, i) in columns.titles" :width="columns.settings[i] && columns.settings[i].width">
       </colgroup>
       <thead>
       <tr>
@@ -58,7 +59,8 @@
     <div>
       <strong>Настройка колонок:</strong>
 
-      <div class="column-card card card-1 card-no-hover" v-for="(s, i) in (columns.settings || [])">
+      <div class="column-card card card-1 card-no-hover" v-for="(s, i) in columns.settings"
+           v-if="columns.settings && columns.settings.length === columns.count">
         <strong>Колонка №{{ i + 1 }} {{ columns.titles[i] }}:</strong>
         <div class="input-group" style="margin-bottom: 10px">
           <span class="input-group-addon">Ширина (пиксели или проценты), пример: 42 или 10% или пусто</span>
@@ -233,7 +235,8 @@ export default {
       const c = this.columns.count;
       this.columns.settings = _.cloneDeep(this.columns.settings || []);
       if (this.columns.settings.length < c) {
-        for (let i = 0; i < c - this.columns.settings.length; i++) {
+        const needToAdd = c - this.columns.settings.length;
+        for (let i = 0; i < needToAdd; i++) {
           this.columns.settings.push({});
         }
       } else if (this.columns.settings.length > c) {
@@ -241,7 +244,7 @@ export default {
       }
 
       for (let i = 0; i < this.columns.settings.length; i++) {
-        let s = this.columns.settings ? this.columns.settings[i] : {};
+        let s = this.columns.settings[i];
         if (!_.isObject(s)) {
           s = {};
         }
@@ -285,7 +288,8 @@ export default {
       }
       const c = this.columns.count;
       if (this.columns.titles.length < c) {
-        for (let i = 0; i < c - this.columns.titles.length; i++) {
+        const needToAdd = c - this.columns.titles.length;
+        for (let i = 0; i < needToAdd; i++) {
           this.columns.titles.push(`Колонка ${this.columns.titles.length + 1}`);
         }
       } else if (this.columns.titles.length > c) {
@@ -296,7 +300,8 @@ export default {
       const c = this.columns.count;
       for (const r of this.rows) {
         if (r.length < c) {
-          for (let i = 0; i < c - r.length; i++) {
+          const needToAdd = c - r.length;
+          for (let i = 0; i < needToAdd; i++) {
             r.push('');
           }
         } else if (r.length > c) {
