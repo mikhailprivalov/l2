@@ -265,9 +265,7 @@
                 </div>
               </div>
               <medical-certificates :med_certificates="data.medical_certificates" :direction="data.direction.pk"/>
-              <a href="#" @click.prevent="open_sick">
-                ЭЛН
-              </a>
+              <RmisLink :is_schedule="false" :is_eln="true"/>
               <ResultsByYear :card_pk="data.patient.card_pk" isDocReferral/>
               <ResultsByYear :card_pk="data.patient.card_pk" isParaclinic/>
               <ResultsByYear :card_pk="data.patient.card_pk" isLab/>
@@ -750,7 +748,8 @@
   import {enter_field, leave_field} from "@/forms/utils";
   import FastTemplates from "../forms/FastTemplates";
   import api from "@/api";
-  import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear'
+  import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear';
+  import RmisLink from '@/ui-cards/RmisLink'
 
   export default {
     name: 'results-paraclinic',
@@ -760,7 +759,7 @@
       DescriptiveForm,
       DateFieldNav, Modal, MKBField, ResearchesPicker, SelectedResearches,
       dropdown, SelectPickerM, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-      LastResult, RecipeInput, IssStatus, MedicalCertificates, ResultsByYear,
+      LastResult, RecipeInput, IssStatus, MedicalCertificates, ResultsByYear, RmisLink
     },
     data() {
       return {
@@ -808,8 +807,6 @@
         inited: false,
         medical_certificatesicates_rows: [],
         sidebarIsOpened: false,
-        eln_link_auth: '',
-        eln_link_made: ''
       }
     },
     watch: {
@@ -883,21 +880,6 @@
       this.$root.$on('open-direction-form', pk => this.load_pk(pk));
     },
     methods: {
-      async open_sick() {
-        await this.get_eln()
-        let myWindowURL = this.eln_link_auth;
-        let myWidowEln = this.eln_link_made
-        let openWindow = null;
-        openWindow = window.open(myWindowURL, '_blank');
-
-        setTimeout(function() {
-            openWindow.close()
-        }, 200);
-
-       setTimeout(function() {
-            window.open(myWidowEln);
-        }, 500);
-      },
       async load_location() {
         if (!this.has_loc) {
           return
@@ -1024,11 +1006,6 @@
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING)
         })
-      },
-      async get_eln(){
-        const params = await api('eln-link');
-        this.eln_link_auth = params.eln_auth;
-        this.eln_link_made = params.eln_made;
       },
       reload_if_need() {
         if (this.date === moment().format('DD.MM.YYYY')) {
