@@ -177,9 +177,7 @@ export default {
         if (t === 'rowNumber') {
           for (let j = 0; j < this.rows.length; j++) {
             const r = this.rows[j];
-            if (!r[i]) {
-              r[i] = `${j + 1}`;
-            }
+            r[i] = `${j + 1}`;
           }
         } else if (t === 10 || t === 12) {
           const v = (this.settings[i].variants || '').split('\n');
