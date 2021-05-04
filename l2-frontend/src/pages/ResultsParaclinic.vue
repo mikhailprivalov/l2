@@ -265,6 +265,7 @@
                 </div>
               </div>
               <medical-certificates :med_certificates="data.medical_certificates" :direction="data.direction.pk"/>
+              <rmis-link :is-schedule="false"/>
               <ResultsByYear :card_pk="data.patient.card_pk" isDocReferral/>
               <ResultsByYear :card_pk="data.patient.card_pk" isParaclinic/>
               <ResultsByYear :card_pk="data.patient.card_pk" isLab/>
@@ -718,40 +719,41 @@
 </template>
 
 <script>
-import moment from 'moment'
-import patients_point from '../api/patients-point'
-import * as action_types from '../store/action-types'
-import directions_point from '../api/directions-point'
-import SelectPickerM from '../fields/SelectPickerM'
-import researches_point from '../api/researches-point'
-import Modal from '../ui-cards/Modal'
-import MKBField from '../fields/MKBField'
-import DateFieldNav from '../fields/DateFieldNav'
-import DReg from '../modals/DReg'
-import dropdown from 'vue-my-dropdown'
-import ResearchesPicker from '../ui-cards/ResearchesPicker'
-import SelectedResearches from '../ui-cards/SelectedResearches'
-import {mapGetters} from 'vuex'
-import users_point from '../api/user-point'
-import ResearchPick from '../ui-cards/ResearchPick'
-import Benefit from '../modals/Benefit'
-import DirectionsHistory from '../ui-cards/DirectionsHistory'
-import RecipeInput from '../ui-cards/RecipeInput'
-import ResultsViewer from '../modals/ResultsViewer'
-import LastResult from '../ui-cards/LastResult'
-import IssStatus from '../ui-cards/IssStatus'
-import {vField, vGroup} from '@/components/visibility-triggers'
-import DescriptiveForm from '../forms/DescriptiveForm'
-import BacMicroForm from '../forms/BacMicroForm'
-import UrlData from '../UrlData'
-import MedicalCertificates from "../ui-cards/MedicalCertificates";
-import {enter_field, leave_field} from "@/forms/utils";
-import FastTemplates from "../forms/FastTemplates";
-import api from "@/api";
-import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear'
-import EDSButton from "@/ui-cards/EDSButton";
+  import moment from 'moment'
+  import patients_point from '../api/patients-point'
+  import * as action_types from '../store/action-types'
+  import directions_point from '../api/directions-point'
+  import SelectPickerM from '../fields/SelectPickerM'
+  import researches_point from '../api/researches-point'
+  import Modal from '../ui-cards/Modal'
+  import MKBField from '../fields/MKBField'
+  import DateFieldNav from '../fields/DateFieldNav'
+  import DReg from '../modals/DReg'
+  import dropdown from 'vue-my-dropdown'
+  import ResearchesPicker from '../ui-cards/ResearchesPicker'
+  import SelectedResearches from '../ui-cards/SelectedResearches'
+  import {mapGetters} from 'vuex'
+  import users_point from '../api/user-point'
+  import ResearchPick from '../ui-cards/ResearchPick'
+  import Benefit from '../modals/Benefit'
+  import DirectionsHistory from '../ui-cards/DirectionsHistory'
+  import RecipeInput from '../ui-cards/RecipeInput'
+  import ResultsViewer from '../modals/ResultsViewer'
+  import LastResult from '../ui-cards/LastResult'
+  import IssStatus from '../ui-cards/IssStatus'
+  import {vField, vGroup} from '@/components/visibility-triggers'
+  import DescriptiveForm from '../forms/DescriptiveForm'
+  import BacMicroForm from '../forms/BacMicroForm'
+  import UrlData from '../UrlData'
+  import MedicalCertificates from "../ui-cards/MedicalCertificates";
+  import {enter_field, leave_field} from "@/forms/utils";
+  import FastTemplates from "../forms/FastTemplates";
+  import api from "@/api";
+  import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear';
+  import RmisLink from '@/ui-cards/RmisLink'
+  import EDSButton from "@/ui-cards/EDSButton";
 
-export default {
+  export default {
     name: 'results-paraclinic',
     components: {
       EDSButton,
@@ -760,7 +762,7 @@ export default {
       DescriptiveForm,
       DateFieldNav, Modal, MKBField, ResearchesPicker, SelectedResearches,
       dropdown, SelectPickerM, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-      LastResult, RecipeInput, IssStatus, MedicalCertificates, ResultsByYear,
+      LastResult, RecipeInput, IssStatus, MedicalCertificates, ResultsByYear, RmisLink
     },
     data() {
       return {

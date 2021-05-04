@@ -104,6 +104,7 @@ new Vue({
     'LaboratoryJournal': () => import('@/ui-cards/LaboratoryJournal'),
     'LaboratoryPrintResults': () => import('@/ui-cards/LaboratoryPrintResults'),
     'CreateDescriptiveDirection': () => import('@/ui-cards/CreateDescriptiveDirection'),
+    'RmisLink': () => import('@/ui-cards/RmisLink'),
     'PlanPharmacotherapy': () => import('@/pages/PlanPharmacotherapy'),
     'LaboratoryResults': () => import('@/pages/LaboratoryResults'),
   },

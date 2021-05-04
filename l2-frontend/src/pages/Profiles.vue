@@ -115,9 +115,25 @@
               </div>
             </div>
           </div>
-          <div class="input-group" style="width: 100%" v-if="l2_user_data.rmis_enabled && modules.l2_rmis_queue">
-            <span class="input-group-addon">РМИС location</span>
-            <input class="form-control" v-model="user.rmis_location"/>
+          <div class="row" v-if="l2_user_data.rmis_enabled && modules.l2_rmis_queue">
+            <div class="col-xs-4" style="padding-right: 0">
+              <div class="input-group" style="width: 100%">
+                <span class="input-group-addon">РМИС location</span>
+                <input class="form-control" v-model="user.rmis_location"/>
+              </div>
+            </div>
+            <div class="col-xs-4" style="padding-left: 0; padding-right: 0;">
+              <div class="input-group" style="width: 100%">
+                <span class="input-group-addon">РМИС employee</span>
+                <input class="form-control" v-model="user.rmis_employee_id"/>
+              </div>
+            </div>
+            <div class="col-xs-4" style="padding-left: 0">
+              <div class="input-group" style="width: 100%">
+                <span class="input-group-addon">РМИС service</span>
+                <input class="form-control" v-model="user.rmis_service_id_time_table"/>
+              </div>
+            </div>
           </div>
           <div class="row">
             <div class="col-xs-6" style="padding-right: 0">
@@ -233,6 +249,8 @@ let toTranslit = function (text) {
           doc_pk: -1,
           personal_code: -1,
           rmis_resource_id: '',
+          rmis_employee_id: '',
+          rmis_service_id_time_table: '',
         },
         selected_hospital: -1,
         open_pk: -2,
