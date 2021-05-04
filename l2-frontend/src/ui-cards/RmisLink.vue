@@ -1,5 +1,5 @@
 <template>
-  <a v-if="is_schedule" href="#" @click.prevent="open_page">Записать</a>
+  <a v-if="isSchedule" href="#" @click.prevent="open_page">Записать</a>
   <a v-else href="#" @click.prevent="open_page">ЭЛН</a>
 </template>
 
@@ -10,7 +10,7 @@ import * as action_types from "@/store/action-types";
 export default {
   name: 'RmisLink',
   props: {
-    is_schedule: {
+    isSchedule: {
       type: Boolean,
       default: false,
     },
@@ -36,8 +36,8 @@ export default {
           setTimeout(() => {
             window.open(this.urlAddress, '_blank');
             resolve();
-          }, 200);
-        }, 200);
+          }, 400);
+        }, 400);
       });
 
       await this.$store.dispatch(action_types.DEC_LOADING);
@@ -45,7 +45,7 @@ export default {
     async get_auth() {
       const params = await api('rmis-link');
       this.urlAuth = params.auth_param;
-      if (this.is_schedule) {
+      if (this.isSchedule) {
         this.urlAddress = params.url_schedule;
       } else {
         this.urlAddress = params.url_eln;
