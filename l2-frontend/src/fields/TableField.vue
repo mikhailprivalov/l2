@@ -95,7 +95,10 @@ export default {
   computed: {
     result() {
       return {
-        columns: this.params.columns,
+        columns: {
+          titles: this.params.columns,
+          settings: this.params.settings.map(s => _.pick(s, ['type', 'width'])),
+        },
         rows: this.rows,
       };
     },
