@@ -26,37 +26,20 @@ export default {
       let openWindow = null;
       this.$store.dispatch(action_types.INC_LOADING)
 
-      if (this.urlAuth === '') {
+      if (!this.urlAuth) {
         await this.get_auth()
       }
 
-      const p = new Promise((resolve, reject) => {
-        openWindow = window.open(this.urlAuth, '_blank');
-        resolve({status: true})
-      })
-
-      p
-        .then((data) => {
-          if (data.status) {
-            return new Promise((resolve, reject) => {
-                setTimeout(() => {
-                  openWindow.close()
-                  resolve({status: true})
-                }, 5);
-              }
-            )
-          }
-        }
-      )
-        .then((data) => {
-          if (data.status) {
-            return new Promise(() => {
-              setTimeout(() => {
-                window.open(this.urlAddress, '_blank');
-              }, 5);
-            })
-          }
-        })
+      await new Promise(resolve => {
+        const openWindow = window.open(this.urlAuth, '_blank');
+        setTimeout(() => {
+          openWindow.close();
+          setTimeout(() => {
+            window.open(this.urlAddress, '_blank');
+            resolve();
+          }, 5);
+        }, 5);
+      });
 
       this.$store.dispatch(action_types.DEC_LOADING)
     },
