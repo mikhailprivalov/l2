@@ -96,8 +96,8 @@ export default {
     result() {
       return {
         columns: {
-          titles: this.params.columns,
-          settings: this.params.settings.map(s => _.pick(s, ['type', 'width'])),
+          titles: this.params.columns.titles,
+          settings: this.settings.map(s => _.pick(s, ['type', 'width'])),
         },
         rows: this.rows,
       };
