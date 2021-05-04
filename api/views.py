@@ -38,6 +38,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from .sql_func import users_by_group
+from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 
 
 def translit(locallangstring):
@@ -1090,6 +1091,8 @@ def user_view(request):
             "rmis_resource_id": '',
             "doc_pk": -1,
             "doc_code": -1,
+            "rmis_employee_id": '',
+            "rmis_service_id_time_table": '',
         }
     else:
         doc = users.DoctorProfile.objects.get(pk=pk)
@@ -1110,6 +1113,8 @@ def user_view(request):
             "doc_pk": doc.user.pk,
             "personal_code": doc.personal_code,
             "speciality": doc.specialities_id,
+            "rmis_employee_id": doc.rmis_employee_id,
+            "rmis_service_id_time_table": doc.rmis_service_id_time_table,
         }
 
     return JsonResponse({"user": data})
@@ -1125,6 +1130,8 @@ def user_save_view(request):
     ud = request_data["user_data"]
     username = ud["username"]
     rmis_location = str(ud["rmis_location"]).strip() or None
+    rmis_employee_id = str(ud["rmis_employee_id"]).strip() or None
+    rmis_service_id_time_table = str(ud["rmis_service_id_time_table"]).strip() or None
     rmis_login = ud["rmis_login"].strip() or None
     rmis_password = ud["rmis_password"].strip() or None
     personal_code = ud.get("personal_code", 0)
@@ -1183,6 +1190,8 @@ def user_save_view(request):
             doc.specialities_id = ud.get('speciality', None)
             doc.fio = ud["fio"]
             doc.rmis_location = rmis_location
+            doc.rmis_employee_id = rmis_employee_id
+            doc.rmis_service_id_time_table = rmis_service_id_time_table
             doc.personal_code = personal_code
             doc.rmis_resource_id = rmis_resource_id
             doc.hospital_id = hospital_pk
@@ -1422,3 +1431,11 @@ def hospitals(request):
     if hasattr(request, 'plain_response') and request.plain_response:
         return result
     return JsonResponse(result)
+
+
+def rmis_link(request):
+    d = request.user.doctorprofile
+    auth_param = URL_RMIS_AUTH.replace('userlogin', d.rmis_login).replace('userpassword', d.rmis_password)
+    url_schedule = URL_SCHEDULE.replace('organization_param', d.hospital.rmis_org_id).replace('service_param', d.rmis_service_id_time_table).replace('employee_param', d.rmis_employee_id)
+    return JsonResponse({'auth_param': auth_param, 'url_eln': URL_ELN_MADE,
+                         'url_schedule': url_schedule})

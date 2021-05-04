@@ -265,6 +265,7 @@
                 </div>
               </div>
               <medical-certificates :med_certificates="data.medical_certificates" :direction="data.direction.pk"/>
+              <rmis-link :is-schedule="false"/>
               <ResultsByYear :card_pk="data.patient.card_pk" isDocReferral/>
               <ResultsByYear :card_pk="data.patient.card_pk" isParaclinic/>
               <ResultsByYear :card_pk="data.patient.card_pk" isLab/>
@@ -747,7 +748,8 @@
   import {enter_field, leave_field} from "@/forms/utils";
   import FastTemplates from "../forms/FastTemplates";
   import api from "@/api";
-  import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear'
+  import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear';
+  import RmisLink from '@/ui-cards/RmisLink'
 
   export default {
     name: 'results-paraclinic',
@@ -757,7 +759,7 @@
       DescriptiveForm,
       DateFieldNav, Modal, MKBField, ResearchesPicker, SelectedResearches,
       dropdown, SelectPickerM, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-      LastResult, RecipeInput, IssStatus, MedicalCertificates, ResultsByYear,
+      LastResult, RecipeInput, IssStatus, MedicalCertificates, ResultsByYear, RmisLink
     },
     data() {
       return {
