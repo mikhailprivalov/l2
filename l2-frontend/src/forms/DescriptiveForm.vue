@@ -31,7 +31,7 @@
                          :duration="400"
                          :on-confirm="clear_val" :value="field"
                          action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21].includes(field.field_type)">
+                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21, 24, 25, 26, 27].includes(field.field_type)">
                 ×
               </longpress>
               <FastTemplates
@@ -135,7 +135,9 @@
               <div class="field-value" v-else-if="field.field_type === 26">
                 <DocReferralPreviousResults v-model="field.value" :disabled="confirmed"/>
               </div>
-
+              <div class="field-value" v-else-if="field.field_type === 27">
+                <TableField :variants="field.values_to_input" v-model="field.value" :disabled="confirmed" />
+              </div>
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
                     placement: 'left',
@@ -171,6 +173,7 @@ export default {
       TextareaAutocomplete: () => import('../fields/TextareaAutocomplete'),
       NumberRangeField: () => import('../fields/NumberRangeField'),
       NumberField: () => import('../fields/NumberField'),
+      TableField: () => import('../fields/TableField'),
       AggregateDesc: () => import('../fields/AggregateDesc'),
       AggregateLaboratory: () => import('../fields/AggregateLaboratory'),
       RichTextEditor: () => import('../fields/RichTextEditor'),
