@@ -1434,7 +1434,7 @@ def hospitals(request):
 
 
 def rmis_link(request):
-    d = users.DoctorProfile.objects.filter(user=request.user).first()
+    d = request.user.doctorprofile
     auth_param = URL_RMIS_AUTH.replace('userlogin', d.rmis_login).replace('userpassword', d.rmis_password)
     url_schedule = URL_SCHEDULE.replace('organization_param', d.hospital.rmis_org_id).replace('service_param', d.rmis_service_id_time_table).replace('employee_param', d.rmis_employee_id)
     return JsonResponse({'auth_param': auth_param, 'url_eln': URL_ELN_MADE,

@@ -10,10 +10,6 @@ import * as action_types from "@/store/action-types";
 export default {
   name: 'RmisLink',
   props: {
-    is_eln: {
-      type: Boolean,
-      default: false,
-    },
     is_schedule: {
       type: Boolean,
       default: false,
@@ -27,8 +23,6 @@ export default {
   },
   methods: {
     async open_page() {
-      // const urlAuth = this.urlAuth;
-      // const urlAddress = this.urlAddress
       let openWindow = null;
       this.$store.dispatch(action_types.INC_LOADING)
 

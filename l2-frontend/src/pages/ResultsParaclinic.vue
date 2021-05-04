@@ -265,7 +265,7 @@
                 </div>
               </div>
               <medical-certificates :med_certificates="data.medical_certificates" :direction="data.direction.pk"/>
-              <RmisLink :is_schedule="false" :is_eln="true"/>
+              <RmisLink :is_schedule="false"/>
               <ResultsByYear :card_pk="data.patient.card_pk" isDocReferral/>
               <ResultsByYear :card_pk="data.patient.card_pk" isParaclinic/>
               <ResultsByYear :card_pk="data.patient.card_pk" isLab/>
