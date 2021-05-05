@@ -2,24 +2,23 @@
   <div>
     <a :href="`/mainmenu/directions?card_pk=${patient.cardId}&base_pk=${patient.base}`"
        target="_blank" class="a-under">
-      {{patient.fio_age}}
+      {{ patient.fio_age }}
     </a>
   </div>
 </template>
 
-<script>
-    import Patient from '../../types/patient'
+<script lang="ts">
+import Vue from 'vue'
+import Component from 'vue-class-component'
 
-    export default {
-        props: {
-            patient: {
-                type: Patient,
-                required: true,
-            }
-        }
-    }
+import Patient from '@/types/patient'
+
+const PatientCardProps = Vue.extend({
+  props: {
+    patient: Patient
+  }
+});
+
+@Component
+export default class PatientCard extends PatientCardProps {}
 </script>
-
-<style scoped>
-
-</style>

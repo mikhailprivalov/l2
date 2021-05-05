@@ -26,14 +26,15 @@ const config = {
   module: {
     rules: [
       {
-        test: /\.js$/,
+        test: /\.(js|ts)$/,
         exclude: /node_modules/,
         use: [
           {
             loader: 'babel-loader'
           }
         ],
-      }, {
+      },
+      {
         test: /.vue$/,
         use: [
           {
@@ -80,7 +81,7 @@ const config = {
       '@': path.resolve(__dirname, 'src'),
       '../bootflat/img/check_flat/default.png': path.resolve(__dirname, 'node_modules/bootflat/bootflat/img/check_flat/default.png'),
     },
-    extensions: ['*', '.js', '.vue', '.json'],
+    extensions: ['*', '.js', '.vue', '.json', '.ts'],
   },
   optimization: {
     minimize: !isDev,

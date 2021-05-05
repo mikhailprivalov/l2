@@ -7,9 +7,27 @@
           "esmodules": true
         }
       }
-    ]
+    ],
+    "@babel/preset-typescript"
   ],
   "plugins": [
-    "@babel/plugin-syntax-dynamic-import"
+    "@babel/plugin-syntax-dynamic-import",
+    [
+      "module-resolver",
+      {
+        "root": [
+          "./src"
+        ],
+        "alias": {
+          "^@/(.+)": "./src/\\1"
+        }
+      }
+    ],
+    [
+      "@babel/plugin-proposal-decorators",
+      {
+        "legacy": true
+      }
+    ]
   ]
 }
