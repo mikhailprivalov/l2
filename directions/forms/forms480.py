@@ -180,6 +180,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph(f'<u>{purpose}</u>', style))
         objs.append(Paragraph('12. Дополнительные клинические сведения (основные симптомы, оперативное или гормональное, или лучевое лечение,', style))
         objs.append(Paragraph('результаты инструментальных и лабораторных исследований)__________________________________________________', style))
+
         if clinical_data:
             objs.append(Paragraph(f"{clinical_data}", style))
         if not laboratory_value:
