@@ -851,8 +851,8 @@ def table_part_result(value):
 
     table_width = [t['width'].replace('%', '') for t in table_settings]
 
-    width_max = 170
-    width_min = width_max / 100
+    width_max_table = 170
+    width_min_column = width_max_table / 100
     empty_count = 0
     not_empty_sum = 0
     width_for_empty_element = 0
@@ -863,14 +863,14 @@ def table_part_result(value):
         else:
             not_empty_sum += int(k)
     if empty_count > 0:
-        width_for_empty_element = (width_max - width_min * not_empty_sum) // empty_count
+        width_for_empty_element = (width_max_table - width_min_column * not_empty_sum) // empty_count
 
     table_width_elements = []
     for t in table_width:
         if not t:
             table_width_elements.append(width_for_empty_element)
         else:
-            table_width_elements.append(int(t) * width_min)
+            table_width_elements.append(int(t) * width_min_column)
 
     tbl = Table(opinion, hAlign='LEFT', colWidths=tuple([k * mm for k in table_width_elements]))
     tbl.setStyle(
