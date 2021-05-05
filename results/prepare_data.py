@@ -850,7 +850,6 @@ def table_part_result(value):
         opinion.append(temp_data)
 
     table_width = []
-    print(table_settings)
     for t in table_settings:
         if '%' in t['width']:
             table_width.append(float(t['width'].replace('%', '')))
