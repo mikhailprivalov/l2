@@ -457,7 +457,7 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                         fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
                         fwb.extend(aggr_lab)
                         continue
-                    if field_type == 24:
+                    elif field_type == 24:
                         previous_laboratory = previous_laboratory_result(v)
                         if not previous_laboratory:
                             continue
@@ -465,13 +465,13 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                         fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
                         fwb.extend(previous_laboratory)
                         continue
-                    if field_type in [26, 25]:
+                    elif field_type in [26, 25]:
                         if v:
                             fwb.append(Spacer(1, 2 * mm))
                             fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
                             fwb = previous_doc_refferal_result(v, fwb)
                         continue
-                    if field_type == 27:
+                    elif field_type == 27:
                         table_results = table_part_result(v)
                         if not table_results:
                             continue
@@ -479,7 +479,7 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                         fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
                         fwb.append(table_results)
                         continue
-                    if field_type == 17:
+                    elif field_type == 17:
                         if v:
                             v = json.loads(v)
                             if not v['directions']:
@@ -545,9 +545,9 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                     vv = v.split('-')
                     if len(vv) == 3:
                         v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-                if field_type in [11, 13]:
+                elif field_type in [11, 13]:
                     v = '<font face="FreeSans" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
-                if field_type == 15:
+                elif field_type == 15:
                     txt += "; ".join(vals)
                     fwb.append(Paragraph(txt, style))
                     txt = ''
@@ -560,7 +560,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                     fwb.append(img)
                     os.remove(file_tmp)
                     continue
-                if field_type == 16:
+                elif field_type == 16:
                     v = json.loads(v)
                     if not v['directions']:
                         continue
@@ -573,13 +573,13 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                     aggr_lab = lab_iss_to_pdf(v)
                     fwb.extend(aggr_lab)
                     continue
-                if field_type == 17:
+                elif field_type == 17:
                     if v:
                         v = json.loads(v)
                         if not v['directions']:
                             continue
                         v = text_iss_to_pdf(v, protocol_plain_text)
-                if field_type == 24:
+                elif field_type == 24:
                     txt += "; ".join(vals)
                     fwb.append(Paragraph(txt, style))
                     txt = ''
@@ -591,7 +591,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                         continue
                     fwb.extend(previous_laboratory)
                     continue
-                if field_type in [26, 25]:
+                elif field_type in [26, 25]:
                     txt += "; ".join(vals)
                     fwb.append(Paragraph(txt, style))
                     txt = ''
@@ -601,7 +601,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                         fwb.append(Paragraph(r.field.get_title(), styleBold))
                         fwb = previous_doc_refferal_result(v, fwb)
                     continue
-                if field_type == 27:
+                elif field_type == 27:
                     txt += "; ".join(vals)
                     fwb.append(Paragraph(txt, style))
                     txt = ''
