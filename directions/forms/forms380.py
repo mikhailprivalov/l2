@@ -755,9 +755,9 @@ def form_05(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
             if lab_values:
                 objs.extend(lab_values)
         if table_value:
-            tab_values = table_part_result(table_value)
-            if tab_values:
-                objs.extend(tab_values)
+            table_value_result = table_part_result(table_value)
+            if table_value_result:
+                objs.extend(table_value_result)
 
         objs.append(Paragraph("______________________________________________________________________________________", style))
         objs.append(Paragraph("Сведения о профилактических прививках (для детей до 18 лет) ________________________", style))

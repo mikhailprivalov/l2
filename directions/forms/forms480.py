@@ -141,25 +141,25 @@ def form_01(c: Canvas, dir: Napravleniya):
         for param in direction_params:
             if param.field_type == 24:
                 laboratory_value = param.value
-            if param.field_type == 27:
+            elif param.field_type == 27:
                 table_value = param.value
-            if param.field_type in [26, 25]:
+            elif param.field_type in [26, 25]:
                 descriptive_values.append(param.value)
-            if param.title == 'Цель':
+            elif param.title == 'Цель':
                 purpose = param.value
-            if param.title == 'Диагноз основной':
+            elif param.title == 'Диагноз основной':
                 main_diagnos = param.value
-            if param.title == ' Код по МКБ':
+            elif param.title == ' Код по МКБ':
                 mkb10_code = param.value
-            if param.title == 'Дополнительные клинические сведения':
+            elif param.title == 'Дополнительные клинические сведения':
                 clinical_data = param.value
-            if param.title == 'Способ получения биопсийного (операционного) материала':
+            elif param.title == 'Способ получения биопсийного (операционного) материала':
                 method_get_material = param.value
-            if param.title == 'Материал помещен в 10%-ный раствор нейтрального формалина':
+            elif param.title == 'Материал помещен в 10%-ный раствор нейтрального формалина':
                 is_aqua_material = param.value
-            if param.title == 'Дата забора материала':
+            elif param.title == 'Дата забора материала':
                 date_get_material = normalize_dash_date(param.value)
-            if param.title == 'Время забора материала':
+            elif param.title == 'Время забора материала':
                 time_get_material = param.value
 
         if main_diagnos:
@@ -232,11 +232,10 @@ def form_01(c: Canvas, dir: Napravleniya):
             )
             objs.append(Spacer(1, 5 * mm))
             objs.append(tbl)
-        if table_value:
-            if table_value:
-                tab_values = table_part_result(table_value)
-                if tab_values:
-                    objs.extend(tab_values)
+        else:
+            table_value_result = table_part_result(table_value)
+            if table_value_result:
+                objs.append(table_value_result)
 
         objs.append(Spacer(1, 5 * mm))
         objs.append(Paragraph(f'19. Фамилия, инициалы врача: {dir.doc.get_fio()} {space_symbol * 5} подпись _________', style))

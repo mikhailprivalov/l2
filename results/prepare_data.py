@@ -465,19 +465,19 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                         fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
                         fwb.extend(previous_laboratory)
                         continue
+                    if field_type in [26, 25]:
+                        if v:
+                            fwb.append(Spacer(1, 2 * mm))
+                            fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
+                            fwb = previous_doc_refferal_result(v, fwb)
+                        continue
                     if field_type == 27:
                         table_results = table_part_result(v)
                         if not table_results:
                             continue
                         fwb.append(Spacer(1, 2 * mm))
                         fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
-                        fwb.extend(table_results)
-                        continue
-                    if field_type in [26, 25]:
-                        if v:
-                            fwb.append(Spacer(1, 2 * mm))
-                            fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
-                            fwb = previous_doc_refferal_result(v, fwb)
+                        fwb.append(table_results)
                         continue
                     if field_type == 17:
                         if v:
@@ -591,6 +591,16 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                         continue
                     fwb.extend(previous_laboratory)
                     continue
+                if field_type in [26, 25]:
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    fwb.append(Spacer(1, 2 * mm))
+                    if v:
+                        fwb.append(Paragraph(r.field.get_title(), styleBold))
+                        fwb = previous_doc_refferal_result(v, fwb)
+                    continue
                 if field_type == 27:
                     txt += "; ".join(vals)
                     fwb.append(Paragraph(txt, style))
@@ -601,17 +611,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                     table_results = table_part_result(v)
                     if not table_results:
                         continue
-                    fwb.extend(table_results)
-                    continue
-                if field_type in [26, 25]:
-                    txt += "; ".join(vals)
-                    fwb.append(Paragraph(txt, style))
-                    txt = ''
-                    vals = []
-                    fwb.append(Spacer(1, 2 * mm))
-                    if v:
-                        fwb.append(Paragraph(r.field.get_title(), styleBold))
-                        fwb = previous_doc_refferal_result(v, fwb)
+                    fwb.append(table_results)
                     continue
                 v = text_to_bold(v)
                 if r.field.get_title(force_type=field_type) != "":
@@ -846,8 +846,8 @@ def table_part_result(value):
 
     table_rows = value['rows']
     for t in table_rows:
-        temp_data = [[Paragraph(f"{row_data}", style) for row_data in t]]
-        opinion.extend(temp_data)
+        temp_data = [Paragraph(f"{row_data}", style) for row_data in t]
+        opinion.append(temp_data)
 
     table_width = [t['width'].replace('%', '') for t in table_settings]
 
@@ -872,7 +872,7 @@ def table_part_result(value):
         else:
             table_width_elements.append(int(t) * width_min_column)
 
-    tbl = Table(opinion, hAlign='LEFT', colWidths=tuple([k * mm for k in table_width_elements]))
+    tbl = Table(opinion, hAlign='LEFT', colWidths=[k * mm for k in table_width_elements])
     tbl.setStyle(
         TableStyle(
             [
@@ -882,4 +882,4 @@ def table_part_result(value):
         )
     )
 
-    return [tbl]
+    return tbl
