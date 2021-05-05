@@ -868,7 +868,7 @@ def table_part_result(value):
         if not k:
             empty_count += 1
         else:
-            not_empty_sum += int(k)
+            not_empty_sum += float(k)
     if empty_count > 0:
         width_for_empty_element = (width_max_table - width_min_column * not_empty_sum) // empty_count
 
