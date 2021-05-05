@@ -1,0 +1,22 @@
+name: Webpack
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  webpack_build_prod:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: make npm_install
+
+      - name: Build for production
+        run: make build_prod
