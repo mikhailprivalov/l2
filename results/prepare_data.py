@@ -465,6 +465,14 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                         fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
                         fwb.extend(previous_laboratory)
                         continue
+                    if field_type == 27:
+                        table_results = table_part_result(v)
+                        if not table_results:
+                            continue
+                        fwb.append(Spacer(1, 2 * mm))
+                        fwb.append(Paragraph("<font face=\"FreeSansBold\">{}</font>".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')), style))
+                        fwb.extend(table_results)
+                        continue
                     if field_type in [26, 25]:
                         if v:
                             fwb.append(Spacer(1, 2 * mm))
@@ -500,7 +508,6 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                         fwb.append(Paragraph(v, style))
                     if sick_title:
                         sick_result[r.field.get_title(force_type=field_type)] = v
-
     return fwb
 
 
@@ -583,6 +590,18 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
                     if not previous_laboratory:
                         continue
                     fwb.extend(previous_laboratory)
+                    continue
+                if field_type == 27:
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    fwb.append(Spacer(1, 2 * mm))
+                    fwb.append(Paragraph(r.field.get_title(), styleBold))
+                    table_results = table_part_result(v)
+                    if not table_results:
+                        continue
+                    fwb.extend(table_results)
                     continue
                 if field_type in [26, 25]:
                     txt += "; ".join(vals)
@@ -746,21 +765,22 @@ def previous_laboratory_result(value):
     style.fontSize = 8
     style.alignment = TA_JUSTIFY
 
-    opinion = [
-        [Paragraph('Анализ', style), Paragraph('Тест', style), Paragraph('Значение', style), Paragraph('Ед.изм', style),
-         Paragraph('Дата', style), Paragraph('Исполнитель', style)]
-    ]
+    opinion = [[Paragraph('Анализ', style), Paragraph('Тест', style), Paragraph('Значение', style), Paragraph('Ед.изм', style), Paragraph('Дата', style), Paragraph('Исполнитель', style)]]
 
-    temp_data = [[Paragraph(f"{data.get('researchTitle', '')}", style),
-                  Paragraph(f"{data.get('fractionTitle', '')}", style),
-                  Paragraph(f"{data.get('value', '')}", style),
-                  Paragraph(f"{data.get('units', '')}", style),
-                  Paragraph(f"{data.get('date', '')}", style),
-                  Paragraph(f"{data.get('docConfirm', '')}", style)
-                  ] for data in value]
+    temp_data = [
+        [
+            Paragraph(f"{data.get('researchTitle', '')}", style),
+            Paragraph(f"{data.get('fractionTitle', '')}", style),
+            Paragraph(f"{data.get('value', '')}", style),
+            Paragraph(f"{data.get('units', '')}", style),
+            Paragraph(f"{data.get('date', '')}", style),
+            Paragraph(f"{data.get('docConfirm', '')}", style),
+        ]
+        for data in value
+    ]
     opinion.extend(temp_data)
 
-    tbl = Table(opinion, colWidths=(50 * mm, 35 * mm, 20 * mm, 15 * mm, 20 * mm, 30 * mm,))
+    tbl = Table(opinion, hAlign='LEFT', colWidths=(50 * mm, 35 * mm, 20 * mm, 15 * mm, 20 * mm, 30 * mm,),)
     tbl.setStyle(
         TableStyle(
             [
@@ -802,3 +822,64 @@ def previous_doc_refferal_result(value, fwb):
         fwb.append(Spacer(1, 2 * mm))
 
     return fwb
+
+
+def table_part_result(value):
+    try:
+        value = json.loads(value)
+    except:
+        return None
+
+    if not value:
+        return None
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "FreeSans"
+    style.fontSize = 8
+    style.alignment = TA_JUSTIFY
+
+    table_titles = value['columns']['titles']
+    table_settings = value['columns']['settings']
+
+    opinion = [[Paragraph(f"{t}", style) for t in table_titles]]
+
+    table_rows = value['rows']
+    for t in table_rows:
+        temp_data = [[Paragraph(f"{row_data}", style) for row_data in t]]
+        opinion.extend(temp_data)
+
+    table_width = [t['width'].replace('%', '') for t in table_settings]
+
+    width_max = 170
+    width_min = width_max / 100
+    empty_count = 0
+    not_empty_sum = 0
+    width_for_empty_element = 0
+
+    for k in table_width:
+        if not k:
+            empty_count += 1
+        else:
+            not_empty_sum += int(k)
+    if empty_count > 0:
+        width_for_empty_element = (width_max - width_min * not_empty_sum) // empty_count
+
+    table_width_elements = []
+    for t in table_width:
+        if not t:
+            table_width_elements.append(width_for_empty_element)
+        else:
+            table_width_elements.append(int(t) * width_min)
+
+    tbl = Table(opinion, hAlign='LEFT', colWidths=tuple([k * mm for k in table_width_elements]))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+            ]
+        )
+    )
+
+    return [tbl]
