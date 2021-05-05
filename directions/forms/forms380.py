@@ -31,7 +31,7 @@ import locale
 from laboratory.utils import current_year
 from reportlab.graphics.barcode import code128
 
-from results.prepare_data import previous_laboratory_result, previous_doc_refferal_result
+from results.prepare_data import previous_laboratory_result, previous_doc_refferal_result, table_part_result
 
 w, h = A4
 
@@ -699,12 +699,14 @@ def form_05(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
         objs.append(Paragraph("Цель консультации (и, или) исследования (нужное обвести):", style))
         direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
         descriptive_values = []
-        laboratory_value, purpose = None, None
+        laboratory_value, purpose, table_value = None, None, None
         main_diagnos, near_diagnos, anamnes, other_purpose = '', '', '', ''
 
         for param in direction_params:
             if param.field_type == 24:
                 laboratory_value = param.value
+            if param.field_type == 27:
+                table_value = param.value
             if param.field_type in [26, 25]:
                 descriptive_values.append(param.value)
             if param.title == 'Цель':
@@ -752,6 +754,11 @@ def form_05(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
             lab_values = previous_laboratory_result(laboratory_value)
             if lab_values:
                 objs.extend(lab_values)
+        if table_value:
+            table_value_result = table_part_result(table_value)
+            if table_value_result:
+                objs.extend(table_value_result)
+
         objs.append(Paragraph("______________________________________________________________________________________", style))
         objs.append(Paragraph("Сведения о профилактических прививках (для детей до 18 лет) ________________________", style))
         objs.append(Paragraph("______________________________________________________________________________________", style))
