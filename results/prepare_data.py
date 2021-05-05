@@ -780,7 +780,7 @@ def previous_laboratory_result(value):
     ]
     opinion.extend(temp_data)
 
-    tbl = Table(opinion, hAlign='LEFT', colWidths=(50 * mm, 35 * mm, 20 * mm, 15 * mm, 20 * mm, 30 * mm,),)
+    tbl = Table(opinion, hAlign='LEFT', colWidths=(50.8 * mm, 35 * mm, 20 * mm, 15 * mm, 20 * mm, 30 * mm,),)
     tbl.setStyle(
         TableStyle(
             [
@@ -849,13 +849,14 @@ def table_part_result(value):
         temp_data = [Paragraph(f"{row_data}", style) for row_data in t]
         opinion.append(temp_data)
 
-    table_width = [t['width'].replace('%', '') for t in table_settings]
+    table_width = []
+    print(table_settings)
     for t in table_settings:
-        if '%' in t:
-            table_width.append(t['width'].replace('%', ''))
-        elif t > 0:
-            table_width.append(t['width'] / 1024 * 100)
-        elif t > 0:
+        if '%' in t['width']:
+            table_width.append(float(t['width'].replace('%', '')))
+        elif t['width'] and float(t['width']) > 0:
+            table_width.append(float(t['width']) / 1024 * 100)
+        else:
             table_width.append(t['width'])
 
     width_max_table = 170
