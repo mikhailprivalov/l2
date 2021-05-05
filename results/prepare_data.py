@@ -878,7 +878,7 @@ def table_part_result(value):
         if not t:
             table_width_elements.append(width_for_empty_element)
         else:
-            table_width_elements.append(int(t) * width_min_column)
+            table_width_elements.append(t * width_min_column)
 
     tbl = Table(opinion, hAlign='LEFT', colWidths=[k * mm for k in table_width_elements])
     tbl.setStyle(
