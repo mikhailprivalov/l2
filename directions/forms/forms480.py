@@ -136,6 +136,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         date_get_material = '_________________________'
         time_get_material = '______________'
         is_aqua_material = '(да/нет)___________'
+        purpose = 'Уточнение диагноза'
 
         for param in direction_params:
             if param.field_type == 24:
@@ -176,8 +177,7 @@ def form_01(c: Canvas, dir: Napravleniya):
             diagnosis = dir.diagnos.strip()
         objs.append(Paragraph(f'10. Код по МКБ: {diagnosis}', style))
         objs.append(Paragraph('11. Задача прижизненного патолого-анатомического исследования биопсийного (операционного) материала', style))
-        objs.append(Paragraph('<u>Уточнение диагноза</u>', style))
-
+        objs.append(Paragraph(f'<u>{purpose}</u>', style))
         objs.append(Paragraph('12. Дополнительные клинические сведения (основные симптомы, оперативное или гормональное, или лучевое лечение,', style))
         objs.append(Paragraph('результаты инструментальных и лабораторных исследований)__________________________________________________', style))
         if clinical_data:
