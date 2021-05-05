@@ -13,12 +13,10 @@ import Component from 'vue-class-component'
 
 import Patient from '@/types/patient'
 
-const PatientCardProps = Vue.extend({
+@Component({
   props: {
-    patient: Patient
+    patient: Patient,
   }
-});
-
-@Component
-export default class PatientCard extends PatientCardProps {}
+})
+export default class PatientCard extends Vue {}
 </script>
