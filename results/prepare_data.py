@@ -850,6 +850,13 @@ def table_part_result(value):
         opinion.append(temp_data)
 
     table_width = [t['width'].replace('%', '') for t in table_settings]
+    for t in table_settings:
+        if '%' in t:
+            table_width.append(t['width'].replace('%', ''))
+        elif t > 0:
+            table_width.append(t['width'] / 1024 * 100)
+        elif t > 0:
+            table_width.append(t['width'])
 
     width_max_table = 170
     width_min_column = width_max_table / 100
