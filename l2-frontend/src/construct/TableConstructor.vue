@@ -10,24 +10,24 @@
            v-if="columns.settings && columns.settings.length === columns.count">
       <colgroup>
         <col width="36">
-        <col v-for="(_, i) in columns.titles" :width="columns.settings[i] && columns.settings[i].width">
+        <col v-for="(_, i) in columns.titles" :width="columns.settings[i] && columns.settings[i].width" :key="i">
       </colgroup>
       <thead>
       <tr>
         <td></td>
-        <td v-for="(_, i) in columns.titles" class="cl-td">
+        <td v-for="(_, i) in columns.titles" class="cl-td" :key="i">
           <input type="text" class="form-control" v-model="columns.titles[i]">
         </td>
       </tr>
       </thead>
       <tbody>
-      <tr v-for="(r, j) in rows">
+      <tr v-for="(r, j) in rows" :key="j">
         <td class="cl-td">
           <button class="btn btn-blue-nb nbr" @click="deleteRow(j)" title="Удалить строку" v-tippy>
             <i class="fa fa-times"></i>
           </button>
         </td>
-        <td v-for="(_, i) in columns.titles" class="cl-td">
+        <td v-for="(_, i) in columns.titles" class="cl-td" :key="i">
           <template v-if="columns.settings[i].type === 0">
             <textarea :rows="columns.settings[i].lines" class="form-control"
                       v-if="columns.settings[i].lines > 1" v-model="r[i]"
@@ -59,8 +59,9 @@
     <div>
       <strong>Настройка колонок:</strong>
 
-      <div class="column-card card card-1 card-no-hover" v-for="(s, i) in columns.settings"
-           v-if="columns.settings && columns.settings.length === columns.count">
+      <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
+      <div v-for="(s, i) in columns.settings" v-if="columns.settings && columns.settings.length === columns.count" :key="i"
+           class="column-card card card-1 card-no-hover">
         <strong>Колонка №{{ i + 1 }} {{ columns.titles[i] }}:</strong>
         <div class="input-group" style="margin-bottom: 10px">
           <span class="input-group-addon">Ширина (пиксели или проценты), пример: 42 или 10% или пусто</span>
@@ -70,7 +71,7 @@
         <div class="input-group" style="margin-bottom: 10px">
           <span class="input-group-addon">Тип</span>
           <select class="form-control" v-model="columns.settings[i].type" @change="updatedSettings">
-            <option :value="t[0]" v-for="t in COLUMN_TYPES">{{ t[1] }}</option>
+            <option :value="t[0]" v-for="t in COLUMN_TYPES" :key="t[0]">{{ t[1] }}</option>
           </select>
         </div>
         <div class="input-group" style="margin-bottom: 10px"
@@ -97,8 +98,8 @@
 </template>
 <script>
 import _ from 'lodash';
-import SelectField from "@/fields/SelectField";
-import RadioField from "@/fields/RadioField";
+import SelectField from '@/fields/SelectField.vue';
+import RadioField from '@/fields/RadioField.vue';
 
 const DEFAULT_TITLES = [
   'Колонка 1',
@@ -109,7 +110,7 @@ const DEFAULT_ROWS = [
   [
     '',
     '',
-  ]
+  ],
 ];
 
 const COLUMN_TYPES = [
@@ -130,9 +131,9 @@ const DEFAULT_SETTINGS = () => ({
 
 export default {
   name: 'TableConstructor',
-  components: {RadioField, SelectField},
+  components: { RadioField, SelectField },
   props: {
-    row: {}
+    row: {},
   },
   mounted() {
     this.checkTable();
@@ -205,7 +206,7 @@ export default {
         params.rows = DEFAULT_ROWS;
       }
 
-      params.rows = params.rows.filter(r => Array.isArray(r) && r.every(v => _.isString));
+      params.rows = params.rows.filter((r) => Array.isArray(r) && r.every((v) => _.isString(v)));
 
       if (params.rows.length === 0) {
         params.rows = DEFAULT_ROWS;
@@ -248,15 +249,16 @@ export default {
         if (!_.isObject(s)) {
           s = {};
         }
-        this.columns.settings[i] = {...DEFAULT_SETTINGS(), ...s};
-        if (!this.COLUMN_TYPES.map(t => t[0]).includes(this.columns.settings[i].type)) {
+        this.columns.settings[i] = { ...DEFAULT_SETTINGS(), ...s };
+        if (!this.COLUMN_TYPES.map((t) => t[0]).includes(this.columns.settings[i].type)) {
+          // eslint-disable-next-line prefer-destructuring
           this.columns.settings[i].type = this.COLUMN_TYPES[0][0];
         }
 
         const t = this.columns.settings[i].type;
 
         if (t !== 0) {
-          for (let j = 0; j < this.rows.length; j++){
+          for (let j = 0; j < this.rows.length; j++) {
             const r = this.rows[j];
             if (t === 1) {
               r[i] = '';
@@ -271,6 +273,7 @@ export default {
             if (t === 10 || t === 12) {
               const v = this.columns.settings[i].variants.split('\n');
               if (!v.includes(r[i])) {
+                // eslint-disable-next-line prefer-destructuring
                 r[i] = v[0];
               }
             } else {
@@ -310,7 +313,7 @@ export default {
       }
     },
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

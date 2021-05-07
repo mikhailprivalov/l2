@@ -19,65 +19,64 @@
 </template>
 
 <script>
-  import Modal from '../ui-cards/Modal'
-  import PlanOperationsData from '../components/PlanOperationsData'
+import Modal from '../ui-cards/Modal.vue';
+import PlanOperationsData from '../components/PlanOperationsData.vue';
 
-  export default {
-    name: 'plan-operation-edit',
-    components: {Modal, PlanOperationsData},
-    props: {
-      card_pk: {
-        type: Number,
-        required: false
-      },
-      patient_fio: {
-        type: String,
-        required: false
-      },
-      direction: {
-        type: String,
-        required: false
-      },
-      pk_plan: {
-        type: Number,
-        required: false
-      },
-      pk_hirurg: {
-        type: Number,
-        required: false
-      },
-      date: {
-        type: String,
-        required: false
-      },
-      operation: {
-        type: String,
-        required: false
-      },
-      cancel_operation: {
-        type: Boolean,
-        required: false
-      },
+export default {
+  name: 'plan-operation-edit',
+  components: { Modal, PlanOperationsData },
+  props: {
+    card_pk: {
+      type: Number,
+      required: false,
     },
-    data() {
-      return {
-        cards: [],
+    patient_fio: {
+      type: String,
+      required: false,
+    },
+    direction: {
+      type: String,
+      required: false,
+    },
+    pk_plan: {
+      type: Number,
+      required: false,
+    },
+    pk_hirurg: {
+      type: Number,
+      required: false,
+    },
+    date: {
+      type: String,
+      required: false,
+    },
+    operation: {
+      type: String,
+      required: false,
+    },
+    cancel_operation: {
+      type: Boolean,
+      required: false,
+    },
+  },
+  data() {
+    return {
+      cards: [],
+    };
+  },
+  mounted() {
+    this.$root.$on('hide_plan_operations', () => {
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
       }
+    });
+  },
+  methods: {
+    hide_plan_operations() {
+      this.$root.$emit('hide_plan_operations');
     },
-    mounted() {
-      this.$root.$on('hide_plan_operations', () => {
-        if (this.$refs.modal) {
-          this.$refs.modal.$el.style.display = 'none'
-        }
-      })
-
-    },
-    methods: {
-      hide_plan_operations() {
-        this.$root.$emit('hide_plan_operations')
-      }
-    },
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

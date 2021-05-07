@@ -39,28 +39,28 @@
 </template>
 
 <script>
-  import SelectedPatient from '../components/SelectedPatient'
-  import CardSearch from '../components/CardSearch'
+import SelectedPatient from '../components/SelectedPatient.vue';
+import CardSearch from '../components/CardSearch.vue';
 
-  export default {
-    name: 'cases',
-    components: {SelectedPatient, CardSearch},
-    data() {
-      return {
-        directionQ: '',
-        selected_card: {
-          pk: -1,
-          num: '',
-          base: '',
-          is_rmis: false,
-          fio: '',
-          sex: '',
-          bd: '',
-          age: '',
-        }
-      }
-    }
-  }
+export default {
+  name: 'cases',
+  components: { SelectedPatient, CardSearch },
+  data() {
+    return {
+      directionQ: '',
+      selected_card: {
+        pk: -1,
+        num: '',
+        base: '',
+        is_rmis: false,
+        fio: '',
+        sex: '',
+        bd: '',
+        age: '',
+      },
+    };
+  },
+};
 </script>
 
 <style lang="scss" scoped>

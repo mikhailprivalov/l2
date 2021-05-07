@@ -9,25 +9,25 @@
 </template>
 
 <script>
-  export default {
-    name: 'research-pick',
-    props: {
-      research: {
-        type: Object,
-        required: true
-      },
-      force_tippy: {
-        type: Boolean,
-        required: false,
-        default: false,
-      },
+export default {
+  name: 'research-pick',
+  props: {
+    research: {
+      type: Object,
+      required: true,
     },
-    computed: {
-      tid() {
-        return 'research-pick-tip-' + this.research.pk
-      }
-    }
-  }
+    force_tippy: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+  },
+  computed: {
+    tid() {
+      return `research-pick-tip-${this.research.pk}`;
+    },
+  },
+};
 </script>
 
 <style scoped>

@@ -83,17 +83,17 @@
 
 <script>
 import api from '@/api';
-import * as action_types from "@/store/action-types";
-import Modal from '@/ui-cards/Modal';
-import DocCallLog from './DocCallLog';
+import * as actions from '@/store/action-types';
+import Modal from '@/ui-cards/Modal.vue';
+import DocCallLog from './DocCallLog.vue';
 
 export default {
   name: 'DocCallModal',
-  components: {Modal, DocCallLog},
+  components: { Modal, DocCallLog },
   props: {
     r: {
       type: Object,
-    }
+    },
   },
   computed: {
     statusText() {
@@ -107,14 +107,16 @@ export default {
   },
   methods: {
     async setMeAsExecutor() {
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message, status, executor, executor_fio, inLog} = await api(
-        'doctor-call/change-executor', this.r, ['pk'], {prevExecutor: this.r.executor}
+      await this.$store.dispatch(actions.INC_LOADING);
+      const {
+        ok, message, status, executor, executor_fio, inLog,
+      } = await api(
+        'doctor-call/change-executor', this.r, ['pk'], { prevExecutor: this.r.executor },
       );
       if (!ok) {
-        errmessage(message);
+        window.errmessage(message);
       } else {
-        okmessage('Исполнитель обновлён успешно');
+        window.okmessage('Исполнитель обновлён успешно');
       }
       this.r.executor = executor;
       this.r.executor_fio = executor_fio;
@@ -122,7 +124,7 @@ export default {
       this.r.inLog = inLog;
       this.$root.$emit('doc-call:log:update');
       this.$root.$emit('doc-call:status:updated', this.r.pk);
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     hide() {
       if (this.$refs.modal) {
@@ -131,5 +133,5 @@ export default {
       this.$root.$emit('doc-call:row:modal:hide');
     },
   },
-}
+};
 </script>

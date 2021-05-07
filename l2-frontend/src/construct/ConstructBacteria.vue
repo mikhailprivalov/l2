@@ -135,228 +135,234 @@
 </template>
 
 <script>
-  import bacteria_point from '../api/bacteria-point'
-  import vSelect from 'vue-select'
-  import 'vue-select/dist/vue-select.css';
-  import draggable from 'vuedraggable'
-  import RadioField from '../fields/RadioField'
-  import BacteriaEditTitleGroup from '../modals/BacteriaEditTitleGroup'
-  import * as action_types from '../store/action-types'
-  import FastCreateAndFillBacteriaGroup from "../modals/FastCreateAndFillBacteriaGroup";
+import vSelect from 'vue-select';
+import 'vue-select/dist/vue-select.css';
+import draggable from 'vuedraggable';
+import bacteriaPoint from '../api/bacteria-point';
+import RadioField from '../fields/RadioField.vue';
+import BacteriaEditTitleGroup from '../modals/BacteriaEditTitleGroup.vue';
+import * as actions from '../store/action-types';
+import FastCreateAndFillBacteriaGroup from '../modals/FastCreateAndFillBacteriaGroup.vue';
 
-  export default {
-    name: 'ConstructBacteria',
-    components: {
-      FastCreateAndFillBacteriaGroup,
-      vSelect,
-      draggable,
-      RadioField,
-      BacteriaEditTitleGroup,
+export default {
+  name: 'ConstructBacteria',
+  components: {
+    FastCreateAndFillBacteriaGroup,
+    vSelect,
+    draggable,
+    RadioField,
+    BacteriaEditTitleGroup,
+  },
+  data() {
+    return {
+      list1: [],
+      list2: [],
+      listSets: [],
+      list1Elements: [],
+      list2Elements: [],
+      listSetsElements: [],
+      selected1: { pk: -2, title: 'Без группы' },
+      selected2: { pk: -1, title: 'Все' },
+      searchElement: '',
+      typesObject: [
+        'Бактерии',
+        'Антибиотики',
+        'Бактериофаги',
+      ],
+      typesGroups: ['Группы'],
+      searchTypesObject: 'Бактерии',
+      searchTypesGroups: 'Группы',
+      editElementTitle: '',
+      editElementFsli: '',
+      editElementLis: '',
+      editElementHide: false,
+      editElementPk: -1,
+      editElementGroup: '',
+      newgroup: '',
+      group_edit_open: false,
+      isFcafbgOpen: false,
+    };
+  },
+  methods: {
+    group_edit() {
+      this.group_edit_open = true;
     },
-    data() {
-      return {
-        list1: [],
-        list2: [],
-        listSets: [],
-        list1Elements: [],
-        list2Elements: [],
-        listSetsElements: [],
-        selected1: {'pk': -2, 'title': 'Без группы'},
-        selected2: {'pk': -1, 'title': 'Все'},
-        searchElement: '',
-        typesObject: [
-          'Бактерии',
-          'Антибиотики',
-          'Бактериофаги',
-        ],
-        typesGroups: ['Группы'],
-        searchTypesObject: 'Бактерии',
-        searchTypesGroups: 'Группы',
-        editElementTitle: '',
-        editElementFsli: '',
-        editElementLis: '',
-        editElementHide: false,
-        editElementPk: -1,
-        editElementGroup: '',
-        newgroup: '',
-        group_edit_open: false,
-        isFcafbgOpen: false,
+    async group_edit_hide() {
+      this.group_edit_open = false;
+      await this.load_culture_groups(this.selected1.title, '1');
+      await this.load_culture_groups(this.selected2.title, '2');
+    },
+    openFcafbg() {
+      this.isFcafbgOpen = true;
+    },
+    async hide_fcafbg() {
+      this.isFcafbgOpen = false;
+      await this.load_culture_groups(this.selected1.title, '1');
+      await this.load_culture_groups(this.selected2.title, '2');
+    },
+    async load_culture_groups(titlegroupOrig, objList) {
+      let titlegroup = titlegroupOrig;
+      if (!titlegroup || titlegroup.length === 0) {
+        titlegroup = 'Все';
+        this.selected1 = { pk: -2, title: 'Без группы' };
+        this.selected2 = { pk: -1, title: 'Все' };
+      }
+      if (this.searchTypesGroups === 'Группы') {
+        bacteriaPoint.loadCultures({ type: titlegroup, searchObj: this.searchTypesObject })
+          .then((data) => {
+            this.list1 = data.groups;
+            this.list2 = [...this.list1];
+            if (objList === '1') {
+              this.list1Elements = data.elements;
+            } else {
+              this.list2Elements = data.elements;
+            }
+          });
+      } else {
+        bacteriaPoint.loadCultures({ type: this.selected1.title, searchObj: this.searchTypesObject })
+          .then((data) => {
+            this.list1 = data.groups;
+            this.list2Elements = [];
+            this.list1Elements = data.elements;
+          });
+
+        const data = await bacteriaPoint.loadantibioticset({
+          TypesObject: this.searchTypesObject,
+          typeGroups: this.searchTypesGroups,
+        });
+        this.list2 = data.groups;
+        this.list2Elements = [];
+        if (this.selected2.title !== 'Все') {
+          const setElements = await bacteriaPoint.loadSetElements({
+            type: this.selected2.title,
+            typeGroups: this.searchTypesGroups,
+          });
+          this.list2Elements = setElements.elements;
+        }
       }
     },
-    methods: {
-      group_edit() {
-        this.group_edit_open = true
-      },
-      async group_edit_hide() {
-        this.group_edit_open = false
-        await this.load_culture_groups(this.selected1.title, '1')
-        await this.load_culture_groups(this.selected2.title, '2')
-      },
-      openFcafbg() {
-        this.isFcafbgOpen = true
-      },
-      async hide_fcafbg() {
-        this.isFcafbgOpen = false
-        await this.load_culture_groups(this.selected1.title, '1')
-        await this.load_culture_groups(this.selected2.title, '2')
-      },
-      async load_culture_groups(titlegroup, objList) {
-        if (!titlegroup || titlegroup.length === 0) {
-          titlegroup = 'Все'
-          this.selected1 = {'pk': -2, 'title': 'Без группы'}
-          this.selected2 = {'pk': -1, 'title': 'Все'}
-        }
-        if (this.searchTypesGroups === 'Группы') {
-          bacteria_point.loadCultures({'type': titlegroup, 'searchObj': this.searchTypesObject})
-            .then(data => {
-                this.list1 = data.groups
-                this.list2 = [...this.list1]
-                objList === '1' ? this.list1Elements = data.elements : this.list2Elements = data.elements
-              }
-            )
-        } else {
-          bacteria_point.loadCultures({'type': this.selected1.title, 'searchObj': this.searchTypesObject})
-            .then(data => {
-                this.list1 = data.groups
-                this.list2Elements = []
-                this.list1Elements = data.elements
-              }
-            )
+    onEditElement(element) {
+      this.editElementPk = element.pk;
+      this.editElementTitle = element.title;
+      this.editElementFsli = element.fsli;
+      this.editElementLis = element.lis;
+      this.editElementHide = element.hide;
+      this.editElementGroup = element.group;
+    },
+    onAddToSet(element) {
+      this.list2Elements.push(element);
+    },
+    delFromlistSetsElements(element) {
+      this.list2Elements = this.list2Elements.filter((item) => item !== element);
+    },
+    async save_element() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await bacteriaPoint.saveElement({
+        TypesObject: this.searchTypesObject,
+        title: this.editElementTitle,
+        fsli: this.editElementFsli,
+        pk: this.editElementPk,
+        hide: this.editElementHide,
+        lis: this.editElementLis,
+      });
+      if (ok) {
+        window.okmessage('Элемент сохранён', `${this.searchTypesObject} – ${this.editElementTitle}`);
+      } else {
+        window.errmessage('Ошибка', message);
+      }
+      this.onClearContentEdit();
+      await this.load_culture_groups(this.selected1.title, '1');
+      await this.load_culture_groups(this.selected2.title, '2');
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    onClearContentEdit() {
+      this.editElementTitle = '';
+      this.editElementFsli = '';
+      this.editElementLis = '';
+      this.editElementPk = -1;
+      this.editElementHide = false;
+      this.editElementGroup = '';
+    },
+    async addNewGroup() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message, obj = this.selected2 } = await bacteriaPoint.addNewGroup({
+        TypesObject: this.searchTypesObject,
+        typeGroups: this.searchTypesGroups,
+        newgroup: this.newgroup,
+      });
+      if (ok) {
+        this.newgroup = '';
+        await this.load_culture_groups(this.selected1.title, '1');
+        this.selected2 = obj;
+        window.okmessage('Сохранено', `${this.searchTypesGroups} - ${this.searchTypesObject} – ${this.newgroup}`);
+      } else {
+        window.errmessage('Ошибка', message);
+      }
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    async save_groups() {
+      const pksElements2 = [];
+      for (const i of this.list2Elements) {
+        pksElements2.push(i.pk);
+      }
+      const pksElements1 = [];
+      for (const i of this.list1Elements) {
+        pksElements1.push(i.pk);
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await bacteriaPoint.saveGroup({
+        TypesObject: this.searchTypesObject,
+        typeGroups: this.searchTypesGroups,
+        obj: [{ group: this.selected1.title, elements: pksElements1 }, {
+          group: this.selected2.title,
+          elements: pksElements2,
+        }],
+        set: { group: this.selected2.title, elements: pksElements2 },
+      });
+      if (ok) {
+        window.okmessage('Группа сохранена', `${this.searchTypesObject} – ${this.selected2.title}`);
+      } else {
+        window.errmessage('Ошибка', message);
+      }
+      this.onClearContentEdit();
+      await this.load_culture_groups(this.selected1.title, '1');
 
-          const data = await bacteria_point.loadantibioticset({
-            'TypesObject': this.searchTypesObject,
-            'typeGroups': this.searchTypesGroups
-          })
-          this.list2 = data.groups
-          this.list2Elements = []
-          if (this.selected2.title !== 'Все') {
-            const setElements = await bacteria_point.loadSetElements({
-              'type': this.selected2.title,
-              'typeGroups': this.searchTypesGroups
-            })
-            this.list2Elements = setElements.elements
-          }
-        }
-      },
-      onEditElement(element) {
-        this.editElementPk = element.pk
-        this.editElementTitle = element.title
-        this.editElementFsli = element.fsli
-        this.editElementLis = element.lis
-        this.editElementHide = element.hide
-        this.editElementGroup = element.group
-      },
-      onAddToSet(element) {
-        this.list2Elements.push(element)
-      },
-      delFromlistSetsElements(element) {
-        this.list2Elements = this.list2Elements.filter(item => item !== element)
-      },
-      async save_element() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {ok, message} = await bacteria_point.saveElement({
-          'TypesObject': this.searchTypesObject, 'title': this.editElementTitle, 'fsli': this.editElementFsli,
-          'pk': this.editElementPk, 'hide': this.editElementHide, 'lis': this.editElementLis
-        })
-        if (ok) {
-          okmessage('Элемент сохранён', `${this.searchTypesObject} – ${this.editElementTitle}`)
-        } else {
-          errmessage('Ошибка', message)
-        }
-        this.onClearContentEdit()
-        await this.load_culture_groups(this.selected1.title, '1')
-        await this.load_culture_groups(this.selected2.title, '2')
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      onClearContentEdit() {
-        this.editElementTitle = ''
-        this.editElementFsli = ''
-        this.editElementLis= ''
-        this.editElementPk = -1
-        this.editElementHide = false
-        this.editElementGroup = ''
-
-      },
-      async addNewGroup() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {ok, message, obj = this.selected2} = await bacteria_point.addNewGroup({
-          'TypesObject': this.searchTypesObject, 'typeGroups': this.searchTypesGroups,
-          'newgroup': this.newgroup
-        })
-        if (ok) {
-          this.newgroup = '';
-          await this.load_culture_groups(this.selected1.title, '1')
-          this.selected2 = obj;
-          okmessage('Сохранено', `${this.searchTypesGroups} - ${this.searchTypesObject} – ${this.newgroup}`)
-        } else {
-          errmessage('Ошибка', message)
-        }
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      async save_groups() {
-        let pksElements2 = []
-        for (let i of this.list2Elements) {
-          pksElements2.push(i.pk)
-        }
-        let pksElements1 = []
-        for (let i of this.list1Elements) {
-          pksElements1.push(i.pk)
-        }
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {ok, message} = await bacteria_point.saveGroup({
-          'TypesObject': this.searchTypesObject, 'typeGroups': this.searchTypesGroups,
-          'obj': [{'group': this.selected1.title, 'elements': pksElements1}, {
-            'group': this.selected2.title,
-            'elements': pksElements2
-          }],
-          'set': {'group': this.selected2.title, 'elements': pksElements2}
-        })
-        if (ok) {
-          okmessage('Группа сохранена', `${this.searchTypesObject} – ${this.selected2.title}`)
-        } else {
-          errmessage('Ошибка', message)
-        }
-        this.onClearContentEdit()
-        await this.load_culture_groups(this.selected1.title, '1')
-
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      filteredGroupObject() {
-        this.load_culture_groups(this.selected1.title, '1')
-        this.selected1 = {'pk': -2, 'title': 'Без группы'}
-        this.selected2 = {'pk': -1, 'title': 'Все'}
-        if (this.searchTypesObject !== 'Антибиотики') {
-          this.searchTypesGroups = 'Группы'
-        }
-        this.typesGroups = this.searchTypesObject === 'Антибиотики' ? ['Группы', 'Наборы'] : ['Группы']
-      },
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-    mounted() {
-      this.load_culture_groups(this.selected1.title, '1')
-      this.load_culture_groups(this.selected2.title, '2')
-      this.$root.$on('hide_ge', () => this.group_edit_hide())
-      this.$root.$on('hide_fcafbg', () => this.hide_fcafbg())
-      this.$root.$on('select2', async (obj) => {
-          await this.load_culture_groups(this.selected1.title, '1')
-          this.selected2 = obj;
-      })
+    filteredGroupObject() {
+      this.load_culture_groups(this.selected1.title, '1');
+      this.selected1 = { pk: -2, title: 'Без группы' };
+      this.selected2 = { pk: -1, title: 'Все' };
+      if (this.searchTypesObject !== 'Антибиотики') {
+        this.searchTypesGroups = 'Группы';
+      }
+      this.typesGroups = this.searchTypesObject === 'Антибиотики' ? ['Группы', 'Наборы'] : ['Группы'];
     },
-    computed: {
-      filteredList() {
-        return this.list1Elements.filter(element => {
-          return element.title.toLowerCase().includes(this.searchElement.toLowerCase())
-        })
-      },
+  },
+  mounted() {
+    this.load_culture_groups(this.selected1.title, '1');
+    this.load_culture_groups(this.selected2.title, '2');
+    this.$root.$on('hide_ge', () => this.group_edit_hide());
+    this.$root.$on('hide_fcafbg', () => this.hide_fcafbg());
+    this.$root.$on('select2', async (obj) => {
+      await this.load_culture_groups(this.selected1.title, '1');
+      this.selected2 = obj;
+    });
+  },
+  computed: {
+    filteredList() {
+      return this.list1Elements.filter((element) => element.title.toLowerCase().includes(this.searchElement.toLowerCase()));
     },
-    watch: {
-      selected1() {
-        this.load_culture_groups(this.selected1.title, '1')
-      },
-      selected2() {
-        this.load_culture_groups(this.selected2.title, '2')
-      },
+  },
+  watch: {
+    selected1() {
+      this.load_culture_groups(this.selected1.title, '1');
     },
-  }
+    selected2() {
+      this.load_culture_groups(this.selected2.title, '2');
+    },
+  },
+};
 </script>
 
 <style lang="scss">

@@ -29,8 +29,8 @@
         </tr>
         </thead>
         <tbody>
-        <PharmacotherapyRow :data="v" :confirmed="confirmed" :params="params" v-for="v in value"
-                            :key="`${v.pk}-${v.remove}`" v-if="!v.remove" />
+        <PharmacotherapyRow :data="v" :confirmed="confirmed" :params="params" v-for="v in valueFiltered"
+                            :key="`${v.pk}-${v.remove}`" />
         <tr v-if="value.length === 0">
           <td class="text-center" colspan="10">нет назначений</td>
         </tr>
@@ -50,7 +50,7 @@
         </div>
       </div>
       <div class="col-xs-9" style="padding-left: 0">
-        <div @click="add(v.value, v.titleOrig)" class="variant" v-for="v in variants" v-html="v.title" />
+        <div @click="add(v.value, v.titleOrig)" class="variant" v-for="v in variants" :key="v.pk" v-html="v.title" />
         <div class="variant-msg" v-if="search === ''">выполните поиск для добавления назначений</div>
         <div class="variant-msg" v-else-if="variants.length === 0">не найдено</div>
       </div>
@@ -59,103 +59,109 @@
 </template>
 
 <script>
-  import * as action_types from '@/store/action-types'
-  import api from '@/api'
-  import PharmacotherapyRow from "@/ui-cards/PharmacotherapyRow";
-  import moment from "moment";
+import * as actions from '@/store/action-types';
+import api from '@/api';
+import PharmacotherapyRow from '@/ui-cards/PharmacotherapyRow.vue';
+import moment from 'moment';
 
-  export default {
-    name: 'PharmacotherapyInput',
-    components: {PharmacotherapyRow},
-    props: {
-      value: {
-        type: Array,
-      },
-      confirmed: {
-        type: Boolean,
-        default: false,
+export default {
+  name: 'PharmacotherapyInput',
+  components: { PharmacotherapyRow },
+  props: {
+    value: {
+      type: Array,
+    },
+    confirmed: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      search: '',
+      variants: [],
+      toRemove: [],
+      params: {},
+    };
+  },
+  async mounted() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    this.params = await api('procedural-list/params');
+    await this.$store.dispatch(actions.DEC_LOADING);
+  },
+  methods: {
+    add(drugPk, drug) {
+      this.value.push({
+        pk: Math.random() + Math.random(),
+        isNew: true,
+        remove: false,
+        drug,
+        drugPk,
+        timesSelected: [],
+        form_release: -1,
+        method: -1,
+        dosage: 1,
+        step: 1,
+        dateStart: moment().format('YYYY-MM-DD'),
+        dateEnd: null,
+        countDays: 1,
+        units: null,
+        comment: '',
+      });
+      this.search = '';
+    },
+  },
+  computed: {
+    valueFiltered() {
+      return this.value.filter(v => !v.remove);
+    },
+  },
+  watch: {
+    async search() {
+      if (this.search.trim() === '') {
+        this.variants = [];
+        return;
       }
-    },
-    data() {
-      return {
-        search: '',
-        variants: [],
-        toRemove: [],
-        params: {},
-      };
-    },
-    async mounted() {
-      await this.$store.dispatch(action_types.INC_LOADING);
-      this.params = await api('procedural-list/params');
-      await this.$store.dispatch(action_types.DEC_LOADING);
-    },
-    methods: {
-      add(drugPk, drug) {
-        this.value.push({
-          pk: Math.random() + Math.random(),
-          isNew: true,
-          remove: false,
-          drug,
-          drugPk,
-          timesSelected: [],
-          form_release: -1,
-          method: -1,
-          dosage: 1,
-          step: 1,
-          dateStart: moment().format('YYYY-MM-DD'),
-          dateEnd: null,
-          countDays: 1,
-          units: null,
-          comment: '',
-        })
-        this.search = '';
-      },
-    },
-    watch: {
-      async search() {
-        if (this.search.trim() === '') {
-          this.variants = []
-          return
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { data } = await fetch(`/api/autocomplete?type=drugs&value=${this.search}&limit=60`).then((r) => r.json());
+      this.variants = [];
+      const lowerSearch = this.search.trim().toLowerCase();
+      const l = lowerSearch.length;
+      for (const v of data) {
+        const { title } = v;
+
+        const parts = [];
+
+        const indexes = [];
+        let i = -1;
+
+        // eslint-disable-next-line no-cond-assign
+        while ((i = title.toLocaleLowerCase().indexOf(lowerSearch, i + 1)) !== -1) {
+          indexes.push(i);
         }
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {data} = await fetch(`/api/autocomplete?type=drugs&value=${this.search}&limit=60`).then(r => r.json())
-        this.variants = []
-        const lowerSearch = this.search.trim().toLowerCase()
-        const l = lowerSearch.length
-        for (const v of data) {
-          const title = v.title;
 
-          const parts = [];
+        let lastIdx = 0;
+        for (const idx of indexes) {
+          parts.push(
+            title.substring(lastIdx, idx),
+            `<strong>${title.substring(idx, idx + l)}</strong>`,
+          );
 
-          const indexes = [];
-          let i = -1;
-
-          while ((i = title.toLocaleLowerCase().indexOf(lowerSearch, i + 1)) !== -1){
-              indexes.push(i);
-          }
-
-          let lastIdx = 0;
-          for (const idx of indexes) {
-            parts.push(
-              title.substring(lastIdx, idx),
-              `<strong>${title.substring(idx, idx + l)}</strong>`,
-            );
-
-            lastIdx = idx + l;
-          }
-
-          parts.push(title.substring(lastIdx));
-
-          this.variants.push({
-            value: v.pk,
-            title: parts.join(''),
-            titleOrig: title,
-          })
+          lastIdx = idx + l;
         }
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
+
+        parts.push(title.substring(lastIdx));
+
+        this.variants.push({
+          value: v.pk,
+          title: parts.join(''),
+          titleOrig: title,
+        });
+      }
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

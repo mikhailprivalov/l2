@@ -24,8 +24,8 @@
           </tr>
           </thead>
           <tbody>
-          <template v-for="row in result.researches">
-            <tr v-for="f in row.fractions">
+          <template v-for="(row, pk) in result.researches">
+            <tr v-for="f in row.fractions" :key="`${pk}_${f.title}_${f.value}`">
               <td>{{ row.title }}</td>
               <td>{{ f.title }}</td>
               <td>
@@ -45,11 +45,11 @@
 </template>
 
 <script>
-import api from '@/api'
-import _ from "lodash";
+import api from '@/api';
+import _ from 'lodash';
 
 export default {
-  name: "ResultDetails",
+  name: 'ResultDetails',
   props: {
     direction: {
       type: Number,
@@ -75,7 +75,7 @@ export default {
     return {
       result: [],
       active: false,
-    }
+    };
   },
   methods: {
     show_results_debounce: _.debounce(function (with_hide) {
@@ -87,7 +87,7 @@ export default {
       }
       this.active = true;
       const result_data = await api('directions/result-patient-by-direction',
-        this, ['isLab', 'isDocReferral', 'isParaclinic'], {'dir': this.direction});
+        this, ['isLab', 'isDocReferral', 'isParaclinic'], { dir: this.direction });
       this.result = result_data.results[0] || [];
     },
     hide_results() {
@@ -95,8 +95,8 @@ export default {
       this.active = false;
       this.result = [];
     },
-  }
-}
+  },
+};
 
 </script>
 

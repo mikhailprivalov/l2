@@ -55,14 +55,16 @@
 </template>
 
 <script>
-import {mapGetters} from "vuex";
-import Modal from "@/ui-cards/Modal";
-import ResearchesPicker from "@/ui-cards/ResearchesPicker";
-import SelectedResearches from "@/ui-cards/SelectedResearches";
-import PatientPicker from "@/ui-cards/PatientPicker";
+import { mapGetters } from 'vuex';
+import Modal from '@/ui-cards/Modal.vue';
+import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
+import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
+import PatientPicker from '@/ui-cards/PatientPicker.vue';
 
 export default {
-  components: {PatientPicker, SelectedResearches, ResearchesPicker, Modal},
+  components: {
+    PatientPicker, SelectedResearches, ResearchesPicker, Modal,
+  },
   name: 'CreateDescriptiveDirection',
   data() {
     return {
@@ -73,20 +75,20 @@ export default {
     };
   },
   mounted() {
-    this.$root.$on('preselect-args', data => {
+    this.$root.$on('preselect-args', (data) => {
       if (!data) {
         this.args_to_preselect = null;
       } else {
         this.args_to_preselect = data;
       }
-    })
+    });
     this.$root.$on('open-direction-form', () => this.hide_window());
   },
   methods: {
     doOpen() {
       this.open = true;
       if (this.args_to_preselect) {
-        const data = {...this.args_to_preselect, hide: true};
+        const data = { ...this.args_to_preselect, hide: true };
         setTimeout(() => this.$root.$emit('select_card', data), 100);
       }
       this.$root.$emit('no-loader-in-header', true);
@@ -97,33 +99,33 @@ export default {
       this.selected_card = {};
       this.$root.$emit('no-loader-in-header', false);
       if (this.$refs.modal) {
-        this.$refs.modal.$el.style.display = 'none'
+        this.$refs.modal.$el.style.display = 'none';
       }
     },
   },
   computed: {
-      card_pk() {
-        return this.selected_card.pk || null;
-      },
-      ...mapGetters({
-        bases: 'bases',
-      }),
-      bases_obj() {
-        return this.bases.reduce((a, b) => ({
-          ...a,
-          [b.pk]: b,
-        }), {})
-      },
-      internal_base() {
-        for (let b of this.bases) {
-          if (b.internal_type) {
-            return b.pk
-          }
+    card_pk() {
+      return this.selected_card.pk || null;
+    },
+    ...mapGetters({
+      bases: 'bases',
+    }),
+    bases_obj() {
+      return this.bases.reduce((a, b) => ({
+        ...a,
+        [b.pk]: b,
+      }), {});
+    },
+    internal_base() {
+      for (const b of this.bases) {
+        if (b.internal_type) {
+          return b.pk;
         }
-        return -1
-      },
+      }
+      return -1;
+    },
   },
-}
+};
 </script>
 
 <style lang="scss" scoped>

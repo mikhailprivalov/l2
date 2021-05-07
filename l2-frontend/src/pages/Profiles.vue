@@ -10,10 +10,10 @@
       <input class="form-control" placeholder="Фильтр" v-model="filter" style="margin-top: 5px;"/>
       <div class="left-wrapper">
         <ul>
-          <li v-for="d in department_filter" v-if="filter === '' || d.users.length || d.title.toLowerCase().startsWith(filter.toLowerCase())">
+          <li v-for="d in departmentFiltered" :key="d.pk">
             <strong>{{d.title}}</strong>
             <ul>
-              <li :class="{selected: x.pk === open_pk}" v-for="x in d.users">
+              <li :class="{selected: x.pk === open_pk}" v-for="x in d.users" :key="x.pk">
                 <a @click.prevent="open(x.pk)" class="user-link" href="#">{{x.username}} – {{x.fio}}</a>
               </li>
               <li :class="{selected: open_pk === -1 && user.department === d.pk}">
@@ -86,7 +86,7 @@
               <div class="input-group">
                 <span class="input-group-addon">Подразделение</span>
                 <select class="form-control" v-model="user.department">
-                  <option :value="d.pk" v-for="d in departments">
+                  <option :value="d.pk" v-for="d in departments" :key="d.pk">
                     {{d.title}}
                   </option>
                 </select>
@@ -146,7 +146,7 @@
               <div class="input-group" style="width: 100%">
                 <span class="input-group-addon">Специальность</span>
                 <select class="form-control" v-model="user.speciality">
-                  <option :value="d.pk" v-for="d in specialities">
+                  <option :value="d.pk" v-for="d in specialities" :key="d.pk">
                     {{d.title}}
                   </option>
                 </select>
@@ -156,7 +156,7 @@
           <div class="input-group" style="width: 100%">
             <span class="input-group-addon">Группы</span>
             <select class="form-control" multiple style="height: 136px;" v-model="user.groups">
-              <option v-for="g in user.groups_list" :value="g.pk">{{ g.title }}</option>
+              <option v-for="g in user.groups_list" :value="g.pk" :key="g.pk">{{ g.title }}</option>
             </select>
           </div>
           <div class="more-title">Запрет на создание направлений с назначениями:</div>
@@ -195,205 +195,210 @@
 </template>
 
 <script>
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import users_point from '../api/user-point'
-import * as action_types from '../store/action-types'
-import ResearchesPicker from '../ui-cards/ResearchesPicker'
-import SelectedResearches from '../ui-cards/SelectedResearches'
-import {debounce} from 'lodash'
-import {mapGetters} from 'vuex'
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import { debounce } from 'lodash';
+import { mapGetters } from 'vuex';
+import usersPoint from '../api/user-point';
+import * as actions from '../store/action-types';
+import ResearchesPicker from '../ui-cards/ResearchesPicker.vue';
+import SelectedResearches from '../ui-cards/SelectedResearches.vue';
 
-let toTranslit = function (text) {
-    return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi,
-      function (all, ch, space, words, i) {
-        if (space || words) {
-          return space ? '-' : ''
-        }
-        let code = ch.charCodeAt(0),
-          index = code === 1025 || code === 1105 ? 0 :
-            code > 1071 ? code - 1071 : code - 1039,
-          t = ['yo', 'a', 'b', 'v', 'g', 'd', 'e', 'zh',
-            'z', 'i', 'y', 'k', 'l', 'm', 'n', 'o', 'p',
-            'r', 's', 't', 'u', 'f', 'h', 'c', 'ch', 'sh',
-            'shch', '', 'y', '', 'e', 'yu', 'ya'
-          ]
-        return t[index]
-      })
+const toTranslit = function (text) {
+  return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi,
+    (all, ch, space, words) => {
+      if (space || words) {
+        return space ? '-' : '';
+      }
+      const code = ch.charCodeAt(0);
+      let index;
+      if (code === 1025 || code === 1105) {
+        index = 0;
+      } else {
+        index = code > 1071 ? code - 1071 : code - 1039;
+      }
+      const t = ['yo', 'a', 'b', 'v', 'g', 'd', 'e', 'zh',
+        'z', 'i', 'y', 'k', 'l', 'm', 'n', 'o', 'p',
+        'r', 's', 't', 'u', 'f', 'h', 'c', 'ch', 'sh',
+        'shch', '', 'y', '', 'e', 'yu', 'ya',
+      ];
+      return t[index];
+    });
+};
+
+function str_rand(l = 8, v = 1) {
+  let result = '';
+  const words = v === 1 ? '0123456789-qwertyuiopasdfghjklzxcvbnm01234567890123456789' : '000000000000123456789';
+  const max_position = words.length - 1;
+  for (let i = 0; i < l; ++i) {
+    const position = Math.floor(Math.random() * max_position);
+    result += words.substring(position, position + 1);
   }
+  return result;
+}
 
-  function str_rand(l = 8, v = 1) {
-    let result = ''
-    const words = v === 1 ? '0123456789-qwertyuiopasdfghjklzxcvbnm01234567890123456789' : '000000000000123456789'
-    const max_position = words.length - 1
-    for (let i = 0; i < l; ++i) {
-      let position = Math.floor(Math.random() * max_position)
-      result += words.substring(position, position + 1)
-    }
-    return result
-  }
-
-  export default {
-    components: {ResearchesPicker, SelectedResearches, Treeselect},
-    name: 'profiles',
-    data() {
-      return {
-        filter: '',
-        departments: [],
-        specialities: [],
-        user: {
-          username: '',
-          rmis_location: '',
-          rmis_login: '',
-          rmis_password: '',
-          doc_pk: -1,
-          personal_code: -1,
-          rmis_resource_id: '',
-          rmis_employee_id: '',
-          rmis_service_id_time_table: '',
-        },
-        selected_hospital: -1,
-        open_pk: -2,
+export default {
+  components: { ResearchesPicker, SelectedResearches, Treeselect },
+  name: 'profiles',
+  data() {
+    return {
+      filter: '',
+      departments: [],
+      specialities: [],
+      user: {
+        username: '',
+        rmis_location: '',
+        rmis_login: '',
+        rmis_password: '',
+        doc_pk: -1,
+        personal_code: -1,
+        rmis_resource_id: '',
+        rmis_employee_id: '',
+        rmis_service_id_time_table: '',
+      },
+      selected_hospital: -1,
+      open_pk: -2,
+    };
+  },
+  created() {
+    this.load_users();
+  },
+  watch: {
+    'user.fio': function () {
+      this.user.fio = this.user.fio.replace(/\s\s+/g, ' ').split(' ')
+        .map((s) => s.split('-').map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
+        .join(' ');
+      if (this.open_pk === -1) {
+        this.deb_gu();
       }
     },
-    created() {
-      this.load_users()
+    user_hospital: {
+      handler() {
+        if (this.selected_hospital !== -1 || this.user_hospital === -1) {
+          return;
+        }
+        this.selected_hospital = this.user_hospital;
+      },
+      immediate: true,
     },
-    watch: {
-      'user.fio': function () {
-        this.user.fio = this.user.fio.replace(/\s\s+/g, ' ').split(' ')
-          .map((s) => s.split('-').map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
-          .join(' ')
-        if (this.open_pk === -1) {
-          this.deb_gu()
-        }
-      },
-      user_hospital: {
-        handler() {
-          if (this.selected_hospital !== -1 || this.user_hospital === -1) {
-            return;
-          }
-          this.selected_hospital = this.user_hospital;
-        },
-        immediate: true,
-      },
-      selected_hospital() {
-        if (this.selected_hospital === -1) {
-          return
-        }
+    selected_hospital() {
+      if (this.selected_hospital === -1) {
+        return;
+      }
 
-        this.load_users();
-      },
+      this.load_users();
     },
-    methods: {
-      deb_gu: debounce(function (e) {
-        this.gen_username()
-      }, 500),
-      gen_username() {
-        let v = this.user.fio.toLowerCase()
-        let ls = v.split(' ')
-        if (ls.length > 3) {
-          ls = [ls[0], ls.slice(1, ls.length - 2).join(' '), ls[ls.length - 1] || '']
-        }
-        while (ls.length <= 2) {
-          ls.push(' ')
-        }
-        v = ls[0] + (ls[1][0] || '') + (ls[2][0] || '')
-        v = toTranslit(v.replace(/\s/g, '')) + str_rand(3, 2)
-        this.user.username = v
-        okmessage('Имя пользователя сгенерировано')
-      },
-      gen_passwd() {
-        this.user.password = str_rand()
-      },
-      async load_users(prev_clr=false) {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        if (!prev_clr) {
-          this.departments = [];
-        }
-        const {departments, specialities} = await users_point.loadUsers(this, 'selected_hospital')
-        this.departments = departments
-        this.specialities = specialities
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      async open(pk, dep = null) {
-        if ((pk === this.open_pk && pk !== -1) || (this.open_pk === -1 && pk === -1 && dep === this.user.department)) {
-          return
-        }
-        this.close()
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {user} = await users_point.loadUser({pk})
-        this.user = user
-        if (pk === -1) {
-          this.user.department = dep
-          this.gen_passwd()
-        }
-        await this.$store.dispatch(action_types.DEC_LOADING)
-        this.open_pk = pk
-      },
-      async save() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {ok, npk, message} = await users_point.saveUser({
-          pk: this.open_pk,
-          user_data: this.user,
-          hospital_pk: this.selected_hospital,
-        })
-        if (ok) {
-          okmessage('Пользователь сохранён', `${this.user.fio} – ${this.user.username}`)
-          this.open_pk = npk
-          this.load_users(true);
-        } else {
-          errmessage('Ошибка', message)
-        }
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      async close() {
-        this.open_pk = -2
-        this.user = {
-          fio: '',
-          groups: [],
-          groups_list: [],
-          restricted_to_direct: [],
-          users_services: [],
-          username: '',
-          password: '',
-          department: null,
-          rmis_resource_id: '',
-        }
-      },
+  },
+  methods: {
+    deb_gu: debounce(function () {
+      this.gen_username();
+    }, 500),
+    gen_username() {
+      let v = this.user.fio.toLowerCase();
+      let ls = v.split(' ');
+      if (ls.length > 3) {
+        ls = [ls[0], ls.slice(1, ls.length - 2).join(' '), ls[ls.length - 1] || ''];
+      }
+      while (ls.length <= 2) {
+        ls.push(' ');
+      }
+      v = ls[0] + (ls[1][0] || '') + (ls[2][0] || '');
+      v = toTranslit(v.replace(/\s/g, '')) + str_rand(3, 2);
+      this.user.username = v;
+      window.okmessage('Имя пользователя сгенерировано');
     },
-    computed: {
-      department_filter() {
-        const r = []
-        for (let x of this.departments) {
-          r.push({
-            ...x, users: x.users.filter(y => y.fio.toLowerCase().startsWith(this.filter.toLowerCase())
-              || y.username.toLowerCase().startsWith(this.filter.toLowerCase()))
-          })
-        }
-        return r
-      },
-      valid() {
-        let p = (this.open_pk > -1 && (this.user.password.length === 0 || this.user.password.length >= 3)
-          || (this.open_pk === -1 && this.user.password.length >= 3))
-        return p && this.user.username !== '' && this.user.fio !== ''
-      },
-      ...mapGetters({
-        modules: 'modules',
-        l2_user_data: 'user_data',
-        hospitals: 'hospitals',
-      }),
-      can_edit_any_organization() {
-        return this.l2_user_data.su || this.l2_user_data.all_hospitals_users_control;
-      },
-      user_hospital() {
-        return this.l2_user_data.hospital || -1;
-      },
-      own_hospital() {
-        return [this.hospitals.find(({id}) => id === this.l2_user_data.hospital) || {}];
-      },
+    gen_passwd() {
+      this.user.password = str_rand();
     },
-  }
+    async load_users(prev_clr = false) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      if (!prev_clr) {
+        this.departments = [];
+      }
+      const { departments, specialities } = await usersPoint.loadUsers(this, 'selected_hospital');
+      this.departments = departments;
+      this.specialities = specialities;
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    async open(pk, dep = null) {
+      if ((pk === this.open_pk && pk !== -1) || (this.open_pk === -1 && pk === -1 && dep === this.user.department)) {
+        return;
+      }
+      this.close();
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { user } = await usersPoint.loadUser({ pk });
+      this.user = user;
+      if (pk === -1) {
+        this.user.department = dep;
+        this.gen_passwd();
+      }
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.open_pk = pk;
+    },
+    async save() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, npk, message } = await usersPoint.saveUser({
+        pk: this.open_pk,
+        user_data: this.user,
+        hospital_pk: this.selected_hospital,
+      });
+      if (ok) {
+        window.okmessage('Пользователь сохранён', `${this.user.fio} – ${this.user.username}`);
+        this.open_pk = npk;
+        this.load_users(true);
+      } else {
+        window.errmessage('Ошибка', message);
+      }
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    async close() {
+      this.open_pk = -2;
+      this.user = {
+        fio: '',
+        groups: [],
+        groups_list: [],
+        restricted_to_direct: [],
+        users_services: [],
+        username: '',
+        password: '',
+        department: null,
+        rmis_resource_id: '',
+      };
+    },
+  },
+  computed: {
+    departmentFiltered() {
+      const r = [];
+      for (const x of this.departments) {
+        r.push({
+          ...x,
+          users: x.users.filter((y) => y.fio.toLowerCase().startsWith(this.filter.toLowerCase())
+              || y.username.toLowerCase().startsWith(this.filter.toLowerCase())),
+        });
+      }
+      return r.filter(d => this.filter === '' || d.users.length || d.title.toLowerCase().startsWith(this.filter.toLowerCase()));
+    },
+    valid() {
+      const p = (this.open_pk > -1 && ((this.user.password.length === 0 || this.user.password.length >= 3)
+          || (this.open_pk === -1 && this.user.password.length >= 3)));
+      return p && this.user.username !== '' && this.user.fio !== '';
+    },
+    ...mapGetters({
+      modules: 'modules',
+      l2_user_data: 'user_data',
+      hospitals: 'hospitals',
+    }),
+    can_edit_any_organization() {
+      return this.l2_user_data.su || this.l2_user_data.all_hospitals_users_control;
+    },
+    user_hospital() {
+      return this.l2_user_data.hospital || -1;
+    },
+    own_hospital() {
+      return [this.hospitals.find(({ id }) => id === this.l2_user_data.hospital) || {}];
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>

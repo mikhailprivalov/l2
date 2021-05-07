@@ -20,7 +20,7 @@
           </button>
           <h5 v-if="results.length > 0">Сохранённые результаты</h5>
           <ul>
-            <li v-for="r in results">{{r.pk}} – {{r.result}}</li>
+            <li v-for="r in results" :key="r.pk">{{r.pk}} – {{r.result}}</li>
           </ul>
         </div>
         <div slot="footer">
@@ -38,11 +38,11 @@
 </template>
 
 <script>
-import Modal from "@/ui-cards/Modal";
-import axios from "axios";
+import Modal from '@/ui-cards/Modal.vue';
+import axios from 'axios';
 
 export default {
-  components: {Modal},
+  components: { Modal },
   name: 'LoadFile',
   data() {
     return {
@@ -59,6 +59,7 @@ export default {
       this.results = [];
     },
     handleFileUpload() {
+      // eslint-disable-next-line prefer-destructuring
       this.file = this.$refs.file.files[0];
     },
     async submit() {
@@ -67,21 +68,20 @@ export default {
         this.results = [];
         const formData = new FormData();
         formData.append('file', this.file);
-        const {data} = await axios.post('/api/parse-file/loadfile',
+        const { data } = await axios.post('/api/parse-file/loadfile',
           formData,
           {
             headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          }
-        );
+              'Content-Type': 'multipart/form-data',
+            },
+          });
         this.results = data.results;
         this.$refs.file.value = '';
         this.file = '';
-        okmessage('Файл загружен');
+        window.okmessage('Файл загружен');
       } catch (e) {
         console.error(e);
-        errmessage('Ошибка');
+        window.errmessage('Ошибка');
       }
       this.loading = false;
     },
@@ -91,7 +91,7 @@ export default {
       return this.$store.getters.modules.l2_load_file;
     },
   },
-}
+};
 </script>
 
 <style lang="scss" scoped>

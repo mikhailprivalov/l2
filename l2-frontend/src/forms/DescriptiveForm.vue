@@ -156,129 +156,128 @@
 </template>
 
 <script>
-import Longpress from 'vue-longpress'
-import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper'
-import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper'
-import FastTemplates from "./FastTemplates";
-import {enter_field, leave_field} from "./utils";
-
+import Longpress from 'vue-longpress';
+import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
+import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
+import FastTemplates from './FastTemplates.vue';
+import { enter_field, leave_field } from './utils';
 
 export default {
-    name: 'DescriptiveForm',
-    components: {
-      FastTemplates,
-      VisibilityGroupWrapper,
-      VisibilityFieldWrapper,
-      Longpress,
-      TextareaAutocomplete: () => import('../fields/TextareaAutocomplete'),
-      NumberRangeField: () => import('../fields/NumberRangeField'),
-      NumberField: () => import('../fields/NumberField'),
-      TableField: () => import('../fields/TableField'),
-      AggregateDesc: () => import('../fields/AggregateDesc'),
-      AggregateLaboratory: () => import('../fields/AggregateLaboratory'),
-      RichTextEditor: () => import('../fields/RichTextEditor'),
-      SearchFractionValueField: () => import('../fields/SearchFractionValueField'),
-      SearchFieldValueField: () => import('../fields/SearchFieldValueField'),
-      RadioField: () => import('../fields/RadioField'),
-      SelectField: () => import('../fields/SelectField'),
-      AnesthesiaProcess: () => import('../fields/AnesthesiaProcess'),
-      MKBFieldForm: () => import('../fields/MKBFieldForm'),
-      FormulaField: () => import('../fields/FormulaField'),
-      LaboratoryPreviousResults: () => import('../fields/LaboratoryPreviousResults'),
-      DiagnosticPreviousResults: () => import('../fields/DiagnosticPreviousResults'),
-      DocReferralPreviousResults: () => import('../fields/DocReferralPreviousResults'),
+  name: 'DescriptiveForm',
+  components: {
+    FastTemplates,
+    VisibilityGroupWrapper,
+    VisibilityFieldWrapper,
+    Longpress,
+    TextareaAutocomplete: () => import('../fields/TextareaAutocomplete'),
+    NumberRangeField: () => import('../fields/NumberRangeField'),
+    NumberField: () => import('../fields/NumberField'),
+    TableField: () => import('../fields/TableField'),
+    AggregateDesc: () => import('../fields/AggregateDesc'),
+    AggregateLaboratory: () => import('../fields/AggregateLaboratory'),
+    RichTextEditor: () => import('../fields/RichTextEditor'),
+    SearchFractionValueField: () => import('../fields/SearchFractionValueField'),
+    SearchFieldValueField: () => import('../fields/SearchFieldValueField'),
+    RadioField: () => import('../fields/RadioField'),
+    SelectField: () => import('../fields/SelectField'),
+    AnesthesiaProcess: () => import('../fields/AnesthesiaProcess'),
+    MKBFieldForm: () => import('../fields/MKBFieldForm'),
+    FormulaField: () => import('../fields/FormulaField'),
+    LaboratoryPreviousResults: () => import('../fields/LaboratoryPreviousResults'),
+    DiagnosticPreviousResults: () => import('../fields/DiagnosticPreviousResults'),
+    DocReferralPreviousResults: () => import('../fields/DocReferralPreviousResults'),
+  },
+  props: {
+    research: {
+      type: Object,
+      required: true,
     },
-    props: {
-      research: {
-        type: Object,
-        required: true,
-      },
-      pk: {
-        type: Number,
-        required: false,
-      },
-      patient: {
-        type: Object,
-        required: true,
-      },
-      confirmed: {
-        type: Boolean,
-        required: true,
-      },
-      change_mkb: {
-        type: Function,
-        default: () => {
-        },
-        required: false,
-      },
-      hospital_r_type: {
-        type: String,
-        required: false,
+    pk: {
+      type: Number,
+      required: false,
+    },
+    patient: {
+      type: Object,
+      required: true,
+    },
+    confirmed: {
+      type: Boolean,
+      required: true,
+    },
+    change_mkb: {
+      type: Function,
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      default: () => () => {},
+      required: false,
+    },
+    hospital_r_type: {
+      type: String,
+      required: false,
+    },
+  },
+  data() {
+    return {
+      prev_scroll: 0,
+      prev_scrollHeightTop: 0,
+      versionTickTimer: null,
+    };
+  },
+  watch: {
+    groups: {
+      deep: true,
+      handler() {
+        this.inc_version();
       },
     },
-    data() {
-      return {
-        prev_scroll: 0,
-        prev_scrollHeightTop: 0,
-        versionTickTimer: null
+  },
+  mounted() {
+    this.versionTickTimer = setInterval(() => this.inc_version(), 2000);
+  },
+  beforeDestroy() {
+    clearInterval(this.versionTickTimer);
+  },
+  computed: {
+    notFilled() {
+      const l = [];
+      if (this.confirmed) {
+        return [];
       }
-    },
-    watch: {
-      groups: {
-        deep: true,
-        handler() {
-          this.inc_version();
-        },
-      }
-    },
-    mounted() {
-      this.versionTickTimer = setInterval(() => this.inc_version(), 2000)
-    },
-    beforeDestroy() {
-      clearInterval(this.versionTickTimer);
-    },
-    computed: {
-      notFilled() {
-        const l = [];
-        if (this.confirmed) {
-          return []
-        }
 
-        for (const g of this.research.groups) {
-          let n = 0;
-          for (const f of g.fields) {
-            n++;
-            if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
-              l.push(f.pk)
-            }
+      for (const g of this.research.groups) {
+        for (const f of g.fields) {
+          if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
+            l.push(f.pk);
           }
         }
-        return l
-      },
-      groups() {
-        return this.research.groups;
       }
+      return l;
     },
-    methods: {
-      inc_version() {
-        this.research.version = (this.research.version || 0) + 1;
-      },
-      updateValue(field) {
-        return newValue => {
-          field.value = newValue
-        };
-      },
-      clear_val(field) {
-        field.value = ''
-      },
-      enter_field(...args) {
-        return enter_field.apply(this, args);
-      },
-      leave_field(...args) {
-        return leave_field.apply(this, args);
-      },
-    }
-  }
+    groups() {
+      return this.research.groups;
+    },
+  },
+  methods: {
+    inc_version() {
+      this.research.version = (this.research.version || 0) + 1;
+    },
+    updateValue(field) {
+      return (newValue) => {
+        // eslint-disable-next-line no-param-reassign
+        field.value = newValue;
+      };
+    },
+    clear_val(field) {
+      // eslint-disable-next-line no-param-reassign
+      field.value = '';
+    },
+    enter_field(...args) {
+      return enter_field.apply(this, args);
+    },
+    leave_field(...args) {
+      return leave_field.apply(this, args);
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

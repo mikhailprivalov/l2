@@ -63,29 +63,31 @@
 </template>
 
 <script>
-  import * as action_types from "../store/action-types";
-  import directions_point from '../api/directions-point'
-  import moment from "moment";
+import moment from 'moment';
+import * as actions from '../store/action-types';
+import directionsPoint from '../api/directions-point';
 
-  export default {
-    name: "results-department",
-    data() {
-      return {
-        date: moment().format('YYYY-MM-DD'),
-        is_lab: true,
-        is_paraclinic: true,
-        is_doc_refferal: false,
-        by_doc: false
-      }
+export default {
+  name: 'results-department',
+  data() {
+    return {
+      date: moment().format('YYYY-MM-DD'),
+      is_lab: true,
+      is_paraclinic: true,
+      is_doc_refferal: false,
+      by_doc: false,
+    };
+  },
+  methods: {
+    async print(by_doc) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { results } = await directionsPoint.getDirectionsTypeDate(
+        this, ['is_lab', 'is_paraclinic', 'is_doc_refferal', 'date'], { by_doc },
+      );
+      this.$root.$emit('print:results', results);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-    methods: {
-      async print(by_doc) {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {results} = await directions_point.getDirectionsTypeDate(this, ['is_lab', 'is_paraclinic', 'is_doc_refferal', 'date'], {by_doc});
-        this.$root.$emit('print:results', results)
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-    }
-  }
+  },
+};
 
 </script>

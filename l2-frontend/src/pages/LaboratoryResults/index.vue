@@ -14,13 +14,15 @@
 </template>
 
 <script>
-import SearchToEnter from "@/pages/LaboratoryResults/SearchToEnter";
-import ReadyToEnter from "@/pages/LaboratoryResults/ReadyToEnter";
-import DirectionForm from "@/pages/LaboratoryResults/DirectionForm";
-import ResultsForm from "@/pages/LaboratoryResults/ResultsForm";
+import SearchToEnter from '@/pages/LaboratoryResults/SearchToEnter.vue';
+import ReadyToEnter from '@/pages/LaboratoryResults/ReadyToEnter.vue';
+import DirectionForm from '@/pages/LaboratoryResults/DirectionForm.vue';
+import ResultsForm from '@/pages/LaboratoryResults/ResultsForm.vue';
 
 export default {
-  components: {ResultsForm, DirectionForm, ReadyToEnter, SearchToEnter},
+  components: {
+    ResultsForm, DirectionForm, ReadyToEnter, SearchToEnter,
+  },
   name: 'laboratory-results',
   data() {
     return {
@@ -29,14 +31,14 @@ export default {
   },
   watch: {},
   mounted() {
-    this.$root.$on('change-laboratory', pk => {
+    this.$root.$on('change-laboratory', (pk) => {
       this.currentLaboratory = pk;
     });
     this.$root.$emit('emit-laboratory');
   },
   methods: {},
   computed: {},
-}
+};
 </script>
 
 <style scoped lang="scss">

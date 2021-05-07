@@ -10,10 +10,10 @@
           Действие с отмеченными <span class="caret"></span>
         </button>
         <ul class="dropdown-menu">
-          <li v-for="f in forms" v-if="card_pk !== -1 && (!f.need_dirs || checked.length > 0)">
+          <li v-for="f in formsFiltered" :key="f.url">
             <a :href="f.url" target="_blank">{{f.title}}</a>
           </li>
-          <li v-for="value in menuItems">
+          <li v-for="value in menuItems" :key="value.title">
             <a href="#"
                v-if="(!value.onlyNotForIssledovaniye || !iss_pk)
                   && (!value.onlyForTypes || value.onlyForTypes.includes(active_type))
@@ -35,77 +35,79 @@
 </template>
 
 <script>
-  import menuMixin from './mixins/menu'
-  import {forDirs} from '../../../forms'
-  import DirectionsChangeParent from '../../../modals/DirectionsChangeParent'
+import menuMixin from './mixins/menu';
+import { forDirs } from '../../../forms';
+import DirectionsChangeParent from '../../../modals/DirectionsChangeParent.vue';
 
-  export default {
-    components: {DirectionsChangeParent},
-    mixins: [menuMixin],
-    props: {
-      checked: {
-        type: Array,
-        required: true,
-      },
-      directions: {
-        type: Array,
-        required: true,
-      },
-      iss_pk: {
-        required: true,
-      },
-      card_pk: {
-        required: true,
-      },
-      active_type: {
-        required: true,
-      },
-      kk: {
-        type: String,
-        default: '',
-      },
+export default {
+  components: { DirectionsChangeParent },
+  mixins: [menuMixin],
+  props: {
+    checked: {
+      type: Array,
+      required: true,
     },
-    data() {
-      return {
-        isOpenChangeParent: false,
-      }
+    directions: {
+      type: Array,
+      required: true,
     },
-    mounted() {
-      this.$root.$on('hide_pe', this.change_parent_hide);
+    iss_pk: {
+      required: true,
     },
-    methods: {
-      callAsThis(handler) {
-        handler.call(this)
-      },
-      change_parent_hide() {
-        this.isOpenChangeParent = false
-      },
+    card_pk: {
+      required: true,
     },
-    computed: {
-      forms() {
-        return forDirs.map(f => {
-          return {
-            ...f, url: f.url.kwf({
-              card: this.card_pk,
-              dir: JSON.stringify(this.checked),
-            })
-          }
-        })
-      },
-      directions_checked() {
-        const r = [];
-        for (const d of this.directions) {
-          if (this.checked.includes(d.pk)) {
-            r.push(d);
-          }
+    active_type: {
+      required: true,
+    },
+    kk: {
+      type: String,
+      default: '',
+    },
+  },
+  data() {
+    return {
+      isOpenChangeParent: false,
+    };
+  },
+  mounted() {
+    this.$root.$on('hide_pe', this.change_parent_hide);
+  },
+  methods: {
+    callAsThis(handler) {
+      handler.call(this);
+    },
+    change_parent_hide() {
+      this.isOpenChangeParent = false;
+    },
+  },
+  computed: {
+    forms() {
+      return forDirs.map((f) => ({
+        ...f,
+        url: f.url.kwf({
+          card: this.card_pk,
+          dir: JSON.stringify(this.checked),
+        }),
+      }));
+    },
+    formsFiltered() {
+      return this.forms.filter(f => this.card_pk !== -1 && (!f.need_dirs || this.checked.length > 0));
+    },
+    directions_checked() {
+      const r = [];
+      for (const d of this.directions) {
+        if (this.checked.includes(d.pk)) {
+          r.push(d);
         }
-        return r;
-      },
-      user_groups() {
-        return this.$store.getters.user_data.groups || [];
-      },
+      }
+      return r;
     },
-  }
+    user_groups() {
+      return this.$store.getters.user_data.groups || [];
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

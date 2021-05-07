@@ -14,78 +14,79 @@
 </template>
 
 <script>
-  import moment from 'moment'
+import moment from 'moment';
 
-  export default {
-    name: 'date-field-nav',
-    props: {
-      def: {
-        type: String,
-        required: false,
-        default: ''
-      },
-      w: {
-        default: '94px'
-      },
-      brn: {
-        default: true,
-        type: Boolean
-      },
-      right: {
-        default: false,
-        type: Boolean
+export default {
+  name: 'date-field-nav',
+  props: {
+    def: {
+      type: String,
+      required: false,
+      default: '',
+    },
+    w: {
+      default: '94px',
+    },
+    brn: {
+      default: true,
+      type: Boolean,
+    },
+    right: {
+      default: false,
+      type: Boolean,
+    },
+  },
+  computed: {
+    md() {
+      return moment(this.val, 'DD.MM.YYYY');
+    },
+  },
+  methods: {
+    decDate() {
+      const a = this.md.clone();
+      a.subtract(1, 'days');
+      this.emit(a);
+    },
+    incDate() {
+      const a = this.md.clone();
+      a.add(1, 'days');
+      this.emit(a);
+    },
+    emit(v) {
+      this.emitf(v.format('DD.MM.YYYY'));
+      this.el.datepicker('update', v.toDate());
+    },
+    emitf(v) {
+      this.val = v;
+      this.$emit('update:val', v);
+    },
+  },
+  data() {
+    return {
+      val: this.def,
+      el: null,
+    };
+  },
+  directives: {
+    datepicker: {
+      bind(el, binding, vnode) {
+        // eslint-disable-next-line no-param-reassign
+        vnode.context.el = window.$(el);
+        window.$(el).datepicker({
+          format: 'dd.mm.yyyy',
+          todayBtn: 'linked',
+          language: 'ru',
+          autoclose: true,
+          todayHighlight: true,
+          enableOnReadonly: true,
+          orientation: 'top left',
+        }).on('changeDate', () => {
+          vnode.context.emitf(window.$(el).val());
+        });
       },
     },
-    computed: {
-      md() {
-        return moment(this.val, 'DD.MM.YYYY')
-      }
-    },
-    methods: {
-      decDate() {
-        let a = this.md.clone()
-        a.subtract(1, 'days')
-        this.emit(a)
-      },
-      incDate() {
-        let a = this.md.clone()
-        a.add(1, 'days')
-        this.emit(a)
-      },
-      emit(v) {
-        this.emitf(v.format('DD.MM.YYYY'))
-        this.el.datepicker('update', v.toDate())
-      },
-      emitf(v) {
-        this.val = v
-        this.$emit('update:val', v)
-      }
-    },
-    data() {
-      return {
-        val: this.def,
-        el: null
-      }
-    },
-    directives: {
-      datepicker: {
-        bind(el, binding, vnode) {
-          vnode.context.el = $(el)
-          $(el).datepicker({
-            format: 'dd.mm.yyyy',
-            todayBtn: 'linked',
-            language: 'ru',
-            autoclose: true,
-            todayHighlight: true,
-            enableOnReadonly: true,
-            orientation: 'top left'
-          }).on('changeDate', () => {
-            vnode.context.emitf($(el).val())
-          })
-        }
-      }
-    }
-  }
+  },
+};
 </script>
 
 <style scoped>

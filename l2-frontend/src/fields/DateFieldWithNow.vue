@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import moment from "moment";
+import moment from 'moment';
 
 export default {
   props: {
@@ -39,7 +39,7 @@ export default {
     value: {
       handler() {
         if (this.value !== this.val) {
-          this.val = this.value
+          this.val = this.value;
         }
       },
       immediate: true,
@@ -51,20 +51,20 @@ export default {
   data() {
     return {
       val: this.value,
-    }
+    };
   },
   model: {
-    event: `modified`
+    event: 'modified',
   },
   methods: {
     changeValue() {
-      this.$emit('modified', this.val)
+      this.$emit('modified', this.val);
     },
     setNow() {
       this.val = moment().format('YYYY-MM-DD');
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped lang="scss">

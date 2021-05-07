@@ -26,70 +26,70 @@
 </template>
 
 <script>
-    import ParaclinicResearchEditor from './ParaclinicResearchEditor'
-    import * as action_types from '../store/action-types'
-    import construct_point from '../api/construct-point'
-    import researches_point from '../api/researches-point'
-    import SelectFieldTitled from '../fields/SelectFieldTitled'
+import ParaclinicResearchEditor from './ParaclinicResearchEditor.vue';
+import * as actions from '../store/action-types';
+import construct_point from '../api/construct-point';
+import researchesPoint from '../api/researches-point';
+import SelectFieldTitled from '../fields/SelectFieldTitled.vue';
 
-    export default {
-        name: 'stationar-form-editor',
-        components: {SelectFieldTitled, ParaclinicResearchEditor},
-        props: {
-            pk: {
-                type: Number,
-                required: true
-            },
-            department: {
-                type: Number,
-                required: true
-            },
-        },
-        created() {
-            this.load()
-        },
-        data() {
-            return {
-                hide: false,
-                has_unsaved: false,
-                loaded_pk: -2,
-                main_service_pk: -1,
-                slave_service_pk: -1,
-                researches_list: [],
-            }
-        },
-        watch: {
-            pk() {
-                this.load()
-            },
-            loaded_pk(n) {
-                this.has_unsaved = false
-            },
-        },
-        methods: {
-            async load() {
-                this.hide = false
-                this.research = -1
-                this.main_service_pk = -1
-                this.slave_service_pk = -1
-                await this.$store.dispatch(action_types.INC_LOADING)
-                const {researches} = await researches_point.getResearchesByDepartment({department: -5})
-                this.researches_list = researches
-                if (this.pk >= 0) {
-                    const data = await construct_point.hospServiceDetails(this, 'pk')
+export default {
+  name: 'stationar-form-editor',
+  components: { SelectFieldTitled, ParaclinicResearchEditor },
+  props: {
+    pk: {
+      type: Number,
+      required: true,
+    },
+    department: {
+      type: Number,
+      required: true,
+    },
+  },
+  created() {
+    this.load();
+  },
+  data() {
+    return {
+      hide: false,
+      has_unsaved: false,
+      loaded_pk: -2,
+      main_service_pk: -1,
+      slave_service_pk: -1,
+      researches_list: [],
+    };
+  },
+  watch: {
+    pk() {
+      this.load();
+    },
+    loaded_pk() {
+      this.has_unsaved = false;
+    },
+  },
+  methods: {
+    async load() {
+      this.hide = false;
+      this.research = -1;
+      this.main_service_pk = -1;
+      this.slave_service_pk = -1;
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { researches } = await researchesPoint.getResearchesByDepartment({ department: -5 });
+      this.researches_list = researches;
+      if (this.pk >= 0) {
+        const data = await construct_point.hospServiceDetails(this, 'pk');
 
-                    this.main_service_pk = data.main_service_pk
-                    this.slave_service_pk = data.slave_service_pk
-                    this.hide = data.hide
-                    this.loaded_pk = this.pk
-                }
-                await this.$store.dispatch(action_types.DEC_LOADING)
-                if (this.main_service_pk === -1) {
-                    this.main_service_pk = this.researches_list[0].pk
-                }
-            },
-        }
-    }
+        this.main_service_pk = data.main_service_pk;
+        this.slave_service_pk = data.slave_service_pk;
+        this.hide = data.hide;
+        this.loaded_pk = this.pk;
+      }
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (this.main_service_pk === -1) {
+        this.main_service_pk = this.researches_list[0].pk;
+      }
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

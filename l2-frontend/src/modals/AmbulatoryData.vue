@@ -21,7 +21,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="r in rows">
+        <tr v-for="r in rows" :key="r.date">
           <td>{{r.date.slice(6)}}</td>
           <td>{{r.date.slice(3,5)}}</td>
           <td><span v-html="r.data.replace(/\n/g, '<br/>')"></span></td>
@@ -87,7 +87,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="r in rows_history">
+            <tr v-for="r in rows_history" :key="r.date">
               <td>{{r.date}}</td>
               <td>{{r.data}}</td>
             </tr>
@@ -131,116 +131,114 @@
 </template>
 
 <script>
-  import Modal from '../ui-cards/Modal'
-  import patients_point from '../api/patients-point'
-  import * as action_types from '../store/action-types'
-  import {form112} from '../forms'
-  import moment from 'moment'
+import moment from 'moment';
+import Modal from '../ui-cards/Modal.vue';
+import patientsPoint from '../api/patients-point';
+import * as actions from '../store/action-types';
+import { form112 } from '../forms';
 
-  export default {
-    name: 'AmbulatoryData',
-    components: {Modal},
-    props: {
-      card_pk: {
-        type: Number,
-        required: true
-      },
-      card_data: {
-        type: Object,
-        required: true,
-      },
+export default {
+  name: 'AmbulatoryData',
+  components: { Modal },
+  props: {
+    card_pk: {
+      type: Number,
+      required: true,
     },
-    data() {
-      return {
-        rows: [],
-        edit_pk: -2,
-        td: moment().format('YYYY-MM'),
-        edit_data: {
-          date: '',
+    card_data: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      rows: [],
+      edit_pk: -2,
+      td: moment().format('YYYY-MM'),
+      edit_data: {
+        date: '',
+        data: '',
+      },
+      show_history_ambulatory: false,
+      rows_history: [],
+    };
+  },
+  created() {
+    this.load_data();
+  },
+  computed: {
+    forms() {
+      return form112.map((f) => ({
+        ...f,
+        url: f.url.kwf({
+          card: this.card_pk,
+        }),
+      }));
+    },
+    valid() {
+      return this.edit_data.date !== '' && this.edit_data.data !== '';
+    },
+  },
+  methods: {
+    open_form_112() {
+      window.open(this.forms[0].url);
+    },
+    show_history_ambulatory_data() {
+      this.show_history_ambulatory = true;
+      this.$store.dispatch(actions.INC_LOADING);
+      patientsPoint.loadAmbulatoryHistory(this, 'card_pk').then(({ rows }) => {
+        this.rows_history = rows;
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+    async edit(pk) {
+      this.td = moment().format('YYYY-MM');
+      if (pk === -1) {
+        this.edit_data = {
+          date: this.td,
           data: '',
-        },
-        show_history_ambulatory: false,
-        rows_history: []
+        };
+      } else {
+        const d = await patientsPoint.loadAmbulatoryDataDetail({ pk });
+        this.edit_data = {
+          ...this.edit_data,
+          ...d,
+        };
       }
+      this.edit_pk = pk;
     },
-    created() {
+    hide_modal() {
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
+      }
+      this.$root.$emit('hide_ambulatory_data');
+    },
+    hide_edit() {
+      if (this.$refs.modalEdit) {
+        this.$refs.modalEdit.$el.style.display = 'none';
+      }
+      this.edit_pk = -2;
+      this.show_history_ambulatory = false;
+    },
+    load_data() {
+      this.$store.dispatch(actions.INC_LOADING);
+      patientsPoint.loadAmbulatoryData(this, 'card_pk').then(({ rows }) => {
+        this.rows = rows;
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+    async save() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await patientsPoint.saveAmbulatoryData({ card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      window.okmessage('Сохранено');
+      this.hide_edit();
       this.load_data();
     },
-    computed: {
-      forms() {
-        return form112.map(f => {
-          return {
-            ...f, url: f.url.kwf({
-              card: this.card_pk,
-            })
-          }
-        })
-      },
-      valid() {
-        return this.edit_data.date !== '' && this.edit_data.data !== '';
-      },
-    },
-    methods: {
-      open_form_112() {
-        window.open(this.forms[0].url)
-      },
-      show_history_ambulatory_data() {
-        this.show_history_ambulatory = true
-        this.$store.dispatch(action_types.INC_LOADING)
-        patients_point.loadAmbulatoryHistory(this, 'card_pk').then(({rows}) => {
-          this.rows_history = rows
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
-
-      },
-      async edit(pk) {
-        this.td = moment().format('YYYY-MM')
-        if (pk === -1) {
-          this.edit_data = {
-            date: this.td,
-            data: '',
-          }
-        } else {
-          const d = await patients_point.loadAmbulatoryDataDetail({pk})
-          this.edit_data = {
-            ...this.edit_data,
-            ...d,
-          };
-        }
-        this.edit_pk = pk
-      },
-      hide_modal() {
-        if (this.$refs.modal) {
-          this.$refs.modal.$el.style.display = 'none'
-        }
-        this.$root.$emit('hide_ambulatory_data')
-      },
-      hide_edit() {
-        if (this.$refs.modalEdit) {
-          this.$refs.modalEdit.$el.style.display = 'none'
-        }
-        this.edit_pk = -2
-        this.show_history_ambulatory = false
-      },
-      load_data() {
-        this.$store.dispatch(action_types.INC_LOADING)
-        patients_point.loadAmbulatoryData(this, 'card_pk').then(({rows}) => {
-          this.rows = rows
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
-      },
-      async save() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await patients_point.saveAmbulatoryData({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
-        await this.$store.dispatch(action_types.DEC_LOADING)
-        okmessage('Сохранено');
-        this.hide_edit()
-        this.load_data()
-      },
-    }
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

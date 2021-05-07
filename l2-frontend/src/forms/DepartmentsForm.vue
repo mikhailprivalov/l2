@@ -41,15 +41,15 @@
 </template>
 
 <script>
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import departments_directory from '@/api/departments-directory'
-import * as action_types from '../store/action-types'
-import {mapGetters} from "vuex";
-import DepartmentEditRow from "@/forms/DepartmentEditRow";
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import departments_directory from '@/api/departments-directory';
+import { mapGetters } from 'vuex';
+import DepartmentEditRow from '@/forms/DepartmentEditRow.vue';
+import * as actions from '../store/action-types';
 
 export default {
-  components: {DepartmentEditRow, Treeselect},
+  components: { DepartmentEditRow, Treeselect },
   name: 'departments-form',
   data() {
     return {
@@ -59,7 +59,7 @@ export default {
       },
       selected_hospital: -1,
       departments: [],
-    }
+    };
   },
   watch: {
     user_hospital: {
@@ -81,56 +81,54 @@ export default {
   },
   methods: {
     async insert() {
-      if (!this.create_valid)
-        return
-      await this.$store.dispatch(action_types.INC_LOADING)
+      if (!this.create_valid) return;
+      await this.$store.dispatch(actions.INC_LOADING);
       const ok = await departments_directory.sendDepartments({
-        method: "POST",
+        method: 'POST',
         hospital: this.selected_hospital,
         type: 'insert',
-        data: [{pk: -1, title: this.create.title, type: this.create.type}]
+        data: [{ pk: -1, title: this.create.title, type: this.create.type }],
       });
 
       await this.loadDepartments();
-      await this.$store.dispatch(action_types.DEC_LOADING)
+      await this.$store.dispatch(actions.DEC_LOADING);
 
       if (ok) {
-        this.create.title = ''
-        okmessage('Сохранено');
+        this.create.title = '';
+        window.okmessage('Сохранено');
       } else {
-        errmessage("Ошибка");
+        window.errmessage('Ошибка');
       }
     },
     async loadDepartments() {
-      await this.$store.dispatch(action_types.INC_LOADING)
-      this.departments =
-        (await departments_directory.getDepartments({
-          method: 'GET',
-          hospital: this.selected_hospital,
-          withoutDefault: true,
-        })).departments;
-      await this.$store.dispatch(action_types.DEC_LOADING)
+      await this.$store.dispatch(actions.INC_LOADING);
+      this.departments = (await departments_directory.getDepartments({
+        method: 'GET',
+        hospital: this.selected_hospital,
+        withoutDefault: true,
+      })).departments;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
   computed: {
     can_edit() {
-      return this.$store.getters.canEditDepartments
+      return this.$store.getters.canEditDepartments;
     },
     types() {
-      return this.$store.getters.allTypes
+      return this.$store.getters.allTypes;
     },
     types_options() {
-      let r = []
-      for (let row of this.types) {
-        r.push({label: row.title, id: row.pk})
+      const r = [];
+      for (const row of this.types) {
+        r.push({ label: row.title, id: row.pk });
       }
-      return r
+      return r;
     },
     trim_title() {
-      return this.create.title.trim()
+      return this.create.title.trim();
     },
     create_valid() {
-      return this.trim_title.length > 0
+      return this.trim_title.length > 0;
     },
     ...mapGetters(['user_data', 'hospitals', 'all_hospitals_with_none']),
     can_edit_any_organization() {
@@ -140,10 +138,10 @@ export default {
       return this.user_data.hospital || -1;
     },
     own_hospital() {
-      return [this.hospitals.find(({id}) => id === this.user_data.hospital) || {}];
+      return [this.hospitals.find(({ id }) => id === this.user_data.hospital) || {}];
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped lang="scss">

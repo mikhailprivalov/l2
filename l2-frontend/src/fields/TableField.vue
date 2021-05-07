@@ -3,24 +3,24 @@
     <table class="table table-bordered table-condensed" style="table-layout: fixed;" v-if="settings">
       <colgroup>
         <col width="36" v-if="params.dynamicRows && !disabled">
-        <col v-for="(_, i) in params.columns.titles" :width="settings[i].width">
+        <col v-for="(_, i) in params.columns.titles" :key="i" :width="settings[i].width">
       </colgroup>
       <thead>
       <tr>
         <td v-if="params.dynamicRows && !disabled"></td>
-        <th v-for="t in params.columns.titles">
+        <th v-for="(t, i) in params.columns.titles" :key="i">
           {{ t }}
         </th>
       </tr>
       </thead>
       <tbody>
-      <tr v-for="(r, j) in rows">
+      <tr v-for="(r, j) in rows" :key="j">
         <td class="cl-td" v-if="params.dynamicRows && !disabled">
           <button class="btn btn-blue-nb nbr" @click="deleteRow(j)" title="Удалить строку" v-tippy>
             <i class="fa fa-times"></i>
           </button>
         </td>
-        <td v-for="(_, i) in params.columns.titles" class="cl-td">
+        <td v-for="(_, i) in params.columns.titles" :key="i" class="cl-td">
           <div v-if="settings[i].type === 'rowNumber' || disabled" class="just-val"
                :class="settings[i].type === 'rowNumber' && 'rowNumber'">
             {{ r[i] }}
@@ -49,9 +49,9 @@
 </template>
 <script>
 import _ from 'lodash';
-import SelectField from "@/fields/SelectField";
-import RadioField from "@/fields/RadioField";
-import DateFieldWithNow from "@/fields/DateFieldWithNow";
+import SelectField from '@/fields/SelectField.vue';
+import RadioField from '@/fields/RadioField.vue';
+import DateFieldWithNow from '@/fields/DateFieldWithNow.vue';
 
 const DEFAULT_SETTINGS = () => ({
   type: 0,
@@ -62,7 +62,7 @@ const DEFAULT_SETTINGS = () => ({
 
 export default {
   name: 'TableField',
-  components: {DateFieldWithNow, RadioField, SelectField},
+  components: { DateFieldWithNow, RadioField, SelectField },
   props: {
     value: {
       required: false,
@@ -97,7 +97,7 @@ export default {
       return {
         columns: {
           titles: this.params.columns.titles,
-          settings: this.settings.map(s => _.pick(s, ['type', 'width'])),
+          settings: this.settings.map((s) => _.pick(s, ['type', 'width'])),
         },
         rows: this.rows,
       };
@@ -115,11 +115,11 @@ export default {
     },
   },
   model: {
-    event: `modified`
+    event: 'modified',
   },
   methods: {
     changeValue(newVal) {
-      this.$emit('modified', newVal)
+      this.$emit('modified', newVal);
     },
     checkTable() {
       let params = this.variants[0] || '{}';
@@ -135,7 +135,7 @@ export default {
         value = {};
       }
 
-      value = {...params, ...value};
+      value = { ...params, ...value };
 
       if (!Array.isArray(value.rows)) {
         value.rows = params.rows;
@@ -151,10 +151,10 @@ export default {
 
       for (let i = 0; i < params.columns.settings.length; i++) {
         const s = params.columns.settings[i];
-        params.columns.settings[i] = {...DEFAULT_SETTINGS(), ...s};
+        params.columns.settings[i] = { ...DEFAULT_SETTINGS(), ...s };
       }
 
-      value.rows = value.rows.filter(r => Array.isArray(r) && r.every(v => _.isString));
+      value.rows = value.rows.filter((r) => Array.isArray(r) && r.every((v) => _.isString(v)));
 
       this.params = params;
       this.rows = value.rows;
@@ -188,6 +188,7 @@ export default {
             const r = this.rows[j];
 
             if (!v.includes(r[i])) {
+              // eslint-disable-next-line prefer-destructuring
               r[i] = v[0];
             }
           }
@@ -207,7 +208,7 @@ export default {
       }
     },
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

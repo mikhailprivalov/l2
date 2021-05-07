@@ -1,5 +1,6 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="900px" width="100%" marginLeftRight="auto" margin-top>
+  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true"
+         max-width="900px" width="100%" marginLeftRight="auto" margin-top>
     <span slot="header">Диспансерный учёт пациента
       <span v-if="!card_data.fio_age">{{card_data.family}} {{card_data.name}} {{card_data.twoname}},
       {{card_data.age}}, карта {{card_data.num}}</span>
@@ -31,7 +32,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :class="{stop: !!r.date_end}">
+          <tr v-for="r in rows" :class="{stop: !!r.date_end}" :key="r.pk">
             <td>{{r.date_start}}</td>
             <td>{{r.date_end}}</td>
             <td>{{r.illnes}}</td>
@@ -56,7 +57,7 @@
         <div class="years">
           <div class="year"
                @click="year = y; load_data()"
-               :class="{active: y === year}" v-for="y in years">
+               :class="{active: y === year}" v-for="y in years" :key="y">
             {{y}}
           </div>
         </div>
@@ -93,7 +94,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="k in researches_data">
+            <tr v-for="k in researches_data" :key="`${k.research_pk}`">
               <td class="cl-td">
                 <label v-if="k.assign_research_pk" title="Выбор для назначения" v-tippy="{ placement : 'top', arrow: true }">
                   <input type="checkbox" v-model="k.assignment">
@@ -101,7 +102,7 @@
               </td>
               <td>{{k.research_title}}</td>
               <td>
-                <div v-for="d in k.diagnoses_time" class="mkb-year">
+                <div v-for="d in k.diagnoses_time" :key="`${d.diagnos}_${d.times}`" class="mkb-year">
                   <span>{{d.diagnos}}</span> <span class="year-times">{{d.times}} р. в год</span>
                 </div>
               </td>
@@ -145,7 +146,8 @@
         <br/>
       </div>
 
-      <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+      <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
+             width="100%" marginLeftRight="auto" margin-top>
         <span slot="header" v-if="edit_pk > -1">Редактор диспансерного учёта</span>
         <span slot="header" v-else>Создание записи диспансерного учёта</span>
         <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
@@ -223,268 +225,272 @@
 </template>
 
 <script>
-  import Modal from '../ui-cards/Modal'
-  import api from '@/api'
-  import * as action_types from '../store/action-types'
-  import MKBFieldForm from '../fields/MKBFieldForm'
-  import RadioField from '../fields/RadioField'
-  import moment from 'moment';
-  import {cloneDeep} from 'lodash';
-  import ConfigureDispenseryResearch from "@/fields/ConfigureDispenseryResearch";
+import api from '@/api';
+import moment from 'moment';
+import { cloneDeep } from 'lodash';
+import ConfigureDispenseryResearch from '@/fields/ConfigureDispenseryResearch.vue';
+import Modal from '../ui-cards/Modal.vue';
+import * as actions from '../store/action-types';
+import MKBFieldForm from '../fields/MKBFieldForm.vue';
+import RadioField from '../fields/RadioField.vue';
 
-  const years = [];
+const years = [];
 
-  for (let i = 2020; i <= Number(moment().format('YYYY')) + 2; i++) {
-    years.push(i);
-  }
+for (let i = 2020; i <= Number(moment().format('YYYY')) + 2; i++) {
+  years.push(i);
+}
 
-  const monthes = [
-    'янв',
-    'фев',
-    'мар',
-    'апр',
-    'май',
-    'июн',
-    'июл',
-    'авг',
-    'сент',
-    'окт',
-    'ноя',
-    'дек',
-  ];
+const monthes = [
+  'янв',
+  'фев',
+  'мар',
+  'апр',
+  'май',
+  'июн',
+  'июл',
+  'авг',
+  'сент',
+  'окт',
+  'ноя',
+  'дек',
+];
 
-  const weekDays = [
-    'понедельник',
-    'вторник',
-    'среда',
-    'четверг',
-    'пятница',
-    'суббота',
-    'воскресенье',
-  ];
+const weekDays = [
+  'понедельник',
+  'вторник',
+  'среда',
+  'четверг',
+  'пятница',
+  'суббота',
+  'воскресенье',
+];
 
-  export default {
-    name: 'd-reg',
-    components: {Modal, MKBFieldForm, RadioField, ConfigureDispenseryResearch,},
-    props: {
-      card_pk: {
-        type: Number,
-        required: true
-      },
-      card_data: {
-        type: Object,
-        required: true,
-      },
+export default {
+  name: 'd-reg',
+  components: {
+    Modal, MKBFieldForm, RadioField, ConfigureDispenseryResearch,
+  },
+  props: {
+    card_pk: {
+      type: Number,
+      required: true,
     },
-    data() {
-      return {
-        td: moment().format('YYYY-MM-DD'),
-        message: '<br>',
-        rows: [],
-        researches_data: [],
-        researches_data_def: [],
-        year: Number(moment().format('YYYY')),
-        monthes,
-        years,
-        edit_data: {
-          date_start: '',
-          date_end: '',
+    card_data: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      td: moment().format('YYYY-MM-DD'),
+      message: '<br>',
+      rows: [],
+      researches_data: [],
+      researches_data_def: [],
+      year: Number(moment().format('YYYY')),
+      monthes,
+      years,
+      edit_data: {
+        date_start: '',
+        date_end: '',
+        why_stop: '',
+        close: false,
+        diagnos: '',
+        illnes: '',
+        time_index: 0,
+        identified_index: 0,
+      },
+      edit_pk: -2,
+      all_selected: false,
+      lock_changes: false,
+      is_first_time: '',
+      how_identified: '',
+      variant_is_first_time: ['не указано', 'впервые', 'повторно'],
+      variant_identified: ['не указано', 'обращении за лечением', 'профилактическом осмотре'],
+      enable_construct: false,
+    };
+  },
+  created() {
+    this.load_data();
+  },
+  computed: {
+    valid_reg() {
+      return this.edit_pk > -2
+          && this.edit_data.diagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?.*/gm)
+          && this.edit_data.date_start !== ''
+          && (!this.edit_data.close || this.edit_data.date_end !== '');
+    },
+    assignments() {
+      return this.researches_data.filter(({ assignment }) => assignment).map((rd) => rd.assign_research_pk);
+    },
+    assignments_diagnoses() {
+      return Object.keys(this.researches_data
+        .filter(({ assignment }) => assignment)
+        .reduce((a, rd) => ({ ...a, ...rd.diagnoses_time.reduce((b, dt) => ({ ...b, [dt.diagnos]: true }), {}) }), {}));
+    },
+    has_assignments() {
+      return this.count_assignments_available > 0;
+    },
+    count_assignments_available() {
+      return this.researches_data.filter((rd) => rd.assign_research_pk).length;
+    },
+    count_assignments() {
+      return this.assignments.length;
+    },
+    has_all_selected() {
+      return this.count_assignments === this.count_assignments_available;
+    },
+    not_selected() {
+      return this.count_assignments === 0;
+    },
+  },
+  watch: {
+    count_assignments() {
+      this.lock_changes = true;
+      if (this.has_all_selected) {
+        this.all_selected = true;
+      } else if (this.not_selected) {
+        this.all_selected = false;
+      }
+      setTimeout(() => {
+        this.lock_changes = false;
+      }, 0);
+    },
+    all_selected() {
+      if (!this.lock_changes) {
+        for (const row of this.researches_data) {
+          if (row.assign_research_pk) {
+            row.assignment = this.all_selected;
+          }
+        }
+      }
+    },
+  },
+  methods: {
+    get_date_string(year, month, dayOrig) {
+      const day = dayOrig.trim();
+      if (!day) {
+        return 'Нет даты в плане';
+      }
+
+      try {
+        const dateString = `${year}-${month + 1}-${day}`;
+        const date = moment(dateString, 'YYYY-MM-DD');
+
+        if (!Number.isNaN(day) && day < 32 && day > 0 && date.isValid()) {
+          return `План: ${day} ${monthes[month]} ${year}, ${weekDays[date.isoWeekday() - 1]}`;
+        }
+      } catch (e) {
+        // pass
+      }
+
+      return 'Некорректная дата';
+    },
+    async edit(pk) {
+      if (pk === -1) {
+        this.edit_data = {
+          date_start: this.td,
+          date_end: this.td,
           why_stop: '',
           close: false,
           diagnos: '',
           illnes: '',
           time_index: 0,
           identified_index: 0,
-        },
-        edit_pk: -2,
-        all_selected: false,
-        lock_changes: false,
-        is_first_time: '',
-        how_identified: '',
-        variant_is_first_time: ['не указано', 'впервые', 'повторно'],
-        variant_identified: ['не указано', 'обращении за лечением', 'профилактическом осмотре'],
-        enable_construct: false,
+        };
+      } else {
+        const d = await api('patients/individuals/load-dreg-detail', { pk });
+        this.edit_data = {
+          ...this.edit_data,
+          ...d,
+          date_end: d.date_end || this.td,
+        };
+        this.is_first_time = this.variant_is_first_time[d.time_index];
+        this.how_identified = this.variant_identified[d.identified_index];
       }
+      this.edit_pk = pk;
     },
-    created() {
-      this.load_data()
+    hide_edit() {
+      if (this.$refs.modalEdit) {
+        this.$refs.modalEdit.$el.style.display = 'none';
+      }
+      this.edit_pk = -2;
     },
-    computed: {
-      valid_reg() {
-        return this.edit_pk > -2 &&
-          this.edit_data.diagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?.*/gm) &&
-          this.edit_data.date_start !== '' &&
-          (!this.edit_data.close || this.edit_data.date_end !== '');
-      },
-      assignments() {
-        return this.researches_data.filter(({assignment}) => assignment).map(rd => rd.assign_research_pk);
-      },
-      assignments_diagnoses() {
-        return Object.keys(this.researches_data
-          .filter(({assignment}) => assignment)
-          .reduce((a, rd) => ({...a, ...rd.diagnoses_time.reduce((b, dt) => ({...b, [dt.diagnos]: true}), {})}), {}));
-      },
-      has_assignments() {
-        return this.count_assignments_available > 0;
-      },
-      count_assignments_available() {
-        return this.researches_data.filter(rd => rd.assign_research_pk).length;
-      },
-      count_assignments() {
-        return this.assignments.length;
-      },
-      has_all_selected() {
-        return this.count_assignments === this.count_assignments_available;
-      },
-      not_selected() {
-        return this.count_assignments === 0;
-      },
+    hide_modal() {
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
+      }
+      this.$root.$emit('hide_dreg');
     },
-    watch: {
-      count_assignments() {
-        this.lock_changes = true;
-        if (this.has_all_selected) {
-          this.all_selected = true;
-        } else if (this.not_selected) {
-          this.all_selected = false;
-        }
-        setTimeout(() => {
-          this.lock_changes = false
-        }, 0)
-      },
-      all_selected() {
-        if (!this.lock_changes) {
-          for (const row of this.researches_data) {
-            if (row.assign_research_pk) {
-              row.assignment = this.all_selected;
-            }
-          }
-        }
-      },
+    async save_plan() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await api('patients/individuals/save-plan-dreg', this, ['card_pk', 'researches_data', 'researches_data_def', 'year']);
+      await this.$store.dispatch(actions.DEC_LOADING);
+      window.okmessage('План сохранён');
     },
-    methods: {
-      get_date_string(year, month, day) {
-        day = day.trim();
-        if (!day) {
-          return 'Нет даты в плане';
+    change_index() {
+      this.edit_data.time_index = this.variant_is_first_time.indexOf(this.is_first_time);
+      this.edit_data.identified_index = this.variant_identified.indexOf(this.how_identified);
+    },
+    async save() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await api('patients/individuals/save-dreg', { card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      window.okmessage('Сохранено');
+      this.hide_edit();
+      this.load_data();
+    },
+    load_data() {
+      this.$store.dispatch(actions.INC_LOADING);
+      api('patients/individuals/load-dreg', this, ['card_pk', 'year']).then(({ rows, researches_data, year }) => {
+        this.rows = rows;
+        this.researches_data = researches_data;
+        this.researches_data_def = cloneDeep(researches_data);
+        this.all_selected = false;
+        if (researches_data && researches_data.length > 0) {
+          window.okmessage(`Загружен ${year} год`);
         }
+        this.year = year;
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+    print_form_030(pk) {
+      window.open(`/forms/pdf?type=100.04&reg_pk=${pk}&year=2020`);
+    },
+    print_results(pk) {
+      this.$root.$emit('print:results', [pk]);
+    },
+    fill_column(i) {
+      const orig = this.researches_data[0].plans[i];
+      for (let j = 1; j < this.researches_data.length; j++) {
+        this.researches_data[j].plans[i] = orig;
+        this.researches_data[j].plans = [...this.researches_data[j].plans]; // Принудительно делаем перерендер
+      }
+      window.okmessage(`Столбец "${this.monthes[i]}" заполнен значением "${orig}"`);
+    },
+    create_directions() {
+      this.$root.$emit('generate-directions', {
+        type: 'direction',
+        card_pk: this.card_pk,
+        fin_source_pk: 'ОМС',
+        researches: { '-1': this.assignments },
+        diagnos: this.assignments_diagnoses.join('; '),
+        counts: {},
+        comments: {},
+        localizations: {},
+        service_locations: {},
+      });
 
-        try {
-          const dateString = `${year}-${month + 1}-${day}`;
-          const date = moment(dateString, 'YYYY-MM-DD');
-
-          if (!isNaN(day) && day < 32 && day > 0 && date.isValid()) {
-            return `План: ${day} ${monthes[month]} ${year}, ${weekDays[date.isoWeekday() - 1]}`;
-          }
-        } catch (e) {}
-
-        return 'Некорректная дата';
-      },
-      async edit(pk) {
-        if (pk === -1) {
-          this.edit_data = {
-            date_start: this.td,
-            date_end: this.td,
-            why_stop: '',
-            close: false,
-            diagnos: '',
-            illnes: '',
-            time_index: 0,
-            identified_index: 0,
-          };
-        } else {
-          const d = await api('patients/individuals/load-dreg-detail', {pk})
-          this.edit_data = {
-            ...this.edit_data,
-            ...d,
-            date_end: d.date_end || this.td,
-          };
-          this.is_first_time = this.variant_is_first_time[d.time_index]
-          this.how_identified = this.variant_identified[d.identified_index]
+      for (const row of this.researches_data) {
+        if (row.assign_research_pk) {
+          row.assignment = false;
         }
-        this.edit_pk = pk;
-      },
-      hide_edit() {
-        if (this.$refs.modalEdit) {
-          this.$refs.modalEdit.$el.style.display = 'none';
-        }
-        this.edit_pk = -2;
-      },
-      hide_modal() {
-        if (this.$refs.modal) {
-          this.$refs.modal.$el.style.display = 'none'
-        }
-        this.$root.$emit('hide_dreg')
-      },
-      async save_plan(){
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await api('patients/individuals/save-plan-dreg', this, ['card_pk', 'researches_data', 'researches_data_def', 'year'])
-        await this.$store.dispatch(action_types.DEC_LOADING)
-        okmessage('План сохранён');
-      },
-      change_index(){
-        this.edit_data.time_index = this.variant_is_first_time.indexOf(this.is_first_time)
-        this.edit_data.identified_index = this.variant_identified.indexOf(this.how_identified)
-      },
-      async save() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await api('patients/individuals/save-dreg', {card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
-        await this.$store.dispatch(action_types.DEC_LOADING)
-        okmessage('Сохранено');
-        this.hide_edit()
-        this.load_data()
-      },
-      load_data() {
-        this.$store.dispatch(action_types.INC_LOADING)
-        api('patients/individuals/load-dreg', this, ['card_pk', 'year']).then(({rows, researches_data, year}) => {
-          this.rows = rows
-          this.researches_data = researches_data
-          this.researches_data_def = cloneDeep(researches_data)
-          this.all_selected = false;
-          if (researches_data && researches_data.length > 0) {
-            okmessage(`Загружен ${year} год`)
-          }
-          this.year = year
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
-      },
-      print_form_030(pk) {
-        window.open(`/forms/pdf?type=100.04&reg_pk=${pk}&year=2020`);
-      },
-      print_results(pk) {
-        this.$root.$emit('print:results', [pk])
-      },
-      fill_column(i) {
-        const orig = this.researches_data[0].plans[i];
-        for (let j = 1; j < this.researches_data.length; j++) {
-          this.researches_data[j].plans[i] = orig;
-          this.researches_data[j].plans = [...this.researches_data[j].plans] // Принудительно делаем перерендер
-        }
-        okmessage(`Столбец "${this.monthes[i]}" заполнен значением "${orig}"`)
-      },
-      create_directions() {
-        this.$root.$emit('generate-directions', {
-          type: 'direction',
-          card_pk: this.card_pk,
-          fin_source_pk: 'ОМС',
-          researches: {'-1': this.assignments},
-          diagnos: this.assignments_diagnoses.join('; '),
-          counts: {},
-          comments: {},
-          localizations: {},
-          service_locations: {},
-        });
-
-        for (const row of this.researches_data) {
-          if (row.assign_research_pk) {
-            row.assignment = false;
-          }
-        }
-        this.all_selected = false
-      },
-    }
-  }
+      }
+      this.all_selected = false;
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

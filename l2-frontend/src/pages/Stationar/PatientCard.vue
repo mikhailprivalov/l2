@@ -8,15 +8,15 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
-import Component from 'vue-class-component'
+import Vue from 'vue';
+import Component from 'vue-class-component';
 
-import Patient from '@/types/patient'
+import Patient from '@/types/patient';
 
 @Component({
   props: {
     patient: Patient,
-  }
+  },
 })
 export default class PatientCard extends Vue {}
 </script>

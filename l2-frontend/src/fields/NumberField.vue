@@ -3,39 +3,39 @@
 </template>
 
 <script>
-  export default {
-    props: {
-      value: {
-        required: false,
+export default {
+  props: {
+    value: {
+      required: false,
+    },
+    disabled: {
+      required: false,
+      default: false,
+      type: Boolean,
+    },
+  },
+  data() {
+    return {
+      val: this.value || 0,
+    };
+  },
+  watch: {
+    val: {
+      handler() {
+        this.changeValue(this.val);
       },
-      disabled: {
-        required: false,
-        default: false,
-        type: Boolean,
-      },
+      immediate: true,
     },
-    data() {
-      return {
-        val: this.value || 0,
-      }
+  },
+  model: {
+    event: 'modified',
+  },
+  methods: {
+    changeValue(newVal) {
+      this.$emit('modified', newVal);
     },
-    watch: {
-      val: {
-        handler() {
-          this.changeValue(this.val)
-        },
-        immediate: true,
-      },
-    },
-    model: {
-      event: `modified`
-    },
-    methods: {
-      changeValue(newVal) {
-        this.$emit('modified', newVal)
-      }
-    }
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

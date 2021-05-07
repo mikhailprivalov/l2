@@ -1,7 +1,7 @@
 <template>
   <td class="ref" :class="{withoutBorderRight: !withBorderRight}">
     <table v-if="parsedData" :class="bordered && 'table table-bordered table-condensed'">
-      <tr v-for="(v, k) in parsedData">
+      <tr v-for="(v, k) in parsedData" :key="k">
         <td>{{ k }}</td>
         <td v-html="v"></td>
       </tr>
@@ -40,7 +40,7 @@ export default {
       return r;
     },
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

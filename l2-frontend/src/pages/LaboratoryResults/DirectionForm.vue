@@ -81,7 +81,7 @@
           Нет исследований для выбранной лаборатории.<br/><br/>
           Назначения в направлении:
           <ul>
-            <li v-for="l in labs">
+            <li v-for="l in labs" :key="l.pk">
               <a v-if="l.islab" href="#" @click.prevent="selectOtherLab(l.pk)">{{ l.title }}</a>
               <span v-else>{{ l.title }}</span>
             </li>
@@ -96,6 +96,7 @@
             active === i.pk && `tb-group-full-${i.group} tb-group-active-${i.group} active`
           ]'
               @click="select(i.pk)"
+              :key="i.pk"
               v-for="i in issledovaniya">
               <div :class='`status status-${getStatusClass(i)}`'>{{ getStatus(i) }}</div>
               {{ i.title }}
@@ -109,7 +110,7 @@
           <div class="other-issledovaniya" v-if="otherLabs.length > 0 && showOtherLabs">
             Другие лаборатории в направлении:
             <ul>
-              <li v-for="l in otherLabs">
+              <li v-for="l in otherLabs" :key="l.pk">
                 <a href="#" @click.prevent="selectOtherLab(l.pk)">{{ l.title }}</a>
               </li>
             </ul>
@@ -122,11 +123,11 @@
 
 <script>
 import _ from 'lodash';
-import * as action_types from "@/store/action-types";
-import api from "@/api";
+import * as actions from '@/store/action-types';
+import api from '@/api';
 
 export default {
-  name: "DirectionForm",
+  name: 'DirectionForm',
   props: {
     laboratory: {},
   },
@@ -173,9 +174,8 @@ export default {
 
       this.$root.$emit('laboratory:results:activate-pks',
         [data.direction.pk],
-        _.uniq(_.flatten(data.issledovaniya.map(i => i.tubes.map(t => t.pk)))),
-        tubesInGroups
-      );
+        _.uniq(_.flatten(data.issledovaniya.map((i) => i.tubes.map((t) => t.pk)))),
+        tubesInGroups);
 
       setTimeout(() => {
         if (this.otherLabs.length > 0) {
@@ -185,14 +185,14 @@ export default {
     });
 
     this.$root.$on('laboratory:reload-direction:with-open-first', () => this.reload());
-    this.$root.$on('laboratory:reload-direction:with-open-pk', pk => this.reload(pk));
+    this.$root.$on('laboratory:reload-direction:with-open-pk', (pk) => this.reload(pk));
   },
   computed: {
     fromRmis() {
       return this.loaded && this.direction && this.direction.imported_from_rmis;
     },
     otherLabs() {
-      return this.labs.filter(l => l.islab && l.pk !== this.laboratory);
+      return this.labs.filter((l) => l.islab && l.pk !== this.laboratory);
     },
   },
   methods: {
@@ -214,11 +214,13 @@ export default {
     getStatus(i) {
       const status = this.getStatusClass(i);
 
-      return {n: 'Не обработан', s: 'Обработан', c: 'Подтверждён', o: 'Отложен'}[status];
+      return {
+        n: 'Не обработан', s: 'Обработан', c: 'Подтверждён', o: 'Отложен',
+      }[status];
     },
     select(pk) {
       this.active = pk;
-      this.$root.$emit('laboratory:results:open-form', pk, this.issledovaniya.map(i => ({
+      this.$root.$emit('laboratory:results:open-form', pk, this.issledovaniya.map((i) => ({
         pk: i.pk,
         research_pk: i.research_pk,
         title: i.title,
@@ -228,18 +230,18 @@ export default {
       this.$root.$emit('laboratory:results:search', this.q.mode, String(this.q.text), pk);
     },
     print() {
-      this.$root.$emit('print:results', [this.direction.pk])
+      this.$root.$emit('print:results', [this.direction.pk]);
     },
     async confirmAll() {
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message} = await api('laboratory/confirm-list', this.direction, 'pk');
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await api('laboratory/confirm-list', this.direction, 'pk');
       if (!ok) {
-        errmessage(message);
+        window.errmessage(message);
       } else {
-        okmessage('Подтверждено');
+        window.okmessage('Подтверждено');
       }
       this.$root.$emit('laboratory:reload-direction:with-open-first');
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     selectOtherLab(pk) {
       this.$root.$emit('external-change-laboratory', pk, () => {
@@ -248,22 +250,23 @@ export default {
     },
     async resetConfirmation(iss) {
       try {
-        await this.$dialog.confirm(`Подтвердите сброс: ${iss.title}`)
-      } catch (_) {
-        return
+        await this.$dialog.confirm(`Подтвердите сброс: ${iss.title}`);
+      } catch (e) {
+        // pass
+        return;
       }
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message} = await api('laboratory/reset-confirm', iss, 'pk');
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await api('laboratory/reset-confirm', iss, 'pk');
       if (!ok) {
-        errmessage(message);
+        window.errmessage(message);
       } else {
-        okmessage('Подтверждение сброшено');
+        window.okmessage('Подтверждение сброшено');
       }
       this.$root.$emit('laboratory:reload-form');
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

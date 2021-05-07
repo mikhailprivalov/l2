@@ -2,7 +2,9 @@
   <transition name="modal">
     <div class="modal-mask">
       <div class="panel panel-flt"
-           :style="{ minWidth, maxWidth, alignSelf, marginTop, width, marginLeft: marginLeftRight, marginRight: marginLeftRight }">
+           :style="{
+          minWidth, maxWidth, alignSelf, marginTop, width, marginLeft: marginLeftRight, marginRight: marginLeftRight
+        }">
         <div class="panel-heading">
           <h3 class="panel-title">
             <slot name="header">
@@ -57,7 +59,7 @@ export default {
       required: false,
       default: '100%',
     },
-    'width': {
+    width: {
       required: false,
       default: 'auto',
     },
@@ -83,8 +85,8 @@ export default {
       required: false,
       default: false,
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped>

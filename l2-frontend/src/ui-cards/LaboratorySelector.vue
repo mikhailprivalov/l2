@@ -7,7 +7,7 @@
         <span class="caret"></span>
       </button>
       <ul class="dropdown-menu" style="margin-top: 1px">
-        <li v-for="row in laboratories" :value="row.pk">
+        <li v-for="row in laboratories" :key="row.pk">
           <a href="#" @click.prevent="laboratory = row.pk">{{ row.title }}</a>
         </li>
       </ul>
@@ -16,17 +16,17 @@
 </template>
 
 <script>
-import * as action_types from "@/store/action-types";
-import api from "@/api";
+import * as actions from '@/store/action-types';
+import api from '@/api';
 
 export default {
-  name: "LaboratorySelector",
+  name: 'LaboratorySelector',
   async mounted() {
-    await this.$store.dispatch(action_types.INC_LOADING);
-    const {rows, active} = await api('laboratory/laboratories');
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { rows, active } = await api('laboratory/laboratories');
     this.laboratory = active;
     this.laboratories = rows;
-    await this.$store.dispatch(action_types.DEC_LOADING);
+    await this.$store.dispatch(actions.DEC_LOADING);
     this.$root.$on('emit-laboratory', () => {
       this.emit();
     });
@@ -69,8 +69,8 @@ export default {
 
       return '';
     },
-  }
-}
+  },
+};
 </script>
 
 <style lang="scss" scoped>

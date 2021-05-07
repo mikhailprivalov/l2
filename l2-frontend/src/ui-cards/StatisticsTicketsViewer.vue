@@ -2,14 +2,18 @@
   <div style="height: 100%;width: 100%;position: relative">
     <div class="top-picker">
       <date-field-nav style="width: 166px;align-self: stretch" :val.sync="date" :def="date"/>
-      <button class="btn btn-blue-nb" @click="load" style="width: 42px;display: inline-block;align-self: stretch"><i
-        class="glyphicon glyphicon-refresh"></i></button>
-      <button class="btn btn-blue-nb" style="width: 94px;display: inline-block;align-self: stretch" @click="print"><i
-        class="glyphicon glyphicon-th-list"></i> Экспорт
+      <button class="btn btn-blue-nb" @click="load"
+              style="width: 42px;display: inline-block;align-self: stretch">
+        <i class="glyphicon glyphicon-refresh"></i>
+      </button>
+      <button class="btn btn-blue-nb"
+              style="width: 94px;display: inline-block;align-self: stretch" @click="print">
+        <i class="glyphicon glyphicon-th-list"></i> Экспорт
       </button>
     </div>
     <div class="content-picker">
-      <table class="table table-responsive table-bordered table-condensed" style="table-layout: fixed;margin-bottom: 0">
+      <table class="table table-responsive table-bordered table-condensed"
+             style="table-layout: fixed;margin-bottom: 0">
         <colgroup>
           <col width="25">
           <col width="150">
@@ -59,7 +63,7 @@
             <col width="55">
           </colgroup>
           <tbody>
-          <tr v-for="row in data" :class="{invalid: row.invalid}">
+          <tr v-for="row in data" :key="row.pk" :class="{invalid: row.invalid}">
             <td>{{row.n}}</td>
             <td>{{row.patinet}}<br/>Карта: {{row.card}}</td>
             <td>{{row.date_ticket}}</td>
@@ -80,9 +84,14 @@
 
             <td class="control-buttons">
               <div class="flex-wrap" v-if="row.can_invalidate">
-                <button class="btn btn-sm btn-blue-nb" v-if="row.invalid" @click="invalidate(row.pk, false)">Вернуть
+                <button class="btn btn-sm btn-blue-nb" v-if="row.invalid"
+                        @click="invalidate(row.pk, false)">
+                  Вернуть
                 </button>
-                <button class="btn btn-sm btn-blue-nb" v-else @click="invalidate(row.pk, true)">Отменить</button>
+                <button class="btn btn-sm btn-blue-nb" v-else
+                        @click="invalidate(row.pk, true)">
+                  Отменить
+                </button>
               </div>
             </td>
           </tr>
@@ -97,60 +106,62 @@
 </template>
 
 <script>
-  import moment from 'moment'
-  import DateFieldNav from '../fields/DateFieldNav'
-  import * as action_types from '../store/action-types'
-  import statistics_tickets_point from '../api/statistics-tickets-point'
+import moment from 'moment';
+import DateFieldNav from '../fields/DateFieldNav.vue';
+import * as actions from '../store/action-types';
+import statisticsTicketsPoint from '../api/statistics-tickets-point';
 
-  export default {
-    name: 'statistics-tickets-viewer',
-    components: {
-      DateFieldNav
-    },
-    data() {
-      return {
-        date: moment().format('DD.MM.YYYY'),
-        data: []
+export default {
+  name: 'statistics-tickets-viewer',
+  components: {
+    DateFieldNav,
+  },
+  data() {
+    return {
+      date: moment().format('DD.MM.YYYY'),
+      data: [],
+    };
+  },
+  created() {
+    this.load();
+    this.$root.$on('create-ticket', () => {
+      if (this.date === moment().format('DD.MM.YYYY')) {
+        this.load();
       }
+    });
+  },
+  watch: {
+    date() {
+      this.load();
     },
-    created() {
-      this.load()
-      this.$root.$on('create-ticket', () => {
-        if (this.date === moment().format('DD.MM.YYYY')) {
-          this.load()
+  },
+  methods: {
+    print() {
+      const users = encodeURIComponent(JSON.stringify([this.$store.getters.user_data.doc_pk]));
+      const { date } = this;
+      window.open(`/statistic/xls?type=statistics-tickets-print&users=${users}&date-start=${date}&date-end=${date}`, '_blank');
+    },
+    load() {
+      this.$store.dispatch(actions.INC_LOADING);
+      statisticsTicketsPoint.loadTickets(this, 'date').then((data) => {
+        this.data = data.data;
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+    invalidate(pk, invalid) {
+      this.$store.dispatch(actions.INC_LOADING);
+      statisticsTicketsPoint.invalidateTicket({ pk, invalid }).then((data) => {
+        if (!data.ok) {
+          window.errmessage(data.message);
         }
-      })
+        this.load();
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
     },
-    watch: {
-      date() {
-        this.load()
-      }
-    },
-    methods: {
-      print() {
-        window.open(`/statistic/xls?type=statistics-tickets-print&users=${encodeURIComponent(JSON.stringify([this.$store.getters.user_data.doc_pk]))}&date-start=${this.date}&date-end=${this.date}`, '_blank')
-      },
-      load() {
-        this.$store.dispatch(action_types.INC_LOADING)
-        statistics_tickets_point.loadTickets(this, 'date').then(data => {
-          this.data = data.data
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
-      },
-      invalidate(pk, invalid) {
-        this.$store.dispatch(action_types.INC_LOADING)
-        statistics_tickets_point.invalidateTicket({pk, invalid}).then(data => {
-          if (!data.ok) {
-            errmessage(data.message)
-          }
-          this.load()
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
-      }
-    }
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

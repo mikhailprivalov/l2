@@ -27,7 +27,7 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="d in directions" :data-pk="d.pk">
+          <tr v-for="d in directions" :data-pk="d.pk" :key="d.pk">
             <td class='num' @click="searchDirection(d.pk)" :class="activeDirections.includes(d.pk) && 'num-active'">
               <span>{{ d.date }}</span> {{ d.pk }}
             </td>
@@ -46,7 +46,7 @@
           </tr>
           </thead>
           <tbody>
-          <tr class='select-tube' :title='t.tube.title' v-for="t in tubes" :data-pk="t.pk">
+          <tr class='select-tube' :title='t.tube.title' v-for="t in tubes" :key="t.pk" :data-pk="t.pk">
             <td class='num' @click="searchTube(t.pk)"
                 :class="[
                   activeTubes.includes(t.pk) && 'num-active',
@@ -75,16 +75,16 @@
 </template>
 
 <script>
-import moment from "moment";
-import DateRange from "@/ui-cards/DateRange";
-import api from "@/api";
-import * as action_types from "@/store/action-types";
-import _ from "lodash";
-import {SEARCH_MODES} from "@/pages/LaboratoryResults/constants";
+import moment from 'moment';
+import DateRange from '@/ui-cards/DateRange.vue';
+import api from '@/api';
+import * as actions from '@/store/action-types';
+import _ from 'lodash';
+import { SEARCH_MODES } from '@/pages/LaboratoryResults/constants';
 
 export default {
-  name: "ReadyToEnter",
-  components: {DateRange},
+  name: 'ReadyToEnter',
+  components: { DateRange },
   props: {
     laboratory: {
       type: Number,
@@ -114,7 +114,7 @@ export default {
       if (tube) {
         this.focus(this.$refs.tubes, tube);
       }
-    })
+    });
   },
   computed: {
     watchParams() {
@@ -135,11 +135,11 @@ export default {
   },
   methods: {
     async load() {
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {directions, tubes} = await api('laboratory/ready', this, ['date_range', 'laboratory']);
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { directions, tubes } = await api('laboratory/ready', this, ['date_range', 'laboratory']);
       this.directions = directions;
       this.tubes = tubes;
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     search(mode, pk) {
       this.$root.$emit('laboratory:results:search', mode, pk);
@@ -151,14 +151,14 @@ export default {
       this.search(SEARCH_MODES.TUBE, pk);
     },
     focus(ref, pk) {
-      const $ref = $(ref);
-      const $to = $(`[data-pk="${pk}"]`, $ref);
+      const $ref = window.$(ref);
+      const $to = window.$(`[data-pk="${pk}"]`, $ref);
       if ($to.length > 0) {
-        $ref.scrollTo($to, 100, {offset: -31});
+        $ref.scrollTo($to, 100, { offset: -31 });
       }
     },
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

@@ -18,7 +18,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="e in elements">
+        <tr v-for="e in elements" :key="e.fsli">
           <td class="cl-td">
             <input type="text" class="form-control" v-model="e.title">
           </td>
@@ -47,67 +47,67 @@
 </template>
 
 <script>
-  import Modal from '../ui-cards/Modal'
-  import * as action_types from '../store/action-types'
-  import bacteria_point from '../api/bacteria-point'
+import Modal from '../ui-cards/Modal.vue';
+import * as actions from '../store/action-types';
+import bacteriaPoint from '../api/bacteria-point';
 
-  const getNewElement = () => ({
-    title: '',
-    fsli: '',
-  });
+const getNewElement = () => ({
+  title: '',
+  fsli: '',
+});
 
-  export default {
-    name: 'FastCreateAndFillBacteriaGroup',
-    components: {Modal},
-    props: {
-      typesObject: {
-        type: String,
-        required: true
-      },
-      typesGroups: {
-        type: String,
-        required: true,
-      },
+export default {
+  name: 'FastCreateAndFillBacteriaGroup',
+  components: { Modal },
+  props: {
+    typesObject: {
+      type: String,
+      required: true,
     },
-    data() {
-      return {
-        title: '',
-        elements: [],
-      };
+    typesGroups: {
+      type: String,
+      required: true,
     },
-    computed: {
-      valid() {
-        return this.title.length > 0
-      },
+  },
+  data() {
+    return {
+      title: '',
+      elements: [],
+    };
+  },
+  computed: {
+    valid() {
+      return this.title.length > 0;
     },
-    mounted() {
-      for (let i = 0; i < 14; i++) {
-        this.elements.push(getNewElement());
+  },
+  mounted() {
+    for (let i = 0; i < 14; i++) {
+      this.elements.push(getNewElement());
+    }
+  },
+  methods: {
+    hide_modal() {
+      this.$root.$emit('hide_fcafbg');
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
       }
     },
-    methods: {
-      hide_modal() {
-        this.$root.$emit('hide_fcafbg')
-        if (this.$refs.modal) {
-          this.$refs.modal.$el.style.display = 'none'
-        }
-      },
-      async save() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {ok, message, obj} = await bacteria_point.packageGroupCreate(this, [
-          'title', 'elements', 'typesObject',
-        ])
-        if (ok) {
-          okmessage('Группа сохранена', `${this.title}`)
-          this.$root.$emit('select2', obj)
-          this.hide_modal();
-        } else {
-          errmessage('Ошибка', message)
-        }
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
+    async save() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message, obj } = await bacteriaPoint.packageGroupCreate(this, [
+        'title', 'elements', 'typesObject',
+      ]);
+      if (ok) {
+        window.okmessage('Группа сохранена', `${this.title}`);
+        this.$root.$emit('select2', obj);
+        this.hide_modal();
+      } else {
+        window.errmessage('Ошибка', message);
+      }
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

@@ -11,33 +11,28 @@
 </template>
 
 <script>
-  import Modal from '../ui-cards/Modal'
+import Modal from '../ui-cards/Modal.vue';
 
-  export default {
-    name: 'report-chart-viewer',
-    components: {Modal},
-    props: {
-      rows_data: {
-        type: Array
-      },
-      directory: {
-        type: Object
-      },
+export default {
+  name: 'report-chart-viewer',
+  components: { Modal },
+  props: {
+    rows_data: {
+      type: Array,
     },
-    computed: {
-      params_types() {
-
+    directory: {
+      type: Object,
+    },
+  },
+  methods: {
+    hide_modal() {
+      this.$root.$emit('hide_report-chart-viewer');
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
       }
     },
-    methods: {
-      hide_modal() {
-        this.$root.$emit('hide_report-chart-viewer')
-        if (this.$refs.modal) {
-          this.$refs.modal.$el.style.display = 'none'
-        }
-      },
-    }
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

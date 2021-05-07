@@ -1,6 +1,6 @@
 <template>
   <div>
-    <table class="table table-bordered table-condensed" style="table-layout: fixed" v-for="(val, index) in tb_data">
+    <table class="table table-bordered table-condensed" style="table-layout: fixed" v-for="(val, index) in tb_data" :key="index">
       <colgroup>
         <col width='50%'/>
         <col width='20%'/>
@@ -9,9 +9,15 @@
       </colgroup>
       <tbody>
       <tr>
-        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Услуга" v-model="val.researchTitle"></td>
-        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Дата" v-model="val.date"></td>
-        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Врач" v-model="val.docConfirm"></td>
+        <td class="cl-td">
+          <input type="text" class="form-control" :readonly="disabled" placeholder="Услуга" v-model="val.researchTitle">
+        </td>
+        <td class="cl-td">
+          <input type="text" class="form-control" :readonly="disabled" placeholder="Дата" v-model="val.date">
+        </td>
+        <td class="cl-td">
+          <input type="text" class="form-control" :readonly="disabled" placeholder="Врач" v-model="val.docConfirm">
+        </td>
         <td class="cl-td">
           <button class="btn btn-blue-nb" @click="delete_row(index)" :disabled="disabled"
                   v-tippy="{ placement : 'bottom'}"
@@ -35,14 +41,16 @@
 </template>
 
 <script>
-import api from "@/api";
-import {debounce} from "lodash";
+import api from '@/api';
+import { debounce } from 'lodash';
 
-const makeDefaultRow = () => ({researchTitle: "", date: "", docConfirm: "", value: ""});
+const makeDefaultRow = () => ({
+  researchTitle: '', date: '', docConfirm: '', value: '',
+});
 
 export default {
-name: "DocReferralPreviousResults",
-   props: {
+  name: 'DocReferralPreviousResults',
+  props: {
     value: {
       required: false,
     },
@@ -50,18 +58,18 @@ name: "DocReferralPreviousResults",
       type: Boolean,
       required: false,
       default: false,
-    }
+    },
   },
   data() {
     return {
       tb_data: ((this.value && this.value !== 'undefined') ? JSON.parse(this.value) : null) || [],
       result: [],
-    }
+    };
   },
   mounted() {
     this.$root.$on('protocol:docReferralResults', (direction) => {
-      this.insertParaclinicResult(direction)
-    })
+      this.insertParaclinicResult(direction);
+    });
   },
   methods: {
     add_new_row() {
@@ -71,30 +79,32 @@ name: "DocReferralPreviousResults",
       this.tb_data.splice(index, 1);
     },
     delete_rows() {
-      this.tb_data = []
+      this.tb_data = [];
     },
     changeValue() {
-      this.$emit('modified', JSON.stringify(this.tb_data))
+      this.$emit('modified', JSON.stringify(this.tb_data));
     },
-    changeValueDebounce: debounce(function (){
-      this.changeValue()
+    changeValueDebounce: debounce(function () {
+      this.changeValue();
     }, 500),
     async insertParaclinicResult(direction) {
       const result_data = await api('directions/result-patient-by-direction',
-        {'isLab': false, 'isDocReferral': true, 'isParaclinic': false, 'dir': direction});
+        {
+          isLab: false, isDocReferral: true, isParaclinic: false, dir: direction,
+        });
       this.result = result_data.results[0] || {};
 
-      for (let r of Object.values(this.result.researches)) {
-        for (let f of r.fractions) {
+      for (const r of Object.values(this.result.researches)) {
+        for (const f of r.fractions) {
           this.tb_data.push({
-            "researchTitle": r.title,
-            "date": r.dateConfirm,
-            "docConfirm": r.fio,
-            "value": f.value,
-          })
+            researchTitle: r.title,
+            date: r.dateConfirm,
+            docConfirm: r.fio,
+            value: f.value,
+          });
         }
       }
-    }
+    },
   },
   watch: {
     tb_data: {
@@ -106,9 +116,9 @@ name: "DocReferralPreviousResults",
     },
   },
   model: {
-    event: `modified`
+    event: 'modified',
   },
-}
+};
 
 </script>
 

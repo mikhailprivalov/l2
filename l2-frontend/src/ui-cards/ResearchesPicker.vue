@@ -8,7 +8,7 @@
         {{researches_selected_in_type(selected_type.pk)}}
       </button>
       <ul v-if="types.length > 1" class="dropdown-menu" style="margin-top: 1px">
-        <li v-for="row in types" :value="row.pk">
+        <li v-for="row in types" :key="row.pk">
           <a href="#" @click.prevent="select_type(row.pk)">{{row.title}} {{researches_selected_in_type(row.pk)}}</a>
         </li>
       </ul>
@@ -20,10 +20,13 @@
         <div @click="select_dep(row.pk)" class="top-inner-select" :class="{active: row.pk === dep}"
              :title="row.title"
              v-tippy="{ placement : 'bottom', arrow: true }"
+             :key="row.pk"
              v-for="row in departments_of_type">
           <span>
             {{ row.title }}
-            <span v-if="researches_selected_in_department(row.pk).length > 0"> ({{researches_selected_in_department(row.pk).length}})</span>
+            <span v-if="researches_selected_in_department(row.pk).length > 0">
+              &nbsp;({{researches_selected_in_department(row.pk).length}})
+            </span>
           </span>
         </div>
       </div>
@@ -65,7 +68,7 @@
           Загрузить шаблон
         </button>
         <ul class="dropdown-menu">
-          <li v-for="row in templates" :value="row.pk">
+          <li v-for="row in templates" :key="row.pk">
             <a href="#" @click.prevent="load_template(row.pk)">{{row.title}}</a>
           </li>
         </ul>
@@ -76,7 +79,9 @@
         </div>
         <div style="position: relative;max-width: 335px;width: 100%;display: flex;">
           <div id="templates-tip" v-if="founded_templates.length > 0">
-            <div class="founded-template" v-for="t in founded_templates" @click="do_select_researches(t.researches)">
+            <div class="founded-template"
+                 :key="t.pk"
+                 v-for="t in founded_templates" @click="do_select_researches(t.researches)">
               {{t.title}}
             </div>
           </div>
@@ -95,7 +100,14 @@
                @keyup.alt.38="k('up')"
                @keyup.alt.39="k('right')"
                @keyup.alt.40="k('down')"
-               v-tippy="{html: '#founded-n', trigger: 'mouseenter focus input', reactive: true, arrow: true, animation : 'fade', duration : 0}"/>
+               v-tippy="{
+                 html: '#founded-n',
+                 trigger: 'mouseenter focus input',
+                 reactive: true,
+                 arrow: true,
+                 animation: 'fade',
+                 duration: 0
+               }"/>
         <button class="btn btn-blue-nb bottom-inner-btn" @click="founded_select"
                 v-tippy="{ placement : 'top', arrow: true }"
                 title="Быстрый выбор найденного">
@@ -117,7 +129,14 @@
              @keyup.alt.38="k('up')"
              @keyup.alt.39="k('right')"
              @keyup.alt.40="k('down')"
-             v-tippy="{html: '#founded-n', trigger: 'mouseenter focus input', reactive: true, arrow: true, animation : 'fade', duration : 0}"/>
+             v-tippy="{
+               html: '#founded-n',
+               trigger: 'mouseenter focus input',
+               reactive: true,
+               arrow: true,
+               animation : 'fade',
+               duration : 0
+             }"/>
       <button class="btn btn-blue-nb bottom-inner-btn" @click="founded_select"
               v-tippy="{ placement : 'top', arrow: true }"
               title="Быстрый выбор найденного">
@@ -133,560 +152,562 @@
 </template>
 
 <script>
-  import * as action_types from '../store/action-types'
-  import ResearchPick from './ResearchPick'
-  import {debounce} from 'lodash/function'
-  import CategoryPick from "@/ui-cards/CategoryPick";
+import { debounce } from 'lodash/function';
+import CategoryPick from '@/ui-cards/CategoryPick.vue';
+import * as actions from '../store/action-types';
+import ResearchPick from './ResearchPick.vue';
 
-  export default {
-    name: 'researches-picker',
-    components: {CategoryPick, ResearchPick},
-    props: {
-      value: {},
-      autoselect: {
-        default: 'directions'
+export default {
+  name: 'researches-picker',
+  components: { CategoryPick, ResearchPick },
+  props: {
+    value: {},
+    autoselect: {
+      default: 'directions',
+    },
+    hidetemplates: {
+      default: false,
+      type: Boolean,
+    },
+    oneselect: {
+      default: false,
+      type: Boolean,
+    },
+    readonly: {
+      default: false,
+      type: Boolean,
+      required: false,
+    },
+    just_search: {
+      default: false,
+      type: Boolean,
+      required: false,
+    },
+    filter_types: {
+      default() {
+        return [];
       },
-      hidetemplates: {
-        default: false,
-        type: Boolean
+      type: Array,
+      required: false,
+    },
+    filter_researches: {
+      default() {
+        return [];
       },
-      oneselect: {
-        default: false,
-        type: Boolean
-      },
-      readonly: {
-        default: false,
-        type: Boolean,
-        required: false,
-      },
-      just_search: {
-        default: false,
-        type: Boolean,
-        required: false,
-      },
-      filter_types: {
-        default() {
-          return []
-        },
-        type: Array,
-        required: false,
-      },
-      filter_researches: {
-        default() {
-          return []
-        },
-        type: Array,
-        required: false,
-      },
-      kk: {
-        type: String,
-        default: '',
-      },
-      typesOnly: {
-        type: Array,
-        default() {
-          return []
-        }
+      type: Array,
+      required: false,
+    },
+    kk: {
+      type: String,
+      default: '',
+    },
+    typesOnly: {
+      type: Array,
+      default() {
+        return [];
       },
     },
-    data() {
-      return {
-        type: '-1',
-        dep: -1,
-        template: -1,
-        selectedSubcategory: -1,
-        checked_researches: [],
-        search: '',
-        search_template: '',
-        founded_templates: [],
-      }
-    },
-    created() {
-      this.$store.watch(state => state.templates, (oldValue, newValue) => {
-        this.check_template()
-      })
+  },
+  data() {
+    return {
+      type: '-1',
+      dep: -1,
+      template: -1,
+      selectedSubcategory: -1,
+      checked_researches: [],
+      search: '',
+      search_template: '',
+      founded_templates: [],
+    };
+  },
+  created() {
+    this.$store.watch((state) => state.templates, () => {
+      this.check_template();
+    });
 
-      this.$store.watch(state => state.allTypes, (oldValue, newValue) => {
-        this.checkType()
-      })
+    this.$store.watch((state) => state.allTypes, () => {
+      this.checkType();
+    });
 
-      this.$store.watch(state => state.templates, (oldValue, newValue) => {
-        this.check_template()
-      })
-    },
-    async mounted() {
-      this.$root.$on('researches-picker:deselect' + this.kk, this.deselect_research_ignore)
-      this.$root.$on('researches-picker:deselect_department' + this.kk, this.deselect_department)
-      this.$root.$on('researches-picker:deselect_all' + this.kk, this.clear)
-      this.$root.$on('researches-picker:add_research' + this.kk, this.select_research_ignore)
+    this.$store.watch((state) => state.templates, () => {
+      this.check_template();
+    });
+  },
+  async mounted() {
+    this.$root.$on(`researches-picker:deselect${this.kk}`, this.deselect_research_ignore);
+    this.$root.$on(`researches-picker:deselect_department${this.kk}`, this.deselect_department);
+    this.$root.$on(`researches-picker:deselect_all${this.kk}`, this.clear);
+    this.$root.$on(`researches-picker:add_research${this.kk}`, this.select_research_ignore);
 
-      if (!this.$store.getters.okDep || Object.keys(this.$store.getters.researches).length === 0) {
-        await this.$store.dispatch(action_types.INC_LOADING)
+    if (!this.$store.getters.okDep || Object.keys(this.$store.getters.researches).length === 0) {
+      await this.$store.dispatch(actions.INC_LOADING);
 
-        await Promise.all([
-          this.$store.dispatch(action_types.GET_RESEARCHES),
-          this.$store.dispatch(action_types.GET_TEMPLATES),
-        ])
+      await Promise.all([
+        this.$store.dispatch(actions.GET_RESEARCHES),
+        this.$store.dispatch(actions.GET_TEMPLATES),
+      ]);
 
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      }
-
-      this.checkType()
-      this.check_template()
-
-      if (this.value instanceof Array) {
-        this.checked_researches = this.value
-      }
-    },
-    watch: {
-      l2_only_doc_call: {
-        handler() {
-          if (this.l2_only_doc_call) {
-            this.select_type('4');
-          }
-        },
-        immediate: true,
-      },
-      value(v) {
-        if (v instanceof Array) {
-          this.checked_researches = v
-        }
-      },
-      types() {
-        this.checkType()
-      },
-      templates() {
-        this.check_template()
-      },
-      checked_researches() {
-        if (this.oneselect) {
-          this.$emit('input', this.checked_researches.length === 0 ? -1 : this.checked_researches[0])
-          return
-        }
-        this.$emit('input', this.checked_researches)
-      },
-      search() {
-        this.check_found_tip()
-      },
-      search_template: debounce(function (nv) {
-        this.do_search_template(nv)
-      }, 80),
-      subcategories() {
-        if (this.subcategories.length === 0) {
-          this.selectedSubcategory = -1
-        }
-      },
-    },
-    computed: {
-      l2_only_doc_call() {
-        return this.$store.getters.modules.l2_only_doc_call;
-      },
-      types() {
-        let result = this.$store.getters.allTypes.filter(row => {
-          return (
-              (row.pk !== '0' && row.pk !== '1' && !this.filter_types.includes(parseInt(row.pk))) &&
-              (this.typesOnly.length === 0 || this.typesOnly.includes(parseInt(row.pk))) &&
-              (!this.l2_only_doc_call || row.pk === '4')
-          );
-        });
-
-        if (this.typesOnly && this.typesOnly.length > 0) {
-          result = this.typesOnly.map(t => result.find(r => Number(r.pk) === Number(t))).filter(Boolean);
-        }
-
-        return result;
-      },
-      selected_type() {
-        for (let t of this.types) {
-          if (t.pk === this.type) {
-            return t
-          }
-        }
-        return {title: 'Не выбран тип', pk: '-1'}
-      },
-      selectedSubcategoryObj() {
-        return this.subcategories.find(c => c.pk === this.selectedSubcategory) || {};
-      },
-      subcategory_base() {
-        if (this.dep === 10001) {
-          return 8;
-        }
-        return null;
-      },
-      work_as_subcategory() {
-        return this.subcategory_base !== null;
-      },
-      subcategories() {
-        if (!this.work_as_subcategory) {
-          return [];
-        }
-        let sc = this.$store.getters.ex_dep[this.subcategory_base] || [];
-        sc = sc.map(c => {
-          const researches = this.researches_sub_categories(c.pk);
-          const selected = researches.filter(({pk}) => this.checked_researches.includes(pk)).length;
-          return {...c, researches, selected};
-        });
-        return sc.filter(c => c.researches.length > 0);
-      },
-      selected_type_i() {
-        let i = 0
-        for (let t of this.types) {
-          if (t.pk === this.type) {
-            return i
-          }
-          i++
-        }
-        return i
-      },
-      t() {
-        return parseInt(this.type || 0)
-      },
-      rev_t() {
-        return this.is_doc_ref ? 2 - this.t : this.t
-      },
-      is_doc_ref() {
-        return parseInt(this.type || 0) > 3
-      },
-      departments_of_type() {
-        if (this.is_doc_ref) {
-          return this.$store.getters.ex_dep[this.type]
-        }
-        let r = []
-        for (let row of this.$store.getters.allDepartments) {
-          if (row.type === this.type) {
-            r.push(row)
-          }
-        }
-        return r
-      },
-      dep_i() {
-        let i = 0
-        for (let row of this.departments_of_type) {
-          if (row.pk === this.dep) {
-            return i
-          }
-          i++
-        }
-        return i
-      },
-      templates() {
-        return this.$store.getters.templates
-      },
-      researches_display() {
-        return this.researches_dep_display()
-      },
-      founded_n() {
-        let r = 'Не найдено'
-        let n = 0
-        for (const row of this.researches_display) {
-          if (this.highlight_search(row)) {
-            n++
-          }
-        }
-        if (n > 0) {
-          r = `Найдено ${n}`
-        }
-        return r
-      },
-    },
-    methods: {
-      researches_sub_categories(sc_id) {
-        let r = []
-        for (const row of (this.$store.getters.researches[this.rev_t] || [])) {
-          if (row.site_type_raw === sc_id && row.site_type === this.dep) {
-            r.push(row)
-          }
-        }
-        return r.filter(x => !this.filter_researches.includes(x.pk))
-      },
-      researches_dep_display(dep = this.dep) {
-        let r = []
-        if (this.rev_t === -2) {
-          for (const d of Object.keys(this.$store.getters.researches)) {
-            for (const row of (this.$store.getters.researches[d] || [])) {
-              if (row.doc_refferal && row.site_type === dep) {
-                r.push(row)
-              }
-            }
-          }
-        } else if (this.rev_t < -2) {
-          for (const row of (this.$store.getters.researches[this.rev_t] || [])) {
-            if (row.site_type === dep || (dep === -1 && !row.site_type)) {
-              r.push(row)
-            }
-          }
-        } else if (this.dep in this.$store.getters.researches) {
-          r = this.$store.getters.researches[dep]
-        }
-        return r.filter(x => !this.filter_researches.includes(x.pk))
-      },
-      k(t) {
-        let n = 0
-        switch (t) {
-          case 'left':
-            n = this.dep_i - 1
-            if (n < 0) {
-              n = this.departments_of_type.length - 1
-            }
-            this.select_dep(this.departments_of_type[n].pk)
-            break
-          case 'right':
-            n = this.dep_i + 1
-            if (n > this.departments_of_type.length - 1) {
-              n = 0
-            }
-            this.select_dep(this.departments_of_type[n].pk)
-            break
-          case 'up':
-            n = this.selected_type_i + 1
-            if (n > this.types.length - 1) {
-              n = 0
-            }
-            this.select_type(this.types[n].pk)
-            break
-          case 'down':
-            n = this.selected_type_i - 1
-            if (n < 0) {
-              n = this.types.length - 1
-            }
-            this.select_type(this.types[n].pk)
-            break
-        }
-      },
-
-      check_found_tip() {
-        let el = this.$refs.fndsrc
-        if (this.search === '' && '_tippy' in el && el._tippy.state.visible) {
-          el._tippy.hide()
-        }
-      },
-      select_type(pk) {
-        this.type = pk
-        this.checkType()
-      },
-      select_dep(pk) {
-        this.dep = pk
-        $(this.$refs.fndsrc).focus()
-      },
-      checkType() {
-        if (this.type === '-1' && this.types.length > 0) {
-          this.type = JSON.parse(JSON.stringify(this.types[0].pk))
-        }
-        for (let row of this.departments_of_type) {
-          if (this.dep === row.pk) {
-            return
-          }
-        }
-        this.dep = this.departments_of_type.length > 0 ? this.departments_of_type[0].pk : -1
-      },
-      check_template() {
-        if (this.template === -1 && this.templates.length > 0) {
-          this.template = JSON.parse(JSON.stringify(this.templates[0].pk))
-        }
-      },
-      load_template(pk) {
-        if (this.readonly) {
-          return
-        }
-        let last_dep = -1
-        let last_type = -1
-        for (let v of this.get_template(pk).values) {
-          this.select_research_ignore(v)
-          let d = this.research_data(v)
-          last_dep = d.department_pk
-          last_type = d.type
-        }
-        this.select_type(last_type)
-        this.select_dep(last_dep)
-      },
-      get_template(pk) {
-        for (let t of this.templates) {
-          if (t.pk === pk) {
-            return t
-          }
-        }
-        return {
-          title: 'Не выбран шаблон',
-          pk: '-1',
-          for_current_user: false,
-          for_users_department: false,
-          values: []
-        }
-      },
-      select_research(pk) {
-        if (this.readonly) {
-          return
-        }
-        if (this.oneselect) {
-          this.checked_researches = [pk]
-          return
-        }
-        if (this.research_selected(pk)) {
-          this.deselect_research_ignore(pk)
-        } else {
-          this.select_research_ignore(pk)
-        }
-      },
-      select_research_ignore(pk) {
-        if (this.readonly) {
-          return
-        }
-        if (!this.research_selected(pk)) {
-          this.checked_researches.push(pk)
-          let research = this.research_data(pk)
-          if (this.autoselect === 'directions' && 'autoadd' in research) {
-            for (let autoadd_pk of research.autoadd) {
-              this.select_research_ignore(autoadd_pk)
-            }
-          }
-        }
-      },
-      deselect_research_ignore(pk) {
-        if (this.readonly) {
-          return
-        }
-        if (this.research_selected(pk)) {
-          this.checked_researches = this.checked_researches.filter(item => item !== pk)
-          let research = this.research_data(pk)
-          if (this.autoselect === 'directions') {
-            for (let addto_pk of (research.addto || [])) {
-              this.deselect_research_ignore(addto_pk)
-            }
-          }
-        }
-      },
-      deselect_department(pk) {
-        if (this.readonly) {
-          return
-        }
-        for (let rpk of this.researches_selected_in_department(pk, true)) {
-          this.deselect_research_ignore(rpk)
-        }
-      },
-      clear() {
-        this.checked_researches = []
-      },
-      research_selected(pk) {
-        return this.checked_researches.indexOf(pk) !== -1
-      },
-      clear_search() {
-        this.search = ''
-        $(this.$refs.fndsrc).focus()
-      },
-      founded_select(clear) {
-        clear = clear || false
-        for (const row of this.researches_display) {
-          if (this.highlight_search(row)) {
-            this.select_research_ignore(row.pk)
-          }
-        }
-        if (clear) {
-          this.clear_search()
-        } else {
-          $(this.$refs.fndsrc).focus()
-        }
-      },
-      highlight_search(row) {
-        const t = row.title.toLowerCase().trim()
-        const ft = row.full_title.toLowerCase().trim()
-        const c = row.code.toLowerCase().trim().replace('а', 'a').replace('в', 'b')
-        const s = this.search.toLowerCase().trim()
-        return s !== '' && (t.includes(s) || ft.includes(s) || c.startsWith(s.replace('а', 'a').replace('в', 'b')))
-      },
-      research_data(pk) {
-        if (pk in this.$store.getters.researches_obj) {
-          return this.$store.getters.researches_obj[pk]
-        }
-        return {}
-      },
-      researches_selected_in_department(pk, prim) {
-        let r = []
-        if (prim) {
-          for (let rpk of this.checked_researches) {
-            let res = this.research_data(rpk)
-            if (res.department_pk === pk || (pk === -2 && res.doc_refferal)) {
-              r.push(rpk)
-            }
-          }
-        } else {
-          for (let rpk of this.checked_researches) {
-            let res = this.research_data(rpk)
-            if (this.rev_t < -2 && res.department_pk === this.rev_t && ((!res.site_type && !pk) || res.site_type === pk)) {
-              r.push(rpk)
-            } else if (this.rev_t >= -2 &&
-              ((res.department_pk === pk && (!res.doc_refferal || !this.is_doc_ref || pk === -2)) ||
-                (this.is_doc_ref && res.site_type === pk && res.doc_refferal) ||
-                (!res.site_type && res.doc_refferal && pk === -2))) {
-              r.push(rpk)
-            }
-          }
-        }
-        return r
-      },
-      researches_selected_in_type(pk) {
-        let l = 0
-        for (let rpk of this.checked_researches) {
-          let res = this.research_data(rpk)
-          if (
-            (res.type === pk && !res.doc_refferal && !res.treatment && !res.stom) ||
-            (pk === '4' && res.doc_refferal) ||
-            (pk === '5' && res.treatment) ||
-            (pk === '6' && res.stom) ||
-            (pk === '7' && res.is_hospital)
-          ) {
-            l++
-          }
-        }
-        return l > 0 ? ` (${l})` : ''
-      },
-      researches_selected_in_type_list(pk) {
-        let l = []
-        for (let rpk of this.checked_researches) {
-          let res = this.research_data(rpk)
-          if (
-            (res.type === pk && !res.doc_refferal && !res.treatment && !res.stom) ||
-            (pk === '4' && res.doc_refferal) ||
-            (pk === '5' && res.treatment) ||
-            (pk === '6' && res.stom) ||
-            (pk === '7' && res.is_hospital)
-          ) {
-            l.push(res)
-          }
-        }
-        return l
-      },
-      do_search_template(nv) {
-        this.founded_templates = []
-        const t = this
-        if (nv === '')
-          return
-        fetch('/api/search-template?q=' + encodeURIComponent(nv)).then(q => {
-          return q.json()
-        }).then(data => {
-          t.founded_templates = (data.result || []).slice().reverse()
-        })
-      },
-      do_select_researches(pks) {
-        if (pks.length === 0) {
-          return
-        }
-
-        for (const pk of pks) {
-          this.select_research_ignore(pk)
-        }
-
-        const d = this.research_data(pks[pks.length - 1])
-        this.select_type(d.type)
-        if (d.type !== '4') {
-          this.select_dep(d.department_pk)
-        }
-        this.clear_search_template()
-      },
-      clear_search_template() {
-        this.search_template = ''
-      }
+      await this.$store.dispatch(actions.DEC_LOADING);
     }
-  }
+
+    this.checkType();
+    this.check_template();
+
+    if (this.value instanceof Array) {
+      this.checked_researches = this.value;
+    }
+  },
+  watch: {
+    l2_only_doc_call: {
+      handler() {
+        if (this.l2_only_doc_call) {
+          this.select_type('4');
+        }
+      },
+      immediate: true,
+    },
+    value(v) {
+      if (v instanceof Array) {
+        this.checked_researches = v;
+      }
+    },
+    types() {
+      this.checkType();
+    },
+    templates() {
+      this.check_template();
+    },
+    checked_researches() {
+      if (this.oneselect) {
+        this.$emit('input', this.checked_researches.length === 0 ? -1 : this.checked_researches[0]);
+        return;
+      }
+      this.$emit('input', this.checked_researches);
+    },
+    search() {
+      this.check_found_tip();
+    },
+    search_template: debounce(function (nv) {
+      this.do_search_template(nv);
+    }, 80),
+    subcategories() {
+      if (this.subcategories.length === 0) {
+        this.selectedSubcategory = -1;
+      }
+    },
+  },
+  computed: {
+    l2_only_doc_call() {
+      return this.$store.getters.modules.l2_only_doc_call;
+    },
+    types() {
+      let result = this.$store.getters.allTypes.filter((row) => (
+        (row.pk !== '0' && row.pk !== '1' && !this.filter_types.includes(parseInt(row.pk, 10)))
+              && (this.typesOnly.length === 0 || this.typesOnly.includes(parseInt(row.pk, 10)))
+              && (!this.l2_only_doc_call || row.pk === '4')
+      ));
+
+      if (this.typesOnly && this.typesOnly.length > 0) {
+        result = this.typesOnly.map((t) => result.find((r) => Number(r.pk) === Number(t))).filter(Boolean);
+      }
+
+      return result;
+    },
+    selected_type() {
+      for (const t of this.types) {
+        if (t.pk === this.type) {
+          return t;
+        }
+      }
+      return { title: 'Не выбран тип', pk: '-1' };
+    },
+    selectedSubcategoryObj() {
+      return this.subcategories.find((c) => c.pk === this.selectedSubcategory) || {};
+    },
+    subcategory_base() {
+      if (this.dep === 10001) {
+        return 8;
+      }
+      return null;
+    },
+    work_as_subcategory() {
+      return this.subcategory_base !== null;
+    },
+    subcategories() {
+      if (!this.work_as_subcategory) {
+        return [];
+      }
+      let sc = this.$store.getters.ex_dep[this.subcategory_base] || [];
+      sc = sc.map((c) => {
+        const researches = this.researches_sub_categories(c.pk);
+        const selected = researches.filter(({ pk }) => this.checked_researches.includes(pk)).length;
+        return { ...c, researches, selected };
+      });
+      return sc.filter((c) => c.researches.length > 0);
+    },
+    selected_type_i() {
+      let i = 0;
+      for (const t of this.types) {
+        if (t.pk === this.type) {
+          return i;
+        }
+        i++;
+      }
+      return i;
+    },
+    t() {
+      return parseInt(this.type || 0, 10);
+    },
+    rev_t() {
+      return this.is_doc_ref ? 2 - this.t : this.t;
+    },
+    is_doc_ref() {
+      return parseInt(this.type || 0, 10) > 3;
+    },
+    departments_of_type() {
+      if (this.is_doc_ref) {
+        return this.$store.getters.ex_dep[this.type];
+      }
+      const r = [];
+      for (const row of this.$store.getters.allDepartments) {
+        if (row.type === this.type) {
+          r.push(row);
+        }
+      }
+      return r;
+    },
+    dep_i() {
+      let i = 0;
+      for (const row of this.departments_of_type) {
+        if (row.pk === this.dep) {
+          return i;
+        }
+        i++;
+      }
+      return i;
+    },
+    templates() {
+      return this.$store.getters.templates;
+    },
+    researches_display() {
+      return this.researches_dep_display();
+    },
+    founded_n() {
+      let r = 'Не найдено';
+      let n = 0;
+      for (const row of this.researches_display) {
+        if (this.highlight_search(row)) {
+          n++;
+        }
+      }
+      if (n > 0) {
+        r = `Найдено ${n}`;
+      }
+      return r;
+    },
+  },
+  methods: {
+    researches_sub_categories(sc_id) {
+      const r = [];
+      for (const row of (this.$store.getters.researches[this.rev_t] || [])) {
+        if (row.site_type_raw === sc_id && row.site_type === this.dep) {
+          r.push(row);
+        }
+      }
+      return r.filter((x) => !this.filter_researches.includes(x.pk));
+    },
+    researches_dep_display(dep = this.dep) {
+      let r = [];
+      if (this.rev_t === -2) {
+        for (const d of Object.keys(this.$store.getters.researches)) {
+          for (const row of (this.$store.getters.researches[d] || [])) {
+            if (row.doc_refferal && row.site_type === dep) {
+              r.push(row);
+            }
+          }
+        }
+      } else if (this.rev_t < -2) {
+        for (const row of (this.$store.getters.researches[this.rev_t] || [])) {
+          if (row.site_type === dep || (dep === -1 && !row.site_type)) {
+            r.push(row);
+          }
+        }
+      } else if (this.dep in this.$store.getters.researches) {
+        r = this.$store.getters.researches[dep];
+      }
+      return r.filter((x) => !this.filter_researches.includes(x.pk));
+    },
+    k(t) {
+      let n = 0;
+      switch (t) {
+        case 'left':
+          n = this.dep_i - 1;
+          if (n < 0) {
+            n = this.departments_of_type.length - 1;
+          }
+          this.select_dep(this.departments_of_type[n].pk);
+          break;
+        case 'right':
+          n = this.dep_i + 1;
+          if (n > this.departments_of_type.length - 1) {
+            n = 0;
+          }
+          this.select_dep(this.departments_of_type[n].pk);
+          break;
+        case 'up':
+          n = this.selected_type_i + 1;
+          if (n > this.types.length - 1) {
+            n = 0;
+          }
+          this.select_type(this.types[n].pk);
+          break;
+        case 'down':
+          n = this.selected_type_i - 1;
+          if (n < 0) {
+            n = this.types.length - 1;
+          }
+          this.select_type(this.types[n].pk);
+          break;
+        default:
+          break;
+      }
+    },
+
+    check_found_tip() {
+      const el = this.$refs.fndsrc;
+      // eslint-disable-next-line no-underscore-dangle
+      if (this.search === '' && '_tippy' in el && el._tippy.state.visible) {
+        // eslint-disable-next-line no-underscore-dangle
+        el._tippy.hide();
+      }
+    },
+    select_type(pk) {
+      this.type = pk;
+      this.checkType();
+    },
+    select_dep(pk) {
+      this.dep = pk;
+      window.$(this.$refs.fndsrc).focus();
+    },
+    checkType() {
+      if (this.type === '-1' && this.types.length > 0) {
+        this.type = JSON.parse(JSON.stringify(this.types[0].pk));
+      }
+      for (const row of this.departments_of_type) {
+        if (this.dep === row.pk) {
+          return;
+        }
+      }
+      this.dep = this.departments_of_type.length > 0 ? this.departments_of_type[0].pk : -1;
+    },
+    check_template() {
+      if (this.template === -1 && this.templates.length > 0) {
+        this.template = JSON.parse(JSON.stringify(this.templates[0].pk));
+      }
+    },
+    load_template(pk) {
+      if (this.readonly) {
+        return;
+      }
+      let last_dep = -1;
+      let last_type = -1;
+      for (const v of this.get_template(pk).values) {
+        this.select_research_ignore(v);
+        const d = this.research_data(v);
+        last_dep = d.department_pk;
+        last_type = d.type;
+      }
+      this.select_type(last_type);
+      this.select_dep(last_dep);
+    },
+    get_template(pk) {
+      for (const t of this.templates) {
+        if (t.pk === pk) {
+          return t;
+        }
+      }
+      return {
+        title: 'Не выбран шаблон',
+        pk: '-1',
+        for_current_user: false,
+        for_users_department: false,
+        values: [],
+      };
+    },
+    select_research(pk) {
+      if (this.readonly) {
+        return;
+      }
+      if (this.oneselect) {
+        this.checked_researches = [pk];
+        return;
+      }
+      if (this.research_selected(pk)) {
+        this.deselect_research_ignore(pk);
+      } else {
+        this.select_research_ignore(pk);
+      }
+    },
+    select_research_ignore(pk) {
+      if (this.readonly) {
+        return;
+      }
+      if (!this.research_selected(pk)) {
+        this.checked_researches.push(pk);
+        const research = this.research_data(pk);
+        if (this.autoselect === 'directions' && 'autoadd' in research) {
+          for (const autoadd_pk of research.autoadd) {
+            this.select_research_ignore(autoadd_pk);
+          }
+        }
+      }
+    },
+    deselect_research_ignore(pk) {
+      if (this.readonly) {
+        return;
+      }
+      if (this.research_selected(pk)) {
+        this.checked_researches = this.checked_researches.filter((item) => item !== pk);
+        const research = this.research_data(pk);
+        if (this.autoselect === 'directions') {
+          for (const addto_pk of (research.addto || [])) {
+            this.deselect_research_ignore(addto_pk);
+          }
+        }
+      }
+    },
+    deselect_department(pk) {
+      if (this.readonly) {
+        return;
+      }
+      for (const rpk of this.researches_selected_in_department(pk, true)) {
+        this.deselect_research_ignore(rpk);
+      }
+    },
+    clear() {
+      this.checked_researches = [];
+    },
+    research_selected(pk) {
+      return this.checked_researches.indexOf(pk) !== -1;
+    },
+    clear_search() {
+      this.search = '';
+      window.$(this.$refs.fndsrc).focus();
+    },
+    founded_select(clearOrig = false) {
+      const clear = clearOrig || false;
+      for (const row of this.researches_display) {
+        if (this.highlight_search(row)) {
+          this.select_research_ignore(row.pk);
+        }
+      }
+      if (clear) {
+        this.clear_search();
+      } else {
+        window.$(this.$refs.fndsrc).focus();
+      }
+    },
+    highlight_search(row) {
+      const t = row.title.toLowerCase().trim();
+      const ft = row.full_title.toLowerCase().trim();
+      const c = row.code.toLowerCase().trim().replace('а', 'a').replace('в', 'b');
+      const s = this.search.toLowerCase().trim();
+      return s !== '' && (t.includes(s) || ft.includes(s) || c.startsWith(s.replace('а', 'a').replace('в', 'b')));
+    },
+    research_data(pk) {
+      if (pk in this.$store.getters.researches_obj) {
+        return this.$store.getters.researches_obj[pk];
+      }
+      return {};
+    },
+    researches_selected_in_department(pk, prim) {
+      const r = [];
+      if (prim) {
+        for (const rpk of this.checked_researches) {
+          const res = this.research_data(rpk);
+          if (res.department_pk === pk || (pk === -2 && res.doc_refferal)) {
+            r.push(rpk);
+          }
+        }
+      } else {
+        for (const rpk of this.checked_researches) {
+          const res = this.research_data(rpk);
+          if (
+            this.rev_t < -2
+            && res.department_pk === this.rev_t
+            && ((!res.site_type && !pk) || res.site_type === pk)
+          ) {
+            r.push(rpk);
+          } else if (this.rev_t >= -2
+              && ((res.department_pk === pk && (!res.doc_refferal || !this.is_doc_ref || pk === -2))
+                || (this.is_doc_ref && res.site_type === pk && res.doc_refferal)
+                || (!res.site_type && res.doc_refferal && pk === -2))) {
+            r.push(rpk);
+          }
+        }
+      }
+      return r;
+    },
+    researches_selected_in_type(pk) {
+      let l = 0;
+      for (const rpk of this.checked_researches) {
+        const res = this.research_data(rpk);
+        if (
+          (res.type === pk && !res.doc_refferal && !res.treatment && !res.stom)
+            || (pk === '4' && res.doc_refferal)
+            || (pk === '5' && res.treatment)
+            || (pk === '6' && res.stom)
+            || (pk === '7' && res.is_hospital)
+        ) {
+          l++;
+        }
+      }
+      return l > 0 ? ` (${l})` : '';
+    },
+    researches_selected_in_type_list(pk) {
+      const l = [];
+      for (const rpk of this.checked_researches) {
+        const res = this.research_data(rpk);
+        if (
+          (res.type === pk && !res.doc_refferal && !res.treatment && !res.stom)
+            || (pk === '4' && res.doc_refferal)
+            || (pk === '5' && res.treatment)
+            || (pk === '6' && res.stom)
+            || (pk === '7' && res.is_hospital)
+        ) {
+          l.push(res);
+        }
+      }
+      return l;
+    },
+    do_search_template(nv) {
+      this.founded_templates = [];
+      if (nv === '') return;
+      fetch(`/api/search-template?q=${encodeURIComponent(nv)}`).then((q) => q.json()).then((data) => {
+        this.founded_templates = (data.result || []).slice().reverse();
+      });
+    },
+    do_select_researches(pks) {
+      if (pks.length === 0) {
+        return;
+      }
+
+      for (const pk of pks) {
+        this.select_research_ignore(pk);
+      }
+
+      const d = this.research_data(pks[pks.length - 1]);
+      this.select_type(d.type);
+      if (d.type !== '4') {
+        this.select_dep(d.department_pk);
+      }
+      this.clear_search_template();
+    },
+    clear_search_template() {
+      this.search_template = '';
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

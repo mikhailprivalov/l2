@@ -18,39 +18,39 @@
 </template>
 
 <script>
-import moment from 'moment'
+import moment from 'moment';
 
 export default {
   name: 'date-field-nav-2',
   props: {
     value: {
       type: String,
-      default: ''
+      default: '',
     },
     w: {
-      default: '94px'
+      default: '94px',
     },
     brn: {
       default: true,
-      type: Boolean
+      type: Boolean,
     },
     right: {
       default: false,
-      type: Boolean
+      type: Boolean,
     },
     disabled: {
       default: false,
-      type: Boolean
+      type: Boolean,
     },
     readonly: {
       default: false,
-      type: Boolean
+      type: Boolean,
     },
   },
   computed: {
     md() {
       return moment(this.val, 'YYYY-MM-DD');
-    }
+    },
   },
   watch: {
     val() {
@@ -59,17 +59,17 @@ export default {
   },
   methods: {
     decDate() {
-      let a = this.md.clone()
-      a.subtract(1, 'days')
-      this.emit(a)
+      const a = this.md.clone();
+      a.subtract(1, 'days');
+      this.emit(a);
     },
     incDate() {
-      let a = this.md.clone()
-      a.add(1, 'days')
-      this.emit(a)
+      const a = this.md.clone();
+      a.add(1, 'days');
+      this.emit(a);
     },
     emit(v) {
-      this.emitf(v.format('YYYY-MM-DD'))
+      this.emitf(v.format('YYYY-MM-DD'));
     },
     emitf(v) {
       this.val = v;
@@ -79,14 +79,14 @@ export default {
     },
   },
   model: {
-    event: `modified`
+    event: 'modified',
   },
   data() {
     return {
       val: this.value,
-    }
+    };
   },
-}
+};
 </script>
 
 <style scoped>

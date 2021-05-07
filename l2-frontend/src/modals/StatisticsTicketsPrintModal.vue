@@ -13,8 +13,10 @@
               <label style="width: 100%;text-align: left;">
                 Источник финансирования:
                 <select v-model="fin" class="form-control">
-                  <optgroup :label="b.title" v-for="b in bases">
-                    <option v-for="f in b.fin_sources.filter(x => !x.hide)" :value="f.pk">{{b.title}} – {{f.title}}</option>
+                  <optgroup :label="b.title" v-for="b in bases" :key="b.pk">
+                    <option v-for="f in b.fin_sources.filter(x => !x.hide)" :key="f.pk" :value="f.pk">
+                      {{b.title}} – {{f.title}}
+                    </option>
                   </optgroup>
                 </select>
               </label>
@@ -51,95 +53,92 @@
 </template>
 
 <script>
-  import DateSelector from '../fields/DateSelector.vue'
-  import SelectPicker from '../fields/SelectPicker'
+import DateSelector from '../fields/DateSelector.vue';
+import SelectPicker from '../fields/SelectPicker.vue';
 
-  export default {
-    name: 'statistics-tickets-print-modal',
-    components: {
-      DateSelector,
-      SelectPicker
+export default {
+  name: 'statistics-tickets-print-modal',
+  components: {
+    DateSelector,
+    SelectPicker,
+  },
+  props: {
+    users: {
+      type: Array,
     },
-    props: {
-      users: {
-        type: Array
-      },
-      deps: {
-        type: Array,
-        required: false,
-        default() {
-          return [];
-        },
+    deps: {
+      type: Array,
+      required: false,
+      default() {
+        return [];
       },
     },
-    data() {
-      return {
-        date_type: 'd',
-        values: {
-          date: '',
-          month: '',
-          year: ''
-        },
-        user: '-1',
-        dep: '-1',
-        fin: '-1',
+  },
+  data() {
+    return {
+      date_type: 'd',
+      values: {
+        date: '',
+        month: '',
+        year: '',
+      },
+      user: '-1',
+      dep: '-1',
+      fin: '-1',
+    };
+  },
+  watch: {
+    bases: {
+      immediate: true,
+      deep: true,
+      handler() {
+        if (this.fin === '-1' && this.bases.length > 0 && this.bases[0].fin_sources.length > 0) {
+          this.fin = this.bases[0].fin_sources[0].pk;
+        }
+      },
+    },
+  },
+  computed: {
+    bases() {
+      return this.$store.getters.bases.filter((b) => !b.hide);
+    },
+    users_list() {
+      const u = [];
+      for (const u_row of this.users) {
+        u.push({ value: u_row.pk, label: u_row.fio });
       }
+      return u;
     },
-    watch: {
-      bases: {
-        immediate: true,
-        deep: true,
-        handler() {
-          if (this.fin === '-1' && this.bases.length > 0 && this.bases[0].fin_sources.length > 0) {
-            this.fin = this.bases[0].fin_sources[0].pk;
-          }
-        },
-      },
-    },
-    computed: {
-      bases() {
-        return this.$store.getters.bases.filter(b => !b.hide)
-      },
-      users_list() {
-        let u = []
-        for (let u_row of this.users) {
-          u.push({value: u_row.pk, label: u_row.fio})
-        }
-        return u
-      },
-      deps_list() {
-        let u = []
-        for (let u_row of this.deps) {
-          u.push({value: u_row.pk, label: u_row.title})
-        }
-        return u
-      },
-      selected_users() {
-        return this.user.split(',')
+    deps_list() {
+      const u = [];
+      for (const u_row of this.deps) {
+        u.push({ value: u_row.pk, label: u_row.title });
       }
+      return u;
     },
-    methods: {
-      change_user(v) {
-        if (!v) {
-          v = ''
-        }
-        if (Array.isArray(v)) {
-          v = v.join(',')
-        }
-        this.user = v
-      },
-      change_dep(v) {
-        if (!v) {
-          v = ''
-        }
-        if (Array.isArray(v)) {
-          v = v.join(',')
-        }
-        this.dep = v
-      },
-      make_report() {
-        window.open(`/statistic/xls?type=statistics-tickets-print&user=${this.selected_users}&department=${this.dep}&date_type=${this.date_type}&date_values=${encodeURIComponent(JSON.stringify(this.values))}&fin=${this.fin}`, '_blank')
+    selected_users() {
+      return this.user.split(',');
+    },
+  },
+  methods: {
+    change_user(val) {
+      let v = val || '';
+      if (Array.isArray(v)) {
+        v = v.join(',');
       }
+      this.user = v;
     },
-  }
+    change_dep(val) {
+      let v = val || '';
+      if (Array.isArray(v)) {
+        v = v.join(',');
+      }
+      this.dep = v;
+    },
+    make_report() {
+      // eslint-disable-next-line max-len
+      window.open(`/statistic/xls?type=statistics-tickets-print&user=${this.selected_users}&department=${this.dep}&date_type=${this.date_type}&date_values=${encodeURIComponent(JSON.stringify(this.values))}&fin=${this.fin}`, '_blank');
+    },
+  },
+};
 </script>

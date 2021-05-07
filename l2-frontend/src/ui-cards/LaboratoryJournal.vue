@@ -74,16 +74,16 @@
 </template>
 
 <script>
-import moment from "moment";
+import moment from 'moment';
 
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import Modal from "@/ui-cards/Modal";
-import * as action_types from "@/store/action-types";
-import api from "@/api";
+import Modal from '@/ui-cards/Modal.vue';
+import * as actions from '@/store/action-types';
+import api from '@/api';
 
 export default {
-  components: {Modal, Treeselect},
+  components: { Modal, Treeselect },
   name: 'LaboratoryJournal',
   data() {
     return {
@@ -97,7 +97,7 @@ export default {
     };
   },
   created() {
-    this.$root.$on('change-laboratory', pk => {
+    this.$root.$on('change-laboratory', (pk) => {
       this.lab_pk = pk;
     });
   },
@@ -105,81 +105,87 @@ export default {
     async doOpen() {
       this.open = true;
       this.date = moment().format('YYYY-MM-DD');
-      await this.$store.dispatch(action_types.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
       const data = await api('laboratory-journal-params');
       this.fin_sources_options = data.fin;
       this.fin_sources = [];
       this.groups = data.groups;
       this.group = -2;
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     createjournal() {
-      const date = this.date;
+      const { date } = this;
       const v = this.fin_sources;
-      const lab_pk = this.lab_pk;
-      const group = this.group;
+      const { lab_pk } = this;
+      const { group } = this;
       if (v.length === 0) {
-        $.amaran({
-          'theme': 'awesome no',
-          'content': {
+        // @ts-ignore
+        // eslint-disable-next-line no-undef
+        window.$.amaran({
+          theme: 'awesome no',
+          content: {
             title: 'Не выбран источник финансирования',
             message: '',
             info: '',
-            icon: 'fa fa-exclamation'
+            icon: 'fa fa-exclamation',
           },
-          'position': 'bottom right',
-          delay: 5000
-        })
-        return
+          position: 'bottom right',
+          delay: 5000,
+        });
+        return;
       }
-      const arr = JSON.parse('[' + v + ']');
-      window.open(`/results/journal?date=${date}&ist_f=${JSON.stringify(arr)}&group=${group}&lab_pk=${lab_pk}`, '_blank')
+      const arr = JSON.parse(`[${v}]`);
+      window.open(`/results/journal?date=${date}&ist_f=${JSON.stringify(arr)}&group=${group}&lab_pk=${lab_pk}`, '_blank');
     },
     createjournaltable() {
-      const date = this.date;
+      const { date } = this;
       const v = this.fin_sources;
-      const lab_pk = this.lab_pk;
+      const { lab_pk } = this;
       if (v.length === 0) {
-        $.amaran({
-          'theme': 'awesome no',
-          'content': {
+        // @ts-ignore
+        // eslint-disable-next-line no-undef
+        window.$.amaran({
+          theme: 'awesome no',
+          content: {
             title: 'Не выбран источник финансирования',
             message: '',
             info: '',
-            icon: 'fa fa-exclamation'
+            icon: 'fa fa-exclamation',
           },
-          'position': 'bottom right',
-          delay: 5000
-        })
-        return
+          position: 'bottom right',
+          delay: 5000,
+        });
+        return;
       }
-      const arr = JSON.parse('[' + v + ']')
-      window.open(`/results/journal_table?date=${date}&ist_f=${JSON.stringify(arr)}&lab_pk=${lab_pk}`, '_blank')
+      const arr = JSON.parse(`[${v}]`);
+      window.open(`/results/journal_table?date=${date}&ist_f=${JSON.stringify(arr)}&lab_pk=${lab_pk}`, '_blank');
     },
     createjournalcodes() {
-      const date = this.date;
+      const { date } = this;
       const v = this.fin_sources;
-      const lab_pk = this.lab_pk;
-      const group = this.group;
+      const { lab_pk } = this;
+      const { group } = this;
       if (v.length === 0) {
-        $.amaran({
-          'theme': 'awesome no',
-          'content': {
+        // @ts-ignore
+        // eslint-disable-next-line no-undef
+        window.$.amaran({
+          theme: 'awesome no',
+          content: {
             title: 'Не выбран источник финансирования',
             message: '',
             info: '',
-            icon: 'fa fa-exclamation'
+            icon: 'fa fa-exclamation',
           },
-          'position': 'bottom right',
-          delay: 5000
-        })
-        return
+          position: 'bottom right',
+          delay: 5000,
+        });
+        return;
       }
-      const arr = JSON.parse('[' + v + ']')
-      window.open(`/results/journal?date=${date}&ist_f=${JSON.stringify(arr)}&group=${group}&codes=1&lab_pk=${lab_pk}`, '_blank')
+      const arr = JSON.parse(`[${v}]`);
+      window.open(`/results/journal?date=${date}&ist_f=${JSON.stringify(arr)}&group=${group}&codes=1&lab_pk=${lab_pk}`, '_blank');
     },
   },
-}
+};
 </script>
 
 <style lang="scss" scoped>

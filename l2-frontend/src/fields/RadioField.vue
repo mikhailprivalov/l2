@@ -1,6 +1,7 @@
 <template>
   <div class="base" :class="{fullWidth, redesigned}">
     <a href="#" @click.prevent="changeValue(v)" :class="{ active: v === val, disabled }"
+       :key="v"
        v-for="v in variantsLocal">
       <span>{{ v }} <span class="badge badge-warning" v-if="Boolean(bages[v])">{{ bages[v] }}</span></span>
     </a>
@@ -42,9 +43,9 @@ export default {
       handler() {
         setTimeout(() => {
           if (this.value !== this.val) {
-            this.val = this.value
+            this.val = this.value;
           }
-        }, 0)
+        }, 0);
       },
       immediate: true,
     },
@@ -53,8 +54,9 @@ export default {
       handler() {
         this.variantsLocal = Array.isArray(this.variants) ? this.variants : this.variants.split('\n');
         if ((!this.val || !this.variantsLocal.includes(this.val)) && this.variantsLocal.length > 0) {
-          this.val = this.variantsLocal[0]
-          this.changeValue(this.val)
+          // eslint-disable-next-line prefer-destructuring
+          this.val = this.variantsLocal[0];
+          this.changeValue(this.val);
         }
       },
     },
@@ -63,21 +65,21 @@ export default {
     return {
       val: this.value,
       variantsLocal: [],
-    }
+    };
   },
   model: {
-    event: `modified`
+    event: 'modified',
   },
   methods: {
     changeValue(newVal) {
       if (this.disabled) {
-        return
+        return;
       }
-      this.val = newVal
-      this.$emit('modified', newVal)
+      this.val = newVal;
+      this.$emit('modified', newVal);
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped lang="scss">
@@ -122,7 +124,6 @@ export default {
       margin: 0 auto;
     }
   }
-
 
   &:not(.redesigned) a {
     background-color: #AAB2BD;

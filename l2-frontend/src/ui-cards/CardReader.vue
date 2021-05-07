@@ -9,67 +9,67 @@
 </template>
 
 <script>
-  import users_point from '../api/user-point'
-  import * as action_types from '../store/action-types'
-  import patients_point from '../api/patients-point'
+import usersPoint from '../api/user-point';
+import * as actions from '../store/action-types';
+import patientsPoint from '../api/patients-point';
 
-  export default {
-    name: 'CardReader',
-    data() {
-      return {
-        status: 'none',
-        interval: null,
-        readerId: window.localStorage.getItem('readerId'),
-        fio: null,
-        polis: null,
-        details: {},
-      };
+export default {
+  name: 'CardReader',
+  data() {
+    return {
+      status: 'none',
+      interval: null,
+      readerId: window.localStorage.getItem('readerId'),
+      fio: null,
+      polis: null,
+      details: {},
+    };
+  },
+  mounted() {
+    if (this.readerId) {
+      this.loadReaderStatus();
+    }
+  },
+  destroyed() {
+    clearInterval(this.interval);
+  },
+  methods: {
+    async loadReaderStatus() {
+      const data = await usersPoint.loadReaderStatus({ readerId: this.readerId }).catch(() => ({}));
+      this.status = data.status;
+      this.fio = data.fio;
+      this.polis = data.polis;
+      this.details = data.details || {};
+
+      this.interval = setTimeout(() => this.loadReaderStatus(), 1000);
     },
-    mounted() {
-      if (this.readerId) {
-        this.loadReaderStatus();
+    click() {
+      if (this.status !== 'inserted') {
+        return;
       }
-    },
-    destroyed() {
-      clearInterval(this.interval);
-    },
-    methods: {
-      async loadReaderStatus() {
-        const data = await users_point.loadReaderStatus({readerId: this.readerId}).catch(() => ({}))
-        this.status = data.status;
-        this.fio = data.fio;
-        this.polis = data.polis;
-        this.details = data.details || {};
 
-        this.interval = setTimeout(() => this.loadReaderStatus(), 1000);
-      },
-      click() {
-        if (this.status !== 'inserted') {
-          return;
-        }
-
-        this.$root.$emit('search-value', this.polis || '');
-      },
-      async clickPlus() {
-        await this.$store.dispatch(action_types.INC_LOADING);
-        await patients_point.createIndividualFromCard(this.details);
-        await this.$store.dispatch(action_types.DEC_LOADING);
-
-        this.$root.$emit('search-value', this.polis || '');
-      },
+      this.$root.$emit('search-value', this.polis || '');
     },
-    computed: {
-      textStatus() {
-        if (this.status === 'none') {
-          return 'нет связи с карт-ридером'
-        }
-        if (this.status === 'wait') {
-          return 'карта не вставлена в карт-ридер'
-        }
-        return `${this.fio} – ${this.polis}`
+    async clickPlus() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await patientsPoint.createIndividualFromCard(this.details);
+      await this.$store.dispatch(actions.DEC_LOADING);
+
+      this.$root.$emit('search-value', this.polis || '');
+    },
+  },
+  computed: {
+    textStatus() {
+      if (this.status === 'none') {
+        return 'нет связи с карт-ридером';
       }
+      if (this.status === 'wait') {
+        return 'карта не вставлена в карт-ридер';
+      }
+      return `${this.fio} – ${this.polis}`;
     },
-  }
+  },
+};
 </script>
 
 <style lang="scss" scoped>

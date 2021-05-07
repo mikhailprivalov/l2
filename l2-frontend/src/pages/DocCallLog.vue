@@ -39,7 +39,7 @@
     </div>
     <div class="log-rows">
       <div v-if="rows.length === 0" class="log-row-empty">Нет записей</div>
-      <div class="log-row" v-for="row in rows">
+      <div class="log-row" v-for="row in rows" :key="row.pk">
         <div class="log-row-author">{{ row.author }}</div>
         <div class="log-row-time">{{ row.createdAt }}</div>
         <div class="log-row-text" v-if="row.text">{{ row.text }}</div>
@@ -63,16 +63,16 @@
 </template>
 
 <script>
-import * as action_types from "@/store/action-types";
-import api from "@/api";
-import axios from "axios";
+import * as actions from '@/store/action-types';
+import api from '@/api';
+import axios from 'axios';
 
 export default {
-  name: "DocCallLog",
+  name: 'DocCallLog',
   props: {
     r: {
       type: Object,
-    }
+    },
   },
   data() {
     return {
@@ -99,7 +99,7 @@ export default {
       }
       const size = Number(file.size);
       if (size > 5242880) {
-        errmessage('Файл больше 5 МБ');
+        window.errmessage('Файл больше 5 МБ');
         return;
       }
       this.file = file;
@@ -107,7 +107,7 @@ export default {
       this.fileSize = Math.round((size / 1024 / 1024) * 100) / 100;
     },
     async createLog() {
-      await this.$store.dispatch(action_types.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
 
       const json = JSON.stringify({
         pk: this.r.pk,
@@ -116,7 +116,7 @@ export default {
         newStatus: this.status,
       });
       const blob = new Blob([json], {
-        type: 'application/json'
+        type: 'application/json',
       });
 
       const formData = new FormData();
@@ -124,21 +124,21 @@ export default {
       formData.append('form', blob);
 
       const {
-        data: {ok, message, status, executor, executor_fio, inLog},
-      } =
-        await axios.post('/api/doctor-call/add-log',
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          }
-        );
+        data: {
+          ok, message, status, executor, executor_fio, inLog,
+        },
+      } = await axios.post('/api/doctor-call/add-log',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
 
       if (!ok) {
-        errmessage(message);
+        window.errmessage(message);
       } else {
-        okmessage('Сохранено');
+        window.okmessage('Сохранено');
         this.status = -1;
         this.text = '';
         this.file = '';
@@ -151,18 +151,18 @@ export default {
       this.r.status = status;
       this.r.inLog = inLog;
       this.$root.$emit('doc-call:status:updated', this.r.pk);
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
       await this.loadRows();
     },
     async loadRows() {
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {rows} = await api('doctor-call/log', this.r, 'pk');
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { rows } = await api('doctor-call/log', this.r, 'pk');
       this.rows = rows;
       this.r.inLog = rows.length;
-      await this.$store.dispatch(action_types.DEC_LOADING);
-    }
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

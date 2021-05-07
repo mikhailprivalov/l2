@@ -13,10 +13,10 @@
 <script>
 
 export default {
-  name: "SelectedResearchesParams",
+  name: 'SelectedResearchesParams',
   components: {
-    'DescriptiveForm': () => import('@/forms/DescriptiveForm'),
-    'ResultsByYear': () => import('@/ui-cards/PatientResults/ResultsByYear'),
+    DescriptiveForm: () => import('@/forms/DescriptiveForm'),
+    ResultsByYear: () => import('@/ui-cards/PatientResults/ResultsByYear'),
   },
   props: {
     research: {
@@ -28,9 +28,9 @@ export default {
     },
   },
   data() {
-    return {}
+    return {};
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

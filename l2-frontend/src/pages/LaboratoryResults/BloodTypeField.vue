@@ -4,10 +4,10 @@
     <template v-else>
       <div>
         <template v-for="g in GROUPS">
-          <label class="radio-inline" v-if="g !== 'spacer'">
+          <label :key="g" class="radio-inline" v-if="g !== 'spacer'">
             <input type="radio" name="blood-type" v-model="r.value" :value="g"/> <span v-html="g"></span>
           </label>
-          <hr v-else/>
+          <hr v-else :key="g"/>
         </template>
       </div>
     </template>
@@ -17,20 +17,20 @@
 <script>
 
 const GROUPS = [
-  "O (I)",
-  "O<sub>αβ</sub> (I)",
-  "spacer",
-  "B (III)",
-  "Bα (III)",
-  "spacer",
-  "A (II)",
-  "A<sub>β</sub> (II)",
-  "A₂β (II)",
-  "spacer",
-  "AB₀ (IV)",
-  "A₂B₀ (IV)",
-  "AB (IV)",
-]
+  'O (I)',
+  'O<sub>αβ</sub> (I)',
+  'spacer',
+  'B (III)',
+  'Bα (III)',
+  'spacer',
+  'A (II)',
+  'A<sub>β</sub> (II)',
+  'A₂β (II)',
+  'spacer',
+  'AB₀ (IV)',
+  'A₂B₀ (IV)',
+  'AB (IV)',
+];
 
 export default {
   name: 'TextInputField',
@@ -43,7 +43,7 @@ export default {
       GROUPS,
     };
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

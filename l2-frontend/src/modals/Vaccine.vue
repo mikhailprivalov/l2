@@ -32,7 +32,7 @@
         </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows">
+          <tr v-for="r in rows" :key="r.pk">
             <td>{{r.date}}</td>
             <td>{{r.title}}</td>
             <td>{{r.series}}</td>
@@ -87,7 +87,7 @@
           <div class="form-group">
             <label for="de-f9">Этап:</label>
             <select v-model="edit_data.step" id="de-f9" class="form-control">
-              <option v-for="s in steps" :value="s">{{s}}</option>
+              <option v-for="s in steps" :value="s" :key="s">{{s}}</option>
             </select>
           </div>
           <div class="form-group">
@@ -130,31 +130,57 @@
 </template>
 
 <script>
-  import Modal from '../ui-cards/Modal'
-  import patients_point from '../api/patients-point'
-  import * as action_types from '../store/action-types'
-  import moment from 'moment'
+import moment from 'moment';
+import Modal from '../ui-cards/Modal.vue';
+import patientsPoint from '../api/patients-point';
+import * as actions from '../store/action-types';
 
-  export default {
-    name: 'vaccine',
-    components: {Modal},
-    props: {
-      card_pk: {
-        type: Number,
-        required: true
-      },
-      card_data: {
-        type: Object,
-        required: true,
-      },
+export default {
+  name: 'vaccine',
+  components: { Modal },
+  props: {
+    card_pk: {
+      type: Number,
+      required: true,
     },
-    data() {
-      return {
-        rows: [],
-        edit_pk: -2,
-        td: moment().format('YYYY-MM-DD'),
-        edit_data: {
-          date: '',
+    card_data: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      rows: [],
+      edit_pk: -2,
+      td: moment().format('YYYY-MM-DD'),
+      edit_data: {
+        date: '',
+        direction: '',
+        title: '',
+        series: '',
+        amount: '',
+        method: '',
+        step: 'V',
+        tap: '',
+        comment: '',
+      },
+      steps: ['V', 'V1', 'V2', 'V3', 'V4', 'R', 'R1', 'R2', 'R3'],
+    };
+  },
+  created() {
+    this.load_data();
+  },
+  computed: {
+    valid() {
+      return this.edit_data.date !== '' && this.edit_data.title !== '';
+    },
+  },
+  methods: {
+    async edit(pk) {
+      this.td = moment().format('YYYY-MM-DD');
+      if (pk === -1) {
+        this.edit_data = {
+          date: moment().format('YYYY-MM-DD'),
           direction: '',
           title: '',
           series: '',
@@ -163,72 +189,46 @@
           step: 'V',
           tap: '',
           comment: '',
-        },
-        steps: ['V', 'V1', 'V2', 'V3', 'V4', 'R', 'R1', 'R2', 'R3'],
+        };
+      } else {
+        const d = await patientsPoint.loadVaccineDetail({ pk });
+        this.edit_data = {
+          ...this.edit_data,
+          ...d,
+        };
       }
+      this.edit_pk = pk;
     },
-    created() {
-      this.load_data()
+    hide_modal() {
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
+      }
+      this.$root.$emit('hide_vaccine');
     },
-    computed: {
-      valid() {
-        return this.edit_data.date !== '' && this.edit_data.title !== '';
-      },
+    hide_edit() {
+      if (this.$refs.modalEdit) {
+        this.$refs.modalEdit.$el.style.display = 'none';
+      }
+      this.edit_pk = -2;
     },
-    methods: {
-      async edit(pk) {
-        this.td = moment().format('YYYY-MM-DD')
-        if (pk === -1) {
-          this.edit_data = {
-            date: moment().format('YYYY-MM-DD'),
-            direction: '',
-            title: '',
-            series: '',
-            amount: '',
-            method: '',
-            step: 'V',
-            tap: '',
-            comment: '',
-          }
-        } else {
-          const d = await patients_point.loadVaccineDetail({pk})
-          this.edit_data = {
-            ...this.edit_data,
-            ...d,
-          };
-        }
-        this.edit_pk = pk
-      },
-      hide_modal() {
-        if (this.$refs.modal) {
-          this.$refs.modal.$el.style.display = 'none'
-        }
-        this.$root.$emit('hide_vaccine')
-      },
-      hide_edit() {
-        if (this.$refs.modalEdit) {
-          this.$refs.modalEdit.$el.style.display = 'none'
-        }
-        this.edit_pk = -2
-      },
-      load_data() {
-        this.$store.dispatch(action_types.INC_LOADING)
-        patients_point.loadVaccine(this, 'card_pk').then(({rows}) => {
-          this.rows = rows
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
-      },
-      async save() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await patients_point.saveVaccine({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
-        await this.$store.dispatch(action_types.DEC_LOADING)
-        okmessage('Сохранено');
-        this.hide_edit()
-        this.load_data()
-      },
-    }
-  }
+    load_data() {
+      this.$store.dispatch(actions.INC_LOADING);
+      patientsPoint.loadVaccine(this, 'card_pk').then(({ rows }) => {
+        this.rows = rows;
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+    async save() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await patientsPoint.saveVaccine({ card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      window.okmessage('Сохранено');
+      this.hide_edit();
+      this.load_data();
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

@@ -16,7 +16,7 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="(val, index) in tb_data">
+      <tr v-for="(val, index) in tb_data" :key="index">
         <td class="cl-td">
           <div class="input-group">
             <div class="input-group-btn">
@@ -33,7 +33,7 @@
           </div>
         <td class="cl-td">
           <select class="form-control nbr" v-model="val.type">
-            <option :value="t" v-for="t in types">{{t}}</option>
+            <option :value="t" v-for="t in types" :key="t">{{t}}</option>
           </select>
         </td>
         <td class="text-center cl-td">
@@ -57,78 +57,78 @@
 </template>
 
 <script>
-  const types = [
-    'Показатели человека',
-    'Сильнодействующие',
-    'Наркотические',
-  ]
+const types = [
+  'Показатели человека',
+  'Сильнодействующие',
+  'Наркотические',
+];
 
-  const makeDefaultRow = (type = null) => ({title: '', type: type || types[0], default: false});
+const makeDefaultRow = (type = null) => ({ title: '', type: type || types[0], default: false });
 
-  export default {
-    name: "ConfigureAnesthesiaField",
-    props: {
-      value: {
-        required: false,
-      },
-      disabled: {
-        required: false,
-        default: false,
-        type: Boolean,
-      },
+export default {
+  name: 'ConfigureAnesthesiaField',
+  props: {
+    value: {
+      required: false,
     },
-    data() {
-      return {
-        tb_data: this.value || [makeDefaultRow()],
-        types,
+    disabled: {
+      required: false,
+      default: false,
+      type: Boolean,
+    },
+  },
+  data() {
+    return {
+      tb_data: this.value || [makeDefaultRow()],
+      types,
+    };
+  },
+  methods: {
+    add_new_row() {
+      const tl = this.tb_data.length;
+      this.tb_data.push(makeDefaultRow(tl > 0 ? this.tb_data[tl - 1].type : null));
+    },
+    delete_row(index) {
+      this.tb_data.splice(index, 1);
+    },
+    is_first_in_template(i) {
+      return i === 0;
+    },
+    is_last_in_template(i) {
+      return i === this.tb_data.length - 1;
+    },
+    down_row(i) {
+      if (this.is_last_in_template(i)) {
+        return;
       }
+      const values = [...this.tb_data];
+      [values[i + 1], values[i]] = [values[i], values[i + 1]];
+      this.tb_data = values;
     },
-    methods: {
-      add_new_row() {
-        const tl = this.tb_data.length;
-        this.tb_data.push(makeDefaultRow(tl > 0 ? this.tb_data[tl - 1].type : null));
-      },
-      delete_row(index) {
-        this.tb_data.splice(index, 1);
-      },
-      is_first_in_template(i) {
-        return i === 0
-      },
-      is_last_in_template(i) {
-        return i === this.tb_data.length - 1
-      },
-      down_row(i) {
-        if (this.is_last_in_template(i)) {
-          return
-        }
-        let values = [...this.tb_data];
-        [values[i + 1], values[i]] = [values[i], values[i + 1]]
-        this.tb_data = values
-      },
-      up_row(i) {
-        if (this.is_first_in_template(i)) {
-          return
-        }
-        let values = [...this.tb_data];
-        [values[i - 1], values[i]] = [values[i], values[i - 1]]
-        this.tb_data = values
-      },
-      changeValue(newVal) {
-        this.$emit('modified', newVal)
+    up_row(i) {
+      if (this.is_first_in_template(i)) {
+        return;
       }
+      const values = [...this.tb_data];
+      [values[i - 1], values[i]] = [values[i], values[i - 1]];
+      this.tb_data = values;
     },
-    watch: {
-      tb_data: {
-        handler() {
-          this.changeValue(this.tb_data)
-        },
-        immediate: true,
+    changeValue(newVal) {
+      this.$emit('modified', newVal);
+    },
+  },
+  watch: {
+    tb_data: {
+      handler() {
+        this.changeValue(this.tb_data);
       },
+      immediate: true,
     },
-    model: {
-      event: `modified`
-    },
-  }
+  },
+  model: {
+    event: 'modified',
+  },
+};
 </script>
 
 <style scoped lang="scss">

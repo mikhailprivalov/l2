@@ -3,7 +3,7 @@
     <a href="#" class="link" :title="selected.about">{{selected.title}}</a>
     <div class="hidden popover_content">
       <table class="table table-responsive">
-        <tr v-for="row_option in options">
+        <tr v-for="row_option in options" :key="row_option.key">
           <td><a href="#" :instance_id="uuid" func="update_val"
                  :val="row_option.key" onclick="vue_cb(this); return false">{{row_option.title}}</a></td>
           <td v-html="row_option.about"></td>
@@ -14,52 +14,53 @@
 </template>
 
 <script>
-  export default {
-    name: 'link-selector',
-    props: {
-      options: {
-        type: Array,
-        required: true
-      },
-      value: {}
+export default {
+  name: 'link-selector',
+  props: {
+    options: {
+      type: Array,
+      required: true,
     },
-    data() {
-      return {
-        uuid: ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16))
-      }
+    value: {},
+  },
+  data() {
+    return {
+      // eslint-disable-next-line max-len,no-mixed-operators,no-bitwise
+      uuid: ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)),
+    };
+  },
+  methods: {
+    update_val(v) {
+      this.$emit('input', v);
+      window.$('.link', this.$el).click();
     },
-    methods: {
-      update_val(v) {
-        this.$emit('input', v)
-        $('.link', this.$el).click()
-      }
-    },
-    computed: {
-      selected() {
-        for (let b of this.options) {
-          if (b.key === this.value) {
-            return b
-          }
+  },
+  computed: {
+    selected() {
+      for (const b of this.options) {
+        if (b.key === this.value) {
+          return b;
         }
-        return {key: '', title: 'не выбрано', about: ''}
       }
+      return { key: '', title: 'не выбрано', about: '' };
     },
-    created() {
-      set_instance(this)
-    },
-    mounted() {
-      let $link = $('.link', this.$el)
-      let $popover_content = $('.popover_content', this.$el)
-      $link.popover({
-        animation: false,
-        html: true,
-        title: 'Выберите вариант',
-        placement: 'auto',
-      }).on('show.bs.popover', () => {
-        $link.attr('data-content', $popover_content.html())
-      }).click((e) => e.preventDefault())
-    }
-  }
+  },
+  created() {
+    window.set_instance(this);
+  },
+  mounted() {
+    const $link = window.$('.link', this.$el);
+    const $popover_content = window.$('.popover_content', this.$el);
+    $link.popover({
+      animation: false,
+      html: true,
+      title: 'Выберите вариант',
+      placement: 'auto',
+    }).on('show.bs.popover', () => {
+      $link.attr('data-content', $popover_content.html());
+    }).click((e) => e.preventDefault());
+  },
+};
 </script>
 
 <style scoped lang="scss">

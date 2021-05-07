@@ -23,10 +23,10 @@
 
 <script>
 import api from '@/api';
-import * as action_types from "@/store/action-types";
+import * as actions from '@/store/action-types';
 
 export default {
-  name: "PharmacotherapyTime",
+  name: 'PharmacotherapyTime',
   props: {
     data: {},
   },
@@ -34,25 +34,25 @@ export default {
     async setExecute(status) {
       if (!status) {
         try {
-          await this.$dialog.confirm('Вы действительно хотите произвести сброс выполнения?')
+          await this.$dialog.confirm('Вы действительно хотите произвести сброс выполнения?');
         } catch (_) {
-          return
+          return;
         }
       }
-      await this.$store.dispatch(action_types.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
       this.data.ok = status;
       this.data.executor = 'загрузка...';
-      const {ok, message} = await api('procedural-list/procedure-time-execute', {pk: this.data.pk, status});
+      const { ok, message } = await api('procedural-list/procedure-time-execute', { pk: this.data.pk, status });
       if (ok) {
-        okmessage(message);
-        this.$root.$emit('pharmacotherapy-aggregation:reload')
+        window.okmessage(message);
+        this.$root.$emit('pharmacotherapy-aggregation:reload');
       } else {
-        errmessage(message);
+        window.errmessage(message);
       }
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

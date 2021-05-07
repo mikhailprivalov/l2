@@ -39,57 +39,56 @@
 </template>
 
 <script>
-  import DateSelector from '../fields/DateSelector.vue'
-  import SelectPicker from '../fields/SelectPicker'
+import DateSelector from '../fields/DateSelector.vue';
+import SelectPicker from '../fields/SelectPicker.vue';
 
-  export default {
-    name: 'statistics-researches-print-modal',
-    components: {
-      DateSelector,
-      SelectPicker
-    },
-    props: {
-      researches: {
-        type: Array,
-        required: false,
-        default() {
-          return [];
-        },
+export default {
+  name: 'statistics-researches-print-modal',
+  components: {
+    DateSelector,
+    SelectPicker,
+  },
+  props: {
+    researches: {
+      type: Array,
+      required: false,
+      default() {
+        return [];
       },
     },
-    data() {
-      return {
-        date_type: 'd',
-        values: {
-          date: '',
-          month: '',
-          year: ''
-        },
-        research: '-1',
+  },
+  data() {
+    return {
+      date_type: 'd',
+      values: {
+        date: '',
+        month: '',
+        year: '',
+      },
+      research: '-1',
+    };
+  },
+  computed: {
+    researches_list() {
+      const u = [];
+      for (const u_row of this.researches) {
+        u.push({ value: u_row.pk, label: u_row.title });
       }
+      return u;
     },
-    computed: {
-      researches_list() {
-        let u = []
-        for (let u_row of this.researches) {
-          u.push({value: u_row.pk, label: u_row.title})
-        }
-        return u
-      },
-    },
-    methods: {
-      change_research(v) {
-        if (!v) {
-          v = ''
-        }
-        if (Array.isArray(v)) {
-          v = v.join(',')
-        }
-        this.research = v
-      },
-      make_report() {
-        window.open(`/statistic/xls?type=statistics-research&research=${this.research}&date_type=${this.date_type}&date_values=${encodeURIComponent(JSON.stringify(this.values))}&fin=${this.fin}`, '_blank')
+  },
+  methods: {
+    change_research(val) {
+      let v = val || '';
+      if (Array.isArray(v)) {
+        v = v.join(',');
       }
+      this.research = v;
     },
-  }
+    make_report() {
+      // eslint-disable-next-line max-len
+      window.open(`/statistic/xls?type=statistics-research&research=${this.research}&date_type=${this.date_type}&date_values=${encodeURIComponent(JSON.stringify(this.values))}&fin=${this.fin}`, '_blank');
+    },
+  },
+};
 </script>

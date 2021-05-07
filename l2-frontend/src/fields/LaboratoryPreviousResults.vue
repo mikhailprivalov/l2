@@ -27,7 +27,7 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="(val, index) in tb_data">
+      <tr v-for="(val, index) in tb_data" :key="`${val.researchTitle}_${val.fractionTitle}_${index}`">
         <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Анализ-наименование"
                                  v-model="val.researchTitle"></td>
         <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Тест-наименование"
@@ -57,13 +57,15 @@
 </template>
 
 <script>
-import api from "@/api";
-import {debounce} from "lodash";
+import api from '@/api';
+import { debounce } from 'lodash';
 
-const makeDefaultRow = () => ({researchTitle: "", fractionTitle: "", value: "", units: "", date: "", docConfirm: ""});
+const makeDefaultRow = () => ({
+  researchTitle: '', fractionTitle: '', value: '', units: '', date: '', docConfirm: '',
+});
 
 export default {
-  name: "LaboratoryPreviousResults",
+  name: 'LaboratoryPreviousResults',
   props: {
     value: {
       required: false,
@@ -72,18 +74,18 @@ export default {
       type: Boolean,
       required: false,
       default: false,
-    }
+    },
   },
   data() {
     return {
       tb_data: ((this.value && this.value !== 'undefined') ? JSON.parse(this.value) : null) || [],
       result: [],
-    }
+    };
   },
   mounted() {
     this.$root.$on('protocol:laboratoryResult', (direction) => {
-      this.insertLaboratoryResult(direction)
-    })
+      this.insertLaboratoryResult(direction);
+    });
   },
   methods: {
     add_new_row() {
@@ -93,32 +95,34 @@ export default {
       this.tb_data.splice(index, 1);
     },
     delete_rows() {
-      this.tb_data = []
+      this.tb_data = [];
     },
     changeValue() {
-      this.$emit('modified', JSON.stringify(this.tb_data))
+      this.$emit('modified', JSON.stringify(this.tb_data));
     },
-    changeValueDebounce: debounce(function (){
-      this.changeValue()
+    changeValueDebounce: debounce(function () {
+      this.changeValue();
     }, 500),
-    async insertLaboratoryResult(direction, ) {
+    async insertLaboratoryResult(direction) {
       const result_data = await api('directions/result-patient-by-direction',
-        {'isLab': true, 'isDocReferral': false, 'isParaclinic': false, 'dir': direction});
+        {
+          isLab: true, isDocReferral: false, isParaclinic: false, dir: direction,
+        });
       this.result = result_data.results[0] || {};
 
-      for (let r of Object.values(this.result.researches)) {
-        for (let f of r.fractions) {
+      for (const r of Object.values(this.result.researches)) {
+        for (const f of r.fractions) {
           this.tb_data.push({
-            "researchTitle": r.title,
-            "fractionTitle": f.title,
-            "value": f.value,
-            "units": f.units,
-            "date": r.dateConfirm,
-            "docConfirm": r.fio
-          })
+            researchTitle: r.title,
+            fractionTitle: f.title,
+            value: f.value,
+            units: f.units,
+            date: r.dateConfirm,
+            docConfirm: r.fio,
+          });
         }
       }
-    }
+    },
   },
   watch: {
     tb_data: {
@@ -130,7 +134,7 @@ export default {
     },
   },
   model: {
-    event: `modified`
+    event: 'modified',
   },
-}
+};
 </script>

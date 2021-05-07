@@ -61,7 +61,7 @@
           </tr>
           </thead>
           <tbody>
-            <tr v-for="r in rows_mapped">
+            <tr v-for="r in rows_mapped" :key="r.pk">
               <td>{{r.date}}</td>
               <td>{{r.service}}</td>
               <td style="white-space: pre-wrap">{{r.comment}}</td>
@@ -76,122 +76,121 @@
 </template>
 
 <script>
-  import * as action_types from "@/store/action-types";
-  import api from "@/api";
-  import moment from "moment";
-  import ResearchDisplay from "@/ui-cards/ResearchDisplay";
-  import patients_point from "@/api/patients-point";
+import * as actions from '@/store/action-types';
+import api from '@/api';
+import moment from 'moment';
+import ResearchDisplay from '@/ui-cards/ResearchDisplay.vue';
+import patientsPoint from '@/api/patients-point';
 
-  const STATUSES = {0: "ожидает", 1: "выполнено", 2: "отменено"};
+const STATUSES = { 0: 'ожидает', 1: 'выполнено', 2: 'отменено' };
 
-  export default {
-    name: "ListWaitCreator",
-    components: {
-      ResearchDisplay,
+export default {
+  name: 'ListWaitCreator',
+  components: {
+    ResearchDisplay,
+  },
+  props: {
+    card_pk: {
+      required: true,
     },
-    props: {
-      card_pk: {
-        required: true,
+    researches: {
+      type: Array,
+    },
+    visible: {
+      type: Boolean,
+    },
+  },
+  data() {
+    return {
+      card: {
+        phone: '',
       },
-      researches: {
-        type: Array,
+      loaded: true,
+      date: moment().format('YYYY-MM-DD'),
+      td: moment().format('YYYY-MM-DD'),
+      comment: '',
+      rows: [],
+      STATUSES,
+    };
+  },
+  watch: {
+    rows_count: {
+      handler() {
+        this.$root.$emit('list-wait-creator:rows-count', this.rows_count);
       },
-      visible: {
-        type: Boolean,
+      immediate: true,
+    },
+    card_pk: {
+      handler() {
+        this.rows = [];
+        this.load_data();
+      },
+      immediate: true,
+    },
+    visible: {
+      handler() {
+        this.load_data();
       },
     },
-    data() {
-      return {
-        card: {
-          phone: "",
+  },
+  mounted() {
+    this.$root.$on('update_card_data', () => this.load_data());
+  },
+  methods: {
+    async save() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const result = await api(
+        'list-wait/create', this,
+        ['card_pk', 'researches', 'date', 'comment'],
+        {
+          phone: this.card.phone,
         },
-        loaded: true,
-        date: moment().format('YYYY-MM-DD'),
-        td: moment().format('YYYY-MM-DD'),
-        comment: '',
-        rows: [],
-        STATUSES,
-      };
+      );
+      await this.load_data();
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (result.ok) {
+        window.okmessage('Записи в лист ожидания созданы');
+        this.date = moment().format('YYYY-MM-DD');
+        this.td = this.date;
+        this.comment = '';
+        this.$root.$emit('researches-picker:clear_all');
+      }
     },
-    watch: {
-      rows_count: {
-        handler() {
-          this.$root.$emit('list-wait-creator:rows-count', this.rows_count);
-        },
-        immediate: true,
-      },
-      card_pk: {
-        handler() {
-          this.rows = []
-          this.load_data();
-        },
-        immediate: true,
-      },
-      visible: {
-        handler() {
-          this.load_data();
-        },
-      },
+    async load_data() {
+      if (this.card_pk === -1) {
+        return;
+      }
+      if (!this.visible) {
+        this.rows = await api('list-wait/actual-rows', this, 'card_pk');
+        return;
+      }
+      this.loaded = false;
+      await this.$store.dispatch(actions.INC_LOADING);
+      this.card = await patientsPoint.getCard(this, 'card_pk');
+      this.loaded = true;
+      this.rows = await api('list-wait/actual-rows', this, 'card_pk');
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-    mounted() {
-      this.$root.$on('update_card_data', () => this.load_data());
+  },
+  computed: {
+    disp_researches() {
+      return this.researches.map((id) => this.$store.getters.researches_obj[id]);
     },
-    methods: {
-      async save() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const result = await api(
-          'list-wait/create', this,
-          ['card_pk', 'researches', 'date', 'comment'],
-          {
-            phone: this.card.phone,
-          }
-        )
-        await this.load_data();
-        await this.$store.dispatch(action_types.DEC_LOADING)
-        if (result.ok) {
-          okmessage('Записи в лист ожидания созданы');
-          this.date = this.td = moment().format('YYYY-MM-DD');
-          this.comment = '';
-          this.$root.$emit('researches-picker:clear_all');
-        }
-      },
-      async load_data() {
-        if (this.card_pk === -1) {
-          return;
-        }
-        if (!this.visible) {
-          this.rows = await api('list-wait/actual-rows', this, 'card_pk')
-          return;
-        }
-        this.loaded = false
-        await this.$store.dispatch(action_types.INC_LOADING)
-        this.card = await patients_point.getCard(this, 'card_pk')
-        this.loaded = true
-        this.rows = await api('list-wait/actual-rows', this, 'card_pk')
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
+    rows_count() {
+      return this.rows.length;
     },
-    computed: {
-      disp_researches() {
-        return this.researches.map(id => {
-          return this.$store.getters.researches_obj[id];
-        })
-      },
-      rows_count() {
-        return this.rows.length;
-      },
-      rows_mapped() {
-        return this.rows.map(r => ({
-          pk: r.pk,
-          date: moment(r.exec_at).format('DD.MM.YYYY'),
-          service: r.research__title,
-          comment: r.comment,
-          status: r.work_status,
-          phone: r.phone,
-        }));
-      },
+    rows_mapped() {
+      return this.rows.map((r) => ({
+        pk: r.pk,
+        date: moment(r.exec_at).format('DD.MM.YYYY'),
+        service: r.research__title,
+        comment: r.comment,
+        status: r.work_status,
+        phone: r.phone,
+      }));
     },
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

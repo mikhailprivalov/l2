@@ -1,27 +1,30 @@
 export function enter_field(skip) {
   if (!skip) {
     return () => {
-    }
+      // pass
+    };
   }
-  return $e => {
-    this.prev_scroll = $('.results-editor').scrollTop();
-    const {offsetHeight: oh, scrollHeight: sh} = $('.results-editor')[0];
+  return ($e) => {
+    this.prev_scroll = window.$('.results-editor').scrollTop();
+    const { offsetHeight: oh, scrollHeight: sh } = window.$('.results-editor')[0];
     this.prev_scrollHeightTop = sh - oh;
-    const $elem = $($e.target);
-    $elem.addClass('open-field')
-  }
+    const $elem = window.$($e.target);
+    $elem.addClass('open-field');
+  };
 }
 
 export function leave_field(skip) {
   if (!skip) {
     return () => {
+      // pass
+    };
+  }
+  return ($e) => {
+    const { offsetHeight: oh, scrollHeight: sh } = window.$('.results-editor > div')[0];
+    if (sh > oh && this.prev_scrollHeightTop < window.$('.results-editor').scrollTop()) {
+      window.$('.results-editor').scrollTo(this.prev_scroll).scrollLeft(0);
     }
-  }
-  return $e => {
-    const {offsetHeight: oh, scrollHeight: sh} = $('.results-editor > div')[0];
-    if (sh > oh && this.prev_scrollHeightTop < $('.results-editor').scrollTop())
-      $('.results-editor').scrollTo(this.prev_scroll).scrollLeft(0);
-    let $elem = $($e.target);
-    $elem.removeClass('open-field')
-  }
+    const $elem = window.$($e.target);
+    $elem.removeClass('open-field');
+  };
 }

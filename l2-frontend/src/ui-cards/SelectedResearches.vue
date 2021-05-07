@@ -17,7 +17,9 @@
         />
       </div>
       <div class="top-inner">
-        <a href="#" @click.prevent="select_fin(row.pk)" class="top-inner-select" :class="{ active: row.pk === fin}"
+        <a href="#" @click.prevent="select_fin(row.pk)" class="top-inner-select"
+           :class="{ active: row.pk === fin}"
+           :key="row.pk"
            v-for="row in base.fin_sources"><span>{{ row.title }}</span></a>
       </div>
     </div>
@@ -33,7 +35,7 @@
           <col width="38" v-if="!readonly">
         </colgroup>
         <tbody>
-        <tr v-for="(row, key) in researches_departments">
+        <tr v-for="(row, key) in researches_departments" :key="key">
           <td>{{ row.title }}</td>
           <td class="pb0">
             <research-display v-for="(res, idx) in row.researches" :simple="simple"
@@ -52,7 +54,7 @@
           <td v-if="!readonly" class="cl-td clean-btn-td">
             <button class="btn last btn-blue-nb nbr" type="button"
                     v-tippy="{ placement : 'bottom', arrow: true }"
-                    :title="`Очистить категорию ${row.title}`" @click.prevent="clear_department(parseInt(key))">
+                    :title="`Очистить категорию ${row.title}`" @click.prevent="clear_department(parseInt(key, 10))">
               <i class="fa fa-times"></i>
             </button>
           </td>
@@ -96,7 +98,7 @@
             <span v-if="directions_count > 1" class="small">
               выбранное&nbsp;будет&nbsp;назначено&nbsp;{{
                 directions_count
-              }}&nbsp;раз{{ directions_count > 1 && directions_count < 5 ? 'а' : '' }}
+              }}&nbsp;раз{{ (directions_count === 0 || directions_count > 5) ? '' : 'а' }}
             </span>
           </td>
         </tr>
@@ -132,8 +134,8 @@
         <tr v-if="directions_params_enabled && !r(global_research_direction_param)">
           <td colspan="2">
             <div class="status-list empty-block">
-              <div class="status status-none">Не заполнены:&nbsp</div>
-              <div class="status status-none" v-for="rl in r_list(global_research_direction_param)">{{ rl }};</div>
+              <div class="status status-none">Не заполнены:&nbsp;</div>
+              <div class="status status-none" :key="rl" v-for="rl in r_list(global_research_direction_param)">{{ rl }};</div>
             </div>
           </td>
         </tr>
@@ -205,6 +207,7 @@
           </thead>
           <tbody>
           <template v-for="(row, i) in need_update_object">
+            <!-- eslint-disable-next-line vue/require-v-for-key -->
             <tr>
               <td class="cl-td" :colspan="(need_update_object.length > 1 && i === 0) ? 1 : 2">
                 <div style="width:100%; overflow: hidden; text-overflow: ellipsis;" :title="row.title">
@@ -219,8 +222,8 @@
                     {{ row.title }}
                   </div>
                   <div class="status-list empty-block" v-if="row.direction_params > -1 && !r(form_params[row.pk])">
-                    <div class="status status-none">Не заполнены:&nbsp</div>
-                    <div class="status status-none" v-for="rl in r_list(form_params[row.pk])">{{ rl }};</div>
+                    <div class="status status-none">Не заполнены:&nbsp;</div>
+                    <div class="status status-none" :key="rl" v-for="rl in r_list(form_params[row.pk])">{{ rl }};</div>
                   </div>
                 </div>
               </td>
@@ -252,7 +255,7 @@
               </td>
             </tr>
             <template v-if="form_params[row.pk]">
-              <tr>
+              <tr :key="row.pk">
                 <td colspan="5">
                   <SelectedResearchesParams
                     :research="form_params[row.pk]"
@@ -279,22 +282,21 @@
 </template>
 
 <script>
-import directions_point from '../api/directions-point'
-import * as action_types from '../store/action-types'
-import ResearchDisplay from './ResearchDisplay'
-import Modal from './Modal'
-import vSelect from 'vue-select'
-import _ from 'lodash'
+import vSelect from 'vue-select';
+import _ from 'lodash';
+import { vField, vGroup } from '@/components/visibility-triggers';
+import api from '@/api';
+import Treeselect from '@riophae/vue-treeselect';
+import TypeAhead from 'vue2-typeahead';
+import directionsPoint from '../api/directions-point';
+import * as actions from '../store/action-types';
+import ResearchDisplay from './ResearchDisplay.vue';
+import Modal from './Modal.vue';
 import 'vue-select/dist/vue-select.css';
-import TypeAhead from 'vue2-typeahead'
-import MKBField from '../fields/MKBField'
-import SelectFieldTitled from '../fields/SelectFieldTitled'
-import SelectedResearchesParams from './SelectedResearchesParams'
-import {vField, vGroup} from "@/components/visibility-triggers";
-import api from '@/api'
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-
+import MKBField from '../fields/MKBField.vue';
+import SelectFieldTitled from '../fields/SelectFieldTitled.vue';
+import SelectedResearchesParams from './SelectedResearchesParams.vue';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 export default {
   name: 'selected-researches',
@@ -315,52 +317,52 @@ export default {
     },
     researches: {
       type: Array,
-      required: true
+      required: true,
     },
     base: {
-      type: Object
+      type: Object,
     },
     card_pk: {
-      type: Number
+      type: Number,
     },
     selected_card: {
-      type: Object
+      type: Object,
     },
     visible: {
       type: Boolean,
-      default: true
+      default: true,
     },
     operator: {
       type: Boolean,
-      default: false
+      default: false,
     },
     readonly: {
       type: Boolean,
-      default: false
+      default: false,
     },
     hide_diagnosis: {
       type: Boolean,
-      default: false
+      default: false,
     },
     hide_params: {
       type: Boolean,
-      default: false
+      default: false,
     },
     create_and_open: {
       type: Boolean,
-      default: false
+      default: false,
     },
     ofname: {
       type: Number,
-      default: -1
+      default: -1,
     },
     history_num: {
       type: String,
-      default: ''
+      default: '',
     },
     main_diagnosis: {
       type: String,
-      default: ''
+      default: '',
     },
     kk: {
       type: String,
@@ -377,7 +379,7 @@ export default {
     },
     clear_after_gen: {
       type: Boolean,
-      default: false
+      default: false,
     },
   },
   data() {
@@ -388,10 +390,10 @@ export default {
       form_params: {},
       localizations: {},
       counts: {},
-      global_direction_params: [{id: -1, label: 'Не выбрано'}],
+      global_direction_params: [{ id: -1, label: 'Не выбрано' }],
       global_current_direction_param: -1,
       global_research_direction_param: {},
-      hospital_department_overrides: [{id: -1, label: 'По умолчанию'}],
+      hospital_department_overrides: [{ id: -1, label: 'По умолчанию' }],
       hospital_department_override: -1,
       service_locations: {},
       need_update_comment: [],
@@ -411,153 +413,156 @@ export default {
       direction_purpose: 'NONE',
       external_organization: 'NONE',
       directions_count: '1',
-      researches_direction_params: {}
-    }
+      researches_direction_params: {},
+    };
   },
   watch: {
     directions_count() {
       if (this.directions_count.trim() === '') {
-        return
+        return;
       }
 
-      let nd = Number(this.directions_count) || 1
+      let nd = Number(this.directions_count) || 1;
 
       if (nd < 1) {
-        nd = 1
+        nd = 1;
       }
       if (nd > 10) {
-        nd = 10
+        nd = 10;
       }
 
-      this.directions_count = String(nd)
+      this.directions_count = String(nd);
     },
     count() {
-      this.count = Math.min(Math.max(parseInt(this.count) || 1, 1), 1000)
+      this.count = Math.min(Math.max(parseInt(this.count, 10) || 1, 1), 1000);
     },
     discount() {
-      this.discount = Math.min(Math.max(parseInt(this.discount) || 0, 0), 100)
+      this.discount = Math.min(Math.max(parseInt(this.discount, 10) || 0, 0), 100);
     },
     card_pk() {
-      this.clear_fin()
+      this.clear_fin();
     },
     base() {
-      this.fin = -1
+      this.fin = -1;
     },
     async researches() {
-      let comments = {}
-      let form_params = {}
-      let service_locations = {}
-      let localizations = {}
-      let counts = {}
-      this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1)
-      this.need_update_localization = this.need_update_localization.filter(e => this.researches.indexOf(e) !== -1)
-      this.need_update_service_location = this.need_update_service_location.filter(e => this.researches.indexOf(e) !== -1)
-      this.need_update_direction_params = this.need_update_direction_params.filter(e => this.researches.indexOf(e) !== -1)
-      let needShowWindow = false
-      for (let pk of this.researches) {
+      const comments = {};
+      const form_params = {};
+      const service_locations = {};
+      const localizations = {};
+      const counts = {};
+      this.need_update_comment = this.need_update_comment.filter((e) => this.researches.indexOf(e) !== -1);
+      this.need_update_localization = this.need_update_localization.filter((e) => this.researches.indexOf(e) !== -1);
+      this.need_update_service_location = this.need_update_service_location.filter((e) => this.researches.indexOf(e) !== -1);
+      this.need_update_direction_params = this.need_update_direction_params.filter((e) => this.researches.indexOf(e) !== -1);
+      let needShowWindow = false;
+      for (const pk of this.researches) {
         if (!this.comments[pk] && !this.localizations[pk] && !this.service_locations[pk] && !this.form_params[pk]) {
-          comments[pk] = ''
+          comments[pk] = '';
           if (pk in this.$store.getters.researches_obj) {
-            let res = this.$store.getters.researches_obj[pk]
+            const res = this.$store.getters.researches_obj[pk];
             if (res.comment_variants.length > 0) {
-              comments[pk] = JSON.parse(JSON.stringify(res.comment_variants[0]))
+              comments[pk] = JSON.parse(JSON.stringify(res.comment_variants[0]));
 
               if (res.comment_variants.length > 1 && !this.need_update_comment.includes(pk)) {
-                this.need_update_comment.push(pk)
-                needShowWindow = true
+                this.need_update_comment.push(pk);
+                needShowWindow = true;
               }
             }
 
             if (res.localizations && res.localizations.length > 0) {
-              localizations[pk] = res.localizations[0]
+              // eslint-disable-next-line prefer-destructuring
+              localizations[pk] = res.localizations[0];
 
               if (res.localizations.length > 1 && !this.need_update_localization.includes(pk)) {
-                this.need_update_localization.push(pk)
-                needShowWindow = true
+                this.need_update_localization.push(pk);
+                needShowWindow = true;
               }
             }
 
             if (res.service_locations && res.service_locations.length > 0) {
-              service_locations[pk] = res.service_locations[0]
+              // eslint-disable-next-line prefer-destructuring
+              service_locations[pk] = res.service_locations[0];
 
               if (res.service_locations.length > 1 && !this.need_update_service_location.includes(pk)) {
-                this.need_update_service_location.push(pk)
-                needShowWindow = true
+                this.need_update_service_location.push(pk);
+                needShowWindow = true;
               }
             }
 
             if (this.directions_params_enabled) {
               if (res.direction_params > -1 && !this.need_update_direction_params.includes(pk) && !this.form_params[pk]) {
-                this.need_update_direction_params.push(pk)
+                this.need_update_direction_params.push(pk);
                 this.form_params[pk] = {};
-                needShowWindow = true
+                needShowWindow = true;
                 form_params[pk] = _.cloneDeep(
-                  await this.load_direction_params_data(res.direction_params)
+                  await this.load_direction_params_data(res.direction_params),
                 );
                 form_params[pk].show = true;
               } else if (this.form_params[pk]) {
-                form_params[pk] = this.form_params[pk]
+                form_params[pk] = this.form_params[pk];
               }
             }
           }
 
-          counts[pk] = 1
+          counts[pk] = 1;
         } else {
-          comments[pk] = this.comments[pk]
-          localizations[pk] = this.localizations[pk]
-          service_locations[pk] = this.service_locations[pk]
-          counts[pk] = this.counts[pk]
-          form_params[pk] = this.form_params[pk]
+          comments[pk] = this.comments[pk];
+          localizations[pk] = this.localizations[pk];
+          service_locations[pk] = this.service_locations[pk];
+          counts[pk] = this.counts[pk];
+          form_params[pk] = this.form_params[pk];
         }
       }
-      this.comments = comments
-      this.form_params = form_params
-      this.localizations = localizations
-      this.service_locations = service_locations
-      this.counts = counts
+      this.comments = comments;
+      this.form_params = form_params;
+      this.localizations = localizations;
+      this.service_locations = service_locations;
+      this.counts = counts;
       if (needShowWindow) {
-        this.show_window()
-        this.$forceUpdate()
+        this.show_window();
+        this.$forceUpdate();
       }
     },
     comments: {
       deep: true,
       handler() {
-        for (let k of Object.keys(this.comments)) {
+        for (const k of Object.keys(this.comments)) {
           if (this.comments[k] && this.comments[k].length > 40) {
-            this.comments[k] = this.comments[k].substr(0, 40)
+            this.comments[k] = this.comments[k].substr(0, 40);
           }
         }
-      }
+      },
     },
     diagnos() {
       if (/^[a-zA-Zа-яА-Я]\d.*/g.test(this.diagnos)) {
-        this.diagnos = this.diagnos.toUpperCase()
+        this.diagnos = this.diagnos.toUpperCase();
         const replace = ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ',
           'ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э',
-          'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю']
+          'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю'];
 
         const search = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '\\[', '\\]',
           'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'',
-          'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.']
+          'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.'];
 
         for (let i = 0; i < replace.length; i++) {
-          let reg = new RegExp(replace[i], 'mig')
-          this.diagnos = this.diagnos.replace(reg, function (a) {
-            return a === a.toLowerCase() ? search[i] : search[i].toUpperCase()
-          })
+          const reg = new RegExp(replace[i], 'mig');
+          this.diagnos = this.diagnos.replace(
+            reg,
+            (a) => (a === a.toLowerCase() ? search[i] : search[i].toUpperCase()),
+          );
         }
       }
-      this.$root.$emit('update_diagnos', this.diagnos)
+      this.$root.$emit('update_diagnos', this.diagnos);
     },
     fin() {
-      this.$root.$emit('update_fin', this.fin)
+      this.$root.$emit('update_fin', this.fin);
     },
     direction_purpose_enabled: {
       immediate: true,
       handler() {
         if (this.direction_purpose_enabled) {
-          this.load_direction_purposes()
+          this.load_direction_purposes();
         }
       },
     },
@@ -565,7 +570,7 @@ export default {
       immediate: true,
       handler() {
         if (this.external_organizations_enabled) {
-          this.load_external_organizations()
+          this.load_external_organizations();
         }
       },
     },
@@ -577,7 +582,7 @@ export default {
         return;
       }
       const paramsPk = Number(this.directions_params_org_form_default_pk);
-      const params = this.global_direction_params.find(({id}) => Number(id) === paramsPk);
+      const params = this.global_direction_params.find(({ id }) => Number(id) === paramsPk);
       if (!params) {
         return;
       }
@@ -589,14 +594,14 @@ export default {
     },
   },
   mounted() {
-    this.$root.$on('researches-picker:clear_all' + this.kk, this.clear_all)
-    this.$root.$on('researches-picker:update-comment' + this.kk, this.update_comment)
-    this.$root.$on('patient-picker:select_card' + this.kk, this.clear_diagnos)
+    this.$root.$on(`researches-picker:clear_all${this.kk}`, this.clear_all);
+    this.$root.$on(`researches-picker:update-comment${this.kk}`, this.update_comment);
+    this.$root.$on(`patient-picker:select_card${this.kk}`, this.clear_diagnos);
     if (this.initial_fin) {
-      this.select_fin(this.initial_fin)
+      this.select_fin(this.initial_fin);
     }
-    this.load_direction_params()
-    this.load_stationar_deparments()
+    this.load_direction_params();
+    this.load_stationar_deparments();
   },
   methods: {
     async changeSelectGlobalResearchDirectionParam(pk) {
@@ -605,15 +610,15 @@ export default {
         return;
       }
       this.global_research_direction_param = _.cloneDeep(
-        await this.load_direction_params_data(pk)
+        await this.load_direction_params_data(pk),
       );
-      this.global_research_direction_param.show = true
+      this.global_research_direction_param.show = true;
     },
     async load_direction_params() {
       const data = await api('researches/by-direction-params');
       this.global_direction_params = [
-        {id: -1, label: 'Не выбрано'},
-        ...Object.keys(data).map(id => ({id, label: data[id].title})),
+        { id: -1, label: 'Не выбрано' },
+        ...Object.keys(data).map((id) => ({ id, label: data[id].title })),
       ];
       this.researches_direction_params = data;
     },
@@ -626,35 +631,37 @@ export default {
       ) {
         return this.researches_direction_params[pk].research_data.research;
       }
-      await this.$store.dispatch(action_types.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
       if (!this.researches_direction_params[pk]) {
         this.researches_direction_params[pk] = {};
       }
       if (!this.researches_direction_params[pk].research_data) {
         this.researches_direction_params[pk].research_data = {};
       }
-      this.researches_direction_params[pk].research_data.research = await api('researches/get-direction-params', {pk});
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      this.researches_direction_params[pk].research_data.research = await api('researches/get-direction-params', { pk });
+      await this.$store.dispatch(actions.DEC_LOADING);
       return this.researches_direction_params[pk].research_data.research;
     },
     hasNotFilled(pk) {
-      return this.form_params[pk] && !this.r(this.form_params[pk])
+      return this.form_params[pk] && !this.r(this.form_params[pk]);
     },
     applyAllFromFirst() {
-      const {pk: fpk} = this.need_update_object[0];
+      const { pk: fpk } = this.need_update_object[0];
       for (const row of this.need_update_object.slice(1)) {
         if (
-          this.localizations[fpk] &&
-          (row.localizations || []).find(({code}) => code === this.localizations[fpk].code)
+          this.localizations[fpk]
+          && (row.localizations || []).find(({ code }) => code === this.localizations[fpk].code)
         ) {
           this.localizations[row.pk] = this.localizations[fpk];
         }
-        if ((row.options || []).includes(this.comments[fpk]) || this.comments[fpk] === "") {
+        if ((row.options || []).includes(this.comments[fpk]) || this.comments[fpk] === '') {
           this.comments[row.pk] = this.comments[fpk];
         }
         if (
-          this.service_locations[fpk] &&
-          (row.service_locations || []).find(({code}) => code === this.service_locations[fpk].code)
+          this.service_locations[fpk]
+          && (row.service_locations || []).find(
+            ({ code }) => code === this.service_locations[fpk].code,
+          )
         ) {
           this.service_locations[row.pk] = this.service_locations[fpk];
         }
@@ -662,99 +669,99 @@ export default {
     },
     update_comment(pk) {
       if (this.need_update_comment.indexOf(pk) === -1) {
-        this.need_update_comment.push(pk)
+        this.need_update_comment.push(pk);
       }
-      this.show_window()
+      this.show_window();
     },
     cancel_update() {
-      this.need_update_comment = []
-      this.need_update_localization = []
-      this.need_update_service_location = []
-      this.need_update_direction_params = []
-      this.hide_window()
+      this.need_update_comment = [];
+      this.need_update_localization = [];
+      this.need_update_service_location = [];
+      this.need_update_direction_params = [];
+      this.hide_window();
       if (this.global_research_direction_param) {
         this.global_research_direction_param.show = false;
       }
     },
     onHit(item) {
-      this.diagnos = item.split(' ')[0] || ''
+      this.diagnos = item.split(' ')[0] || '';
     },
     onHitVich(item) {
-      this.vich_code = item.split(' ')[0] || ''
+      this.vich_code = item.split(' ')[0] || '';
     },
     getResponse(resp) {
-      return [...resp.data.data]
+      return [...resp.data.data];
     },
-    renderItems: (items) => items.map(i => `${i.code} ${i.title}`),
-    get_def_diagnosis(fin) {
-      fin = fin || this.fin
-      return (this.main_diagnosis + ' ' + this.get_fin_obj(fin).default_diagnos).trim()
+    renderItems: (items) => items.map((i) => `${i.code} ${i.title}`),
+    get_def_diagnosis(finOrig) {
+      const fin = finOrig || this.fin;
+      return (`${this.main_diagnosis} ${this.get_fin_obj(fin).default_diagnos}`).trim();
     },
     clear_diagnos() {
-      this.diagnos = this.get_def_diagnosis()
-      this.vich_code = ''
+      this.diagnos = this.get_def_diagnosis();
+      this.vich_code = '';
     },
     highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
     hide_window() {
-      this.hide_window_update = true
+      this.hide_window_update = true;
       if (this.$refs.modal) {
-        this.$refs.modal.$el.style.display = 'none'
+        this.$refs.modal.$el.style.display = 'none';
       }
     },
     show_window() {
-      this.hide_window_update = false
+      this.hide_window_update = false;
       if (this.$refs.modal) {
-        this.$refs.modal.$el.style.display = 'block'
+        this.$refs.modal.$el.style.display = 'block';
       }
     },
     researches_departments_simple() {
-      let r = {}
+      const r = {};
 
-      for (let pk of this.researches) {
+      for (const pk of this.researches) {
         if (pk in this.$store.getters.researches_obj) {
-          let res = this.$store.getters.researches_obj[pk]
+          const res = this.$store.getters.researches_obj[pk];
           if (!(res.department_pk in r)) {
-            r[res.department_pk] = []
+            r[res.department_pk] = [];
           }
-          r[res.department_pk].push(pk)
+          r[res.department_pk].push(pk);
         }
       }
-      return r
+      return r;
     },
     get_fin_obj(pk) {
       if (pk !== -1) {
-        for (let f of this.base.fin_sources) {
-          if (f.pk === pk)
-            return f
+        for (const f of this.base.fin_sources) {
+          if (f.pk === pk) return f;
         }
       }
-      return {pk: -1, title: '', default_diagnos: ''}
+      return { pk: -1, title: '', default_diagnos: '' };
     },
-    select_fin(pk) {
+    select_fin(pkOrig) {
+      let pk = pkOrig;
       if (this.base.fin_sources.length === 1 && pk === -1) {
-        pk = this.base.fin_sources[0].pk
+        pk = this.base.fin_sources[0].pk;
       }
-      const cfin = this.fin
-      this.fin = pk
-      this.count = 1
-      this.discount = 0
+      const cfin = this.fin;
+      this.fin = pk;
+      this.count = 1;
+      this.discount = 0;
       if (this.get_def_diagnosis(cfin) === this.diagnos || this.diagnos.trim() === '') {
-        this.diagnos = this.get_def_diagnosis()
+        this.diagnos = this.get_def_diagnosis();
       }
     },
     clear_department(pk) {
-      this.$root.$emit('researches-picker:deselect_department' + this.kk, pk)
+      this.$root.$emit(`researches-picker:deselect_department${this.kk}`, pk);
     },
     generate(type) {
       if (this.diagnos === '' && this.current_fin !== 'Платно' && !this.pay_source && !this.create_and_open) {
-        $(this.$refs.d).focus()
-        errmessage('Диагноз не указан', 'Если не требуется, то укажите прочерк ("-")')
-        return
+        window.$(this.$refs.d).focus();
+        window.errmessage('Диагноз не указан', 'Если не требуется, то укажите прочерк ("-")');
+        return;
       }
       if (this.need_vich_code && this.vich_code === '') {
-        $(this.$refs.v).focus()
-        errmessage('Не указан код', 'Требуется код для направления на ВИЧ')
-        return
+        window.$(this.$refs.v).focus();
+        window.errmessage('Не указан код', 'Требуется код для направления на ВИЧ');
+        return;
       }
       this.$root.$emit('generate-directions', {
         type,
@@ -783,10 +790,10 @@ export default {
         direction_form_params: this.form_params,
         current_global_direction_params: this.global_research_direction_param,
         hospital_department_override: this.hospital_department_override,
-      })
+      });
     },
     clear_all() {
-      this.$root.$emit('researches-picker:deselect_all' + this.kk);
+      this.$root.$emit(`researches-picker:deselect_all${this.kk}`);
       this.clear_fin();
       this.direction_purpose = 'NONE';
       this.external_organization = 'NONE';
@@ -798,59 +805,58 @@ export default {
       this.select_fin(-1);
     },
     async load_direction_purposes() {
-      await this.$store.dispatch(action_types.INC_LOADING)
-      const {purposes} = await directions_point.getPurposes()
-      this.purposes = purposes
-      await this.$store.dispatch(action_types.DEC_LOADING)
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { purposes } = await directionsPoint.getPurposes();
+      this.purposes = purposes;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async load_external_organizations() {
       if (!this.external_organizations_enabled) {
         return;
       }
-      await this.$store.dispatch(action_types.INC_LOADING)
-      const {organizations} = await directions_point.getExternalOrgranizations()
-      this.externalOrganizations = organizations
-      await this.$store.dispatch(action_types.DEC_LOADING)
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { organizations } = await directionsPoint.getExternalOrgranizations();
+      this.externalOrganizations = organizations;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     r(research) {
       if (!research) {
-        return true
+        return true;
       }
-      return this.r_list(research).length === 0
-
+      return this.r_list(research).length === 0;
     },
     r_list(research) {
       if (!research.groups) {
         return [];
       }
-      const l = []
+      const l = [];
       for (const g of research.groups) {
         if (!vGroup(g, research.groups, this.simulated_patient)) {
-          continue
+          continue;
         }
-        let n = 0
+        let n = 0;
         for (const f of g.fields) {
-          n++
-          if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value) &&
-            (vField(g, research.groups, f.visibility, this.simulated_patient))) {
-            l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title))
+          n++;
+          if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)
+            && (vField(g, research.groups, f.visibility, this.simulated_patient))) {
+            l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));
           }
         }
       }
-      return l.slice(0, 2)
+      return l.slice(0, 2);
     },
     is_stationar(pk) {
       const res = this.$store.getters.researches_obj[pk] || {};
       return res.department_pk === -5;
     },
     async load_stationar_deparments() {
-      const {data} = await api('procedural-list/suitable-departments');
-      this.hospital_department_overrides = [{id: -1, label: 'По умолчанию'}, ...data];
-    }
+      const { data } = await api('procedural-list/suitable-departments');
+      this.hospital_department_overrides = [{ id: -1, label: 'По умолчанию' }, ...data];
+    },
   },
   computed: {
     has_stationar() {
-      for (let pk of this.researches) {
+      for (const pk of this.researches) {
         if (this.is_stationar(pk)) {
           return true;
         }
@@ -858,7 +864,7 @@ export default {
       return false;
     },
     has_only_stationar() {
-      for (let pk of this.researches) {
+      for (const pk of this.researches) {
         if (!this.is_stationar(pk)) {
           return false;
         }
@@ -869,13 +875,13 @@ export default {
       return this.global_research_direction_param && this.global_research_direction_param.show;
     },
     direction_purpose_enabled() {
-      return this.$store.getters.modules.l2_direction_purpose && this.kk !== 'stationar'
+      return this.$store.getters.modules.l2_direction_purpose && this.kk !== 'stationar';
     },
     external_organizations_enabled() {
-      return this.$store.getters.modules.l2_external_organizations && this.kk !== 'stationar'
+      return this.$store.getters.modules.l2_external_organizations && this.kk !== 'stationar';
     },
     directions_params_enabled() {
-      return this.$store.getters.modules.directions_params && this.kk !== 'stationar'
+      return this.$store.getters.modules.directions_params && this.kk !== 'stationar';
     },
     l2_user_data() {
       return this.$store.getters.user_data || {};
@@ -884,55 +890,58 @@ export default {
       return this.l2_user_data.directions_params_org_form_default_pk;
     },
     show_additions() {
-      return this.researches.length > 0
+      return this.researches.length > 0;
     },
     current_fin() {
-      return this.get_fin_obj(this.fin)
+      return this.get_fin_obj(this.fin);
     },
     pay_source() {
-      return this.current_fin.title.toLowerCase() === 'платно'
+      return this.current_fin.title.toLowerCase() === 'платно';
     },
     researches_departments() {
-      let r = {}
-      let deps = {
-        '-2': {title: 'Консультации'},
-        '-3': {title: 'Лечение'},
-        '-4': {title: 'Стоматология'},
-        '-5': {title: 'Стационар'},
-        '-9998': {title: 'Морфология'},
-        '-9': {title: 'Формы'}
-      }
-      for (let dep of this.$store.getters.allDepartments) {
-        deps[dep.pk] = dep
+      const r = {};
+      const deps = {
+        '-2': { title: 'Консультации' },
+        '-3': { title: 'Лечение' },
+        '-4': { title: 'Стоматология' },
+        '-5': { title: 'Стационар' },
+        '-9998': { title: 'Морфология' },
+        '-9': { title: 'Формы' },
+      };
+      for (const dep of this.$store.getters.allDepartments) {
+        deps[dep.pk] = dep;
       }
 
-      for (let pk of this.researches) {
+      for (const pk of this.researches) {
         if (this.$store.getters.researches_obj[pk]) {
-          let res = this.$store.getters.researches_obj[pk]
-          let d = (res.department_pk && !res.doc_refferal) ? res.department_pk : -2
+          const res = this.$store.getters.researches_obj[pk];
+          const d = (res.department_pk && !res.doc_refferal) ? res.department_pk : -2;
           if (!(d in r)) {
             r[d] = {
               pk: d,
               title: deps[d].title,
-              researches: []
-            }
+              researches: [],
+            };
           }
-          r[d].researches.push({pk: pk, title: res.title, site_type_raw: res.site_type_raw})
+          r[d].researches.push({ pk, title: res.title, site_type_raw: res.site_type_raw });
         }
       }
-      return r
+      return r;
     },
     categories() {
       const sc = this.$store.getters.ex_dep[8] || [];
-      return sc.reduce((a, b) => ({...a, [b.pk]: b.title}), {});
+      return sc.reduce((a, b) => ({ ...a, [b.pk]: b.title }), {});
     },
     need_vich_code() {
-      for (let pk of this.researches) {
-        if (pk in this.$store.getters.researches_obj && this.$store.getters.researches_obj[pk].need_vich_code) {
-          return true
+      for (const pk of this.researches) {
+        if (
+          pk in this.$store.getters.researches_obj
+          && this.$store.getters.researches_obj[pk].need_vich_code
+        ) {
+          return true;
         }
       }
-      return false
+      return false;
     },
     can_save() {
       if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1) {
@@ -943,7 +952,7 @@ export default {
         return false;
       }
 
-      return !this.researches.find(pk => {
+      return !this.researches.find((pk) => {
         if (!this.form_params[pk]) {
           return false;
         }
@@ -952,31 +961,35 @@ export default {
       });
     },
     need_update_object() {
-      let r = []
-      const toUpd = [...this.need_update_comment]
-      for (const pk of [...this.need_update_localization, ...this.need_update_service_location, ...this.need_update_direction_params]) {
+      const r = [];
+      const toUpd = [...this.need_update_comment];
+      for (const pk of [
+        ...this.need_update_localization,
+        ...this.need_update_service_location,
+        ...this.need_update_direction_params,
+      ]) {
         if (!toUpd.includes(pk)) {
-          toUpd.push(pk)
+          toUpd.push(pk);
         }
       }
-      for (let pk of toUpd) {
+      for (const pk of toUpd) {
         if (pk in this.$store.getters.researches_obj) {
-          let res = this.$store.getters.researches_obj[pk]
+          const res = this.$store.getters.researches_obj[pk];
           r.push({
-            pk: pk,
+            pk,
             title: res.title,
             options: res.comment_variants,
             localizations: res.localizations,
             service_locations: res.service_locations,
             direction_params: res.direction_params,
             research_data: res.research_data.research,
-          })
+          });
         }
       }
-      return r
+      return r;
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped lang="scss">

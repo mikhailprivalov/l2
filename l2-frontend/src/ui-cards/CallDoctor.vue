@@ -21,7 +21,7 @@
           <div class="form-row sm-f" style="border-top: none">
             <div class="row-t">Участок</div>
             <select v-model="card.district" class="form-control">
-              <option v-for="c in card.districts" :value="c.id">
+              <option v-for="c in card.districts" :value="c.id" :key="c.id">
                 {{c.title}}
               </option>
             </select>
@@ -42,7 +42,7 @@
           <div class="form-row sm-f border-right" style="border-top: none">
             <div class="row-t">Цель вызова</div>
             <select v-model="card.purpose" class="form-control">
-              <option v-for="c in card.purposes" :value="c.id">
+              <option v-for="c in card.purposes" :value="c.id" :key="c.id">
                 {{c.label}}
               </option>
             </select>
@@ -121,7 +121,7 @@
           </tr>
           </thead>
           <tbody>
-            <tr v-for="r in rows_mapped" :class="{'cancel-row':  r.cancel}">
+            <tr v-for="r in rows_mapped" :class="{'cancel-row':  r.cancel}" :key="r.pk">
               <td>{{r.date}}</td>
               <td>
                 {{r.service}}
@@ -144,199 +144,200 @@
 </template>
 
 <script>
-  import TypeAhead from 'vue2-typeahead'
-  import * as action_types from "@/store/action-types";
-  import api from "@/api";
-  import patients_point from "@/api/patients-point";
-  import moment from "moment";
-  import ResearchDisplay from "@/ui-cards/ResearchDisplay";
-  import Treeselect from "@riophae/vue-treeselect";
-  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import TypeAhead from 'vue2-typeahead';
+import * as actions from '@/store/action-types';
+import api from '@/api';
+import patientsPoint from '@/api/patients-point';
+import moment from 'moment';
+import ResearchDisplay from '@/ui-cards/ResearchDisplay.vue';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-  export default {
-    name: "CallDoctor",
-    components: {
-      ResearchDisplay,
-      TypeAhead,
-      Treeselect,
+export default {
+  name: 'CallDoctor',
+  components: {
+    ResearchDisplay,
+    TypeAhead,
+    Treeselect,
+  },
+  props: {
+    card_pk: {
+      required: true,
     },
-    props: {
-      card_pk: {
-        required: true,
+    researches: {
+      type: Array,
+    },
+    visible: {
+      type: Boolean,
+    },
+  },
+  data() {
+    return {
+      card: {
+        fact_address: '',
+        districts: [],
+        district: -1,
+        docs: [],
+        doc: -1,
+        purposes: [],
+        purpose: -1,
+        hospitals: [],
+        hospital: -1,
+        phone: '',
       },
-      researches: {
-        type: Array,
+      loaded: true,
+      asExecuted: false,
+      date: moment().format('YYYY-MM-DD'),
+      td: moment().format('YYYY-MM-DD'),
+      comment: '',
+      rows: [],
+    };
+  },
+  mounted() {
+    this.$root.$on('update_card_data', () => this.load_data());
+  },
+  watch: {
+    rows_count: {
+      handler() {
+        this.$root.$emit('call-doctor:rows-count', this.rows_count);
       },
-      visible: {
-        type: Boolean,
+      immediate: true,
+    },
+    card_pk: {
+      handler() {
+        this.rows = [];
+        this.load_data();
+      },
+      immediate: true,
+    },
+    visible: {
+      handler() {
+        this.load_data();
       },
     },
-    data() {
-      return {
-        card: {
-          fact_address: "",
-          districts: [],
-          district: -1,
-          docs: [],
-          doc: -1,
-          purposes: [],
-          purpose: -1,
-          hospitals: [],
-          hospital: -1,
-          phone: "",
-        },
-        loaded: true,
-        asExecuted: false,
-        date: moment().format('YYYY-MM-DD'),
-        td: moment().format('YYYY-MM-DD'),
-        comment: '',
-        rows: [],
+  },
+  methods: {
+    getResponse(resp) {
+      return [...resp.data.data];
+    },
+    onHit(name, no_next) {
+      return (item, t) => {
+        if (t.$el) {
+          if (no_next) {
+            window.$('input', t.$el).focus();
+          } else {
+            const index = window.$('input', this.$el).index(window.$('input', t.$el)) + 1;
+            window.$('input', this.$el).eq(index).focus();
+          }
+        }
+        if (!item) {
+          return;
+        }
+        this.card[name] = item;
       };
     },
-    mounted() {
-      this.$root.$on('update_card_data', () => this.load_data());
+    highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
+    async load_data() {
+      if (this.card_pk === -1) {
+        return;
+      }
+      if (!this.visible) {
+        this.rows = await api('doctor-call/actual-rows', this, 'card_pk');
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      this.loaded = false;
+      const [card, {
+        docs, purposes, hospitals, hospitalId,
+      }, rows] = await Promise.all([
+        patientsPoint.getCard(this, 'card_pk'),
+        api('actual-districts', this, 'card_pk'),
+        api('doctor-call/actual-rows', this, 'card_pk'),
+      ]);
+      this.card = card;
+      this.card.doc = -1;
+      this.card.docs = docs;
+      this.card.purpose = (purposes.find((p) => p.label === 'Другое') || { id: purposes[0].id }).id;
+      this.card.purposes = purposes;
+      this.card.hospital = hospitalId;
+      this.card.hospitals = hospitals;
+      this.rows = rows;
+      this.loaded = true;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-    watch: {
-      rows_count: {
-        handler() {
-          this.$root.$emit('call-doctor:rows-count', this.rows_count);
+    async save() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const result = await api(
+        'doctor-call/create', this,
+        ['card_pk', 'researches', 'date', 'comment', 'asExecuted'],
+        {
+          fact_address: this.card.fact_address,
+          district: this.card.district,
+          doc: this.card.doc,
+          purpose: this.card.purpose,
+          hospital: this.card.hospital,
+          phone: this.card.phone,
         },
-        immediate: true,
-      },
-      card_pk: {
-        handler() {
-          this.rows = []
-          this.load_data();
+      );
+      if (result.ok) {
+        window.okmessage('Записи для вызова на дом созданы');
+        this.date = moment().format('YYYY-MM-DD');
+        this.td = this.date;
+        this.comment = '';
+        this.asExecuted = false;
+        this.$root.$emit('researches-picker:clear_all');
+      }
+      await this.load_data();
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    async cancel_doc_call(pk) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await api(
+        'doctor-call/cancel-row',
+        {
+          pk,
         },
-        immediate: true,
-      },
-      visible: {
-        handler() {
-          this.load_data();
-        },
-      },
+      );
+      await this.load_data();
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-    methods: {
-      getResponse(resp) {
-        return [...resp.data.data]
-      },
-      onHit(name, no_next) {
-        return (item, t) => {
-          if (t.$el) {
-            if (no_next) {
-              $('input', t.$el).focus();
-            } else {
-              let index = $('input', this.$el).index($('input', t.$el)) + 1;
-              $('input', this.$el).eq(index).focus();
-            }
-          }
-          if (!item) {
-            return;
-          }
-          this.card[name] = item;
-        }
-      },
-      highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
-      async load_data() {
-        if (this.card_pk === -1) {
-          return;
-        }
-        if (!this.visible) {
-          this.rows = await api('doctor-call/actual-rows', this, 'card_pk')
-          return;
-        }
-        await this.$store.dispatch(action_types.INC_LOADING)
-        this.loaded = false
-        const [card, {docs, purposes, hospitals, hospitalId}, rows] = await Promise.all([
-          patients_point.getCard(this, 'card_pk'),
-          api('actual-districts', this, 'card_pk'),
-          api('doctor-call/actual-rows', this, 'card_pk'),
-        ])
-        this.card = card
-        this.card.doc = -1
-        this.card.docs = docs
-        this.card.purpose = (purposes.find(p => p.label === 'Другое') || {id: purposes[0].id}).id
-        this.card.purposes = purposes
-        this.card.hospital = hospitalId
-        this.card.hospitals = hospitals
-        this.rows = rows;
-        this.loaded = true
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      async save() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const result = await api(
-          'doctor-call/create', this,
-          ['card_pk', 'researches', 'date', 'comment', 'asExecuted'],
-          {
-            fact_address: this.card.fact_address,
-            district: this.card.district,
-            doc: this.card.doc,
-            purpose: this.card.purpose,
-            hospital: this.card.hospital,
-            phone: this.card.phone,
-          }
-        )
-        if (result.ok) {
-          okmessage('Записи для вызова на дом созданы');
-          this.date = this.td = moment().format('YYYY-MM-DD');
-          this.comment = '';
-          this.asExecuted = false;
-          this.$root.$emit('researches-picker:clear_all');
-        }
-        await this.load_data();
-        await this.$store.dispatch(action_types.DEC_LOADING);
-      },
-      async cancel_doc_call(pk) {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await api(
-          'doctor-call/cancel-row',
-          {
-            pk: pk,
-          }
-        )
-        await this.load_data();
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      updateCard() {
-        this.card = {...this.card};
-      },
+    updateCard() {
+      this.card = { ...this.card };
     },
-    computed: {
-      noHospital() {
-        return this.card.hospital === -1;
-      },
-      disabled() {
-        return this.noHospital;
-      },
-      disp_researches() {
-        return this.researches.map(id => {
-          return this.$store.getters.researches_obj[id];
-        })
-      },
-      rows_count() {
-        return this.rows.length;
-      },
-      purposes() {
-        return this.card.purposes.reduce((a, b) => ({...a, [b.id]: b.label}), {});
-      },
-      rows_mapped() {
-        return this.rows.map(r => ({
-          pk: r.pk,
-          date: moment(r.exec_at).format('DD.MM.YYYY'),
-          service: r.research__title,
-          address: r.address,
-          district: r.district__title,
-          doc: r.doc_assigned__fio && `${r.doc_assigned__fio}, ${r.doc_assigned__podrazdeleniye__title}`,
-          purpose: (this.purposes || {})[r.purpose],
-          hospital: r.hospital__short_title || r.hospital__title,
-          comment: r.comment,
-          phone: r.phone,
-          cancel: r.cancel
-        }));
-      },
+  },
+  computed: {
+    noHospital() {
+      return this.card.hospital === -1;
     },
-  }
+    disabled() {
+      return this.noHospital;
+    },
+    disp_researches() {
+      return this.researches.map((id) => this.$store.getters.researches_obj[id]);
+    },
+    rows_count() {
+      return this.rows.length;
+    },
+    purposes() {
+      return this.card.purposes.reduce((a, b) => ({ ...a, [b.id]: b.label }), {});
+    },
+    rows_mapped() {
+      return this.rows.map((r) => ({
+        pk: r.pk,
+        date: moment(r.exec_at).format('DD.MM.YYYY'),
+        service: r.research__title,
+        address: r.address,
+        district: r.district__title,
+        doc: r.doc_assigned__fio && `${r.doc_assigned__fio}, ${r.doc_assigned__podrazdeleniye__title}`,
+        purpose: (this.purposes || {})[r.purpose],
+        hospital: r.hospital__short_title || r.hospital__title,
+        comment: r.comment,
+        phone: r.phone,
+        cancel: r.cancel,
+      }));
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

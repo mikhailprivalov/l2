@@ -28,7 +28,7 @@
     <div id="favorites-view" class="tp">
       <table class="table table-condensed table-bordered">
         <tbody>
-        <tr v-for="row in data">
+        <tr v-for="row in data" :key="row.pk">
           <td>
             <LinkToHistory :direction="row.direction" />
           </td>
@@ -52,31 +52,31 @@
 </template>
 
 <script>
-  import directions_point from "../api/directions-point";
-  import LinkToHistory from "../pages/Stationar/LinkToHistory";
-  import Favorite from "../pages/Stationar/Favorite";
+import directionsPoint from '../api/directions-point';
+import LinkToHistory from '../pages/Stationar/LinkToHistory.vue';
+import Favorite from '../pages/Stationar/Favorite.vue';
 
-  export default {
-    name: "Favorites",
-    components: {Favorite, LinkToHistory},
-    data() {
-      return {
-        inFavorite: false,
-        data: [],
-      }
-    },
-    mounted() {
-      this.load();
+export default {
+  name: 'Favorites',
+  components: { Favorite, LinkToHistory },
+  data() {
+    return {
+      inFavorite: false,
+      data: [],
+    };
+  },
+  mounted() {
+    this.load();
 
-      this.$root.$on('add-to-favorites', () => this.load());
+    this.$root.$on('add-to-favorites', () => this.load());
+  },
+  methods: {
+    async load() {
+      const { data } = await directionsPoint.allDirectionsInFavorites();
+      this.data = data;
     },
-    methods: {
-      async load() {
-        const {data} = await directions_point.allDirectionsInFavorites()
-        this.data = data;
-      },
-    }
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

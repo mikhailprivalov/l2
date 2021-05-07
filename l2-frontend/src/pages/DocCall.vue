@@ -158,7 +158,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="r in rows">
+        <tr v-for="r in rows" :key="r.pk">
           <DocCallRow :r="r"/>
         </tr>
         </tbody>
@@ -194,16 +194,17 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import Paginate from 'vuejs-paginate';
 import api from '@/api';
-import * as action_types from '@/store/action-types';
-import DocCallRow from "@/pages/DocCallRow";
-import DateFieldNav2 from "@/fields/DateFieldNav2";
-import StatisticsMessagePrintModal from '@/modals/StatisticsMessagePrintModal'
-import PatientPickerDocCall from '@/ui-cards/PatientPickerDocCall'
-
+import * as actions from '@/store/action-types';
+import DocCallRow from '@/pages/DocCallRow.vue';
+import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
+import StatisticsMessagePrintModal from '@/modals/StatisticsMessagePrintModal.vue';
+import PatientPickerDocCall from '@/ui-cards/PatientPickerDocCall.vue';
 
 export default {
   name: 'DocCall',
-  components: {DateFieldNav2, DocCallRow, Treeselect, Paginate, StatisticsMessagePrintModal, PatientPickerDocCall},
+  components: {
+    DateFieldNav2, DocCallRow, Treeselect, Paginate, StatisticsMessagePrintModal, PatientPickerDocCall,
+  },
   data() {
     return {
       districts: [],
@@ -235,8 +236,8 @@ export default {
     };
   },
   beforeMount() {
-    this.$store.dispatch(action_types.GET_USER_DATA);
-    this.$store.watch(state => state.user.data, (oldValue, newValue) => {
+    this.$store.dispatch(actions.GET_USER_DATA);
+    this.$store.watch((state) => state.user.data, (oldValue, newValue) => {
       this.params.hospital = newValue.hospital || -1;
     });
   },
@@ -291,20 +292,21 @@ export default {
     },
   },
   async mounted() {
-    await this.$store.dispatch(action_types.INC_LOADING);
+    await this.$store.dispatch(actions.INC_LOADING);
     const data = await api('actual-districts');
-    const {hospitals} = await api('hospitals', {filterByUserHospital: true});
+    const { hospitals } = await api('hospitals', { filterByUserHospital: true });
 
     this.districts = data.rows;
     this.docs_assigned = data.docs;
-    this.purposes = [{id: -1, label: 'Не выбрана'}, ...data.purposes];
+    this.purposes = [{ id: -1, label: 'Не выбрана' }, ...data.purposes];
     this.hospitals = hospitals;
-    this.$root.$on('hide_message_tickets', () => this.hide_statistcs())
-    await this.$store.dispatch(action_types.DEC_LOADING);
+    this.$root.$on('hide_message_tickets', () => this.hide_statistcs());
+    await this.$store.dispatch(actions.DEC_LOADING);
   },
   methods: {
     print() {
-      const {params} = this;
+      const { params } = this;
+      // eslint-disable-next-line max-len
       window.open(`/forms/pdf?type=109.02&date=${params.date}&time_start=${params.time_start}&time_end=${params.time_end}&district=${params.district || -1}&doc=${params.doc_assigned || -1}&purpose=${params.purpose || -1}&hospital_pk=${params.hospital || -1}&external=${params.is_external ? 0 : 1}&cancel=${params.is_canceled ? 0 : 1}`);
     },
     async load(page_to_load) {
@@ -313,21 +315,21 @@ export default {
       } else {
         this.params.page = 1;
       }
-      await this.$store.dispatch(action_types.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
       const data = await api('doctor-call/search', this.params);
       this.params.pages = data.pages;
       this.params.page = data.page;
       this.params.total = data.total;
       this.rows = data.rows;
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
       this.loaded = true;
     },
     show_statistics_message_tickets() {
-      this.statistics_tickets = true
+      this.statistics_tickets = true;
     },
     hide_statistcs() {
-      this.statistics_tickets = false
-    }
+      this.statistics_tickets = false;
+    },
   },
 };
 

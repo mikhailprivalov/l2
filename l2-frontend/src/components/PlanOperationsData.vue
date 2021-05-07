@@ -68,163 +68,168 @@
 </template>
 
 <script>
-  import Modal from '../ui-cards/Modal'
-  import Treeselect from '@riophae/vue-treeselect'
-  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-  import * as action_types from "../store/action-types";
-  import users_point from '../api/user-point'
-  import PatientSmallPicker from '../ui-cards/PatientSmallPicker'
-  import patients_point from "../api/patients-point";
-  import moment from "moment";
-  import plans_point from "../api/plans-point";
+import moment from 'moment';
+import Treeselect from '@riophae/vue-treeselect';
+import Modal from '../ui-cards/Modal.vue';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import * as actions from '../store/action-types';
+import usersPoint from '../api/user-point';
+import PatientSmallPicker from '../ui-cards/PatientSmallPicker.vue';
+import patientsPoint from '../api/patients-point';
+import plansPoint from '../api/plans-point';
 
-  export default {
-    name: "PlanOperationsData",
-    components: {Treeselect, PatientSmallPicker, Modal},
-    props: {
-      card_pk_initial: {
-        type: Number,
-        required: false
-      },
-      patient_fio: {
-        type: String,
-        required: false
-      },
-      direction: {
-        type: String,
-        required: false
-      },
-      pk_plan: {
-        type: Number,
-        required: false
-      },
-      pk_hirurg: {
-        type: Number,
-        required: false
-      },
-      date: {
-        type: String,
-        required: false
-      },
-      operation: {
-        type: String,
-        required: false
-      },
-      cancel_operation: {
-        type: Boolean,
-        required: true
-      },
+export default {
+  name: 'PlanOperationsData',
+  components: { Treeselect, PatientSmallPicker, Modal },
+  props: {
+    card_pk_initial: {
+      type: Number,
+      required: false,
     },
-    data() {
-      return {
-        cart_pk: this.card_pk_initial,
-        hirurgs: [],
-        patient_to_edit: false,
-        patient_data: '',
-        current_direction: '',
-        timeValue: moment().format('YYYY-MM-DD'),
-        current_hirurg: this.pk_hirurg,
-        current_time: this.date,
-        type_operation: this.operation,
-        base_pk: -1,
-      }
+    patient_fio: {
+      type: String,
+      required: false,
     },
-    watch: {
-      card_pk_initial: {
-        handler() {
-          this.card_pk = this.card_pk_initial;
-          if (this.patient_fio && this.card_pk) {
-            this.patient_data = this.patient_fio
-          }
-        },
-        immediate: true,
-      },
+    direction: {
+      type: String,
+      required: false,
     },
-    created() {
-      this.$store.watch(state => state.bases, () => {
-        this.check_base()
-      })
-      this.check_base()
-      this.load_hirurgs();
-      if (this.patient_fio && this.card_pk) {
-        this.patient_data = this.patient_fio
-      }
-      this.current_direction = this.direction;
+    pk_plan: {
+      type: Number,
+      required: false,
     },
-    computed: {
-      bases() {
-        return this.$store.getters.bases.filter(b => !b.hide)
-      },
+    pk_hirurg: {
+      type: Number,
+      required: false,
     },
-    methods: {
-      check_base() {
-        if (this.base_pk === -1 && this.bases.length > 0) {
-          for (let row of this.bases) {
-            if (row.internal_type) {
-              this.base_pk = row.pk
-              break
-            }
-          }
+    date: {
+      type: String,
+      required: false,
+    },
+    operation: {
+      type: String,
+      required: false,
+    },
+    cancel_operation: {
+      type: Boolean,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      cart_pk: this.card_pk_initial,
+      hirurgs: [],
+      patient_to_edit: false,
+      patient_data: '',
+      current_direction: '',
+      timeValue: moment().format('YYYY-MM-DD'),
+      current_hirurg: this.pk_hirurg,
+      current_time: this.date,
+      type_operation: this.operation,
+      base_pk: -1,
+    };
+  },
+  watch: {
+    card_pk_initial: {
+      handler() {
+        this.card_pk = this.card_pk_initial;
+        if (this.patient_fio && this.card_pk) {
+          this.patient_data = this.patient_fio;
         }
       },
-      async load_hirurgs() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {users} = await users_point.loadUsersByGroup({'group': ['Оперирует']})
-        this.hirurgs = users
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      open_patient_picker() {
-        this.patient_to_edit = true
-      },
-      hide_modal_patient_edit() {
-        if (this.$refs.modalPatientEdit) {
-          this.load_patient()
-          this.$refs.modalPatientEdit.$el.style.display = 'none';
-          this.patient_to_edit = false
-        }
-      },
-      async load_patient() {
-        if (!this.card_pk) {
-          this.patient_data = ''
-        } else {
-          const l2Card = await patients_point.searchL2Card({'card_pk': this.card_pk})
-          this.patient_data = `${l2Card.results[0].family} ${l2Card.results[0].name} ${l2Card.results[0].twoname} (${l2Card.results[0].num})`
-        }
-      },
-      async save_to_plan() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await plans_point.planOperationsSave({
-          'pk_plan': this.pk_plan,
-          'card_pk': this.card_pk,
-          'direction': this.current_direction,
-          'hirurg': this.current_hirurg,
-          'date': this.current_time,
-          'type_operation': this.type_operation,
-        })
-        await this.$store.dispatch(action_types.DEC_LOADING)
-        okmessage('Сохранено');
-        this.$root.$emit('hide_plan_operations');
-        this.$root.$emit('reload-plans');
-      },
-      async cancel_from_plan() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-
-        const data = await plans_point.planOperationsCancel({
-          'pk_plan': this.pk_plan,
-        })
-
-        await this.$store.dispatch(action_types.DEC_LOADING)
-
-        if (data.result) {
-          okmessage('Операция отменена');
-        } else {
-          okmessage('Отмена убрана');
-        }
-
-        this.$root.$emit('reload-plans');
-      }
+      immediate: true,
+    },
+  },
+  created() {
+    this.$store.watch((state) => state.bases, () => {
+      this.check_base();
+    });
+    this.check_base();
+    this.load_hirurgs();
+    if (this.patient_fio && this.card_pk) {
+      this.patient_data = this.patient_fio;
     }
-  }
+    this.current_direction = this.direction;
+  },
+  computed: {
+    bases() {
+      return this.$store.getters.bases.filter((b) => !b.hide);
+    },
+  },
+  methods: {
+    check_base() {
+      if (this.base_pk === -1 && this.bases.length > 0) {
+        for (const row of this.bases) {
+          if (row.internal_type) {
+            this.base_pk = row.pk;
+            break;
+          }
+        }
+      }
+    },
+    async load_hirurgs() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { users } = await usersPoint.loadUsersByGroup({ group: ['Оперирует'] });
+      this.hirurgs = users;
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    open_patient_picker() {
+      this.patient_to_edit = true;
+    },
+    hide_modal_patient_edit() {
+      if (this.$refs.modalPatientEdit) {
+        this.load_patient();
+        this.$refs.modalPatientEdit.$el.style.display = 'none';
+        this.patient_to_edit = false;
+      }
+    },
+    async load_patient() {
+      if (!this.card_pk) {
+        this.patient_data = '';
+      } else {
+        const l2Card = await patientsPoint.searchL2Card({ card_pk: this.card_pk });
+        this.patient_data = [
+          l2Card.results[0].family,
+          l2Card.results[0].name,
+          l2Card.results[0].twoname,
+          `(${l2Card.results[0].num})`,
+        ].join(' ');
+      }
+    },
+    async save_to_plan() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await plansPoint.planOperationsSave({
+        pk_plan: this.pk_plan,
+        card_pk: this.card_pk,
+        direction: this.current_direction,
+        hirurg: this.current_hirurg,
+        date: this.current_time,
+        type_operation: this.type_operation,
+      });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      window.okmessage('Сохранено');
+      this.$root.$emit('hide_plan_operations');
+      this.$root.$emit('reload-plans');
+    },
+    async cancel_from_plan() {
+      await this.$store.dispatch(actions.INC_LOADING);
+
+      const data = await plansPoint.planOperationsCancel({
+        pk_plan: this.pk_plan,
+      });
+
+      await this.$store.dispatch(actions.DEC_LOADING);
+
+      if (data.result) {
+        window.okmessage('Операция отменена');
+      } else {
+        window.okmessage('Отмена убрана');
+      }
+
+      this.$root.$emit('reload-plans');
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">
@@ -311,4 +316,3 @@
     margin: 10px;
   }
 </style>
-

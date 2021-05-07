@@ -23,79 +23,85 @@
 </template>
 
 <script>
-  import Split from 'split.js'
-  import PatientPicker from '../ui-cards/PatientPicker'
-  import StatisticsTicketCreator from '../ui-cards/StatisticsTicketCreator'
-  import StatisticsTicketsViewer from '../ui-cards/StatisticsTicketsViewer'
+import Split from 'split.js';
+import PatientPicker from '../ui-cards/PatientPicker.vue';
+import StatisticsTicketCreator from '../ui-cards/StatisticsTicketCreator.vue';
+import StatisticsTicketsViewer from '../ui-cards/StatisticsTicketsViewer.vue';
 
-  export default {
-    name: 'statistics-tickets',
-    components: {
-      PatientPicker,
-      StatisticsTicketCreator,
-      StatisticsTicketsViewer
-    },
-    data() {
-      return {
-        selected_card: {pk: -1, base: {}, ofname: -1, ofname_dep: -1, operator: false, history_num: ''},
-      }
-    },
-    computed: {
-      directions_url() {
-        return `/mainmenu/directions?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}&ofname=${this.selected_card.ofname}&ofname_dep=${this.selected_card.ofname_dep}`
+export default {
+  name: 'statistics-tickets',
+  components: {
+    PatientPicker,
+    StatisticsTicketCreator,
+    StatisticsTicketsViewer,
+  },
+  data() {
+    return {
+      selected_card: {
+        pk: -1, base: {}, ofname: -1, ofname_dep: -1, operator: false, history_num: '',
       },
-      can_create_directions() {
-        if('groups' in this.$store.getters.user_data) {
-          for (let g of this.$store.getters.user_data.groups) {
-            if (g === "Лечащий врач" || g === "Оператор лечащего врача") {
-              return true
-            }
+    };
+  },
+  computed: {
+    directions_url() {
+      const base = this.selected_card.base.pk;
+      const card = this.selected_card.pk;
+      const { ofname } = this.selected_card;
+      const dep = this.selected_card.ofname_dep;
+      return `/mainmenu/directions?base_pk=${base}&card_pk=${card}&ofname=${ofname}&ofname_dep=${dep}`;
+    },
+    can_create_directions() {
+      if ('groups' in this.$store.getters.user_data) {
+        for (const g of this.$store.getters.user_data.groups) {
+          if (g === 'Лечащий врач' || g === 'Оператор лечащего врача') {
+            return true;
           }
         }
-        return false
       }
+      return false;
     },
-    mounted() {
-      $(document).ready(() => {
-        this.resize()
-        $(window).resize(() => {
-          this.resize()
-        })
+  },
+  mounted() {
+    window.$(document).ready(() => {
+      this.resize();
+      window.$(window).resize(() => {
+        this.resize();
+      });
 
-        Split([this.$refs.ct, this.$refs.cb], {
-          direction: 'vertical',
-          gutterSize: 5,
-          cursor: 'row-resize',
-          minSize: 200,
-          sizes: [45, 55],
-          onDrag: vm.resize
-        })
+      Split([this.$refs.ct, this.$refs.cb], {
+        direction: 'vertical',
+        gutterSize: 5,
+        cursor: 'row-resize',
+        minSize: 200,
+        sizes: [45, 55],
+        onDrag: () => this.resize,
+      });
 
-        Split([this.$refs.tl, this.$refs.tr], {
-          gutterSize: 5,
-          cursor: 'col-resize',
-          minSize: 200,
-          onDrag: vm.resize,
-          elementStyle: function (dimension, size, gutterSize) {
-            return {
-              'flex-basis': 'calc(' + size + '% - ' + gutterSize + 'px)'
-            }
-          },
-          gutterStyle: function (dimension, gutterSize) {
-            return {
-              'flex-basis': gutterSize + 'px'
-            }
-          }
-        })
-      })
+      Split([this.$refs.tl, this.$refs.tr], {
+        gutterSize: 5,
+        cursor: 'col-resize',
+        minSize: 200,
+        onDrag: () => this.resize,
+        elementStyle(dimension, size, gutterSize) {
+          return {
+            'flex-basis': `calc(${size}% - ${gutterSize}px)`,
+          };
+        },
+        gutterStyle(dimension, gutterSize) {
+          return {
+            'flex-basis': `${gutterSize}px`,
+          };
+        },
+      });
+    });
+  },
+  methods: {
+    resize() {
+      const $fp = window.$(this.$refs.root);
+      $fp.height(window.$(window).height() - $fp.position().top - 11);
     },
-    methods: {
-      resize() {
-        const $fp = $(this.$refs.root)
-        $fp.height($(window).height() - $fp.position().top - 11)
-      }
-    }
-  }
+  },
+};
 </script>
 
 <style scoped>

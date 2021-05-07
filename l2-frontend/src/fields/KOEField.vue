@@ -38,54 +38,54 @@
 </template>
 
 <script>
-  const valueToParts = value => {
-    const [num, second] = value.split(' × ');
-    const [, power] = (second || '').split('^');
+const valueToParts = (value) => {
+  const [num, second] = value.split(' × ');
+  const [, power] = (second || '').split('^');
 
-    return {
-      num: num || '1',
-      power: power || '4',
-    };
+  return {
+    num: num || '1',
+    power: power || '4',
   };
-  const partsToValue = ({num, power}) => `${num} × 10^${power}`;
+};
+const partsToValue = ({ num, power }) => `${num} × 10^${power}`;
 
-  export default {
-    props: {
-      value: String,
-      disabled: {
-        required: false,
-        default: false,
-        type: Boolean,
+export default {
+  props: {
+    value: String,
+    disabled: {
+      required: false,
+      default: false,
+      type: Boolean,
+    },
+  },
+  data() {
+    return {
+      ...valueToParts(this.value || ''),
+    };
+  },
+  watch: {
+    num: {
+      handler() {
+        this.updateParts();
       },
     },
-    data() {
-      return {
-        ...valueToParts(this.value || ''),
-      }
-    },
-    watch: {
-      num: {
-        handler() {
-          this.updateParts()
-        },
+    power: {
+      handler() {
+        this.updateParts();
       },
-      power: {
-        handler() {
-          this.updateParts()
-        },
-        immediate: true,
-      },
+      immediate: true,
     },
-    model: {
-      event: `modified`
+  },
+  model: {
+    event: 'modified',
+  },
+  methods: {
+    updateParts() {
+      this.changeValue(partsToValue(this));
     },
-    methods: {
-      updateParts() {
-        this.changeValue(partsToValue(this));
-      },
-      changeValue(newVal) {
-        this.$emit('modified', newVal)
-      }
-    }
-  }
+    changeValue(newVal) {
+      this.$emit('modified', newVal);
+    },
+  },
+};
 </script>

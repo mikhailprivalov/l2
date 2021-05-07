@@ -26,7 +26,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr :class="{stop: !!r.date_end}" v-for="r in rows">
+        <tr :class="{stop: !!r.date_end}" v-for="r in rows" :key="r.pk">
           <td>{{r.benefit}}</td>
           <td>{{r.registration_basis}}</td>
           <td>{{r.doc_start_reg}}<br/>{{r.date_start}}</td>
@@ -55,7 +55,7 @@
           <div class="form-group">
             <label>Вид льготы:</label>
             <select :readonly="edit_data.close" class="form-control" v-model="edit_data.benefit_id">
-              <option :value="x.pk" v-for="x in edit_data.types">{{x.title}}</option>
+              <option :value="x.pk" v-for="x in edit_data.types" :key="x.pk">{{x.title}}</option>
             </select>
           </div>
           <div class="form-group">
@@ -109,89 +109,89 @@
 </template>
 
 <script>
-  import Modal from '../ui-cards/Modal'
-  import patients_point from '../api/patients-point'
-  import * as action_types from '../store/action-types'
-  import moment from 'moment'
+import moment from 'moment';
+import Modal from '../ui-cards/Modal.vue';
+import patientsPoint from '../api/patients-point';
+import * as actions from '../store/action-types';
 
-  export default {
-    name: 'benefit',
-    components: {Modal},
-    props: {
-      card_pk: {
-        type: Number,
-        required: true
-      },
-      card_data: {
-        type: Object,
-        required: true,
-      },
-      readonly: {
-        type: Boolean,
-        required: false,
-        default: false,
-      },
+export default {
+  name: 'benefit',
+  components: { Modal },
+  props: {
+    card_pk: {
+      type: Number,
+      required: true,
     },
-    data() {
-      return {
-        td: moment().format('YYYY-MM-DD'),
-        rows: [],
-        edit_data: {},
-        edit_pk: -2,
+    card_data: {
+      type: Object,
+      required: true,
+    },
+    readonly: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      td: moment().format('YYYY-MM-DD'),
+      rows: [],
+      edit_data: {},
+      edit_pk: -2,
+    };
+  },
+  created() {
+    this.load_data();
+  },
+  computed: {
+    valid_reg() {
+      return this.edit_pk > -2
+          && this.edit_data.date_start !== ''
+          && this.edit_data.registration_basis !== ''
+          && (!this.edit_data.close || this.edit_data.date_end !== '');
+    },
+  },
+  methods: {
+    async edit(pk) {
+      const d = await patientsPoint.loadBenefitDetail({ pk });
+      this.edit_data = {
+        ...this.edit_data,
+        ...d,
+        date_start: d.date_start || this.td,
+        date_end: d.date_end || this.td,
+      };
+      this.edit_pk = pk;
+    },
+    hide_edit() {
+      if (this.$refs.modalEdit) {
+        this.$refs.modalEdit.$el.style.display = 'none';
       }
+      this.edit_pk = -2;
     },
-    created() {
-      this.load_data()
-    },
-    computed: {
-      valid_reg() {
-        return this.edit_pk > -2 &&
-          this.edit_data.date_start !== '' &&
-          this.edit_data.registration_basis !== '' &&
-          (!this.edit_data.close || this.edit_data.date_end !== '')
+    hide_modal() {
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
       }
+      this.$root.$emit('hide_benefit');
     },
-    methods: {
-      async edit(pk) {
-        const d = await patients_point.loadBenefitDetail({pk})
-        this.edit_data = {
-          ...this.edit_data,
-          ...d,
-          date_start: d.date_start || this.td,
-          date_end: d.date_end || this.td,
-        }
-        this.edit_pk = pk
-      },
-      hide_edit() {
-        if (this.$refs.modalEdit) {
-          this.$refs.modalEdit.$el.style.display = 'none'
-        }
-        this.edit_pk = -2
-      },
-      hide_modal() {
-        if (this.$refs.modal) {
-          this.$refs.modal.$el.style.display = 'none'
-        }
-        this.$root.$emit('hide_benefit')
-      },
-      async save() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await patients_point.saveBenefit({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
-        await this.$store.dispatch(action_types.DEC_LOADING)
-        okmessage('Сохранено')
-        this.hide_edit()
-        this.load_data()
-      },
-      load_data() {
-        this.$store.dispatch(action_types.INC_LOADING)
-        patients_point.loadBenefit(this, 'card_pk').then(({rows}) => {
-          this.rows = rows
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
-      },
-    }
-  }
+    async save() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await patientsPoint.saveBenefit({ card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      window.okmessage('Сохранено');
+      this.hide_edit();
+      this.load_data();
+    },
+    load_data() {
+      this.$store.dispatch(actions.INC_LOADING);
+      patientsPoint.loadBenefit(this, 'card_pk').then(({ rows }) => {
+        this.rows = rows;
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>

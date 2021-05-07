@@ -185,6 +185,8 @@ def procedure_aggregate(request):
         card_pk = i[10]
         if card_pk not in data:
             data[card_pk] = {
+                "pk": i[22],
+                "card": card_pk,
                 "patient": {"fio": i[8]},
                 "drugs": {},
             }

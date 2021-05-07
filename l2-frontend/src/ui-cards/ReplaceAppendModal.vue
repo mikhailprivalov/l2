@@ -10,19 +10,19 @@
 </template>
 
 <script>
-  import DialogMixin from 'vuejs-dialog/dist/vuejs-dialog-mixin.min'
+import DialogMixin from 'vuejs-dialog/dist/vuejs-dialog-mixin.min';
 
-  export default {
-    mixins: [DialogMixin],
-    methods: {
-      handle(platform) {
-        this.proceed(platform)
-      },
-      handleDismiss() {
-        this.cancel()
-      }
+export default {
+  mixins: [DialogMixin],
+  methods: {
+    handle(platform) {
+      this.proceed(platform);
     },
-  }
+    handleDismiss() {
+      this.cancel();
+    },
+  },
+};
 </script>
 
 <style scoped>

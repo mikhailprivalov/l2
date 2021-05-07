@@ -1,4 +1,4 @@
-import {generator} from './http-common'
+import { generator } from './http-common';
 
 export default generator({
   planOperationsSave: {
@@ -19,4 +19,4 @@ export default generator({
   planOperationsCancel: {
     url: 'plans/plan-operations-cancel',
   },
-})
+});

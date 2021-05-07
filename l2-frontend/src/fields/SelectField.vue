@@ -1,6 +1,6 @@
 <template>
   <select :disabled="disabled" v-model="val">
-    <option :value="v" v-for="v in variantsLocal">
+    <option :value="v" :key="v" v-for="v in variantsLocal">
       {{ v }}
     </option>
   </select>
@@ -25,29 +25,30 @@ export default {
     return {
       val: this.value,
       variantsLocal: [],
-    }
+    };
   },
   watch: {
     val() {
-      this.changeValue(this.val)
+      this.changeValue(this.val);
     },
     variants: {
       immediate: true,
       handler() {
         this.variantsLocal = Array.isArray(this.variants) ? this.variants : this.variants.split('\n');
         if ((!this.val || !this.variantsLocal.includes(this.val)) && this.variantsLocal.length > 0) {
-          this.val = this.variantsLocal[0]
+          // eslint-disable-next-line prefer-destructuring
+          this.val = this.variantsLocal[0];
         }
       },
     },
   },
   model: {
-    event: `modified`
+    event: 'modified',
   },
   methods: {
     changeValue(newVal) {
-      this.$emit('modified', newVal)
-    }
-  }
-}
+      this.$emit('modified', newVal);
+    },
+  },
+};
 </script>

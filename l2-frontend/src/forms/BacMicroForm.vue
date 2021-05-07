@@ -22,7 +22,7 @@
     </div>
     <div class="fields">
       <div style="height: 100%;width: 100%;position: relative;min-height: 100px;">
-        <div v-for="bactery in bacteriesResult" class="bactery">
+        <div v-for="bactery in bacteriesResult" class="bactery" :key="bactery.bacteryPk">
           <div class="bactery-title">
           <span title="Удалить" class="bactery-delete" @click="deleteBac(bactery.bacteryPk)" v-tippy>
             <i class="fa fa-times"></i>
@@ -80,7 +80,7 @@
                   </tr>
                   </thead>
                   <tbody>
-                  <tr v-for="a in bactery.antibiotics">
+                  <tr v-for="a in bactery.antibiotics" :key="a.pk">
                     <td class="cl-td" v-if="!confirmed">
                       <button title="Удалить" class="btn last btn-blue-nb nbr" type="button" v-tippy
                               tabindex="-1"
@@ -153,171 +153,180 @@
 </template>
 
 <script>
-  import vSelect from 'vue-select'
-  import 'vue-select/dist/vue-select.css'
-  import bacteria_point from '../api/bacteria-point'
-  import * as action_types from '../store/action-types'
-  import RadioField from '../fields/RadioField'
-  import {createPopper} from '@popperjs/core'
-  import {enter_field, leave_field} from "./utils";
-  import FastTemplates from "./FastTemplates";
-  import KOEField from "../fields/KOEField";
+import vSelect from 'vue-select';
+import 'vue-select/dist/vue-select.css';
+import { createPopper } from '@popperjs/core';
+import bacteriaPoint from '../api/bacteria-point';
+import * as actions from '../store/action-types';
+import RadioField from '../fields/RadioField.vue';
+import { enter_field, leave_field } from './utils';
+import FastTemplates from './FastTemplates.vue';
+import KOEField from '../fields/KOEField.vue';
 
-  const getDefaultElement = () => ({
-    pk: -1,
-    title: '',
-  })
+const getDefaultElement = () => ({
+  pk: -1,
+  title: '',
+});
 
-  export default {
-    name: 'BacMicroForm',
-    components: {KOEField, FastTemplates, RadioField, vSelect},
-    props: {
-      cultureCommentsTemplates: {
-        type: Array,
-        default: () => [],
-        required: false,
+export default {
+  name: 'BacMicroForm',
+  components: {
+    KOEField, FastTemplates, RadioField, vSelect,
+  },
+  props: {
+    cultureCommentsTemplates: {
+      type: Array,
+      default: () => [],
+      required: false,
+    },
+    value: {
+      type: Array,
+      default: () => [],
+      required: false,
+    },
+    confirmed: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      sri: ['S', 'R', 'I'],
+      val: [...this.value],
+      bacteriesGroups: [],
+      bacteries: [],
+      selectedGroup: getDefaultElement(),
+      selectedBactery: getDefaultElement(),
+      bacteriesResult: this.value,
+      antibiotics: {
+        groups: [],
+        groupsObj: {},
+        antibiotics: {},
+        sets: [],
       },
-      value: {
-        type: Array,
-        default: () => [],
-        required: false,
-      },
-      confirmed: {
-        type: Boolean,
-        default: false,
+      prev_scroll: 0,
+      prev_scrollHeightTop: 0,
+    };
+  },
+  async mounted() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    this.bacteriesGroups = (await bacteriaPoint.getBacGroups()).groups;
+    this.antibiotics = await bacteriaPoint.getAntibioticGroups();
+    this.selectedGroup = this.bacteriesGroups[0] || getDefaultElement();
+    await this.$store.dispatch(actions.DEC_LOADING);
+
+    for (const b of this.bacteriesResult) {
+      // eslint-disable-next-line prefer-destructuring
+      b.selectedGroup = this.antibiotics.groups[0];
+      // eslint-disable-next-line prefer-destructuring
+      b.selectedAntibiotic = this.antibiotics.groupsObj[this.antibiotics.groups[0].pk][0];
+      // eslint-disable-next-line prefer-destructuring
+      b.selectedSet = this.antibiotics.sets[0];
+    }
+  },
+  methods: {
+    withPopper(dropdownList, component, { width }) {
+      // eslint-disable-next-line no-param-reassign
+      dropdownList.style.width = width;
+      const popper = createPopper(component.$refs.toggle, dropdownList, {
+        placement: 'bottom',
+      });
+
+      return () => popper.destroy();
+    },
+    async load_bac_by_group() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      this.bacteries = (await bacteriaPoint.getBacByGroup({ groupId: this.selectedGroup.pk })).list;
+      this.selectedBactery = this.bacteries[0] || getDefaultElement();
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    addBactery() {
+      for (const bactery of this.bacteriesResult) {
+        if (bactery.bacteryPk === this.selectedBactery.pk) {
+          return;
+        }
+      }
+      this.bacteriesResult.push({
+        resultPk: -1,
+        bacteryPk: this.selectedBactery.pk,
+        bacteryTitle: this.selectedBactery.title,
+        bacteryGroupTitle: this.selectedGroup.title,
+        selectedGroup: this.antibiotics.groups[0],
+        selectedAntibiotic: this.antibiotics.groupsObj[this.antibiotics.groups[0].pk][0],
+        selectedSet: this.antibiotics.sets[0],
+        antibiotics: [],
+        koe: '',
+        comments: '',
+      });
+    },
+    async deleteBac(pk) {
+      try {
+        await this.$dialog.confirm('Подтвердите удаление');
+      } catch (_) {
+        return;
+      }
+
+      this.bacteriesResult = this.bacteriesResult.filter((br) => br.bacteryPk !== pk);
+    },
+    deleteAnti(bactery, pk) {
+      // eslint-disable-next-line no-param-reassign
+      bactery.antibiotics = bactery.antibiotics.filter((a) => a.pk !== pk);
+    },
+    loadSet(bactery) {
+      for (const id of bactery.selectedSet.ids) {
+        this.addAntibiotic(bactery, id);
       }
     },
-    data() {
-      return {
-        sri: ['S', 'R', 'I'],
-        val: [...this.value],
-        bacteriesGroups: [],
-        bacteries: [],
-        selectedGroup: getDefaultElement(),
-        selectedBactery: getDefaultElement(),
-        bacteriesResult: this.value,
-        antibiotics: {
-          groups: [],
-          groupsObj: {},
-          antibiotics: {},
-          sets: [],
-        },
-        prev_scroll: 0,
-        prev_scrollHeightTop: 0,
+    loadAntibiotic(bactery) {
+      this.addAntibiotic(bactery, bactery.selectedAntibiotic.pk);
+    },
+    addAntibiotic(bactery, pk) {
+      for (const a of bactery.antibiotics) {
+        if (a.pk === pk) {
+          return;
+        }
       }
+
+      bactery.antibiotics.push({
+        pk,
+        resultPk: -1,
+        sri: 'S',
+        dia: '',
+        amount: '',
+      });
     },
-    async mounted() {
-      await this.$store.dispatch(action_types.INC_LOADING)
-      this.bacteriesGroups = (await bacteria_point.getBacGroups()).groups
-      this.antibiotics = await bacteria_point.getAntibioticGroups()
-      this.selectedGroup = this.bacteriesGroups[0] || getDefaultElement()
-      await this.$store.dispatch(action_types.DEC_LOADING)
-
-      for (const b of this.bacteriesResult) {
-        b.selectedGroup = this.antibiotics.groups[0];
-        b.selectedAntibiotic = this.antibiotics.groupsObj[this.antibiotics.groups[0].pk][0];
-        b.selectedSet = this.antibiotics.sets[0];
-      }
+    updateSelectedAntibiotic(bactery) {
+      // eslint-disable-next-line no-param-reassign,prefer-destructuring
+      bactery.selectedAntibiotic = this.antibiotics.groupsObj[bactery.selectedGroup.pk][0];
     },
-    methods: {
-      withPopper(dropdownList, component, {width}) {
-        dropdownList.style.width = width
-        const popper = createPopper(component.$refs.toggle, dropdownList, {
-          placement: 'bottom',
-        })
-
-        return () => popper.destroy()
-      },
-      async load_bac_by_group() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        this.bacteries = (await bacteria_point.getBacByGroup({groupId: this.selectedGroup.pk})).list
-        this.selectedBactery = this.bacteries[0] || getDefaultElement()
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      addBactery() {
-        for (const bactery of this.bacteriesResult) {
-          if (bactery.bacteryPk === this.selectedBactery.pk) {
-            return
-          }
-        }
-        this.bacteriesResult.push({
-          resultPk: -1,
-          bacteryPk: this.selectedBactery.pk,
-          bacteryTitle: this.selectedBactery.title,
-          bacteryGroupTitle: this.selectedGroup.title,
-          selectedGroup: this.antibiotics.groups[0],
-          selectedAntibiotic: this.antibiotics.groupsObj[this.antibiotics.groups[0].pk][0],
-          selectedSet: this.antibiotics.sets[0],
-          antibiotics: [],
-          koe: '',
-          comments: '',
-        })
-      },
-      async deleteBac(pk) {
-        try {
-          await this.$dialog.confirm('Подтвердите удаление')
-        } catch (_) {
-          return
-        }
-
-        this.bacteriesResult = this.bacteriesResult.filter(br => br.bacteryPk !== pk)
-      },
-      deleteAnti(bactery, pk) {
-        bactery.antibiotics = bactery.antibiotics.filter(a => a.pk !== pk)
-      },
-      loadSet(bactery) {
-        for (const id of bactery.selectedSet.ids) {
-          this.addAntibiotic(bactery, id)
-        }
-      },
-      loadAntibiotic(bactery) {
-        this.addAntibiotic(bactery, bactery.selectedAntibiotic.pk)
-      },
-      addAntibiotic(bactery, pk) {
-        for (const a of bactery.antibiotics) {
-          if (a.pk === pk) {
-            return
-          }
-        }
-
-        bactery.antibiotics.push({
-          pk,
-          resultPk: -1,
-          sri: 'S',
-          dia: '',
-          amount: '',
-        })
-      },
-      updateSelectedAntibiotic(bactery) {
-        bactery.selectedAntibiotic = this.antibiotics.groupsObj[bactery.selectedGroup.pk][0]
-      },
-      updateValue(field, prop) {
-        return newValue => {
-          field[prop] = newValue
-        };
-      },
-      enter_field(...args) {
-        return enter_field.apply(this, args);
-      },
-      leave_field(...args) {
-        return leave_field.apply(this, args);
+    updateValue(field, prop) {
+      return (newValue) => {
+        // eslint-disable-next-line no-param-reassign
+        field[prop] = newValue;
+      };
+    },
+    enter_field(...args) {
+      return enter_field.apply(this, args);
+    },
+    leave_field(...args) {
+      return leave_field.apply(this, args);
+    },
+  },
+  watch: {
+    bacteriesResult: {
+      deep: true,
+      handler() {
+        this.$emit('input', this.bacteriesResult);
       },
     },
-    watch: {
-      bacteriesResult: {
-        deep: true,
-        handler() {
-          this.$emit('input', this.bacteriesResult)
-        },
-      },
-      selectedGroup: {
-        deep: true,
-        handler() {
-          this.load_bac_by_group()
-        },
+    selectedGroup: {
+      deep: true,
+      handler() {
+        this.load_bac_by_group();
       },
     },
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

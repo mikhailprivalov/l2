@@ -7,10 +7,10 @@
       <div class="sidebar-content" :class="{fcenter: templates_list.length === 0}">
         <div v-if="templates_list.length === 0">Не найдено</div>
         <div class="research" :class="{rhide: row.hide}"
-             v-for="row in rows"
+             :key="row.pk" v-for="row in rows"
              @click="open_editor(row.pk)">
           <div class="t-t">{{row.title}}</div>
-          <div v-for="res in row.researches" class="t-r">
+          <div v-for="res in row.researches" :key="res.pk" class="t-r">
             {{res.title}}
           </div>
         </div>
@@ -21,75 +21,77 @@
       </button>
     </div>
     <div class="construct-content">
-      <template-editor style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;" v-if="opened_id > -2" :pk="opened_id" :global_template_p="parseInt(type)" />
+      <template-editor style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;" v-if="opened_id > -2" :pk="opened_id"
+                       :global_template_p="parseInt(type, 10)" />
     </div>
   </div>
 </template>
 
 <script>
-  import SelectPickerM from '../fields/SelectPickerM'
-  import TemplateEditor from './TemplateEditor'
-  import * as action_types from '../store/action-types'
+import SelectPickerM from '../fields/SelectPickerM.vue';
+import TemplateEditor from './TemplateEditor.vue';
+import * as actions from '../store/action-types';
 
-  export default {
-    components: {
-      SelectPickerM,
-      TemplateEditor,
-    },
-    name: 'construct-templates',
-    data() {
-      return {
-        type: 1,
-        templates_list: [],
-        opened_id: -2,
-        inLoading: true,
-      }
-    },
-    created() {
-      this.$parent.$on('research-editor:cancel', this.cancel_edit)
+export default {
+  components: {
+    SelectPickerM,
+    TemplateEditor,
+  },
+  name: 'construct-templates',
+  data() {
+    return {
+      type: 1,
+      templates_list: [],
+      opened_id: -2,
+      inLoading: true,
+    };
+  },
+  created() {
+    this.$parent.$on('research-editor:cancel', this.cancel_edit);
 
-      this.$store.dispatch(action_types.INC_LOADING)
-      this.$store.dispatch(action_types.GET_RESEARCHES).finally(() => {
-        this.$store.dispatch(action_types.DEC_LOADING)
-      })
+    this.$store.dispatch(actions.INC_LOADING);
+    this.$store.dispatch(actions.GET_RESEARCHES).finally(() => {
+      this.$store.dispatch(actions.DEC_LOADING);
+    });
 
-      this.$store.watch(state => state.researches, () => {
-        this.load_templates()
-      })
+    this.$store.watch((state) => state.researches, () => {
+      this.load_templates();
+    });
+  },
+  methods: {
+    load_templates() {
+      this.templates_list = [];
+      fetch(`/api/load-templates?type=${this.type}`).then((r) => r.json()).then((data) => {
+        this.templates_list = data.result;
+      });
     },
-    methods: {
-      load_templates() {
-        const t = this;
-        t.templates_list = [];
-        fetch("/api/load-templates?type=" + this.type).then(r => r.json()).then(data => {
-          t.templates_list = data.result;
-        })
-      },
-      open_editor(pk) {
-        this.opened_id = pk
-      },
-      cancel_edit() {
-        this.opened_id = -2
-        this.load_templates()
-      },
+    open_editor(pk) {
+      this.opened_id = pk;
     },
-    watch: {
-      type() {
-        this.load_templates()
-      },
+    cancel_edit() {
+      this.opened_id = -2;
+      this.load_templates();
     },
-    computed: {
-      types() {
-        return [
-          {value: 1, label: 'Global'},
-          {value: 2, label: 'Searchable'},
-        ];
-      },
-      rows() {
-        return this.templates_list.map(r => ({...r, researches: r.researches.map(rpk => this.$store.getters.researches_obj[rpk]).filter(Boolean)}))
-      },
-    }
-  }
+  },
+  watch: {
+    type() {
+      this.load_templates();
+    },
+  },
+  computed: {
+    types() {
+      return [
+        { value: 1, label: 'Global' },
+        { value: 2, label: 'Searchable' },
+      ];
+    },
+    rows() {
+      return this.templates_list.map(
+        (r) => ({ ...r, researches: r.researches.map((rpk) => this.$store.getters.researches_obj[rpk]).filter(Boolean) }),
+      );
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

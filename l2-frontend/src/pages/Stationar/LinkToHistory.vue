@@ -7,18 +7,18 @@
 </template>
 
 <script>
-  export default {
-    name: "LinkToHistory",
-    props: {
-      direction: {
-        type: Number,
-        required: true,
-      },
+export default {
+  name: 'LinkToHistory',
+  props: {
+    direction: {
+      type: Number,
+      required: true,
     },
-    methods: {
-      load() {
-        this.$root.$emit('open-history', this.direction);
-      },
+  },
+  methods: {
+    load() {
+      this.$root.$emit('open-history', this.direction);
     },
-  }
+  },
+};
 </script>

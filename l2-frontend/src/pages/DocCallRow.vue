@@ -49,7 +49,7 @@
       <DocCallModal :r="r" v-if="showModal"/>
     </td>
 
-    <div :id="`template-${r.pk}-${t}`" class="tp" v-for="t in tpls">
+    <div :id="`template-${r.pk}-${t}`" :key="t" class="tp" v-for="t in tpls">
       <div>
         Больница: {{ r.hospital || 'нет' }}
       </div>
@@ -67,16 +67,16 @@
 </template>
 <script>
 import api from '@/api';
-import * as action_types from "@/store/action-types";
-import DocCallModal from "@/pages/DocCallModal";
+import * as actions from '@/store/action-types';
+import DocCallModal from '@/pages/DocCallModal.vue';
 
 export default {
   name: 'DocCallRow',
-  components: {DocCallModal},
+  components: { DocCallModal },
   props: {
     r: {
       type: Object,
-    }
+    },
   },
   data() {
     const tpls = [];
@@ -90,13 +90,13 @@ export default {
       commonTippy: {
         reactive: true, animateFill: false, duration: 200, delay: [250, 0],
       },
-    }
+    };
   },
   mounted() {
     this.$root.$on('doc-call:row:modal:hide', () => {
-      this.showModal = false
+      this.showModal = false;
     });
-    this.$root.$on('doc-call:status:updated', pk => {
+    this.$root.$on('doc-call:status:updated', (pk) => {
       if (pk === this.r.pk) {
         this.status = this.r.status;
       }
@@ -104,41 +104,45 @@ export default {
   },
   methods: {
     async onChangeStatus() {
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message, status, executor, executor_fio, inLog} = await api(
-        'doctor-call/change-status', this.r, ['pk', 'status'], {prevStatus: this.status}
+      await this.$store.dispatch(actions.INC_LOADING);
+      const {
+        ok, message, status, executor, executor_fio, inLog,
+      } = await api(
+        'doctor-call/change-status', this.r, ['pk', 'status'], { prevStatus: this.status },
       );
       if (!ok) {
-        errmessage(message);
+        window.errmessage(message);
       } else {
-        okmessage('Статус обновлён успешно');
+        window.okmessage('Статус обновлён успешно');
       }
       this.r.executor = executor;
       this.r.executor_fio = executor_fio;
       this.r.inLog = inLog;
       this.r.status = status;
       this.$root.$emit('doc-call:status:updated', this.r.pk);
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async setMeAsExecutor() {
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message, status, executor, executor_fio, inLog} = await api(
-        'doctor-call/change-executor', this.r, ['pk'], {prevExecutor: this.r.executor}
+      await this.$store.dispatch(actions.INC_LOADING);
+      const {
+        ok, message, status, executor, executor_fio, inLog,
+      } = await api(
+        'doctor-call/change-executor', this.r, ['pk'], { prevExecutor: this.r.executor },
       );
       if (!ok) {
-        errmessage(message);
+        window.errmessage(message);
       } else {
-        okmessage('Исполнитель обновлён успешно');
+        window.okmessage('Исполнитель обновлён успешно');
       }
       this.r.executor = executor;
       this.r.executor_fio = executor_fio;
       this.r.inLog = inLog;
       this.r.status = status;
       this.$root.$emit('doc-call:status:updated', this.r.pk);
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

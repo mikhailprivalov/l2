@@ -4,8 +4,8 @@
       {{data.date}}
     </td>
     <td>
-      <a
-        :href="`/mainmenu/stationar#{%22pk%22:${data.direction},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
+      <!-- eslint-disable-next-line max-len -->
+      <a :href="`/mainmenu/stationar#{%22pk%22:${data.direction},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
         target="_blank" class="a-under">
         {{data.direction}}
       </a>
@@ -51,60 +51,62 @@
 </template>
 
 <script>
-  import Treeselect from "@riophae/vue-treeselect";
-  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-  import * as action_types from "../../../store/action-types";
-  import plans_point from "../../../api/plans-point";
-  import PlanOperationEdit from "../../../modals/PlanOperationEdit";
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import * as actions from '../../../store/action-types';
+import plansPoint from '../../../api/plans-point';
+import PlanOperationEdit from '../../../modals/PlanOperationEdit.vue';
 
-  export default {
-    name: "Row",
-    components: {PlanOperationEdit, Treeselect},
-    props: {
-      data: {
-        type: Object,
-        required: true,
-      },
-      hirurgs: {
-        type: Object,
-        required: true,
-      },
-      anestesiologs: {
-        type: Array,
-        required: true,
-      },
+export default {
+  name: 'Row',
+  components: { PlanOperationEdit, Treeselect },
+  props: {
+    data: {
+      type: Object,
+      required: true,
     },
-    data() {
-      return {
-        edit_plan_operation: false
-      };
+    hirurgs: {
+      type: Object,
+      required: true,
     },
-    computed: {
-      anestesiologId() {
-        return this.data.doc_anesthetist_id;
-      },
-      can_edit_operations() {
-        return (this.$store.getters.user_data.groups || []).includes('Управление планами операций')
-      },
-      can_edit_anestesiologs() {
-        return (this.$store.getters.user_data.groups || []).includes('Управление анестезиологами')
-      },
+    anestesiologs: {
+      type: Array,
+      required: true,
     },
-    mounted() {
-      this.$root.$on('hide_plan_operations', () => this.edit_plan_operation = false)
+  },
+  data() {
+    return {
+      edit_plan_operation: false,
+    };
+  },
+  computed: {
+    anestesiologId() {
+      return this.data.doc_anesthetist_id;
     },
-    watch: {
-      async anestesiologId() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await plans_point.changeAnestesiolog({
-          'plan_pk': this.data.pk_plan,
-          'doc_anesthetist_pk': this.anestesiologId,
-        })
-        okmessage('Анестезиолог изменён');
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
+    can_edit_operations() {
+      return (this.$store.getters.user_data.groups || []).includes('Управление планами операций');
     },
-  }
+    can_edit_anestesiologs() {
+      return (this.$store.getters.user_data.groups || []).includes('Управление анестезиологами');
+    },
+  },
+  mounted() {
+    this.$root.$on('hide_plan_operations', () => {
+      this.edit_plan_operation = false;
+    });
+  },
+  watch: {
+    async anestesiologId() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await plansPoint.changeAnestesiolog({
+        plan_pk: this.data.pk_plan,
+        doc_anesthetist_pk: this.anestesiologId,
+      });
+      window.okmessage('Анестезиолог изменён');
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

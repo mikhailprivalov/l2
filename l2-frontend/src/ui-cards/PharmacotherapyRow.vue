@@ -13,14 +13,14 @@
           <select class="form-control nbr" :class="!isValidFormRelease && 'invalid'"
                   v-model.number="data.form_release" :readonly="confirmed">
             <option value="-1" v-if="data.form_release === -1" disabled>Не выбрано</option>
-            <option :value="f.pk" v-for="f in params.formReleases">{{ f.title }}</option>
+            <option :value="f.pk" v-for="f in params.formReleases" :key="f.pk">{{ f.title }}</option>
           </select>
         </td>
         <td class="cl-td">
           <select class="form-control nbr" :class="!isValidMethod && 'invalid'" v-model.number="data.method"
                   :readonly="confirmed">
             <option value="-1" v-if="data.method === -1" disabled>Не выбрано</option>
-            <option :value="f.pk" v-for="f in params.methods">{{ f.title }}</option>
+            <option :value="f.pk" v-for="f in params.methods" :key="f.pk">{{ f.title }}</option>
           </select>
         </td>
         <td class="cl-td">
@@ -31,7 +31,7 @@
           <select class="form-control nbr" :class="!isValidUnits && 'invalid'" v-model="data.units"
                   :readonly="confirmed">
             <option :value="null" v-if="data.units === null" disabled>–</option>
-            <option :value="u" v-for="u in params.units">{{ u }}</option>
+            <option :value="u" v-for="u in params.units" :key="u">{{ u }}</option>
           </select>
         </td>
         <td class="cl-td">
@@ -68,14 +68,14 @@
 </template>
 
 <script>
-import Treeselect from "@riophae/vue-treeselect";
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-import moment from "moment";
+import moment from 'moment';
 
 export default {
-  name: "PharmacotherapyRow",
-  components: {Treeselect},
+  name: 'PharmacotherapyRow',
+  components: { Treeselect },
   props: {
     data: {},
     params: {},
@@ -114,16 +114,15 @@ export default {
         const dates = [];
         for (let i = 0; i < this.data.countDays; i += this.data.step) {
           dates.push(
-            moment(this.data.dateStart).add(i, 'days').format('DD.MM.YYYY')
+            moment(this.data.dateStart).add(i, 'days').format('DD.MM.YYYY'),
           );
         }
         return dates.join(' ');
       }
       return moment(this.data.dateStart).add(this.data.countDays - 1, 'days').format('DD.MM.YYYY');
-
     },
     timesToSelect() {
-      return (this.params.times || []).map(t => ({
+      return (this.params.times || []).map((t) => ({
         id: t,
         label: t,
       }));
@@ -140,14 +139,14 @@ export default {
   data() {
     return {
       td: moment().format('YYYY-MM-DD'),
-    }
+    };
   },
   methods: {
     delete_row() {
       this.data.remove = true;
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped lang="scss">

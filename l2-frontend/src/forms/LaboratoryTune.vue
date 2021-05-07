@@ -14,7 +14,7 @@
         </tr>
       </thead>
       <tbody>
-      <tr v-for="f in fractions">
+      <tr v-for="f in fractions" :key="`${f.pk}_${f.title}`">
         <td>
           {{f.title}}{{f.units ?  ', ' + f.units : ''}}
         </td>
@@ -25,7 +25,12 @@
                      SearchingText="Поиск..."
                      :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
                      :limit="14" :minChars="1"
-                     :render="items => items.map(i => `${i.code_fsli} – ${i.title} – ${i.sample}${i.synonym ? ' – ' + i.synonym : ''}${i.nmu ? ' – ' + i.nmu : ''}`)"
+                     :render="items => (
+                       items.map(i => (
+                         // eslint-disable-next-line max-len
+                         `${i.code_fsli} – ${i.title} – ${i.sample}${i.synonym ? ' – ' + i.synonym : ''}${i.nmu ? ' – ' + i.nmu : ''}`
+                       ))
+                     )"
                      :onHit="onHit(f)"
                      :selectFirst="true"
                      maxlength="128"
@@ -43,48 +48,49 @@
 </template>
 
 <script>
-  import * as action_types from '../store/action-types'
-  import laboratory_point from '../api/laboratory-point'
-  import TypeAhead from 'vue2-typeahead'
+import TypeAhead from 'vue2-typeahead';
+import * as actions from '../store/action-types';
+import laboratory_point from '../api/laboratory-point';
 
-  export default {
-    components: {TypeAhead},
-    props: {
-      pk: {
-        type: String,
-        required: true,
-      }
+export default {
+  components: { TypeAhead },
+  props: {
+    pk: {
+      type: String,
+      required: true,
     },
-    data() {
-      return {
-        fractions: [],
-        title: '',
-      }
+  },
+  data() {
+    return {
+      fractions: [],
+      title: '',
+    };
+  },
+  mounted() {
+    this.loadData();
+  },
+  methods: {
+    async loadData() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { fractions, title } = await laboratory_point.getFractions(this, 'pk');
+      this.fractions = fractions;
+      this.title = title;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-    mounted() {
-      this.loadData();
+    async save() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await laboratory_point.saveFsli(this, 'fractions');
+      window.okmessage('Сохранено');
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-    methods: {
-      async loadData() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {fractions, title} = await laboratory_point.getFractions(this, 'pk');
-        this.fractions = fractions;
-        this.title = title;
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      async save() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await laboratory_point.saveFsli(this, 'fractions');
-        okmessage('Сохранено');
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      onHit(f) {
-        return item => {
-          f.fsli = item.split('–')[0].trim();
-        }
-      },
+    onHit(f) {
+      return (item) => {
+        // eslint-disable-next-line no-param-reassign
+        f.fsli = item.split('–')[0].trim();
+      };
     },
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

@@ -1,6 +1,6 @@
 <template>
   <div class="root-agg">
-    <div v-for="rr in rows">
+    <div v-for="rr in rows" :key="rr.pk">
       <table class="table table-responsive table-bordered table-condensed">
         <colgroup>
           <col width="200"/>
@@ -22,7 +22,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="r in rr.drugs">
+        <tr v-for="r in rr.drugs" :key="r.pk">
           <td class="patient" :class="{cancel: r.cancel}">
             {{ rr.patient.fio }},
             история {{ r.history_num }}
@@ -57,13 +57,13 @@
 </template>
 
 <script>
-import api from '@/api'
-import PharmacotherapyTime from "@/fields/PharmacotherapyTime";
-import * as action_types from "@/store/action-types";
+import api from '@/api';
+import PharmacotherapyTime from '@/fields/PharmacotherapyTime.vue';
+import * as actions from '@/store/action-types';
 
 export default {
-  name: "AggregatePharmacoTherapyDepartment",
-  components: {PharmacotherapyTime},
+  name: 'AggregatePharmacoTherapyDepartment',
+  components: { PharmacotherapyTime },
   props: {
     direction: {},
     department_pk: null,
@@ -76,15 +76,15 @@ export default {
       times: [],
       timesInDates: {},
       dates_aggregate: '',
-    }
+    };
   },
   async mounted() {
     this.dates_aggregate = this.dateRange.split('x');
-    this.load()
+    this.load();
     this.$root.$on('pharmacotherapy-aggregation:reload', () => this.load());
-    $('.root-agg').on('mouseover mouseout', '[data-datetime]', function (event) {
-      const t$ = $(event.target);
-      const all$ = $(`[data-datetime="${t$.data('datetime')}"]`);
+    window.$('.root-agg').on('mouseover mouseout', '[data-datetime]', (event) => {
+      const t$ = window.$(event.target);
+      const all$ = window.$(`[data-datetime="${t$.data('datetime')}"]`);
       if (event.type === 'mouseover') {
         all$.addClass('datetime-hover');
       } else {
@@ -93,29 +93,29 @@ export default {
     });
   },
   beforeDestroy() {
-    $('.root-agg [data-datetime]').off('mouseover mouseout');
+    window.$('.root-agg [data-datetime]').off('mouseover mouseout');
   },
   watch: {
     dateRange: {
       handler() {
         this.dates_aggregate = this.dateRange.split('x');
-        this.load()
+        this.load();
       },
     },
     department_pk: {
       handler() {
-        this.load()
-      }
-    }
+        this.load();
+      },
+    },
   },
   computed: {
     can_cancel() {
-      for (let g of (this.$store.getters.user_data.groups || [])) {
-        if (g === 'Врач стационара' || g === "Admin") {
-          return true
+      for (const g of (this.$store.getters.user_data.groups || [])) {
+        if (g === 'Врач стационара' || g === 'Admin') {
+          return true;
         }
       }
-      return false
+      return false;
     },
   },
   methods: {
@@ -126,42 +126,42 @@ export default {
         times,
         timesInDates,
       } = await api('procedural-list/department-procedures', {
-        'start_date': this.dates_aggregate[0],
-        'end_date': this.dates_aggregate[1],
-        'department_pk': this.department_pk
+        start_date: this.dates_aggregate[0],
+        end_date: this.dates_aggregate[1],
+        department_pk: this.department_pk,
       });
       this.rows = result;
       this.dates = dates;
       this.times = times;
       this.timesInDates = timesInDates;
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async cancelRow(pk, cancel) {
       if (cancel) {
         try {
-          await this.$dialog.confirm('Вы действительно хотите отменить назначение?')
+          await this.$dialog.confirm('Вы действительно хотите отменить назначение?');
         } catch (_) {
-          return
+          return;
         }
       } else {
         try {
-          await this.$dialog.confirm('Вы действительно хотите вернуть назначение?')
+          await this.$dialog.confirm('Вы действительно хотите вернуть назначение?');
         } catch (_) {
-          return
+          return;
         }
       }
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message} = await api('procedural-list/procedure-cancel', {pk, cancel});
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await api('procedural-list/procedure-cancel', { pk, cancel });
       if (ok) {
-        okmessage(message);
-        this.$root.$emit('pharmacotherapy-aggregation:reload')
+        window.okmessage(message);
+        this.$root.$emit('pharmacotherapy-aggregation:reload');
       } else {
-        errmessage(message);
+        window.errmessage(message);
       }
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

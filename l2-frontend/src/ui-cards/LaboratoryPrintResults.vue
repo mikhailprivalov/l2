@@ -46,18 +46,18 @@
 </template>
 
 <script>
-import moment from "moment";
+import moment from 'moment';
 import _ from 'lodash';
 
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import Modal from "@/ui-cards/Modal";
-import ResearchesPicker from "@/ui-cards/ResearchesPicker";
-import * as action_types from "@/store/action-types";
-import api from "@/api";
+import Modal from '@/ui-cards/Modal.vue';
+import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
+import * as actions from '@/store/action-types';
+import api from '@/api';
 
 export default {
-  components: {Modal, ResearchesPicker, Treeselect},
+  components: { Modal, ResearchesPicker, Treeselect },
   name: 'LaboratoryPrintResults',
   data() {
     return {
@@ -74,68 +74,72 @@ export default {
       this.selected_researches = [];
       this.date = moment().format('YYYY-MM-DD');
       this.otd = -1;
-      await this.$store.dispatch(action_types.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
       this.otds = (await api('otds')).rows;
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async dayprint_do() {
       const researches = this.selected_researches;
 
       if (researches.length === 0) {
-        $.amaran({
-          'theme': 'awesome wrn',
-          'content': {
+        // @ts-ignore
+        // eslint-disable-next-line no-undef
+        window.$.amaran({
+          theme: 'awesome wrn',
+          content: {
             title: 'Печать невозможна',
             message: 'Ничего не выбрано',
             info: '',
-            icon: 'fa fa-exclamation'
+            icon: 'fa fa-exclamation',
           },
-          'position': 'bottom right',
-          delay: 6000
-        })
-        return
+          position: 'bottom right',
+          delay: 6000,
+        });
+        return;
       }
 
-      await this.$store.dispatch(action_types.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
 
-      await new Promise(r => {
-        $.ajax({
+      await new Promise((r) => {
+        window.$.ajax({
           url: '/results/day',
           data: {
             date: this.date,
             researches: JSON.stringify(researches),
             otd: this.otd,
-          }
+          },
         }).done(function (data) {
           if (Object.keys(data.directions).length > 0) {
-            let strs = []
+            let strs = [];
             for (let l = 0; l < Object.keys(data.directions).length; l++) {
-              strs = _.union(strs, data.directions[Object.keys(data.directions)[l]])
+              strs = _.union(strs, data.directions[Object.keys(data.directions)[l]]);
             }
-            printResults(strs)
+            window.printResults(strs);
             this.open = false;
           } else {
-            $.amaran({
-              'theme': 'awesome wrn',
-              'content': {
+            // @ts-ignore
+            // eslint-disable-next-line no-undef
+            window.$.amaran({
+              theme: 'awesome wrn',
+              content: {
                 title: 'Печать невозможна',
                 message: 'Ничего не найдено',
                 info: '',
-                icon: 'fa fa-exclamation'
+                icon: 'fa fa-exclamation',
               },
-              'position': 'bottom right',
-              delay: 6000
-            })
+              position: 'bottom right',
+              delay: 6000,
+            });
           }
-        }).always(function () {
+        }).always(() => {
           r();
         });
       });
 
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
-}
+};
 </script>
 
 <style lang="scss" scoped>

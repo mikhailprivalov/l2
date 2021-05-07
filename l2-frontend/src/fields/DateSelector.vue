@@ -21,67 +21,67 @@
 </template>
 
 <script>
-  import SelectPicker from './SelectPicker'
-  import DateField from './DateField'
+import SelectPicker from './SelectPicker.vue';
+import DateField from './DateField.vue';
 
-  export default {
-    name: 'date-selector',
-    props: {
-      values_def: {
-        type: Object,
-        default() {
-          return {
-            date: getFormattedDate(today),
-            month: today.getMonth() + '',
-            year: today.getFullYear() + ''
-          }
-        }
-      }
-    },
-    data() {
-      return {
-        date_type: 'd',
-        date_types: [{value: 'd', label: 'За день'}, {value: 'm', label: 'За месяц'}],
-        monthes: [
-          {value: '0', label: 'Январь'},
-          {value: '1', label: 'Февраль'},
-          {value: '2', label: 'Март'},
-          {value: '3', label: 'Апрель'},
-          {value: '4', label: 'Май'},
-          {value: '5', label: 'Июнь'},
-          {value: '6', label: 'Июль'},
-          {value: '7', label: 'Август'},
-          {value: '8', label: 'Сентябрь'},
-          {value: '9', label: 'Октябрь'},
-          {value: '10', label: 'Ноябрь'},
-          {value: '11', label: 'Декабрь'},
-        ],
-        values: this.values_def
-      }
-    },
-    watch: {
-      date_type() {
-        this.$emit('update:date_type', this.date_type)
+export default {
+  name: 'date-selector',
+  props: {
+    values_def: {
+      type: Object,
+      default() {
+        return {
+          date: window.getFormattedDate(window.today),
+          month: `${window.today.getMonth()}`,
+          year: `${window.today.getFullYear()}`,
+        };
       },
-      values: {
-        handler() {
-          this.$emit('update:values', this.values)
-        },
-        deep: true
-      }
     },
-    created() {
-      this.$emit('update:date_type', this.date_type)
-      this.$emit('update:values', this.values)
+  },
+  data() {
+    return {
+      date_type: 'd',
+      date_types: [{ value: 'd', label: 'За день' }, { value: 'm', label: 'За месяц' }],
+      monthes: [
+        { value: '0', label: 'Январь' },
+        { value: '1', label: 'Февраль' },
+        { value: '2', label: 'Март' },
+        { value: '3', label: 'Апрель' },
+        { value: '4', label: 'Май' },
+        { value: '5', label: 'Июнь' },
+        { value: '6', label: 'Июль' },
+        { value: '7', label: 'Август' },
+        { value: '8', label: 'Сентябрь' },
+        { value: '9', label: 'Октябрь' },
+        { value: '10', label: 'Ноябрь' },
+        { value: '11', label: 'Декабрь' },
+      ],
+      values: this.values_def,
+    };
+  },
+  watch: {
+    date_type() {
+      this.$emit('update:date_type', this.date_type);
     },
-    methods: {
-      change_type(v) {
-        this.date_type = v
+    values: {
+      handler() {
+        this.$emit('update:values', this.values);
       },
-      change_month(v) {
-        this.values.month = v
-      }
+      deep: true,
     },
-    components: {SelectPicker, DateField}
-  }
+  },
+  created() {
+    this.$emit('update:date_type', this.date_type);
+    this.$emit('update:values', this.values);
+  },
+  methods: {
+    change_type(v) {
+      this.date_type = v;
+    },
+    change_month(v) {
+      this.values.month = v;
+    },
+  },
+  components: { SelectPicker, DateField },
+};
 </script>

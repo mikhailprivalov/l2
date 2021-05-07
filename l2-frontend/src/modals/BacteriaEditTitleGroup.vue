@@ -34,50 +34,51 @@
 </template>
 
 <script>
-  import Modal from '../ui-cards/Modal'
-  import * as action_types from '../store/action-types'
-  import bacteria_point from '../api/bacteria-point'
+import Modal from '../ui-cards/Modal.vue';
+import * as actions from '../store/action-types';
+import bacteriaPoint from '../api/bacteria-point';
 
-  export default {
-    name: 'BacteriaEditTitleGroup',
-    components: {Modal},
-    props: {
-      typesObject: {
-        type: String,
-        required: true
-      },
-      group_obj: {
-        type: Object,
-        required: true,
-      },
-      typesGroups: {
-        type: String,
-        required: true,
-      },
+export default {
+  name: 'BacteriaEditTitleGroup',
+  components: { Modal },
+  props: {
+    typesObject: {
+      type: String,
+      required: true,
     },
-    methods: {
-      hide_modal() {
-        this.$root.$emit('hide_ge')
-        if (this.$refs.modal) {
-          this.$refs.modal.$el.style.display = 'none'
-        }
-      },
-      async updateGroup() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {ok, message} = await bacteria_point.updateGroup({
-          'TypesObject': this.typesObject, 'typeGroups': this.typesGroups,
-          'obj': {'pk': this.group_obj.pk, 'title': this.group_obj.title, 'hide': this.group_obj.hide}
-        })
-        if (ok) {
-          okmessage('Группа сохранена', `${this.group_obj.title}`)
-        } else {
-          errmessage('Ошибка', message)
-        }
-        await this.$store.dispatch(action_types.DEC_LOADING)
-        this.hide_modal();
-      },
+    group_obj: {
+      type: Object,
+      required: true,
     },
-  }
+    typesGroups: {
+      type: String,
+      required: true,
+    },
+  },
+  methods: {
+    hide_modal() {
+      this.$root.$emit('hide_ge');
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
+      }
+    },
+    async updateGroup() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await bacteriaPoint.updateGroup({
+        TypesObject: this.typesObject,
+        typeGroups: this.typesGroups,
+        obj: { pk: this.group_obj.pk, title: this.group_obj.title, hide: this.group_obj.hide },
+      });
+      if (ok) {
+        window.okmessage('Группа сохранена', `${this.group_obj.title}`);
+      } else {
+        window.errmessage('Ошибка', message);
+      }
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.hide_modal();
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

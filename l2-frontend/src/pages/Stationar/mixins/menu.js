@@ -1,19 +1,19 @@
 const menuItems = Object.freeze({
   'primary receptions': 'Первичные приёмы',
-  'laboratory': 'Лабораторные',
-  'paraclinical': 'Параклинические',
-  'morfology': 'Морфология',
-  'consultation': 'Консультации',
-  'diaries': 'Дневники',
-  'vc': 'Врачебная комиссия',
-  'operation': 'Операции',
-  'bl': 'Больничные листы',
-  'physiotherapy': 'Физиотерапия',
-  'pharmacotherapy': 'Фармакотерапия',
+  laboratory: 'Лабораторные',
+  paraclinical: 'Параклинические',
+  morfology: 'Морфология',
+  consultation: 'Консультации',
+  diaries: 'Дневники',
+  vc: 'Врачебная комиссия',
+  operation: 'Операции',
+  bl: 'Больничные листы',
+  physiotherapy: 'Физиотерапия',
+  pharmacotherapy: 'Фармакотерапия',
   't, ad, p sheet': 't, ad, p – листы',
-  'epicrisis': 'Эпикризы',
-  'extracts': 'Выписки',
-  'all': 'Показать всё',
+  epicrisis: 'Эпикризы',
+  extracts: 'Выписки',
+  all: 'Показать всё',
 });
 
 export default {
@@ -45,7 +45,7 @@ export default {
       allowedOnlyOneEntry: {
         'primary receptions': true,
         extracts: true,
-      }
-    }
-  }
-}
+      },
+    };
+  },
+};

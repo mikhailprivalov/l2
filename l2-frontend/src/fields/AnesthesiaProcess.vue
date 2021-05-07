@@ -28,14 +28,15 @@
               <col/>
               <col width='80'/>
             </colgroup>
-            <tr v-for="(v, k) in patient_params_used" v-if="k !== 'temperature'">
+            <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
+            <tr v-for="(v, k) in patient_params_used" :key="k" v-if="k !== 'temperature'">
               <td class="cl-td" @click="focus_next">{{k}}</td>
               <td class="cl-td">
                 <input class="no-outline anastesia" type="text" v-model="patient_params_used[k]" :key="k"
                        :readonly="actionDelete"
                        @focus="focus_input"
                        @blur="blur_input"
-                       @keyup.enter="move_focus_next"
+                       @keyup.enter.exact="move_focus_next"
                        @keyup.enter.shift="move_focus_prev"
                        placeholder="значение"/>
               </td>
@@ -50,7 +51,7 @@
               -0.1
             </button>
             <input type="text" v-model.number="temperature" class="anastesia"
-                   @keyup.enter="move_focus_next"
+                   @keyup.enter.exact="move_focus_next"
                    @keyup.enter.shift="move_focus_prev"
                    :readonly="actionDelete"
                    placeholder="Температура"/>
@@ -68,14 +69,14 @@
               <col/>
               <col width='80'/>
             </colgroup>
-            <tr v-for="(v, k) in potent_drugs_used">
+            <tr v-for="(v, k) in potent_drugs_used" :key="k">
               <td class="cl-td" @click="focus_next">{{k}}</td>
               <td class="cl-td">
                 <input class="no-outline anastesia" type="text" v-model="potent_drugs_used[k]"
                        :readonly="actionDelete"
                        @focus="focus_input"
                        @blur="blur_input"
-                       @keyup.enter="move_focus_next"
+                       @keyup.enter.exact="move_focus_next"
                        @keyup.enter.shift="move_focus_prev"
                        :key="k" placeholder="значение"/>
               </td>
@@ -87,14 +88,14 @@
               <col/>
               <col width='80'/>
             </colgroup>
-            <tr v-for="(v, k) in narcotic_drugs_used">
+            <tr v-for="(v, k) in narcotic_drugs_used" :key="k">
               <td class="cl-td" @click="focus_next">{{k}}</td>
               <td class="cl-td">
                 <input class="no-outline anastesia" type="text" v-model="narcotic_drugs_used[k]" :key="k"
                        :readonly="actionDelete"
                        @focus="focus_input"
                        @blur="blur_input"
-                       @keyup.enter="move_focus_next"
+                       @keyup.enter.exact="move_focus_next"
                        @keyup.enter.shift="move_focus_prev"
                        placeholder="значение"/>
               </td>
@@ -131,7 +132,7 @@
     </button>
     <div class="GRID-HACK table-root">
       <table v-if="tb_data.length > 0" ref="firstTable">
-        <tr v-for="(row, i) in tb_data" :class="`row-${row_category[i] || 'default'}`">
+        <tr v-for="(row, i) in tb_data" :key="i" :class="`row-${row_category[i] || 'default'}`">
           <td>
             <div>
               {{row[0]}}
@@ -141,13 +142,14 @@
       </table>
       <div class="tb-data" ref="tbData">
         <table :class="!disabled && 'all-hover'">
-          <colgroup v-for="_ in tb_data[0] || []" />
+          <colgroup v-for="(_, i) in tb_data[0] || []" :key="i" />
           <tbody>
-            <tr v-for="(row, i) in tb_data" :class="`row-${row_category[i] || 'default'}`">
-              <td
-                v-for="(item, j) in row" v-if="j > 0"
-                :class="j + 1 === row.length && 'no-hover'"
-                @click="editColumn(j)"
+            <tr v-for="(row, i) in tb_data" :key="i" :class="`row-${row_category[i] || 'default'}`">
+              <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
+              <td v-for="(item, j) in row" v-if="j > 0"
+                  :key="j"
+                  :class="j + 1 === row.length && 'no-hover'"
+                  @click="editColumn(j)"
               >
                 <div :style="{height: `${tb_heights[i]}px`}">
                   <template v-if="i === 0 && j > 0 && item !== 'Сумма'">
@@ -171,272 +173,275 @@
 </template>
 
 <script>
-  import moment from 'moment'
-  import * as action_types from '../store/action-types'
-  import directions_point from "../api/directions-point";
-  import DisplayDateTime from "../ui-cards/DisplayDateTime";
+import moment from 'moment';
+import * as actions from '../store/action-types';
+import directionsPoint from '../api/directions-point';
+import DisplayDateTime from '../ui-cards/DisplayDateTime.vue';
 
-  export default {
-    name: "AnesthesiaProcess",
-    components: {DisplayDateTime},
-    props: {
-      fields: {
-        type: Array,
-        required: true
-      },
-      iss: {
-        type: Number,
-        required: false,
-      },
-      field_pk: {
-        type: Number,
-        required: true,
-      },
-      disabled: {
-        type: Boolean,
-        required: false,
-        default: false,
-      }
+export default {
+  name: 'AnesthesiaProcess',
+  components: { DisplayDateTime },
+  props: {
+    fields: {
+      type: Array,
+      required: true,
     },
-    data() {
-      return {
-        show_anesthesia_menu: false,
-        timeValue: moment().format('YYYY-MM-DDTHH:mm'),
-        maxTimeValue: moment().add(1, 'days').format('YYYY-MM-DDTHH:mm'),
-        temperature: 36.6,
-        interval: null,
-        intervalTime: null,
-        potent_drugs_other: {},
-        potent_drugs_used: {},
-        potent_data: {},
-        narcotic_drugs_other: {},
-        narcotic_drugs_used: {},
-        narcotic_data: {},
-        patient_params_used: {},
-        patient_params_other: {},
-        actionDelete: false,
-        isEdit: false,
-        tb_data: [],
-        tb_heights: [],
-        row_category: {},
-      }
+    iss: {
+      type: Number,
+      required: false,
     },
-    mounted() {
-      for (let f of this.fields) {
-        if (f.type === 'Сильнодействующие' && f.default === true) {
-          this.potent_drugs_used[f.title] = ''
-        } else if (f.type === 'Наркотические' && f.default === true) {
-          this.narcotic_drugs_used[f.title] = ''
-        } else if (f.type === 'Показатели человека' && f.default === true) {
-          this.patient_params_used[f.title] = ''
-        }
-      }
-      this.intervalTime = setInterval(() => {
-        this.setMaxTime()
-      }, 1000);
-      this.setCurrentTime();
-      this.setMaxTime();
-      this.load_data();
+    field_pk: {
+      type: Number,
+      required: true,
     },
-    destroyed() {
-      clearInterval(this.interval);
-      clearInterval(this.intervalTime);
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
-    watch: {
-      temperature() {
-        this.temperature = Number(this.temperature) || 36.6
-        if (this.temperature < 34) {
-          this.temperature = 34
-        } else if (this.temperature > 41) {
-          this.temperature = 41
-        }
-        this.temperature = Number(this.temperature.toFixed(1))
-      }
-    },
-    methods: {
-      editColumn(j) {
-        if (this.disabled || j + 1 === this.tb_data[0].length) {
-          return
-        }
-        this.show_anesthesia_sidebar();
-        this.isEdit = true;
-        const data = {
-          patient_params: {...this.patient_params_used},
-          potent_drugs: {...this.potent_drugs_used},
-          narcotic_drugs: {...this.narcotic_drugs_used},
-        };
-        for (let i = 0; i < this.tb_data.length; i++) {
-          const cat = this.row_category[i];
-          const paramName = this.tb_data[i][0];
-          const val = this.tb_data[i][j];
-          if (paramName && val) {
-             if (paramName === 'temperature') {
-              this.temperature = Number(val) || 36.6;
-            } else if (data[cat]) {
-              data[cat][paramName] = val;
-            } else if (paramName === 'Параметр') {
-              this.timeValue = val;
-            }
-          }
-        }
-        this.patient_params_used = data.patient_params;
-        this.potent_drugs_used = data.potent_drugs;
-        this.narcotic_drugs_used = data.narcotic_drugs;
-      },
-      sync_heights() {
-        const tb_heights = [];
-        if (this.$refs.firstTable) {
-          $(this.$refs.firstTable).find('tr td div').each(function () {
-            tb_heights.push($(this).height())
-          });
-        }
-        this.tb_heights = tb_heights;
-      },
-      focus_next(e) {
-        $('input', $(e.target).next()).focus();
-      },
-      focus_input(e) {
-        $(e.target).parent().parent().addClass('active');
-      },
-      blur_input(e) {
-        $(e.target).parent().parent().removeClass('active');
-      },
-      move_focus_next(e) {
-        this.move_focus(e)
-      },
-      move_focus_prev(e) {
-        this.move_focus(e, -1)
-      },
-      move_focus(e, n = 1) {
-        const s = 'input.anastesia';
-        const nextI = $(s).index(e.target) + n;
-        const next = $(s).eq(nextI);
-        if (next.length) {
-          next.focus();
-        }
-      },
-      async save_data() {
-        await this.$store.dispatch(action_types.INC_LOADING);
-        this.patient_params_used['temperature'] = this.temperature
-        let temp_result = {
-          'time': this.timeValue,
-          'potent_drugs': this.potent_drugs_used,
-          'narcotic_drugs': this.narcotic_drugs_used,
-          'patient_params': this.patient_params_used
-        }
-        let research_data = {'iss_pk': this.iss, 'field_pk': this.field_pk}
-        this.tb_data.push(temp_result)
-        await directions_point.anesthesiaResultSave({
-          'temp_result': temp_result,
-          'research_data': research_data
-        });
-        setTimeout(() => this.sync_heights(), 10);
-        await this.load_data()
-        await this.$store.dispatch(action_types.DEC_LOADING)
-        okmessage('Сохранено');
-        this.show_anesthesia_sidebar();
-      },
-      async delete_data() {
-        try {
-          await this.$dialog.confirm('Подтвердите удаление')
-        } catch (_) {
-          return
-        }
-        await this.$store.dispatch(action_types.INC_LOADING);
-        let research_data = {'iss_pk': this.iss, 'field_pk': this.field_pk}
-        let temp_result = {
-          'time': this.timeValue,
-          'potent_drugs': this.potent_drugs_used,
-          'narcotic_drugs': this.narcotic_drugs_used,
-          'patient_params': this.patient_params_used
-        }
-        await directions_point.anesthesiaResultSave({
-          'temp_result': temp_result,
-          'research_data': research_data,
-          action: 'del'
-        });
-        setTimeout(() => this.sync_heights(), 10);
-        await this.load_data()
-        await this.$store.dispatch(action_types.DEC_LOADING)
-        okmessage('Запись удалена');
-        this.show_anesthesia_sidebar();
-      },
-      async load_data() {
-        await this.$store.dispatch(action_types.INC_LOADING);
-        let research_data = {'iss_pk': this.iss, 'field_pk': this.field_pk};
-        const data = await directions_point.anesthesiaLoadData({
-          'research_data': research_data
-        });
-        this.tb_data = [...data.data];
-        this.row_category = data.row_category
-        setTimeout(() => this.sync_heights(), 10);
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      plus_temperature_start() {
-        if (typeof this.temperature !== 'number') {
-          this.temperature = 36.6
-        } else {
-          this.temperature += 0.1
-        }
-
-        clearInterval(this.interval);
-
-        this.interval = setTimeout(() => {
-          clearInterval(this.interval);
-          this.interval = setInterval(() => {
-            this.temperature += 0.1
-          }, 200)
-        }, 400)
-      },
-      temperature_stop() {
-        clearInterval(this.interval);
-        this.interval = null
-      },
-      minus_temperature_start() {
-        if (typeof this.temperature !== 'number') {
-          this.temperature = 36.6
-        } else {
-          this.temperature -= 0.1
-        }
-
-        clearInterval(this.interval);
-
-        this.interval = setTimeout(() => {
-          clearInterval(this.interval);
-          this.interval = setInterval(() => {
-            this.temperature -= 0.1
-          }, 200)
-        }, 400)
-      },
-      minus_temperature_once() {
-        this.temperature -= 1;
-      },
-      plus_temperature_once() {
-        this.temperature += 1;
-      },
-      setCurrentTime() {
-        this.timeValue = moment().format('YYYY-MM-DDTHH:mm');
-      },
-      setMaxTime() {
-        this.maxTimeValue = moment().add(2, 'days').format('YYYY-MM-DDTHH:mm');
-      },
-      clear_data(obj) {
-        Object.entries(obj).forEach(([key]) => obj[key] = '');
-      },
-      clearAll() {
-        this.clear_data(this.potent_drugs_used)
-        this.clear_data(this.narcotic_drugs_used)
-        this.clear_data(this.patient_params_used)
-        this.isEdit = false;
-        this.actionDelete = false;
-        this.setCurrentTime();
-      },
-      show_anesthesia_sidebar() {
-        this.$store.dispatch(action_types.CHANGE_STATUS_MENU_ANESTHESIA);
-        this.clearAll();
+  },
+  data() {
+    return {
+      show_anesthesia_menu: false,
+      timeValue: moment().format('YYYY-MM-DDTHH:mm'),
+      maxTimeValue: moment().add(1, 'days').format('YYYY-MM-DDTHH:mm'),
+      temperature: 36.6,
+      interval: null,
+      intervalTime: null,
+      potent_drugs_other: {},
+      potent_drugs_used: {},
+      potent_data: {},
+      narcotic_drugs_other: {},
+      narcotic_drugs_used: {},
+      narcotic_data: {},
+      patient_params_used: {},
+      patient_params_other: {},
+      actionDelete: false,
+      isEdit: false,
+      tb_data: [],
+      tb_heights: [],
+      row_category: {},
+    };
+  },
+  mounted() {
+    for (const f of this.fields) {
+      if (f.type === 'Сильнодействующие' && f.default === true) {
+        this.potent_drugs_used[f.title] = '';
+      } else if (f.type === 'Наркотические' && f.default === true) {
+        this.narcotic_drugs_used[f.title] = '';
+      } else if (f.type === 'Показатели человека' && f.default === true) {
+        this.patient_params_used[f.title] = '';
       }
     }
-  }
+    this.intervalTime = setInterval(() => {
+      this.setMaxTime();
+    }, 1000);
+    this.setCurrentTime();
+    this.setMaxTime();
+    this.load_data();
+  },
+  destroyed() {
+    clearInterval(this.interval);
+    clearInterval(this.intervalTime);
+  },
+  watch: {
+    temperature() {
+      this.temperature = Number(this.temperature) || 36.6;
+      if (this.temperature < 34) {
+        this.temperature = 34;
+      } else if (this.temperature > 41) {
+        this.temperature = 41;
+      }
+      this.temperature = Number(this.temperature.toFixed(1));
+    },
+  },
+  methods: {
+    editColumn(j) {
+      if (this.disabled || j + 1 === this.tb_data[0].length) {
+        return;
+      }
+      this.show_anesthesia_sidebar();
+      this.isEdit = true;
+      const data = {
+        patient_params: { ...this.patient_params_used },
+        potent_drugs: { ...this.potent_drugs_used },
+        narcotic_drugs: { ...this.narcotic_drugs_used },
+      };
+      for (let i = 0; i < this.tb_data.length; i++) {
+        const cat = this.row_category[i];
+        const paramName = this.tb_data[i][0];
+        const val = this.tb_data[i][j];
+        if (paramName && val) {
+          if (paramName === 'temperature') {
+            this.temperature = Number(val) || 36.6;
+          } else if (data[cat]) {
+            data[cat][paramName] = val;
+          } else if (paramName === 'Параметр') {
+            this.timeValue = val;
+          }
+        }
+      }
+      this.patient_params_used = data.patient_params;
+      this.potent_drugs_used = data.potent_drugs;
+      this.narcotic_drugs_used = data.narcotic_drugs;
+    },
+    sync_heights() {
+      const tb_heights = [];
+      if (this.$refs.firstTable) {
+        window.$(this.$refs.firstTable).find('tr td div').each(function () {
+          tb_heights.push(window.$(this).height());
+        });
+      }
+      this.tb_heights = tb_heights;
+    },
+    focus_next(e) {
+      window.$('input', window.$(e.target).next()).focus();
+    },
+    focus_input(e) {
+      window.$(e.target).parent().parent().addClass('active');
+    },
+    blur_input(e) {
+      window.$(e.target).parent().parent().removeClass('active');
+    },
+    move_focus_next(e) {
+      this.move_focus(e);
+    },
+    move_focus_prev(e) {
+      this.move_focus(e, -1);
+    },
+    move_focus(e, n = 1) {
+      const s = 'input.anastesia';
+      const nextI = window.$(s).index(e.target) + n;
+      const next = window.$(s).eq(nextI);
+      if (next.length) {
+        next.focus();
+      }
+    },
+    async save_data() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      this.patient_params_used.temperature = this.temperature;
+      const temp_result = {
+        time: this.timeValue,
+        potent_drugs: this.potent_drugs_used,
+        narcotic_drugs: this.narcotic_drugs_used,
+        patient_params: this.patient_params_used,
+      };
+      const research_data = { iss_pk: this.iss, field_pk: this.field_pk };
+      this.tb_data.push(temp_result);
+      await directionsPoint.anesthesiaResultSave({
+        temp_result,
+        research_data,
+      });
+      setTimeout(() => this.sync_heights(), 10);
+      await this.load_data();
+      await this.$store.dispatch(actions.DEC_LOADING);
+      window.okmessage('Сохранено');
+      this.show_anesthesia_sidebar();
+    },
+    async delete_data() {
+      try {
+        await this.$dialog.confirm('Подтвердите удаление');
+      } catch (_) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      const research_data = { iss_pk: this.iss, field_pk: this.field_pk };
+      const temp_result = {
+        time: this.timeValue,
+        potent_drugs: this.potent_drugs_used,
+        narcotic_drugs: this.narcotic_drugs_used,
+        patient_params: this.patient_params_used,
+      };
+      await directionsPoint.anesthesiaResultSave({
+        temp_result,
+        research_data,
+        action: 'del',
+      });
+      setTimeout(() => this.sync_heights(), 10);
+      await this.load_data();
+      await this.$store.dispatch(actions.DEC_LOADING);
+      window.okmessage('Запись удалена');
+      this.show_anesthesia_sidebar();
+    },
+    async load_data() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const research_data = { iss_pk: this.iss, field_pk: this.field_pk };
+      const data = await directionsPoint.anesthesiaLoadData({
+        research_data,
+      });
+      this.tb_data = [...data.data];
+      this.row_category = data.row_category;
+      setTimeout(() => this.sync_heights(), 10);
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    plus_temperature_start() {
+      if (typeof this.temperature !== 'number') {
+        this.temperature = 36.6;
+      } else {
+        this.temperature += 0.1;
+      }
+
+      clearInterval(this.interval);
+
+      this.interval = setTimeout(() => {
+        clearInterval(this.interval);
+        this.interval = setInterval(() => {
+          this.temperature += 0.1;
+        }, 200);
+      }, 400);
+    },
+    temperature_stop() {
+      clearInterval(this.interval);
+      this.interval = null;
+    },
+    minus_temperature_start() {
+      if (typeof this.temperature !== 'number') {
+        this.temperature = 36.6;
+      } else {
+        this.temperature -= 0.1;
+      }
+
+      clearInterval(this.interval);
+
+      this.interval = setTimeout(() => {
+        clearInterval(this.interval);
+        this.interval = setInterval(() => {
+          this.temperature -= 0.1;
+        }, 200);
+      }, 400);
+    },
+    minus_temperature_once() {
+      this.temperature -= 1;
+    },
+    plus_temperature_once() {
+      this.temperature += 1;
+    },
+    setCurrentTime() {
+      this.timeValue = moment().format('YYYY-MM-DDTHH:mm');
+    },
+    setMaxTime() {
+      this.maxTimeValue = moment().add(2, 'days').format('YYYY-MM-DDTHH:mm');
+    },
+    clear_data(obj) {
+      Object.entries(obj).forEach(([key]) => {
+        // eslint-disable-next-line no-param-reassign
+        obj[key] = '';
+      });
+    },
+    clearAll() {
+      this.clear_data(this.potent_drugs_used);
+      this.clear_data(this.narcotic_drugs_used);
+      this.clear_data(this.patient_params_used);
+      this.isEdit = false;
+      this.actionDelete = false;
+      this.setCurrentTime();
+    },
+    show_anesthesia_sidebar() {
+      this.$store.dispatch(actions.CHANGE_STATUS_MENU_ANESTHESIA);
+      this.clearAll();
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">
@@ -649,7 +654,6 @@
       color: #000;
     }
   }
-
 
   .tb-background {
     background-color: #eee;

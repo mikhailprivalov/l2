@@ -29,289 +29,290 @@
 </template>
 
 <script>
-  import ResearchesPicker from '../ui-cards/ResearchesPicker'
-  import SelectedResearches from '../ui-cards/SelectedResearches'
-  import construct_point from '../api/construct-point'
-  import * as action_types from '../store/action-types'
+import ResearchesPicker from '../ui-cards/ResearchesPicker.vue';
+import SelectedResearches from '../ui-cards/SelectedResearches.vue';
+import construct_point from '../api/construct-point';
+import * as actions from '../store/action-types';
 
-  export default {
-    name: 'template-editor',
-    components: {
-      ResearchesPicker,
-      SelectedResearches,
+export default {
+  name: 'template-editor',
+  components: {
+    ResearchesPicker,
+    SelectedResearches,
+  },
+  props: {
+    pk: {
+      type: Number,
+      required: true,
     },
-    props: {
-      pk: {
-        type: Number,
-        required: true
-      },
-      global_template_p: {
-        type: Number,
-        required: true
-      },
+    global_template_p: {
+      type: Number,
+      required: true,
     },
-    created() {
-      this.load()
+  },
+  created() {
+    this.load();
+  },
+  data() {
+    return {
+      title: '',
+      cancel_do: false,
+      loaded_pk: -2,
+      researches: null,
+      has_unsaved: false,
+      global_template: false,
+    };
+  },
+  watch: {
+    pk() {
+      this.load();
     },
-    data() {
-      return {
-        title: '',
-        cancel_do: false,
-        loaded_pk: -2,
-        researches: null,
-        has_unsaved: false,
-        global_template: false,
-      }
+    loaded_pk() {
+      this.has_unsaved = false;
     },
-    watch: {
-      pk() {
-        this.load()
-      },
-      loaded_pk(n) {
-        this.has_unsaved = false
-      },
-      groups: {
-        handler(n, o) {
-          if (o && o.length > 0) {
-            this.has_unsaved = true
-          }
-        },
-        deep: true
-      }
-    },
-    mounted() {
-      $(window).on('beforeunload', () => {
-        if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do)
-          return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
-      })
-    },
-    computed: {
-      researches_departments() {
-        let r = {}
-        let deps = {"-2": {title: "Консультации"}}
-        for (let dep of this.$store.getters.allDepartments) {
-          deps[dep.pk] = dep
+    groups: {
+      handler(n, o) {
+        if (o && o.length > 0) {
+          this.has_unsaved = true;
         }
+      },
+      deep: true,
+    },
+  },
+  mounted() {
+    window.$(window).on('beforeunload', () => {
+      if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do) {
+        return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?';
+      }
 
-        for (let pk of this.researches) {
-          if (pk in this.$store.getters.researches_obj) {
-            let res = this.$store.getters.researches_obj[pk]
-            let d = res.department_pk && !res.doc_refferal ? res.department_pk: -2;
-            if (!(d in r)) {
-              r[d] = {
-                pk: d,
-                title: deps[d].title,
-                researches: []
-              }
-            }
-            r[d].researches.push({pk: pk, title: res.title})
+      return null;
+    });
+  },
+  computed: {
+    researches_departments() {
+      const r = {};
+      const deps = { '-2': { title: 'Консультации' } };
+      for (const dep of this.$store.getters.allDepartments) {
+        deps[dep.pk] = dep;
+      }
+
+      for (const pk of this.researches) {
+        if (pk in this.$store.getters.researches_obj) {
+          const res = this.$store.getters.researches_obj[pk];
+          const d = res.department_pk && !res.doc_refferal ? res.department_pk : -2;
+          if (!(d in r)) {
+            r[d] = {
+              pk: d,
+              title: deps[d].title,
+              researches: [],
+            };
           }
+          r[d].researches.push({ pk, title: res.title });
         }
-        return r
-      },
-      valid() {
-        return this.norm_title.length > 0 && this.researches && this.researches.length > 0
-      },
-      norm_title() {
-        return this.title.trim()
-      },
-      ordered_groups() {
-        return this.groups.slice().sort(function (a, b) {
-          return a.order === b.order ? 0 : +(a.order > b.order) || -1
-        })
-      },
-      min_max_order_groups() {
-        let min = 0
-        let max = 0
-        for (let row of this.groups) {
-          if (min === 0) {
-            min = row.order
-          } else {
-            min = Math.min(min, row.order)
-          }
-          max = Math.max(max, row.order)
-        }
-        return {min, max}
-      },
+      }
+      return r;
     },
-    methods: {
-      is_first_in_template(i) {
-        return i === 0
-      },
-      is_last_in_template(row, i) {
-        return i === row.values_to_input.length - 1
-      },
-      up_template(row, i) {
-        if (this.is_first_in_template(i))
-          return
-        let values = JSON.parse(JSON.stringify(row.values_to_input));
-        [values[i - 1], values[i]] = [values[i], values[i - 1]]
-        row.values_to_input = values
-      },
-      down_template(row, i) {
-        if (this.is_last_in_template(row, i))
-          return
-        let values = JSON.parse(JSON.stringify(row.values_to_input));
-        [values[i + 1], values[i]] = [values[i], values[i + 1]]
-        row.values_to_input = values
-      },
-      remove_template(row, i) {
-        if (row.values_to_input.length - 1 < i)
-          return
-        row.values_to_input.splice(i, 1)
-      },
-      add_template_value(row) {
-        if (row.new_value === '')
-          return
-        row.values_to_input.push(row.new_value)
-        row.new_value = ''
-      },
-      drag(row, ev) {
-        // console.log(row, ev)
-      },
-      min_max_order(group) {
-        let min = 0
-        let max = 0
-        for (let row of group.fields) {
-          if (min === 0) {
-            min = row.order
-          } else {
-            min = Math.min(min, row.order)
-          }
-          max = Math.max(max, row.order)
-        }
-        return {min, max}
-      },
-      ordered_fields(group) {
-        return group.fields.slice().sort(function (a, b) {
-          return a.order === b.order ? 0 : +(a.order > b.order) || -1
-        })
-      },
-      inc_group_order(row) {
-        if (row.order === this.min_max_order_groups.max)
-          return
-        let next_row = this.find_group_by_order(row.order + 1)
-        if (next_row) {
-          next_row.order--
-        }
-        row.order++
-      },
-      dec_group_order(row) {
-        if (row.order === this.min_max_order_groups.min)
-          return
-        let prev_row = this.find_group_by_order(row.order - 1)
-        if (prev_row) {
-          prev_row.order++
-        }
-        row.order--
-      },
-      inc_order(group, row) {
-        if (row.order === this.min_max_order(group).max)
-          return
-        let next_row = this.find_by_order(group, row.order + 1)
-        if (next_row) {
-          next_row.order--
-        }
-        row.order++
-      },
-      dec_order(group, row) {
-        if (row.order === this.min_max_order(group).min)
-          return
-        let prev_row = this.find_by_order(group, row.order - 1)
-        if (prev_row) {
-          prev_row.order++
-        }
-        row.order--
-      },
-      find_by_order(group, order) {
-        for (let row of group.fields) {
-          if (row.order === order) {
-            return row
-          }
-        }
-        return false
-      },
-      find_group_by_order(order) {
-        for (let row of this.groups) {
-          if (row.order === order) {
-            return row
-          }
-        }
-        return false
-      },
-      is_first_group(group) {
-        return group.order === this.min_max_order_groups.min
-      },
-      is_last_group(group) {
-        return group.order === this.min_max_order_groups.max
-      },
-      is_first_field(group, row) {
-        return row.order === this.min_max_order(group).min
-      },
-      is_last_field(group, row) {
-        return row.order === this.min_max_order(group).max
-      },
-      add_field(group) {
-        let order = 0
-        for (let row of group.fields) {
-          order = Math.max(order, row.order)
-        }
-        group.fields.push({
-          pk: -1,
-          order: order + 1,
-          title: '',
-          default: '',
-          values_to_input: [],
-          new_value: '',
-          hide: false,
-          lines: 3
-        })
-      },
-      add_group() {
-        let order = 0
-        for (let row of this.groups) {
-          order = Math.max(order, row.order)
-        }
-        let g = {pk: -1, order: order + 1, title: '', fields: [], show_title: true, hide: false}
-        this.add_field(g)
-        this.groups.push(g)
-      },
-      load() {
-        this.title = ''
-        this.researches = null
-        this.global_template = this.global_template_p === 1
-        if (this.pk >= 0) {
-          this.$store.dispatch(action_types.INC_LOADING)
-          fetch('/api/get-template?pk=' + this.pk).then(r => r.json()).then(data => {
-            this.title = data.title
-            this.researches = data.researches
-            this.global_template = data.global_template
-          }).finally(() => {
-            this.$store.dispatch(action_types.DEC_LOADING)
-          })
+    valid() {
+      return this.norm_title.length > 0 && this.researches && this.researches.length > 0;
+    },
+    norm_title() {
+      return this.title.trim();
+    },
+    ordered_groups() {
+      return this.groups.slice().sort((a, b) => (a.order === b.order ? 0 : +(a.order > b.order) || -1));
+    },
+    min_max_order_groups() {
+      let min = 0;
+      let max = 0;
+      for (const row of this.groups) {
+        if (min === 0) {
+          min = row.order;
         } else {
-          this.researches = []
+          min = Math.min(min, row.order);
         }
-      },
-      cancel() {
-        if (this.has_unsaved && !confirm('Изменения, возможно, не сохранены. Вы уверены, что хотите отменить редактирование?')) {
-          return
-        }
-        this.cancel_do = true
-        this.$root.$emit('research-editor:cancel')
-      },
-      save() {
-        this.$store.dispatch(action_types.INC_LOADING)
-        construct_point.updateTemplate(this, ['pk', 'title', 'researches', 'global_template']).then(() => {
-          this.has_unsaved = false
-          okmessage('Сохранено')
-          this.cancel()
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
+        max = Math.max(max, row.order);
       }
-    }
-  }
+      return { min, max };
+    },
+  },
+  methods: {
+    is_first_in_template(i) {
+      return i === 0;
+    },
+    is_last_in_template(row, i) {
+      return i === row.values_to_input.length - 1;
+    },
+    up_template(row, i) {
+      if (this.is_first_in_template(i)) return;
+      const values = JSON.parse(JSON.stringify(row.values_to_input));
+      [values[i - 1], values[i]] = [values[i], values[i - 1]];
+      // eslint-disable-next-line no-param-reassign
+      row.values_to_input = values;
+    },
+    down_template(row, i) {
+      if (this.is_last_in_template(row, i)) return;
+      const values = JSON.parse(JSON.stringify(row.values_to_input));
+      [values[i + 1], values[i]] = [values[i], values[i + 1]];
+      // eslint-disable-next-line no-param-reassign
+      row.values_to_input = values;
+    },
+    remove_template(row, i) {
+      if (row.values_to_input.length - 1 < i) return;
+      row.values_to_input.splice(i, 1);
+    },
+    add_template_value(row) {
+      if (row.new_value === '') return;
+      row.values_to_input.push(row.new_value);
+      // eslint-disable-next-line no-param-reassign
+      row.new_value = '';
+    },
+    drag() {
+      // console.log(row, ev)
+    },
+    min_max_order(group) {
+      let min = 0;
+      let max = 0;
+      for (const row of group.fields) {
+        if (min === 0) {
+          min = row.order;
+        } else {
+          min = Math.min(min, row.order);
+        }
+        max = Math.max(max, row.order);
+      }
+      return { min, max };
+    },
+    ordered_fields(group) {
+      return group.fields.slice().sort((a, b) => (a.order === b.order ? 0 : +(a.order > b.order) || -1));
+    },
+    inc_group_order(row) {
+      if (row.order === this.min_max_order_groups.max) return;
+      const next_row = this.find_group_by_order(row.order + 1);
+      if (next_row) {
+        next_row.order--;
+      }
+      // eslint-disable-next-line no-param-reassign
+      row.order++;
+    },
+    dec_group_order(row) {
+      if (row.order === this.min_max_order_groups.min) return;
+      const prev_row = this.find_group_by_order(row.order - 1);
+      if (prev_row) {
+        prev_row.order++;
+      }
+      // eslint-disable-next-line no-param-reassign
+      row.order--;
+    },
+    inc_order(group, row) {
+      if (row.order === this.min_max_order(group).max) return;
+      const next_row = this.find_by_order(group, row.order + 1);
+      if (next_row) {
+        next_row.order--;
+      }
+      // eslint-disable-next-line no-param-reassign
+      row.order++;
+    },
+    dec_order(group, row) {
+      if (row.order === this.min_max_order(group).min) return;
+      const prev_row = this.find_by_order(group, row.order - 1);
+      if (prev_row) {
+        prev_row.order++;
+      }
+      // eslint-disable-next-line no-param-reassign
+      row.order--;
+    },
+    find_by_order(group, order) {
+      for (const row of group.fields) {
+        if (row.order === order) {
+          return row;
+        }
+      }
+      return false;
+    },
+    find_group_by_order(order) {
+      for (const row of this.groups) {
+        if (row.order === order) {
+          return row;
+        }
+      }
+      return false;
+    },
+    is_first_group(group) {
+      return group.order === this.min_max_order_groups.min;
+    },
+    is_last_group(group) {
+      return group.order === this.min_max_order_groups.max;
+    },
+    is_first_field(group, row) {
+      return row.order === this.min_max_order(group).min;
+    },
+    is_last_field(group, row) {
+      return row.order === this.min_max_order(group).max;
+    },
+    add_field(group) {
+      let order = 0;
+      for (const row of group.fields) {
+        order = Math.max(order, row.order);
+      }
+      group.fields.push({
+        pk: -1,
+        order: order + 1,
+        title: '',
+        default: '',
+        values_to_input: [],
+        new_value: '',
+        hide: false,
+        lines: 3,
+      });
+    },
+    add_group() {
+      let order = 0;
+      for (const row of this.groups) {
+        order = Math.max(order, row.order);
+      }
+      const g = {
+        pk: -1, order: order + 1, title: '', fields: [], show_title: true, hide: false,
+      };
+      this.add_field(g);
+      this.groups.push(g);
+    },
+    load() {
+      this.title = '';
+      this.researches = null;
+      this.global_template = this.global_template_p === 1;
+      if (this.pk >= 0) {
+        this.$store.dispatch(actions.INC_LOADING);
+        fetch(`/api/get-template?pk=${this.pk}`).then((r) => r.json()).then((data) => {
+          this.title = data.title;
+          this.researches = data.researches;
+          this.global_template = data.global_template;
+        }).finally(() => {
+          this.$store.dispatch(actions.DEC_LOADING);
+        });
+      } else {
+        this.researches = [];
+      }
+    },
+    cancel() {
+      // eslint-disable-next-line no-restricted-globals,no-alert
+      if (this.has_unsaved && !confirm('Изменения, возможно, не сохранены. Вы уверены, что хотите отменить редактирование?')) {
+        return;
+      }
+      this.cancel_do = true;
+      this.$root.$emit('research-editor:cancel');
+    },
+    save() {
+      this.$store.dispatch(actions.INC_LOADING);
+      construct_point.updateTemplate(this, ['pk', 'title', 'researches', 'global_template']).then(() => {
+        this.has_unsaved = false;
+        window.okmessage('Сохранено');
+        this.cancel();
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+  },
+};
 </script>
 
 <style>

@@ -75,7 +75,7 @@
           </div>
         </div>
         <div class="col-xs-12" v-if="!card.new_individual && individuals.length > 0">
-          <div @click="select_individual(i.pk)" class="info-row individual" v-for="i in individuals">
+          <div @click="select_individual(i.pk)" class="info-row individual" v-for="i in individuals" :key="i.pk">
             <input :checked="i.pk === card.individual" type="checkbox"/> {{i.fio}}<br/>
             <table class="table table-bordered table-condensed">
               <thead>
@@ -86,7 +86,7 @@
               </tr>
               </thead>
               <tbody>
-              <tr v-for="d in i.docs">
+              <tr v-for="d in i.docs" :key="`${d.type_title}_${d.serial}_${d.number}`">
                 <td>{{d.type_title}}</td>
                 <td>{{d.serial}}</td>
                 <td>{{d.number}}</td>
@@ -94,7 +94,7 @@
               <tr v-if="i.l2_cards.length > 0">
                 <th>Активные карты L2</th>
                 <td colspan="2">
-                  <div v-for="c in i.l2_cards">
+                  <div v-for="c in i.l2_cards" :key="c.pk">
                     <a :href="`/mainmenu/directions?card_pk=${c.pk}&base_pk=${base_pk}&open_edit=true`" class="a-under c-pointer"
                         title="Открыть существующую карту" v-tippy>
                       <strong>{{c.number}}</strong>
@@ -153,7 +153,7 @@
             <div class="form-row sm-f">
               <div class="row-t">Участок</div>
               <select v-model="card.district" class="form-control">
-                <option v-for="c in card.districts" :value="c.id">
+                <option v-for="c in card.districts" :value="c.id" :key="c.id">
                   {{c.title}}
                 </option>
               </select>
@@ -161,7 +161,7 @@
             <div class="form-row sm-f" v-if="card.sex === 'ж'">
               <div class="row-t">Гинекологический участок</div>
               <select v-model="card.ginekolog_district" class="form-control">
-                <option v-for="c in card.gin_districts" :value="c.id">
+                <option v-for="c in card.gin_districts" :value="c.id" :key="c.id">
                   {{c.title}}
                 </option>
               </select>
@@ -233,7 +233,7 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="d in card.docs" :title="d.who_give"
+          <tr v-for="d in card.docs" :title="d.who_give" :key="d.id"
               :class="{nonPrior: card.main_docs[d.document_type] !== d.id,
             prior: card.main_docs[d.document_type] === d.id}">
             <td>
@@ -283,8 +283,9 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="t in card.agent_types" :class="{nonPrior: card.who_is_agent !== t.key,
-            prior: card.who_is_agent === t.key}" v-if="!card.excluded_types.includes(t.key)">
+          <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
+          <tr v-for="t in card.agent_types" v-if="!card.excluded_types.includes(t.key)" :key="t.key"
+              :class="{nonPrior: card.who_is_agent !== t.key, prior: card.who_is_agent === t.key}">
             <td>
               <input type="radio" name="agent"
                      @click="update_wia(t.key)" v-if="!card.excluded_types.includes(t.key)"
@@ -308,7 +309,8 @@
             </td>
             <td colspan="4">НЕ ВЫБРАНО</td>
           </tr>
-          <tr v-for="t in card.agent_types" class="prior" v-if="card.excluded_types.includes(t.key)">
+          <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
+          <tr v-for="t in card.agent_types" :key="t.key" class="prior" v-if="card.excluded_types.includes(t.key)">
             <td>
             </td>
             <td>
@@ -362,12 +364,13 @@
       </div>
       <modal v-if="document_to_edit > -2" ref="modalDocEdit" @close="hide_modal_doc_edit" show-footer="true"
              white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+        <!-- eslint-disable-next-line max-len -->
         <span slot="header">Редактор документов (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
         <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
           <div class="form-group">
             <label>Тип документа:</label>
             <select v-if="document_to_edit === -1" v-model="document.document_type">
-              <option v-for="dt in card.doc_types" :value="dt.pk">{{dt.title}}</option>
+              <option v-for="dt in card.doc_types" :value="dt.pk" :key="dt.pk">{{dt.title}}</option>
             </select>
             <span v-else>{{document.type_title}}</span>
           </div>
@@ -424,6 +427,7 @@
       </modal>
       <modal v-if="agent_to_edit" ref="modalAgentEdit" @close="hide_modal_agent_edit" show-footer="true" white-bg="true"
              max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+        <!-- eslint-disable-next-line max-len -->
         <span slot="header">Редактор – {{agent_type_by_key(agent_to_edit)}} (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
         <div slot="body" style="min-height: 140px" class="registry-body">
           <div v-show="!agent_clear">
@@ -468,7 +472,7 @@
               Печатн. формы <span class="caret"></span>
             </button>
             <ul class="dropdown-menu">
-              <li v-for="f in forms">
+              <li v-for="f in forms" :key="f.url">
                 <a :href="f.url" target="_blank" class="ddm">{{f.title}}</a>
               </li>
             </ul>
@@ -495,498 +499,504 @@
 </template>
 
 <script>
-  import Modal from '../ui-cards/Modal'
-  import patients_point from '../api/patients-point'
-  import PatientSmallPicker from '../ui-cards/PatientSmallPicker'
-  import * as action_types from '../store/action-types'
-  import RadioField from '../fields/RadioField'
-  import TypeAhead from 'vue2-typeahead'
-  import moment from 'moment'
-  import Treeselect from "@riophae/vue-treeselect";
-  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-  import forms from '../forms'
-  import {normalizeNamePart, swapLayouts, validateSnils} from "@/utils";
-  import {GENDERS} from "@/constants";
-  import api from '@/api';
-  import _ from 'lodash';
+import TypeAhead from 'vue2-typeahead';
+import moment from 'moment';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import { normalizeNamePart, swapLayouts, validateSnils } from '@/utils';
+import { GENDERS } from '@/constants';
+import api from '@/api';
+import _ from 'lodash';
+import patientsPoint from '../api/patients-point';
+import Modal from '../ui-cards/Modal.vue';
+import forms from '../forms';
+import RadioField from '../fields/RadioField.vue';
+import * as actions from '../store/action-types';
+import PatientSmallPicker from '../ui-cards/PatientSmallPicker.vue';
 
-  export default {
-    name: 'l2-card-create',
-    components: {Modal, TypeAhead, PatientSmallPicker, RadioField, Treeselect},
-    props: {
-      card_pk: {
-        type: Number,
-        required: true
-      },
-      base_pk: {
-        type: Number,
-        required: true
-      },
+export default {
+  name: 'l2-card-create',
+  components: {
+    Modal, TypeAhead, PatientSmallPicker, RadioField, Treeselect,
+  },
+  props: {
+    card_pk: {
+      type: Number,
+      required: true,
     },
-    data() {
+    base_pk: {
+      type: Number,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      GENDERS,
+      card: {
+        number: '',
+        number_poli: '',
+        main_address: '',
+        fact_address: '',
+        work_place: '',
+        work_position: '',
+        family: '',
+        patronymic: '',
+        name: '',
+        main_diagnosis: '',
+        sex: GENDERS[0],
+        has_rmis_card: false,
+        birthday: moment().format('YYYY-MM-DD'),
+        individual: -1,
+        new_individual: false,
+        custom_workplace: false,
+        docs: [],
+        docs_to_delete: [],
+        rmis_uid: null,
+        work_place_db: null,
+        doc_types: [],
+        av_companies: [],
+        main_docs: {},
+        districts: [],
+        district: -1,
+        gin_districts: [],
+        ginekolog_district: -1,
+        agent_types: [],
+        agent_need_doc: [],
+        excluded_types: [],
+        who_is_agent: '',
+        mother: null,
+        mother_pk: null,
+        father: null,
+        father_pk: null,
+        curator: null,
+        curator_doc: null,
+        curator_pk: null,
+        agent: null,
+        agent_doc: null,
+        agent_pk: null,
+        phone: '',
+        harmful: '',
+        tfoms_idp: null,
+        tfoms_enp: null,
+        time_tfoms_last_sync: null,
+      },
+      individuals: [],
+      document_to_edit: -2,
+      document: {
+        number: '',
+      },
+      agent_to_edit: null,
+      agent_card_selected: null,
+      agent_doc: '',
+      agent_clear: false,
+      loading: false,
+      new_card_num: '',
+    };
+  },
+  created() {
+    this.load_data();
+    this.$root.$on('reload_editor', () => {
+      this.load_data();
+    });
+  },
+  updated() {
+    // Костыль, что бы не вылезал автокомплит полей от браузера
+    const {
+      f, n, pn, ar, af,
+    } = this.$refs;
+    setTimeout(() => {
+      for (const r of [f, n, pn, ar, af]) {
+        if (r) {
+          const inp = window.$('input', r.$el);
+          inp.attr('autocomplete', 'new-password');
+        }
+      }
+    }, 100);
+  },
+  computed: {
+    l2_tfoms() {
+      return this.$store.getters.modules.l2_tfoms;
+    },
+    doc_edit_type_title() {
+      const t = this.document.document_type;
+      if (!t) return '';
+      return (this.card.doc_types.find((x) => x.pk === t) || {}).title || '';
+    },
+    is_snils() {
+      const tt = this.doc_edit_type_title;
+      return tt === 'СНИЛС';
+    },
+    doc_edit_fields() {
+      const tt = this.doc_edit_type_title;
       return {
-        GENDERS,
-        card: {
-          number: '',
-          number_poli: '',
-          main_address: "",
-          fact_address: "",
-          work_place: "",
-          work_position: "",
-          family: "",
-          patronymic: "",
-          name: "",
-          main_diagnosis: "",
-          sex: GENDERS[0],
-          has_rmis_card: false,
-          birthday: moment().format('YYYY-MM-DD'),
-          individual: -1,
-          new_individual: false,
-          custom_workplace: false,
-          docs: [],
-          docs_to_delete: [],
-          rmis_uid: null,
-          work_place_db: null,
-          doc_types: [],
-          av_companies: [],
-          main_docs: {},
-          districts: [],
-          district: -1,
-          gin_districts: [],
-          ginekolog_district: -1,
-          agent_types: [],
-          agent_need_doc: [],
-          excluded_types: [],
-          who_is_agent: "",
-          mother: null,
-          mother_pk: null,
-          father: null,
-          father_pk: null,
-          curator: null,
-          curator_doc: null,
-          curator_pk: null,
-          agent: null,
-          agent_doc: null,
-          agent_pk: null,
-          phone: '',
-          harmful: '',
-          tfoms_idp: null,
-          tfoms_enp: null,
-          time_tfoms_last_sync: null,
+        serial: tt !== 'СНИЛС',
+        dates: tt !== 'СНИЛС',
+        who_give: tt !== 'СНИЛС',
+        masks: {
+          number: tt === 'СНИЛС' ? '999-999-999 99' : undefined,
         },
-        individuals: [],
-        document_to_edit: -2,
-        document: {
-          number: ''
-        },
-        agent_to_edit: null,
-        agent_card_selected: null,
-        agent_doc: '',
-        agent_clear: false,
-        loading: false,
-        new_card_num: '',
+      };
+    },
+    family() {
+      return this.card.family;
+    },
+    name() {
+      return this.card.name;
+    },
+    patronymic() {
+      return this.card.patronymic;
+    },
+    sex() {
+      return this.card.sex;
+    },
+    new_individual() {
+      return this.card.new_individual;
+    },
+    time_tfoms_last_sync() {
+      return this.card.time_tfoms_last_sync && moment(this.card.time_tfoms_last_sync).format('HH:mm DD.MM.YY');
+    },
+    valid() {
+      if (!this.card.family || !this.card.name || !this.card.birthday) {
+        return false;
       }
-    },
-    created() {
-      this.load_data()
-      this.$root.$on('reload_editor', () => {
-        this.load_data()
-      })
-    },
-    updated() {
-      // Костыль, что бы не вылезал автокомплит полей от браузера
-      const {f, n, pn, ar, af} = this.$refs;
-      setTimeout(() => {
-        for (const r of [f, n, pn, ar, af]) {
-          if (r) {
-            const inp = $('input', r.$el);
-            inp.attr('autocomplete', 'new-password')
-          }
-        }
-      }, 100);
-    },
-    computed: {
-      l2_tfoms() {
-        return this.$store.getters.modules.l2_tfoms
-      },
-      doc_edit_type_title() {
-        const t = this.document.document_type;
-        if (!t)
-          return '';
-        return (this.card.doc_types.find(x => x.pk === t) || {}).title || '';
-      },
-      is_snils() {
-        const tt = this.doc_edit_type_title;
-        return tt === 'СНИЛС'
-      },
-      doc_edit_fields() {
-        const tt = this.doc_edit_type_title;
-        return {
-          serial: tt !== 'СНИЛС',
-          dates: tt !== 'СНИЛС',
-          who_give: tt !== 'СНИЛС',
-          masks: {
-            number: tt === 'СНИЛС' ? '999-999-999 99' : undefined,
-          }
-        };
-      },
-      family() {
-        return this.card.family
-      },
-      name() {
-        return this.card.name
-      },
-      patronymic() {
-        return this.card.patronymic
-      },
-      sex() {
-        return this.card.sex
-      },
-      new_individual() {
-        return this.card.new_individual
-      },
-      time_tfoms_last_sync() {
-        return this.card.time_tfoms_last_sync && moment(this.card.time_tfoms_last_sync).format('HH:mm DD.MM.YY');
-      },
-      valid() {
-        if (!this.card.family || !this.card.name || !this.card.birthday) {
-          return false;
-        }
-        return !!(this.card.family.length > 0
+      return !!(this.card.family.length > 0
           && this.card.name.length > 0 && this.card.birthday.match(/\d{4}-\d{2}-\d{2}/gm));
-      },
-      birthday() {
-        return this.card.birthday
-      },
-      valid_doc() {
-        if (this.doc_edit_type_title === 'СНИЛС') {
-          return /^\d\d\d-\d\d\d-\d\d\d \d\d$/gm.test(this.document.number) && validateSnils(this.document.number);
+    },
+    birthday() {
+      return this.card.birthday;
+    },
+    valid_doc() {
+      if (this.doc_edit_type_title === 'СНИЛС') {
+        return /^\d\d\d-\d\d\d-\d\d\d \d\d$/gm.test(this.document.number) && validateSnils(this.document.number);
+      }
+      return this.document.number.length > 0;
+    },
+    valid_agent() {
+      if (this.agent_clear) return true;
+      return this.agent_card_selected && this.agent_card_selected !== this.card_pk;
+    },
+    forms() {
+      return forms.map((f) => ({
+        ...f,
+        url: f.url.kwf({
+          card: this.card_pk,
+          individual: this.card.individual,
+        }),
+      }));
+    },
+    can_change_owner_directions() {
+      return (this.$store.getters.user_data.groups || []).includes('Управление иерархией истории');
+    },
+  },
+  watch: {
+    sex() {
+      let s = swapLayouts(this.card.sex.toLowerCase());
+      if (s.length > 1) {
+        // eslint-disable-next-line prefer-destructuring
+        s = s[0];
+      }
+      if (s !== 'м' && s !== 'ж') {
+        s = 'м';
+      }
+      this.card.sex = s;
+      this.individuals_search();
+    },
+    family() {
+      this.card.family = normalizeNamePart(this.card.family);
+      this.individuals_search();
+      this.individual_sex('family', this.card.family);
+    },
+    name() {
+      this.card.name = normalizeNamePart(this.card.name);
+      this.individuals_search();
+      this.individual_sex('name', this.card.name);
+    },
+    patronymic() {
+      this.card.patronymic = normalizeNamePart(this.card.patronymic);
+      this.individuals_search();
+      this.individual_sex('patronymic', this.card.patronymic);
+    },
+    birthday() {
+      this.individuals_search();
+    },
+    new_individual() {
+      this.individuals_search();
+    },
+    individuals: {
+      deep: true,
+      handler(nv) {
+        if (nv.length === 0) {
+          this.card.new_individual = true;
         }
-        return this.document.number.length > 0;
-      },
-      valid_agent() {
-        if (this.agent_clear)
-          return true;
-        return this.agent_card_selected && this.agent_card_selected !== this.card_pk;
-      },
-      forms() {
-        return forms.map(f => {
-          return {
-            ...f, url: f.url.kwf({
-              card: this.card_pk,
-              individual: this.card.individual,
-            })
-          }
-        });
-      },
-      can_change_owner_directions() {
-        return (this.$store.getters.user_data.groups || []).includes('Управление иерархией истории')
       },
     },
-    watch: {
-      sex() {
-        let s = swapLayouts(this.card.sex.toLowerCase())
-        if (s.length > 1) {
-          s = s[0]
+  },
+  methods: {
+    companiesTreeselect(companies) {
+      return companies.map((c) => ({ id: c.id, label: c.short_title || c.title }));
+    },
+    agent_type_by_key(key) {
+      for (const t of this.card.agent_types) {
+        if (t.key === key) {
+          return t.title;
         }
-        if (s !== 'м' && s !== 'ж') {
-          s = 'м'
-        }
-        this.card.sex = s
-        this.individuals_search()
-      },
-      family() {
-        this.card.family = normalizeNamePart(this.card.family)
-        this.individuals_search()
-        this.individual_sex('family', this.card.family)
-      },
-      name() {
-        this.card.name = normalizeNamePart(this.card.name)
-        this.individuals_search()
-        this.individual_sex('name', this.card.name)
-      },
-      patronymic() {
-        this.card.patronymic = normalizeNamePart(this.card.patronymic)
-        this.individuals_search()
-        this.individual_sex('patronymic', this.card.patronymic)
-      },
-      birthday() {
-        this.individuals_search()
-      },
-      new_individual() {
-        this.individuals_search()
-      },
-      individuals: {
-        deep: true,
-        handler(nv) {
-          if (nv.length === 0) {
-            this.card.new_individual = true
-          }
-        },
+      }
+      return 'НЕ ВЫБРАНО';
+    },
+    agent_need_doc(key) {
+      return this.card.agent_need_doc.includes(key);
+    },
+    select_individual(invpk) {
+      this.card.individual = invpk;
+    },
+    toggleNewIndividual() {
+      this.card.new_individual = !this.card.new_individual;
+    },
+    hide_modal() {
+      this.$root.$emit('hide_l2_card_create');
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
       }
     },
-    methods: {
-      companiesTreeselect(companies) {
-        return companies.map(c => ({id: c.id, label: c.short_title || c.title}));
-      },
-      agent_type_by_key(key) {
-        for (const t of this.card.agent_types) {
-          if (t.key === key) {
-            return t.title;
-          }
-        }
-        return 'НЕ ВЫБРАНО';
-      },
-      agent_need_doc(key) {
-        return this.card.agent_need_doc.includes(key);
-      },
-      select_individual(invpk) {
-        this.card.individual = invpk
-      },
-      toggleNewIndividual() {
-        this.card.new_individual = !this.card.new_individual
-      },
-      hide_modal() {
-        this.$root.$emit('hide_l2_card_create')
-        if (this.$refs.modal) {
-          this.$refs.modal.$el.style.display = 'none'
-        }
-      },
-      save_hide_modal() {
-        this.save(true)
-      },
-      async save(hide_after = false) {
-        if (!this.valid) {
-          return
-        }
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const data = await patients_point.sendCard(this.card,
-          ['family', 'name', 'patronymic', 'birthday', 'sex', 'new_individual', 'base_pk',
-            'fact_address', 'main_address', 'work_place', 'main_diagnosis', 'work_position', 'work_place_db',
-            'custom_workplace', 'district', 'phone', 'number_poli', 'harmful'], {
-            card_pk: this.card_pk, individual_pk: this.card.individual, gin_district: this.card.ginekolog_district,
-            base_pk: this.base_pk,
-          })
-        if (data.result !== 'ok') {
-          errmessage('Сохранение прошло не удачно')
-          return
-        }
-        if (Array.isArray(data.messages)) {
-          for (const msg of data.messages) {
-            wrnmessage('Warning', msg)
-          }
-        }
-        okmessage('Данные сохранены')
-        this.$root.$emit('update_card_data');
-        if (hide_after) {
-          this.hide_modal()
-        }
-        this.update_card(hide_after, data);
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      update_card(hide_after=false, data=null) {
-        if (this.card_pk < 0) {
-          return
-        }
-        this.$root.$emit('select_card', {
-          card_pk: data ? data.card_pk : this.card_pk,
+    save_hide_modal() {
+      this.save(true);
+    },
+    async save(hide_after = false) {
+      if (!this.valid) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      const data = await patientsPoint.sendCard(this.card,
+        ['family', 'name', 'patronymic', 'birthday', 'sex', 'new_individual', 'base_pk',
+          'fact_address', 'main_address', 'work_place', 'main_diagnosis', 'work_position', 'work_place_db',
+          'custom_workplace', 'district', 'phone', 'number_poli', 'harmful'], {
+          card_pk: this.card_pk,
+          individual_pk: this.card.individual,
+          gin_district: this.card.ginekolog_district,
           base_pk: this.base_pk,
-          hide: hide_after,
-        })
-      },
-      async update_cdu(doc) {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await patients_point.updateCdu({card_pk: this.card_pk, doc})
-        await this.load_data();
-        okmessage('Изменения сохранены');
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      async update_wia(key) {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await patients_point.updateWIA({card_pk: this.card_pk, key})
-        await this.load_data();
-        okmessage('Изменения сохранены');
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      edit_agent(key) {
-        this.agent_card_selected = this.card[`${key}_pk`]
-        this.agent_doc = this.card[`${key}_doc_auth`] || ''
-        this.agent_clear = false
-        this.agent_to_edit = key;
-      },
-      async sync_rmis() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await patients_point.syncRmis(this, 'card_pk')
-        await this.load_data();
-        this.update_card();
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      async sync_tfoms() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {updated} = await patients_point.syncTfoms(this, 'card_pk')
-        await this.load_data();
-        this.update_card();
-        okmessage('Сверка проведена');
-        if (updated && updated.length > 0) {
-          okmessage('Обновлены данные', updated.join(', '));
-        }
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      getResponse(resp) {
-        return [...resp.data.data]
-      },
-      onHitDocWhoGive(item) {
-        if (!item) {
-          return
-        }
-        this.document.who_give = item
-      },
-      onHit(name, no_next) {
-        return (item, t) => {
-          if (t.$el) {
-            if (no_next) {
-              $('input', t.$el).focus();
-            } else {
-              let index = $('input', this.$el).index($('input', t.$el)) + 1;
-              $('input', this.$el).eq(index).focus();
-            }
-          }
-          if (!item) {
-            return;
-          }
-          this.card[name] = item;
-        }
-      },
-      highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
-      load_data() {
-        if (this.card_pk === -1) {
-          return Promise.resolve({});
-        }
-        this.loaded = false
-        this.$store.dispatch(action_types.INC_LOADING)
-        return patients_point.getCard(this, 'card_pk').then(data => {
-          this.card = data
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-          this.loaded = true
-        })
-      },
-      individuals_search: _.debounce(function() { this.individuals_search_main() }, 500),
-      async individuals_search_main() {
-        if (!this.valid || this.card_pk !== -1 ||
-            this.card.family === '' || this.card.name === '' || this.card.new_individual) {
-          return
-        }
-
-        this.loading = true;
-
-        const {
-          result, forced_gender
-        } = await patients_point.individualsSearch(this.card, ['family', 'name', 'patronymic', 'birthday'])
-
-        this.individuals = result
-        this.card.individual = result.length === 0 ? -1 : result[0].pk
-        this.card.new_individual = result.length === 0
-        if (forced_gender) {
-          this.card.sex = forced_gender;
-        }
-
-        this.loading = false;
-      },
-      individual_sex(t, v) {
-        if (this.card_pk >= 0) {
-          return
-        }
-        patients_point.individualSex({t, v}).then(({sex}) => {
-          this.card.sex = sex
-        })
-      },
-      edit_document(pk) {
-        this.document = {
-          document_type: this.card.doc_types[0].pk,
-          is_active: true,
-          number: "",
-          serial: "",
-          type_title: null,
-          date_start: null,
-          date_end: null,
-          who_give: null,
-          ...(this.card.docs.find(x => x.id === pk) || {})
-        };
-        this.document_to_edit = pk
-      },
-      hide_modal_doc_edit() {
-        if (this.$refs.modalDocEdit) {
-          this.$refs.modalDocEdit.$el.style.display = 'none'
-        }
-        this.document_to_edit = -2
-      },
-      hide_modal_agent_edit() {
-        if (this.$refs.modalAgentEdit) {
-          this.$refs.modalAgentEdit.$el.style.display = 'none';
-        }
-        this.agent_to_edit = null;
-      },
-      async save_doc() {
-        if (!this.valid_doc) {
-          return
-        }
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await patients_point.editDoc(this.document,
-          ['serial', 'number', 'is_active', 'date_start', 'date_end', 'who_give'],
-          {
-            card_pk: this.card_pk,
-            pk: this.document_to_edit,
-            type: this.document.document_type,
-            individual_pk: this.card.individual,
-          })
-        await this.load_data();
-        this.document = {
-          number: ''
-        };
-        this.hide_modal_doc_edit();
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      async save_agent() {
-        if (!this.valid_agent) {
-          return
-        }
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await patients_point.editAgent({
-          key: this.agent_to_edit,
-          parent_card_pk: this.card_pk,
-          card_pk: this.agent_card_selected,
-          doc: this.agent_doc,
-          clear: this.agent_clear,
-        })
-        await this.load_data();
-        this.hide_modal_agent_edit();
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      async change_directions_owner(){
-          const {ok, individual_fio} = await api('patients/is-card', {
-            'number': this.new_card_num,
-          })
-          if (!ok) {
-            errmessage("Карта не найдена")
-            return
-          }
-          try {
-            await this.$dialog.confirm(`Перенести все услуги из карты № ${this.card.number}-${this.card.family} ${this.card.name} ${this.card.patronymic}) в карту № ${this.new_card_num} -${individual_fio} ?`)
-          } catch (_) {
-            return
-          }
-          await this.$store.dispatch(action_types.INC_LOADING)
-          const data = await api('directions/change-owner-direction', {
-            'old_card_number': this.card.number,
-            'new_card_number': this.new_card_num,
-          })
-          okmessage('Направления успешно перенесены')
-          okmessage('Номера: ', data.directions)
-          await this.$store.dispatch(action_types.DEC_LOADING)
+        });
+      if (data.result !== 'ok') {
+        window.errmessage('Сохранение прошло не удачно');
+        return;
       }
-    }
-  }
+      if (Array.isArray(data.messages)) {
+        for (const msg of data.messages) {
+          window.wrnmessage('Warning', msg);
+        }
+      }
+      window.okmessage('Данные сохранены');
+      this.$root.$emit('update_card_data');
+      if (hide_after) {
+        this.hide_modal();
+      }
+      this.update_card(hide_after, data);
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    update_card(hide_after = false, data = null) {
+      if (this.card_pk < 0) {
+        return;
+      }
+      this.$root.$emit('select_card', {
+        card_pk: data ? data.card_pk : this.card_pk,
+        base_pk: this.base_pk,
+        hide: hide_after,
+      });
+    },
+    async update_cdu(doc) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await patientsPoint.updateCdu({ card_pk: this.card_pk, doc });
+      await this.load_data();
+      window.okmessage('Изменения сохранены');
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    async update_wia(key) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await patientsPoint.updateWIA({ card_pk: this.card_pk, key });
+      await this.load_data();
+      window.okmessage('Изменения сохранены');
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    edit_agent(key) {
+      this.agent_card_selected = this.card[`${key}_pk`];
+      this.agent_doc = this.card[`${key}_doc_auth`] || '';
+      this.agent_clear = false;
+      this.agent_to_edit = key;
+    },
+    async sync_rmis() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await patientsPoint.syncRmis(this, 'card_pk');
+      await this.load_data();
+      this.update_card();
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    async sync_tfoms() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { updated } = await patientsPoint.syncTfoms(this, 'card_pk');
+      await this.load_data();
+      this.update_card();
+      window.okmessage('Сверка проведена');
+      if (updated && updated.length > 0) {
+        window.okmessage('Обновлены данные', updated.join(', '));
+      }
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    getResponse(resp) {
+      return [...resp.data.data];
+    },
+    onHitDocWhoGive(item) {
+      if (!item) {
+        return;
+      }
+      this.document.who_give = item;
+    },
+    onHit(name, no_next) {
+      return (item, t) => {
+        if (t.$el) {
+          if (no_next) {
+            window.$('input', t.$el).focus();
+          } else {
+            const index = window.$('input', this.$el).index(window.$('input', t.$el)) + 1;
+            window.$('input', this.$el).eq(index).focus();
+          }
+        }
+        if (!item) {
+          return;
+        }
+        this.card[name] = item;
+      };
+    },
+    highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
+    load_data() {
+      if (this.card_pk === -1) {
+        return Promise.resolve({});
+      }
+      this.loaded = false;
+      this.$store.dispatch(actions.INC_LOADING);
+      return patientsPoint.getCard(this, 'card_pk').then((data) => {
+        this.card = data;
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+        this.loaded = true;
+      });
+    },
+    individuals_search: _.debounce(function () { this.individuals_search_main(); }, 500),
+    async individuals_search_main() {
+      if (!this.valid || this.card_pk !== -1
+            || this.card.family === '' || this.card.name === '' || this.card.new_individual) {
+        return;
+      }
+
+      this.loading = true;
+
+      const {
+        result, forced_gender,
+      } = await patientsPoint.individualsSearch(this.card, ['family', 'name', 'patronymic', 'birthday']);
+
+      this.individuals = result;
+      this.card.individual = result.length === 0 ? -1 : result[0].pk;
+      this.card.new_individual = result.length === 0;
+      if (forced_gender) {
+        this.card.sex = forced_gender;
+      }
+
+      this.loading = false;
+    },
+    individual_sex(t, v) {
+      if (this.card_pk >= 0) {
+        return;
+      }
+      patientsPoint.individualSex({ t, v }).then(({ sex }) => {
+        this.card.sex = sex;
+      });
+    },
+    edit_document(pk) {
+      this.document = {
+        document_type: this.card.doc_types[0].pk,
+        is_active: true,
+        number: '',
+        serial: '',
+        type_title: null,
+        date_start: null,
+        date_end: null,
+        who_give: null,
+        ...(this.card.docs.find((x) => x.id === pk) || {}),
+      };
+      this.document_to_edit = pk;
+    },
+    hide_modal_doc_edit() {
+      if (this.$refs.modalDocEdit) {
+        this.$refs.modalDocEdit.$el.style.display = 'none';
+      }
+      this.document_to_edit = -2;
+    },
+    hide_modal_agent_edit() {
+      if (this.$refs.modalAgentEdit) {
+        this.$refs.modalAgentEdit.$el.style.display = 'none';
+      }
+      this.agent_to_edit = null;
+    },
+    async save_doc() {
+      if (!this.valid_doc) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      await patientsPoint.editDoc(this.document,
+        ['serial', 'number', 'is_active', 'date_start', 'date_end', 'who_give'],
+        {
+          card_pk: this.card_pk,
+          pk: this.document_to_edit,
+          type: this.document.document_type,
+          individual_pk: this.card.individual,
+        });
+      await this.load_data();
+      this.document = {
+        number: '',
+      };
+      this.hide_modal_doc_edit();
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    async save_agent() {
+      if (!this.valid_agent) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      await patientsPoint.editAgent({
+        key: this.agent_to_edit,
+        parent_card_pk: this.card_pk,
+        card_pk: this.agent_card_selected,
+        doc: this.agent_doc,
+        clear: this.agent_clear,
+      });
+      await this.load_data();
+      this.hide_modal_agent_edit();
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    async change_directions_owner() {
+      const { ok, individual_fio } = await api('patients/is-card', {
+        number: this.new_card_num,
+      });
+      if (!ok) {
+        window.errmessage('Карта не найдена');
+        return;
+      }
+      try {
+        // eslint-disable-next-line max-len
+        await this.$dialog.confirm(`Перенести все услуги из карты № ${this.card.number}-${this.card.family} ${this.card.name} ${this.card.patronymic}) в карту № ${this.new_card_num} -${individual_fio} ?`);
+      } catch (e) {
+        // pass
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      const data = await api('directions/change-owner-direction', {
+        old_card_number: this.card.number,
+        new_card_number: this.new_card_num,
+      });
+      window.okmessage('Направления успешно перенесены');
+      window.okmessage('Номера: ', data.directions);
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

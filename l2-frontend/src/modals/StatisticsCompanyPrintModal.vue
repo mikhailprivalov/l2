@@ -41,32 +41,32 @@
 </template>
 
 <script>
-  import Treeselect from '@riophae/vue-treeselect'
-  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-  export default {
-    name: 'statistics-company-print-modal',
-    components: {Treeselect},
-    props: {
-      companies: {
-        type: Array,
-        required: false,
-        default() {
-          return [];
-        },
+export default {
+  name: 'statistics-company-print-modal',
+  components: { Treeselect },
+  props: {
+    companies: {
+      type: Array,
+      required: false,
+      default() {
+        return [];
       },
     },
-    data() {
-      return {
-        current_company: '-1',
-        date1: '',
-        date2: '',
-      }
+  },
+  data() {
+    return {
+      current_company: '-1',
+      date1: '',
+      date2: '',
+    };
+  },
+  methods: {
+    make_report() {
+      window.open(`forms/pdf?type=200.01&company=${this.current_company}&date1=${this.date1}&date2=${this.date2}`, '_blank');
     },
-    methods: {
-      make_report() {
-        window.open(`forms/pdf?type=200.01&company=${this.current_company}&date1=${this.date1}&date2=${this.date2}`, '_blank')
-      }
-    },
-  }
+  },
+};
 </script>

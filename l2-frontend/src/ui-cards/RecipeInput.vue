@@ -17,7 +17,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="v in fv">
+        <tr v-for="v in fv" :key="v.pk">
           <td>{{v.prescription}}</td>
           <td class="cl-td prec">
             <TypeAhead :delayTime="300" v-if="!confirmed"
@@ -59,7 +59,7 @@
         </div>
       </div>
       <div class="col-xs-9" style="padding-left: 0">
-        <div @click="add(v.value)" class="variant" v-for="v in variants">
+        <div @click="add(v.value)" class="variant" v-for="v in variants" :key="v.pk">
           <strong>{{v.highlighted}}</strong>{{v.noHighlighted}}
         </div>
         <div class="variant-msg" v-if="search === ''">выполните поиск для добавления назначений</div>
@@ -70,85 +70,85 @@
 </template>
 
 <script>
-  import TypeAhead from 'vue2-typeahead'
-  import * as action_types from '../store/action-types'
+import TypeAhead from 'vue2-typeahead';
+import * as actions from '../store/action-types';
 
-  export default {
-    name: 'recipe-input',
-    components: {TypeAhead},
-    props: {
-      value: {
-        type: Array,
-      },
-      confirmed: {
-        type: Boolean,
-        default: false,
-      }
+export default {
+  name: 'recipe-input',
+  components: { TypeAhead },
+  props: {
+    value: {
+      type: Array,
     },
-    data() {
-      return {
-        search: '',
-        variants: [],
-        toRemove: [],
-      };
+    confirmed: {
+      type: Boolean,
+      default: false,
     },
-    computed: {
-      fv() {
-        return this.value.filter(v => !this.toRemove.includes(v.pk) && !v.remove)
-      }
+  },
+  data() {
+    return {
+      search: '',
+      variants: [],
+      toRemove: [],
+    };
+  },
+  computed: {
+    fv() {
+      return this.value.filter((v) => !this.toRemove.includes(v.pk) && !v.remove);
     },
-    methods: {
-      add(value) {
-        this.value.push({
-          pk: Math.random() + Math.random(),
-          prescription: value,
-          taking: '',
-          comment: '',
-          isNew: true,
-        })
-      },
-      async remove(pk) {
-        for (let i = 0; i < this.value.length; i++) {
-          if (this.value[i].pk === pk) {
-            try {
-              await this.$dialog.confirm(`Подтвердите удаление назначения «${this.value[i].prescription}»`)
-            } catch (_) {
-              return
-            }
-            this.value[i].remove = true
-            this.toRemove.push(pk)
-            break
+  },
+  methods: {
+    add(value) {
+      this.value.push({
+        pk: Math.random() + Math.random(),
+        prescription: value,
+        taking: '',
+        comment: '',
+        isNew: true,
+      });
+    },
+    async remove(pk) {
+      for (let i = 0; i < this.value.length; i++) {
+        if (this.value[i].pk === pk) {
+          try {
+            await this.$dialog.confirm(`Подтвердите удаление назначения «${this.value[i].prescription}»`);
+          } catch (_) {
+            return;
           }
+          this.value[i].remove = true;
+          this.toRemove.push(pk);
+          break;
         }
-      },
+      }
     },
-    watch: {
-      async search() {
-        if (this.search.trim() === '') {
-          this.variants = []
-          return
-        }
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {data} = await fetch(`/api/key-value?key=mnn&value=${this.search}`).then(r => r.json())
-        this.variants = []
-        const lowerSearch = this.search.trim().toLowerCase()
-        const l = lowerSearch.length
-        for (const v of data) {
-          const i = v.value.toLowerCase().indexOf(lowerSearch)
-          const to = i + l
+  },
+  watch: {
+    async search() {
+      if (this.search.trim() === '') {
+        this.variants = [];
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { data } = await fetch(`/api/key-value?key=mnn&value=${this.search}`).then((r) => r.json());
+      this.variants = [];
+      const lowerSearch = this.search.trim().toLowerCase();
+      const l = lowerSearch.length;
+      for (const v of data) {
+        const i = v.value.toLowerCase().indexOf(lowerSearch);
+        const to = i + l;
 
-          const highlighted = v.value.substring(i, to)
-          const noHighlighted = v.value.substring(to)
-          this.variants.push({
-            value: v.value,
-            highlighted,
-            noHighlighted,
-          })
-        }
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
+        const highlighted = v.value.substring(i, to);
+        const noHighlighted = v.value.substring(to);
+        this.variants.push({
+          value: v.value,
+          highlighted,
+          noHighlighted,
+        });
+      }
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

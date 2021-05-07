@@ -5,53 +5,53 @@
 </template>
 
 <script>
-  import directions_point from "../../api/directions-point";
+import directionsPoint from '../../api/directions-point';
 
-  export default {
-    name: "Favorite",
-    props: {
-      direction: {
-        type: Number,
-        required: true,
-      },
-      inList: {
-        type: Boolean,
-        default: false,
-      }
+export default {
+  name: 'Favorite',
+  props: {
+    direction: {
+      type: Number,
+      required: true,
     },
-    data() {
-      return {
-        inFavorite: false,
-      }
+    inList: {
+      type: Boolean,
+      default: false,
     },
-    mounted() {
-      if (!this.inList) {
-        this.$root.$on('remove-from-favorites', () => this.load());
-      }
-    },
-    watch: {
-      direction: {
-        immediate: true,
-        handler() {
-          this.load();
-        },
-      }
-    },
-    methods: {
-      async click(forced, val) {
-        this.inFavorite = forced ? Boolean(val) : !this.inFavorite;
-        await directions_point.directionInFavorites({pk: this.direction, update: true, status: this.inFavorite})
-        if (this.inList) {
-          this.$root.$emit('remove-from-favorites');
-        }
-        this.$root.$emit('add-to-favorites');
-      },
-      async load() {
-        const {status} = await directions_point.directionInFavorites({pk: this.direction, update: false})
-        this.inFavorite = status;
-      },
+  },
+  data() {
+    return {
+      inFavorite: false,
+    };
+  },
+  mounted() {
+    if (!this.inList) {
+      this.$root.$on('remove-from-favorites', () => this.load());
     }
-  }
+  },
+  watch: {
+    direction: {
+      immediate: true,
+      handler() {
+        this.load();
+      },
+    },
+  },
+  methods: {
+    async click(forced, val) {
+      this.inFavorite = forced ? Boolean(val) : !this.inFavorite;
+      await directionsPoint.directionInFavorites({ pk: this.direction, update: true, status: this.inFavorite });
+      if (this.inList) {
+        this.$root.$emit('remove-from-favorites');
+      }
+      this.$root.$emit('add-to-favorites');
+    },
+    async load() {
+      const { status } = await directionsPoint.directionInFavorites({ pk: this.direction, update: false });
+      this.inFavorite = status;
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

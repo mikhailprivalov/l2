@@ -9,14 +9,14 @@
           <div class="form-group">
             <label>Исполнитель:
               <select v-model="executor" class="form-control">
-                <option v-for="user in users" :value="user.pk">{{user.fio}} – {{user.username}}</option>
+                <option v-for="user in users" :value="user.pk" :key="user.pk">{{user.fio}} – {{user.username}}</option>
               </select>
             </label>
           </div>
           <div class="form-group">
             <label>Тип работ:
               <select v-model="type" class="form-control">
-                <option v-for="t in types" :value="t.pk">{{t.title}}</option>
+                <option v-for="t in types" :value="t.pk" :key="t.pk">{{t.title}}</option>
               </select>
             </label>
           </div>
@@ -51,7 +51,7 @@
           </tr>
           </thead>
           <tbody>
-            <tr v-for="row in rows" :class="{canceled: row.canceled}">
+            <tr v-for="row in rows" :class="{canceled: row.canceled}" :key="row.pk">
               <td>{{row.executor}}</td>
               <td>{{row.type}}</td>
               <td>{{row.count}}</td>
@@ -72,68 +72,68 @@
 </template>
 
 <script>
-  import moment from 'moment'
-  import users_point from '../api/user-point'
-  import * as action_types from '../store/action-types'
-  import DateFieldNav from '../fields/DateFieldNav'
+import moment from 'moment';
+import usersPoint from '../api/user-point';
+import * as actions from '../store/action-types';
+import DateFieldNav from '../fields/DateFieldNav.vue';
 
-  export default {
-    name: 'employee-jobs',
-    components: {DateFieldNav},
-    data() {
-      return {
-        date: moment().format('DD.MM.YYYY'),
-        users: [],
-        types: [],
-        rows: [],
-        executor: null,
-        type: null,
-        count: 1,
-      }
+export default {
+  name: 'employee-jobs',
+  components: { DateFieldNav },
+  data() {
+    return {
+      date: moment().format('DD.MM.YYYY'),
+      users: [],
+      types: [],
+      rows: [],
+      executor: null,
+      type: null,
+      count: 1,
+    };
+  },
+  watch: {
+    date() {
+      this.loadRows();
     },
-    watch: {
-      date() {
-        this.loadRows()
-      }
+  },
+  async created() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { types, users } = await usersPoint.loadJobTypes();
+    this.types = types;
+    this.users = users;
+    this.type = types[0].pk;
+    this.executor = users[0].pk;
+    await this.loadRows();
+    await this.$store.dispatch(actions.DEC_LOADING);
+  },
+  methods: {
+    async save() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await usersPoint.saveJob({
+        date: this.date,
+        type: this.type,
+        executor: this.executor,
+        count: this.count,
+      });
+      await this.loadRows();
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-    async created() {
-      await this.$store.dispatch(action_types.INC_LOADING)
-      const {types, users} = await users_point.loadJobTypes()
-      this.types = types
-      this.users = users
-      this.type = types[0].pk
-      this.executor = users[0].pk
-      await this.loadRows()
-      await this.$store.dispatch(action_types.DEC_LOADING)
+    async loadRows() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { list } = await usersPoint.loadJobs(this, 'date');
+      this.rows = list;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-    methods: {
-      async save() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await users_point.saveJob({
-            date: this.date,
-            type: this.type,
-            executor: this.executor,
-            count: this.count,
-        })
-        await this.loadRows()
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      async loadRows() {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {list} = await users_point.loadJobs(this, "date")
-        this.rows = list;
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      async cancel(pk, cancel) {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        await users_point.jobCancel({
-          pk, cancel,
-        })
-        await this.loadRows()
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
+    async cancel(pk, cancel) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await usersPoint.jobCancel({
+        pk, cancel,
+      });
+      await this.loadRows();
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-  }
+  },
+};
 </script>
 
 <style lang="scss" scoped>

@@ -13,6 +13,7 @@
 </template>
 
 <script>
+import Vue from 'vue';
 import Bloodhound from 'typeahead.js';
 
 export default {
@@ -20,51 +21,51 @@ export default {
     return {
       id: this.$attrs.id || `typeahead-suggestion${Math.floor(Math.random() * 100000)}`,
       defaultSuggestions: [],
-      query: ''
+      query: '',
     };
   },
   props: {
     value: {
       type: String,
-      default: ''
+      default: '',
     },
     displayKey: {
       type: String,
-      default: ''
+      default: '',
     },
     suggestionTemplate: {
       type: String,
-      default: ''
+      default: '',
     },
     name: {
       type: String,
-      default: 'Vue Auto Complete'
+      default: 'Vue Auto Complete',
     },
     prefetch: {
       type: String,
-      default: ''
+      default: '',
     },
     defaultSuggestion: {
       type: Boolean,
-      default: false
+      default: false,
     },
     remote: {
       type: String,
-      default: ''
+      default: '',
     },
     placeholder: {
       type: String,
-      default: ''
+      default: '',
     },
     local: {
       type: Array,
-      default: function () {
-        return []
-      }
+      default() {
+        return [];
+      },
     },
     responseWrapper: {
       type: String,
-      default: ''
+      default: '',
     },
     keyupEnter: {
       type: Function,
@@ -79,7 +80,7 @@ export default {
       this.resetTypeahead();
     },
     value(val) {
-      $('#' + this.id).typeahead('val', val);
+      window.$(`#${this.id}`).typeahead('val', val);
     },
   },
   mounted() {
@@ -90,12 +91,13 @@ export default {
   },
   methods: {
     updateValue(value) {
-      this.$emit('input', value)
+      this.$emit('input', value);
     },
     formatValue() {
       this.$refs.input.value = this.value;
     },
-    transformer(response) {
+    transformer(responseOrig) {
+      let response = responseOrig;
       if (this.responseWrapper) {
         response = response[this.responseWrapper];
       }
@@ -109,28 +111,28 @@ export default {
       if (this.prefetch) {
         let prefetch = {
           cache: false,
-          url: this.prefetch
+          url: this.prefetch,
         };
         if (this.defaultSuggestion) {
-          prefetch = {...prefetch, transform: this.transformer};
+          prefetch = { ...prefetch, transform: this.transformer };
         }
-        bloodhoundConfig = {prefetch};
+        bloodhoundConfig = { prefetch };
       }
       if (this.local) {
         bloodhoundConfig = {
           local: this.local,
-          ...bloodhoundConfig
-        }
+          ...bloodhoundConfig,
+        };
       }
       if (this.remote) {
         bloodhoundConfig = {
           remote: {
             url: this.remote,
             wildcard: '%QUERY',
-            transform: this.transformer
+            transform: this.transformer,
           },
-          ...bloodhoundConfig
-        }
+          ...bloodhoundConfig,
+        };
       }
       return bloodhoundConfig;
     },
@@ -139,57 +141,55 @@ export default {
       const vm = new Vue({
         data,
         render: res.render,
-        staticRenderFns: res.staticRenderFns
+        staticRenderFns: res.staticRenderFns,
       }).$mount();
       return vm.$el;
     },
     getSource() {
-      const self = this;
       const bloodhoundConfig = this.bloodhoundOption();
       const datumTokenizer = this.displayKey ? Bloodhound.tokenizers.obj.whitespace(this.displayKey)
         : Bloodhound.tokenizers.whitespace;
       const engine = new Bloodhound({
         datumTokenizer,
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        ...bloodhoundConfig
+        ...bloodhoundConfig,
       });
-      const source = function (q, sync, async) {
-        if (q === '' && self.defaultSuggestions.length > 0 && self.defaultSuggestion) {
-          sync(self.defaultSuggestions);
+      const source = (q, sync, a) => {
+        if (q === '' && this.defaultSuggestions.length > 0 && this.defaultSuggestion) {
+          sync(this.defaultSuggestions);
         } else {
-          engine.search(q, sync, async);
+          engine.search(q, sync, a);
         }
       };
       return this.defaultSuggestion ? source : engine;
     },
     resetTypeahead() {
-      $('#' + this.id).typeahead('destroy');
+      window.$(`#${this.id}`).typeahead('destroy');
       this.initTypeahead();
     },
     initTypeahead() {
-      const self = this;
       let templates = {};
       if (this.suggestionTemplate) {
-        templates = {suggestion: self.parseTemplate}
+        templates = { suggestion: this.parseTemplate };
       }
       const dataset = {
         name: 'Typeahead-Suggestion',
         display: this.displayKey,
         source: this.getSource(),
         limit: Infinity,
-        templates
+        templates,
       };
-      $('#' + self.id).typeahead({
+      window.$(`#${this.id}`).typeahead({
         minLength: 0,
-        highlight: true
+        highlight: true,
       }, dataset)
-        .on('typeahead:select', function (event, suggession) {
-          self.$emit('input', self.displayKey ? suggession[self.displayKey] : suggession)
-          self.$emit('selected', suggession);
+        .on('typeahead:select', (event, suggession) => {
+          this.$emit('input', this.displayKey ? suggession[this.displayKey] : suggession);
+          this.$emit('selected', suggession);
         });
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

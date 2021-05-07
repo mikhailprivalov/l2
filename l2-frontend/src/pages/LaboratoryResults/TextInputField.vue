@@ -29,8 +29,8 @@
   </td>
 </template>
 <script>
-import Typeahead from './Typeahead';
-import * as action_types from "@/store/action-types";
+import * as actions from '@/store/action-types';
+import Typeahead from './Typeahead.vue';
 
 function is_float(str) {
   return /^-?\d+\.\d+$/.test(str);
@@ -38,6 +38,69 @@ function is_float(str) {
 
 function is_lnum(str) {
   return /^-?\d+(\.\d+)?$/.test(str);
+}
+
+function ready_formula(formula, resolve, dir_data) {
+  function get_age(s_age) {
+    return parseInt(s_age.split(' ')[0], 10);
+  }
+
+  // eslint-disable-next-line no-new-func
+  let v = new Function('dir_data', 'get_age', `return ${formula.tmp};`)(dir_data, get_age);
+  if (is_float(v)) {
+    v = Math.round(parseFloat(v) * 1000) / 1000;
+  }
+  if (!Number.isNaN(v) && Number.isFinite(v)) {
+    resolve(v);
+    // @ts-ignore
+    // eslint-disable-next-line no-undef
+    window.$.amaran({
+      theme: 'awesome ok',
+      content: {
+        title: 'Результат посчитан',
+        message: `Формула:<br/>${formula.str}<br/>Процесс подсчета:<br/>${formula.tmp}`,
+        info: '',
+        icon: 'fa fa-exclamation',
+      },
+      position: 'bottom right',
+      delay: 10000,
+    });
+    return;
+  }
+
+  if (!Number.isFinite(v) && !Number.isNaN(v)) {
+    // @ts-ignore
+    // eslint-disable-next-line no-undef
+    window.$.amaran({
+      theme: 'awesome wrn',
+      closeButton: true,
+      sticky: true,
+      content: {
+        title: 'Ошибка',
+        message: `Произошло деление на ноль.<br/>Формула:<br/>${formula.str}<br/>Процесс подсчета:<br/>${formula.tmp}`,
+        info: '',
+        icon: 'fa fa-exclamation',
+      },
+      position: 'bottom right',
+    });
+  } else {
+    // @ts-ignore
+    // eslint-disable-next-line no-undef
+    window.$.amaran({
+      theme: 'awesome wrn',
+      closeButton: true,
+      sticky: true,
+      content: {
+        title: 'Ошибка',
+        message: 'Возможно, не все необходимые исследования были назначены',
+        info: '',
+        icon: 'fa fa-exclamation',
+      },
+      position: 'bottom right',
+    });
+  }
+
+  resolve(null);
 }
 
 function exec_formula(dir_data, allDirPks, formulaString, resolve) {
@@ -50,11 +113,12 @@ function exec_formula(dir_data, allDirPks, formulaString, resolve) {
 
   if (formula.necessary !== null) {
     for (let i = 0; i < formula.necessary.length; i++) {
-      formula.necessary[i] = formula.necessary[i].replace(/[{}]/g, "");
+      formula.necessary[i] = formula.necessary[i].replace(/[{}]/g, '');
       let fval = 0;
       try {
-        fval = parseFloat($(`#fraction-${formula.necessary[i]}`).val().trim().replace(",", "."));
+        fval = parseFloat(window.$(`#fraction-${formula.necessary[i]}`).val().trim().replace(',', '.'));
       } catch (e) {
+        // pass
       }
       if (!fval) {
         fval = 0;
@@ -64,22 +128,22 @@ function exec_formula(dir_data, allDirPks, formulaString, resolve) {
   }
 
   function perform_complex(k) {
-    formula.necessary_complex[k] = formula.necessary_complex[k].split("|");
+    formula.necessary_complex[k] = formula.necessary_complex[k].split('|');
 
-    formula.necessary_complex[k][0] = parseInt(formula.necessary_complex[k][0].replace(/[{}]/g, ""));
-    formula.necessary_complex[k][1] = parseInt(formula.necessary_complex[k][1].replace(/[{}]/g, ""));
+    formula.necessary_complex[k][0] = parseInt(formula.necessary_complex[k][0].replace(/[{}]/g, ''), 10);
+    formula.necessary_complex[k][1] = parseInt(formula.necessary_complex[k][1].replace(/[{}]/g, ''), 10);
 
-    const iss_obj = allDirPks.find(i => i.research_pk === formula.necessary_complex[k][0]);
+    const iss_obj = allDirPks.find((i) => i.research_pk === formula.necessary_complex[k][0]);
     if (iss_obj) {
       formula.str = formula.str.replace(`{${formula.necessary_complex[k][0]}|${formula.necessary_complex[k][1]}}`, iss_obj.title);
       const fraction = formula.necessary_complex[k][1];
-      $.ajax({url: "/results/get", data: {iss_id: iss_obj.pk}}).done(function (data) {
-        let fval = "0";
+      window.$.ajax({ url: '/results/get', data: { iss_id: iss_obj.pk } }).done((data) => {
+        let fval = '0';
         if (data.results[fraction]) {
-          const g = data.results[fraction] + "";
-          fval = g.replace(",", ".").trim();
+          const g = `${data.results[fraction]}`;
+          fval = g.replace(',', '.').trim();
           if (!is_lnum(fval)) {
-            fval = "0";
+            fval = '0';
           }
         }
         formula.tmp = formula.tmp.replace(`{${iss_obj.research_pk}|${fraction}}`, fval);
@@ -90,7 +154,7 @@ function exec_formula(dir_data, allDirPks, formulaString, resolve) {
         }
       });
     } else {
-      formula.tmp = formula.tmp.replace(`{${formula.necessary_complex[k][0]}|${formula.necessary_complex[k][1]}}`, fval);
+      formula.tmp = formula.tmp.replace(`{${formula.necessary_complex[k][0]}|${formula.necessary_complex[k][1]}}`, '0');
       if (k === formula.necessary_complex.length - 1) {
         ready_formula(formula, resolve, dir_data);
       } else {
@@ -106,65 +170,9 @@ function exec_formula(dir_data, allDirPks, formulaString, resolve) {
   }
 }
 
-function ready_formula(formula, resolve, dir_data) {
-  function get_age(s_age) {
-    return parseInt(s_age.split(' ')[0])
-  }
-
-  let v = new Function('dir_data', 'get_age', "return " + formula.tmp + ";")(dir_data, get_age);
-  if (is_float(v)) {
-    v = Math.round(parseFloat(v) * 1000) / 1000;
-  }
-  if (!isNaN(v) && isFinite(v)) {
-    resolve(v);
-    $.amaran({
-      'theme': 'awesome ok',
-      'content': {
-        title: 'Результат посчитан',
-        message: "Формула:<br/>" + formula.str + "<br/>Процесс подсчета:<br/>" + formula.tmp,
-        info: '',
-        icon: 'fa fa-exclamation'
-      },
-      'position': 'bottom right',
-      delay: 10000
-    });
-    return;
-  }
-
-  if (!isFinite(v) && !isNaN(v)) {
-    $.amaran({
-      'theme': 'awesome wrn',
-      closeButton: true,
-      sticky: true,
-      'content': {
-        title: 'Ошибка',
-        message: "Произошло деление на ноль.<br/>Формула:<br/>" + formula.str + "<br/>Процесс подсчета:<br/>" + formula.tmp,
-        info: '',
-        icon: 'fa fa-exclamation'
-      },
-      'position': 'bottom right'
-    });
-  } else {
-    $.amaran({
-      'theme': 'awesome wrn',
-      closeButton: true,
-      sticky: true,
-      'content': {
-        title: 'Ошибка',
-        message: "Возможно, не все необходимые исследования были назначены",
-        info: '',
-        icon: 'fa fa-exclamation'
-      },
-      'position': 'bottom right'
-    });
-  }
-
-  resolve(null);
-}
-
 export default {
   name: 'TextInputField',
-  components: {Typeahead},
+  components: { Typeahead },
   props: {
     readonly: {},
     moveFocusNext: {},
@@ -174,7 +182,7 @@ export default {
   },
   computed: {
     options() {
-      const {type} = this.r.fraction;
+      const { type } = this.r.fraction;
       if (!type || type.length === 0 || type[0] === 'Без вариантов') {
         return [];
       }
@@ -184,25 +192,23 @@ export default {
   },
   methods: {
     async calcFormula() {
-      await this.$store.dispatch(action_types.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
       try {
-        const r = await new Promise(resolve =>
-          exec_formula(this.dirData, this.allDirPks, this.r.fraction.formula, resolve)
-        );
+        const r = await new Promise((resolve) => exec_formula(this.dirData, this.allDirPks, this.r.fraction.formula, resolve));
         if (r !== null) {
           this.r.value = String(r);
           setTimeout(() => {
-            $(`#fraction-${this.r.fraction.pk}`).focus();
+            window.$(`#fraction-${this.r.fraction.pk}`).focus();
           }, 50);
         }
       } catch (e) {
         console.error(e);
-        errmessage('Произошла ошибка рассчёта');
+        window.errmessage('Произошла ошибка рассчёта');
       }
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped lang="scss">

@@ -5,13 +5,16 @@
       {{card.birthday}} ({{card.age}})</span>
     <div slot="body" style="min-height: 200px" class="directions-manage" v-if="loaded">
       <div class="directions-sidebar">
-        <div @click="select_direction(d.pk)" class="direction" :class="{active: d.pk === selected_direction}"
+        <div @click="select_direction(d.pk)" class="direction"
+             :class="{active: d.pk === selected_direction}"
+             :key="d.pk"
              v-for="d in rows">
           <div>РМИС-направление №{{d.pk}} от {{d.referralDate}}</div>
           <div>Направляющая организация: {{d.referralOrganization}}</div>
           <hr/>
           <ol>
-            <li v-for="s in d.services"><span class="s-code" v-if="s.code">{{s.code}}</span>
+            <li v-for="s in d.services" :key="`${s.code}_${s.title}`">
+              <span class="s-code" v-if="s.code">{{s.code}}</span>
               {{s.title}}
             </li>
           </ol>
@@ -36,6 +39,7 @@
           </div>
           <div class="direction-service"
                :class="{wrn: s.selected_local_service === -1 && !s.exclude_direction, cancel: s.exclude_direction}"
+               :key="`${s.code}_${s.title}`"
                v-for="s in direction_data.services">
             <div class="service-rmis">
               <div class="s-code">{{s.code}}</div>
@@ -53,7 +57,7 @@
             <div class="service-l2" v-else-if="s.local_services.length > 1">
               <div class="l2-notice">Найдено несколько исследований с таким кодом</div>
               <ul>
-                <li v-for="rs in s.local_services">
+                <li v-for="rs in s.local_services" :key="rs">
                   <label class="fwn">
                     <input type="radio" :value="rs" v-model="s.selected_local_service">
                     <span class="service-department">
@@ -83,7 +87,14 @@
                 </div>
               </div>
               <button class="btn btn-primary-nb btn-blue-nb btn-sm" style="margin-top: 3px"
-                      v-tippy="{ html: '#template-' + s.pk, reactive : true, interactive : true, theme : 'light', animateFill : false, trigger: 'click' }">
+                      v-tippy="{
+                        html: '#template-' + s.pk,
+                        reactive : true,
+                        interactive : true,
+                        theme: 'light',
+                        animateFill: false,
+                        trigger: 'click'
+                      }">
                 Заменить исследование
               </button>
               <div class="no-attach">
@@ -126,137 +137,131 @@
 </template>
 
 <script>
-  import Modal from '../ui-cards/Modal'
-  import directions_point from '../api/directions-point'
-  import * as action_types from '../store/action-types'
-  import ResearchesPicker from '../ui-cards/ResearchesPicker'
+import Modal from '../ui-cards/Modal.vue';
+import directionsPoint from '../api/directions-point';
+import * as actions from '../store/action-types';
+import ResearchesPicker from '../ui-cards/ResearchesPicker.vue';
 
-  export default {
-    name: 'rmis-directions-viewer',
-    components: {Modal, ResearchesPicker},
-    props: {
-      card: {
-        type: Object,
-        required: true
+export default {
+  name: 'rmis-directions-viewer',
+  components: { Modal, ResearchesPicker },
+  props: {
+    card: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      rows: [],
+      loaded: false,
+      direction_data: {},
+      selected_direction: -1,
+      post: false,
+    };
+  },
+  created() {
+    this.load_data();
+  },
+  computed: {
+    departments() {
+      const deps = {};
+      for (const dep of this.$store.getters.allDepartments) {
+        deps[dep.pk] = dep;
       }
+      return deps;
     },
-    data() {
-      return {
-        rows: [],
-        loaded: false,
-        direction_data: {},
-        selected_direction: -1,
-        post: false
+    valid() {
+      if (this.selected_direction === -1 || Object.keys(this.direction_data).length === 0) return false;
+      let has_n_ex = false;
+      for (const r of this.direction_data.services) {
+        if (r.selected_local_service === -1 && !r.exclude_direction) {
+          return false;
+        }
+        if (!r.exclude_direction) has_n_ex = true;
       }
+      return has_n_ex;
     },
-    created() {
-      this.load_data()
-    },
-    computed: {
-      departments() {
-        let deps = {}
-        for (let dep of this.$store.getters.allDepartments) {
-          deps[dep.pk] = dep
-        }
-        return deps
-      },
-      valid() {
-        if (this.selected_direction === -1 || Object.keys(this.direction_data).length === 0)
-          return false
-        let has_n_ex = false
-        for (let r of this.direction_data.services) {
-          if (r.selected_local_service === -1 && !r.exclude_direction) {
-            return false
-          }
-          if (!r.exclude_direction)
-            has_n_ex = true
-        }
-        return has_n_ex
-      },
-      has_excluded() {
-        if (!this.valid)
-          return false
-        for (let r of this.direction_data.services) {
-          if (r.exclude_direction)
-            return true
-        }
+    has_excluded() {
+      if (!this.valid) return false;
+      for (const r of this.direction_data.services) {
+        if (r.exclude_direction) return true;
       }
+      return false;
     },
-    methods: {
-      generateDirections() {
-        if (this.post)
-          return
-        const r = {}
-        for (const s of this.direction_data.services) {
-          if (s.exclude_direction || s.selected_local_service === -1)
-            continue
-          const dep = this.research_data(s.selected_local_service).department_pk
-          if (!(dep in r)) {
-            r[dep] = []
-          }
-          r[dep].push(s.selected_local_service)
+  },
+  methods: {
+    generateDirections() {
+      if (this.post) return;
+      const r = {};
+      for (const s of this.direction_data.services) {
+        if (s.exclude_direction || s.selected_local_service === -1) continue;
+        const dep = this.research_data(s.selected_local_service).department_pk;
+        if (!(dep in r)) {
+          r[dep] = [];
         }
+        r[dep].push(s.selected_local_service);
+      }
 
-        this.post = true
-        this.$root.$emit('generate-directions', {
-          type: 'direction',
-          card_pk: this.card.pk,
-          fin_source_pk: null,
-          diagnos: this.direction_data.diagnosis || '',
-          base: null,
-          researches: r,
-          operator: false,
-          ofname: -1,
-          history_num: '',
-          comments: {},
-          for_rmis: true,
-          rmis_data: {rmis_number: this.selected_direction, imported_org: this.direction_data.referralOrganizationPk},
-          callback: () => {
-            this.load_data()
-          }
-        })
-      },
-      research_data(pk) {
-        if (pk in this.$store.getters.researches_obj) {
-          return this.$store.getters.researches_obj[pk]
-        }
-        return {}
-      },
-      cancel() {
-        this.direction_data = {}
-        this.selected_direction = -1
-        this.post = false
-      },
-      hide_modal() {
-        this.$root.$emit('hide_rmis_directions')
-        if (this.$refs.modal) {
-          this.$refs.modal.$el.style.display = 'none'
-        }
-      },
-      load_data() {
-        this.loaded = false
-        this.$store.dispatch(action_types.INC_LOADING)
-        this.cancel()
-        directions_point.getRmisDirections(this.card, ['pk']).then(data => {
-          this.rows = data.rows
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-          this.loaded = true
-        })
-      },
-      select_direction(pk) {
-        if (pk === this.selected_direction)
-          return
-        this.$store.dispatch(action_types.INC_LOADING)
-        directions_point.getRmisDirection({pk}).then(data => {
-          this.direction_data = data
-          this.selected_direction = pk
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
+      this.post = true;
+      this.$root.$emit('generate-directions', {
+        type: 'direction',
+        card_pk: this.card.pk,
+        fin_source_pk: null,
+        diagnos: this.direction_data.diagnosis || '',
+        base: null,
+        researches: r,
+        operator: false,
+        ofname: -1,
+        history_num: '',
+        comments: {},
+        for_rmis: true,
+        rmis_data: { rmis_number: this.selected_direction, imported_org: this.direction_data.referralOrganizationPk },
+        callback: () => {
+          this.load_data();
+        },
+      });
+    },
+    research_data(pk) {
+      if (pk in this.$store.getters.researches_obj) {
+        return this.$store.getters.researches_obj[pk];
       }
-    }
-  }
+      return {};
+    },
+    cancel() {
+      this.direction_data = {};
+      this.selected_direction = -1;
+      this.post = false;
+    },
+    hide_modal() {
+      this.$root.$emit('hide_rmis_directions');
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
+      }
+    },
+    load_data() {
+      this.loaded = false;
+      this.$store.dispatch(actions.INC_LOADING);
+      this.cancel();
+      directionsPoint.getRmisDirections(this.card, ['pk']).then((data) => {
+        this.rows = data.rows;
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+        this.loaded = true;
+      });
+    },
+    select_direction(pk) {
+      if (pk === this.selected_direction) return;
+      this.$store.dispatch(actions.INC_LOADING);
+      directionsPoint.getRmisDirection({ pk }).then((data) => {
+        this.direction_data = data;
+        this.selected_direction = pk;
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

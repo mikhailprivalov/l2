@@ -3,88 +3,89 @@
     <div class="content-picker" style="overflow: auto">
       <div style="width: 100%;display: contents">
         <research-params-select v-for="r in params_researches" v-model="r.selected_params" :research="r" :key="r.pk"/>
-        <div class="text-center" v-if="params_researches.length === 0" style="width: 100%;display: flex;align-items: center;justify-content: center;">Ничего не выбрано</div>
+        <div class="text-center" v-if="params_researches.length === 0"
+             style="width: 100%;display: flex;align-items: center;justify-content: center;">Ничего не выбрано</div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  import _ from 'lodash';
-  import ResearchParamsSelect from './ResearchParamsSelect'
+import _ from 'lodash';
+import ResearchParamsSelect from './ResearchParamsSelect.vue';
 
-  export default {
-    name: 'report-selected-researches',
-    components: {
-      ResearchParamsSelect
+export default {
+  name: 'report-selected-researches',
+  components: {
+    ResearchParamsSelect,
+  },
+  props: {
+    researches: {
+      type: Array,
+      required: true,
     },
-    props: {
-      researches: {
-        type: Array,
-        required: true
-      },
-      params_directory: {
-        type: Object,
-        required: true
-      },
-      value: {}
+    params_directory: {
+      type: Object,
+      required: true,
     },
-    data() {
-      return {
-        params_researches: [],
+    value: {},
+  },
+  data() {
+    return {
+      params_researches: [],
+    };
+  },
+  computed: {
+    selected_params() {
+      let p = [];
+      for (const rp of this.params_researches) {
+        p = _.union(p, rp.selected_params);
       }
+      return p;
     },
-    computed: {
-      selected_params() {
-        let p = []
-        for (let rp of this.params_researches) {
-          p = _.union(p, rp.selected_params)
-        }
-        return p
-      },
+  },
+  created() {
+    this.$root.$on('researches-picker:clear_all', this.clear_all);
+    this.$root.$on('params-load', this.params_researches_update);
+  },
+  methods: {
+    has_in_directory(pk) {
+      return pk in this.params_directory;
     },
-    created() {
-      this.$root.$on('researches-picker:clear_all', this.clear_all)
-      this.$root.$on('params-load', this.params_researches_update)
+    get_research(pk) {
+      return this.params_directory[pk];
     },
-    methods: {
-      has_in_directory(pk) {
-        return pk in this.params_directory
-      },
-      get_research(pk) {
-        return this.params_directory[pk]
-      },
-      clear_all() {
-        this.$root.$emit('researches-picker:deselect_all')
-      },
-      params_researches_update() {
-        this.params_researches.length = 0
+    clear_all() {
+      this.$root.$emit('researches-picker:deselect_all');
+    },
+    params_researches_update() {
+      this.params_researches.length = 0;
 
-        for (let rpk of Object.keys(this.params_directory)) {
-          if (this.researches.includes(parseInt(rpk))) {
-            this.params_researches.push(this.params_directory[rpk])
-            continue
-          }
-          this.params_directory[rpk].selected_params = []
+      for (const rpk of Object.keys(this.params_directory)) {
+        if (this.researches.includes(parseInt(rpk, 10))) {
+          this.params_researches.push(this.params_directory[rpk]);
+          continue;
         }
+        this.params_directory[rpk].selected_params = [];
       }
     },
-    watch: {
-      params_directory: {
-        handler() {
-          this.params_researches_update()
-        },
-        deep: true
+  },
+  watch: {
+    params_directory: {
+      handler() {
+        this.params_researches_update();
       },
-      researches() {
-        this.params_researches_update()
-        this.$root.$emit('report-researches:update')
-      },
-      selected_params() {
-        this.$emit('input', this.selected_params)
-      }
-    }
-  }
+      deep: true,
+    },
+    researches() {
+      this.params_researches_update();
+      this.$root.$emit('report-researches:update');
+    },
+    selected_params() {
+      this.$emit('input', this.selected_params);
+    },
+  },
+};
 </script>
 
 <style scoped>

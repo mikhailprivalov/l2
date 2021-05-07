@@ -47,7 +47,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="(r, i) in result">
+        <tr v-for="(r, i) in result" :key="r.fraction.pk">
           <td>
             <label class="fraction-title" :for="`fraction-${r.fraction.pk}`">{{ r.fraction.title }}</label>
           </td>
@@ -124,7 +124,7 @@
           <col/>
         </colgroup>
         <tbody>
-        <tr v-for="r in execParams">
+        <tr v-for="r in execParams" :key="`${r[0]}_${r[1]}`">
           <th>{{ r[0] }}</th>
           <td>{{ r[1] }}</td>
         </tr>
@@ -158,20 +158,22 @@
   </div>
 </template>
 <script>
-import * as action_types from "@/store/action-types";
-import api from "@/api";
+import * as actions from '@/store/action-types';
+import api from '@/api';
 
-import Treeselect from "@riophae/vue-treeselect";
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-import Ref from "@/pages/LaboratoryResults/Ref";
-import TextInputField from "@/pages/LaboratoryResults/TextInputField";
-import BloodTypeField from "@/pages/LaboratoryResults/BloodTypeField";
-import RefSettings from "@/pages/LaboratoryResults/RefSettings";
+import Ref from '@/pages/LaboratoryResults/Ref.vue';
+import TextInputField from '@/pages/LaboratoryResults/TextInputField.vue';
+import BloodTypeField from '@/pages/LaboratoryResults/BloodTypeField.vue';
+import RefSettings from '@/pages/LaboratoryResults/RefSettings.vue';
 
 export default {
   name: 'ResultsForm',
-  components: {RefSettings, TextInputField, BloodTypeField, Ref, Treeselect},
+  components: {
+    RefSettings, TextInputField, BloodTypeField, Ref, Treeselect,
+  },
   mounted() {
     this.$root.$on('laboratory:results:open-form', (pk, allDirPks, dirData) => {
       this.loadForm(pk);
@@ -237,8 +239,8 @@ export default {
         this.allow_reset_confirm = false;
         return;
       }
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {data} = await api('laboratory/form', {pk});
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { data } = await api('laboratory/form', { pk });
       this.pk = data.pk;
       this.research = data.research;
       this.execData = data.execData;
@@ -251,58 +253,58 @@ export default {
       this.co_executor2 = data.co_executor2;
       this.allow_reset_confirm = data.allow_reset_confirm;
       this.loaded = true;
-      $(this.$refs.root).scrollTop(0);
+      window.$(this.$refs.root).scrollTop(0);
       if (!data.confirmed) {
         setTimeout(() => {
-          const $rf = $('.result-field:not([readonly]):not([disabled])');
+          const $rf = window.$('.result-field:not([readonly]):not([disabled])');
           if ($rf.length) {
-            const idx = data.result.findIndex(r => !Boolean(r.value));
+            const idx = data.result.findIndex((r) => !r.value);
             if (idx !== -1) {
               $rf.eq(idx).focus();
             }
           }
         }, 0);
       }
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async clearAll() {
       try {
-        await this.$dialog.confirm('Вы действительно очистить все значения?')
+        await this.$dialog.confirm('Вы действительно очистить все значения?');
       } catch (_) {
-        return
+        return;
       }
       for (const i of this.result) {
         i.value = '';
       }
     },
     async save(withoutReloading = false) {
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message} = await api(
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await api(
         'laboratory/save',
         this,
-        ['pk', 'result', 'comment', 'co_executor', 'co_executor2']
+        ['pk', 'result', 'comment', 'co_executor', 'co_executor2'],
       );
       if (!ok) {
-        errmessage(message);
+        window.errmessage(message);
       } else {
-        okmessage('Сохранено');
+        window.okmessage('Сохранено');
       }
       if (!withoutReloading) {
         this.$root.$emit('laboratory:reload-direction:with-open-first');
       }
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
       return ok;
     },
     async confirm() {
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message} = await api('laboratory/confirm', this, 'pk');
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await api('laboratory/confirm', this, 'pk');
       if (!ok) {
-        errmessage(message);
+        window.errmessage(message);
       } else {
-        okmessage('Подтверждено');
+        window.okmessage('Подтверждено');
       }
       this.$root.$emit('laboratory:reload-direction:with-open-first');
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
       return ok;
     },
     async saveAndConfirm() {
@@ -315,25 +317,25 @@ export default {
     },
     async resetConfirm() {
       try {
-        await this.$dialog.confirm('Подтвердите сброс')
+        await this.$dialog.confirm('Подтвердите сброс');
       } catch (_) {
-        return
+        return;
       }
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message} = await api('laboratory/reset-confirm', this, 'pk');
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await api('laboratory/reset-confirm', this, 'pk');
       if (!ok) {
-        errmessage(message);
+        window.errmessage(message);
       } else {
-        okmessage('Подтверждение сброшено');
+        window.okmessage('Подтверждение сброшено');
       }
       this.reloadForm();
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     reloadForm() {
       this.$root.$emit('laboratory:reload-direction:with-open-pk', this.pk);
     },
     moveFocusNext(e) {
-      const $rf = $('.result-field:not([readonly]):not([disabled])');
+      const $rf = window.$('.result-field:not([readonly]):not([disabled])');
       const index = $rf.index(e.target) + 1;
       if ($rf.eq(index).length) {
         $rf.eq(index).focus();
@@ -348,7 +350,7 @@ export default {
       this.showRefSettings = false;
     },
   },
-}
+};
 </script>
 
 <style scoped lang="scss">
@@ -377,7 +379,6 @@ export default {
   max-width: 150px;
   float: right;
 }
-
 
 .table-header {
   th, td {

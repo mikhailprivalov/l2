@@ -45,10 +45,10 @@
 </template>
 
 <script>
-  export default {
-    name: 'DisplayDirection',
-    props: ['direction']
-  }
+export default {
+  name: 'DisplayDirection',
+  props: ['direction'],
+};
 </script>
 
 <style scoped lang="scss">

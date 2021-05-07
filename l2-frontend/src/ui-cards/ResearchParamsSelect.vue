@@ -10,7 +10,14 @@
     </div>
     <div>
       <div v-for="p in params"
-           :class="{active: selected_param(p.pk), n1: params_cnt === 1, n2: params_cnt === 2, n3: params_cnt === 3, n4: params_cnt > 3}"
+           :key="p.pk"
+           :class="{
+             active: selected_param(p.pk),
+             n1: params_cnt === 1,
+             n2: params_cnt === 2,
+             n3: params_cnt === 3,
+             n4: params_cnt > 3
+           }"
            @click="toggle_select(p.pk)"
            class="param" :title="p.title"><span>{{p.title}}</span></div>
     </div>
@@ -25,83 +32,81 @@
 </template>
 
 <script>
-  import Longpress from 'vue-longpress'
+import Longpress from 'vue-longpress';
 
-  export default {
-    name: 'research-params-select',
-    components: {
-      Longpress
+export default {
+  name: 'research-params-select',
+  components: {
+    Longpress,
+  },
+  props: {
+    research: {
+      required: true,
     },
-    props: {
-      research: {
-        required: true
-      },
-      value: {
-        type: Array
+    value: {
+      type: Array,
+    },
+  },
+  data() {
+    return {
+      selected_params: [],
+      inited: false,
+    };
+  },
+  computed: {
+    params_cnt() {
+      return this.research.params.length;
+    },
+    params() {
+      return this.research.params;
+    },
+  },
+  mounted() {
+    if (this.value.length === 0) {
+      if (this.params_cnt === 1) {
+        this.selected_params.push({ pk: this.research.params[0].pk, is_paraclinic: this.research.is_paraclinic });
       }
-    },
-    data() {
-      return {
-        selected_params: [],
-        inited: false
-      }
-    },
-    computed: {
-      params_cnt() {
-        return this.research.params.length
-      },
-      params() {
-        return this.research.params
-      },
-    },
-    mounted() {
-      if (this.value.length === 0) {
-        if (this.params_cnt === 1) {
-          this.selected_params.push({pk: this.research.params[0].pk, is_paraclinic: this.research.is_paraclinic})
-        }
-      } else {
-        this.selected_params = JSON.parse(JSON.stringify(this.value))
-      }
-      this.inited = true
-    },
-    methods: {
-      deselect() {
-        this.$root.$emit('researches-picker:deselect', this.research.pk)
-      },
-      deselect_all() {
-        this.selected_params = []
-      },
-      select_all() {
-        for (let p of this.params) {
-          if (!this.selected_param(p.pk)) {
-            this.toggle_select(p.pk)
-          }
-        }
-      },
-      selected_param(pk) {
-        return this.selected_params.filter(item => item.pk === pk).length > 0
-      },
-      toggle_select(pk) {
-        if (this.selected_param(pk)) {
-          this.selected_params = this.selected_params.filter(item => item.pk !== pk)
-        }
-        else {
-          this.selected_params.push({pk: pk, is_paraclinic: this.research.is_paraclinic})
-        }
-      },
-    },
-    watch: {
-      selected_params() {
-        if (this.inited)
-          this.$emit('input', JSON.parse(JSON.stringify(this.selected_params)))
-      },
-      research() {
-        if (this.selected_params.length === 0 && this.research.selected_params.length > 0) {
-          this.selected_params = JSON.parse(JSON.stringify(this.research.selected_params))
-        }
-      }
+    } else {
+      this.selected_params = JSON.parse(JSON.stringify(this.value));
     }
-  }
+    this.inited = true;
+  },
+  methods: {
+    deselect() {
+      this.$root.$emit('researches-picker:deselect', this.research.pk);
+    },
+    deselect_all() {
+      this.selected_params = [];
+    },
+    select_all() {
+      for (const p of this.params) {
+        if (!this.selected_param(p.pk)) {
+          this.toggle_select(p.pk);
+        }
+      }
+    },
+    selected_param(pk) {
+      return this.selected_params.filter((item) => item.pk === pk).length > 0;
+    },
+    toggle_select(pk) {
+      if (this.selected_param(pk)) {
+        this.selected_params = this.selected_params.filter((item) => item.pk !== pk);
+      } else {
+        this.selected_params.push({ pk, is_paraclinic: this.research.is_paraclinic });
+      }
+    },
+  },
+  watch: {
+    selected_params() {
+      if (this.inited) this.$emit('input', JSON.parse(JSON.stringify(this.selected_params)));
+    },
+    research() {
+      if (this.selected_params.length === 0 && this.research.selected_params.length > 0) {
+        this.selected_params = JSON.parse(JSON.stringify(this.research.selected_params));
+      }
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

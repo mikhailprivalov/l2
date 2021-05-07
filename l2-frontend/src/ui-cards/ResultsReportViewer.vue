@@ -10,7 +10,8 @@
         <date-range v-model="date_range"/>
       </div>
       <div class="top-inner">
-        <button class="btn btn-blue-nb btn-ell" style="display: inline-block;vertical-align: top;border-radius: 0;width: auto;" title="Загрузить данные"
+        <button class="btn btn-blue-nb btn-ell"
+                style="display: inline-block;vertical-align: top;border-radius: 0;width: auto;" title="Загрузить данные"
                 @click="load_history" v-if="individual_pk > -1 && params.length > 0">
           <i class="glyphicon glyphicon-list-alt"></i> Загрузить данные
         </button>
@@ -43,7 +44,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="r in rows" :class="{not_norm: r.is_norm !== 'normal'}">
+        <tr v-for="r in rows" :key="r.pk" :class="{not_norm: r.is_norm !== 'normal'}">
           <td>{{r.date}}</td>
           <td class="research">{{get_param_name(r.research, r.pk).research}}</td>
           <td>{{get_param_name(r.research, r.pk).title}}</td>
@@ -70,103 +71,101 @@
 </template>
 
 <script>
-  import DateRange from './DateRange'
-  // import ReportChartViewer from './ReportChartViewer'
-  import directions_point from '../api/directions-point'
-  import * as action_types from '../store/action-types'
-  import moment from 'moment'
+import moment from 'moment';
+import DateRange from './DateRange.vue';
+// import ReportChartViewer from './ReportChartViewer'
+import directionsPoint from '../api/directions-point';
+import * as actions from '../store/action-types';
 
-  export default {
-    components: {DateRange, /*ReportChartViewer*/},
-    name: 'results-report-viewer',
-    props: {
-      individual_pk: {
-        type: Number,
-        default: -1
-      },
-      params: {
-        type: Array,
-        default: () => [],
-      },
-      params_directory: {
-        type: Object,
-        default: () => {},
-      },
+export default {
+  components: { DateRange /* ReportChartViewer */ },
+  name: 'results-report-viewer',
+  props: {
+    individual_pk: {
+      type: Number,
+      default: -1,
     },
-    data() {
-      return {
-        date_range: [moment().subtract(3, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
-        is_created: false,
-        rows: [],
-        show_charts: false
-      }
+    params: {
+      type: Array,
+      default: () => [],
     },
-    computed: {},
-    mounted() {
-      this.is_created = true
-      this.$root.$on('hide_report-chart-viewer', () => {
-        this.show_charts = false
-      })
+    params_directory: {
+      type: Object,
+      default: () => ({}),
     },
-    methods: {
-      params_titles() {
-        let d = {}
-        for (let rpk of Object.keys(this.params_directory)) {
-          if (!d.hasOwnProperty(rpk))
-            d[rpk] = {}
-          for (let p of this.params_directory[rpk].params) {
-            d[rpk][p.pk] = {title: p.title, research: this.params_directory[rpk].short_title}
-          }
+  },
+  data() {
+    return {
+      date_range: [moment().subtract(3, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+      is_created: false,
+      rows: [],
+      show_charts: false,
+    };
+  },
+  computed: {},
+  mounted() {
+    this.is_created = true;
+    this.$root.$on('hide_report-chart-viewer', () => {
+      this.show_charts = false;
+    });
+  },
+  methods: {
+    params_titles() {
+      const d = {};
+      for (const rpk of Object.keys(this.params_directory)) {
+        if (!d[rpk]) d[rpk] = {};
+        for (const p of this.params_directory[rpk].params) {
+          d[rpk][p.pk] = { title: p.title, research: this.params_directory[rpk].short_title };
         }
-        return d
-      },
-      get_param_name(rpk, ppk) {
-        let pt = this.params_titles()
-        if (pt.hasOwnProperty(rpk) && pt[rpk].hasOwnProperty(ppk)) {
-          return pt[rpk][ppk]
-        }
-        return {title: '', research: ''}
-      },
-      build_graphs() {
-        this.show_charts = true
-      },
-      show_results(pk) {
-        this.$root.$emit('show_results', pk)
-      },
-      print_direction(pk) {
-        this.$root.$emit('print:directions', [pk])
-      },
-      print_results(pk) {
-        this.$root.$emit('print:results', [pk])
-      },
-      load_history() {
-        if (!this.is_created)
-          return
-        this.$root.$emit('validate-datepickers')
-        this.is_created = false
-        this.$store.dispatch(action_types.INC_LOADING)
-        directions_point.getResultsReport({
-          individual: this.individual_pk,
-          params: this.params,
-          date_start: this.date_range[0],
-          date_end: this.date_range[1]
-        }).then(data => {
-          this.rows = data.data
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-          this.is_created = true
-        })
-      },
-      clear() {
-        this.rows = []
       }
+      return d;
     },
-    watch: {
-      individual_pk() {
-        this.clear()
+    get_param_name(rpk, ppk) {
+      const pt = this.params_titles();
+      if (pt[rpk] && pt[rpk][ppk]) {
+        return pt[rpk][ppk];
       }
-    }
-  }
+      return { title: '', research: '' };
+    },
+    build_graphs() {
+      this.show_charts = true;
+    },
+    show_results(pk) {
+      this.$root.$emit('show_results', pk);
+    },
+    print_direction(pk) {
+      this.$root.$emit('print:directions', [pk]);
+    },
+    print_results(pk) {
+      this.$root.$emit('print:results', [pk]);
+    },
+    load_history() {
+      if (!this.is_created) return;
+      this.$root.$emit('validate-datepickers');
+      this.is_created = false;
+      this.$store.dispatch(actions.INC_LOADING);
+      directionsPoint.getResultsReport({
+        individual: this.individual_pk,
+        params: this.params,
+        date_start: this.date_range[0],
+        date_end: this.date_range[1],
+      }).then((data) => {
+        this.rows = data.data;
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+        this.is_created = true;
+      });
+    },
+    clear() {
+      this.rows = [];
+    },
+  },
+  watch: {
+    individual_pk() {
+      this.clear();
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

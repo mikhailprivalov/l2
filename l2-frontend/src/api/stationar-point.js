@@ -1,40 +1,40 @@
-import {generator} from './http-common'
+import { generator } from './http-common';
 
 export default generator({
   load: {
     url: 'stationar/load',
-    onReject: {ok: false, message: ''}
+    onReject: { ok: false, message: '' },
   },
   counts: {
     url: 'stationar/counts',
-    onReject: {}
+    onReject: {},
   },
   hospServicesByType: {
     url: 'stationar/hosp-services-by-type',
-    onReject: {data: []}
+    onReject: { data: [] },
   },
   makeService: {
     url: 'stationar/make-service',
-    onReject: {pk: -1}
+    onReject: { pk: -1 },
   },
   directionsByKey: {
     url: 'stationar/directions-by-key',
-    onReject: {data: []}
+    onReject: { data: [] },
   },
   aggregateLaboratory: {
     url: 'stationar/aggregate-laboratory',
-    onReject: {}
+    onReject: {},
   },
   aggregateDesc: {
     url: 'stationar/aggregate-desc',
-    onReject: {}
+    onReject: {},
   },
   aggregateTADP: {
     url: 'stationar/aggregate-tadp',
-    onReject: {}
+    onReject: {},
   },
   changeDepartment: {
     url: 'stationar/change-department',
-    onReject: {}
+    onReject: {},
   },
-})
+});

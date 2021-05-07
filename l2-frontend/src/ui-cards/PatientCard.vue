@@ -6,15 +6,11 @@
 </template>
 
 <script>
-  import Patient from './Patient'
-  import Card from './Card'
+import Patient from './Patient.vue';
+import Card from './Card.vue';
 
-  export default {
-    name: 'patient-card',
-    components: {Patient, Card}
-  }
+export default {
+  name: 'patient-card',
+  components: { Patient, Card },
+};
 </script>
-
-<style scoped>
-
-</style>

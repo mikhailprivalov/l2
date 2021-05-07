@@ -34,7 +34,7 @@
         <div v-if="has_not_filled && !simple">
           <div><strong>Незаполенные поля:</strong></div>
           <ul>
-            <li v-for="f in not_filled_fields">{{ f }}</li>
+            <li v-for="f in not_filled_fields" :key="f">{{ f }}</li>
           </ul>
         </div>
       </div>
@@ -56,19 +56,19 @@ export default {
       type: Number,
     },
     pk: {
-      type: Number
+      type: Number,
     },
     comment: {
       type: String,
-      default: ''
+      default: '',
     },
     kk: {
       type: String,
-      default: ''
+      default: '',
     },
     service_location: {
       type: String,
-      default: ''
+      default: '',
     },
     simple: {
       type: Boolean,
@@ -99,15 +99,14 @@ export default {
   },
   methods: {
     remove() {
-      this.$root.$emit('researches-picker:deselect' + this.kk, this.pk)
+      this.$root.$emit(`researches-picker:deselect${this.kk}`, this.pk);
     },
     update_comment() {
-      if (this.simple)
-        return
-      this.$root.$emit('researches-picker:update-comment' + this.kk, this.pk)
-    }
-  }
-}
+      if (this.simple) return;
+      this.$root.$emit(`researches-picker:update-comment${this.kk}`, this.pk);
+    },
+  },
+};
 </script>
 
 <style scoped>

@@ -5,15 +5,15 @@
 </template>
 
 <script>
-  export default {
-    name: 'category-pick',
-    props: {
-      category: {
-        type: Object,
-        required: true
-      },
+export default {
+  name: 'category-pick',
+  props: {
+    category: {
+      type: Object,
+      required: true,
     },
-  }
+  },
+};
 </script>
 
 <style scoped>

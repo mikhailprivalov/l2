@@ -17,14 +17,14 @@
 </template>
 
 <script>
-  export default {
-    name: 'SelectedPatient',
-    props: {
-      card: {
-        type: Object,
-      },
+export default {
+  name: 'SelectedPatient',
+  props: {
+    card: {
+      type: Object,
     },
-  }
+  },
+};
 </script>
 
 <style lang="scss" scoped>

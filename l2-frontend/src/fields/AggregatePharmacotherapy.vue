@@ -22,7 +22,7 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="r in rows">
+      <tr v-for="r in rows" :key="r.pk">
         <td>
           <div class="drug" :class="{cancel: r.cancel}">{{ r.drug }}</div>
           <span class="badge badge-primary" title="Форма выпуска" v-tippy>{{ r.form_release }}</span>
@@ -55,12 +55,12 @@
 </template>
 
 <script>
-import api from '@/api'
-import PharmacotherapyTime from "@/fields/PharmacotherapyTime";
-import * as action_types from "@/store/action-types";
+import api from '@/api';
+import PharmacotherapyTime from '@/fields/PharmacotherapyTime.vue';
+import * as actions from '@/store/action-types';
 
 export default {
-  components: {PharmacotherapyTime},
+  components: { PharmacotherapyTime },
   props: {
     direction: {},
   },
@@ -70,14 +70,14 @@ export default {
       dates: [],
       times: [],
       timesInDates: {},
-    }
+    };
   },
   async mounted() {
-    await this.load()
+    await this.load();
     this.$root.$on('pharmacotherapy-aggregation:reload', () => this.load());
-    $('.root-agg').on('mouseover mouseout', '[data-datetime]', function (event) {
-      const t$ = $(event.target);
-      const all$ = $(`[data-datetime="${t$.data('datetime')}"]`);
+    window.$('.root-agg').on('mouseover mouseout', '[data-datetime]', (event) => {
+      const t$ = window.$(event.target);
+      const all$ = window.$(`[data-datetime="${t$.data('datetime')}"]`);
       if (event.type === 'mouseover') {
         all$.addClass('datetime-hover');
       } else {
@@ -86,21 +86,21 @@ export default {
     });
   },
   beforeDestroy() {
-    $('.root-agg [data-datetime]').off('mouseover mouseout');
+    window.$('.root-agg [data-datetime]').off('mouseover mouseout');
   },
   computed: {
     can_cancel() {
-      for (let g of (this.$store.getters.user_data.groups || [])) {
-        if (g === 'Врач стационара' || g === "Admin") {
-          return true
+      for (const g of (this.$store.getters.user_data.groups || [])) {
+        if (g === 'Врач стационара' || g === 'Admin') {
+          return true;
         }
       }
-      return false
+      return false;
     },
   },
   methods: {
     async load() {
-      await this.$store.dispatch(action_types.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
       const {
         result,
         dates,
@@ -111,37 +111,37 @@ export default {
       this.dates = dates;
       this.times = times;
       this.timesInDates = timesInDates;
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async cancelRow(pk, cancel) {
       if (cancel) {
         try {
-          await this.$dialog.confirm('Вы действительно хотите отменить назначение?')
+          await this.$dialog.confirm('Вы действительно хотите отменить назначение?');
         } catch (_) {
-          return
+          return;
         }
       } else {
         try {
-          await this.$dialog.confirm('Вы действительно хотите вернуть назначение?')
+          await this.$dialog.confirm('Вы действительно хотите вернуть назначение?');
         } catch (_) {
-          return
+          return;
         }
       }
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, message} = await api('procedural-list/procedure-cancel', {pk, cancel});
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await api('procedural-list/procedure-cancel', { pk, cancel });
       if (ok) {
-        okmessage(message);
-        this.$root.$emit('pharmacotherapy-aggregation:reload')
+        window.okmessage(message);
+        this.$root.$emit('pharmacotherapy-aggregation:reload');
       } else {
-        errmessage(message);
+        window.errmessage(message);
       }
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-    print_form(pk) {
+    print_form() {
       window.open(`/forms/pdf?type=107.02&&hosp_pk=${this.direction}`);
     },
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

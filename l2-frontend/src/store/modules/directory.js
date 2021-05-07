@@ -1,74 +1,72 @@
-import researches_point from '../../api/researches-point'
-import * as mutation_types from '../mutation-types'
-import * as action_types from '../action-types'
+import researchesPoint from '../../api/researches-point';
+import * as mutation_types from '../mutation-types';
+import * as actionsTypes from '../action-types';
 
-const state = {
+const stateInitial = {
   templates: [],
   templates_loaded: false,
   researches: {},
   tubes: {},
   researches_loaded: false,
-}
+};
 
 const getters = {
-  templates: state => state.templates,
-  researches: state => state.researches,
-  tubes: state => state.tubes,
-  researches_obj: function (state) {
-    let o = {}
-    for (let k in state.researches) {
-      if (state.researches.hasOwnProperty(k)) {
-        for (let r of state.researches[k]) {
-          o[r.pk] = r
-        }
+  templates: (state) => state.templates,
+  researches: (state) => state.researches,
+  tubes: (state) => state.tubes,
+  researches_obj(state) {
+    const o = {};
+    for (const k of Object.keys(state.researches)) {
+      for (const r of state.researches[k]) {
+        o[r.pk] = r;
       }
     }
-    return o
-  }
-}
+    return o;
+  },
+};
 
 const actions = {
-  async [action_types.GET_TEMPLATES]({commit, state}) {
+  async [actionsTypes.GET_TEMPLATES]({ commit, state }) {
     if (state.templates_loaded) {
-      return
+      return;
     }
-    const answer = await researches_point.getTemplates()
-    let templates = answer.templates
-    commit(mutation_types.UPDATE_TEMPLATES, {templates})
-    let templates_loaded = true
-    commit(mutation_types.SET_TEMPLATES_LOADED, {templates_loaded})
+    const answer = await researchesPoint.getTemplates();
+    const { templates } = answer;
+    commit(mutation_types.UPDATE_TEMPLATES, { templates });
+    const templates_loaded = true;
+    commit(mutation_types.SET_TEMPLATES_LOADED, { templates_loaded });
   },
-  async [action_types.GET_RESEARCHES]({commit, state}) {
+  async [actionsTypes.GET_RESEARCHES]({ commit, state }) {
     if (state.researches_loaded) {
-      return
+      return;
     }
-    const answer = await researches_point.getResearches()
-    let researches = answer.researches
-    let tubes = answer.tubes
-    commit(mutation_types.UPDATE_RESEARCHES, {researches})
-    commit(mutation_types.UPDATE_TUBES, {tubes})
+    const answer = await researchesPoint.getResearches();
+    const { researches } = answer;
+    const { tubes } = answer;
+    commit(mutation_types.UPDATE_RESEARCHES, { researches });
+    commit(mutation_types.UPDATE_TUBES, { tubes });
   },
-}
+};
 
 const mutations = {
-  [mutation_types.UPDATE_TEMPLATES](state, {templates}) {
-    state.templates = templates
+  [mutation_types.UPDATE_TEMPLATES](state, { templates }) {
+    state.templates = templates;
   },
-  [mutation_types.SET_TEMPLATES_LOADED](state, {templates_loaded}) {
-    state.templates_loaded = templates_loaded
+  [mutation_types.SET_TEMPLATES_LOADED](state, { templates_loaded }) {
+    state.templates_loaded = templates_loaded;
   },
-  [mutation_types.UPDATE_RESEARCHES](state, {researches}) {
-    state.researches = researches
-    state.researches_loaded = true
+  [mutation_types.UPDATE_RESEARCHES](state, { researches }) {
+    state.researches = researches;
+    state.researches_loaded = true;
   },
-  [mutation_types.UPDATE_TUBES](state, {tubes}) {
-    state.tubes = tubes
+  [mutation_types.UPDATE_TUBES](state, { tubes }) {
+    state.tubes = tubes;
   },
-}
+};
 
 export default {
-  state,
+  state: stateInitial,
   getters,
   mutations,
   actions,
-}
+};

@@ -40,14 +40,14 @@
 </template>
 
 <script>
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import Modal from '../ui-cards/Modal'
-import moment from "moment";
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import moment from 'moment';
+import Modal from '../ui-cards/Modal.vue';
 
 export default {
   name: 'statistics-message-print-modal',
-  components: {Treeselect, Modal,},
+  components: { Treeselect, Modal },
   props: {
     hospitals: {
       type: Array,
@@ -62,15 +62,15 @@ export default {
       current_hospital: '-1',
       date1: moment().format('YYYY-MM-DD'),
       date2: moment().format('YYYY-MM-DD'),
-      card_pk: ''
-    }
+      card_pk: '',
+    };
   },
   watch: {
     date1: {
       handler() {
-        this.date2 = this.date1
+        this.date2 = this.date1;
       },
-    }
+    },
   },
   computed: {
     maxdate() {
@@ -78,21 +78,22 @@ export default {
     },
   },
   mounted() {
-    console.log(this.date1)
-    console.log(this.date2)
+    console.log(this.date1);
+    console.log(this.date2);
     this.$root.$on('hide_message_tickets', () => {
       if (this.$refs.modal) {
-        this.$refs.modal.$el.style.display = 'none'
+        this.$refs.modal.$el.style.display = 'none';
       }
-    })
+    });
   },
   methods: {
     make_report() {
-      window.open(`/statistic/xls?type=message-ticket&hospital=${this.current_hospital}&date-start=${this.date1}&date-end=${this.date2}`, '_blank')
+      // eslint-disable-next-line max-len
+      window.open(`/statistic/xls?type=message-ticket&hospital=${this.current_hospital}&date-start=${this.date1}&date-end=${this.date2}`, '_blank');
     },
     hide_message() {
-      this.$root.$emit('hide_message_tickets')
-    }
+      this.$root.$emit('hide_message_tickets');
+    },
   },
-}
+};
 </script>

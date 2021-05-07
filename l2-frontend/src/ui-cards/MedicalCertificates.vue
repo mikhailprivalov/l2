@@ -29,10 +29,9 @@
     <div id="certificates-view" class="tp" v-if="is_med_certificates">
       <table class="table">
         <tbody>
-        <tr v-for="row in med_certificates">
+        <tr v-for="row in med_certificates" :key="`${row.form}_${row.title}`">
           <td>
-            <a href="#" @click.prevent="print_med_certificate(row.form, direction)">{{row.title}} <i
-              class="fa fa-print"/></a>
+            <a href="#" @click.prevent="print_med_certificate(row.form, direction)">{{row.title}} <i class="fa fa-print"/></a>
           </td>
         </tr>
         </tbody>
@@ -42,29 +41,29 @@
 </template>
 
 <script>
-  export default {
-    name: "Certificates",
-    props: {
-      med_certificates: {
-        type: Array,
-        required: false,
-      },
-      direction: {
-        type: Number,
-        required: false,
-      }
+export default {
+  name: 'Certificates',
+  props: {
+    med_certificates: {
+      type: Array,
+      required: false,
     },
-    methods: {
-      print_med_certificate(type_form, direction) {
-        window.open(`/medical_certificates/pdf?type=${type_form}&dir=${direction}`, '_blank')
-      },
+    direction: {
+      type: Number,
+      required: false,
     },
-    computed: {
-      is_med_certificates() {
-        return this.med_certificates.length > 0;
-      }
+  },
+  methods: {
+    print_med_certificate(type_form, direction) {
+      window.open(`/medical_certificates/pdf?type=${type_form}&dir=${direction}`, '_blank');
     },
-  }
+  },
+  computed: {
+    is_med_certificates() {
+      return this.med_certificates.length > 0;
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">
@@ -74,7 +73,6 @@
     display: inline-block;
     margin-right: 3px;
   }
-
 
   .tp {
     text-align: left;

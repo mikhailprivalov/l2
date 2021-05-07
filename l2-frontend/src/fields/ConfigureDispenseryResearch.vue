@@ -18,10 +18,10 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="(val, index) in tb_data">
+      <tr v-for="(val, index) in tb_data" :key="index">
         <td class="cl-td">
           <select class="form-control" style="border: none" v-model="val.type">
-            <option :value="t" v-for="t in types">{{ t }}</option>
+            <option :value="t" v-for="t in types" :key="t">{{ t }}</option>
           </select>
         </td>
         <td class="cl-td">
@@ -70,17 +70,17 @@
 </template>
 
 <script>
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import * as action_types from "@/store/action-types";
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import * as actions from '@/store/action-types';
 import api from '@/api';
 
-const types = ["Услуга", "Врач"]
-const makeDefaultRow = (type = null) => ({type: type || types[0], is_visit: false});
+const types = ['Услуга', 'Врач'];
+const makeDefaultRow = (type = null) => ({ type: type || types[0], is_visit: false });
 
 export default {
-  name: "ConfigureDispenseryResearch",
-  components: {Treeselect},
+  name: 'ConfigureDispenseryResearch',
+  components: { Treeselect },
   props: {
     diagnos_code: {
       default: '',
@@ -93,28 +93,33 @@ export default {
       types,
       researches: [],
       specialities: [],
-    }
+    };
   },
   mounted() {
-    api('researches/research-dispensary').then(rows => this.researches = rows);
-    api('researches/research-specialities').then(rows => this.specialities = rows);
-    api('researches/load-research-by-diagnos', {'diagnos_code': this.diagnos_code}).then(rows => this.tb_data = rows);
+    api('researches/research-dispensary').then((rows) => {
+      this.researches = rows;
+    });
+    api('researches/research-specialities').then((rows) => {
+      this.specialities = rows;
+    });
+    api('researches/load-research-by-diagnos', { diagnos_code: this.diagnos_code }).then((rows) => {
+      this.tb_data = rows;
+    });
   },
   methods: {
     async save_dispensary_data(tb_data) {
-      await this.$store.dispatch(action_types.INC_LOADING)
-      const {ok, message} = await api('researches/save-dispensary-data', {
-        'diagnos': this.diagnos_code,
-        'tb_data': tb_data
-      })
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await api('researches/save-dispensary-data', {
+        diagnos: this.diagnos_code,
+        tb_data,
+      });
       if (ok) {
-        okmessage(message);
+        window.okmessage(message);
       } else {
-        errmessage(message);
+        window.errmessage(message);
       }
-      await this.$store.dispatch(action_types.DEC_LOADING)
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-
     add_new_row() {
       const tl = this.tb_data.length;
       this.tb_data.push(makeDefaultRow(tl > 0 ? this.tb_data[tl - 1].type : null));
@@ -123,21 +128,21 @@ export default {
       this.tb_data.splice(index, 1);
     },
     changeValue(newVal) {
-      this.$emit('modified', newVal)
-    }
+      this.$emit('modified', newVal);
+    },
   },
   watch: {
     tb_data: {
       handler() {
-        this.changeValue(this.tb_data)
+        this.changeValue(this.tb_data);
       },
       immediate: true,
     },
   },
   model: {
-    event: `modified`
+    event: 'modified',
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

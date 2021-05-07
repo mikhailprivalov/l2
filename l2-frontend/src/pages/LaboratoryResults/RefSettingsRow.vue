@@ -5,7 +5,7 @@
     </td>
     <td>
       <select class="form-control" v-model.number="r.selectedReference">
-        <option :value="k" v-for="(v, k) in r.fraction.references.available">{{ v.title }}</option>
+        <option :value="k" :key="k" v-for="(v, k) in r.fraction.references.available">{{ v.title }}</option>
       </select>
     </td>
     <td>
@@ -23,21 +23,22 @@
     </td>
   </div>
 </template>
+
 <script>
 import _ from 'lodash';
 
-import Ref from "@/pages/LaboratoryResults/Ref";
-import RefEditor from "@/pages/LaboratoryResults/RefEditor";
+import Ref from '@/pages/LaboratoryResults/Ref.vue';
+import RefEditor from '@/pages/LaboratoryResults/RefEditor.vue';
 
 export default {
   name: 'RefSettingsRow',
-  components: {RefEditor, Ref},
+  components: { RefEditor, Ref },
   props: {
-    r: {}
+    r: {},
   },
   watch: {
     selectedReference() {
-      const r = this.r;
+      const { r } = this;
       if (!r.ref) {
         r.ref = {};
       }
@@ -57,5 +58,5 @@ export default {
       return this.r.selectedReference;
     },
   },
-}
+};
 </script>

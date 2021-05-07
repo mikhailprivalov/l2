@@ -5,7 +5,7 @@
       <div class="directions-sidebar">
         <div class="inner">
           <div @click="select_template(d.pk)" class="direction" :class="{active: d.pk === selected_template, ishidden: d.hide}"
-               v-for="d in rows">
+               :key="d.pk" v-for="d in rows">
             <div>{{d.title}}</div>
             <a href="#" @click.prevent.stop="copy_template(d.pk)"><i class="fa fa-copy"></i></a>
           </div>
@@ -20,7 +20,9 @@
         <div class="direction-data">
           <div class="results-top">
             <div>
-              <label>Название: <input v-model="template_data.title" placeholder="Название" :readonly="template_data.readonly" /></label>
+              <label>
+                Название: <input v-model="template_data.title" placeholder="Название" :readonly="template_data.readonly" />
+              </label>
               <strong v-if="selected_template === -1">(новый шаблон)</strong>
             </div>
             <div>
@@ -28,10 +30,12 @@
             </div>
           </div>
           <div class="results-editor">
-            <div class="ft-group" v-for="group in groups">
+            <div class="ft-group" :key="`${group.pk}_${group.title}_${jg}`"
+                 v-for="(group, jg) in groups">
               <div class="ft-group-title" v-if="group.title !== ''">{{group.title}}</div>
               <div class="ft-fields">
-                <div class="ft-field" v-for="field in group.fields"
+                <div class="ft-field" :key="`${field.pk}_${field.title}_${field.field_type}_${jf}`"
+                     v-for="(field, jf) in group.fields"
                      :class="{disabled: template_data.readonly, required: field.required}">
                   <div v-if="field.title !== ''" class="ft-field-title">
                     {{field.title}}
@@ -39,7 +43,8 @@
                   <div class="ft-field-value" v-if="field.field_type === 0">
                     <textarea v-model="template_data.fields[field.pk]" :rows="field.lines" class="form-control"
                               v-if="field.lines > 1" :readonly="template_data.readonly"></textarea>
-                    <input v-model="template_data.fields[field.pk]" class="form-control" :readonly="template_data.readonly" v-else/>
+                    <input v-model="template_data.fields[field.pk]" class="form-control"
+                           :readonly="template_data.readonly" v-else/>
                   </div>
                   <div class="ft-field-value mkb10" v-else-if="field.field_type === 2 && !template_data.readonly">
                     <m-k-b-field v-model="template_data.fields[field.pk]" :short="false" />
@@ -53,7 +58,9 @@
             </div>
           </div>
           <div class="center" v-if="!template_data.readonly">
-            <button class="btn btn-blue-nb" @click="save()" :disabled="(template_data.title || '').length === 0">Сохранить</button>
+            <button class="btn btn-blue-nb" @click="save()" :disabled="(template_data.title || '').length === 0">
+              Сохранить
+            </button>
           </div>
         </div>
       </div>
@@ -76,128 +83,129 @@
 </template>
 
 <script>
-  import Modal from '../ui-cards/Modal'
-  import MKBField from '../fields/MKBField'
-  import researches_point from '../api/researches-point'
-  import * as action_types from '../store/action-types'
+import Modal from '../ui-cards/Modal.vue';
+import MKBField from '../fields/MKBField.vue';
+import researchesPoint from '../api/researches-point';
+import * as actions from '../store/action-types';
 
-  export default {
-    name: 'fast-templates-editor',
-    components: {Modal, MKBField},
-    props: {
-      research_pk: {
-        type: Number,
-        required: true
-      },
-      title: {
-        type: String,
-        required: true,
-      },
-      groups: {
-        type: Array,
-        required: true,
-      },
+export default {
+  name: 'fast-templates-editor',
+  components: { Modal, MKBField },
+  props: {
+    research_pk: {
+      type: Number,
+      required: true,
     },
-    data() {
-      return {
-        rows: [],
-        loaded: false,
-        checked: false,
-        selected_template: -2,
-        template_data: {},
-      }
+    title: {
+      type: String,
+      required: true,
     },
-    created() {
-      this.load_data()
+    groups: {
+      type: Array,
+      required: true,
     },
-    watch: {
-      selected_template() {
-        if (this.selected_template !== -2) {
-          for (const g of this.groups) {
-            for (const f of g.fields) {
-              if (!this.template_data.fields[f.pk] && this.template_data.fields[f.pk] !== '') {
-                this.template_data.fields[f.pk] = f.default;
-              }
+  },
+  data() {
+    return {
+      rows: [],
+      loaded: false,
+      checked: false,
+      selected_template: -2,
+      template_data: {},
+    };
+  },
+  created() {
+    this.load_data();
+  },
+  watch: {
+    selected_template() {
+      if (this.selected_template !== -2) {
+        for (const g of this.groups) {
+          for (const f of g.fields) {
+            if (!this.template_data.fields[f.pk] && this.template_data.fields[f.pk] !== '') {
+              this.template_data.fields[f.pk] = f.default;
             }
           }
-          this.checked = true;
         }
+        this.checked = true;
       }
     },
-    methods: {
-      hide_modal() {
-        this.$root.$emit('hide_fte')
-        if (this.$refs.modal) {
-          this.$refs.modal.$el.style.display = 'none'
+  },
+  methods: {
+    hide_modal() {
+      this.$root.$emit('hide_fte');
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
+      }
+    },
+    clear() {
+      this.checked = false;
+      this.template_data = {};
+      this.selected_template = -2;
+    },
+    add() {
+      this.clear();
+      this.template_data = {
+        title: '',
+        hide: false,
+        readonly: false,
+        fields: {},
+      };
+      this.selected_template = -1;
+    },
+    load_data(select_after) {
+      this.loaded = false;
+      this.clear();
+      this.$store.dispatch(actions.INC_LOADING);
+      researchesPoint.getFastTemplates({ pk: this.research_pk, all: true }).then(({ data }) => {
+        this.rows = data;
+        if (select_after) {
+          this.select_template(select_after);
         }
-      },
-      clear() {
-        this.checked = false;
-        this.template_data = {};
-        this.selected_template = -2;
-      },
-      add() {
-        this.clear();
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+        this.loaded = true;
+      });
+    },
+    select_template(pk) {
+      if (pk === this.selected_template) return;
+      this.clear();
+      this.$store.dispatch(actions.INC_LOADING);
+      researchesPoint.getTemplateData({ pk }).then(({ data }) => {
+        this.template_data = data;
+        this.selected_template = pk;
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+    copy_template(pk) {
+      this.clear();
+      this.$store.dispatch(actions.INC_LOADING);
+      researchesPoint.getTemplateData({ pk }).then(({ data }) => {
         this.template_data = {
-          title: '',
-          hide: false,
-          readonly: false,
-          fields: {},
+          ...data, title: '', hide: false, readonly: false,
         };
         this.selected_template = -1;
-      },
-      load_data(select_after) {
-        this.loaded = false
-        this.clear();
-        this.$store.dispatch(action_types.INC_LOADING)
-        researches_point.getFastTemplates({pk: this.research_pk, all: true}).then(({data}) => {
-          this.rows = data
-          if (select_after) {
-            this.select_template(select_after);
-          }
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-          this.loaded = true
-        })
-      },
-      select_template(pk) {
-        if (pk === this.selected_template)
-          return
-        this.clear();
-        this.$store.dispatch(action_types.INC_LOADING)
-        researches_point.getTemplateData({pk}).then(({data}) => {
-          this.template_data = data
-          this.selected_template = pk
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
-      },
-      copy_template(pk) {
-        this.clear();
-        this.$store.dispatch(action_types.INC_LOADING)
-        researches_point.getTemplateData({pk}).then(({data}) => {
-          this.template_data = {...data, title: '', hide: false, readonly: false}
-          this.selected_template = -1
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
-      },
-      save() {
-        this.loaded = false
-        this.$store.dispatch(action_types.INC_LOADING)
-        researches_point.saveFastTemplate({
-          pk: this.selected_template,
-          data: this.template_data,
-          research_pk: this.research_pk
-        }).then(({pk}) => {
-          this.load_data(pk)
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-          this.loaded = true
-        })
-      }
-    }
-  }
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+    save() {
+      this.loaded = false;
+      this.$store.dispatch(actions.INC_LOADING);
+      researchesPoint.saveFastTemplate({
+        pk: this.selected_template,
+        data: this.template_data,
+        research_pk: this.research_pk,
+      }).then(({ pk }) => {
+        this.load_data(pk);
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+        this.loaded = true;
+      });
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

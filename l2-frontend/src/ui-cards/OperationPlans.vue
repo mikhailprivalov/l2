@@ -38,7 +38,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="row in data" :class="{'cancel-row': row.cancel}">
+        <tr v-for="row in data" :class="{'cancel-row': row.cancel}" :key="row.pk_plan">
           <td>
             <LinkPlanOperations :direction="row.direction"/>
           </td>
@@ -70,70 +70,71 @@
 </template>
 
 <script>
-  import plans_point from "../api/plans-point";
-  import LinkPlanOperations from "../pages/Stationar/LinkPlanOperations";
+import plansPoint from '../api/plans-point';
+import LinkPlanOperations from '../pages/Stationar/LinkPlanOperations.vue';
 
-  export default {
-    name: "OperationPlans",
-    components: {LinkPlanOperations, PlanOperationEdit: () => import('@/modals/PlanOperationEdit')},
-    data() {
-      return {
-        data: [],
-        edit_plan_operations: false,
-        edit_plan_operations_old: false,
-        patient_fio: '',
-        card_pk: null,
-        current_direction: '',
-        current_direction_history_open: '',
-        pk_plan: null,
-        pk_hirurg: null,
-        date: null,
-        operation: '',
-        cancel: false,
-      }
+export default {
+  name: 'OperationPlans',
+  components: { LinkPlanOperations, PlanOperationEdit: () => import('@/modals/PlanOperationEdit') },
+  data() {
+    return {
+      data: [],
+      edit_plan_operations: false,
+      edit_plan_operations_old: false,
+      patient_fio: '',
+      card_pk: null,
+      current_direction: '',
+      current_direction_history_open: '',
+      pk_plan: null,
+      pk_hirurg: null,
+      date: null,
+      operation: '',
+      cancel: false,
+    };
+  },
+  mounted() {
+    this.$root.$on('hide_plan_operations', () => {
+      this.edit_plan_operations = false;
+      this.edit_plan_operations_old = false;
+      this.load();
+    });
+    this.$root.$on('current_history_direction', (data) => {
+      this.current_direction_history_open = data.history_num;
+      this.card_pk = data.patient.card_pk;
+      // eslint-disable-next-line prefer-destructuring
+      this.patient_fio = data.patient.fio_age.split('+')[0];
+      this.load();
+    });
+  },
+  methods: {
+    async load() {
+      const { data } = await plansPoint.getPlanOperastionsPatient({ card_pk: this.card_pk });
+      this.data = data;
     },
-    mounted() {
-      this.$root.$on('hide_plan_operations', () => {
-        this.edit_plan_operations = false
-        this.edit_plan_operations_old = false
-        this.load();
-      });
-      this.$root.$on('current_history_direction', (data) => {
-        this.current_direction_history_open = data.history_num
-        this.card_pk = data.patient.card_pk
-        this.patient_fio = data.patient.fio_age.split('+')[0]
-        this.load();
-      });
+    add_data() {
+      this.edit_plan_operations = true;
+      this.pk_plan = -1;
+      this.date = '';
+      this.operation = '';
+      this.current_direction = this.current_direction_history_open.toString();
     },
-    methods: {
-      async load() {
-        const {data} = await plans_point.getPlanOperastionsPatient({'card_pk': this.card_pk})
-        this.data = data;
-      },
-      add_data() {
-        this.edit_plan_operations = true
-        this.pk_plan = -1
-        this.date = ''
-        this.operation = ''
-        this.current_direction = this.current_direction_history_open.toString()
-      },
-      edit_data(row) {
-        this.pk_hirurg = row.hirurg_pk
-        const date_array = row.date.split('.')
-        this.date = date_array[2] + '-' + date_array[1] + '-' + date_array[0]
-        this.current_direction = row.direction.toString()
-        this.operation = row.type_operation
-        this.pk_plan = row.pk_plan
-        this.cancel = row.cancel
-        this.edit_plan_operations_old = true
-      }
+    edit_data(row) {
+      this.pk_hirurg = row.hirurg_pk;
+      const date_array = row.date.split('.');
+      this.date = `${date_array[2]}-${date_array[1]}-${date_array[0]}`;
+      this.current_direction = row.direction.toString();
+      this.operation = row.type_operation;
+      this.pk_plan = row.pk_plan;
+      this.cancel = row.cancel;
+      this.edit_plan_operations_old = true;
     },
-    computed: {
-      can_edit_operations() {
-        return (this.$store.getters.user_data.groups || []).includes('Управление планами операций')
-      },
-    }
-  }
+  },
+  computed: {
+    can_edit_operations() {
+      return (this.$store.getters.user_data.groups || []).includes('Управление планами операций');
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

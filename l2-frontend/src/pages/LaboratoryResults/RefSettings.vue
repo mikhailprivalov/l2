@@ -17,6 +17,7 @@
         </tr>
         </thead>
         <tbody>
+        <!-- eslint-disable-next-line vue/require-v-for-key -->
         <tr v-for="r in result">
           <RefSettingsRow :r="r"/>
         </tr>
@@ -36,12 +37,12 @@
 </template>
 
 <script>
-import Modal from "@/ui-cards/Modal";
-import RefSettingsRow from "@/pages/LaboratoryResults/RefSettingsRow";
+import Modal from '@/ui-cards/Modal.vue';
+import RefSettingsRow from '@/pages/LaboratoryResults/RefSettingsRow.vue';
 
 export default {
-  name: "RefSettings",
-  components: {RefSettingsRow, Modal},
+  name: 'RefSettings',
+  components: { RefSettingsRow, Modal },
   props: {
     close: {
       type: Function,
@@ -55,11 +56,10 @@ export default {
   methods: {
     closeWithFastHide() {
       if (this.$refs.modal) {
-        this.$refs.modal.$el.style.display = 'none'
+        this.$refs.modal.$el.style.display = 'none';
       }
       this.close();
     },
   },
-}
+};
 </script>
-

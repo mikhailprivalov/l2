@@ -13,7 +13,7 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="row in m">
+          <tr v-for="row in m" :key="row.key">
             <td class="cl-td"><input type="text" class="form-control" v-model="row.key"></td>
             <td class="cl-td"><input type="text" class="form-control" v-model="row.value"></td>
           </tr>
@@ -32,7 +32,7 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="row in f">
+          <tr v-for="row in f" :key="row.key">
             <td class="cl-td"><input type="text" class="form-control" v-model.trim="row.key"></td>
             <td class="cl-td"><input type="text" class="form-control" v-model.trim="row.value"></td>
           </tr>
@@ -49,7 +49,7 @@
 export default {
   name: 'RefEditor',
   props: {
-    reference: {}
+    reference: {},
   },
   data() {
     return {
@@ -87,20 +87,20 @@ export default {
       this.reference.f = this.makeObj(this.f);
     },
     makeObj(o) {
-      return o.reduce((a, b) => ({[b.key]: b.value, ...a}), {});
+      return o.reduce((a, b) => ({ [b.key]: b.value, ...a }), {});
     },
     makeRows(r) {
-      return Object.keys(r).map(k => ({key: k, value: r[k]}));
+      return Object.keys(r).map((k) => ({ key: k, value: r[k] }));
     },
     addRefEmptyRow() {
       this.addRefEmptyRowToObj(this.m);
       this.addRefEmptyRowToObj(this.f);
     },
     addRefEmptyRowToObj(o) {
-      if (!o.find(r => r.key === '')) {
-        o.push({key: '', value: ''});
+      if (!o.find((r) => r.key === '')) {
+        o.push({ key: '', value: '' });
       }
     },
   },
-}
+};
 </script>

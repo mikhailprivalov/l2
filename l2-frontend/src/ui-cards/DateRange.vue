@@ -9,94 +9,93 @@
 </template>
 
 <script>
-  import moment from 'moment'
+import moment from 'moment';
 
-  export default {
-    name: 'date-range',
-    props: {
-      value: {
-        type: Array,
-        default: () => [getFormattedDate(today), getFormattedDate(today)]
-      },
-      small: {
-        type: Boolean,
-        default: false,
-      },
+export default {
+  name: 'date-range',
+  props: {
+    value: {
+      type: Array,
+      default: () => [new Date(), new Date()],
     },
-    data() {
-      return {
-        dfrom: '',
-        dto: '',
+    small: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      dfrom: '',
+      dto: '',
+    };
+  },
+  created() {
+    // eslint-disable-next-line prefer-destructuring
+    this.dfrom = this.value[0];
+    // eslint-disable-next-line prefer-destructuring
+    this.dto = this.value[1];
+    this.$root.$on('validate-datepickers', this.validate);
+  },
+  mounted() {
+    window.$(this.$el).datepicker({
+      format: this.datef.toLowerCase(),
+      todayBtn: 'linked',
+      language: 'ru',
+      autoclose: true,
+      todayHighlight: true,
+    }).on('changeDate', () => {
+      if (!window.$(this.$refs.from).is(':focus')) this.$refs.from.dispatchEvent(new Event('change'));
+      if (!window.$(this.$refs.to).is(':focus')) this.$refs.to.dispatchEvent(new Event('change'));
+    });
+  },
+  watch: {
+    dfrom() {
+      this.emit();
+    },
+    dto() {
+      this.emit();
+    },
+  },
+  computed: {
+    datefull() {
+      return 'DD.MM.YYYY';
+    },
+    datesmall() {
+      return 'DD.MM.YY';
+    },
+    datef() {
+      return this.small ? this.datesmall : this.datefull;
+    },
+  },
+  methods: {
+    emit() {
+      this.validate();
+      this.$emit('input', [this.dfrom, this.dto]);
+    },
+    validate_date(date) {
+      const r = moment(date, this.datef, true).isValid();
+
+      if (!r) window.errmessage('Неверная дата');
+      return r;
+    },
+    validate() {
+      let ch = false;
+      if (!this.validate_date(this.dfrom)) {
+        this.dfrom = moment().format(this.datef);
+        window.$(this.$refs.from).datepicker('update', moment().toDate());
+        ch = true;
+      }
+      if (!this.validate_date(this.dto)) {
+        this.dto = moment().format(this.datef);
+        window.$(this.$refs.to).datepicker('update', moment().toDate());
+        ch = true;
+      }
+      if (ch) {
+        window.$(this.$el).datepicker('update');
       }
     },
-    created() {
-      this.dfrom = this.value[0]
-      this.dto = this.value[1]
-      this.$root.$on('validate-datepickers', this.validate)
-    },
-    mounted() {
-      $(this.$el).datepicker({
-        format: this.datef.toLowerCase(),
-        todayBtn: 'linked',
-        language: 'ru',
-        autoclose: true,
-        todayHighlight: true
-      }).on('changeDate', () => {
-        if(!$(this.$refs.from).is(':focus'))
-          this.$refs.from.dispatchEvent(new Event('change'))
-        if(!$(this.$refs.to).is(':focus'))
-          this.$refs.to.dispatchEvent(new Event('change'))
-      })
-    },
-    watch: {
-      dfrom() {
-        this.emit()
-      },
-      dto() {
-        this.emit()
-      }
-    },
-    computed: {
-      datefull() {
-        return 'DD.MM.YYYY'
-      },
-      datesmall() {
-        return 'DD.MM.YY'
-      },
-      datef() {
-        return this.small ? this.datesmall : this.datefull
-      },
-    },
-    methods: {
-      emit() {
-        this.validate()
-        this.$emit('input', [this.dfrom, this.dto])
-      },
-      validate_date(date) {
-        let r = moment(date, this.datef, true).isValid()
-
-        if (!r)
-          errmessage('Неверная дата')
-        return r
-      },
-      validate() {
-        let ch = false
-        if (!this.validate_date(this.dfrom)) {
-          this.dfrom = moment().format(this.datef)
-          $(this.$refs.from).datepicker('update', moment().toDate())
-          ch = true
-        }
-        if (!this.validate_date(this.dto)) {
-          this.dto = moment().format(this.datef)
-          $(this.$refs.to).datepicker('update', moment().toDate())
-          ch = true
-        }
-        if (ch) {
-          $(this.$el).datepicker('update')
-        }
-      },
-    }
-  }
+  },
+};
 </script>
 
 <style lang="scss" scoped>

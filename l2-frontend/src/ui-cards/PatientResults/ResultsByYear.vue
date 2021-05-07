@@ -57,7 +57,7 @@
               </button>
             </td>
           </tr>
-          <tr v-for="row in data">
+          <tr v-for="row in data" :key="row.dir">
             <td>
               <ResultDetails :direction="row.dir"
                              :isLab="isLab" :isDocReferral="isDocReferral" :isParaclinic="isParaclinic"/>
@@ -84,14 +84,13 @@
 </template>
 
 <script>
-import api from '@/api'
-import moment from "moment";
-import ResultDetails from "./ResultDetails";
-
+import api from '@/api';
+import moment from 'moment';
+import ResultDetails from './ResultDetails.vue';
 
 export default {
-  name: "ResultsLaboratory",
-  components: {ResultDetails},
+  name: 'ResultsLaboratory',
+  components: { ResultDetails },
   props: {
     card_pk: {
       type: Number,
@@ -115,7 +114,7 @@ export default {
     return {
       data: '',
       current_year: moment().format('YYYY'),
-    }
+    };
   },
   computed: {
     tippyId() {
@@ -140,7 +139,7 @@ export default {
       this.data = result.results;
     },
     print_med_certificate(type_form, direction) {
-      window.open(`/medical_certificates/pdf?type=${type_form}&dir=${direction}`, '_blank')
+      window.open(`/medical_certificates/pdf?type=${type_form}&dir=${direction}`, '_blank');
     },
     plus_year() {
       this.current_year = moment(this.current_year).add(1, 'year').format('YYYY');
@@ -149,30 +148,28 @@ export default {
       this.current_year = moment(this.current_year).subtract(1, 'year').format('YYYY');
     },
     set_current_year() {
-      this.current_year = moment().format('YYYY')
-      this.load()
+      this.current_year = moment().format('YYYY');
+      this.load();
     },
-    sendToProtocol(direction){
+    sendToProtocol(direction) {
       if (this.isLab) {
-        this.$root.$emit('protocol:laboratoryResult', direction)
-      }
-      else if (this.isParaclinic){
-        this.$root.$emit('protocol:paraclinicResult', direction)
-      }
-      else if (this.isDocReferral){
-        this.$root.$emit('protocol:docReferralResults', direction)
+        this.$root.$emit('protocol:laboratoryResult', direction);
+      } else if (this.isParaclinic) {
+        this.$root.$emit('protocol:paraclinicResult', direction);
+      } else if (this.isDocReferral) {
+        this.$root.$emit('protocol:docReferralResults', direction);
       }
     },
     print_result(pk) {
-      this.$root.$emit('print:results', [pk])
+      this.$root.$emit('print:results', [pk]);
     },
   },
   watch: {
     current_year() {
-      this.load()
-    }
-  }
-}
+      this.load();
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

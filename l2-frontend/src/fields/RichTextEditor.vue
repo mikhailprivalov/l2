@@ -207,81 +207,81 @@
 </template>
 
 <script>
-    import {Editor, EditorContent, EditorMenuBar} from 'tiptap'
-    import {
-        HardBreak,
-        Heading,
-        OrderedList,
-        BulletList,
-        ListItem,
-        Bold,
-        Italic,
-        Table,
-        TableHeader,
-        TableCell,
-        TableRow,
-        Strike,
-        Underline,
-        History,
-    } from 'tiptap-extensions'
+import { Editor, EditorContent, EditorMenuBar } from 'tiptap';
+import {
+  HardBreak,
+  Heading,
+  OrderedList,
+  BulletList,
+  ListItem,
+  Bold,
+  Italic,
+  Table,
+  TableHeader,
+  TableCell,
+  TableRow,
+  Strike,
+  Underline,
+  History,
+} from 'tiptap-extensions';
 
-    export default {
-        components: {
-            EditorContent,
-            EditorMenuBar,
-        },
-        props: {
-            value: {
-                required: false,
-            },
-            disabled: {
-                required: false,
-                default: false,
-                type: Boolean,
-            },
-        },
-        data() {
-            return {
-                editor: new Editor({
-                    extensions: [
-                        new BulletList(),
-                        new HardBreak(),
-                        new Heading({levels: [1, 2, 3]}),
-                        new ListItem(),
-                        new OrderedList(),
-                        new Bold(),
-                        new Italic(),
-                        new Strike(),
-                        new Underline(),
-                        new History(),
-                        new Table({
-                            resizable: true,
-                        }),
-                        new TableHeader(),
-                        new TableCell(),
-                        new TableRow(),
-                    ],
-                    content: this.value,
-                }),
-            }
-        },
-        mounted() {
-            this.editor.on('update', ({getHTML}) => {
-                this.changeValue(getHTML())
-            })
-        },
-        beforeDestroy() {
-            this.editor.destroy()
-        },
-        model: {
-            event: `modified`
-        },
-        methods: {
-            changeValue(newVal) {
-                this.$emit('modified', newVal)
-            }
-        }
-    }
+export default {
+  components: {
+    EditorContent,
+    EditorMenuBar,
+  },
+  props: {
+    value: {
+      required: false,
+    },
+    disabled: {
+      required: false,
+      default: false,
+      type: Boolean,
+    },
+  },
+  data() {
+    return {
+      editor: new Editor({
+        extensions: [
+          new BulletList(),
+          new HardBreak(),
+          new Heading({ levels: [1, 2, 3] }),
+          new ListItem(),
+          new OrderedList(),
+          new Bold(),
+          new Italic(),
+          new Strike(),
+          new Underline(),
+          new History(),
+          new Table({
+            resizable: true,
+          }),
+          new TableHeader(),
+          new TableCell(),
+          new TableRow(),
+        ],
+        content: this.value,
+      }),
+    };
+  },
+  mounted() {
+    this.editor.on('update', ({ getHTML }) => {
+      this.changeValue(getHTML());
+    });
+  },
+  beforeDestroy() {
+    this.editor.destroy();
+  },
+  model: {
+    event: 'modified',
+  },
+  methods: {
+    changeValue(newVal) {
+      this.$emit('modified', newVal);
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

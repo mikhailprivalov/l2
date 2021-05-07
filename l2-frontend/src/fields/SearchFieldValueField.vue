@@ -23,121 +23,116 @@
 </template>
 
 <script>
-  import researches_point from '../api/researches-point'
-  import directions_point from '../api/directions-point'
+import researchesPoint from '../api/researches-point';
+import directionsPoint from '../api/directions-point';
 
-  export default {
-    name: 'SearchFieldValueField',
-    props: {
-      readonly: {
-        type: Boolean
-      },
-      fieldPk: {
-        type: String,
-        required: true,
-      },
-      clientPk: {
-        type: Number,
-        required: true,
-      },
-      value: {
-        required: false,
-      },
-      lines: {
-        type: Number,
-      },
-      raw: {
-        type: Boolean,
-        required: false,
-        default: false,
-      },
-      not_autoload_result: {
-        type: Boolean,
-        required: false,
-        default: false,
-      },
-      iss_pk: {
-        type: Number,
-        required: false,
-      },
+export default {
+  name: 'SearchFieldValueField',
+  props: {
+    readonly: {
+      type: Boolean,
     },
-    data() {
-      return {
-        val: this.value,
-        title: '',
-        direction: null,
-      }
+    fieldPk: {
+      type: String,
+      required: true,
     },
-    mounted() {
-      if (!this.raw) {
-        researches_point.fieldTitle({pk: this.fieldPk}).then(data => {
-          const titles = new Set([data.research, data.group, data.field])
-          this.title = [...titles].filter(t => !!t).join(' – ')
-          this.checkDirection()
+    clientPk: {
+      type: Number,
+      required: true,
+    },
+    value: {
+      required: false,
+    },
+    lines: {
+      type: Number,
+    },
+    raw: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    not_autoload_result: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    iss_pk: {
+      type: Number,
+      required: false,
+    },
+  },
+  data() {
+    return {
+      val: this.value,
+      title: '',
+      direction: null,
+    };
+  },
+  mounted() {
+    if (!this.raw) {
+      researchesPoint.fieldTitle({ pk: this.fieldPk }).then((data) => {
+        const titles = new Set([data.research, data.group, data.field]);
+        this.title = [...titles].filter((t) => !!t).join(' – ');
+        this.checkDirection();
 
-          setTimeout(() => {
-            if (!this.val && !this.not_autoload_result) {
-              this.loadLast()
-            }
-          }, 200)
-        })
-      }
-      else {
-        if (!this.val && !this.not_autoload_result) {
-          this.loadLast()
-        }
-        else if (this.not_autoload_result){
-          this.val = ''
-        }
-      }
-    },
-    watch: {
-      val() {
-        this.changeValue(this.val)
-      },
-      value() {
-        this.val = this.value;
-      },
-    },
-    model: {
-      event: 'modified'
-    },
-    methods: {
-      checkDirection() {
-        const res = /направление (\d+)\)$/gm.exec(this.val)
-        this.direction = !res ? null : parseInt(res[1])
-      },
-      changeValue(newVal) {
-        this.$emit('modified', newVal)
-      },
-      async loadLast() {
-        this.direction = null;
-        const {result} = await directions_point.lastFieldResult(this, [
-          'fieldPk',
-          'clientPk',
-          'iss_pk'
-        ])
-        let logicalAnd = false
-        if (this.fieldPk.indexOf('&') > -1) {
-          logicalAnd = true
-        }
-        if (result) {
-          this.direction = result.direction;
-          if (this.raw || logicalAnd) {
-            this.val = result.value;
+        setTimeout(() => {
+          if (!this.val && !this.not_autoload_result) {
+            this.loadLast();
           }
-          else {
-            this.val = `${result.value} (${result.date}, направление ${result.direction})`;
-          }
+        }, 200);
+      });
+    } else if (!this.val && !this.not_autoload_result) {
+      this.loadLast();
+    } else if (this.not_autoload_result) {
+      this.val = '';
+    }
+  },
+  watch: {
+    val() {
+      this.changeValue(this.val);
+    },
+    value() {
+      this.val = this.value;
+    },
+  },
+  model: {
+    event: 'modified',
+  },
+  methods: {
+    checkDirection() {
+      const res = /направление (\d+)\)$/gm.exec(this.val);
+      this.direction = !res ? null : parseInt(res[1], 10);
+    },
+    changeValue(newVal) {
+      this.$emit('modified', newVal);
+    },
+    async loadLast() {
+      this.direction = null;
+      const { result } = await directionsPoint.lastFieldResult(this, [
+        'fieldPk',
+        'clientPk',
+        'iss_pk',
+      ]);
+      let logicalAnd = false;
+      if (this.fieldPk.indexOf('&') > -1) {
+        logicalAnd = true;
+      }
+      if (result) {
+        this.direction = result.direction;
+        if (this.raw || logicalAnd) {
+          this.val = result.value;
         } else {
-          errmessage(`Результат не найден (${this.title})!`)
+          this.val = `${result.value} (${result.date}, направление ${result.direction})`;
         }
-      },
-      print_results() {
-        this.$root.$emit('print:results', [this.direction])
-      },
+      } else {
+        window.errmessage(`Результат не найден (${this.title})!`);
+      }
     },
-  }
+    print_results() {
+      this.$root.$emit('print:results', [this.direction]);
+    },
+  },
+};
 </script>
 
 <style scoped>

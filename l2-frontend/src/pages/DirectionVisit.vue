@@ -62,14 +62,15 @@
                 </table>
               </li>
               <li class="list-group-item" v-if="loaded_pk > 0">
-                <div v-for="r in researches" class="research-card card card-1 card-no-hover">
+                <div v-for="r in researches" :key="r.pk" class="research-card card card-1 card-no-hover">
                   <div>
-                    <span v-if="r.tube" class="tube-pk">{{r.tube.pk}}</span> {{r.title}} <span class="comment" v-if="r.comment"> [{{r.comment}}]</span>
+                    <span v-if="r.tube" class="tube-pk">{{r.tube.pk}}</span>&nbsp;
+                    {{r.title}} <span class="comment" v-if="r.comment"> [{{r.comment}}]</span>
                   </div>
                   <div v-if="r.tube" style="margin-top: 5px">
                     <a style="float: right" class="a-under" href="#" @click.prevent="print_tube_iss(r.tube.pk)">печать ш/к</a>
-                    <span
-                      :style="`background-color: ${r.tube.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;`"></span>
+                    <!-- eslint-disable-next-line max-len -->
+                    <span :style="`background-color: ${r.tube.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;`"></span>
                     <span>{{r.tube.title}}</span>
                   </div>
                 </div>
@@ -147,7 +148,7 @@
               </tr>
               </thead>
               <tbody>
-              <tr v-for="r in journal_data">
+              <tr v-for="r in journal_data" :key="r.pk">
                 <td>{{r.pk}}</td>
                 <td>{{r.datetime}}</td>
                 <td>{{r.client}}</td>
@@ -178,14 +179,14 @@
               </tr>
               </thead>
               <tbody>
-              <tr v-for="r in journal_recv_data">
+              <tr v-for="r in journal_recv_data" :key="r.pk">
                 <td>{{r.pk}}</td>
                 <td>{{r.datetime}}</td>
                 <td>{{r.client}}</td>
                 <td>
-                  <div v-for="t in r.tubes">
-                    <span
-                      :style="`background-color: ${t.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;`"></span>
+                  <div v-for="t in r.tubes" :key="`${t.title}_${t.color}`">
+                    <!-- eslint-disable-next-line max-len -->
+                    <span :style="`background-color: ${t.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;`"></span>
                     {{t.title}}
                   </div>
                 </td>
@@ -218,234 +219,235 @@
 </template>
 
 <script>
-    import DateFieldNav from '../fields/DateFieldNav'
-    import DateRange from '../ui-cards/DateRange'
-    import directionsPoint from '../api/directions-point'
-    import * as action_types from '../store/action-types'
-    import Modal from '../ui-cards/Modal'
-    import moment from 'moment'
+import moment from 'moment';
+import DateFieldNav from '../fields/DateFieldNav.vue';
+import DateRange from '../ui-cards/DateRange.vue';
+import directionsPoint from '../api/directions-point';
+import * as actions from '../store/action-types';
+import Modal from '../ui-cards/Modal.vue';
 
-    /**
+/**
      * @return {number}
      */
-    function TryParseInt(str, defaultValue) {
-        let retValue = defaultValue
-        if (str !== null) {
-            if (str.length > 0) {
-                if (!isNaN(str)) {
-                    retValue = parseInt(str)
-                }
-            }
-        }
-        return retValue
+function TryParseInt(str, defaultValue) {
+  let retValue = defaultValue;
+  if (str !== null) {
+    if (str.length > 0) {
+      if (!Number.isNaN(str)) {
+        retValue = parseInt(str, 10);
+      }
     }
+  }
+  return retValue;
+}
 
-    export default {
-        name: 'direction-visit',
-        components: {
-            DateFieldNav,
-            Modal,
-            DateRange
-        },
-        data() {
-            return {
-                loaded_pk: -1,
-                direction: '',
-                in_load: false,
-                showModal: false,
-                researches: [],
-                visit_status: false,
-                receive_status: false,
-                receive_datetime: null,
-                allow_reset_confirm: false,
-                visit_date: '',
-                direction_data: {},
-                journal_date: moment().format('DD.MM.YYYY'),
-                journal_data: [],
-                journal_recv_date: moment().format('DD.MM.YYYY'),
-                journal_recv_data: [],
-                date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
-            }
-        },
-        computed: {
-            query_int() {
-                return TryParseInt(this.direction, -1)
-            },
-            can_get() {
-                if ('groups' in this.$store.getters.user_data) {
-                    for (let g of this.$store.getters.user_data.groups) {
-                        if (g === 'Заборщик биоматериала микробиологии') {
-                            return true
-                        }
-                    }
-                }
-                return false
-            },
-            can_receive() {
-                if ('groups' in this.$store.getters.user_data) {
-                    for (let g of this.$store.getters.user_data.groups) {
-                        if (g === 'Получатель биоматериала микробиологии') {
-                            return true
-                        }
-                    }
-                }
-                return false
-            },
-            can_visit() {
-                if ('groups' in this.$store.getters.user_data) {
-                    for (let g of this.$store.getters.user_data.groups) {
-                        if (g === 'Посещения по направлениям' || g === 'Врач параклиники' || g === 'Врач консультаций') {
-                            return true
-                        }
-                    }
-                }
-                return false
-            },
-        },
-        watch: {
-            journal_date() {
-                this.load_journal()
-            },
-            journal_recv_date() {
-                this.load_recv_journal()
-            },
-        },
-        mounted() {
-            this.load_journal()
-            this.load_recv_journal()
-        },
-        methods: {
-            report(t) {
-                window.open(`/statistic/xls?type=statistics-visits&users=${encodeURIComponent(JSON.stringify([this.$store.getters.user_data.doc_pk]))}&date-start=${this.date_range[0]}&date-end=${this.date_range[1]}&t=${t}`, '_blank')
-            },
-            hide_modal() {
-                this.showModal = false
-                if (this.$refs.modal) {
-                    this.$refs.modal.$el.style.display = 'none'
-                }
-            },
-            show_modal() {
-                if (this.$refs.modal) {
-                  this.$refs.modal.$el.style.display = 'flex'
-                }
-                this.showModal = true
-            },
-            cancel() {
-                this.loaded_pk = -1
-                this.researches = []
-                this.visit_status = false
-                this.allow_reset_confirm = false
-                this.visit_date = ''
-                this.direction_data = {}
-            },
-            print_direction() {
-                if (this.loaded_pk === -1)
-                    return
-                this.$root.$emit('print:directions', [this.loaded_pk])
-            },
-            load_journal() {
-                this.$store.dispatch(action_types.INC_LOADING)
-                directionsPoint.visitJournal({date: this.journal_date}).then(data => {
-                    this.journal_data = data.data
-                }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING)
-                })
-            },
-            load_recv_journal() {
-                this.$store.dispatch(action_types.INC_LOADING)
-                directionsPoint.recvJournal({date: this.journal_recv_date}).then(data => {
-                    this.journal_recv_data = data.data
-                }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING)
-                })
-            },
-            load() {
-                if (this.query_int === -1) {
-                    return
-                }
-                if (this.in_load)
-                    return
-                this.$store.dispatch(action_types.INC_LOADING)
-                this.in_load = true
-                this.cancel()
-                directionsPoint.getDirectionsServices({pk: this.query_int}).then(data => {
-                    if (data.ok) {
-                        this.loaded_pk = data.loaded_pk
-                        this.researches = data.researches
-                        this.direction_data = data.direction_data
-                        this.visit_status = data.visit_status
-                        this.visit_date = data.visit_date
-                        this.receive_status = !!data.direction_data.receive_datetime
-                        this.receive_datetime = data.direction_data.receive_datetime
-                        this.allow_reset_confirm = data.allow_reset_confirm
-                        this.blur()
-                    } else {
-                        errmessage(data.message)
-                    }
-                }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING)
-                    this.in_load = false
-                    this.direction = ''
-                })
-            },
-            focus() {
-                $(this.$refs.field).focus()
-            },
-            blur() {
-                $(this.$refs.field).blur()
-            },
-            cancel_visit() {
-                if (confirm('Вы уверены, что хотите отменить посещение?'))
-                    this.make_visit(true)
-            },
-            make_visit(cancel = false) {
-                if (this.loaded_pk === -1 || this.in_load)
-                    return
-                this.$store.dispatch(action_types.INC_LOADING)
-                this.in_load = true
-                directionsPoint.getMarkDirectionVisit({pk: this.loaded_pk, cancel}).then(data => {
-                    if (data.ok) {
-                        this.visit_status = data.visit_status
-                        this.visit_date = data.visit_date
-                        this.allow_reset_confirm = data.allow_reset_confirm
-                        this.focus()
-                    } else {
-                        errmessage(data.message)
-                    }
-                }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING)
-                    this.in_load = false
-                    this.load_journal()
-                })
-            },
-            print_tube_iss(pk) {
-                this.$root.$emit('print:barcodes:iss', [pk])
-            },
-            cancel_receive() {
-                if (confirm('Вы уверены, что хотите отменить приём биоматериала?'))
-                    this.make_receive(true)
-            },
-            make_receive(cancel = false) {
-                if (this.loaded_pk === -1 || this.in_load)
-                    return
-                this.$store.dispatch(action_types.INC_LOADING)
-                this.in_load = true
-                directionsPoint.drectionReceiveMaterial({pk: this.loaded_pk, cancel}).then(data => {
-                    if (data.ok) {
-                        this.receive_status = !!data.receive_datetime
-                        this.receive_datetime = data.receive_datetime
-                        this.focus()
-                    } else {
-                        errmessage(data.message)
-                    }
-                }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING)
-                    this.in_load = false
-                    this.load_recv_journal()
-                })
-            },
+export default {
+  name: 'direction-visit',
+  components: {
+    DateFieldNav,
+    Modal,
+    DateRange,
+  },
+  data() {
+    return {
+      loaded_pk: -1,
+      direction: '',
+      in_load: false,
+      showModal: false,
+      researches: [],
+      visit_status: false,
+      receive_status: false,
+      receive_datetime: null,
+      allow_reset_confirm: false,
+      visit_date: '',
+      direction_data: {},
+      journal_date: moment().format('DD.MM.YYYY'),
+      journal_data: [],
+      journal_recv_date: moment().format('DD.MM.YYYY'),
+      journal_recv_data: [],
+      date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+    };
+  },
+  computed: {
+    query_int() {
+      return TryParseInt(this.direction, -1);
+    },
+    can_get() {
+      if ('groups' in this.$store.getters.user_data) {
+        for (const g of this.$store.getters.user_data.groups) {
+          if (g === 'Заборщик биоматериала микробиологии') {
+            return true;
+          }
         }
-    }
+      }
+      return false;
+    },
+    can_receive() {
+      if ('groups' in this.$store.getters.user_data) {
+        for (const g of this.$store.getters.user_data.groups) {
+          if (g === 'Получатель биоматериала микробиологии') {
+            return true;
+          }
+        }
+      }
+      return false;
+    },
+    can_visit() {
+      if ('groups' in this.$store.getters.user_data) {
+        for (const g of this.$store.getters.user_data.groups) {
+          if (g === 'Посещения по направлениям' || g === 'Врач параклиники' || g === 'Врач консультаций') {
+            return true;
+          }
+        }
+      }
+      return false;
+    },
+  },
+  watch: {
+    journal_date() {
+      this.load_journal();
+    },
+    journal_recv_date() {
+      this.load_recv_journal();
+    },
+  },
+  mounted() {
+    this.load_journal();
+    this.load_recv_journal();
+  },
+  methods: {
+    report(t) {
+      // eslint-disable-next-line max-len
+      window.open(`/statistic/xls?type=statistics-visits&users=${encodeURIComponent(JSON.stringify([this.$store.getters.user_data.doc_pk]))}&date-start=${this.date_range[0]}&date-end=${this.date_range[1]}&t=${t}`, '_blank');
+    },
+    hide_modal() {
+      this.showModal = false;
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
+      }
+    },
+    show_modal() {
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'flex';
+      }
+      this.showModal = true;
+    },
+    cancel() {
+      this.loaded_pk = -1;
+      this.researches = [];
+      this.visit_status = false;
+      this.allow_reset_confirm = false;
+      this.visit_date = '';
+      this.direction_data = {};
+    },
+    print_direction() {
+      if (this.loaded_pk === -1) return;
+      this.$root.$emit('print:directions', [this.loaded_pk]);
+    },
+    load_journal() {
+      this.$store.dispatch(actions.INC_LOADING);
+      directionsPoint.visitJournal({ date: this.journal_date }).then((data) => {
+        this.journal_data = data.data;
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+    load_recv_journal() {
+      this.$store.dispatch(actions.INC_LOADING);
+      directionsPoint.recvJournal({ date: this.journal_recv_date }).then((data) => {
+        this.journal_recv_data = data.data;
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+    load() {
+      if (this.query_int === -1) {
+        return;
+      }
+      if (this.in_load) return;
+      this.$store.dispatch(actions.INC_LOADING);
+      this.in_load = true;
+      this.cancel();
+      directionsPoint.getDirectionsServices({ pk: this.query_int }).then((data) => {
+        if (data.ok) {
+          this.loaded_pk = data.loaded_pk;
+          this.researches = data.researches;
+          this.direction_data = data.direction_data;
+          this.visit_status = data.visit_status;
+          this.visit_date = data.visit_date;
+          this.receive_status = !!data.direction_data.receive_datetime;
+          this.receive_datetime = data.direction_data.receive_datetime;
+          this.allow_reset_confirm = data.allow_reset_confirm;
+          this.blur();
+        } else {
+          window.errmessage(data.message);
+        }
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+        this.in_load = false;
+        this.direction = '';
+      });
+    },
+    focus() {
+      window.$(this.$refs.field).focus();
+    },
+    blur() {
+      window.$(this.$refs.field).blur();
+    },
+    cancel_visit() {
+      // eslint-disable-next-line no-restricted-globals,no-alert
+      if (confirm('Вы уверены, что хотите отменить посещение?')) {
+        this.make_visit(true);
+      }
+    },
+    make_visit(cancel = false) {
+      if (this.loaded_pk === -1 || this.in_load) return;
+      this.$store.dispatch(actions.INC_LOADING);
+      this.in_load = true;
+      directionsPoint.getMarkDirectionVisit({ pk: this.loaded_pk, cancel }).then((data) => {
+        if (data.ok) {
+          this.visit_status = data.visit_status;
+          this.visit_date = data.visit_date;
+          this.allow_reset_confirm = data.allow_reset_confirm;
+          this.focus();
+        } else {
+          window.errmessage(data.message);
+        }
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+        this.in_load = false;
+        this.load_journal();
+      });
+    },
+    print_tube_iss(pk) {
+      this.$root.$emit('print:barcodes:iss', [pk]);
+    },
+    cancel_receive() {
+      // eslint-disable-next-line no-restricted-globals,no-alert
+      if (confirm('Вы уверены, что хотите отменить приём биоматериала?')) {
+        this.make_receive(true);
+      }
+    },
+    make_receive(cancel = false) {
+      if (this.loaded_pk === -1 || this.in_load) return;
+      this.$store.dispatch(actions.INC_LOADING);
+      this.in_load = true;
+      directionsPoint.drectionReceiveMaterial({ pk: this.loaded_pk, cancel }).then((data) => {
+        if (data.ok) {
+          this.receive_status = !!data.receive_datetime;
+          this.receive_datetime = data.receive_datetime;
+          this.focus();
+        } else {
+          window.errmessage(data.message);
+        }
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+        this.in_load = false;
+        this.load_recv_journal();
+      });
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

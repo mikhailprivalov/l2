@@ -25,12 +25,12 @@
 </template>
 
 <script>
-import {SEARCH_MODES, SEARCH_MODES_TITLES} from "@/pages/LaboratoryResults/constants";
-import * as action_types from "@/store/action-types";
-import api from "@/api";
+import { SEARCH_MODES, SEARCH_MODES_TITLES } from '@/pages/LaboratoryResults/constants';
+import * as actions from '@/store/action-types';
+import api from '@/api';
 
 export default {
-  name: "SearchToEnter",
+  name: 'SearchToEnter',
   props: {
     laboratory: {
       type: Number,
@@ -51,11 +51,11 @@ export default {
       this.q = String(pk);
       this.pkAfterSearch = pkAfterSearch;
       this.search();
-    })
+    });
   },
   watch: {
     mode() {
-      $(this.$refs.q).focus();
+      window.$(this.$refs.q).focus();
     },
     q() {
       this.q = this.q.replace(/\D/g, '');
@@ -63,19 +63,19 @@ export default {
   },
   methods: {
     async search() {
-      await this.$store.dispatch(action_types.INC_LOADING);
-      const {ok, data, msg} = await api('laboratory/search', this, ['q', 'mode', 'laboratory']);
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, data, msg } = await api('laboratory/search', this, ['q', 'mode', 'laboratory']);
       if (ok) {
         this.q = '';
         this.$root.$emit('laboratory:results:show-direction', data, this.pkAfterSearch);
         this.pkAfterSearch = null;
       } else {
-        errmessage(msg || 'Не найдено');
+        window.errmessage(msg || 'Не найдено');
       }
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
-}
+};
 </script>
 
 <style scoped lang="scss">
