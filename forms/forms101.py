@@ -2801,6 +2801,7 @@ def form_11(request_data):
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
+              
                           
 def form_12(request_data):
     """
@@ -2815,13 +2816,6 @@ def form_12(request_data):
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
         agent_status = True
-
-    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
-    who_patient = 'пациента'
-    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
-        return False
-    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
-        who_patient = 'ребёнка'
 
     if agent_status:
         person_data = p_agent.get_data_individual()
