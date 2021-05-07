@@ -153,7 +153,7 @@ export default {
       if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do) {
         return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?';
       }
-      return null;
+      return undefined;
     });
     this.$root.$on('hide_fte', () => this.f_templates_hide());
     this.$store.dispatch(actions.GET_RESEARCHES);

@@ -24,16 +24,14 @@
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="{% static 'icon/ms-icon-144x144.png' %}">
     <meta name="theme-color" content="#ffffff">
-    <title>{% block title %}{% endblock %} &mdash; {% firstof request.user.doctorprofile.hospital_safe_title org_title %}</title>
+    <title>{% block title %}{% endblock %}
+        &mdash; {% firstof request.user.doctorprofile.hospital_safe_title org_title %}</title>
 
-    <link rel="preload" href="{% manifest 'vendors.css' %}" as="style"/>
-    <link rel="preload" href="{% manifest 'main.css' %}" as="style"/>
-    <link rel="preload" href="{% manifest 'vendors.js' %}" as="script"/>
-    <link rel="preload" href="{% manifest 'main.js' %}" as="script"/>
-    <link rel="preload" href="{% manifest 'runtime.js' %}" as="script"/>
+    <link rel="preload" href="{% manifest 'chunk-vendors.css' %}" as="style"/>
+    <link rel="preload" href="{% manifest 'app.css' %}" as="style"/>
 
-    <link rel="stylesheet" href="{% manifest 'vendors.css' %}"/>
-    <link rel="stylesheet" href="{% manifest 'main.css' %}"/>
+    <link rel="stylesheet" href="{% manifest 'chunk-vendors.css' %}"/>
+    <link rel="stylesheet" href="{% manifest 'app.css' %}"/>
 
     <script src="{% static 'js/jquery.min.js' %}"></script>
 
@@ -58,31 +56,33 @@
 <div id="app" class="{% block container %}container{% endblock %}">
     {% block nav %}
         {% spaceless %}
-        {% load setting_default %}
-        {% s_default "show_l2_logo" "true" "b" as show_l2_logo %}
-        {% s_default "l2_logo_class" "default" "s" as l2_logo_class %}
-        {% s_default "l2_logo_addonational_text" "" "s" as l2_logo_addonational_text %}
-        <nav class="navbar navbar-inverse {% block navbar_classes %}{% endblock %}" :class="loaderInHeader && 'show-loader'">
-            <div class="nav-cont">
-                <div class="navbar-header">
-                    {% if show_l2_logo %}
-                        <a href="/mainmenu" class="navbar-left logo {{ l2_logo_class|safe }}">
-                            L<sup>2</sup>
-                            {% if l2_logo_addonational_text %}
-                                <span>{{ l2_logo_addonational_text |safe }}</span>
-                            {% endif %}
+            {% load setting_default %}
+            {% s_default "show_l2_logo" "true" "b" as show_l2_logo %}
+            {% s_default "l2_logo_class" "default" "s" as l2_logo_class %}
+            {% s_default "l2_logo_addonational_text" "" "s" as l2_logo_addonational_text %}
+            <nav class="navbar navbar-inverse {% block navbar_classes %}{% endblock %}"
+                 :class="loaderInHeader && 'show-loader'">
+                <div class="nav-cont">
+                    <div class="navbar-header">
+                        {% if show_l2_logo %}
+                            <a href="/mainmenu" class="navbar-left logo {{ l2_logo_class|safe }}">
+                                L<sup>2</sup>
+                                {% if l2_logo_addonational_text %}
+                                    <span>{{ l2_logo_addonational_text |safe }}</span>
+                                {% endif %}
+                            </a>
+                        {% endif %}
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                                data-target="#navbar">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a href="/mainmenu">
+                            <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio|safe }}</small></span>
                         </a>
-                    {% endif %}
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a href="/mainmenu">
-                        <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio|safe }}</small></span>
-                    </a>
-                </div>
-                <div id="navbar" class="navbar-collapse collapse">
+                    </div>
+                    <div id="navbar" class="navbar-collapse collapse">
                         <ul class="nav navbar-nav">
                             <li class="dropdown dropdown-large">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -96,7 +96,8 @@
                                                 <div class="dash-buttons text-center">
                                             {% else %}
                                                 <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn{% if item.active %} dash-active{% endif %}">
-                                                    <a href="{{ item.url|safe }}"{% if item.nt %} target="_blank"{% endif %} class="panel-body">
+                                                    <a href="{{ item.url|safe }}"{% if item.nt %}
+                                                       target="_blank"{% endif %} class="panel-body">
                                                         <span>{{ item.title|safe }}</span>
                                                     </a>
                                                 </div>
@@ -117,42 +118,42 @@
                             </span>
                             </li>
                         </ul>
-                </div>
-            </div>
-            <div class="nav-loader center">
-                <div class="navbar-header">
-                    {% if show_l2_logo %}
-                        <div class="navbar-left logo {{ l2_logo_class|safe }}">
-                            L<sup>2</sup>
-                            {% if l2_logo_addonational_text %}
-                                <span>{{ l2_logo_addonational_text |safe }}</span>
-                            {% endif %}
-                        </div>
-                    {% endif %}
-                    <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio|safe }}</small></span>
-                </div>
-                <div class="din-spinner" style="text-align: center">
-                    <div class="sk-fading-circle">
-                        <div class="sk-circle1 sk-circle"></div>
-                        <div class="sk-circle2 sk-circle"></div>
-                        <div class="sk-circle3 sk-circle"></div>
-                        <div class="sk-circle4 sk-circle"></div>
-                        <div class="sk-circle5 sk-circle"></div>
-                        <div class="sk-circle6 sk-circle"></div>
-                        <div class="sk-circle7 sk-circle"></div>
-                        <div class="sk-circle8 sk-circle"></div>
-                        <div class="sk-circle9 sk-circle"></div>
-                        <div class="sk-circle10 sk-circle"></div>
-                        <div class="sk-circle11 sk-circle"></div>
-                        <div class="sk-circle12 sk-circle"></div>
                     </div>
-                    {% verbatim %}
-                    <span class="loading-text"
-                          style="color: #fff; font-size: 14pt;font-weight: 200;margin-left: 10px;vertical-align: middle;display: inline-block">{{ loadingLabel.toUpperCase() }}</span>
-                    {% endverbatim %}
                 </div>
-            </div>
-        </nav>
+                <div class="nav-loader center">
+                    <div class="navbar-header">
+                        {% if show_l2_logo %}
+                            <div class="navbar-left logo {{ l2_logo_class|safe }}">
+                                L<sup>2</sup>
+                                {% if l2_logo_addonational_text %}
+                                    <span>{{ l2_logo_addonational_text |safe }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio|safe }}</small></span>
+                    </div>
+                    <div class="din-spinner" style="text-align: center">
+                        <div class="sk-fading-circle">
+                            <div class="sk-circle1 sk-circle"></div>
+                            <div class="sk-circle2 sk-circle"></div>
+                            <div class="sk-circle3 sk-circle"></div>
+                            <div class="sk-circle4 sk-circle"></div>
+                            <div class="sk-circle5 sk-circle"></div>
+                            <div class="sk-circle6 sk-circle"></div>
+                            <div class="sk-circle7 sk-circle"></div>
+                            <div class="sk-circle8 sk-circle"></div>
+                            <div class="sk-circle9 sk-circle"></div>
+                            <div class="sk-circle10 sk-circle"></div>
+                            <div class="sk-circle11 sk-circle"></div>
+                            <div class="sk-circle12 sk-circle"></div>
+                        </div>
+                        {% verbatim %}
+                        <span class="loading-text"
+                              style="color: #fff; font-size: 14pt;font-weight: 200;margin-left: 10px;vertical-align: middle;display: inline-block">{{ loadingLabel.toUpperCase() }}</span>
+                        {% endverbatim %}
+                    </div>
+                </div>
+            </nav>
         {% endspaceless %}
     {% endblock %}
     {% block content %}{% endblock %}
@@ -719,13 +720,13 @@
             mess_pos = false
         }
 
-        function errmessage(title, body, delay) {
+        function errmessage(title, body, delay, info) {
             $.amaran({
                 'theme': 'awesome no',
                 'content': {
                     title: title,
                     message: body || '',
-                    info: '',
+                    info: info || '',
                     icon: 'fa fa-exclamation'
                 },
                 'position': mess_pos || 'bottom right',
@@ -879,12 +880,16 @@
         };
 
         window.prefetch = new Prefetch({logging: true});
+
+        window.onerror = function (message, source, lineno, colno, error) {
+            errmessage('Error', `${message}`, null, String(error));
+            return false;
+        };
     </script>
     {% block scripts_pre_webpack %}{% endblock %}
     <div id="page-preloader"></div>
-    <script src="{% manifest 'vendors.js' %}"></script>
-    <script src="{% manifest 'main.js' %}"></script>
-    <script src="{% manifest 'runtime.js' %}"></script>
+    <script src="{% manifest 'chunk-vendors.js' %}"></script>
+    <script src="{% manifest 'app.js' %}"></script>
 {% endblock %}
 {% block scripts %}{% endblock %}
 </body>

@@ -219,7 +219,7 @@ export default {
         if (document.activeElement) {
           window.$(document.activeElement).blur();
         }
-        return null;
+        return undefined;
       }
       return 'Исследования выбраны, но направления не созданы. Вы уверены, что хотите покинуть страницу?';
     });

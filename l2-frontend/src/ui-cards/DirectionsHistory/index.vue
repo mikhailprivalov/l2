@@ -162,6 +162,9 @@ import * as actions from '../../store/action-types';
 import Bottom from './Bottom/index.vue';
 
 function truncate(s, n, useWordBoundary) {
+  if (!s) {
+    return '';
+  }
   if (s.length <= n) {
     return s;
   }
@@ -251,7 +254,7 @@ export default {
       return {};
     },
     ...mapGetters({
-      researches: 'researches',
+      researches_obj: 'researches',
     }),
   },
   mounted() {
@@ -265,9 +268,9 @@ export default {
       await this.load_history(true);
     },
     update_so(researches) {
-      const s = Object.values(researches).map((r) => ({
+      const s = Object.values(researches || {}).map((r) => ({
         value: String(r.pk),
-        label: truncate(r.full_title, 70, true),
+        label: truncate(r.full_title || r.title, 70, true),
       }));
       if (s.length === 0) {
         return;

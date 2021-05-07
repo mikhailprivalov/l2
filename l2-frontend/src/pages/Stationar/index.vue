@@ -1223,7 +1223,7 @@ export default {
   computed: {
     ...mapGetters({
       user_data: 'user_data',
-      researches: 'researches',
+      researches_obj: 'researches',
       bases: 'bases',
     }),
     newTransfer() {
@@ -1373,7 +1373,6 @@ export default {
 
     .title-block {
       position: relative;
-      margin-right: 0;
 
       .top-right {
         position: absolute;

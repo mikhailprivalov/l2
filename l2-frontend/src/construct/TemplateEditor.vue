@@ -85,7 +85,7 @@ export default {
         return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?';
       }
 
-      return null;
+      return undefined;
     });
   },
   computed: {

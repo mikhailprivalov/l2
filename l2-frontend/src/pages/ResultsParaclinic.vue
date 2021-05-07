@@ -870,7 +870,7 @@ export default {
         return 'Возможно имеются несохраненные изменения! Вы уверены, что хотите покинуть страницу?';
       }
 
-      return null;
+      return undefined;
     });
     this.load_history();
     this.$root.$on('hide_dreg', () => {
@@ -1500,7 +1500,7 @@ export default {
     },
     ...mapGetters({
       user_data: 'user_data',
-      researches: 'researches',
+      researches_obj: 'researches',
       bases: 'bases',
     }),
     internal_base() {
