@@ -55,4 +55,3 @@ transliterate==1.10.2
 imgkit==1.2.2
 python-docx
 pdf2docx
-PyYAML==5.4
