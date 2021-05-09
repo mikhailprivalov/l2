@@ -948,9 +948,15 @@ class Napravleniya(models.Model):
         """
         return not self.is_all_confirm() and any([x.deferred for x in Issledovaniya.objects.filter(napravleniye=self)])
 
-    def department(self):
+    def research(self):
         if Issledovaniya.objects.filter(napravleniye=self).exists():
-            return Issledovaniya.objects.filter(napravleniye=self)[0].research.podrazdeleniye
+            return Issledovaniya.objects.filter(napravleniye=self)[0].research
+        return None
+
+    def department(self):
+        research = self.research()
+        if research:
+            return research.podrazdeleniye
         return None
 
     def rmis_direction_type(self) -> str:
@@ -958,6 +964,16 @@ class Napravleniya(models.Model):
         if dep:
             return dep.rmis_direction_type
         from rmis_integration.client import Settings
+
+        research: directory.Researches = self.research()
+        if research:
+            k = None
+            if research.is_doc_refferal:
+                k = Settings.get("dtype_is_doc_refferal", default="Направление на консультацию")
+            elif research.is_paraclinic:
+                k = Settings.get("dtype_is_paraclinic", default="Направление на инструментальную диагностику")
+            if k:
+                return k
 
         return Settings.get("direction_type_title", default="Направление в лабораторию")
 

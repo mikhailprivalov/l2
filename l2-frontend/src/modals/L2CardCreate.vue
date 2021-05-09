@@ -471,9 +471,14 @@
                     style="width: 100%">
               Печатн. формы <span class="caret"></span>
             </button>
-            <ul class="dropdown-menu">
-              <li v-for="f in forms" :key="f.url">
-                <a :href="f.url" target="_blank" class="ddm">{{f.title}}</a>
+            <ul class="dropdown-menu multi-level">
+              <li v-for="f in forms" :key="`${f.url || '#'}_${f.title}`" :class="f.isGroup && 'dropdown-submenu'">
+                <a :href="f.url || '#'" :target="!f.isGroup && '_blank'" class="ddm">{{f.title}}</a>
+                <ul class="dropdown-menu" v-if="f.isGroup">
+                  <li v-for="ff in f.forms" :key="ff.url">
+                    <a :href="ff.url" target="_blank" class="ddm">{{ff.title}}</a>
+                  </li>
+                </ul>
               </li>
             </ul>
           </div>
@@ -676,13 +681,7 @@ export default {
       return this.agent_card_selected && this.agent_card_selected !== this.card_pk;
     },
     forms() {
-      return forms.map((f) => ({
-        ...f,
-        url: f.url.kwf({
-          card: this.card_pk,
-          individual: this.card.individual,
-        }),
-      }));
+      return this.makeForms(forms);
     },
     can_change_owner_directions() {
       return (this.$store.getters.user_data.groups || []).includes('Управление иерархией истории');
@@ -732,6 +731,23 @@ export default {
     },
   },
   methods: {
+    makeForms(formsBase) {
+      return formsBase.map(f => {
+        if (f.isGroup) {
+          return {
+            ...f,
+            forms: this.makeForms(f.forms),
+          };
+        }
+        return {
+          ...f,
+          url: f.url.kwf({
+            card: this.card_pk,
+            individual: this.card.individual,
+          }),
+        };
+      }).fitler(f => !f.not_internal);
+    },
     companiesTreeselect(companies) {
       return companies.map((c) => ({ id: c.id, label: c.short_title || c.title }));
     },
