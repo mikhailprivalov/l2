@@ -29,8 +29,14 @@
               Печатные формы <span class="caret"></span>
             </button>
             <ul class="dropdown-menu">
-              <li v-for="f in forms" v-if="selected_card.base.internal_type || f.not_internal">
-                <a :href="f.url" target="_blank" class="ddm">{{f.title}}</a>
+              <li v-for="f in forms" v-if="selected_card.base.internal_type || f.not_internal"
+                  :class="f.isGroup && 'dropdown-submenu'">
+                <a :href="f.url || '#'" :target="!f.isGroup && '_blank'" class="ddm">{{f.title}}</a>
+                <ul class="dropdown-menu multi-level" v-if="f.isGroup">
+                  <li v-for="ff in f.forms">
+                    <a :href="ff.url" target="_blank" class="ddm">{{ff.title}}</a>
+                  </li>
+                </ul>
               </li>
             </ul>
           </div>
@@ -226,11 +232,15 @@
       },
       do_show_rmis_send_directions() {
         this.show_rmis_send_directions = true
-      }
-    },
-    computed: {
-      forms() {
-        return forms.map(f => {
+      },
+      makeForms(formsBase) {
+        return formsBase.map(f => {
+          if (f.isGroup) {
+            return {
+              ...f,
+              forms: this.makeForms(f.forms),
+            };
+          }
           return {
             ...f, url: f.url.kwf({
               card: this.selected_card.pk,
@@ -238,6 +248,11 @@
             })
           }
         });
+      },
+    },
+    computed: {
+      forms() {
+        return this.makeForms(forms);
       },
       patient_valid() {
         return this.selected_card.pk !== -1
