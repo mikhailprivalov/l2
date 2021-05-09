@@ -368,16 +368,17 @@ export default {
   },
   methods: {
     get_date_string(year, month, dayOrig) {
-      const day = dayOrig.trim();
-      if (!day) {
+      if (!dayOrig.trim()) {
         return 'Нет даты в плане';
       }
+
+      const day = Number(dayOrig.trim());
 
       try {
         const dateString = `${year}-${month + 1}-${day}`;
         const date = moment(dateString, 'YYYY-MM-DD');
 
-        if (!Number.isNaN(day) && day < 32 && day > 0 && date.isValid()) {
+        if (day < 32 && day > 0 && date.isValid()) {
           return `План: ${day} ${monthes[month]} ${year}, ${weekDays[date.isoWeekday() - 1]}`;
         }
       } catch (e) {

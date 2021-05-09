@@ -379,8 +379,10 @@ export default {
       return r.filter(d => this.filter === '' || d.users.length || d.title.toLowerCase().startsWith(this.filter.toLowerCase()));
     },
     valid() {
-      const p = (this.open_pk > -1 && ((this.user.password.length === 0 || this.user.password.length >= 3)
-          || (this.open_pk === -1 && this.user.password.length >= 3)));
+      const p = (
+        (this.open_pk > -1 && (this.user.password.length === 0 || this.user.password.length >= 3))
+        || (this.open_pk === -1 && this.user.password.length >= 3)
+      );
       return p && this.user.username !== '' && this.user.fio !== '';
     },
     ...mapGetters({
