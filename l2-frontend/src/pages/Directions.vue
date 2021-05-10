@@ -29,8 +29,14 @@
               Печатные формы <span class="caret"></span>
             </button>
             <ul class="dropdown-menu">
-              <li v-for="f in forms" v-if="selected_card.base.internal_type || f.not_internal">
-                <a :href="f.url" target="_blank" class="ddm">{{f.title}}</a>
+              <li v-for="f in forms" :key="`${f.url || '#'}_${f.title}`"
+                  :class="f.isGroup && 'dropdown-submenu'">
+                <a :href="f.url || '#'" :target="!f.isGroup && '_blank'" class="ddm">{{f.title}}</a>
+                <ul class="dropdown-menu multi-level" v-if="f.isGroup">
+                  <li v-for="ff in f.forms" :key="ff.url">
+                    <a :href="ff.url" target="_blank" class="ddm">{{ff.title}}</a>
+                  </li>
+                </ul>
               </li>
             </ul>
           </div>
@@ -85,190 +91,207 @@
   </div>
 </template>
 
-<script>
-  import Split from "split-grid";
-  import ResearchesPicker from '@/ui-cards/ResearchesPicker'
-  import PatientPicker from '@/ui-cards/PatientPicker'
-  import SelectedResearches from '@/ui-cards/SelectedResearches'
-  import DirectionsHistory from '@/ui-cards/DirectionsHistory'
-  import ResultsViewer from '@/modals/ResultsViewer'
-  import RmisDirectionsViewer from '@/modals/RmisDirectionsViewer'
-  import LastResult from '@/ui-cards/LastResult'
-  import DirectAndPlanSwitcher from "@/ui-cards/DirectAndPlanSwitcher";
-  import forms from '@/forms';
-  import {
-    DIRECTION_MODE_DIRECTION,
-    DIRECTION_MODE_CALL,
-    DIRECTION_MODE_WAIT,
-  } from '@/constants';
-  import CallDoctor from "@/ui-cards/CallDoctor";
-  import ListWaitCreator from "@/ui-cards/ListWaitCreator";
+<script lang="ts">
+import Split from 'split-grid';
+import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
+import PatientPicker from '@/ui-cards/PatientPicker.vue';
+import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
+import DirectionsHistory from '@/ui-cards/DirectionsHistory/index.vue';
+import ResultsViewer from '@/modals/ResultsViewer.vue';
+import RmisDirectionsViewer from '@/modals/RmisDirectionsViewer.vue';
+import LastResult from '@/ui-cards/LastResult.vue';
+import DirectAndPlanSwitcher from '@/ui-cards/DirectAndPlanSwitcher.vue';
+import forms from '@/forms';
+import {
+  DIRECTION_MODE_DIRECTION,
+  DIRECTION_MODE_CALL,
+  DIRECTION_MODE_WAIT,
+} from '@/constants';
+import CallDoctor from '@/ui-cards/CallDoctor.vue';
+import ListWaitCreator from '@/ui-cards/ListWaitCreator.vue';
 
-  export default {
-    components: {
-      ListWaitCreator,
-      CallDoctor,
-      DirectAndPlanSwitcher,
-      PatientPicker,
-      ResearchesPicker,
-      SelectedResearches,
-      DirectionsHistory,
-      ResultsViewer,
-      RmisDirectionsViewer,
-      LastResult,
-    },
-    name: 'directions',
-    data() {
-      return {
-        selected_card: {
-          pk: -1,
-          base: {},
-          ofname: -1,
-          ofname_dep: -1,
-          individual_pk: -1,
-          operator: false,
-          is_rmis: false,
-          history_num: '',
-          family: '',
-          name: '',
-          twoname: '',
-          birthday: '',
-          age: '',
-          main_diagnosis: '',
-        },
-        selected_researches: [],
-        show_results_pk: -1,
-        show_rmis_directions: false,
-        show_rmis_send_directions: false,
-        diagnos: '',
-        fin: -1,
-        hasGrid: Modernizr.cssgrid,
-        mode: DIRECTION_MODE_DIRECTION,
-        DIRECTION_MODE_DIRECTION,
-        DIRECTION_MODE_CALL,
-        DIRECTION_MODE_WAIT,
-        modes_counts: {
-          [DIRECTION_MODE_CALL]: 0,
-          [DIRECTION_MODE_WAIT]: 0,
-        },
-      }
-    },
-    watch: {
-      l2_only_doc_call: {
-        handler() {
-          if (this.l2_only_doc_call) {
-            this.mode = DIRECTION_MODE_CALL;
-          }
-        },
-        immediate: true,
+export default {
+  components: {
+    ListWaitCreator,
+    CallDoctor,
+    DirectAndPlanSwitcher,
+    PatientPicker,
+    ResearchesPicker,
+    SelectedResearches,
+    DirectionsHistory,
+    ResultsViewer,
+    RmisDirectionsViewer,
+    LastResult,
+  },
+  name: 'directions',
+  data() {
+    return {
+      selected_card: {
+        pk: -1,
+        base: {},
+        ofname: -1,
+        ofname_dep: -1,
+        individual_pk: -1,
+        operator: false,
+        is_rmis: false,
+        history_num: '',
+        family: '',
+        name: '',
+        twoname: '',
+        birthday: '',
+        age: '',
+        main_diagnosis: '',
       },
-    },
-    created() {
-      this.$root.$on('show_results', (pk) => {
-        this.show_results_pk = pk
-      })
-
-      this.$root.$on('hide_results', () => {
-        this.show_results_pk = -1
-      })
-
-      this.$root.$on('hide_rmis_directions', () => {
-        this.show_rmis_directions = false
-        this.show_rmis_send_directions = false
-      })
-
-      this.$root.$on('update_diagnos', (diagnos) => {
-        this.diagnos = diagnos
-      })
-
-      this.$root.$on('update_fin', (fin) => {
-        this.fin = fin
-      })
-
-      this.$root.$on('call-doctor:rows-count', count => {
-        this.modes_counts[DIRECTION_MODE_CALL] = count
-      })
-
-      this.$root.$on('list-wait-creator:rows-count', count => {
-        this.modes_counts[DIRECTION_MODE_WAIT] = count
-      })
-    },
-    mounted() {
-      if (this.hasGrid) {
-        Split({
-          columnGutters: [{
-            track: 1,
-            element: document.querySelector('.gutter-column-1'),
-          }, {
-            track: 1,
-            element: document.querySelector('.gutter-column-2'),
-          }],
-          rowGutters: [{
-            track: 1,
-            element: document.querySelector('.gutter-row-1'),
-          }],
-          minSize: 200,
-        })
-      }
-      $(window).on('beforeunload', () => {
-        if (this.selected_card.pk === -1 || this.selected_researches.length <= 0 || document.activeElement && document.activeElement.href && document.activeElement.href.startsWith('sip:')) {
-          if (document.activeElement) {
-            $(document.activeElement).blur()
-          }
-        } else {
-          return 'Исследования выбраны, но направления не созданы. Вы уверены, что хотите покинуть страницу?'
+      selected_researches: [],
+      show_results_pk: -1,
+      show_rmis_directions: false,
+      show_rmis_send_directions: false,
+      diagnos: '',
+      fin: -1,
+      hasGrid: window.Modernizr.cssgrid,
+      mode: DIRECTION_MODE_DIRECTION,
+      DIRECTION_MODE_DIRECTION,
+      DIRECTION_MODE_CALL,
+      DIRECTION_MODE_WAIT,
+      modes_counts: {
+        [DIRECTION_MODE_CALL]: 0,
+        [DIRECTION_MODE_WAIT]: 0,
+      },
+    };
+  },
+  watch: {
+    l2_only_doc_call: {
+      handler() {
+        if (this.l2_only_doc_call) {
+          this.mode = DIRECTION_MODE_CALL;
         }
-      })
-    },
-    methods: {
-      do_show_rmis_directions() {
-        this.show_rmis_directions = true
       },
-      do_show_rmis_send_directions() {
-        this.show_rmis_send_directions = true
-      }
+      immediate: true,
     },
-    computed: {
-      forms() {
-        return forms.map(f => {
+  },
+  created() {
+    this.$root.$on('show_results', (pk) => {
+      this.show_results_pk = pk;
+    });
+
+    this.$root.$on('hide_results', () => {
+      this.show_results_pk = -1;
+    });
+
+    this.$root.$on('hide_rmis_directions', () => {
+      this.show_rmis_directions = false;
+      this.show_rmis_send_directions = false;
+    });
+
+    this.$root.$on('update_diagnos', (diagnos) => {
+      this.diagnos = diagnos;
+    });
+
+    this.$root.$on('update_fin', (fin) => {
+      this.fin = fin;
+    });
+
+    this.$root.$on('call-doctor:rows-count', (count) => {
+      this.modes_counts[DIRECTION_MODE_CALL] = count;
+    });
+
+    this.$root.$on('list-wait-creator:rows-count', (count) => {
+      this.modes_counts[DIRECTION_MODE_WAIT] = count;
+    });
+  },
+  mounted() {
+    if (this.hasGrid) {
+      Split({
+        columnGutters: [{
+          track: 1,
+          element: document.querySelector('.gutter-column-1'),
+        }, {
+          track: 1,
+          element: document.querySelector('.gutter-column-2'),
+        }],
+        rowGutters: [{
+          track: 1,
+          element: document.querySelector('.gutter-row-1'),
+        }],
+        minSize: 200,
+      });
+    }
+    window.$(window).on('beforeunload', () => {
+      if (
+        this.selected_card.pk === -1
+        || this.selected_researches.length <= 0
+        // @ts-ignore
+        || (document.activeElement && document.activeElement.href && document.activeElement.href.startsWith('sip:'))
+      ) {
+        if (document.activeElement) {
+          window.$(document.activeElement).blur();
+        }
+        return undefined;
+      }
+      return 'Исследования выбраны, но направления не созданы. Вы уверены, что хотите покинуть страницу?';
+    });
+  },
+  methods: {
+    do_show_rmis_directions() {
+      this.show_rmis_directions = true;
+    },
+    do_show_rmis_send_directions() {
+      this.show_rmis_send_directions = true;
+    },
+    makeForms(formsBase) {
+      return formsBase.map(f => {
+        if (f.isGroup) {
           return {
-            ...f, url: f.url.kwf({
-              card: this.selected_card.pk,
-              individual: this.selected_card.individual_pk,
-            })
-          }
-        });
-      },
-      patient_valid() {
-        return this.selected_card.pk !== -1
-      },
-      ticket_url() {
-        return `/mainmenu/statistics-tickets?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}&ofname=${this.selected_card.ofname}&ofname_dep=${this.selected_card.ofname_dep}`
-      },
-      report_url() {
-        return `/mainmenu/results_report?individual_pk=${this.selected_card.individual_pk}&base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`
-      },
-      can_create_tickets() {
-        if ('groups' in this.$store.getters.user_data) {
-          for (let g of this.$store.getters.user_data.groups) {
-            if (g === 'Оформление статталонов' || g === 'Лечащий врач' || g === 'Оператор лечащего врача') {
-              return true
-            }
+            ...f,
+            forms: this.makeForms(f.forms),
+          };
+        }
+        return {
+          ...f,
+          url: f.url.kwf({
+            card: this.selected_card.pk,
+            individual: this.selected_card.individual_pk,
+          }),
+        };
+      }).filter(f => this.selected_card.base.internal_type || f.not_internal);
+    },
+  },
+  computed: {
+    forms() {
+      return this.makeForms(forms);
+    },
+    patient_valid() {
+      return this.selected_card.pk !== -1;
+    },
+    ticket_url() {
+      // eslint-disable-next-line max-len
+      return `/mainmenu/statistics-tickets?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}&ofname=${this.selected_card.ofname}&ofname_dep=${this.selected_card.ofname_dep}`;
+    },
+    report_url() {
+      // eslint-disable-next-line max-len
+      return `/mainmenu/results_report?individual_pk=${this.selected_card.individual_pk}&base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`;
+    },
+    can_create_tickets() {
+      if ('groups' in this.$store.getters.user_data) {
+        for (const g of this.$store.getters.user_data.groups) {
+          if (g === 'Оформление статталонов' || g === 'Лечащий врач' || g === 'Оператор лечащего врача') {
+            return true;
           }
         }
-        return false
-      },
-      l2_list_wait() {
-        return this.$store.getters.modules.l2_list_wait
-      },
-      l2_doc_call() {
-        return this.$store.getters.modules.l2_doc_call
-      },
-      l2_only_doc_call() {
-        return this.$store.getters.modules.l2_only_doc_call && this.l2_doc_call;
-      },
+      }
+      return false;
     },
-  }
+    l2_list_wait() {
+      return this.$store.getters.modules.l2_list_wait;
+    },
+    l2_doc_call() {
+      return this.$store.getters.modules.l2_doc_call;
+    },
+    l2_only_doc_call() {
+      return this.$store.getters.modules.l2_only_doc_call && this.l2_doc_call;
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

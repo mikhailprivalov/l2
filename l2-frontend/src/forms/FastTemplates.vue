@@ -4,7 +4,7 @@
     <div class="input-values-wrap">
       <div class="input-values">
         <div class="inner-wrap">
-          <div @click="append_value(val)" class="input-value"
+          <div @click="append_value(val)" class="input-value" :key="val"
                v-for="val in values">
             {{ val }}
           </div>
@@ -13,7 +13,8 @@
     </div>
   </div>
 </template>
-<script>
+
+<script lang="ts">
 export default {
   name: 'FastTemplates',
   props: {
@@ -40,7 +41,7 @@ export default {
       type: String,
       required: false,
       default: '',
-    }
+    },
   },
   computed: {
     localValue() {
@@ -50,19 +51,27 @@ export default {
   methods: {
     append_value(value) {
       let add_val = value;
-      const val = this.this.localValue;
+      const val = this.localValue;
       if (add_val !== ',' && add_val !== '.') {
         if (val.length > 0 && val[val.length - 1] !== ' ' && val[val.length - 1] !== '\n') {
           if (val[val.length - 1] === '.') {
-            add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
+            add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase());
           }
-          add_val = ' ' + add_val
-        } else if ((val.length === 0 || (val.length >= 2 && val[val.length - 2] === '.' && val[val.length - 1] === '\n')) && this.field_title === '') {
-          add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
+          add_val = ` ${add_val}`;
+        } else if (
+          (val.length === 0
+            || (val.length >= 2
+              && val[val.length - 2] === '.'
+              && val[val.length - 1] === '\n'
+            )
+          )
+          && this.field_title === ''
+        ) {
+          add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase());
         }
       }
-      this.update_value(this.value + add_val);
+      this.update_value(val + add_val);
     },
-  }
-}
+  },
+};
 </script>

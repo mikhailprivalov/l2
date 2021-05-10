@@ -1,16 +1,17 @@
-import {generator} from './http-common'
-
+import { generator } from './http-common';
 
 export default generator({
   getCurrentUserInfo: {
     method: 'get',
     url: 'current-user-info',
-    onReject: {"auth": false, username: "", fio: "", groups: [], doc_pk: -1, department: {pk: -1, title: ""}, extended_departments: {}}
+    onReject: {
+      auth: false, username: '', fio: '', groups: [], doc_pk: -1, department: { pk: -1, title: '' }, extended_departments: {},
+    },
   },
   getDirectiveFrom: {
     method: 'get',
     url: 'directive-from',
-    onReject: {data: []}
+    onReject: { data: [] },
   },
   loadUsers: {
     url: 'users',

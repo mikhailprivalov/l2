@@ -3,9 +3,9 @@
   <a v-else href="#" @click.prevent="open_page">ЭЛН</a>
 </template>
 
-<script>
-import api from "@/api";
-import * as action_types from "@/store/action-types";
+<script lang="ts">
+import api from '@/api';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'RmisLink',
@@ -23,24 +23,24 @@ export default {
   },
   methods: {
     async open_page() {
-      await this.$store.dispatch(action_types.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
 
       if (!this.urlAuth) {
-        await this.get_auth()
+        await this.get_auth();
       }
 
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         const openWindow = window.open(this.urlAuth, '_blank');
         setTimeout(() => {
           openWindow.close();
           setTimeout(() => {
             window.open(this.urlAddress, '_blank');
-            resolve();
+            resolve(0);
           }, 400);
         }, 400);
       });
 
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async get_auth() {
       const params = await api('rmis-link');
@@ -52,5 +52,5 @@ export default {
       }
     },
   },
-}
+};
 </script>

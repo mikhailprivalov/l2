@@ -1,6 +1,7 @@
 <template>
     <modal v-if="agent_to_edit" ref="modalCardfind" @close="hide_modal_agent_edit" show-footer="true" white-bg="true"
              max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+        <!-- eslint-disable-next-line max-len -->
         <span slot="header">Редактор – {{agent_type_by_key(agent_to_edit)}} (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
         <div slot="body" style="min-height: 140px" class="registry-body">
           <div v-show="!agent_clear">
@@ -37,10 +38,10 @@
       </modal>
 </template>
 
-<script>
-    export default {
-        name: "FindPatient"
-    }
+<script lang="ts">
+export default {
+  name: 'FindPatient',
+};
 </script>
 
 <style scoped>

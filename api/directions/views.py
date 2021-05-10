@@ -592,6 +592,7 @@ def directions_services(request):
             ):
                 researches.append(
                     {
+                        "pk": i.pk,
                         "title": i.research.title,
                         "department": "" if not i.research.podrazdeleniye else i.research.podrazdeleniye.get_title(),
                         "is_microbiology": i.research.is_microbiology,

@@ -25,7 +25,7 @@
             <div class="input-group">
               <span class="input-group-addon">Подраздел</span>
               <select class="form-control" v-model="site_type">
-                <option :value="r.pk" v-for="r in ex_deps">{{r.title}}</option>
+                <option :value="r.pk" :key="r.pk" v-for="r in ex_deps">{{r.title}}</option>
               </select>
             </div>
           </div>
@@ -39,7 +39,7 @@
         <div class="input-group">
           <span class="input-group-addon"> Ф.направления </span>
           <select class="form-control" v-model="direction_current_form">
-            <option :value="d[0]" v-for="d in direction_forms">
+            <option :value="d[0]" :key="d[0]" v-for="d in direction_forms">
               {{d[1]}}
             </option>
           </select>
@@ -58,7 +58,7 @@
         <span class="input-group-addon">Ёмкость для биоматериала</span>
         <select class="form-control" v-model="tube">
           <option :value="-1">Не выбрано</option>
-          <option :value="t.pk" v-for="t in tubes">{{t.title}}</option>
+          <option :value="t.pk" :key="t.pk" v-for="t in tubes">{{t.title}}</option>
         </select>
       </div>
       <div class="input-group" style="margin-bottom: 5px">
@@ -78,340 +78,340 @@
   </div>
 </template>
 
-<script>
-  import construct_point from '../api/construct-point'
-  import * as action_types from '../store/action-types'
-  import {mapGetters} from 'vuex'
+<script lang="ts">
+import { mapGetters } from 'vuex';
+import construct_point from '../api/construct-point';
+import * as actions from '../store/action-types';
 
-  export default {
-    name: 'microbiology-research-editor',
-    props: {
-      pk: {
-        type: Number,
-        required: true
+export default {
+  name: 'microbiology-research-editor',
+  props: {
+    pk: {
+      type: Number,
+      required: true,
+    },
+    department: {
+      type: Number,
+      required: true,
+    },
+    direction_forms: {
+      type: Array,
+      required: false,
+      default: () => [],
+    },
+  },
+  created() {
+    this.load();
+  },
+  data() {
+    return {
+      title: '',
+      short_title: '',
+      code: '',
+      internal_code: '',
+      direction_current_form: '',
+      conclusionTpl: '',
+      cultureTpl: '',
+      info: '',
+      hide: false,
+      cancel_do: false,
+      loaded_pk: -2,
+      site_type: null,
+      groups: [],
+      template_add_types: [
+        { sep: ' ', title: 'Пробел' },
+        { sep: ', ', title: 'Запятая и пробел' },
+        { sep: '; ', title: 'Точка с запятой (;) и пробел' },
+        { sep: '. ', title: 'Точка и пробел' },
+        { sep: '\n', title: 'Перенос строки' },
+      ],
+      has_unsaved: false,
+      f_templates_open: false,
+      templates: [],
+      opened_template_data: {},
+      tube: -1,
+    };
+  },
+  watch: {
+    pk() {
+      this.load();
+    },
+    loaded_pk() {
+      this.has_unsaved = false;
+    },
+    groups: {
+      handler(n, o) {
+        if (o && o.length > 0) {
+          this.has_unsaved = true;
+        }
       },
-      department: {
-        type: Number,
-        required: true
-      },
-      direction_forms: {
-        type: Array,
-        required: false,
-        default: () => [],
+      deep: true,
+    },
+  },
+  mounted() {
+    window.$(window).on('beforeunload', () => {
+      if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do) {
+        return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?';
       }
+      return undefined;
+    });
+    this.$root.$on('hide_fte', () => this.f_templates_hide());
+    this.$store.dispatch(actions.GET_RESEARCHES);
+  },
+  computed: {
+    fte() {
+      return this.$store.getters.modules.l2_fast_templates;
     },
-    created() {
-      this.load()
+    valid() {
+      return this.tube !== -1 && this.norm_title.length > 0 && !this.cancel_do;
     },
-    data() {
-      return {
-        title: '',
-        short_title: '',
-        code: '',
-        internal_code: '',
-        direction_current_form: '',
-        conclusionTpl: '',
-        cultureTpl: '',
-        info: '',
-        hide: false,
-        cancel_do: false,
-        loaded_pk: -2,
-        site_type: null,
-        groups: [],
-        template_add_types: [
-          {sep: ' ', title: 'Пробел'},
-          {sep: ', ', title: 'Запятая и пробел'},
-          {sep: '; ', title: 'Точка с запятой (;) и пробел'},
-          {sep: '. ', title: 'Точка и пробел'},
-          {sep: '\n', title: 'Перенос строки'},
-        ],
-        has_unsaved: false,
-        f_templates_open: false,
-        templates: [],
-        opened_template_data: {},
-        tube: -1,
-      }
+    norm_title() {
+      return this.title.trim();
     },
-    watch: {
-      pk() {
-        this.load()
-      },
-      loaded_pk(n) {
-        this.has_unsaved = false
-      },
-      groups: {
-        handler(n, o) {
-          if (o && o.length > 0) {
-            this.has_unsaved = true
-          }
-        },
-        deep: true
-      }
+    ordered_groups() {
+      return this.groups.slice().sort((a, b) => (a.order === b.order ? 0 : +(a.order > b.order) || -1));
     },
-    mounted() {
-      $(window).on('beforeunload', () => {
-        if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do)
-          return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
-      })
-      this.$root.$on('hide_fte', () => this.f_templates_hide())
-      this.$store.dispatch(action_types.GET_RESEARCHES)
-    },
-    computed: {
-      fte() {
-        return this.$store.getters.modules.l2_fast_templates
-      },
-      valid() {
-        return this.tube !== -1 && this.norm_title.length > 0 && !this.cancel_do
-      },
-      norm_title() {
-        return this.title.trim()
-      },
-      ordered_groups() {
-        return this.groups.slice().sort(function (a, b) {
-          return a.order === b.order ? 0 : +(a.order > b.order) || -1
-        })
-      },
-      min_max_order_groups() {
-        let min = 0
-        let max = 0
-        for (let row of this.groups) {
-          if (min === 0) {
-            min = row.order
-          } else {
-            min = Math.min(min, row.order)
-          }
-          max = Math.max(max, row.order)
-        }
-        return {min, max}
-      },
-      ex_dep() {
-        return {
-          '-2': 4,
-          '-3': 5,
-          '-4': 6,
-          '-5': 7,
-          '-6': 8,
-        }[this.department] || this.department
-      },
-      ex_deps() {
-        return this.$store.getters.ex_dep[this.ex_dep] || []
-      },
-      ...mapGetters(['tubes']),
-    },
-    methods: {
-      f_templates() {
-        this.f_templates_open = true
-      },
-      f_templates_hide() {
-        this.f_templates_open = false
-      },
-      is_first_in_template(i) {
-        return i === 0
-      },
-      is_last_in_template(row, i) {
-        return i === row.values_to_input.length - 1
-      },
-      up_template(row, i) {
-        if (this.is_first_in_template(i))
-          return
-        let values = JSON.parse(JSON.stringify(row.values_to_input));
-        [values[i - 1], values[i]] = [values[i], values[i - 1]]
-        row.values_to_input = values
-      },
-      down_template(row, i) {
-        if (this.is_last_in_template(row, i))
-          return
-        let values = JSON.parse(JSON.stringify(row.values_to_input));
-        [values[i + 1], values[i]] = [values[i], values[i + 1]]
-        row.values_to_input = values
-      },
-      remove_template(row, i) {
-        if (row.values_to_input.length - 1 < i)
-          return
-        row.values_to_input.splice(i, 1)
-      },
-      add_template_value(row) {
-        if (row.new_value === '')
-          return
-        row.values_to_input.push(row.new_value)
-        row.new_value = ''
-      },
-      drag(row, ev) {
-        // console.log(row, ev)
-      },
-      min_max_order(group) {
-        let min = 0
-        let max = 0
-        for (let row of group.fields) {
-          if (min === 0) {
-            min = row.order
-          } else {
-            min = Math.min(min, row.order)
-          }
-          max = Math.max(max, row.order)
-        }
-        return {min, max}
-      },
-      ordered_fields(group) {
-        return group.fields.slice().sort(function (a, b) {
-          return a.order === b.order ? 0 : +(a.order > b.order) || -1
-        })
-      },
-      inc_group_order(row) {
-        if (row.order === this.min_max_order_groups.max)
-          return
-        let next_row = this.find_group_by_order(row.order + 1)
-        if (next_row) {
-          next_row.order--
-        }
-        row.order++
-      },
-      dec_group_order(row) {
-        if (row.order === this.min_max_order_groups.min)
-          return
-        let prev_row = this.find_group_by_order(row.order - 1)
-        if (prev_row) {
-          prev_row.order++
-        }
-        row.order--
-      },
-      inc_order(group, row) {
-        if (row.order === this.min_max_order(group).max)
-          return
-        let next_row = this.find_by_order(group, row.order + 1)
-        if (next_row) {
-          next_row.order--
-        }
-        row.order++
-      },
-      dec_order(group, row) {
-        if (row.order === this.min_max_order(group).min)
-          return
-        let prev_row = this.find_by_order(group, row.order - 1)
-        if (prev_row) {
-          prev_row.order++
-        }
-        row.order--
-      },
-      find_by_order(group, order) {
-        for (let row of group.fields) {
-          if (row.order === order) {
-            return row
-          }
-        }
-        return false
-      },
-      find_group_by_order(order) {
-        for (let row of this.groups) {
-          if (row.order === order) {
-            return row
-          }
-        }
-        return false
-      },
-      is_first_group(group) {
-        return group.order === this.min_max_order_groups.min
-      },
-      is_last_group(group) {
-        return group.order === this.min_max_order_groups.max
-      },
-      is_first_field(group, row) {
-        return row.order === this.min_max_order(group).min
-      },
-      is_last_field(group, row) {
-        return row.order === this.min_max_order(group).max
-      },
-      add_field(group) {
-        let order = 0
-        for (let row of group.fields) {
-          order = Math.max(order, row.order)
-        }
-        group.fields.push({
-          pk: -1,
-          order: order + 1,
-          title: '',
-          default: '',
-          values_to_input: [],
-          new_value: '',
-          hide: false,
-          lines: 3,
-          field_type: 0,
-        })
-      },
-      add_group() {
-        let order = 0
-        for (let row of this.groups) {
-          order = Math.max(order, row.order)
-        }
-        let g = {pk: -1, order: order + 1, title: '', fields: [], show_title: true, hide: false}
-        this.add_field(g)
-        this.groups.push(g)
-      },
-      load() {
-        this.title = ''
-        this.short_title = ''
-        this.code = ''
-        this.info = ''
-        this.hide = false
-        this.site_type = null
-        this.tube = -1
-        this.direction_current_form = ''
-        if (this.pk >= 0) {
-          this.$store.dispatch(action_types.INC_LOADING)
-          construct_point.researchDetails(this, 'pk').then(data => {
-            this.title = data.title
-            this.short_title = data.short_title
-            this.code = data.code
-            this.internal_code = data.internal_code
-            this.direction_current_form = data.direction_current_form
-            this.conclusionTpl = data.conclusionTpl
-            this.cultureTpl = data.cultureTpl
-            this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
-            this.hide = data.hide
-            this.site_type = data.site_type
-            this.loaded_pk = this.pk
-            this.tube = data.tube
-          }).finally(() => {
-            this.$store.dispatch(action_types.DEC_LOADING)
-          })
+    min_max_order_groups() {
+      let min = 0;
+      let max = 0;
+      for (const row of this.groups) {
+        if (min === 0) {
+          min = row.order;
         } else {
-          this.add_group()
+          min = Math.min(min, row.order);
         }
-      },
-      cancel() {
-        if (this.has_unsaved && !confirm('Изменения, возможно, не сохранены. Вы уверены, что хотите отменить редактирование?')) {
-          return
+        max = Math.max(max, row.order);
+      }
+      return { min, max };
+    },
+    ex_dep() {
+      return {
+        '-2': 4,
+        '-3': 5,
+        '-4': 6,
+        '-5': 7,
+        '-6': 8,
+      }[this.department] || this.department;
+    },
+    ex_deps() {
+      return this.$store.getters.ex_dep[this.ex_dep] || [];
+    },
+    ...mapGetters(['tubes']),
+  },
+  methods: {
+    f_templates() {
+      this.f_templates_open = true;
+    },
+    f_templates_hide() {
+      this.f_templates_open = false;
+    },
+    is_first_in_template(i) {
+      return i === 0;
+    },
+    is_last_in_template(row, i) {
+      return i === row.values_to_input.length - 1;
+    },
+    up_template(row, i) {
+      if (this.is_first_in_template(i)) return;
+      const values = JSON.parse(JSON.stringify(row.values_to_input));
+      [values[i - 1], values[i]] = [values[i], values[i - 1]];
+      // eslint-disable-next-line no-param-reassign
+      row.values_to_input = values;
+    },
+    down_template(row, i) {
+      if (this.is_last_in_template(row, i)) return;
+      const values = JSON.parse(JSON.stringify(row.values_to_input));
+      [values[i + 1], values[i]] = [values[i], values[i + 1]];
+      // eslint-disable-next-line no-param-reassign
+      row.values_to_input = values;
+    },
+    remove_template(row, i) {
+      if (row.values_to_input.length - 1 < i) return;
+      row.values_to_input.splice(i, 1);
+    },
+    add_template_value(row) {
+      if (row.new_value === '') return;
+      row.values_to_input.push(row.new_value);
+      // eslint-disable-next-line no-param-reassign
+      row.new_value = '';
+    },
+    drag() {
+      // console.log(row, ev)
+    },
+    min_max_order(group) {
+      let min = 0;
+      let max = 0;
+      for (const row of group.fields) {
+        if (min === 0) {
+          min = row.order;
+        } else {
+          min = Math.min(min, row.order);
         }
-        this.cancel_do = true
-        this.$root.$emit('research-editor:cancel')
-      },
-      save() {
-        this.$store.dispatch(action_types.INC_LOADING)
-        construct_point.updateResearch(this, [
-          'pk',
-          'department',
-          'title',
-          'short_title',
-          'code',
-          'hide',
-          'site_type',
-          'internal_code',
-          'tube',
-          'direction_current_form',
-          'conclusionTpl',
-          'cultureTpl',
-        ], {
-          info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>')
-        }).then(() => {
-          this.has_unsaved = false
-          okmessage('Сохранено')
-          this.cancel()
+        max = Math.max(max, row.order);
+      }
+      return { min, max };
+    },
+    ordered_fields(group) {
+      return group.fields.slice().sort((a, b) => (a.order === b.order ? 0 : +(a.order > b.order) || -1));
+    },
+    inc_group_order(row) {
+      if (row.order === this.min_max_order_groups.max) return;
+      const next_row = this.find_group_by_order(row.order + 1);
+      if (next_row) {
+        next_row.order--;
+      }
+      // eslint-disable-next-line no-param-reassign
+      row.order++;
+    },
+    dec_group_order(row) {
+      if (row.order === this.min_max_order_groups.min) return;
+      const prev_row = this.find_group_by_order(row.order - 1);
+      if (prev_row) {
+        prev_row.order++;
+      }
+      // eslint-disable-next-line no-param-reassign
+      row.order--;
+    },
+    inc_order(group, row) {
+      if (row.order === this.min_max_order(group).max) return;
+      const next_row = this.find_by_order(group, row.order + 1);
+      if (next_row) {
+        next_row.order--;
+      }
+      // eslint-disable-next-line no-param-reassign
+      row.order++;
+    },
+    dec_order(group, row) {
+      if (row.order === this.min_max_order(group).min) return;
+      const prev_row = this.find_by_order(group, row.order - 1);
+      if (prev_row) {
+        prev_row.order++;
+      }
+      // eslint-disable-next-line no-param-reassign
+      row.order--;
+    },
+    find_by_order(group, order) {
+      for (const row of group.fields) {
+        if (row.order === order) {
+          return row;
+        }
+      }
+      return false;
+    },
+    find_group_by_order(order) {
+      for (const row of this.groups) {
+        if (row.order === order) {
+          return row;
+        }
+      }
+      return false;
+    },
+    is_first_group(group) {
+      return group.order === this.min_max_order_groups.min;
+    },
+    is_last_group(group) {
+      return group.order === this.min_max_order_groups.max;
+    },
+    is_first_field(group, row) {
+      return row.order === this.min_max_order(group).min;
+    },
+    is_last_field(group, row) {
+      return row.order === this.min_max_order(group).max;
+    },
+    add_field(group) {
+      let order = 0;
+      for (const row of group.fields) {
+        order = Math.max(order, row.order);
+      }
+      group.fields.push({
+        pk: -1,
+        order: order + 1,
+        title: '',
+        default: '',
+        values_to_input: [],
+        new_value: '',
+        hide: false,
+        lines: 3,
+        field_type: 0,
+      });
+    },
+    add_group() {
+      let order = 0;
+      for (const row of this.groups) {
+        order = Math.max(order, row.order);
+      }
+      const g = {
+        pk: -1, order: order + 1, title: '', fields: [], show_title: true, hide: false,
+      };
+      this.add_field(g);
+      this.groups.push(g);
+    },
+    load() {
+      this.title = '';
+      this.short_title = '';
+      this.code = '';
+      this.info = '';
+      this.hide = false;
+      this.site_type = null;
+      this.tube = -1;
+      this.direction_current_form = '';
+      if (this.pk >= 0) {
+        this.$store.dispatch(actions.INC_LOADING);
+        construct_point.researchDetails(this, 'pk').then((data) => {
+          this.title = data.title;
+          this.short_title = data.short_title;
+          this.code = data.code;
+          this.internal_code = data.internal_code;
+          this.direction_current_form = data.direction_current_form;
+          this.conclusionTpl = data.conclusionTpl;
+          this.cultureTpl = data.cultureTpl;
+          this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n');
+          this.hide = data.hide;
+          this.site_type = data.site_type;
+          this.loaded_pk = this.pk;
+          this.tube = data.tube;
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
-      },
-    }
-  }
+          this.$store.dispatch(actions.DEC_LOADING);
+        });
+      } else {
+        this.add_group();
+      }
+    },
+    cancel() {
+      // eslint-disable-next-line no-restricted-globals,no-alert
+      if (this.has_unsaved && !confirm('Изменения, возможно, не сохранены. Вы уверены, что хотите отменить редактирование?')) {
+        return;
+      }
+      this.cancel_do = true;
+      this.$root.$emit('research-editor:cancel');
+    },
+    save() {
+      this.$store.dispatch(actions.INC_LOADING);
+      construct_point.updateResearch(this, [
+        'pk',
+        'department',
+        'title',
+        'short_title',
+        'code',
+        'hide',
+        'site_type',
+        'internal_code',
+        'tube',
+        'direction_current_form',
+        'conclusionTpl',
+        'cultureTpl',
+      ], {
+        info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
+      }).then(() => {
+        this.has_unsaved = false;
+        window.okmessage('Сохранено');
+        this.cancel();
+      }).finally(() => {
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>

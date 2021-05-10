@@ -1,19 +1,19 @@
-import {generator} from './http-common'
+import { generator } from './http-common';
 
 export default generator({
   getTemplates: {
     method: 'get',
     url: 'researches/templates',
-    onReject: {templates: {}},
+    onReject: { templates: {} },
   },
   getResearches: {
     method: 'get',
     url: 'researches/all',
-    onReject: {researches: []},
+    onReject: { researches: [] },
   },
   getResearchesByDepartment: {
     url: 'researches/by-department',
-    onReject: {researches: []},
+    onReject: { researches: [] },
   },
   getResearchesParams: {
     url: 'researches/params',
@@ -22,21 +22,21 @@ export default generator({
     url: 'researches/fast-templates',
   },
   getTemplateData: {
-    url: 'researches/fast-template-data'
+    url: 'researches/fast-template-data',
   },
   saveFastTemplate: {
-    url: 'researches/fast-template-save'
+    url: 'researches/fast-template-save',
   },
   fractionTitle: {
-    url: 'researches/fraction-title'
+    url: 'researches/fraction-title',
   },
   fieldTitle: {
-    url: 'researches/field-title'
+    url: 'researches/field-title',
   },
   getFieldsAndGroups: {
-    url: 'researches/fields-and-groups-titles'
+    url: 'researches/fields-and-groups-titles',
   },
   getResearchesDispensary: {
-    url: 'researches/research-dispensary'
+    url: 'researches/research-dispensary',
   },
-})
+});

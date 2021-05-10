@@ -13,7 +13,8 @@
         </div>
       </div>
       <div style="overflow-y: auto;overflow-x:hidden;">
-        <div class="direction" v-for="direction in directions">
+        <!-- eslint-disable-next-line vue/no-unused-vars -->
+        <div class="direction" v-for="direction in directions" :key="direction.pk">
         </div>
         <div class="text-center" style="margin: 5px" v-if="directions.length === 0">
           Нет данных
@@ -26,28 +27,32 @@
   </div>
 </template>
 
-<script>
-  import DateRange from '../ui-cards/DateRange'
-  import moment from 'moment'
+<script lang="ts">
+import moment from 'moment';
+import DateRange from '../ui-cards/DateRange.vue';
 
-  export default {
-    name: 'rmis-confirm',
-    components: {DateRange},
-    data() {
-      return {
-        date_range: [moment().subtract(1, 'months').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
-        directions: [],
-        pk: ""
-      }
+export default {
+  name: 'rmis-confirm',
+  components: { DateRange },
+  data() {
+    return {
+      date_range: [moment().subtract(1, 'months').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+      directions: [],
+      pk: '',
+    };
+  },
+  mounted() {
+    this.load_history();
+  },
+  methods: {
+    load() {
+      // pass
     },
-    mounted() {
-      this.load_history()
+    load_history() {
+      // pass
     },
-    methods: {
-      load() {},
-      load_history() {},
-    }
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

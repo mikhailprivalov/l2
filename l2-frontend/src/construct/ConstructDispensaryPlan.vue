@@ -7,20 +7,20 @@
 
 </template>
 
-<script>
+<script lang="ts">
 
-import MKBFieldForm from '../fields/MKBFieldForm'
-import ConfigureDispenseryResearch from "@/fields/ConfigureDispenseryResearch";
+import ConfigureDispenseryResearch from '@/fields/ConfigureDispenseryResearch.vue';
+import MKBFieldForm from '../fields/MKBFieldForm.vue';
 
 export default {
   name: 'ConstructDispensaryPlan',
-  components: {MKBFieldForm, ConfigureDispenseryResearch,},
+  components: { MKBFieldForm, ConfigureDispenseryResearch },
   data() {
     return {
       diagnos: '',
-    }
+    };
   },
-}
+};
 </script>
 
 <style scoped lang="scss">

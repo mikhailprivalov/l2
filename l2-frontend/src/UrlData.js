@@ -5,19 +5,18 @@ export default class UrlData {
     if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
       window.history.pushState('', '/', window.location.pathname);
       return false;
-    } else {
-      window.location.hash = JSON.stringify(data);
-      return true;
     }
+    window.location.hash = JSON.stringify(data);
+    return true;
   }
 
   static get() {
     try {
-      const data = JSON.parse(decodeURI(window.location.hash.substring(1)) || "null");
+      const data = JSON.parse(decodeURI(window.location.hash.substring(1)) || 'null');
       console.log(data);
       return data;
     } catch (e) {
-
+      console.error(e);
     }
     return null;
   }

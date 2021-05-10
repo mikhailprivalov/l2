@@ -35,31 +35,31 @@
     </tbody>
   </table>
 </template>
-<script>
-  import Treeselect from "@riophae/vue-treeselect";
-  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-  import DateRange from "../../../ui-cards/DateRange"
+<script lang="ts">
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import DateRange from '../../../ui-cards/DateRange.vue';
 
-  export default {
-    name: 'Filters',
-    components: {DateRange, Treeselect},
-    props: {
-      filters: {
-        type: Object,
-        required: true,
-      },
-      anestesiologs: {
-        type: Array,
-        required: true,
-      },
-      hirurgs: {
-        type: Object,
-        required: true,
-      },
-      departments: {
-        type: Array,
-        required: true,
-      },
-    }
-  }
+export default {
+  name: 'Filters',
+  components: { DateRange, Treeselect },
+  props: {
+    filters: {
+      type: Object,
+      required: true,
+    },
+    anestesiologs: {
+      type: Array,
+      required: true,
+    },
+    hirurgs: {
+      type: Object,
+      required: true,
+    },
+    departments: {
+      type: Array,
+      required: true,
+    },
+  },
+};
 </script>

@@ -3,18 +3,17 @@
     {{name}}
   </div>
 
-    
 </template>
 
-<script>
-    export default {
-        name: "L2queue",
-        data() {
-            return {
-            name: 'Экраны',
-            }
-        }
-    }
+<script lang="ts">
+export default {
+  name: 'L2queue',
+  data() {
+    return {
+      name: 'Экраны',
+    };
+  },
+};
 </script>
 
 <style>

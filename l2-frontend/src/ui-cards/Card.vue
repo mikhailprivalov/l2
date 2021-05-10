@@ -2,10 +2,10 @@
   <div>Карта</div>
 </template>
 
-<script>
-  export default {
-    name: 'card'
-  }
+<script lang="ts">
+export default {
+  name: 'card',
+};
 </script>
 
 <style scoped>

@@ -47,15 +47,15 @@
   </div>
 </template>
 
-<script>
-import moment from "moment";
+<script lang="ts">
+import moment from 'moment';
 
-import Modal from "@/ui-cards/Modal";
-import DateRange from "@/ui-cards/DateRange";
-import ResearchesPicker from "@/ui-cards/ResearchesPicker";
+import Modal from '@/ui-cards/Modal.vue';
+import DateRange from '@/ui-cards/DateRange.vue';
+import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 
 export default {
-  components: {ResearchesPicker, Modal, DateRange},
+  components: { ResearchesPicker, Modal, DateRange },
   name: 'ExecutionList',
   data() {
     return {
@@ -71,30 +71,33 @@ export default {
       this.date_range = [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')];
     },
     createlist(type) {
-      let [datestart, dateend] = this.date_range;
+      const [ds, de] = this.date_range;
       if (this.selected_researches.length === 0) {
-        $.amaran({
-          'theme': 'awesome wrn',
-          'content': {
+        // @ts-ignore
+        // eslint-disable-next-line no-undef
+        window.$.amaran({
+          theme: 'awesome wrn',
+          content: {
             title: 'Создание невозможно',
             message: 'Ничего не выбрано',
             info: '',
-            icon: 'fa fa-exclamation'
+            icon: 'fa fa-exclamation',
           },
-          'position': 'bottom right',
-          delay: 6000
-        })
-        return
+          position: 'bottom right',
+          delay: 6000,
+        });
+        return;
       }
+      const res = JSON.stringify(this.selected_researches);
       switch (type) {
         case 3:
-          window.open(`/mainmenu/receive/execlist?type=nonconfirmed&datestart=${datestart}&dateend=${dateend}&researches=${JSON.stringify(this.selected_researches)}`, '_blank')
-          break
+          window.open(`/mainmenu/receive/execlist?type=nonconfirmed&datestart=${ds}&dateend=${de}&researches=${res}`, '_blank');
+          break;
         default:
-          window.open(`/directions/execlist?type=${type}&datestart=${datestart}&dateend=${dateend}&researches=${JSON.stringify(this.selected_researches)}`, '_blank')
-          break
+          window.open(`/directions/execlist?type=${type}&datestart=${ds}&dateend=${de}&researches=${res}`, '_blank');
+          break;
       }
     },
   },
-}
+};
 </script>

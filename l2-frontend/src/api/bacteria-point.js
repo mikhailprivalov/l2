@@ -1,9 +1,9 @@
-import {generator} from './http-common'
+import { generator } from './http-common';
 
 export default generator({
   loadGroups: {
     url: 'bacteria/loadculture',
-    onReject: {ok: false},
+    onReject: { ok: false },
   },
   saveElement: {
     url: 'bacteria/saveculture',
@@ -38,4 +38,4 @@ export default generator({
   getAntibioticGroups: {
     url: 'bacteria/get-antibiotic-groups',
   },
-})
+});

@@ -1,12 +1,12 @@
-import {generator} from './http-common'
+import { generator } from './http-common';
 
 export default generator({
   getDepartments: {
     url: 'departments',
-    onReject: {can_edit: false, departments: [], types: []}
+    onReject: { can_edit: false, departments: [], types: [] },
   },
   sendDepartments: {
     url: 'departments',
-    onReject: {ok: false, message: ''},
-  }
-})
+    onReject: { ok: false, message: '' },
+  },
+});

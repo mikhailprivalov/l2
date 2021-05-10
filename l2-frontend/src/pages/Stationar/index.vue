@@ -183,7 +183,7 @@
         </div>
       </div>
       <div class="inner results-editor">
-        <div v-for="row in researches_forms">
+        <div v-for="row in researches_forms" :key="row.pk">
           <div class="research-title">
             <div class="research-left">
               <button style="margin-right: 5px" class="btn btn-blue-nb" @click="show_anesthesia"
@@ -201,7 +201,7 @@
                 </a>
                 <div class="results-history" slot="dropdown">
                   <ul>
-                    <li v-for="r in research_history">
+                    <li v-for="r in research_history" :key="r.pk">
                       Результат от {{ r.date }}
                       <a href="#" @click.prevent="print_results(r.direction)">печать</a>
                       <a href="#" @click.prevent="copy_results(row, r.pk)" v-if="!row.confirmed">скопировать</a>
@@ -358,7 +358,7 @@
             </button>
             <div class="status-list" v-if="!r(row) && !row.confirmed">
               <div class="status status-none">Не заполнено:</div>
-              <div class="status status-none" v-for="rl in r_list(row)">{{ rl }};</div>
+              <div class="status status-none" v-for="rl in r_list(row)" :key="rl">{{ rl }};</div>
             </div>
           </div>
         </div>
@@ -502,27 +502,26 @@
   </div>
 </template>
 
-
-<script>
-import {mapGetters} from 'vuex'
-import dropdown from 'vue-my-dropdown'
-import menuMixin from './mixins/menu'
-import * as action_types from '@/store/action-types'
-import stationar_point from '@/api/stationar-point'
-import PatientCard from './PatientCard'
-import Patient from '@/types/patient'
-import directions_point from '@/api/directions-point'
-import IssStatus from '@/ui-cards/IssStatus'
-import {vField, vGroup} from '@/components/visibility-triggers'
-import researches_point from '@/api/researches-point'
-import DescriptiveForm from '@/forms/DescriptiveForm'
-import DisplayDirection from './DisplayDirection'
-import patients_point from '@/api/patients-point'
-import UrlData from '@/UrlData'
-import AmbulatoryData from '@/modals/AmbulatoryData'
-import RadioField from '@/fields/RadioField'
-import Favorite from "./Favorite";
-import Treeselect from '@riophae/vue-treeselect'
+<script lang="ts">
+import { mapGetters } from 'vuex';
+import dropdown from 'vue-my-dropdown';
+import * as actions from '@/store/action-types';
+import stationar_point from '@/api/stationar-point';
+import Patient from '@/types/patient';
+import directionsPoint from '@/api/directions-point';
+import IssStatus from '@/ui-cards/IssStatus.vue';
+import { vField, vGroup } from '@/components/visibility-triggers';
+import researchesPoint from '@/api/researches-point';
+import DescriptiveForm from '@/forms/DescriptiveForm.vue';
+import patientsPoint from '@/api/patients-point';
+import UrlData from '@/UrlData';
+import AmbulatoryData from '@/modals/AmbulatoryData.vue';
+import RadioField from '@/fields/RadioField.vue';
+import Treeselect from '@riophae/vue-treeselect';
+import Favorite from './Favorite.vue';
+import DisplayDirection from './DisplayDirection.vue';
+import PatientCard from './PatientCard.vue';
+import menuMixin from './mixins/menu';
 
 export default {
   mixins: [menuMixin],
@@ -536,19 +535,19 @@ export default {
     IssStatus,
     PatientCard,
     AmbulatoryData,
-    DirectionsHistory: () => import('@/ui-cards/DirectionsHistory'),
-    AggregateTADP: () => import('@/fields/AggregateTADP'),
-    AggregateDesc: () => import('@/fields/AggregateDesc'),
-    AggregateLaboratory: () => import('@/fields/AggregateLaboratory'),
-    AggregatePharmacotherapy: () => import('@/fields/AggregatePharmacotherapy'),
-    ResultsViewer: () => import('@/modals/ResultsViewer'),
-    SelectPickerM: () => import('@/fields/SelectPickerM'),
-    ResearchPick: () => import('@/ui-cards/ResearchPick'),
-    SelectedResearches: () => import('@/ui-cards/SelectedResearches'),
-    LastResult: () => import('@/ui-cards/LastResult'),
-    ResearchesPicker: () => import('@/ui-cards/ResearchesPicker'),
-    Modal: () => import('@/ui-cards/Modal'),
-    PharmacotherapyInput: () => import('@/ui-cards/PharmacotherapyInput'),
+    DirectionsHistory: () => import('@/ui-cards/DirectionsHistory/index.vue'),
+    AggregateTADP: () => import('@/fields/AggregateTADP.vue'),
+    AggregateDesc: () => import('@/fields/AggregateDesc.vue'),
+    AggregateLaboratory: () => import('@/fields/AggregateLaboratory.vue'),
+    AggregatePharmacotherapy: () => import('@/fields/AggregatePharmacotherapy.vue'),
+    ResultsViewer: () => import('@/modals/ResultsViewer.vue'),
+    SelectPickerM: () => import('@/fields/SelectPickerM.vue'),
+    ResearchPick: () => import('@/ui-cards/ResearchPick.vue'),
+    SelectedResearches: () => import('@/ui-cards/SelectedResearches.vue'),
+    LastResult: () => import('@/ui-cards/LastResult.vue'),
+    ResearchesPicker: () => import('@/ui-cards/ResearchesPicker.vue'),
+    Modal: () => import('@/ui-cards/Modal.vue'),
+    PharmacotherapyInput: () => import('@/ui-cards/PharmacotherapyInput.vue'),
   },
   data() {
     return {
@@ -589,7 +588,7 @@ export default {
       research_history: [],
       inited: false,
       ambulatory_data: false,
-      variantTypeTransfer: ["Новый перевод", "Выбрать из предыдущих"],
+      variantTypeTransfer: ['Новый перевод', 'Выбрать из предыдущих'],
       typeTransfer: 'Новый перевод',
       selectStationarDir: '',
       directions_parent_select: [],
@@ -603,11 +602,11 @@ export default {
       departments: [],
       prev_department: '',
       change_department: false,
-    }
+    };
   },
   watch: {
     pk() {
-      this.pk = String(this.pk).replace(/\D/g, '')
+      this.pk = String(this.pk).replace(/\D/g, '');
     },
     navState() {
       if (this.inited) {
@@ -618,23 +617,23 @@ export default {
     },
   },
   async mounted() {
-    await this.$store.dispatch(action_types.INC_LOADING)
-    const {researches} = await researches_point.getResearchesByDepartment({department: -5})
-    this.stationar_researches = researches
-    await this.$store.dispatch(action_types.DEC_LOADING)
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { researches } = await researchesPoint.getResearchesByDepartment({ department: -5 });
+    this.stationar_researches = researches;
+    await this.$store.dispatch(actions.DEC_LOADING);
     this.$root.$on('hide_results', () => {
-      this.show_results_pk = -1
-    })
+      this.show_results_pk = -1;
+    });
     this.$root.$on('hide_ambulatory_data', () => {
-      this.ambulatory_data = false
-    })
+      this.ambulatory_data = false;
+    });
     const storedData = UrlData.get();
     if (storedData && typeof storedData === 'object') {
       if (storedData.pk) {
         await this.load_pk(storedData.pk, storedData.every || false);
       }
       if (storedData.opened_list_key) {
-        await this.load_directions(storedData.opened_list_key)
+        await this.load_directions(storedData.opened_list_key);
       }
       if (storedData.opened_form_pk && Array.isArray(this.list_directions)) {
         for (const dir of this.list_directions) {
@@ -645,14 +644,14 @@ export default {
         }
       }
     }
-    this.inited = true
+    this.inited = true;
     this.$root.$on('open-history', (d) => {
       this.load_pk(d, false);
     });
   },
   methods: {
     getDepartmentTitle(pk) {
-      return (this.departments.find(d => d.id === pk)).label || ''
+      return (this.departments.find((d) => d.id === pk)).label || '';
     },
     async changeDepartmentToggle() {
       if (!this.change_department) {
@@ -666,38 +665,43 @@ export default {
     async updateDepartment(node) {
       let needUpdate = false;
       try {
-        await this.$dialog.confirm(`Вы действительно хотите сменить отделение с "${this.prev_department}" на "${this.getDepartmentTitle(node.id)}"?`);
+        await this.$dialog.confirm(
+          `Вы действительно хотите сменить отделение с "${this.prev_department}" на "${this.getDepartmentTitle(node.id)}"?`,
+        );
         needUpdate = true;
       } catch (_) {
+        // pass
       }
 
       return this.saveUpdatedDepartment(needUpdate, node.id);
     },
     async saveUpdatedDepartment(needUpdate, department_id) {
-      await this.$store.dispatch(action_types.INC_LOADING)
-      const {newDepartment, ok, from: dep_from, to: dep_to} = await stationar_point.changeDepartment(
-        this, 'iss', {needUpdate, department_id: department_id || this.department_id}
+      await this.$store.dispatch(actions.INC_LOADING);
+      const {
+        newDepartment, ok, from: dep_from, to: dep_to,
+      } = await stationar_point.changeDepartment(
+        this, 'iss', { needUpdate, department_id: department_id || this.department_id },
       );
       this.department_id = newDepartment;
       if (!department_id) {
         this.change_department = false;
       } else if (ok) {
-        okmessage('Отделение успешно изменено', `${dep_from} → ${dep_to}`);
+        window.okmessage('Отделение успешно изменено', `${dep_from} → ${dep_to}`);
         this.change_department = false;
       } else if (needUpdate) {
-        errmessage('Не удалось сменить отделение!');
+        window.errmessage('Не удалось сменить отделение!');
       }
-      await this.$store.dispatch(action_types.DEC_LOADING)
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async cancel_direction(pk) {
-      await this.$store.dispatch(action_types.INC_LOADING)
-      await directions_point.cancelDirection({pk});
-      this.pk = pk
+      await this.$store.dispatch(actions.INC_LOADING);
+      await directionsPoint.cancelDirection({ pk });
+      this.pk = pk;
       await this.load();
-      await this.$store.dispatch(action_types.DEC_LOADING)
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     show_anesthesia() {
-      this.$store.dispatch(action_types.CHANGE_STATUS_MENU_ANESTHESIA)
+      this.$store.dispatch(actions.CHANGE_STATUS_MENU_ANESTHESIA);
     },
     is_diary(research) {
       const res_title = research.title.toLowerCase();
@@ -705,383 +709,395 @@ export default {
     },
     create_directions(iss) {
       this.create_directions_diagnosis = iss.diagnos;
-      this.create_directions_for = iss.pk
+      this.create_directions_for = iss.pk;
     },
     async confirm_service() {
-      await this.$store.dispatch(action_types.INC_LOADING)
-      const {pk} = await stationar_point.makeService({
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { pk } = await stationar_point.makeService({
         service: this.direction_service,
         main_direction: this.direction,
-      })
-      await this.load_directions(this.openPlusId)
+      });
+      await this.load_directions(this.openPlusId);
       if (pk) {
-        await this.open_form({pk, type: this.plusDirectionsMode[this.openPlusId] ? 'directions' : 'stationar'})
+        await this.open_form({ pk, type: this.plusDirectionsMode[this.openPlusId] ? 'directions' : 'stationar' });
       }
-      await this.closePlus()
-      this.counts = await stationar_point.counts(this, ['direction'])
-      await this.$store.dispatch(action_types.DEC_LOADING)
+      await this.closePlus();
+      this.counts = await stationar_point.counts(this, ['direction']);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     select_research(pk) {
-      this.direction_service = pk
+      this.direction_service = pk;
     },
     async open_form(d) {
-      const mode = d.type
+      const mode = d.type;
       if (mode === 'stationar') {
-        this.close_form()
-        this.opened_form_pk = d.pk
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {researches, patient} = await directions_point.getParaclinicForm({pk: d.pk, force: true})
-        this.researches_forms = researches
-        this.patient_form = patient
-        await this.$store.dispatch(action_types.DEC_LOADING)
+        this.close_form();
+        this.opened_form_pk = d.pk;
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { researches, patient } = await directionsPoint.getParaclinicForm({ pk: d.pk, force: true });
+        this.researches_forms = researches;
+        this.patient_form = patient;
+        await this.$store.dispatch(actions.DEC_LOADING);
       } else {
-        this.show_results_pk = d.pk
+        this.show_results_pk = d.pk;
       }
     },
     close_form() {
       this.hide_results();
-      this.opened_form_pk = null
-      this.researches_forms = null
-      this.patient_form = null
-      this.stationar_research = -1
+      this.opened_form_pk = null;
+      this.researches_forms = null;
+      this.patient_form = null;
+      this.stationar_research = -1;
     },
     async load_pk(pk, every = false) {
-      this.pk = String(pk)
-      await this.load(every)
+      this.pk = String(pk);
+      await this.load(every);
     },
     async close(force = false) {
       this.hide_results();
       if (!force) {
         try {
-          await this.$dialog.confirm(`Подтвердите отмену просмотра истории «${this.direction}»`)
+          await this.$dialog.confirm(`Подтвердите отмену просмотра истории «${this.direction}»`);
         } catch (_) {
-          return
+          return;
         }
       }
-      this.close_list_directions()
-      this.anamnesis_edit = false
+      this.close_list_directions();
+      this.anamnesis_edit = false;
       this.anamnesis_data = {
-        text: ''
-      }
-      this.direction = null
-      this.cancel = false
-      this.iss = null
-      this.parent_iss = null
-      this.issTitle = null
-      this.finId = null
-      this.counts = {}
-      this.patient = new Patient({})
-      this.openPlusId = null
-      this.openPlusMode = null
-      this.forbidden_edit = false
-      this.every = false
-      this.stationar_research = -1
-      this.create_directions_data = []
-      this.tree = []
+        text: '',
+      };
+      this.direction = null;
+      this.cancel = false;
+      this.iss = null;
+      this.parent_iss = null;
+      this.issTitle = null;
+      this.finId = null;
+      this.counts = {};
+      this.patient = new Patient({});
+      this.openPlusId = null;
+      this.openPlusMode = null;
+      this.forbidden_edit = false;
+      this.every = false;
+      this.stationar_research = -1;
+      this.create_directions_data = [];
+      this.tree = [];
     },
     async load(every = false) {
       this.hide_results();
       await this.close(true);
-      await this.$store.dispatch(action_types.INC_LOADING)
-      const {ok, data, message} = await stationar_point.load(this, ['pk'], {every})
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, data, message } = await stationar_point.load(this, ['pk'], { every });
       if (ok) {
-        this.pk = ''
-        this.every = every
-        this.direction = data.direction
-        this.cancel = data.cancel
-        this.iss = data.iss
-        this.parent_issledovaniye = data.parent_issledovaniye
-        this.child_issledovaniye = data.child_issledovaniye
-        this.child_direction = data.child_direction
-        this.child_research_title = data.child_research_title
-        this.issTitle = data.iss_title
-        this.finId = data.fin_pk
-        this.forbidden_edit = data.forbidden_edit
-        this.soft_forbidden = !!data.soft_forbidden
-        this.tree = data.tree
-        this.directions_parent_select = []
-        this.directions_child_select = []
-        this.department_id = data.department_id
-        this.departments = data.departments
+        this.pk = '';
+        this.every = every;
+        this.direction = data.direction;
+        this.cancel = data.cancel;
+        this.iss = data.iss;
+        this.parent_issledovaniye = data.parent_issledovaniye;
+        this.child_issledovaniye = data.child_issledovaniye;
+        this.child_direction = data.child_direction;
+        this.child_research_title = data.child_research_title;
+        this.issTitle = data.iss_title;
+        this.finId = data.fin_pk;
+        this.forbidden_edit = data.forbidden_edit;
+        this.soft_forbidden = !!data.soft_forbidden;
+        this.tree = data.tree;
+        this.directions_parent_select = [];
+        this.directions_child_select = [];
+        this.department_id = data.department_id;
+        this.departments = data.departments;
         for (const direction_obj of this.tree) {
           this.directions_parent_select.push({
-            'label': direction_obj.direction + '-' +
-              direction_obj.research_title + '(' + direction_obj.order + ')',
-            'id': direction_obj.issledovaniye
-          })
-          this.direcions_order[direction_obj.issledovaniye] = direction_obj.order
+            label: `${direction_obj.direction}-${
+              direction_obj.research_title}(${direction_obj.order})`,
+            id: direction_obj.issledovaniye,
+          });
+          this.direcions_order[direction_obj.issledovaniye] = direction_obj.order;
         }
-        this.directions_child_select = [...this.directions_parent_select]
-        this.directions_parent_select.push({'label': 'Назначить головным текущее', 'id': -1})
-        this.directions_child_select.push({'label': 'Очистить', 'id': -1})
+        this.directions_child_select = [...this.directions_parent_select];
+        this.directions_parent_select.push({ label: 'Назначить головным текущее', id: -1 });
+        this.directions_child_select.push({ label: 'Очистить', id: -1 });
 
-        this.patient = new Patient(data.patient)
-        this.counts = await stationar_point.counts(this, ['direction'], {every})
+        this.patient = new Patient(data.patient);
+        this.counts = await stationar_point.counts(this, ['direction'], { every });
         if (message && message.length > 0) {
-          wrnmessage(message)
+          window.wrnmessage(message);
         }
       } else {
-        errmessage(message)
+        window.errmessage(message);
       }
-      this.$root.$emit('current_history_direction', {'history_num': this.direction, 'patient': this.patient})
-      await this.$store.dispatch(action_types.DEC_LOADING)
+      this.$root.$emit('current_history_direction', { history_num: this.direction, patient: this.patient });
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     print_all_list() {
-      this.$root.$emit('print:results', this.list_directions.map(d => d.pk))
+      this.$root.$emit('print:results', this.list_directions.map((d) => d.pk));
     },
     close_list_directions() {
-      this.close_form()
-      this.list_directions = []
-      this.opened_list_key = null
+      this.close_form();
+      this.list_directions = [];
+      this.opened_list_key = null;
     },
     async load_directions(key, no_close = false) {
-      await this.$store.dispatch(action_types.INC_LOADING)
+      await this.$store.dispatch(actions.INC_LOADING);
       if (!no_close) {
-        this.close_list_directions()
+        this.close_list_directions();
       }
-      const {data} = await stationar_point.directionsByKey({
+      const { data } = await stationar_point.directionsByKey({
         direction: this.direction,
         r_type: key,
         every: this.every,
-      })
-      this.list_directions = data
-      this.opened_list_key = key
-      await this.$store.dispatch(action_types.DEC_LOADING)
+      });
+      this.list_directions = data;
+      this.opened_list_key = key;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async plus(key) {
-      const mode = this.plusDirectionsMode[key] ? 'directions' : 'stationar'
+      const mode = this.plusDirectionsMode[key] ? 'directions' : 'stationar';
       if (mode === 'stationar') {
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {data} = await stationar_point.hospServicesByType({
+        await this.$store.dispatch(actions.INC_LOADING);
+        const { data } = await stationar_point.hospServicesByType({
           direction: this.direction,
           r_type: key,
-        })
-        this.hosp_services = data
+        });
+        this.hosp_services = data;
         if (data.length === 1) {
-          this.direction_service = data[0].pk
+          this.direction_service = data[0].pk;
         }
-        await this.$store.dispatch(action_types.DEC_LOADING)
+        await this.$store.dispatch(actions.DEC_LOADING);
       }
-      this.openPlusMode = mode
-      this.openPlusId = key
+      this.openPlusMode = mode;
+      this.openPlusId = key;
     },
     async closePlus() {
-      this.create_directions_for = -1
-      this.openPlusMode = null
-      this.create_directions_diagnosis = ''
-      this.openPlusId = null
-      this.create_directions_data = []
-      this.hosp_services = []
-      this.direction_service = -1
+      this.create_directions_for = -1;
+      this.openPlusMode = null;
+      this.create_directions_diagnosis = '';
+      this.openPlusId = null;
+      this.create_directions_data = [];
+      this.hosp_services = [];
+      this.direction_service = -1;
 
       if (this.$refs.modalStationar && this.$refs.modalStationar.$el) {
-        this.$refs.modalStationar.$el.style.display = 'none'
+        this.$refs.modalStationar.$el.style.display = 'none';
       }
 
       if (this.$refs.modalStationar2 && this.$refs.modalStationar2.$el) {
-        this.$refs.modalStationar2.$el.style.display = 'none'
+        this.$refs.modalStationar2.$el.style.display = 'none';
       }
 
-      this.$store.dispatch(action_types.INC_LOADING)
-      this.counts = await stationar_point.counts(this, ['direction'])
-      this.$store.dispatch(action_types.DEC_LOADING)
-      this.reload_if_need(true)
+      this.$store.dispatch(actions.INC_LOADING);
+      this.counts = await stationar_point.counts(this, ['direction']);
+      this.$store.dispatch(actions.DEC_LOADING);
+      this.reload_if_need(true);
     },
     print_results(pk) {
-      this.$root.$emit('print:results', [pk])
+      this.$root.$emit('print:results', [pk]);
     },
     reload_if_need(no_close = false) {
       if (!this.opened_list_key) {
-        return
+        return;
       }
-      this.load_directions(this.opened_list_key, no_close)
+      this.load_directions(this.opened_list_key, no_close);
     },
     save(iss) {
       this.hide_results();
-      this.$store.dispatch(action_types.INC_LOADING)
-      directions_point.paraclinicResultSave({
+      this.$store.dispatch(actions.INC_LOADING);
+      directionsPoint.paraclinicResultSave({
         force: true,
         data: {
           ...iss,
           direction: {
-            pk: this.opened_form_pk
+            pk: this.opened_form_pk,
           },
           stationar_research: this.stationar_research,
         },
         with_confirm: false,
-        visibility_state: this.visibility_state(iss)
-      }).then(data => {
+        visibility_state: this.visibility_state(iss),
+      }).then((data) => {
         if (data.ok) {
-          okmessage('Сохранено')
-          iss.saved = true
-          iss.research.transfer_direction_iss = data.transfer_direction_iss
+          window.okmessage('Сохранено');
+          // eslint-disable-next-line no-param-reassign
+          iss.saved = true;
+          // eslint-disable-next-line no-param-reassign
+          iss.research.transfer_direction_iss = data.transfer_direction_iss;
           if (iss.procedure_list) {
             for (const pl of iss.procedure_list) {
               pl.isNew = false;
             }
           }
-          this.reload_if_need(true)
+          this.reload_if_need(true);
         } else {
-          errmessage(data.message)
+          window.errmessage(data.message);
         }
       }).finally(() => {
-        this.$store.dispatch(action_types.DEC_LOADING)
-      })
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
     },
     save_and_confirm(iss) {
       this.hide_results();
       if (this.direcions_order[this.parent_issledovaniye] > this.direcions_order[this.iss]) {
-        return errmessage("Порядок отделений меняется снизу вверх")
+        return window.errmessage('Порядок отделений меняется снизу вверх');
       }
       if (this.direcions_order[this.parent_issledovaniye] > this.direcions_order[this.child_issledovaniye]) {
-        return errmessage("Порядок отделений меняется снизу вверх")
+        return window.errmessage('Порядок отделений меняется снизу вверх');
       }
 
-      this.$store.dispatch(action_types.INC_LOADING)
+      this.$store.dispatch(actions.INC_LOADING);
       if (!this.newTransfer) {
-        this.stationar_research = -1
+        this.stationar_research = -1;
       }
-      directions_point.paraclinicResultSave({
+      return directionsPoint.paraclinicResultSave({
         force: true,
         data: {
           ...iss,
           direction: {
-            pk: this.opened_form_pk
+            pk: this.opened_form_pk,
           },
           stationar_research: this.stationar_research,
         },
         with_confirm: true,
         visibility_state: this.visibility_state(iss),
         parent_child_data: {
-          "parent_iss": this.parent_issledovaniye, "current_direction": this.direction, "current_iss": this.iss,
-          "child_iss": this.child_issledovaniye
-        }
-      }).then(data => {
+          parent_iss: this.parent_issledovaniye,
+          current_direction: this.direction,
+          current_iss: this.iss,
+          child_iss: this.child_issledovaniye,
+        },
+      }).then((data) => {
         if (data.ok) {
-          okmessage('Сохранено')
-          okmessage('Подтверждено')
-          iss.saved = true
-          iss.allow_reset_confirm = !data.forbidden_edit || this.can_reset_transfer
-          iss.confirmed = true
-          iss.research.transfer_direction = data.transfer_direction
-          iss.research.transfer_direction_iss = data.transfer_direction_iss
-          iss.forbidden_edit = data.forbidden_edit
-          this.forbidden_edit = data.forbidden_edit
-          this.soft_forbidden = data.soft_forbidden
-          this.stationar_research = -1
+          window.okmessage('Сохранено');
+          window.okmessage('Подтверждено');
+          // eslint-disable-next-line no-param-reassign
+          iss.saved = true;
+          // eslint-disable-next-line no-param-reassign
+          iss.allow_reset_confirm = !data.forbidden_edit || this.can_reset_transfer;
+          // eslint-disable-next-line no-param-reassign
+          iss.confirmed = true;
+          // eslint-disable-next-line no-param-reassign
+          iss.research.transfer_direction = data.transfer_direction;
+          // eslint-disable-next-line no-param-reassign
+          iss.research.transfer_direction_iss = data.transfer_direction_iss;
+          // eslint-disable-next-line no-param-reassign
+          iss.forbidden_edit = data.forbidden_edit;
+          this.forbidden_edit = data.forbidden_edit;
+          this.soft_forbidden = data.soft_forbidden;
+          this.stationar_research = -1;
           if (iss.procedure_list) {
             for (const pl of iss.procedure_list) {
               pl.isNew = false;
             }
           }
-          this.reload_if_need(true)
+          this.reload_if_need(true);
         } else {
-          errmessage(data.message)
+          window.errmessage(data.message);
         }
       }).finally(() => {
-          this.pk = this.direction
-          this.$store.dispatch(action_types.DEC_LOADING)
-        }
-      )
+        this.pk = this.direction;
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
     },
     async reset_confirm(iss) {
       this.hide_results();
       try {
-        await this.$dialog.confirm(`Подтвердите сброс подтверждения услуги «${iss.research.title}»`)
+        await this.$dialog.confirm(`Подтвердите сброс подтверждения услуги «${iss.research.title}»`);
       } catch (_) {
-        return
+        return;
       }
 
-      await this.$store.dispatch(action_types.INC_LOADING)
+      await this.$store.dispatch(actions.INC_LOADING);
 
-      const data = await directions_point.paraclinicResultConfirmReset({iss_pk: iss.pk})
+      const data = await directionsPoint.paraclinicResultConfirmReset({ iss_pk: iss.pk });
 
       if (data.ok) {
-        okmessage('Подтверждение сброшено')
-        iss.confirmed = false
-        this.reload_if_need(true)
+        window.okmessage('Подтверждение сброшено');
+        // eslint-disable-next-line no-param-reassign
+        iss.confirmed = false;
+        this.reload_if_need(true);
         if (data.is_transfer || data.is_extract) {
-          this.forbidden_edit = !!data.forbidden_edit
+          this.forbidden_edit = !!data.forbidden_edit;
         }
-        iss.forbidden_edit = data.forbidden_edit
+        // eslint-disable-next-line no-param-reassign
+        iss.forbidden_edit = data.forbidden_edit;
       } else {
-        errmessage(data.message)
+        window.errmessage(data.message);
       }
 
-      await this.$store.dispatch(action_types.DEC_LOADING)
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async copy_results(row, pk) {
-      await this.$store.dispatch(action_types.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
       this.hide_results();
-      const {data} = await directions_point.paraclinicDataByFields({pk});
+      const { data } = await directionsPoint.paraclinicDataByFields({ pk });
       this.replace_fields_values(row, data);
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async open_results(pk) {
       if (this.research_open_history) {
         this.hide_results();
-        return
+        return;
       }
-      await this.$store.dispatch(action_types.INC_LOADING);
-      this.research_history = (await directions_point.paraclinicResultPatientHistory({
+      await this.$store.dispatch(actions.INC_LOADING);
+      this.research_history = (await directionsPoint.paraclinicResultPatientHistory({
         pk,
-        isSameParent: true
+        isSameParent: true,
       })).data || [];
-      await this.$store.dispatch(action_types.DEC_LOADING);
-      this.research_open_history = pk
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.research_open_history = pk;
     },
     hide_results() {
       this.research_history = [];
-      this.research_open_history = null
+      this.research_open_history = null;
     },
-    r_is_transfer({research}) {
-      return research.can_transfer
+    r_is_transfer({ research }) {
+      return research.can_transfer;
     },
     r(research) {
-      return this.r_list(research).length === 0
+      return this.r_list(research).length === 0;
     },
     r_list(research) {
-      const l = []
+      const l = [];
       if (research.confirmed) {
-        return []
+        return [];
       }
 
       for (const g of research.research.groups) {
         if (!vGroup(g, research.research.groups, this.patient_form)) {
-          continue
+          continue;
         }
-        let n = 0
+        let n = 0;
         for (const f of g.fields) {
-          n++
-          if (f.required && f.field_type !== 3 && (f.value === '' || f.value === '- Не выбрано' || !f.value) &&
-            vField(g, research.research.groups, f.visibility, this.patient_form)) {
-            l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title))
+          n++;
+          if (f.required && f.field_type !== 3 && (f.value === '' || f.value === '- Не выбрано' || !f.value)
+            && vField(g, research.research.groups, f.visibility, this.patient_form)) {
+            l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));
           }
         }
       }
-      if (this.r_is_transfer(research) && this.stationar_research === -1 && this.typeTransfer === "Новый перевод") {
-        l.push('Отделение перевода')
+      if (this.r_is_transfer(research) && this.stationar_research === -1 && this.typeTransfer === 'Новый перевод') {
+        l.push('Отделение перевода');
       }
-      return l.slice(0, 2)
+      return l.slice(0, 2);
     },
     change_mkb() {
+      // TODO
     },
     template_fields_values(row, dataTemplate, title) {
       this.$dialog.alert(title, {
         view: 'replace-append-modal',
-      }).then(({data}) => {
+      }).then(({ data }) => {
         if (data === 'append') {
-          this.append_fields_values(row, dataTemplate)
+          this.append_fields_values(row, dataTemplate);
         } else {
-          this.replace_fields_values(row, dataTemplate)
+          this.replace_fields_values(row, dataTemplate);
         }
-      })
+      });
     },
     replace_fields_values(row, data) {
       for (const g of row.research.groups) {
         for (const f of g.fields) {
           if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type)) {
-            f.value = data[f.pk] || ''
+            f.value = data[f.pk] || '';
           }
         }
       }
@@ -1090,7 +1106,7 @@ export default {
       for (const g of row.research.groups) {
         for (const f of g.fields) {
           if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type) && data[f.pk]) {
-            this.append_value(f, data[f.pk])
+            this.append_value(f, data[f.pk]);
           }
         }
       }
@@ -1099,52 +1115,68 @@ export default {
       this.$dialog
         .confirm('Вы действительно хотите очистить результаты?')
         .then(() => {
-          okmessage('Очищено')
+          window.okmessage('Очищено');
           for (const g of row.research.groups) {
             for (const f of g.fields) {
               if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type)) {
-                this.clear_val(f)
+                this.clear_val(f);
               }
             }
           }
-        })
+        });
     },
     clear_val(field) {
-      field.value = ''
+      // eslint-disable-next-line no-param-reassign
+      field.value = '';
     },
     append_value(field, value) {
-      let add_val = value
+      let add_val = value;
       if (add_val !== ',' && add_val !== '.') {
-        if (field.value.length > 0 && field.value[field.value.length - 1] !== ' ' && field.value[field.value.length - 1] !== '\n') {
+        if (
+          field.value.length > 0
+          && field.value[field.value.length - 1] !== ' '
+          && field.value[field.value.length - 1] !== '\n'
+        ) {
           if (field.value[field.value.length - 1] === '.') {
-            add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
+            add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase());
           }
-          add_val = ' ' + add_val
-        } else if ((field.value.length === 0 || (field.value.length >= 2 && field.value[field.value.length - 2] === '.' && field.value[field.value.length - 1] === '\n')) && field.title === '') {
-          add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
+          add_val = ` ${add_val}`;
+        } else if (
+          (
+            field.value.length === 0
+            || (
+              field.value.length >= 2
+              && field.value[field.value.length - 2] === '.'
+              && field.value[field.value.length - 1] === '\n'
+            )
+          )
+          && field.title === ''
+        ) {
+          add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase());
         }
       }
-      field.value += add_val
+      // eslint-disable-next-line no-param-reassign
+      field.value += add_val;
     },
     load_template(row, pk) {
-      this.$store.dispatch(action_types.INC_LOADING)
-      researches_point.getTemplateData({pk: parseInt(pk)}).then(({data: {fields: data, title}}) => {
-        this.template_fields_values(row, data, title)
+      this.$store.dispatch(actions.INC_LOADING);
+      researchesPoint.getTemplateData({ pk: parseInt(pk, 10) }).then(({ data: { fields: data, title } }) => {
+        this.template_fields_values(row, data, title);
       }).finally(() => {
-        this.$store.dispatch(action_types.DEC_LOADING)
-      })
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
     },
     visibility_state(iss) {
-      const groups = {}
-      const fields = {}
-      const {groups: igroups} = iss.research
+      const groups = {};
+      const fields = {};
+      const { groups: igroups } = iss.research;
       for (const group of iss.research.groups) {
         if (!vGroup(group, igroups, this.patient_form)) {
-          groups[group.pk] = false
+          groups[group.pk] = false;
         } else {
-          groups[group.pk] = true
+          groups[group.pk] = true;
           for (const field of group.fields) {
-            fields[field.pk] = vField(group, igroups, field.visibility, this.patient_form)
+            fields[field.pk] = vField(group, igroups, field.visibility, this.patient_form);
           }
         }
       }
@@ -1152,54 +1184,54 @@ export default {
       return {
         groups,
         fields,
-      }
+      };
     },
     print_direction(pk) {
-      this.$root.$emit('print:directions', [pk])
+      this.$root.$emit('print:directions', [pk]);
     },
     print_hosp(pk) {
-      this.$root.$emit('print:hosp', [pk])
+      this.$root.$emit('print:hosp', [pk]);
     },
     async load_anamnesis() {
-      this.anamnesis_loading = true
-      this.anamnesis_data = await patients_point.loadAnamnesis(this.patient, 'card_pk')
-      this.anamnesis_loading = false
+      this.anamnesis_loading = true;
+      this.anamnesis_data = await patientsPoint.loadAnamnesis(this.patient, 'card_pk');
+      this.anamnesis_loading = false;
     },
     async edit_anamnesis() {
-      await this.$store.dispatch(action_types.INC_LOADING)
-      this.anamnesis_data = await patients_point.loadAnamnesis(this.patient, 'card_pk')
-      await this.$store.dispatch(action_types.DEC_LOADING)
-      this.anamnesis_edit = true
+      await this.$store.dispatch(actions.INC_LOADING);
+      this.anamnesis_data = await patientsPoint.loadAnamnesis(this.patient, 'card_pk');
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.anamnesis_edit = true;
     },
     async save_anamnesis() {
-      await this.$store.dispatch(action_types.INC_LOADING)
-      await patients_point.saveAnamnesis(this.patient, 'card_pk', {text: this.anamnesis_data.text})
-      await this.$store.dispatch(action_types.DEC_LOADING)
-      this.new_anamnesis = this.anamnesis_data.text
-      this.hide_modal_anamnesis_edit()
+      await this.$store.dispatch(actions.INC_LOADING);
+      await patientsPoint.saveAnamnesis(this.patient, 'card_pk', { text: this.anamnesis_data.text });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.new_anamnesis = this.anamnesis_data.text;
+      this.hide_modal_anamnesis_edit();
     },
     hide_modal_anamnesis_edit() {
       if (this.$refs.modalAnamnesisEdit) {
-        this.$refs.modalAnamnesisEdit.$el.style.display = 'none'
+        this.$refs.modalAnamnesisEdit.$el.style.display = 'none';
       }
-      this.anamnesis_edit = false
+      this.anamnesis_edit = false;
     },
     open_ambulatory_data() {
-      this.ambulatory_data = true
+      this.ambulatory_data = true;
     },
   },
   computed: {
     ...mapGetters({
       user_data: 'user_data',
-      researches: 'researches',
+      researches_obj: 'researches',
       bases: 'bases',
     }),
     newTransfer() {
-      return this.typeTransfer === "Новый перевод";
+      return this.typeTransfer === 'Новый перевод';
     },
     navState() {
       if (!this.direction) {
-        return null
+        return null;
       }
       return {
         pk: this.direction,
@@ -1211,57 +1243,57 @@ export default {
     stationar_researches_filtered() {
       return [{
         pk: -1,
-        title: 'Не выбрано'
-      }, ...(this.stationar_researches || []).filter(r => r.title !== this.issTitle && !r.hide)]
+        title: 'Не выбрано',
+      }, ...(this.stationar_researches || []).filter((r) => r.title !== this.issTitle && !r.hide)];
     },
     bases_obj() {
       return this.bases.reduce((a, b) => ({
         ...a,
         [b.pk]: b,
-      }), {})
+      }), {});
     },
     stat_btn() {
-      return this.$store.getters.modules.l2_stat_btn
+      return this.$store.getters.modules.l2_stat_btn;
     },
     pickerTypesOnly() {
       if (this.openPlusId === 'laboratory') {
-        return [2]
+        return [2];
       }
       if (this.openPlusId === 'paraclinical') {
-        return [3]
+        return [3];
       }
       if (this.openPlusId === 'morfology') {
-        return [10000]
+        return [10000];
       }
       if (this.openPlusId === 'consultation') {
-        return [4]
+        return [4];
       }
       if (this.openPlusId === null) {
-        return [2, 3, 4]
+        return [2, 3, 4];
       }
-      return []
+      return [];
     },
     fte() {
-      return this.$store.getters.modules.l2_fast_templates
+      return this.$store.getters.modules.l2_fast_templates;
     },
     can_reset_transfer() {
-      for (let g of (this.$store.getters.user_data.groups || [])) {
+      for (const g of (this.$store.getters.user_data.groups || [])) {
         if (g === 'Сброс подтверждения переводного эпикриза') {
-          return true
+          return true;
         }
       }
-      return false
+      return false;
     },
     can_add_tadp() {
-      for (let g of (this.$store.getters.user_data.groups || [])) {
+      for (const g of (this.$store.getters.user_data.groups || [])) {
         if (g === 't, ad, p') {
-          return !!this.soft_forbidden || !this.forbidden_edit
+          return !!this.soft_forbidden || !this.forbidden_edit;
         }
       }
-      return false
+      return false;
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped lang="scss">
@@ -1341,7 +1373,6 @@ export default {
 
     .title-block {
       position: relative;
-      margin-right: 0;
 
       .top-right {
         position: absolute;
@@ -1571,7 +1602,6 @@ export default {
     white-space: nowrap;
   }
 }
-
 
 .research-right {
   text-align: right;
