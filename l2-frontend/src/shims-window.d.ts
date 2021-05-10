@@ -4,6 +4,7 @@ declare global {
   interface Window {
     $: any
     Modernizr: any
+    eds: any
     selectTextEl: (arg: any) => void
     okblink: (arg: any) => void
     clearselection: () => void

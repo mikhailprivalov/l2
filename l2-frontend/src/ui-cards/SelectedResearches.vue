@@ -49,6 +49,7 @@
                               :has_not_filled="hasNotFilled(res.pk)"
                               :has_params="form_params[res.pk]"
                               :not_filled_fields="hasNotFilled(res.pk) ? r_list(form_params[res.pk]) : []"
+                              :readonly="readonly"
                               :nof="row.researches.length"/>
           </td>
           <td v-if="!readonly" class="cl-td clean-btn-td">
@@ -282,11 +283,13 @@
 </template>
 
 <script lang="ts">
+// @ts-ignore
 import vSelect from 'vue-select';
 import _ from 'lodash';
 import { vField, vGroup } from '@/components/visibility-triggers';
 import api from '@/api';
 import Treeselect from '@riophae/vue-treeselect';
+// @ts-ignore
 import TypeAhead from 'vue2-typeahead';
 import directionsPoint from '../api/directions-point';
 import * as actions from '../store/action-types';
@@ -890,7 +893,7 @@ export default {
       return this.l2_user_data.directions_params_org_form_default_pk;
     },
     show_additions() {
-      return this.researches.length > 0;
+      return this.researches.length > 0 && !this.simple;
     },
     current_fin() {
       return this.get_fin_obj(this.fin);

@@ -355,7 +355,7 @@
             <div class="group-title">Дополнительные услуги</div>
             <div class="row">
               <div class="col-xs-6"
-                   v-if="!row.confirmed"
+                   v-show="!row.confirmed"
                    style="height: 200px;border-right: 1px solid #eaeaea;padding-right: 0;">
                 <researches-picker v-model="row.more" :hidetemplates="true"
                                    :readonly="row.confirmed"
@@ -724,6 +724,7 @@
 
 <script lang="ts">
 import moment from 'moment';
+// @ts-ignore
 import dropdown from 'vue-my-dropdown';
 import { mapGetters } from 'vuex';
 import { vField, vGroup } from '@/components/visibility-triggers';
@@ -731,6 +732,7 @@ import { enter_field, leave_field } from '@/forms/utils';
 import api from '@/api';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import RmisLink from '@/ui-cards/RmisLink.vue';
+import EDSButton from '@/ui-cards/EDSButton.vue';
 import patientsPoint from '../api/patients-point';
 import * as actions from '../store/action-types';
 import directionsPoint from '../api/directions-point';
@@ -755,18 +757,32 @@ import BacMicroForm from '../forms/BacMicroForm.vue';
 import UrlData from '../UrlData';
 import MedicalCertificates from '../ui-cards/MedicalCertificates.vue';
 import FastTemplates from '../forms/FastTemplates.vue';
-import EDSButton from "@/ui-cards/EDSButton.vue";
 
 export default {
   name: 'results-paraclinic',
   components: {
     EDSButton,
-      FastTemplates,
-      BacMicroForm,
-      DescriptiveForm,
-      DateFieldNav, Modal, MKBField, ResearchesPicker, SelectedResearches,
-      dropdown, SelectPickerM, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-      LastResult, RecipeInput, IssStatus, MedicalCertificates, ResultsByYear, RmisLink,
+    FastTemplates,
+    BacMicroForm,
+    DescriptiveForm,
+    DateFieldNav,
+    Modal,
+    MKBField,
+    ResearchesPicker,
+    SelectedResearches,
+    dropdown,
+    SelectPickerM,
+    DReg,
+    ResearchPick,
+    Benefit,
+    DirectionsHistory,
+    ResultsViewer,
+    LastResult,
+    RecipeInput,
+    IssStatus,
+    MedicalCertificates,
+    ResultsByYear,
+    RmisLink,
   },
   data() {
     return {

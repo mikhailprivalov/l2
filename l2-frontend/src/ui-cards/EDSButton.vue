@@ -7,7 +7,8 @@
       <div
         class="eds-status"
         :class="s.ok && 'eds-status-ok'"
-        v-for="s in edsStatus.signatures"
+        v-for="(s, i) in edsStatus.signatures"
+        :key="i"
         :title="
         `Есть подписи: ${s.executors.join('; ') || 'пусто'}` +
         (s.needSignatures.length > 0 ? `; Нужны подписи: ${s.needSignatures.join('; ')}`: '')
@@ -36,14 +37,14 @@
   </fragment>
 </template>
 
-<script>
-import Modal from "@/ui-cards/Modal";
-import * as action_types from "@/store/action-types";
-import axios from "axios";
+<script lang="ts">
+import Modal from '@/ui-cards/Modal.vue';
+import * as actions from '@/store/action-types';
+import axios from 'axios';
 
 export const EDS_API = axios.create({
   baseURL: '/mainmenu/eds/eds',
-})
+});
 
 export default {
   name: 'EDSButton',
@@ -60,20 +61,20 @@ export default {
       edsStatus: {
         signatures: [],
       },
-    }
+    };
   },
   mounted() {
-    window.addEventListener("message", this.edsMessage, false);
+    window.addEventListener('message', this.edsMessage, false);
   },
   beforeDestroy() {
-    window.removeEventListener("message", this.edsMessage, false)
+    window.removeEventListener('message', this.edsMessage, false);
   },
   methods: {
     hide_modal() {
       this.modal_opened = false;
       this.edsMounted = false;
       if (this.$refs.modal) {
-        this.$refs.modal.$el.style.display = 'none'
+        this.$refs.modal.$el.style.display = 'none';
       }
       this.loadStatus();
     },
@@ -83,22 +84,21 @@ export default {
       }
     },
     async loadDocuments() {
-      await this.$store.dispatch(action_types.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
       const documents = [];
+      const url = `/results/pdf?pk=[${this.direction.pk}]&split=1&leftnone=0&inline=1&protocol_plain_text=1`;
       const config = {
-        method: 'get',
-        url: `/results/pdf?pk=[${this.direction.pk}]&split=1&leftnone=0&inline=1&protocol_plain_text=1`,
-        responseType: "arraybuffer"
+        method: 'GET',
       };
-      const pdfResult = await axios(config);
+      const pdfResult = await fetch(url, config).then(r => r.arrayBuffer());
       documents.push({
         type: 'PDF',
-        data: pdfResult.data,
-      })
+        data: pdfResult,
+      });
       window.frames.eds.passEvent('set-documents', this.directionData, documents, {
         token: this.eds_token,
       });
-      await this.$store.dispatch(action_types.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async loadStatus() {
       this.edsStatus = (await EDS_API.post('signature-status', {
@@ -112,7 +112,7 @@ export default {
   watch: {
     edsMounted() {
       if (this.edsMounted) {
-        setTimeout(() => this.loadDocuments(), 500)
+        setTimeout(() => this.loadDocuments(), 500);
       }
     },
     visible: {
@@ -121,7 +121,7 @@ export default {
         if (this.visible) {
           this.loadStatus();
         }
-      }
+      },
     },
   },
   computed: {
@@ -141,7 +141,7 @@ export default {
       return this.$store.getters.user_data.eds_token;
     },
   },
-}
+};
 </script>
 
 <style scoped lang="scss">
