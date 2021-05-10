@@ -75,9 +75,9 @@ Vue.config.errorHandler = function (msg) {
   window.errmessage('Vue Error', String(msg));
 };
 
-Vue.config.warnHandler = function (msg) {
-  window.wrnmessage('Vue Warning', msg);
-};
+// Vue.config.warnHandler = function (msg) {
+//   window.wrnmessage('Vue Warning', msg);
+// };
 
 function printForm(tpl: string, pks: number[]) {
   if (!pks || !Array.isArray(pks) || pks.length === 0) {
