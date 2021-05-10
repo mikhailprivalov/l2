@@ -2040,6 +2040,18 @@ def form_10(request_data):
             Paragraph('<font size=9 >Направление на осмотр (консультацию) врачом-онкологом при подозрении на онкологические заболевания.</font>', styleSign),
             Paragraph('<font size=9 >15</font>', styleSign),
         ],
+        [
+            Paragraph('<font size=9 >Oсмотр (консультацию) врачом-дерматовенерологом, включая проведение дерматоскопии (для граждан с подозрением'
+                      'на злокачественные новообразования кожи и (или) слизистых оболочек по назначению врача-терапевта по результатам осмотра на'
+                      'выявление визуальных и иных локализаций онкологических заболеваний, включающего осмотр кожных покровов, слизистых губ и ротовой '
+                      'полости, пальпацию щитовидной железы, лимфатических узлов);</font>', styleSign),
+            Paragraph('<font size=9 >16</font>', styleSign),
+        ],
+        [
+            Paragraph('<font size=9 >Проведение исследования уровня гликированного гемоглобина в крови (для граждан с подозрением на сахарный диабет'
+                      'по назначению врача-терапевта по результатам осмотров и исследований первого этапа диспансеризации);</font>', styleSign),
+            Paragraph('<font size=9 >17</font>', styleSign),
+        ],
     ]
 
     row_height = []
@@ -2520,18 +2532,17 @@ def form_10(request_data):
         'за организацию и проведение профилактического медицинского осмотра (диспансеризации) на участке<sup>2</sup>.', style,
     ))
 
-    objs.append(Spacer(1, 95 * mm))
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph(
+        '<font size=7 ><sup>1</sup> Международная статистическая классификация болезней и проблем, связанных со здоровьем, 10-го пересмотра (далее - МКБ - 10).</font>', style,))
 
     objs.append(Paragraph(
-        '<font size=9 ><sup>1</sup> Международная статистическая классификация болезней и проблем, связанных со здоровьем, 10-го пересмотра (далее - МКБ - 10).</font>', style,))
-
-    objs.append(Paragraph(
-        '<font size=9 ><sup>2</sup> Абзацы третий и четвертый пункта 12 порядка проведения профилактического медицинского осмотра и диспансеризации определенных групп</font>'
-        '<font size=9 >взрослого населения, утвержденного приказом Министерства здравоохранения Российской Федерации от 13 марта 2019 г. N 124н "Об утверждении порядка</font>'
-        '<font size=9 >проведения профилактического медицинского осмотра и диспансеризации определенных групп взрослого населения" (зарегистрирован Министерством</font>'
-        '<font size=9 >юстиции Российской Федерации 24 апреля 2019 г., регистрационный N 54495), с изменениями, внесенными приказом Министерства здравоохранения</font>'
-        '<font size=9 >Российской Федерации 2 сентября 2019 г. N 716н (зарегистрирован Министерством юстиции Российской Федерации 16 октября 2019 г., регистрационный </font>'
-        '<font size=9 >№ 56254).</font>', style,))
+        '<font size=7 ><sup>2</sup> Абзацы третий и четвертый пункта 12 порядка проведения профилактического медицинского осмотра и диспансеризации определенных групп</font>'
+        '<font size=7 >взрослого населения, утвержденного приказом Министерства здравоохранения Российской Федерации от 13 марта 2019 г. N 124н "Об утверждении порядка</font>'
+        '<font size=7 >проведения профилактического медицинского осмотра и диспансеризации определенных групп взрослого населения" (зарегистрирован Министерством</font>'
+        '<font size=7 >юстиции Российской Федерации 24 апреля 2019 г., регистрационный N 54495), с изменениями, внесенными приказом Министерства здравоохранения</font>'
+        '<font size=7 >Российской Федерации 2 сентября 2019 г. N 716н (зарегистрирован Министерством юстиции Российской Федерации 16 октября 2019 г., регистрационный </font>'
+        '<font size=7 >№ 56254).</font>', style,))
 
     def first_pages(canvas, document):
         canvas.saveState()
@@ -2777,6 +2788,219 @@ def form_11(request_data):
 
     objs.append(Paragraph('', style))
     objs.append(Paragraph('', style))
+
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+              
+                          
+def form_12(request_data):
+    """
+    Добровольное информированное согласие 
+    пациентана вакцинацию против новой
+    коронавирусной инфекции или отказ от неё
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = True
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4, leftMargin=13 * mm, rightMargin=4 * mm, topMargin=4 * mm, bottomMargin=4 * mm, allowSplitting=1, title="Форма {}".format("Согласие на прививку")
+    )
+    width, height = portrait(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 11
+    style.leading = 12
+    style.spaceAfter = 0 * mm
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+
+    styleFL = deepcopy(style)
+    styleFL.firstLineIndent = 0
+
+    styleSign = deepcopy(style)
+    styleSign.firstLineIndent = 0
+    styleSign.alignment = TA_LEFT
+    styleSign.leading = 13
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleBold.firstLineIndent = 0
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 9
+    styleCenter.leading = 10
+    styleCenter.spaceAfter = 0 * mm
+
+    styleRight = deepcopy(style)
+    styleRight.aligment = TA_RIGHT
+
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.firstLineIndent = 0
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 13
+    styleCenterBold.face = 'PTAstraSerifBold'
+
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    styleT = deepcopy(style)
+    styleT.firstLineIndent = 0
+
+    objs = []
+
+    objs.append(
+        Paragraph(
+            'Добровольное информированное согласие пациента <br/>'
+            'а вакцинацию против новой коронавирусной инфекции или отказ от неё<br/> ', styleCenterBold),
+    )
+
+    d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('Я, нижеподписавшийся(аяся) {}&nbsp; {} г. рождения'.format(person_data['fio'], date_individual_born), style))
+
+    styleLeft = deepcopy(style)
+    styleLeft.alignment = TA_LEFT
+    objs.append(Paragraph('Зарегистрированный(ая) по адресу: {}'.format(person_data['main_address']), style))
+    objs.append(Paragraph('Номер телефона для связи: ________________', style,))
+    objs.append(Paragraph('Настоящим подтверждаю, что проинформирован врачом:', style,))
+    objs.append(Paragraph('- о смысле и цели вакцинации;', style,))
+
+    objs.append(
+        Paragraph(
+            '- на момент вакцинации я не предъявляю никаких острых жалоб на состояние '
+            'здоровья (температура тела нормальная, отсутствуют жалобы на боль, озноб, сильную слабость, '
+            'нет иных выраженных жалоб, которые могут свидетельствовать об острых заболеваниях или обострении хронических);',
+            style,
+        )
+    )
+
+    objs.append(
+        Paragraph(
+            '- я понимаю, что вакцинация - это введение в организм человека '
+            'иммунобиологического лекарственного препарата для создания специфической '
+            'невосприимчивости к инфекционным заболеваниям;',
+            style,
+        )
+    )
+
+    objs.append(
+        Paragraph(
+            '- мне ясно, что после вакцинации возможны реакции на прививку, которые могут '
+            'быть местными (покраснения, уплотнения, боль, зуд в месте инъекции и другие) и общими '
+            '(повышение температуры, недомогание, озноб и другие); крайне редко могут наблюдаться '
+            'поствакцинальные осложнения (шок, аллергические реакции и другие), но вероятность '
+            'озникновения таких реакций значительно ниже, чем вероятность развития неблагоприятных '
+            'исходов заболевания, для предупреждения которого проводится вакцинация;',
+            style,
+        )
+    )
+
+    objs.append(Paragraph('- о всех имеющихся противопоказаниях к вакцинации;', style,))
+
+    objs.append(
+        Paragraph(
+            '- я поставил (поставила) в известность медицинского работника о ранее выполненных '
+            'вакцинациях, обо всех проблемах, связанных со здоровьем, в том числе о любых формах '
+            'аллергических проявлений, обо всех перенесенных мною и известных мне заболеваниях, '
+            'принимаемых лекарственных средствах, о наличии реакций или осложнений на предшествующие '
+            'введения вакцин у меня. Сообщила (для женщин) об отсутствии факта беременности '
+            'или кормления грудью.',
+            style,
+        )
+    )
+
+    objs.append(Paragraph('Я имел(а) возможность задавать любые вопросы и на все вопросы получил(а) исчерпывающие ответы.', style,))
+
+    objs.append(
+        Paragraph(
+            'Получив полную информацию о необходимости проведения профилактической прививки '
+            'против новой коронавирусной инфекции, возможных прививочных реакциях, последствиях отказа '
+            'от неё, подтверждаю, что мне понятен смысл всех терминов и:',
+            style,
+        )
+    )
+
+    objs.append(
+        Paragraph(
+            'добровольно соглашаюсь на проведение прививки  _________________________________________________',
+            style,
+        )
+    )
+
+    objs.append(
+        Paragraph(
+            'добровольно отказываюсь на проведение прививки  ________________________________________________',
+            style,
+        )
+    )
+
+    objs.append(Paragraph('Я, нижеподписавшийся(аяся) {}&nbsp; {} г. рождения'.format(person_data['fio'], date_individual_born), style))
+    
+    objs.append(
+        Paragraph(
+            'Медицинским работником _______________________________________________________________________',
+            style,
+        )
+    )
+
+    space_bottom = ' &nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('{}'.format(person_data['fio']), styleCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph('(подпись){0}(Ф.И.О. гражданина или законного представителя гражданина){1}'.format(22 * space_bottom, 30 * space_bottom), styleCenter))
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph('Дата {} г.'.format(date_now), styleSign))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('Я свидетельствую, что разъяснил все вопросы, связанные с проведением прививок и дал ответы на все вопросы.', style))
+    
+    objs.append(Paragraph('{}'.format(space_bottom), style))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph('(подпись){0}(Ф.И.О. врача){1}'.format(33 * space_bottom, 43 * space_bottom), styleCenter))
+
+    objs.append(Spacer(1, 5 * mm))
+
+    styleSign = deepcopy(style)
+    styleSign.firstLineIndent = 0
 
     def first_pages(canvas, document):
         canvas.saveState()
