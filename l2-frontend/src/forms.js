@@ -5,6 +5,7 @@ export default [
     isGroup: true,
     title: 'Согласия',
     forms: [
+      {url: '/forms/pdf?type=101.12&card_pk={card}', title: 'Согласие на прививку COVID-19'},
       {url: '/forms/pdf?type=101.11&card_pk={card}', title: 'Отказ от видов медицинских вмешательств'},
       {url: '/forms/pdf?type=101.09&card_pk={card}', title: 'Согласие на прерывание беремености'},
       {url: '/forms/pdf?type=101.06&card_pk={card}', title: 'Согласие COVID-19'},
