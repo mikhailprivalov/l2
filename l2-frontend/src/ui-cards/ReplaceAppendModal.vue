@@ -9,7 +9,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import DialogMixin from 'vuejs-dialog/dist/vuejs-dialog-mixin.min';
 
 export default {

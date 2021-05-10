@@ -9,7 +9,7 @@
   />
 </template>
 
-<script>
+<script lang="ts">
 import TypeAhead from 'vue2-typeahead';
 
 export default {

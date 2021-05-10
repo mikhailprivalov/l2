@@ -17,7 +17,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 
 export default {

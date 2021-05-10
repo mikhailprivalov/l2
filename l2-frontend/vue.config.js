@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const {WebpackManifestPlugin} = require('webpack-manifest-plugin');
+const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 
 const assetsPath = path.resolve(__dirname, '../assets/');
 
@@ -23,6 +23,14 @@ module.exports = {
     sourceMap: true,
   },
   chainWebpack: config => [
+    config.module.rule('vue')
+      .use('vue-loader')
+      .loader('vue-loader')
+      .tap(options => {
+        // eslint-disable-next-line no-param-reassign
+        options.compilerOptions.whitespace = 'preserve';
+        return options;
+      }),
     config.plugins.delete('html'),
     config.plugins.delete('preload'),
     config.plugins.delete('prefetch'),

@@ -78,7 +78,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { mapGetters } from 'vuex';
 import construct_point from '../api/construct-point';
 import * as actions from '../store/action-types';

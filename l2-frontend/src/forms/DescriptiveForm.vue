@@ -155,7 +155,8 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+// @ts-ignore
 import Longpress from 'vue-longpress';
 import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
@@ -169,23 +170,23 @@ export default {
     VisibilityGroupWrapper,
     VisibilityFieldWrapper,
     Longpress,
-    TextareaAutocomplete: () => import('../fields/TextareaAutocomplete'),
-    NumberRangeField: () => import('../fields/NumberRangeField'),
-    NumberField: () => import('../fields/NumberField'),
-    TableField: () => import('../fields/TableField'),
-    AggregateDesc: () => import('../fields/AggregateDesc'),
-    AggregateLaboratory: () => import('../fields/AggregateLaboratory'),
-    RichTextEditor: () => import('../fields/RichTextEditor'),
-    SearchFractionValueField: () => import('../fields/SearchFractionValueField'),
-    SearchFieldValueField: () => import('../fields/SearchFieldValueField'),
-    RadioField: () => import('../fields/RadioField'),
-    SelectField: () => import('../fields/SelectField'),
-    AnesthesiaProcess: () => import('../fields/AnesthesiaProcess'),
-    MKBFieldForm: () => import('../fields/MKBFieldForm'),
-    FormulaField: () => import('../fields/FormulaField'),
-    LaboratoryPreviousResults: () => import('../fields/LaboratoryPreviousResults'),
-    DiagnosticPreviousResults: () => import('../fields/DiagnosticPreviousResults'),
-    DocReferralPreviousResults: () => import('../fields/DocReferralPreviousResults'),
+    TextareaAutocomplete: () => import('../fields/TextareaAutocomplete.vue'),
+    NumberRangeField: () => import('../fields/NumberRangeField.vue'),
+    NumberField: () => import('../fields/NumberField.vue'),
+    TableField: () => import('../fields/TableField.vue'),
+    AggregateDesc: () => import('../fields/AggregateDesc.vue'),
+    AggregateLaboratory: () => import('../fields/AggregateLaboratory.vue'),
+    RichTextEditor: () => import('../fields/RichTextEditor.vue'),
+    SearchFractionValueField: () => import('../fields/SearchFractionValueField.vue'),
+    SearchFieldValueField: () => import('../fields/SearchFieldValueField.vue'),
+    RadioField: () => import('../fields/RadioField.vue'),
+    SelectField: () => import('../fields/SelectField.vue'),
+    AnesthesiaProcess: () => import('../fields/AnesthesiaProcess.vue'),
+    MKBFieldForm: () => import('../fields/MKBFieldForm.vue'),
+    FormulaField: () => import('../fields/FormulaField.vue'),
+    LaboratoryPreviousResults: () => import('../fields/LaboratoryPreviousResults.vue'),
+    DiagnosticPreviousResults: () => import('../fields/DiagnosticPreviousResults.vue'),
+    DocReferralPreviousResults: () => import('../fields/DocReferralPreviousResults.vue'),
   },
   props: {
     research: {

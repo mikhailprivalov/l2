@@ -172,7 +172,7 @@
 
 </template>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import * as actions from '../store/action-types';
 import directionsPoint from '../api/directions-point';

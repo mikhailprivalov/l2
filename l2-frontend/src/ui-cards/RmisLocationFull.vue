@@ -8,7 +8,7 @@
   </table>
 </template>
 
-<script>
+<script lang="ts">
 import { mapGetters } from 'vuex';
 import usersPoint from '../api/user-point';
 

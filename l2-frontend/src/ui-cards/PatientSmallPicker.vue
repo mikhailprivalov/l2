@@ -81,7 +81,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from './Modal.vue';
 import * as actions from '../store/action-types';
 import patientsPoint from '../api/patients-point';

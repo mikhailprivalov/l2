@@ -65,7 +65,7 @@
     </div>
   </div>
 </template>
-<script>
+<script lang="ts">
 import api from '@/api';
 import * as actions from '@/store/action-types';
 import DocCallModal from '@/pages/DocCallModal.vue';

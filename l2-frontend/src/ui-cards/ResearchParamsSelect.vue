@@ -31,7 +31,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Longpress from 'vue-longpress';
 
 export default {

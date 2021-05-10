@@ -46,7 +46,7 @@
 
 </template>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import flatten from 'lodash/flatten';
 import plansPoint from '../../api/plans-point';
@@ -102,7 +102,7 @@ export default {
     },
     hirurgsReversed() {
       return flatten(this.hirurgsWithEmpty.map((x) => x.children).filter(Boolean))
-        .reduce((a, b) => ({ ...a, [b.id]: b }), {});
+        .reduce((a: any, b: any) => ({ ...a, [b.id]: b }), {});
     },
     forms() {
       return planOperations.map((f) => ({

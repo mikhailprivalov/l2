@@ -24,7 +24,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { SEARCH_MODES, SEARCH_MODES_TITLES } from '@/pages/LaboratoryResults/constants';
 import * as actions from '@/store/action-types';
 import api from '@/api';

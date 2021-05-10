@@ -96,7 +96,7 @@
     </label>
   </div>
 </template>
-<script>
+<script lang="ts">
 import _ from 'lodash';
 import SelectField from '@/fields/SelectField.vue';
 import RadioField from '@/fields/RadioField.vue';

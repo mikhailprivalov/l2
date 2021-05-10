@@ -28,7 +28,7 @@
     <div class="unit">{{ r.fraction.units }}</div>
   </td>
 </template>
-<script>
+<script lang="ts">
 import * as actions from '@/store/action-types';
 import Typeahead from './Typeahead.vue';
 
@@ -104,7 +104,7 @@ function ready_formula(formula, resolve, dir_data) {
 }
 
 function exec_formula(dir_data, allDirPks, formulaString, resolve) {
-  const formula = {};
+  const formula: any = {};
   formula.body = formulaString;
   formula.necessary = formula.body.match(/{(\d{1,})}/g);
   formula.necessary_complex = formula.body.match(/{\d{1,}\|\d+}/g);

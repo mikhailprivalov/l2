@@ -2,7 +2,7 @@
   <div>Карта</div>
 </template>
 
-<script>
+<script lang="ts">
 export default {
   name: 'card',
 };

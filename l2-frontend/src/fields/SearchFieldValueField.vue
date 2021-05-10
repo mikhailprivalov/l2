@@ -22,7 +22,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import researchesPoint from '../api/researches-point';
 import directionsPoint from '../api/directions-point';
 

@@ -4,7 +4,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { vField } from './visibility-triggers';
 
 export default {

@@ -28,7 +28,7 @@
   </tr>
 </template>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import directionsPoint from '../api/directions-point';
 

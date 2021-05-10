@@ -21,7 +21,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 //! ТЕСТОВЫЙ КОМПОНЕНТ ДЛЯ ЭКСПЕРИМЕНТОВ С АВТОКОМПЛИТОМ
 
 import getCaretCoordinates from 'textarea-caret';

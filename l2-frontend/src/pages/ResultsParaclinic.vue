@@ -721,7 +721,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import dropdown from 'vue-my-dropdown';
 import { mapGetters } from 'vuex';

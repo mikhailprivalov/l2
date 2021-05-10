@@ -502,7 +502,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { mapGetters } from 'vuex';
 import dropdown from 'vue-my-dropdown';
 import * as actions from '@/store/action-types';
@@ -535,19 +535,19 @@ export default {
     IssStatus,
     PatientCard,
     AmbulatoryData,
-    DirectionsHistory: () => import('@/ui-cards/DirectionsHistory'),
-    AggregateTADP: () => import('@/fields/AggregateTADP'),
-    AggregateDesc: () => import('@/fields/AggregateDesc'),
-    AggregateLaboratory: () => import('@/fields/AggregateLaboratory'),
-    AggregatePharmacotherapy: () => import('@/fields/AggregatePharmacotherapy'),
-    ResultsViewer: () => import('@/modals/ResultsViewer'),
-    SelectPickerM: () => import('@/fields/SelectPickerM'),
-    ResearchPick: () => import('@/ui-cards/ResearchPick'),
-    SelectedResearches: () => import('@/ui-cards/SelectedResearches'),
-    LastResult: () => import('@/ui-cards/LastResult'),
-    ResearchesPicker: () => import('@/ui-cards/ResearchesPicker'),
-    Modal: () => import('@/ui-cards/Modal'),
-    PharmacotherapyInput: () => import('@/ui-cards/PharmacotherapyInput'),
+    DirectionsHistory: () => import('@/ui-cards/DirectionsHistory/index.vue'),
+    AggregateTADP: () => import('@/fields/AggregateTADP.vue'),
+    AggregateDesc: () => import('@/fields/AggregateDesc.vue'),
+    AggregateLaboratory: () => import('@/fields/AggregateLaboratory.vue'),
+    AggregatePharmacotherapy: () => import('@/fields/AggregatePharmacotherapy.vue'),
+    ResultsViewer: () => import('@/modals/ResultsViewer.vue'),
+    SelectPickerM: () => import('@/fields/SelectPickerM.vue'),
+    ResearchPick: () => import('@/ui-cards/ResearchPick.vue'),
+    SelectedResearches: () => import('@/ui-cards/SelectedResearches.vue'),
+    LastResult: () => import('@/ui-cards/LastResult.vue'),
+    ResearchesPicker: () => import('@/ui-cards/ResearchesPicker.vue'),
+    Modal: () => import('@/ui-cards/Modal.vue'),
+    PharmacotherapyInput: () => import('@/ui-cards/PharmacotherapyInput.vue'),
   },
   data() {
     return {

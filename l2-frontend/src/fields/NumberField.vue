@@ -2,7 +2,7 @@
   <input type="number" v-model="val" :readonly="disabled" min="-1000" max="1000" class="form-control" />
 </template>
 
-<script>
+<script lang="ts">
 export default {
   props: {
     value: {

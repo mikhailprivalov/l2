@@ -34,7 +34,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import menuMixin from './mixins/menu';
 import { forDirs } from '../../../forms';
 import DirectionsChangeParent from '../../../modals/DirectionsChangeParent.vue';

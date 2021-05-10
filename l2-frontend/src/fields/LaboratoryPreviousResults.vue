@@ -56,9 +56,10 @@
   </div>
 </template>
 
-<script>
-import api from '@/api';
+<script lang="ts">
 import { debounce } from 'lodash';
+import api from '@/api';
+import { Research } from '@/types/research';
 
 const makeDefaultRow = () => ({
   researchTitle: '', fractionTitle: '', value: '', units: '', date: '', docConfirm: '',
@@ -109,8 +110,9 @@ export default {
           isLab: true, isDocReferral: false, isParaclinic: false, dir: direction,
         });
       this.result = result_data.results[0] || {};
+      const researches: Research[] = Object.values(this.result.researches);
 
-      for (const r of Object.values(this.result.researches)) {
+      for (const r of researches) {
         for (const f of r.fractions) {
           this.tb_data.push({
             researchTitle: r.title,

@@ -91,7 +91,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Split from 'split-grid';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import PatientPicker from '@/ui-cards/PatientPicker.vue';
@@ -220,6 +220,7 @@ export default {
       if (
         this.selected_card.pk === -1
         || this.selected_researches.length <= 0
+        // @ts-ignore
         || (document.activeElement && document.activeElement.href && document.activeElement.href.startsWith('sip:'))
       ) {
         if (document.activeElement) {

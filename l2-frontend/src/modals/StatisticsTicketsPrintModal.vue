@@ -52,7 +52,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import DateSelector from '../fields/DateSelector.vue';
 import SelectPicker from '../fields/SelectPicker.vue';
 

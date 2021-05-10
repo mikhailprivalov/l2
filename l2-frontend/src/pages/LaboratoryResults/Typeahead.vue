@@ -12,7 +12,7 @@
   >
 </template>
 
-<script>
+<script lang="ts">
 import Vue from 'vue';
 import Bloodhound from 'typeahead.js';
 
@@ -112,6 +112,7 @@ export default {
         let prefetch = {
           cache: false,
           url: this.prefetch,
+          transform: null,
         };
         if (this.defaultSuggestion) {
           prefetch = { ...prefetch, transform: this.transformer };

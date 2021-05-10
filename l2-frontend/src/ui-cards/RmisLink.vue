@@ -3,7 +3,7 @@
   <a v-else href="#" @click.prevent="open_page">ЭЛН</a>
 </template>
 
-<script>
+<script lang="ts">
 import api from '@/api';
 import * as actions from '@/store/action-types';
 
@@ -35,7 +35,7 @@ export default {
           openWindow.close();
           setTimeout(() => {
             window.open(this.urlAddress, '_blank');
-            resolve();
+            resolve(0);
           }, 400);
         }, 400);
       });

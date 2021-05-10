@@ -121,7 +121,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import _ from 'lodash';
 import * as actions from '@/store/action-types';
 import api from '@/api';

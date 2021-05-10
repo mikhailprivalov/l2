@@ -83,7 +83,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import api from '@/api';
 import moment from 'moment';
 import ResultDetails from './ResultDetails.vue';

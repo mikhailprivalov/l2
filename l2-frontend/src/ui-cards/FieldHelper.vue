@@ -34,7 +34,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import _ from 'lodash';
 import { debounce } from 'lodash/function';
 import { LINK_FIELD, LINK_PATIENT, PrepareFormula } from '@/utils';
@@ -138,7 +138,7 @@ export default {
         return null;
       }
 
-      return PrepareFormula({}, this.value, {}, false, true);
+      return PrepareFormula([], this.value, {}, false, true);
     },
     fieldsAsObject() {
       if (this.mode !== 'formula') {
@@ -149,9 +149,9 @@ export default {
         this.groups
           .map((g) => g.fields.map((f) => ({ pk: f.pk, title: f.title, group: g.title }))),
       )
-        .filter((f) => f.pk && f.pk > -1)
+        .filter((f: {pk?: number}) => f.pk && f.pk > -1)
         .reduce(
-          (a, b) => ({ ...a, [b.pk]: `${b.group || 'группа без названия'} – ${b.title || 'поле без названия'}` }),
+          (a: any, b: any) => ({ ...a, [b.pk]: `${b.group || 'группа без названия'} – ${b.title || 'поле без названия'}` }),
           { age: 'возраст', sex: 'пол' },
         );
     },

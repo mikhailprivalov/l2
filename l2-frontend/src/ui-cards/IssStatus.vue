@@ -2,7 +2,7 @@
   <span :class="'status-' + status" class="status">{{text}}</span>
 </template>
 
-<script>
+<script lang="ts">
 const statuses = {
   true: {
     none: 'не сохр.',

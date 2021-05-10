@@ -503,7 +503,7 @@
   </modal>
 </template>
 
-<script>
+<script lang="ts">
 import TypeAhead from 'vue2-typeahead';
 import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';

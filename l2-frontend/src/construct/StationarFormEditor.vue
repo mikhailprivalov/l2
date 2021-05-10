@@ -25,7 +25,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import ParaclinicResearchEditor from './ParaclinicResearchEditor.vue';
 import * as actions from '../store/action-types';
 import construct_point from '../api/construct-point';

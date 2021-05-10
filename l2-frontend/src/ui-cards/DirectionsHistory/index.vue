@@ -152,9 +152,10 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import { mapGetters } from 'vuex';
+import { Research } from '@/types/research';
 import SelectPickerM from '../../fields/SelectPickerM.vue';
 import DateRange from '../DateRange.vue';
 import directionsPoint from '../../api/directions-point';
@@ -267,8 +268,8 @@ export default {
     async load_history_safe() {
       await this.load_history(true);
     },
-    update_so(researches) {
-      const s = Object.values(researches || {}).map((r) => ({
+    update_so(researches: {[key: string]: Research}) {
+      const s = Object.values(researches || {}).map((r: Research) => ({
         value: String(r.pk),
         label: truncate(r.full_title || r.title, 70, true),
       }));

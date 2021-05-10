@@ -2,7 +2,7 @@
   <radio-field v-model="val" :variants="DIRECTION_MODES" :bages="bages"/>
 </template>
 
-<script>
+<script lang="ts">
 import RadioField from '@/fields/RadioField.vue';
 import {
   DIRECTION_MODE_DIRECTION,

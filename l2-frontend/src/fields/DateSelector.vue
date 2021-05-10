@@ -20,7 +20,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import SelectPicker from './SelectPicker.vue';
 import DateField from './DateField.vue';
 

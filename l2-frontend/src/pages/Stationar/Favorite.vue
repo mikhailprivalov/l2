@@ -4,7 +4,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import directionsPoint from '../../api/directions-point';
 
 export default {

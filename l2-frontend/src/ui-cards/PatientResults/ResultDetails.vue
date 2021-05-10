@@ -44,7 +44,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import api from '@/api';
 import _ from 'lodash';
 

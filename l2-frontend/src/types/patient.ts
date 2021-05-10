@@ -4,14 +4,11 @@ type IndividualId = number;
 type BaseId = number;
 
 interface InputData {
-  // eslint-disable-next-line camelcase
-  fio_age: string | void;
-  card: CardNumber | void;
-  // eslint-disable-next-line camelcase
-  card_pk: CardId | void;
-  // eslint-disable-next-line camelcase
-  individual_pk: IndividualId | void;
-  base: BaseId | void;
+  fio_age?: string;
+  card?: CardNumber;
+  card_pk?: CardId;
+  individual_pk?: IndividualId;
+  base?: BaseId;
 }
 
 export default class Patient {

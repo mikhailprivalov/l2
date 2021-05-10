@@ -10,13 +10,13 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 
 export default {
   name: 'SelectedResearchesParams',
   components: {
-    DescriptiveForm: () => import('@/forms/DescriptiveForm'),
-    ResultsByYear: () => import('@/ui-cards/PatientResults/ResultsByYear'),
+    DescriptiveForm: () => import('@/forms/DescriptiveForm.vue'),
+    ResultsByYear: () => import('@/ui-cards/PatientResults/ResultsByYear.vue'),
   },
   props: {
     research: {

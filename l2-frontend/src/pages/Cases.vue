@@ -38,7 +38,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import SelectedPatient from '../components/SelectedPatient.vue';
 import CardSearch from '../components/CardSearch.vue';
 

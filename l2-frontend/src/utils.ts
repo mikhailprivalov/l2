@@ -163,7 +163,7 @@ export const CalculateVisibility = (
 interface Error {code?: number, message?: string}
 
 export const validateSnils = (
-  snilsOrig: string | number, returnErrors: boolean,
+  snilsOrig: string | number, returnErrors?: boolean,
 ) : boolean | {result: boolean, errors: Error} => {
   let result = false;
   let snils = snilsOrig;

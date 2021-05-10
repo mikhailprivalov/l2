@@ -224,7 +224,7 @@
   </modal>
 </template>
 
-<script>
+<script lang="ts">
 import api from '@/api';
 import moment from 'moment';
 import { cloneDeep } from 'lodash';

@@ -281,7 +281,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import vSelect from 'vue-select';
 import _ from 'lodash';
 import { vField, vGroup } from '@/components/visibility-triggers';

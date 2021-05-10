@@ -54,7 +54,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import api from '@/api';
 import PharmacotherapyTime from '@/fields/PharmacotherapyTime.vue';
 import * as actions from '@/store/action-types';

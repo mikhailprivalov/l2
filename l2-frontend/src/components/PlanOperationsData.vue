@@ -67,7 +67,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';
 import Modal from '../ui-cards/Modal.vue';

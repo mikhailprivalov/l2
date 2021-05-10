@@ -151,7 +151,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { debounce } from 'lodash/function';
 import CategoryPick from '@/ui-cards/CategoryPick.vue';
 import * as actions from '../store/action-types';

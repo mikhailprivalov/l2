@@ -2,7 +2,7 @@
   <input v-datepicker type="text" class="form-control no-context" v-model="val" maxlength="10"/>
 </template>
 
-<script>
+<script lang="ts">
 export default {
   name: 'date-field',
   props: {

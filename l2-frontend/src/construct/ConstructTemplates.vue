@@ -27,7 +27,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import SelectPickerM from '../fields/SelectPickerM.vue';
 import TemplateEditor from './TemplateEditor.vue';
 import * as actions from '../store/action-types';

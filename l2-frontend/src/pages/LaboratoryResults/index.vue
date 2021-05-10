@@ -13,7 +13,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import SearchToEnter from '@/pages/LaboratoryResults/SearchToEnter.vue';
 import ReadyToEnter from '@/pages/LaboratoryResults/ReadyToEnter.vue';
 import DirectionForm from '@/pages/LaboratoryResults/DirectionForm.vue';

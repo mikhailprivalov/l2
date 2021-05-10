@@ -17,7 +17,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import VueApexCharts from 'vue-apexcharts';
 
 import stationar_point from '../api/stationar-point';

@@ -82,7 +82,7 @@
   </modal>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from '../ui-cards/Modal.vue';
 import MKBField from '../fields/MKBField.vue';
 import researchesPoint from '../api/researches-point';

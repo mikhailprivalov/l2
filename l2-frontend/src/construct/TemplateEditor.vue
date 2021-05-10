@@ -28,7 +28,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import ResearchesPicker from '../ui-cards/ResearchesPicker.vue';
 import SelectedResearches from '../ui-cards/SelectedResearches.vue';
 import construct_point from '../api/construct-point';

@@ -218,7 +218,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import DateFieldNav from '../fields/DateFieldNav.vue';
 import DateRange from '../ui-cards/DateRange.vue';

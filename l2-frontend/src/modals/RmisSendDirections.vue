@@ -19,7 +19,7 @@
   </modal>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from '../ui-cards/Modal.vue';
 
 export default {

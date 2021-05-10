@@ -45,7 +45,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import _ from 'lodash';
 
@@ -132,7 +132,7 @@ export default {
             });
           }
         }).always(() => {
-          r();
+          r(0);
         });
       });
 

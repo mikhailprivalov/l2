@@ -70,7 +70,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import DateRange from './DateRange.vue';
 // import ReportChartViewer from './ReportChartViewer'

@@ -35,7 +35,7 @@
     </tbody>
   </table>
 </template>
-<script>
+<script lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import DateRange from '../../../ui-cards/DateRange.vue';

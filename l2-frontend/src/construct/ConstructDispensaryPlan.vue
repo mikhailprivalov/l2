@@ -7,7 +7,7 @@
 
 </template>
 
-<script>
+<script lang="ts">
 
 import ConfigureDispenseryResearch from '@/fields/ConfigureDispenseryResearch.vue';
 import MKBFieldForm from '../fields/MKBFieldForm.vue';

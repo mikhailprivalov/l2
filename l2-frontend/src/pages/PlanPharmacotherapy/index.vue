@@ -5,7 +5,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import api from '@/api';
 import Filters from './components/Filters.vue';

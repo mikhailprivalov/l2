@@ -14,7 +14,7 @@
   </td>
 </template>
 
-<script>
+<script lang="ts">
 
 const GROUPS = [
   'O (I)',

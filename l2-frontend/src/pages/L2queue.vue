@@ -5,7 +5,7 @@
 
 </template>
 
-<script>
+<script lang="ts">
 export default {
   name: 'L2queue',
   data() {

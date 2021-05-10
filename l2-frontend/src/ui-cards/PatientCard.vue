@@ -5,7 +5,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Patient from './Patient.vue';
 import Card from './Card.vue';
 

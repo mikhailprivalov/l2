@@ -340,7 +340,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Vue from 'vue';
 import Vue2Filters from 'vue2-filters';
 

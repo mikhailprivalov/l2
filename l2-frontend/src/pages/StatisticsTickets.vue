@@ -22,7 +22,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Split from 'split.js';
 import PatientPicker from '../ui-cards/PatientPicker.vue';
 import StatisticsTicketCreator from '../ui-cards/StatisticsTicketCreator.vue';

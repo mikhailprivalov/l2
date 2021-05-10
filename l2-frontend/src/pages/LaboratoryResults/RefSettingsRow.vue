@@ -24,7 +24,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import _ from 'lodash';
 
 import Ref from '@/pages/LaboratoryResults/Ref.vue';
@@ -42,8 +42,7 @@ export default {
       if (!r.ref) {
         r.ref = {};
       }
-      for (let pk of Object.keys(r.fraction.references.available)) {
-        pk = Number(pk);
+      for (const pk of Object.keys(r.fraction.references.available).map(p => Number(p))) {
         if (pk === this.selectedReference) {
           r.ref = _.cloneDeep(r.fraction.references.available[pk]);
           return;

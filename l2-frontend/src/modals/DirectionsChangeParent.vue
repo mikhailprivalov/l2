@@ -57,7 +57,7 @@
   </modal>
 </template>
 
-<script>
+<script lang="ts">
 import vSelect from 'vue-select';
 import Modal from '../ui-cards/Modal.vue';
 import * as actions from '../store/action-types';

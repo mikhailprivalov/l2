@@ -152,7 +152,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import vSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
 import { createPopper } from '@popperjs/core';

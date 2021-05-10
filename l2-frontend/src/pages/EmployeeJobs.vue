@@ -71,7 +71,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import usersPoint from '../api/user-point';
 import * as actions from '../store/action-types';

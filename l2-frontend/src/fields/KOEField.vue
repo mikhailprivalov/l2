@@ -37,7 +37,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 const valueToParts = (value) => {
   const [num, second] = value.split(' × ');
   const [, power] = (second || '').split('^');

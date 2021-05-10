@@ -206,7 +206,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap';
 import {
   HardBreak,

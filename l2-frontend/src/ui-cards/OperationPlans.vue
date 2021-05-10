@@ -69,13 +69,13 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import plansPoint from '../api/plans-point';
 import LinkPlanOperations from '../pages/Stationar/LinkPlanOperations.vue';
 
 export default {
   name: 'OperationPlans',
-  components: { LinkPlanOperations, PlanOperationEdit: () => import('@/modals/PlanOperationEdit') },
+  components: { LinkPlanOperations, PlanOperationEdit: () => import('@/modals/PlanOperationEdit.vue') },
   data() {
     return {
       data: [],

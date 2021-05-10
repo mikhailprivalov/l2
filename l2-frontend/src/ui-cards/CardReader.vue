@@ -8,7 +8,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import usersPoint from '../api/user-point';
 import * as actions from '../store/action-types';
 import patientsPoint from '../api/patients-point';

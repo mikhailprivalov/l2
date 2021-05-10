@@ -109,7 +109,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import stationar_point from '../api/stationar-point';
 
 const delimiter = '#@#';

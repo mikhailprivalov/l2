@@ -69,7 +69,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
