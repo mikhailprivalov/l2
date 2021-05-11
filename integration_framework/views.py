@@ -824,3 +824,7 @@ def external_research_create(request):
         message = 'Серверная ошибка'
 
     return Response({"ok": False, 'message': message})
+
+
+def result_eds(request):
+    pass
