@@ -82,6 +82,9 @@
       async print(by_doc) {
         await this.$store.dispatch(action_types.INC_LOADING)
         const {results} = await directions_point.getDirectionsTypeDate(this, ['is_lab', 'is_paraclinic', 'is_doc_refferal', 'date'], {by_doc});
+        if (!results || results.length === 0) {
+          window.errmessage('Результатов не найдено');
+        }
         this.$root.$emit('print:results', results)
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
