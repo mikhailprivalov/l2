@@ -1,3 +1,4 @@
+import logging
 import threading
 import time
 import re
@@ -39,6 +40,9 @@ from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from .sql_func import users_by_group
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
+
+
+logger = logging.getLogger("API")
 
 
 def translit(locallangstring):
@@ -300,9 +304,12 @@ def endpoint(request):
                                             if len(find) > 0:
                                                 val_str = fraction_result.value
                                                 for f in find:
-                                                    val = float(f) * fraction_rel.get_multiplier_display()
-                                                    val = app.auto_set_places(fraction_rel, val)
-                                                    val_str = val_str.replace(f, str(val))
+                                                    try:
+                                                        val = float(f) * fraction_rel.get_multiplier_display()
+                                                        val = app.auto_set_places(fraction_rel, val)
+                                                        val_str = val_str.replace(f, str(val))
+                                                    except Exception as e:
+                                                        logger.exception(e)
                                                 fraction_result.value = val_str
 
                                             fraction_result.iteration = 1
@@ -1396,11 +1403,17 @@ def actual_districts(request):
 
 def hospitals(request):
     data = json.loads(request.body)
-    any_hospital = request.user.doctorprofile.all_hospitals_users_control
+    if request.user.is_authenticated and request.user.doctorprofile:
+        any_hospital = request.user.doctorprofile.all_hospitals_users_control
+    else:
+        any_hospital = False
     filters = {}
-    if data.get('filterByUserHospital') and not any_hospital:
-        filters['pk'] = request.user.doctorprofile.get_hospital_id()
-    rows = Hospitals.objects.filter(hide=False, **filters).order_by('-is_default', 'short_title').values('pk', 'short_title', 'title', 'code_tfoms')
+    if request.user.is_authenticated and request.user.doctorprofile:
+        if data.get('filterByUserHospital') and not any_hospital:
+            filters['pk'] = request.user.doctorprofile.get_hospital_id()
+        rows = Hospitals.objects.filter(hide=False, **filters).order_by('-is_default', 'short_title').values('pk', 'short_title', 'title', 'code_tfoms')
+    else:
+        rows = []
     default_hospital = []
     if any_hospital:
         default_hospital = [
