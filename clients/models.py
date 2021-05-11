@@ -6,6 +6,7 @@ import logging
 
 import simplejson
 from dateutil.relativedelta import relativedelta
+from django.core.exceptions import MultipleObjectsReturned
 from django.core.management.base import OutputWrapper
 from django.db import models, transaction
 from django.db.models import Q
@@ -80,37 +81,50 @@ class Individual(models.Model):
             if force_print:
                 logger.exception("Есть РМИС запись: %s" % rmis_uid)
 
+        founded_by_uid = {}
+
         if not ok:
             docs = Document.objects.filter(individual=self).exclude(document_type__check_priority=0).order_by("-document_type__check_priority")
             for document in docs:
                 s = c.patients.search_by_document(document)
-                if len(s) > 0:
-                    rmis_uid = s[0]
-                    ok = True
-                    if out:
-                        out.write("Физ.лицо найдено по документу: %s -> %s" % (document, rmis_uid))
-                        if force_print:
-                            logger.exception("Физ.лицо найдено по документу: %s -> %s" % (document, rmis_uid))
+                for x in s:
+                    data = c.patients.get_data(rmis_uid, forced_data=forced_data, return_none_on_empty=True)
+                    if data:
+                        founded_by_uid[x] = data
+                        rmis_uid = x
+                        ok = True
+                        if out:
+                            out.write("Физ.лицо найдено по документу: %s -> %s" % (document, rmis_uid))
+                            if force_print:
+                                logger.exception("Физ.лицо найдено по документу: %s -> %s" % (document, rmis_uid))
+                        break
+                if ok:
                     break
 
         if ok:
-            data = c.patients.get_data(rmis_uid, forced_data=forced_data)
-            upd = self.family != data["family"] or self.name != data["name"] or self.patronymic != data["patronymic"] or (self.birthday != data["birthday"] and data["birthday"] is not None)
+            data = founded_by_uid.get('rmis_uid') or c.patients.get_data(rmis_uid, forced_data=forced_data, return_none_on_empty=True)
+            if data:
+                upd = (
+                    self.family != data["family"]
+                    or self.name != data["name"]
+                    or self.patronymic != data["patronymic"]
+                    or (self.birthday != data["birthday"] and data["birthday"] is not None)
+                )
 
-            if upd:
-                prev = str(self)
-                self.family = data["family"]
-                self.name = data["name"]
-                self.patronymic = data["patronymic"]
-                if data["birthday"] is not None:
-                    self.birthday = data["birthday"]
-                self.sex = data["sex"]
-                self.save()
-                if out:
-                    out.write("Обновление данных: %s" % self.fio(full=True))
-                if force_print:
-                    logger.exception("Обновление данных: %s" % self.fio(full=True))
-                slog.Log(key=str(self.pk), type=2003, body=simplejson.dumps({"Новые данные": str(self), "Не актуальные данные": prev}), user=None).save()
+                if upd:
+                    prev = str(self)
+                    self.family = data["family"]
+                    self.name = data["name"]
+                    self.patronymic = data["patronymic"]
+                    if data["birthday"] is not None:
+                        self.birthday = data["birthday"]
+                    self.sex = data["sex"]
+                    self.save()
+                    if out:
+                        out.write("Обновление данных: %s" % self.fio(full=True))
+                    if force_print:
+                        logger.exception("Обновление данных: %s" % self.fio(full=True))
+                    slog.Log(key=str(self.pk), type=2003, body=simplejson.dumps({"Новые данные": str(self), "Не актуальные данные": prev}), user=None).save()
 
         if not ok:
             query = {"surname": self.family, "name": self.name, "patrName": self.patronymic, "birthDate": self.birthday.strftime("%Y-%m-%d")}
@@ -894,8 +908,12 @@ class Card(models.Model):
         if not t:
             return
         t = t[:20]
-        p, created = Phones.objects.get_or_create(card=self, number=t)
-        p.normalize_number()
+        try:
+            p, created = Phones.objects.get_or_create(card=self, number=t)
+            p.normalize_number()
+        except MultipleObjectsReturned:
+            for p in Phones.objects.filter(card=self, number=t):
+                p.normalize_number()
 
     def get_card_documents(self):
         types = [t.pk for t in DocumentType.objects.all()]
@@ -1028,12 +1046,12 @@ class Card(models.Model):
             return c
 
         with transaction.atomic():
-            cb = CardBase.objects.select_for_update().filter(internal_type=True).first()
+            cb = list(CardBase.objects.filter(internal_type=True).select_for_update())
             if (not card_orig and not individual) or not cb:
                 return
             c = Card(
                 number=Card.next_l2_n(),
-                base=cb,
+                base=cb[0],
                 individual=individual if individual else card_orig.individual,
                 polis=polis or (None if not card_orig else card_orig.polis),
                 main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
