@@ -1,5 +1,5 @@
-import api from '@/api';
-import departments_directory from '@/api/departments-directory';
+import api from '../../api';
+import departments_directory from '../../api/departments-directory';
 import * as mutation_types from '../mutation-types';
 import * as actionsTypes from '../action-types';
 

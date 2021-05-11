@@ -846,3 +846,7 @@ def directions(request):
         },
     })
     return render(request, 'dashboard/directions_ng.html', {"prefetched": prefetched})
+
+
+def ui(request, path):
+    return render(request, 'vuebase.html')

@@ -11,7 +11,7 @@ export const HTTP = axios.create({
 
 export const smartCall = async ({
   method = 'post', url, urlFmt = null, onReject = {}, ctx = null, moreData = {}, pickKeys,
-}) => {
+}: any): Promise<any> => {
   let data;
   if (ctx) {
     data = pickKeys ? merge(pick(ctx, Array.isArray(pickKeys) ? pickKeys : [pickKeys]), moreData) : ctx;
@@ -44,7 +44,7 @@ export const smartCall = async ({
 
 export const creator = ({
   method = 'post', url = null, urlFmt = null, onReject = {},
-}, resultOnCatch = null) => (ctx = null, pickKeys = null, moreData = {}) => smartCall({
+}: any, resultOnCatch: any = null): any => (ctx = null, pickKeys = null, moreData = {}) => smartCall({
   method,
   url,
   urlFmt,
@@ -54,7 +54,7 @@ export const creator = ({
   pickKeys,
 });
 
-export const generator = (points) => {
+export const generator = (points: any): any => {
   const apiPoints = {};
 
   for (const k of Object.keys(points)) {

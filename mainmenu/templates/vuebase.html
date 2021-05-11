@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">{% spaceless %}
+    {% load static setting manifest %}
+    {% s_get "org_title" as org_title %}{% endspaceless %}
+    <link rel="apple-touch-icon" sizes="57x57" href="{% static 'icon/apple-icon-57x57.png' %}">
+    <link rel="apple-touch-icon" sizes="60x60" href="{% static 'icon/apple-icon-60x60.png' %}">
+    <link rel="apple-touch-icon" sizes="72x72" href="{% static 'icon/apple-icon-72x72.png' %}">
+    <link rel="apple-touch-icon" sizes="76x76" href="{% static 'icon/apple-icon-76x76.png' %}">
+    <link rel="apple-touch-icon" sizes="114x114" href="{% static 'icon/apple-icon-114x114.png' %}">
+    <link rel="apple-touch-icon" sizes="120x120" href="{% static 'icon/apple-icon-120x120.png' %}">
+    <link rel="apple-touch-icon" sizes="144x144" href="{% static 'icon/apple-icon-144x144.png' %}">
+    <link rel="apple-touch-icon" sizes="152x152" href="{% static 'icon/apple-icon-152x152.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'icon/apple-icon-180x180.png' %}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'icon/android-icon-192x192.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'icon/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="96x96" href="{% static 'icon/favicon-96x96.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'icon/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'icon/manifest.json' %}">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="{% static 'icon/ms-icon-144x144.png' %}">
+    <meta name="theme-color" content="#ffffff">
+    <title>
+        {{ title|default:"Нет названия" }}
+        &mdash; {% firstof request.user.doctorprofile.hospital_safe_title org_title %}
+    </title>
+
+    <link rel="preload" href="{% manifest 'chunk-vendors.css' %}" as="style"/>
+    <link rel="preload" href="{% manifest 'router.css' %}" as="style"/>
+
+    <link rel="stylesheet" href="{% manifest 'chunk-vendors.css' %}"/>
+    <link rel="stylesheet" href="{% manifest 'router.css' %}"/>
+    {% if container_full %}
+        <style>
+            body, html {
+                height: 100%;
+            }
+
+            body {
+                padding-bottom: 0 !important;
+            }
+
+            .container-fluid {
+                height: 100%;
+                width: 100%;
+            }
+
+            .navbar {
+                margin-bottom: 3px;
+            }
+        </style>
+    {% endif %}
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+    function Prefetch(params) {
+        params = params || {};
+        this.routes = {};
+        this.logging = params.logging || false;
+        this.dummy = params.dummy || false;
+    }
+
+    Prefetch.prototype.log = function (method, ...msg) {
+        if (this.logging) {
+            console.log(`Prefetch.${method}:`, ...msg);
+        }
+    };
+
+    Prefetch.prototype.getParamsKey = function (params) {
+        let key = '';
+
+        if (typeof params === 'string') {
+            key = params;
+        } else if (typeof params === 'object' && params !== null) {
+            const keys = Object.keys(params);
+            keys.sort();
+
+            key = keys.map(k => `${k}_$_${params[k]}`).join('_#_');
+        }
+
+        this.log('getParamsKey', {params, key});
+
+        return key;
+    };
+
+    Prefetch.prototype.addRouteCache = function (route, params, data) {
+        if (this.dummy) {
+            return;
+        }
+        if (!this.routes[route]) {
+            this.routes[route] = {};
+        }
+        if (typeof data === 'string') {
+            try {
+                data = JSON.parse(data);
+            } catch (e) {
+                this.log('addRouteCache', 'JSON parse error');
+                console.error(e);
+                return;
+            }
+        }
+        this.routes[route][this.getParamsKey(params)] = data;
+        this.log('addRouteCache', {currentState: this.routes, args: {route, params, data}});
+    };
+
+    Prefetch.prototype.addBatchRoutes = function (data) {
+        this.log('addBatchRoutes', {data});
+        const prevLogging = this.logging;
+        this.logging = false;
+        for (const row of data) {
+            this.addRouteCache(row.url, row.params, row.data)
+        }
+        this.logging = prevLogging;
+    };
+
+    Prefetch.prototype.popRouteCache = function (route, params) {
+        this.log('popRouteCache', {route, params});
+        const key = this.getParamsKey(params);
+
+        if (!this.routes[route]) {
+            this.log('popRouteCache', 'no route in cache');
+            return null;
+        }
+        const result = this.routes[route][key] || null;
+        if (key) {
+            delete this.routes[route][key];
+        }
+        this.log('popRouteCache', result ? 'HIT' : 'MISS', key, 'Result:', result);
+        return result;
+    };
+
+    window.prefetch = new Prefetch({logging: {% if debug %}true{% else %}false{% endif %});
+</script>
+{% if prefetched %}
+    {% include 'prefetch.html' with prefetched=prefetched %}
+{% endif %}
+<script src="{% static 'js/jquery.slim.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% manifest 'chunk-common.js' %}"></script>
+<script src="{% manifest 'chunk-vendors.js' %}"></script>
+<script src="{% manifest 'router.js' %}"></script>
+</body>
+</html>
