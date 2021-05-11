@@ -19,6 +19,9 @@ def get_confirm_direction(list_dirs):
 
 
 def get_not_confirm_direction(list_dirs):
+    if not list_dirs:
+        return []
+
     with connection.cursor() as cursor:
         cursor.execute(
             """

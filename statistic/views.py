@@ -922,6 +922,8 @@ def statistic_xls(request):
                     else:
                         iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False, time_confirmation__range=(date_start, date_end))
 
+                    iss_list = iss_list.filter(napravleniye__isnull=False)
+
                     for researches in iss_list:
                         n = False
                         for x in d.Result.objects.filter(issledovaniye=researches):
@@ -931,7 +933,10 @@ def statistic_xls(request):
                                 break
                         if n:
                             continue
-                        otd_pk = "external-" + str(researches.napravleniye.imported_org_id) if not researches.napravleniye.doc else researches.napravleniye.doc.podrazdeleniye_id
+                        if researches.napravleniye:
+                            otd_pk = "external-" + str(researches.napravleniye.imported_org_id) if not researches.napravleniye.doc else researches.napravleniye.doc.podrazdeleniye_id
+                        else:
+                            otd_pk = "empty"
                         if otd_pk not in otds:
                             otds[otd_pk] = defaultdict(lambda: 0)
                         otds[otd_pk][obj.pk] += 1

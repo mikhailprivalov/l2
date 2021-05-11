@@ -562,6 +562,7 @@ def result_print(request):
 
     count_pages = 0
     has_page_break = False
+    has_own_form_result = False
 
     for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
         dpk = direction.pk
@@ -1266,6 +1267,7 @@ def result_print(request):
         client_prev = direction.client.individual_id
 
     num_card = hosp_nums
+
     if not hosp:
         num_card = pk[0]
     if len(pk) == 1 and has_own_form_result:

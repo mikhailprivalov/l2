@@ -552,8 +552,10 @@ class Patients(BaseRequester):
                 break
         return patients
 
-    def get_data(self, uid, forced_data=None):
+    def get_data(self, uid, forced_data=None, return_none_on_empty=False):
         from_rmis = forced_data or self.client.getIndividual(uid)
+        if (not from_rmis or not from_rmis['surname'] or not from_rmis["name"]) and return_none_on_empty:
+            return None
         return dict(
             family=(from_rmis["surname"] or "").title().strip(),
             name=(from_rmis["name"] or "").title().strip(),
