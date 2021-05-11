@@ -19,5 +19,4 @@ urlpatterns = [
     path('doc-call-update-status', views.external_doc_call_update_status),
     path('doc-call-send', views.external_doc_call_send),
     path('send-result', views.external_research_create),
-    path('result/eds', views.result_eds),
 ]

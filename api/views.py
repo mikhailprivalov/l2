@@ -1450,7 +1450,8 @@ def hospitals(request):
 def rmis_link(request):
     d = request.user.doctorprofile
     d_pass = urllib.parse.quote(d.rmis_password or '')
-    auth_param = URL_RMIS_AUTH.replace('userlogin', d.rmis_login).replace('userpassword', d_pass)
+    d_login = d.rmis_login or ''
+    auth_param = URL_RMIS_AUTH.replace('userlogin', d_login).replace('userpassword', d_pass)
     url_schedule = URL_SCHEDULE.replace('organization_param', d.hospital.rmis_org_id).replace('service_param', d.rmis_service_id_time_table).replace('employee_param', d.rmis_employee_id)
     return JsonResponse({'auth_param': auth_param, 'url_eln': URL_ELN_MADE,
                          'url_schedule': url_schedule})
