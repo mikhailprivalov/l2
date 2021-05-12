@@ -116,6 +116,7 @@ export default {
         token: this.eds_token,
         requiredSignatures: this.requiredSignatures,
         requiredEDSDocTypes: this.requiredEDSDocTypes,
+        allowedSign: this.eds_allowed_sign,
       });
       await this.$store.dispatch(actions.DEC_LOADING);
     },
@@ -126,7 +127,7 @@ export default {
         withoutRender: true,
       }).then(r => r.data);
 
-      this.requiredSignatures = requiredResult.signsRequired || ['Лечащий врач'];
+      this.requiredSignatures = requiredResult.signsRequired || ['Врач'];
       this.requiredEDSDocTypes = requiredResult.needCda ? ['PDF', 'CDA'] : ['PDF'];
 
       this.edsStatus = (await EDS_API.post('signature-status', {
@@ -167,6 +168,9 @@ export default {
     },
     eds_token() {
       return this.$store.getters.user_data.eds_token;
+    },
+    eds_allowed_sign() {
+      return this.$store.getters.user_data.eds_allowed_sign;
     },
   },
 };
