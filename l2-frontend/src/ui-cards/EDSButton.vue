@@ -1,6 +1,6 @@
 <template>
-  <fragment v-if="visible">
-    <button class="btn btn-blue-nb nbr" @click="modal_opened = true">
+  <div v-frag>
+    <button class="btn btn-blue-nb nbr" @click="modal_opened = true" v-if="visible">
       ЭЦП
     </button>
     <template v-if="edsStatus.ok">
@@ -34,7 +34,7 @@
         </div>
       </div>
     </modal>
-  </fragment>
+  </div>
 </template>
 
 <script lang="ts">
@@ -61,6 +61,8 @@ export default {
       edsStatus: {
         signatures: [],
       },
+      requiredSignatures: [],
+      requiredEDSDocTypes: [],
     };
   },
   mounted() {
@@ -85,27 +87,53 @@ export default {
     },
     async loadDocuments() {
       await this.$store.dispatch(actions.INC_LOADING);
+      await this.loadStatus();
       const documents = [];
-      const url = `/results/pdf?pk=[${this.direction.pk}]&split=1&leftnone=0&inline=1&protocol_plain_text=1`;
+      const urlPdf = `/results/pdf?pk=[${this.direction.pk}]&split=1&leftnone=0&inline=1&protocol_plain_text=1`;
       const config = {
         method: 'GET',
       };
-      const pdfResult = await fetch(url, config).then(r => r.arrayBuffer());
+      const pdfResult = await fetch(urlPdf, config).then(r => r.arrayBuffer());
+      const cdaResult = await EDS_API.post('cda', {
+        token: this.eds_token,
+        pk: this.directionData.direction.pk,
+      }).then(r => r.data);
       documents.push({
         type: 'PDF',
         data: pdfResult,
       });
-      window.frames.eds.passEvent('set-documents', this.directionData, documents, {
+      if (cdaResult.ok) {
+        if (cdaResult.needCda && cdaResult.cda) {
+          documents.push({
+            type: 'CDA',
+            data: cdaResult.cda,
+          });
+        }
+      } else {
+        window.errmessage('CDA XML не получен');
+      }
+      window.frames.eds.passEvent('set-data', this.directionData, documents, {
         token: this.eds_token,
+        requiredSignatures: this.requiredSignatures,
+        requiredEDSDocTypes: this.requiredEDSDocTypes,
       });
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async loadStatus() {
+      const requiredResult = await EDS_API.post('cda', {
+        token: this.eds_token,
+        pk: this.directionData.direction.pk,
+        withoutRender: true,
+      }).then(r => r.data);
+
+      this.requiredSignatures = requiredResult.signsRequired || ['Лечащий врач'];
+      this.requiredEDSDocTypes = requiredResult.needCda ? ['PDF', 'CDA'] : ['PDF'];
+
       this.edsStatus = (await EDS_API.post('signature-status', {
         token: this.eds_token,
         pk: this.directionData.direction.pk,
-        requiredSignatures: this.directionData.direction.requiredSignatures,
-        requiredEDSDocTypes: this.directionData.direction.requiredEDSDocTypes,
+        requiredSignatures: requiredResult.signsRequired,
+        requiredEDSDocTypes: this.requiredEDSDocTypes,
       })).data;
     },
   },

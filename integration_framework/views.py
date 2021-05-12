@@ -858,7 +858,7 @@ def eds_get_cda_data(request):
 
     body = json.loads(request.body)
 
-    pk = body.get("oldId")
+    pk = body.get("pk")
 
     n = Napravleniya.objects.get(pk=pk)
     i: directions.Issledovaniya = n.issledovaniya_set.all()[0]

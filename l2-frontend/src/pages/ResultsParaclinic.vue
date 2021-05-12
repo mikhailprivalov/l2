@@ -585,7 +585,7 @@
                 Отправить в АМД
               </button>
             </template>
-            <EDSButton :direction-data="data"/>
+            <EDSButton :key="data.direction.pk" :direction-data="data"/>
             <div class="status-list" v-if="!r(row) && !row.confirmed">
               <div class="status status-none">Не заполнено:</div>
               <div class="status status-none" v-for="rl in r_list(row)" :key="rl">{{rl}};</div>

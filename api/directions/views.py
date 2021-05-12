@@ -1038,8 +1038,6 @@ def directions_paraclinic_form(request):
                 "tube": None,
                 "amd": d.amd_status,
                 "amd_number": d.amd_number,
-                "requiredSignatures": ['Лечащий врач', 'Подписывающий 1'],
-                "requiredEDSDocTypes": ['PDF', 'CDA'],
             }
 
             response["researches"] = []
