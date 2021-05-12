@@ -60,7 +60,7 @@ def get_researches(request):
         cache.set(k, json.dumps(restricted_to_direct), 30)
     else:
         restricted_to_direct = json.loads(restricted_to_direct)
-    mk = f'get_researches:result:{get_md5(";".join(restricted_to_direct))}'
+    mk = f'get_researches:result:{get_md5(";".join([str(x) for x in restricted_to_direct]))}'
     result = cache.get(mk)
     if not result:
         res = (
