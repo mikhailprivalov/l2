@@ -506,7 +506,12 @@ class Individual(models.Model):
         return is_new, updated
 
     @staticmethod
-    def import_from_tfoms(data: dict, individual: ['Individual', None] = None, no_update=False):
+    def import_from_tfoms(data: Union[dict, List], individual: ['Individual', None] = None, no_update=False):
+        if isinstance(data, list):
+            if len(data) > 0:
+                data = data[0]
+            else:
+                data = {}
         idp = data.get('idp')
         updated_data = []
 
