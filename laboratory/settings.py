@@ -325,6 +325,7 @@ DB_PASSWORD = get_env_value('DB_PASSWORD')
 DB_NAME = get_env_value('DB_NAME')
 DB_HOST = get_env_value('DB_HOST')
 DB_PORT = get_env_value('DB_PORT')
+ENV_SECRET_KEY = get_env_value('SECRET_KEY')
 
 if DB_USER:
     DATABASES['default']['USER'] = DB_USER
@@ -340,6 +341,9 @@ if DB_HOST:
 
 if DB_PORT:
     DATABASES['default']['PORT'] = DB_PORT
+
+if ENV_SECRET_KEY:
+    SECRET_KEY = ENV_SECRET_KEY
 
 # db = DATABASES.get('default', {})
 # db['OPTIONS'] = db.get('OPTIONS', {})
