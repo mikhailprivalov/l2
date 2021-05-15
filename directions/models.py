@@ -679,6 +679,8 @@ class Napravleniya(models.Model):
         childrens = {}
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         lab_podrazdeleniye_pk = list(Podrazdeleniya.objects.values_list('pk', flat=True).filter(p_type=2))
+        if not current_global_direction_params.get("title", False):
+            current_global_direction_params = None
 
         i = 0
         result = {"r": False, "list_id": [], "list_stationar_id": []}
@@ -761,8 +763,6 @@ class Napravleniya(models.Model):
                         dir_group = dir_group_onlylab
 
                     research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
-                    if not current_global_direction_params.get("show", None):
-                        current_global_direction_params = None
 
                     if research_data_params:
                         dir_group = -1
