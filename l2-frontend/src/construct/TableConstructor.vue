@@ -24,7 +24,7 @@
       <tr v-for="(r, j) in rows">
         <td class="cl-td">
           <button class="btn btn-blue-nb nbr" @click="deleteRow(j)" title="Удалить строку" v-tippy>
-            <i class="fa fa-times"></i>
+            <i class="fas fa-times"></i>
           </button>
         </td>
         <td v-for="(_, i) in columns.titles" class="cl-td">
@@ -185,7 +185,9 @@ export default {
 
       params.columns = params.columns || this.columns;
       params.rows = params.rows || this.rows;
-      params.dynamicRows = Boolean(params.dynamicRows || this.dynamicRows);
+      params.dynamicRows = Boolean(
+        Object.keys(params).includes('dynamicRows') ? params.dynamicRows : this.dynamicRows
+      );
 
       if (!_.isObject(params.columns)) {
         params.columns = {};
@@ -213,6 +215,7 @@ export default {
 
       this.columns = params.columns;
       this.rows = params.rows;
+      this.dynamicRows = params.dynamicRows;
 
       this.validate();
     },
