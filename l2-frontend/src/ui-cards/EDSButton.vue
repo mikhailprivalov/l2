@@ -93,15 +93,22 @@ export default {
       const config = {
         method: 'GET',
       };
-      const pdfResult = await fetch(urlPdf, config).then(r => r.arrayBuffer());
       const cdaResult = await EDS_API.post('cda', {
         token: this.eds_token,
         pk: this.directionData.direction.pk,
       }).then(r => r.data);
-      documents.push({
-        type: 'PDF',
-        data: pdfResult,
-      });
+      if (!cdaResult.ok || !cdaResult.savedPDF) {
+        const pdfResult = await fetch(urlPdf, config).then(r => r.arrayBuffer());
+        documents.push({
+          type: 'PDF',
+          data: pdfResult,
+        });
+      } else {
+        documents.push({
+          type: 'PDF',
+          data: Uint8Array.from(atob(cdaResult.savedPDF), c => c.charCodeAt(0)),
+        });
+      }
       if (cdaResult.ok) {
         if (cdaResult.needCda && cdaResult.cda) {
           documents.push({
