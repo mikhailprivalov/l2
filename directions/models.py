@@ -763,7 +763,6 @@ class Napravleniya(models.Model):
                         dir_group = dir_group_onlylab
 
                     research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
-
                     if research_data_params:
                         dir_group = -1
 
