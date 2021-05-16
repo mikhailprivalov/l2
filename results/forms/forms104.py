@@ -276,7 +276,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
 
 def form_03(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
-    # Рапорт на ВМП
+    # Рапорт ВМП
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
