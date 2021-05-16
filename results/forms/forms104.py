@@ -55,10 +55,6 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(Paragraph(f'{open_bold_tag}Дата:{close_tag_bold} {(strdate(iss.medical_examination))}', style_ml))
     fwb.append(Paragraph(f'{open_bold_tag}ФИО пациента:{close_tag_bold} {direction.client.individual.fio()}', style_ml))
     sex = direction.client.individual.sex
-    if sex == "м":
-        sex = f'{sex}-1'
-    else:
-        sex = f'{sex}-2'
     space_symbol = '&nbsp;'
     fwb.append(Paragraph(f'{open_bold_tag}Дата рождения:{close_tag_bold} {direction.client.individual.bd()}, {space_symbol * 5} {open_bold_tag}Пол:{close_tag_bold} {sex}', style_ml))
     polis_num = ''
@@ -131,10 +127,6 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Spacer(1, 4 * mm))
     fwb.append(Paragraph(f'{open_bold_tag}ФИО пациента:{close_tag_bold} {direction.client.individual.fio()}', style_ml))
     sex = direction.client.individual.sex
-    if sex == "м":
-        sex = f'{sex}-1'
-    else:
-        sex = f'{sex}-2'
     space_symbol = '&nbsp;'
     fwb.append(Paragraph(f'{open_bold_tag}Дата рождения:{close_tag_bold} {direction.client.individual.bd()} {open_bold_tag} - Пол:{close_tag_bold} {sex}, {space_symbol * 5}', style_ml))
     polis_num = ''
@@ -266,10 +258,6 @@ def form_03(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Spacer(1, 2 * mm))
     fwb.append(Paragraph(f'{open_bold_tag}ФИО пациента:{close_tag_bold} {direction.client.individual.fio()}', style_ml))
     sex = direction.client.individual.sex
-    if sex == "м":
-        sex = f'{sex}-1'
-    else:
-        sex = f'{sex}-2'
     space_symbol = '&nbsp;'
     fwb.append(Paragraph(f'{open_bold_tag}Дата рождения:{close_tag_bold} {direction.client.individual.bd()} {open_bold_tag} - Пол:{close_tag_bold} {sex}, {space_symbol * 5}', style_ml))
     polis_num = ''
