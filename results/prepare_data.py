@@ -923,7 +923,9 @@ def fields_result_only_title_fields(iss, title_fields):
     return result
 
 
-def fields_result(iss, fwb, title_field_result=[]):
+def fields_result(iss, fwb, title_field_result=None):
+    if title_field_result is None:
+        title_field_result = []
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"

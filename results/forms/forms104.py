@@ -6,9 +6,8 @@ from reportlab.lib import colors
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
-import directory.models as directory
-from directions.models import ParaclinicResult, Napravleniya
-from results.prepare_data import text_to_bold, fields_result_only_title_fields, fields_result
+from directions.models import Napravleniya
+from results.prepare_data import fields_result_only_title_fields, fields_result
 from directions.models import Issledovaniya
 from laboratory.settings import FONTS_FOLDER
 import os.path
