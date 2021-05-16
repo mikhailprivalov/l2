@@ -890,3 +890,33 @@ def table_part_result(value):
     )
 
     return tbl
+
+
+def fields_result(iss, title_fields):
+    result = []
+    title = ''
+    if not title_fields:
+        return result
+    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
+        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
+        if results.exists():
+            for r in results:
+                if r.field.title not in title_fields:
+                    continue
+                field_type = r.get_field_type()
+                v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
+                v = v.replace('&lt;sub&gt;', '<sub>')
+                v = v.replace('&lt;/sub&gt;', '</sub>')
+                v = v.replace('&lt;sup&gt;', '<sup>')
+                v = v.replace('&lt;/sup&gt;', '</sup>')
+                v = text_to_bold(v)
+                if field_type == 1:
+                    vv = v.split('-')
+                    if len(vv) == 3:
+                        v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+                if field_type in [11, 13]:
+                    v = v.replace("&lt;br/&gt;", " ")
+                if r.field.get_title(force_type=field_type) != "":
+                    title = r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')
+                result.append({"title": title, "value": v})
+    return result
