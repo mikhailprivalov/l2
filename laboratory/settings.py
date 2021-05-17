@@ -4,6 +4,8 @@ import sys
 import warnings
 from collections import OrderedDict
 
+from django.core.exceptions import ImproperlyConfigured
+
 PROFILING = False
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -310,6 +312,36 @@ MANIFEST_LOADER = {
     'manifest_file': os.path.join(BASE_DIR, 'assets/webpack_bundles/manifest.json'),
     'ignore_missing_assets': DEBUG,
 }
+
+
+def get_env_value(env_variable):
+    return os.environ.get(env_variable)
+
+
+DB_USER = get_env_value('DB_USER')
+DB_PASSWORD = get_env_value('DB_PASSWORD')
+DB_NAME = get_env_value('DB_NAME')
+DB_HOST = get_env_value('DB_HOST')
+DB_PORT = get_env_value('DB_PORT')
+ENV_SECRET_KEY = get_env_value('SECRET_KEY')
+
+if DB_USER:
+    DATABASES['default']['USER'] = DB_USER
+
+if DB_PASSWORD:
+    DATABASES['default']['PASSWORD'] = DB_PASSWORD
+
+if DB_NAME:
+    DATABASES['default']['NAME'] = DB_NAME
+
+if DB_HOST:
+    DATABASES['default']['HOST'] = DB_HOST
+
+if DB_PORT:
+    DATABASES['default']['PORT'] = DB_PORT
+
+if ENV_SECRET_KEY:
+    SECRET_KEY = ENV_SECRET_KEY
 
 # db = DATABASES.get('default', {})
 # db['OPTIONS'] = db.get('OPTIONS', {})

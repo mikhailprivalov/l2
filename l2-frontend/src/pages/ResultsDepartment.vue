@@ -84,10 +84,12 @@ export default {
       const { results } = await directionsPoint.getDirectionsTypeDate(
         this, ['is_lab', 'is_paraclinic', 'is_doc_refferal', 'date'], { by_doc },
       );
+      if (!results || results.length === 0) {
+        window.errmessage('Результатов не найдено');
+      }
       this.$root.$emit('print:results', results);
       await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
 };
-
 </script>
