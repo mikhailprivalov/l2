@@ -1609,7 +1609,6 @@ def directions_paraclinic_result(request):
         iss.save()
         more = request_data.get("more", [])
         h = []
-        confirmed_at = None
         for m in more:
             if not Issledovaniya.objects.filter(parent=iss, doc_save=request.user.doctorprofile, research_id=m):
                 i = Issledovaniya.objects.create(parent=iss, research_id=m)
