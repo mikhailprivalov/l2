@@ -585,7 +585,7 @@
                 Отправить в АМД
               </button>
             </template>
-            <EDSButton :key="data.direction.pk" :direction-data="data"/>
+            <EDSButton :key="`${data.direction.pk}_${row.confirmed}`" :iss-data="row" :direction-data="data"/>
             <div class="status-list" v-if="!r(row) && !row.confirmed">
               <div class="status status-none">Не заполнено:</div>
               <div class="status status-none" v-for="rl in r_list(row)" :key="rl">{{rl}};</div>
@@ -830,6 +830,7 @@ export default {
       inited: false,
       medical_certificatesicates_rows: [],
       sidebarIsOpened: false,
+      hasEDSigns: false,
     };
   },
   watch: {
@@ -892,6 +893,10 @@ export default {
 
     this.$root.$on('hide_results', () => {
       this.show_results_pk = -1;
+    });
+
+    this.$root.$on('EDS:has-signs', has => {
+      this.hasEDSigns = has;
     });
 
     const storedData = UrlData.get();
@@ -1066,6 +1071,7 @@ export default {
           this.pk = '';
           this.data = data;
           this.sidebarIsOpened = false;
+          this.hasEDSigns = false;
           setTimeout(
             () => this.$root.$emit(
               'preselect-args', { card_pk: data.patient.card_pk, base_pk: data.patient.base },
@@ -1168,6 +1174,9 @@ export default {
           this.data.direction.amd = data.amd;
           this.data.direction.amd_number = data.amd_number;
           this.data.direction.all_confirmed = this.data.researches.every((r) => Boolean(r.confirmed));
+          for (const r of this.data.researches) {
+            r.confirmed_at = data.confirmed_at;
+          }
           this.reload_if_need();
           this.changed = false;
         } else {
@@ -1193,6 +1202,9 @@ export default {
           this.data.direction.amd = data.amd;
           this.data.direction.amd_number = data.amd_number;
           this.data.direction.all_confirmed = this.data.researches.every((r) => Boolean(r.confirmed));
+          for (const r of this.data.researches) {
+            r.confirmed_at = data.confirmed_at;
+          }
           this.reload_if_need();
           this.changed = false;
         } else {
@@ -1208,7 +1220,8 @@ export default {
       this.hide_results();
 
       try {
-        await this.$dialog.confirm(`Подтвердите сброс подтверждения услуги «${iss.research.title}»`);
+        const moreMessage = this.hasEDSigns ? 'ИМЕЮТСЯ ЭЛЕКТРОННЫЕ ПОДПИСИ! ' : '';
+        await this.$dialog.confirm(`${moreMessage}Подтвердите сброс подтверждения услуги «${iss.research.title}»`);
       } catch (_) {
         return;
       }
@@ -1222,6 +1235,12 @@ export default {
         iss.confirmed = false;
         this.data.direction.amd = 'not_need';
         this.data.direction.all_confirmed = this.data.researches.every((r) => Boolean(r.confirmed));
+        if (this.hasEDSigns) {
+          this.$root.$emit('EDS:archive-document');
+        }
+        for (const r of this.data.researches) {
+          r.confirmed_at = null;
+        }
         this.reload_if_need();
         this.changed = false;
       } else {

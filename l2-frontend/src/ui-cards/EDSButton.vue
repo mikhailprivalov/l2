@@ -53,6 +53,7 @@ export default {
   },
   props: {
     directionData: {},
+    issData: {},
   },
   data() {
     return {
@@ -67,6 +68,7 @@ export default {
   },
   mounted() {
     window.addEventListener('message', this.edsMessage, false);
+    this.$root.$on('EDS:archive-document', () => this.archive());
   },
   beforeDestroy() {
     window.removeEventListener('message', this.edsMessage, false);
@@ -119,7 +121,10 @@ export default {
       } else {
         window.errmessage('CDA XML не получен');
       }
-      window.frames.eds.passEvent('set-data', this.directionData, documents, {
+      window.frames.eds.passEvent('set-data', {
+        ...this.directionData,
+        confirmedAt: this.issData.confirmed_at,
+      }, documents, {
         token: this.eds_token,
         requiredSignatures: this.requiredSignatures,
         requiredEDSDocTypes: this.requiredEDSDocTypes,
@@ -127,10 +132,20 @@ export default {
       });
       await this.$store.dispatch(actions.DEC_LOADING);
     },
+    async archive() {
+      await EDS_API.post('archive-document', {
+        token: this.eds_token,
+        pk: this.directionData.direction.pk,
+        confirmedAt: this.issData.confirmed_at,
+        hospitalTFOMSCode: this.directionData.direction.hospitalTFOMSCode,
+      });
+    },
     async loadStatus() {
       const requiredResult = await EDS_API.post('cda', {
         token: this.eds_token,
         pk: this.directionData.direction.pk,
+        confirmedAt: this.issData.confirmed_at,
+        hospitalTFOMSCode: this.directionData.direction.hospitalTFOMSCode,
         withoutRender: true,
       }).then(r => r.data);
 
@@ -140,9 +155,13 @@ export default {
       this.edsStatus = (await EDS_API.post('signature-status', {
         token: this.eds_token,
         pk: this.directionData.direction.pk,
+        confirmedAt: this.issData.confirmed_at,
+        hospitalTFOMSCode: this.directionData.direction.hospitalTFOMSCode,
         requiredSignatures: requiredResult.signsRequired,
         requiredEDSDocTypes: this.requiredEDSDocTypes,
       })).data;
+
+      this.$root.$emit('EDS:has-signs', (this.edsStatus.signatures || []).some(s => s.executors.length > 0));
     },
   },
   watch: {

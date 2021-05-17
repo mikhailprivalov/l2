@@ -419,6 +419,12 @@ class Napravleniya(models.Model):
             self.save(update_fields=['hospital'])
         return self.hospital
 
+    def get_hospital_tfoms_id(self):
+        hosp = self.get_hospital()
+        if not hosp:
+            return None
+        return hosp.code_tfoms
+
     @property
     def hospital_title(self):
         hosp = self.get_hospital()

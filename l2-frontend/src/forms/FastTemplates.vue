@@ -4,8 +4,8 @@
     <div class="input-values-wrap">
       <div class="input-values">
         <div class="inner-wrap">
-          <div @click="append_value(val)" class="input-value" :key="val"
-               v-for="val in values">
+          <div @click="append_value(val)" class="input-value" :key="`${val}_${i}`"
+               v-for="(val, i) in values">
             {{ val }}
           </div>
         </div>
