@@ -162,12 +162,12 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     opinion = [
         [
-            Paragraph(f'Руководитель медицинской организации', styleT),
+            Paragraph('Руководитель медицинской организации', styleT),
             Paragraph('___________________', styleT),
             Paragraph(f'{main_manager}', styleT),
         ],
         [
-            Paragraph(f'Лечащий врач', styleT),
+            Paragraph('Лечащий врач', styleT),
             Paragraph('___________________', styleT),
             Paragraph(f'{iss.doc_confirmation.fio}', styleT),
         ],
@@ -186,7 +186,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     fwb.append(tbl)
     fwb.append(Spacer(1, 10 * mm))
-    fwb.append(Paragraph(f"Печать направляющей медицинской организации", style_ml))
+    fwb.append(Paragraph("Печать направляющей медицинской организации", style_ml))
 
     return fwb
 
@@ -237,7 +237,7 @@ def form_03(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     opinion = [
         [
-            Paragraph(f' ', styleT),
+            Paragraph(' ', styleT),
             Paragraph(f'{main_manager}<br/>от<br/>{from_who}', styleT),
         ],
     ]
@@ -281,7 +281,7 @@ def form_03(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Spacer(1, 7 * mm))
     opinion = [
         [
-            Paragraph(f'Лечащий врач', styleT),
+            Paragraph('Лечащий врач', styleT),
             Paragraph('___________________', styleT),
             Paragraph(f'{iss.doc_confirmation.fio}', styleT),
         ],

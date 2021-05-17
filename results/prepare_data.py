@@ -943,12 +943,10 @@ def fields_result(iss, fwb, title_field_result=None):
 
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).order_by("field__order")
-        group_title = False
         fwb.append(Spacer(1, 3 * mm))
         if results.exists():
             if group.show_title and group.show_title != "":
                 fwb.append(Paragraph(group.title.replace('<', '&lt;').replace('>', '&gt;'), styleBold))
-                group_title = True
             for r in results:
                 field_type = r.get_field_type()
                 if field_type == 15:
