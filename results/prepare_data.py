@@ -22,6 +22,7 @@ import simplejson as json
 
 from laboratory.utils import strfdatetime
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes
+from utils.dates import normalize_date
 from utils.xh import check_valid_square_brackets
 from reportlab.platypus.flowables import HRFlowable
 
@@ -890,3 +891,91 @@ def table_part_result(value):
     )
 
     return tbl
+
+
+def fields_result_only_title_fields(iss, title_fields):
+    result = []
+    title = ''
+    if not title_fields:
+        return result
+    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
+        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
+        if results.exists():
+            for r in results:
+                if r.field.title not in title_fields:
+                    continue
+                field_type = r.get_field_type()
+                v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
+                v = v.replace('&lt;sub&gt;', '<sub>')
+                v = v.replace('&lt;/sub&gt;', '</sub>')
+                v = v.replace('&lt;sup&gt;', '<sup>')
+                v = v.replace('&lt;/sup&gt;', '</sup>')
+                v = text_to_bold(v)
+                if field_type == 1:
+                    vv = v.split('-')
+                    if len(vv) == 3:
+                        v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+                if field_type in [11, 13]:
+                    v = v.replace("&lt;br/&gt;", " ")
+                if r.field.get_title(force_type=field_type) != "":
+                    title = r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;')
+                result.append({"title": title, "value": v})
+    return result
+
+
+def fields_result(iss, fwb, title_field_result=None):
+    if title_field_result is None:
+        title_field_result = []
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+
+    style_ml = deepcopy(style)
+    style_ml.spaceAfter = 2 * mm
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+
+    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
+        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).order_by("field__order")
+        fwb.append(Spacer(1, 3 * mm))
+        if results.exists():
+            if group.show_title and group.show_title != "":
+                fwb.append(Paragraph(group.title.replace('<', '&lt;').replace('>', '&gt;'), styleBold))
+            for r in results:
+                field_type = r.get_field_type()
+                if field_type == 15:
+                    continue
+                else:
+                    v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
+                    if not v:
+                        continue
+                    v = v.replace('&lt;sub&gt;', '<sub>')
+                    v = v.replace('&lt;/sub&gt;', '</sub>')
+                    v = v.replace('&lt;sup&gt;', '<sup>')
+                    v = v.replace('&lt;/sup&gt;', '</sup>')
+                    v = text_to_bold(v)
+                    if field_type == 16:
+                        continue
+                    if field_type == 17:
+                        continue
+                    if field_type == 1:
+                        v = normalize_date(v)
+                    if field_type in [11, 13]:
+                        v = '<font face="PTAstraSerifReg" size="12">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
+                    if r.field.get_title(force_type=field_type) != "" and not r.field.get_title(force_type=field_type) in title_field_result:
+                        fwb.append(
+                            Paragraph(
+                                "<font face=\"PTAstraSerifBold\">{}:</font> {}".format(r.field.get_title(force_type=field_type).replace('<', '&lt;').replace('>', '&gt;'), v),
+                                style_ml,
+                            )
+                        )
+                    else:
+                        if not r.field.get_title(force_type=field_type) in title_field_result:
+                            fwb.append(Paragraph(v, style_ml))
+    return fwb
