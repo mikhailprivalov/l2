@@ -85,15 +85,29 @@
           <span class="input-group-addon nbr">Информация на направлении</span>
           <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
         </div>
-        <div class="input-group" v-if="direction_params_all.length > 1">
-          <span class="input-group-addon nbr" style="width: 233px">Параметры для направления</span>
-          <treeselect class="treeselect-noborder treeselect-wide"
-                      :multiple="false" :disable-branch-nodes="true"
-                      :options="direction_params_all"
-                      placeholder="Параметр не выбран" v-model="direction_current_params"
-                      :append-to-body="true"
-                      :clearable="false"
-          />
+        <div class="row">
+          <div class="col-xs-6" style="padding-right: 0">
+            <div class="input-group" v-if="direction_params_all.length > 1">
+              <span class="input-group-addon nbr" style="width: 233px">Параметры для направления</span>
+              <treeselect class="treeselect-noborder treeselect-wide"
+                          :multiple="false" :disable-branch-nodes="true"
+                          :options="direction_params_all"
+                          placeholder="Параметр не выбран" v-model="direction_current_params"
+                          :append-to-body="true"
+                          :clearable="false"
+              />
+            </div>
+          </div>
+          <div class="col-xs-6" style="padding-left: 0">
+            <div class="input-group">
+              <span class="input-group-addon nbr"> Ф.результатов </span>
+              <select class="form-control" v-model="result_current_form">
+                <option :value="d[0]" v-for="d in result_forms">
+                  {{ d[1] }}
+                </option>
+              </select>
+            </div>
+          </div>
         </div>
       </template>
       <div v-if="ex_dep === 7" class="department-select">
@@ -402,6 +416,11 @@ export default {
       required: false,
       default: () => []
     },
+    result_forms: {
+      type: Array,
+      required: false,
+      default: () => []
+    },
     specialities: {
       type: Array,
       required: false,
@@ -410,6 +429,7 @@ export default {
     }
   },
   created() {
+    console.log(this.result_forms)
     this.load()
     this.load_deparments()
   },
@@ -421,6 +441,7 @@ export default {
       code: '',
       internal_code: '',
       direction_current_form: '',
+      result_current_form: '',
       info: '',
       hide: false,
       cancel_do: false,
@@ -661,6 +682,7 @@ export default {
       this.site_type = null
       this.groups = []
       this.direction_current_form = ''
+      this.result_current_form = ''
       this.speciality = -1
       this.hospital_research_department_pk = -1
       if (this.pk >= 0) {
@@ -672,6 +694,7 @@ export default {
           this.code = data.code
           this.internal_code = data.internal_code
           this.direction_current_form = data.direction_current_form
+          this.result_current_form = data.result_current_form
           this.speciality = data.speciality
           this.hospital_research_department_pk = data.department
           this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
@@ -713,6 +736,7 @@ export default {
         'site_type',
         'internal_code',
         'direction_current_form',
+        'result_current_form',
         'speciality',
         'hospital_research_department_pk',
         'direction_current_params'
