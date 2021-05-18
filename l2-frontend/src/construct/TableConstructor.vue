@@ -187,7 +187,7 @@ export default {
       params.columns = params.columns || this.columns;
       params.rows = params.rows || this.rows;
       params.dynamicRows = Boolean(
-        Object.keys(params).includes('dynamicRows') ? params.dynamicRows : this.dynamicRows
+        Object.keys(params).includes('dynamicRows') ? params.dynamicRows : this.dynamicRows,
       );
 
       if (!_.isObject(params.columns)) {
