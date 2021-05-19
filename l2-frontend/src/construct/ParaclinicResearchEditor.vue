@@ -101,7 +101,7 @@
           <div class="col-xs-6" style="padding-left: 0">
             <div class="input-group">
               <span class="input-group-addon nbr"> Ф.результатов </span>
-              <select class="form-control" v-model="result_current_form">
+              <select class="form-control nbr" v-model="result_current_form">
                 <option :value="d[0]" v-for="d in result_forms">
                   {{ d[1] }}
                 </option>
@@ -429,7 +429,6 @@ export default {
     }
   },
   created() {
-    console.log(this.result_forms)
     this.load()
     this.load_deparments()
   },
@@ -440,8 +439,8 @@ export default {
       is_global_direction_params: false,
       code: '',
       internal_code: '',
-      direction_current_form: '',
-      result_current_form: '',
+      direction_current_form: 0,
+      result_current_form: 0,
       info: '',
       hide: false,
       cancel_do: false,

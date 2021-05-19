@@ -280,11 +280,8 @@ def researches_update(request):
             researche_direction_current_params = DResearches.objects.get(pk=int(direction_current_params))
         if not direction_current_form:
             direction_current_form = 0
-        own_form_result = True
-        if not result_current_form:
-            result_current_form = 0
-        if result_current_form == 0:
-            own_form_result = False
+        result_current_form = result_current_form or 0
+        own_form_result = result_current_form == 0
         info = request_data.get("info", "").strip()
         hide = request_data.get("hide")
         site_type = request_data.get("site_type", None)
