@@ -28,7 +28,9 @@
                                   :pk="opened_id"
                                   :department="department_int"
                                   :direction_forms="direction_forms"
+                                  :result_forms="result_forms"
                                   :specialities="specialities"
+
       />
     </div>
     <div class="construct-content" v-else>
@@ -67,6 +69,7 @@
         opened_id: -2,
         title_filter: '',
         direction_forms: [],
+        result_forms: [],
         specialities: [],
       }
     },
@@ -76,6 +79,7 @@
         researches_point.getResearchesByDepartment(this, 'department').then(data => {
           this.researches_list = data.researches
           this.direction_forms = data.direction_forms
+          this.result_forms = data.result_forms
           this.specialities = data.specialities
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING)
