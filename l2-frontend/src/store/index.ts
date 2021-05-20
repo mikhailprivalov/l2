@@ -6,6 +6,7 @@ import directory from './modules/directory';
 import user from './modules/user';
 import * as action_types from './action-types';
 import * as mutation_types from './mutation-types';
+import { RESET_G_LOADING } from './action-types';
 
 Vue.use(Vuex);
 
@@ -17,6 +18,7 @@ export default new Vuex.Store({
     user,
   },
   state: {
+    globalLoadingCounter: 0,
     inLoading: false,
     loaderInHeader: true,
     loadingCounter: 0,
@@ -27,17 +29,26 @@ export default new Vuex.Store({
     async [action_types.ENABLE_LOADING]({ commit }, { loadingLabel }) {
       commit(mutation_types.SET_LOADING, { inLoading: true, loadingLabel: loadingLabel || 'Загрузка...' });
     },
-    async [action_types.INC_LOADING]({ commit, state }) {
-      commit(mutation_types.SET_LOADING_COUNTER, { loadingCounter: state.loadingCounter + 1 });
-    },
     async [action_types.DISABLE_LOADING]({ commit }) {
       commit(mutation_types.SET_LOADING, { inLoading: false, loadingLabel: 'Загрузка...' });
+    },
+    async [action_types.INC_LOADING]({ commit, state }) {
+      commit(mutation_types.SET_LOADING_COUNTER, { loadingCounter: state.loadingCounter + 1 });
     },
     async [action_types.DEC_LOADING]({ commit, state }) {
       commit(mutation_types.SET_LOADING_COUNTER, { loadingCounter: state.loadingCounter - 1 });
     },
     async [action_types.SET_LOADER_IN_HEADER]({ commit }, status) {
       commit(mutation_types.SET_LOADER_IN_HEADER, { loaderInHeader: Boolean(status) });
+    },
+    async [action_types.INC_G_LOADING]({ commit, state }) {
+      commit(mutation_types.SET_G_LOADING_COUNTER, { loadingCounter: state.globalLoadingCounter + 1 });
+    },
+    async [action_types.DEC_G_LOADING]({ commit, state }) {
+      commit(mutation_types.SET_G_LOADING_COUNTER, { loadingCounter: state.globalLoadingCounter - 1 });
+    },
+    async [action_types.RESET_G_LOADING]({ commit }) {
+      commit(mutation_types.SET_G_LOADING_COUNTER, { loadingCounter: 0 });
     },
     async [action_types.CHANGE_STATUS_MENU_ANESTHESIA]({ commit }) {
       commit(mutation_types.TOGGLE_ANESTHESIA_MENU_SHOW);
@@ -53,6 +64,9 @@ export default new Vuex.Store({
       state.inLoading = state.loadingCounter > 0;
       state.loadingLabel = 'Загрузка';
     },
+    [mutation_types.SET_G_LOADING_COUNTER](state, { loadingCounter }) {
+      state.globalLoadingCounter = Math.max(0, loadingCounter);
+    },
     [mutation_types.SET_LOADER_IN_HEADER](state, { loaderInHeader }) {
       state.loaderInHeader = loaderInHeader;
     },
@@ -65,5 +79,6 @@ export default new Vuex.Store({
     loaderInHeader: (state) => state.loaderInHeader,
     loadingLabel: (state) => state.loadingLabel,
     loadingCounter: (state) => state.loadingCounter,
+    fullPageLoader: (state, getters) => getters.authenticateLoading || state.globalLoadingCounter,
   },
 });

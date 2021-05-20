@@ -4,6 +4,8 @@ import * as actionsTypes from '../action-types';
 
 const stateInitial = {
   data: {
+    auth: true,
+    loading: true,
     modules: {},
   },
   directive_from: [],
@@ -11,6 +13,8 @@ const stateInitial = {
 
 const getters = {
   user_data: (state) => state.data,
+  authenticated: (state) => state.data && state.data.auth,
+  authenticateLoading: (state) => Boolean(state.data && state.data.loading),
   ex_dep: (state) => state.data.extended_departments || [],
   directive_from: (state) => state.directive_from,
   modules: (state) => state.data.modules || {},

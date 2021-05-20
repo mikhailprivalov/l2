@@ -2,6 +2,7 @@ export {};
 
 declare global {
   interface Window {
+    ORG_TITLE: string;
     $: any
     Modernizr: any
     prefetch: any

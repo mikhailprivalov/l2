@@ -11,12 +11,13 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a href="/mainmenu">
+        <a href="/mainmenu" v-if="authenticated">
           <span class="navbar-brand"><small>Иванов Иван Иванович</small></span>
         </a>
+        <span class="navbar-brand" v-else><small>ВХОД В СИСТЕМУ</small></span>
       </div>
       <div id="navbar" class="navbar-collapse collapse">
-        <ul class="nav navbar-nav">
+        <ul class="nav navbar-nav" v-if="authenticated">
           <li class="dropdown dropdown-large">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
               Меню <b class="caret"></b>
@@ -35,8 +36,8 @@
         </ul>
         <ul class="nav navbar-right navbar-nav">
           <li>
-            <span class="navbar-brand" style="font-size: 14px">
-                Организация: DEFORG
+            <span class="navbar-brand org-title">
+                Организация: {{ $orgTitle() }}
             </span>
           </li>
         </ul>
@@ -47,9 +48,10 @@
         <div class="navbar-left logo">
           L<sup>2</sup>
         </div>
-        <span class="navbar-brand"><small>Иванов Иван Иванович</small></span>
+        <span class="navbar-brand" v-if="authenticated"><small>Иванов Иван Иванович</small></span>
+        <span class="navbar-brand" v-else><small>ВХОД В СИСТЕМУ</small></span>
       </div>
-      <div class="din-spinner" style="text-align: center">
+      <div class="din-spinner">
         <div class="sk-fading-circle">
           <div class="sk-circle1 sk-circle"></div>
           <div class="sk-circle2 sk-circle"></div>
@@ -74,23 +76,24 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
-import * as actions from '../store/action-types';
+// import * as actions from '../store/action-types';
 
 @Component({
-  computed: mapGetters(['inLoading', 'loadingLabel', 'loaderInHeader']),
+  computed: mapGetters(['inLoading', 'loadingLabel', 'loaderInHeader', 'authenticated']),
 })
 export default class Navbar extends Vue {
+  authenticated: boolean;
+
   inLoading: boolean;
 
   loadingLabel: string;
 
   loaderInHeader: boolean;
 
-  async mounted() {
-    await this.$store.dispatch(actions.INC_LOADING);
-    console.log('mounted');
-    // await this.$store.dispatch(actions.DEC_LOADING);
-  }
+  // async mounted() {
+  //   await this.$store.dispatch(actions.DEC_LOADING);
+  //   eslint-disable-next-line no-alert
+  // }
 
   get loading() {
     return this.inLoading && this.loaderInHeader;
@@ -114,5 +117,13 @@ export default class Navbar extends Vue {
   margin-left: 10px;
   vertical-align: middle;
   display: inline-block;
+}
+
+.din-spinner {
+  text-align: center;
+}
+
+.org-title {
+  font-size: 14px;
 }
 </style>
