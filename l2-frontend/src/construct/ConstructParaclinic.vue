@@ -125,6 +125,9 @@
           if (this.modules.l2_forms) {
             d.push({value: -9, label: 'Формы'})
           }
+          if (this.modules.l2_applications) {
+            d.push({value: -11, label: '– Заявления'})
+          }
           if (this.modules.directions_params) {
             d.push({value: -10, label: 'Параметры направления'})
           }
