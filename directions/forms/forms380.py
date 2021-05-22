@@ -865,8 +865,8 @@ def form_06(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
         tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
         objs.append(tbl)
         objs.append(Spacer(1, 5 * mm))
-        objs.append(Paragraph(f'Заявление пациента (законного представителя пациента) о<br/>'
-                              f'рассмотрении медицинских документов и оказание<br/>высокотехнологичной медицинской помощи.', styleCenterBold))
+        objs.append(Paragraph('Заявление пациента (законного представителя пациента) о<br/>'
+                              'рассмотрении медицинских документов и оказание<br/>высокотехнологичной медицинской помощи.', styleCenterBold))
 
         objs.append(Spacer(1, 5 * mm))
 
