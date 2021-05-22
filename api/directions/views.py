@@ -155,6 +155,7 @@ def directions_history(request):
     final_result = []
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
     maybe_onco = False
+    is_application = False
     parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
     status_set = {-2}
     lab = set()
@@ -188,6 +189,7 @@ def directions_history(request):
                         'has_hosp': has_hosp,
                         'has_descriptive': has_descriptive,
                         'maybe_onco': maybe_onco,
+                        'is_application': is_application,
                         'lab': lab_title,
                         'parent': parent_obj,
                     }
@@ -199,6 +201,7 @@ def directions_history(request):
             researches_pks = []
             pacs = None
             maybe_onco = False
+            is_application = False
             parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
             if i[13]:
                 if i[21]:
@@ -219,7 +222,7 @@ def directions_history(request):
         has_descriptive = False
         if i[8] or i[9]:
             status_val = 1
-        if i[7]:
+        if i[7] or i[24]:
             status_val = 2
         if i[1]:
             status_val = -1
@@ -238,6 +241,9 @@ def directions_history(request):
             lab.add(title_podr)
         if i[14] or i[15] or i[16] or i[17] or i[18] or i[19] or i[23]:
             has_descriptive = True
+        if i[24]:
+            is_application = True
+
 
     status = min(status_set)
     if len(lab) > 0:
@@ -256,6 +262,7 @@ def directions_history(request):
                 'has_hosp': has_hosp,
                 'has_descriptive': has_descriptive,
                 'maybe_onco': maybe_onco,
+                'is_application': is_application,
                 'lab': lab_title,
                 'parent': parent_obj,
             }
