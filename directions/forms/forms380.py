@@ -2,6 +2,7 @@ import os
 from copy import deepcopy
 from typing import Union, List
 
+import pytils
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import QuerySet
 from django.utils.text import Truncator
@@ -18,7 +19,7 @@ from reportlab.lib import colors
 from api.stationar.stationar_func import hosp_get_hosp_direction
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, DirectionParamsResult
-from reportlab.platypus import Table, TableStyle, Paragraph, Frame, KeepInFrame, Spacer
+from reportlab.platypus import Table, TableStyle, Paragraph, Frame, KeepInFrame, Spacer, HRFlowable
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.pagesizes import A4
 
@@ -30,6 +31,7 @@ import sys
 import locale
 from laboratory.utils import current_year
 from reportlab.graphics.barcode import code128
+import datetime
 
 from results.prepare_data import previous_laboratory_result, previous_doc_refferal_result, table_part_result
 
@@ -783,3 +785,183 @@ def form_05(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
         if count > 1:
             c.showPage()
         printForm(dir)
+
+
+def form_06(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
+    # Заявление на ВМП
+    def printForm(dir: Napravleniya):
+        if sys.platform == 'win32':
+            locale.setlocale(locale.LC_ALL, 'rus_rus')
+        else:
+            locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+        pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+        pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+        styleSheet = getSampleStyleSheet()
+        style = styleSheet["Normal"]
+        style.fontName = "PTAstraSerifReg"
+        style.fontSize = 11
+        style.leading = 12
+        style.spaceAfter = 1.5 * mm
+
+        styleBold = deepcopy(style)
+        styleBold.fontName = 'PTAstraSerifBold'
+
+        styleCenterBold = deepcopy(style)
+        styleCenterBold.alignment = TA_CENTER
+        styleCenterBold.fontSize = 12
+        styleCenterBold.leading = 15
+        styleCenterBold.fontName = 'PTAstraSerifBold'
+
+        styleT = deepcopy(style)
+        styleT.alignment = TA_LEFT
+        styleT.fontSize = 10
+        styleT.leading = 4.5 * mm
+        styleT.face = 'PTAstraSerifReg'
+
+        styleTCentre = deepcopy(styleT)
+        styleTCentre.alignment = TA_CENTER
+        styleTCentre.fontSize = 13
+
+        styleSign = deepcopy(style)
+        styleSign.firstLineIndent = 0
+        styleSign.alignment = TA_LEFT
+        styleSign.leading = 13
+
+        barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
+        dir_code = Drawing()
+        dir_code.add(barcode)
+        renderPDF.draw(dir_code, c, 10 * mm, 245 * mm)
+
+        objs = []
+        hospital_name = dir.hospital.title
+        short_name = dir.hospital.short_title
+        phones = dir.hospital.phones
+        hospital_address = dir.hospital.address
+
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph(f'{hospital_name.upper()}', styleCenterBold))
+        objs.append(HRFlowable(width=190 * mm, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.black, thickness=1.5))
+        opinion = [
+            [
+                Paragraph(f'<font size=11>{hospital_address}</font>', styleT),
+                Paragraph(f'<font size=9 >{phones}</font>', styleT),
+            ],
+        ]
+
+        tbl = Table(opinion, 2 * [100 * mm])
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+        objs.append(tbl)
+
+        opinion = [
+            [
+                Paragraph('', styleT),
+                Paragraph(f'В комиссию {short_name}<br/>По отбору и направлению больных<br/> На оказание высокотехнологичной<br/> Медицинской помощи', styleT),
+            ],
+        ]
+
+        tbl = Table(opinion, 2 * [100 * mm])
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+        objs.append(tbl)
+        objs.append(Spacer(1, 5 * mm))
+        objs.append(Paragraph(f'Заявление пациента (законного представителя пациента) о<br/>'
+                              f'рассмотрении медицинских документов и оказание<br/>высокотехнологичной медицинской помощи.', styleCenterBold))
+
+        objs.append(Spacer(1, 5 * mm))
+
+        ind_card = dir.client
+        patient_data = ind_card.get_data_individual()
+
+        agent_status = False
+        if ind_card.who_is_agent:
+            p_agent = getattr(ind_card, ind_card.who_is_agent)
+            agent_status = True
+
+        # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+        who_patient = 'пациента'
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+            return False
+        elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+            who_patient = 'ребёнка'
+
+        if agent_status:
+            person_data = p_agent.get_data_individual()
+        else:
+            person_data = patient_data
+
+        d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
+        date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
+
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph('Я, нижеподписавшийся(аяся) {}&nbsp; {} г. рождения'.format(person_data['fio'], date_individual_born), styleSign))
+
+        styleLeft = deepcopy(style)
+        styleLeft.alignment = TA_LEFT
+        objs.append(Paragraph('Зарегистрированный(ая) по адресу: {}'.format(person_data['main_address']), styleSign))
+        objs.append(Paragraph('Проживающий(ая) по адресу: {}'.format(person_data['fact_address']), styleSign))
+        objs.append(
+            Paragraph(
+                'Документ, удостоверяющий личность {}: серия <u> {}</u> номер: <u>{}</u>'.format(person_data['type_doc'], person_data['passport_serial'], person_data['passport_num']),
+                styleSign
+            )
+        )
+        objs.append(Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
+        objs.append(Spacer(1, 2 * mm))
+
+        if agent_status:
+            opinion = [
+                Paragraph('являюсь законным представителем ({}) {}:'.format(ind_card.get_who_is_agent_display(), who_patient), styleBold),
+                Paragraph('{}&nbsp; {} г. рождения'.format(patient_data['fio'], patient_data['born']), styleSign),
+                Paragraph('Зарегистрированный(ая) по адресу: {}'.format(patient_data['main_address']), styleSign),
+                Paragraph('Проживающий(ая) по адресу: {}'.format(patient_data['fact_address']), styleSign),
+            ]
+            # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+            if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+                opinion.append(
+                    Paragraph(
+                        'Документ, удостоверяющий личность {}: серия <u>{}</u> номер <u>{}</u>'.format(patient_data['type_doc'], patient_data['bc_serial'], patient_data['bc_num']), styleSign
+                    )
+                )
+                opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["bc_date_start"], person_data['bc_issued']), styleSign))
+            else:
+                opinion.append(
+                    Paragraph(
+                        'Документ, удостоверяющий личность {}: серия {} номер {}'.format(patient_data['type_doc'], patient_data['passport_serial'], patient_data['passport_num']), styleSign
+                    )
+                )
+                opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["passport_date_start"], person_data['passport_issued']), styleSign))
+
+            objs.extend(opinion)
+
+        objs.append(Spacer(1, 2 * mm))
+        direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
+        department, main_diagnos = '', ''
+        for param in direction_params:
+            if param.title == 'Диагноз':
+                main_diagnos = param.value
+            if param.title == 'Отделение':
+                department = param.value
+
+        objs.append(Paragraph(f'госпитализированного в отделение {department}', style))
+        objs.append(Paragraph(f'прошу рассмотреть медицинские документы и оказать высокотехнологичную медицинскую помощь по поводу (диагноз): {main_diagnos}', style))
+
+        objs.append(Spacer(1, 5 * mm))
+        objs.append(Paragraph(f'Место проведения лечения: {short_name}', style))
+
+        space_symbol = '&nbsp;'
+
+        date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+        objs.append(Spacer(1, 8 * mm))
+
+        objs.append(Paragraph(f'<u>{date_now} г.</u> {15 * space_symbol} _________________________ {15 * space_symbol} _________________________', style))
+        objs.append(Paragraph(f'{space_symbol * 5}(дата) {40 * space_symbol} (ФИО) {50 * space_symbol} (подпись)', style))
+
+        print_frame = Frame(0 * mm, mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+        for p in objs:
+            while print_frame.add(p, c) == 0:
+                print_frame.split(p, c)
+                c.showPage()
+                print_frame = Frame(0 * mm, mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+
+    printForm(dir_obj)
