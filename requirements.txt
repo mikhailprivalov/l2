@@ -1,6 +1,6 @@
 appdirs==1.4.4
 astm==0.5.0
-attrs==20.3.0
+attrs==21.2.0
 bleach==3.3.0
 autopep8==1.5.7
 cached-property==1.5.2
