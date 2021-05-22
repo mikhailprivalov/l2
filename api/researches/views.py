@@ -108,7 +108,7 @@ def get_researches(request):
                 autoadd = [x.b_id for x in r.a.all()]
                 addto = [x.a_id for x in r.b.all()]
 
-                direction_params_pk = r.direction_params_id or -1
+                direction_params_pk = (r.direction_params_id or -1) if not r.is_application else r.pk
                 research_data = {
                     "pk": r.pk,
                     "onlywith": r.onlywith_id or -1,
@@ -119,6 +119,7 @@ def get_researches(request):
                     "treatment": r.is_treatment,
                     "is_hospital": r.is_hospital,
                     "is_form": r.is_form,
+                    "is_application": r.is_application,
                     "stom": r.is_stom,
                     "need_vich_code": r.need_vich_code,
                     "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
@@ -127,7 +128,7 @@ def get_researches(request):
                     "code": r.code,
                     "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
                     "site_type": r.get_site_type_id(),
-                    "site_type_raw": r.site_type_id,
+                    "site_type_raw": r.site_type_id if not r.is_application else -13,
                     "localizations": [{"code": x.pk, "label": x.title} for x in r.localization_list],
                     "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location_list],
                     "direction_params": direction_params_pk,
@@ -220,6 +221,8 @@ def researches_by_department(request):
             q = DResearches.objects.filter(is_form=True).order_by("title")
         elif department_pk == -10:
             q = DResearches.objects.filter(is_direction_params=True).order_by("title")
+        elif department_pk == -11:
+            q = DResearches.objects.filter(is_application=True).order_by("title")
         else:
             q = DResearches.objects.filter(podrazdeleniye__pk=department_pk).order_by("title")
 
@@ -296,7 +299,7 @@ def researches_update(request):
         if tube == -1:
             tube = None
         stationar_slave = is_simple and -500 >= department_pk > -600 and main_service_pk != 1
-        desc = stationar_slave or department_pk in [-2, -3, -4, -5, -6, -7, -8, -9, -10]
+        desc = stationar_slave or department_pk in [-2, -3, -4, -5, -6, -7, -8, -9, -10, -11]
         if len(title) > 0 and (desc or Podrazdeleniya.objects.filter(pk=department_pk).exists()):
             department = None if desc else Podrazdeleniya.objects.filter(pk=department_pk)[0]
             res = None
@@ -320,6 +323,7 @@ def researches_update(request):
                     is_gistology=department_pk == -8,
                     is_form=department_pk == -9,
                     is_direction_params=department_pk == -10,
+                    is_application=department_pk == -11,
                     is_slave_hospital=stationar_slave,
                     microbiology_tube_id=tube if department_pk == -6 else None,
                     site_type_id=site_type,
@@ -352,6 +356,7 @@ def researches_update(request):
                 res.is_gistology = department_pk == -8
                 res.is_form = department_pk == -9
                 res.is_direction_params = department_pk == -10
+                res.is_application = department_pk == -11
                 res.microbiology_tube_id = tube if department_pk == -6 else None
                 res.paraclinic_info = info
                 res.hide = hide

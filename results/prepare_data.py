@@ -979,3 +979,12 @@ def fields_result(iss, fwb, title_field_result=None):
                         if not r.field.get_title(force_type=field_type) in title_field_result:
                             fwb.append(Paragraph(v, style_ml))
     return fwb
+
+
+def get_direction_params(direction_params, titles):
+    result = {}
+    for param in direction_params:
+        if param.title in titles:
+            result[param.title] = param.value
+    return result
+
