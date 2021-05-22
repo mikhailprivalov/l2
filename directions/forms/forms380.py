@@ -33,7 +33,7 @@ from laboratory.utils import current_year
 from reportlab.graphics.barcode import code128
 import datetime
 
-from results.prepare_data import previous_laboratory_result, previous_doc_refferal_result, table_part_result
+from results.prepare_data import previous_laboratory_result, previous_doc_refferal_result, table_part_result, get_direction_params
 
 w, h = A4
 
@@ -937,11 +937,12 @@ def form_06(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
         objs.append(Spacer(1, 2 * mm))
         direction_params = DirectionParamsResult.objects.filter(napravleniye=dir)
         department, main_diagnos = '', ''
-        for param in direction_params:
-            if param.title == 'Диагноз':
-                main_diagnos = param.value
-            if param.title == 'Отделение':
-                department = param.value
+        result = get_direction_params(direction_params, ['Диагноз', 'Отделение'])
+        for k, v in result.items():
+            if k == 'Диагноз':
+                main_diagnos = v
+            if k == 'Отделение':
+                department = v
 
         objs.append(Paragraph(f'госпитализированного в отделение {department}', style))
         objs.append(Paragraph(f'прошу рассмотреть медицинские документы и оказать высокотехнологичную медицинскую помощь по поводу (диагноз): {main_diagnos}', style))
@@ -952,10 +953,10 @@ def form_06(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
         space_symbol = '&nbsp;'
 
         date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
-        objs.append(Spacer(1, 8 * mm))
+        objs.append(Spacer(1, 15 * mm))
 
-        objs.append(Paragraph(f'<u>{date_now} г.</u> {15 * space_symbol} _________________________ {15 * space_symbol} _________________________', style))
-        objs.append(Paragraph(f'{space_symbol * 5}(дата) {40 * space_symbol} (ФИО) {50 * space_symbol} (подпись)', style))
+        objs.append(Paragraph(f'<u>{date_now} г.</u> {15 * space_symbol} ______________________________ {25 * space_symbol} _________________________', style))
+        objs.append(Paragraph(f'{space_symbol * 5}(дата) {45 * space_symbol} (ФИО) {70 * space_symbol} (подпись)', style))
 
         print_frame = Frame(0 * mm, mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
         for p in objs:
