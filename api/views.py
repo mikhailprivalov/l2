@@ -591,8 +591,20 @@ def current_user_info(request):
                     sites_by_types[s.site_type] = []
                 sites_by_types[s.site_type].append({"pk": s.pk, "title": s.title, "type": s.site_type, "extended": True, 'e': s.site_type + 4})
 
+            # Тут 13 – заявления, 11 – формы, 7 – формы минус 4
+            if 13 in en and 11 in en:
+                if 7 not in sites_by_types:
+                    sites_by_types[7] = []
+                sites_by_types[7].append({
+                    "pk": -13,
+                    "title": "Заявления",
+                    "type": 7,
+                    "extended": True,
+                    'e': 11,
+                })
+
             for e in en:
-                if e < 4 or not en[e]:
+                if e < 4 or not en[e] or e == 13:
                     continue
 
                 t = e - 4
