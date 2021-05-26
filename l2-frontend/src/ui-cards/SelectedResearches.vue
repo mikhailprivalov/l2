@@ -135,7 +135,10 @@
           <td colspan="2">
             <div class="status-list empty-block">
               <div class="status status-none">Не заполнены:&nbsp;</div>
-              <div class="status status-none" :key="rl" v-for="rl in r_list(global_research_direction_param)">{{ rl }};</div>
+              <div class="status status-none" :key="rl" v-for="rl in r_list(global_research_direction_param)">{{
+                  rl
+                }};
+              </div>
             </div>
           </td>
         </tr>
@@ -247,8 +250,8 @@
               <td class="cl-td">
                 <v-select :clearable="false" :options="row.service_locations"
                           :searchable="false" v-if="row.service_locations && row.service_locations.length > 0"
-                          v-model="service_locations[row.pk]" />
-                <div style="text-align: center;padding: 3px;color: lightslategray;font-size: 90%" v-else-if="row.site_type_raw !== -13">
+                          v-model="service_locations[row.pk]"/>
+                <div class="empty-variants" v-else-if="row.site_type_raw !== -13">
                   нет доступных вариантов
                 </div>
               </td>
@@ -910,7 +913,7 @@ export default {
         '-5': { title: 'Стационар' },
         '-9998': { title: 'Морфология' },
         '-9': { title: 'Формы' },
-        '-11': {title: 'Заявления'},
+        '-11': { title: 'Заявления' },
       };
       for (const dep of this.$store.getters.allDepartments) {
         deps[dep.pk] = dep;
@@ -927,7 +930,10 @@ export default {
               researches: [],
             };
           }
-          r[d].researches.push({ pk, title: res.title, site_type_raw: res.site_type_raw ,
+          r[d].researches.push({
+            pk,
+            title: res.title,
+            site_type_raw: res.site_type_raw,
             show_category: res.department_pk === -9998,
           });
         }
@@ -1269,5 +1275,12 @@ export default {
   display: block;
   width: 100%;
   height: 37px;
+}
+
+.empty-variants {
+  text-align: center;
+  padding: 3px;
+  color: lightslategray;
+  font-size: 90%
 }
 </style>

@@ -85,7 +85,7 @@
         <div class="input-group">
           <span class="input-group-addon">Печатная форма</span>
           <select class="form-control" v-model="direction_current_form">
-            <option :value="d[0]" v-for="d in direction_forms">
+            <option :value="d[0]" v-for="d in direction_forms" :key="d[0]">
               {{ d[1] }}
             </option>
           </select>
@@ -118,7 +118,7 @@
             <div class="input-group">
               <span class="input-group-addon nbr"> Ф.результатов </span>
               <select class="form-control nbr" v-model="result_current_form">
-                <option :value="d[0]" v-for="d in result_forms">
+                <option :value="d[0]" v-for="d in result_forms" :key="d[0]">
                   {{ d[1] }}
                 </option>
               </select>
@@ -441,7 +441,7 @@ export default {
     result_forms: {
       type: Array,
       required: false,
-      default: () => []
+      default: () => [],
     },
     specialities: {
       type: Array,
@@ -707,7 +707,7 @@ export default {
       this.site_type = null;
       this.groups = [];
       this.direction_current_form = '';
-      this.result_current_form = ''
+      this.result_current_form = '';
       this.speciality = -1;
       this.hospital_research_department_pk = -1;
       if (this.pk >= 0) {
@@ -719,7 +719,7 @@ export default {
           this.code = data.code;
           this.internal_code = data.internal_code;
           this.direction_current_form = data.direction_current_form;
-          this.result_current_form = data.result_current_form
+          this.result_current_form = data.result_current_form;
           this.speciality = data.speciality;
           this.hospital_research_department_pk = data.department;
           this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n');
