@@ -304,7 +304,7 @@ export default {
       let result = this.$store.getters.allTypes.filter((row) => (
         (row.pk !== '0' && row.pk !== '1' && !this.filter_types.includes(parseInt(row.pk, 10)))
               && (this.typesOnly.length === 0 || this.typesOnly.includes(parseInt(row.pk, 10)))
-              && (!this.l2_only_doc_call || row.pk === '4')
+              && (!this.l2_only_doc_call || row.pk === '4') && row.pk !== '13'
       ));
 
       if (this.typesOnly && this.typesOnly.length > 0) {
@@ -418,10 +418,10 @@ export default {
     },
     researches_dep_display(dep = this.dep) {
       let r = [];
-      if (this.rev_t === -2) {
+      if (this.rev_t === -2 || dep === -13) {
         for (const d of Object.keys(this.$store.getters.researches)) {
           for (const row of (this.$store.getters.researches[d] || [])) {
-            if (row.doc_refferal && row.site_type === dep) {
+            if ((row.doc_refferal || row.is_application) && row.site_type === dep) {
               r.push(row);
             }
           }

@@ -28,7 +28,9 @@
                                   :pk="opened_id"
                                   :department="department_int"
                                   :direction_forms="direction_forms"
+                                  :result_forms="result_forms"
                                   :specialities="specialities"
+
       />
     </div>
     <div class="construct-content" v-else>
@@ -67,6 +69,7 @@ export default {
       opened_id: -2,
       title_filter: '',
       direction_forms: [],
+      result_forms: [],
       specialities: [],
     };
   },
@@ -76,6 +79,7 @@ export default {
       researchesPoint.getResearchesByDepartment(this, 'department').then((data) => {
         this.researches_list = data.researches;
         this.direction_forms = data.direction_forms;
+        this.result_forms = data.result_forms;
         this.specialities = data.specialities;
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
@@ -121,7 +125,10 @@ export default {
         if (this.modules.l2_forms) {
           d.push({ value: -9, label: 'Формы' });
         }
-        if (this.modules.directions_params) {
+        if (this.modules.l2_applications) {
+            d.push({value: -11, label: '– Заявления'})
+          }
+          if (this.modules.directions_params) {
           d.push({ value: -10, label: 'Параметры направления' });
         }
 

@@ -108,7 +108,7 @@ def get_researches(request):
                 autoadd = [x.b_id for x in r.a.all()]
                 addto = [x.a_id for x in r.b.all()]
 
-                direction_params_pk = r.direction_params_id or -1
+                direction_params_pk = (r.direction_params_id or -1) if not r.is_application else r.pk
                 research_data = {
                     "pk": r.pk,
                     "onlywith": r.onlywith_id or -1,
@@ -119,6 +119,7 @@ def get_researches(request):
                     "treatment": r.is_treatment,
                     "is_hospital": r.is_hospital,
                     "is_form": r.is_form,
+                    "is_application": r.is_application,
                     "stom": r.is_stom,
                     "need_vich_code": r.need_vich_code,
                     "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
@@ -127,7 +128,7 @@ def get_researches(request):
                     "code": r.code,
                     "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
                     "site_type": r.get_site_type_id(),
-                    "site_type_raw": r.site_type_id,
+                    "site_type_raw": r.site_type_id if not r.is_application else -13,
                     "localizations": [{"code": x.pk, "label": x.title} for x in r.localization_list],
                     "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location_list],
                     "direction_params": direction_params_pk,
@@ -184,8 +185,9 @@ def get_direction_params(request):
 @group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Врач стационара")
 def researches_by_department(request):
     direction_form = DResearches.DIRECTION_FORMS
+    result_form = DResearches.RESULT_FORMS
     spec_data = [{"pk": -1, "title": "Не выбрано"}, *list(users.Speciality.objects.all().values('pk', 'title').order_by("title"))]
-    response = {"researches": [], "direction_forms": direction_form, "specialities": spec_data}
+    response = {"researches": [], "direction_forms": direction_form, "result_forms": result_form, "specialities": spec_data}
     request_data = json.loads(request.body)
     department_pk = int(request_data["department"])
     if -500 >= department_pk > -600:
@@ -219,6 +221,8 @@ def researches_by_department(request):
             q = DResearches.objects.filter(is_form=True).order_by("title")
         elif department_pk == -10:
             q = DResearches.objects.filter(is_direction_params=True).order_by("title")
+        elif department_pk == -11:
+            q = DResearches.objects.filter(is_application=True).order_by("title")
         else:
             q = DResearches.objects.filter(podrazdeleniye__pk=department_pk).order_by("title")
 
@@ -272,12 +276,14 @@ def researches_update(request):
         spec_pk = request_data.get("speciality", -1)
         speciality = Speciality.objects.filter(pk=spec_pk).first()
         direction_current_form = request_data.get("direction_current_form", 0)
+        result_current_form = request_data.get("result_current_form", 0)
         direction_current_params = request_data.get("direction_current_params", -1)
         researche_direction_current_params = None
         if int(direction_current_params) > -1:
             researche_direction_current_params = DResearches.objects.get(pk=int(direction_current_params))
-        if not direction_current_form:
-            direction_current_form = 0
+        direction_current_form = direction_current_form or 0
+        result_current_form = result_current_form or 0
+        own_form_result = result_current_form > 0
         info = request_data.get("info", "").strip()
         hide = request_data.get("hide")
         site_type = request_data.get("site_type", None)
@@ -293,7 +299,7 @@ def researches_update(request):
         if tube == -1:
             tube = None
         stationar_slave = is_simple and -500 >= department_pk > -600 and main_service_pk != 1
-        desc = stationar_slave or department_pk in [-2, -3, -4, -5, -6, -7, -8, -9, -10]
+        desc = stationar_slave or department_pk in [-2, -3, -4, -5, -6, -7, -8, -9, -10, -11]
         if len(title) > 0 and (desc or Podrazdeleniya.objects.filter(pk=department_pk).exists()):
             department = None if desc else Podrazdeleniya.objects.filter(pk=department_pk)[0]
             res = None
@@ -317,16 +323,19 @@ def researches_update(request):
                     is_gistology=department_pk == -8,
                     is_form=department_pk == -9,
                     is_direction_params=department_pk == -10,
+                    is_application=department_pk == -11,
                     is_slave_hospital=stationar_slave,
                     microbiology_tube_id=tube if department_pk == -6 else None,
                     site_type_id=site_type,
                     internal_code=internal_code,
                     direction_form=direction_current_form,
+                    result_form=result_current_form,
                     speciality=speciality,
                     bac_conclusion_templates=conclusion_templates,
                     bac_culture_comments_templates=culture_comments_templates,
                     direction_params=researche_direction_current_params,
                     is_global_direction_params=is_global_direction_params,
+                    has_own_form_result=own_form_result
                 )
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
@@ -347,6 +356,7 @@ def researches_update(request):
                 res.is_gistology = department_pk == -8
                 res.is_form = department_pk == -9
                 res.is_direction_params = department_pk == -10
+                res.is_application = department_pk == -11
                 res.microbiology_tube_id = tube if department_pk == -6 else None
                 res.paraclinic_info = info
                 res.hide = hide
@@ -354,10 +364,12 @@ def researches_update(request):
                 res.internal_code = internal_code
                 res.speciality = speciality
                 res.direction_form = direction_current_form
+                res.result_form = result_current_form
                 res.bac_conclusion_templates = conclusion_templates
                 res.bac_culture_comments_templates = culture_comments_templates
                 res.direction_params = researche_direction_current_params
                 res.is_global_direction_params = is_global_direction_params
+                res.has_own_form_result = own_form_result
             if res:
                 res.save()
                 if main_service_pk != 1 and stationar_slave:
@@ -460,6 +472,7 @@ def researches_details(request):
         response["site_type"] = res.site_type_id
         response["internal_code"] = res.internal_code
         response["direction_current_form"] = res.direction_form
+        response["result_current_form"] = res.result_form
         response["conclusionTpl"] = res.bac_conclusion_templates
         response["cultureTpl"] = res.bac_culture_comments_templates
         response["speciality"] = res.speciality_id or -1

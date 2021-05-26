@@ -45,9 +45,9 @@
                               :comment="(localizations[res.pk] || {}).label || comments[res.pk]"
                               :count="counts[res.pk]"
                               :service_location="(service_locations[res.pk] || {}).label"
-                              :category="categories[res.site_type_raw]"
+                              :category="res.show_category ? categories[res.site_type_raw] : ''"
                               :has_not_filled="hasNotFilled(res.pk)"
-                              :has_params="form_params[res.pk]"
+                              :has_params="Boolean(form_params[res.pk])"
                               :not_filled_fields="hasNotFilled(res.pk) ? r_list(form_params[res.pk]) : []"
                               :nof="row.researches.length"/>
           </td>
@@ -157,26 +157,26 @@
     <div class="bottom-picker" v-if="!simple">
       <template v-if="create_and_open">
         <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('create_and_open')"
-                title="Сохранить и распечатать направления">
+                title="Сохранить и заполнить протокол" v-tippy>
           <span>Сохранить и заполнить протокол</span>
         </button>
         <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('direction')"
-                title="Сохранить и распечатать направления">
+                title="Сохранить и распечатать направления" v-tippy>
           <span>Сохранить и распечатать направления</span>
         </button>
       </template>
       <template v-else>
         <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('direction')"
-                title="Сохранить и распечатать направления">
-          <span>Сохранить и распечатать направления</span>
+                title="Сохранить и распечатать направления" v-tippy>
+          <span>Сохранить и распечатать</span>
         </button>
         <button class="btn btn-blue-nb top-inner-select hidden-small" :disabled="!can_save"
                 @click="generate('barcode')"
-                title="Сохранить и распечатать штрих-коды">
+                title="Сохранить и распечатать штрих-коды" v-tippy>
           <span>Сохранить и распечатать штрих-коды</span>
         </button>
         <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('just-save')"
-                title="Сохранить без печати">
+                title="Сохранить без печати" v-tippy>
           <span>Сохранить без печати</span>
         </button>
       </template>
@@ -230,6 +230,7 @@
               <td class="cl-td" v-if="need_update_object.length > 1 && i === 0">
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
+                        v-if="row.site_type_raw !== -13"
                         title="Назначить всем исследованиям те же параметры" @click="applyAllFromFirst">
                   <i class="fa fa-circle"></i>
                 </button>
@@ -238,20 +239,22 @@
                 <v-select :clearable="false" :options="row.localizations"
                           :searchable="false" v-if="row.localizations && row.localizations.length > 0"
                           v-model="localizations[row.pk]"/>
-                <v-select :options="row.options" taggable v-else v-model="comments[row.pk]">
+                <v-select :options="row.options" taggable v-else-if="row.site_type_raw !== -13"
+                          v-model="comments[row.pk]">
                   <div slot="no-options">Нет вариантов по умолчанию</div>
                 </v-select>
               </td>
               <td class="cl-td">
                 <v-select :clearable="false" :options="row.service_locations"
                           :searchable="false" v-if="row.service_locations && row.service_locations.length > 0"
-                          v-model="service_locations[row.pk]"/>
-                <div style="text-align: center;padding: 3px;color: lightslategray;font-size: 90%" v-else>
+                          v-model="service_locations[row.pk]" />
+                <div style="text-align: center;padding: 3px;color: lightslategray;font-size: 90%" v-else-if="row.site_type_raw !== -13">
                   нет доступных вариантов
                 </div>
               </td>
               <td class="cl-td">
-                <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"/>
+                <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"
+                       v-if="row.site_type_raw !== -13"/>
               </td>
             </tr>
             <template v-if="form_params[row.pk]">
@@ -907,6 +910,7 @@ export default {
         '-5': { title: 'Стационар' },
         '-9998': { title: 'Морфология' },
         '-9': { title: 'Формы' },
+        '-11': {title: 'Заявления'},
       };
       for (const dep of this.$store.getters.allDepartments) {
         deps[dep.pk] = dep;
@@ -923,7 +927,9 @@ export default {
               researches: [],
             };
           }
-          r[d].researches.push({ pk, title: res.title, site_type_raw: res.site_type_raw });
+          r[d].researches.push({ pk, title: res.title, site_type_raw: res.site_type_raw ,
+            show_category: res.department_pk === -9998,
+          });
         }
       }
       return r;
@@ -983,6 +989,7 @@ export default {
             service_locations: res.service_locations,
             direction_params: res.direction_params,
             research_data: res.research_data.research,
+            site_type_raw: res.site_type_raw,
           });
         }
       }

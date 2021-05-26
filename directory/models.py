@@ -119,7 +119,10 @@ class Researches(models.Model):
         (38003, '38003. ИО - Направление на COVID-19'),
         (38004, '38004. ИО - Направление на Микробиологию'),
         (38005, '38005. ИО - Напрвление в др. организацию'),
+        (38006, '38006. ИО - Заявление на ВМП'),
+
         (48001, '48001. ИО - Направление на Гистологию'),
+
         (38101, '38101. ИО - Направление в ИДЦ Ковид'),
         (38102, '38102. ИО - Направление в ИДЦ обследование'),
     )
@@ -174,6 +177,7 @@ class Researches(models.Model):
     is_citology = models.BooleanField(default=False, blank=True, help_text="Это цитологическое исследование", db_index=True)
     is_gistology = models.BooleanField(default=False, blank=True, help_text="Это гистологическое исследование", db_index=True)
     is_form = models.BooleanField(default=False, blank=True, help_text="Это формы, cправки, направления", db_index=True)
+    is_application = models.BooleanField(default=False, blank=True, help_text="Это заявление", db_index=True)
     is_direction_params = models.BooleanField(default=False, blank=True, help_text="Суррогатная услуга - параметры направления", db_index=True)
     is_global_direction_params = models.BooleanField(default=False, blank=True, help_text="Глобальные параметры", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
@@ -220,6 +224,7 @@ class Researches(models.Model):
             11: dict(is_gistology=True),
             12: dict(is_form=True),
             13: dict(is_direction_params=True),
+            14: dict(is_application=True),
         }
         return ts.get(t + 1, {})
 
@@ -239,6 +244,8 @@ class Researches(models.Model):
             return -9
         if self.is_direction_params:
             return -10
+        if self.is_application:
+            return -11
         if self.is_microbiology or self.is_citology or self.is_gistology:
             return 2 - Podrazdeleniya.MORFOLOGY
         return self.podrazdeleniye_id or -2
@@ -324,6 +331,8 @@ class Researches(models.Model):
             return Podrazdeleniya.MORFOLOGY + 2
         if self.is_gistology:
             return Podrazdeleniya.MORFOLOGY + 3
+        if self.is_application:
+            return -13
         return self.site_type_id
 
 

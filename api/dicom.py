@@ -51,7 +51,7 @@ def search_dicom_study(direction=None):
                 check_sum = check_sum_ean13(ean13_dir)
                 ean13_dir = f'{ean13_dir}{check_sum}'
 
-                orthanc = Orthanc(DICOM_SERVER)
+                orthanc = Orthanc(DICOM_SERVER, warn_insecure=False)
                 for tag in DICOM_SEARCH_TAGS:
                     for dir in [ean13_dir, str_dir]:
                         query = {"Level": "Study", "Query": {"Modality": "*", "StudyDate": "*", tag: dir}}

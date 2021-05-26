@@ -14,6 +14,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     MORFOLOGY = 10000  # Не добавлять в типы
     FORMS = 11
     DIRECTIONPARAMS = 12
+    APPLICATIONS = 13
 
     TYPES = (
         (HIDDEN, "Скрыто"),
@@ -27,6 +28,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         (MICROBIOLOGY, "Микробиология"),
         (FORMS, "Формы"),
         (DIRECTIONPARAMS, "Параметры для направления"),
+        (APPLICATIONS, "Заявления"),
     )
 
     title = models.CharField(max_length=255)  # Название подразделения

@@ -84,6 +84,7 @@ class SettingManager:
                     "send_doc_calls",
                     "only_doc_call",
                     "forms",
+                    "applications",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
@@ -113,6 +114,7 @@ class SettingManager:
                 10: SettingManager.l2('gistology'),
                 11: SettingManager.l2('forms'),
                 12: SettingManager.get("directions_params", default='false', default_type='b'),
+                13: SettingManager.l2("applications"),
             }
 
             cache.set(k, simplejson.dumps(result), 60 * 60 * 24)
