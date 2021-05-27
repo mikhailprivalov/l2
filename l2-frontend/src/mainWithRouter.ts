@@ -1,6 +1,9 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import VueMeta from 'vue-meta';
+import Toast from 'vue-toastification';
+import 'vue-toastification/dist/index.css';
+
 import App from '@/App.vue';
 
 import registerHooks from './registerHooks';
@@ -9,7 +12,12 @@ import store from './store';
 import * as actions from './store/action-types';
 
 import './styles/index.scss';
-import { RESET_G_LOADING } from './store/action-types';
+
+Vue.use(Toast, {
+  transition: 'Vue-Toastification__bounce',
+  maxToasts: 20,
+  newestOnTop: false,
+});
 
 registerVue();
 

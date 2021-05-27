@@ -24,6 +24,7 @@ import Navbar from '@/components/Navbar.vue';
 import api from '@/api/index';
 import * as actions from '@/store/action-types';
 import { mapGetters } from 'vuex';
+import { POSITION } from 'vue-toastification/src/ts/constants';
 
 @Component({
   components: {
@@ -73,10 +74,22 @@ export default class LoginPage extends Vue {
     await this.$store.dispatch(actions.INC_LOADING);
     const { ok, message } = await api('users/auth', this, ['username', 'password']);
     if (!ok) {
-      // eslint-disable-next-line no-alert
-      window.alert(message);
+      this.$toast.error(message, {
+        position: POSITION.BOTTOM_RIGHT,
+        timeout: 8000,
+        closeOnClick: true,
+        pauseOnHover: true,
+        icon: true,
+      });
       await this.$store.dispatch(actions.DEC_LOADING);
     } else {
+      this.$toast.success('Успешный вход', {
+        position: POSITION.BOTTOM_RIGHT,
+        timeout: 8000,
+        closeOnClick: true,
+        pauseOnHover: true,
+        icon: true,
+      });
       this.afterOkAuth();
     }
   }
