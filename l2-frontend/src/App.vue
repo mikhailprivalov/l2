@@ -15,6 +15,8 @@
         </div>
       </div>
     </transition>
+
+    <CheckBackend />
   </div>
 </template>
 
@@ -23,10 +25,11 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
 import Navbar from '@/components/Navbar.vue';
+import CheckBackend from '@/ui-cards/CheckBackend.vue';
 
 @Component({
-  components: { Navbar },
-  computed: mapGetters(['inLoading', 'fullPageLoader']),
+  components: { CheckBackend, Navbar },
+  computed: mapGetters(['inLoading', 'fullPageLoader', 'authenticated']),
   metaInfo() {
     return {
       title: `${this.$route.meta.title || 'L2'} — ${this.$orgTitle()}`,
@@ -37,6 +40,8 @@ export default class App extends Vue {
     inLoading: boolean;
 
     fullPageLoader: boolean;
+
+    authenticated: boolean;
 }
 </script>
 

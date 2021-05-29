@@ -539,6 +539,7 @@ def current_user_info(request):
         "department": {"pk": -1, "title": ""},
         "groups": [],
         "user_services": [],
+        "loading": False,
     }
     if ret["auth"]:
         def fill_user_data():

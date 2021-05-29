@@ -3,7 +3,6 @@ import re
 
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
-from django.middleware.csrf import CsrfViewMiddleware
 
 import slog.models as slog
 from users.models import DoctorProfile

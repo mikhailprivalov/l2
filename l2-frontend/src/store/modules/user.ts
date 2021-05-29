@@ -51,6 +51,7 @@ const getters = {
 
 const actions = {
   async [actionsTypes.GET_USER_DATA]({ commit }, { loadMenu = false } = {}) {
+    commit(mutation_types.SET_USER_DATA, { loading: true });
     const data = await user_point.getCurrentUserInfo();
     commit(mutation_types.SET_USER_DATA, { data });
     if (loadMenu) {
@@ -66,7 +67,10 @@ const actions = {
 
 const mutations = {
   [mutation_types.SET_USER_DATA](state, { data }) {
-    state.data = data;
+    state.data = {
+      ...state.data,
+      ...data,
+    };
   },
   [mutation_types.SET_MENU](state, { data }) {
     state.menu = {

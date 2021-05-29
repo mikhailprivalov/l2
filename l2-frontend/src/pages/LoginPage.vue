@@ -93,7 +93,6 @@ export default class LoginPage extends Vue {
     }
   }
 
-  // eslint-disable-next-line class-methods-use-this
   afterOkAuth() {
     const urlParams = new URLSearchParams(window.location.search);
     const next = urlParams.get('next');

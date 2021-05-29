@@ -6,7 +6,6 @@ import directory from './modules/directory';
 import user from './modules/user';
 import * as action_types from './action-types';
 import * as mutation_types from './mutation-types';
-import { RESET_LOADING } from './action-types';
 
 Vue.use(Vuex);
 

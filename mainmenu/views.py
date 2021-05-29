@@ -36,7 +36,7 @@ from utils.dates import try_parse_range
 def dashboard(request):
     if not request.is_ajax():
         return redirect('/ui/menu')
-    return HttpResponse("OK")
+    return HttpResponse(f"OK:{request.user.username}")
 
 
 @login_required

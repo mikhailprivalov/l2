@@ -38,7 +38,7 @@ const router = new Router({
     },
     {
       path: '/ui/menu',
-      name: 'login',
+      name: 'menu',
       component: () => import('@/pages/MenuPage.vue'),
       meta: {
         narrowLayout: true,
@@ -49,15 +49,29 @@ const router = new Router({
 });
 
 router.beforeEach(async (to, from, next) => {
+  await router.app.$store.dispatch(actions.RESET_G_LOADING);
   if (to.fullPath.startsWith('/ui') || to.fullPath.startsWith('ui')) {
-    await router.app.$store.dispatch(actions.RESET_G_LOADING);
     await router.app.$store.dispatch(actions.INC_G_LOADING);
 
     await router.app.$store.dispatch(actions.INC_G_LOADING);
     await router.app.$store.dispatch(actions.GET_USER_DATA, { loadMenu: true });
     await router.app.$store.dispatch(actions.DEC_G_LOADING);
-
-    next();
+    if (
+      to.name !== 'login'
+      && !to.matched.some(record => record.meta.allowWithoutLogin)
+      && !router.app.$store.getters.authenticated
+    ) {
+      next({ name: 'login' });
+    } else if (
+      to.name === 'login'
+      && router.app.$store.getters.authenticated
+    ) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const nextPath = urlParams.get('next');
+      next(nextPath || '/ui/menu');
+    } else {
+      next();
+    }
   } else {
     window.location.href = to.fullPath;
   }
@@ -65,18 +79,6 @@ router.beforeEach(async (to, from, next) => {
 
 router.afterEach(async () => {
   await router.app.$store.dispatch(actions.DEC_G_LOADING);
-});
-
-router.beforeEach((to, from, next) => {
-  if (
-    to.name !== 'login'
-    && !to.matched.some(record => record.meta.allowWithoutLogin)
-    && router.app.$store.getters.authenticated
-  ) {
-    next({ name: 'login' });
-  } else {
-    next();
-  }
 });
 
 new Vue({
