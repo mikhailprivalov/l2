@@ -28,9 +28,11 @@
     </title>
 
     <link rel="preload" href="{% manifest 'chunk-vendors.css' %}" as="style"/>
+    <link rel="preload" href="{% manifest 'chunk-common.css' %}" as="style"/>
     <link rel="preload" href="{% manifest 'router.css' %}" as="style"/>
 
     <link rel="stylesheet" href="{% manifest 'chunk-vendors.css' %}"/>
+    <link rel="stylesheet" href="{% manifest 'chunk-common.css' %}"/>
     <link rel="stylesheet" href="{% manifest 'router.css' %}"/>
     {% if container_full %}
         <style>

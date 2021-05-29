@@ -734,6 +734,7 @@ export default {
     makeForms(formsBase) {
       return formsBase.map(f => {
         if (f.isGroup) {
+          console.log(f);
           return {
             ...f,
             forms: this.makeForms(f.forms),
@@ -746,7 +747,7 @@ export default {
             individual: this.card.individual,
           }),
         };
-      }).fitler(f => !f.not_internal);
+      }).filter(f => !f.not_internal);
     },
     companiesTreeselect(companies) {
       return companies.map((c) => ({ id: c.id, label: c.short_title || c.title }));

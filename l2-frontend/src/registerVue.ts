@@ -70,6 +70,7 @@ export default (): void => {
   Vue.dialog.registerComponent('replace-append-modal', ReplaceAppendModal);
 
   Vue.config.errorHandler = function (msg) {
+    console.error(msg);
     window.errmessage('Vue Error', String(msg));
   };
 };
