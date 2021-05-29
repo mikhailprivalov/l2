@@ -12,6 +12,7 @@ export const UPDATE_RESEARCHES = 'UPDATE_RESEARCHES';
 export const UPDATE_TUBES = 'UPDATE_TUBES';
 
 export const SET_USER_DATA = 'SET_USER_DATA';
+export const SET_MENU = 'SET_MENU';
 export const SET_DIRECTIVE_FROM = 'SET_DIRECTIVE_FROM';
 
 export const SET_LOADING = 'SET_LOADING';

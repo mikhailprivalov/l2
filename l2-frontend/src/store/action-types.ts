@@ -13,6 +13,7 @@ export const INC_LOADING = 'INC_LOADING';
 export const DISABLE_LOADING = 'DISABLE_LOADING';
 export const DEC_LOADING = 'DEC_LOADING';
 export const SET_LOADER_IN_HEADER = 'SET_LOADER_IN_HEADER';
+export const RESET_LOADING = 'RESET_LOADING';
 
 export const RESET_G_LOADING = 'RESET_G_LOADING';
 export const INC_G_LOADING = 'INC_G_LOADING';

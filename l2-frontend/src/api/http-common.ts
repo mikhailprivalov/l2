@@ -4,9 +4,6 @@ import { merge, pick } from 'lodash/object';
 
 export const HTTP = axios.create({
   baseURL: `${window.location.origin}/api`,
-  headers: {
-    'X-CSRF-Token': Cookies.get('csrftoken'),
-  },
 });
 
 export const smartCall = async ({
@@ -31,7 +28,11 @@ export const smartCall = async ({
     if (urlFmt) {
       response = await HTTP.get(urlFmt.kwf(data));
     } else {
-      response = await HTTP[method](url, data);
+      response = await HTTP[method](url, data, {
+        headers: {
+          'X-CSRFToken': Cookies.get('csrftoken'),
+        },
+      });
     }
     if (response.statusText === 'OK') {
       return response.data;

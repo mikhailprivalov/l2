@@ -1,10 +1,8 @@
 <template>
-  <div id="app">
-    <template>
-      <Navbar />
+  <div id="app" :class="$route.meta.narrowLayout && 'container'">
+    <Navbar />
 
-      <router-view v-if="!fullPageLoader"></router-view>
-    </template>
+    <router-view v-if="!fullPageLoader"></router-view>
 
     <div id="preloader" v-if="inLoading"></div>
 
@@ -31,8 +29,7 @@ import Navbar from '@/components/Navbar.vue';
   computed: mapGetters(['inLoading', 'fullPageLoader']),
   metaInfo() {
     return {
-      title: 'L2',
-      titleTemplate: `%s — ${this.$orgTitle()}`,
+      title: `${this.$route.meta.title || 'L2'} — ${this.$orgTitle()}`,
     };
   },
 })

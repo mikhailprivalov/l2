@@ -23,7 +23,6 @@ registerVue();
 
 Vue.use(Router);
 Vue.use(VueMeta);
-Vue.prototype.$orgTitle = () => window.ORG_TITLE;
 
 const router = new Router({
   mode: 'history',
@@ -34,6 +33,16 @@ const router = new Router({
       component: () => import('@/pages/LoginPage.vue'),
       meta: {
         allowWithoutLogin: true,
+        title: 'Вход в систему',
+      },
+    },
+    {
+      path: '/ui/menu',
+      name: 'login',
+      component: () => import('@/pages/MenuPage.vue'),
+      meta: {
+        narrowLayout: true,
+        title: 'Меню L2',
       },
     },
   ],
@@ -43,16 +52,19 @@ router.beforeEach(async (to, from, next) => {
   if (to.fullPath.startsWith('/ui') || to.fullPath.startsWith('ui')) {
     await router.app.$store.dispatch(actions.RESET_G_LOADING);
     await router.app.$store.dispatch(actions.INC_G_LOADING);
+
+    await router.app.$store.dispatch(actions.INC_G_LOADING);
+    await router.app.$store.dispatch(actions.GET_USER_DATA, { loadMenu: true });
+    await router.app.$store.dispatch(actions.DEC_G_LOADING);
+
     next();
   } else {
     window.location.href = to.fullPath;
   }
 });
 
-router.afterEach(() => {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  router.app.$store.dispatch(actions.DEC_G_LOADING).then(() => {
-  });
+router.afterEach(async () => {
+  await router.app.$store.dispatch(actions.DEC_G_LOADING);
 });
 
 router.beforeEach((to, from, next) => {
@@ -72,9 +84,6 @@ new Vue({
   store,
   render: h => h(App),
   async created() {
-    await this.$store.dispatch(actions.INC_G_LOADING);
-    await this.$store.dispatch(actions.GET_USER_DATA);
     registerHooks(this);
-    await this.$store.dispatch(actions.DEC_G_LOADING);
   },
 }).$mount('#app');

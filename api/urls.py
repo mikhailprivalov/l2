@@ -11,6 +11,7 @@ urlpatterns = [
     path('bases', views.bases),
     path('laborants', views.laborants),
     path('current-user-info', views.current_user_info),
+    path('menu', views.get_menu),
     path('directive-from', views.directive_from),
     path('load-users-by-group', views.load_docprofile_by_group),
     path('users', views.users_view),

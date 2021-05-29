@@ -15,9 +15,14 @@ import Inputmask from 'inputmask';
 // @ts-ignore
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min';
 
+import api from './api';
+
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal.vue';
 
 export default (): void => {
+  Vue.prototype.$orgTitle = () => window.ORG_TITLE;
+  Vue.prototype.$api = api;
+
   const VueInputMask = {
     install(Vue$) {
       Vue$.directive('mask', {

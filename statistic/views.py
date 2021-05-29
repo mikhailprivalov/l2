@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone, dateformat
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
 import directory.models as directory
 import slog.models as slog
@@ -30,6 +30,7 @@ from directory.models import HospitalService
 
 @csrf_exempt
 @login_required
+@ensure_csrf_cookie
 def statistic_page(request):
     """ Страница статистики """
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации")  # Лаборатории

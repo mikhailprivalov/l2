@@ -9,10 +9,10 @@ from django.contrib.auth.models import User, Group
 from django.db import IntegrityError
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils import dateformat
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
 import directory.models as directory
 import podrazdeleniya.models as pod
@@ -32,23 +32,16 @@ from utils.dates import try_parse_range
 
 
 @login_required
+@ensure_csrf_cookie
 def dashboard(request):
     if not request.is_ajax():
-        return render(
-            request,
-            'dashboard.html',
-            {
-                "rmis": SettingManager.get("rmis_enabled", default='false', default_type='b'),
-                "mis_module": SettingManager.get("mis_module", default='false', default_type='b'),
-                "paraclinic": SettingManager.get("paraclinic_module", default='false', default_type='b'),
-                "region": SettingManager.get("region", default='38', default_type='s'),
-            },
-        )
+        return redirect('/ui/menu')
     return HttpResponse("OK")
 
 
 @login_required
 @group_required("Просмотр журнала")
+@ensure_csrf_cookie
 def view_log(request):
     import slog.models as slog
 
@@ -60,6 +53,7 @@ def view_log(request):
 
 @login_required
 @group_required("Создание и редактирование пользователей")
+@ensure_csrf_cookie
 def profiles(request):
     return render(request, 'dashboard/profiles.html')
 
@@ -67,6 +61,7 @@ def profiles(request):
 @csrf_exempt
 @login_required
 @group_required("Создание и редактирование пользователей")
+@ensure_csrf_cookie
 def change_password(request):
     if request.method == "POST":
         if not request.user.is_superuser:
@@ -113,6 +108,7 @@ def change_password(request):
 @csrf_exempt
 @login_required
 @group_required("Создание и редактирование пользователей")
+@ensure_csrf_cookie
 def update_pass(request):
     userid = int(request.POST.get("pk", "-1"))
     password = request.POST.get("pass", "")
@@ -176,6 +172,7 @@ def load_logs(request):
 # @cache_page(60 * 15)
 @login_required
 @group_required("Заборщик биоматериала")
+@ensure_csrf_cookie
 def researches_control(request):
     tubes = Tubes.objects.all()
     return render(request, 'dashboard/get_biomaterial.html', {"tubes": tubes})
@@ -183,6 +180,7 @@ def researches_control(request):
 
 @login_required
 @group_required("Получатель биоматериала")
+@ensure_csrf_cookie
 def receive_journal_form(request):
     p = request.GET.get("lab_pk")
     if p != '-2':
@@ -237,6 +235,7 @@ def confirm_reset(request):
 
 @login_required
 @group_required("Создание и редактирование пользователей")
+@ensure_csrf_cookie
 def create_user(request):  # Страница создания пользователя
     registered = False
     podr = Podrazdeleniya.objects.filter(hide=False).order_by("title")  # Получение всех подразделений
@@ -331,6 +330,7 @@ def create_pod(request):
 
 @login_required
 @staff_member_required
+@ensure_csrf_cookie
 def ldap_sync(request):
     """ Страница синхронизации с LDAP """
     return render(request, 'dashboard/ldap_sync.html')
@@ -348,6 +348,7 @@ def get_fin():
 
 @login_required
 @group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники", "Врач консультаций")
+@ensure_csrf_cookie
 def results_history(request):
     podr = Podrazdeleniya.objects.filter(p_type__in=[Podrazdeleniya.LABORATORY, Podrazdeleniya.PARACLINIC]).order_by("title")
 
@@ -378,6 +379,7 @@ def results_history(request):
 
 @login_required
 @group_required("Лечащий врач", "Загрузка выписок", "Поиск выписок")
+@ensure_csrf_cookie
 def discharge(request):
     podr = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации")
 
@@ -643,6 +645,7 @@ def researches_from_directions(request):
 
 
 @login_required
+@ensure_csrf_cookie
 def direction_info(request):
     if request.is_ajax():
         yesno = {True: "да", False: "нет"}
@@ -728,6 +731,7 @@ def ratelimited(request, e):
     return render(request, 'dashboard/error.html', {"message": "Запрос выполняется слишком часто, попробуйте позднее", "update": True})
 
 
+@ensure_csrf_cookie
 def cards(request):
     if not SettingManager.get("mis_module", default='false', default_type='b'):
         from django.http import Http404
@@ -746,30 +750,35 @@ def v500(request, exception=None):
 
 @login_required
 @group_required("Госпитализация")
+@ensure_csrf_cookie
 def hosp(request):
     return render(request, 'dashboard/hosp.html')
 
 
 @login_required
 @group_required("Врач параклиники", "Врач консультаций")
+@ensure_csrf_cookie
 def results_paraclinic(request):
     return render(request, 'dashboard/results_paraclinic.html')
 
 
 @login_required
 @group_required("Врач параклиники", "Посещения по направлениям", "Врач консультаций")
+@ensure_csrf_cookie
 def direction_visit(request):
     return render(request, 'dashboard/direction_visit.html')
 
 
 @login_required
 @group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники")
+@ensure_csrf_cookie
 def results_report(request):
     return render(request, 'dashboard/results_report.html')
 
 
 @login_required
 @group_required("Врач параклиники", "Врач консультаций")
+@ensure_csrf_cookie
 def results_paraclinic_blanks(request):
     researches = directory.Researches.objects.filter(hide=False, is_paraclinic=True, podrazdeleniye=request.user.doctorprofile.podrazdeleniye).order_by("title")
     return render(request, 'dashboard/results_paraclinic_blanks.html', {"researches": researches})
@@ -804,15 +813,18 @@ def rmq_send(request):
 
 @login_required
 @group_required("Подтверждение отправки результатов в РМИС")
+@ensure_csrf_cookie
 def rmis_confirm(request):
     return render(request, 'dashboard/rmis_confirm.html')
 
 
+@ensure_csrf_cookie
 def l2queue(request):
     return render(request, 'dashboard/l2queue.html')
 
 
 @login_required
+@ensure_csrf_cookie
 def directions(request):
     prefetched = prefetch(request, {
         'researches.get_researches': {
@@ -848,5 +860,6 @@ def directions(request):
     return render(request, 'dashboard/directions_ng.html', {"prefetched": prefetched})
 
 
+@ensure_csrf_cookie
 def ui(request, path):
     return render(request, 'vuebase.html')

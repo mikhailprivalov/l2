@@ -3,6 +3,7 @@ import re
 
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
+from django.middleware.csrf import CsrfViewMiddleware
 
 import slog.models as slog
 from users.models import DoctorProfile
@@ -19,7 +20,7 @@ def auth(request):
             login(request, user)
             log = slog.Log(key="", type=18, body="IP: {0}".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile)
             log.save()
-            return JsonResponse({"ok": True})
+            return JsonResponse({"ok": True, 'fio': user.doctorprofile.fio})
 
         return JsonResponse({"ok": False, "message": "Ваш аккаунт отключен"})
     elif len(password) == 0 and len(f1) == 1 and len(f1[0]) == 2:
@@ -29,6 +30,6 @@ def auth(request):
             user = u.user
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             slog.Log(key='По штрих-коду', type=18, body="IP: {0}".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile).save()
-            return JsonResponse({"ok": True})
+            return JsonResponse({"ok": True, 'fio': user.doctorprofile.fio})
 
     return JsonResponse({"ok": False, "message": "Неверное имя пользователя или пароль"})

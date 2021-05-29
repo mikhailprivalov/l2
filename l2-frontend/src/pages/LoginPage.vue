@@ -13,6 +13,9 @@
           </button>
         </div>
       </div>
+      <div class="version">
+        L2 {{ menu.version }}
+      </div>
     </form>
   </div>
 </template>
@@ -20,20 +23,14 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import Navbar from '@/components/Navbar.vue';
 import api from '@/api/index';
 import * as actions from '@/store/action-types';
 import { mapGetters } from 'vuex';
 import { POSITION } from 'vue-toastification/src/ts/constants';
+import { Menu } from '@/types/menu';
 
 @Component({
-  components: {
-    Navbar,
-  },
-  metaInfo: {
-    title: 'Вход в L2',
-  },
-  computed: mapGetters(['authenticated']),
+  computed: mapGetters(['authenticated', 'menu']),
   data() {
     return {
       username: '',
@@ -43,6 +40,8 @@ import { POSITION } from 'vue-toastification/src/ts/constants';
 })
 export default class LoginPage extends Vue {
   authenticated: boolean;
+
+  menu: Menu;
 
   username: string;
 
@@ -72,7 +71,8 @@ export default class LoginPage extends Vue {
 
   async auth() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { ok, message } = await api('users/auth', this, ['username', 'password']);
+    const { ok, message, fio } = await api('users/auth', this, ['username', 'password']);
+    await this.$store.dispatch(actions.DEC_LOADING);
     if (!ok) {
       this.$toast.error(message, {
         position: POSITION.BOTTOM_RIGHT,
@@ -81,11 +81,10 @@ export default class LoginPage extends Vue {
         pauseOnHover: true,
         icon: true,
       });
-      await this.$store.dispatch(actions.DEC_LOADING);
     } else {
-      this.$toast.success('Успешный вход', {
+      this.$toast.success(`Вы вошли как ${fio}`, {
         position: POSITION.BOTTOM_RIGHT,
-        timeout: 8000,
+        timeout: 6000,
         closeOnClick: true,
         pauseOnHover: true,
         icon: true,
@@ -98,7 +97,7 @@ export default class LoginPage extends Vue {
   afterOkAuth() {
     const urlParams = new URLSearchParams(window.location.search);
     const next = urlParams.get('next');
-    this.$router.push(next || '/mainmenu/');
+    this.$router.push(next || '/ui/menu');
   }
 }
 </script>
@@ -156,5 +155,10 @@ export default class LoginPage extends Vue {
   .form-signin {
     width: 100%;
   }
+}
+
+.version {
+  padding: 10px;
+  text-align: center;
 }
 </style>

@@ -6,6 +6,7 @@ import directory from './modules/directory';
 import user from './modules/user';
 import * as action_types from './action-types';
 import * as mutation_types from './mutation-types';
+import { RESET_LOADING } from './action-types';
 
 Vue.use(Vuex);
 
@@ -36,6 +37,9 @@ export default new Vuex.Store({
     },
     async [action_types.DEC_LOADING]({ commit, state }) {
       commit(mutation_types.SET_LOADING_COUNTER, { loadingCounter: state.loadingCounter - 1 });
+    },
+    async [action_types.RESET_LOADING]({ commit }) {
+      commit(mutation_types.SET_LOADING_COUNTER, { loadingCounter: 0 });
     },
     async [action_types.SET_LOADER_IN_HEADER]({ commit }, status) {
       commit(mutation_types.SET_LOADER_IN_HEADER, { loaderInHeader: Boolean(status) });
