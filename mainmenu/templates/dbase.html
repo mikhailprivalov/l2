@@ -28,10 +28,10 @@
         &mdash; {% firstof request.user.doctorprofile.hospital_safe_title org_title %}</title>
 
     <link rel="preload" href="{% manifest 'chunk-vendors.css' %}" as="style"/>
-    <link rel="preload" href="{% manifest 'app.css' %}" as="style"/>
+    <link rel="preload" href="{% manifest 'chunk-common.css' %}" as="style"/>
 
     <link rel="stylesheet" href="{% manifest 'chunk-vendors.css' %}"/>
-    <link rel="stylesheet" href="{% manifest 'app.css' %}"/>
+    <link rel="stylesheet" href="{% manifest 'chunk-common.css' %}"/>
 
     <script src="{% static 'js/jquery.min.js' %}"></script>
 
