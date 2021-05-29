@@ -355,7 +355,7 @@
             <div class="group-title">Дополнительные услуги</div>
             <div class="row">
               <div class="col-xs-6"
-                   v-if="!row.confirmed"
+                   v-show="!row.confirmed"
                    style="height: 200px;border-right: 1px solid #eaeaea;padding-right: 0;">
                 <researches-picker v-model="row.more" :hidetemplates="true"
                                    :readonly="row.confirmed"
