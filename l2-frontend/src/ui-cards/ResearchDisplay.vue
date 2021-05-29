@@ -29,12 +29,12 @@
       <div style="text-align: left">
         <div class="param"><strong>Назначение:</strong> {{ title }}</div>
         <div class="param"><strong>Количество:</strong> {{ count }}</div>
-        <button class="btn btn-blue-nb btn-sm" @click.stop="update_comment">Настройка</button>
-        <button class="btn btn-blue-nb btn-sm" @click.stop="remove">Убрать</button>
+        <button class="btn btn-blue-nb btn-sm" @click.stop="update_comment" v-if="!simple && !readonly">Настройка</button>
+        <button class="btn btn-blue-nb btn-sm" @click.stop="remove" v-if="!readonly">Убрать</button>
         <div v-if="has_not_filled && !simple">
           <div><strong>Незаполенные поля:</strong></div>
           <ul>
-            <li v-for="f in not_filled_fields">{{ f }}</li>
+            <li v-for="f in not_filled_fields" :key="f">{{ f }}</li>
           </ul>
         </div>
       </div>
@@ -42,7 +42,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default {
   name: 'research-display',
   props: {
@@ -56,21 +56,25 @@ export default {
       type: Number,
     },
     pk: {
-      type: Number
+      type: Number,
     },
     comment: {
       type: String,
-      default: ''
+      default: '',
     },
     kk: {
       type: String,
-      default: ''
+      default: '',
     },
     service_location: {
       type: String,
-      default: ''
+      default: '',
     },
     simple: {
+      type: Boolean,
+      default: false,
+    },
+    readonly: {
       type: Boolean,
       default: false,
     },
@@ -99,15 +103,14 @@ export default {
   },
   methods: {
     remove() {
-      this.$root.$emit('researches-picker:deselect' + this.kk, this.pk)
+      this.$root.$emit(`researches-picker:deselect${this.kk}`, this.pk);
     },
     update_comment() {
-      if (this.simple)
-        return
-      this.$root.$emit('researches-picker:update-comment' + this.kk, this.pk)
-    }
-  }
-}
+      if (this.simple) return;
+      this.$root.$emit(`researches-picker:update-comment${this.kk}`, this.pk);
+    },
+  },
+};
 </script>
 
 <style scoped>

@@ -19,30 +19,30 @@
   </modal>
 </template>
 
-<script>
-  import Modal from '../ui-cards/Modal'
+<script lang="ts">
+import Modal from '../ui-cards/Modal.vue';
 
-  export default {
-    name: 'rmis-send-directions',
-    components: {Modal},
-    props: {
-      card: {
-        type: Object,
-        required: true
+export default {
+  name: 'rmis-send-directions',
+  components: { Modal },
+  props: {
+    card: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {};
+  },
+  methods: {
+    hide_modal() {
+      this.$root.$emit('hide_rmis_directions');
+      if (this.$refs.modal) {
+        this.$refs.modal.$el.style.display = 'none';
       }
     },
-    data() {
-      return {}
-    },
-    methods: {
-      hide_modal() {
-        this.$root.$emit('hide_rmis_directions')
-        if (this.$refs.modal) {
-          this.$refs.modal.$el.style.display = 'none'
-        }
-      },
-    }
-  }
+  },
+};
 </script>
 
 <style scoped lang="scss">

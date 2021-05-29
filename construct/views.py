@@ -3,7 +3,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
 import directory.models as directory
 from appconf.manager import SettingManager
@@ -11,6 +11,7 @@ from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 
 
+@ensure_csrf_cookie
 @login_required
 def menu(request):
     """ Меню конструктора """
@@ -48,6 +49,7 @@ def menu(request):
 
 @login_required
 @group_required("Оператор", "Конструктор: Лабораторные исследования")
+@ensure_csrf_cookie
 def researches(request):
     """ Конструктор исследований """
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
@@ -56,6 +58,7 @@ def researches(request):
 
 @login_required
 @group_required("Оператор", "Конструктор: Лабораторные исследования")
+@ensure_csrf_cookie
 def researches_tune(request):
     """ Настройка исследований """
     pk = request.GET["pk"]
@@ -64,6 +67,7 @@ def researches_tune(request):
 
 @login_required
 @group_required("Оператор", "Конструктор: Лабораторные исследования")
+@ensure_csrf_cookie
 def researches_tune_ng(request):
     """ Настройка исследований """
     pk = request.GET["pk"]
@@ -72,6 +76,7 @@ def researches_tune_ng(request):
 
 @login_required
 @group_required("Оператор", "Конструктор: Ёмкости для биоматериала")
+@ensure_csrf_cookie
 def tubes(request):
     """ Создание и редактирование ёмкостей """
     return render(request, 'construct_tubes.html')
@@ -79,6 +84,7 @@ def tubes(request):
 
 @login_required
 @group_required("Оператор", "Конструктор: Группировка исследований по направлениям")
+@ensure_csrf_cookie
 def directions_group(request):
     """ Группировка по направлениям """
     labs = Podrazdeleniya.objects.filter(Q(p_type=Podrazdeleniya.LABORATORY) | Q(p_type=Podrazdeleniya.PARACLINIC))
@@ -87,6 +93,7 @@ def directions_group(request):
 
 @login_required
 @group_required("Оператор", "Конструктор: Настройка УЕТов")
+@ensure_csrf_cookie
 def uets(request):
     """ Настройка УЕТов """
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
@@ -96,6 +103,7 @@ def uets(request):
 @csrf_exempt
 @login_required
 @group_required("Оператор", "Группировка исследований по направлениям")
+@ensure_csrf_cookie
 def onlywith(request):
     """ Настройка назначения анализов вместе """
     if request.method == "GET":
@@ -166,6 +174,7 @@ def refs(request):
 
 @login_required
 @group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+@ensure_csrf_cookie
 def researches_paraclinic(request):
     if SettingManager.get("paraclinic_module", default='false', default_type='b'):
         return render(request, 'construct_paraclinic.html')
@@ -175,6 +184,7 @@ def researches_paraclinic(request):
 
 @login_required
 @group_required("Оператор", "Конструктор: консультации")
+@ensure_csrf_cookie
 def construct_consults(request):
     if SettingManager.get("consults_module", default='false', default_type='b'):
         return render(request, 'construct_consults.html')
@@ -184,17 +194,20 @@ def construct_consults(request):
 
 @login_required
 @group_required("Оператор", "Конструктор: Настройка шаблонов")
+@ensure_csrf_cookie
 def construct_templates(request):
     return render(request, 'construct_templates.html')
 
 
 @login_required
 @group_required("Оператор", "Конструктор: Настройка микробиологии")
+@ensure_csrf_cookie
 def construct_bacteria(request):
     return render(request, 'construct_bacteria.html')
 
 
 @login_required
 @group_required("Конструктор: Д-учет")
+@ensure_csrf_cookie
 def construct_dispensary_plan(request):
     return render(request, 'construct_dplan.html')

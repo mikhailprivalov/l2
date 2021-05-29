@@ -4,19 +4,26 @@ type IndividualId = number;
 type BaseId = number;
 
 interface InputData {
-  fio_age: string | void;
-  card: CardNumber | void;
-  card_pk: CardId | void;
-  individual_pk: IndividualId | void;
-  base: BaseId | void;
+  fio_age?: string;
+  card?: CardNumber;
+  card_pk?: CardId;
+  individual_pk?: IndividualId;
+  base?: BaseId;
 }
 
 export default class Patient {
+  // eslint-disable-next-line camelcase
   fio_age: string | void;
+
   card: CardNumber | void;
+
   cardId: CardId | void;
+
+  // eslint-disable-next-line camelcase
   card_pk: CardId | void;
+
   individualId: IndividualId | void;
+
   base: BaseId | void;
 
   constructor(data: InputData) {

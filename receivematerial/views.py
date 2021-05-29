@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import dateformat
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from reportlab.lib.pagesizes import A4
 
 import directory.models as directory
@@ -30,6 +30,7 @@ w, h = A4
 @csrf_exempt
 @login_required
 @group_required("Получатель биоматериала")
+@ensure_csrf_cookie
 def receive(request):
     """Представление для приемщика материала в лаборатории"""
 
@@ -62,6 +63,7 @@ def receive(request):
 @csrf_exempt
 @login_required
 @group_required("Получатель биоматериала")
+@ensure_csrf_cookie
 def receive_obo(request):
     lpk = int(request.GET.get("lab_pk", -2) if request.method == "GET" else request.POST.get("lab_pk", -2))
     if lpk >= 0:

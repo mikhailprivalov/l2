@@ -4,16 +4,16 @@
   </div>
 </template>
 
-<script>
-  export default {
-    name: 'category-pick',
-    props: {
-      category: {
-        type: Object,
-        required: true
-      },
+<script lang="ts">
+export default {
+  name: 'category-pick',
+  props: {
+    category: {
+      type: Object,
+      required: true,
     },
-  }
+  },
+};
 </script>
 
 <style scoped>

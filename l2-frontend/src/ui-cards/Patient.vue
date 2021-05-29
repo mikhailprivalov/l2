@@ -5,10 +5,10 @@
   </div>
 </template>
 
-<script>
-  export default {
-    name: 'patient'
-  }
+<script lang="ts">
+export default {
+  name: 'patient',
+};
 </script>
 
 <style scoped>

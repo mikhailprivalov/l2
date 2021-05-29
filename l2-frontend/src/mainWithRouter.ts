@@ -1,0 +1,131 @@
+import Vue from 'vue';
+import Router from 'vue-router';
+import VueMeta from 'vue-meta';
+import Toast from 'vue-toastification';
+import 'vue-toastification/dist/index.css';
+import { POSITION } from 'vue-toastification/src/ts/constants';
+
+import App from '@/App.vue';
+
+import registerHooks from './registerHooks';
+import registerVue from './registerVue';
+import store from './store';
+import * as actions from './store/action-types';
+
+import './styles/index.scss';
+
+Vue.use(Toast, {
+  transition: 'Vue-Toastification__bounce',
+  maxToasts: 20,
+  newestOnTop: false,
+});
+
+registerVue();
+
+Vue.use(Router);
+Vue.use(VueMeta);
+
+const lazyLoad = page => () => import(`@/pages/${page}Page.vue`);
+
+const router = new Router({
+  mode: 'history',
+  routes: [
+    {
+      path: '/ui/login',
+      name: 'login',
+      component: lazyLoad('Login'),
+      meta: {
+        allowWithoutLogin: true,
+        title: 'Вход в систему',
+      },
+    },
+    {
+      path: '/ui/menu',
+      name: 'menu',
+      component: lazyLoad('Menu'),
+      meta: {
+        narrowLayout: true,
+        title: 'Меню L2',
+      },
+    },
+  ],
+});
+
+router.beforeEach(async (to, from, next) => {
+  await router.app.$store.dispatch(actions.RESET_G_LOADING);
+  if (to.fullPath.startsWith('/ui') || to.fullPath.startsWith('ui')) {
+    if (
+      to.fullPath.startsWith('/ui/https://')
+      || to.fullPath.startsWith('/ui/http://')
+      || to.fullPath.startsWith('ui/https://')
+      || to.fullPath.startsWith('ui/http://')
+    ) {
+      window.location.replace(to.fullPath.split('ui/')[1]);
+      return;
+    }
+
+    await router.app.$store.dispatch(actions.INC_G_LOADING);
+
+    await router.app.$store.dispatch(actions.INC_G_LOADING);
+    await router.app.$store.dispatch(actions.GET_USER_DATA, { loadMenu: true });
+    await router.app.$store.dispatch(actions.DEC_G_LOADING);
+
+    const { getters } = router.app.$store;
+
+    if (
+      to.name === 'login'
+      && !getters.authenticated
+    ) {
+      // Если пользователь неавторизован и открывается страница входа
+      // то не проверяем другие варианты
+      next();
+    } else if (
+      to.name !== 'login'
+      && !to.matched.some(record => record.meta.allowWithoutLogin)
+      && !getters.authenticated
+    ) {
+      // Если пользователь неавторизован и страница требует авторизации,
+      // то идём на страницу входа
+      next({ name: 'login' });
+    } else if (
+      to.name === 'login'
+      && getters.authenticated
+    ) {
+      // Если пользователь авторизован и открывается страница входа,
+      // то открываем страницу из ?next=<адрес> или меню
+      const urlParams = new URLSearchParams(window.location.search);
+      const nextPath = urlParams.get('next');
+      next(nextPath || { name: 'menu' });
+    } else if (
+      to.matched.some(r => r.meta.groups)
+      && to.matched.every(r => !r.meta.groups || !r.meta.groups.find(g => getters.user_groups.includes(g)))
+      && !getters.user_groups.includes('Admin')
+    ) {
+      router.app.$toast.warning('Нет доступа.', {
+        position: POSITION.BOTTOM_RIGHT,
+        timeout: 8000,
+        icon: true,
+      });
+      // Если страница требует наличия групп и у пользователя в группах таких нет, и нет группы Admin,
+      // то открываем меню
+      next({ name: 'menu' });
+    } else {
+      next();
+    }
+  } else {
+    window.location.href = to.fullPath;
+  }
+});
+
+router.afterEach(async () => {
+  await router.app.$store.dispatch(actions.DEC_G_LOADING);
+});
+
+new Vue({
+  router,
+  store,
+  render: h => h(App),
+  async created() {
+    registerHooks(this);
+  },
+}).$mount('#app');

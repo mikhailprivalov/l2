@@ -49,31 +49,33 @@
   </div>
 </template>
 
-<script>
-  import Treeselect from "@riophae/vue-treeselect";
-  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-  import moment from "moment";
-  import DateRange from "../ui-cards/DateRange"
-  import api from '@/api';
+<script lang="ts">
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import moment from 'moment';
+import api from '@/api';
+import DateRange from '../ui-cards/DateRange.vue';
 
-  export default {
-    name: "ListWait",
-    components: {Treeselect, DateRange},
-      data() {
-        return {
-          date: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
-          research: -1,
-          researches: [],
-      }
+export default {
+  name: 'ListWait',
+  components: { Treeselect, DateRange },
+  data() {
+    return {
+      date: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+      research: -1,
+      researches: [],
+    };
+  },
+  mounted() {
+    api('researches/descriptive-research').then((rows) => {
+      this.researches = rows;
+    });
+  },
+  methods: {
+    print() {
+      window.open(`/forms/pdf?type=109.03&date=${this.date}&research_pk=${this.research}`);
     },
-    mounted() {
-      api('researches/descriptive-research').then(rows => this.researches = rows);
-    },
-    methods: {
-      print() {
-        window.open(`/forms/pdf?type=109.03&date=${this.date}&research_pk=${this.research}`);
-      },
-    }
-  }
+  },
+};
 
 </script>

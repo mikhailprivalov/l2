@@ -3,7 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth.views import LogoutView
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.views.generic import RedirectView
 
 import clients.views
@@ -29,6 +29,7 @@ def trigger_error(request):
 urlpatterns = [
     path('favicon.ico', RedirectView.as_view(url='/static/icon/favicon.ico', permanent=True)),
     path('', home, name='home'),
+    re_path(r'^ui/(?P<path>.*)$', mainmenu.views.ui),
     path('clients/import', clients.views.receive_db),
     path('clients/get_db', clients.views.get_db),
     path('clients/search_phone', clients.views.search_phone),

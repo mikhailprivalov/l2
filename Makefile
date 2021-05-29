@@ -7,7 +7,7 @@ install: pip_install_upgrade npm_install
 install_prod: pip_install_upgrade_prod npm_install
 
 watch:
-	yarn --cwd l2-frontend watch
+	yarn --cwd l2-frontend serve
 
 build:
 	yarn --cwd l2-frontend build

@@ -30,7 +30,7 @@ def menu(request):
         data = cache.get(k)
         if not data:
             pages = [
-                {"url": "/mainmenu/", "title": "Начальная страница", "nt": False, "access": ["*"], "not_show_home": True},
+                {"url": "/ui/menu", "title": "Меню L2", "nt": False, "access": ["*"], "not_show_home": True},
                 {"url": "/logout", "title": "Выход из профиля", "nt": False, "access": ["*"], "not_show_home": True},
                 {"hr": True, "access": ["*"]},
                 {"url": "/mainmenu/directions", "title": "Направления и картотека", "nt": False,

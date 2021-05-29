@@ -16,15 +16,15 @@
   </div>
 </template>
 
-<script>
-  export default {
-    name: 'SelectedPatient',
-    props: {
-      card: {
-        type: Object,
-      },
+<script lang="ts">
+export default {
+  name: 'SelectedPatient',
+  props: {
+    card: {
+      type: Object,
     },
-  }
+  },
+};
 </script>
 
 <style lang="scss" scoped>

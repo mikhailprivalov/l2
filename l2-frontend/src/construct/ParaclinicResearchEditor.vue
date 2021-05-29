@@ -29,7 +29,7 @@
           <input type="text" class="form-control" v-model="short_title">
           <span class="input-group-addon">Профиль</span>
           <select class="form-control" v-model="speciality">
-            <option :value="d.pk" v-for="d in specialities">
+            <option :value="d.pk" :key="d.pk" v-for="d in specialities">
               {{ d.title }}
             </option>
           </select>
@@ -49,7 +49,7 @@
             <div class="input-group">
               <span class="input-group-addon">Подраздел</span>
               <select v-model="site_type" class="form-control">
-                <option v-for="r in ex_deps" :value="r.pk">{{ r.title }}</option>
+                <option v-for="r in ex_deps" :value="r.pk" :key="r.pk">{{ r.title }}</option>
               </select>
             </div>
           </div>
@@ -63,7 +63,7 @@
         <div class="input-group">
           <span class="input-group-addon"> Ф.направления </span>
           <select class="form-control" v-model="direction_current_form">
-            <option :value="d[0]" v-for="d in direction_forms">
+            <option :value="d[0]" v-for="d in direction_forms" :key="d[0]">
               {{ d[1] }}
             </option>
           </select>
@@ -85,7 +85,7 @@
         <div class="input-group">
           <span class="input-group-addon">Печатная форма</span>
           <select class="form-control" v-model="direction_current_form">
-            <option :value="d[0]" v-for="d in direction_forms">
+            <option :value="d[0]" v-for="d in direction_forms" :key="d[0]">
               {{ d[1] }}
             </option>
           </select>
@@ -118,7 +118,7 @@
             <div class="input-group">
               <span class="input-group-addon nbr"> Ф.результатов </span>
               <select class="form-control nbr" v-model="result_current_form">
-                <option :value="d[0]" v-for="d in result_forms">
+                <option :value="d[0]" v-for="d in result_forms" :key="d[0]">
                   {{ d[1] }}
                 </option>
               </select>
@@ -131,7 +131,7 @@
                     placeholder="Отделение не выбрано" v-model="hospital_research_department_pk"/>
       </div>
       <template v-if="ex_dep !== 7">
-        <div v-for="group in orderBy(groups, 'order')" class="ed-group">
+        <div v-for="(group, gi) in orderBy(groups, 'order')" :key="gi" class="ed-group">
           <div class="input-group" v-if="ex_dep !== 12 && ex_dep !== 13">
             <span class="input-group-btn">
               <button class="btn btn-blue-nb lob" :disabled="is_first_group(group)" @click="dec_group_order(group)">
@@ -164,7 +164,7 @@
             <div>
               <strong>Поля ввода</strong>
             </div>
-            <div v-for="row in orderBy(group.fields, 'order')" class="ed-field">
+            <div v-for="(row, ri) in orderBy(group.fields, 'order')" :key="ri" class="ed-field">
               <div class="ed-field-inner">
                 <div>
                   <button class="btn btn-default btn-sm btn-block" :disabled="is_first_field(group, row)"
@@ -255,7 +255,8 @@
                                                                 @click="add_template_value(row)">Добавить</button></span>
                         </div>
                         <div>
-                          <div class="input-group" v-for="(v, i) in row.values_to_input" style="margin-bottom: 1px">
+                          <div class="input-group" v-for="(v, i) in row.values_to_input" :key="i"
+                               style="margin-bottom: 1px">
                             <span class="input-group-btn">
                               <button class="btn btn-blue-nb lob" :disabled="is_first_in_template(i)"
                                       @click="up_template(row, i)">
@@ -352,7 +353,7 @@
       <div v-if="ex_dep === 12 && pk > -1">
         <div><strong>Назначения, где используется этот шаблон параметров:</strong></div>
         <ul>
-          <li v-for="a in assigned_to_params">{{ a }}</li>
+          <li v-for="a in assigned_to_params" :key="a">{{ a }}</li>
           <li v-if="assigned_to_params.length === 0">не найдено</li>
         </ul>
       </div>
@@ -369,43 +370,48 @@
   </div>
 </template>
 
-<script>
-import Vue from 'vue'
-import Vue2Filters from 'vue2-filters'
+<script lang="ts">
+import Vue from 'vue';
+import Vue2Filters from 'vue2-filters';
 
-import construct_point from '@/api/construct-point'
-import * as action_types from '@/store/action-types'
-import NumberRangeField from "@/fields/NumberRangeField";
-import ConfigureAnesthesiaField from "@/fields/ConfigureAnesthesiaField";
-import RichTextEditor from '@/fields/RichTextEditor'
-import NumberField from "@/fields/NumberField";
-import FieldHelper from "@/ui-cards/FieldHelper";
+import construct_point from '@/api/construct-point';
+import * as actions from '@/store/action-types';
+import NumberRangeField from '@/fields/NumberRangeField.vue';
+import ConfigureAnesthesiaField from '@/fields/ConfigureAnesthesiaField.vue';
+import RichTextEditor from '@/fields/RichTextEditor.vue';
+import NumberField from '@/fields/NumberField.vue';
+import FieldHelper from '@/ui-cards/FieldHelper.vue';
 
-import FastTemplatesEditor from './FastTemplatesEditor'
 import api from '@/api';
 
-import Treeselect from "@riophae/vue-treeselect";
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import TableConstructor from "@/construct/TableConstructor";
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import TableConstructor from '@/construct/TableConstructor.vue';
+import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
-Vue.use(Vue2Filters)
+Vue.use(Vue2Filters);
 
 export default {
   name: 'paraclinic-research-editor',
   components: {
     TableConstructor,
     FieldHelper,
-    NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor, ConfigureAnesthesiaField, Treeselect,
+    NumberRangeField,
+    NumberField,
+    RichTextEditor,
+    FastTemplatesEditor,
+    ConfigureAnesthesiaField,
+    Treeselect,
   },
   mixins: [Vue2Filters.mixin],
   props: {
     pk: {
       type: Number,
-      required: true
+      required: true,
     },
     department: {
       type: Number,
-      required: true
+      required: true,
     },
     simple: {
       type: Boolean,
@@ -430,23 +436,23 @@ export default {
     direction_forms: {
       type: Array,
       required: false,
-      default: () => []
+      default: () => [],
     },
     result_forms: {
       type: Array,
       required: false,
-      default: () => []
+      default: () => [],
     },
     specialities: {
       type: Array,
       required: false,
       default: () => [],
 
-    }
+    },
   },
   created() {
-    this.load()
-    this.load_deparments()
+    this.load();
+    this.load_deparments();
   },
   data() {
     return {
@@ -464,11 +470,11 @@ export default {
       site_type: null,
       groups: [],
       template_add_types: [
-        {sep: ' ', title: 'Пробел'},
-        {sep: ', ', title: 'Запятая и пробел'},
-        {sep: '; ', title: 'Точка с запятой (;) и пробел'},
-        {sep: '. ', title: 'Точка и пробел'},
-        {sep: '\n', title: 'Перенос строки'},
+        { sep: ' ', title: 'Пробел' },
+        { sep: ', ', title: 'Запятая и пробел' },
+        { sep: '; ', title: 'Точка с запятой (;) и пробел' },
+        { sep: '. ', title: 'Точка и пробел' },
+        { sep: '\n', title: 'Перенос строки' },
       ],
       has_unsaved: false,
       f_templates_open: false,
@@ -480,53 +486,55 @@ export default {
       direction_params_all: [],
       direction_current_params: -1,
       assigned_to_params: [],
-    }
+    };
   },
   watch: {
     pk() {
-      this.load()
+      this.load();
     },
-    loaded_pk(n) {
-      this.has_unsaved = false
+    loaded_pk() {
+      this.has_unsaved = false;
     },
     groups: {
       handler(n, o) {
         if (o && o.length > 0) {
-          this.has_unsaved = true
+          this.has_unsaved = true;
         }
       },
-      deep: true
+      deep: true,
     },
   },
   mounted() {
-    $(window).on('beforeunload', () => {
-      if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do)
-        return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
-    })
-    this.$root.$on('hide_fte', () => this.f_templates_hide())
+    window.$(window).on('beforeunload', () => {
+      if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do) {
+        return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?';
+      }
+      return undefined;
+    });
+    this.$root.$on('hide_fte', () => this.f_templates_hide());
   },
   computed: {
     fte() {
-      return this.$store.getters.modules.l2_fast_templates
+      return this.$store.getters.modules.l2_fast_templates;
     },
     valid() {
-      return this.norm_title.length > 0 && !this.cancel_do && (!this.simple || this.main_service_pk !== -1)
+      return this.norm_title.length > 0 && !this.cancel_do && (!this.simple || this.main_service_pk !== -1);
     },
     norm_title() {
-      return this.title.trim()
+      return this.title.trim();
     },
     min_max_order_groups() {
-      let min = 0
-      let max = 0
-      for (let row of this.groups) {
+      let min = 0;
+      let max = 0;
+      for (const row of this.groups) {
         if (min === 0) {
-          min = row.order
+          min = row.order;
         } else {
-          min = Math.min(min, row.order)
+          min = Math.min(min, row.order);
         }
-        max = Math.max(max, row.order)
+        max = Math.max(max, row.order);
       }
-      return {min, max}
+      return { min, max };
     },
     ex_dep() {
       return {
@@ -538,134 +546,133 @@ export default {
         '-9': 11,
         '-10': 12,
         '-11': 13,
-      }[this.department] || this.department
+      }[this.department] || this.department;
     },
     ex_deps() {
-      return this.$store.getters.ex_dep[this.ex_dep] || []
+      return this.$store.getters.ex_dep[this.ex_dep] || [];
     },
   },
   methods: {
     f_templates() {
-      this.f_templates_open = true
+      this.f_templates_open = true;
     },
     f_templates_hide() {
-      this.f_templates_open = false
+      this.f_templates_open = false;
     },
     is_first_in_template(i) {
-      return i === 0
+      return i === 0;
     },
     is_last_in_template(row, i) {
-      return i === row.values_to_input.length - 1
+      return i === row.values_to_input.length - 1;
     },
     up_template(row, i) {
-      if (this.is_first_in_template(i))
-        return
-      let values = JSON.parse(JSON.stringify(row.values_to_input));
-      [values[i - 1], values[i]] = [values[i], values[i - 1]]
-      row.values_to_input = values
+      if (this.is_first_in_template(i)) return;
+      const values = JSON.parse(JSON.stringify(row.values_to_input));
+      [values[i - 1], values[i]] = [values[i], values[i - 1]];
+      // eslint-disable-next-line no-param-reassign
+      row.values_to_input = values;
     },
     down_template(row, i) {
-      if (this.is_last_in_template(row, i))
-        return
-      let values = JSON.parse(JSON.stringify(row.values_to_input));
-      [values[i + 1], values[i]] = [values[i], values[i + 1]]
-      row.values_to_input = values
+      if (this.is_last_in_template(row, i)) return;
+      const values = JSON.parse(JSON.stringify(row.values_to_input));
+      [values[i + 1], values[i]] = [values[i], values[i + 1]];
+      // eslint-disable-next-line no-param-reassign
+      row.values_to_input = values;
     },
     remove_template(row, i) {
-      if (row.values_to_input.length - 1 < i)
-        return
-      row.values_to_input.splice(i, 1)
+      if (row.values_to_input.length - 1 < i) return;
+      row.values_to_input.splice(i, 1);
     },
     add_template_value(row) {
-      if (row.new_value === '')
-        return
-      row.values_to_input.push(row.new_value)
-      row.new_value = ''
+      if (row.new_value === '') return;
+      row.values_to_input.push(row.new_value);
+      // eslint-disable-next-line no-param-reassign
+      row.new_value = '';
     },
-    drag(row, ev) {
+    drag() {
       // console.log(row, ev)
     },
     min_max_order(group) {
-      let min = 0
-      let max = 0
-      for (let row of group.fields) {
+      let min = 0;
+      let max = 0;
+      for (const row of group.fields) {
         if (min === 0) {
-          min = row.order
+          min = row.order;
         } else {
-          min = Math.min(min, row.order)
+          min = Math.min(min, row.order);
         }
-        max = Math.max(max, row.order)
+        max = Math.max(max, row.order);
       }
-      return {min, max}
+      return { min, max };
     },
     inc_group_order(row) {
-      if (row.order === this.min_max_order_groups.max)
-        return
-      let next_row = this.find_group_by_order(row.order + 1)
+      if (row.order === this.min_max_order_groups.max) return;
+      const next_row = this.find_group_by_order(row.order + 1);
       if (next_row) {
-        next_row.order--
+        next_row.order--;
       }
-      row.order++
+      // eslint-disable-next-line no-param-reassign
+      row.order++;
     },
     dec_group_order(row) {
-      if (row.order === this.min_max_order_groups.min)
-        return
-      let prev_row = this.find_group_by_order(row.order - 1)
+      if (row.order === this.min_max_order_groups.min) return;
+      const prev_row = this.find_group_by_order(row.order - 1);
       if (prev_row) {
-        prev_row.order++
+        prev_row.order++;
       }
-      row.order--
+      // eslint-disable-next-line no-param-reassign
+      row.order--;
     },
     inc_order(group, row) {
-      if (row.order === this.min_max_order(group).max)
-        return
-      let next_row = this.find_by_order(group, row.order + 1)
+      if (row.order === this.min_max_order(group).max) return;
+      const next_row = this.find_by_order(group, row.order + 1);
       if (next_row) {
-        next_row.order--
+        next_row.order--;
       }
-      row.order++
+      // eslint-disable-next-line no-param-reassign
+      row.order++;
     },
     dec_order(group, row) {
-      if (row.order === this.min_max_order(group).min)
-        return
-      let prev_row = this.find_by_order(group, row.order - 1)
+      if (row.order === this.min_max_order(group).min) return;
+      const prev_row = this.find_by_order(group, row.order - 1);
       if (prev_row) {
-        prev_row.order++
+        prev_row.order++;
       }
-      row.order--
+      // eslint-disable-next-line no-param-reassign
+      row.order--;
     },
     find_by_order(group, order) {
-      for (let row of group.fields) {
+      for (const row of group.fields) {
         if (row.order === order) {
-          return row
+          return row;
         }
       }
-      return false
+      return false;
     },
     find_group_by_order(order) {
-      for (let row of this.groups) {
+      for (const row of this.groups) {
         if (row.order === order) {
-          return row
+          return row;
         }
       }
-      return false
+      return false;
     },
     is_first_group(group) {
-      return group.order === this.min_max_order_groups.min
+      return group.order === this.min_max_order_groups.min;
     },
     is_last_group(group) {
-      return group.order === this.min_max_order_groups.max
+      return group.order === this.min_max_order_groups.max;
     },
     is_first_field(group, row) {
-      return row.order === this.min_max_order(group).min
+      return row.order === this.min_max_order(group).min;
     },
     is_last_field(group, row) {
-      return row.order === this.min_max_order(group).max
+      return row.order === this.min_max_order(group).max;
     },
     add_field(group) {
-      let order = 0
-      for (let row of group.fields) {
-        order = Math.max(order, row.order)
+      let order = 0;
+      for (const row of group.fields) {
+        order = Math.max(order, row.order);
       }
       group.fields.push({
         pk: -1,
@@ -677,69 +684,72 @@ export default {
         hide: false,
         lines: 3,
         field_type: 0,
-      })
+      });
     },
     add_group() {
-      let order = 0
-      for (let row of this.groups) {
-        order = Math.max(order, row.order)
+      let order = 0;
+      for (const row of this.groups) {
+        order = Math.max(order, row.order);
       }
-      let g = {pk: -1, order: order + 1, title: '', fields: [], show_title: true, hide: false}
-      this.add_field(g)
-      this.groups.push(g)
+      const g = {
+        pk: -1, order: order + 1, title: '', fields: [], show_title: true, hide: false,
+      };
+      this.add_field(g);
+      this.groups.push(g);
     },
     load() {
-      this.title = ''
-      this.short_title = ''
-      this.is_global_direction_params = false,
-        this.code = ''
-      this.info = ''
-      this.hide = false
-      this.site_type = null
-      this.groups = []
-      this.direction_current_form = ''
-      this.result_current_form = ''
-      this.speciality = -1
-      this.hospital_research_department_pk = -1
+      this.title = '';
+      this.short_title = '';
+      this.is_global_direction_params = false;
+      this.code = '';
+      this.info = '';
+      this.hide = false;
+      this.site_type = null;
+      this.groups = [];
+      this.direction_current_form = '';
+      this.result_current_form = '';
+      this.speciality = -1;
+      this.hospital_research_department_pk = -1;
       if (this.pk >= 0) {
-        this.$store.dispatch(action_types.INC_LOADING)
-        construct_point.researchDetails(this, 'pk').then(data => {
-          this.title = data.title
-          this.short_title = data.short_title
-          this.is_global_direction_params = data.is_global_direction_params
-          this.code = data.code
-          this.internal_code = data.internal_code
-          this.direction_current_form = data.direction_current_form
-          this.result_current_form = data.result_current_form
-          this.speciality = data.speciality
-          this.hospital_research_department_pk = data.department
-          this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
-          this.hide = data.hide
-          this.site_type = data.site_type
-          this.loaded_pk = this.pk
-          this.groups = data.groups
-          this.direction_params_all = data.direction_params_all
-          this.direction_current_params = data.direction_current_params
-          this.assigned_to_params = data.assigned_to_params
+        this.$store.dispatch(actions.INC_LOADING);
+        construct_point.researchDetails(this, 'pk').then((data) => {
+          this.title = data.title;
+          this.short_title = data.short_title;
+          this.is_global_direction_params = data.is_global_direction_params;
+          this.code = data.code;
+          this.internal_code = data.internal_code;
+          this.direction_current_form = data.direction_current_form;
+          this.result_current_form = data.result_current_form;
+          this.speciality = data.speciality;
+          this.hospital_research_department_pk = data.department;
+          this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n');
+          this.hide = data.hide;
+          this.site_type = data.site_type;
+          this.loaded_pk = this.pk;
+          this.groups = data.groups;
+          this.direction_params_all = data.direction_params_all;
+          this.direction_current_params = data.direction_current_params;
+          this.assigned_to_params = data.assigned_to_params;
           if (this.groups.length === 0) {
-            this.add_group()
+            this.add_group();
           }
         }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING)
-        })
+          this.$store.dispatch(actions.DEC_LOADING);
+        });
       } else {
-        this.add_group()
+        this.add_group();
       }
     },
     cancel() {
+      // eslint-disable-next-line no-restricted-globals,no-alert
       if (this.has_unsaved && !confirm('Изменения, возможно, не сохранены. Вы уверены, что хотите отменить редактирование?')) {
-        return
+        return;
       }
-      this.cancel_do = true
-      this.$root.$emit('research-editor:cancel')
+      this.cancel_do = true;
+      this.$root.$emit('research-editor:cancel');
     },
     save() {
-      this.$store.dispatch(action_types.INC_LOADING)
+      this.$store.dispatch(actions.INC_LOADING);
       const props = [
         'pk',
         'department',
@@ -755,29 +765,29 @@ export default {
         'result_current_form',
         'speciality',
         'hospital_research_department_pk',
-        'direction_current_params'
-      ]
+        'direction_current_params',
+      ];
       const moreData = {
         info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
         simple: this.simple,
       };
       if (this.simple) {
-        props.push('main_service_pk', 'hide_main', 'hs_pk')
+        props.push('main_service_pk', 'hide_main', 'hs_pk');
       }
       construct_point.updateResearch(this, props, moreData).then(() => {
-        this.has_unsaved = false
-        okmessage('Сохранено')
-        this.cancel()
+        this.has_unsaved = false;
+        window.okmessage('Сохранено');
+        this.cancel();
       }).finally(() => {
-        this.$store.dispatch(action_types.DEC_LOADING)
-      })
+        this.$store.dispatch(actions.DEC_LOADING);
+      });
     },
     async load_deparments() {
-      const {data} = await api('procedural-list/suitable-departments');
-      this.departments = [{id: -1, label: 'Отделение не выбрано'}, ...data];
-    }
-  }
-}
+      const { data } = await api('procedural-list/suitable-departments');
+      this.departments = [{ id: -1, label: 'Отделение не выбрано' }, ...data];
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

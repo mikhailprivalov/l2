@@ -44,11 +44,11 @@
   </div>
 </template>
 
-<script>
-  export default {
-    name: 'DisplayDirection',
-    props: ['direction']
-  }
+<script lang="ts">
+export default {
+  name: 'DisplayDirection',
+  props: ['direction'],
+};
 </script>
 
 <style scoped lang="scss">

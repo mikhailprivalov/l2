@@ -18,8 +18,12 @@
             <span class="caret"></span> {{active_type_obj.title}}
           </button>
           <ul class="dropdown-menu">
-            <li><a :title="row.title" @click.prevent="select_type(row.pk)" href="#" v-for="row in types"
-                   v-if="row.pk !== active_type">{{ row.title }}</a></li>
+            <li v-for="row in typesFiltered" :key="row.pk">
+              <a :title="row.title"
+                 @click.prevent="select_type(row.pk)" href="#">
+                {{ row.title }}
+              </a>
+            </li>
           </ul>
         </div>
         <button class="btn btn-blue-nb btn-ell nbr" title="Обновить" v-tippy @click="load_history_safe">
@@ -66,12 +70,12 @@
         <tr v-if="directions.length === 0 && !is_created">
           <td class="text-center" :colspan="6">Загрузка...</td>
         </tr>
-        <tr v-for="row in directions">
+        <tr v-for="row in directions" :key="row.pk">
           <td class="text-center">{{row.date}}</td>
           <td>
             <span v-if="!!row.has_hosp && role_can_use_stationar">
-              <a
-                :href="`/mainmenu/stationar#{%22pk%22:${row.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
+              <!-- eslint-disable-next-line max-len -->
+              <a :href="`/mainmenu/stationar#{%22pk%22:${row.pk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`"
                 target="_blank" class="a-under">
                 {{row.pk}}
               </a>
@@ -98,8 +102,18 @@
 
           </td>
           <td class="button-td">
-            <div v-if="!row.is_application" class="button-td-inner" :class="[{has_pacs_stationar: !!row.pacs && !!row.parent.parent_is_hosp || !!row.pacs && !!row.parent.parent_is_doc_refferal},
-                 {has_pacs: (!!row.pacs && !row.parent.parent_is_hosp) || (!row.pacs && !!row.parent.parent_is_hosp) || !row.pacs && !!row.parent.parent_is_doc_refferal}]">
+            <div v-if="!row.is_application" class="button-td-inner"
+                 :class="[
+                   {
+                     has_pacs_stationar: !!row.pacs
+                     && (!!row.parent.parent_is_hosp || !!row.parent.parent_is_doc_refferal)
+                   },
+                   {
+                     has_pacs: (!!row.pacs && !row.parent.parent_is_hosp)
+                      || (!row.pacs && !!row.parent.parent_is_hosp)
+                      || (!row.pacs && !!row.parent.parent_is_doc_refferal)
+                   }
+                 ]">
               <a :href="row.pacs" title="Снимок" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.pacs">
                 <i class="fa fa-camera"/>
               </a>
@@ -146,251 +160,258 @@
   </div>
 </template>
 
-<script>
-  import SelectPickerM from '../../fields/SelectPickerM'
-  import DateRange from '../DateRange'
-  import directions_point from '../../api/directions-point'
-  import * as action_types from '../../store/action-types'
-  import moment from 'moment'
-  import {mapGetters} from 'vuex'
-  import Bottom from './Bottom';
+<script lang="ts">
+import moment from 'moment';
+import { mapGetters } from 'vuex';
+import { Research } from '@/types/research';
+import SelectPickerM from '../../fields/SelectPickerM.vue';
+import DateRange from '../DateRange.vue';
+import directionsPoint from '../../api/directions-point';
+import * as actions from '../../store/action-types';
+import Bottom from './Bottom/index.vue';
 
-  function truncate(s, n, useWordBoundary) {
-    if (s.length <= n) {
-      return s
-    }
-    const subString = s.substr(0, n - 1)
-    return (useWordBoundary
-      ? subString.substr(0, subString.lastIndexOf(' '))
-      : subString) + '...'
+function truncate(s, n, useWordBoundary) {
+  if (!s) {
+    return '';
   }
+  if (s.length <= n) {
+    return s;
+  }
+  const subString = s.substr(0, n - 1);
+  return `${useWordBoundary
+    ? subString.substr(0, subString.lastIndexOf(' '))
+    : subString}...`;
+}
 
-  export default {
-    components: {SelectPickerM, DateRange, Bottom},
-    name: 'directions-history',
-    props: {
-      patient_pk: {
-        type: Number,
-        default: -1,
-        required: false,
-      },
-      iss_pk: {
-        type: Number,
-        default: null,
-        required: false,
-      },
-      kk: {
-        type: String,
-        default: '',
-      },
-      forHospSlave: {
-        type: Boolean,
-        required: false,
-        default: false,
-      },
+export default {
+  components: { SelectPickerM, DateRange, Bottom },
+  name: 'directions-history',
+  props: {
+    patient_pk: {
+      type: Number,
+      default: -1,
+      required: false,
     },
-    data() {
-      return {
-        date_range: [moment().subtract(6, 'month').format('DD.MM.YY'), moment().format('DD.MM.YY')],
-        types: [
-          {pk: 3, title: 'Направления пациента'},
-          {pk: 0, title: 'Только выписанные'},
-          {pk: 1, title: 'Материал в лаборатории'},
-          {pk: 2, title: 'Результаты подтверждены'},
-          {pk: 4, title: 'Созданы пользователем'}
-        ],
-        active_type: 3,
-        checked_obj: {},
-        is_created: false,
-        directions: [],
-        checked: [],
-        services: [],
-        services_options: [],
-        all_checked: false,
-        statuses: {
-          '-2': 'Посещение зарегистрировано',
-          '-1': 'Направление отменено',
-          '0': 'Направление только выписано',
-          '1': 'Материал в лаборатории',
-          '2': 'Результаты подтверждены',
-        },
+    iss_pk: {
+      type: Number,
+      default: null,
+      required: false,
+    },
+    kk: {
+      type: String,
+      default: '',
+    },
+    forHospSlave: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      date_range: [moment().subtract(6, 'month').format('DD.MM.YY'), moment().format('DD.MM.YY')],
+      types: [
+        { pk: 3, title: 'Направления пациента' },
+        { pk: 0, title: 'Только выписанные' },
+        { pk: 1, title: 'Материал в лаборатории' },
+        { pk: 2, title: 'Результаты подтверждены' },
+        { pk: 4, title: 'Созданы пользователем' },
+      ],
+      active_type: 3,
+      checked_obj: {},
+      is_created: false,
+      directions: [],
+      checked: [],
+      services: [],
+      services_options: [],
+      all_checked: false,
+      statuses: {
+        '-2': 'Посещение зарегистрировано',
+        '-1': 'Направление отменено',
+        0: 'Направление только выписано',
+        1: 'Материал в лаборатории',
+        2: 'Результаты подтверждены',
+      },
+    };
+  },
+  computed: {
+    typesFiltered() {
+      return this.types.filter(t => t.pk !== this.active_type);
+    },
+    role_can_use_stationar() {
+      for (const g of (this.$store.getters.user_data.groups || [])) {
+        if (g === 'Врач стационара') {
+          return true;
+        }
+      }
+      return false;
+    },
+    role_can_use_descriptive() {
+      for (const g of (this.$store.getters.user_data.groups || [])) {
+        if (['Врач консультаций', 'Врач параклиники'].includes(g)) {
+          return true;
+        }
+      }
+      return false;
+    },
+    active_type_obj() {
+      for (const row of this.types) {
+        if (row.pk === this.active_type) {
+          return row;
+        }
+      }
+      return {};
+    },
+    ...mapGetters({
+      researches_obj: 'researches',
+    }),
+  },
+  mounted() {
+    this.is_created = true;
+    this.load_history();
+    this.$root.$on(`researches-picker:directions_created${this.kk}`, this.load_history);
+    this.$root.$on(`researches-picker:refresh${this.kk}`, this.load_history_safe);
+  },
+  methods: {
+    async load_history_safe() {
+      await this.load_history(true);
+    },
+    update_so(researches: {[key: string]: Research}) {
+      const s = Object.values(researches || {}).map((r: Research) => ({
+        value: String(r.pk),
+        label: truncate(r.full_title || r.title, 70, true),
+      }));
+      if (s.length === 0) {
+        return;
+      }
+      s.sort((a, b) => ((a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : -1));
+      this.services_options = s;
+      setTimeout(() => {
+        this.$root.$emit('update-sp-m-services_options');
+      }, 0);
+    },
+    show_stationar(dir) {
+      const path = `/mainmenu/stationar#{%22pk%22:${dir},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`;
+      window.open(path, '_blank');
+    },
+    show_results(row) {
+      if (row.has_descriptive) {
+        this.$root.$emit('print:results', [row.pk]);
+      } else {
+        this.$root.$emit('show_results', row.pk);
       }
     },
-    computed: {
-      role_can_use_stationar() {
-        for (let g of (this.$store.getters.user_data.groups || [])) {
-          if (g === 'Врач стационара') {
-            return true
-          }
-        }
-        return false
-      },
-      role_can_use_descriptive() {
-        for (let g of (this.$store.getters.user_data.groups || [])) {
-          if (['Врач консультаций', 'Врач параклиники'].includes(g)) {
-            return true
-          }
-        }
-        return false
-      },
-      active_type_obj() {
-        for (let row of this.types) {
-          if (row.pk === this.active_type) {
-            return row
-          }
-        }
-        return {}
-      },
-      ...mapGetters({
-        researches: 'researches',
-      }),
+    print_direction(pk) {
+      this.$root.$emit('print:directions', [pk]);
     },
-    mounted() {
-      this.is_created = true
-      this.load_history()
-      this.$root.$on('researches-picker:directions_created' + this.kk, this.load_history)
-      this.$root.$on('researches-picker:refresh' + this.kk, this.load_history_safe)
+    print_hosp(pk) {
+      this.$root.$emit('print:hosp', [pk]);
     },
-    methods: {
-      async load_history_safe() {
-        await this.load_history(true)
-      },
-      update_so(researches) {
-        const s = [].concat.apply([], Object.values(researches)).map(r => ({
-          value: String(r.pk),
-          label: truncate(r.full_title, 70, true),
-        }))
-        if (s.length === 0) {
-          return
-        }
-        s.sort((a, b) => (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : -1)
-        this.services_options = s
-        setTimeout(() => {
-          this.$root.$emit(`update-sp-m-services_options`)
-        }, 0)
-      },
-      show_stationar(dir) {
-        window.open(`/mainmenu/stationar#{%22pk%22:${dir},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`, "_blank")
-      },
-      show_results(row) {
-        if (row.has_descriptive) {
-          this.$root.$emit('print:results', [row.pk])
-        } else {
-          this.$root.$emit('show_results', row.pk)
-        }
-      },
-      print_direction(pk) {
-        this.$root.$emit('print:directions', [pk])
-      },
-      print_hosp(pk) {
-        this.$root.$emit('print:hosp', [pk])
-      },
-      async cancel_direction(pk) {
-        await this.$store.dispatch(action_types.INC_LOADING)
+    async cancel_direction(pk) {
+      await this.$store.dispatch(actions.INC_LOADING);
 
-        const data = await directions_point.cancelDirection({pk});
+      const data = await directionsPoint.cancelDirection({ pk });
 
-        for (let dir of this.directions) {
-          if (dir.pk === pk) {
-            dir.cancel = data.cancel
-            if (dir.status === -1 && !dir.cancel) {
-              dir.status = 0
-            } else if (dir.status === 0 && dir.cancel) {
-              dir.status = -1
-            }
-            break
+      for (const dir of this.directions) {
+        if (dir.pk === pk) {
+          dir.cancel = data.cancel;
+          if (dir.status === -1 && !dir.cancel) {
+            dir.status = 0;
+          } else if (dir.status === 0 && dir.cancel) {
+            dir.status = -1;
           }
+          break;
         }
+      }
 
-        await this.$store.dispatch(action_types.DEC_LOADING)
-      },
-      select_type(pk) {
-        this.active_type = pk
-      },
-      async load_history(safe) {
-        if (!this.is_created)
-          return
-        this.$root.$emit('validate-datepickers')
-        this.is_created = false
-
-        await this.$store.dispatch(action_types.INC_LOADING)
-        this.directions = []
-        if (!safe) {
-          this.all_checked = false
-        }
-
-        const checked = []
-
-        if (safe) {
-          checked.push(...this.checked)
-        }
-
-        await directions_point.getHistory(this, ['iss_pk', 'services', 'forHospSlave'], {
-          type: this.active_type,
-          patient: this.patient_pk,
-          date_from: moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY'),
-          date_to: moment(this.date_range[1], 'DD.MM.YY').format('DD.MM.YYYY'),
-        }).then((data) => {
-          this.directions = data.directions
-          for (const d of this.directions) {
-            if (checked.includes(d.pk)) {
-              d.checked = true
-            }
-          }
-        }).finally(() => {
-          this.is_created = true
-          return this.$store.dispatch(action_types.DEC_LOADING)
-        })
-      },
-      in_checked(pk) {
-        return this.checked.indexOf(pk) !== -1
-      },
-      sync_check(pk, e) {
-        let v = e.target.checked
-        if (!v) {
-          this.checked = this.checked.filter(e => e !== pk)
-        } else if (!this.in_checked(pk)) {
-          this.checked.push(pk)
-        }
-      },
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
-    watch: {
-      active_type() {
-        this.load_history()
-      },
-      patient_pk() {
-        this.load_history()
-      },
-      date_range() {
-        this.load_history()
-      },
-      services() {
-        this.load_history()
-      },
-      all_checked() {
-        for (let row of this.directions) {
-          row.checked = this.all_checked
+    select_type(pk) {
+      this.active_type = pk;
+    },
+    async load_history(safe) {
+      if (!this.is_created) return;
+      this.$root.$emit('validate-datepickers');
+      this.is_created = false;
+
+      await this.$store.dispatch(actions.INC_LOADING);
+      this.directions = [];
+      if (!safe) {
+        this.all_checked = false;
+      }
+
+      const checked = [];
+
+      if (safe) {
+        checked.push(...this.checked);
+      }
+
+      await directionsPoint.getHistory(this, ['iss_pk', 'services', 'forHospSlave'], {
+        type: this.active_type,
+        patient: this.patient_pk,
+        date_from: moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY'),
+        date_to: moment(this.date_range[1], 'DD.MM.YY').format('DD.MM.YYYY'),
+      }).then((data) => {
+        this.directions = data.directions;
+        for (const d of this.directions) {
+          if (checked.includes(d.pk)) {
+            d.checked = true;
+          }
+        }
+      }).finally(() => {
+        this.is_created = true;
+        return this.$store.dispatch(actions.DEC_LOADING);
+      });
+    },
+    in_checked(pk) {
+      return this.checked.indexOf(pk) !== -1;
+    },
+    sync_check(pk, env) {
+      const v = env.target.checked;
+      if (!v) {
+        this.checked = this.checked.filter((e) => e !== pk);
+      } else if (!this.in_checked(pk)) {
+        this.checked.push(pk);
+      }
+    },
+  },
+  watch: {
+    active_type() {
+      this.load_history();
+    },
+    patient_pk() {
+      this.load_history();
+    },
+    date_range() {
+      this.load_history();
+    },
+    services() {
+      this.load_history();
+    },
+    all_checked() {
+      for (const row of this.directions) {
+        row.checked = this.all_checked;
+      }
+    },
+    directions: {
+      handler() {
+        this.checked = [];
+        for (const row of this.directions) {
+          if (row.checked) {
+            this.checked.push(row.pk);
+          }
         }
       },
-      directions: {
-        handler() {
-          this.checked = []
-          for (let row of this.directions) {
-            if (row.checked) {
-              this.checked.push(row.pk)
-            }
-          }
-        },
-        deep: true
+      deep: true,
+    },
+    researches: {
+      handler() {
+        this.update_so(this.researches);
       },
-      researches: {
-        handler() {
-          this.update_so(this.researches)
-        },
-        immediate: true,
-      },
-    }
-  }
+      immediate: true,
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">

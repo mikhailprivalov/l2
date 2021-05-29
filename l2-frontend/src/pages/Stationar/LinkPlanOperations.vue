@@ -6,19 +6,19 @@
   </a>
 </template>
 
-<script>
-  export default {
-    name: "LinkPlanOperations",
-    props: {
-      direction: {
-        type: String,
-        required: true,
-      },
+<script lang="ts">
+export default {
+  name: 'LinkPlanOperations',
+  props: {
+    direction: {
+      type: String,
+      required: true,
     },
-    methods: {
-      load() {
-        this.$root.$emit('open-history', this.direction);
-      },
+  },
+  methods: {
+    load() {
+      this.$root.$emit('open-history', this.direction);
     },
-  }
+  },
+};
 </script>
