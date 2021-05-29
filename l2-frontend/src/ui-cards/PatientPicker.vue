@@ -302,6 +302,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { mapGetters } from 'vuex';
 import { debounce } from 'lodash';
+import { set } from 'es-cookie';
 import L2CardCreate from '../modals/L2CardCreate.vue';
 import DReg from '../modals/DReg.vue';
 import Benefit from '../modals/Benefit.vue';
@@ -419,6 +420,8 @@ export default {
     this.$root.$on('hide_vaccine', () => {
       this.vaccine = false;
     });
+  },
+  mounted() {
     this.inited();
   },
   watch: {
@@ -674,33 +677,38 @@ export default {
     },
     async inited() {
       await this.$store.dispatch(actions.INC_LOADING);
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        if (!this.$store.getters.user_data.loading) {
+          break;
+        }
+        await new Promise(r => setTimeout(r, 10));
+      }
       await this.$store.dispatch(actions.GET_DIRECTIVE_FROM);
       await this.$store.dispatch(actions.DEC_LOADING);
 
-      setTimeout(() => {
-        this.local_directive_departments = this.$store.getters.directive_from;
-        this.directive_departments_select = [];
+      this.local_directive_departments = this.$store.getters.directive_from;
+      this.directive_departments_select = [];
+      for (const dep of this.local_directive_departments) {
+        this.directive_departments_select.push({ label: dep.title, id: dep.pk });
+      }
+
+      if (
+        this.$store.getters.user_data
+        && this.$store.getters.user_data.department
+        && this.local_directive_departments.length > 0 && this.ofname_to_set === -1
+      ) {
         for (const dep of this.local_directive_departments) {
-          this.directive_departments_select.push({ label: dep.title, id: dep.pk });
-        }
-
-        if (
-          this.$store.getters.user_data
-          && this.$store.getters.user_data.department
-          && this.local_directive_departments.length > 0 && this.ofname_to_set === -1
-        ) {
-          for (const dep of this.local_directive_departments) {
-            if (dep.pk === this.$store.getters.user_data.department.pk) {
-              this.directive_department = dep.pk;
-              this.check_base();
-              return;
-            }
+          if (dep.pk === this.$store.getters.user_data.department.pk) {
+            this.directive_department = dep.pk;
+            this.check_base();
+            return;
           }
-          this.directive_department = this.local_directive_departments[0].pk;
         }
+        this.directive_department = this.local_directive_departments[0].pk;
+      }
 
-        this.check_base();
-      }, 100);
+      this.check_base();
     },
     open_anamnesis() {
       this.$store.dispatch(actions.INC_LOADING);
