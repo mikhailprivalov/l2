@@ -1,10 +1,13 @@
 <template>
   <div class="root">
-    <div class="top-editor" :class="{simpleEditor: simple, formEditor: ex_dep === 12}">
+    <div class="top-editor" :class="{simpleEditor: simple, formEditor: ex_dep === 12, oneLine: ex_dep === 13}">
       <div class="left">
         <div class="input-group">
           <span class="input-group-addon" v-if="ex_dep === 12">
             Название шаблона параметров направления ({{ loaded_pk }})
+          </span>
+          <span class="input-group-addon" v-else-if="ex_dep === 13">
+            Название заявления
           </span>
           <span class="input-group-addon" v-else>Полное наименование</span>
           <input type="text" class="form-control" v-model="title">
@@ -21,7 +24,7 @@
             </button>
           </span>
         </div>
-        <div class="input-group" v-if="ex_dep !== 12">
+        <div class="input-group" v-if="ex_dep !== 12 && ex_dep !== 13">
           <span class="input-group-addon">Краткое <small>(для создания направлений)</small></span>
           <input type="text" class="form-control" v-model="short_title">
           <span class="input-group-addon">Профиль</span>
@@ -32,7 +35,7 @@
           </select>
         </div>
       </div>
-      <div class="right" v-if="!simple && ex_dep !== 12">
+      <div class="right" v-if="!simple && ex_dep !== 12 && ex_dep !== 13">
         <div class="row" style="margin-right: 0;" v-if="department < -1">
           <div class="col-xs-6" style="padding-right: 0">
             <div class="input-group" style="margin-right: -1px">
@@ -65,7 +68,7 @@
             </option>
           </select>
           <label class="input-group-addon" style="height: 34px;text-align: left;">
-            <input type="checkbox" v-model="hide"/> Скрытие исследования
+            <input type="checkbox" v-model="hide"/> Скрыть
           </label>
           <span class="input-group-btn" v-if="fte">
             <button class="btn btn-blue-nb"
@@ -78,22 +81,49 @@
           </span>
         </div>
       </div>
+      <div class="right" v-else-if="ex_dep === 13">
+        <div class="input-group">
+          <span class="input-group-addon">Печатная форма</span>
+          <select class="form-control" v-model="direction_current_form">
+            <option :value="d[0]" v-for="d in direction_forms" :key="d[0]">
+              {{ d[1] }}
+            </option>
+          </select>
+          <label class="input-group-addon" style="height: 34px;text-align: left;">
+            <input type="checkbox" v-model="hide"/> Скрыть
+          </label>
+        </div>
+      </div>
     </div>
     <div class="content-editor">
-      <template v-if="ex_dep !== 12">
+      <template v-if="ex_dep !== 12 && ex_dep !== 13">
         <div class="input-group" v-if="!simple">
           <span class="input-group-addon nbr">Информация на направлении</span>
           <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
         </div>
-        <div class="input-group" v-if="direction_params_all.length > 1">
-          <span class="input-group-addon nbr" style="width: 233px">Параметры для направления</span>
-          <treeselect class="treeselect-noborder treeselect-wide"
-                      :multiple="false" :disable-branch-nodes="true"
-                      :options="direction_params_all"
-                      placeholder="Параметр не выбран" v-model="direction_current_params"
-                      :append-to-body="true"
-                      :clearable="false"
-          />
+        <div class="row">
+          <div class="col-xs-6" style="padding-right: 0">
+            <div class="input-group" v-if="direction_params_all.length > 1">
+              <span class="input-group-addon nbr" style="width: 233px">Параметры для направления</span>
+              <treeselect class="treeselect-noborder treeselect-wide"
+                          :multiple="false" :disable-branch-nodes="true"
+                          :options="direction_params_all"
+                          placeholder="Параметр не выбран" v-model="direction_current_params"
+                          :append-to-body="true"
+                          :clearable="false"
+              />
+            </div>
+          </div>
+          <div class="col-xs-6" style="padding-left: 0">
+            <div class="input-group">
+              <span class="input-group-addon nbr"> Ф.результатов </span>
+              <select class="form-control nbr" v-model="result_current_form">
+                <option :value="d[0]" v-for="d in result_forms" :key="d[0]">
+                  {{ d[1] }}
+                </option>
+              </select>
+            </div>
+          </div>
         </div>
       </template>
       <div v-if="ex_dep === 7" class="department-select">
@@ -102,7 +132,7 @@
       </div>
       <template v-if="ex_dep !== 7">
         <div v-for="(group, gi) in orderBy(groups, 'order')" :key="gi" class="ed-group">
-          <div class="input-group" v-if="ex_dep !== 12">
+          <div class="input-group" v-if="ex_dep !== 12 && ex_dep !== 13">
             <span class="input-group-btn">
               <button class="btn btn-blue-nb lob" :disabled="is_first_group(group)" @click="dec_group_order(group)">
                 <i class="glyphicon glyphicon-arrow-up"></i>
@@ -118,7 +148,7 @@
             <span class="input-group-addon">Условие видимости</span>
             <input type="text" class="form-control" placeholder="Условие" v-model="group.visibility">
           </div>
-          <div class="row" v-if="ex_dep !== 12">
+          <div class="row" v-if="ex_dep !== 12 && ex_dep !== 13">
             <div class="col-xs-6">
               <label v-if="!group.hide">Отображать название <input type="checkbox" v-model="group.show_title"/></label>
               <div v-else>
@@ -316,7 +346,7 @@
             </div>
           </template>
         </div>
-        <div v-if="ex_dep !== 12">
+        <div v-if="ex_dep !== 12 && ex_dep !== 13">
           <button class="btn btn-blue-nb" @click="add_group">Добавить группу</button>
         </div>
       </template>
@@ -408,6 +438,11 @@ export default {
       required: false,
       default: () => [],
     },
+    result_forms: {
+      type: Array,
+      required: false,
+      default: () => [],
+    },
     specialities: {
       type: Array,
       required: false,
@@ -426,7 +461,8 @@ export default {
       is_global_direction_params: false,
       code: '',
       internal_code: '',
-      direction_current_form: '',
+      direction_current_form: 0,
+      result_current_form: 0,
       info: '',
       hide: false,
       cancel_do: false,
@@ -509,6 +545,7 @@ export default {
         '-6': 8,
         '-9': 11,
         '-10': 12,
+        '-11': 13,
       }[this.department] || this.department;
     },
     ex_deps() {
@@ -670,6 +707,7 @@ export default {
       this.site_type = null;
       this.groups = [];
       this.direction_current_form = '';
+      this.result_current_form = '';
       this.speciality = -1;
       this.hospital_research_department_pk = -1;
       if (this.pk >= 0) {
@@ -681,6 +719,7 @@ export default {
           this.code = data.code;
           this.internal_code = data.internal_code;
           this.direction_current_form = data.direction_current_form;
+          this.result_current_form = data.result_current_form;
           this.speciality = data.speciality;
           this.hospital_research_department_pk = data.department;
           this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n');
@@ -723,6 +762,7 @@ export default {
         'site_type',
         'internal_code',
         'direction_current_form',
+        'result_current_form',
         'speciality',
         'hospital_research_department_pk',
         'direction_current_params',
@@ -774,6 +814,10 @@ export default {
 .top-editor {
   display: flex;
   flex: 0 0 68px;
+
+  &.oneLine {
+    flex: 0 0 34px;
+  }
 
   .left {
     flex: 0 0 45%

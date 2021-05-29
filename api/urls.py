@@ -11,6 +11,7 @@ urlpatterns = [
     path('bases', views.bases),
     path('laborants', views.laborants),
     path('current-user-info', views.current_user_info),
+    path('menu', views.get_menu),
     path('directive-from', views.directive_from),
     path('load-users-by-group', views.load_docprofile_by_group),
     path('users', views.users_view),
@@ -54,4 +55,5 @@ urlpatterns = [
     path('list-wait/', include('api.list_wait.urls')),
     path('procedural-list/', include('api.procedure_list.urls')),
     path('parse-file/', include('api.parse_file.urls')),
+    path('users/', include('api.users.urls')),
 ]

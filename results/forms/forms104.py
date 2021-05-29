@@ -120,7 +120,17 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(HRFlowable(width=190 * mm, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.black, thickness=1.5))
 
     fwb.append(Spacer(1, 2 * mm))
-    fwb.append(Paragraph(f'Исх.№ <u>{direction.pk}</u> от <u>{strdate(iss.medical_examination)}</u>', style))
+
+    title_field_result = ["Руководитель медицинской организации", "Дата"]
+    data_fields_result = fields_result_only_title_fields(iss, title_field_result)
+    main_manager, date_protocol = "", ""
+    for i in data_fields_result:
+        if i["title"] == "Руководитель медицинской организации":
+            main_manager = i["value"]
+        if i["title"] == "Дата":
+            date_protocol = normalize_date(i["value"])
+
+    fwb.append(Paragraph(f'Исх.№ <u>{direction.pk}</u> от <u>{date_protocol or str(iss.medical_examination)}</u>', style))
     fwb.append(Spacer(1, 2 * mm))
     fwb.append(Paragraph('НАПРАВЛЕНИЕ', styleCenterBold))
     fwb.append(Paragraph('на госпитализацию для оказания высокотехнологичной медицинской помощи', styleCenterBold))
@@ -145,15 +155,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     address = ind_data['main_address']
     fwb.append(Paragraph(f'{open_bold_tag}Адрес регистрации:{close_tag_bold} {address}', style_ml))
 
-    title_field_result = ["Руководитель медицинской организации"]
     fwb = fields_result(iss, fwb, title_field_result)
-
-    data_fields_result = fields_result_only_title_fields(iss, title_field_result)
-    main_manager = ""
-    for i in data_fields_result:
-        if i["title"] == "Руководитель медицинской организации":
-            main_manager = i["value"]
-
     fwb.append(Spacer(1, 10 * mm))
 
     styleT = deepcopy(style)

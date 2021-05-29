@@ -20,7 +20,7 @@ from django.shortcuts import render, redirect
 from django.utils import dateformat
 from django.utils import timezone
 from django.utils.text import Truncator
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from pdfrw import PdfReader, PdfWriter
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
@@ -66,6 +66,7 @@ pdfmetrics.registerFont(TTFont('cour', os.path.join(FONTS_FOLDER, 'cour.ttf')))
 @login_required
 @group_required("Лечащий врач", "Зав. отделением")
 @csrf_exempt
+@ensure_csrf_cookie
 def results_search(request):
     """ Представление для поиска результатов исследований у пациента """
     if request.method == "POST":

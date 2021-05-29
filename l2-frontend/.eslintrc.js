@@ -23,14 +23,15 @@ module.exports = {
     'camelcase': 'off',
     'arrow-parens': 'off',
     "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-explicit-any": "off",
     'func-names': 'off',
   },
   "overrides": [
     {
       "files": ["*.ts", "*.tsx"],
       "rules": {
-        "@typescript-eslint/explicit-module-boundary-types": ["warn"]
+        "@typescript-eslint/explicit-module-boundary-types": ["off"],
       }
     }
-  ]
+  ],
 };

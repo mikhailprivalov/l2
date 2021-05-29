@@ -4,14 +4,11 @@ import { merge, pick } from 'lodash/object';
 
 export const HTTP = axios.create({
   baseURL: `${window.location.origin}/api`,
-  headers: {
-    'X-CSRF-Token': Cookies.get('csrftoken'),
-  },
 });
 
 export const smartCall = async ({
   method = 'post', url, urlFmt = null, onReject = {}, ctx = null, moreData = {}, pickKeys,
-}) => {
+}: any): Promise<any> => {
   let data;
   if (ctx) {
     data = pickKeys ? merge(pick(ctx, Array.isArray(pickKeys) ? pickKeys : [pickKeys]), moreData) : ctx;
@@ -31,7 +28,11 @@ export const smartCall = async ({
     if (urlFmt) {
       response = await HTTP.get(urlFmt.kwf(data));
     } else {
-      response = await HTTP[method](url, data);
+      response = await HTTP[method](url, data, {
+        headers: {
+          'X-CSRFToken': Cookies.get('csrftoken'),
+        },
+      });
     }
     if (response.statusText === 'OK') {
       return response.data;
@@ -44,7 +45,7 @@ export const smartCall = async ({
 
 export const creator = ({
   method = 'post', url = null, urlFmt = null, onReject = {},
-}, resultOnCatch = null) => (ctx = null, pickKeys = null, moreData = {}) => smartCall({
+}: any, resultOnCatch: any = null): any => (ctx = null, pickKeys = null, moreData = {}) => smartCall({
   method,
   url,
   urlFmt,
@@ -54,7 +55,7 @@ export const creator = ({
   pickKeys,
 });
 
-export const generator = (points) => {
+export const generator = (points: any): any => {
   const apiPoints = {};
 
   for (const k of Object.keys(points)) {

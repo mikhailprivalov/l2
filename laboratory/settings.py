@@ -9,7 +9,7 @@ from django.core.exceptions import ImproperlyConfigured
 PROFILING = False
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
+SECRET_KEY = None
 DEBUG = "DLIS" in os.environ
 INTERNAL_IPS = ['127.0.0.1', '192.168.0.200', '192.168.0.101', '192.168.102.4', '192.168.0.128']
 ALLOWED_HOSTS = ['lis', '127.0.0.1', 'localhost', 'testserver']
@@ -66,13 +66,14 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE = [
+    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
 ]
 INSTALLED_APPS_PRE_ADD = ()
 INSTALLED_APPS_ADD = ()
@@ -109,9 +110,10 @@ TEMPLATES = [
 ]
 WSGI_APPLICATION = 'laboratory.wsgi.application'
 LOGIN_URL = '/'
-LOGIN_REDIRECT_URL = '/mainmenu/'
-# Database
-# https://docs.djangoproject.com/en/1.8/ref/settings/#databases
+LOGIN_REDIRECT_URL = '/ui/menu'
+
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_HTTPONLY = False
 
 DATABASES = {
     'default': {
@@ -193,9 +195,6 @@ DEBUG_TOOLBAR_PANELS = (
 )
 LDAP = {
     "enable": False,
-    "server": {"host": "192.168.0.254", "port": 389, "user": "cn=Admin,dc=fc-ismu,dc=local", "password": ""},
-    "user_object": "(objectClass=*)",
-    "base": "dc=fc-ismu,dc=local",
 }
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True

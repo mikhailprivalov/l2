@@ -11,6 +11,9 @@ module.exports = {
     app: {
       entry: 'src/main.ts',
     },
+    router: {
+      entry: 'src/mainWithRouter.ts',
+    },
   },
   pluginOptions: {
     webpack: {

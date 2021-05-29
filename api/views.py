@@ -14,7 +14,7 @@ from django.db import connections
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
 import api.models as models
 import directions.models as directions
@@ -23,6 +23,7 @@ from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document, District
+from context_processors.utils import menu
 from directory.models import Fractions, ParaclinicInputField, ResearchSite, Culture, Antibiotic, ResearchGroup
 from directory.models import Researches as DResearches
 from doctor_call.models import DoctorCall
@@ -527,6 +528,7 @@ def bases(request):
     return JsonResponse(ret)
 
 
+@ensure_csrf_cookie
 def current_user_info(request):
     user = request.user
     ret = {
@@ -539,6 +541,7 @@ def current_user_info(request):
         "eds_token": None,
         "modules": SettingManager.l2_modules(),
         "user_services": [],
+        "loading": False,
     }
     if ret["auth"]:
         def fill_user_data():
@@ -564,7 +567,9 @@ def current_user_info(request):
             ret["restricted"] = [x.pk for x in doctorprofile.restricted_to_direct.all()]
             ret["user_services"] = [x.pk for x in doctorprofile.users_services.all() if x not in ret["restricted"]]
             ret["hospital"] = doctorprofile.get_hospital_id()
+            ret["hospital_title"] = doctorprofile.get_hospital_title()
             ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
+            ret["specialities"] = [] if not doctorprofile.specialities else [doctorprofile.specialities.title]
             ret["groups"] = list(user.groups.values_list('name', flat=True))
             if user.is_superuser:
                 ret["groups"].append("Admin")
@@ -599,8 +604,20 @@ def current_user_info(request):
                     sites_by_types[s.site_type] = []
                 sites_by_types[s.site_type].append({"pk": s.pk, "title": s.title, "type": s.site_type, "extended": True, 'e': s.site_type + 4})
 
+            # Тут 13 – заявления, 11 – формы, 7 – формы минус 4
+            if 13 in en and 11 in en:
+                if 7 not in sites_by_types:
+                    sites_by_types[7] = []
+                sites_by_types[7].append({
+                    "pk": -13,
+                    "title": "Заявления",
+                    "type": 7,
+                    "extended": True,
+                    'e': 11,
+                })
+
             for e in en:
-                if e < 4 or not en[e]:
+                if e < 4 or not en[e] or e == 13:
                     continue
 
                 t = e - 4
@@ -644,6 +661,16 @@ def current_user_info(request):
     if hasattr(request, 'plain_response') and request.plain_response:
         return ret
     return JsonResponse(ret)
+
+
+def get_menu(request):
+    data = menu(request)
+
+    return JsonResponse({
+        "buttons": data["mainmenu"],
+        "version": data["version"],
+        "region": SettingManager.get("region", default='38', default_type='s'),
+    })
 
 
 @login_required

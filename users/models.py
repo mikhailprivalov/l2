@@ -71,6 +71,12 @@ class DoctorProfile(models.Model):
             return hosp.pk
         return None
 
+    def get_hospital_title(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.safe_short_title
+        return None
+
     def get_hospital(self):
         if not self.hospital:
             from hospitals.models import Hospitals

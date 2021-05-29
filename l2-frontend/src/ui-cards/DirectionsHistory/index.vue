@@ -95,9 +95,14 @@
                 (row.maybe_onco ? '. Онкоподозрение' : '')"
               v-tippy="{ placement : 'bottom', arrow: true }"
               :class="['status-' + row.status]">
-            <strong>{{row.status}}<span v-if="row.maybe_onco">*О</span></strong></td>
+            <strong>{{row.status}}
+              <span v-if="row.maybe_onco">*О</span>
+              <span v-if="row.is_application">**З</span>
+            </strong>
+
+          </td>
           <td class="button-td">
-            <div class="button-td-inner"
+            <div v-if="!row.is_application" class="button-td-inner"
                  :class="[
                    {
                      has_pacs_stationar: !!row.pacs
@@ -132,6 +137,9 @@
               </button>
               <button class="btn btn-blue-nb" v-else-if="!row.has_hosp" @click="show_results(row)">Результаты</button>
               <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
+            </div>
+            <div v-else class="button-td-inner button-td-inner-single">
+              <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Заявление</button>
             </div>
           </td>
           <td class="nopd"><input v-model="row.checked" type="checkbox"/></td>
@@ -605,9 +613,15 @@ export default {
         border: none !important;
       }
 
-      &:not(.has_pacs) {
+      &:not(.has_pacs):not(&-single) {
         .btn {
           flex: 0 0 50%;
+        }
+      }
+
+      &-single {
+        .btn {
+          flex: 0 0 100%;
         }
       }
 

@@ -8,6 +8,10 @@ export default generator({
       auth: false, username: '', fio: '', groups: [], doc_pk: -1, department: { pk: -1, title: '' }, extended_departments: {},
     },
   },
+  getMenu: {
+    method: 'get',
+    url: 'menu',
+  },
   getDirectiveFrom: {
     method: 'get',
     url: 'directive-from',

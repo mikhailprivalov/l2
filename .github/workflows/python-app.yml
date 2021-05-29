@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      SECRET_KEY: 'COMMIT_${SHORT_SHA}'
 
     services:
       postgres:
