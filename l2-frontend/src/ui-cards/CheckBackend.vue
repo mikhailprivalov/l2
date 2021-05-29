@@ -31,7 +31,7 @@ export default class CheckBackend extends Vue {
   user_data: any;
 
   mounted() {
-    this.check();
+    setTimeout(() => this.check(), 8000);
   }
 
   check() {

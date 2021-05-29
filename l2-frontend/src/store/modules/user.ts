@@ -8,6 +8,7 @@ const stateInitial = {
     auth: false,
     loading: true,
     modules: {},
+    groups: [],
   },
   menu: {
     buttons: [],
@@ -42,6 +43,7 @@ const getters = {
   },
   user_hospital_title: state => state.data && state.data.hospital_title,
   authenticated: (state) => Boolean(state.data && state.data.auth),
+  user_groups: (state) => (state.data && state.data.groups) || [],
   authenticateLoading: (state) => Boolean(state.data && state.data.loading),
   ex_dep: (state) => state.data.extended_departments || [],
   directive_from: (state) => state.directive_from,
@@ -52,10 +54,14 @@ const getters = {
 const actions = {
   async [actionsTypes.GET_USER_DATA]({ commit }, { loadMenu = false } = {}) {
     commit(mutation_types.SET_USER_DATA, { loading: true });
-    const data = await user_point.getCurrentUserInfo();
-    commit(mutation_types.SET_USER_DATA, { data });
+
+    const [userData, menuData] = await Promise.all([
+      user_point.getCurrentUserInfo(),
+      loadMenu ? user_point.getMenu() : Promise.resolve(null),
+    ]);
+
+    commit(mutation_types.SET_USER_DATA, { data: userData });
     if (loadMenu) {
-      const menuData = await user_point.getMenu();
       commit(mutation_types.SET_MENU, { data: menuData });
     }
   },
