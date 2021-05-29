@@ -302,7 +302,6 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { mapGetters } from 'vuex';
 import { debounce } from 'lodash';
-import { set } from 'es-cookie';
 import L2CardCreate from '../modals/L2CardCreate.vue';
 import DReg from '../modals/DReg.vue';
 import Benefit from '../modals/Benefit.vue';
