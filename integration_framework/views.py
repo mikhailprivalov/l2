@@ -826,8 +826,14 @@ def external_research_create(request):
     return Response({"ok": False, 'message': message})
 
 
-def send_eds(request):
+def data_to_xml(request):
     direction_pk = request.GET.get("direction_pk")
+    direction = directions.Napravleniya.objects.select_related('istochnik_f', 'client', 'client__individual', 'client__base').get(pk=direction_pk)
+    card = direction.client
+    individual = card.individual
+    iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=False).select_related('research', 'doc_confirmation')
+
+    # идентификатор документа
 
     patientRole = {"pk_extension": "", "snils_extension": "", "addr": {"streetAddressLine": "", "state_region_code": "", "fiasAOGUID": "", "fiasHOUSEGUID": ""},
                     "patient": {"family": "", "given1": "", "given2": "", "sex": "", "birth": ""}

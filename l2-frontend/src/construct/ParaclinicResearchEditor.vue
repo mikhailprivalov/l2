@@ -247,7 +247,9 @@
                       <TableConstructor :row="row" v-if="row.field_type === 27"/>
                       <template v-else>
                         <div class="input-group" style="margin-bottom: 5px">
-                          <input type="text" v-model="row.new_value" class="form-control"
+                          <treeselect v-if="row.field_type === 10" :multiple="false" :disable-branch-nodes="true" :options="permanent_directories_keys"
+                            placeholder="Справочник не выбран" v-model="permanent_directories_keys_id" @select="add_packet_values"/>
+                          <input v-if="permanent_directories_keys_id === -1" type="text" v-model="row.new_value" class="form-control"
                                  @keyup.enter="add_template_value(row)"
                                  placeholder="Новый шаблон быстрого ввода"/>
                           <span class="input-group-btn"><button class="btn last btn-blue-nb" type="button"
@@ -335,6 +337,7 @@
                       <option value="25">Результаты диагностические</option>
                       <option value="26">Результаты консультаций</option>
                       <option value="27">Таблица</option>
+                      <option value="28">Справочник строгий</option>
                     </select>
                   </label>
                 </div>
@@ -387,13 +390,15 @@ import api from '@/api';
 import Treeselect from "@riophae/vue-treeselect";
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import TableConstructor from "@/construct/TableConstructor";
+import DirectorySelect from "@/construct/DirectorySelect";
+import vSelect from 'vue-select'
 
 Vue.use(Vue2Filters)
 
 export default {
   name: 'paraclinic-research-editor',
   components: {
-    TableConstructor,
+    TableConstructor,DirectorySelect, vSelect,
     FieldHelper,
     NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor, ConfigureAnesthesiaField, Treeselect,
   },
@@ -441,7 +446,11 @@ export default {
       type: Array,
       required: false,
       default: () => [],
-
+    },
+    permanent_directories: {
+      type: Object,
+      required: false,
+      default: () => {}
     }
   },
   created() {
@@ -480,6 +489,8 @@ export default {
       direction_params_all: [],
       direction_current_params: -1,
       assigned_to_params: [],
+      permanent_directories_keys: [{id: -1, label: 'не выбран'}],
+      permanent_directories_keys_id: -1
     }
   },
   watch: {
@@ -497,6 +508,11 @@ export default {
       },
       deep: true
     },
+    permanent_directories_keys_id: {
+      handler(){
+        (this.permanent_directories_keys_id)
+      }
+    }
   },
   mounted() {
     $(window).on('beforeunload', () => {
@@ -504,6 +520,9 @@ export default {
         return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
     })
     this.$root.$on('hide_fte', () => this.f_templates_hide())
+    for (let prop in this.permanent_directories) {
+      this.permanent_directories_keys.push({id: prop, label: prop})
+    }
   },
   computed: {
     fte() {
@@ -579,8 +598,14 @@ export default {
     add_template_value(row) {
       if (row.new_value === '')
         return
-      row.values_to_input.push(row.new_value)
-      row.new_value = ''
+      if (this.permanent_directories_keys_id === -1){
+        row.values_to_input.push(row.new_value)
+        row.new_value = ''
+      }
+    },
+    add_packet_values(node, instanceId){
+      console.log(node.label)
+      console.log(instanceId)
     },
     drag(row, ev) {
       // console.log(row, ev)
@@ -776,7 +801,7 @@ export default {
       const {data} = await api('procedural-list/suitable-departments');
       this.departments = [{id: -1, label: 'Отделение не выбрано'}, ...data];
     }
-  }
+  },
 }
 </script>
 

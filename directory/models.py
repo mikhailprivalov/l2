@@ -447,6 +447,7 @@ class ParaclinicInputField(models.Model):
         (25, 'Diagnostic result'),
         (26, 'Consultation result'),
         (27, 'Table'),
+        (28, 'Dict permanent'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
