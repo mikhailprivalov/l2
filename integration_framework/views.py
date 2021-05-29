@@ -824,3 +824,26 @@ def external_research_create(request):
         message = 'Серверная ошибка'
 
     return Response({"ok": False, 'message': message})
+
+
+def send_eds(request):
+    direction_pk = request.GET.get("direction_pk")
+
+    patientRole = {"pk_extension": "", "snils_extension": "", "addr": {"streetAddressLine": "", "state_region_code": "", "fiasAOGUID": "", "fiasHOUSEGUID": ""},
+                    "patient": {"family": "", "given1": "", "given2": "", "sex": "", "birth": ""}
+                   }
+    patient_document_passport = {"type": "", "serial": "", "num": "", "who": "", "code_department": "", "date": ""}
+
+    ############################################################################################################
+    providerOrganization = {"oid": "", "name": "", "telecom": {"tel": "", "fax": "", "http": ""}, "streetAddressLine": "", "state_region_code": ""}
+
+    ############################################################################################################
+    # < !-- R[1..1] ДАННЫЕ ОБ АВТОРЕ ДОКУМЕНТА -->
+    # < !-- R[1..1] Дата подписи документа автором --> <timevalue = "201508151255+0300"/>
+    author = {
+        "timeValue": "201508151255+0300", "assignedAuthor": {"extension": "", "code": "", "displayName": ""},
+        "addr": {"streetAddressLine": "", "state": "", "fiasAddress": {"fiasAOGUID": "", "fiasHOUSEGUID": ""},
+                 "assignedPerson": {"name": {"family": "", "given1": "", "given2": ""}
+                                    }
+                 }
+    }
