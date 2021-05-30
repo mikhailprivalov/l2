@@ -1,9 +1,6 @@
 <template>
-  <div>
     <treeselect v-if="row.field_type === 10" :multiple="false" :disable-branch-nodes="true"
                 :options="permanent_directories_keys"  placeholder="Справочник не выбран" @select="saveDirectories"/>
-
-  </div>
 </template>
 
 
