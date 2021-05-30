@@ -26,6 +26,8 @@ from rmis_integration.client import get_md5
 from slog.models import Log
 from users.models import Speciality
 from utils.permanent_directories import permanent_directories
+import os.path
+from laboratory.settings import BASE_DIR
 
 
 @login_required
@@ -188,6 +190,13 @@ def researches_by_department(request):
     direction_form = DResearches.DIRECTION_FORMS
     result_form = DResearches.RESULT_FORMS
     spec_data = [{"pk": -1, "title": "Не выбрано"}, *list(users.Speciality.objects.all().values('pk', 'title').order_by("title"))]
+
+    exist_file = os.path.isfile(os.path.join(BASE_DIR, 'utils', 'extension_directories.json'))
+    if exist_file:
+        extension_directories = os.path.join(BASE_DIR, 'utils', 'extension_directories.json')
+        with open(extension_directories) as json_file:
+            data = json.load(json_file)
+            permanent_directories.update(data)
     response = {"researches": [], "direction_forms": direction_form, "result_forms": result_form, "specialities": spec_data, "permanent_directories": permanent_directories}
     request_data = json.loads(request.body)
     department_pk = int(request_data["department"])

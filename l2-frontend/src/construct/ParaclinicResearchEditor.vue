@@ -247,9 +247,10 @@
                       <TableConstructor :row="row" v-if="row.field_type === 27"/>
                       <template v-else>
                         <div class="input-group" style="margin-bottom: 5px">
-                          <treeselect v-if="row.field_type === 10" :multiple="false" :disable-branch-nodes="true" :options="permanent_directories_keys"
-                            placeholder="Справочник не выбран" v-model="row.permanent_directories_keys_id" @select="add_packet_values"/>
-                          <input v-if="permanent_directories_keys_id === -1" type="text" v-model="row.new_value" class="form-control"
+                          <PermanentDirectories :row="row" :permanent_directories_keys="permanent_directories_keys"
+                                                :permanent_directories="permanent_directories"
+                                                v-if="row.field_type === 10"/>
+                          <input type="text" v-model="row.new_value" class="form-control"
                                  @keyup.enter="add_template_value(row)"
                                  placeholder="Новый шаблон быстрого ввода"/>
                           <span class="input-group-btn"><button class="btn last btn-blue-nb" type="button"
@@ -390,6 +391,7 @@ import api from '@/api';
 import Treeselect from "@riophae/vue-treeselect";
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import TableConstructor from "@/construct/TableConstructor";
+import PermanentDirectories from "@/construct/PermanentDirectories";
 import DirectorySelect from "@/construct/DirectorySelect";
 import vSelect from 'vue-select'
 
@@ -398,7 +400,7 @@ Vue.use(Vue2Filters)
 export default {
   name: 'paraclinic-research-editor',
   components: {
-    TableConstructor,DirectorySelect, vSelect,
+    TableConstructor,DirectorySelect, vSelect, PermanentDirectories,
     FieldHelper,
     NumberRangeField, NumberField, RichTextEditor, FastTemplatesEditor, ConfigureAnesthesiaField, Treeselect,
   },
@@ -507,11 +509,6 @@ export default {
       },
       deep: true
     },
-    permanent_directories_keys_id: {
-      handler(){
-        (this.permanent_directories_keys_id)
-      }
-    }
   },
   mounted() {
     $(window).on('beforeunload', () => {
@@ -597,14 +594,12 @@ export default {
     add_template_value(row) {
       if (row.new_value === '')
         return
-      if (this.permanent_directories_keys_id === -1){
-        row.values_to_input.push(row.new_value)
-        row.new_value = ''
-      }
+      row.values_to_input.push(row.new_value)
+      row.new_value = ''
     },
     add_packet_values(node, instanceId){
-      console.log(node.label)
-      this.di
+      console.log("label", node.label)
+      console.log("id", node.id)
       console.log(instanceId)
       let list_data = this.permanent_directories[node.label]
       console.log(list_data)
@@ -704,7 +699,6 @@ export default {
         hide: false,
         lines: 3,
         field_type: 0,
-        permanent_directories_keys_id: -1
       })
     },
     add_group() {
