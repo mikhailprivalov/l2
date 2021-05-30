@@ -247,6 +247,9 @@
                       <TableConstructor :row="row" v-if="row.field_type === 27"/>
                       <template v-else>
                         <div class="input-group" style="margin-bottom: 5px">
+                          <PermanentDirectories :row="row" :permanent_directories_keys="permanent_directories_keys"
+                                            :permanent_directories="permanent_directories"
+                                            v-if="row.field_type === 10"/>
                           <input type="text" v-model="row.new_value" class="form-control"
                                  @keyup.enter="add_template_value(row)"
                                  placeholder="Новый шаблон быстрого ввода"/>
@@ -387,6 +390,7 @@ import api from '@/api';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import TableConstructor from '@/construct/TableConstructor.vue';
+import PermanentDirectories from '@/construct/PermanentDirectories.vue';
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
 Vue.use(Vue2Filters);
@@ -395,6 +399,7 @@ export default {
   name: 'paraclinic-research-editor',
   components: {
     TableConstructor,
+    PermanentDirectories,
     FieldHelper,
     NumberRangeField,
     NumberField,
@@ -447,7 +452,10 @@ export default {
       type: Array,
       required: false,
       default: () => [],
-
+    },
+    permanent_directories: {
+      type: Object,
+      required: false,
     },
   },
   created() {
@@ -486,6 +494,7 @@ export default {
       direction_params_all: [],
       direction_current_params: -1,
       assigned_to_params: [],
+      permanent_directories_keys: [{ id: -1, label: 'не выбран' }],
     };
   },
   watch: {
@@ -512,6 +521,9 @@ export default {
       return undefined;
     });
     this.$root.$on('hide_fte', () => this.f_templates_hide());
+    Object.keys(this.permanent_directories).forEach(key => {
+      this.permanent_directories_keys.push({ id: key, label: key });
+    });
   },
   computed: {
     fte() {
