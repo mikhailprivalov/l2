@@ -248,7 +248,7 @@
                       <template v-else>
                         <div class="input-group" style="margin-bottom: 5px">
                           <treeselect v-if="row.field_type === 10" :multiple="false" :disable-branch-nodes="true" :options="permanent_directories_keys"
-                            placeholder="Справочник не выбран" v-model="permanent_directories_keys_id" @select="add_packet_values"/>
+                            placeholder="Справочник не выбран" v-model="row.permanent_directories_keys_id" @select="add_packet_values"/>
                           <input v-if="permanent_directories_keys_id === -1" type="text" v-model="row.new_value" class="form-control"
                                  @keyup.enter="add_template_value(row)"
                                  placeholder="Новый шаблон быстрого ввода"/>
@@ -490,7 +490,6 @@ export default {
       direction_current_params: -1,
       assigned_to_params: [],
       permanent_directories_keys: [{id: -1, label: 'не выбран'}],
-      permanent_directories_keys_id: -1
     }
   },
   watch: {
@@ -605,7 +604,10 @@ export default {
     },
     add_packet_values(node, instanceId){
       console.log(node.label)
+      this.di
       console.log(instanceId)
+      let list_data = this.permanent_directories[node.label]
+      console.log(list_data)
     },
     drag(row, ev) {
       // console.log(row, ev)
@@ -702,6 +704,7 @@ export default {
         hide: false,
         lines: 3,
         field_type: 0,
+        permanent_directories_keys_id: -1
       })
     },
     add_group() {
