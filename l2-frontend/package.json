@@ -81,7 +81,7 @@
     "@vue/eslint-config-typescript": "^7.0.0",
     "cross-env": "^7.0.3",
     "eslint": "^6.7.2",
-    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-import": "^2.23.4",
     "eslint-plugin-vue": "^6.2.2",
     "postcss": "^8.2.14",
     "sass": "^1.32.12",
