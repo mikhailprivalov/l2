@@ -223,15 +223,15 @@ export default {
   created() {
     this.$store.watch((state) => state.templates, () => {
       this.check_template();
-    });
+    }, { immediate: true });
 
     this.$store.watch((state) => state.allTypes, () => {
       this.checkType();
-    });
+    }, { immediate: true });
 
     this.$store.watch((state) => state.templates, () => {
       this.check_template();
-    });
+    }, { immediate: true });
   },
   async mounted() {
     this.$root.$on(`researches-picker:deselect${this.kk}`, this.deselect_research_ignore);

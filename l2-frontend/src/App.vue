@@ -1,8 +1,10 @@
 <template>
-  <div id="app" :class="$route.meta.narrowLayout && 'container'">
+  <div id="app">
     <Navbar />
 
-    <router-view v-if="!fullPageLoader"></router-view>
+    <div :class="$route.meta.narrowLayout && 'container'">
+      <router-view v-if="!fullPageLoader"></router-view>
+    </div>
 
     <div id="preloader" v-if="inLoading"></div>
 

@@ -41,6 +41,7 @@
             </div>
           </li>
         </ul>
+        <card-reader v-if="$route.meta.showCardReader"/>
         <ul class="nav navbar-right navbar-nav">
           <li>
             <span class="navbar-brand org-title">
@@ -83,7 +84,6 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
-// import * as actions from '../store/action-types';
 
 @Component({
   computed: mapGetters([
@@ -95,6 +95,9 @@ import { mapGetters } from 'vuex';
     'fio_short',
     'user_hospital_title',
   ]),
+  components: {
+    CardReader: () => import('@/ui-cards/CardReader.vue'),
+  },
 })
 export default class Navbar extends Vue {
   authenticated: boolean;
@@ -150,5 +153,10 @@ export default class Navbar extends Vue {
 .dash-buttons .panel-body span {
   font-size: 18px;
   font-weight: 300;
+}
+
+a.dash-active {
+  background: #048493 !important;
+  border: 1px solid #048493 !important;
 }
 </style>

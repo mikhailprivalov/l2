@@ -11,7 +11,10 @@ const getters = {
 };
 
 const actions = {
-  async [actionsTypes.GET_BASES]({ commit }) {
+  async [actionsTypes.GET_BASES]({ commit, state }, { lazy = false } = {}) {
+    if (lazy && state.bases && state.bases.length > 0) {
+      return;
+    }
     const answer = await cards_point.getBases();
     const { bases } = answer;
     commit(mutation_types.UPDATE_BASES, { bases });

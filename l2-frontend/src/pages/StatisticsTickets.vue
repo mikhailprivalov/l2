@@ -48,7 +48,7 @@ export default {
       const card = this.selected_card.pk;
       const { ofname } = this.selected_card;
       const dep = this.selected_card.ofname_dep;
-      return `/mainmenu/directions?base_pk=${base}&card_pk=${card}&ofname=${ofname}&ofname_dep=${dep}`;
+      return `/ui/directions?base_pk=${base}&card_pk=${card}&ofname=${ofname}&ofname_dep=${dep}`;
     },
     can_create_directions() {
       if ('groups' in this.$store.getters.user_data) {

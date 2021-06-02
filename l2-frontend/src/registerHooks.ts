@@ -1,5 +1,6 @@
 import Vue from 'vue';
 
+import { POSITION, TYPE } from 'vue-toastification/src/ts/constants';
 import * as actions from './store/action-types';
 import directionsPoint from './api/directions-point';
 
@@ -29,6 +30,29 @@ export default (instance: Vue): void => {
   });
 
   instance.$root.$on('print:directions_list', (pks) => printForm('/statistic/xls?pk={pks}&type=directions_list', pks));
+
+  instance.$root.$on('msg', (type, message, timeout: number | void) => {
+    let t = TYPE.DEFAULT;
+
+    if (type === 'error') {
+      t = TYPE.ERROR;
+    } else if (type === 'ok') {
+      t = TYPE.SUCCESS;
+    } else if (type === 'warning') {
+      t = TYPE.WARNING;
+    } else if (type === 'info') {
+      t = TYPE.INFO;
+    }
+
+    instance.$toast(message, {
+      type: t,
+      position: POSITION.BOTTOM_RIGHT,
+      timeout: timeout || 8000,
+      closeOnClick: false,
+      pauseOnHover: true,
+      icon: true,
+    });
+  });
 
   instance.$root.$on('generate-directions', ({
     type,
@@ -61,19 +85,19 @@ export default (instance: Vue): void => {
     hospital_department_override: hospitalDepartmentOverride = -1,
   }) => {
     if (cardPk === -1) {
-      window.errmessage('Не выбрана карта');
+      instance.$root.$emit('msg', 'error', 'Не выбрана карта');
       return;
     }
     if (finSourcePk === -1) {
-      window.errmessage('Не выбран источник финансирования');
+      instance.$root.$emit('msg', 'error', 'Не выбран источник финансирования');
       return;
     }
     if (Object.keys(researches).length === 0) {
-      window.errmessage('Не выбраны исследования');
+      instance.$root.$emit('msg', 'error', 'Не выбраны исследования');
       return;
     }
     if (operator && ofname < 0) {
-      window.errmessage('Не выбрано, от чьего имени выписываются направления');
+      instance.$root.$emit('msg', 'error', 'Не выбрано, от чьего имени выписываются направления');
       return;
     }
     instance.$store.dispatch(actions.INC_LOADING);
@@ -108,7 +132,7 @@ export default (instance: Vue): void => {
         if (type === 'create_and_open') {
           instance.$root.$emit('open-direction-form', data.directions[0]);
 
-          window.okmessage('Направления создано', `Номер: ${data.directions[0]}`);
+          instance.$root.$emit('msg', 'ok', `Направления создано: ${data.directions[0]}`);
         } else if (type === 'direction') {
           if (needContract) {
             instance.$root.$emit('print:directions:contract', data.directions);
@@ -118,12 +142,12 @@ export default (instance: Vue): void => {
         } else if (type === 'barcode') {
           instance.$root.$emit('print:barcodes', data.directions, data.directionsStationar);
         } else if (type === 'just-save' || type === 'barcode') {
-          window.okmessage('Направления созданы', `Номера: ${data.directions.join(', ')}`);
+          instance.$root.$emit('msg', 'ok', `Направления созданы: ${data.directions.join(', ')}`);
         }
         instance.$root.$emit(`researches-picker:clear_all${kk}`);
         instance.$root.$emit(`researches-picker:directions_created${kk}`);
       } else {
-        window.errmessage('Направления не созданы', data.message);
+        instance.$root.$emit('msg', 'error', `Направления не созданы: ${data.message}`);
       }
       if (callback) callback();
     });

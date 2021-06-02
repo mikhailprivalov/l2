@@ -21,7 +21,10 @@ const getters = {
 };
 
 const actions = {
-  async [actionsTypes.GET_ALL_DEPARTMENTS]({ commit }) {
+  async [actionsTypes.GET_ALL_DEPARTMENTS]({ commit, state }, { lazy = false } = {}) {
+    if (lazy && state.all && state.all.length > 0) {
+      return;
+    }
     const answer = await departments_directory.getDepartments({ method: 'GET' });
     const { departments } = answer;
     commit(mutation_types.UPDATE_DEPARTMENTS, { departments });
@@ -29,7 +32,10 @@ const actions = {
     commit(mutation_types.SET_CAN_EDIT, { can_edit: answer.can_edit });
     commit(mutation_types.SET_TYPES, { department_types: answer.types });
   },
-  async [actionsTypes.LOAD_HOSPITALS]({ commit }) {
+  async [actionsTypes.LOAD_HOSPITALS]({ commit, state }, { lazy = false } = {}) {
+    if (lazy && state.hospitals && state.hospitals.length > 0) {
+      return;
+    }
     const data = await api('hospitals');
     commit(mutation_types.SET_HOSPITALS, data);
   },

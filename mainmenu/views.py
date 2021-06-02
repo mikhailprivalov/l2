@@ -826,38 +826,8 @@ def l2queue(request):
 @login_required
 @ensure_csrf_cookie
 def directions(request):
-    prefetched = prefetch(request, {
-        'researches.get_researches': {
-            'url': 'researches/all',
-        },
-        'departments': {
-            'data': {'method': 'GET'},
-        },
-        'bases': {},
-        'current_user_info': {
-            'url': 'current-user-info',
-        },
-        'hospitals': {},
-        'researches.by_direction_params': {
-            'url': 'researches/by-direction-params',
-        },
-        'procedure_list.get_suitable_departments': {
-            'url': 'procedural-list/suitable-departments',
-        },
-        'directive_from': {
-            'url': 'directive-from',
-        },
-        'directions.purposes': {
-            'url': 'directions/purposes',
-        },
-        'directions.external_organizations': {
-            'url': 'directions/external-organizations',
-        },
-        'researches.get_researches_templates': {
-            'url': 'researches/templates',
-        },
-    })
-    return render(request, 'dashboard/directions_ng.html', {"prefetched": prefetched})
+    q = request.GET.urlencode()
+    return redirect(f'/ui/directions{("?" + q) if q else ""}')
 
 
 @ensure_csrf_cookie

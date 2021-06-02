@@ -125,7 +125,7 @@ export default {
           this.val = `${result.value} (${result.date}, направление ${result.direction})`;
         }
       } else {
-        window.errmessage(`Результат не найден (${this.title})!`);
+        this.$root.$emit('msg', 'error', `Результат не найден (${this.title})!`);
       }
     },
     print_results() {

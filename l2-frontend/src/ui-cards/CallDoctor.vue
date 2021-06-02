@@ -280,7 +280,7 @@ export default {
         },
       );
       if (result.ok) {
-        window.okmessage('Записи для вызова на дом созданы');
+        this.$root.$emit('msg', 'ok', 'Записи для вызова на дом созданы');
         this.date = moment().format('YYYY-MM-DD');
         this.td = this.date;
         this.comment = '';

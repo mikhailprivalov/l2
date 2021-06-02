@@ -33,7 +33,7 @@ def menu(request):
                 {"url": "/ui/menu", "title": "Меню L2", "nt": False, "access": ["*"], "not_show_home": True},
                 {"url": "/logout", "title": "Выход из профиля", "nt": False, "access": ["*"], "not_show_home": True},
                 {"hr": True, "access": ["*"]},
-                {"url": "/mainmenu/directions", "title": "Направления и картотека", "nt": False,
+                {"url": "/ui/directions", "title": "Направления и картотека", "nt": False,
                  "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Оператор Контакт-центра"]},
                 {
                     "url": "/mainmenu/direction/info",
