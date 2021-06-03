@@ -64,6 +64,7 @@ INSTALLED_APPS = (
     'doctor_call',
     'hospitals.apps.HospitalsConfig',
     'pharmacotherapy',
+    'command_utils',
 )
 
 MIDDLEWARE = [
