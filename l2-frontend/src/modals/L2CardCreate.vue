@@ -95,7 +95,7 @@
                 <th>Активные карты L2</th>
                 <td colspan="2">
                   <div v-for="c in i.l2_cards" :key="c.pk">
-                    <a :href="`/mainmenu/directions?card_pk=${c.pk}&base_pk=${base_pk}&open_edit=true`" class="a-under c-pointer"
+                    <a :href="`/ui/directions?card_pk=${c.pk}&base_pk=${base_pk}&open_edit=true`" class="a-under c-pointer"
                         title="Открыть существующую карту" v-tippy>
                       <strong>{{c.number}}</strong>
                     </a>
@@ -504,11 +504,14 @@
 </template>
 
 <script lang="ts">
+// @ts-ignore
 import TypeAhead from 'vue2-typeahead';
 import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import { normalizeNamePart, swapLayouts, validateSnils } from '@/utils';
+import {
+  normalizeNamePart, swapLayouts, validateSnils, valuesToString,
+} from '@/utils';
 import { GENDERS } from '@/constants';
 import api from '@/api';
 import _ from 'lodash';
@@ -595,6 +598,7 @@ export default {
       agent_doc: '',
       agent_clear: false,
       loading: false,
+      loaded: false,
       new_card_num: '',
     };
   },
@@ -689,7 +693,7 @@ export default {
   },
   watch: {
     sex() {
-      let s = swapLayouts(this.card.sex.toLowerCase());
+      let s = swapLayouts((this.card.sex || '').toLowerCase());
       if (s.length > 1) {
         // eslint-disable-next-line prefer-destructuring
         s = s[0];
@@ -734,7 +738,6 @@ export default {
     makeForms(formsBase) {
       return formsBase.map(f => {
         if (f.isGroup) {
-          console.log(f);
           return {
             ...f,
             forms: this.makeForms(f.forms),
@@ -742,7 +745,7 @@ export default {
         }
         return {
           ...f,
-          url: f.url.kwf({
+          url: valuesToString(f.url, {
             card: this.card_pk,
             individual: this.card.individual,
           }),
@@ -793,15 +796,15 @@ export default {
           base_pk: this.base_pk,
         });
       if (data.result !== 'ok') {
-        window.errmessage('Сохранение прошло не удачно');
+        this.$root.$emit('msg', 'error', 'Сохранение прошло не удачно');
         return;
       }
       if (Array.isArray(data.messages)) {
         for (const msg of data.messages) {
-          window.wrnmessage('Warning', msg);
+          this.$root.$emit('msg', 'warning', msg);
         }
       }
-      window.okmessage('Данные сохранены');
+      this.$root.$emit('msg', 'ok', 'Данные сохранены');
       this.$root.$emit('update_card_data');
       if (hide_after) {
         this.hide_modal();
@@ -823,14 +826,14 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       await patientsPoint.updateCdu({ card_pk: this.card_pk, doc });
       await this.load_data();
-      window.okmessage('Изменения сохранены');
+      this.$root.$emit('msg', 'ok', 'Изменения сохранены');
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async update_wia(key) {
       await this.$store.dispatch(actions.INC_LOADING);
       await patientsPoint.updateWIA({ card_pk: this.card_pk, key });
       await this.load_data();
-      window.okmessage('Изменения сохранены');
+      this.$root.$emit('msg', 'ok', 'Изменения сохранены');
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     edit_agent(key) {
@@ -851,9 +854,9 @@ export default {
       const { updated } = await patientsPoint.syncTfoms(this, 'card_pk');
       await this.load_data();
       this.update_card();
-      window.okmessage('Сверка проведена');
+      this.$root.$emit('msg', 'ok', 'Сверка проведена');
       if (updated && updated.length > 0) {
-        window.okmessage('Обновлены данные', updated.join(', '));
+        this.$root.$emit('msg', 'ok', `Обновлены данные: ${updated.join(', ')}`);
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },
@@ -884,10 +887,10 @@ export default {
     },
     highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
     load_data() {
+      this.loaded = false;
       if (this.card_pk === -1) {
         return Promise.resolve({});
       }
-      this.loaded = false;
       this.$store.dispatch(actions.INC_LOADING);
       return patientsPoint.getCard(this, 'card_pk').then((data) => {
         this.card = data;
@@ -993,7 +996,7 @@ export default {
         number: this.new_card_num,
       });
       if (!ok) {
-        window.errmessage('Карта не найдена');
+        this.$root.$emit('msg', 'error', 'Карта не найдена');
         return;
       }
       try {
@@ -1008,8 +1011,8 @@ export default {
         old_card_number: this.card.number,
         new_card_number: this.new_card_num,
       });
-      window.okmessage('Направления успешно перенесены');
-      window.okmessage('Номера: ', data.directions);
+      this.$root.$emit('msg', 'ok', 'Направления успешно перенесены');
+      this.$root.$emit('msg', 'ok', `Номера: ${data.directions}`);
       await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
@@ -1074,5 +1077,10 @@ export default {
     &, & strong, &:hover {
       cursor: pointer!important;
     }
+  }
+
+  .loading-body {
+    padding: 20px;
+    text-align: center;
   }
 </style>

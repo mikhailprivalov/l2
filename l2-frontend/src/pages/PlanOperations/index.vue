@@ -49,6 +49,7 @@
 <script lang="ts">
 import moment from 'moment';
 import flatten from 'lodash/flatten';
+import { valuesToString } from '@/utils';
 import plansPoint from '../../api/plans-point';
 import Filters from './components/Filters.vue';
 import Row from './components/Row.vue';
@@ -107,7 +108,7 @@ export default {
     forms() {
       return planOperations.map((f) => ({
         ...f,
-        url: f.url.kwf({
+        url: valuesToString(f.url, {
           pks_plan: this.pks_plan,
         }),
       }));

@@ -12,6 +12,8 @@ import VuejsDialog from 'vuejs-dialog';
 import PortalVue from 'portal-vue';
 // @ts-ignore
 import Inputmask from 'inputmask';
+import Toast from 'vue-toastification';
+import 'vue-toastification/dist/index.css';
 // @ts-ignore
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min';
 
@@ -68,9 +70,14 @@ export default (): void => {
 
   // @ts-ignore
   Vue.dialog.registerComponent('replace-append-modal', ReplaceAppendModal);
+  Vue.use(Toast, {
+    transition: 'Vue-Toastification__bounce',
+    maxToasts: 20,
+    newestOnTop: false,
+  });
 
-  Vue.config.errorHandler = function (msg) {
+  Vue.config.errorHandler = function (msg, vm) {
     console.error(msg);
-    window.errmessage('Vue Error', String(msg));
+    vm.$root.$emit('msg', 'error', `Vue Error: ${msg}`);
   };
 };

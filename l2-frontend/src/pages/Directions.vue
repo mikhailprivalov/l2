@@ -109,6 +109,7 @@ import {
 } from '@/constants';
 import CallDoctor from '@/ui-cards/CallDoctor.vue';
 import ListWaitCreator from '@/ui-cards/ListWaitCreator.vue';
+import { valuesToString } from '@/utils';
 
 export default {
   components: {
@@ -248,7 +249,7 @@ export default {
         }
         return {
           ...f,
-          url: f.url.kwf({
+          url: valuesToString(f.url, {
             card: this.selected_card.pk,
             individual: this.selected_card.individual_pk,
           }),

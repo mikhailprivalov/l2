@@ -379,7 +379,7 @@ export default {
   created() {
     this.$store.watch((state) => state.bases, () => {
       this.check_base();
-    });
+    }, { immediate: true });
     this.$root.$on('search', () => {
       this.search();
     });
@@ -460,6 +460,13 @@ export default {
       if (nv) {
         this.inc_tfoms = true;
       }
+    },
+    base: {
+      immediate: true,
+      handler() {
+        this.$root.$emit('global:select-base', this.base);
+        window.localStorage.setItem('selected-base', this.base);
+      },
     },
   },
   computed: {
@@ -896,8 +903,8 @@ export default {
           this.search_after_loading = true;
           this.open_edit_after_loading = open_edit;
         }
-        window.$(this.$refs.q).focus();
         this.emit_input();
+        setTimeout(() => window.$(this.$refs.q).focus(), 200);
       }
     },
     emit_input(from_hn = false) {

@@ -335,7 +335,7 @@ export default {
       setTimeout(() => this.sync_heights(), 10);
       await this.load_data();
       await this.$store.dispatch(actions.DEC_LOADING);
-      window.okmessage('Сохранено');
+      this.$root.$emit('msg', 'ok', 'Сохранено');
       this.show_anesthesia_sidebar();
     },
     async delete_data() {
@@ -360,7 +360,7 @@ export default {
       setTimeout(() => this.sync_heights(), 10);
       await this.load_data();
       await this.$store.dispatch(actions.DEC_LOADING);
-      window.okmessage('Запись удалена');
+      this.$root.$emit('msg', 'ok', 'Запись удалена');
       this.show_anesthesia_sidebar();
     },
     async load_data() {

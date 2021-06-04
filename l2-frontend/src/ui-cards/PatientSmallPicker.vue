@@ -126,7 +126,7 @@ export default {
 
     this.$store.watch((state) => state.bases, () => {
       this.check_base();
-    });
+    }, { immediate: true });
   },
   watch: {
     query() {

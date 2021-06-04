@@ -294,6 +294,7 @@ import _ from 'lodash';
 import { vField, vGroup } from '@/components/visibility-triggers';
 import api from '@/api';
 import Treeselect from '@riophae/vue-treeselect';
+// @ts-ignore
 import TypeAhead from 'vue2-typeahead';
 import directionsPoint from '../api/directions-point';
 import * as actions from '../store/action-types';
@@ -762,12 +763,12 @@ export default {
     generate(type) {
       if (this.diagnos === '' && this.current_fin !== 'Платно' && !this.pay_source && !this.create_and_open) {
         window.$(this.$refs.d).focus();
-        window.errmessage('Диагноз не указан', 'Если не требуется, то укажите прочерк ("-")');
+        this.$root.$emit('msg', 'error', 'Диагноз не указан.\nЕсли не требуется, то укажите прочерк ("-")');
         return;
       }
       if (this.need_vich_code && this.vich_code === '') {
         window.$(this.$refs.v).focus();
-        window.errmessage('Не указан код', 'Требуется код для направления на ВИЧ');
+        this.$root.$emit('msg', 'error', 'Не указан код для направления на ВИЧ');
         return;
       }
       this.$root.$emit('generate-directions', {
