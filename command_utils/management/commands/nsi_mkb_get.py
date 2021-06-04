@@ -35,7 +35,6 @@ class Command(BaseCommand):
                 diag = None
                 response = requests.get(f'https://nsi.rosminzdrav.ru:443/port/rest/data?userKey={nsi_key}&identifier={k}&page={i}&size=500')
                 for data in response.json()['list']:
-                    print(data)
                     nsi_code, title, mkb_code = "", "", ""
                     for p in data:
                         if p['column'] == 'ID':
