@@ -155,7 +155,9 @@ export default class App extends Vue {
     transform: rotate(360deg);
   }
 }
+</style>
 
+<style lang="scss">
 .fade-enter-active, .fade-leave-active {
   transition: opacity .7s;
 }

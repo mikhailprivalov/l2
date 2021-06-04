@@ -461,6 +461,13 @@ export default {
         this.inc_tfoms = true;
       }
     },
+    base: {
+      immediate: true,
+      handler() {
+        this.$root.$emit('global:select-base', this.base);
+        window.localStorage.setItem('selected-base', this.base);
+      },
+    },
   },
   computed: {
     bases() {

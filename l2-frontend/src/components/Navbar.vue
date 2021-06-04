@@ -41,6 +41,7 @@
             </div>
           </li>
         </ul>
+        <extended-patient-search v-if="$route.meta.showExtendedPatientSearch"/>
         <card-reader v-if="$route.meta.showCardReader"/>
         <ul class="nav navbar-right navbar-nav">
           <li>
@@ -97,6 +98,7 @@ import { mapGetters } from 'vuex';
   ]),
   components: {
     CardReader: () => import('@/ui-cards/CardReader.vue'),
+    ExtendedPatientSearch: () => import('@/ui-cards/ExtendedPatientSearch/index.vue'),
   },
 })
 export default class Navbar extends Vue {

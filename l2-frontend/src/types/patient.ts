@@ -2,6 +2,21 @@ type CardNumber = string;
 type CardId = number;
 type IndividualId = number;
 type BaseId = number;
+type Phone = string;
+
+export interface Document {
+  pk: number,
+  serial: string,
+  number: string,
+  date_end: string | null,
+  date_start: string | null,
+  who_give: string,
+  is_active: boolean,
+  document_type_id: number,
+  type_title: string,
+  from_rmis: boolean,
+  rmis_uid: string | null,
+}
 
 interface InputData {
   fio_age?: string;
@@ -11,15 +26,34 @@ interface InputData {
   base?: BaseId;
 }
 
+export interface SimplePatient {
+  family: string,
+  name: string,
+  twoname: string,
+  age: string,
+  birthday: string,
+  fio_age: string,
+  docs: Document[],
+  phones: Phone[],
+  disp_data: any,
+  pk: number,
+  individual_pk: number,
+  base_pk: number,
+  num: string,
+  type_title: string,
+  main_diagnosis: string,
+  sex: string,
+  status_disp: string,
+  is_rmis: boolean,
+}
+
 export default class Patient {
-  // eslint-disable-next-line camelcase
   fio_age: string | void;
 
   card: CardNumber | void;
 
   cardId: CardId | void;
 
-  // eslint-disable-next-line camelcase
   card_pk: CardId | void;
 
   individualId: IndividualId | void;

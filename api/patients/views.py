@@ -87,8 +87,11 @@ def patients_search_card(request):
     birthday_order = SettingManager.l2('birthday_order')
     inc_tfoms = d.get('inc_tfoms') and tfoms_module
     card_type = CardBase.objects.get(pk=d['type'])
-    query = d['query'].strip()
+    query = d.get('query', '').strip()
     suggests = d.get('suggests', False)
+    extended_search = d.get('extendedSearch', False)
+    limit = min(int(d.get('limit', 10)), 20)
+    form = d.get('form', {})
     p = re.compile(r'^[а-яё]{3}[0-9]{8}$', re.IGNORECASE)
     p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.?[0-9]{2}\.?[0-9]{4}))?)?)?$')
     p_tfoms = re.compile(r'^([А-яЁё\-]+) ([А-яЁё\-]+)( ([А-яЁё\-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$')
@@ -102,7 +105,67 @@ def patients_search_card(request):
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     c = None
     has_phone_search = False
-    if p5i or (always_phone_search and len(query) == 11 and query.isdigit()):
+
+    if extended_search and form:
+        q = {}
+
+        family = str(form.get('family', ''))
+        if family:
+            q['family__istartswith'] = family
+
+        name = str(form.get('name', ''))
+        if name:
+            q['name__istartswith'] = name
+
+        patronymic = str(form.get('patronymic', ''))
+        if patronymic:
+            q['patronymic__istartswith'] = patronymic
+
+        birthday = str(form.get('birthday', ''))
+        if birthday:
+            birthday_parts = birthday.split('.')
+            if len(birthday_parts) == 3:
+                if birthday_parts[0].isdigit():
+                    q['birthday__day'] = int(birthday_parts[0])
+                if birthday_parts[1].isdigit():
+                    q['birthday__month'] = int(birthday_parts[1])
+                if birthday_parts[2].isdigit():
+                    q['birthday__year'] = int(birthday_parts[2])
+
+        objects = Individual.objects.all()
+
+        if q:
+            objects = objects.filter(**q)
+
+        enp_s = str(form.get('enp_s', ''))
+        enp_n = str(form.get('enp_n', ''))
+        if enp_n:
+            if enp_s:
+                objects = objects.filter(document__serial=enp_s, document__number=enp_s, document__document_type__title='Полис ОМС')
+            else:
+                objects = objects.filter(document__number=enp_n, document__document_type__title='Полис ОМС')
+
+        pass_s = str(form.get('pass_s', ''))
+        pass_n = str(form.get('pass_n', ''))
+        if pass_n:
+            objects = objects.filter(document__serial=pass_s, document__number=pass_n, document__document_type__title='Паспорт гражданина РФ')
+
+        snils = str(form.get('snils', ''))
+        if pass_n:
+            objects = objects.filter(document__number=snils, document__document_type__title='СНИЛС')
+
+        phone = str(form.get('phone', ''))
+
+        if phone:
+            normalized_phones = Phones.normalize_to_search(phone)
+            if normalized_phones:
+                objects = objects.filter(
+                    Q(card__phones__normalized_number__in=normalized_phones) |
+                    Q(card__phones__number__in=normalized_phones) |
+                    Q(card__phone__in=normalized_phones) |
+                    Q(card__doctorcall__phone__in=normalized_phones)
+                )
+    elif p5i or (always_phone_search and len(query) == 11 and query.isdigit()):
         has_phone_search = True
         phone = query.replace('phone:', '')
         normalized_phones = Phones.normalize_to_search(phone)
@@ -244,7 +307,7 @@ def patients_search_card(request):
             ),
             'phones_set',
         )
-        .distinct()[:10]
+        .distinct()[:limit]
     ):
         disp_data = sql_func.dispensarization_research(row.individual.sex, row.individual.age_for_year(), row.pk, d1, d2)
 
@@ -260,6 +323,7 @@ def patients_search_card(request):
         data.append(
             {
                 "type_title": card_type.title,
+                "base_pk": row.base_id,
                 "num": row.number,
                 "is_rmis": row.base.is_rmis,
                 "family": row.individual.family,

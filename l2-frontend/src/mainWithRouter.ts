@@ -48,6 +48,7 @@ const router = new Router({
         title: 'Направления и картотека',
         groups: ['Лечащий врач', 'Врач-лаборант', 'Оператор лечащего врача', 'Оператор Контакт-центра'],
         showCardReader: true,
+        showExtendedPatientSearch: true,
       },
     },
   ],
