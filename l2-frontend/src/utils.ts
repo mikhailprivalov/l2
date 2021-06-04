@@ -235,3 +235,15 @@ export const replaceAll = (s: string, a: string, b: string) => s.replace(new Reg
 
 export const valuesToString = (origStr: string, values: StringDict) => Object.keys(values)
   .reduce((s, k) => replaceAll(s, `{${k}}`, values[k]), origStr);
+
+export const getFormattedDate = (date: Date | void): string => {
+  if (!date) {
+    return '';
+  }
+  const year = date.getFullYear();
+  let month = (1 + date.getMonth()).toString();
+  month = month.length > 1 ? month : `0${month}`;
+  let day = date.getDate().toString();
+  day = day.length > 1 ? day : `0${day}`;
+  return `${day}.${month}.${year}`;
+};

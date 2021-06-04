@@ -43,6 +43,7 @@ export default {
       language: 'ru',
       autoclose: true,
       todayHighlight: true,
+      orientation: 'top',
     }).on('changeDate', () => {
       if (!window.$(this.$refs.from).is(':focus')) this.$refs.from.dispatchEvent(new Event('change'));
       if (!window.$(this.$refs.to).is(':focus')) this.$refs.to.dispatchEvent(new Event('change'));
