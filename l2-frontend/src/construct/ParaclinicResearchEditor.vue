@@ -525,9 +525,8 @@ export default {
       return undefined;
     });
     this.$root.$on('hide_fte', () => this.f_templates_hide());
-    Object.keys(this.permanent_directories).forEach(key => {
-      this.permanent_directories_keys.push({ id: key, label: key });
-    });
+    this.permanent_directories_keys = Object.keys(this.permanent_directories).map(key => ({ id: key, label: key }));
+    this.permanent_directories_keys = [{ id: -1, label: 'не выбран' }, ...this.permanent_directories_keys];
   },
   computed: {
     fte() {

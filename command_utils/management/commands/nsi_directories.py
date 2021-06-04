@@ -33,7 +33,7 @@ class Command(BaseCommand):
         session = Session()
         transport = Transport(session=session)
         client = Client('https://nsi.rosminzdrav.ru/wsdl/SOAP-server.v2.php?wsdl', transport=transport)
-        version_data, mkb_code, data_parts, nsi_code, title = '', '', '', '', ''
+        version_data, data_parts, title = '', '', ''
         for k, v in nsi_directories.items():
             data = client.service.getVersionList(userKey5=nsi_key, refbookCode4=k)
             version_data = data['item'][-1]['children']['item']

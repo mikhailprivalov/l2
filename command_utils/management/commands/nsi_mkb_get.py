@@ -32,12 +32,11 @@ class Command(BaseCommand):
                 if i['key'] == "partsAmount":
                     data_parts = int(i['value']) + 1
             for i in range(1, data_parts):
-                print(i)
                 diag = None
                 response = requests.get(f'https://nsi.rosminzdrav.ru:443/port/rest/data?userKey={nsi_key}&identifier={k}&page={i}&size=500')
                 for data in response.json()['list']:
                     print(data)
-                    code, title = "", ""
+                    nsi_code, title, mkb_code = "", "", ""
                     for p in data:
                         if p['column'] == 'ID':
                             nsi_code = p['value']
@@ -46,7 +45,6 @@ class Command(BaseCommand):
                         if p['column'] == 'ICD-10':
                             mkb_code = p['value']
                     diag = Diagnoses.objects.filter(code=mkb_code).first()
-                    print(diag)
                     if diag:
                         if diag.title != title:
                             diag.title = title
@@ -54,5 +52,5 @@ class Command(BaseCommand):
                         diag.save()
                         print(f"обновлено: {mkb_code}-{title}-{nsi_code}")  # noqa: T001
                 if diag is None:
-                    Diagnoses(code=mkb_code, title=title, m_type=2, d_type='mkb10.4', nsi_id = nsi_code).save()
+                    Diagnoses(code=mkb_code, title=title, m_type=2, d_type='mkb10.4', nsi_id=nsi_code).save()
                     print(f"создано: {mkb_code}-{title}-{nsi_code}")  # noqa: T001
