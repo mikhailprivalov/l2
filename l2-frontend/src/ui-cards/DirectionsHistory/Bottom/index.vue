@@ -35,6 +35,7 @@
 </template>
 
 <script lang="ts">
+import { valuesToString } from '@/utils';
 import menuMixin from './mixins/menu';
 import { forDirs } from '../../../forms';
 import DirectionsChangeParent from '../../../modals/DirectionsChangeParent.vue';
@@ -85,7 +86,7 @@ export default {
     forms() {
       return forDirs.map((f) => ({
         ...f,
-        url: f.url.kwf({
+        url: valuesToString(f.url, {
           card: this.card_pk,
           dir: JSON.stringify(this.checked),
         }),

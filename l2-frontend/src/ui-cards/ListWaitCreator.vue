@@ -149,7 +149,7 @@ export default {
       await this.load_data();
       await this.$store.dispatch(actions.DEC_LOADING);
       if (result.ok) {
-        window.okmessage('Записи в лист ожидания созданы');
+        this.$root.$emit('msg', 'ok', 'Записи в лист ожидания созданы');
         this.date = moment().format('YYYY-MM-DD');
         this.td = this.date;
         this.comment = '';

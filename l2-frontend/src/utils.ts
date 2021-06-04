@@ -1,3 +1,5 @@
+import { StringDict } from '@/types/common';
+
 const FUNCTION_CACHE = {};
 
 const patientProps = ['age', 'sex'];
@@ -228,3 +230,8 @@ export const normalizeNamePart = (stringOrig: string): string => {
   }
   return r.join(' ').trim();
 };
+
+export const replaceAll = (s: string, a: string, b: string) => s.replace(new RegExp(a, 'gm'), b);
+
+export const valuesToString = (origStr: string, values: StringDict) => Object.keys(values)
+  .reduce((s, k) => replaceAll(s, `{${k}}`, values[k]), origStr);

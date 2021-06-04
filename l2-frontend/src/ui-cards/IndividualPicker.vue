@@ -141,7 +141,7 @@ export default {
   },
   computed: {
     directions_url() {
-      return `/mainmenu/directions?base_pk=${this.return_base}&card_pk=${this.return_card}`;
+      return `/ui/directions?base_pk=${this.return_base}&card_pk=${this.return_card}`;
     },
     normalized_query() {
       return this.query.trim();

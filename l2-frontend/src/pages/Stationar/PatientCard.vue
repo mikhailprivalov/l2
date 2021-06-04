@@ -1,6 +1,6 @@
 <template>
   <div>
-    <a :href="`/mainmenu/directions?card_pk=${patient.cardId}&base_pk=${patient.base}`"
+    <a :href="`/ui/directions?card_pk=${patient.cardId}&base_pk=${patient.base}`"
        target="_blank" class="a-under">
       {{ patient.fio_age }}
     </a>

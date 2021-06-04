@@ -1,8 +1,6 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import VueMeta from 'vue-meta';
-import Toast from 'vue-toastification';
-import 'vue-toastification/dist/index.css';
 import { POSITION } from 'vue-toastification/src/ts/constants';
 
 import App from '@/App.vue';
@@ -14,18 +12,12 @@ import * as actions from './store/action-types';
 
 import './styles/index.scss';
 
-Vue.use(Toast, {
-  transition: 'Vue-Toastification__bounce',
-  maxToasts: 20,
-  newestOnTop: false,
-});
-
 registerVue();
 
 Vue.use(Router);
 Vue.use(VueMeta);
 
-const lazyLoad = page => () => import(`@/pages/${page}Page.vue`);
+const lazyLoad = (page, withoutSuffix: boolean | void) => () => import(`@/pages/${page}${withoutSuffix ? '' : 'Page'}.vue`);
 
 const router = new Router({
   mode: 'history',
@@ -48,6 +40,17 @@ const router = new Router({
         title: 'Меню L2',
       },
     },
+    {
+      path: '/ui/directions',
+      name: 'directions',
+      component: lazyLoad('Directions', true),
+      meta: {
+        title: 'Направления и картотека',
+        groups: ['Лечащий врач', 'Врач-лаборант', 'Оператор лечащего врача', 'Оператор Контакт-центра'],
+        showCardReader: true,
+        showExtendedPatientSearch: true,
+      },
+    },
   ],
 });
 
@@ -68,9 +71,17 @@ router.beforeEach(async (to, from, next) => {
 
     await router.app.$store.dispatch(actions.INC_G_LOADING);
     await router.app.$store.dispatch(actions.GET_USER_DATA, { loadMenu: true });
-    await router.app.$store.dispatch(actions.DEC_G_LOADING);
-
     const { getters } = router.app.$store;
+
+    if (getters.authenticated) {
+      await Promise.all([
+        router.app.$store.dispatch(actions.GET_ALL_DEPARTMENTS, { lazy: true }),
+        router.app.$store.dispatch(actions.GET_BASES, { lazy: true }),
+        router.app.$store.dispatch(actions.LOAD_HOSPITALS, { lazy: true }),
+      ]);
+    }
+
+    await router.app.$store.dispatch(actions.DEC_G_LOADING);
 
     if (
       to.name === 'login'

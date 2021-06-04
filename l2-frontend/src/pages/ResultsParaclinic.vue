@@ -679,7 +679,7 @@
         <div class="text-left" v-else>
           <h3 style="margin-top: 0;">Талон № {{slot.data.pk}}</h3>
           <h5>{{slot.data.datetime}}</h5>
-          РМИС UID пациента: <a :href="`/mainmenu/directions?rmis_uid=${slot.data.patient_uid}`"
+          РМИС UID пациента: <a :href="`/ui/directions?rmis_uid=${slot.data.patient_uid}`"
                                 target="_blank">{{slot.data.patient_uid}}</a><br/>
           <div v-if="!slot.data.direction">Нет связанного назначения. Выберите ниже:</div>
           <div v-else>Выбранное назначение для талона:</div>

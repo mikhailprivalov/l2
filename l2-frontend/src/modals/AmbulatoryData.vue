@@ -132,6 +132,7 @@
 
 <script lang="ts">
 import moment from 'moment';
+import { valuesToString } from '@/utils';
 import Modal from '../ui-cards/Modal.vue';
 import patientsPoint from '../api/patients-point';
 import * as actions from '../store/action-types';
@@ -170,7 +171,7 @@ export default {
     forms() {
       return form112.map((f) => ({
         ...f,
-        url: f.url.kwf({
+        url: valuesToString(f.url, {
           card: this.card_pk,
         }),
       }));

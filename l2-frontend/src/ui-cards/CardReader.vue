@@ -1,10 +1,12 @@
 <template>
   <div v-frag>
-    <li v-show="Boolean(readerId)">
-      <a href="#" @click.prevent="clickPlus" v-tippy title="Найти или импортировать пациента">
-        <i class="fa fa-circle status" :class="`status-${status}`"></i> {{textStatus}}
-      </a>
-    </li>
+    <ul class="nav navbar-nav" v-show="Boolean(readerId)">
+      <li>
+        <a href="#" @click.prevent="clickPlus" v-tippy title="Найти или импортировать пациента">
+          <i class="fa fa-circle status" :class="`status-${status}`"></i> {{textStatus}}
+        </a>
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -51,6 +53,10 @@ export default {
       this.$root.$emit('search-value', this.polis || '');
     },
     async clickPlus() {
+      if (!this.polis) {
+        this.$root.$emit('msg', 'error', 'Полис не считан');
+        return;
+      }
       await this.$store.dispatch(actions.INC_LOADING);
       await patientsPoint.createIndividualFromCard(this.details);
       await this.$store.dispatch(actions.DEC_LOADING);

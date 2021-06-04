@@ -181,7 +181,7 @@ export default {
       document.execCommand('copy');
       window.clearselection();
       window.okblink(this.$refs.rc);
-      window.okmessage('Результаты скопированы', 'Ок');
+      this.$root.$emit('msg', 'ok', 'Результаты скопированы');
     },
     need_units_and_refs(fraction) {
       return (fraction.units !== '' || JSON.stringify(fraction.ref_m) !== JSON.stringify({}))

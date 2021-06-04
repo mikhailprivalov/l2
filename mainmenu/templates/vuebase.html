@@ -57,8 +57,63 @@
 </head>
 <body>
 <div id="app"></div>
+<script src="{% static 'js/modernizr.cssgrid.js' %}"></script>
 <script src="{% static 'js/jquery.min.js' %}"></script>
+<script>
+    const blink_animated = {}
+
+    function okblink(selector, effect) {
+        if (blink_animated[selector]) return
+        let e = effect || 'fadeIn'
+        e = `animate__${e}`
+        $(selector).removeClass(e).removeClass('animate__animated fast')
+        $(selector).addClass(e).addClass('animate__animated fast')
+        blink_animated[selector] = true
+        setTimeout(function (s) {
+            $(selector).removeClass(e).removeClass('animate__animated fast')
+            blink_animated[s] = false
+        }.bind(this, selector), 334)
+    }
+
+
+    function selectTextEl(element) {
+        let doc = document
+        let text = element
+
+        if (doc.body.createTextRange) { // ms
+            let range = doc.body.createTextRange()
+            range.moveToElementText(text)
+            range.select()
+        } else if (window.getSelection) { // moz, opera, webkit
+            let selection = window.getSelection()
+            let range = doc.createRange()
+            range.selectNodeContents(text)
+            selection.removeAllRanges()
+            selection.addRange(range)
+        }
+    }
+
+    function clearselection() {
+        if (window.getSelection) {
+            if (window.getSelection().empty) {  // Chrome
+                window.getSelection().empty()
+            } else if (window.getSelection().removeAllRanges) {  // Firefox
+                window.getSelection().removeAllRanges()
+            }
+        } else if (document.selection) {  // IE?
+            document.selection.empty()
+        }
+    }
+
+    $.fn.scrollDown = function () {
+        let el = $(this)
+        el.scrollTop(el[0].scrollHeight)
+    }
+</script>
 <script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-select.js' %}"></script>
+<script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'locales/bootstrap-datepicker.ru.min.js' %}"></script>
 <script src="{% manifest 'chunk-common.js' %}"></script>
 <script src="{% manifest 'chunk-vendors.js' %}"></script>
 <script>

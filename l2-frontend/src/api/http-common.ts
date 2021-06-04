@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as Cookies from 'es-cookie';
 import { merge, pick } from 'lodash/object';
+import { valuesToString } from '@/utils';
 
 export const HTTP = axios.create({
   baseURL: `${window.location.origin}/api`,
@@ -26,7 +27,7 @@ export const smartCall = async ({
   try {
     let response;
     if (urlFmt) {
-      response = await HTTP.get(urlFmt.kwf(data));
+      response = await HTTP.get(valuesToString(urlFmt, data));
     } else {
       response = await HTTP[method](url, data, {
         headers: {

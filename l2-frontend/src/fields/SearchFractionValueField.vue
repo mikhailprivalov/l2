@@ -86,7 +86,7 @@ export default {
       if (result) {
         this.val = `${result.value} (${result.date})`.replace('<br/>', '');
       } else {
-        window.errmessage(`Результат не найден (${this.title})!`);
+        this.$root.$emit('msg', 'error', `Результат не найден (${this.title})!`);
       }
     },
     print_results() {
