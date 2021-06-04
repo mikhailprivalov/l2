@@ -21,6 +21,7 @@
 </template>
 
 <script lang="ts">
+import { getFormattedDate } from '@/utils';
 import SelectPicker from './SelectPicker.vue';
 import DateField from './DateField.vue';
 
@@ -30,10 +31,11 @@ export default {
     values_def: {
       type: Object,
       default() {
+        const today = new Date();
         return {
-          date: window.getFormattedDate(window.today),
-          month: `${window.today.getMonth()}`,
-          year: `${window.today.getFullYear()}`,
+          date: getFormattedDate(today),
+          month: `${today.getMonth()}`,
+          year: `${today.getFullYear()}`,
         };
       },
     },
