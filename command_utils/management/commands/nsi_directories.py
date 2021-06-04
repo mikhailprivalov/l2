@@ -1,9 +1,6 @@
 import os
 from django.core.management import BaseCommand
-
-import utils.permanent_directories2
 from appconf.manager import SettingManager
-import pickle
 import requests
 from requests import Session
 from zeep import Client
