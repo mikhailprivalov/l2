@@ -133,7 +133,7 @@ import { SimplePatient } from '@/types/patient';
       return null;
     },
     basesFiltered() {
-      return this.bases.filter(b => !b.hide && b.code !== 'RMIS');
+      return this.bases.filter(b => !b.hide);
     },
   },
   watch: {
