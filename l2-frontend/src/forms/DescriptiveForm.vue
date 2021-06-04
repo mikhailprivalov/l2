@@ -31,7 +31,7 @@
                          :duration="400"
                          :on-confirm="clear_val" :value="field"
                          action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21, 24, 25, 26, 27].includes(field.field_type)">
+                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21, 24, 25, 26, 27, 28].includes(field.field_type)">
                 ×
               </longpress>
               <FastTemplates
@@ -64,6 +64,12 @@
                 <input :readonly="true" class="form-control" v-model="field.value"/>
               </div>
               <div class="field-value" v-else-if="field.field_type === 10">
+                <SelectField
+                  :disabled="confirmed" :variants="field.values_to_input" class="form-control fw"
+                  v-model="field.value"
+                />
+              </div>
+              <div class="field-value" v-else-if="field.field_type === 28">
                 <SelectField
                   :disabled="confirmed" :variants="field.values_to_input" class="form-control fw"
                   v-model="field.value"

@@ -1,6 +1,11 @@
 <template>
-    <treeselect v-if="row.field_type === 10" :multiple="false" :disable-branch-nodes="true"
-                :options="permanent_directories_keys"  placeholder="Справочник не выбран" @select="saveDirectories"/>
+  <div>
+  <treeselect v-if="row.field_type === 28" :multiple="false" :disable-branch-nodes="true"
+    :options="permanent_directories_keys" placeholder="Справочник не выбран" @select="saveDirectories"/>
+    <div class="input-group" v-for="(v, i) in row.values_to_input" :key="i" style="margin-bottom: 1px">
+      {{ row.values_to_input[i] }}
+      </div>
+  </div>
 </template>
 
 <script>

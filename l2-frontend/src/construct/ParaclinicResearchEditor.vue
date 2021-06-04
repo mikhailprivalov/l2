@@ -228,7 +228,7 @@
                   <div v-else-if="row.field_type === 27">
                     <strong>Таблица:</strong>
                   </div>
-                  <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23, 27].includes(row.field_type)">
+                  <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23, 27, 28].includes(row.field_type)">
                     <div class="header" v-collapse-toggle>
                       <a href="#" class="a-under" @click.prevent v-if="row.field_type === 0">
                         Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
@@ -245,17 +245,20 @@
                     </div>
                     <div class="my-content" v-collapse-content>
                       <TableConstructor :row="row" v-if="row.field_type === 27"/>
+                      <PermanentDirectories :row="row" :permanent_directories_keys="permanent_directories_keys"
+                                            :permanent_directories="permanent_directories"
+                                            v-else-if="row.field_type === 28"/>
                       <template v-else>
                         <div class="input-group" style="margin-bottom: 5px">
-                          <PermanentDirectories :row="row" :permanent_directories_keys="permanent_directories_keys"
-                                            :permanent_directories="permanent_directories"
-                                            v-if="row.field_type === 10"/>
-                          <input type="text" v-model="row.new_value" class="form-control"
+                          <input  type="text" v-model="row.new_value" class="form-control"
                                  @keyup.enter="add_template_value(row)"
                                  placeholder="Новый шаблон быстрого ввода"/>
-                          <span class="input-group-btn"><button class="btn last btn-blue-nb" type="button"
+                          <span class="input-group-btn">
+                            <button class="btn last btn-blue-nb" type="button"
                                                                 :disabled="row.new_value === ''"
-                                                                @click="add_template_value(row)">Добавить</button></span>
+                                                                @click="add_template_value(row)">Добавить
+                            </button>
+                          </span>
                         </div>
                         <div>
                           <div class="input-group" v-for="(v, i) in row.values_to_input" :key="i"
@@ -339,6 +342,7 @@
                       <option value="25">Результаты диагностические</option>
                       <option value="26">Результаты консультаций</option>
                       <option value="27">Таблица</option>
+                      <option value="28">НСИ-справочник</option>
                     </select>
                   </label>
                 </div>

@@ -36,7 +36,6 @@ class Command(BaseCommand):
         session = Session()
         transport = Transport(session=session)
         client = Client('https://nsi.rosminzdrav.ru/wsdl/SOAP-server.v2.php?wsdl', transport=transport)
-        # nsi_key = "5d7cb915-28e3-45af-ac07-cb7ace64d891"
         version_data, mkb_code, data_parts, nsi_code, title = '', '', '', '', ''
         for k, v in nsi_directories.items():
             data = client.service.getVersionList(userKey5=nsi_key, refbookCode4=k)
@@ -49,7 +48,7 @@ class Command(BaseCommand):
             for i in data['item']:
                 if i['key'] == "partsAmount":
                     data_parts = int(i['value']) + 1
-            temp_data = []
+            temp_data = {}
             for i in range(1, data_parts):
                 response = requests.get(
                     f'https://nsi.rosminzdrav.ru:443/port/rest/data?userKey={nsi_key}&identifier={k}&page={i}&size=500')
@@ -57,14 +56,14 @@ class Command(BaseCommand):
                     code, title = "", ""
                     for p in data:
                         if p['column'] == 'ID':
-                            code = p['value']
+                            code = int(p['value'])
                         if p['column'] == 'NAME':
-                            title = p['value']
+                            title = p['value'].replace('\xa0', ' ')
                         if p['column'] == 'Name':
-                            title = p['value']
-                    temp_data.append(f"{code} - {title}")
-                result[v] = temp_data
+                            title = p['value'].replace('\xa0', ' ')
+                    temp_data[code] = title
+            result[v] = [f"{key} - {temp_data[key]}" for key in sorted(temp_data.keys())]
 
-        exist_file = os.path.join(BASE_DIR, 'utils', 'extension_directories.json')
-        with open(exist_file, 'w') as  f:
+        directories_file = os.path.join(BASE_DIR, 'utils', 'permanent_directories.json')
+        with open(directories_file, 'w') as f:
             json.dump(result, f)

@@ -190,14 +190,12 @@ def researches_by_department(request):
     result_form = DResearches.RESULT_FORMS
     spec_data = [{"pk": -1, "title": "Не выбрано"}, *list(users.Speciality.objects.all().values('pk', 'title').order_by("title"))]
 
-    exist_file = os.path.isfile(os.path.join(BASE_DIR, 'utils', 'extension_directories.json'))
+    exist_file = os.path.isfile(os.path.join(BASE_DIR, 'utils', 'permanent_directories.json'))
     permanent_directories = {}
     if exist_file:
-        extension_directories = os.path.join(BASE_DIR, 'utils', 'extension_directories.json')
-        with open(extension_directories) as json_file:
-            data = json.load(json_file)
-            permanent_directories.update(data)
-    print(permanent_directories)
+        file_directories = os.path.join(BASE_DIR, 'utils', 'permanent_directories.json')
+        with open(file_directories) as json_file:
+            permanent_directories = json.load(json_file)
 
     response = {"researches": [], "direction_forms": direction_form, "result_forms": result_form, "specialities": spec_data, "permanent_directories": permanent_directories}
     request_data = json.loads(request.body)
