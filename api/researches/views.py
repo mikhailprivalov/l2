@@ -27,6 +27,7 @@ from slog.models import Log
 from users.models import Speciality
 import os.path
 from laboratory.settings import BASE_DIR
+from utils.nsi_directories import NSI
 
 
 @login_required
@@ -190,14 +191,7 @@ def researches_by_department(request):
     result_form = DResearches.RESULT_FORMS
     spec_data = [{"pk": -1, "title": "Не выбрано"}, *list(users.Speciality.objects.all().values('pk', 'title').order_by("title"))]
 
-    exist_file = os.path.isfile(os.path.join(BASE_DIR, 'utils', 'permanent_directories.json'))
-    permanent_directories = {}
-    if exist_file:
-        file_directories = os.path.join(BASE_DIR, 'utils', 'permanent_directories.json')
-        with open(file_directories) as json_file:
-            permanent_directories = json.load(json_file)
-
-    response = {"researches": [], "direction_forms": direction_form, "result_forms": result_form, "specialities": spec_data, "permanent_directories": permanent_directories}
+    response = {"researches": [], "direction_forms": direction_form, "result_forms": result_form, "specialities": spec_data, "permanent_directories": NSI}
     request_data = json.loads(request.body)
     department_pk = int(request_data["department"])
     if -500 >= department_pk > -600:

@@ -179,7 +179,7 @@
                 <div>
                   <div class="input-group">
                     <span class="input-group-addon">Название поля ({{ row.pk === -1 ? 'новое' : row.pk }})</span>
-                    <input type="text" class="form-control" v-model="row.title">
+                    <input type="text" class="form-control" v-model="row.title" :readonly="row.field_type === 28">
                     <span class="input-group-addon">ID-скрепки</span>
                     <input type="text" class="form-control" v-model="row.attached">
                   </div>
@@ -228,7 +228,10 @@
                   <div v-else-if="row.field_type === 27">
                     <strong>Таблица:</strong>
                   </div>
-                  <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23, 27, 28].includes(row.field_type)">
+                  <PermanentDirectories :row="row" :permanent_directories_keys="permanent_directories_keys"
+                                        :permanent_directories="permanent_directories"
+                                        v-if="row.field_type === 28"/>
+                  <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23, 27].includes(row.field_type)">
                     <div class="header" v-collapse-toggle>
                       <a href="#" class="a-under" @click.prevent v-if="row.field_type === 0">
                         Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
@@ -245,18 +248,15 @@
                     </div>
                     <div class="my-content" v-collapse-content>
                       <TableConstructor :row="row" v-if="row.field_type === 27"/>
-                      <PermanentDirectories :row="row" :permanent_directories_keys="permanent_directories_keys"
-                                            :permanent_directories="permanent_directories"
-                                            v-else-if="row.field_type === 28"/>
                       <template v-else>
                         <div class="input-group" style="margin-bottom: 5px">
-                          <input  type="text" v-model="row.new_value" class="form-control"
+                          <input type="text" v-model="row.new_value" class="form-control"
                                  @keyup.enter="add_template_value(row)"
                                  placeholder="Новый шаблон быстрого ввода"/>
                           <span class="input-group-btn">
                             <button class="btn last btn-blue-nb" type="button"
-                                                                :disabled="row.new_value === ''"
-                                                                @click="add_template_value(row)">Добавить
+                                    :disabled="row.new_value === ''"
+                                    @click="add_template_value(row)">Добавить
                             </button>
                           </span>
                         </div>
@@ -460,6 +460,7 @@ export default {
     permanent_directories: {
       type: Object,
       required: false,
+      default: () => ({}),
     },
   },
   created() {
@@ -498,7 +499,6 @@ export default {
       direction_params_all: [],
       direction_current_params: -1,
       assigned_to_params: [],
-      permanent_directories_keys: [{ id: -1, label: 'не выбран' }],
     };
   },
   watch: {
@@ -525,10 +525,13 @@ export default {
       return undefined;
     });
     this.$root.$on('hide_fte', () => this.f_templates_hide());
-    this.permanent_directories_keys = Object.keys(this.permanent_directories).map(key => ({ id: key, label: key }));
-    this.permanent_directories_keys = [{ id: -1, label: 'не выбран' }, ...this.permanent_directories_keys];
   },
   computed: {
+    permanent_directories_keys() {
+      return [
+        { id: -1, label: 'не выбран' },
+        ...Object.keys(this.permanent_directories).map(oid => ({ id: oid, label: this.permanent_directories[oid].title }))];
+    },
     fte() {
       return this.$store.getters.modules.l2_fast_templates;
     },

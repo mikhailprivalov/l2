@@ -39,6 +39,7 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Statistic
 from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
+from utils.nsi_directories import NSI
 from .sql_func import users_by_group
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
@@ -1482,3 +1483,11 @@ def rmis_link(request):
     url_schedule = URL_SCHEDULE.replace('organization_param', d.hospital.rmis_org_id).replace('service_param', d.rmis_service_id_time_table).replace('employee_param', d.rmis_employee_id)
     return JsonResponse({'auth_param': auth_param, 'url_eln': URL_ELN_MADE,
                          'url_schedule': url_schedule})
+
+
+@login_required
+def get_permanent_directory(request):
+    request_data = json.loads(request.body)
+    oid = request_data.get('oid', '')
+    return JsonResponse(NSI.get(oid, {}))
+

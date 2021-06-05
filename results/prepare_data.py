@@ -442,7 +442,7 @@ def structure_data_for_result(iss, fwb, doc, leftnone):
                     fwb.append(img)
                     os.remove(file_tmp)
                 else:
-                    v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
+                    v = r.string_value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
                     v = v.replace('&lt;sub&gt;', '<sub>')
                     v = v.replace('&lt;/sub&gt;', '</sub>')
                     v = v.replace('&lt;sup&gt;', '<sup>')
@@ -537,7 +537,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text):
             vals = []
             for r in results:
                 field_type = r.get_field_type()
-                v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
+                v = r.string_value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
                 v = v.replace('&lt;sub&gt;', '<sub>')
                 v = v.replace('&lt;/sub&gt;', '</sub>')
                 v = v.replace('&lt;sup&gt;', '<sup>')
@@ -985,6 +985,6 @@ def get_direction_params(direction_params, titles):
     result = {}
     for param in direction_params:
         if param.title in titles:
-            result[param.title] = param.value
+            result[param.title] = param.string_value
     return result
 

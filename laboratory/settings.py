@@ -4,7 +4,6 @@ import sys
 import warnings
 from collections import OrderedDict
 
-from django.core.exceptions import ImproperlyConfigured
 
 PROFILING = False
 

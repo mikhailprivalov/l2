@@ -7,21 +7,23 @@ from zeep import Client
 from zeep.transports import Transport
 
 
+NSI_MKB10_DIRECTORIES = {
+    "1.2.643.5.1.13.13.11.1489": "Алфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3)",
+    "1.2.643.5.1.13.13.99.2.692": "Алфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3, "
+                                  "внешние причины заболеваемости и смертности)",
+}
+
+
 class Command(BaseCommand):
     help = "Получение справочника МКБ"
 
     def handle(self, *args, **options):
         nsi_key = SettingManager.get("nsi_key", default='', default_type='s')
-        mkb10_directories = {
-            "1.2.643.5.1.13.13.11.1489": "Алфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3)",
-            "1.2.643.5.1.13.13.99.2.692": "Алфавитный указатель к Международной статистической классификации болезней и проблем, связанных со здоровьем (10-й пересмотр, том 3, "
-                                          "внешние причины заболеваемости и смертности)",
-        }
         session = Session()
         transport = Transport(session=session)
         client = Client('https://nsi.rosminzdrav.ru/wsdl/SOAP-server.v2.php?wsdl', transport=transport)
         version_data, mkb_code, data_parts, nsi_code, title = '', '', '', '', ''
-        for k, v in mkb10_directories.items():
+        for k, v in NSI_MKB10_DIRECTORIES.items():
             data = client.service.getVersionList(userKey5=nsi_key, refbookCode4=k)
             version_data = data['item'][-1]['children']['item']
             for i in version_data:

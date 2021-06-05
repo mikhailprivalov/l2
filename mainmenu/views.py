@@ -17,7 +17,6 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import directory.models as directory
 import podrazdeleniya.models as pod
 import slog.models as slog
-from api.prefetch import prefetch
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya

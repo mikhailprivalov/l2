@@ -1,0 +1,129 @@
+<template>
+  <div style="max-width: 800px;">
+    <div v-if="disabled" class="simple-value">
+      {{ localCode }} – {{ localTitle }}
+    </div>
+    <div v-else-if="loading">
+      загрузка значений справочника
+    </div>
+    <div v-else>
+      <SelectFieldTitled v-model="localCode" :variants="variantsToSelect" fullWidth/>
+    </div>
+  </div>
+</template>
+
+<script lang="ts">
+import Vue from 'vue';
+import { mapGetters } from 'vuex';
+import Component from 'vue-class-component';
+import { LOAD_PERMANENT_DIRECTORY } from '@/store/action-types';
+
+@Component({
+  props: {
+    value: {
+      type: String,
+      required: true,
+    },
+    oid: {
+      type: Array,
+      required: true,
+    },
+    disabled: {
+      required: false,
+      default: false,
+      type: Boolean,
+    },
+  },
+  components: {
+    SelectFieldTitled: () => import('@/fields/SelectFieldTitled.vue'),
+  },
+  data() {
+    return {
+      localCode: '-1',
+      localTitle: 'Не выбрано',
+      loading: false,
+    };
+  },
+  computed: mapGetters(['permanentDirectories']),
+  async mounted() {
+    const [oid] = this.oid;
+    let value = this.value || '{}';
+    try {
+      value = JSON.parse(value);
+    } catch (e) {
+      value = {};
+    }
+
+    if (value.code) {
+      this.localCode = String(value.code);
+    }
+    if (value.title) {
+      this.localTitle = String(value.title);
+    }
+
+    if (this.disabled) {
+      return;
+    }
+    this.loading = true;
+    await this.$store.dispatch(LOAD_PERMANENT_DIRECTORY, { oid });
+    this.loading = false;
+    if (!this.variants[this.localCode]) {
+      // eslint-disable-next-line prefer-destructuring
+      this.localCode = Object.keys(this.variants)[0];
+    }
+  },
+  watch: {
+    localCode() {
+      if (this.disabled) {
+        return;
+      }
+
+      this.localTitle = (this.variants)[this.localCode] || '';
+      this.emit();
+    },
+    localTitle() {
+      this.emit();
+    },
+  },
+  model: {
+    event: 'modified',
+  },
+})
+export default class PermanentDirectoryField extends Vue {
+  value: any;
+
+  permanentDirectories: any;
+
+  oid: string;
+
+  disabled: boolean | void;
+
+  localCode: string;
+
+  localTitle: string;
+
+  loading: boolean;
+
+  get variants() {
+    const [oid] = this.oid;
+    return (this.permanentDirectories[oid] || {}).values || {};
+  }
+
+  get variantsToSelect() {
+    return Object.keys(this.variants).map(k => ({ pk: k, title: `${k} – ${this.variants[k]}` }));
+  }
+
+  emit() {
+    this.$emit('modified', JSON.stringify({
+      code: this.localCode,
+      title: this.localTitle,
+    }));
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.simple-value {
+  padding: 5px;
+}
+</style>

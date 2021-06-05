@@ -69,12 +69,6 @@
                   v-model="field.value"
                 />
               </div>
-              <div class="field-value" v-else-if="field.field_type === 28">
-                <SelectField
-                  :disabled="confirmed" :variants="field.values_to_input" class="form-control fw"
-                  v-model="field.value"
-                />
-              </div>
               <div class="field-value" v-else-if="field.field_type === 11">
                 <SearchFractionValueField :readonly="confirmed"
                                           :fraction-pk="field.default_value"
@@ -144,6 +138,9 @@
               <div class="field-value" v-else-if="field.field_type === 27">
                 <TableField :variants="field.values_to_input" v-model="field.value" :disabled="confirmed" />
               </div>
+              <div class="field-value" v-else-if="field.field_type === 28">
+                <PermanentDirectoryField :oid="field.values_to_input" v-model="field.value" :disabled="confirmed" />
+              </div>
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
                     placement: 'left',
@@ -193,6 +190,7 @@ export default {
     LaboratoryPreviousResults: () => import('../fields/LaboratoryPreviousResults.vue'),
     DiagnosticPreviousResults: () => import('../fields/DiagnosticPreviousResults.vue'),
     DocReferralPreviousResults: () => import('../fields/DocReferralPreviousResults.vue'),
+    PermanentDirectoryField: () => import('../fields/PermanentDirectoryField.vue'),
   },
   props: {
     research: {

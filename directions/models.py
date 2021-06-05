@@ -1317,6 +1317,17 @@ class ParaclinicResult(models.Model):
     def get_field_type(self):
         return self.field_type if self.issledovaniye.time_confirmation and self.field_type is not None else self.field.field_type
 
+    @property
+    def string_value(self):
+        result = self.value
+        if self.get_field_type() == 28:
+            try:
+                data = json.loads(result)
+                result = f"{data['code']} – {data['title']}"
+            except:
+                pass
+        return result
+
     @staticmethod
     def anesthesia_value_get(iss_pk=-1, field_pk=-1):
         if iss_pk > 0:
@@ -1396,6 +1407,17 @@ class DirectionParamsResult(models.Model):
 
     def get_field_type(self):
         return self.field_type if self.field_type is not None else self.field.field_type
+
+    @property
+    def string_value(self):
+        result = self.value
+        if self.get_field_type() == 28:
+            try:
+                data = json.loads(result)
+                result = f"{data['code']} – {data['title']}"
+            except:
+                pass
+        return result
 
     @staticmethod
     def save_direction_params(direction_obj, data):
