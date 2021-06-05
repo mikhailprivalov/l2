@@ -57,7 +57,7 @@ import { LOAD_PERMANENT_DIRECTORY } from '@/store/action-types';
         return;
       }
 
-      this.localTitle = (this.variants)[this.localCode] || '';
+      this.localTitle = this.variants[this.localCode] || '';
       this.emit();
     },
     localTitle() {
@@ -117,6 +117,8 @@ export default class PermanentDirectoryField extends Vue {
     if (!this.variants[this.localCode]) {
       // eslint-disable-next-line prefer-destructuring
       this.localCode = Object.keys(this.variants)[0];
+    } else {
+      this.localTitle = this.variants[this.localCode] || '';
     }
   }
 
