@@ -25,8 +25,6 @@ from researches.models import Tubes
 from rmis_integration.client import get_md5
 from slog.models import Log
 from users.models import Speciality
-import os.path
-from laboratory.settings import BASE_DIR
 from utils.nsi_directories import NSI
 
 

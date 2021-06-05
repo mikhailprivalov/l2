@@ -3,7 +3,7 @@
     <div v-if="disabled" class="simple-value">
       {{ localCode }} – {{ localTitle }}
     </div>
-    <div v-else-if="loading">
+    <div v-else-if="loading" class="simple-value">
       загрузка значений справочника
     </div>
     <div v-else>
@@ -45,34 +45,13 @@ import { LOAD_PERMANENT_DIRECTORY } from '@/store/action-types';
     };
   },
   computed: mapGetters(['permanentDirectories']),
-  async mounted() {
-    const [oid] = this.oid;
-    let value = this.value || '{}';
-    try {
-      value = JSON.parse(value);
-    } catch (e) {
-      value = {};
-    }
-
-    if (value.code) {
-      this.localCode = String(value.code);
-    }
-    if (value.title) {
-      this.localTitle = String(value.title);
-    }
-
-    if (this.disabled) {
-      return;
-    }
-    this.loading = true;
-    await this.$store.dispatch(LOAD_PERMANENT_DIRECTORY, { oid });
-    this.loading = false;
-    if (!this.variants[this.localCode]) {
-      // eslint-disable-next-line prefer-destructuring
-      this.localCode = Object.keys(this.variants)[0];
-    }
+  mounted() {
+    this.validateData();
   },
   watch: {
+    disabled() {
+      this.validateData();
+    },
     localCode() {
       if (this.disabled) {
         return;
@@ -111,6 +90,34 @@ export default class PermanentDirectoryField extends Vue {
 
   get variantsToSelect() {
     return Object.keys(this.variants).map(k => ({ pk: k, title: `${k} – ${this.variants[k]}` }));
+  }
+
+  async validateData() {
+    const [oid] = this.oid;
+    let value = this.value || '{}';
+    try {
+      value = JSON.parse(value);
+    } catch (e) {
+      value = {};
+    }
+
+    if (value.code) {
+      this.localCode = String(value.code);
+    }
+    if (value.title) {
+      this.localTitle = String(value.title);
+    }
+
+    if (this.disabled) {
+      return;
+    }
+    this.loading = true;
+    await this.$store.dispatch(LOAD_PERMANENT_DIRECTORY, { oid });
+    this.loading = false;
+    if (!this.variants[this.localCode]) {
+      // eslint-disable-next-line prefer-destructuring
+      this.localCode = Object.keys(this.variants)[0];
+    }
   }
 
   emit() {
