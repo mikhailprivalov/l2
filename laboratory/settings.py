@@ -4,7 +4,6 @@ import sys
 import warnings
 from collections import OrderedDict
 
-from django.core.exceptions import ImproperlyConfigured
 
 PROFILING = False
 
@@ -64,6 +63,7 @@ INSTALLED_APPS = (
     'doctor_call',
     'hospitals.apps.HospitalsConfig',
     'pharmacotherapy',
+    'command_utils',
 )
 
 MIDDLEWARE = [

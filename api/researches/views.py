@@ -25,6 +25,7 @@ from researches.models import Tubes
 from rmis_integration.client import get_md5
 from slog.models import Log
 from users.models import Speciality
+from utils.nsi_directories import NSI
 
 
 @login_required
@@ -187,7 +188,8 @@ def researches_by_department(request):
     direction_form = DResearches.DIRECTION_FORMS
     result_form = DResearches.RESULT_FORMS
     spec_data = [{"pk": -1, "title": "Не выбрано"}, *list(users.Speciality.objects.all().values('pk', 'title').order_by("title"))]
-    response = {"researches": [], "direction_forms": direction_form, "result_forms": result_form, "specialities": spec_data}
+
+    response = {"researches": [], "direction_forms": direction_form, "result_forms": result_form, "specialities": spec_data, "permanent_directories": NSI}
     request_data = json.loads(request.body)
     department_pk = int(request_data["department"])
     if -500 >= department_pk > -600:

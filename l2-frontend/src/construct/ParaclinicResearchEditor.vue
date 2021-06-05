@@ -179,7 +179,7 @@
                 <div>
                   <div class="input-group">
                     <span class="input-group-addon">Название поля ({{ row.pk === -1 ? 'новое' : row.pk }})</span>
-                    <input type="text" class="form-control" v-model="row.title">
+                    <input type="text" class="form-control" v-model="row.title" :readonly="row.field_type === 28">
                     <span class="input-group-addon">ID-скрепки</span>
                     <input type="text" class="form-control" v-model="row.attached">
                   </div>
@@ -228,6 +228,9 @@
                   <div v-else-if="row.field_type === 27">
                     <strong>Таблица:</strong>
                   </div>
+                  <PermanentDirectories :row="row" :permanent_directories_keys="permanent_directories_keys"
+                                        :permanent_directories="permanent_directories"
+                                        v-if="row.field_type === 28"/>
                   <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23, 27].includes(row.field_type)">
                     <div class="header" v-collapse-toggle>
                       <a href="#" class="a-under" @click.prevent v-if="row.field_type === 0">
@@ -250,9 +253,12 @@
                           <input type="text" v-model="row.new_value" class="form-control"
                                  @keyup.enter="add_template_value(row)"
                                  placeholder="Новый шаблон быстрого ввода"/>
-                          <span class="input-group-btn"><button class="btn last btn-blue-nb" type="button"
-                                                                :disabled="row.new_value === ''"
-                                                                @click="add_template_value(row)">Добавить</button></span>
+                          <span class="input-group-btn">
+                            <button class="btn last btn-blue-nb" type="button"
+                                    :disabled="row.new_value === ''"
+                                    @click="add_template_value(row)">Добавить
+                            </button>
+                          </span>
                         </div>
                         <div>
                           <div class="input-group" v-for="(v, i) in row.values_to_input" :key="i"
@@ -336,6 +342,7 @@
                       <option value="25">Результаты диагностические</option>
                       <option value="26">Результаты консультаций</option>
                       <option value="27">Таблица</option>
+                      <option value="28">НСИ-справочник</option>
                     </select>
                   </label>
                 </div>
@@ -387,6 +394,7 @@ import api from '@/api';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import TableConstructor from '@/construct/TableConstructor.vue';
+import PermanentDirectories from '@/construct/PermanentDirectories.vue';
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
 Vue.use(Vue2Filters);
@@ -395,6 +403,7 @@ export default {
   name: 'paraclinic-research-editor',
   components: {
     TableConstructor,
+    PermanentDirectories,
     FieldHelper,
     NumberRangeField,
     NumberField,
@@ -447,7 +456,11 @@ export default {
       type: Array,
       required: false,
       default: () => [],
-
+    },
+    permanent_directories: {
+      type: Object,
+      required: false,
+      default: () => ({}),
     },
   },
   created() {
@@ -514,6 +527,11 @@ export default {
     this.$root.$on('hide_fte', () => this.f_templates_hide());
   },
   computed: {
+    permanent_directories_keys() {
+      return [
+        { id: -1, label: 'не выбран' },
+        ...Object.keys(this.permanent_directories).map(oid => ({ id: oid, label: this.permanent_directories[oid].title }))];
+    },
     fte() {
       return this.$store.getters.modules.l2_fast_templates;
     },

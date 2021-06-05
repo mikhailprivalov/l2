@@ -244,7 +244,6 @@ def directions_history(request):
         if i[24]:
             is_application = True
 
-
     status = min(status_set)
     if len(lab) > 0:
         lab_title = ', '.join(lab)

@@ -1,3 +1,4 @@
+import api from '../../api';
 import researchesPoint from '../../api/researches-point';
 import * as mutation_types from '../mutation-types';
 import * as actionsTypes from '../action-types';
@@ -8,6 +9,7 @@ const stateInitial = {
   researches: {},
   tubes: {},
   researches_loaded: false,
+  permanentDirectories: {},
 };
 
 const getters = {
@@ -23,6 +25,7 @@ const getters = {
     }
     return o;
   },
+  permanentDirectories: (state) => state.permanentDirectories,
 };
 
 const actions = {
@@ -46,6 +49,13 @@ const actions = {
     commit(mutation_types.UPDATE_RESEARCHES, { researches });
     commit(mutation_types.UPDATE_TUBES, { tubes });
   },
+  async [actionsTypes.LOAD_PERMANENT_DIRECTORY]({ commit, state }, { oid }) {
+    if (state.permanentDirectories[oid]) {
+      return;
+    }
+    const data = await api('permanent-directory', { oid });
+    commit(mutation_types.SET_PERMANENT_DIRECTORY, { oid, data });
+  },
 };
 
 const mutations = {
@@ -61,6 +71,12 @@ const mutations = {
   },
   [mutation_types.UPDATE_TUBES](state, { tubes }) {
     state.tubes = tubes;
+  },
+  [mutation_types.SET_PERMANENT_DIRECTORY](state, { oid, data }) {
+    state.permanentDirectories = {
+      ...state.permanentDirectories,
+      [oid]: data,
+    };
   },
 };
 

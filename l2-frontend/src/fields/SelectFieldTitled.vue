@@ -1,5 +1,5 @@
 <template>
-  <select :disabled="disabled" v-model="val" class="form-control">
+  <select :disabled="disabled" v-model="val" class="form-control" :class="fullWidth && 'fullWidth'">
     <option :value="v.pk" :key="v.pk" v-for="v in variants">
       {{v.title}}
     </option>
@@ -16,6 +16,11 @@ export default {
       required: true,
     },
     disabled: {
+      required: false,
+      default: false,
+      type: Boolean,
+    },
+    fullWidth: {
       required: false,
       default: false,
       type: Boolean,
@@ -52,3 +57,9 @@ export default {
   },
 };
 </script>
+
+<style lang="scss" scoped>
+.fullWidth {
+  width: 100%;
+}
+</style>

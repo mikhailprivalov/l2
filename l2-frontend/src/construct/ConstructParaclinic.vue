@@ -30,7 +30,7 @@
                                   :direction_forms="direction_forms"
                                   :result_forms="result_forms"
                                   :specialities="specialities"
-
+                                  :permanent_directories="permanent_directories"
       />
     </div>
     <div class="construct-content" v-else>
@@ -71,6 +71,7 @@ export default {
       direction_forms: [],
       result_forms: [],
       specialities: [],
+      permanent_directories: {},
     };
   },
   methods: {
@@ -81,6 +82,7 @@ export default {
         this.direction_forms = data.direction_forms;
         this.result_forms = data.result_forms;
         this.specialities = data.specialities;
+        this.permanent_directories = data.permanent_directories;
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
       });
