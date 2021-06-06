@@ -539,6 +539,8 @@ def current_user_info(request):
         "fio": "",
         "department": {"pk": -1, "title": ""},
         "groups": [],
+        "eds_token": None,
+        "modules": SettingManager.l2_modules(),
         "user_services": [],
         "loading": False,
     }
@@ -569,6 +571,15 @@ def current_user_info(request):
             ret["hospital_title"] = doctorprofile.get_hospital_title()
             ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
             ret["specialities"] = [] if not doctorprofile.specialities else [doctorprofile.specialities.title]
+            ret["groups"] = list(user.groups.values_list('name', flat=True))
+            if user.is_superuser:
+                ret["groups"].append("Admin")
+            ret["eds_token"] = doctorprofile.get_eds_token()
+            ret["eds_allowed_sign"] = []
+            if 'Врач консультаций' in ret["groups"] or 'Заведующий отделением' in ret["groups"]:
+                ret["eds_allowed_sign"].append('Врач')
+            if 'Заведующий отделением' in ret["groups"] or 'Admin' in ret["groups"]:
+                ret["eds_allowed_sign"].append('Заведующий отделением')
 
             try:
                 connections.close_all()
@@ -576,11 +587,8 @@ def current_user_info(request):
                 print(f"Error closing connections {e}")  # noqa: T001
 
         def fill_settings():
-            ret["groups"] = list(user.groups.values_list('name', flat=True))
             ret["su"] = user.is_superuser
             ret["username"] = user.username
-            if user.is_superuser:
-                ret["groups"].append("Admin")
 
             ret["modules"] = SettingManager.l2_modules()
             ret["rmis_enabled"] = SettingManager.get("rmis_enabled", default='false', default_type='b')

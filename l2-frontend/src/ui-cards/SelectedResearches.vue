@@ -289,6 +289,7 @@
 </template>
 
 <script lang="ts">
+// @ts-ignore
 import vSelect from 'vue-select';
 import _ from 'lodash';
 import { vField, vGroup } from '@/components/visibility-triggers';

@@ -57,6 +57,13 @@ class DoctorProfile(models.Model):
 
     hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, blank=True, default=None, null=True, on_delete=models.SET_NULL)
     all_hospitals_users_control = models.BooleanField(default=False, blank=True, help_text="Может настраивать пользователей во всех организациях")
+    eds_token = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Токен для L2 EDS')
+
+    def get_eds_token(self):
+        if not self.eds_token:
+            self.eds_token = uuid.uuid4()
+            self.save(update_fields=['eds_token'])
+        return str(self.eds_token)
 
     def get_hospital_id(self):
         hosp = self.get_hospital()

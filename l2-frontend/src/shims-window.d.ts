@@ -6,6 +6,7 @@ declare global {
     $: any
     Modernizr: any
     prefetch: any
+    eds: any
     selectTextEl: (arg: any) => void
     okblink: (arg: any) => void
     clearselection: () => void

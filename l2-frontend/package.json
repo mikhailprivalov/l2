@@ -94,10 +94,7 @@
     "webpack-manifest-plugin": "^3.1.1"
   },
   "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead",
-    "not ie >= 0"
+    "last 2 years"
   ],
   "_id": "l2-frontend@1.0.0",
   "license": "MIT",

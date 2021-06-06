@@ -8,7 +8,7 @@ from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 from django.utils import timezone
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 
 import directions.models as directions
@@ -24,6 +24,7 @@ from researches.models import Tubes
 from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient
+from users.models import DoctorProfile
 from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
 from . import sql_if
@@ -824,3 +825,56 @@ def external_research_create(request):
         message = 'Серверная ошибка'
 
     return Response({"ok": False, 'message': message})
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+def eds_get_user_data(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    token = token.replace('Bearer ', '')
+
+    if not token or not DoctorProfile.objects.filter(eds_token=token).exists():
+        return Response({"ok": False})
+
+    doc = DoctorProfile.objects.filter(eds_token=token)[0]
+
+    return Response({
+        "ok": True,
+        "userData": {
+            "fio": doc.fio,
+            "department": doc.podrazdeleniye.title if doc.podrazdeleniye else None,
+        }
+    })
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+def eds_get_cda_data(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    token = token.replace('Bearer ', '')
+
+    if not token or not DoctorProfile.objects.filter(eds_token=token).exists():
+        return Response({"ok": False})
+
+    body = json.loads(request.body)
+
+    pk = body.get("pk")
+
+    n = Napravleniya.objects.get(pk=pk)
+    i: directions.Issledovaniya = n.issledovaniya_set.all()[0]
+    card = n.client
+    ind = n.client.individual
+
+    return Response({
+        "title": i.research.title,
+        "patient": {
+            'pk': card.number,
+            'family': ind.family,
+            'name': ind.name,
+            'patronymic': ind.patronymic,
+            'gender': ind.sex.lower(),
+            'birthdate': ind.birthday.strftime("%Y%m%d"),
+        },
+    })

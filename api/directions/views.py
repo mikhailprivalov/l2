@@ -1011,7 +1011,7 @@ def directions_paraclinic_form(request):
     )
 
     if dn.exists():
-        d = dn[0]
+        d: Napravleniya = dn[0]
         df = d.issledovaniya_set.all()
 
         if df.exists():
@@ -1044,13 +1044,14 @@ def directions_paraclinic_form(request):
                 "tube": None,
                 "amd": d.amd_status,
                 "amd_number": d.amd_number,
+                "hospitalTFOMSCode": d.get_hospital_tfoms_id(),
             }
 
             response["researches"] = []
-            i: Issledovaniya
             tube = None
             medical_certificates = []
             tmp_certificates = []
+            i: Issledovaniya
             for i in df:
                 if i.research.is_doc_refferal:
                     response["has_doc_referral"] = True
@@ -1102,6 +1103,7 @@ def directions_paraclinic_form(request):
                     "templates": [],
                     "saved": i.time_save is not None,
                     "confirmed": i.time_confirmation is not None,
+                    "confirmed_at": None if not i.time_confirmation else time.mktime(timezone.localtime(i.time_confirmation).timetuple()),
                     "allow_reset_confirm": i.allow_reset_confirm(request.user) and (not more_forbidden or TADP in i.research.title),
                     "more": [x.research_id for x in Issledovaniya.objects.filter(parent=i)],
                     "sub_directions": [],
@@ -1638,6 +1640,7 @@ def directions_paraclinic_result(request):
         response["ok"] = True
         response["amd"] = iss.napravleniye.amd_status
         response["amd_number"] = iss.napravleniye.amd_number
+        response["confirmed_at"] = None if not iss.time_confirmation else time.mktime(timezone.localtime(iss.time_confirmation).timetuple())
         Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
         if with_confirm:
             if stationar_research != -1:
@@ -1719,6 +1722,7 @@ def directions_paraclinic_confirm(request):
         response["amd"] = iss.napravleniye.amd_status
         response["amd_number"] = iss.napravleniye.amd_number
         response["forbidden_edit"] = forbidden_edit_dir(iss.napravleniye_id)
+        response["confirmed_at"] = None if not iss.time_confirmation else time.mktime(timezone.localtime(iss.time_confirmation).timetuple())
         Log(key=pk, type=14, body=json.dumps(request_data), user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
