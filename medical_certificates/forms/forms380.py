@@ -975,10 +975,9 @@ def form_08(request_data):
     fwb.append(Paragraph(f'6. Адрес места жительства: {patient_data["main_address"]}', style))
     fwb.append(Spacer(1, 2 * mm))
     fwb.append(Paragraph(f'7. Врачебное  заключение о   профессиональной   пригодности: <u>{identified_fianl}</u>', style))
-    fwb.append(
-        Paragraph(
-            '<font size=9>(дается в соответствии с перечнем заболеваний, препятствующих  назначению на  должность  судьи,  утвержденным  решением  Совета  судей  Российской Федерации)</font>',
-            style,
+    fwb.append(Paragraph(
+        '<font size=9>(дается в соответствии с перечнем заболеваний, препятствующих  назначению на  должность  судьи,  утвержденным  решением  Совета  судей  Российской Федерации)</font>',
+        style,
         )
     )
     fwb.append(Spacer(1, 4 * mm))
@@ -1333,8 +1332,6 @@ def form_11(request_data):
     patient = Napravleniya.objects.get(pk=direction)
     fio = patient.client.individual.fio()
     fio_short = patient.client.individual.fio(short=True, dots=True)
-    born = patient.client.individual.bd()
-    sex = patient.client.individual.sex
 
     iss = Issledovaniya.objects.filter(napravleniye__pk=direction).order_by("research__pk", "research__sort_weight").first()
     if not iss.time_confirmation:
@@ -1375,8 +1372,6 @@ def form_11(request_data):
             date = i["value"]
         elif i["title"] == "Цех, участок ОПУ":
             department = i["value"]
-        elif i["title"] == "Группа здоровья":
-            group_health = i["value"]
 
     fwb.append(Paragraph('Заключение по результатам', styleCenterBold))
     fwb.append(Paragraph(f'{type_med_examination_padeg} медицинского осмотра (обследования) № {direction}', styleCenterBold))
@@ -1519,7 +1514,7 @@ def form_12(request_data):
     if not iss.time_confirmation:
         return ""
 
-    work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date, department = ("", "", "", "", "", "", "", "")
+    work_place, work_position, harmful_factor, type_med_examination, restrictions, date, department = ("", "", "", "", "", "", "")
     type_med_examination_padeg, group_health = "", ""
 
     title_fields = [
