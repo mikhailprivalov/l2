@@ -79,7 +79,6 @@
     "@vue/cli-service": "~4.5.0",
     "@vue/eslint-config-airbnb": "^5.0.2",
     "@vue/eslint-config-typescript": "^7.0.0",
-    "babel-loader": "^8.2.2",
     "cross-env": "^7.0.3",
     "eslint": "^6.7.2",
     "eslint-plugin-import": "^2.23.4",
@@ -91,7 +90,7 @@
     "url-loader": "^4.1.1",
     "vue-cli-plugin-webpack": "~0.1.0",
     "vue-template-compiler": "^2.6.13",
-    "webpack": "5",
+    "webpack": "4",
     "webpack-manifest-plugin": "^3.1.1"
   },
   "browserslist": [
