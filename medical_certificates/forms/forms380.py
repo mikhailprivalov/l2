@@ -977,9 +977,7 @@ def form_08(request_data):
     fwb.append(Paragraph(f'7. Врачебное  заключение о   профессиональной   пригодности: <u>{identified_fianl}</u>', style))
     fwb.append(Paragraph(
         '<font size=9>(дается в соответствии с перечнем заболеваний, препятствующих  назначению на  должность  судьи,  утвержденным  решением  Совета  судей  Российской Федерации)</font>',
-        style,
-        )
-    )
+        style, ))
     fwb.append(Spacer(1, 4 * mm))
     fwb.append(Paragraph("Подпись лица, заполнившего освидетельствование ________________________", style))
     fwb.append(Spacer(1, 2 * mm))
@@ -1338,7 +1336,7 @@ def form_11(request_data):
         return ""
 
     work_place, work_position, harmful_factor, type_med_examination, restrictions, med_report, date, department = ("", "", "", "", "", "", "", "")
-    type_med_examination_padeg, group_health = "", ""
+    type_med_examination_padeg = "", ""
 
     title_fields = [
         "Место работы",
