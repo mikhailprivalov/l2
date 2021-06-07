@@ -415,12 +415,14 @@ class Patients(BaseRequester):
     def get_fake_reserves():
         r = []
         from random import randint
-        rn = randint(100, 1000000)
+        cards = clients_models.Card.objects.filter(base__is_rmis=True)
         for i in range(10):
+            rn = randint(0, cards.count())
+            c: clients_models.Card = cards[rn]
             r.append(
                 {
-                    'uid': '',
-                    'patient': 'Иванов Иван Иванович',
+                    'uid': c.number,
+                    'patient': c.individual.fio(),
                     'slot': f'l2-test-{i + rn}',
                     'timeStart': f'0{i}:00',
                     'timeEnd': f'0{i}:59'
