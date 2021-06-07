@@ -415,7 +415,7 @@ class Patients(BaseRequester):
     def get_fake_reserves():
         r = []
         from random import randint
-        cards = clients_models.Card.objects.filter(base__is_rmis=True)
+        cards = clients_models.Card.objects.filter(base__is_rmis=True, is_archive=False)
         for i in range(10):
             rn = randint(0, cards.count())
             c: clients_models.Card = cards[rn]
