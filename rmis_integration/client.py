@@ -411,7 +411,24 @@ class Patients(BaseRequester):
         self.smart_client = self.main_client.get_client("path_smart_patients", "patients-smart-ws/patient?wsdl").service
         self.appointment_client = self.main_client.get_client("path_appointment", "appointment-ws/appointment?wsdl").service
 
-    def get_reserves(self, date: datetime.date, location: int):
+    @staticmethod
+    def get_fake_reserves():
+        r = []
+        from random import randint
+        rn = randint(100, 1000000)
+        for i in range(10):
+            r.append(
+                {
+                    'uid': '',
+                    'patient': 'Иванов Иван Иванович',
+                    'slot': f'l2-test-{i + rn}',
+                    'timeStart': f'0{i}:00',
+                    'timeEnd': f'0{i}:59'
+                }
+            )
+        return r
+
+    def get_reserves(self, date: datetime.date, location: Union[int, str]):
         d = self.appointment_client.getReserveFiltered(date=date, location=location)
         r = []
         for dd in d:
@@ -429,7 +446,15 @@ class Patients(BaseRequester):
             )
         return sorted(r, key=lambda k: k['timeStart'])
 
-    def get_slot(self, pk: [int, str]):
+    @staticmethod
+    def get_fake_slot():
+        from django.utils import timezone
+        return {
+            "status": "unknown",
+            "datetime": timezone.now(),
+        }
+
+    def get_slot(self, pk: Union[int, str]):
         d = self.appointment_client.getSlot(pk)
         return (
             {

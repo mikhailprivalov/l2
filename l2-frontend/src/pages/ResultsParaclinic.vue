@@ -1551,7 +1551,7 @@ export default {
         return [];
       }
       const r = [{ pk: -1, title: 'Не выбрано', full_title: 'Не выбрано' }];
-      for (const d of Object.keys(this.researches)) {
+      for (const d of Object.keys(this.researches_obj)) {
         for (const row of (this.$store.getters.researches[d] || [])) {
           if (this.user_data.user_services.includes(row.pk)) {
             r.push(row);

@@ -170,8 +170,8 @@
               <selected-researches :researches="user.restricted_to_direct" :simple="true"/>
             </div>
           </div>
-          <div class="more-title" v-if="modules.l2_rmis_queue && user.rmis_location !== ''">Услуги, оказываемые
-            пользователем:
+          <div class="more-title" v-if="modules.l2_rmis_queue && user.rmis_location !== ''">
+            Услуги, оказываемые пользователем:
           </div>
           <div class="row" style="margin-right: 0" v-if="modules.l2_rmis_queue && user.rmis_location !== ''">
             <div class="col-xs-6"

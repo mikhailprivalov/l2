@@ -1250,6 +1250,18 @@ def user_save_view(request):
     return JsonResponse({"ok": ok, "npk": npk, "message": message})
 
 
+def slot_status(x):
+    s = 0
+    pk = None
+    n = directions.Napravleniya.objects.filter(rmis_slot_id=x["slot"]).first()
+    if n:
+        pk = n.pk
+        s = 1
+        if n.is_all_confirm():
+            s = 2
+    return {"code": s, "direction": pk}
+
+
 @login_required
 def user_location(request):
     request_data = json.loads(request.body)
@@ -1257,21 +1269,14 @@ def user_location(request):
     d = {}
     rl = request.user.doctorprofile.rmis_location
     if rl and SettingManager.get("l2_rmis_queue", default='false', default_type='b'):
-        from rmis_integration.client import Client
+        if rl == 1337 and request.user.is_superuser:
+            from rmis_integration.client import Patients
+            d = Patients.get_fake_reserves()
+        else:
+            from rmis_integration.client import Client
 
-        c = Client(modules=['patients'])
-        d = c.patients.get_reserves(date, rl)
-
-        def slot_status(x):
-            s = 0
-            pk = None
-            n = directions.Napravleniya.objects.filter(rmis_slot_id=x["slot"]).first()
-            if n:
-                pk = n.pk
-                s = 1
-                if n.is_all_confirm():
-                    s = 2
-            return {"code": s, "direction": pk}
+            c = Client(modules=['patients'])
+            d = c.patients.get_reserves(date, rl)
 
         d = list(map(lambda x: {**x, "status": slot_status(x)}, d))
     return JsonResponse({"data": d})
@@ -1284,16 +1289,21 @@ def user_get_reserve(request):
     patient_uid = request_data["patient"]
     rl = request.user.doctorprofile.rmis_location
     if rl:
-        from rmis_integration.client import Client
+        if rl == 1337 and request.user.is_superuser:
+            from rmis_integration.client import Patients
 
-        c = Client(modules=['patients'])
-        d = c.patients.get_slot(pk)
+            d = Patients.get_fake_slot()
+        else:
+            from rmis_integration.client import Client
+
+            c = Client(modules=['patients'])
+            d = c.patients.get_slot(pk)
         n = directions.Napravleniya.objects.filter(rmis_slot_id=pk).first()
         d["direction"] = n.pk if n else None
         ds = directions.Issledovaniya.objects.filter(napravleniye=n, napravleniye__isnull=False).first()
         d['direction_service'] = ds.research_id if ds else -1
         if d:
-            return JsonResponse({**d, "datetime": d["datetime"].strftime('%d.%m.%Y %H:%M'), "patient_uid": patient_uid, "pk": int(str(pk)[1:])})
+            return JsonResponse({**d, "datetime": d["datetime"].strftime('%d.%m.%Y %H:%M'), "patient_uid": patient_uid, "pk": int(str(pk)[1:]) if str(pk).isdigit() else str(pk)})
     return JsonResponse({})
 
 
