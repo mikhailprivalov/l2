@@ -17,15 +17,13 @@ registerVue();
 Vue.use(Router);
 Vue.use(VueMeta);
 
-const lazyLoad = (page, withoutSuffix: boolean | void) => () => import(`@/pages/${page}${withoutSuffix ? '' : 'Page'}.vue`);
-
 const router = new Router({
   mode: 'history',
   routes: [
     {
       path: '/ui/login',
       name: 'login',
-      component: lazyLoad('Login'),
+      component: () => import('@/pages/LoginPage.vue'),
       meta: {
         allowWithoutLogin: true,
         title: 'Вход в систему',
@@ -34,7 +32,7 @@ const router = new Router({
     {
       path: '/ui/menu',
       name: 'menu',
-      component: lazyLoad('Menu'),
+      component: () => import('@/pages/MenuPage.vue'),
       meta: {
         narrowLayout: true,
         title: 'Меню L2',
@@ -43,12 +41,21 @@ const router = new Router({
     {
       path: '/ui/directions',
       name: 'directions',
-      component: lazyLoad('Directions', true),
+      component: () => import('@/pages/Directions.vue'),
       meta: {
         title: 'Направления и картотека',
         groups: ['Лечащий врач', 'Врач-лаборант', 'Оператор лечащего врача', 'Оператор Контакт-центра'],
         showCardReader: true,
         showExtendedPatientSearch: true,
+      },
+    },
+    {
+      path: '/ui/results-by-department-or-doctor',
+      name: 'results_department',
+      component: () => import('@/pages/ResultsDepartment.vue'),
+      meta: {
+        title: 'Печать по отделению или врачу',
+        groups: ['Лечащий врач', 'Оператор лечащего врача'],
       },
     },
   ],

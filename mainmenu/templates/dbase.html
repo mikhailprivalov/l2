@@ -888,8 +888,8 @@
     </script>
     {% block scripts_pre_webpack %}{% endblock %}
     <div id="page-preloader"></div>
-    <script src="{% manifest 'chunk-common.js' %}"></script>
     <script src="{% manifest 'chunk-vendors.js' %}"></script>
+    <script src="{% manifest 'chunk-common.js' %}"></script>
     <script src="{% manifest 'app.js' %}"></script>
 {% endblock %}
 {% block scripts %}{% endblock %}

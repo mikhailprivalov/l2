@@ -114,8 +114,8 @@
 <script src="{% static 'js/bootstrap-select.js' %}"></script>
 <script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
 <script src="{% static 'locales/bootstrap-datepicker.ru.min.js' %}"></script>
-<script src="{% manifest 'chunk-common.js' %}"></script>
 <script src="{% manifest 'chunk-vendors.js' %}"></script>
+<script src="{% manifest 'chunk-common.js' %}"></script>
 <script>
     window.ORG_TITLE = `{% firstof request.user.doctorprofile.hospital_safe_title org_title|safe %}`;
 </script>

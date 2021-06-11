@@ -839,3 +839,8 @@ def eds(request, path):
 @ensure_csrf_cookie
 def ui(request, path):
     return render(request, 'vuebase.html')
+
+
+@login_required
+def results_department(request):
+    return redirect('/ui/results-by-department-or-doctor')

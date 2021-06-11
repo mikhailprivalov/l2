@@ -63,12 +63,13 @@
 </template>
 
 <script lang="ts">
+import Vue from 'vue';
+import Component from 'vue-class-component';
 import moment from 'moment';
 import * as actions from '../store/action-types';
 import directionsPoint from '../api/directions-point';
 
-export default {
-  name: 'results-department',
+@Component({
   data() {
     return {
       date: moment().format('YYYY-MM-DD'),
@@ -78,18 +79,28 @@ export default {
       by_doc: false,
     };
   },
-  methods: {
-    async print(by_doc) {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { results } = await directionsPoint.getDirectionsTypeDate(
-        this, ['is_lab', 'is_paraclinic', 'is_doc_refferal', 'date'], { by_doc },
-      );
-      if (!results || results.length === 0) {
-        window.errmessage('Результатов не найдено');
-      }
-      this.$root.$emit('print:results', results);
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-  },
-};
+})
+export default class ResultsDepartment extends Vue {
+  date: string;
+
+  is_lab: boolean;
+
+  is_paraclinic: boolean;
+
+  is_doc_refferal: boolean;
+
+  by_doc: boolean;
+
+  async print(by_doc) {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { results } = await directionsPoint.getDirectionsTypeDate(
+      this, ['is_lab', 'is_paraclinic', 'is_doc_refferal', 'date'], { by_doc },
+    );
+    if (!results || results.length === 0) {
+      this.$root.$emit('msg', 'error', 'Результатов не найдено');
+    }
+    this.$root.$emit('print:results', results);
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+}
 </script>
