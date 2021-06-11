@@ -89,6 +89,10 @@ export default {
     });
   },
   methods: {
+    resize() {
+      const $fp = window.$(this.$refs.root);
+      $fp.height(window.$(window).height() - $fp.position().top - 5);
+    },
     load_params(pks) {
       if (this.inLoad || pks.length === 0) return;
       this.inLoad = true;

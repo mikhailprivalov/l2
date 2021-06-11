@@ -4,6 +4,7 @@ import re
 import time
 from datetime import datetime, time as dtime
 from operator import itemgetter
+from typing import Optional
 
 import pytz
 import simplejson as json
@@ -44,6 +45,7 @@ from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE
 from laboratory.utils import strdatetime, strdate, tsdatetime, start_end_year, strfdatetime, current_time
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
+from refprocessor.result_parser import ResultRight
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
@@ -896,8 +898,8 @@ def directions_results_report(request):
                             "units": "",
                             "is_norm": "normal",
                             "not_norm_dir": "",
-                            "delta": 0,
-                            "active_ref": {},
+                            # "delta": 0,
+                            "active_ref": None,
                             "direction": i.napravleniye_id,
                         }
                         data.append(paramdata)
@@ -909,26 +911,29 @@ def directions_results_report(request):
                             continue
                         is_norm, ref_sign = r.get_is_norm()
                         not_norm_dir = ""
-                        delta = ""
+                        # delta = ""
                         active_ref = r.calc_normal(fromsave=False, only_ref=True)
-                        if isinstance(active_ref, str) and "r" in active_ref and re.match(r"^\d+(\.\d+)?$", r.value.replace(",", ".").strip()):
-                            x = float(r.value.replace(",", ".").strip())
-                            spl = r.calc_normal(fromsave=False, only_ref=True, raw_ref=False)
-                            if (isinstance(spl, list) or isinstance(spl, tuple)) and len(spl) == 2:
-                                if spl[0] >= x:
-                                    not_norm_dir = "down"
-                                    nx = spl[0] - x
-                                    n10 = spl[0] * 0.2
-                                    if nx <= n10:
-                                        not_norm_dir = "n_down"
-                                    delta = nx
-                                elif spl[1] <= x:
-                                    not_norm_dir = "up"
-                                    nx = x - spl[1]
-                                    n10 = spl[1] * 0.2
-                                    if nx <= n10:
-                                        not_norm_dir = "n_up"
-                                    delta = nx
+                        if isinstance(active_ref, str) and re.match(r"^\d+(\.\d+)?$", r.value.replace(",", ".").strip()):
+                            # x = float(r.value.replace(",", ".").strip())
+                            r1, r2 = r.calc_normal(fromsave=False, only_ref=False)
+
+                            if r1 and r2:
+                                if r1 == 'not_normal':
+                                    not_norm_dir = {'<': "n_down", ">": "n_up"}.get(r2, "")
+                                # if spl[0] >= x:
+                                #     not_norm_dir = "down"
+                                #     nx = spl[0] - x
+                                #     n10 = spl[0] * 0.2
+                                #     if nx <= n10:
+                                #         not_norm_dir = "n_down"
+                                #     delta = nx
+                                # elif spl[1] <= x:
+                                #     not_norm_dir = "up"
+                                #     nx = x - spl[1]
+                                #     n10 = spl[1] * 0.2
+                                #     if nx <= n10:
+                                #         not_norm_dir = "n_up"
+                                #     delta = nx
 
                         paramdata = {
                             "research": f.research_id,
@@ -940,7 +945,7 @@ def directions_results_report(request):
                             "units": r.get_units(),
                             "is_norm": is_norm,
                             "not_norm_dir": not_norm_dir,
-                            "delta": delta,
+                            # "delta": delta,
                             "active_ref": active_ref,
                             "direction": r.issledovaniye.napravleniye_id,
                         }

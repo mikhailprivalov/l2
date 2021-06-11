@@ -48,14 +48,14 @@
           <td>{{r.date}}</td>
           <td class="research">{{get_param_name(r.research, r.pk).research}}</td>
           <td>{{get_param_name(r.research, r.pk).title}}</td>
-          <td v-if="r.active_ref.r" class="v-field">
+          <td v-if="r.active_ref" class="v-field">
             <span v-if="r.not_norm_dir === 'n_up'">&uarr;</span>
             <span v-if="r.not_norm_dir === 'up'">&uarr;&uarr;</span>
             <span v-if="r.not_norm_dir === 'n_down'">&darr;</span>
             <span v-if="r.not_norm_dir === 'down'">&darr;&darr;</span>
             {{r.value}} <span class="units">{{r.units}}</span>
           </td>
-          <td v-if="r.active_ref.r">{{r.active_ref.r}}</td>
+          <td v-if="r.active_ref">{{r.active_ref}}</td>
           <td v-else colspan="2">{{r.value}} <span class="units">{{r.units}}</span></td>
           <td><a href="#" @click.prevent="print_results(r.direction)" title="Печать результатов направления">{{r.direction}}</a>
           </td>
