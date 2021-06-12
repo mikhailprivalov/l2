@@ -538,7 +538,7 @@ def patients_card_save(request):
         i.family = request_data["family"]
         i.name = request_data["name"]
         i.patronymic = request_data["patronymic"]
-        i.birthday = request_data["birthday"]
+        i.birthday = datetime.datetime.strptime(request_data["birthday"], "%d.%m.%Y" if '.' in request_data["birthday"] else "%Y-%m-%d").date()
         i.sex = request_data["sex"]
         i.save()
         if Card.objects.filter(individual=i, base__is_rmis=True).exists() and changed:

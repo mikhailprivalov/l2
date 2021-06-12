@@ -330,6 +330,8 @@ class Individual(models.Model):
         else:
             today = iss.tubes.filter(time_recive__isnull=False).order_by("-time_recive")[0].time_recive.date()
         born = self.birthday
+        if isinstance(born, str):
+            born = datetime.strptime(born, "%d.%m.%Y" if '.' in born else "%Y-%m-%d").date()
         try:
             birthday = born.replace(year=today.year)
         except ValueError:
@@ -433,12 +435,13 @@ class Individual(models.Model):
     def fio(self, short=False, dots=False, full=False, direction=None, npf=False, bd=False):
 
         if not short:
+            birthday_date = datetime.strptime(self.birthday, "%d.%m.%Y" if '.' in self.birthday else "%Y-%m-%d").date() if isinstance(self.birthday, str) else self.birthday
             if full:
-                r = "{0} {1} {2}, {5}, {3:%d.%m.%Y} ({4})".format(self.family, self.name, self.patronymic, self.birthday, self.age_s(direction=direction), self.sex)
+                r = "{0} {1} {2}, {5}, {3:%d.%m.%Y} ({4})".format(self.family, self.name, self.patronymic, birthday_date, self.age_s(direction=direction), self.sex)
             elif not npf:
                 r = "{} {} {}".format(self.family, self.name, self.patronymic).strip()
             elif bd:
-                r = "{0} {1} {2}, {3:%d.%m.%Y}".format(self.family, self.name, self.patronymic, self.birthday)
+                r = "{0} {1} {2}, {3:%d.%m.%Y}".format(self.family, self.name, self.patronymic, birthday_date)
             else:
                 r = "{} {} {}".format(self.name, self.patronymic, self.family).strip()
         else:

@@ -880,9 +880,6 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     update_card(hide_after = false, data = null) {
-      if (this.card_pk < 0) {
-        return;
-      }
       this.$root.$emit('select_card', {
         card_pk: data ? data.card_pk : this.card_pk,
         base_pk: this.base_pk,
