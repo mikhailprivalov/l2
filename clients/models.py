@@ -892,7 +892,7 @@ class Card(models.Model):
     phone = models.CharField(max_length=20, blank=True, default='', db_index=True)
     harmful_factor = models.CharField(max_length=255, blank=True, default='', help_text="Фактор вредности")
 
-    medbook_number = models.CharField(max_length=16, blank=True, default='', db_index=True, help_text="Номер мед.книжки", unique=True)
+    medbook_number = models.CharField(max_length=16, blank=True, default='', db_index=True, help_text="Номер мед.книжки")
     medbook_type = models.CharField(max_length=6, choices=MEDBOOK_TYPES, blank=True, default=MEDBOOK_TYPES[0][0], help_text="Тип номера мед.книжки")
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
