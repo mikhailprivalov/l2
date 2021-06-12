@@ -9,4 +9,5 @@ export interface PatientForm {
   pass_n: string,
   snils: string,
   phone: string,
+  medbookNumber: string,
 }

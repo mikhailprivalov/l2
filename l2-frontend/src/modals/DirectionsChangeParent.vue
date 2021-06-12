@@ -136,10 +136,10 @@ export default {
         slave_dirs: this.slave_dirs,
       });
       if (ok) {
-        window.okmessage('Cохранено');
+        this.$root.$emit('msg', 'ok', 'Cохранено');
         this.hide_modal();
       } else {
-        window.errmessage('Ошибка', message);
+        this.$root.$emit('msg', 'error', `Ошибка\n${message}`);
       }
       await this.$store.dispatch(actions.DEC_LOADING);
       this.$root.$emit(`researches-picker:refresh${this.kk}`);

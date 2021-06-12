@@ -236,9 +236,9 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await api('laboratory/confirm-list', this.direction, 'pk');
       if (!ok) {
-        window.errmessage(message);
+        this.$root.$emit('msg', 'error', message);
       } else {
-        window.okmessage('Подтверждено');
+        this.$root.$emit('msg', 'ok', 'Подтверждено');
       }
       this.$root.$emit('laboratory:reload-direction:with-open-first');
       await this.$store.dispatch(actions.DEC_LOADING);
@@ -258,9 +258,9 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await api('laboratory/reset-confirm', iss, 'pk');
       if (!ok) {
-        window.errmessage(message);
+        this.$root.$emit('msg', 'error', message);
       } else {
-        window.okmessage('Подтверждение сброшено');
+        this.$root.$emit('msg', 'ok', 'Подтверждение сброшено');
       }
       this.$root.$emit('laboratory:reload-form');
       await this.$store.dispatch(actions.DEC_LOADING);

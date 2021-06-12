@@ -44,10 +44,10 @@ export default {
       this.data.executor = 'загрузка...';
       const { ok, message } = await api('procedural-list/procedure-time-execute', { pk: this.data.pk, status });
       if (ok) {
-        window.okmessage(message);
+        this.$root.$emit('msg', 'ok', message);
         this.$root.$emit('pharmacotherapy-aggregation:reload');
       } else {
-        window.errmessage(message);
+        this.$root.$emit('msg', 'error', message);
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },

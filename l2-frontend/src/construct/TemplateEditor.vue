@@ -305,7 +305,7 @@ export default {
       this.$store.dispatch(actions.INC_LOADING);
       construct_point.updateTemplate(this, ['pk', 'title', 'researches', 'global_template']).then(() => {
         this.has_unsaved = false;
-        window.okmessage('Сохранено');
+        this.$root.$emit('msg', 'ok', 'Сохранено');
         this.cancel();
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);

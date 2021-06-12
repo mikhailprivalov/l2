@@ -130,10 +130,10 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await api('procedural-list/procedure-cancel', { pk, cancel });
       if (ok) {
-        window.okmessage(message);
+        this.$root.$emit('msg', 'ok', message);
         this.$root.$emit('pharmacotherapy-aggregation:reload');
       } else {
-        window.errmessage(message);
+        this.$root.$emit('msg', 'error', message);
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },

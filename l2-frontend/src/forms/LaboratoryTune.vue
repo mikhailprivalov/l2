@@ -80,7 +80,7 @@ export default {
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
       await laboratory_point.saveFsli(this, 'fractions');
-      window.okmessage('Сохранено');
+      this.$root.$emit('msg', 'ok', 'Сохранено');
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     onHit(f) {

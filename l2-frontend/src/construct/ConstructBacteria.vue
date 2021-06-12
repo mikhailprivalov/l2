@@ -266,9 +266,9 @@ export default {
         lis: this.editElementLis,
       });
       if (ok) {
-        window.okmessage('Элемент сохранён', `${this.searchTypesObject} – ${this.editElementTitle}`);
+        this.$root.$emit('msg', 'ok', `Элемент сохранён\n${this.searchTypesObject} – ${this.editElementTitle}`);
       } else {
-        window.errmessage('Ошибка', message);
+        this.$root.$emit('msg', 'error', `Ошибка\n${message}`);
       }
       this.onClearContentEdit();
       await this.load_culture_groups(this.selected1.title, '1');
@@ -294,9 +294,9 @@ export default {
         this.newgroup = '';
         await this.load_culture_groups(this.selected1.title, '1');
         this.selected2 = obj;
-        window.okmessage('Сохранено', `${this.searchTypesGroups} - ${this.searchTypesObject} – ${this.newgroup}`);
+        this.$root.$emit('msg', 'ok', `Сохранено\n${this.searchTypesGroups} - ${this.searchTypesObject} – ${this.newgroup}`);
       } else {
-        window.errmessage('Ошибка', message);
+        this.$root.$emit('msg', 'error', `Ошибка\n${message}`);
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },
@@ -320,9 +320,9 @@ export default {
         set: { group: this.selected2.title, elements: pksElements2 },
       });
       if (ok) {
-        window.okmessage('Группа сохранена', `${this.searchTypesObject} – ${this.selected2.title}`);
+        this.$root.$emit('msg', 'ok', `Группа сохранена\n${this.searchTypesObject} – ${this.selected2.title}`);
       } else {
-        window.errmessage('Ошибка', message);
+        this.$root.$emit('msg', 'error', `Ошибка\n${message}`);
       }
       this.onClearContentEdit();
       await this.load_culture_groups(this.selected1.title, '1');

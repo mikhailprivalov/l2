@@ -505,10 +505,10 @@ export default {
             this.select_card(0);
           }
         } else {
-          window.errmessage('Ошибка на сервере');
+          this.$root.$emit('msg', 'error', 'Ошибка на сервере');
         }
       }).catch((error) => {
-        window.errmessage('Ошибка на сервере', error.message);
+        this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
       }).finally(() => {
         this.$store.dispatch(actions.DISABLE_LOADING);
       });
@@ -547,17 +547,17 @@ export default {
               this.open_editor();
             }
           } else {
-            window.errmessage('Не найдено', 'Карт по такому запросу не найдено');
+            this.$root.$emit('msg', 'error', 'Карт по такому запросу не найдено');
           }
         } else {
-          window.errmessage('Ошибка на сервере');
+          this.$root.$emit('msg', 'error', 'Ошибка на сервере');
         }
         if (this.search_after_loading) {
           this.search_after_loading = false;
           this.query = '';
         }
       }).catch((error) => {
-        window.errmessage('Ошибка на сервере', error.message);
+        this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
       }).finally(() => {
         this.open_edit_after_loading = false;
         this.$store.dispatch(actions.DISABLE_LOADING);

@@ -114,9 +114,9 @@ export default {
         tb_data,
       });
       if (ok) {
-        window.okmessage(message);
+        this.$root.$emit('msg', 'ok', message);
       } else {
-        window.errmessage(message);
+        this.$root.$emit('msg', 'error', message);
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },

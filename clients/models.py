@@ -330,6 +330,8 @@ class Individual(models.Model):
         else:
             today = iss.tubes.filter(time_recive__isnull=False).order_by("-time_recive")[0].time_recive.date()
         born = self.birthday
+        if isinstance(born, str):
+            born = datetime.strptime(born, "%d.%m.%Y" if '.' in born else "%Y-%m-%d").date()
         try:
             birthday = born.replace(year=today.year)
         except ValueError:
@@ -433,12 +435,13 @@ class Individual(models.Model):
     def fio(self, short=False, dots=False, full=False, direction=None, npf=False, bd=False):
 
         if not short:
+            birthday_date = datetime.strptime(self.birthday, "%d.%m.%Y" if '.' in self.birthday else "%Y-%m-%d").date() if isinstance(self.birthday, str) else self.birthday
             if full:
-                r = "{0} {1} {2}, {5}, {3:%d.%m.%Y} ({4})".format(self.family, self.name, self.patronymic, self.birthday, self.age_s(direction=direction), self.sex)
+                r = "{0} {1} {2}, {5}, {3:%d.%m.%Y} ({4})".format(self.family, self.name, self.patronymic, birthday_date, self.age_s(direction=direction), self.sex)
             elif not npf:
                 r = "{} {} {}".format(self.family, self.name, self.patronymic).strip()
             elif bd:
-                r = "{0} {1} {2}, {3:%d.%m.%Y}".format(self.family, self.name, self.patronymic, self.birthday)
+                r = "{0} {1} {2}, {3:%d.%m.%Y}".format(self.family, self.name, self.patronymic, birthday_date)
             else:
                 r = "{} {} {}".format(self.name, self.patronymic, self.family).strip()
         else:
@@ -851,6 +854,12 @@ class Card(models.Model):
         ('', 'НЕ ВЫБРАНО'),
     )
 
+    MEDBOOK_TYPES = (
+        ('none', 'нет'),
+        ('auto', 'авто'),
+        ('custom', 'вручную'),
+    )
+
     AGENT_NEED_DOC = ['curator', 'agent']
     AGENT_CANT_SELECT = ['payer']
 
@@ -882,6 +891,9 @@ class Card(models.Model):
     number_poliklinika = models.CharField(max_length=20, blank=True, default='', help_text="Идетификатор карты поликлиника", db_index=True)
     phone = models.CharField(max_length=20, blank=True, default='', db_index=True)
     harmful_factor = models.CharField(max_length=255, blank=True, default='', help_text="Фактор вредности")
+
+    medbook_number = models.CharField(max_length=16, blank=True, default='', db_index=True, help_text="Номер мед.книжки", unique=True)
+    medbook_type = models.CharField(max_length=6, choices=MEDBOOK_TYPES, blank=True, default=MEDBOOK_TYPES[0][0], help_text="Тип номера мед.книжки")
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
@@ -1011,6 +1023,14 @@ class Card(models.Model):
         if last_l2:
             n = last_l2.numberInt
         return n + 1
+
+    @staticmethod
+    def next_medbook_n():
+        last_medbook = Card.objects.filter(base__internal_type=True).exclude(medbook_number='').extra(select={'numberInt': 'CAST(medbook_number AS INTEGER)'}).order_by("-numberInt").first()
+        n = 0
+        if last_medbook:
+            n = last_medbook.numberInt
+        return max(n + 1, SettingManager.get_medbook_auto_start())
 
     @staticmethod
     def add_l2_card(

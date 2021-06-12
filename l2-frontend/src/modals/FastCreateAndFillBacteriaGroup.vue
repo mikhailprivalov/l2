@@ -98,11 +98,11 @@ export default {
         'title', 'elements', 'typesObject',
       ]);
       if (ok) {
-        window.okmessage('Группа сохранена', `${this.title}`);
+        this.$root.$emit('msg', 'ok', `Группа сохранена\n${this.title}`);
         this.$root.$emit('select2', obj);
         this.hide_modal();
       } else {
-        window.errmessage('Ошибка', message);
+        this.$root.$emit('msg', 'error', `Ошибка\n${message}`);
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },

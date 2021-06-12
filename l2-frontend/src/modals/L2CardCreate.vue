@@ -4,7 +4,7 @@
     <span slot="header">Регистратура L2</span>
     <div slot="body" style="min-height: 200px" class="registry-body">
       <form autocomplete="off" class="row" onsubmit.prevent>
-        <input type="hidden" autocomplete="off" />
+        <input type="hidden" autocomplete="off"/>
         <div class="col-xs-6 col-form left">
           <div class="form-row">
             <div class="row-t">Фамилия</div>
@@ -38,7 +38,7 @@
           <div class="form-row">
             <div class="row-t">Карта</div>
             <div class="row-v" style="font-weight: bold;">
-              {{card_pk >= 0 ? (card.id ? card.number : 'загрузка') : 'НОВАЯ'}}
+              {{ card_pk >= 0 ? (card.id ? card.number : 'загрузка') : 'НОВАЯ' }}
             </div>
           </div>
           <div class="form-row">
@@ -60,23 +60,27 @@
         </div>
         <div class="col-xs-6">
           <div class="info-row" v-if="loading">
-            Поиск пациентов в L2<template v-if="l2_tfoms"> и в ТФОМС</template>...
+            Поиск пациентов в L2
+            <template v-if="l2_tfoms"> и в ТФОМС</template>
+            ...
           </div>
           <div class="info-row" v-else>
-            Найдено физлиц в L2<template v-if="l2_tfoms"> и ТФОМС</template>: {{individuals.length}}
+            Найдено физлиц в L2
+            <template v-if="l2_tfoms"> и ТФОМС</template>
+            : {{ individuals.length }}
           </div>
         </div>
         <div class="col-xs-12"
              v-if="!card.new_individual && individuals.map(i => i.l2_cards.length).reduce((a, b) => a + b, 0) > 0">
           <div class="alert-warning" style="padding: 10px">
-            <strong>Внимание:</strong> найдены существующие карты или созданы автоматически.<br />
+            <strong>Внимание:</strong> найдены существующие карты или созданы автоматически.<br/>
             Выберите подходящую, нажав на номер карты или продолжайте создание новой при необходимости
             или не совпадении физ. лиц
           </div>
         </div>
         <div class="col-xs-12" v-if="!card.new_individual && individuals.length > 0">
           <div @click="select_individual(i.pk)" class="info-row individual" v-for="i in individuals" :key="i.pk">
-            <input :checked="i.pk === card.individual" type="checkbox"/> {{i.fio}}<br/>
+            <input :checked="i.pk === card.individual" type="checkbox"/> {{ i.fio }}<br/>
             <table class="table table-bordered table-condensed">
               <thead>
               <tr>
@@ -87,17 +91,18 @@
               </thead>
               <tbody>
               <tr v-for="d in i.docs" :key="`${d.type_title}_${d.serial}_${d.number}`">
-                <td>{{d.type_title}}</td>
-                <td>{{d.serial}}</td>
-                <td>{{d.number}}</td>
+                <td>{{ d.type_title }}</td>
+                <td>{{ d.serial }}</td>
+                <td>{{ d.number }}</td>
               </tr>
               <tr v-if="i.l2_cards.length > 0">
                 <th>Активные карты L2</th>
                 <td colspan="2">
                   <div v-for="c in i.l2_cards" :key="c.pk">
-                    <a :href="`/ui/directions?card_pk=${c.pk}&base_pk=${base_pk}&open_edit=true`" class="a-under c-pointer"
-                        title="Открыть существующую карту" v-tippy>
-                      <strong>{{c.number}}</strong>
+                    <a :href="`/ui/directions?card_pk=${c.pk}&base_pk=${base_pk}&open_edit=true`"
+                       class="a-under c-pointer"
+                       title="Открыть существующую карту" v-tippy>
+                      <strong>{{ c.number }}</strong>
                     </a>
                   </div>
                 </td>
@@ -112,14 +117,14 @@
           <div class="info-row">
             <template v-if="card.tfoms_idp || card.tfoms_enp">Есть связь с ТФОМС</template>
             <template v-else>Не связано с ТФОМС</template>
-            <template v-if="time_tfoms_last_sync">({{time_tfoms_last_sync}})</template>
+            <template v-if="time_tfoms_last_sync">({{ time_tfoms_last_sync }})</template>
             <a href="#" class="a-under" @click.prevent="sync_tfoms" tabindex="-1">сверка</a>
           </div>
         </div>
         <div class="text-right" :class="{'col-xs-6': l2_tfoms, 'col-xs-12': !l2_tfoms}">
           <div class="info-row">
-            Связь с РМИС – {{card.has_rmis_card ? 'ЕСТЬ' : 'НЕТ'}}
-            <strong v-if="card.has_rmis_card">{{card.rmis_uid}}</strong>
+            Связь с РМИС – {{ card.has_rmis_card ? 'ЕСТЬ' : 'НЕТ' }}
+            <strong v-if="card.has_rmis_card">{{ card.rmis_uid }}</strong>
             <a href="#" class="a-under" @click.prevent="sync_rmis" tabindex="-1">синхронизировать</a>
           </div>
         </div>
@@ -154,7 +159,7 @@
               <div class="row-t">Участок</div>
               <select v-model="card.district" class="form-control">
                 <option v-for="c in card.districts" :value="c.id" :key="c.id">
-                  {{c.title}}
+                  {{ c.title }}
                 </option>
               </select>
             </div>
@@ -162,7 +167,7 @@
               <div class="row-t">Гинекологический участок</div>
               <select v-model="card.ginekolog_district" class="form-control">
                 <option v-for="c in card.gin_districts" :value="c.id" :key="c.id">
-                  {{c.title}}
+                  {{ c.title }}
                 </option>
               </select>
             </div>
@@ -242,16 +247,16 @@
                      :checked="card.main_docs[d.document_type] === d.id"/>
             </td>
             <td>
-              {{d.type_title}}
+              {{ d.type_title }}
             </td>
             <td>
-              {{d.serial}}
+              {{ d.serial }}
             </td>
             <td>
-              {{d.number}}
+              {{ d.number }}
             </td>
             <td>
-              {{d.is_active ? 'действ.' : 'не действителен'}}
+              {{ d.is_active ? 'действ.' : 'не действителен' }}
             </td>
             <td>
               <a @click.prevent="edit_document(d.id)" href="#" v-if="!d.from_rmis"><i class="fa fa-pencil"></i></a>
@@ -292,10 +297,10 @@
                      :checked="card.who_is_agent === t.key"/>
             </td>
             <td>
-              {{t.title}}
+              {{ t.title }}
             </td>
-            <td :colspan="agent_need_doc(t.key) ? 1 : 2">{{card[t.key]}}</td>
-            <td v-if="agent_need_doc(t.key)">{{card[`${t.key}_doc_auth`]}}</td>
+            <td :colspan="agent_need_doc(t.key) ? 1 : 2">{{ card[t.key] }}</td>
+            <td v-if="agent_need_doc(t.key)">{{ card[`${t.key}_doc_auth`] }}</td>
             <td>
               <a @click.prevent="edit_agent(t.key)" href="#"><i class="fa fa-pencil"></i></a>
             </td>
@@ -314,10 +319,10 @@
             <td>
             </td>
             <td>
-              {{t.title}}
+              {{ t.title }}
             </td>
-            <td :colspan="agent_need_doc(t.key) ? 1 : 2">{{card[t.key]}}</td>
-            <td v-if="agent_need_doc(t.key)">{{card[`${t.key}_doc_auth`]}}</td>
+            <td :colspan="agent_need_doc(t.key) ? 1 : 2">{{ card[t.key] }}</td>
+            <td v-if="agent_need_doc(t.key)">{{ card[`${t.key}_doc_auth`] }}</td>
             <td>
               <a @click.prevent="edit_agent(t.key)" href="#"><i class="fa fa-pencil"></i></a>
             </td>
@@ -352,6 +357,44 @@
             </div>
           </div>
         </div>
+        <div class="row" style="margin-bottom: 10px" v-if="l2_profcenter">
+          <div class="col-xs-6" style="padding-right: 0">
+            <div class="form-row sm-f" style="border-right: 1px solid #434a54;">
+              <div class="row-t" style="width: 50%;flex: 0 50%;">Номер мед.книжки</div>
+              <select class="form-control" style="width: 50%;flex: 0 50%;" v-model="card.medbookType">
+                <option v-for="t in MEDBOOK_TYPES" :key="t.type" :value="t.type">{{ t.title }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-xs-6" style="padding-left: 0">
+            <div class="form-row sm-f" style="height: 28px;">
+              <div class="input-group" style="flex: 1 100%;" v-if="card.medbookType === 'custom'">
+                <input type="number" class="form-control"
+                       maxlength="16"
+                       :max="medbook_auto_start - 1"
+                       min="1"
+                       v-model="card.medbookNumberCustom"
+                       :placeholder="`Введите номер книжки до ${medbook_auto_start}`">
+                <span class="input-group-btn"
+                      v-if="card.medbookNumberCustomOriginal && card.medbookNumberCustomOriginal !== card.medbookNumberCustom">
+                    <button class="btn row-t-btn" title="Вернуть предыдущий номер"
+                            @click="card.medbookNumberCustom = card.medbookNumberCustomOriginal"
+                            v-tippy="{ placement : 'bottom', arrow: true }">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                </span>
+              </div>
+              <div v-else-if="card.medbookType !== 'custom'" style="line-height: 26px;padding-left: 10px;">
+                <template v-if="card.medbookType === 'auto'">
+                  {{ (card.medbookTypePrev === 'auto' && card.medbookNumber) || 'Номер будет сгенерирован после сохранения' }}
+                </template>
+                <template v-else-if="card.medbookType === 'none' && card.medbookTypePrev !== 'none'">
+                  Номер будет очищен после сохранения
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="input-group" style="margin-bottom: 10px" v-if="can_change_owner_directions">
           <div class="input-group-btn">
             <button type="button" class="btn btn-blue-nb nbr" @click="change_directions_owner()">
@@ -364,15 +407,16 @@
       </div>
       <modal v-if="document_to_edit > -2" ref="modalDocEdit" @close="hide_modal_doc_edit" show-footer="true"
              white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
-        <!-- eslint-disable-next-line max-len -->
-        <span slot="header">Редактор документов (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
+        <span slot="header">
+          Редактор документов (карта {{ card.number }} пациента {{ card.family }} {{ card.name }} {{ card.patronymic }})
+        </span>
         <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
           <div class="form-group">
             <label>Тип документа:</label>
             <select v-if="document_to_edit === -1" v-model="document.document_type">
-              <option v-for="dt in card.doc_types" :value="dt.pk" :key="dt.pk">{{dt.title}}</option>
+              <option v-for="dt in card.doc_types" :value="dt.pk" :key="dt.pk">{{ dt.title }}</option>
             </select>
-            <span v-else>{{document.type_title}}</span>
+            <span v-else>{{ document.type_title }}</span>
           </div>
           <div class="form-group" v-show="doc_edit_fields.serial">
             <label for="de-f2">Серия (при наличии):</label>
@@ -427,8 +471,10 @@
       </modal>
       <modal v-if="agent_to_edit" ref="modalAgentEdit" @close="hide_modal_agent_edit" show-footer="true" white-bg="true"
              max-width="710px" width="100%" marginLeftRight="auto" margin-top>
-        <!-- eslint-disable-next-line max-len -->
-        <span slot="header">Редактор – {{agent_type_by_key(agent_to_edit)}} (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
+        <span slot="header">
+          Редактор – {{ agent_type_by_key(agent_to_edit) }}&nbsp;
+          (карта {{ card.number }} пациента {{ card.family }} {{ card.name }} {{ card.patronymic }})
+        </span>
         <div slot="body" style="min-height: 140px" class="registry-body">
           <div v-show="!agent_clear">
             <div style="height: 110px">
@@ -442,7 +488,7 @@
           <div class="checkbox" style="padding-left: 35px;padding-top: 10px" v-if="!!card[agent_to_edit]">
             <label>
               <input type="checkbox" v-model="agent_clear"> очистить представителя
-              ({{agent_type_by_key(agent_to_edit)}})
+              ({{ agent_type_by_key(agent_to_edit) }})
             </label>
           </div>
         </div>
@@ -473,10 +519,10 @@
             </button>
             <ul class="dropdown-menu multi-level">
               <li v-for="f in forms" :key="`${f.url || '#'}_${f.title}`" :class="f.isGroup && 'dropdown-submenu'">
-                <a :href="f.url || '#'" :target="!f.isGroup && '_blank'" class="ddm">{{f.title}}</a>
+                <a :href="f.url || '#'" :target="!f.isGroup && '_blank'" class="ddm">{{ f.title }}</a>
                 <ul class="dropdown-menu" v-if="f.isGroup">
                   <li v-for="ff in f.forms" :key="ff.url">
-                    <a :href="ff.url" target="_blank" class="ddm">{{ff.title}}</a>
+                    <a :href="ff.url" target="_blank" class="ddm">{{ ff.title }}</a>
                   </li>
                 </ul>
               </li>
@@ -522,6 +568,12 @@ import RadioField from '../fields/RadioField.vue';
 import * as actions from '../store/action-types';
 import PatientSmallPicker from '../ui-cards/PatientSmallPicker.vue';
 
+const MEDBOOK_TYPES = [
+  { type: 'none', title: 'нет' },
+  { type: 'auto', title: 'авто' },
+  { type: 'custom', title: 'вручную' },
+];
+
 export default {
   name: 'l2-card-create',
   components: {
@@ -540,6 +592,7 @@ export default {
   data() {
     return {
       GENDERS,
+      MEDBOOK_TYPES,
       card: {
         number: '',
         number_poli: '',
@@ -587,6 +640,11 @@ export default {
         tfoms_idp: null,
         tfoms_enp: null,
         time_tfoms_last_sync: null,
+        medbookNumber: '',
+        medbookNumberCustom: '',
+        medbookNumberCustomOriginal: '',
+        medbookType: MEDBOOK_TYPES[0].type,
+        medbookTypePrev: MEDBOOK_TYPES[0].type,
       },
       individuals: [],
       document_to_edit: -2,
@@ -625,6 +683,13 @@ export default {
   computed: {
     l2_tfoms() {
       return this.$store.getters.modules.l2_tfoms;
+    },
+    l2_profcenter() {
+      return this.$store.getters.modules.l2_profcenter;
+    },
+    medbook_auto_start() {
+      const value = Number(this.$store.getters.modules.medbook_auto_start);
+      return Number.isSafeInteger(value) ? value : 100000;
     },
     doc_edit_type_title() {
       const t = this.document.document_type;
@@ -669,7 +734,7 @@ export default {
         return false;
       }
       return !!(this.card.family.length > 0
-          && this.card.name.length > 0 && this.card.birthday.match(/\d{4}-\d{2}-\d{2}/gm));
+        && this.card.name.length > 0 && this.card.birthday.match(/\d{4}-\d{2}-\d{2}/gm));
     },
     birthday() {
       return this.card.birthday;
@@ -789,7 +854,8 @@ export default {
       const data = await patientsPoint.sendCard(this.card,
         ['family', 'name', 'patronymic', 'birthday', 'sex', 'new_individual', 'base_pk',
           'fact_address', 'main_address', 'work_place', 'main_diagnosis', 'work_position', 'work_place_db',
-          'custom_workplace', 'district', 'phone', 'number_poli', 'harmful'], {
+          'custom_workplace', 'district', 'phone', 'number_poli', 'harmful',
+          'medbookNumber', 'medbookType', 'medbookNumberCustom'], {
           card_pk: this.card_pk,
           individual_pk: this.card.individual,
           gin_district: this.card.ginekolog_district,
@@ -797,6 +863,7 @@ export default {
         });
       if (data.result !== 'ok') {
         this.$root.$emit('msg', 'error', 'Сохранение прошло не удачно');
+        await this.$store.dispatch(actions.DEC_LOADING);
         return;
       }
       if (Array.isArray(data.messages)) {
@@ -813,9 +880,6 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     update_card(hide_after = false, data = null) {
-      if (this.card_pk < 0) {
-        return;
-      }
       this.$root.$emit('select_card', {
         card_pk: data ? data.card_pk : this.card_pk,
         base_pk: this.base_pk,
@@ -899,10 +963,12 @@ export default {
         this.loaded = true;
       });
     },
-    individuals_search: _.debounce(function () { this.individuals_search_main(); }, 500),
+    individuals_search: _.debounce(function () {
+      this.individuals_search_main();
+    }, 500),
     async individuals_search_main() {
       if (!this.valid || this.card_pk !== -1
-            || this.card.family === '' || this.card.name === '' || this.card.new_individual) {
+        || this.card.family === '' || this.card.name === '' || this.card.new_individual) {
         return;
       }
 
@@ -1020,67 +1086,73 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .nonPrior {
-    opacity: .7;
+.nonPrior {
+  opacity: .7;
 
-    &:hover {
-      opacity: 1;
-    }
+  &:hover {
+    opacity: 1;
   }
+}
 
-  .prior {
-    background-color: rgba(#000, .05);
+.prior {
+  background-color: rgba(#000, .05);
+}
+
+.modal-mask {
+  align-items: stretch !important;
+  justify-content: stretch !important;
+}
+
+::v-deep .panel-flt {
+  margin: 41px;
+  align-self: stretch !important;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+::v-deep .panel-body {
+  flex: 1;
+  padding: 0;
+  height: calc(100% - 91px);
+  min-height: 200px;
+}
+
+.info-row {
+  padding: 7px;
+}
+
+.individual {
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, .15);
   }
+}
 
-  .modal-mask {
-    align-items: stretch !important;
-    justify-content: stretch !important;
+.str ::v-deep .input-group {
+  width: 100%;
+}
+
+.lst {
+  margin: 0;
+  line-height: 1;
+}
+
+.c-pointer {
+  &, & strong, &:hover {
+    cursor: pointer !important;
   }
+}
 
-  ::v-deep .panel-flt {
-    margin: 41px;
-    align-self: stretch !important;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-  }
+.loading-body {
+  padding: 20px;
+  text-align: center;
+}
 
-  ::v-deep .panel-body {
-    flex: 1;
-    padding: 0;
-    height: calc(100% - 91px);
-    min-height: 200px;
-  }
-
-  .info-row {
-    padding: 7px;
-  }
-
-  .individual {
-    cursor: pointer;
-
-    &:hover {
-      background-color: rgba(0, 0, 0, .15);
-    }
-  }
-
-  .str ::v-deep .input-group {
-    width: 100%;
-  }
-
-  .lst {
-    margin: 0;
-    line-height: 1;
-  }
-
-  .c-pointer {
-    &, & strong, &:hover {
-      cursor: pointer!important;
-    }
-  }
-
-  .loading-body {
-    padding: 20px;
-    text-align: center;
-  }
+.row-t-btn {
+  height: 26px;
+  border-radius: 0;
+  font-size: 10px;
+}
 </style>

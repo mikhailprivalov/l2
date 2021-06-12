@@ -90,13 +90,13 @@ export default {
         }],
       });
       if (ok) {
-        window.okmessage('Сохранено');
+        this.$root.$emit('msg', 'ok', 'Сохранено');
         this.updated = true;
         this.timer = setTimeout(() => {
           this.updated = false;
         }, 4000);
       } else {
-        window.errmessage('Ошибка');
+        this.$root.$emit('msg', 'error', 'Ошибка');
       }
 
       await this.$store.dispatch(actions.GET_ALL_DEPARTMENTS);

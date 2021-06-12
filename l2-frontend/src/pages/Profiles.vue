@@ -305,7 +305,7 @@ export default {
       v = ls[0] + (ls[1][0] || '') + (ls[2][0] || '');
       v = toTranslit(v.replace(/\s/g, '')) + str_rand(3, 2);
       this.user.username = v;
-      window.okmessage('Имя пользователя сгенерировано');
+      this.$root.$emit('msg', 'ok', 'Имя пользователя сгенерировано');
     },
     gen_passwd() {
       this.user.password = str_rand();
@@ -343,11 +343,11 @@ export default {
         hospital_pk: this.selected_hospital,
       });
       if (ok) {
-        window.okmessage('Пользователь сохранён', `${this.user.fio} – ${this.user.username}`);
+        this.$root.$emit('msg', 'ok', `Пользователь сохранён\n{this.user.fio} – ${this.user.username}`);
         this.open_pk = npk;
         this.load_users(true);
       } else {
-        window.errmessage('Ошибка', message);
+        this.$root.$emit('msg', 'error', `Ошибка\n${message}`);
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },

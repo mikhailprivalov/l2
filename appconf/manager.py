@@ -6,9 +6,10 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    WARMUP_TEST_KEY = 'SettingManager:test-warmup'
-    FULL_CACHE_L2_KEY = 'setting_manager_full_cached_l2'
-    FULL_CACHE_EN_KEY = 'setting_manager_full_cached_en'
+    VERSION = '2'
+    WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
+    FULL_CACHE_L2_KEY = f'setting_manager_full_cached_l2:v{VERSION}'
+    FULL_CACHE_EN_KEY = f'setting_manager_full_cached_en:v{VERSION}'
 
     @staticmethod
     def warmup():
@@ -33,7 +34,7 @@ class SettingManager:
     @staticmethod
     def get(key, default=None, default_type='s', rebuild=False):
         no_cache = '#no-cache#' in key
-        k = 'setting_manager_' + key
+        k = f'setting_manager:v{SettingManager.VERSION}:{key}'
         cv = cache.get(k) if not no_cache and not rebuild else None
         if cv:
             return simplejson.loads(cv)
@@ -52,6 +53,10 @@ class SettingManager:
     @staticmethod
     def get_eds_base_url():
         return SettingManager.get("eds_base_url", default='http://empty', default_type='s')
+
+    @staticmethod
+    def get_medbook_auto_start():
+        return SettingManager.get("medbook_auto_start", default='100000', default_type='i')
 
     @staticmethod
     def l2_modules():
@@ -90,12 +95,14 @@ class SettingManager:
                     "forms",
                     "applications",
                     "eds",
+                    "profcenter",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
             "directions_params": SettingManager.get("directions_params", default='false', default_type='b'),
             "morfology": SettingManager.is_morfology_enabled(SettingManager.en()),
             "eds_base_url": SettingManager.get_eds_base_url(),
+            "medbook_auto_start": SettingManager.get_medbook_auto_start(),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
 

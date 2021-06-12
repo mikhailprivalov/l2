@@ -285,9 +285,9 @@ export default {
         ['pk', 'result', 'comment', 'co_executor', 'co_executor2'],
       );
       if (!ok) {
-        window.errmessage(message);
+        this.$root.$emit('msg', 'error', message);
       } else {
-        window.okmessage('Сохранено');
+        this.$root.$emit('msg', 'ok', 'Сохранено');
       }
       if (!withoutReloading) {
         this.$root.$emit('laboratory:reload-direction:with-open-first');
@@ -299,9 +299,9 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await api('laboratory/confirm', this, 'pk');
       if (!ok) {
-        window.errmessage(message);
+        this.$root.$emit('msg', 'error', message);
       } else {
-        window.okmessage('Подтверждено');
+        this.$root.$emit('msg', 'ok', 'Подтверждено');
       }
       this.$root.$emit('laboratory:reload-direction:with-open-first');
       await this.$store.dispatch(actions.DEC_LOADING);
@@ -324,9 +324,9 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await api('laboratory/reset-confirm', this, 'pk');
       if (!ok) {
-        window.errmessage(message);
+        this.$root.$emit('msg', 'error', message);
       } else {
-        window.okmessage('Подтверждение сброшено');
+        this.$root.$emit('msg', 'ok', 'Подтверждение сброшено');
       }
       this.reloadForm();
       await this.$store.dispatch(actions.DEC_LOADING);

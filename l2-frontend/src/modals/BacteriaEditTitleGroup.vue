@@ -70,9 +70,9 @@ export default {
         obj: { pk: this.group_obj.pk, title: this.group_obj.title, hide: this.group_obj.hide },
       });
       if (ok) {
-        window.okmessage('Группа сохранена', `${this.group_obj.title}`);
+        this.$root.$emit('msg', 'ok', `Группа сохранена\n${this.group_obj.title}`);
       } else {
-        window.errmessage('Ошибка', message);
+        this.$root.$emit('msg', 'error', `Ошибка\n${message}`);
       }
       await this.$store.dispatch(actions.DEC_LOADING);
       this.hide_modal();

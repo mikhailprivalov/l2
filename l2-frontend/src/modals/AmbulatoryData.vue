@@ -234,7 +234,7 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       await patientsPoint.saveAmbulatoryData({ card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data });
       await this.$store.dispatch(actions.DEC_LOADING);
-      window.okmessage('Сохранено');
+      this.$root.$emit('msg', 'ok', 'Сохранено');
       this.hide_edit();
       this.load_data();
     },

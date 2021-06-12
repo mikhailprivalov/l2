@@ -70,7 +70,7 @@ export default {
         this.$root.$emit('laboratory:results:show-direction', data, this.pkAfterSearch);
         this.pkAfterSearch = null;
       } else {
-        window.errmessage(msg || 'Не найдено');
+        this.$root.$emit('msg', 'error', msg || 'Не найдено');
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },

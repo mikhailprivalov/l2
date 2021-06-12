@@ -427,7 +427,7 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       await api('patients/individuals/save-plan-dreg', this, ['card_pk', 'researches_data', 'researches_data_def', 'year']);
       await this.$store.dispatch(actions.DEC_LOADING);
-      window.okmessage('План сохранён');
+      this.$root.$emit('msg', 'ok', 'План сохранён');
     },
     change_index() {
       this.edit_data.time_index = this.variant_is_first_time.indexOf(this.is_first_time);
@@ -437,7 +437,7 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       await api('patients/individuals/save-dreg', { card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data });
       await this.$store.dispatch(actions.DEC_LOADING);
-      window.okmessage('Сохранено');
+      this.$root.$emit('msg', 'ok', 'Сохранено');
       this.hide_edit();
       this.load_data();
     },
@@ -449,7 +449,7 @@ export default {
         this.researches_data_def = cloneDeep(researches_data);
         this.all_selected = false;
         if (researches_data && researches_data.length > 0) {
-          window.okmessage(`Загружен ${year} год`);
+          this.$root.$emit('msg', 'ok', `Загружен ${year} год`);
         }
         this.year = year;
       }).finally(() => {
@@ -468,7 +468,7 @@ export default {
         this.researches_data[j].plans[i] = orig;
         this.researches_data[j].plans = [...this.researches_data[j].plans]; // Принудительно делаем перерендер
       }
-      window.okmessage(`Столбец "${this.monthes[i]}" заполнен значением "${orig}"`);
+      this.$root.$emit('msg', 'ok', `Столбец "${this.monthes[i]}" заполнен значением "${orig}"`);
     },
     create_directions() {
       this.$root.$emit('generate-directions', {

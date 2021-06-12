@@ -95,9 +95,9 @@ export default {
 
       if (ok) {
         this.create.title = '';
-        window.okmessage('Сохранено');
+        this.$root.$emit('msg', 'ok', 'Сохранено');
       } else {
-        window.errmessage('Ошибка');
+        this.$root.$emit('msg', 'error', 'Ошибка');
       }
     },
     async loadDepartments() {

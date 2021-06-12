@@ -76,7 +76,7 @@ export default {
     validate_date(date) {
       const r = moment(date, this.datef, true).isValid();
 
-      if (!r) window.errmessage('Неверная дата');
+      if (!r) this.$root.$emit('msg', 'error', 'Неверная дата');
       return r;
     },
     validate() {

@@ -246,13 +246,13 @@ export default {
           } else if (this.founded_cards.length === 1) {
             this.select_card(0);
           } else {
-            window.errmessage('Не найдено', 'Карт по такому запросу не найдено');
+            this.$root.$emit('msg', 'error', 'Не найдено\nКарт по такому запросу не найдено');
           }
         } else {
-          window.errmessage('Ошибка на сервере');
+          this.$root.$emit('msg', 'error', 'Ошибка на сервере');
         }
       }).catch((error) => {
-        window.errmessage('Ошибка на сервере', error.message);
+        this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
       }).finally(() => {
         this.$store.dispatch(actions.DISABLE_LOADING);
       });

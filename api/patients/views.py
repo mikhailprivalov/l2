@@ -154,6 +154,10 @@ def patients_search_card(request):
         if pass_n:
             objects = objects.filter(document__number=snils, document__document_type__title='СНИЛС')
 
+        medbook_number = str(form.get('medbookNumber', ''))
+        if medbook_number and SettingManager.l2('profcenter'):
+            objects = objects.filter(card__medbook_number=medbook_number)
+
         phone = str(form.get('phone', ''))
 
         if phone:
@@ -288,6 +292,11 @@ def patients_search_card(request):
     if p_enp and cards:
         cards = cards.filter(carddocusage__document__number=query, carddocusage__document__document_type__title='Полис ОМС')
 
+    if cards:
+        medbook_number = str(form.get('medbookNumber', ''))
+        if medbook_number and SettingManager.l2('profcenter'):
+            cards = cards.filter(medbook_number=medbook_number)
+
     d1, d2 = start_end_year()
 
     if birthday_order:
@@ -338,21 +347,41 @@ def patients_search_card(request):
                 "phones": Phones.phones_to_normalized_list(row.phones_set.all(), row.phone),
                 "main_diagnosis": row.main_diagnosis,
                 "docs": [
-                    {
-                        "pk": x.pk,
-                        "type_title": x.document_type.title,
-                        "document_type_id": x.document_type_id,
-                        "serial": x.serial,
-                        "number": x.number,
-                        "is_active": x.is_active,
-                        "date_start": x.date_start,
-                        "date_end": x.date_end,
-                        "who_give": x.who_give,
-                        "from_rmis": x.from_rmis,
-                        "rmis_uid": x.rmis_uid,
-                    }
-                    for x in row.individual.document_set.all()
+                    *[
+                        {
+                            "pk": x.pk,
+                            "type_title": x.document_type.title,
+                            "document_type_id": x.document_type_id,
+                            "serial": x.serial,
+                            "number": x.number,
+                            "is_active": x.is_active,
+                            "date_start": x.date_start,
+                            "date_end": x.date_end,
+                            "who_give": x.who_give,
+                            "from_rmis": x.from_rmis,
+                            "rmis_uid": x.rmis_uid,
+                        }
+                        for x in row.individual.document_set.all()
+                    ],
+                    *(
+                        [
+                            {
+                                "pk": -10,
+                                "type_title": "Номер мед.книжки",
+                                "document_type_id": -10,
+                                "serial": "",
+                                "number": str(row.medbook_number),
+                                "is_active": True,
+                                "date_start": None,
+                                "date_end": None,
+                                "who_give": "",
+                                "from_rmis": False,
+                                "rmis_uid": None,
+                            }
+                        ] if row.medbook_number else []
+                    )
                 ],
+                "medbookNumber": row.medbook_number,
                 "status_disp": status_disp,
                 "disp_data": disp_data,
             }
@@ -478,6 +507,11 @@ def patients_get_card_data(request, card_id):
             "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()],
             "number_poli": card.number_poliklinika,
             "harmful": card.harmful_factor,
+            "medbookNumber": card.medbook_number,
+            "medbookNumberCustom": card.medbook_number if card.medbook_type == 'custom' else '',
+            "medbookNumberCustomOriginal": card.medbook_number if card.medbook_type == 'custom' else '',
+            "medbookType": card.medbook_type,
+            "medbookTypePrev": card.medbook_type,
         }
     )
 
@@ -504,7 +538,7 @@ def patients_card_save(request):
         i.family = request_data["family"]
         i.name = request_data["name"]
         i.patronymic = request_data["patronymic"]
-        i.birthday = request_data["birthday"]
+        i.birthday = datetime.datetime.strptime(request_data["birthday"], "%d.%m.%Y" if '.' in request_data["birthday"] else "%Y-%m-%d").date()
         i.sex = request_data["sex"]
         i.save()
         if Card.objects.filter(individual=i, base__is_rmis=True).exists() and changed:
@@ -517,14 +551,11 @@ def patients_card_save(request):
     individual_pk = i.pk
 
     if request_data["card_pk"] < 0:
-        base = CardBase.objects.get(pk=request_data["base_pk"], internal_type=True)
-        last_l2 = Card.objects.filter(base__internal_type=True).extra(select={'numberInt': 'CAST(number AS INTEGER)'}).order_by("-numberInt").first()
-        n = 0
-        if last_l2:
-            n = int(last_l2.number)
-        c = Card(number=n + 1, base=base, individual=i, main_diagnosis="", main_address="", fact_address="")
-        c.save()
-        card_pk = c.pk
+        with transaction.atomic():
+            base = CardBase.objects.select_for_update().get(pk=request_data["base_pk"], internal_type=True)
+            c = Card(number=Card.next_l2_n(), base=base, individual=i, main_diagnosis="", main_address="", fact_address="")
+            c.save()
+            card_pk = c.pk
         Log.log(card_pk, 30000, request.user.doctorprofile, request_data)
     else:
         card_pk = request_data["card_pk"]
@@ -545,6 +576,31 @@ def patients_card_save(request):
     c.work_position = request_data["work_position"]
     c.phone = request_data["phone"]
     c.harmful_factor = request_data.get("harmful", "")
+    medbook_type = request_data.get("medbookType", "")
+    medbook_number = str(request_data.get("medbookNumber", "-1"))
+    medbook_number_custom = str(request_data.get("medbookNumberCustom", "-1"))
+    medbook_number = medbook_number if medbook_type != 'custom' else medbook_number_custom
+    medbook_number_int = int(medbook_number) if medbook_number.isdigit() else None
+    if medbook_type == 'none' and c.medbook_type != 'none':
+        c.medbook_number = ''
+        c.medbook_type = medbook_type
+    else:
+        try:
+            with transaction.atomic():
+                base = CardBase.objects.select_for_update().get(pk=request_data["base_pk"], internal_type=True)
+                if medbook_type == 'custom' and medbook_number_int is not None and c.medbook_number != medbook_number_int:
+                    medbook_auto_start = SettingManager.get_medbook_auto_start()
+                    if medbook_number_int <= 1 or medbook_auto_start <= medbook_number_int:
+                        raise Exception("Некорректный номер мед.книжки")
+                    if Card.objects.filter(medbook_number=medbook_number, base=base).exclude(pk=c.pk).exists():
+                        raise Exception(f"Номер {medbook_number} уже есть у другого пациента")
+                    c.medbook_number = medbook_number_int
+                    c.medbook_type = medbook_type
+                elif (c.medbook_type != 'auto' or c.medbook_number == '') and medbook_type == 'auto':
+                    c.medbook_number = Card.next_medbook_n()
+                    c.medbook_type = medbook_type
+        except Exception as e:
+            messages.append(str(e))
     c.save()
     if c.individual.primary_for_rmis:
         try:
