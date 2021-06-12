@@ -111,9 +111,9 @@ export default {
         'doctor-call/change-status', this.r, ['pk', 'status'], { prevStatus: this.status },
       );
       if (!ok) {
-        window.errmessage(message);
+        this.$root.$emit('msg', 'error', message);
       } else {
-        window.okmessage('Статус обновлён успешно');
+        this.$root.$emit('msg', 'ok', 'Статус обновлён успешно');
       }
       this.r.executor = executor;
       this.r.executor_fio = executor_fio;
@@ -130,9 +130,9 @@ export default {
         'doctor-call/change-executor', this.r, ['pk'], { prevExecutor: this.r.executor },
       );
       if (!ok) {
-        window.errmessage(message);
+        this.$root.$emit('msg', 'error', message);
       } else {
-        window.okmessage('Исполнитель обновлён успешно');
+        this.$root.$emit('msg', 'ok', 'Исполнитель обновлён успешно');
       }
       this.r.executor = executor;
       this.r.executor_fio = executor_fio;

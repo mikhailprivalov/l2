@@ -201,13 +201,13 @@ export default {
           } else if (this.founded_individuals.length === 1) {
             this.select_individual(0);
           } else {
-            window.errmessage('Не найдено', 'Пациентов по такому запросу не найдено');
+            this.$root.$emit('msg', 'error', 'Пациентов по такому запросу не найдено');
           }
         } else {
-          window.errmessage('Ошибка на сервере');
+          this.$root.$emit('msg', 'error', 'Ошибка на сервере');
         }
       }).catch((error) => {
-        window.errmessage('Ошибка на сервере', error.message);
+        this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
       }).finally(() => {
         this.$store.dispatch(actions.DISABLE_LOADING);
       });

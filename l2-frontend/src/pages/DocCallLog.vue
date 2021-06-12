@@ -99,7 +99,7 @@ export default {
       }
       const size = Number(file.size);
       if (size > 5242880) {
-        window.errmessage('Файл больше 5 МБ');
+        this.$root.$emit('msg', 'error', 'Файл больше 5 МБ');
         return;
       }
       this.file = file;
@@ -136,9 +136,9 @@ export default {
         });
 
       if (!ok) {
-        window.errmessage(message);
+        this.$root.$emit('msg', 'error', message);
       } else {
-        window.okmessage('Сохранено');
+        this.$root.$emit('msg', 'ok', 'Сохранено');
         this.status = -1;
         this.text = '';
         this.file = '';

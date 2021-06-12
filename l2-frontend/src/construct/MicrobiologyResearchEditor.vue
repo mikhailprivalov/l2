@@ -404,7 +404,7 @@ export default {
         info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
       }).then(() => {
         this.has_unsaved = false;
-        window.okmessage('Сохранено');
+        this.$root.$emit('msg', 'ok', 'Сохранено');
         this.cancel();
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);

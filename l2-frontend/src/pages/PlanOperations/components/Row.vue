@@ -102,7 +102,7 @@ export default {
         plan_pk: this.data.pk_plan,
         doc_anesthetist_pk: this.anestesiologId,
       });
-      window.okmessage('Анестезиолог изменён');
+      this.$root.$emit('msg', 'ok', 'Анестезиолог изменён');
       await this.$store.dispatch(actions.DEC_LOADING);
     },
   },

@@ -153,7 +153,7 @@ export default {
       this.$store.dispatch(actions.INC_LOADING);
       statisticsTicketsPoint.invalidateTicket({ pk, invalid }).then((data) => {
         if (!data.ok) {
-          window.errmessage(data.message);
+          this.$root.$emit('msg', 'error', data.message);
         }
         this.load();
       }).finally(() => {

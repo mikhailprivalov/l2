@@ -207,7 +207,7 @@ export default {
         type_operation: this.type_operation,
       });
       await this.$store.dispatch(actions.DEC_LOADING);
-      window.okmessage('Сохранено');
+      this.$root.$emit('msg', 'ok', 'Сохранено');
       this.$root.$emit('hide_plan_operations');
       this.$root.$emit('reload-plans');
     },
@@ -221,9 +221,9 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
 
       if (data.result) {
-        window.okmessage('Операция отменена');
+        this.$root.$emit('msg', 'ok', 'Операция отменена');
       } else {
-        window.okmessage('Отмена убрана');
+        this.$root.$emit('msg', 'ok', 'Отмена убрана');
       }
 
       this.$root.$emit('reload-plans');

@@ -960,7 +960,7 @@ export default {
         if (field.value && !row.confirmed && row.research.is_doc_refferal && this.stat_btn) {
           const ndiagnos = field.value.split(' ')[0] || '';
           if (ndiagnos !== row.diagnos && ndiagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?$/gm)) {
-            window.okmessage('Диагноз в данных статталона обновлён', ndiagnos);
+            this.$root.$emit('msg', 'ok', `Диагноз в данных статталона обновлён\n${ndiagnos}`);
             // eslint-disable-next-line no-param-reassign
             row.diagnos = ndiagnos;
           }
@@ -1079,11 +1079,11 @@ export default {
             300,
           );
           if (data.card_internal && data.status_disp === 'need' && data.has_doc_referral) {
-            window.errmessage('Диспансеризация не пройдена');
+            this.$root.$emit('msg', 'error', 'Диспансеризация не пройдена');
           }
           this.changed = false;
         } else {
-          window.errmessage(data.message);
+          this.$root.$emit('msg', 'error', data.message);
         }
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
@@ -1134,7 +1134,7 @@ export default {
         visibility_state: this.visibility_state(iss),
       }).then((data) => {
         if (data.ok) {
-          window.okmessage('Сохранено');
+          this.$root.$emit('msg', 'ok', 'Сохранено');
           // eslint-disable-next-line no-param-reassign
           iss.saved = true;
           this.data.direction.amd = data.amd;
@@ -1142,7 +1142,7 @@ export default {
           this.reload_if_need();
           this.changed = false;
         } else {
-          window.errmessage(data.message);
+          this.$root.$emit('msg', 'error', data.message);
         }
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
@@ -1163,8 +1163,8 @@ export default {
         visibility_state: this.visibility_state(iss),
       }).then((data) => {
         if (data.ok) {
-          window.okmessage('Сохранено');
-          window.okmessage('Подтверждено');
+          this.$root.$emit('msg', 'ok', 'Сохранено');
+          this.$root.$emit('msg', 'ok', 'Подтверждено');
           // eslint-disable-next-line no-param-reassign
           iss.saved = true;
           // eslint-disable-next-line no-param-reassign
@@ -1180,7 +1180,7 @@ export default {
           this.reload_if_need();
           this.changed = false;
         } else {
-          window.errmessage(data.message);
+          this.$root.$emit('msg', 'error', data.message);
         }
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
@@ -1194,7 +1194,7 @@ export default {
       this.$store.dispatch(actions.INC_LOADING);
       directionsPoint.paraclinicResultConfirm({ iss_pk: iss.pk }).then((data) => {
         if (data.ok) {
-          window.okmessage('Подтверждено');
+          this.$root.$emit('msg', 'ok', 'Подтверждено');
           // eslint-disable-next-line no-param-reassign
           iss.confirmed = true;
           // eslint-disable-next-line no-param-reassign
@@ -1208,7 +1208,7 @@ export default {
           this.reload_if_need();
           this.changed = false;
         } else {
-          window.errmessage(data.message);
+          this.$root.$emit('msg', 'error', data.message);
         }
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
@@ -1230,7 +1230,7 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const data = await directionsPoint.paraclinicResultConfirmReset({ iss_pk: iss.pk });
       if (data.ok) {
-        window.okmessage('Подтверждение сброшено');
+        this.$root.$emit('msg', 'ok', 'Подтверждение сброшено');
         // eslint-disable-next-line no-param-reassign
         iss.confirmed = false;
         this.data.direction.amd = 'not_need';
@@ -1244,7 +1244,7 @@ export default {
         this.reload_if_need();
         this.changed = false;
       } else {
-        window.errmessage(data.message);
+        this.$root.$emit('msg', 'error', data.message);
       }
       await this.$store.dispatch(actions.DEC_LOADING);
       this.inserted = true;
@@ -1373,7 +1373,7 @@ export default {
       this.$dialog
         .confirm('Вы действительно хотите очистить результаты?')
         .then(() => {
-          window.okmessage('Очищено');
+          this.$root.$emit('msg', 'ok', 'Очищено');
           for (const g of row.research.groups) {
             for (const f of g.fields) {
               if (![1, 3, 16, 17, 20, 13, 14, 11, 23].includes(f.field_type)) {
@@ -1437,10 +1437,10 @@ export default {
       const toSend = this.directions_history.filter((d) => ['error', 'need'].includes(d.amd)).map((d) => d.pk);
       if (toSend.length > 0) {
         await directionsPoint.sendAMD({ pks: toSend });
-        window.okmessage('Отправка запланирована');
+        this.$root.$emit('msg', 'ok', 'Отправка запланирована');
         this.reload_if_need();
       } else {
-        window.errmessage('Не найдены подходящие направления');
+        this.$root.$emit('msg', 'error', 'Не найдены подходящие направления');
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },
@@ -1461,7 +1461,7 @@ export default {
       await directionsPoint.sendAMD({ pks });
       this.load_pk(this.data.direction.pk);
       this.reload_if_need();
-      window.okmessage('Отправка запланирована');
+      this.$root.$emit('msg', 'ok', 'Отправка запланирована');
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     updateValue(field, prop) {

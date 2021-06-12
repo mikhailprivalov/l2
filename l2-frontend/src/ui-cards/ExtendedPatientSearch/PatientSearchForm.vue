@@ -25,6 +25,10 @@
       <span class="input-group-addon addon-fixed">СНИЛС</span>
       <input class='form-control' v-model="form.snils" placeholder="номер" maxlength="30"/>
     </div>
+    <div class="input-group mt5" v-if="l2_profcenter">
+      <span class="input-group-addon addon-fixed">Мед.книжка</span>
+      <input class='form-control' v-model="form.medbookNumber" placeholder="номер" maxlength="16"/>
+    </div>
     <div class="input-group mt5">
       <span class="input-group-addon addon-fixed">Телефон</span>
       <input class='form-control' v-model="form.phone" placeholder="телефон" v-mask="'8 999 9999999'"/>
@@ -49,6 +53,7 @@ const makeForm = (): PatientForm => ({
   pass_n: '',
   snils: '',
   phone: '',
+  medbookNumber: '',
 });
 
 @Component({
@@ -82,6 +87,11 @@ const makeForm = (): PatientForm => ({
   },
   model: {
     event: 'modified',
+  },
+  computed: {
+    l2_profcenter() {
+      return this.$store.getters.modules.l2_profcenter;
+    },
   },
 })
 export default class PatientSearchForm extends Vue {

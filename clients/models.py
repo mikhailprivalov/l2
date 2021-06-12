@@ -851,6 +851,12 @@ class Card(models.Model):
         ('', 'НЕ ВЫБРАНО'),
     )
 
+    MEDBOOK_TYPES = (
+        ('none', 'нет'),
+        ('auto', 'авто'),
+        ('custom', 'вручную'),
+    )
+
     AGENT_NEED_DOC = ['curator', 'agent']
     AGENT_CANT_SELECT = ['payer']
 
@@ -882,6 +888,9 @@ class Card(models.Model):
     number_poliklinika = models.CharField(max_length=20, blank=True, default='', help_text="Идетификатор карты поликлиника", db_index=True)
     phone = models.CharField(max_length=20, blank=True, default='', db_index=True)
     harmful_factor = models.CharField(max_length=255, blank=True, default='', help_text="Фактор вредности")
+
+    medbook_number = models.CharField(max_length=16, blank=True, default='', db_index=True, help_text="Номер мед.книжки", unique=True)
+    medbook_type = models.CharField(max_length=6, choices=MEDBOOK_TYPES, blank=True, default=MEDBOOK_TYPES[0][0], help_text="Тип номера мед.книжки")
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
@@ -1011,6 +1020,14 @@ class Card(models.Model):
         if last_l2:
             n = last_l2.numberInt
         return n + 1
+
+    @staticmethod
+    def next_medbook_n():
+        last_medbook = Card.objects.filter(base__internal_type=True).exclude(medbook_number='').extra(select={'numberInt': 'CAST(medbook_number AS INTEGER)'}).order_by("-numberInt").first()
+        n = 0
+        if last_medbook:
+            n = last_medbook.numberInt
+        return max(n + 1, SettingManager.get_medbook_auto_start())
 
     @staticmethod
     def add_l2_card(

@@ -230,7 +230,7 @@ export default {
       })
         .then(() => {
           this.clear();
-          window.okmessage('Статталон добавлен');
+          this.$root.$emit('msg', 'ok', 'Статталон добавлен');
           this.$root.$emit('create-ticket');
         }).finally(() => {
           this.$store.dispatch(actions.DEC_LOADING);

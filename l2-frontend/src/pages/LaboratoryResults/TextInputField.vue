@@ -203,7 +203,7 @@ export default {
         }
       } catch (e) {
         console.error(e);
-        window.errmessage('Произошла ошибка рассчёта');
+        this.$root.$emit('msg', 'error', 'Произошла ошибка рассчёта');
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },

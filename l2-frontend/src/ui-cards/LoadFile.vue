@@ -78,10 +78,10 @@ export default {
         this.results = data.results;
         this.$refs.file.value = '';
         this.file = '';
-        window.okmessage('Файл загружен');
+        this.$root.$emit('msg', 'ok', 'Файл загружен');
       } catch (e) {
         console.error(e);
-        window.errmessage('Ошибка');
+        this.$root.$emit('msg', 'error', 'Ошибка');
       }
       this.loading = false;
     },

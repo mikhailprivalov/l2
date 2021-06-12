@@ -686,10 +686,10 @@ export default {
       if (!department_id) {
         this.change_department = false;
       } else if (ok) {
-        window.okmessage('Отделение успешно изменено', `${dep_from} → ${dep_to}`);
+        this.$root.$emit('msg', 'ok', `Отделение успешно изменено\n${dep_from} → ${dep_to}`);
         this.change_department = false;
       } else if (needUpdate) {
-        window.errmessage('Не удалось сменить отделение!');
+        this.$root.$emit('msg', 'error', 'Не удалось сменить отделение!');
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },
@@ -822,10 +822,10 @@ export default {
         this.patient = new Patient(data.patient);
         this.counts = await stationar_point.counts(this, ['direction'], { every });
         if (message && message.length > 0) {
-          window.wrnmessage(message);
+          this.$root.$emit('msg', 'warning', message);
         }
       } else {
-        window.errmessage(message);
+        this.$root.$emit('msg', 'error', message);
       }
       this.$root.$emit('current_history_direction', { history_num: this.direction, patient: this.patient });
       await this.$store.dispatch(actions.DEC_LOADING);
@@ -916,7 +916,7 @@ export default {
         visibility_state: this.visibility_state(iss),
       }).then((data) => {
         if (data.ok) {
-          window.okmessage('Сохранено');
+          this.$root.$emit('msg', 'ok', 'Сохранено');
           // eslint-disable-next-line no-param-reassign
           iss.saved = true;
           // eslint-disable-next-line no-param-reassign
@@ -928,7 +928,7 @@ export default {
           }
           this.reload_if_need(true);
         } else {
-          window.errmessage(data.message);
+          this.$root.$emit('msg', 'error', data.message);
         }
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
@@ -937,10 +937,10 @@ export default {
     save_and_confirm(iss) {
       this.hide_results();
       if (this.direcions_order[this.parent_issledovaniye] > this.direcions_order[this.iss]) {
-        return window.errmessage('Порядок отделений меняется снизу вверх');
+        return this.$root.$emit('msg', 'error', 'Порядок отделений меняется снизу вверх');
       }
       if (this.direcions_order[this.parent_issledovaniye] > this.direcions_order[this.child_issledovaniye]) {
-        return window.errmessage('Порядок отделений меняется снизу вверх');
+        return this.$root.$emit('msg', 'error', 'Порядок отделений меняется снизу вверх');
       }
 
       this.$store.dispatch(actions.INC_LOADING);
@@ -966,8 +966,8 @@ export default {
         },
       }).then((data) => {
         if (data.ok) {
-          window.okmessage('Сохранено');
-          window.okmessage('Подтверждено');
+          this.$root.$emit('msg', 'ok', 'Сохранено');
+          this.$root.$emit('msg', 'ok', 'Подтверждено');
           // eslint-disable-next-line no-param-reassign
           iss.saved = true;
           // eslint-disable-next-line no-param-reassign
@@ -990,7 +990,7 @@ export default {
           }
           this.reload_if_need(true);
         } else {
-          window.errmessage(data.message);
+          this.$root.$emit('msg', 'error', data.message);
         }
       }).finally(() => {
         this.pk = this.direction;
@@ -1010,7 +1010,7 @@ export default {
       const data = await directionsPoint.paraclinicResultConfirmReset({ iss_pk: iss.pk });
 
       if (data.ok) {
-        window.okmessage('Подтверждение сброшено');
+        this.$root.$emit('msg', 'ok', 'Подтверждение сброшено');
         // eslint-disable-next-line no-param-reassign
         iss.confirmed = false;
         this.reload_if_need(true);
@@ -1020,7 +1020,7 @@ export default {
         // eslint-disable-next-line no-param-reassign
         iss.forbidden_edit = data.forbidden_edit;
       } else {
-        window.errmessage(data.message);
+        this.$root.$emit('msg', 'error', data.message);
       }
 
       await this.$store.dispatch(actions.DEC_LOADING);
@@ -1115,7 +1115,7 @@ export default {
       this.$dialog
         .confirm('Вы действительно хотите очистить результаты?')
         .then(() => {
-          window.okmessage('Очищено');
+          this.$root.$emit('msg', 'ok', 'Очищено');
           for (const g of row.research.groups) {
             for (const f of g.fields) {
               if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type)) {

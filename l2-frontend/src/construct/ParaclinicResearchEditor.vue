@@ -794,7 +794,7 @@ export default {
       }
       construct_point.updateResearch(this, props, moreData).then(() => {
         this.has_unsaved = false;
-        window.okmessage('Сохранено');
+        this.$root.$emit('msg', 'ok', 'Сохранено');
         this.cancel();
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);

@@ -223,6 +223,12 @@
               />
             </td>
           </tr>
+          <tr v-if="selected_card.medbookNumber">
+            <td class="table-header-row">Мед.книжка:</td>
+            <td class="table-content-row" colspan="3">
+              <strong>{{selected_card.medbookNumber}}</strong>
+            </td>
+          </tr>
           </tbody>
         </table>
         <div v-if="phones.length > 0 && !hide_card_editor" class="hovershow">
@@ -957,10 +963,10 @@ export default {
             this.select_card(0);
           }
         } else {
-          window.errmessage('Ошибка на сервере');
+          this.$root.$emit('msg', 'error', 'Ошибка на сервере');
         }
       }).catch((error) => {
-        window.errmessage('Ошибка на сервере', error.message);
+        this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
       }).finally(() => {
         this.$store.dispatch(actions.DISABLE_LOADING);
       });
@@ -998,17 +1004,17 @@ export default {
               this.open_editor();
             }
           } else {
-            window.errmessage('Не найдено', 'Карт по такому запросу не найдено');
+            this.$root.$emit('msg', 'error', 'Карт по такому запросу не найдено');
           }
         } else {
-          window.errmessage('Ошибка на сервере');
+          this.$root.$emit('msg', 'error', 'Ошибка на сервере');
         }
         if (this.search_after_loading) {
           this.search_after_loading = false;
           this.query = '';
         }
       }).catch((error) => {
-        window.errmessage('Ошибка на сервере', error.message);
+        this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
       }).finally(() => {
         this.open_edit_after_loading = false;
         this.$store.dispatch(actions.DISABLE_LOADING);

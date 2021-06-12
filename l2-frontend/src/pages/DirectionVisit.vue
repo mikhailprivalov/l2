@@ -380,7 +380,7 @@ export default {
           this.allow_reset_confirm = data.allow_reset_confirm;
           this.blur();
         } else {
-          window.errmessage(data.message);
+          this.$root.$emit('msg', 'error', data.message);
         }
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
@@ -411,7 +411,7 @@ export default {
           this.allow_reset_confirm = data.allow_reset_confirm;
           this.focus();
         } else {
-          window.errmessage(data.message);
+          this.$root.$emit('msg', 'error', data.message);
         }
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
@@ -438,7 +438,7 @@ export default {
           this.receive_datetime = data.receive_datetime;
           this.focus();
         } else {
-          window.errmessage(data.message);
+          this.$root.$emit('msg', 'error', data.message);
         }
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);

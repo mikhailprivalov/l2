@@ -119,7 +119,7 @@ export default {
           });
         }
       } else {
-        window.errmessage('CDA XML не получен');
+        this.$root.$emit('msg', 'error', 'CDA XML не получен');
       }
       window.frames.eds.passEvent('set-data', {
         ...this.directionData,
