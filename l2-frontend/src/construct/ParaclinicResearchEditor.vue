@@ -47,8 +47,11 @@
           </div>
           <div class="col-xs-6" style="padding-left: 0;padding-right: 0;margin-right: 0;">
             <div class="input-group">
-              <label class="input-group-addon" style="height: 34px;text-align: left;" v-if="ex_dep !== 8 && ex_dep !== 13">
-                <input type="checkbox" v-model="show_more_services"/> Дополн. услуги
+              <label class="input-group-addon" style="height: 34px;text-align: left;"
+                     title="Показыать ли форму дополнительных услуг в протоколе"
+                     v-tippy
+                     v-if="ex_dep !== 8 && ex_dep !== 13">
+                <input type="checkbox" v-model="show_more_services"/> Доп. услуги
               </label>
               <span class="input-group-addon">Подраздел</span>
               <select v-model="site_type" class="form-control">
