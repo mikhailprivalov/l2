@@ -297,6 +297,7 @@ def researches_update(request):
         conclusion_templates = request_data.get("conclusionTpl", "")
         culture_comments_templates = request_data.get("cultureTpl", "")
         hide_main = request_data.get("hide_main", False)
+        show_more_services = request_data.get("show_more_services", True)
         hospital_research_department_pk = request_data.get("hospital_research_department_pk", -1)
         if tube == -1:
             tube = None
@@ -337,7 +338,8 @@ def researches_update(request):
                     bac_culture_comments_templates=culture_comments_templates,
                     direction_params=researche_direction_current_params,
                     is_global_direction_params=is_global_direction_params,
-                    has_own_form_result=own_form_result
+                    has_own_form_result=own_form_result,
+                    show_more_services=show_more_services,
                 )
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
@@ -372,6 +374,7 @@ def researches_update(request):
                 res.direction_params = researche_direction_current_params
                 res.is_global_direction_params = is_global_direction_params
                 res.has_own_form_result = own_form_result
+                res.show_more_services = show_more_services and not res.is_microbiology and not res.is_form
             if res:
                 res.save()
                 if main_service_pk != 1 and stationar_slave:
@@ -474,6 +477,7 @@ def researches_details(request):
         response["site_type"] = res.site_type_id
         response["internal_code"] = res.internal_code
         response["direction_current_form"] = res.direction_form
+        response["show_more_services"] = res.show_more_services
         response["result_current_form"] = res.result_form
         response["conclusionTpl"] = res.bac_conclusion_templates
         response["cultureTpl"] = res.bac_culture_comments_templates
@@ -518,7 +522,14 @@ def paraclinic_details(request):
     request_data = json.loads(request.body)
     pk = request_data.get("pk")
     for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
-        g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title, "hide": group.hide, "fields": []}
+        g = {
+            "pk": group.pk,
+            "order": group.order,
+            "title": group.title,
+            "show_title": group.show_title,
+            "hide": group.hide,
+            "fields": [],
+        }
         for field in ParaclinicInputField.objects.filter(group=group).order_by("order"):
             g["fields"].append(
                 {

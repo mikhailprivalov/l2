@@ -47,6 +47,9 @@
           </div>
           <div class="col-xs-6" style="padding-left: 0;padding-right: 0;margin-right: 0;">
             <div class="input-group">
+              <label class="input-group-addon" style="height: 34px;text-align: left;" v-if="ex_dep !== 8 && ex_dep !== 13">
+                <input type="checkbox" v-model="show_more_services"/> Дополн. услуги
+              </label>
               <span class="input-group-addon">Подраздел</span>
               <select v-model="site_type" class="form-control">
                 <option v-for="r in ex_deps" :value="r.pk" :key="r.pk">{{ r.title }}</option>
@@ -55,6 +58,9 @@
           </div>
         </div>
         <div class="input-group" v-else>
+          <label class="input-group-addon" style="height: 34px;text-align: left;" v-if="ex_dep !== 8 && ex_dep !== 13">
+            <input type="checkbox" v-model="show_more_services"/> Дополн. услуги
+          </label>
           <span class="input-group-addon">Код (ОМС)</span>
           <input type="text" class="form-control f-code" v-model="code">
           <span class="input-group-addon">Код (внутр)</span>
@@ -491,6 +497,7 @@ export default {
       ],
       has_unsaved: false,
       f_templates_open: false,
+      show_more_services: true,
       templates: [],
       opened_template_data: {},
       speciality: -1,
@@ -748,6 +755,7 @@ export default {
           this.direction_params_all = data.direction_params_all;
           this.direction_current_params = data.direction_current_params;
           this.assigned_to_params = data.assigned_to_params;
+          this.show_more_services = data.show_more_services;
           if (this.groups.length === 0) {
             this.add_group();
           }
@@ -784,6 +792,7 @@ export default {
         'speciality',
         'hospital_research_department_pk',
         'direction_current_params',
+        'show_more_services',
       ];
       const moreData = {
         info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),

@@ -351,7 +351,8 @@
             :patient="data.patient"
             :change_mkb="change_mkb(row)"
           />
-          <div class="group" v-if="!data.has_microbiology && (!row.confirmed || row.more.length > 0)">
+          <div class="group"
+               v-if="!data.has_microbiology && row.research.show_more_services && (!row.confirmed || row.more.length > 0)">
             <div class="group-title">Дополнительные услуги</div>
             <div class="row">
               <div class="col-xs-6"

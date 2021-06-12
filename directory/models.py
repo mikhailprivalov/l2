@@ -210,6 +210,7 @@ class Researches(models.Model):
     rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
     has_own_form_result = models.BooleanField(blank=True, default=False, help_text="Собственная форма результатов")
     direction_params = models.ForeignKey('self', related_name='direction_params_p', help_text="Параметры направления", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    show_more_services = models.BooleanField(blank=True, default=True, help_text="Показывать Дополнительные услуги")
 
     @staticmethod
     def filter_type(t):
