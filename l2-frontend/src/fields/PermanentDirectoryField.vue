@@ -8,6 +8,7 @@
     </div>
     <div v-else>
       <SelectFieldTitled v-model="localCode" :variants="variantsToSelect" fullWidth/>
+      <small v-if="fieldTitle !== directoryTitle">НСИ справочник: {{ directoryTitle }}</small>
     </div>
   </div>
 </template>
@@ -20,6 +21,10 @@ import { LOAD_PERMANENT_DIRECTORY } from '@/store/action-types';
 
 @Component({
   props: {
+    fieldTitle: {
+      type: String,
+      required: true,
+    },
     value: {
       type: String,
       required: true,
@@ -86,6 +91,11 @@ export default class PermanentDirectoryField extends Vue {
   get variants() {
     const [oid] = this.oid;
     return (this.permanentDirectories[oid] || {}).values || {};
+  }
+
+  get directoryTitle() {
+    const [oid] = this.oid;
+    return (this.permanentDirectories[oid] || {}).title || '';
   }
 
   get variantsToSelect() {

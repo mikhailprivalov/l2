@@ -139,7 +139,9 @@
                 <TableField :variants="field.values_to_input" v-model="field.value" :disabled="confirmed" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 28">
-                <PermanentDirectoryField :oid="field.values_to_input" v-model="field.value" :disabled="confirmed" />
+                <PermanentDirectoryField :oid="field.values_to_input" v-model="field.value"
+                                         :field-title="field.title"
+                                         :disabled="confirmed" />
               </div>
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{

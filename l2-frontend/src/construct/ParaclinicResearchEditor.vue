@@ -179,7 +179,7 @@
                 <div>
                   <div class="input-group">
                     <span class="input-group-addon">Название поля ({{ row.pk === -1 ? 'новое' : row.pk }})</span>
-                    <input type="text" class="form-control" v-model="row.title" :readonly="row.field_type === 28">
+                    <input type="text" class="form-control" v-model="row.title">
                     <span class="input-group-addon">ID-скрепки</span>
                     <input type="text" class="form-control" v-model="row.attached">
                   </div>
