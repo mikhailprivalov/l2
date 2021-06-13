@@ -564,6 +564,7 @@ export default {
     &-data {
       height: calc(100% - 68px);
       overflow-y: auto;
+      overflow-x: hidden;
     }
 
     &-title {
