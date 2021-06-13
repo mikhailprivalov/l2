@@ -478,7 +478,7 @@ export default {
     position: absolute;
     top: 0;
     left: 0;
-    right: -5px;
+    right: 0;
     bottom: 34px;
   }
 
@@ -486,7 +486,7 @@ export default {
     position: absolute;
     background-color: #eaeaea;
     left: 0;
-    right: -5px;
+    right: 0;
     bottom: 0;
     height: 34px;
     display: flex;
