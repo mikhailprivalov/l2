@@ -77,6 +77,7 @@ class Command(BaseCommand):
                     user.save()
                     us = users.DoctorProfile(user=user, fio=f, podrazdeleniye=o)
                     us.save()
+                    us.get_fio_parts()
                     self.stdout.write("Добавлен пользователь " + username + ". Необходимо сменить пароль (по умолчанию 123456)!")
                 user = us.user
                 user.groups.clear()

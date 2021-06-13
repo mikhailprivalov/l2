@@ -1201,8 +1201,9 @@ def user_save_view(request):
             user = User.objects.create_user(username)
             user.is_active = True
             user.save()
-            doc = users.DoctorProfile(user=user, fio=ud["fio"])
+            doc = users.DoctorProfile(user=user, fio=f'{ud["family"]} {ud["name"]} {ud["patronymic"]}')
             doc.save()
+            doc.get_fio_parts()
             npk = doc.pk
         else:
             ok = False
