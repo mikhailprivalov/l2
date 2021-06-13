@@ -311,7 +311,7 @@ def search(request):
                     "pk": direction.pk,
                     "imported_from_rmis": direction.imported_from_rmis,
                     "imported_org": None if not direction.imported_org else direction.imported_org.title,
-                    "directioner": None if direction.imported_from_rmis or not direction.doc else direction.doc.fio,
+                    "directioner": None if direction.imported_from_rmis or not direction.doc else direction.doc.get_full_fio(),
                     "otd": None if direction.imported_from_rmis else direction.get_doc_podrazdeleniye_title(),
                     "fin_source": None if direction.imported_from_rmis else direction.fin_title,
                     "in_rmis": direction.result_rmis_send,
@@ -366,7 +366,7 @@ def form(request):
         "comment": iss.lab_comment or "",
         "laborants": (
             [{"id": -1, "label": 'Не выбрано'}, *[
-                {"id": x.pk, "label": x.fio}
+                {"id": x.pk, "label": x.get_full_fio()}
                 for x in
                 DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by('fio')
             ]]

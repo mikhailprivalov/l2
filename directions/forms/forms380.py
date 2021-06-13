@@ -100,7 +100,7 @@ def form_01(c: Canvas, d: Napravleniya):
         c.drawString(px(53), py(93 + offset), "Диагноз: ")
         c.line(px(68), py(94.2 + offset), pxr(18), py(94.2 + offset))
 
-        c.drawString(px(18.5), py(98 + offset), "ФИО врача, направившего на обследование: {}".format(d.doc.fio))
+        c.drawString(px(18.5), py(98 + offset), "ФИО врача, направившего на обследование: {}".format(d.doc.get_full_fio()))
         c.line(pxr(117.5), py(99.2 + offset), pxr(18), py(99.2 + offset))
 
         c.drawString(px(18.5), py(103 + offset), "ФИО процедурной м/с: ")

@@ -76,6 +76,7 @@ def change_password(request):
                 doc.user.groups.add(group)
         elif request.POST.get("update_fio") == "1":
             doc.fio = request.POST.get("fio", "ФИО")
+            doc.family = None
             doc.save()
         elif request.POST.get("update_username") == "1":
             un = request.POST.get("username", "").strip()

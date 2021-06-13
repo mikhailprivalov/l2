@@ -559,7 +559,7 @@ def current_user_info(request):
                 'podrazdeleniye'
             ).get(user_id=user.pk)
 
-            ret["fio"] = doctorprofile.fio
+            ret["fio"] = doctorprofile.get_full_fio()
             ret["doc_pk"] = doctorprofile.pk
             ret["rmis_location"] = doctorprofile.rmis_location
             ret["rmis_login"] = doctorprofile.rmis_login
@@ -702,7 +702,7 @@ def directive_from(request):
         d = {
             "pk": dep.pk,
             "title": dep.title,
-            "docs": [{"pk": x.pk, "fio": x.fio} for x in dep.doctorprofile_set.all()],
+            "docs": [{"pk": x.pk, "fio": x.get_full_fio()} for x in dep.doctorprofile_set.all()],
         }
         data.append(d)
 
@@ -1070,7 +1070,7 @@ def laborants(request):
     if SettingManager.l2('results_laborants'):
         data = [{"pk": '-1', "fio": 'Не выбрано'}]
         for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by('fio'):
-            data.append({"pk": str(d.pk), "fio": d.fio})
+            data.append({"pk": str(d.pk), "fio": d.get_full_fio()})
     return JsonResponse({"data": data, "doc": request.user.doctorprofile.has_group("Врач-лаборант")})
 
 
@@ -1124,7 +1124,9 @@ def user_view(request):
     pk = request_data["pk"]
     if pk == -1:
         data = {
-            "fio": '',
+            "family": '',
+            "name": '',
+            "patronymic": '',
             "username": '',
             "department": '',
             "groups": [],
@@ -1143,9 +1145,11 @@ def user_view(request):
         }
     else:
         doc = users.DoctorProfile.objects.get(pk=pk)
-
+        fio_parts = doc.get_fio_parts()
         data = {
-            "fio": doc.fio,
+            "family": fio_parts[0],
+            "name": fio_parts[1],
+            "patronymic": fio_parts[2],
             "username": doc.user.username,
             "department": doc.podrazdeleniye_id,
             "groups": [x.pk for x in doc.user.groups.all()],
@@ -1235,7 +1239,10 @@ def user_save_view(request):
 
             doc.podrazdeleniye_id = ud['department']
             doc.specialities_id = ud.get('speciality', None)
-            doc.fio = ud["fio"]
+            doc.family = ud["family"]
+            doc.name = ud["name"]
+            doc.patronymic = ud["patronymic"]
+            doc.fio = f'{ud["family"]} {ud["name"]} {ud["patronymic"]}'
             doc.rmis_location = rmis_location
             doc.rmis_employee_id = rmis_employee_id
             doc.rmis_service_id_time_table = rmis_service_id_time_table

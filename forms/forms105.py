@@ -194,7 +194,7 @@ def form_01(request_data):
     styleTatr.fontSize = 11
 
     opinion = [
-        [Paragraph('ФИО врача:', styleTatr), Paragraph('{}'.format(doc_confirm.fio), styleTatr), Paragraph('{}'.format(date_confirm.strftime('%d.%m.%Y')), styleTatr)],
+        [Paragraph('ФИО врача:', styleTatr), Paragraph('{}'.format(doc_confirm.get_full_fio()), styleTatr), Paragraph('{}'.format(date_confirm.strftime('%d.%m.%Y')), styleTatr)],
         [Paragraph('Специальность:', styleTatr), Paragraph('{}'.format(doc_confirm.specialities), styleTatr), Paragraph('', styleTatr)],
     ]
 

@@ -257,7 +257,7 @@ def form_02(request_data):
         if i.district:
             title = i.district.title
         if i.doc_assigned:
-            who_doc_assigned = i.doc_assigned.fio
+            who_doc_assigned = i.doc_assigned.get_full_fio()
         if i.purpose:
             what_purpose = i.get_purpose_display()
         org = ""

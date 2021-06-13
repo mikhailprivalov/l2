@@ -140,7 +140,7 @@ def get_object(request):
                 i = users.DoctorProfile.objects.get(pk=pk)
                 d["pk"] = i.pk
                 d["username"] = i.user.username
-                d["fio"] = i.fio
+                d["fio"] = i.get_full_fio()
                 d["podrazdeleniye"] = i.podrazdeleniye_id
 
     elif app == "researches":
@@ -211,7 +211,7 @@ def get_directory(request):
             {"pk": x.pk, "title": x.title, "short_title": x.get_title(), "p_type": x.p_type} for x in podrazdeleniya.Podrazdeleniya.objects.all().order_by("pk")
         ],
         "users.models.DoctorProfile": [
-            {"pk": x.pk, "username": x.user.username, "fio": x.fio, "podrazdeleniye": x.podrazdeleniye_id} for x in users.DoctorProfile.objects.all().order_by("pk")
+            {"pk": x.pk, "username": x.user.username, "fio": x.get_full_fio(), "podrazdeleniye": x.podrazdeleniye_id} for x in users.DoctorProfile.objects.all().order_by("pk")
         ],
         "researches.models.Tubes": [{"pk": x.pk, "color": x.color, "title": x.title, "short_title": x.get_short_title()} for x in researches.Tubes.objects.all().order_by("pk")],
         "directory.models.Researches": [

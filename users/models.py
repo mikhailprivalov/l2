@@ -26,6 +26,15 @@ class Speciality(models.Model):
         verbose_name_plural = 'Специальности'
 
 
+def add_dots_if_not_digit(w: str, dots):
+    w = w.strip()
+    if not w:
+        return ''
+    if not w.isdigit() and len(w) > 0:
+        w = w[0] + ("." if dots else "")
+    return w
+
+
 class DoctorProfile(models.Model):
     """
     Профили врачей
@@ -38,7 +47,10 @@ class DoctorProfile(models.Model):
     )
     user = models.OneToOneField(User, null=True, blank=True, help_text='Ссылка на Django-аккаунт', on_delete=models.CASCADE)
     specialities = models.ForeignKey(Speciality, blank=True, default=None, null=True, help_text='Специальности пользователя', on_delete=models.CASCADE)
-    fio = models.CharField(max_length=255, help_text='ФИО')
+    fio = models.CharField(max_length=255, help_text='ФИО')  # DEPRECATED
+    family = models.CharField(max_length=255, help_text='Фамилия', blank=True, default=None, null=True)
+    name = models.CharField(max_length=255, help_text='Имя', blank=True, default=None, null=True)
+    patronymic = models.CharField(max_length=255, help_text='Отчество', blank=True, default=None, null=True)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
     isLDAP_user = models.BooleanField(default=False, blank=True, help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
     labtype = models.IntegerField(choices=labtypes, default=0, blank=True, help_text='Категория профиля для лаборатории')
@@ -98,31 +110,31 @@ class DoctorProfile(models.Model):
             return SettingManager.get("org_title")
         return self.hospital.safe_short_title
 
+    def get_fio_parts(self):
+        if not self.family or not self.name or not self.patronymic:
+            fio = self.fio.strip().replace("  ", " ").strip()
+            fio_split = fio.split(" ")
+            if len(fio_split) > 3:
+                fio_split = [fio_split[0], " ".join(fio_split[1:-2]), fio_split[-1]]
+            fio_split += [''] * max(0, 3 - len(fio_split))
+            self.family = fio_split[0]
+            self.name = fio_split[1]
+            self.patronymic = fio_split[2]
+            self.save(update_fields=['family', 'name', 'patronymic'])
+        return self.family, self.name, self.patronymic
+
+    def get_full_fio(self):
+        return " ".join(self.get_fio_parts())
+
     def get_fio(self, dots=True):
         """
         Функция формирования фамилии и инициалов (Иванов И.И.)
         :param dots:
         :return:
         """
+        fio_parts = self.get_fio_parts()
 
-        def gfl(w: str, dots):
-            w = w.strip()
-            if not w.isdigit() and len(w) > 0:
-                w = w[0] + ("." if dots else "")
-            return w
-
-        fio = self.fio.strip().replace("  ", " ").strip()
-        fio_split = fio.split(" ")
-
-        if len(fio_split) == 0:
-            return self.user.username
-        if len(fio_split) == 1:
-            return fio
-
-        if len(fio_split) > 3:
-            fio_split = [fio_split[0], " ".join(fio_split[1:-2]), fio_split[-1]]
-
-        return fio_split[0] + " " + gfl(fio_split[1], dots) + ("" if len(fio_split) == 2 else gfl(fio_split[2], dots))
+        return f"{fio_parts[0]} {add_dots_if_not_digit(fio_parts[1], dots)} {add_dots_if_not_digit(fio_parts[2], dots)}".strip()
 
     def is_member(self, groups: list) -> bool:
         """
@@ -140,9 +152,9 @@ class DoctorProfile(models.Model):
 
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
         if self.podrazdeleniye:
-            return self.fio + ', ' + self.podrazdeleniye.title
+            return self.get_full_fio() + ', ' + self.podrazdeleniye.title
         else:
-            return self.fio
+            return self.get_full_fio()
 
     class Meta:
         verbose_name = 'Профиль пользователя L2'
