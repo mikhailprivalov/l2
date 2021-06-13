@@ -571,9 +571,6 @@ def confirm_list(request):
             for r in Result.objects.filter(issledovaniye=iss):
                 r.get_ref()
             iss.doc_confirmation = request.user.doctorprofile
-            if iss.napravleniye:
-                iss.napravleniye.qr_check_token = None
-                iss.napravleniye.save(update_fields=['qr_check_token'])
             iss.time_confirmation = timezone.now()
             if not request.user.doctorprofile.has_group("Врач-лаборант"):
                 iss.co_executor = request.user.doctorprofile
