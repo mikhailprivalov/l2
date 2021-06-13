@@ -942,7 +942,7 @@ def external_check_result(request):
         if not i.doc_confirmation:
             continue
         result = {
-            "title": i.research,
+            "title": i.research.title,
             "datetime": strfdatetime(i.time_confirmation, "%d.%m.%Y %H"),
             "data": [],
         }
