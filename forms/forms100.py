@@ -825,7 +825,7 @@ def form_04(request_data):
     doc_speciality = "____________________"
     if doctor.specialities:
         doc_speciality = f"<u>{doctor.specialities.title}</u>"
-    doc_fio = doctor.fio
+    doc_fio = doctor.get_full_fio()
     date_start = reg_dipensary.date_start
     date_start = strdate(date_start, short_year=True)
     date_start = normalize_date(date_start)

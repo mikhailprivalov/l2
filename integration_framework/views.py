@@ -842,7 +842,7 @@ def eds_get_user_data(request):
     return Response({
         "ok": True,
         "userData": {
-            "fio": doc.fio,
+            "fio": doc.get_full_fio(),
             "department": doc.podrazdeleniye.title if doc.podrazdeleniye else None,
         }
     })

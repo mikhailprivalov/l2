@@ -46,7 +46,7 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(Paragraph(f'ЗАКЛЮЧЕНИЕ № {direction.pk} {history_num} ', styleCenterBold))
     fwb.append(Paragraph('медицинского специалиста соответствующего профиля', styleCenterBold))
     doc_profile = iss.doc_confirmation.specialities.title
-    doc_fio = iss.doc_confirmation.fio
+    doc_fio = iss.doc_confirmation.get_full_fio()
     fwb.append(Paragraph(f'{doc_profile} {doc_fio}', styleCenterBold))
 
     open_bold_tag = "<font face =\"PTAstraSerifBold\">"
@@ -171,7 +171,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         [
             Paragraph('Лечащий врач', styleT),
             Paragraph('___________________', styleT),
-            Paragraph(f'{iss.doc_confirmation.fio}', styleT),
+            Paragraph(f'{iss.doc_confirmation.get_full_fio()}', styleT),
         ],
     ]
 
@@ -285,7 +285,7 @@ def form_03(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         [
             Paragraph('Лечащий врач', styleT),
             Paragraph('___________________', styleT),
-            Paragraph(f'{iss.doc_confirmation.fio}', styleT),
+            Paragraph(f'{iss.doc_confirmation.get_full_fio()}', styleT),
         ],
         [
             Paragraph(f'{date_protocol} ', styleT),

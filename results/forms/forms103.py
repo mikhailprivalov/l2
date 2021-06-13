@@ -98,7 +98,7 @@ def add_template(iss: Issledovaniya, direction, offset=0):
     opinion = [
         [
             Paragraph(f'<u>{date_confirm}</u>', styleCenter),
-            Paragraph(f'<u>врач-психиатр, {iss.doc_confirmation.fio}</u>', styleCenter),
+            Paragraph(f'<u>врач-психиатр, {iss.doc_confirmation.get_full_fio()}</u>', styleCenter),
         ],
         [
             Paragraph('(Дата)', styleCenter),

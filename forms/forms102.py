@@ -45,7 +45,7 @@ def form_01(request_data):
     p_agent = None
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     ind_dir = json.loads(request_data["napr_id"])
-    exec_person = request_data['user'].doctorprofile.fio
+    exec_person = request_data['user'].doctorprofile.get_full_fio()
 
     patient_data = ind_card.get_data_individual()
     agent_status = None

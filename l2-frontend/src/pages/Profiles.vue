@@ -31,8 +31,12 @@
           <div class="row">
             <div class="col-xs-6" style="padding-right: 0">
               <div class="input-group">
-                <span class="input-group-addon">ФИО</span>
-                <input class="form-control" style="margin-right: -1px;" type="text" v-model="user.fio"/>
+                <input class="form-control wbr" type="text" v-model="user.family" placeholder="Фамилия"/>
+                <span class="input-group-btn" style="width:0"></span>
+                <input class="form-control wbr" type="text" v-model="user.name" placeholder="Имя"/>
+                <span class="input-group-btn" style="width:0"></span>
+                <input class="form-control" style="margin-right: -1px;" type="text" v-model="user.patronymic"
+                       placeholder="Отчество"/>
               </div>
             </div>
             <div class="col-xs-6" style="padding-left: 0">
@@ -264,8 +268,24 @@ export default {
     this.load_users();
   },
   watch: {
-    'user.fio': function () {
-      this.user.fio = this.user.fio.replace(/\s\s+/g, ' ').split(' ')
+    'user.family': function () {
+      this.user.family = this.user.family.replace(/\s\s+/g, ' ').split(' ')
+        .map((s) => s.split('-').map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
+        .join(' ');
+      if (this.open_pk === -1) {
+        this.deb_gu();
+      }
+    },
+    'user.name': function () {
+      this.user.name = this.user.name.replace(/\s\s+/g, ' ').split(' ')
+        .map((s) => s.split('-').map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
+        .join(' ');
+      if (this.open_pk === -1) {
+        this.deb_gu();
+      }
+    },
+    'user.patronymic': function () {
+      this.user.patronymic = this.user.patronymic.replace(/\s\s+/g, ' ').split(' ')
         .map((s) => s.split('-').map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
         .join(' ');
       if (this.open_pk === -1) {
@@ -294,7 +314,7 @@ export default {
       this.gen_username();
     }, 500),
     gen_username() {
-      let v = this.user.fio.toLowerCase();
+      let v = `${this.user.family} ${this.user.name} ${this.user.patronymic}`;
       let ls = v.split(' ');
       if (ls.length > 3) {
         ls = [ls[0], ls.slice(1, ls.length - 2).join(' '), ls[ls.length - 1] || ''];
@@ -343,7 +363,8 @@ export default {
         hospital_pk: this.selected_hospital,
       });
       if (ok) {
-        this.$root.$emit('msg', 'ok', `Пользователь сохранён\n{this.user.fio} – ${this.user.username}`);
+        this.$root.$emit('msg', 'ok',
+          `Пользователь сохранён\n${this.user.family} ${this.user.name} ${this.user.patronymic} – ${this.user.username}`);
         this.open_pk = npk;
         this.load_users(true);
       } else {
@@ -354,7 +375,9 @@ export default {
     async close() {
       this.open_pk = -2;
       this.user = {
-        fio: '',
+        family: '',
+        name: '',
+        patronymic: '',
         groups: [],
         groups_list: [],
         restricted_to_direct: [],
@@ -383,7 +406,7 @@ export default {
         (this.open_pk > -1 && (this.user.password.length === 0 || this.user.password.length >= 3))
         || (this.open_pk === -1 && this.user.password.length >= 3)
       );
-      return p && this.user.username !== '' && this.user.fio !== '';
+      return p && this.user.username !== '' && this.user.family !== '' && this.user.name !== '';
     },
     ...mapGetters({
       modules: 'modules',
@@ -552,5 +575,9 @@ export default {
 
   .rinp {
     width: 30%;
+  }
+
+  .form-control.wbr {
+    border-right: 1px solid #646d78;
   }
 </style>

@@ -428,7 +428,7 @@ def statistic_xls(request):
     if tp == "statistics-visits":
         date_start, date_end = try_parse_range(date_start_o, date_end_o)
         t = request.GET.get("t", "sum")
-        fio = request.user.doctorprofile.fio
+        fio = request.user.doctorprofile.get_full_fio()
         dep = request.user.doctorprofile.podrazdeleniye.get_title()
         dirs = Napravleniya.objects.filter(
             visit_date__range=(
@@ -768,7 +768,7 @@ def statistic_xls(request):
             user_row = DoctorProfile.objects.get(pk=user_pk)
             ws = wb.add_sheet("{} {}".format(user_row.get_fio(dots=False), user_pk))
             row_num = 0
-            row = [("Исполнитель: ", 4000), (user_row.fio, 7600)]
+            row = [("Исполнитель: ", 4000), (user_row.get_full_fio(), 7600)]
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num][0], font_style)
                 ws.col(col_num).width = row[col_num][1]
@@ -1489,7 +1489,7 @@ def statistic_xls(request):
             row_num += 1
             row = [
                 usr.podrazdeleniye.title,
-                usr.fio,
+                usr.get_full_fio(),
                 uets,
             ]
             for col_num in range(len(row)):

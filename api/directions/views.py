@@ -2270,7 +2270,7 @@ def results_by_direction(request):
                 objs_result[r.direction] = {'dir': r.direction, 'date': r.date_confirm, 'researches': {}}
 
             if r.iss_id not in objs_result[r.direction]['researches']:
-                objs_result[r.direction]['researches'][r.iss_id] = {'title': r.research_title, 'fio': short_fio_dots(r.fio), 'dateConfirm': r.date_confirm, 'fractions': []}
+                objs_result[r.direction]['researches'][r.iss_id] = {'title': r.research_title, 'fio': short_fio_dots(r.get_full_fio()), 'dateConfirm': r.date_confirm, 'fractions': []}
 
             objs_result[r.direction]['researches'][r.iss_id]['fractions'].append({'title': r.fraction_title, 'value': r.value, 'units': r.units})
 
