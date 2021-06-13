@@ -18,7 +18,7 @@ from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
 from laboratory.settings import AFTER_DATE, MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY
-from laboratory.utils import current_time
+from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
 from rmis_integration.client import Client
@@ -943,6 +943,7 @@ def external_check_result(request):
             continue
         result = {
             "title": i.research,
+            "datetime": strfdatetime(iss.time_confirmation, "%d.%m.%Y %H"),
             "data": [],
         }
         fractions = Fractions.objects.filter(research=i.research).order_by("pk").order_by("sort_weight")
