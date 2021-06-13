@@ -895,6 +895,12 @@ def external_check_result(request):
         }, status=403)
 
     external_service: ExternalService = external_service
+    if not external_service.is_active:
+        return Response({
+            "ok": False,
+            "message": "Доступ отключен",
+        }, status=403)
+
     if 'qr_check_result' not in external_service.rights:
         return Response({
             "ok": False,
