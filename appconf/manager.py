@@ -6,7 +6,7 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = '2'
+    VERSION = '3'
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'setting_manager_full_cached_l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'setting_manager_full_cached_en:v{VERSION}'
@@ -57,6 +57,18 @@ class SettingManager:
     @staticmethod
     def get_medbook_auto_start():
         return SettingManager.get("medbook_auto_start", default='100000', default_type='i')
+
+    @staticmethod
+    def qr_check_result():
+        return SettingManager.get("qr_check_result", default='false', default_type='b')
+
+    @staticmethod
+    def qr_check_url():
+        return SettingManager.get("qr_check_url", default='', default_type='s')
+
+    @staticmethod
+    def instance_id():
+        return SettingManager.get("instance_id", default='', default_type='s')
 
     @staticmethod
     def l2_modules():

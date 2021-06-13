@@ -164,6 +164,9 @@ class Command(BaseCommand):
 
                             t = timezone.now()
                             obj_iss.doc_confirmation = doc_profile
+                            if obj_iss.napravleniye:
+                                obj_iss.napravleniye.qr_check_token = None
+                                obj_iss.napravleniye.save(update_fields=['qr_check_token'])
                             obj_iss.link_file = f'{today_dir}/{num_dir}_{list_fio[2]}.pdf'
                             obj_iss.time_confirmation = t
                             obj_iss.time_save = t

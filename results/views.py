@@ -5,9 +5,11 @@ import operator
 import os.path
 import random
 import re
+import uuid
 from copy import deepcopy
 from decimal import Decimal
 from io import BytesIO
+from typing import Optional
 
 import bleach
 import simplejson as json
@@ -22,6 +24,9 @@ from django.utils import timezone
 from django.utils.text import Truncator
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from pdfrw import PdfReader, PdfWriter
+from reportlab.graphics import renderPDF
+from reportlab.graphics.barcode import qr
+from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
 from reportlab.lib.pagesizes import A4, landscape, portrait
@@ -283,6 +288,9 @@ def result_confirm(request):
         issledovaniye = Issledovaniya.objects.get(pk=int(request.POST["pk"]))
         if issledovaniye.doc_save:  # Если исследование сохранено
             issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
+            if issledovaniye.napravleniye:
+                issledovaniye.napravleniye.qr_check_token = None
+                issledovaniye.napravleniye.save(update_fields=['qr_check_token'])
             for r in Result.objects.filter(issledovaniye=issledovaniye):
                 r.get_ref()
             issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
@@ -305,6 +313,9 @@ def result_confirm_list(request):
                 for r in Result.objects.filter(issledovaniye=issledovaniye):
                     r.get_ref()
                 issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
+                if issledovaniye.napravleniye:
+                    issledovaniye.napravleniye.qr_check_token = None
+                    issledovaniye.napravleniye.save(update_fields=['qr_check_token'])
                 issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
                 if not request.user.doctorprofile.has_group("Врач-лаборант"):
                     issledovaniye.co_executor = request.user.doctorprofile
@@ -375,10 +386,10 @@ def result_print(request):
         invariant=1
     )
     p_frame = Frame(
-        0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=16 * mm, id='portrait_frame', showBoundary=0
+        0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=18 * mm, id='portrait_frame', showBoundary=0
     )
     l_frame = Frame(
-        0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=10 * mm, rightPadding=15 * mm, topPadding=(27 if leftnone else 15) * mm, bottomPadding=16 * mm, id='landscape_frame', showBoundary=0
+        0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=10 * mm, rightPadding=15 * mm, topPadding=(27 if leftnone else 15) * mm, bottomPadding=18 * mm, id='landscape_frame', showBoundary=0
     )
 
     naprs = []
@@ -547,7 +558,7 @@ def result_print(request):
     previous_size_form = None
     is_page_template_set = False
 
-    def mark_pages(canvas_mark, direction: Napravleniya):
+    def mark_pages(canvas_mark, direction: Napravleniya, qr_data: Optional[str] = None):
         canvas_mark.saveState()
         canvas_mark.setFont('FreeSansBold', 8)
         if direction.hospital:
@@ -555,17 +566,29 @@ def result_print(request):
         else:
             canvas_mark.drawString(55 * mm, 13 * mm, '{}'.format(SettingManager.get("org_title")))
         if direction.is_external:
-            canvas_mark.drawString(55 * mm, 9.6 * mm, f'№ карты : {direction.client.number_with_type()}; Номер в организации: {direction.id_in_hospital}; Направление № {direction.pk}')
+            canvas_mark.drawString(55 * mm, 9.6 * mm, f'№ карты: {direction.client.number_with_type()}; Номер в организации: {direction.id_in_hospital}; Направление № {direction.pk}')
         else:
-            canvas_mark.drawString(55 * mm, 9.6 * mm, '№ карты : {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
+            canvas_mark.drawString(55 * mm, 9.6 * mm, '№ карты: {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk))
         canvas_mark.drawString(55 * mm, 7.1 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
         canvas_mark.line(55 * mm, 12.7 * mm, 181 * mm, 11.5 * mm)
+        if qr_data:
+            qr_code = qr.QrCodeWidget(qr_data)
+            qr_code.barWidth = 15 * mm
+            qr_code.barHeight = 15 * mm
+            qr_code.qrVersion = 1
+            d = Drawing()
+            d.add(qr_code)
+            renderPDF.draw(d, canvas_mark, 20 * mm, 3 * mm)
         canvas_mark.restoreState()
 
     count_pages = 0
     has_page_break = False
     has_own_form_result = False
+    instance_id = SettingManager.instance_id()
+    qr_check_url = SettingManager.qr_check_url()
+    need_qr = SettingManager.qr_check_result()
 
+    direction: Napravleniya
     for direction in sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk):
         dpk = direction.pk
 
@@ -614,9 +637,20 @@ def result_print(request):
             current_size_form = iss.research.size_form
             temp_iss = iss
 
+        qr_data = None
+
+        if not has_paraclinic and need_qr and instance_id and qr_check_url:
+            if not direction.qr_check_token:
+                direction.qr_check_token = uuid.uuid4()
+                direction.save(update_fields=['qr_check_token'])
+            qr_data = qr_check_url
+            qr_data = qr_data.replace('<qr_token>', str(direction.qr_check_token))
+            qr_data = qr_data.replace('<direction_id>', str(direction.pk))
+            qr_data = qr_data.replace('<instance_id>', instance_id)
+
         def local_mark_pages(c, _):
             if not has_own_form_result:
-                mark_pages(c, direction)
+                mark_pages(c, direction, qr_data)
 
         portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
         landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)
