@@ -29,7 +29,7 @@ from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
 from . import sql_if
 from directions.models import Napravleniya
-
+from .models import ExternalService
 
 logger = logging.getLogger("IF")
 
@@ -877,4 +877,86 @@ def eds_get_cda_data(request):
             'gender': ind.sex.lower(),
             'birthdate': ind.birthday.strftime("%Y%m%d"),
         },
+    })
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+def external_check_result(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    token = token.replace('Bearer ', '')
+    external_service = ExternalService.objects.filter(token=token).first()
+
+    if not token or not external_service:
+        return Response({
+            "ok": False,
+            "message": "Передан некорректный токен в заголовке HTTP_AUTHORIZATION",
+        }, status=403)
+
+    external_service: ExternalService = external_service
+    if 'qr_check_result' not in external_service.rights:
+        return Response({
+            "ok": False,
+            "message": "Нет доступа",
+        }, status=403)
+
+    body = json.loads(request.body)
+    instance_id = body.get("instanceId")
+
+    if SettingManager.instance_id() != instance_id:
+        return Response({
+            "ok": False,
+            "message": "Некорректный instance_id",
+        })
+
+    pk = body.get("direction")
+    direction = Napravleniya.objects.filter(pk=pk).first()
+    if not direction:
+        return Response({
+            "ok": False,
+            "message": "Направление не найдено",
+        })
+
+    direction: Napravleniya
+
+    direction_token = body.get("directionToken")
+    if str(direction.qr_check_token) != direction_token:
+        return Response({
+            "ok": False,
+            "message": "Некорректный токен направления",
+        })
+
+    ind: Individual = direction.client.individual
+    patient = {
+        "family": f"{ind.family[0] if ind.family else ''}*****",
+        "name": f"{ind.name[0] if ind.name else ''}*****",
+        "patronymic": f"{ind.patronymic[0] if ind.patronymic else ''}*****",
+        "birthdate": str(ind.birthday.year),
+    }
+
+    results = []
+
+    i: directions.Issledovaniya
+    for i in direction.issledovaniya_set.all():
+        if not i.doc_confirmation:
+            continue
+        result = {
+            "title": i.research,
+            "data": [],
+        }
+        fractions = Fractions.objects.filter(research=i.research).order_by("pk").order_by("sort_weight")
+        f: Fractions
+        for f in fractions:
+            if not directions.Result.objects.filter(issledovaniye=i, fraction=f).exists():
+                continue
+            r: directions.Result = directions.Result.objects.filter(issledovaniye=i, fraction=f)[0]
+            result["data"].append({
+                "title": f.title,
+                "value": r.value,
+            })
+        results.append(result)
+    return Response({
+        "patient": patient,
+        "results": results,
     })

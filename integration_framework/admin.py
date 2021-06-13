@@ -16,4 +16,15 @@ class ResIntertationResearches(admin.ModelAdmin):
     list_filter = ('type_integration',)
 
 
+class ExternalServiceAdmin(admin.ModelAdmin):
+    readonly_fields = ('token',)
+
+    list_display = (
+        'title',
+        'rights',
+        'is_active',
+    )
+
+
 admin.site.register(models.IntegrationResearches, ResIntertationResearches)
+admin.site.register(models.ExternalService, ExternalServiceAdmin)

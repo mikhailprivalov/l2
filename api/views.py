@@ -922,6 +922,9 @@ def flg(request):
                     i.time_save = date
                     i.doc_confirmation = doc
                     i.time_confirmation = date
+                    if i.napravleniye:
+                        i.napravleniye.qr_check_token = None
+                        i.napravleniye.save(update_fields=['qr_check_token'])
                     i.save()
 
                 if not i.napravleniye.visit_who_mark or not i.napravleniye.visit_date:

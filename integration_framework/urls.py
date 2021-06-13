@@ -21,4 +21,5 @@ urlpatterns = [
     path('send-result', views.external_research_create),
     path('eds/get-user-data', views.eds_get_user_data),
     path('eds/get-cda-data', views.eds_get_cda_data),
+    path('external/check-result', views.external_check_result),
 ]

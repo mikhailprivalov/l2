@@ -1,6 +1,9 @@
+import uuid
+
 from django.db import models
 
 from directory.models import Researches
+from utils.models import ChoiceArrayField
 
 
 class IntegrationNamespace(models.Model):
@@ -36,3 +39,27 @@ class IntegrationResearches(models.Model):
 class TempData(models.Model):
     key = models.CharField(max_length=50, default="", blank=True, help_text='Приложение/объект', db_index=True)
     holter_protocol_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Последний обработанный протокол')
+
+
+class ExternalService(models.Model):
+    ACCESS_RIGHT_QR_CHECK_RESULT = 'qr_check_result'
+
+    ACCESS_RIGHTS = (
+        (ACCESS_RIGHT_QR_CHECK_RESULT, 'QR check result'),
+    )
+
+    title = models.CharField(max_length=127, help_text="Название")
+    token = models.UUIDField(default=uuid.uuid4, editable=False, help_text="Токен, генерируется автоматически", db_index=True)
+    rights = ChoiceArrayField(
+        models.CharField(max_length=16, choices=ACCESS_RIGHTS),
+        help_text='Права доступа'
+    )
+    is_active = models.BooleanField(default=True, help_text="Сервис активен")
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Внешний сервис'
+        verbose_name_plural = 'Внешние сервисы'
+

@@ -1561,6 +1561,9 @@ def directions_paraclinic_result(request):
         if with_confirm:
             iss.doc_confirmation = request.user.doctorprofile
             iss.time_confirmation = timezone.now()
+            if iss.napravleniye:
+                iss.napravleniye.qr_check_token = None
+                iss.napravleniye.save(update_fields=['qr_check_token'])
 
         if not iss.napravleniye.visit_who_mark or not iss.napravleniye.visit_date:
             iss.napravleniye.visit_who_mark = request.user.doctorprofile
@@ -1630,6 +1633,9 @@ def directions_paraclinic_result(request):
                 if with_confirm:
                     i.doc_confirmation = request.user.doctorprofile
                     i.time_confirmation = timezone.now()
+                    if i.napravleniye:
+                        i.napravleniye.qr_check_token = None
+                        i.napravleniye.save(update_fields=['qr_check_token'])
                 i.save()
                 h.append(i.pk)
             else:
@@ -1638,6 +1644,9 @@ def directions_paraclinic_result(request):
                     if with_confirm:
                         i2.doc_confirmation = request.user.doctorprofile
                         i2.time_confirmation = timezone.now()
+                        if i2.napravleniye:
+                            i2.napravleniye.qr_check_token = None
+                            i2.napravleniye.save(update_fields=['qr_check_token'])
                     i2.save()
                     h.append(i2.pk)
 
@@ -1717,6 +1726,9 @@ def directions_paraclinic_confirm(request):
             iss.napravleniye.visit_date = t
             iss.napravleniye.save()
         iss.doc_confirmation = request.user.doctorprofile
+        if iss.napravleniye:
+            iss.napravleniye.qr_check_token = None
+            iss.napravleniye.save(update_fields=['qr_check_token'])
         iss.time_confirmation = t
         iss.save()
         iss.gen_after_confirm(request.user)
@@ -1724,6 +1736,9 @@ def directions_paraclinic_confirm(request):
             i.doc_confirmation = request.user.doctorprofile
             i.time_confirmation = t
             i.save()
+            if i.napravleniye:
+                i.napravleniye.qr_check_token = None
+                i.napravleniye.save(update_fields=['qr_check_token'])
         response["ok"] = True
         response["amd"] = iss.napravleniye.amd_status
         response["amd_number"] = iss.napravleniye.amd_number
