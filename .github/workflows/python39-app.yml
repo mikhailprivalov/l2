@@ -1,4 +1,4 @@
-name: Django testing
+name: Py3.9 Django testing
 
 on:
   push:
