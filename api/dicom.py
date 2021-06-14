@@ -1,7 +1,7 @@
 import socket
 from functools import reduce
 
-from orthanc_rest_client import Orthanc
+from beren import Orthanc
 
 from directions.models import Issledovaniya
 from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_PORT, DICOM_ADDRESS
@@ -54,8 +54,8 @@ def search_dicom_study(direction=None):
                 orthanc = Orthanc(DICOM_SERVER, warn_insecure=False)
                 for tag in DICOM_SEARCH_TAGS:
                     for dir in [ean13_dir, str_dir]:
-                        query = {"Level": "Study", "Query": {"Modality": "*", "StudyDate": "*", tag: dir}}
-                        dicom_study = orthanc.find(query)
+                        query = {"Modality": "*", "StudyDate": "*", tag: dir}
+                        dicom_study = orthanc.find(query, level='Study')
                         if len(dicom_study) > 0:
                             Issledovaniya.objects.filter(napravleniye=direction).update(study_instance_uid=dicom_study[0])
                             return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study[0]}'
