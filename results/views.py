@@ -562,7 +562,7 @@ def result_print(request):
         canvas_mark.saveState()
         canvas_mark.setFont('FreeSansBold', 8)
         if direction.hospital:
-            canvas_mark.drawString(55 * mm, 13 * mm, direction.hospital.title)
+            canvas_mark.drawString(55 * mm, 13 * mm, direction.hospital.safe_short_title)
         else:
             canvas_mark.drawString(55 * mm, 13 * mm, '{}'.format(SettingManager.get("org_title")))
         if direction.is_external:

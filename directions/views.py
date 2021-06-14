@@ -421,7 +421,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
         c.restoreState()
 
     c.setFont('OpenSans', 10)
-    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 5) + (h / 2) * yn, dir.hospital_title)
+    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 5) + (h / 2) * yn, dir.hospital_short_title)
 
     c.setFont('OpenSans', 8)
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 15) + (h / 2) * yn, "(%s. %s)" % (dir.hospital_address, dir.hospital_phones))
