@@ -1239,6 +1239,16 @@ class DispensaryRegPlans(models.Model):
                         print(e)  # noqa: T001
 
 
+class ScreeningRegPlan(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, db_index=True, blank=True, default=None, null=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
+    date = models.DateField(help_text='Планируемая дата', db_index=True, default=None, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Скрининг план'
+        verbose_name_plural = 'Скрининг план'
+
+
 class Phones(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     number = models.CharField(max_length=20, help_text='Номер телефона', db_index=True)

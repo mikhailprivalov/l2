@@ -706,6 +706,29 @@ class DispensaryPlan(models.Model):
         verbose_name_plural = 'Диспансерный учет'
 
 
+class ScreeningPlan(models.Model):
+    SEX = (
+        ('м', 'м'),
+        ('ж', 'ж'),
+    )
+
+    age_start_control = models.PositiveSmallIntegerField(db_index=True, help_text='Возраст', null=False, blank=False)
+    age_end_control = models.PositiveSmallIntegerField(db_index=True, help_text='Возраст', null=False, blank=False)
+    sex_client = models.CharField(max_length=1, choices=SEX, help_text="Пол", db_index=True)
+    research = models.ForeignKey(Researches, db_index=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
+    period = models.PositiveSmallIntegerField(db_index=True, help_text='Период (1 раз в лет/года)', null=False, blank=False)
+    sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес соритировки')
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие', db_index=True)
+
+    def __str__(self):
+        return f"{self.age_start_control} - {self.age_end_control} - {self.sex_client}, {self.research}"
+
+    class Meta:
+        unique_together = ("age_start_control", "age_end_control", "research", "sex_client")
+        verbose_name = 'Скрининг Шаблон'
+        verbose_name_plural = 'Скрининг-Шаблоны'
+
+
 class GroupCulture(models.Model):
     title = models.CharField(max_length=255, help_text="Группа культур")
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие группы', db_index=True)
