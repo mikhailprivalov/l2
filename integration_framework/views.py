@@ -949,7 +949,7 @@ def external_check_result(request):
             continue
         result = {
             "title": i.research.title,
-            "datetime": strfdatetime(i.time_confirmation, "%d.%m.%Y %H"),
+            "datetime": strfdatetime(i.time_confirmation, "%d.%m.%Y %X"),
             "data": [],
         }
         fractions = Fractions.objects.filter(research=i.research).order_by("pk").order_by("sort_weight")
