@@ -8,6 +8,7 @@ import simplejson
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.management.base import OutputWrapper
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models, transaction
 from django.db.models import Q
 from django.db.models.signals import pre_save
@@ -1241,10 +1242,15 @@ class DispensaryRegPlans(models.Model):
 
 class ScreeningRegPlan(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
-    research = models.ForeignKey(Researches, db_index=True, blank=True, default=None, null=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
-    date = models.DateField(help_text='Планируемая дата', db_index=True, default=None, blank=True, null=True)
+    research = models.ForeignKey(Researches, db_index=True, help_text='Исследование', on_delete=models.CASCADE)
+    date = models.DateField(help_text='Планируемая дата', db_index=True)
+
+    def __str__(self):
+        return f"{self.card} – {self.research}, {strfdatetime(self.date, '%d-%m-%Y')}"
 
     class Meta:
+        unique_together = ("card", "research", "date")
+
         verbose_name = 'Скрининг план'
         verbose_name_plural = 'Скрининг план'
 
