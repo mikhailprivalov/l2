@@ -8,7 +8,6 @@ import simplejson
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.management.base import OutputWrapper
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models, transaction
 from django.db.models import Q
 from django.db.models.signals import pre_save
