@@ -1253,6 +1253,10 @@ class ScreeningRegPlan(models.Model):
         verbose_name = 'Скрининг план'
         verbose_name_plural = 'Скрининг план'
 
+    @staticmethod
+    def get_screening_data(card_pk):
+        return True
+
 
 class Phones(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)

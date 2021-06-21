@@ -32,6 +32,7 @@ from clients.models import (
     AmbulatoryData,
     AmbulatoryDataHistory,
     DispensaryRegPlans,
+    ScreeningRegPlan,
 )
 from contracts.models import Company
 from directions.models import Issledovaniya
@@ -909,6 +910,12 @@ def get_dispensary_reg_plans(card, research, speciality, year):
             plan[d.date.month - 1] = str(d.date.day).rjust(2, '0')
 
     return plan
+
+
+def get_screening_reg_plans(card):
+    screening_patient_data = ScreeningRegPlan.get_screening_data(card)
+
+    return screening_patient_data
 
 
 def update_dispensary_reg_plans(request):

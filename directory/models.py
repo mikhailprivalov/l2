@@ -721,6 +721,7 @@ class ScreeningPlan(models.Model):
     period = models.PositiveSmallIntegerField(db_index=True, help_text='Период (1 раз в лет/года)', validators=[MinValueValidator(1), MaxValueValidator(100)])
     sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес соритировки')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие', db_index=True)
+    delta_before_next_plan = models.PositiveSmallIntegerField(default=None, blank=True, db_index=True, help_text='', validators=[MinValueValidator(0), MaxValueValidator(100)])
 
     def __str__(self):
         return f"{self.age_start_control} - {self.age_end_control} - {self.sex_client}, {self.research}"
