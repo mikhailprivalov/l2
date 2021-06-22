@@ -15,7 +15,7 @@ from django.utils import timezone
 
 import slog.models as slog
 from appconf.manager import SettingManager
-from directory.models import Researches
+from directory.models import Researches, ScreeningPlan
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
 
@@ -1256,12 +1256,14 @@ class ScreeningRegPlan(models.Model):
     @staticmethod
     def get_screening_data(card_pk):
         client_obj = Card.objects.get(pk=card_pk)
-        sex = client_obj.individual.sex
-        age_current_year = client_obj.individual.age_for_year()
+        sex_client = client_obj.individual.sex
+        age_patient = client_obj.individual.age_for_year()
         count = 6
         now_year = current_year()
-        all_years = [i for i in range(now_year - count, now_year + count)]
-        all_ages = [i for i in range(age_current_year - count, age_current_year + count)]
+        all_years = [i for i in range(now_year - count, now_year + count + 1)]
+        all_ages = [i for i in range(age_patient - count, age_patient + count + 1)]
+        screening_plan = ScreeningPlan.objects.filter(age_start_control__lte=age_patient, age_start_control__gte=age_patient, sex_client=sex_client, hide=False)
+
 
         return True
 
