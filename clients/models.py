@@ -1255,6 +1255,14 @@ class ScreeningRegPlan(models.Model):
 
     @staticmethod
     def get_screening_data(card_pk):
+        client_obj = Card.objects.get(pk=card_pk)
+        sex = client_obj.individual.sex
+        age_current_year = client_obj.individual.age_for_year()
+        count = 6
+        now_year = current_year()
+        all_years = [i for i in range(now_year - count, now_year + count)]
+        all_ages = [i for i in range(age_current_year - count, age_current_year + count)]
+
         return True
 
 
