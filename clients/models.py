@@ -1264,10 +1264,15 @@ class ScreeningRegPlan(models.Model):
         sex_client = client_obj.individual.sex
         age_patient = client_obj.individual.age_for_year()
         year = 6
-        now_year = current_year()
+        now_year = int(current_year())
         all_years_patient = [i for i in range(now_year - year, now_year + year + 1)]
         all_ages_patient = [i for i in range(age_patient - year, age_patient + year + 1)]
-        screening_plan_obj = ScreeningPlan.objects.filter(age_start_control__lte=age_patient, age_start_control__gte=age_patient, sex_client=sex_client, hide=False)
+        screening_plan_obj = ScreeningPlan.objects.filter(age_start_control__lte=age_patient, age_end_control__gte=age_patient, sex_client=sex_client, hide=False)
+
+        ages_years = {}
+        for i in range(len(all_years_patient)):
+            ages_years[all_ages_patient[i]] = all_years_patient[i]
+
 
         for screening_plan in screening_plan_obj:
             period = screening_plan.period
@@ -1285,14 +1290,28 @@ class ScreeningRegPlan(models.Model):
             slice_ages = {}
             start = 0
             for c in range(count_slice):
-                slice_ages[c] = all_ages_research[start: start + period]
-                start += period
+                for k in range(period):
+                    if start < len(all_ages_research):
+                        slice_ages[all_ages_research[start]] = c
+                        start += 1
+                    else:
+                        break
+            print(all_years_patient)
+            print(all_ages_patient)
+            print(slice_ages)
 
-            result_research_ages = {}
-            for k, v in slice_ages.items():
-                for age_data in v:
-                    result_research_ages[age_data] = k
-
+            old_key = None
+            ages_research = []
+            temp_ages = {"is_even": None, "plan": None, "values": []}
+            for ap in all_ages_patient:
+                new_key = slice_ages.get(ap, None)
+                if slice_ages.get(ap, None):
+                    temp_ages["values"].append({"age": ap, "year": ages_years[ap]})
+                if new_key != old_key:
+                    old_key = new_key
+                    temp_ages["is_even"] = False if slice_ages[ap] % 2 > 0 else True
+                    ages_research.append(temp_ages)
+                    temp_ages = {"is_even": None, "plan": None, "values": []}
 
         # "researches": [
         #     {
@@ -1303,10 +1322,10 @@ class ScreeningRegPlan(models.Model):
         #         "ages": [
         #             {"is_even": true, "plan": null,
         #              "values": [{"age": 29, "year": "", "fact": null}, {"age": 30, "year": "", "fact": {"direction": 12132, "date": "01.01.2021"}}, 31, 32, 33]},
-        #             {"is_even": false, "plan": null, "values": [34, 35, 36, 37, 38]}
+        #
         #         ]
         #     },
-
+        print(ages_research)
 
         return True
 
