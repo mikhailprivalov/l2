@@ -18,6 +18,19 @@ class DocumentTypeAdmin(admin.ModelAdmin):
     pass
 
 
+@admin.register(models.ScreeningRegPlan)
+class ScreeningRegPlanAdmin(admin.ModelAdmin):
+    raw_id_fields = (
+        'card',
+    )
+    list_display = (
+        'card',
+        'research',
+        'ages',
+        'date'
+    )
+
+
 @admin.register(models.Document)
 class DocumentAdmin(admin.ModelAdmin):
     raw_id_fields = ('individual',)

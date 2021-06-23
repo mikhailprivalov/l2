@@ -1,4 +1,5 @@
 import inspect
+import math
 import sys
 from datetime import date, datetime
 from typing import List, Union, Dict, Optional
@@ -18,6 +19,8 @@ from appconf.manager import SettingManager
 from directory.models import Researches, ScreeningPlan
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
+from utils.models import ChoiceArrayField
+
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
@@ -1240,15 +1243,17 @@ class DispensaryRegPlans(models.Model):
 
 
 class ScreeningRegPlan(models.Model):
+    AGES = [(str(x), str(x)) for x in range(1, 121)]
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование', on_delete=models.CASCADE)
     date = models.DateField(help_text='Планируемая дата', db_index=True)
+    ages = ChoiceArrayField(models.CharField(max_length=3, choices=AGES), help_text='Года во время к-рых необходимо выполнить обследование')
 
     def __str__(self):
         return f"{self.card} – {self.research}, {strfdatetime(self.date, '%d-%m-%Y')}"
 
     class Meta:
-        unique_together = ("card", "research", "date")
+        unique_together = ("card", "research", "ages")
 
         verbose_name = 'Скрининг план'
         verbose_name_plural = 'Скрининг план'
@@ -1258,11 +1263,49 @@ class ScreeningRegPlan(models.Model):
         client_obj = Card.objects.get(pk=card_pk)
         sex_client = client_obj.individual.sex
         age_patient = client_obj.individual.age_for_year()
-        count = 6
+        year = 6
         now_year = current_year()
-        all_years = [i for i in range(now_year - count, now_year + count + 1)]
-        all_ages = [i for i in range(age_patient - count, age_patient + count + 1)]
-        screening_plan = ScreeningPlan.objects.filter(age_start_control__lte=age_patient, age_start_control__gte=age_patient, sex_client=sex_client, hide=False)
+        all_years_patient = [i for i in range(now_year - year, now_year + year + 1)]
+        all_ages_patient = [i for i in range(age_patient - year, age_patient + year + 1)]
+        screening_plan_obj = ScreeningPlan.objects.filter(age_start_control__lte=age_patient, age_start_control__gte=age_patient, sex_client=sex_client, hide=False)
+
+        for screening_plan in screening_plan_obj:
+            period = screening_plan.period
+            all_ages_research = [i for i in range(screening_plan.age_start_control, screening_plan.age_end_control + 1)]
+
+            ages_patient_research = []
+            for k in range(len(all_ages_patient)):
+                if all_ages_patient[k] in all_ages_research:
+                    ages_patient_research.append(all_ages_patient[k])
+                else:
+                    ages_patient_research.append(None)
+
+            count_slice = math.ceil(len(all_ages_research)/period)
+
+            slice_ages = {}
+            start = 0
+            for c in range(count_slice):
+                slice_ages[c] = all_ages_research[start: start + period]
+                start += period
+
+            result_research_ages = {}
+            for k, v in slice_ages.items():
+                for age_data in v:
+                    result_research_ages[age_data] = k
+
+
+        # "researches": [
+        #     {
+        #         "titleResearch": "холестерин",
+        #         "startAgeControl": 18,
+        #         "endAgeControl": 65,
+        #         "period": 5,
+        #         "ages": [
+        #             {"is_even": true, "plan": null,
+        #              "values": [{"age": 29, "year": "", "fact": null}, {"age": 30, "year": "", "fact": {"direction": 12132, "date": "01.01.2021"}}, 31, 32, 33]},
+        #             {"is_even": false, "plan": null, "values": [34, 35, 36, 37, 38]}
+        #         ]
+        #     },
 
 
         return True
