@@ -1274,9 +1274,12 @@ class ScreeningRegPlan(models.Model):
             ages_years[all_ages_patient[i]] = all_years_patient[i]
 
 
+        researches = []
         for screening_plan in screening_plan_obj:
             period = screening_plan.period
-            all_ages_research = [i for i in range(screening_plan.age_start_control, screening_plan.age_end_control + 1)]
+            start_age_control = screening_plan.age_start_control
+            end_age_control = screening_plan.age_end_control
+            all_ages_research = [i for i in range(start_age_control, screening_plan.age_end_control + 1)]
 
             ages_patient_research = []
             for k in range(len(all_ages_patient)):
@@ -1296,38 +1299,41 @@ class ScreeningRegPlan(models.Model):
                         start += 1
                     else:
                         break
-            print(all_years_patient)
-            print(all_ages_patient)
-            print(slice_ages)
 
-            old_key = None
             ages_research = []
             temp_ages = {"is_even": None, "plan": None, "values": []}
-            for ap in all_ages_patient:
-                new_key = slice_ages.get(ap, None)
-                if slice_ages.get(ap, None):
+            count = 0
+            old_part_slice = None
+            for ap in ages_patient_research:
+                if not ap:
+                    continue
+                new_part_slice = slice_ages.get(ap, None)
+                if count == 0:
+                    old_part_slice = new_part_slice
+
+                if (slice_ages.get(ap, -1) > -1) and (new_part_slice == old_part_slice):
                     temp_ages["values"].append({"age": ap, "year": ages_years[ap]})
-                if new_key != old_key:
-                    old_key = new_key
-                    temp_ages["is_even"] = False if slice_ages[ap] % 2 > 0 else True
+
+                if new_part_slice != old_part_slice:
+                    temp_ages["is_even"] = False if old_part_slice is None or old_part_slice % 2 > 0 else True
                     ages_research.append(temp_ages)
                     temp_ages = {"is_even": None, "plan": None, "values": []}
+                    if slice_ages.get(ap, None):
+                        temp_ages["values"].append({"age": ap, "year": ages_years[ap]})
+                count += 1
+                old_part_slice = new_part_slice
 
-        # "researches": [
-        #     {
-        #         "titleResearch": "холестерин",
-        #         "startAgeControl": 18,
-        #         "endAgeControl": 65,
-        #         "period": 5,
-        #         "ages": [
-        #             {"is_even": true, "plan": null,
-        #              "values": [{"age": 29, "year": "", "fact": null}, {"age": 30, "year": "", "fact": {"direction": 12132, "date": "01.01.2021"}}, 31, 32, 33]},
-        #
-        #         ]
-        #     },
-        print(ages_research)
+            temp_ages["is_even"] = False if old_part_slice is None or old_part_slice % 2 > 0 else True
 
-        return True
+            ages_research.append(temp_ages)
+            researches.append({"titleResearch": screening_plan.research.title,
+                               "startAgeControl": start_age_control,
+                               "endAgeControl": end_age_control,
+                               "period": period,
+                               "ages": ages_research
+                               })
+
+        return researches
 
 
 class Phones(models.Model):
