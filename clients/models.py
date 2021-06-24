@@ -1273,7 +1273,6 @@ class ScreeningRegPlan(models.Model):
         for i in range(len(all_years_patient)):
             ages_years[all_ages_patient[i]] = all_years_patient[i]
 
-
         researches = []
         for screening_plan in screening_plan_obj:
             period = screening_plan.period
@@ -1288,7 +1287,7 @@ class ScreeningRegPlan(models.Model):
                 else:
                     ages_patient_research.append(None)
 
-            count_slice = math.ceil(len(all_ages_research)/period)
+            count_slice = math.ceil(len(all_ages_research) / period)
 
             slice_ages = {}
             start = 0
