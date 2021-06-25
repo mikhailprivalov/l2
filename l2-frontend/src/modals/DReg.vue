@@ -2,55 +2,56 @@
   <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true"
          max-width="900px" width="100%" marginLeftRight="auto" margin-top>
     <span slot="header">Диспансерный учёт пациента
-      <span v-if="!card_data.fio_age">{{card_data.family}} {{card_data.name}} {{card_data.twoname}},
-      {{card_data.age}}, карта {{card_data.num}}</span>
-      <span v-else>{{card_data.fio_age}}</span>
+      <span v-if="!card_data.fio_age">{{ card_data.family }} {{ card_data.name }} {{ card_data.twoname }},
+      {{ card_data.age }}, карта {{ card_data.num }}</span>
+      <span v-else>{{ card_data.fio_age }}</span>
     </span>
     <div slot="body" style="min-height: 200px;" class="registry-body">
       <table class="table table-bordered table-condensed table-sm-pd"
              style="table-layout: fixed; font-size: 12px; margin-bottom: 0;">
         <colgroup>
-          <col width="70" />
-          <col width="98" />
-          <col />
-          <col width="70" />
-          <col />
-          <col width="90" />
+          <col width="70"/>
+          <col width="98"/>
+          <col/>
+          <col width="70"/>
+          <col/>
+          <col width="90"/>
         </colgroup>
         <thead>
-          <tr>
-            <th>Дата начала</th>
-            <th>Дата прекращения</th>
-            <th>Диагноз</th>
-            <th>Код по МКБ-10</th>
-            <th>Врач</th>
-            <th>
-              <button class="btn btn-primary-nb btn-blue-nb" style="padding-left: 4px"
-                      @click="edit(-1)"
-                      type="button">Добавить</button>
-            </th>
-          </tr>
+        <tr>
+          <th>Дата начала</th>
+          <th>Дата прекращения</th>
+          <th>Диагноз</th>
+          <th>Код по МКБ-10</th>
+          <th>Врач</th>
+          <th>
+            <button class="btn btn-primary-nb btn-blue-nb" style="padding-left: 4px"
+                    @click="edit(-1)"
+                    type="button">Добавить
+            </button>
+          </th>
+        </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :class="{stop: !!r.date_end}" :key="r.pk">
-            <td>{{r.date_start}}</td>
-            <td>{{r.date_end}}</td>
-            <td>{{r.illnes}}</td>
-            <td>{{r.diagnos}}</td>
-            <td>{{r.spec_reg}} {{r.doc_start_reg}}</td>
-            <td>
-                <button class="btn last btn-blue-nb nbr" type="button"
-                        v-tippy="{ placement : 'bottom', arrow: true }"
-                        title="030/у" style="margin-left: -1px" @click="print_form_030(r.pk)">
-                  <i class="fa fa-print"></i>
-                </button>
-                <button class="btn last btn-blue-nb nbr" type="button"
-                        v-tippy="{ placement : 'bottom', arrow: true }"
-                        title="Редактирование" style="margin-left: -1px" @click="edit(r.pk)">
-                  <i class="glyphicon glyphicon-pencil"></i>
-                </button>
-            </td>
-          </tr>
+        <tr v-for="r in rows" :class="{stop: !!r.date_end}" :key="r.pk">
+          <td>{{ r.date_start }}</td>
+          <td>{{ r.date_end }}</td>
+          <td>{{ r.illnes }}</td>
+          <td>{{ r.diagnos }}</td>
+          <td>{{ r.spec_reg }} {{ r.doc_start_reg }}</td>
+          <td>
+            <button class="btn last btn-blue-nb nbr" type="button"
+                    v-tippy="{ placement : 'bottom', arrow: true }"
+                    title="030/у" style="margin-left: -1px" @click="print_form_030(r.pk)">
+              <i class="fa fa-print"></i>
+            </button>
+            <button class="btn last btn-blue-nb nbr" type="button"
+                    v-tippy="{ placement : 'bottom', arrow: true }"
+                    title="Редактирование" style="margin-left: -1px" @click="edit(r.pk)">
+              <i class="glyphicon glyphicon-pencil"></i>
+            </button>
+          </td>
+        </tr>
         </tbody>
       </table>
       <template v-if="researches_data && researches_data.length > 0">
@@ -58,78 +59,79 @@
           <div class="year"
                @click="year = y; load_data()"
                :class="{active: y === year}" v-for="y in years" :key="y">
-            {{y}}
+            {{ y }}
           </div>
         </div>
         <table class="table table-bordered table-condensed table-sm-pd"
                style="table-layout: fixed; font-size: 12px; margin-top: 0;">
           <colgroup>
-            <col width="30" />
-            <col />
-            <col width="110" />
-            <col width="40" v-for="m in monthes" :key="m" />
-            <col width="30" />
+            <col width="30"/>
+            <col/>
+            <col width="110"/>
+            <col width="40" v-for="m in monthes" :key="m"/>
+            <col width="30"/>
           </colgroup>
           <thead>
-            <tr>
-              <th class="cl-td">
-                <label v-if="has_assignments" title="Выбор всех назначений" v-tippy="{ placement : 'top', arrow: true }">
-                  <input type="checkbox" v-model="all_selected">
-                </label>
-              </th>
-              <th>Обследование (прием)</th>
-              <th>МКБ-10<br>кол-во в год</th>
-              <th v-for="(m, i) in monthes" :key="`th-${m}`" class="text-center">
-                {{m}}<br />
-                <a href="#" class="a-under" @click.prevent="fill_column(i)"
-                   v-if="researches_data && researches_data.length > 1"
-                   title="Заполнить столбец по первой строке" v-tippy="{ placement : 'top', arrow: true }">
-                  <i class="fa fa-arrow-circle-down"></i>
-                </a>
-              </th>
-              <th title="Результатов в году" v-tippy="{ placement : 'top', arrow: true }"
-                  class="text-center" style="font-size: 14px">
-                <i class="fa fa-times-circle-o"></i>
-              </th>
-            </tr>
+          <tr>
+            <th class="cl-td">
+              <label v-if="has_assignments" title="Выбор всех назначений" v-tippy="{ placement : 'top', arrow: true }">
+                <input type="checkbox" v-model="all_selected">
+              </label>
+            </th>
+            <th>Обследование (прием)</th>
+            <th>МКБ-10<br>кол-во в год</th>
+            <th v-for="(m, i) in monthes" :key="`th-${m}`" class="text-center">
+              {{ m }}<br/>
+              <a href="#" class="a-under" @click.prevent="fill_column(i)"
+                 v-if="researches_data && researches_data.length > 1"
+                 title="Заполнить столбец по первой строке" v-tippy="{ placement : 'top', arrow: true }">
+                <i class="fa fa-arrow-circle-down"></i>
+              </a>
+            </th>
+            <th title="Результатов в году" v-tippy="{ placement : 'top', arrow: true }"
+                class="text-center" style="font-size: 14px">
+              <i class="fa fa-times-circle-o"></i>
+            </th>
+          </tr>
           </thead>
           <tbody>
-            <tr v-for="k in researches_data" :key="`${k.research_pk}`">
-              <td class="cl-td">
-                <label v-if="k.assign_research_pk" title="Выбор для назначения" v-tippy="{ placement : 'top', arrow: true }">
-                  <input type="checkbox" v-model="k.assignment">
-                </label>
-              </td>
-              <td>{{k.research_title}}</td>
-              <td>
-                <div v-for="d in k.diagnoses_time" :key="`${d.diagnos}_${d.times}`" class="mkb-year">
-                  <span>{{d.diagnos}}</span> <span class="year-times">{{d.times}} р. в год</span>
-                </div>
-              </td>
-              <td v-for="(m, i) in monthes" :key="`td-${k.research_pk}-${m}`">
-                <input v-model="k.plans[i]" type="text" class="form-control nbr input-cell" maxlength="3"
-                       :title="get_date_string(year, i, k.plans[i])"
-                       v-tippy="{ placement : 'left', arrow: true, reactive: true, trigger: 'mouseenter focus input' }">
-                <div v-if="k.results[i]" class="text-center">
-                  <a href="#" @click.prevent="print_results(k.results[i].pk)" class="a-under"
-                     title="Печать результата" v-tippy>
-                    {{k.results[i].date}}
-                  </a>
-                </div>
-                <div v-else>&nbsp;</div>
-              </td>
-              <td class="text-center">
-                <div style="height: 22px;">&nbsp;</div>
-                x{{k.times}}
-              </td>
-            </tr>
-            <tr v-if="assignments.length > 0">
-              <td :colspan="4 + monthes.length">
-                <button @click="create_directions" class="btn btn-primary-nb btn-blue-nb" type="button">
-                  Создать направления по выбранным назначениям
-                </button>
-              </td>
-            </tr>
+          <tr v-for="k in researches_data" :key="`${k.research_pk}`">
+            <td class="cl-td">
+              <label v-if="k.assign_research_pk" title="Выбор для назначения"
+                     v-tippy="{ placement : 'top', arrow: true }">
+                <input type="checkbox" v-model="k.assignment">
+              </label>
+            </td>
+            <td>{{ k.research_title }}</td>
+            <td>
+              <div v-for="d in k.diagnoses_time" :key="`${d.diagnos}_${d.times}`" class="mkb-year">
+                <span>{{ d.diagnos }}</span> <span class="year-times">{{ d.times }} р. в год</span>
+              </div>
+            </td>
+            <td v-for="(m, i) in monthes" :key="`td-${k.research_pk}-${m}`">
+              <input v-model="k.plans[i]" type="text" class="form-control nbr input-cell" maxlength="3"
+                     :title="get_date_string(year, i, k.plans[i])"
+                     v-tippy="{ placement : 'left', arrow: true, reactive: true, trigger: 'mouseenter focus input' }">
+              <div v-if="k.results[i]" class="text-center">
+                <a href="#" @click.prevent="print_results(k.results[i].pk)" class="a-under"
+                   title="Печать результата" v-tippy>
+                  {{ k.results[i].date }}
+                </a>
+              </div>
+              <div v-else>&nbsp;</div>
+            </td>
+            <td class="text-center">
+              <div style="height: 22px;">&nbsp;</div>
+              x{{ k.times }}
+            </td>
+          </tr>
+          <tr v-if="assignments.length > 0">
+            <td :colspan="4 + monthes.length">
+              <button @click="create_directions" class="btn btn-primary-nb btn-blue-nb" type="button">
+                Создать направления по выбранным назначениям
+              </button>
+            </td>
+          </tr>
           </tbody>
         </table>
 
@@ -139,12 +141,17 @@
           </button>
         </div>
       </template>
-      <div v-else class="text-center">
-        <br/>
-        <br/>
-        Нет данных для построения плана
-        <br/>
+      <div v-else class="text-center" style="margin: 30px 0;">
+        Нет данных для построения плана по диагнозам
       </div>
+
+      <ScreeningDisplay
+        :patientAge="screening.patientAge"
+        :currentYear="screening.currentYear"
+        :years="screening.years"
+        :ages="screening.ages"
+        :researches="screening.researches"
+      />
 
       <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
              width="100%" marginLeftRight="auto" margin-top>
@@ -158,12 +165,12 @@
           </div>
           <div class="form-group mkb10" style="width: 100%">
             <label>Диагноз в полной форме (код по МКБ и название):</label>
-            <MKBFieldForm v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false" />
+            <MKBFieldForm v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false"/>
             <input class="form-control" v-model="edit_data.diagnos" v-else readonly>
           </div>
           <div class="radio-button-object radio-button-groups">
             <label>Диагноз установлен</label>
-              <radio-field v-model="is_first_time" :variants="variant_is_first_time" @modified="change_index" fullWidth/>
+            <radio-field v-model="is_first_time" :variants="variant_is_first_time" @modified="change_index" fullWidth/>
           </div>
           <div class="radio-button-object radio-button-groups" style="margin-top: 15px; margin-bottom: 15px;">
             <label>Заболевание выявлено при:</label>
@@ -189,7 +196,8 @@
             </label>
           </div>
           <div class="form-group">
-            <ConfigureDispenseryResearch v-if="enable_construct && edit_data.diagnos" :diagnos_code="edit_data.diagnos"/>
+            <ConfigureDispenseryResearch v-if="enable_construct && edit_data.diagnos"
+                                         :diagnos_code="edit_data.diagnos"/>
           </div>
         </div>
         <div slot="footer">
@@ -268,7 +276,11 @@ const weekDays = [
 export default {
   name: 'd-reg',
   components: {
-    Modal, MKBFieldForm, RadioField, ConfigureDispenseryResearch,
+    Modal,
+    MKBFieldForm,
+    RadioField,
+    ConfigureDispenseryResearch,
+    ScreeningDisplay: () => import('@/ui-cards/ScreeningDisplay.vue'),
   },
   props: {
     card_pk: {
@@ -308,6 +320,120 @@ export default {
       variant_is_first_time: ['не указано', 'впервые', 'повторно'],
       variant_identified: ['не указано', 'обращении за лечением', 'профилактическом осмотре'],
       enable_construct: false,
+      screening: {
+        patientAge: 35,
+        currentYear: 2021,
+        years: [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027],
+        ages: [29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41],
+        researches: [
+          {
+            pk: 73,
+            title: 'Глюкоза',
+            startAgeControl: 18,
+            endAgeControl: 65,
+            period: 5,
+            ages: [
+              {
+                isEven: true,
+                plan: '20.01.2017',
+                planYear: 2017,
+                values: [
+                  { age: 29, year: 2015, fact: null },
+                  { age: 30, year: 2016, fact: null },
+                  { age: 31, year: 2017, fact: null },
+                  { age: 32, year: 2018, fact: null },
+                ],
+              },
+              {
+                isEven: false,
+                plan: null,
+                values: [
+                  { age: 33, year: 2019, fact: null },
+                  { age: 34, year: 2020, fact: { direction: 23231, date: '01.07.2020' } },
+                  { age: 35, year: 2021, fact: null },
+                  { age: 36, year: 2022, fact: null },
+                  { age: 37, year: 2023, fact: null },
+                ],
+              },
+              {
+                isEven: true,
+                plan: '03.01.2025',
+                planYear: 2025,
+                values: [
+                  { age: 38, year: 2024, fact: null },
+                  { age: 39, year: 2025, fact: null },
+                  { age: 40, year: 2026, fact: null },
+                  { age: 41, year: 2027, fact: null },
+                ],
+              },
+            ],
+          },
+          {
+            pk: 89,
+            title: 'Креатинин',
+            startAgeControl: 39,
+            endAgeControl: 65,
+            period: 2,
+            ages: [
+              {
+                isEven: true,
+                plan: null,
+                values: [
+                  null,
+                  null,
+                ],
+              },
+              {
+                isEven: false,
+                plan: null,
+                values: [
+                  null,
+                  null,
+                ],
+              },
+              {
+                isEven: true,
+                plan: null,
+                values: [
+                  null,
+                  null,
+                ],
+              },
+              {
+                isEven: false,
+                plan: null,
+                values: [
+                  null,
+                  null,
+                ],
+              },
+              {
+                isEven: true,
+                plan: null,
+                values: [
+                  null,
+                  null,
+                ],
+              },
+              {
+                isEven: false,
+                plan: null,
+                values: [
+                  { age: 39, year: 2025, fact: null },
+                  { age: 40, year: 2026, fact: null },
+                ],
+              },
+              {
+                isEven: true,
+                plan: null,
+                values: [
+                  { age: 41, year: 2027, fact: null },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     };
   },
   created() {
@@ -316,9 +442,9 @@ export default {
   computed: {
     valid_reg() {
       return this.edit_pk > -2
-          && this.edit_data.diagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?.*/gm)
-          && this.edit_data.date_start !== ''
-          && (!this.edit_data.close || this.edit_data.date_end !== '');
+        && this.edit_data.diagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?.*/gm)
+        && this.edit_data.date_start !== ''
+        && (!this.edit_data.close || this.edit_data.date_end !== '');
     },
     assignments() {
       return this.researches_data.filter(({ assignment }) => assignment).map((rd) => rd.assign_research_pk);
@@ -495,224 +621,238 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .input-cell {
-    padding: 3px;
-    margin: 0;
-    height: 25px;
+.input-cell {
+  padding: 3px;
+  margin: 0;
+  height: 25px;
+}
+
+select.form-control {
+  padding: 0;
+  overflow: visible;
+}
+
+.nonPrior {
+  opacity: .7;
+
+  &:hover {
+    opacity: 1;
   }
-  select.form-control {
-    padding: 0;
-    overflow: visible;
+}
+
+.prior {
+  background-color: rgba(#000, .05);
+}
+
+.modal-mask {
+  align-items: stretch !important;
+  justify-content: stretch !important;
+}
+
+::v-deep .panel-flt {
+  margin: 41px;
+  align-self: stretch !important;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+::v-deep .panel-body {
+  flex: 1;
+  padding: 0;
+  height: calc(100% - 91px);
+  min-height: 200px;
+}
+
+.form-row {
+  width: 100%;
+  display: flex;
+  border-bottom: 1px solid #434a54;
+
+  &:first-child:not(.nbt-i) {
+    border-top: 1px solid #434a54;
   }
 
-  .nonPrior {
-    opacity: .7;
-    &:hover {
-      opacity: 1;
-    }
+  justify-content: stretch;
+
+  .row-t {
+    background-color: #AAB2BD;
+    padding: 7px 0 0 10px;
+    width: 35%;
+    flex: 0 35%;
+    color: #fff;
   }
 
-  .prior {
-    background-color: rgba(#000, .05);
+  .input-group {
+    flex: 0 65%;
   }
 
-  .modal-mask {
-    align-items: stretch !important;
-    justify-content: stretch !important;
+  input, .row-v, ::v-deep input {
+    background: #fff;
+    border: none;
+    border-radius: 0 !important;
+    width: 65%;
+    flex: 0 65%;
+    height: 34px;
   }
 
-  ::v-deep .panel-flt {
-    margin: 41px;
-    align-self: stretch !important;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  ::v-deep .panel-body {
-    flex: 1;
-    padding: 0;
-    height: calc(100% - 91px);
-    min-height: 200px;
-  }
-
-  .form-row {
-    width: 100%;
-    display: flex;
-    border-bottom: 1px solid #434a54;
-    &:first-child:not(.nbt-i) {
-      border-top: 1px solid #434a54;
-    }
-    justify-content: stretch;
+  &.sm-f {
     .row-t {
-      background-color: #AAB2BD;
-      padding: 7px 0 0 10px;
-      width: 35%;
-      flex: 0 35%;
-      color: #fff;
-    }
-
-    .input-group {
-      flex: 0 65%;
+      padding: 2px 0 0 10px;
     }
 
     input, .row-v, ::v-deep input {
-      background: #fff;
-      border: none;
-      border-radius: 0 !important;
-      width: 65%;
-      flex: 0 65%;
-      height: 34px;
-    }
-
-    &.sm-f {
-      .row-t {
-        padding: 2px 0 0 10px;
-      }
-      input, .row-v, ::v-deep input {
-        height: 26px;
-      }
-    }
-
-    ::v-deep input {
-      width: 100% !important;
-    }
-    .row-v {
-      padding: 7px 0 0 10px;
-    }
-
-    ::v-deep .input-group {
-      border-radius: 0;
-    }
-
-    ::v-deep ul {
-      width: auto;
-      font-size: 13px;
-    }
-
-    ::v-deep ul li {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      padding: 2px .25rem;
-      margin: 0 .2rem;
-
-      a {
-        padding: 2px 10px;
-      }
+      height: 26px;
     }
   }
-  .col-form {
-    &.left {
-      padding-right: 0!important;
 
-      .row-t, input, .row-v, ::v-deep input {
-        border-right: 1px solid #434a54 !important;
-      }
-    }
-    &:not(.left):not(.mid) {
-      padding-left: 0!important;
-      .row-t {
-        border-right: 1px solid #434a54;
-      }
-    }
-  }
-  .info-row {
-    padding: 7px;
+  ::v-deep input {
+    width: 100% !important;
   }
 
-  .individual {
-    cursor: pointer;
-
-    &:hover {
-      background-color: rgba(0, 0, 0, .15);
-    }
-  }
-  .str ::v-deep .input-group {
-    width: 100%;
+  .row-v {
+    padding: 7px 0 0 10px;
   }
 
-  .lst {
-    margin: 0;
-    line-height: 1;
+  ::v-deep .input-group {
+    border-radius: 0;
   }
 
-  .mkb10 {
-    z-index: 0;
-  }
-
-  .mkb10 ::v-deep .input-group {
-    width: 100%;
-  }
-
-  .mkb10 ::v-deep ul {
+  ::v-deep ul {
+    width: auto;
     font-size: 13px;
-    z-index: 1000;
   }
 
-  .mkb10 ::v-deep ul li {
+  ::v-deep ul li {
     overflow: hidden;
     text-overflow: ellipsis;
     padding: 2px .25rem;
     margin: 0 .2rem;
+
     a {
       padding: 2px 10px;
     }
   }
+}
 
-  tr.stop {
-    opacity: .7;
-    text-decoration: line-through;
-    &:hover {
-      opacity: 1;
-      text-decoration: none;
+.col-form {
+  &.left {
+    padding-right: 0 !important;
+
+    .row-t, input, .row-v, ::v-deep input {
+      border-right: 1px solid #434a54 !important;
     }
   }
 
-  .year-times {
-    font-weight: 700;
-    font-size: 90%;
-    white-space: nowrap;
-  }
+  &:not(.left):not(.mid) {
+    padding-left: 0 !important;
 
-  .mkb-year {
-    color: #000;
-    padding: .2em .3em;
-    line-height: 1;
-    margin-bottom: 2px;
-    background-color: rgba(#000, .08);
-    border-radius: .25em;
-    display: flex;
-    justify-content: space-between;
-    align-content: center;
-    white-space: nowrap;
-  }
-
-  .years {
-    padding: 18px 10px 9px 10px;
-    overflow-x: auto;
-
-    .year {
-      cursor: pointer;
-      display: inline-block;
-      margin-right: 7px;
-      padding: 3px;
-      border-radius: 3px;
-      color: #049372;
-      background-color: rgba(#049372, .3);
-      transition: all .2s cubic-bezier(.25, .8, .25, 1);
-
-      &.active {
-        font-weight: bold;
-        background-color: #049372;
-        color: #fff;
-      }
-
-      &:not(.active):hover {
-        box-shadow: 0 7px 14px rgba(#049372, 0.15), 0 5px 5px rgba(#049372, 0.11);
-        z-index: 1;
-        transform: scale(1.02);
-        background-color: rgba(#049372, .4);
-      }
+    .row-t {
+      border-right: 1px solid #434a54;
     }
   }
+}
+
+.info-row {
+  padding: 7px;
+}
+
+.individual {
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, .15);
+  }
+}
+
+.str ::v-deep .input-group {
+  width: 100%;
+}
+
+.lst {
+  margin: 0;
+  line-height: 1;
+}
+
+.mkb10 {
+  z-index: 0;
+}
+
+.mkb10 ::v-deep .input-group {
+  width: 100%;
+}
+
+.mkb10 ::v-deep ul {
+  font-size: 13px;
+  z-index: 1000;
+}
+
+.mkb10 ::v-deep ul li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 2px .25rem;
+  margin: 0 .2rem;
+
+  a {
+    padding: 2px 10px;
+  }
+}
+
+tr.stop {
+  opacity: .7;
+  text-decoration: line-through;
+
+  &:hover {
+    opacity: 1;
+    text-decoration: none;
+  }
+}
+
+.year-times {
+  font-weight: 700;
+  font-size: 90%;
+  white-space: nowrap;
+}
+
+.mkb-year {
+  color: #000;
+  padding: .2em .3em;
+  line-height: 1;
+  margin-bottom: 2px;
+  background-color: rgba(#000, .08);
+  border-radius: .25em;
+  display: flex;
+  justify-content: space-between;
+  align-content: center;
+  white-space: nowrap;
+}
+
+.years {
+  padding: 18px 10px 9px 10px;
+  overflow-x: auto;
+
+  .year {
+    cursor: pointer;
+    display: inline-block;
+    margin-right: 7px;
+    padding: 3px;
+    border-radius: 3px;
+    color: #049372;
+    background-color: rgba(#049372, .3);
+    transition: all .2s cubic-bezier(.25, .8, .25, 1);
+
+    &.active {
+      font-weight: bold;
+      background-color: #049372;
+      color: #fff;
+    }
+
+    &:not(.active):hover {
+      box-shadow: 0 7px 14px rgba(#049372, 0.15), 0 5px 5px rgba(#049372, 0.11);
+      z-index: 1;
+      transform: scale(1.02);
+      background-color: rgba(#049372, .4);
+    }
+  }
+}
 </style>
