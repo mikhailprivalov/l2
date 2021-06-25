@@ -11,11 +11,11 @@
     </tr>
     <tr>
       <th colspan="2">Год</th>
-      <td v-for="y in years" :key="y">{{ y }}</td>
+      <td v-for="y in years" :key="y" :class="y === currentYear && 'current-param'">{{ y }}</td>
     </tr>
     <tr>
       <th colspan="2">Возраст</th>
-      <td v-for="a in ages" :key="a">{{ a }}</td>
+      <td v-for="a in ages" :key="a" :class="a === patientAge && 'current-param'">{{ a }}</td>
     </tr>
     </thead>
     <tbody>
@@ -166,5 +166,9 @@ export default class ScreeningDisplay extends Vue {
 .plan-details {
   font-weight: normal;
   font-size: 12px;
+}
+
+.current-param {
+  font-weight: bold;
 }
 </style>
