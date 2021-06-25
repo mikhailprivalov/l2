@@ -170,5 +170,6 @@ export default class ScreeningDisplay extends Vue {
 
 .current-param {
   font-weight: bold;
+  background: rgba(0,0,0,.025);
 }
 </style>
