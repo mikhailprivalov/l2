@@ -265,7 +265,7 @@
       </div>
     </modal>
     <l2-card-create :card_pk="editor_pk" v-if="editor_pk !== -2" :base_pk="base"/>
-    <d-reg :card_pk="selected_card.pk" :card_data="selected_card" v-if="dreg"/>
+    <d-reg :card_pk="selected_card.pk" :card_data="selected_card" v-if="dreg" :selected-researches="selectedResearches"/>
     <vaccine :card_pk="selected_card.pk" :card_data="selected_card" v-if="vaccine"/>
     <benefit :card_pk="selected_card.pk" :card_data="selected_card" v-if="benefit" :readonly="false"/>
     <modal v-if="anamnesis" ref="modalAnamnesis" @close="hide_modal_anamnesis" show-footer="true" white-bg="true"
@@ -345,6 +345,10 @@ export default {
       default: false,
     },
     value: {},
+    selectedResearches: {
+      type: Array,
+      required: false,
+    },
   },
   data() {
     return {

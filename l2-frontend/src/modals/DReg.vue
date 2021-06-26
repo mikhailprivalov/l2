@@ -6,9 +6,8 @@
       {{ card_data.age }}, карта {{ card_data.num }}</span>
       <span v-else>{{ card_data.fio_age }}</span>
     </span>
-    <div slot="body" style="min-height: 200px;" class="registry-body">
-      <table class="table table-bordered table-condensed table-sm-pd"
-             style="table-layout: fixed; font-size: 12px; margin-bottom: 0;">
+    <div slot="body" class="registry-body">
+      <table class="table table-bordered table-condensed table-sm-pd dreg-table">
         <colgroup>
           <col width="70"/>
           <col width="98"/>
@@ -25,7 +24,7 @@
           <th>Код по МКБ-10</th>
           <th>Врач</th>
           <th>
-            <button class="btn btn-primary-nb btn-blue-nb" style="padding-left: 4px"
+            <button class="btn btn-primary-nb btn-blue-nb pl4"
                     @click="edit(-1)"
                     type="button">Добавить
             </button>
@@ -40,14 +39,14 @@
           <td>{{ r.diagnos }}</td>
           <td>{{ r.spec_reg }} {{ r.doc_start_reg }}</td>
           <td>
-            <button class="btn last btn-blue-nb nbr" type="button"
+            <button class="btn last btn-blue-nb nbr ml-1" type="button"
                     v-tippy="{ placement : 'bottom', arrow: true }"
-                    title="030/у" style="margin-left: -1px" @click="print_form_030(r.pk)">
+                    title="030/у" @click="print_form_030(r.pk)">
               <i class="fa fa-print"></i>
             </button>
-            <button class="btn last btn-blue-nb nbr" type="button"
+            <button class="btn last btn-blue-nb nbr ml-1" type="button"
                     v-tippy="{ placement : 'bottom', arrow: true }"
-                    title="Редактирование" style="margin-left: -1px" @click="edit(r.pk)">
+                    title="Редактирование" @click="edit(r.pk)">
               <i class="glyphicon glyphicon-pencil"></i>
             </button>
           </td>
@@ -55,17 +54,8 @@
         </tbody>
       </table>
       <template v-if="researches_data && researches_data.length > 0">
-        <div class="years">
-          <div class="year"
-               @click="year = y; load_data()"
-               :class="{active: y === year}" v-for="y in years" :key="y">
-            {{ y }}
-          </div>
-        </div>
-        <table class="table table-bordered table-condensed table-sm-pd"
-               style="table-layout: fixed; font-size: 12px; margin-top: 0;">
+        <table class="table table-bordered table-condensed table-sm-pd dreg-table">
           <colgroup>
-            <col width="30"/>
             <col/>
             <col width="110"/>
             <col width="40" v-for="m in monthes" :key="m"/>
@@ -73,11 +63,22 @@
           </colgroup>
           <thead>
           <tr>
-            <th class="cl-td">
-              <label v-if="has_assignments" title="Выбор всех назначений" v-tippy="{ placement : 'top', arrow: true }">
-                <input type="checkbox" v-model="all_selected">
-              </label>
+            <th :colspan="3 + monthes.length" class="text-center">
+              План диспансерного учёта
             </th>
+          </tr>
+          <tr>
+            <td :colspan="3 + monthes.length">
+              <div class="years">
+                <div class="year"
+                     @click="year = y; load_data()"
+                     :class="{active: y === year}" v-for="y in years" :key="y">
+                  {{ y }}
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr>
             <th>Обследование (прием)</th>
             <th>МКБ-10<br>кол-во в год</th>
             <th v-for="(m, i) in monthes" :key="`th-${m}`" class="text-center">
@@ -89,20 +90,23 @@
               </a>
             </th>
             <th title="Результатов в году" v-tippy="{ placement : 'top', arrow: true }"
-                class="text-center" style="font-size: 14px">
+                class="text-center fs14">
               <i class="fa fa-times-circle-o"></i>
             </th>
           </tr>
           </thead>
           <tbody>
           <tr v-for="k in researches_data" :key="`${k.research_pk}`">
-            <td class="cl-td">
-              <label v-if="k.assign_research_pk" title="Выбор для назначения"
-                     v-tippy="{ placement : 'top', arrow: true }">
-                <input type="checkbox" v-model="k.assignment">
-              </label>
+            <td>
+              <div v-if="!selectedResearches">
+                {{ k.research_title }}
+                <label v-if="k.assign_research_pk" title="Выбор для назначения"
+                       v-tippy="{ placement : 'top', arrow: true }">
+                  <input type="checkbox" v-model="k.assignment">
+                </label>
+              </div>
+              <ResearchPickById v-else :pk="k.research_pk" :selected-researches="selectedResearches" />
             </td>
-            <td>{{ k.research_title }}</td>
             <td>
               <div v-for="d in k.diagnoses_time" :key="`${d.diagnos}_${d.times}`" class="mkb-year">
                 <span>{{ d.diagnos }}</span> <span class="year-times">{{ d.times }} р. в год</span>
@@ -121,27 +125,28 @@
               <div v-else>&nbsp;</div>
             </td>
             <td class="text-center">
-              <div style="height: 22px;">&nbsp;</div>
+              <div class="nbsp-height">&nbsp;</div>
               x{{ k.times }}
             </td>
           </tr>
-          <tr v-if="assignments.length > 0">
-            <td :colspan="4 + monthes.length">
+          <tr v-if="!selectedResearches && assignments.length > 0">
+            <td :colspan="3 + monthes.length">
               <button @click="create_directions" class="btn btn-primary-nb btn-blue-nb" type="button">
                 Создать направления по выбранным назначениям
               </button>
             </td>
           </tr>
+          <tr>
+            <td :colspan="3 + monthes.length">
+              <button @click="save_plan" class="btn btn-primary-nb btn-blue-nb btn-sm" type="button">
+                Сохранить план
+              </button>
+            </td>
+          </tr>
           </tbody>
         </table>
-
-        <div style="margin: 0 auto 20px auto; width: 200px">
-          <button @click="save_plan" class="btn btn-primary-nb btn-blue-nb" type="button">
-            Сохранить план
-          </button>
-        </div>
       </template>
-      <div v-else class="text-center" style="margin: 30px 0;">
+      <div v-else class="text-center empty-dreg">
         Нет данных для построения плана по диагнозам
       </div>
 
@@ -151,19 +156,20 @@
         :years="screening.years"
         :ages="screening.ages"
         :researches="screening.researches"
+        :selected-researches="selectedResearches"
       />
 
       <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
              width="100%" marginLeftRight="auto" margin-top>
         <span slot="header" v-if="edit_pk > -1">Редактор диспансерного учёта</span>
         <span slot="header" v-else>Создание записи диспансерного учёта</span>
-        <div slot="body" style="min-height: 200px;padding: 10px" class="registry-body">
+        <div slot="body" class="registry-body p10">
           <div class="form-group">
             <label for="de-f3">Дата начала:</label>
             <input class="form-control" type="date" id="de-f3" v-model="edit_data.date_start" :max="td"
                    :readonly="edit_data.close">
           </div>
-          <div class="form-group mkb10" style="width: 100%">
+          <div class="form-group mkb10 w100">
             <label>Диагноз в полной форме (код по МКБ и название):</label>
             <MKBFieldForm v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false"/>
             <input class="form-control" v-model="edit_data.diagnos" v-else readonly>
@@ -172,11 +178,11 @@
             <label>Диагноз установлен</label>
             <radio-field v-model="is_first_time" :variants="variant_is_first_time" @modified="change_index" fullWidth/>
           </div>
-          <div class="radio-button-object radio-button-groups" style="margin-top: 15px; margin-bottom: 15px;">
+          <div class="radio-button-object radio-button-groups mtb15">
             <label>Заболевание выявлено при:</label>
             <radio-field v-model="how_identified" :variants="variant_identified" @modified="change_index" fullWidth/>
           </div>
-          <div class="checkbox" style="padding-left: 15px;">
+          <div class="checkbox pl15">
             <label>
               <input type="checkbox" v-model="edit_data.close"> прекращён
             </label>
@@ -190,7 +196,7 @@
             <input class="form-control" id="de-f6" v-model="edit_data.why_stop">
           </div>
 
-          <div class="checkbox" style="padding-left: 15px;">
+          <div class="checkbox pl15">
             <label>
               <input type="checkbox" v-model="enable_construct"> настройка обследований для диагноза:
             </label>
@@ -237,6 +243,7 @@ import api from '@/api';
 import moment from 'moment';
 import { cloneDeep } from 'lodash';
 import ConfigureDispenseryResearch from '@/fields/ConfigureDispenseryResearch.vue';
+import ResearchPickById from '@/ui-cards/ResearchPickById.vue';
 import Modal from '../ui-cards/Modal.vue';
 import * as actions from '../store/action-types';
 import MKBFieldForm from '../fields/MKBFieldForm.vue';
@@ -276,6 +283,7 @@ const weekDays = [
 export default {
   name: 'd-reg',
   components: {
+    ResearchPickById,
     Modal,
     MKBFieldForm,
     RadioField,
@@ -290,6 +298,10 @@ export default {
     card_data: {
       type: Object,
       required: true,
+    },
+    selectedResearches: {
+      type: Array,
+      required: false,
     },
   },
   data() {
@@ -437,7 +449,7 @@ export default {
     };
   },
   created() {
-    this.load_data();
+    this.load_data(true);
   },
   computed: {
     valid_reg() {
@@ -565,16 +577,16 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
       this.$root.$emit('msg', 'ok', 'Сохранено');
       this.hide_edit();
-      this.load_data();
+      this.load_data(true);
     },
-    load_data() {
+    load_data(isInitial = false) {
       this.$store.dispatch(actions.INC_LOADING);
       api('patients/individuals/load-dreg', this, ['card_pk', 'year']).then(({ rows, researches_data, year }) => {
         this.rows = rows;
         this.researches_data = researches_data;
         this.researches_data_def = cloneDeep(researches_data);
         this.all_selected = false;
-        if (researches_data && researches_data.length > 0) {
+        if (researches_data && researches_data.length > 0 && !isInitial) {
           this.$root.$emit('msg', 'ok', `Загружен ${year} год`);
         }
         this.year = year;
@@ -828,7 +840,6 @@ tr.stop {
 }
 
 .years {
-  padding: 18px 10px 9px 10px;
   overflow-x: auto;
 
   .year {
@@ -854,5 +865,48 @@ tr.stop {
       background-color: rgba(#049372, .4);
     }
   }
+}
+
+.dreg-table {
+  table-layout: fixed;
+  font-size: 12px;
+  margin-top: 0;
+}
+
+.nbsp-height {
+  height: 22px;
+}
+
+.registry-body {
+  min-height: 200px;
+}
+
+.pl4 {
+  padding-left: 4px;
+}
+
+.ml-1 {
+  margin-left: -1px
+}
+
+.fs14 {
+  font-size: 14px;
+}
+
+.p10 {
+  padding: 10px;
+}
+
+.w100 {
+  width: 100%;
+}
+
+.pl15 {
+  padding-left: 15px;
+}
+
+.mtb15 {
+  margin-top: 15px;
+  margin-bottom: 15px;
 }
 </style>

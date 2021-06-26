@@ -1,9 +1,9 @@
 <template>
-  <table class="table table-bordered table-condensed" style="table-layout: fixed">
+  <table class="table table-bordered table-condensed table-sm-pd" :style="yearWidth">
     <colgroup>
-      <col style="width: 170px"/>
+      <col/>
       <col style="width: 47px"/>
-      <col v-for="y in years" :key="y"/>
+      <col v-for="y in years" :key="y" class="col-year"/>
     </colgroup>
     <thead>
     <tr>
@@ -21,13 +21,15 @@
     <tbody>
     <template v-for="r in researches">
       <tr :key="`${r.pk}_1`">
-        <th rowspan="2">
-          {{ r.title }} <a href="#" title="Выбрать для назначения" v-tippy class="a-under"
-                           @click.prevent="addResearch(r.pk, r.title)"><i class="fas fa-circle"></i></a>
-          <div class="plan-details">
-            раз в {{r.period | pluralAge}}
+        <td rowspan="2" class="td-title">
+          <div v-if="!selectedResearches">
+            {{ r.title }}
           </div>
-        </th>
+          <ResearchPickById v-else :pk="r.pk" :selected-researches="selectedResearches" />
+          <div class="plan-details">
+            раз в {{ r.period | pluralAge }}
+          </div>
+        </td>
         <th>план</th>
         <template v-for="(a, i) in r.ages">
           <td v-for="(v, j) in a.values" :key="`${i}_${j}`" class="cl-td fixed-td"
@@ -35,14 +37,9 @@
                 a.isEven && 'td-even',
                 v && (a.planYear !== v.year ? 'empty-plan' : 'has-plan'),
                 !v ? 'no-plan' : 'plan',
-                v && v.year >= currentYear && 'can-set-plan'
+                v && 'can-set-plan'
               ]">
-            <div v-if="!v" />
-            <div v-else-if="currentYear > v.year" class="plan-simple">
-              <template v-if="a.planYear === v.year">
-                {{ a.plan.replace(`.${v.year}`, '') }}
-              </template>
-            </div>
+            <div v-if="!v"/>
             <ScreeningDate v-else :a="a" :v="v" @updated="updatedDate"/>
           </td>
         </template>
@@ -53,7 +50,7 @@
           <td v-for="(v, j) in a.values" :key="`${i}_${j}`" class="cl-td fixed-td"
               :class="[a.isEven && 'td-even', !v && 'no-plan']">
             <div class="fact">
-              <a href="#" @click.prevent="printResult(v.fact.direction)" class="a-under-reversed" v-if="v && v.fact">
+              <a href="#" @click.prevent="printResult(v.fact.direction)" class="a-under" v-if="v && v.fact">
                 {{ v.fact.date.replace(`.${v.year}`, '') }}
               </a>
             </div>
@@ -69,9 +66,11 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import ScreeningDate from '@/ui-cards/ScreeningDate.vue';
+import ResearchPickById from '@/ui-cards/ResearchPickById.vue';
 
 @Component({
   components: {
+    ResearchPickById,
     ScreeningDate,
   },
   props: {
@@ -95,9 +94,19 @@ import ScreeningDate from '@/ui-cards/ScreeningDate.vue';
       type: Array,
       required: true,
     },
+    selectedResearches: {
+      type: Array,
+      required: false,
+    },
   },
 })
 export default class ScreeningDisplay extends Vue {
+  years: number[];
+
+  get yearWidth() {
+    return `--year-width: calc(573px / ${this.years.length})`;
+  }
+
   printResult(pk) {
     this.$root.$emit('print:results', [pk]);
   }
@@ -114,22 +123,44 @@ export default class ScreeningDisplay extends Vue {
 </script>
 
 <style scoped lang="scss">
+$even_color: #4c4c4c;
+$odd_color: #049372;
+$normal_opacity: .3;
+$hover_opacity: .45;
+$border_mix_color: #fff;
+$border_mix_percentage: 60%;
+
 .fixed-td {
   &.no-plan {
     background-color: transparent !important;
   }
 
-  background-color: #effbfd;
+  transition: all .2s cubic-bezier(.25, .8, .25, 1);
+  font-weight: 600;
+
+  background-color: rgba($odd_color, $normal_opacity);
+  border-color: mix($odd_color, $border_mix_color, $border_mix_percentage);
+  color: $odd_color;
 
   &.has-plan {
-    border-bottom: 3px solid #c2f0f7;
+    border-bottom: 2px solid $odd_color;
+  }
+
+  a {
+    color: $odd_color;
   }
 
   &.td-even {
-    background-color: #fdf1ef;
+    background-color: rgba($even_color, $normal_opacity);
+    border-color: mix($even_color, $border_mix_color, $border_mix_percentage);
+    color: $even_color;
 
     &.has-plan {
-      border-bottom: 3px solid #f7c9c2;
+      border-bottom: 2px solid $even_color;
+    }
+
+    a {
+      color: $even_color;
     }
   }
 
@@ -137,11 +168,11 @@ export default class ScreeningDisplay extends Vue {
     cursor: pointer;
 
     &:hover {
-      background-color: #c2f0f7;
+      background-color: rgba($odd_color, $hover_opacity);
     }
 
     &.td-even:hover {
-      background-color: #f7c9c2;
+      background-color: rgba($even_color, $hover_opacity);
     }
   }
 }
@@ -153,23 +184,42 @@ export default class ScreeningDisplay extends Vue {
 
 .table {
   height: 1px;
+  table-layout: fixed;
+  font-size: 12px;
 
   td {
     text-align: center;
   }
 
-  tr { height: 100%; }
-  td { height: 100%; }
-  td > div, td ::v-deep > div, td span, td ::v-deep > span { height: 100%; }
+  .td-title {
+    text-align: left;
+  }
+
+  tr {
+    height: 100%;
+  }
+
+  td {
+    height: 100%;
+  }
+
+  td:not(.td-title) > div, td:not(.td-title) ::v-deep > div, td:not(.td-title) span, td:not(.td-title) ::v-deep > span {
+    height: 100%;
+  }
 }
 
 .plan-details {
   font-weight: normal;
-  font-size: 12px;
+  font-size: 11px;
+  color: #777;
 }
 
 .current-param {
   font-weight: bold;
-  background: rgba(0,0,0,.025);
+  background: rgba(0, 0, 0, .025);
+}
+
+.col-year {
+  width: var(--year-width, 45px);
 }
 </style>

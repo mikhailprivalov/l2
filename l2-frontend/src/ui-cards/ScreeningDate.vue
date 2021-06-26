@@ -1,6 +1,6 @@
 <template>
   <date-picker class="td-calendar" v-model="a.plan" ref="datepicker"
-               :key="a.plan"
+               :key="a.plan" is-dark color="teal"
                :available-dates='avDates'
                @popoverWillShow="onShow"
                :masks="masks">
