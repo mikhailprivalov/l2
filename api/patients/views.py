@@ -31,7 +31,7 @@ from clients.models import (
     Phones,
     AmbulatoryData,
     AmbulatoryDataHistory,
-    DispensaryRegPlans,
+    DispensaryRegPlans, ScreeningRegPlan,
 )
 from contracts.models import Company
 from directions.models import Issledovaniya
@@ -874,8 +874,9 @@ def load_dreg(request):
                 specialities_data[index_spec]['diagnoses_time'].append({"diagnos": i.diagnos, "times": i.repeat})
 
     researches_data.extend(specialities_data)
+    screening = ScreeningRegPlan.get_screening_data(request_data["card_pk"])
 
-    return JsonResponse({"rows": data, "researches_data": researches_data, "year": year})
+    return JsonResponse({"rows": data, "researches_data": researches_data, "year": year, "screening_data": screening})
 
 
 def research_last_result_every_month(researches: List[Researches], card: Card, year: str, visits: Optional[List[VisitPurpose]] = None):
@@ -914,6 +915,7 @@ def get_dispensary_reg_plans(card, research, speciality, year):
 def update_dispensary_reg_plans(request):
     request_data = json.loads(request.body)
     DispensaryRegPlans.update_plan(request_data["card_pk"], request_data["researches_data_def"], request_data["researches_data"], request_data["year"])
+    ScreeningRegPlan.update_plan(request_data["card_pk"])
 
     return JsonResponse({"ok": True})
 

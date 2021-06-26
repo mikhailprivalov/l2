@@ -321,6 +321,13 @@ export default {
       variant_identified: ['не указано', 'обращении за лечением', 'профилактическом осмотре'],
       enable_construct: false,
       screening: {
+        patientAge: -1,
+        years: [],
+        currentYear: -1,
+        ages: [],
+        researches: [],
+      },
+      screening1: {
         patientAge: 35,
         currentYear: 2021,
         years: [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027],
@@ -569,9 +576,13 @@ export default {
     },
     load_data() {
       this.$store.dispatch(actions.INC_LOADING);
-      api('patients/individuals/load-dreg', this, ['card_pk', 'year']).then(({ rows, researches_data, year }) => {
+      api('patients/individuals/load-dreg', this, ['card_pk', 'year']).then(({
+        rows, researches_data, year, screening_data,
+      }) => {
         this.rows = rows;
         this.researches_data = researches_data;
+        this.screening = screening_data;
+        console.log(this.screening);
         this.researches_data_def = cloneDeep(researches_data);
         this.all_selected = false;
         if (researches_data && researches_data.length > 0) {

@@ -42,6 +42,14 @@ class CardAdmin(admin.ModelAdmin):
 
     search_fields = ('individual__family',)
 
+@admin.register(models.ScreeningRegPlan)
+class CardAdmin(admin.ModelAdmin):
+    raw_id_fields = (
+        'card',
+    )
+
+    search_fields = ('research__title',)
+
 
 @admin.register(models.Phones)
 class PhonesAdmin(admin.ModelAdmin):
