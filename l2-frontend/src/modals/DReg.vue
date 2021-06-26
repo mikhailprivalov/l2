@@ -157,6 +157,7 @@
         :ages="screening.ages"
         :researches="screening.researches"
         :selected-researches="selectedResearches"
+        :card-pk="card_pk"
       />
 
       <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
@@ -338,120 +339,6 @@ export default {
         currentYear: -1,
         ages: [],
         researches: [],
-      },
-      screening1: {
-        patientAge: 35,
-        currentYear: 2021,
-        years: [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027],
-        ages: [29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41],
-        researches: [
-          {
-            pk: 73,
-            title: 'Глюкоза',
-            startAgeControl: 18,
-            endAgeControl: 65,
-            period: 5,
-            ages: [
-              {
-                isEven: true,
-                plan: '20.01.2017',
-                planYear: 2017,
-                values: [
-                  { age: 29, year: 2015, fact: null },
-                  { age: 30, year: 2016, fact: null },
-                  { age: 31, year: 2017, fact: null },
-                  { age: 32, year: 2018, fact: null },
-                ],
-              },
-              {
-                isEven: false,
-                plan: null,
-                values: [
-                  { age: 33, year: 2019, fact: null },
-                  { age: 34, year: 2020, fact: { direction: 23231, date: '01.07.2020' } },
-                  { age: 35, year: 2021, fact: null },
-                  { age: 36, year: 2022, fact: null },
-                  { age: 37, year: 2023, fact: null },
-                ],
-              },
-              {
-                isEven: true,
-                plan: '03.01.2025',
-                planYear: 2025,
-                values: [
-                  { age: 38, year: 2024, fact: null },
-                  { age: 39, year: 2025, fact: null },
-                  { age: 40, year: 2026, fact: null },
-                  { age: 41, year: 2027, fact: null },
-                ],
-              },
-            ],
-          },
-          {
-            pk: 89,
-            title: 'Креатинин',
-            startAgeControl: 39,
-            endAgeControl: 65,
-            period: 2,
-            ages: [
-              {
-                isEven: true,
-                plan: null,
-                values: [
-                  null,
-                  null,
-                ],
-              },
-              {
-                isEven: false,
-                plan: null,
-                values: [
-                  null,
-                  null,
-                ],
-              },
-              {
-                isEven: true,
-                plan: null,
-                values: [
-                  null,
-                  null,
-                ],
-              },
-              {
-                isEven: false,
-                plan: null,
-                values: [
-                  null,
-                  null,
-                ],
-              },
-              {
-                isEven: true,
-                plan: null,
-                values: [
-                  null,
-                  null,
-                ],
-              },
-              {
-                isEven: false,
-                plan: null,
-                values: [
-                  { age: 39, year: 2025, fact: null },
-                  { age: 40, year: 2026, fact: null },
-                ],
-              },
-              {
-                isEven: true,
-                plan: null,
-                values: [
-                  { age: 41, year: 2027, fact: null },
-                ],
-              },
-            ],
-          },
-        ],
       },
     };
   },

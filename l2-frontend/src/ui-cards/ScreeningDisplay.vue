@@ -40,7 +40,7 @@
                 v && 'can-set-plan'
               ]">
             <div v-if="!v"/>
-            <ScreeningDate v-else :a="a" :v="v" @updated="updatedDate"/>
+            <ScreeningDate v-else :a="a" :v="v" :research-pk="r.pk" @updated="updatedDate"/>
           </td>
         </template>
       </tr>
@@ -67,6 +67,8 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import ScreeningDate from '@/ui-cards/ScreeningDate.vue';
 import ResearchPickById from '@/ui-cards/ResearchPickById.vue';
+import * as actions from '@/store/action-types';
+import api from '@/api';
 
 @Component({
   components: {
@@ -98,10 +100,16 @@ import ResearchPickById from '@/ui-cards/ResearchPickById.vue';
       type: Array,
       required: false,
     },
+    cardPk: {
+      type: Number,
+      required: true,
+    },
   },
 })
 export default class ScreeningDisplay extends Vue {
   years: number[];
+
+  cardPk: number;
 
   get yearWidth() {
     return `--year-width: calc(573px / ${this.years.length})`;
@@ -111,8 +119,15 @@ export default class ScreeningDisplay extends Vue {
     this.$root.$emit('print:results', [pk]);
   }
 
-  updatedDate() {
+  async updatedDate(researchPk, ageGroup) {
     this.$forceUpdate();
+    await this.$store.dispatch(actions.INC_LOADING);
+    await api('/patients/save-screening-plan', {
+      cardPk: this.cardPk,
+      researchPk,
+      ageGroup,
+    });
+    await this.$store.dispatch(actions.DEC_LOADING);
   }
 
   addResearch(pk, title) {
@@ -143,7 +158,7 @@ $border_mix_percentage: 60%;
   color: $odd_color;
 
   &.has-plan {
-    border-bottom: 2px solid $odd_color;
+    border-bottom: 1px solid $odd_color;
   }
 
   a {
@@ -156,7 +171,7 @@ $border_mix_percentage: 60%;
     color: $even_color;
 
     &.has-plan {
-      border-bottom: 2px solid $even_color;
+      border-bottom: 1px solid $even_color;
     }
 
     a {
@@ -178,8 +193,8 @@ $border_mix_percentage: 60%;
 }
 
 .fact, .plan-simple {
-  height: 29px;
-  line-height: 29px;
+  height: 27px;
+  line-height: 27px;
 }
 
 .table {

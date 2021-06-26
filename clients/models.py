@@ -1251,7 +1251,7 @@ class ScreeningRegPlan(models.Model):
         return f"{self.card} – {self.research}, {strfdatetime(self.date, '%d-%m-%Y')}"
 
     class Meta:
-        unique_together = ("card", "research")
+        unique_together = ("card", "research", "ages")
 
         verbose_name = 'Скрининг план'
         verbose_name_plural = 'Скрининг план'
@@ -1355,23 +1355,6 @@ class ScreeningRegPlan(models.Model):
 
     @staticmethod
     def update_plan(data):
-        # на входе
-        # data = {
-        #     "cardPk": "199554",
-        #     "researchPk": 77,
-        #     "ageGroup": {
-        #         "isEven": False,
-        #         "plan": "01.06.2021",
-        #         "values": [
-        #             {"age": 48, "year": 2018, "fact": None},
-        #             {"age": 49, "year": 2019, "fact": None},
-        #             {"age": 50, "year": 2020, "fact": None},
-        #             {"age": 51, "year": 2021, "fact": None},
-        #             {"age": 52, "year": 2022, "fact": None},
-        #         ],
-        #     },
-        # }
-
         ages = [age_data['age'] for age_data in data['ageGroup']['values']]
         plan = data['ageGroup']['plan']
         plan_date = None

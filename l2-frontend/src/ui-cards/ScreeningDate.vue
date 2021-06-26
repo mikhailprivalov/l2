@@ -37,6 +37,10 @@ import DatePicker from 'v-calendar/lib/components/date-picker.umd';
       type: Object,
       required: true,
     },
+    researchPk: {
+      type: Number,
+      required: true,
+    },
     v: {
       type: Object,
       required: true,
@@ -61,7 +65,7 @@ import DatePicker from 'v-calendar/lib/components/date-picker.umd';
   watch: {
     planDate() {
       if (!this.planDate) {
-        this.$emit('updated');
+        this.$emit('updated', this.researchPk, this.a);
         return;
       }
 
@@ -84,13 +88,17 @@ import DatePicker from 'v-calendar/lib/components/date-picker.umd';
       }
 
       if (hasChanges) {
-        this.$emit('updated');
+        this.$emit('updated', this.researchPk, this.a);
       }
     },
   },
 })
 export default class ScreeningDate extends Vue {
   a: any;
+
+  cardPk: any;
+
+  researchPk: any;
 
   v: any;
 
@@ -153,7 +161,7 @@ export default class ScreeningDate extends Vue {
 }
 
 .td-calendar-inner {
-  line-height: 29px;
+  line-height: 27px;
 }
 
 .btn-transparent {

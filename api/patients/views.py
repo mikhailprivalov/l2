@@ -916,7 +916,14 @@ def get_dispensary_reg_plans(card, research, speciality, year):
 def update_dispensary_reg_plans(request):
     request_data = json.loads(request.body)
     DispensaryRegPlans.update_plan(request_data["card_pk"], request_data["researches_data_def"], request_data["researches_data"], request_data["year"])
-    ScreeningRegPlan.update_plan(request_data["card_pk"])
+
+    return JsonResponse({"ok": True})
+
+
+def update_screening_reg_plan(request):
+    request_data = json.loads(request.body)
+
+    ScreeningRegPlan.update_plan(request_data)
 
     return JsonResponse({"ok": True})
 
