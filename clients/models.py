@@ -19,13 +19,11 @@ from appconf.manager import SettingManager
 from directory.models import Researches, ScreeningPlan
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
-from utils.models import ChoiceArrayField
+from django.contrib.postgres.fields import ArrayField
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
 logger = logging.getLogger(__name__)
-
-from django.contrib.postgres.fields import ArrayField
 
 
 class AgeCache(models.Model):
@@ -1353,8 +1351,6 @@ class ScreeningRegPlan(models.Model):
                 }
             )
         screening = {"patientAge": age_patient, "currentYear": now_year, "years": all_years_patient, "ages": all_ages_patient, "researches": researches}
-        print(screening)
-
         return screening
 
     @staticmethod

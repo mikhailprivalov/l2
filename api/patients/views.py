@@ -875,6 +875,7 @@ def load_dreg(request):
 
     researches_data.extend(specialities_data)
     screening = ScreeningRegPlan.get_screening_data(request_data["card_pk"])
+    # screening = {}
 
     return JsonResponse({"rows": data, "researches_data": researches_data, "year": year, "screening_data": screening})
 
