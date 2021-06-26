@@ -1,4 +1,5 @@
 import inspect
+import math
 import sys
 from datetime import date, datetime
 from typing import List, Union, Dict, Optional
@@ -15,9 +16,10 @@ from django.utils import timezone
 
 import slog.models as slog
 from appconf.manager import SettingManager
-from directory.models import Researches
+from directory.models import Researches, ScreeningPlan
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
+from django.contrib.postgres.fields import ArrayField
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
@@ -1243,15 +1245,151 @@ class ScreeningRegPlan(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование', on_delete=models.CASCADE)
     date = models.DateField(help_text='Планируемая дата', db_index=True)
+    ages = ArrayField(models.PositiveSmallIntegerField(default=[], blank=True, help_text='Возраст(лет) во время к-рых необходимо выполнить обследование'))
 
     def __str__(self):
         return f"{self.card} – {self.research}, {strfdatetime(self.date, '%d-%m-%Y')}"
 
     class Meta:
-        unique_together = ("card", "research", "date")
+        unique_together = ("card", "research")
 
         verbose_name = 'Скрининг план'
         verbose_name_plural = 'Скрининг план'
+
+    @staticmethod
+    def get_screening_data(card_pk):
+        client_obj = Card.objects.get(pk=card_pk)
+        sex_client = client_obj.individual.sex
+        age_patient = client_obj.individual.age_for_year()
+        year = 6
+        now_year = int(current_year())
+        all_years_patient = [i for i in range(now_year - year, now_year + year + 1)]
+        all_ages_patient = [i for i in range(age_patient - year, age_patient + year + 1)]
+        screening_plan_obj = ScreeningPlan.objects.filter(Q(age_start_control__lte=age_patient, age_end_control__gte=age_patient, hide=False), Q(sex_client=sex_client) | Q(sex_client='в'))
+
+        ages_years = {}
+        for i in range(len(all_years_patient)):
+            ages_years[all_ages_patient[i]] = all_years_patient[i]
+
+        researches = []
+        for screening_plan in screening_plan_obj:
+            period = screening_plan.period
+            start_age_control = screening_plan.age_start_control
+            end_age_control = screening_plan.age_end_control
+            all_ages_research = [i for i in range(start_age_control, screening_plan.age_end_control + 1)]
+
+            ages_patient_research = []
+            for k in range(len(all_ages_patient)):
+                if all_ages_patient[k] in all_ages_research:
+                    ages_patient_research.append(all_ages_patient[k])
+                else:
+                    ages_patient_research.append(None)
+
+            count_slice = math.ceil(len(all_ages_research) / period)
+
+            slice_ages = {}
+            start = 0
+            for c in range(count_slice):
+                for k in range(period):
+                    if start < len(all_ages_research):
+                        slice_ages[all_ages_research[start]] = c
+                        start += 1
+                    else:
+                        break
+
+            ages_research = []
+            temp_ages = {"isEven": False, "plan": None, "planYear": None, "values": []}
+            count = 0
+            old_part_slice = None
+            ages_plan = []
+            for ap in ages_patient_research:
+                if not ap:
+                    continue
+                new_part_slice = slice_ages.get(ap, None)
+                if count == 0:
+                    old_part_slice = new_part_slice
+
+                if slice_ages.get(ap, -1) > -1 and new_part_slice == old_part_slice:
+                    temp_ages["values"].append({"age": ap, "year": ages_years[ap], "fact": None})
+                    ages_plan.append(ap)
+
+                if new_part_slice != old_part_slice:
+                    temp_ages["isEven"] = old_part_slice is not None and old_part_slice % 2 == 0
+                    plan_obj = ScreeningRegPlan.objects.filter(card_id=client_obj, research_id=screening_plan.research.pk, ages=ages_plan)
+                    if plan_obj.exists():
+                        if len(plan_obj) > 0:
+                            plan_date = strfdatetime(plan_obj[0].date, '%d.%m.%Y')
+                            temp_ages["plan"] = plan_date
+                            temp_ages["planYear"] = int(strfdatetime(plan_obj[0].date, '%Y'))
+                    ages_research.append(temp_ages)
+                    temp_ages = {"isEven": None, "plan": None, "planYear": None, "values": []}
+                    ages_plan = []
+                    if slice_ages.get(ap, None):
+                        temp_ages["values"].append({"age": ap, "year": ages_years[ap], "fact": None})
+                        ages_plan.append(ap)
+                count += 1
+                old_part_slice = new_part_slice
+
+            temp_ages["isEven"] = old_part_slice is not None and old_part_slice % 2 == 0
+            plan_obj = ScreeningRegPlan.objects.filter(card_id=client_obj, research_id=screening_plan.research.pk, ages=ages_plan)
+            if plan_obj.exists():
+                if len(plan_obj) > 0:
+                    plan_date = strfdatetime(plan_obj[0].date, '%d.%m.%Y')
+                    temp_ages["plan"] = plan_date
+                    temp_ages["planYear"] = int(strfdatetime(plan_obj[0].date, '%Y'))
+
+            ages_research.append(temp_ages)
+
+            researches.append(
+                {
+                    "pk": screening_plan.research.pk,
+                    "title": screening_plan.research.title,
+                    "startAgeControl": start_age_control,
+                    "endAgeControl": end_age_control,
+                    "period": period,
+                    "ages": ages_research,
+                }
+            )
+        screening = {"patientAge": age_patient, "currentYear": now_year, "years": all_years_patient, "ages": all_ages_patient, "researches": researches}
+        return screening
+
+    @staticmethod
+    def update_plan(data):
+        # на входе
+        # data = {
+        #     "cardPk": "199554",
+        #     "researchPk": 77,
+        #     "ageGroup": {
+        #         "isEven": False,
+        #         "plan": "01.06.2021",
+        #         "values": [
+        #             {"age": 48, "year": 2018, "fact": None},
+        #             {"age": 49, "year": 2019, "fact": None},
+        #             {"age": 50, "year": 2020, "fact": None},
+        #             {"age": 51, "year": 2021, "fact": None},
+        #             {"age": 52, "year": 2022, "fact": None},
+        #         ],
+        #     },
+        # }
+
+        ages = [age_data['age'] for age_data in data['ageGroup']['values']]
+        plan = data['ageGroup']['plan']
+        plan_date = None
+        if plan:
+            plan_date = datetime.strptime(plan, "%d.%m.%Y").date()
+
+        plan_screening_obj = ScreeningRegPlan.objects.filter(card_id=data['cardPk'], research_id=data['researchPk'], ages=ages)
+        if plan_screening_obj.exists():
+            if len(plan_screening_obj) > 1:
+                return {"messge": "Ошибка с возрастами! Проверьте настройки"}
+            else:
+                if not plan_date:
+                    plan_screening_obj[0].delete()
+                else:
+                    plan_screening_obj[0].date = plan_date
+                    plan_screening_obj[0].save()
+        else:
+            ScreeningRegPlan(card_id=data['cardPk'], research_id=data['researchPk'], ages=ages, date=plan_date).save()
 
 
 class Phones(models.Model):
