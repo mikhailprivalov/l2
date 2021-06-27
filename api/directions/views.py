@@ -1031,6 +1031,7 @@ def directions_paraclinic_form(request):
                 "sex": d.client.individual.sex.lower(),
                 "card": d.client.number_with_type(),
                 "card_pk": d.client_id,
+                "pk": d.client_id,
                 "individual_pk": d.client.individual_id,
                 "has_dreg": DispensaryReg.objects.filter(date_end__isnull=True, card=d.client).exists(),
                 "has_benefit": BenefitReg.objects.filter(date_end__isnull=True, card=d.client).exists(),

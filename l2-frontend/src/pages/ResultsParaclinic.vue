@@ -717,7 +717,9 @@
         </div>
       </div>
     </modal>
-    <d-reg :card_pk="data.patient.card_pk" :card_data="data.patient" :fin-id="data.direction.fin_source_id" v-if="dreg"/>
+    <d-reg :card_pk="data.patient.card_pk" :card_data="data.patient" :fin-id="data.direction.fin_source_id"
+           :parent_iss="data.researches[0].pk"
+           v-if="dreg"/>
     <benefit :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="benefit" :readonly="true"/>
     <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1"/>
   </div>
