@@ -1038,6 +1038,7 @@ def directions_paraclinic_form(request):
                 "imported_from_rmis": d.imported_from_rmis,
                 "imported_org": "" if not d.imported_org else d.imported_org.title,
                 "base": d.client.base_id,
+                "main_diagnosis": d.client.main_diagnosis,
             }
             response["direction"] = {
                 "pk": d.pk,

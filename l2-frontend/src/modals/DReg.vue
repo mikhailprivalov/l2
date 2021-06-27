@@ -1,6 +1,6 @@
 <template>
   <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true"
-         max-width="900px" width="100%" marginLeftRight="auto" margin-top>
+         :max-width="extendedResearches ? '1920px' : '900px'" width="100%" marginLeftRight="auto" margin-top>
     <span slot="header">Диспансерный учёт пациента
       <span v-if="!card_data.fio_age">{{ card_data.family }} {{ card_data.name }} {{ card_data.twoname }},
       {{ card_data.age }}, карта {{ card_data.num }}</span>
@@ -53,7 +53,9 @@
         </tr>
         </tbody>
       </table>
-      <template v-if="researches_data && researches_data.length > 0">
+      <div class="row">
+        <div :class="extendedResearches ? 'col-xs-7' : 'col-xs-12'">
+          <template v-if="researches_data && researches_data.length > 0">
         <table class="table table-bordered table-condensed table-sm-pd dreg-table">
           <colgroup>
             <col/>
@@ -98,14 +100,7 @@
           <tbody>
           <tr v-for="k in researches_data" :key="`${k.research_pk}`">
             <td>
-              <div v-if="!selectedResearches">
-                {{ k.research_title }}
-                <label v-if="k.assign_research_pk" title="Выбор для назначения"
-                       v-tippy="{ placement : 'top', arrow: true }">
-                  <input type="checkbox" v-model="k.assignment">
-                </label>
-              </div>
-              <ResearchPickById v-else :pk="k.research_pk" :selected-researches="selectedResearches" />
+              <ResearchPickById :pk="k.research_pk" :selected-researches="selectedResearchesLocal" :kk="kk" />
             </td>
             <td>
               <div v-for="d in k.diagnoses_time" :key="`${d.diagnos}_${d.times}`" class="mkb-year">
@@ -129,13 +124,6 @@
               x{{ k.times }}
             </td>
           </tr>
-          <tr v-if="!selectedResearches && assignments.length > 0">
-            <td :colspan="3 + monthes.length">
-              <button @click="create_directions" class="btn btn-primary-nb btn-blue-nb" type="button">
-                Создать направления по выбранным назначениям
-              </button>
-            </td>
-          </tr>
           <tr>
             <td :colspan="3 + monthes.length">
               <button @click="save_plan" class="btn btn-primary-nb btn-blue-nb btn-sm" type="button">
@@ -146,19 +134,33 @@
           </tbody>
         </table>
       </template>
-      <div v-else class="text-center empty-dreg">
-        Нет данных для построения плана по диагнозам
+          <div v-else class="text-center empty-dreg">
+            Нет данных для построения плана по диагнозам
+          </div>
+          <ScreeningDisplay
+            :patientAge="screening.patientAge"
+            :currentYear="screening.currentYear"
+            :years="screening.years"
+            :ages="screening.ages"
+            :researches="screening.researches"
+            :selected-researches="selectedResearchesLocal"
+            :card-pk="card_pk"
+            :kk="kk"
+          />
+        </div>
+        <div class="col-xs-5" v-if="extendedResearches" style="height: 350px;padding-left: 0;">
+          <selected-researches
+            :kk="kk"
+            :researches="selectedResearchesLocal"
+            :base="bases_obj[card_data.base]"
+            :main_diagnosis="card_data.main_diagnosis"
+            :card_pk="card_pk"
+            :selected_card="card_data"
+            :initial_fin="finId"
+            style="border-top: 1px solid #eaeaea;"
+          />
+        </div>
       </div>
-
-      <ScreeningDisplay
-        :patientAge="screening.patientAge"
-        :currentYear="screening.currentYear"
-        :years="screening.years"
-        :ages="screening.ages"
-        :researches="screening.researches"
-        :selected-researches="selectedResearches"
-        :card-pk="card_pk"
-      />
 
       <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
              width="100%" marginLeftRight="auto" margin-top>
@@ -243,12 +245,13 @@
 import api from '@/api';
 import moment from 'moment';
 import { cloneDeep } from 'lodash';
+import { mapGetters } from 'vuex';
+import * as actions from '@/store/action-types';
 import ConfigureDispenseryResearch from '@/fields/ConfigureDispenseryResearch.vue';
 import ResearchPickById from '@/ui-cards/ResearchPickById.vue';
-import Modal from '../ui-cards/Modal.vue';
-import * as actions from '../store/action-types';
-import MKBFieldForm from '../fields/MKBFieldForm.vue';
-import RadioField from '../fields/RadioField.vue';
+import Modal from '@/ui-cards/Modal.vue';
+import MKBFieldForm from '@/fields/MKBFieldForm.vue';
+import RadioField from '@/fields/RadioField.vue';
 
 const years = [];
 
@@ -281,6 +284,8 @@ const weekDays = [
   'воскресенье',
 ];
 
+const KK = '-dreg';
+
 export default {
   name: 'd-reg',
   components: {
@@ -290,11 +295,16 @@ export default {
     RadioField,
     ConfigureDispenseryResearch,
     ScreeningDisplay: () => import('@/ui-cards/ScreeningDisplay.vue'),
+    SelectedResearches: () => import('@/ui-cards/SelectedResearches.vue'),
   },
   props: {
     card_pk: {
       type: Number,
       required: true,
+    },
+    finId: {
+      type: Number,
+      required: false,
     },
     card_data: {
       type: Object,
@@ -340,12 +350,44 @@ export default {
         ages: [],
         researches: [],
       },
+      selectedResearchesDReg: [],
     };
   },
   created() {
     this.load_data(true);
   },
+  mounted() {
+    this.$root.$on(`researches-picker:deselect${KK}`, pk => {
+      this.selectedResearchesDReg = this.selectedResearchesDReg.filter(k => k !== pk);
+    });
+    this.$root.$on(`researches-picker:deselect_all${KK}`, () => {
+      this.selectedResearchesDReg = [];
+    });
+    this.$root.$on(`researches-picker:add_research${KK}`, pk => {
+      this.selectedResearchesDReg = !this.selectedResearchesDReg.includes(pk)
+        ? [...this.selectedResearchesDReg, pk]
+        : this.selectedResearchesDReg;
+    });
+  },
   computed: {
+    ...mapGetters({
+      bases: 'bases',
+    }),
+    bases_obj() {
+      return this.bases.reduce((a, b) => ({
+        ...a,
+        [b.pk]: b,
+      }), {});
+    },
+    selectedResearchesLocal() {
+      return this.selectedResearches || this.selectedResearchesDReg;
+    },
+    extendedResearches() {
+      return !this.selectedResearches;
+    },
+    kk() {
+      return this.extendedResearches ? KK : '';
+    },
     valid_reg() {
       return this.edit_pk > -2
         && this.edit_data.diagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?.*/gm)
