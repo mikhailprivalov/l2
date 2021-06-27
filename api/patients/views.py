@@ -904,24 +904,6 @@ def research_last_result_every_month(researches: List[Researches], card: Card, y
     return results
 
 
-def research_last_result_some_year(researches, card, years):
-    results = []
-    filter = {
-        "napravleniye__client": card,
-        "research__in": researches,
-    }
-
-    for year in years:
-        iss = Issledovaniya.objects.filter(**filter, time_confirmation__year=year).order_by("-time_confirmation").first()
-        if iss:
-            date = str(localtime(iss.time_confirmation).day).rjust(2, '0')
-            results.append({"year": year, "direction_pk": iss.napravleniye_id, "date": date})
-        else:
-            results.append(None)
-
-    return results
-
-
 def get_dispensary_reg_plans(card, research, speciality, year):
     plan = [''] * 12
     disp_plan = DispensaryRegPlans.objects.filter(card=card, research=research, speciality=speciality, date__year=year)
