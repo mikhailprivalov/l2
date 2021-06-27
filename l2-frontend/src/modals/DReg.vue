@@ -98,14 +98,7 @@
           <tbody>
           <tr v-for="k in researches_data" :key="`${k.research_pk}`">
             <td>
-              <div v-if="!selectedResearches">
-                {{ k.research_title }}
-                <label v-if="k.assign_research_pk" title="Выбор для назначения"
-                       v-tippy="{ placement : 'top', arrow: true }">
-                  <input type="checkbox" v-model="k.assignment">
-                </label>
-              </div>
-              <ResearchPickById v-else :pk="k.research_pk" :selected-researches="selectedResearches" />
+              <ResearchPickById :pk="k.research_pk" :selected-researches="selectedResearchesLocal" :kk="kk"/>
             </td>
             <td>
               <div v-for="d in k.diagnoses_time" :key="`${d.diagnos}_${d.times}`" class="mkb-year">
@@ -129,13 +122,6 @@
               x{{ k.times }}
             </td>
           </tr>
-          <tr v-if="!selectedResearches && assignments.length > 0">
-            <td :colspan="3 + monthes.length">
-              <button @click="create_directions" class="btn btn-primary-nb btn-blue-nb" type="button">
-                Создать направления по выбранным назначениям
-              </button>
-            </td>
-          </tr>
           <tr>
             <td :colspan="3 + monthes.length">
               <button @click="save_plan" class="btn btn-primary-nb btn-blue-nb btn-sm" type="button">
@@ -149,79 +135,97 @@
       <div v-else class="text-center empty-dreg">
         Нет данных для построения плана по диагнозам
       </div>
-
       <ScreeningDisplay
         :patientAge="screening.patientAge"
         :currentYear="screening.currentYear"
         :years="screening.years"
         :ages="screening.ages"
         :researches="screening.researches"
-        :selected-researches="selectedResearches"
+        :selected-researches="selectedResearchesLocal"
         :card-pk="card_pk"
+        :kk="kk"
       />
 
-      <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true" max-width="710px"
-             width="100%" marginLeftRight="auto" margin-top>
-        <span slot="header" v-if="edit_pk > -1">Редактор диспансерного учёта</span>
-        <span slot="header" v-else>Создание записи диспансерного учёта</span>
-        <div slot="body" class="registry-body p10">
-          <div class="form-group">
-            <label for="de-f3">Дата начала:</label>
-            <input class="form-control" type="date" id="de-f3" v-model="edit_data.date_start" :max="td"
-                   :readonly="edit_data.close">
-          </div>
-          <div class="form-group mkb10 w100">
-            <label>Диагноз в полной форме (код по МКБ и название):</label>
-            <MKBFieldForm v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false"/>
-            <input class="form-control" v-model="edit_data.diagnos" v-else readonly>
-          </div>
-          <div class="radio-button-object radio-button-groups">
-            <label>Диагноз установлен</label>
-            <radio-field v-model="is_first_time" :variants="variant_is_first_time" @modified="change_index" fullWidth/>
-          </div>
-          <div class="radio-button-object radio-button-groups mtb15">
-            <label>Заболевание выявлено при:</label>
-            <radio-field v-model="how_identified" :variants="variant_identified" @modified="change_index" fullWidth/>
-          </div>
-          <div class="checkbox pl15">
-            <label>
-              <input type="checkbox" v-model="edit_data.close"> прекращён
-            </label>
-          </div>
-          <div class="form-group" v-if="edit_data.close">
-            <label for="de-f5">Дата прекращения:</label>
-            <input class="form-control" type="date" id="de-f5" v-model="edit_data.date_end" :min="td">
-          </div>
-          <div class="form-group" v-if="edit_data.close">
-            <label for="de-f6">Причина прекращения:</label>
-            <input class="form-control" id="de-f6" v-model="edit_data.why_stop">
-          </div>
+      <div class="selected-researches" v-if="extendedResearches && card_pk && parent_iss">
+        <selected-researches
+          :kk="kk"
+          :researches="selectedResearchesLocal"
+          :base="bases_obj[card_data.base]"
+          :main_diagnosis="card_data.main_diagnosis"
+          :card_pk="card_pk"
+          :selected_card="card_data"
+          :initial_fin="finId"
+          :parent_iss="parent_iss"
+          style="border-top: 1px solid #eaeaea;"
+        />
+      </div>
 
-          <div class="checkbox pl15">
-            <label>
-              <input type="checkbox" v-model="enable_construct"> настройка обследований для диагноза:
-            </label>
-          </div>
-          <div class="form-group">
-            <ConfigureDispenseryResearch v-if="enable_construct && edit_data.diagnos"
-                                         :diagnos_code="edit_data.diagnos"/>
-          </div>
-        </div>
-        <div slot="footer">
-          <div class="row">
-            <div class="col-xs-4">
-              <button @click="hide_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
-                Отмена
-              </button>
+      <div class="dreg-flt">
+        <modal v-if="edit_pk > -2" ref="modalEdit" @close="hide_edit" show-footer="true" white-bg="true"
+               max-width="710px"
+               width="100%" marginLeftRight="auto" margin-top>
+          <span slot="header" v-if="edit_pk > -1">Редактор диспансерного учёта</span>
+          <span slot="header" v-else>Создание записи диспансерного учёта</span>
+          <div slot="body" class="registry-body p10">
+            <div class="form-group">
+              <label for="de-f3">Дата начала:</label>
+              <input class="form-control" type="date" id="de-f3" v-model="edit_data.date_start" :max="td"
+                     :readonly="edit_data.close">
             </div>
-            <div class="col-xs-4">
-              <button :disabled="!valid_reg" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">
-                Сохранить
-              </button>
+            <div class="form-group mkb10 w100">
+              <label>Диагноз в полной форме (код по МКБ и название):</label>
+              <MKBFieldForm v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false"/>
+              <input class="form-control" v-model="edit_data.diagnos" v-else readonly>
+            </div>
+            <div class="radio-button-object radio-button-groups">
+              <label>Диагноз установлен</label>
+              <radio-field v-model="is_first_time" :variants="variant_is_first_time" @modified="change_index"
+                           fullWidth/>
+            </div>
+            <div class="radio-button-object radio-button-groups mtb15">
+              <label>Заболевание выявлено при:</label>
+              <radio-field v-model="how_identified" :variants="variant_identified" @modified="change_index" fullWidth/>
+            </div>
+            <div class="checkbox pl15">
+              <label>
+                <input type="checkbox" v-model="edit_data.close"> прекращён
+              </label>
+            </div>
+            <div class="form-group" v-if="edit_data.close">
+              <label for="de-f5">Дата прекращения:</label>
+              <input class="form-control" type="date" id="de-f5" v-model="edit_data.date_end" :min="td">
+            </div>
+            <div class="form-group" v-if="edit_data.close">
+              <label for="de-f6">Причина прекращения:</label>
+              <input class="form-control" id="de-f6" v-model="edit_data.why_stop">
+            </div>
+
+            <div class="checkbox pl15">
+              <label>
+                <input type="checkbox" v-model="enable_construct"> настройка обследований для диагноза:
+              </label>
+            </div>
+            <div class="form-group">
+              <ConfigureDispenseryResearch v-if="enable_construct && edit_data.diagnos"
+                                           :diagnos_code="edit_data.diagnos"/>
             </div>
           </div>
-        </div>
-      </modal>
+          <div slot="footer">
+            <div class="row">
+              <div class="col-xs-4">
+                <button @click="hide_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+                  Отмена
+                </button>
+              </div>
+              <div class="col-xs-4">
+                <button :disabled="!valid_reg" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">
+                  Сохранить
+                </button>
+              </div>
+            </div>
+          </div>
+        </modal>
+      </div>
     </div>
     <div slot="footer">
       <div class="row">
@@ -243,12 +247,13 @@
 import api from '@/api';
 import moment from 'moment';
 import { cloneDeep } from 'lodash';
+import { mapGetters } from 'vuex';
+import * as actions from '@/store/action-types';
 import ConfigureDispenseryResearch from '@/fields/ConfigureDispenseryResearch.vue';
 import ResearchPickById from '@/ui-cards/ResearchPickById.vue';
-import Modal from '../ui-cards/Modal.vue';
-import * as actions from '../store/action-types';
-import MKBFieldForm from '../fields/MKBFieldForm.vue';
-import RadioField from '../fields/RadioField.vue';
+import Modal from '@/ui-cards/Modal.vue';
+import MKBFieldForm from '@/fields/MKBFieldForm.vue';
+import RadioField from '@/fields/RadioField.vue';
 
 const years = [];
 
@@ -281,6 +286,8 @@ const weekDays = [
   'воскресенье',
 ];
 
+const KK = '-dreg';
+
 export default {
   name: 'd-reg',
   components: {
@@ -290,11 +297,20 @@ export default {
     RadioField,
     ConfigureDispenseryResearch,
     ScreeningDisplay: () => import('@/ui-cards/ScreeningDisplay.vue'),
+    SelectedResearches: () => import('@/ui-cards/SelectedResearches.vue'),
   },
   props: {
     card_pk: {
       type: Number,
       required: true,
+    },
+    parent_iss: {
+      type: Number,
+      required: false,
+    },
+    finId: {
+      type: Number,
+      required: false,
     },
     card_data: {
       type: Object,
@@ -340,12 +356,50 @@ export default {
         ages: [],
         researches: [],
       },
+      selectedResearchesDReg: [],
     };
   },
   created() {
     this.load_data(true);
   },
+  mounted() {
+    this.$root.$on(`researches-picker:deselect${KK}`, pk => {
+      this.selectedResearchesDReg = this.selectedResearchesDReg.filter(k => k !== pk);
+    });
+    this.$root.$on(`researches-picker:deselect_department${KK}`, (_, pks) => {
+      this.selectedResearchesDReg = this.selectedResearchesDReg.filter(k => !pks.includes(k));
+    });
+    this.$root.$on(`researches-picker:deselect_all${KK}`, () => {
+      this.selectedResearchesDReg = [];
+    });
+    this.$root.$on(`researches-picker:directions_created${KK}`, () => {
+      this.$root.$emit('researches-picker:directions_createdcd');
+    });
+    this.$root.$on(`researches-picker:add_research${KK}`, pk => {
+      this.selectedResearchesDReg = !this.selectedResearchesDReg.includes(pk)
+        ? [...this.selectedResearchesDReg, pk]
+        : this.selectedResearchesDReg;
+    });
+  },
   computed: {
+    ...mapGetters({
+      bases: 'bases',
+    }),
+    bases_obj() {
+      return this.bases.reduce((a, b) => ({
+        ...a,
+        [b.pk]: b,
+      }), {});
+    },
+    selectedResearchesLocal() {
+      return this.selectedResearches || this.selectedResearchesDReg;
+    },
+    extendedResearches() {
+      return !this.selectedResearches;
+    },
+    kk() {
+      return this.extendedResearches ? KK : '';
+    },
     valid_reg() {
       return this.edit_pk > -2
         && this.edit_data.diagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?.*/gm)
@@ -476,7 +530,10 @@ export default {
     load_data(isInitial = false) {
       this.$store.dispatch(actions.INC_LOADING);
       api('patients/individuals/load-dreg', this, ['card_pk', 'year']).then(({
-        rows, researches_data, year, screening_data,
+        rows,
+        researches_data,
+        year,
+        screening_data,
       }) => {
         this.rows = rows;
         this.researches_data = researches_data;
@@ -559,7 +616,7 @@ select.form-control {
   justify-content: stretch !important;
 }
 
-::v-deep .panel-flt {
+.dreg-flt ::v-deep .panel-flt {
   margin: 41px;
   align-self: stretch !important;
   width: 100%;
@@ -806,5 +863,9 @@ tr.stop {
 .mtb15 {
   margin-top: 15px;
   margin-bottom: 15px;
+}
+
+.selected-researches {
+  height: 350px;
 }
 </style>

@@ -25,7 +25,7 @@
           <div v-if="!selectedResearches">
             {{ r.title }}
           </div>
-          <ResearchPickById v-else :pk="r.pk" :selected-researches="selectedResearches" />
+          <ResearchPickById v-else :pk="r.pk" :selected-researches="selectedResearches" :kk="kk" />
           <div class="plan-details">
             раз в {{ r.period | pluralAge }}
           </div>
@@ -103,6 +103,10 @@ import api from '@/api';
     cardPk: {
       type: Number,
       required: true,
+    },
+    kk: {
+      type: String,
+      required: false,
     },
   },
 })
