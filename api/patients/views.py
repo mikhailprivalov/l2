@@ -796,6 +796,8 @@ def edit_agent(request):
     return JsonResponse({"ok": True})
 
 
+
+
 def load_dreg(request):
     request_data = json.loads(request.body)
     data = []
@@ -875,7 +877,6 @@ def load_dreg(request):
 
     researches_data.extend(specialities_data)
     screening = ScreeningRegPlan.get_screening_data(request_data["card_pk"])
-    # screening = {}
 
     return JsonResponse({"rows": data, "researches_data": researches_data, "year": year, "screening_data": screening})
 
@@ -897,6 +898,24 @@ def research_last_result_every_month(researches: List[Researches], card: Card, y
         if iss:
             date = str(localtime(iss.time_confirmation).day).rjust(2, '0')
             results.append({"pk": iss.napravleniye_id, "date": date})
+        else:
+            results.append(None)
+
+    return results
+
+
+def research_last_result_some_year(researches, card, years):
+    results = []
+    filter = {
+        "napravleniye__client": card,
+        "research__in": researches,
+    }
+
+    for year in years:
+        iss = Issledovaniya.objects.filter(**filter, time_confirmation__year=year).order_by("-time_confirmation").first()
+        if iss:
+            date = str(localtime(iss.time_confirmation).day).rjust(2, '0')
+            results.append({"year": year, "direction_pk": iss.napravleniye_id, "date": date})
         else:
             results.append(None)
 
