@@ -1355,7 +1355,33 @@ class ScreeningRegPlan(models.Model):
             researches_pks.append(screening_plan.research.pk)
         screening = {"patientAge": age_patient, "currentYear": now_year, "years": all_years_patient, "ages": all_ages_patient, "researches": researches}
         last_years_result = last_result_researches_years(card_pk, all_years_patient, researches_pks)
-        print(last_years_result)
+
+        results_research = {}
+        for i in last_years_result:
+            if not results_research.get(i.research_id, None):
+                results_research[i.research_id] = {}
+            if not results_research[i.research_id].get(int(i.year_date), None):
+                results_research[i.research_id][int(i.year_date)] = {}
+
+            day = f'0{int(i.day_date)}' if int(i.day_date) < 10 else f'{int(i.day_date)}'
+            month = f'0{int(i.month_date)}' if int(i.month_date) < 10 else f'{int(i.month_date)}'
+            results_research[i.research_id][int(i.year_date)] = {'day': day, 'month': month, 'direction': i.dir_id}
+
+        for i in screening["researches"]:
+            if not results_research.get(i["pk"], None):
+                continue
+            research_fact_result = results_research.get(i["pk"], None)
+            for age in i['ages']:
+                for v in age['values']:
+                    print(v)
+                    if not research_fact_result.get(v['year'], None):
+                        continue
+                    else:
+                        data_fact = research_fact_result.get(v['year'])
+                    day = data_fact.get("day")
+                    month = data_fact.get("month")
+                    direction = data_fact.get("direction")
+                    v['fact'] = {"date": f'{day}.{month}', "direction": direction}
 
         return screening
 
