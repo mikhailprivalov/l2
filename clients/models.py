@@ -16,6 +16,7 @@ from django.utils import timezone
 
 import slog.models as slog
 from appconf.manager import SettingManager
+from clients.sql_func import last_result_researches_years
 from directory.models import Researches, ScreeningPlan
 from laboratory.utils import localtime, current_year, strfdatetime
 from users.models import Speciality, DoctorProfile
@@ -1272,6 +1273,7 @@ class ScreeningRegPlan(models.Model):
             ages_years[all_ages_patient[i]] = all_years_patient[i]
 
         researches = []
+        researches_pks = []
         for screening_plan in screening_plan_obj:
             period = screening_plan.period
             start_age_control = screening_plan.age_start_control
@@ -1350,7 +1352,36 @@ class ScreeningRegPlan(models.Model):
                     "ages": ages_research,
                 }
             )
+            researches_pks.append(screening_plan.research.pk)
         screening = {"patientAge": age_patient, "currentYear": now_year, "years": all_years_patient, "ages": all_ages_patient, "researches": researches}
+        last_years_result = last_result_researches_years(card_pk, all_years_patient, researches_pks)
+
+        results_research = {}
+        for i in last_years_result:
+            if not results_research.get(i.research_id):
+                results_research[i.research_id] = {}
+            if not results_research[i.research_id].get(int(i.year_date)):
+                results_research[i.research_id][int(i.year_date)] = {}
+
+            month = f'{int(i.month_date):02}'
+            day = f'{int(i.day_date):02}'
+            results_research[i.research_id][int(i.year_date)] = {'day': day, 'month': month, 'direction': i.dir_id}
+
+        for i in screening["researches"]:
+            if not results_research.get(i["pk"]):
+                continue
+            research_fact_result = results_research.get(i["pk"])
+            for age in i['ages']:
+                for v in age['values']:
+                    if not research_fact_result.get(v['year']):
+                        continue
+                    else:
+                        data_fact = research_fact_result.get(v['year'])
+                    day = data_fact.get("day")
+                    month = data_fact.get("month")
+                    direction = data_fact.get("direction")
+                    v['fact'] = {"date": f'{day}.{month}', "direction": direction}
+
         return screening
 
     @staticmethod
