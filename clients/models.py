@@ -1373,7 +1373,6 @@ class ScreeningRegPlan(models.Model):
             research_fact_result = results_research.get(i["pk"], None)
             for age in i['ages']:
                 for v in age['values']:
-                    print(v)
                     if not research_fact_result.get(v['year'], None):
                         continue
                     else:
