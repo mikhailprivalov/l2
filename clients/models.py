@@ -1358,22 +1358,22 @@ class ScreeningRegPlan(models.Model):
 
         results_research = {}
         for i in last_years_result:
-            if not results_research.get(i.research_id, None):
+            if not results_research.get(i.research_id):
                 results_research[i.research_id] = {}
-            if not results_research[i.research_id].get(int(i.year_date), None):
+            if not results_research[i.research_id].get(int(i.year_date)):
                 results_research[i.research_id][int(i.year_date)] = {}
 
-            day = f'0{int(i.day_date)}' if int(i.day_date) < 10 else f'{int(i.day_date)}'
-            month = f'0{int(i.month_date)}' if int(i.month_date) < 10 else f'{int(i.month_date)}'
+            month = f'{int(i.month_date):02}'
+            day = f'{int(i.day_date):02}'
             results_research[i.research_id][int(i.year_date)] = {'day': day, 'month': month, 'direction': i.dir_id}
 
         for i in screening["researches"]:
-            if not results_research.get(i["pk"], None):
+            if not results_research.get(i["pk"]):
                 continue
-            research_fact_result = results_research.get(i["pk"], None)
+            research_fact_result = results_research.get(i["pk"])
             for age in i['ages']:
                 for v in age['values']:
-                    if not research_fact_result.get(v['year'], None):
+                    if not research_fact_result.get(v['year']):
                         continue
                     else:
                         data_fact = research_fact_result.get(v['year'])

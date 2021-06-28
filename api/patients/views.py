@@ -796,8 +796,6 @@ def edit_agent(request):
     return JsonResponse({"ok": True})
 
 
-
-
 def load_dreg(request):
     request_data = json.loads(request.body)
     data = []
