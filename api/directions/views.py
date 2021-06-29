@@ -1121,6 +1121,22 @@ def directions_paraclinic_form(request):
                     "maybe_onco": i.maybe_onco,
                     "tube": tube,
                     "procedure_list": [],
+                    "is_form": i.research.is_form,
+                    "children_directions": [
+                        {
+                            "pk": x.pk,
+                            "services": [
+                                y.research.get_title()
+                                for y in Issledovaniya.objects.filter(napravleniye=x)
+                            ]
+                        }
+                        for x in Napravleniya.objects.filter(parent=i)
+                    ],
+                    "parentDirection": None if not i.napravleniye.parent else {
+                        "pk": i.napravleniye.parent.napravleniye_id,
+                        "service": i.napravleniye.parent.research.get_title(),
+                        "is_hospital": i.napravleniye.parent.research.is_hospital,
+                    }
                 }
 
                 if i.research.is_microbiology:
