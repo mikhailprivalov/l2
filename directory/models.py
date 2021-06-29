@@ -418,6 +418,27 @@ class ParaclinicInputGroups(models.Model):
         verbose_name_plural = 'Группы'
 
 
+class MonitoringGroup(models.Model):
+    title = models.CharField(max_length=400, help_text='Название группы мониторинга')
+    short_title = models.CharField(max_length=255, default='', blank=True)
+    hide = models.BooleanField()
+
+    class Meta:
+        verbose_name = 'Мониторинг - Группы'
+        verbose_name_plural = 'Мониторинг-Группа'
+
+
+class MonitoringParams(models.Model):
+    title = models.CharField(max_length=255, default="", help_text='Название параметра', db_index=True)
+    short_title = models.CharField(max_length=255, default='', blank=True)
+    group = models.ForeignKey(MonitoringGroup, on_delete=models.CASCADE)
+    hide = models.BooleanField()
+
+    class Meta:
+        verbose_name = 'Мониторинг - Параметры'
+        verbose_name_plural = 'Мониторинг-параметр'
+
+
 class ParaclinicInputField(models.Model):
     TYPES = (
         (0, 'Text'),
@@ -466,6 +487,7 @@ class ParaclinicInputField(models.Model):
     for_extract_card = models.BooleanField(default=False, help_text='В выписку', blank=True)
     for_med_certificate = models.BooleanField(default=False, help_text='В справку', blank=True)
     attached = models.CharField(max_length=20, help_text='Скреплено с полем другой услуги', blank=True, default=None, null=True, db_index=True)
+    monitoring_params = models.ForeignKey(MonitoringParams, on_delete=models.CASCADE)
 
     def get_title(self, force_type=None, recursive=False):
         field_type = force_type or self.field_type
