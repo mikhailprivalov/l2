@@ -1,7 +1,9 @@
 <template>
   <div class="root" :class="{noGrid: !hasGrid, hasGrid}">
     <div class="a">
-      <patient-picker v-model="selected_card" directive_from_need="true" search_results="true" bottom_picker="true">
+      <patient-picker v-model="selected_card" directive_from_need="true" search_results="true"
+                      :selected-researches="selected_researches"
+                      bottom_picker="true">
         <div slot="for_card" class="text-right">
           <div v-if="selected_researches.length > 0"
                style="margin-top: 5px;text-align: left">

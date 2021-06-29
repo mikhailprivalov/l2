@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from jsonfield import JSONField
 
@@ -704,6 +705,30 @@ class DispensaryPlan(models.Model):
     class Meta:
         verbose_name = 'Диспансерный учет план'
         verbose_name_plural = 'Диспансерный учет'
+
+
+class ScreeningPlan(models.Model):
+    SEX = (
+        ('в', 'все'),
+        ('м', 'м'),
+        ('ж', 'ж'),
+    )
+
+    age_start_control = models.PositiveSmallIntegerField(db_index=True, help_text='Возраст начала', validators=[MaxValueValidator(130)])
+    age_end_control = models.PositiveSmallIntegerField(db_index=True, help_text='Возраст окончания (включительно)', validators=[MaxValueValidator(130)])
+    sex_client = models.CharField(max_length=1, choices=SEX, help_text="Пол", db_index=True)
+    research = models.ForeignKey(Researches, db_index=True, help_text='Исследование, включенное в список', on_delete=models.CASCADE)
+    period = models.PositiveSmallIntegerField(db_index=True, help_text='Период (1 раз в лет/года)', validators=[MinValueValidator(1), MaxValueValidator(100)])
+    sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес соритировки')
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие', db_index=True)
+
+    def __str__(self):
+        return f"{self.age_start_control} - {self.age_end_control} - {self.sex_client}, {self.research}"
+
+    class Meta:
+        unique_together = ("age_start_control", "age_end_control", "research", "sex_client")
+        verbose_name = 'Скрининг Шаблон'
+        verbose_name_plural = 'Скрининг-Шаблоны'
 
 
 class GroupCulture(models.Model):

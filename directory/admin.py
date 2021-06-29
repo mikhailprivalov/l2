@@ -204,14 +204,14 @@ class ResCulture(admin.ModelAdmin):
     search_fields = ('group_culture__title',)
 
 
-class ResAntibioticSets(admin.ModelAdmin):
-    list_display = ('title',)
-    list_display_links = ('title',)
+class ScreeningPlanAdmin(admin.ModelAdmin):
+    list_display = ('age_start_control', 'age_end_control', 'sex_client', 'research', 'period', 'hide')
     list_filter = (
-        'title',
-        'antibiotics__title',
+        'sex_client',
+        ('research', admin.RelatedOnlyFieldListFilter),
     )
-    search_fields = ('antibiotics__title',)
+    search_fields = ('research__title',)
+    autocomplete_fields = ('research',)
 
 
 admin.site.register(models.ResearchSite, RefSiteType)
@@ -238,3 +238,4 @@ admin.site.register(models.GroupAntibiotic)
 admin.site.register(models.Localization, TitleFsli)
 admin.site.register(models.ServiceLocation, TitleHide)
 admin.site.register(models.HospitalService, ResHospitalService)
+admin.site.register(models.ScreeningPlan, ScreeningPlanAdmin)

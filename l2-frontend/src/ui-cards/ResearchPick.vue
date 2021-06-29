@@ -22,10 +22,10 @@ export default {
       default: false,
     },
   },
-  computed: {
-    tid() {
-      return `research-pick-tip-${this.research.pk}`;
-    },
+  data() {
+    return {
+      tid: `research-pick-tip-${this.research.pk}-${Math.floor(Math.random() * 100000)}`,
+    };
   },
 };
 </script>

@@ -33,4 +33,5 @@ urlpatterns = [
     path('individuals/save-benefit', views.save_benefit),
     path('individuals/save-anamnesis', views.save_anamnesis),
     path('is-card', views.is_l2_card),
+    path('save-screening-plan', views.update_screening_reg_plan),
 ]
