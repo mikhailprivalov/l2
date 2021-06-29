@@ -58,6 +58,15 @@ const router = new Router({
         groups: ['Лечащий врач', 'Оператор лечащего врача'],
       },
     },
+    {
+      path: '/ui/construct/screening',
+      name: 'construct_screening',
+      component: () => import('@/construct/ConstructScreening.vue'),
+      meta: {
+        title: 'Настройка скрининга',
+        groups: ['Конструктор: Настройка скрининга'],
+      },
+    },
   ],
 });
 
