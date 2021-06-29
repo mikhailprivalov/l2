@@ -168,7 +168,13 @@
           </div>
           <div class="col-xs-5">
             <div v-if="!data.patient.imported_from_rmis">Источник финансирования: {{data.direction.fin_source}}</div>
-            <div>Карта: {{data.patient.card}}
+            <div>
+              Карта:
+              <a :href="`/ui/directions?card_pk=${data.patient.card_pk}&base_pk=${data.patient.base}`"
+                 target="_blank" class="a-under">
+                {{ data.patient.card }}
+              </a>
+              &nbsp;&nbsp;
               <a href="#"
                  v-if="data.card_internal && data.has_doc_referral"
                  v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
@@ -546,7 +552,7 @@
               </div>
             </div>
           </div>
-          <div class="group" v-if="!data.has_microbiology">
+          <div class="group" v-if="!data.has_microbiology && !row.is_form">
             <div class="fields">
               <div class="field">
                 <label class="field-title" for="onco">
@@ -554,6 +560,40 @@
                 </label>
                 <div class="field-value">
                   <input type="checkbox" id="onco" v-model="row.maybe_onco" :disabled="row.confirmed"/>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="group" v-if="row.parentDirection">
+            <div class="group-title">Главное направление</div>
+            <div class="fields">
+              <div class="field">
+                <label class="field-title" for="onco">
+                  №<a href="#" class="a-under"
+                      @click.prevent="load_pk(row.parentDirection.pk)"
+                      v-if="!row.parentDirection.is_hospital">{{ row.parentDirection.pk }}</a><span
+                  v-else>{{ row.parentDirection.pk }}</span>
+                </label>
+                <div class="field-value simple-value">
+                  {{ row.parentDirection.service }}
+                  <template v-if="row.parentDirection.is_hospital">
+                    &nbsp;<i class="fa fa-bed" title="И/б стационара" v-tippy></i>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="group" v-if="row.children_directions && row.children_directions.length > 0">
+            <div class="group-title">Дочерние направления</div>
+            <div class="fields" v-for="d in row.children_directions" :key="d.pk">
+              <div class="field">
+                <label class="field-title" for="onco">
+                  №<a href="#" class="a-under" @click.prevent="load_pk(d.pk)">{{ d.pk }}</a>
+                </label>
+                <div class="field-value simple-value">
+                  <ul>
+                    <li v-for="(s, j) in d.services" :key="j">{{ s }}</li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -2198,5 +2238,18 @@ export default {
 
   textarea {
     resize: vertical;
+  }
+
+  .simple-value {
+    padding: 5px;
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+  }
+
+  .cursor-pointer {
+    cursor: pointer;
   }
 </style>
