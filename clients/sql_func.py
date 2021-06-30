@@ -22,7 +22,7 @@ def last_result_researches_years(client_id, years, researches):
                 LEFT JOIN directions_napravleniya
                     ON directions_issledovaniya.napravleniye_id =directions_napravleniya.id
                 WHERE 
-                directions_napravleniya.client_id = 199554 and 
+                directions_napravleniya.client_id = %(card_pk)s and 
                 directions_issledovaniya.research_id = ANY(ARRAY[%(researches)s]) and
                 date_part('year', directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s) = ANY(ARRAY[%(years)s])
                 ORDER BY directions_issledovaniya.time_confirmation DESC)
