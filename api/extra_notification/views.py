@@ -26,6 +26,13 @@ def search(request):
     if hospital == -1:
         return JsonResponse({})
 
-    result = extra_notification_sql(EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, datetime_start, datetime_end, hospital, status)
+    result_extra = extra_notification_sql(EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, datetime_start, datetime_end, hospital, status)
+    result = []
+    for i in result_extra:
+        title = i.title
+        if i.short_title:
+            title = i.short_title
+        patient = f'{i.pfam} {i.pname} {i.twoname}'
+        result.append({'hospital': title, 'main_direction': i.dir_id, 'slave_dir': i.r_dir_id, 'patient': patient, 'born': i.birthday, 'value': i.num_value, 'iss_pk': i.r_iss_id})
 
-    return JsonResponse({result})
+    return JsonResponse({'result': result})
