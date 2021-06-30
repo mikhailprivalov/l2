@@ -87,8 +87,15 @@ def extra_notification_sql(master_research, slave_research, date_start, date_end
                 END
                 ORDER BY directions_napravleniya.client_id
             """,
-            params={'tz': TIME_ZONE, 'master_research': master_research, 'slave_research': slave_research, 'd_start': date_start, 'd_end': date_end, 'hospital_id': hospital_id,
-                    'status': status},
-            )
+            params={
+                'tz': TIME_ZONE,
+                'master_research': master_research,
+                'slave_research': slave_research,
+                'd_start': date_start,
+                'd_end': date_end,
+                'hospital_id': hospital_id,
+                'status': status,
+            },
+        )
         rows = namedtuplefetchall(cursor)
     return rows
