@@ -22,7 +22,7 @@ from laboratory.settings import EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_P
 @login_required
 def search(request):
     request_data = json.loads(request.body)
-    # status - 0 новые, 1-подтвержденные, 2 - все
+    # status - 0 новые, 1-присвоенные номера от ЭпидЦентра, 2 - все
     status = int(request_data.get("status", 2))
     hospital = int(request_data.get("hospital", -1))
     date = request_data["date"]
@@ -33,7 +33,9 @@ def search(request):
 
     if not request.user.doctorprofile.all_hospitals_users_control:
         hospital_id = request.user.doctorprofile.get_hospital_id() or -1
+    else:
+        hospital_id = -2
 
-    result = extra_notification_sql(EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, datetime_start, datetime_end, hospital, status)
+    result = extra_notification_sql(EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, datetime_start, datetime_end, hospital_id, status)
 
     return JsonResponse({})

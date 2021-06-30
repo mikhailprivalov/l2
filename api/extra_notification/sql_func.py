@@ -60,11 +60,31 @@ def extra_notification_sql(master_research, slave_research, date_start, date_end
                         ) as individual
                 ON directions_napravleniya.client_id=individual.cl_card
                 WHERE CASE 
-                WHEN  %(hospital_id)s > -1 THEN 
+                WHEN  %(hospital_id)s > -1 and %(status)s = 2 THEN 
                     directions_napravleniya.hospital_id = %(hospital_id)s and directions_issledovaniya.research_id = %(master_research)s and
                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
-                WHEN  %(is_text_research)s = FALSE THEN
-                    napravleniye_id = ANY(ARRAY[%(num_dirs)s]) AND research_id = ANY(ARRAY[%(id_researches)s]) AND time_confirmation IS NOT NULL
+                
+                WHEN  %(hospital_id)s > -1 and %(status)s = 1 THEN 
+                    directions_napravleniya.hospital_id = %(hospital_id)s and directions_issledovaniya.research_id = %(master_research)s and
+                    directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s and dirslave.r_confirm is not null
+                
+                WHEN  %(hospital_id)s > -1 and %(status)s = 0 THEN 
+                    directions_napravleniya.hospital_id = %(hospital_id)s and directions_issledovaniya.research_id = %(master_research)s and
+                    directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s and dirslave.r_confirm is null
+                
+                WHEN  %(hospital_id)s = -2 and %(status)s = 2 THEN 
+                    directions_issledovaniya.research_id = %(master_research)s and
+                    directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                
+                WHEN  %(hospital_id)s = -2 and %(status)s = 1 THEN 
+                    directions_issledovaniya.research_id = %(master_research)s and
+                    directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s and dirslave.r_confirm is not null
+                    
+                WHEN  %(hospital_id)s = -2 and %(status)s = 0 THEN 
+                    directions_issledovaniya.research_id = %(master_research)s and
+                    directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s and dirslave.r_confirm is null
+                
+                
                 END
                 ORDER BY directions_napravleniya.client_id
             """,
