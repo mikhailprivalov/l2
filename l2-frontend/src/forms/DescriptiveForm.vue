@@ -19,6 +19,7 @@
             </div>
             <div :class="{disabled: confirmed,
             empty: notFilled.includes(field.pk),
+            'field-vertical-simple': [16, 17].includes(field.field_type) && pk,
             required: field.required}" :title="field.required && 'обязательно для заполнения'"
                  v-on="{
                   mouseenter: enter_field(field.values_to_input.length > 0),
