@@ -20,7 +20,7 @@
           {{getAfterGroup(t)}}
         </span>
       </div>
-      <div v-for="(row, i) in lab.vertical" :key="i">
+      <div v-for="(row, i) in lab.vertical" :key="i" class="scroll">
         <div><strong>{{row.title_research}}</strong></div>
         <div v-if="excludedTitlesByGroup(row.title_research).length > 0" class="excluded">
           <u><strong>Исключённые фракции:</strong></u>
@@ -43,6 +43,9 @@
         <table>
           <colgroup>
             <col width="64"/>
+            <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
+            <col v-for="t in row.title_fracions" v-if="!excludedTitle(t, row.title_research)"
+                 :key="t" width="52"/>
           </colgroup>
           <thead>
           <tr>
@@ -72,10 +75,13 @@
           </tbody>
         </table>
       </div>
-      <div v-for="(row, jj) in lab.horizontal" :key="jj">
+      <div v-for="(row, jj) in lab.horizontal" :key="jj" class="scroll">
         <table>
           <colgroup>
             <col width="120"/>
+            <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
+            <col v-for="(_, dateDir) in row.result" v-if="!excludedDateDir(dateDir, title)"
+                 :key="dateDir" width="64"/>
           </colgroup>
           <thead>
           <tr>
@@ -333,5 +339,9 @@ export default {
   .excluded {
     white-space: normal;
     word-break: break-word;
+  }
+
+  .scroll {
+    overflow: auto;
   }
 </style>
