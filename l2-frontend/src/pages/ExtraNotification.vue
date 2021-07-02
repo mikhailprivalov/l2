@@ -1,6 +1,6 @@
 <template>
   <div>
-    <form class="panel panel-default panel-flt" style="margin: 20px;" @submit.prevent="load(null)">
+    <form class="panel panel-default panel-flt" style="margin: 20px;" @submit.prevent="load()">
       <div class="panel-body" style="overflow: visible;">
         <div class="row" style="margin-top:5px;">
           <div class="col-xs-6">
@@ -140,13 +140,13 @@ export default {
     watchParams: {
       deep: true,
       handler() {
-        this.load(null);
+        this.load();
       },
     },
     watchParamsDebounce: {
       deep: true,
       handler: _.debounce(function () {
-        this.load(null);
+        this.load();
       }, 400),
     },
     l2_only_doc_call: {
