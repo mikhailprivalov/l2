@@ -26,7 +26,7 @@ def search(request):
     if hospital == -1:
         return JsonResponse({})
 
-    result_extra = extra_notification_sql(EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, datetime_start, datetime_end, -2, status)
+    result_extra = extra_notification_sql(EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, datetime_start, datetime_end, hospital, status)
     result = []
     for i in result_extra:
         title = i.title
