@@ -161,12 +161,7 @@ export default {
   },
   async mounted() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const data = await api('actual-districts');
     const { hospitals } = await api('hospitals', { filterByUserHospital: true });
-
-    this.districts = data.rows;
-    this.docs_assigned = data.docs;
-    this.purposes = [{ id: -1, label: 'Не выбрана' }, ...data.purposes];
     this.hospitals = hospitals;
     this.$root.$on('hide_message_tickets', () => this.hide_statistcs());
     await this.$store.dispatch(actions.DEC_LOADING);
@@ -180,8 +175,6 @@ export default {
     async load() {
       await this.$store.dispatch(actions.INC_LOADING);
       const data = await api('extra-notification/search', this.params);
-      this.params.pages = data.pages;
-      this.params.page = data.page;
       this.params.total = data.total;
       this.rows = data.rows;
       await this.$store.dispatch(actions.DEC_LOADING);

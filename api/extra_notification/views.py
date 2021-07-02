@@ -47,4 +47,4 @@ def search(request):
             }
         )
 
-    return JsonResponse({'result': result})
+    return JsonResponse({'rows': result})
