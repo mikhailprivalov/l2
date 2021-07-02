@@ -67,6 +67,15 @@ const router = new Router({
         groups: ['Конструктор: Настройка скрининга'],
       },
     },
+    {
+      path: '/ui/extra-notification',
+      name: 'extra_notification',
+      component: () => import('@/pages/ExtraNotification.vue'),
+      meta: {
+        title: 'Экстренные извещения',
+        groups: ['Лечащий врач', 'Оператор лечащего врача', 'Вызов врача'],
+      },
+    },
   ],
 });
 

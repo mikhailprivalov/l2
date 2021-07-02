@@ -40,7 +40,6 @@ new Vue({
     EmployeeJobs: () => import('@/pages/EmployeeJobs.vue'),
     Stationar: () => import('@/pages/Stationar/index.vue'),
     DocCall: () => import('@/pages/DocCall.vue'),
-    ExtraNotification: () => import('@/pages/ExtraNotification.vue'),
     ListWait: () => import('@/pages/ListWait.vue'),
     LoadFile: () => import('@/ui-cards/LoadFile.vue'),
     LaboratorySelector: () => import('@/ui-cards/LaboratorySelector.vue'),
