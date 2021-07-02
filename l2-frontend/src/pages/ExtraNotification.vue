@@ -95,13 +95,11 @@ import _ from 'lodash';
 
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import Paginate from 'vuejs-paginate';
 import api from '@/api';
 import * as actions from '@/store/action-types';
 import DocCallRow from '@/pages/DocCallRow.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
 import StatisticsMessagePrintModal from '@/modals/StatisticsMessagePrintModal.vue';
-import PatientPickerDocCall from '@/ui-cards/PatientPickerDocCall.vue';
 
 export default {
   name: 'ExtraNotification',
@@ -118,22 +116,9 @@ export default {
       loaded: false,
       params: {
         date: moment().format('YYYY-MM-DD'),
-        card_pk: -1,
-        status: -1,
-        district: -1,
-        is_canceled: false,
-        my_requests: false,
-        without_date: false,
-        is_external: false,
-        purpose: -1,
-        doc_assigned: -1,
+        status: 0,
         hospital: -1,
-        pages: 0,
-        page: 1,
-        total: 0,
-        number: '',
       },
-      statistics_tickets: false,
     };
   },
   beforeMount() {
@@ -146,27 +131,9 @@ export default {
     watchParams() {
       return _.pick(this.params, [
         'date',
-        'card_pk',
         'status',
-        'district',
-        'without_date',
-        'is_canceled',
-        'my_requests',
-        'is_external',
-        'purpose',
-        'doc_assigned',
         'hospital',
       ]);
-    },
-    watchParamsDebounce() {
-      return _.pick(this.params, [
-        'number',
-        'time_start',
-        'time_end',
-      ]);
-    },
-    l2_only_doc_call() {
-      return this.$store.getters.modules.l2_only_doc_call;
     },
   },
   watch: {
@@ -210,14 +177,9 @@ export default {
       // eslint-disable-next-line max-len
       window.open(`/forms/pdf?type=109.02&date=${params.date}&time_start=${params.time_start}&time_end=${params.time_end}&district=${params.district || -1}&doc=${params.doc_assigned || -1}&purpose=${params.purpose || -1}&hospital_pk=${params.hospital || -1}&external=${params.is_external ? 0 : 1}&cancel=${params.is_canceled ? 0 : 1}`);
     },
-    async load(page_to_load) {
-      if (page_to_load !== null) {
-        this.params.page = page_to_load;
-      } else {
-        this.params.page = 1;
-      }
+    async load() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const data = await api('doctor-call/search', this.params);
+      const data = await api('extra-notification/search', this.params);
       this.params.pages = data.pages;
       this.params.page = data.page;
       this.params.total = data.total;
