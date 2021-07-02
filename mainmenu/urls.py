@@ -57,5 +57,6 @@ urlpatterns = [
     path('stationar', login_required(TemplateView.as_view(template_name="dashboard/stationar.html"))),
     path('list_wait', TemplateView.as_view(template_name="dashboard/list_wait.html")),
     path('doc_call', TemplateView.as_view(template_name="dashboard/doc_call.html")),
+    path('extra_notification', TemplateView.as_view(template_name="dashboard/extra_notification.html")),
     path('procedure_list', TemplateView.as_view(template_name="dashboard/procedure_list.html")),
 ]
