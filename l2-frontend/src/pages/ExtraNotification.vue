@@ -47,7 +47,7 @@
     </form>
     <div class="not-loaded" v-if="!loaded">
       Данные не загружены<br/>
-      <a class="a-under" href="#" @click.prevent="load(null)">загрузить</a>
+      <a class="a-under" href="#" @click.prevent="load()">загрузить</a>
     </div>
     <div v-else class="data">
       <table class="table table-bordered table-condensed table-hover">
