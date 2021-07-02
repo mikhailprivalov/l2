@@ -33,9 +33,11 @@ def search(request):
         hospital = -1
 
     if hospital == -1:
-        return JsonResponse({
-            'result': [],
-        })
+        return JsonResponse(
+            {
+                'result': [],
+            }
+        )
 
     result_extra = extra_notification_sql(EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, datetime_start, datetime_end, hospital, status)
     result = []
@@ -76,18 +78,14 @@ def save(request):
     if not value:
         return JsonResponse({'ok': False, 'message': 'Некорректное значение'})
 
-    iss = (
-        Issledovaniya.objects
-            .filter(napravleniye=direction, time_confirmation__isnull=True)
-            .filter(
-                Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
-                | Q(research__is_doc_refferal=True)
-                | Q(research__is_treatment=True)
-                | Q(research__is_gistology=True)
-                | Q(research__is_stom=True)
-                | Q(research__is_gistology=True)
-                | Q(research__is_form=True)
-        )
+    iss = Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=True).filter(
+        Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
+        | Q(research__is_doc_refferal=True)
+        | Q(research__is_treatment=True)
+        | Q(research__is_gistology=True)
+        | Q(research__is_stom=True)
+        | Q(research__is_gistology=True)
+        | Q(research__is_form=True)
     )
 
     confirmed_at = None
@@ -117,9 +115,11 @@ def save(request):
             ok = True
             message = None
 
-    return JsonResponse({
-        'ok': ok,
-        'message': message,
-        'value': value,
-        'slaveConfirm': confirmed_at,
-    })
+    return JsonResponse(
+        {
+            'ok': ok,
+            'message': message,
+            'value': value,
+            'slaveConfirm': confirmed_at,
+        }
+    )
