@@ -2,10 +2,17 @@ import datetime
 import json
 
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.db.models import Q
 from django.http import JsonResponse
+from django.utils import timezone
 
 from api.extra_notification.sql_func import extra_notification_sql
+from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
+from directory.models import ParaclinicInputGroups, ParaclinicInputField
+from laboratory.decorators import group_required
 from laboratory.settings import EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
+from laboratory.utils import strdate
 
 
 @login_required
@@ -20,11 +27,15 @@ def search(request):
     datetime_start = datetime.datetime.strptime(time_start, '%Y-%m-%d %H:%M:%S')
     datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S:%f')
 
-    if not request.user.doctorprofile.all_hospitals_users_control:
-        hospital = request.user.doctorprofile.get_hospital_id() or -1
+    user_hospital = request.user.doctorprofile.get_hospital_id() or -1
+
+    if user_hospital != hospital and "Заполнение экстренных извещений" not in [str(x) for x in request.user.groups.all()]:
+        hospital = -1
 
     if hospital == -1:
-        return JsonResponse({})
+        return JsonResponse({
+            'result': [],
+        })
 
     result_extra = extra_notification_sql(EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, datetime_start, datetime_end, hospital, status)
     result = []
@@ -48,3 +59,67 @@ def search(request):
         )
 
     return JsonResponse({'rows': result})
+
+
+@login_required
+@group_required('Заполнение экстренных извещений')
+def save(request):
+    request_data = json.loads(request.body)
+    pk = int(request_data.get("pk", -1))
+    value = str(request_data.get("value", '')).strip()
+
+    direction = Napravleniya.objects.filter(pk=pk).first()
+
+    if not direction:
+        return JsonResponse({'ok': False, 'message': 'Документ не найден'})
+
+    if not value:
+        return JsonResponse({'ok': False, 'message': 'Некорректное значение'})
+
+    iss = (
+        Issledovaniya.objects
+            .filter(napravleniye=direction, time_confirmation__isnull=True)
+            .filter(
+                Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
+                | Q(research__is_doc_refferal=True)
+                | Q(research__is_treatment=True)
+                | Q(research__is_gistology=True)
+                | Q(research__is_stom=True)
+                | Q(research__is_gistology=True)
+                | Q(research__is_form=True)
+        )
+    )
+
+    confirmed_at = None
+    ok = False
+    message = 'Неизвестная ошибка'
+    with transaction.atomic():
+        for i in iss:
+            ParaclinicResult.objects.filter(issledovaniye=i).delete()
+
+            for g in ParaclinicInputGroups.objects.filter(research=i.research):
+                for f in ParaclinicInputField.objects.filter(group=g):
+                    f_result = ParaclinicResult(issledovaniye=i, field=f, value="")
+                    f_result.value = value
+                    f_result.field_type = f.field_type
+                    f_result.save()
+
+            i.doc_save = request.user.doctorprofile
+            i.time_save = timezone.now()
+
+            i.doc_confirmation = request.user.doctorprofile
+            i.time_confirmation = timezone.now()
+            if i.napravleniye:
+                i.napravleniye.qr_check_token = None
+                i.napravleniye.save(update_fields=['qr_check_token'])
+            i.save()
+            confirmed_at = strdate(i.time_confirmation)
+            ok = True
+            message = None
+
+    return JsonResponse({
+        'ok': ok,
+        'message': message,
+        'value': value,
+        'slaveConfirm': confirmed_at,
+    })

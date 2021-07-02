@@ -6,42 +6,29 @@
           <div class="col-xs-6">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Больница</span>
-              <treeselect :multiple="false" :disable-branch-nodes="true" :options="hospitals"
+              <treeselect :multiple="false" :disable-branch-nodes="true" :options="visibleHospitals"
                           placeholder="Больница не выбрана" v-model="params.hospital"
-                          :disabled="Boolean(params.number)"
                           :clearable="false" class="treeselect-wide"
               />
             </div>
           </div>
-          <div class="col-xs-2">
-            <div class="input-group date-time">
+          <div class="col-xs-6">
+            <div class="input-group date-time treeselect-noborder-left">
               <span class="input-group-addon">Дата</span>
               <span class="input-group-addon" style="padding: 0;border: none;">
-                <date-field-nav-2 v-model="params.date" right
-                                  :disabled="Boolean(params.number || params.without_date)"
-                                  w="140px" :brn="false"/>
+                <DateFieldNav2 v-model="params.date" right w="140px" :brn="false"/>
               </span>
-            </div>
-          </div>
-          <div class="col-xs-1"></div>
-          <div class="col-xs-3">
-            <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Статус</span>
-              <select v-model="params.status" :readonly="Boolean(params.number)" class="form-control">
-                <option :value="0">Все</option>
-                <option :value="1">Новые</option>
-                <option :value="2">Выполнены</option>
+              <select v-model="params.status" class="form-control">
+                <option :value="2">Все</option>
+                <option :value="0">Новые</option>
+                <option :value="1">Выполнены</option>
               </select>
             </div>
           </div>
         </div>
         <div style="margin-top: 5px">
-          <a href="#" class="a-under pull-right" @click.prevent="print">
-            Печать
-          </a>
-          <a href="#" class="a-under pull-right" @click.prevent="show_statistics_message_tickets" style="padding-right: 10px">
-             Статистика
-          </a>
+          <a class="a-under pull-right" href="#" @click.prevent="load()">перезагрузить данные</a>
         </div>
       </div>
     </form>
@@ -50,17 +37,15 @@
       <a class="a-under" href="#" @click.prevent="load()">загрузить</a>
     </div>
     <div v-else class="data">
-      <table class="table table-bordered table-condensed table-hover">
+      <table class="table table-bordered table-condensed table-hover" style="table-layout: fixed">
         <colgroup>
-          <col style="width: 45px">
-          <col style="width: 75px">
-          <col style="width: 15px">
-          <col style="width: 20px">
-          <col style="width: 70px">
-          <col style="width: 25px">
-          <col style="width: 25px">
-          <col style="width: 30px">
-          <col style="width: 15px">
+          <col>
+          <col>
+          <col style="width: 120px">
+          <col style="width: 120px">
+          <col style="width: 200px">
+          <col style="width: 120px">
+          <col style="width: 120px">
         </colgroup>
         <thead>
         <tr>
@@ -69,27 +54,48 @@
           <td>№ заявки</td>
           <td>Дата заявки</td>
           <td>Эпид №</td>
-          <td>№ в базе</td>
           <td>Эпид № - дата</td>
-          <td>Исполнитель</td>
-          <td>Заполнить</td>
+          <td>№ в базе</td>
         </tr>
         </thead>
         <tbody>
-        <tr v-for="r in rows" :key="r.pk">
-          <DocCallRow :r="r"/>
+        <tr v-for="r in rows" :key="r.mainDirection">
+          <td>
+            {{ r.hospital }}
+          </td>
+          <td>
+            {{ r.patient }} {{ r.born }}
+          </td>
+          <td>
+            <a :href='`/mainmenu/results/paraclinic#{"pk":${r.mainDirection}}`' target="_blank" class="a-under">
+              {{ r.mainDirection }}
+            </a>
+          </td>
+          <td>
+            {{ r.mainConfirm }}
+          </td>
+          <td class="cl-td">
+            <ExtraNotificationFastEditor :data="r" :can-edit="canEdit"/>
+          </td>
+          <td>
+            {{ r.slaveConfirm || '–' }}
+          </td>
+          <td>
+            <a :href='`/mainmenu/results/paraclinic#{"pk":${r.slaveDir}}`' class="a-under" target="_blank"
+               v-if="r.slaveDir">
+              {{ r.slaveDir }}
+            </a>
+          </td>
         </tr>
         </tbody>
       </table>
-      <div class="founded">
-        Найдено записей: <strong>{{ params.total }}</strong>
-      </div>
     </div>
-    <statistics-message-print-modal v-if="statistics_tickets" :hospitals="hospitals"/>
   </div>
 </template>
 
 <script lang="ts">
+import Vue from 'vue';
+import Component from 'vue-class-component';
 import moment from 'moment';
 import _ from 'lodash';
 
@@ -99,42 +105,43 @@ import api from '@/api';
 import * as actions from '@/store/action-types';
 import DocCallRow from '@/pages/DocCallRow.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
-import StatisticsMessagePrintModal from '@/modals/StatisticsMessagePrintModal.vue';
+import ExtraNotificationFastEditor from '@/ui-cards/ExtraNotificationFastEditor.vue';
+import { ExtraNotificationData } from '@/types/extraNotification';
 
-export default {
-  name: 'ExtraNotification',
+interface Params {
+  date: string,
+  status: number,
+  hospital: number,
+}
+
+const EMPTY_ROWS: ExtraNotificationData[] = [];
+
+@Component({
   components: {
-    DateFieldNav2, DocCallRow, Treeselect, StatisticsMessagePrintModal,
+    ExtraNotificationFastEditor,
+    DateFieldNav2,
+    DocCallRow,
+    Treeselect,
   },
   data() {
     return {
-      districts: [],
-      purposes: [],
-      docs_assigned: [],
       hospitals: [],
-      rows: [],
+      rows: EMPTY_ROWS,
       loaded: false,
       params: {
         date: moment().format('YYYY-MM-DD'),
-        status: 0,
+        status: 2,
         hospital: -1,
       },
     };
   },
   beforeMount() {
-    this.$store.dispatch(actions.GET_USER_DATA);
     this.$store.watch((state) => state.user.data, (oldValue, newValue) => {
-      this.params.hospital = newValue.hospital || -1;
-    });
-  },
-  computed: {
-    watchParams() {
-      return _.pick(this.params, [
-        'date',
-        'status',
-        'hospital',
-      ]);
-    },
+      if (this.params.hospital === -1 && newValue) {
+        this.params.hospital = newValue.hospital || -1;
+      }
+    }, { immediate: true });
+    this.$store.dispatch(actions.GET_USER_DATA);
   },
   watch: {
     watchParams: {
@@ -147,47 +154,56 @@ export default {
       deep: true,
       handler: _.debounce(function () {
         this.load();
-      }, 400),
-    },
-    l2_only_doc_call: {
-      handler() {
-        if (this.l2_only_doc_call) {
-          // Подумать над этим
-          // this.params.is_external = true;
-        }
-      },
-      immediate: true,
+      }, 200),
     },
   },
   async mounted() {
     await this.$store.dispatch(actions.INC_LOADING);
     const { hospitals } = await api('hospitals', { filterByUserHospital: true });
     this.hospitals = hospitals;
-    this.$root.$on('hide_message_tickets', () => this.hide_statistcs());
     await this.$store.dispatch(actions.DEC_LOADING);
   },
-  methods: {
-    print() {
-      const { params } = this;
-      // eslint-disable-next-line max-len
-      window.open(`/forms/pdf?type=109.02&date=${params.date}&time_start=${params.time_start}&time_end=${params.time_end}&district=${params.district || -1}&doc=${params.doc_assigned || -1}&purpose=${params.purpose || -1}&hospital_pk=${params.hospital || -1}&external=${params.is_external ? 0 : 1}&cancel=${params.is_canceled ? 0 : 1}`);
-    },
-    async load() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const data = await api('extra-notification/search', this.params);
-      this.params.total = data.total;
-      this.rows = data.rows;
-      await this.$store.dispatch(actions.DEC_LOADING);
-      this.loaded = true;
-    },
-    show_statistics_message_tickets() {
-      this.statistics_tickets = true;
-    },
-    hide_statistcs() {
-      this.statistics_tickets = false;
-    },
-  },
-};
+})
+export default class ExtraNotification extends Vue {
+  params: Params;
+
+  rows: ExtraNotificationData[];
+
+  loaded: boolean;
+
+  hospitals: any[];
+
+  get canEdit() {
+    for (const g of (this.$store.getters.user_data.groups || [])) {
+      if (g === 'Заполнение экстренных извещений') {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  get watchParams() {
+    return _.pick(this.params, [
+      'date',
+      'status',
+      'hospital',
+    ]);
+  }
+
+  get visibleHospitals() {
+    return this.canEdit
+      ? this.hospitals
+      : this.hospitals.filter(h => h.id === this.$store.getters.user_data.hospital);
+  }
+
+  async load() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const data = await api('extra-notification/search', this.params);
+    this.rows = data.rows;
+    await this.$store.dispatch(actions.DEC_LOADING);
+    this.loaded = true;
+  }
+}
 
 </script>
 
@@ -215,6 +231,7 @@ export default {
 
 .addon-splitter {
   background-color: #fff;
+
   &.disabled {
     opacity: .4;
   }
@@ -224,5 +241,10 @@ export default {
   input {
     line-height: 1;
   }
+}
+
+.date-nav ::v-deep .btn:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
 }
 </style>

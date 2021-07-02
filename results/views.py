@@ -1175,6 +1175,7 @@ def result_print(request):
                         or iss.research.is_microbiology
                         or iss.research.is_citology
                         or iss.research.is_gistology
+                        or iss.research.is_form
                     ):
                         iss_title = iss.research.title
                     elif iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
