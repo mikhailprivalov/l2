@@ -1003,7 +1003,7 @@ export default {
         if (field.value && !row.confirmed && row.research.is_doc_refferal && this.stat_btn) {
           const ndiagnos = field.value.split(' ')[0] || '';
           if (ndiagnos !== row.diagnos && ndiagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?$/gm)) {
-            this.$root.$emit('msg', 'ok', `Диагноз в данных статталона обновлён\n${ndiagnos}`);
+            this.$root.$emit('msg', 'ok', `Диагноз в данных статталона обновлён\n${ndiagnos}`, 3000);
             // eslint-disable-next-line no-param-reassign
             row.diagnos = ndiagnos;
           }
