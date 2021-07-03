@@ -223,7 +223,10 @@ export default class ExtraNotification extends Vue {
 
   print() {
     const ids = this.toPrintNumbers;
-    console.log(ids);
+    // todo печать
+    for (const i of ids) {
+      this.toPrint[i] = false;
+    }
   }
 
   async load() {
