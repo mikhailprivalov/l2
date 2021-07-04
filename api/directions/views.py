@@ -1924,7 +1924,6 @@ def last_fraction_result(request):
 @login_required
 def last_field_result(request):
     request_data = json.loads(request.body)
-    print(request_data)
     client_pk = request_data["clientPk"]
 
     logical_or, logical_and, logical_group_or = False, False, False
