@@ -60,7 +60,7 @@ def form_01(request_data):
             TableStyle(
                 [
                     ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 0.5 * mm),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm),
                 ]
             )
         )
