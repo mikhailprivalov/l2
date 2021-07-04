@@ -65,8 +65,8 @@
                 <input :readonly="true" class="form-control" v-model="field.value"/>
               </div>
               <div class="field-value" v-else-if="field.field_type === 10">
-                <SelectField
-                  :disabled="confirmed" :variants="field.values_to_input" class="form-control fw"
+                <TreeSelectField
+                  :disabled="confirmed" :variants="field.values_to_input"
                   v-model="field.value"
                 />
               </div>
@@ -186,7 +186,7 @@ export default {
     SearchFractionValueField: () => import('../fields/SearchFractionValueField.vue'),
     SearchFieldValueField: () => import('../fields/SearchFieldValueField.vue'),
     RadioField: () => import('../fields/RadioField.vue'),
-    SelectField: () => import('../fields/SelectField.vue'),
+    TreeSelectField: () => import('../fields/TreeSelectField.vue'),
     AnesthesiaProcess: () => import('../fields/AnesthesiaProcess.vue'),
     MKBFieldForm: () => import('../fields/MKBFieldForm.vue'),
     FormulaField: () => import('../fields/FormulaField.vue'),

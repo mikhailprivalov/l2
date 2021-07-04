@@ -37,7 +37,7 @@
       <a class="a-under" href="#" @click.prevent="load()">загрузить</a>
     </div>
     <div v-else class="data">
-      <table class="table table-bordered table-condensed table-hover" style="table-layout: fixed">
+      <table class="table table-bordered table-condensed table-hover table-list">
         <colgroup>
           <col>
           <col>
@@ -46,16 +46,24 @@
           <col style="width: 200px">
           <col style="width: 120px">
           <col style="width: 120px">
+          <col style="width: 34px">
         </colgroup>
         <thead>
         <tr>
-          <td>Медицинская организация</td>
-          <td>Пациент</td>
-          <td>№ заявки</td>
-          <td>Дата заявки</td>
-          <td>Эпид №</td>
-          <td>Эпид № - дата</td>
-          <td>№ в базе</td>
+          <th>Медицинская организация</th>
+          <th>Пациент</th>
+          <th>№ заявки</th>
+          <th>Дата заявки</th>
+          <th>Эпид №</th>
+          <th>Эпид № - дата</th>
+          <th>№ в базе</th>
+          <th class="text-center">
+            <a href="#" @click.prevent="print" class="a-under" title="Печать выбранных"
+               v-if="toPrintNumbers.length > 0"
+               v-tippy>
+              <i class="fas fa-print"></i>
+            </a>
+          </th>
         </tr>
         </thead>
         <tbody>
@@ -85,6 +93,16 @@
                v-if="r.slaveDir">
               {{ r.slaveDir }}
             </a>
+          </td>
+          <td class="text-center cl-td">
+            <label v-if="r.slaveConfirm">
+              <input type="checkbox" v-model="toPrint[r.slaveDir]">
+            </label>
+          </td>
+        </tr>
+        <tr v-if="rows.length === 0">
+          <td colspan="8" class="text-center">
+            не найдено
           </td>
         </tr>
         </tbody>
@@ -133,6 +151,7 @@ const EMPTY_ROWS: ExtraNotificationData[] = [];
         status: 2,
         hospital: -1,
       },
+      toPrint: {},
     };
   },
   beforeMount() {
@@ -173,6 +192,8 @@ export default class ExtraNotification extends Vue {
 
   hospitals: any[];
 
+  toPrint: any;
+
   get canEdit() {
     for (const g of (this.$store.getters.user_data.groups || [])) {
       if (g === 'Заполнение экстренных извещений') {
@@ -196,10 +217,23 @@ export default class ExtraNotification extends Vue {
       : this.hospitals.filter(h => h.id === this.$store.getters.user_data.hospital);
   }
 
+  get toPrintNumbers() {
+    return Object.keys(this.toPrint).filter(k => this.toPrint[k]);
+  }
+
+  print() {
+    const ids = this.toPrintNumbers;
+    // todo печать
+    for (const i of ids) {
+      this.toPrint[i] = false;
+    }
+  }
+
   async load() {
     await this.$store.dispatch(actions.INC_LOADING);
     const data = await api('extra-notification/search', this.params);
     this.rows = data.rows;
+    this.toPrint = data.rows.reduce((a, r) => ({ ...a, [r.slaveDir]: false }), {});
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loaded = true;
   }
@@ -246,5 +280,15 @@ export default class ExtraNotification extends Vue {
 .date-nav ::v-deep .btn:last-child {
   border-top-right-radius: 4px;
   border-bottom-right-radius: 4px;
+}
+
+.table-list {
+  table-layout: fixed;
+
+  thead th {
+    position: sticky;
+    top: -1px;
+    background: #fff;
+  }
 }
 </style>
