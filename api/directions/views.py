@@ -1924,6 +1924,7 @@ def last_fraction_result(request):
 @login_required
 def last_field_result(request):
     request_data = json.loads(request.body)
+    print(request_data)
     client_pk = request_data["clientPk"]
 
     logical_or, logical_and, logical_group_or = False, False, False
@@ -1941,6 +1942,11 @@ def last_field_result(request):
         else:
             work_place = ""
         result = {"value": work_place}
+    elif request_data["fieldPk"].find('%hospital') != -1:
+        current_iss = request_data["iss_pk"]
+        num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+        hosp_title = Napravleniya.objects.get(pk=num_dir).hospital.title
+        result = {"value": hosp_title}
     elif request_data["fieldPk"].find('%main_address') != -1:
         result = {"value": c.main_address}
     elif request_data["fieldPk"].find('%snils') != -1:
