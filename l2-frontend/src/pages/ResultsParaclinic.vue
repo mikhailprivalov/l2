@@ -356,6 +356,7 @@
             :confirmed="row.confirmed"
             :patient="data.patient"
             :change_mkb="change_mkb(row)"
+            :pk="row.pk"
           />
           <div class="group"
                v-if="!data.has_microbiology && row.research.show_more_services && (!row.confirmed || row.more.length > 0)">
