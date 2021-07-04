@@ -223,7 +223,7 @@ export default class ExtraNotification extends Vue {
 
   print() {
     const ids = this.toPrintNumbers;
-    // todo печать
+    window.open(`/forms/extra-nofication?pk=[${ids}]`);
     for (const i of ids) {
       this.toPrint[i] = false;
     }
