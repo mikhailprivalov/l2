@@ -21,7 +21,7 @@ def form_01(request_data):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
-    style.fontSize = 10
+    style.fontSize = 9
     style.alignment = TA_JUSTIFY
 
     directions = [x for x in json.loads(request_data["pk"]) if x is not None]
