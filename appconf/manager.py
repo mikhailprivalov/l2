@@ -108,6 +108,7 @@ class SettingManager:
                     "applications",
                     "eds",
                     "profcenter",
+                    "extra_notifications",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

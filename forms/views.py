@@ -1,6 +1,7 @@
 # import os
 from django.http import HttpResponse
 from django.utils.module_loading import import_string
+
 # from io import BytesIO
 # from datetime import datetime
 # from pdf2docx import Converter
@@ -80,3 +81,19 @@ def pdf(request):
 #         self.filename_pdf = 'xx.pdf'
 #         self._fitz_doc = fitz.Document(stream=buffer, filename=self.filename_pdf)
 #         self._pages = [Page(fitz_page) for fitz_page in self._fitz_doc]
+
+
+def extra_nofication(request):
+    # Результат Экстренные извещения
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="extra_note.pdf"'
+
+    f = import_string('forms.forms110.form_01')
+    response.write(
+        f(
+            request_data={
+                **dict(request.GET.items()),
+            }
+        )
+    )
+    return response
