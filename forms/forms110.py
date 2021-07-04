@@ -11,6 +11,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 import simplejson as json
 from io import BytesIO
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from laboratory.settings import EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
 
 
 def form_01(request_data):
@@ -27,7 +28,7 @@ def form_01(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("Эпид. извещение"))
-    result = get_extra_notification_data_for_pdf(directions)
+    result = get_extra_notification_data_for_pdf(directions, EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK)
 
     data_result = {}
     for i in result:

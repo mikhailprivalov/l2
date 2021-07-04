@@ -2,7 +2,7 @@ from django.db import connection
 from utils.db import namedtuplefetchall
 
 
-def get_extra_notification_data_for_pdf(directions):
+def get_extra_notification_data_for_pdf(directions, extra_master_research_id, extra_slave_research_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -55,10 +55,10 @@ def get_extra_notification_data_for_pdf(directions):
                 ON directions_napravleniya.parent_id=master_book_data.master_iss
                 WHERE directions_issledovaniya.napravleniye_id = any(ARRAY[%(num_dirs)s]) 
                 AND directions_issledovaniya.time_confirmation is not null 
-                AND directions_issledovaniya.research_id = 767 and master_direction.master_research_id=766
+                AND directions_issledovaniya.research_id = %(slave_research_id)s and master_direction.master_research_id = %(master_research_id)s
                 ORDER BY master_dir, master_field_sort
         """,
-            params={'num_dirs': directions},
+            params={'num_dirs': directions, 'master_research_id': extra_master_research_id, 'slave_research_id': extra_slave_research_id },
         )
         rows = namedtuplefetchall(cursor)
     return rows
