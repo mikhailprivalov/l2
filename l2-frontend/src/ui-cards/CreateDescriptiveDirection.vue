@@ -21,7 +21,7 @@
             <div>
               <researches-picker :hidetemplates="true" :oneselect="true"
                                  :autoselect="false"
-                                 :types-only="[4, 3]" kk="cdd"
+                                 :types-only="[4, 3, 11]" kk="cdd"
                                  :just_search="true" v-model="research"/>
             </div>
           </div>

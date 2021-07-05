@@ -1925,7 +1925,6 @@ def last_fraction_result(request):
 def last_field_result(request):
     request_data = json.loads(request.body)
     client_pk = request_data["clientPk"]
-
     logical_or, logical_and, logical_group_or = False, False, False
     field_is_link, field_is_aggregate_operation, field_is_aggregate_proto_description = False, False, False
     field_pks, operations_data, aggregate_data = None, None, None
@@ -1948,6 +1947,8 @@ def last_field_result(request):
         result = {"value": hosp_title}
     elif request_data["fieldPk"].find('%main_address') != -1:
         result = {"value": c.main_address}
+    elif request_data["fieldPk"].find('%docprofile') != -1:
+        result = {"value": request.user.doctorprofile.get_full_fio()}
     elif request_data["fieldPk"].find('%patient_fio') != -1:
         result = {"value": data['fio']}
     elif request_data["fieldPk"].find('%patient_born') != -1:
