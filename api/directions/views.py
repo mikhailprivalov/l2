@@ -1948,7 +1948,7 @@ def last_field_result(request):
     elif request_data["fieldPk"].find('%main_address') != -1:
         result = {"value": c.main_address}
     elif request_data["fieldPk"].find('%docprofile') != -1:
-        result = {"value": request.user.doctorprofile.fio}
+        result = {"value": request.user.doctorprofile.get_full_fio()}
     elif request_data["fieldPk"].find('%patient_fio') != -1:
         result = {"value": data['fio']}
     elif request_data["fieldPk"].find('%patient_born') != -1:
