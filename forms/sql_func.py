@@ -17,7 +17,8 @@ def get_extra_notification_data_for_pdf(directions, extra_master_research_id, ex
                 epid_data.epid_value,
                 master_book_data.master_field_title,
                 master_book_data.master_value,
-                master_book_data.master_field_sort
+                master_book_data.master_field_sort,
+                master_book_data.master_field
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya
                 ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
@@ -45,7 +46,7 @@ def get_extra_notification_data_for_pdf(directions, extra_master_research_id, ex
                     SELECT 
                       issledovaniye_id as master_iss, 
                       value as master_value, 
-                      field_id as master_field, 
+                      directions_paraclinicresult.field_type as master_field,  
                       directory_paraclinicinputfield.title as master_field_title,
                       directory_paraclinicinputfield.order as master_field_sort
                     FROM directions_paraclinicresult

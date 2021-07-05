@@ -12,6 +12,7 @@ import simplejson as json
 from io import BytesIO
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from laboratory.settings import EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
+from utils.dates import normalize_date
 
 
 def form_01(request_data):
@@ -32,16 +33,20 @@ def form_01(request_data):
 
     data_result = {}
     for i in result:
+        if i.master_field == 1:
+            master_value = normalize_date(i.master_value)
+        else:
+            master_value = i.master_value
         if data_result.get(i.slave_dir) is None:
             data_result[i.slave_dir] = {
                 'master_dir': i.master_dir,
                 'epid_title': i.epid_title,
                 'epid_value': i.epid_value,
-                'master_field_results': [{'master_field_title': i.master_field_title, 'master_value': i.master_value}],
+                'master_field_results': [{'master_field_title': i.master_field_title, 'master_value': master_value}],
             }
         else:
             temp_data = data_result.get(i.slave_dir)
-            temp_data['master_field_results'].append({'master_field_title': i.master_field_title, 'master_value': i.master_value})
+            temp_data['master_field_results'].append({'master_field_title': i.master_field_title, 'master_value': master_value})
 
     objs = []
     for k, v in data_result.items():
