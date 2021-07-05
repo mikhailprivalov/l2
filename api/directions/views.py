@@ -1925,7 +1925,6 @@ def last_fraction_result(request):
 def last_field_result(request):
     request_data = json.loads(request.body)
     client_pk = request_data["clientPk"]
-    print(request.user.doctorprofile.fio)
     logical_or, logical_and, logical_group_or = False, False, False
     field_is_link, field_is_aggregate_operation, field_is_aggregate_proto_description = False, False, False
     field_pks, operations_data, aggregate_data = None, None, None
