@@ -68,7 +68,15 @@
               </div>
             </td>
             <td class="cl-td">
-              <input class="form-control" v-model.number="row.period" type="number" :min="1" :max="100" placeholder="период" />
+              <input
+                class="form-control"
+                v-model.number="row.period"
+                type="number"
+                :min="1"
+                :max="100"
+                placeholder="период"
+                @change="changeRow(row)"
+              />
             </td>
             <td class="cl-td">
               <label>
