@@ -230,3 +230,5 @@ venv*
 newrelic.ini
 make-*.sh
 forms/contract.json
+
+**/.vscode/

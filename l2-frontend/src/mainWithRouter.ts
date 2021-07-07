@@ -65,7 +65,6 @@ const router = new Router({
       meta: {
         title: 'Настройка скрининга',
         groups: ['Конструктор: Настройка скрининга'],
-        module: 'l2_doc_call',
       },
     },
     {
