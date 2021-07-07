@@ -1,9 +1,16 @@
 from typing import Callable, Dict, Union
+from django.db import models
 
 import simplejson
 from django.http import Http404
 
 from clients.models import Card
+
+
+def as_model(model: models.Model):
+    def internal(pk: Union[int, str]):
+        return model.objects.filter(pk=pk).first()    
+    return internal
 
 
 def data_parse(data: Union[dict, str, bytes], keys_types: Dict[str, Union[Callable, str, None]], default_values: dict = None) -> list:

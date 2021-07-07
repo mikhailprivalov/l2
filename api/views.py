@@ -3,7 +3,11 @@ import threading
 import time
 import re
 from collections import defaultdict
-from typing import Union
+from typing import Optional, Union
+from utils.response import status_response
+
+from django.db.utils import IntegrityError
+from utils.data_verification import as_model, data_parse
 
 import simplejson as json
 import yaml
@@ -1525,7 +1529,7 @@ def get_permanent_directory(request):
 @login_required
 @group_required("Конструктор: Настройка скрининга")
 def screening_get_directory(request):
-    rows = list(ScreeningPlan.objects.all().order_by('pk', 'sort_weight').values('pk', 'age_start_control', 'age_end_control', 'sex_client', 'research_id', 'period', 'sort_weight', 'hide'))
+    rows = list(ScreeningPlan.objects.all().order_by('sort_weight').values('pk', 'age_start_control', 'age_end_control', 'sex_client', 'research_id', 'period', 'sort_weight', 'hide'))
     n = 0
     for r in rows:
         if r['sort_weight'] != n:
@@ -1534,4 +1538,50 @@ def screening_get_directory(request):
             p.sort_weight = n
             p.save(update_fields=['sort_weight'])
         n += 1
+        r['hasChanges'] = False
     return JsonResponse({"rows": rows})
+
+
+@login_required
+@group_required("Конструктор: Настройка скрининга")
+def screening_save(request):
+    parse_params = {
+        'screening': as_model(ScreeningPlan),
+        'service': as_model(DResearches),
+        'sex': str,
+        'ageFrom': int,
+        'ageTo': int,
+        'period': int,
+        'sortWeight': int,
+        'hide': bool,
+    }
+
+    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
+    screening: Optional[ScreeningPlan] = data[0]
+    service: Optional[DResearches] = data[1]
+    sex: str = data[2]
+    age_from: int = data[3]
+    age_to: int = data[4]
+    period: int = data[5]
+    sort_weight: int = data[6]
+    hide: bool = data[7]
+
+    if not service:
+        return status_response(False, 'Не передана услуга или исследование')
+
+    try:
+        if not screening:
+            screening = ScreeningPlan.objects.create(research=service, sex_client=sex, age_start_control=age_from, age_end_control=age_to, period=period, sort_weight=sort_weight, hide=hide)
+        else:
+            screening.research = service
+            screening.sex_client = sex
+            screening.age_start_control = age_from
+            screening.age_end_control = age_to
+            screening.period = period
+            screening.sort_weight = sort_weight
+            screening.hide = hide
+            screening.save()
+    except IntegrityError:
+        return status_response(False, 'Такой скрининг уже есть!')
+
+    return status_response(True)

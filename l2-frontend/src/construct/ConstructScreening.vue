@@ -3,7 +3,7 @@
     <div class="card-no-hover card card-1">
       <h4 class="text-center">Настройка скрининга</h4>
 
-      <table class="table table-bordered table-condensed table-screening">
+      <table class="table table-bordered table-condensed table-striped table-screening">
         <colgroup>
           <col style="width: 80px" />
           <col />
@@ -11,6 +11,7 @@
           <col style="width: 180px" />
           <col style="width: 180px" />
           <col style="width: 180px" />
+          <col style="width: 40px" />
         </colgroup>
         <thead>
           <tr>
@@ -20,6 +21,7 @@
             <th>Возраст</th>
             <th>Период, раз в N лет</th>
             <th>Скрыть</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -38,7 +40,7 @@
               {{ researches_obj[row.research_id].title }}
             </td>
             <td class="cl-td">
-              <select class="form-control" v-model="row.sex_client">
+              <select class="form-control" v-model="row.sex_client" @change="changeRow(row)">
                 <option v-for="s in SEX" :key="s.id" :value="s.id">{{ s.label }}</option>
               </select>
             </td>
@@ -51,6 +53,7 @@
                   :min="0"
                   :max="row.age_end_control"
                   placeholder="от"
+                  @change="changeRow(row)"
                 />
                 <span class="input-group-addon addon-splitter">—</span>
                 <input
@@ -60,6 +63,7 @@
                   :min="row.age_start_control"
                   :max="120"
                   placeholder="до (вкл)"
+                  @change="changeRow(row)"
                 />
               </div>
             </td>
@@ -68,8 +72,21 @@
             </td>
             <td class="cl-td">
               <label>
-                <input type="checkbox" v-model="row.hide" />
+                <input type="checkbox" v-model="row.hide" @change="changeRow(row)" />
               </label>
+            </td>
+            <td class="cl-td">
+              <div class="save-td">
+                <button
+                  class="btn btn-primary-nb btn-sm btn-block btn-save"
+                  v-if="row.hasChanges"
+                  @click="saveRow(row)"
+                  :disabled="isRowDisabled(row)"
+                  :title="isRowDisabled(row)"
+                >
+                  <i class="fas fa-save"></i>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -79,7 +96,7 @@
       <h5 class="text-center">Добавить новую запись</h5>
       <h6>Услуга или исследование</h6>
       <div class="researches-wrapper">
-        <researches-picker v-model="serviceToCreate" autoselect="none" :hidetemplates="true" :oneselect="true" />
+        <researches-picker v-model="serviceToCreate" autoselect="none" :hidetemplates="true" :oneselect="true" kk="screening" />
       </div>
       <h6>Параметры</h6>
       <table class="table table-bordered table-condensed" style="width: 360px">
@@ -141,7 +158,7 @@
         :disabled="!serviceToCreate || !periodToCreate || !ageFromToCreate || !ageToToCreate"
         @click="create"
       >
-        <template v-if="!serviceToCreate">
+        <template v-if="!serviceToCreate || !researches_obj[serviceToCreate]">
           Услуга или исследование не выбрано
         </template>
         <template v-else>
@@ -235,6 +252,8 @@ export default class ConstructScreening extends Vue {
 
     // eslint-disable-next-line no-param-reassign
     row.sort_weight = next;
+
+    setTimeout(() => this.saveRows({ ...row }, { ...nextRow }), 10);
   }
 
   dec(row) {
@@ -249,6 +268,8 @@ export default class ConstructScreening extends Vue {
 
     // eslint-disable-next-line no-param-reassign
     row.sort_weight = next;
+
+    setTimeout(() => this.saveRows({ ...row }, { ...nextRow }), 10);
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -260,26 +281,70 @@ export default class ConstructScreening extends Vue {
     return row.sort_weight === Math.max(...this.rows.map(r => r.sort_weight));
   }
 
+  // eslint-disable-next-line class-methods-use-this
+  isRowDisabled(row) {
+    return !row.period || !row.age_start_control || !row.age_end_control;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  changeRow(row) {
+    // eslint-disable-next-line no-param-reassign
+    row.hasChanges = true;
+    this.$forceUpdate();
+  }
+
   get nextOrder() {
     return this.rows.length > 0 ? Math.max(...this.rows.map(r => r.sort_weight)) + 1 : 0;
   }
 
   async create() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { ok, message } = await api('screening/create', {
+    const { ok, message } = await api('screening/save', {
       service: this.serviceToCreate,
       sex: this.sexToCreate,
       ageFrom: this.ageFromToCreate,
       ageTo: this.ageToToCreate,
       period: this.periodToCreate,
+      sortWeight: this.nextOrder,
     });
     if (ok) {
       this.serviceToCreate = null;
+      this.$root.$emit('researches-picker:deselect_allscreening');
       this.$root.$emit('msg', 'ok', 'Скрининг добавлен!');
     } else {
       this.$root.$emit('msg', 'error', `Ошибка: ${message}`);
     }
     await this.loadRows();
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async saveRows(row1, row2) {
+    await Promise.all([
+      row1 ? this.saveRow(row1, true) : Promise.resolve(null),
+      row2 ? this.saveRow(row2, true) : Promise.resolve(null),
+    ]);
+  }
+
+  async saveRow(row, disableReloading = false) {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await api('screening/save', {
+      screening: row.pk,
+      service: row.research_id,
+      sex: row.sex_client,
+      ageFrom: row.age_start_control,
+      ageTo: row.age_end_control,
+      period: row.period,
+      sortWeight: row.sort_weight,
+      hide: row.hide,
+    });
+    if (ok) {
+      this.$root.$emit('msg', 'ok', 'Скрининг обновлён!');
+    } else {
+      this.$root.$emit('msg', 'error', `Ошибка: ${message}`);
+    }
+    if (!disableReloading) {
+      await this.loadRows();
+    }
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 }
@@ -342,6 +407,25 @@ export default class ConstructScreening extends Vue {
   .addon-splitter {
     width: 28px;
     flex: 1 28px;
+  }
+}
+
+.cl-td .btn {
+  height: 32px;
+}
+
+.save-td {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 1px;
+  padding: 1px;
+  justify-content: stretch;
+  align-items: stretch;
+
+  .btn {
+    flex: 0 100%;
+    width: unset !important;
   }
 }
 </style>

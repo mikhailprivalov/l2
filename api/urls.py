@@ -46,6 +46,7 @@ urlpatterns = [
     path('rmis-link', views.rmis_link),
     path('permanent-directory', views.get_permanent_directory),
     path('screening/get-directory', views.screening_get_directory),
+    path('screening/save', views.screening_save),
     path('researches/', include('api.researches.urls')),
     path('patients/', include('api.patients.urls')),
     path('directions/', include('api.directions.urls')),
