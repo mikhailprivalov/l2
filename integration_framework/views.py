@@ -618,7 +618,7 @@ def external_research_create(request):
     body = json.loads(request.body)
 
     old_pk = body.get("oldId")
-    org = body.get("org")
+    org = body.get("org", {})
     code_tfoms = org.get("codeTFOMS")
     oid_org = org.get("oid")
 
@@ -636,7 +636,35 @@ def external_research_create(request):
     if not request.user.hospitals.filter(pk=hospital.pk).exists():
         return Response({"ok": False, 'message': 'Нет доступа в переданную организацию'})
 
+    initiator = org.get('initiator', {})
+    title_org_initiator = initiator.get('title')
+    if title_org_initiator is not None:
+        title_org_initiator = str(title_org_initiator)[:254]
+
+    ogrn_org_initiator = initiator.get('ogrn')
+    if ogrn_org_initiator is not None:
+        ogrn_org_initiator = str(ogrn_org_initiator)
+
+    if not title_org_initiator:
+        title_org_initiator = None
+
+    if not ogrn_org_initiator:
+        ogrn_org_initiator = None
+
+    if not title_org_initiator and ogrn_org_initiator:
+        return Response({"ok": False, 'message': 'org.initiator: при передаче ogrn поле title обязательно'})
+
+    if title_org_initiator and not ogrn_org_initiator:
+        return Response({"ok": False, 'message': 'org.initiator: при передаче title поле ogrn обязательно'})
+
+    if ogrn_org_initiator and not ogrn_org_initiator.isdigit():
+        return Response({"ok": False, 'message': 'org.initiator.ogrn: в значении возможны только числа'})
+
+    if ogrn_org_initiator and len(ogrn_org_initiator) != 13:
+        return Response({"ok": False, 'message': 'org.initiator.ogrn: длина должна быть 13'})
+
     patient = body.get("patient", {})
+
     enp = patient.get("enp", '').replace(' ', '')
 
     if len(enp) != 16 or not enp.isdigit():
@@ -692,6 +720,8 @@ def external_research_create(request):
                 direction.polis_who_give = card.polis.who_give if card.polis else None
                 direction.polis_n = card.polis.number if card.polis else None
                 direction.id_in_hospital = id_in_hospital
+                direction.title_org_initiator = title_org_initiator
+                direction.ogrn_org_initiator = ogrn_org_initiator
                 direction.save()
                 direction.issledovaniya_set.all().delete()
                 print('Replacing all data for', old_pk)  # noqa: T001
@@ -704,6 +734,8 @@ def external_research_create(request):
                     polis_n=card.polis.number if card.polis else None,
                     hospital=hospital,
                     id_in_hospital=id_in_hospital,
+                    title_org_initiator=title_org_initiator,
+                    ogrn_org_initiator=ogrn_org_initiator
                 )
 
             research_to_filter = defaultdict(lambda: False)
