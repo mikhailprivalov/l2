@@ -54,6 +54,8 @@
                   :max="row.age_end_control"
                   placeholder="от"
                   @change="changeRow(row)"
+                  @keypress="changeRow(row)"
+                  @input="changeRow(row)"
                 />
                 <span class="input-group-addon addon-splitter">—</span>
                 <input
@@ -64,6 +66,8 @@
                   :max="120"
                   placeholder="до (вкл)"
                   @change="changeRow(row)"
+                  @keypress="changeRow(row)"
+                  @input="changeRow(row)"
                 />
               </div>
             </td>
@@ -76,14 +80,22 @@
                 :max="100"
                 placeholder="период"
                 @change="changeRow(row)"
+                @keypress="changeRow(row)"
+                @input="changeRow(row)"
               />
             </td>
             <td class="cl-td">
               <label>
-                <input type="checkbox" v-model="row.hide" @change="changeRow(row)" />
+                <input
+                  type="checkbox"
+                  v-model="row.hide"
+                  @change="changeRow(row)"
+                  @keypress="changeRow(row)"
+                  @input="changeRow(row)"
+                />
               </label>
             </td>
-            <td class="cl-td">
+            <td class="cl-td" :key="`${row.pk}_${row.hasChanges}`">
               <div class="save-td">
                 <button
                   class="btn btn-primary-nb btn-sm btn-block btn-save"
@@ -299,7 +311,6 @@ export default class ConstructScreening extends Vue {
   changeRow(row) {
     // eslint-disable-next-line no-param-reassign
     row.hasChanges = true;
-    this.$forceUpdate();
   }
 
   get nextOrder() {
