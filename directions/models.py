@@ -396,6 +396,9 @@ class Napravleniya(models.Model):
     rmis_case_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='ID случая в РМИС')
     rmis_visit_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='ID посещения в РМИС')
     qr_check_token = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Токен для проверки результата по QR внешним сервисом')
+    title_org_initiator = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Организация направитель')
+    ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
+
 
     def get_doc_podrazdeleniye_title(self):
         if self.hospital and (self.is_external or not self.hospital.is_default):
