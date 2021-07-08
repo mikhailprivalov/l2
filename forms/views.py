@@ -114,7 +114,7 @@ def covid_result(request):
     datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S:%f')
     result = get_covid_to_json(COVID_RESEARCHES_PK, datetime_start, datetime_end)
 
-    return_data = {}
+    return_data = {'result': result}
     response['Content-Disposition'] = "attachment; filename=\"covid.json\""
     response.write(json.dumps(return_data))
     return response

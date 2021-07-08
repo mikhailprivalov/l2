@@ -67,7 +67,7 @@ def get_extra_notification_data_for_pdf(directions, extra_master_research_id, ex
     return rows
 
 
-def get_covid_to_json(researches, d_s, d_e ):
+def get_covid_to_json(researches, d_s, d_e):
     with connection.cursor() as cursor:
         cursor.execute(
             """
