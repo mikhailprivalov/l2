@@ -90,7 +90,8 @@
                   v-if="row.hasChanges"
                   @click="saveRow(row)"
                   :disabled="isRowDisabled(row)"
-                  :title="isRowDisabled(row)"
+                  :title="isRowDisabled(row) ? 'Некорректные данные' : 'Сохранить'"
+                  v-tippy
                 >
                   <i class="fas fa-save"></i>
                 </button>
