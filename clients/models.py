@@ -483,7 +483,7 @@ class Individual(models.Model):
         return ""
 
     def get_enp(self):
-        enp_doc: [Document, None] = Document.objects.filter(document_type__title__startswith="Полис ОМС", individual=self).first()
+        enp_doc: Union[Document, None] = Document.objects.filter(document_type__title__startswith="Полис ОМС", individual=self).first()
         if enp_doc and enp_doc.number:
             return enp_doc.number
         return None
@@ -492,7 +492,7 @@ class Individual(models.Model):
         is_new = False
         updated = []
 
-        enp_doc: [Document, None] = Document.objects.filter(document_type__title__startswith="Полис ОМС", individual=self).first()
+        enp_doc: Union[Document, None] = Document.objects.filter(document_type__title__startswith="Полис ОМС", individual=self).first()
 
         tfoms_data = None
         if enp_doc and enp_doc.number:
@@ -512,7 +512,7 @@ class Individual(models.Model):
         return is_new, updated
 
     @staticmethod
-    def import_from_tfoms(data: Union[dict, List], individual: ['Individual', None] = None, no_update=False):
+    def import_from_tfoms(data: Union[dict, List], individual: Union['Individual', None] = None, no_update=False):
         if isinstance(data, list):
             if len(data) > 0:
                 data = data[0]
@@ -1037,7 +1037,13 @@ class Card(models.Model):
 
     @staticmethod
     def add_l2_card(
-        individual: [Individual, None] = None, card_orig: ['Card', None] = None, distinct=True, polis: ['Document', None] = None, address: [str, None] = None, force=False, updated_data=None
+        individual: Union[Individual, None] = None,
+        card_orig: Union['Card', None] = None,
+        distinct=True,
+        polis: Union['Document', None] = None,
+        address: Union[str, None] = None,
+        force=False,
+        updated_data=None,
     ):
         if distinct and card_orig and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True).exists():
             return None
@@ -1266,7 +1272,9 @@ class ScreeningRegPlan(models.Model):
         now_year = int(current_year())
         all_years_patient = [i for i in range(now_year - year, now_year + year + 1)]
         all_ages_patient = [i for i in range(age_patient - year, age_patient + year + 1)]
-        screening_plan_obj = ScreeningPlan.objects.filter(Q(age_start_control__lte=age_patient, age_end_control__gte=age_patient, hide=False), Q(sex_client=sex_client) | Q(sex_client='в'))
+        screening_plan_obj = ScreeningPlan.objects.filter(
+            Q(age_start_control__lte=age_patient, age_end_control__gte=age_patient, hide=False), Q(sex_client=sex_client) | Q(sex_client='в')
+        ).order_by('sort_weight')
 
         ages_years = {}
         for i in range(len(all_years_patient)):
@@ -1304,9 +1312,13 @@ class ScreeningRegPlan(models.Model):
             count = 0
             old_part_slice = None
             ages_plan = []
-            for ap in ages_patient_research:
-                if not ap:
+            for j in range(len(all_ages_patient)):
+                ap = all_ages_patient[j]
+                a_patient = None if j >= len(ages_patient_research) else ages_patient_research[j]
+                if not a_patient:
+                    temp_ages["values"].append(None)
                     continue
+
                 new_part_slice = slice_ages.get(ap, None)
                 if count == 0:
                     old_part_slice = new_part_slice
@@ -1326,7 +1338,7 @@ class ScreeningRegPlan(models.Model):
                     ages_research.append(temp_ages)
                     temp_ages = {"isEven": None, "plan": None, "planYear": None, "values": []}
                     ages_plan = []
-                    if slice_ages.get(ap, None):
+                    if slice_ages.get(ap):
                         temp_ages["values"].append({"age": ap, "year": ages_years[ap], "fact": None})
                         ages_plan.append(ap)
                 count += 1
@@ -1373,7 +1385,7 @@ class ScreeningRegPlan(models.Model):
             research_fact_result = results_research.get(i["pk"])
             for age in i['ages']:
                 for v in age['values']:
-                    if not research_fact_result.get(v['year']):
+                    if not v or not research_fact_result.get(v['year']):
                         continue
                     else:
                         data_fact = research_fact_result.get(v['year'])
