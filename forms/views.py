@@ -1,6 +1,9 @@
 # import os
+import json
+
 from django.http import HttpResponse
 from django.utils.module_loading import import_string
+import datetime
 
 # from io import BytesIO
 # from datetime import datetime
@@ -9,6 +12,8 @@ from django.utils.module_loading import import_string
 # import fitz
 # from pdf2docx import Page
 # from appconf.manager import SettingManager
+from forms.sql_func import get_covid_to_json
+from laboratory.settings import COVID_RESEARCHES_PK
 
 
 def pdf(request):
@@ -96,4 +101,20 @@ def extra_nofication(request):
             }
         )
     )
+    return response
+
+
+def covid_result(request):
+    response = HttpResponse(content_type='application/json')
+    request_data = {**dict(request.GET.items())}
+    date = request_data["date"]
+    time_start = f'{date} {request_data.get("time_start", "00:00")}:00'
+    time_end = f'{date} {request_data.get("time_end", "23:59")}:59:999999'
+    datetime_start = datetime.datetime.strptime(time_start, '%Y-%m-%d %H:%M:%S')
+    datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S:%f')
+    result = get_covid_to_json(COVID_RESEARCHES_PK, datetime_start, datetime_end)
+
+    return_data = {}
+    response['Content-Disposition'] = "attachment; filename=\"covid.json\""
+    response.write(json.dumps(return_data))
     return response
