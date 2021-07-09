@@ -18,7 +18,7 @@
     "@popperjs/core": "^2.9.2",
     "@riophae/vue-treeselect": "^0.4.0",
     "animate.css": "^4.1.1",
-    "apexcharts": "^3.24.0",
+    "apexcharts": "^3.27.2",
     "autoprefixer": "^9.8.6",
     "axios": "^0.21.1",
     "bootflat": "^2.0.4",
