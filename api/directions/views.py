@@ -4,7 +4,6 @@ import re
 import time
 from datetime import datetime, time as dtime
 from operator import itemgetter
-from typing import Optional
 
 import pytz
 import simplejson as json
@@ -45,7 +44,6 @@ from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE
 from laboratory.utils import strdatetime, strdate, tsdatetime, start_end_year, strfdatetime, current_time
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
-from refprocessor.result_parser import ResultRight
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
