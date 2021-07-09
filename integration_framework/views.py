@@ -726,23 +726,30 @@ def external_research_create(request):
     if birthdate and sex not in ['м', 'ж']:
         return Response({"ok": False, 'message': 'individual.sex должно быть "м" или "ж"'})
 
+    has_tfoms = False
+
     if enp:
         individuals = Individual.objects.filter(tfoms_enp=enp)
         if not individuals.exists():
             individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title='Полис ОМС') | Q(document__document_type__title='ЕНП'))
-        if not individuals.exists():
+            individual = individuals.first()
+        if not individual:
             tfoms_data = match_enp(enp)
             if tfoms_data:
                 Individual.import_from_tfoms(tfoms_data)
                 individuals = Individual.objects.filter(tfoms_enp=enp)
 
-        individual = individuals.first()
+            individual = individuals.first()
+            if individual:
+                has_tfoms = True
 
     if not individual and lastname:
         tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
         if tfoms_data:
             Individual.import_from_tfoms(tfoms_data)
             individual = Individual.objects.filter(tfoms_enp=enp).first()
+        if individual:
+            has_tfoms = True
 
     if not individual and passport_serial:
         individuals = Individual.objects.filter(document__serial=passport_serial, document__number=passport_number, document__document_type__title='Паспорт гражданина РФ')
@@ -764,7 +771,7 @@ def external_research_create(request):
             "passport_number": passport_number,
             "snils": snils,
         }, need_return_individual=True)
-    elif individual and lastname:
+    elif individual and lastname and not has_tfoms:
         Individual.import_from_tfoms({
             "family": lastname,
             "given": firstname,
