@@ -678,7 +678,7 @@ def external_research_create(request):
     passport_serial = (patient.get("passportSerial") or '').replace(' ', '')
     passport_number = (patient.get("passportNumber") or '').replace(' ', '')
 
-    snils = (patient.get("passportNumber") or '').replace(' ', '').replace('-', '')
+    snils = (patient.get("snils") or '').replace(' ', '').replace('-', '')
 
     if not enp and (not passport_serial or not passport_number) and not snils:
         return Response({"ok": False, 'message': 'При пустом patient.enp должно быть передано patient.snils или patient.passportSerial+patient.passportNumber'})
