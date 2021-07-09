@@ -106,6 +106,10 @@ def extra_nofication(request):
 
 def covid_result(request):
     response = HttpResponse(content_type='application/json')
+    if not request.user.doctorprofile.has_group('Заполнение экстренных извещений'):
+        response.write(json.dumps({"error": "not access"}, ensure_ascii=False))
+        return response
+
     request_data = {**dict(request.GET.items())}
     date = request_data["date"]
     time_start = f'{date} {request_data.get("time_start", "00:00")}:00'
@@ -116,6 +120,8 @@ def covid_result(request):
     data_return = []
     count = 0
     for i in result:
+        if empty_data(i):
+            continue
         result_value = i.value_result
         if result_value == 'отрицательно':
             result_value = 0
@@ -126,12 +132,20 @@ def covid_result(request):
             enp = i.oms_number
         snils_number = ""
         if i.snils_number:
-            snils_number = i.oms_number
+            snils_number = i.snils_number
 
         passport_serial, passport_number = "", ""
         if i.passport_serial and i.passport_number:
             passport_serial = i.passport_serial
             passport_number = i.passport_number
+
+        sex = ""
+        if i.psex == "ж":
+            sex = 2
+        if i.psex == "м":
+            sex = 1
+        if not sex:
+            continue
 
         data_return.append({
                 "order": {
@@ -157,7 +171,7 @@ def covid_result(request):
                         "surname": i.pfam,
                         "name": i.pname,
                         "patronymic": i.twoname,
-                        "gender": 2,
+                        "gender": sex,
                         "birthday":  i.birthday,
                         "phone": "",
                         "email": "",
@@ -195,3 +209,21 @@ def covid_result(request):
     response['Content-Disposition'] = f"attachment; filename=\"{date}-covid-{count}.json\""
     response.write(json.dumps(data_return, ensure_ascii=False))
     return response
+
+
+def empty_data(obj):
+    if "" or None in [obj.number_direction]:
+        return True
+    if "" or None in [obj.laboratoryname]:
+        return True
+    if "" or None in [obj.laboratoryogrn]:
+        return True
+    if "" or None in [obj.get_tubes]:
+        return True
+    if "" or None in [obj.title_org_initiator]:
+        return True
+    if "" or None in [obj.ogrn_org_initiator]:
+        return True
+    if "" or None in [obj.psex]:
+        return True
+    return False

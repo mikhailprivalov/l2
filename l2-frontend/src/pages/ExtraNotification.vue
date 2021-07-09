@@ -28,7 +28,8 @@
           </div>
         </div>
         <div style="margin-top: 5px">
-          <a class="a-under pull-right" href="#" @click.prevent="load()">перезагрузить данные</a>
+          <a class="a-under pull-right" href="#" @click.prevent="load()" >перезагрузить данные</a>
+          <a v-if="canEdit" class="a-under pull-right" href="#" @click.prevent="covid()" style="padding-right: 10px">ПЦР(json)</a>
         </div>
       </div>
     </form>
@@ -236,6 +237,10 @@ export default class ExtraNotification extends Vue {
     this.toPrint = data.rows.reduce((a, r) => ({ ...a, [r.slaveDir]: false }), {});
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loaded = true;
+  }
+
+  covid() {
+    window.open(`/forms/covid-result?date=${this.params.date}`);
   }
 }
 
