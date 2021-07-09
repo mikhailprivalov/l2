@@ -13,7 +13,7 @@ import datetime
 # from pdf2docx import Page
 # from appconf.manager import SettingManager
 from forms.sql_func import get_covid_to_json
-from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY
+from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION
 
 
 def pdf(request):
@@ -183,13 +183,13 @@ def covid_result(request):
                             "regAddress": {
                                 "town": "",
                                 "house": "",
-                                "region": "",
+                                "region": REGION,
                                 "building": "",
                                 "district": "",
                                 "appartament": "",
                                 "streetName": "",
                             },
-                            "factAddress": {"town": "", "house": "", "region": "", "building": "", "district": "", "appartament": "", "streetName": ""},
+                            "factAddress": {"town": "", "house": "", "region": REGION, "building": "", "district": "", "appartament": "", "streetName": ""},
                         },
                     },
                 }
