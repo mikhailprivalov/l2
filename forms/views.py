@@ -107,7 +107,7 @@ def extra_nofication(request):
 def covid_result(request):
     response = HttpResponse(content_type='application/json')
     if not request.user.doctorprofile.has_group('Заполнение экстренных извещений'):
-        response.write(json.dumps({"error": "not access"}, ensure_ascii=False))
+        response.write(json.dumps({"error": "Access denied"}, ensure_ascii=False))
         return response
 
     request_data = {**dict(request.GET.items())}
@@ -144,8 +144,6 @@ def covid_result(request):
             sex = 2
         elif i.psex == "м":
             sex = 1
-        if sex is None:
-            continue
 
         data_return.append(
             {
