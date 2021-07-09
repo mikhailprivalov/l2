@@ -147,7 +147,8 @@ def covid_result(request):
         if not sex:
             continue
 
-        data_return.append({
+        data_return.append(
+            {
                 "order": {
                     "number": i.number_direction,
                     "depart": "100000",
@@ -172,14 +173,12 @@ def covid_result(request):
                         "name": i.pname,
                         "patronymic": i.twoname,
                         "gender": sex,
-                        "birthday":  i.birthday,
+                        "birthday": i.birthday,
                         "phone": "",
                         "email": "",
-
                         "documentType": "ПаспортгражданинаРФ",
                         "documentNumber": passport_number,
                         "documentSerNumber": passport_serial,
-
                         "snils": snils_number,
                         "oms": enp,
                         "address": {
@@ -192,19 +191,12 @@ def covid_result(request):
                                 "appartament": "",
                                 "streetName": "",
                             },
-                            "factAddress": {
-                                "town": "",
-                                "house": "",
-                                "region": "",
-                                "building": "",
-                                "district": "",
-                                "appartament": "",
-                                "streetName": ""
-                            }
-                        }
-                    }
+                            "factAddress": {"town": "", "house": "", "region": "", "building": "", "district": "", "appartament": "", "streetName": ""},
+                        },
+                    },
                 }
-            })
+            }
+        )
         count += 1
     response['Content-Disposition'] = f"attachment; filename=\"{date}-covid-{count}.json\""
     response.write(json.dumps(data_return, ensure_ascii=False))
