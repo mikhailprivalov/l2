@@ -69,13 +69,14 @@ def save(request):
     request_data = json.loads(request.body)
     pk = int(request_data.get("pk", -1))
     value = str(request_data.get("value", '')).strip()
+    with_confirm = bool(request_data.get("withConfirm", True))
 
     direction = Napravleniya.objects.filter(pk=pk).first()
 
     if not direction:
         return JsonResponse({'ok': False, 'message': 'Документ не найден'})
 
-    if not value:
+    if not value and with_confirm:
         return JsonResponse({'ok': False, 'message': 'Некорректное значение'})
 
     iss = Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=True).filter(
@@ -105,8 +106,10 @@ def save(request):
             i.doc_save = request.user.doctorprofile
             i.time_save = timezone.now()
 
-            i.doc_confirmation = request.user.doctorprofile
-            i.time_confirmation = timezone.now()
+            if with_confirm:
+                i.doc_confirmation = request.user.doctorprofile
+                i.time_confirmation = timezone.now()
+
             if i.napravleniye:
                 i.napravleniye.qr_check_token = None
                 i.napravleniye.save(update_fields=['qr_check_token'])

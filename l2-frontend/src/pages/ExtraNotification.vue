@@ -46,7 +46,7 @@
           <col>
           <col style="width: 120px">
           <col style="width: 120px">
-          <col style="width: 200px">
+          <col style="width: 260px">
           <col style="width: 120px">
           <col style="width: 120px">
           <col style="width: 34px">
