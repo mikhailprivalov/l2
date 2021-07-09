@@ -764,6 +764,18 @@ def external_research_create(request):
             "passport_number": passport_number,
             "snils": snils,
         }, need_return_individual=True)
+    elif individual:
+        Individual.import_from_tfoms({
+            "family": lastname,
+            "given": firstname,
+            "patronymic": patronymic,
+            "gender": sex,
+            "birthdate": birthdate,
+            "enp": enp,
+            "passport_serial": passport_serial,
+            "passport_number": passport_number,
+            "snils": snils,
+        }, individual=individual)
 
     if not individual:
         return Response({"ok": False, 'message': 'Физлицо не найдено'})
