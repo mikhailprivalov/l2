@@ -512,7 +512,7 @@ class Individual(models.Model):
         return is_new, updated
 
     @staticmethod
-    def import_from_tfoms(data: Union[dict, List], individual: Union['Individual', None] = None, no_update=False):
+    def import_from_tfoms(data: Union[dict, List], individual: Union['Individual', None] = None, no_update=False, need_return_individual=False):
         if isinstance(data, list):
             if len(data) > 0:
                 data = data[0]
@@ -527,13 +527,16 @@ class Individual(models.Model):
         gender = data.get('gender', '').lower().strip()
         bdate = data.get('birthdate', '').split(' ')[0]
 
+        i = None
+
         if family and name and gender and bdate:
-            enp = data.get('enp', '').strip()
+            enp = (data.get('enp') or '').strip()
             birthday = datetime.strptime(bdate, "%d.%m.%Y" if '.' in bdate else "%Y-%m-%d").date()
             address = data.get('address', '').title().replace('Ул.', 'ул.').replace('Д.', 'д.').replace('Кв.', 'кв.').strip()
             passport_number = data.get('passport_number', '').strip()
-            passport_seria = data.get('passport_seria', '').strip()
-            snils = data.get('snils', '').strip()
+            passport_serial = data.get('passport_serial', '').strip()
+            passport_seria = passport_serial or data.get('passport_seria', '').strip()
+            snils = (data.get('snils') or '').replace(' ', '').replace('-', '')
 
             q_idp = dict(tfoms_idp=idp or '##fakeidp##')
             q_enp = dict(tfoms_enp=enp or '##fakeenp##')
@@ -643,6 +646,9 @@ class Individual(models.Model):
 
             i.time_tfoms_last_sync = timezone.now()
             i.save(update_fields=['time_tfoms_last_sync'])
+
+        if need_return_individual:
+            return i
 
         return updated_data
 

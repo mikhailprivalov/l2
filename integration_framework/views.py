@@ -2,7 +2,9 @@ import datetime
 import logging
 import random
 from collections import defaultdict
+import re
 
+import petrovna
 import simplejson as json
 from django.db import transaction
 from django.db.models import Q, Prefetch
@@ -636,7 +638,7 @@ def external_research_create(request):
     if not request.user.hospitals.filter(pk=hospital.pk).exists():
         return Response({"ok": False, 'message': 'Нет доступа в переданную организацию'})
 
-    initiator = org.get('initiator', {})
+    initiator = org.get('initiator') or {}
     title_org_initiator = initiator.get('title')
     if title_org_initiator is not None:
         title_org_initiator = str(title_org_initiator)[:254]
@@ -663,24 +665,106 @@ def external_research_create(request):
     if ogrn_org_initiator and len(ogrn_org_initiator) != 13:
         return Response({"ok": False, 'message': 'org.initiator.ogrn: длина должна быть 13'})
 
+    if ogrn_org_initiator and not petrovna.validate_ogrn(ogrn_org_initiator):
+        return Response({"ok": False, 'message': 'org.initiator.ogrn: не прошёл валидацию'})
+
     patient = body.get("patient", {})
 
-    enp = patient.get("enp", '').replace(' ', '')
+    enp = (patient.get("enp") or '').replace(' ', '')
 
-    if len(enp) != 16 or not enp.isdigit():
+    if enp and (len(enp) != 16 or not enp.isdigit()):
         return Response({"ok": False, 'message': 'Неверные данные полиса, должно быть 16 чисел'})
 
-    individuals = Individual.objects.filter(tfoms_enp=enp)
-    if not individuals.exists():
-        individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title='Полис ОМС') | Q(document__document_type__title='ЕНП'))
-    if not individuals.exists():
-        tfoms_data = match_enp(enp)
-        if not tfoms_data:
-            return Response({"ok": False, 'message': 'Неверные данные полиса, в базе ТФОМС нет такого пациента'})
-        Individual.import_from_tfoms(tfoms_data)
-        individuals = Individual.objects.filter(tfoms_enp=enp)
+    passport_serial = (patient.get("passportSerial") or '').replace(' ', '')
+    passport_number = (patient.get("passportNumber") or '').replace(' ', '')
 
-    individual = individuals.first()
+    snils = (patient.get("passportNumber") or '').replace(' ', '').replace('-', '')
+
+    if not enp and (not passport_serial or not passport_number) and not snils:
+        return Response({"ok": False, 'message': 'При пустом patient.enp должно быть передано patient.snils или patient.passportSerial+patient.passportNumber'})
+
+    if passport_serial and len(passport_serial) != 4:
+        return Response({"ok": False, 'message': 'Длина patient.passportSerial должна быть 4'})
+
+    if passport_serial and not passport_serial.isdigit():
+        return Response({"ok": False, 'message': 'patient.passportSerial должен содержать только числа'})
+
+    if passport_number and len(passport_number) != 4:
+        return Response({"ok": False, 'message': 'Длина patient.passport_number должна быть 6'})
+
+    if passport_number and not passport_number.isdigit():
+        return Response({"ok": False, 'message': 'patient.passport_number должен содержать только числа'})
+
+    if snils and not petrovna.validate_snils(snils):
+        return Response({"ok": False, 'message': 'patient.snils: не прошёл валидацию'})
+
+    individual_data = patient.get("individual") or {}
+
+    if not enp and not individual_data:
+        return Response({"ok": False, 'message': 'При пустом patient.enp должно быть передано поле patient.individual'})
+
+    lastname = str(individual_data.get("lastname") or '')
+    firstname = str(individual_data.get('firstname') or '')
+    patronymic = str(individual_data.get('patronymic') or '')
+    birthdate = str(individual_data.get('birthdate') or '')
+    sex = str(individual_data.get('sex') or '').lower()
+
+    individual = None
+
+    if lastname and not firstname:
+        return Response({"ok": False, 'message': 'При передаче lastname должен быть передан и firstname'})
+
+    if firstname and not lastname:
+        return Response({"ok": False, 'message': 'При передаче firstname должен быть передан и lastname'})
+
+    if firstname and lastname and not birthdate:
+        return Response({"ok": False, 'message': 'При передаче firstname и lastname должно быть передано поле birthdate'})
+
+    if birthdate and (not re.fullmatch(r'\d{4}-\d\d-\d\d', birthdate) or birthdate[0] not in ['1', '2']):
+        return Response({"ok": False, 'message': 'birthdate должно соответствовать формату YYYY-MM-DD'})
+
+    if birthdate and sex not in ['м', 'ж']:
+        return Response({"ok": False, 'message': 'individual.sex должно быть "м" или "ж"'})
+
+    if enp:
+        individuals = Individual.objects.filter(tfoms_enp=enp)
+        if not individuals.exists():
+            individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title='Полис ОМС') | Q(document__document_type__title='ЕНП'))
+        if not individuals.exists():
+            tfoms_data = match_enp(enp)
+            if tfoms_data:
+                Individual.import_from_tfoms(tfoms_data)
+                individuals = Individual.objects.filter(tfoms_enp=enp)
+
+        individual = individuals.first()
+
+    if not individual and lastname:
+        tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
+        if tfoms_data:
+            Individual.import_from_tfoms(tfoms_data)
+            individual = Individual.objects.filter(tfoms_enp=enp).first()
+
+    if not individual and passport_serial:
+        individuals = Individual.objects.filter(document__serial=passport_serial, document__number=passport_number, document__document_type__title='Паспорт гражданина РФ')
+        individual = individuals.first()
+
+    if not individual and snils:
+        individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
+        individual = individuals.first()
+
+    if not individual and lastname:
+        individual = Individual.import_from_tfoms({
+            "family": lastname,
+            "given": firstname,
+            "patronymic": patronymic,
+            "gender": sex,
+            "birthdate": birthdate,
+            "enp": enp,
+            "passport_serial": passport_serial,
+            "passport_number": passport_number,
+            "snils": snils,
+        }, need_return_individual=True)
+
     if not individual:
         return Response({"ok": False, 'message': 'Физлицо не найдено'})
 
@@ -724,7 +808,6 @@ def external_research_create(request):
                 direction.ogrn_org_initiator = ogrn_org_initiator
                 direction.save()
                 direction.issledovaniya_set.all().delete()
-                print('Replacing all data for', old_pk)  # noqa: T001
             else:
                 direction = Napravleniya.objects.create(
                     client=card,

@@ -242,7 +242,13 @@ const SEX = [
   },
 })
 export default class ConstructScreening extends Vue {
+  researches_obj: any;
+
+  SEX: any;
+
   rows: any[];
+
+  orderBy: any;
 
   serviceToCreate: number | null;
 
