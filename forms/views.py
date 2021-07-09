@@ -114,6 +114,7 @@ def covid_result(request):
     datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S:%f')
     result = get_covid_to_json(COVID_RESEARCHES_PK, datetime_start, datetime_end)
     data_return = []
+    count = 0
     for i in result:
         result_value = i.value_result
         if result_value == 'отрицательно':
@@ -190,6 +191,7 @@ def covid_result(request):
                     }
                 }
             })
-    response['Content-Disposition'] = "attachment; filename=\"covid.json\""
+        count += 1
+    response['Content-Disposition'] = f"attachment; filename=\"{date}-covid-{count}.json\""
     response.write(json.dumps(data_return, ensure_ascii=False))
     return response
