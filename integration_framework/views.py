@@ -689,11 +689,11 @@ def external_research_create(request):
     if passport_serial and not passport_serial.isdigit():
         return Response({"ok": False, 'message': 'patient.passportSerial должен содержать только числа'})
 
-    if passport_number and len(passport_number) != 4:
-        return Response({"ok": False, 'message': 'Длина patient.passport_number должна быть 6'})
+    if passport_number and len(passport_number) != 6:
+        return Response({"ok": False, 'message': 'Длина patient.passportNumber должна быть 6'})
 
     if passport_number and not passport_number.isdigit():
-        return Response({"ok": False, 'message': 'patient.passport_number должен содержать только числа'})
+        return Response({"ok": False, 'message': 'patient.passportNumber должен содержать только числа'})
 
     if snils and not petrovna.validate_snils(snils):
         return Response({"ok": False, 'message': 'patient.snils: не прошёл валидацию'})
