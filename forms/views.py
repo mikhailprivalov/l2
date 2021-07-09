@@ -13,7 +13,7 @@ import datetime
 # from pdf2docx import Page
 # from appconf.manager import SettingManager
 from forms.sql_func import get_covid_to_json
-from laboratory.settings import COVID_RESEARCHES_PK
+from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY
 
 
 def pdf(request):
@@ -139,19 +139,19 @@ def covid_result(request):
             passport_serial = i.passport_serial
             passport_number = i.passport_number
 
-        sex = ""
+        sex = None
         if i.psex == "ж":
             sex = 2
-        if i.psex == "м":
+        elif i.psex == "м":
             sex = 1
-        if not sex:
+        if sex is None:
             continue
 
         data_return.append(
             {
                 "order": {
                     "number": i.number_direction,
-                    "depart": "100000",
+                    "depart": CENTRE_GIGIEN_EPIDEMIOLOGY,
                     "laboratoryName": i.laboratoryname,
                     "laboratoryOgrn": i.laboratoryogrn,
                     "name": i.title_org_initiator,
@@ -204,18 +204,4 @@ def covid_result(request):
 
 
 def empty_data(obj):
-    if "" or None in [obj.number_direction]:
-        return True
-    if "" or None in [obj.laboratoryname]:
-        return True
-    if "" or None in [obj.laboratoryogrn]:
-        return True
-    if "" or None in [obj.get_tubes]:
-        return True
-    if "" or None in [obj.title_org_initiator]:
-        return True
-    if "" or None in [obj.ogrn_org_initiator]:
-        return True
-    if "" or None in [obj.psex]:
-        return True
-    return False
+    return any(not x for x in [obj.number_direction, obj.laboratoryname, obj.laboratoryogrn, obj.get_tubes, obj.title_org_initiator, obj.ogrn_org_initiator, obj.psex])
