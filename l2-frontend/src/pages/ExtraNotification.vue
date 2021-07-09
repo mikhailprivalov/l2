@@ -29,7 +29,9 @@
         </div>
         <div style="margin-top: 5px">
           <a class="a-under pull-right" href="#" @click.prevent="load()" >перезагрузить данные</a>
-          <a v-if="canEdit" class="a-under pull-right" href="#" @click.prevent="covid()" style="padding-right: 10px">ПЦР(json)</a>
+          <a v-if="canEdit" class="a-under pull-right" href="#" @click.prevent="covid()" style="padding-right: 10px">
+            covid-json
+          </a>
         </div>
       </div>
     </form>
