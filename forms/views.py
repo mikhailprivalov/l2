@@ -191,5 +191,5 @@ def covid_result(request):
                 }
             })
     response['Content-Disposition'] = "attachment; filename=\"covid.json\""
-    response.write(json.dumps({'data': data_return}, ensure_ascii=False))
+    response.write(json.dumps(data_return, ensure_ascii=False))
     return response
