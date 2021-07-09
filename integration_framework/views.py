@@ -764,7 +764,7 @@ def external_research_create(request):
             "passport_number": passport_number,
             "snils": snils,
         }, need_return_individual=True)
-    elif individual:
+    elif individual and lastname:
         Individual.import_from_tfoms({
             "family": lastname,
             "given": firstname,
