@@ -108,7 +108,7 @@ def get_covid_to_json(researches, d_s, d_e):
                 LEFT JOIN (
                 SELECT issledovaniya_id,
                 tubesregistration_id,
-                to_char(directions_tubesregistration.time_get AT TIME ZONE 'ASIA/IRKUTSK', 'YYYY-MM-DD') AS get_tubes
+                to_char(directions_tubesregistration.time_get AT TIME ZONE %(tz)s, 'YYYY-MM-DD') AS get_tubes
                 FROM directions_issledovaniya_tubes
                 LEFT JOIN directions_tubesregistration
                 ON directions_tubesregistration.id = directions_issledovaniya_tubes.tubesregistration_id

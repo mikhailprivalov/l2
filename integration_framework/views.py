@@ -740,8 +740,8 @@ def external_research_create(request):
                 individuals = Individual.objects.filter(tfoms_enp=enp)
 
             individual = individuals.first()
-            if individual:
-                has_tfoms = True
+        if individual:
+            has_tfoms = True
 
     if not individual and lastname:
         tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
@@ -771,18 +771,6 @@ def external_research_create(request):
             "passport_number": passport_number,
             "snils": snils,
         }, need_return_individual=True)
-    elif individual and lastname and not has_tfoms:
-        Individual.import_from_tfoms({
-            "family": lastname,
-            "given": firstname,
-            "patronymic": patronymic,
-            "gender": sex,
-            "birthdate": birthdate,
-            "enp": enp,
-            "passport_serial": passport_serial,
-            "passport_number": passport_number,
-            "snils": snils,
-        }, individual=individual)
 
     if not individual:
         return Response({"ok": False, 'message': 'Физлицо не найдено'})
