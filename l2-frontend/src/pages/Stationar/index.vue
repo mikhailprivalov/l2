@@ -2,15 +2,19 @@
   <div ref="root" class="root">
     <div class="sidebar">
       <div class="sidebar-top">
-        <input type="text" class="form-control" v-model="pk" @keyup.enter="load()" autofocus
-               placeholder="Номер истории"/>
+        <input type="text" class="form-control" v-model="pk" @keyup.enter="load()" autofocus placeholder="Номер истории" />
         <button class="btn btn-blue-nb" @click="load()" :disabled="pk === ''">Загрузить</button>
       </div>
       <div class="sidebar-content">
         <div class="inner" v-if="direction !== null && !!patient.fio_age">
           <div class="inner-card">
-            <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" class="a-under"
-               target="_blank" v-if="!every" style="float: right">
+            <a
+              :href="`/forms/pdf?type=106.01&dir_pk=${direction}`"
+              class="a-under"
+              target="_blank"
+              v-if="!every"
+              style="float: right"
+            >
               003/у
             </a>
             <a :href="`/forms/pdf?type=105.03&dir_pk=${direction}`" class="a-under" target="_blank" v-if="every">
@@ -21,12 +25,22 @@
               <span v-else>И/б {{ direction }}</span>
             </a>
             &nbsp;&nbsp;&nbsp;
-            <a v-if="!cancel" href="#" @click.prevent="cancel_direction(direction)"
-               :class="{cancel_color: !cancel}" class="a-under">
+            <a
+              v-if="!cancel"
+              href="#"
+              @click.prevent="cancel_direction(direction)"
+              :class="{ cancel_color: !cancel }"
+              class="a-under"
+            >
               Отменить
             </a>
-            <a v-if="cancel" href="#" @click.prevent="cancel_direction(direction)"
-               :class="{active_color: cancel}" class="a-under">
+            <a
+              v-if="cancel"
+              href="#"
+              @click.prevent="cancel_direction(direction)"
+              :class="{ active_color: cancel }"
+              class="a-under"
+            >
               Вернуть
             </a>
           </div>
@@ -39,7 +53,7 @@
             </a>
           </div>
           <div class="inner-card" v-if="!every">
-            <Favorite :direction="direction"/>
+            <Favorite :direction="direction" />
           </div>
           <div class="inner-card" v-else>
             {{ issTitle }}
@@ -47,42 +61,49 @@
           <div class="inner-card" v-if="cancel">
             <strong>Направление отменено</strong>
           </div>
-          <patient-card :patient="patient" class="inner-card"/>
+          <patient-card :patient="patient" class="inner-card" />
           <div class="inner-card">
-            <a href="#"
-               v-tippy="{ placement : 'right', arrow: true, reactive : true,
-                  popperOptions: {
-                    modifiers: {
-                      preventOverflow: {
-                        boundariesElement: 'window'
-                      },
-                      hide: {
-                        enabled: false
-                      }
-                    }
+            <a
+              href="#"
+              v-tippy="{
+                placement: 'right',
+                arrow: true,
+                reactive: true,
+                popperOptions: {
+                  modifiers: {
+                    preventOverflow: {
+                      boundariesElement: 'window',
+                    },
+                    hide: {
+                      enabled: false,
+                    },
                   },
-                  interactive : true, html: '#template-anamnesis'}"
-               @show="load_anamnesis"
-               class="a-under"
-               @click.prevent="edit_anamnesis">Анамнез жизни</a>
+                },
+                interactive: true,
+                html: '#template-anamnesis',
+              }"
+              @show="load_anamnesis"
+              class="a-under"
+              @click.prevent="edit_anamnesis"
+              >Анамнез жизни</a
+            >
             <div id="template-anamnesis">
-              <strong>Анамнез жизни</strong><br/>
+              <strong>Анамнез жизни</strong><br />
               <span v-if="anamnesis_loading">загрузка...</span>
-              <pre v-else
-                   style="padding: 5px;text-align: left;white-space: pre-wrap;word-break: keep-all;max-width:600px"
-              >{{ anamnesis_data.text || 'нет данных' }}</pre>
+              <pre v-else style="padding: 5px;text-align: left;white-space: pre-wrap;word-break: keep-all;max-width:600px">{{
+                anamnesis_data.text || 'нет данных'
+              }}</pre>
             </div>
-            <a href="#"
-               class="a-under" style="float: right"
-               @click.prevent="open_ambulatory_data">112-ф</a>
+            <a href="#" class="a-under" style="float: right" @click.prevent="open_ambulatory_data">112-ф</a>
           </div>
           <div class="inner-card" v-if="!every">
             <div>
-              <a href="#"
-                 :title="change_department ? 'Отмена' : 'Сменить отделение'"
-                 v-tippy
-                 class="a-under-reversed float-right a-icon-btn"
-                 @click.prevent="changeDepartmentToggle"
+              <a
+                href="#"
+                :title="change_department ? 'Отмена' : 'Сменить отделение'"
+                v-tippy
+                class="a-under-reversed float-right a-icon-btn"
+                @click.prevent="changeDepartmentToggle"
               >
                 <i class="fa fa-pencil" v-if="!change_department"></i>
                 <i class="fa fa-times" v-else></i>
@@ -92,71 +113,73 @@
             <div v-if="!change_department">
               {{ getDepartmentTitle(department_id) }}
             </div>
-            <treeselect :multiple="false" :disable-branch-nodes="true"
-                        class="treeselect-wide"
-                        :options="departments"
-                        placeholder="Отделение не выбрано" :clearable="false"
-                        v-model="department_id"
-                        @select="updateDepartment"
-                        :disabled="forbidden_edit"
-                        v-else
+            <treeselect
+              :multiple="false"
+              :disable-branch-nodes="true"
+              class="treeselect-wide"
+              :options="departments"
+              placeholder="Отделение не выбрано"
+              :clearable="false"
+              v-model="department_id"
+              @select="updateDepartment"
+              :disabled="forbidden_edit"
+              v-else
             />
           </div>
-          <div class="sidebar-btn-wrapper"
-               v-for="(title, key) in menuItems"
-               :key="key">
-            <button class="btn btn-blue-nb sidebar-btn"
-                    @click="load_directions(key)"
-            >
+          <div class="sidebar-btn-wrapper" v-for="(title, key) in menuItems" :key="key">
+            <button class="btn btn-blue-nb sidebar-btn" @click="load_directions(key)">
               <span v-if="Boolean(counts[key])" class="counts">{{ counts[key] }} шт.</span> {{ title }}
             </button>
-            <button class="btn btn-blue-nb sidebar-btn"
-                    v-if="!every &&
-                    menuNeedPlus[key] &&
-                    (!allowedOnlyOneEntry[key] || !Boolean(counts[key])) &&
-                    (!forbidden_edit || (can_add_tadp && key === 't, ad, p sheet'))"
-                    @click="plus(key)"
+            <button
+              class="btn btn-blue-nb sidebar-btn"
+              v-if="
+                !every &&
+                  menuNeedPlus[key] &&
+                  (!allowedOnlyOneEntry[key] || !Boolean(counts[key])) &&
+                  (!forbidden_edit || (can_add_tadp && key === 't, ad, p sheet'))
+              "
+              @click="plus(key)"
             >
-              <i class="fa fa-plus"/>
+              <i class="fa fa-plus" />
             </button>
           </div>
           <template v-for="(dir, index) in tree">
             <div class="sidebar-btn-wrapper" v-if="!every && dir.isCurrent" :key="dir.direction">
-              <button class="btn btn-blue-nb sidebar-btn active-btn" style="font-size: 12px"
-                      :style="{color: dir.color}">
-                <i class="fa fa-arrow-down" v-if="index < tree.length - 1"/>
-                <i class="fa fa-dot-circle-o" v-else/>
+              <button class="btn btn-blue-nb sidebar-btn active-btn" style="font-size: 12px" :style="{ color: dir.color }">
+                <i class="fa fa-arrow-down" v-if="index < tree.length - 1" />
+                <i class="fa fa-dot-circle-o" v-else />
                 <del v-if="dir.cancel">№{{ dir.direction }} {{ dir.research_title }}</del>
                 <span v-else>№{{ dir.direction }} {{ dir.research_title }}</span>
-                <i class="fa fa-check"/>
+                <i class="fa fa-check" />
               </button>
             </div>
             <div class="sidebar-btn-wrapper" v-else :key="dir.direction">
-              <button class="btn btn-blue-nb sidebar-btn" style="font-size: 12px" :style="{color: dir.color}"
-                      @click="load_pk(dir.direction)"
+              <button
+                class="btn btn-blue-nb sidebar-btn"
+                style="font-size: 12px"
+                :style="{ color: dir.color }"
+                @click="load_pk(dir.direction)"
               >
-                <i class="fa fa-arrow-down" v-if="index < tree.length - 1"/>
-                <i class="fa fa-dot-circle-o" v-else/>
+                <i class="fa fa-arrow-down" v-if="index < tree.length - 1" />
+                <i class="fa fa-dot-circle-o" v-else />
                 <del v-if="dir.cancel">№{{ dir.direction }} {{ dir.research_title }}</del>
                 <span v-else>№{{ dir.direction }} {{ dir.research_title }}</span>
               </button>
             </div>
           </template>
           <div class="sidebar-btn-wrapper" v-if="tree.length > 1">
-            <button class="btn btn-blue-nb sidebar-btn text-center"
-                    style="font-size: 12px"
-                    @click="load_pk(tree[0].direction, true)"
+            <button
+              class="btn btn-blue-nb sidebar-btn text-center"
+              style="font-size: 12px"
+              @click="load_pk(tree[0].direction, true)"
             >
-              <i class="fa fa-cubes"/>
+              <i class="fa fa-cubes" />
               Загрузить всё
             </button>
           </div>
           <div class="sidebar-btn-wrapper" v-if="tree.length > 1">
-            <button class="btn btn-blue-nb sidebar-btn text-center"
-                    style="font-size: 12px"
-                    @click="close()"
-            >
-              <i class="fa fa-close"/>
+            <button class="btn btn-blue-nb sidebar-btn text-center" style="font-size: 12px" @click="close()">
+              <i class="fa fa-close" />
               Отмена просмотра истории
             </button>
           </div>
@@ -168,17 +191,20 @@
         <div class="top-block title-block" v-if="opened_list_key">
           <span>
             {{ menuItems[opened_list_key] }}
-            <br/>
-            <a href="#" class="a-under" @click.prevent="print_all_list"><i class="fa fa-print"/> результатов</a>
+            <br />
+            <a href="#" class="a-under" @click.prevent="print_all_list"><i class="fa fa-print" /> результатов</a>
           </span>
-          <i class="top-right fa fa-times" @click="close_list_directions"/>
+          <i class="top-right fa fa-times" @click="close_list_directions" />
         </div>
-        <div class="top-block direction-block"
-             :class="{confirmed: Boolean(d.confirm), active: opened_form_pk === d.pk}"
-             @click="open_form(d)"
-             :key="d.pk" v-for="d in list_directions">
+        <div
+          class="top-block direction-block"
+          :class="{ confirmed: Boolean(d.confirm), active: opened_form_pk === d.pk }"
+          @click="open_form(d)"
+          :key="d.pk"
+          v-for="d in list_directions"
+        >
           <span>
-            <display-direction :direction="d"/>
+            <display-direction :direction="d" />
           </span>
         </div>
       </div>
@@ -186,17 +212,24 @@
         <div v-for="row in researches_forms" :key="row.pk">
           <div class="research-title">
             <div class="research-left">
-              <button style="margin-right: 5px" class="btn btn-blue-nb" @click="show_anesthesia"
-                      title="Добавить значения в наркозную карту" v-tippy v-if="row.research.title.includes('анестез')">
+              <button
+                style="margin-right: 5px"
+                class="btn btn-blue-nb"
+                @click="show_anesthesia"
+                title="Добавить значения в наркозную карту"
+                v-tippy
+                v-if="row.research.title.includes('анестез')"
+              >
                 <i class="fa fa-heartbeat fa-lg"></i>
               </button>
               {{ row.research.title }}
               <span class="comment" v-if="row.research.comment"> [{{ row.research.comment }}]</span>
-              <dropdown :visible="research_open_history === row.pk"
-                        :position='["left", "bottom", "left", "top"]'
-                        @clickout="hide_results">
-                <a style="font-weight: normal"
-                   href="#" @click.prevent="open_results(row.pk)">
+              <dropdown
+                :visible="research_open_history === row.pk"
+                :position="['left', 'bottom', 'left', 'top']"
+                @clickout="hide_results"
+              >
+                <a style="font-weight: normal" href="#" @click.prevent="open_results(row.pk)">
                   (другие результаты)
                 </a>
                 <div class="results-history" slot="dropdown">
@@ -213,29 +246,38 @@
             </div>
             <div class="research-right">
               <template v-if="row.confirmed">
-                <a :href="`/forms/pdf?type=105.02&napr_id=[${opened_form_pk}]`"
-                   class="btn btn-blue-nb" target="_blank" v-if="stat_btn">Статталон</a>
-                <a href="#" class="btn btn-blue-nb"
-                   @click.prevent="print_results(opened_form_pk)">Печать</a>
+                <a
+                  :href="`/forms/pdf?type=105.02&napr_id=[${opened_form_pk}]`"
+                  class="btn btn-blue-nb"
+                  target="_blank"
+                  v-if="stat_btn"
+                  >Статталон</a
+                >
+                <a href="#" class="btn btn-blue-nb" @click.prevent="print_results(opened_form_pk)">Печать</a>
               </template>
               <template>
-                <a :href="row.pacs" class="btn btn-blue-nb" v-if="!!row.pacs"
-                   target="_blank"
-                   title="Снимок" v-tippy>
-                  &nbsp;<i class="fa fa-camera"/>&nbsp;
+                <a :href="row.pacs" class="btn btn-blue-nb" v-if="!!row.pacs" target="_blank" title="Снимок" v-tippy>
+                  &nbsp;<i class="fa fa-camera" />&nbsp;
                 </a>
                 <template v-if="!row.confirmed">
-                  <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed"
-                          title="Сохранить без подтверждения" v-tippy>
-                    &nbsp;<i class="fa fa-save"/>&nbsp;
+                  <button
+                    class="btn btn-blue-nb"
+                    @click="save(row)"
+                    v-if="!row.confirmed"
+                    title="Сохранить без подтверждения"
+                    v-tippy
+                  >
+                    &nbsp;<i class="fa fa-save" />&nbsp;
                   </button>
                   <button class="btn btn-blue-nb" @click="clear_vals(row)" title="Очистить протокол" v-tippy>
-                    &nbsp;<i class="fa fa-times"/>&nbsp;
+                    &nbsp;<i class="fa fa-times" />&nbsp;
                   </button>
                   <div class="right-f" v-if="fte">
-                    <select-picker-m v-model="templates[row.pk]"
-                                     :search="true"
-                                     :options="row.templates.map(x => ({label: x.title, value: x.pk}))"/>
+                    <select-picker-m
+                      v-model="templates[row.pk]"
+                      :search="true"
+                      :options="row.templates.map(x => ({ label: x.title, value: x.pk }))"
+                    />
                   </div>
                   <button class="btn btn-blue-nb" @click="load_template(row, templates[row.pk])" v-if="fte">
                     Загрузить шаблон
@@ -254,27 +296,33 @@
           />
           <div class="group" v-if="r_is_transfer(row)">
             <div class="radio-button-object radio-button-groups" v-if="!row.confirmed">
-              <radio-field v-model="typeTransfer" :variants="variantTypeTransfer" fullWidth
-                           style="width: 100%"/>
+              <radio-field v-model="typeTransfer" :variants="variantTypeTransfer" fullWidth style="width: 100%" />
             </div>
             <div class="group-title" v-if="newTransfer">Отделение перевода</div>
             <div class="group-title" v-else>Схема движения по отделениям</div>
             <div class="fields">
               <div class="content-picker" v-if="!row.confirmed && newTransfer">
-                <research-pick :class="{ active: r.pk === stationar_research }" :research="r"
-                               @click.native="stationar_research = r.pk"
-                               class="research-select"
-                               v-for="r in stationar_researches_filtered"
-                               force_tippy
-                               :key="r.pk"/>
+                <research-pick
+                  :class="{ active: r.pk === stationar_research }"
+                  :research="r"
+                  @click.native="stationar_research = r.pk"
+                  class="research-select"
+                  v-for="r in stationar_researches_filtered"
+                  force_tippy
+                  :key="r.pk"
+                />
               </div>
               <div v-else-if="!newTransfer && !row.confirmed">
                 <div class="row" id="row-box">
                   <div class="col-xs-3">
                     <h6><strong>Поступил ИЗ (предыдущее отделение)</strong></h6>
-                    <treeselect :multiple="false" :disable-branch-nodes="true"
-                                :options="directions_parent_select" placeholder="Откуда поступил"
-                                v-model="parent_issledovaniye"/>
+                    <treeselect
+                      :multiple="false"
+                      :disable-branch-nodes="true"
+                      :options="directions_parent_select"
+                      placeholder="Откуда поступил"
+                      v-model="parent_issledovaniye"
+                    />
                   </div>
                   <div class="col-xs-1">
                     <i class="fa fa-arrow-right fa-2x fa-fw transferArrow"></i>
@@ -288,25 +336,29 @@
                   </div>
                   <div class="col-xs-3">
                     <h6><strong>Переведен В (следующее отделение)</strong></h6>
-                    <treeselect :multiple="false" :disable-branch-nodes="true"
-                                :options="directions_child_select" placeholder="Куда переведен"
-                                v-model="child_issledovaniye"/>
+                    <treeselect
+                      :multiple="false"
+                      :disable-branch-nodes="true"
+                      :options="directions_child_select"
+                      placeholder="Куда переведен"
+                      v-model="child_issledovaniye"
+                    />
                   </div>
                 </div>
               </div>
               <div v-else-if="row.confirmed">
                 История болезни №{{ child_direction }}
-                <br/>
+                <br />
                 {{ child_research_title }}
-                <br/>
+                <br />
                 <a class="a-under" href="#" @click.prevent="print_hosp(child_direction)">
                   Печать ш/к браслета
                 </a>
-                <br/>
+                <br />
                 <a class="a-under" href="#" @click.prevent="print_direction(child_direction)">
                   Печать направления
                 </a>
-                <br/>
+                <br />
                 <a class="a-under" href="#" @click.prevent="load_pk(child_direction)">
                   Открыть историю
                 </a>
@@ -318,11 +370,10 @@
             <div class="row">
               <div class="col-xs-12">
                 <div class="sd">
-                  <directions-history :iss_pk="row.pk" kk="stationar" forHospSlave/>
+                  <directions-history :iss_pk="row.pk" kk="stationar" forHospSlave />
                 </div>
                 <div class="sd empty" v-if="!row.confirmed">
-                  <button @click="create_directions(row)"
-                          class="btn btn-primary-nb btn-blue-nb" type="button">
+                  <button @click="create_directions(row)" class="btn btn-primary-nb btn-blue-nb" type="button">
                     <i class="fa fa-plus"></i> создать направления
                   </button>
                 </div>
@@ -333,24 +384,29 @@
             <div class="group-title">Фармакотерапия</div>
             <div class="row">
               <div class="col-xs-12">
-                <PharmacotherapyInput v-model="row.procedure_list" :pk="row.pk" :confirmed="row.confirmed"/>
+                <PharmacotherapyInput v-model="row.procedure_list" :pk="row.pk" :confirmed="row.confirmed" />
               </div>
             </div>
           </div>
           <div class="control-row" :key="row.research.version">
             <div class="res-title">{{ row.research.title }}:</div>
-            <iss-status :i="row"/>
-            <button class="btn btn-blue-nb" @click="save(row)"
-                    v-if="!row.confirmed && !row.forbidden_edit">
+            <iss-status :i="row" />
+            <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed && !row.forbidden_edit">
               Сохранить
             </button>
-            <button class="btn btn-blue-nb" @click="save_and_confirm(row)"
-                    v-if="!row.confirmed && !row.forbidden_edit"
-                    :disabled="!r(row)">
+            <button
+              class="btn btn-blue-nb"
+              @click="save_and_confirm(row)"
+              v-if="!row.confirmed && !row.forbidden_edit"
+              :disabled="!r(row)"
+            >
               Сохранить и подтвердить
             </button>
-            <button class="btn btn-blue-nb" @click="reset_confirm(row)"
-                    v-if="row.confirmed && row.allow_reset_confirm && (!row.forbidden_edit || can_reset_transfer)">
+            <button
+              class="btn btn-blue-nb"
+              @click="reset_confirm(row)"
+              v-if="row.confirmed && row.allow_reset_confirm && (!row.forbidden_edit || can_reset_transfer)"
+            >
               Сброс подтверждения
             </button>
             <button class="btn btn-blue-nb" @click="close_form">
@@ -363,7 +419,7 @@
           </div>
         </div>
         <div style="padding: 5px" v-if="!opened_form_pk">
-          <AggregateLaboratory v-if="opened_list_key === 'laboratory'" :pk="iss" disabled/>
+          <AggregateLaboratory v-if="opened_list_key === 'laboratory'" :pk="iss" disabled />
           <AggregateDesc
             v-if="['paraclinical', 'consultation', 'diaries', 'morfology'].includes(opened_list_key)"
             :pk="iss"
@@ -374,27 +430,31 @@
             v-if="opened_list_key === 't, ad, p sheet'"
             :directions="every ? tree.map(d => d.direction) : [direction]"
           />
-          <AggregatePharmacotherapy
-            v-if="opened_list_key === 'pharmacotherapy'"
-            :direction="direction"
-          />
+          <AggregatePharmacotherapy v-if="opened_list_key === 'pharmacotherapy'" :direction="direction" />
         </div>
       </div>
     </div>
-    <modal @close="closePlus" marginLeftRight="auto"
-           margin-top="60px"
-           max-width="1400px" ref="modalStationar" show-footer="true"
-           v-if="openPlusMode === 'directions' || create_directions_for > -1"
-           white-bg="true" width="100%">
+    <modal
+      @close="closePlus"
+      marginLeftRight="auto"
+      margin-top="60px"
+      max-width="1400px"
+      ref="modalStationar"
+      show-footer="true"
+      v-if="openPlusMode === 'directions' || create_directions_for > -1"
+      white-bg="true"
+      width="100%"
+    >
       <span slot="header">Создание направлений – история {{ direction }} {{ issTitle }}, {{ patient.fio_age }}</span>
       <div class="registry-body" slot="body" style="min-height: 140px">
         <div class="row">
-          <div class="col-xs-6"
-               style="height: 450px;border-right: 1px solid #eaeaea;padding-right: 0;">
-            <researches-picker v-model="create_directions_data"
-                               :types-only="pickerTypesOnly"
-                               kk="stationar"
-                               style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"/>
+          <div class="col-xs-6" style="height: 450px;border-right: 1px solid #eaeaea;padding-right: 0;">
+            <researches-picker
+              v-model="create_directions_data"
+              :types-only="pickerTypesOnly"
+              kk="stationar"
+              style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"
+            />
           </div>
           <div class="col-xs-6" style="height: 450px;padding-left: 0;">
             <selected-researches
@@ -412,20 +472,23 @@
             />
           </div>
         </div>
-        <div v-if="create_directions_data.length > 0"
-             style="margin-top: 5px;text-align: left">
+        <div v-if="create_directions_data.length > 0" style="margin-top: 5px;text-align: left">
           <table class="table table-bordered lastresults">
             <colgroup>
-              <col width="180">
-              <col>
-              <col width="110">
-              <col width="110">
+              <col width="180" />
+              <col />
+              <col width="110" />
+              <col width="110" />
             </colgroup>
             <tbody>
-            <last-result :individual="patient.individualId" :key="p" v-for="p in create_directions_data"
-                         :parent-iss="iss"
-                         :noScroll="true"
-                         :research="p"/>
+              <last-result
+                :individual="patient.individualId"
+                :key="p"
+                v-for="p in create_directions_data"
+                :parent-iss="iss"
+                :noScroll="true"
+                :research="p"
+              />
             </tbody>
           </table>
         </div>
@@ -440,26 +503,39 @@
         </div>
       </div>
     </modal>
-    <modal v-if="openPlusMode === 'stationar'" ref="modalStationar2" @close="closePlus"
-           margin-top="50px"
-           show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto">
-      <span
-        slot="header">{{ menuItems[openPlusId] }} – история {{ direction }} {{ issTitle }}, {{ patient.fio_age }}</span>
+    <modal
+      v-if="openPlusMode === 'stationar'"
+      ref="modalStationar2"
+      @close="closePlus"
+      margin-top="50px"
+      show-footer="true"
+      white-bg="true"
+      max-width="710px"
+      width="100%"
+      marginLeftRight="auto"
+    >
+      <span slot="header">{{ menuItems[openPlusId] }} – история {{ direction }} {{ issTitle }}, {{ patient.fio_age }}</span>
       <div slot="body" style="min-height: 200px;background-color: #fff" class="registry-body">
         <div class="text-left">
           <div class="content-picker">
-            <research-pick :class="{ active: row.pk === direction_service }" :research="row"
-                           @click.native="select_research(row.pk)"
-                           class="research-select"
-                           force_tippy
-                           v-for="row in hosp_services"
-                           :key="row.pk"/>
+            <research-pick
+              :class="{ active: row.pk === direction_service }"
+              :research="row"
+              @click.native="select_research(row.pk)"
+              class="research-select"
+              force_tippy
+              v-for="row in hosp_services"
+              :key="row.pk"
+            />
             <div v-if="hosp_services.length === 0">не настроено</div>
           </div>
           <div class="text-center" style="margin-top: 10px;">
-            <button @click="confirm_service"
-                    :disabled="direction_service === -1"
-                    class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button
+              @click="confirm_service"
+              :disabled="direction_service === -1"
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+            >
               Сохранить назначение и заполнить протокол
             </button>
           </div>
@@ -475,12 +551,20 @@
         </div>
       </div>
     </modal>
-    <modal v-if="anamnesis_edit" ref="modalAnamnesisEdit" @close="hide_modal_anamnesis_edit" show-footer="true"
-           white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+    <modal
+      v-if="anamnesis_edit"
+      ref="modalAnamnesisEdit"
+      @close="hide_modal_anamnesis_edit"
+      show-footer="true"
+      white-bg="true"
+      max-width="710px"
+      width="100%"
+      marginLeftRight="auto"
+      margin-top
+    >
       <span slot="header">Редактор анамнеза жизни – карта {{ patient.card }}, {{ patient.fio_age }}</span>
       <div slot="body" style="min-height: 140px" class="registry-body">
-          <textarea v-model="anamnesis_data.text" rows="14" class="form-control"
-                    placeholder="Анамнез жизни"></textarea>
+        <textarea v-model="anamnesis_data.text" rows="14" class="form-control" placeholder="Анамнез жизни"></textarea>
       </div>
       <div slot="footer">
         <div class="row">
@@ -497,14 +581,15 @@
         </div>
       </div>
     </modal>
-    <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1" no_desc/>
-    <ambulatory-data :card_pk="patient.cardId" :card_data="patient" v-if="ambulatory_data"/>
+    <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1" no_desc />
+    <ambulatory-data :card_pk="patient.cardId" :card_data="patient" v-if="ambulatory_data && patient.cardId" />
   </div>
 </template>
 
 <script lang="ts">
 import { mapGetters } from 'vuex';
 import dropdown from 'vue-my-dropdown';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import stationar_point from '@/api/stationar-point';
 import Patient from '@/types/patient';
@@ -645,7 +730,7 @@ export default {
       }
     }
     this.inited = true;
-    this.$root.$on('open-history', (d) => {
+    this.$root.$on('open-history', d => {
       this.load_pk(d, false);
     });
   },
@@ -679,9 +764,10 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const {
         newDepartment, ok, from: dep_from, to: dep_to,
-      } = await stationar_point.changeDepartment(
-        this, 'iss', { needUpdate, department_id: department_id || this.department_id },
-      );
+      } = await stationar_point.changeDepartment(this, 'iss', {
+        needUpdate,
+        department_id: department_id || this.department_id,
+      });
       this.department_id = newDepartment;
       if (!department_id) {
         this.change_department = false;
@@ -809,8 +895,7 @@ export default {
         this.departments = data.departments;
         for (const direction_obj of this.tree) {
           this.directions_parent_select.push({
-            label: `${direction_obj.direction}-${
-              direction_obj.research_title}(${direction_obj.order})`,
+            label: `${direction_obj.direction}-${direction_obj.research_title}(${direction_obj.order})`,
             id: direction_obj.issledovaniye,
           });
           this.direcions_order[direction_obj.issledovaniye] = direction_obj.order;
@@ -831,7 +916,10 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     print_all_list() {
-      this.$root.$emit('print:results', this.list_directions.map((d) => d.pk));
+      this.$root.$emit(
+        'print:results',
+        this.list_directions.map(d => d.pk),
+      );
     },
     close_list_directions() {
       this.close_form();
@@ -903,36 +991,39 @@ export default {
     save(iss) {
       this.hide_results();
       this.$store.dispatch(actions.INC_LOADING);
-      directionsPoint.paraclinicResultSave({
-        force: true,
-        data: {
-          ...iss,
-          direction: {
-            pk: this.opened_form_pk,
+      directionsPoint
+        .paraclinicResultSave({
+          force: true,
+          data: {
+            ...iss,
+            direction: {
+              pk: this.opened_form_pk,
+            },
+            stationar_research: this.stationar_research,
           },
-          stationar_research: this.stationar_research,
-        },
-        with_confirm: false,
-        visibility_state: this.visibility_state(iss),
-      }).then((data) => {
-        if (data.ok) {
-          this.$root.$emit('msg', 'ok', 'Сохранено');
-          // eslint-disable-next-line no-param-reassign
-          iss.saved = true;
-          // eslint-disable-next-line no-param-reassign
-          iss.research.transfer_direction_iss = data.transfer_direction_iss;
-          if (iss.procedure_list) {
-            for (const pl of iss.procedure_list) {
-              pl.isNew = false;
+          with_confirm: false,
+          visibility_state: this.visibility_state(iss),
+        })
+        .then(data => {
+          if (data.ok) {
+            this.$root.$emit('msg', 'ok', 'Сохранено');
+            // eslint-disable-next-line no-param-reassign
+            iss.saved = true;
+            // eslint-disable-next-line no-param-reassign
+            iss.research.transfer_direction_iss = data.transfer_direction_iss;
+            if (iss.procedure_list) {
+              for (const pl of iss.procedure_list) {
+                pl.isNew = false;
+              }
             }
+            this.reload_if_need(true);
+          } else {
+            this.$root.$emit('msg', 'error', data.message);
           }
-          this.reload_if_need(true);
-        } else {
-          this.$root.$emit('msg', 'error', data.message);
-        }
-      }).finally(() => {
-        this.$store.dispatch(actions.DEC_LOADING);
-      });
+        })
+        .finally(() => {
+          this.$store.dispatch(actions.DEC_LOADING);
+        });
     },
     save_and_confirm(iss) {
       this.hide_results();
@@ -947,55 +1038,58 @@ export default {
       if (!this.newTransfer) {
         this.stationar_research = -1;
       }
-      return directionsPoint.paraclinicResultSave({
-        force: true,
-        data: {
-          ...iss,
-          direction: {
-            pk: this.opened_form_pk,
+      return directionsPoint
+        .paraclinicResultSave({
+          force: true,
+          data: {
+            ...iss,
+            direction: {
+              pk: this.opened_form_pk,
+            },
+            stationar_research: this.stationar_research,
           },
-          stationar_research: this.stationar_research,
-        },
-        with_confirm: true,
-        visibility_state: this.visibility_state(iss),
-        parent_child_data: {
-          parent_iss: this.parent_issledovaniye,
-          current_direction: this.direction,
-          current_iss: this.iss,
-          child_iss: this.child_issledovaniye,
-        },
-      }).then((data) => {
-        if (data.ok) {
-          this.$root.$emit('msg', 'ok', 'Сохранено');
-          this.$root.$emit('msg', 'ok', 'Подтверждено');
-          // eslint-disable-next-line no-param-reassign
-          iss.saved = true;
-          // eslint-disable-next-line no-param-reassign
-          iss.allow_reset_confirm = !data.forbidden_edit || this.can_reset_transfer;
-          // eslint-disable-next-line no-param-reassign
-          iss.confirmed = true;
-          // eslint-disable-next-line no-param-reassign
-          iss.research.transfer_direction = data.transfer_direction;
-          // eslint-disable-next-line no-param-reassign
-          iss.research.transfer_direction_iss = data.transfer_direction_iss;
-          // eslint-disable-next-line no-param-reassign
-          iss.forbidden_edit = data.forbidden_edit;
-          this.forbidden_edit = data.forbidden_edit;
-          this.soft_forbidden = data.soft_forbidden;
-          this.stationar_research = -1;
-          if (iss.procedure_list) {
-            for (const pl of iss.procedure_list) {
-              pl.isNew = false;
+          with_confirm: true,
+          visibility_state: this.visibility_state(iss),
+          parent_child_data: {
+            parent_iss: this.parent_issledovaniye,
+            current_direction: this.direction,
+            current_iss: this.iss,
+            child_iss: this.child_issledovaniye,
+          },
+        })
+        .then(data => {
+          if (data.ok) {
+            this.$root.$emit('msg', 'ok', 'Сохранено');
+            this.$root.$emit('msg', 'ok', 'Подтверждено');
+            // eslint-disable-next-line no-param-reassign
+            iss.saved = true;
+            // eslint-disable-next-line no-param-reassign
+            iss.allow_reset_confirm = !data.forbidden_edit || this.can_reset_transfer;
+            // eslint-disable-next-line no-param-reassign
+            iss.confirmed = true;
+            // eslint-disable-next-line no-param-reassign
+            iss.research.transfer_direction = data.transfer_direction;
+            // eslint-disable-next-line no-param-reassign
+            iss.research.transfer_direction_iss = data.transfer_direction_iss;
+            // eslint-disable-next-line no-param-reassign
+            iss.forbidden_edit = data.forbidden_edit;
+            this.forbidden_edit = data.forbidden_edit;
+            this.soft_forbidden = data.soft_forbidden;
+            this.stationar_research = -1;
+            if (iss.procedure_list) {
+              for (const pl of iss.procedure_list) {
+                pl.isNew = false;
+              }
             }
+            this.reload_if_need(true);
+          } else {
+            this.$root.$emit('msg', 'error', data.message);
           }
-          this.reload_if_need(true);
-        } else {
-          this.$root.$emit('msg', 'error', data.message);
-        }
-      }).finally(() => {
-        this.pk = this.direction;
-        this.$store.dispatch(actions.DEC_LOADING);
-      });
+        })
+        .finally(() => {
+          this.pk = this.direction;
+          this.$store.dispatch(actions.DEC_LOADING);
+        });
     },
     async reset_confirm(iss) {
       this.hide_results();
@@ -1038,10 +1132,12 @@ export default {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      this.research_history = (await directionsPoint.paraclinicResultPatientHistory({
-        pk,
-        isSameParent: true,
-      })).data || [];
+      this.research_history = (
+        await directionsPoint.paraclinicResultPatientHistory({
+          pk,
+          isSameParent: true,
+        })
+      ).data || [];
       await this.$store.dispatch(actions.DEC_LOADING);
       this.research_open_history = pk;
     },
@@ -1068,8 +1164,12 @@ export default {
         let n = 0;
         for (const f of g.fields) {
           n++;
-          if (f.required && f.field_type !== 3 && (f.value === '' || f.value === '- Не выбрано' || !f.value)
-            && vField(g, research.research.groups, f.visibility, this.patient_form)) {
+          if (
+            f.required
+            && f.field_type !== 3
+            && (f.value === '' || f.value === '- Не выбрано' || !f.value)
+            && vField(g, research.research.groups, f.visibility, this.patient_form)
+          ) {
             l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));
           }
         }
@@ -1083,15 +1183,17 @@ export default {
       // TODO
     },
     template_fields_values(row, dataTemplate, title) {
-      this.$dialog.alert(title, {
-        view: 'replace-append-modal',
-      }).then(({ data }) => {
-        if (data === 'append') {
-          this.append_fields_values(row, dataTemplate);
-        } else {
-          this.replace_fields_values(row, dataTemplate);
-        }
-      });
+      this.$dialog
+        .alert(title, {
+          view: 'replace-append-modal',
+        })
+        .then(({ data }) => {
+          if (data === 'append') {
+            this.append_fields_values(row, dataTemplate);
+          } else {
+            this.replace_fields_values(row, dataTemplate);
+          }
+        });
     },
     replace_fields_values(row, data) {
       for (const g of row.research.groups) {
@@ -1112,18 +1214,16 @@ export default {
       }
     },
     clear_vals(row) {
-      this.$dialog
-        .confirm('Вы действительно хотите очистить результаты?')
-        .then(() => {
-          this.$root.$emit('msg', 'ok', 'Очищено');
-          for (const g of row.research.groups) {
-            for (const f of g.fields) {
-              if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type)) {
-                this.clear_val(f);
-              }
+      this.$dialog.confirm('Вы действительно хотите очистить результаты?').then(() => {
+        this.$root.$emit('msg', 'ok', 'Очищено');
+        for (const g of row.research.groups) {
+          for (const f of g.fields) {
+            if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type)) {
+              this.clear_val(f);
             }
           }
-        });
+        }
+      });
     },
     clear_val(field) {
       // eslint-disable-next-line no-param-reassign
@@ -1142,14 +1242,10 @@ export default {
           }
           add_val = ` ${add_val}`;
         } else if (
-          (
-            field.value.length === 0
-            || (
-              field.value.length >= 2
+          (field.value.length === 0
+            || (field.value.length >= 2
               && field.value[field.value.length - 2] === '.'
-              && field.value[field.value.length - 1] === '\n'
-            )
-          )
+              && field.value[field.value.length - 1] === '\n'))
           && field.title === ''
         ) {
           add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase());
@@ -1160,11 +1256,14 @@ export default {
     },
     load_template(row, pk) {
       this.$store.dispatch(actions.INC_LOADING);
-      researchesPoint.getTemplateData({ pk: parseInt(pk, 10) }).then(({ data: { fields: data, title } }) => {
-        this.template_fields_values(row, data, title);
-      }).finally(() => {
-        this.$store.dispatch(actions.DEC_LOADING);
-      });
+      researchesPoint
+        .getTemplateData({ pk: parseInt(pk, 10) })
+        .then(({ data: { fields: data, title } }) => {
+          this.template_fields_values(row, data, title);
+        })
+        .finally(() => {
+          this.$store.dispatch(actions.DEC_LOADING);
+        });
     },
     visibility_state(iss) {
       const groups = {};
@@ -1241,16 +1340,22 @@ export default {
       };
     },
     stationar_researches_filtered() {
-      return [{
-        pk: -1,
-        title: 'Не выбрано',
-      }, ...(this.stationar_researches || []).filter((r) => r.title !== this.issTitle && !r.hide)];
+      return [
+        {
+          pk: -1,
+          title: 'Не выбрано',
+        },
+        ...(this.stationar_researches || []).filter(r => r.title !== this.issTitle && !r.hide),
+      ];
     },
     bases_obj() {
-      return this.bases.reduce((a, b) => ({
-        ...a,
-        [b.pk]: b,
-      }), {});
+      return this.bases.reduce(
+        (a, b) => ({
+          ...a,
+          [b.pk]: b,
+        }),
+        {},
+      );
     },
     stat_btn() {
       return this.$store.getters.modules.l2_stat_btn;
@@ -1277,7 +1382,7 @@ export default {
       return this.$store.getters.modules.l2_fast_templates;
     },
     can_reset_transfer() {
-      for (const g of (this.$store.getters.user_data.groups || [])) {
+      for (const g of this.$store.getters.user_data.groups || []) {
         if (g === 'Сброс подтверждения переводного эпикриза') {
           return true;
         }
@@ -1285,7 +1390,7 @@ export default {
       return false;
     },
     can_add_tadp() {
-      for (const g of (this.$store.getters.user_data.groups || [])) {
+      for (const g of this.$store.getters.user_data.groups || []) {
         if (g === 't, ad, p') {
           return !!this.soft_forbidden || !this.forbidden_edit;
         }
@@ -1299,11 +1404,11 @@ export default {
 <style scoped lang="scss">
 .transferArrow {
   padding-top: 40px;
-  opacity: 0.5
+  opacity: 0.5;
 }
 
 .cancel_color {
-  color: #93046d
+  color: #93046d;
 }
 
 .active_color {
@@ -1390,7 +1495,7 @@ export default {
 
     .direction-block {
       cursor: pointer;
-      transition: all .2s cubic-bezier(.25, .8, .25, 1);
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
       position: relative;
 
       span {
@@ -1421,7 +1526,7 @@ export default {
       }
 
       &.active {
-        background-image: linear-gradient(#6C7A89, #56616c) !important;
+        background-image: linear-gradient(#6c7a89, #56616c) !important;
         color: #fff !important;
       }
     }
@@ -1442,7 +1547,8 @@ export default {
   flex-wrap: nowrap;
   justify-content: stretch;
 
-  input, button {
+  input,
+  button {
     align-self: stretch;
     border: none;
     border-radius: 0;
@@ -1457,7 +1563,7 @@ export default {
 
   button {
     flex: 3 94px;
-    width: 94px
+    width: 94px;
   }
 }
 
@@ -1497,9 +1603,10 @@ export default {
   padding: 0 12px;
   height: 24px;
 
-  &:not(:hover):not(.colorBad), &.active-btn:hover:not(.colorBad) {
+  &:not(:hover):not(.colorBad),
+  &.active-btn:hover:not(.colorBad) {
     cursor: default;
-    background-color: rgba(#000, .02) !important;
+    background-color: rgba(#000, 0.02) !important;
     color: #000;
     border-bottom: 1px solid #b1b1b1 !important;
   }
@@ -1522,7 +1629,8 @@ export default {
   background-color: #ffdb4d;
   border-color: #000;
 
-  ::v-deep th, ::v-deep td {
+  ::v-deep th,
+  ::v-deep td {
     border-color: #000;
   }
 
@@ -1556,14 +1664,14 @@ export default {
   color: #000;
   background-color: #fff;
   text-decoration: none;
-  transition: .15s linear all;
+  transition: 0.15s linear all;
   margin: 0;
   font-size: 12px;
   min-width: 0;
   flex: 0 1 auto;
   width: 25%;
   height: 34px;
-  border: 1px solid #6C7A89 !important;
+  border: 1px solid #6c7a89 !important;
   cursor: pointer;
   text-align: left;
   outline: transparent;
@@ -1574,7 +1682,7 @@ export default {
   }
 
   &:hover {
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, .8) !important;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8) !important;
   }
 }
 
@@ -1629,7 +1737,7 @@ export default {
   }
 
   div {
-    align-self: stretch
+    align-self: stretch;
   }
 }
 
@@ -1657,7 +1765,8 @@ export default {
   text-overflow: ellipsis;
 }
 
-.status, .control-row .amd {
+.status,
+.control-row .amd {
   padding: 5px;
 }
 
@@ -1669,7 +1778,7 @@ export default {
 }
 
 .status-none {
-  color: #CF3A24
+  color: #cf3a24;
 }
 
 .results-history {
@@ -1692,19 +1801,20 @@ export default {
         font-weight: bold;
         display: inline-block;
         padding: 2px 4px;
-        background: rgba(#000, .03);
+        background: rgba(#000, 0.03);
         border-radius: 4px;
         margin-left: 3px;
 
         &:hover {
-          background: rgba(#000, .1);
+          background: rgba(#000, 0.1);
         }
       }
     }
   }
 }
 
-.direction, .sd {
+.direction,
+.sd {
   padding: 5px;
   margin: 5px;
   border-radius: 5px;
