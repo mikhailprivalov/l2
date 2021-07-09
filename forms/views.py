@@ -113,8 +113,83 @@ def covid_result(request):
     datetime_start = datetime.datetime.strptime(time_start, '%Y-%m-%d %H:%M:%S')
     datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S:%f')
     result = get_covid_to_json(COVID_RESEARCHES_PK, datetime_start, datetime_end)
+    data_return = []
+    for i in result:
+        result_value = i.value_result
+        if result_value == 'отрицательно':
+            result_value = 0
+        if result_value == 'положительно':
+            result_value = 1
+        enp = ""
+        if i.oms_number:
+            enp = i.oms_number
+        snils_number = ""
+        if i.snils_number:
+            snils_number = i.oms_number
 
-    return_data = {'result': result}
+        passport_serial, passport_number = "", ""
+        if i.passport_serial and i.passport_number:
+            passport_serial = i.passport_serial
+            passport_number = i.passport_number
+
+        data_return.append({
+                "order": {
+                    "number": i.number_direction,
+                    "depart": "100000",
+                    "laboratoryName": i.laboratoryname,
+                    "laboratoryOgrn": i.laboratoryogrn,
+                    "name": i.title_org_initiator,
+                    "ogrn": i.ogrn_org_initiator,
+                    "orderDate": i.get_tubes,
+                    "serv": [
+                        {
+                            "code": i.fsli,
+                            "name": i.title,
+                            "testSystem": "",
+                            "biomaterDate": i.get_tubes,
+                            "readyDate": i.date_confirm,
+                            "result": result_value,
+                            "type": 1,
+                        }
+                    ],
+                    "patient": {
+                        "surname": i.pfam,
+                        "name": i.pname,
+                        "patronymic": i.twoname,
+                        "gender": 2,
+                        "birthday":  i.birthday,
+                        "phone": "",
+                        "email": "",
+
+                        "documentType": "ПаспортгражданинаРФ",
+                        "documentNumber": passport_number,
+                        "documentSerNumber": passport_serial,
+
+                        "snils": snils_number,
+                        "oms": enp,
+                        "address": {
+                            "regAddress": {
+                                "town": "",
+                                "house": "",
+                                "region": "",
+                                "building": "",
+                                "district": "",
+                                "appartament": "",
+                                "streetName": "",
+                            },
+                            "factAddress": {
+                                "town": "",
+                                "house": "",
+                                "region": "",
+                                "building": "",
+                                "district": "",
+                                "appartament": "",
+                                "streetName": ""
+                            }
+                        }
+                    }
+                }
+            })
     response['Content-Disposition'] = "attachment; filename=\"covid.json\""
-    response.write(json.dumps(return_data))
+    response.write(json.dumps({'data': data_return}, ensure_ascii=False))
     return response
