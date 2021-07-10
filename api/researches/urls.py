@@ -23,4 +23,6 @@ urlpatterns = [
     path('load-research-by-diagnos', views.load_research_by_diagnos),
     path('by-direction-params', views.by_direction_params),
     path('get-direction-params', views.get_direction_params),
+    path('localization', views.localization),
+    path('localization/save', views.localization_save),
 ]

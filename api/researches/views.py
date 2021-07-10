@@ -26,6 +26,7 @@ from rmis_integration.client import get_md5
 from slog.models import Log
 from users.models import Speciality
 from utils.nsi_directories import NSI
+from utils.response import status_response
 
 
 @login_required
@@ -180,6 +181,34 @@ def get_direction_params(request):
     pk = int(request_data["pk"])
     data = get_research_for_direction_params(pk).get('research', {})
     return JsonResponse(data)
+
+
+@login_required
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+def localization(request):
+    request_data = json.loads(request.body)
+    pk = int(request_data["pk"])
+    research = DResearches.objects.get(pk=pk)
+    selected = [x["pk"] for x in research.localization.all().values('pk')]
+    localizations = list(Localization.objects.all().order_by('title').values('pk', 'title', 'fsli', 'barcode'))
+    return JsonResponse({"localizations": localizations, "selected": selected})
+
+
+@login_required
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+def localization_save(request):
+    request_data = json.loads(request.body)
+    pk = int(request_data["pk"])
+    selected = [int(x) for x in list(request_data["selected"])]
+    research = DResearches.objects.get(pk=pk)
+    for lс in research.localization.all():
+        if lс.pk not in selected:
+            research.localization.remove(lс.pk)
+        else:
+            selected = [x for x in selected if x != lс.pk]
+    if selected:
+        research.localization.add(*list(Localization.objects.filter(pk__in=selected)))
+    return status_response(True)
 
 
 @login_required
@@ -484,6 +513,7 @@ def researches_details(request):
         response["speciality"] = res.speciality_id or -1
         response["direction_current_params"] = res.direction_params_id or -1
         response["is_global_direction_params"] = res.is_global_direction_params
+        response["is_paraclinic"] = res.is_paraclinic
         response["assigned_to_params"] = []
         if res.is_direction_params:
             response["assigned_to_params"] = [f'{x.pk} – {x.get_full_short_title()}' for x in DResearches.objects.filter(direction_params=res)]
