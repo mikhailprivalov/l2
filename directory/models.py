@@ -5,6 +5,7 @@ from jsonfield import JSONField
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from users.models import Speciality
+from utils.choices import BED_TYPES
 
 
 class DirectionsGroup(models.Model):
@@ -212,6 +213,7 @@ class Researches(models.Model):
     has_own_form_result = models.BooleanField(blank=True, default=False, help_text="Собственная форма результатов")
     direction_params = models.ForeignKey('self', related_name='direction_params_p', help_text="Параметры направления", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     show_more_services = models.BooleanField(blank=True, default=True, help_text="Показывать Дополнительные услуги")
+    bed_type = models.PositiveSmallIntegerField(choices=BED_TYPES, blank=True, null=True, default=None, help_text="Тип койки в стационаре", db_index=True)
 
     @staticmethod
     def filter_type(t):
