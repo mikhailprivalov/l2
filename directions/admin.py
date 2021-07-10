@@ -17,7 +17,6 @@ from .models import (
     PersonContract,
     ExternalOrganization,
     DirectionsHistory,
-    TypeBeds
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -117,7 +116,6 @@ class ResDirectionsHistory(admin.ModelAdmin):
 
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
-admin.site.register(TypeBeds)
 admin.site.register(FrequencyOfUseResearches)
 admin.site.register(CustomResearchOrdering)
 admin.site.register(ExternalOrganization)

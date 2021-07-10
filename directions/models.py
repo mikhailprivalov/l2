@@ -24,6 +24,7 @@ import contracts.models as contracts
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, Place
 
 from appconf.manager import SettingManager
+from utils.choices import BED_TYPES
 
 
 class FrequencyOfUseResearches(models.Model):
@@ -1076,18 +1077,6 @@ class PersonContract(models.Model):
         pers_contract.save()
 
 
-class TypeBeds(models.Model):
-    bed_title = models.CharField(max_length=100, help_text='Тип койки')
-    hide = models.BooleanField(help_text="Скрыть тип", default=False)
-
-    def __str__(self):
-        return "%s" % (self.title)
-
-    class Meta:
-        verbose_name = 'Тип койки'
-        verbose_name_plural = 'Типы коек'
-
-
 class Issledovaniya(models.Model):
     """
     Направления на исследования
@@ -1148,7 +1137,7 @@ class Issledovaniya(models.Model):
     aggregate_desc = JSONField(null=True, blank=True, default=None, help_text='ID направлений описательных, привязаных к стационарному случаю')
     microbiology_conclusion = models.TextField(default=None, null=True, blank=True, help_text='Заключение по микробиологии')
     hospital_department_override = models.ForeignKey(Podrazdeleniya, blank=True, null=True, default=None, help_text="Отделение стационара", on_delete=models.SET_NULL)
-    bed_type = models.ForeignKey(TypeBeds, blank=True, null=True, default=None, help_text="Тип койки в стационаре", db_index=True, on_delete=models.SET_NULL)
+    bed_type = models.PositiveSmallIntegerField(choices=BED_TYPES, blank=True, null=True, default=None, help_text="Тип койки в стационаре", db_index=True)
 
     @property
     def time_save_local(self):
