@@ -120,6 +120,7 @@ def covid_result(request):
     data_return = []
     count = 0
     for i in result:
+        print(i)
         if empty_data(i):
             continue
         result_value = i.value_result
