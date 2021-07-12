@@ -53,3 +53,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     class Meta:
         verbose_name = 'Подразделение'
         verbose_name_plural = 'Подразделения'
+
+
+class Rooms(models.Model):
+    title = models.CharField(max_length=255, default="", help_text='Название кабинета', db_index=True)
