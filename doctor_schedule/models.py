@@ -43,3 +43,4 @@ class ResourceSlotsFact(models.Model):
     resource_plan = models.ForeignKey(ResourceSlotsPlan, db_index=True, null=True, help_text='Лечащий врач', on_delete=models.CASCADE)
     patient = models.ForeignKey(Card, null=True, help_text='Карта пациента', db_index=True, on_delete=models.SET_NULL)
     status = models.PositiveSmallIntegerField(choices=STATUS,  blank=True)
+    id_other_system = models.CharField(max_length=255, default='', blank=True)
