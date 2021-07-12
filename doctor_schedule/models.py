@@ -3,7 +3,7 @@ from django.db import models
 from clients.models import Card
 from directory.models import Researches
 from podrazdeleniya.models import Rooms, Podrazdeleniya
-from users.models import DoctorProfile
+from users.models import DoctorProfile, Speciality
 from utils.models import ChoiceArrayField
 
 
@@ -12,6 +12,7 @@ class DoctorScheduleResource(models.Model):
     research = models.ForeignKey(Researches, null=True, blank=True, help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
     room = models.ForeignKey(Rooms, default=None, null=True, blank=True, help_text='Кабинет', db_index=True, on_delete=models.CASCADE)
     departmnent = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
+    speciality = models.ForeignKey(Speciality, null=True, blank=True, help_text='Специальность', db_index=True, on_delete=models.CASCADE)
 
 
 class ResourceSlotsPlan(models.Model):

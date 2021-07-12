@@ -1,3 +1,7 @@
 from django.contrib import admin
+from .models import DoctorScheduleResource, ResourceSlotsPlan, ResourceSlotsFact
 
-# Register your models here.
+
+admin.site.register(DoctorScheduleResource)
+admin.site.register(ResourceSlotsPlan)
+admin.site.register(ResourceSlotsFact)
