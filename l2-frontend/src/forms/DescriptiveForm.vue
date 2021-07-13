@@ -19,6 +19,7 @@
             </div>
             <div :class="{disabled: confirmed,
             empty: notFilled.includes(field.pk),
+            'field-vertical-simple': [16, 17].includes(field.field_type) && pk,
             required: field.required}" :title="field.required && 'обязательно для заполнения'"
                  v-on="{
                   mouseenter: enter_field(field.values_to_input.length > 0),
@@ -64,8 +65,8 @@
                 <input :readonly="true" class="form-control" v-model="field.value"/>
               </div>
               <div class="field-value" v-else-if="field.field_type === 10">
-                <SelectField
-                  :disabled="confirmed" :variants="field.values_to_input" class="form-control fw"
+                <TreeSelectField
+                  :disabled="confirmed" :variants="field.values_to_input"
                   v-model="field.value"
                 />
               </div>
@@ -185,7 +186,7 @@ export default {
     SearchFractionValueField: () => import('../fields/SearchFractionValueField.vue'),
     SearchFieldValueField: () => import('../fields/SearchFieldValueField.vue'),
     RadioField: () => import('../fields/RadioField.vue'),
-    SelectField: () => import('../fields/SelectField.vue'),
+    TreeSelectField: () => import('../fields/TreeSelectField.vue'),
     AnesthesiaProcess: () => import('../fields/AnesthesiaProcess.vue'),
     MKBFieldForm: () => import('../fields/MKBFieldForm.vue'),
     FormulaField: () => import('../fields/FormulaField.vue'),

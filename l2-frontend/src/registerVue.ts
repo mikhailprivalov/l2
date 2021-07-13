@@ -15,6 +15,7 @@ import Inputmask from 'inputmask';
 import Toast from 'vue-toastification';
 import 'vue-toastification/dist/index.css';
 // @ts-ignore
+import plural from 'plural-ru';
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min';
 
 import api from './api';
@@ -46,6 +47,7 @@ export default (): void => {
   Vue.use(VueInputMask);
   Vue.use(VueCollapse);
   Vue.use(PortalVue);
+  Vue.filter('pluralAge', amount => `${amount} ${plural(amount, 'год', 'года', 'лет')}`);
 
   Vue.directive('click-outside', {
     bind(el, binding, vnode) {

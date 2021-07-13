@@ -58,6 +58,25 @@ const router = new Router({
         groups: ['Лечащий врач', 'Оператор лечащего врача'],
       },
     },
+    {
+      path: '/ui/construct/screening',
+      name: 'construct_screening',
+      component: () => import('@/construct/ConstructScreening.vue'),
+      meta: {
+        title: 'Настройка скрининга',
+        groups: ['Конструктор: Настройка скрининга'],
+      },
+    },
+    {
+      path: '/ui/extra-notification',
+      name: 'extra_notification',
+      component: () => import('@/pages/ExtraNotification.vue'),
+      meta: {
+        title: 'Экстренные извещения',
+        groups: ['Лечащий врач', 'Оператор лечащего врача', 'Вызов врача', 'Заполнение экстренных извещений'],
+        module: 'l2_extra_notifications',
+      },
+    },
   ],
 });
 
@@ -125,6 +144,18 @@ router.beforeEach(async (to, from, next) => {
         icon: true,
       });
       // Если страница требует наличия групп и у пользователя в группах таких нет, и нет группы Admin,
+      // то открываем меню
+      next({ name: 'menu' });
+    } else if (
+      to.matched.some(r => r.meta.module)
+      && to.matched.every(r => !getters.modules[r.meta.module])
+    ) {
+      router.app.$toast.warning('Не настроено.', {
+        position: POSITION.BOTTOM_RIGHT,
+        timeout: 8000,
+        icon: true,
+      });
+      // Если страница требует наличия модуля, но модуль не настроен
       // то открываем меню
       next({ name: 'menu' });
     } else {

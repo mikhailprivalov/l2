@@ -3,7 +3,11 @@ import threading
 import time
 import re
 from collections import defaultdict
-from typing import Union
+from typing import Optional, Union
+from utils.response import status_response
+
+from django.db.utils import IntegrityError
+from utils.data_verification import as_model, data_parse
 
 import simplejson as json
 import yaml
@@ -24,8 +28,7 @@ from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document, District
 from context_processors.utils import menu
-from directory.models import Fractions, ParaclinicInputField, ResearchSite, Culture, Antibiotic, ResearchGroup
-from directory.models import Researches as DResearches
+from directory.models import Fractions, ParaclinicInputField, ResearchSite, Culture, Antibiotic, ResearchGroup, Researches as DResearches, ScreeningPlan
 from doctor_call.models import DoctorCall
 from external_system.models import FsliRefbookTest
 from hospitals.models import Hospitals
@@ -545,19 +548,22 @@ def current_user_info(request):
         "loading": False,
     }
     if ret["auth"]:
+
         def fill_user_data():
-            doctorprofile = users.DoctorProfile.objects.prefetch_related(
-                Prefetch(
-                    'restricted_to_direct',
-                    queryset=DResearches.objects.only('pk'),
-                ),
-                Prefetch(
-                    'users_services',
-                    queryset=DResearches.objects.only('pk'),
-                ),
-            ).select_related(
-                'podrazdeleniye'
-            ).get(user_id=user.pk)
+            doctorprofile = (
+                users.DoctorProfile.objects.prefetch_related(
+                    Prefetch(
+                        'restricted_to_direct',
+                        queryset=DResearches.objects.only('pk'),
+                    ),
+                    Prefetch(
+                        'users_services',
+                        queryset=DResearches.objects.only('pk'),
+                    ),
+                )
+                .select_related('podrazdeleniye')
+                .get(user_id=user.pk)
+            )
 
             ret["fio"] = doctorprofile.get_full_fio()
             ret["doc_pk"] = doctorprofile.pk
@@ -609,13 +615,15 @@ def current_user_info(request):
             if 13 in en and 11 in en:
                 if 7 not in sites_by_types:
                     sites_by_types[7] = []
-                sites_by_types[7].append({
-                    "pk": -13,
-                    "title": "Заявления",
-                    "type": 7,
-                    "extended": True,
-                    'e': 11,
-                })
+                sites_by_types[7].append(
+                    {
+                        "pk": -13,
+                        "title": "Заявления",
+                        "type": 7,
+                        "extended": True,
+                        'e': 11,
+                    }
+                )
 
             for e in en:
                 if e < 4 or not en[e] or e == 13:
@@ -667,11 +675,13 @@ def current_user_info(request):
 def get_menu(request):
     data = menu(request)
 
-    return JsonResponse({
-        "buttons": data["mainmenu"],
-        "version": data["version"],
-        "region": SettingManager.get("region", default='38', default_type='s'),
-    })
+    return JsonResponse(
+        {
+            "buttons": data["mainmenu"],
+            "version": data["version"],
+            "region": SettingManager.get("region", default='38', default_type='s'),
+        }
+    )
 
 
 @login_required
@@ -679,19 +689,14 @@ def directive_from(request):
     data = []
     hospital = request.user.doctorprofile.hospital
     for dep in (
-        Podrazdeleniya.objects.filter(
-            p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.HOSP, Podrazdeleniya.PARACLINIC),
-            hospital__in=(hospital, None)
-        )
+        Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.HOSP, Podrazdeleniya.PARACLINIC), hospital__in=(hospital, None))
         .prefetch_related(
             Prefetch(
                 'doctorprofile_set',
                 queryset=(
                     users.DoctorProfile.objects.filter(user__groups__name__in=["Лечащий врач", "Врач параклиники"])
                     .distinct('fio', 'pk')
-                    .filter(
-                        Q(hospital=hospital) | Q(hospital__isnull=True)
-                    )
+                    .filter(Q(hospital=hospital) | Q(hospital__isnull=True))
                     .order_by("fio")
                 ),
             )
@@ -1282,6 +1287,7 @@ def user_location(request):
     if rl and SettingManager.get("l2_rmis_queue", default='false', default_type='b'):
         if rl == 1337 and request.user.is_superuser:
             from rmis_integration.client import Patients
+
             d = Patients.get_fake_reserves()
         else:
             from rmis_integration.client import Client
@@ -1510,8 +1516,7 @@ def rmis_link(request):
     d_login = d.rmis_login or ''
     auth_param = URL_RMIS_AUTH.replace('userlogin', d_login).replace('userpassword', d_pass)
     url_schedule = URL_SCHEDULE.replace('organization_param', d.hospital.rmis_org_id).replace('service_param', d.rmis_service_id_time_table).replace('employee_param', d.rmis_employee_id)
-    return JsonResponse({'auth_param': auth_param, 'url_eln': URL_ELN_MADE,
-                         'url_schedule': url_schedule})
+    return JsonResponse({'auth_param': auth_param, 'url_eln': URL_ELN_MADE, 'url_schedule': url_schedule})
 
 
 @login_required
@@ -1520,3 +1525,63 @@ def get_permanent_directory(request):
     oid = request_data.get('oid', '')
     return JsonResponse(NSI.get(oid, {}))
 
+
+@login_required
+@group_required("Конструктор: Настройка скрининга")
+def screening_get_directory(request):
+    rows = list(ScreeningPlan.objects.all().order_by('sort_weight').values('pk', 'age_start_control', 'age_end_control', 'sex_client', 'research_id', 'period', 'sort_weight', 'hide'))
+    n = 0
+    for r in rows:
+        if r['sort_weight'] != n:
+            r['sort_weight'] = n
+            p = ScreeningPlan.objects.get(pk=r['pk'])
+            p.sort_weight = n
+            p.save(update_fields=['sort_weight'])
+        n += 1
+        r['hasChanges'] = False
+    return JsonResponse({"rows": rows})
+
+
+@login_required
+@group_required("Конструктор: Настройка скрининга")
+def screening_save(request):
+    parse_params = {
+        'screening': as_model(ScreeningPlan),
+        'service': as_model(DResearches),
+        'sex': str,
+        'ageFrom': int,
+        'ageTo': int,
+        'period': int,
+        'sortWeight': int,
+        'hide': bool,
+    }
+
+    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
+    screening: Optional[ScreeningPlan] = data[0]
+    service: Optional[DResearches] = data[1]
+    sex: str = data[2]
+    age_from: int = data[3]
+    age_to: int = data[4]
+    period: int = data[5]
+    sort_weight: int = data[6]
+    hide: bool = data[7]
+
+    if not service:
+        return status_response(False, 'Не передана услуга или исследование')
+
+    try:
+        if not screening:
+            screening = ScreeningPlan.objects.create(research=service, sex_client=sex, age_start_control=age_from, age_end_control=age_to, period=period, sort_weight=sort_weight, hide=hide)
+        else:
+            screening.research = service
+            screening.sex_client = sex
+            screening.age_start_control = age_from
+            screening.age_end_control = age_to
+            screening.period = period
+            screening.sort_weight = sort_weight
+            screening.hide = hide
+            screening.save()
+    except IntegrityError:
+        return status_response(False, 'Такой скрининг уже есть!')
+
+    return status_response(True)

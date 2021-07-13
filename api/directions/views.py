@@ -4,7 +4,6 @@ import re
 import time
 from datetime import datetime, time as dtime
 from operator import itemgetter
-from typing import Optional
 
 import pytz
 import simplejson as json
@@ -45,7 +44,6 @@ from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE
 from laboratory.utils import strdatetime, strdate, tsdatetime, start_end_year, strfdatetime, current_time
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
-from refprocessor.result_parser import ResultRight
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
@@ -1031,6 +1029,7 @@ def directions_paraclinic_form(request):
                 "sex": d.client.individual.sex.lower(),
                 "card": d.client.number_with_type(),
                 "card_pk": d.client_id,
+                "pk": d.client_id,
                 "individual_pk": d.client.individual_id,
                 "has_dreg": DispensaryReg.objects.filter(date_end__isnull=True, card=d.client).exists(),
                 "has_benefit": BenefitReg.objects.filter(date_end__isnull=True, card=d.client).exists(),
@@ -1038,6 +1037,7 @@ def directions_paraclinic_form(request):
                 "imported_from_rmis": d.imported_from_rmis,
                 "imported_org": "" if not d.imported_org else d.imported_org.title,
                 "base": d.client.base_id,
+                "main_diagnosis": d.client.main_diagnosis,
             }
             response["direction"] = {
                 "pk": d.pk,
@@ -1119,6 +1119,22 @@ def directions_paraclinic_form(request):
                     "maybe_onco": i.maybe_onco,
                     "tube": tube,
                     "procedure_list": [],
+                    "is_form": i.research.is_form,
+                    "children_directions": [
+                        {
+                            "pk": x.pk,
+                            "services": [
+                                y.research.get_title()
+                                for y in Issledovaniya.objects.filter(napravleniye=x)
+                            ]
+                        }
+                        for x in Napravleniya.objects.filter(parent=i)
+                    ],
+                    "parentDirection": None if not i.napravleniye.parent else {
+                        "pk": i.napravleniye.parent.napravleniye_id,
+                        "service": i.napravleniye.parent.research.get_title(),
+                        "is_hospital": i.napravleniye.parent.research.is_hospital,
+                    }
                 }
 
                 if i.research.is_microbiology:
@@ -1907,7 +1923,6 @@ def last_fraction_result(request):
 def last_field_result(request):
     request_data = json.loads(request.body)
     client_pk = request_data["clientPk"]
-
     logical_or, logical_and, logical_group_or = False, False, False
     field_is_link, field_is_aggregate_operation, field_is_aggregate_proto_description = False, False, False
     field_pks, operations_data, aggregate_data = None, None, None
@@ -1923,8 +1938,19 @@ def last_field_result(request):
         else:
             work_place = ""
         result = {"value": work_place}
+    elif request_data["fieldPk"].find('%hospital') != -1:
+        current_iss = request_data["iss_pk"]
+        num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+        hosp_title = Napravleniya.objects.get(pk=num_dir).hospital_title
+        result = {"value": hosp_title}
     elif request_data["fieldPk"].find('%main_address') != -1:
         result = {"value": c.main_address}
+    elif request_data["fieldPk"].find('%docprofile') != -1:
+        result = {"value": request.user.doctorprofile.get_full_fio()}
+    elif request_data["fieldPk"].find('%patient_fio') != -1:
+        result = {"value": data['fio']}
+    elif request_data["fieldPk"].find('%patient_born') != -1:
+        result = {"value": data['born']}
     elif request_data["fieldPk"].find('%snils') != -1:
         result = {"value": data['snils']}
     elif request_data["fieldPk"].find('%polis_enp') != -1:

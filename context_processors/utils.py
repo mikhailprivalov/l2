@@ -118,6 +118,8 @@ def menu(request):
                 {"url": '/mainmenu/rmis_confirm', "title": "Подтверждение отправки результатов в РМИС", "nt": False, "access": ["Подтверждение отправки результатов в РМИС"]},
                 {"url": '/mainmenu/list_wait', "title": "Листы ожидания", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"], "module": "l2_list_wait"},
                 {"url": '/mainmenu/doc_call', "title": "Вызовы врача и заявки", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача"], "module": "l2_doc_call"},
+                {"url": '/ui/extra-notification', "title": "Экстренные извещения", "nt": False,
+                 "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача", "Заполнение экстренных извещений"], "module": "l2_extra_notifications"},
                 {"url": '/mainmenu/procedure_list', "title": "Процедурный лист", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
                 # {"url": '/cases/', "title": "Случаи обслуживания", "nt": False, "access": []},
             ]

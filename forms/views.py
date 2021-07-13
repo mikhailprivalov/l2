@@ -1,6 +1,10 @@
 # import os
+import json
+
 from django.http import HttpResponse
 from django.utils.module_loading import import_string
+import datetime
+
 # from io import BytesIO
 # from datetime import datetime
 # from pdf2docx import Converter
@@ -8,6 +12,8 @@ from django.utils.module_loading import import_string
 # import fitz
 # from pdf2docx import Page
 # from appconf.manager import SettingManager
+from forms.sql_func import get_covid_to_json
+from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION
 
 
 def pdf(request):
@@ -80,3 +86,120 @@ def pdf(request):
 #         self.filename_pdf = 'xx.pdf'
 #         self._fitz_doc = fitz.Document(stream=buffer, filename=self.filename_pdf)
 #         self._pages = [Page(fitz_page) for fitz_page in self._fitz_doc]
+
+
+def extra_nofication(request):
+    # Результат Экстренные извещения
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="extra_note.pdf"'
+
+    f = import_string('forms.forms110.form_01')
+    response.write(
+        f(
+            request_data={
+                **dict(request.GET.items()),
+            }
+        )
+    )
+    return response
+
+
+def covid_result(request):
+    response = HttpResponse(content_type='application/json')
+    if not request.user.doctorprofile.has_group('Заполнение экстренных извещений'):
+        response.write(json.dumps({"error": "Access denied"}, ensure_ascii=False))
+        return response
+
+    request_data = {**dict(request.GET.items())}
+    date = request_data["date"]
+    time_start = f'{date} {request_data.get("time_start", "00:00")}:00'
+    time_end = f'{date} {request_data.get("time_end", "23:59")}:59:999999'
+    datetime_start = datetime.datetime.strptime(time_start, '%Y-%m-%d %H:%M:%S')
+    datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S:%f')
+    result = get_covid_to_json(COVID_RESEARCHES_PK, datetime_start, datetime_end)
+    data_return = []
+    count = 0
+    for i in result:
+        if empty_data(i):
+            continue
+        result_value = i.value_result
+        if result_value == 'отрицательно':
+            result_value = 0
+        if result_value == 'положительно':
+            result_value = 1
+        enp = ""
+        if i.oms_number:
+            enp = i.oms_number
+        snils_number = ""
+        if i.snils_number:
+            snils_number = i.snils_number
+
+        passport_serial, passport_number = "", ""
+        if i.passport_serial and i.passport_number:
+            passport_serial = i.passport_serial
+            passport_number = i.passport_number
+
+        sex = None
+        if i.psex == "ж":
+            sex = 2
+        elif i.psex == "м":
+            sex = 1
+
+        data_return.append(
+            {
+                "order": {
+                    "number": i.number_direction,
+                    "depart": CENTRE_GIGIEN_EPIDEMIOLOGY,
+                    "laboratoryName": i.laboratoryname,
+                    "laboratoryOgrn": i.laboratoryogrn,
+                    "name": i.title_org_initiator,
+                    "ogrn": i.ogrn_org_initiator,
+                    "orderDate": i.get_tubes,
+                    "serv": [
+                        {
+                            "code": i.fsli,
+                            "name": i.title,
+                            "testSystem": "",
+                            "biomaterDate": i.get_tubes,
+                            "readyDate": i.date_confirm,
+                            "result": result_value,
+                            "type": 1,
+                        }
+                    ],
+                    "patient": {
+                        "surname": i.pfam,
+                        "name": i.pname,
+                        "patronymic": i.twoname,
+                        "gender": sex,
+                        "birthday": i.birthday,
+                        "phone": "",
+                        "email": "",
+                        "documentType": "ПаспортгражданинаРФ",
+                        "documentNumber": passport_number,
+                        "documentSerNumber": passport_serial,
+                        "snils": snils_number,
+                        "oms": enp,
+                        "address": {
+                            "regAddress": {
+                                "town": "",
+                                "house": "",
+                                "region": REGION,
+                                "building": "",
+                                "district": "",
+                                "appartament": "",
+                                "streetName": "",
+                            },
+                            "factAddress": {"town": "", "house": "", "region": REGION, "building": "", "district": "", "appartament": "", "streetName": ""},
+                        },
+                    },
+                }
+            }
+        )
+        count += 1
+    response['Content-Disposition'] = f"attachment; filename=\"{date}-covid-{count}.json\""
+    response.write(json.dumps(data_return, ensure_ascii=False))
+    return response
+
+
+def empty_data(obj):
+    return any(not x for x in [obj.number_direction, obj.laboratoryname, obj.laboratoryogrn, obj.get_tubes, obj.title_org_initiator, obj.ogrn_org_initiator, obj.psex])

@@ -4,7 +4,7 @@
       <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos"
               v-if="!hide_diagnosis"
               v-tippy="{ placement : 'bottom', arrow: true }"
-              title="Очистить диагноз">
+              title="Очистить диагноз и подставить из картотеки">
         <span>&times;</span>
       </button>
       <m-k-b-field v-model="diagnos" v-if="!hide_diagnosis"/>
@@ -759,7 +759,7 @@ export default {
       }
     },
     clear_department(pk) {
-      this.$root.$emit(`researches-picker:deselect_department${this.kk}`, pk);
+      this.$root.$emit(`researches-picker:deselect_department${this.kk}`, pk, this.researches_departments_simple()[pk]);
     },
     generate(type) {
       if (this.diagnos === '' && this.current_fin !== 'Платно' && !this.pay_source && !this.create_and_open) {
