@@ -7,40 +7,44 @@ from users.models import DoctorProfile, Speciality
 from utils.models import ChoiceArrayField
 
 
-class DoctorScheduleResource(models.Model):
-    doctor = models.ForeignKey(DoctorProfile, db_index=True, null=True, help_text='Лечащий врач', on_delete=models.CASCADE)
-    research = models.ForeignKey(Researches, null=True, blank=True, help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
-    room = models.ForeignKey(Rooms, default=None, null=True, blank=True, help_text='Кабинет', db_index=True, on_delete=models.CASCADE)
+class ScheduleResource(models.Model):
+    executor = models.ForeignKey(DoctorProfile, db_index=True, null=True, help_text='Исполнитель', on_delete=models.CASCADE)
+    service = models.ForeignKey(Researches, help_text='Услуга', db_index=True, on_delete=models.CASCADE)
+    room = models.ForeignKey(Rooms, help_text='Кабинет', db_index=True, on_delete=models.CASCADE)
     departmnent = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
     speciality = models.ForeignKey(Speciality, null=True, blank=True, help_text='Специальность', db_index=True, on_delete=models.CASCADE)
 
 
-class ResourceSlotsPlan(models.Model):
+class SlotPlan(models.Model):
     GOSUSLUGI = 'gosuslugi'
     PORTAL = 'portal'
+    LOCAL = 'local'
 
     AVAILABLE_RECORDS = (
-        (GOSUSLUGI, 'Gosuslugi'),
-        (PORTAL, 'Portal'),
+        (GOSUSLUGI, 'ЕПГУ'),
+        (PORTAL, 'Портал пациента'),
+        (LOCAL, 'Текущая система L2'),
     )
 
-    doctor_resource = models.ForeignKey(DoctorScheduleResource, db_index=True, null=True, help_text='Лечащий врач', on_delete=models.CASCADE)
-    slot_datetime = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата/время слота')
-    long_time = models.PositiveSmallIntegerField(default=0, help_text='Длительность в мин')
-    source_available_records = ChoiceArrayField(models.CharField(max_length=16, choices=AVAILABLE_RECORDS), help_text='Доступна для записи')
+    resource = models.ForeignKey(ScheduleResource, db_index=True, help_text='Ресурс', on_delete=models.CASCADE)
+    datetime = models.DateTimeField(db_index=True, help_text='Дата/время слота')
+    duration_minutes = models.PositiveSmallIntegerField(help_text='Длительность в мин')
+    available_systems = ChoiceArrayField(models.CharField(max_length=16, choices=AVAILABLE_RECORDS), help_text='Источник записи')
     disabled = models.BooleanField(default=False, blank=True, help_text='Не доступно для записи', db_index=True)
     is_cito = models.BooleanField(default=False, blank=True, help_text='ЦИТО', db_index=True)
 
 
-class ResourceSlotsFact(models.Model):
+class SlotFact(models.Model):
     RESERVED = 0
     CANCELED = 1
+    SUCCESS = 2
 
     STATUS = (
         (CANCELED, "Отмена"),
         (RESERVED, "Зарезервировано"),
+        (SUCCESS, "Выполнено"),
     )
-    resource_plan = models.ForeignKey(ResourceSlotsPlan, db_index=True, null=True, help_text='Лечащий врач', on_delete=models.CASCADE)
-    patient = models.ForeignKey(Card, null=True, help_text='Карта пациента', db_index=True, on_delete=models.SET_NULL)
-    status = models.PositiveSmallIntegerField(choices=STATUS,  blank=True)
-    id_other_system = models.CharField(max_length=255, default='', blank=True)
+    plan = models.ForeignKey(SlotPlan, db_index=True, help_text='Слот-план', on_delete=models.CASCADE)
+    patient = models.ForeignKey(Card, help_text='Карта пациента', db_index=True, null=True, on_delete=models.SET_NULL)
+    status = models.PositiveSmallIntegerField(choices=STATUS, blank=True, db_index=True)
+    external_slot_id = models.CharField(max_length=255, default='', blank=True)

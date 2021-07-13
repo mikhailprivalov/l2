@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import DoctorScheduleResource, ResourceSlotsPlan, ResourceSlotsFact
+from .models import ScheduleResource, SlotPlan, SlotFact
 
 
-admin.site.register(DoctorScheduleResource)
-admin.site.register(ResourceSlotsPlan)
-admin.site.register(ResourceSlotsFact)
+admin.site.register(ScheduleResource)
+admin.site.register(SlotPlan)
+admin.site.register(SlotFact)
