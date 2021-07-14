@@ -917,6 +917,7 @@ export default {
         '-9998': { title: 'Морфология' },
         '-9': { title: 'Формы' },
         '-11': { title: 'Заявления' },
+        '-12': { title: 'Мониторинги' },
       };
       for (const dep of this.$store.getters.allDepartments) {
         deps[dep.pk] = dep;

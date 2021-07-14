@@ -141,6 +141,7 @@ class SettingManager:
                 11: SettingManager.l2('forms'),
                 12: SettingManager.get("directions_params", default='false', default_type='b'),
                 13: SettingManager.l2("applications"),
+                14: SettingManager.l2("monitorings"),
             }
 
             cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
