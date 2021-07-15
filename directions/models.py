@@ -873,6 +873,7 @@ class Napravleniya(models.Model):
                     if research.is_monitoring:
                         monitoring = MonitoringResult(napravleniye=directions_for_researches[dir_group], research=research, issledovaniye=issledovaniye)
                         monitoring.type_period = research.type_period
+                        monitoring.hospital = doc_current.hospital or Hospitals.get_default_hospital()
                         monitoring.save()
 
                     if issledovaniye.pk not in childrens:
@@ -1281,10 +1282,10 @@ class MonitoringResult(models.Model):
     )
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
     monitoring_group = models.ForeignKey(directory.ParaclinicInputGroups, default=None, blank=True, null=True, db_index=True, help_text='Группа результата', on_delete=models.CASCADE)
-    monitoring_order_group = models.IntegerField()
+    monitoring_order_group = models.IntegerField(default=None, blank=True, null=True)
     field = models.ForeignKey(directory.ParaclinicInputField, default=None, blank=True, null=True, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
     field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
-    field_order = models.IntegerField()
+    field_order = models.IntegerField(default=None, blank=True, null=True)
     value_aggregate = models.IntegerField(default=None, blank=True, null=True)
     value_text = models.TextField(default='', blank=True)
     type_period = models.CharField(max_length=20, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
