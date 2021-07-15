@@ -152,14 +152,22 @@ class Researches(models.Model):
         (1, 'Альбомный А4'),
     )
 
+    PERIOD_HOUR = 'PERIOD_HOUR'
+    PERIOD_DAY = 'PERIOD_DAY'
+    PERIOD_WEEK = 'PERIOD_WEEK'
+    PERIOD_MONTH = 'PERIOD_MONTH'
+    PERIOD_QURTER = 'PERIOD_QURTER'
+    PERIOD_HALFYEAR = 'PERIOD_HALFYEAR'
+    PERIOD_YEAR = 'PERIOD_YEAR'
+
     PERIOD_TYPES = (
-        (0, 'Час'),
-        (1, 'День'),
-        (2, 'Неделя'),
-        (3, 'Месяц'),
-        (4, 'Квартал'),
-        (5, 'Полгода'),
-        (6, 'Год'),
+        (PERIOD_HOUR, 'Час'),
+        (PERIOD_DAY, 'День'),
+        (PERIOD_WEEK, 'Неделя'),
+        (PERIOD_MONTH, 'Месяц'),
+        (PERIOD_QURTER, 'Квартал'),
+        (PERIOD_HALFYEAR, 'Полгода'),
+        (PERIOD_YEAR, 'Год'),
     )
 
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления', on_delete=models.SET_NULL)
@@ -223,7 +231,8 @@ class Researches(models.Model):
     has_own_form_result = models.BooleanField(blank=True, default=False, help_text="Собственная форма результатов")
     direction_params = models.ForeignKey('self', related_name='direction_params_p', help_text="Параметры направления", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     show_more_services = models.BooleanField(blank=True, default=True, help_text="Показывать Дополнительные услуги")
-    type_period = models.SmallIntegerField(default=0, choices=PERIOD_TYPES, blank=True)
+    type_period = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
+
 
     @staticmethod
     def filter_type(t):
