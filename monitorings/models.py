@@ -45,6 +45,6 @@ class MonitoringResult(models.Model):
     period_param_hour = models.PositiveSmallIntegerField(default=None, blank=True)
     period_param_day = models.PositiveSmallIntegerField(default=None, blank=True)
     period_param_month = models.PositiveSmallIntegerField(default=None, blank=True)
-    period_param_quarter  = models.PositiveSmallIntegerField(default=None, blank=True)
-    period_param_halfyear  = models.PositiveSmallIntegerField(default=None, blank=True)
+    period_param_quarter = models.PositiveSmallIntegerField(default=None, blank=True)
+    period_param_halfyear = models.PositiveSmallIntegerField(default=None, blank=True)
     period_year = models.PositiveSmallIntegerField(default=None, blank=True)
