@@ -1,20 +1,22 @@
 <template>
   <div>
     <template v-if="Boolean(mode)">
-      <div>{{modeTitle}}</div>
+      <div>{{ modeTitle }}</div>
       <div v-if="mode === 'formula'">
         <ul>
           <li v-for="l in formulaLinks" :key="`${l.type}-${l.id}`">
-            <u>{{LINK_TITLES[l.type]}} {{l.id}}</u>:
-            <span v-if="fieldsAsObject[l.id]">{{fieldsAsObject[l.id]}}</span>
+            <u>{{ LINK_TITLES[l.type] }} {{ l.id }}</u
+            >:
+            <span v-if="fieldsAsObject[l.id]">{{ fieldsAsObject[l.id] }}</span>
             <strong v-else>значение не найдено</strong>
           </li>
         </ul>
       </div>
       <div v-else-if="mode === 'fraction'">
-        <u>Фракция {{this.value}}</u>:
+        <u>Фракция {{ this.value }}</u
+        >:
         <span v-if="loading">загрузка...</span>
-        <span v-else-if="fractions[this.value.trim()]">{{fractions[this.value.trim()]}}</span>
+        <span v-else-if="fractions[this.value.trim()]">{{ fractions[this.value.trim()] }}</span>
         <strong v-else>фракция не найдена</strong>
       </div>
       <div v-else>
@@ -23,9 +25,10 @@
         <div class="bold" v-if="fieldsAndGroups.ids.length === 1">Одно поле или группа</div>
         <ul>
           <li v-for="fg in fieldsAndGroups.ids" :key="fg">
-            <u>{{fg.endsWith('@') ? 'Группа' : 'Поле'}} {{fg.replace('@', '')}}</u>:
+            <u>{{ fg.endsWith('@') ? 'Группа' : 'Поле' }} {{ fg.replace('@', '') }}</u
+            >:
             <span v-if="loading">загрузка</span>
-            <span v-else-if="fieldsAndGroupsCache[fg]">{{fieldsAndGroupsCache[fg]}}</span>
+            <span v-else-if="fieldsAndGroupsCache[fg]">{{ fieldsAndGroupsCache[fg] }}</span>
             <strong v-else>не найдено</strong>
           </li>
         </ul>
@@ -42,7 +45,11 @@ import laboratoryPoint from '@/api/laboratory-point';
 import researchesPoint from '@/api/researches-point';
 
 const fieldModes = {
-  3: 'formula', 11: 'fraction', 13: 'field', 14: 'field', 23: 'field-and-group',
+  3: 'formula',
+  11: 'fraction',
+  13: 'field',
+  14: 'field',
+  23: 'field-and-group',
 };
 
 const modeTitles = {
@@ -103,7 +110,7 @@ export default {
       if (!this.fieldsAndGroups) {
         return;
       }
-      const ids = this.fieldsAndGroups.ids.filter((i) => !this.fieldsAndGroupsCache[i]);
+      const ids = this.fieldsAndGroups.ids.filter(i => !this.fieldsAndGroupsCache[i]);
       if (ids.length > 0) {
         this.loading = true;
         const { titles } = await researchesPoint.getFieldsAndGroups({ ids });
@@ -145,24 +152,26 @@ export default {
         return null;
       }
 
-      return _.flatten(
-        this.groups
-          .map((g) => g.fields.map((f) => ({ pk: f.pk, title: f.title, group: g.title }))),
-      )
-        .filter((f: {pk?: number}) => f.pk && f.pk > -1)
+      return _.flatten(this.groups.map(g => g.fields.map(f => ({ pk: f.pk, title: f.title, group: g.title }))))
+        .filter((f: { pk?: number }) => f.pk && f.pk > -1)
         .reduce(
           (a: any, b: any) => ({ ...a, [b.pk]: `${b.group || 'группа без названия'} – ${b.title || 'поле без названия'}` }),
           { age: 'возраст', sex: 'пол' },
         );
     },
     fieldsAndGroups() {
-      if (this.mode === 'formula' || this.mode === 'fraction') {
+      if (this.mode === 'formula' || this.mode === 'fraction' || typeof this.value !== 'string') {
         return null;
       }
       const signAND = this.value.includes('&');
       const signOR = this.value.includes('|');
-      const sign = (!signAND && !signOR) ? '-' : ((signAND && '&') || '|');
-      const ids = _.uniq(this.value.trim().split(sign).filter(Boolean));
+      const sign = !signAND && !signOR ? '-' : (signAND && '&') || '|';
+      const ids = _.uniq(
+        this.value
+          .trim()
+          .split(sign)
+          .filter(Boolean),
+      );
 
       return { ids, sign };
     },

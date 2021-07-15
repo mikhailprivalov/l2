@@ -83,12 +83,13 @@ export default (instance: Vue): void => {
     direction_form_params: directionFormParams = {},
     current_global_direction_params: currentGlobalDirectionParams = {},
     hospital_department_override: hospitalDepartmentOverride = -1,
+    monitoring = false,
   }) => {
-    if (cardPk === -1) {
+    if (cardPk === -1 && !monitoring) {
       instance.$root.$emit('msg', 'error', 'Не выбрана карта');
       return;
     }
-    if (finSourcePk === -1) {
+    if (finSourcePk === -1 && !monitoring) {
       instance.$root.$emit('msg', 'error', 'Не выбран источник финансирования');
       return;
     }
@@ -96,7 +97,7 @@ export default (instance: Vue): void => {
       instance.$root.$emit('msg', 'error', 'Не выбраны исследования');
       return;
     }
-    if (operator && ofname < 0) {
+    if (operator && ofname < 0 && !monitoring) {
       instance.$root.$emit('msg', 'error', 'Не выбрано, от чьего имени выписываются направления');
       return;
     }

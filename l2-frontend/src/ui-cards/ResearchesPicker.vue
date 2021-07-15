@@ -1,61 +1,75 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
     <div class="top-picker">
-      <button v-if="types.length > 1" class="btn btn-blue-nb btn-ell dropdown-toggle bt1"
-              type="button" data-toggle="dropdown">
+      <button v-if="types.length > 1" class="btn btn-blue-nb btn-ell dropdown-toggle bt1" type="button" data-toggle="dropdown">
         <span class="caret"></span>
-        {{selected_type.title}}
-        {{researches_selected_in_type(selected_type.pk)}}
+        {{ selected_type.title }}
+        {{ researches_selected_in_type(selected_type.pk) }}
       </button>
       <ul v-if="types.length > 1" class="dropdown-menu" style="margin-top: 1px">
         <li v-for="row in types" :key="row.pk">
-          <a href="#" @click.prevent="select_type(row.pk)">{{row.title}} {{researches_selected_in_type(row.pk)}}</a>
+          <a href="#" @click.prevent="select_type(row.pk)">{{ row.title }} {{ researches_selected_in_type(row.pk) }}</a>
         </li>
       </ul>
-      <button v-if="types.length === 1" class="btn btn-blue-nb btn-ell" type="button"
-              style="width: 135px;border-radius: 0">
-        {{selected_type.title}}
+      <button v-if="types.length === 1" class="btn btn-blue-nb btn-ell" type="button" style="width: 135px;border-radius: 0">
+        {{ selected_type.title }}
       </button>
       <div class="top-inner">
-        <div @click="select_dep(row.pk)" class="top-inner-select" :class="{active: row.pk === dep}"
-             :title="row.title"
-             v-tippy="{ placement : 'bottom', arrow: true }"
-             :key="row.pk"
-             v-for="row in departments_of_type">
+        <div
+          @click="select_dep(row.pk)"
+          class="top-inner-select"
+          :class="{ active: row.pk === dep }"
+          :title="row.title"
+          v-tippy="{ placement: 'bottom', arrow: true }"
+          :key="row.pk"
+          v-for="row in departments_of_type"
+        >
           <span>
             {{ row.title }}
             <span v-if="researches_selected_in_department(row.pk).length > 0">
-              &nbsp;({{researches_selected_in_department(row.pk).length}})
+              &nbsp;({{ researches_selected_in_department(row.pk).length }})
             </span>
           </span>
         </div>
       </div>
     </div>
-    <div class="content-picker" :class="{hidetemplates: hidetemplates && !just_search}"
-         v-if="researches_display.length > 0">
+    <div class="content-picker" :class="{ hidetemplates: hidetemplates && !just_search }" v-if="researches_display.length > 0">
       <template v-if="work_as_subcategory">
         <template v-if="selectedSubcategory === -1">
           <div class="category-title">Категории</div>
-          <category-pick @click.native="selectedSubcategory = row.pk" class="research-select" :key="row.pk"
-                         v-for="row in subcategories" :category="row" />
+          <category-pick
+            @click.native="selectedSubcategory = row.pk"
+            class="research-select"
+            :key="row.pk"
+            v-for="row in subcategories"
+            :category="row"
+          />
         </template>
         <template v-else>
           <div class="category-title">
-            <a href="#" @click.prevent="selectedSubcategory = -1" class="a-under">
-              <i class="fa fa-arrow-left"></i> Назад</a>&nbsp;&nbsp;{{selectedSubcategoryObj.title}}
+            <a href="#" @click.prevent="selectedSubcategory = -1" class="a-under"> <i class="fa fa-arrow-left"></i> Назад</a
+            >&nbsp;&nbsp;{{ selectedSubcategoryObj.title }}
           </div>
 
-          <research-pick @click.native="select_research(row.pk)" class="research-select"
-                         :key="row.pk"
-                         :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
-                         v-for="row in selectedSubcategoryObj.researches || []" :research="row"/>
+          <research-pick
+            @click.native="select_research(row.pk)"
+            class="research-select"
+            :key="row.pk"
+            :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
+            v-for="row in selectedSubcategoryObj.researches || []"
+            :research="row"
+          />
         </template>
       </template>
       <template v-else>
-        <research-pick @click.native="select_research(row.pk)" class="research-select"
-                       :key="row.pk"
-                       :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
-                       v-for="row in researches_display" :research="row"/>
+        <research-pick
+          @click.native="select_research(row.pk)"
+          class="research-select"
+          :key="row.pk"
+          :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
+          v-for="row in researches_display"
+          :research="row"
+        />
       </template>
     </div>
     <div class="content-none" v-else>
@@ -63,88 +77,129 @@
     </div>
     <div class="bottom-picker" v-if="!hidetemplates" style="white-space: nowrap;">
       <div class="dropup" style="display: inline-block">
-        <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-                style="text-align: left!important;border-radius: 0"><span class="caret"></span>
+        <button
+          class="btn btn-blue-nb btn-ell dropdown-toggle"
+          type="button"
+          data-toggle="dropdown"
+          style="text-align: left!important;border-radius: 0"
+        >
+          <span class="caret"></span>
           Загрузить шаблон
         </button>
         <ul class="dropdown-menu">
           <li v-for="row in templates" :key="row.pk">
-            <a href="#" @click.prevent="load_template(row.pk)">{{row.title}}</a>
+            <a href="#" @click.prevent="load_template(row.pk)">{{ row.title }}</a>
           </li>
         </ul>
       </div>
       <div style="display: flex;width: calc(100% - 164px);justify-content: flex-end;">
         <div id="founded-n" v-show="founded_n !== '' && search !== ''">
-          <div style="font-size: 16px">{{founded_n}}</div>
+          <div style="font-size: 16px">{{ founded_n }}</div>
         </div>
         <div style="position: relative;max-width: 335px;width: 100%;display: flex;">
           <div id="templates-tip" v-if="founded_templates.length > 0">
-            <div class="founded-template"
-                 :key="t.pk"
-                 v-for="t in founded_templates" @click="do_select_researches(t.researches)">
-              {{t.title}}
+            <div class="founded-template" :key="t.pk" v-for="t in founded_templates" @click="do_select_researches(t.researches)">
+              {{ t.title }}
             </div>
           </div>
-          <input type="text" placeholder="Поиск шаблона" id="template-search"
-                 v-model="search_template" class="form-control" style="width: calc(100% - 35px);max-width: 300px;"/>
-          <button class="btn btn-blue-nb bottom-inner-btn" @click="clear_search_template"
-                  v-tippy="{ placement : 'top', arrow: true }"
-                  style="width: 35px" title="Очистить поиск">
+          <input
+            type="text"
+            placeholder="Поиск шаблона"
+            id="template-search"
+            v-model="search_template"
+            class="form-control"
+            style="width: calc(100% - 35px);max-width: 300px;"
+          />
+          <button
+            class="btn btn-blue-nb bottom-inner-btn"
+            @click="clear_search_template"
+            v-tippy="{ placement: 'top', arrow: true }"
+            style="width: 35px"
+            title="Очистить поиск"
+          >
             <span>&times;</span>
           </button>
         </div>
-        <input type="text" placeholder="Поиск назначения (Enter для быстрого выбора и очистки)" class="form-control"
-               v-model="search" @keyup.enter="founded_select(true)" ref="fndsrc" id="fndsrc" style="max-width: 300px"
-               @show="check_found_tip" @shown="check_found_tip"
-               @keyup.alt.37="k('left')"
-               @keyup.alt.38="k('up')"
-               @keyup.alt.39="k('right')"
-               @keyup.alt.40="k('down')"
-               v-tippy="{
-                 html: '#founded-n',
-                 trigger: 'mouseenter focus input',
-                 reactive: true,
-                 arrow: true,
-                 animation: 'fade',
-                 duration: 0
-               }"/>
-        <button class="btn btn-blue-nb bottom-inner-btn" @click="founded_select"
-                v-tippy="{ placement : 'top', arrow: true }"
-                title="Быстрый выбор найденного">
+        <input
+          type="text"
+          placeholder="Поиск назначения (Enter для быстрого выбора и очистки)"
+          class="form-control"
+          v-model="search"
+          @keyup.enter="founded_select(true)"
+          ref="fndsrc"
+          id="fndsrc"
+          style="max-width: 300px"
+          @show="check_found_tip"
+          @shown="check_found_tip"
+          @keyup.alt.37="k('left')"
+          @keyup.alt.38="k('up')"
+          @keyup.alt.39="k('right')"
+          @keyup.alt.40="k('down')"
+          v-tippy="{
+            html: '#founded-n',
+            trigger: 'mouseenter focus input',
+            reactive: true,
+            arrow: true,
+            animation: 'fade',
+            duration: 0,
+          }"
+        />
+        <button
+          class="btn btn-blue-nb bottom-inner-btn"
+          @click="founded_select"
+          v-tippy="{ placement: 'top', arrow: true }"
+          title="Быстрый выбор найденного"
+        >
           <span class="fa fa-circle"></span>
         </button>
-        <button class="btn btn-blue-nb bottom-inner-btn" @click="clear_search"
-                v-tippy="{ placement : 'top', arrow: true }"
-                title="Очистить поиск">
+        <button
+          class="btn btn-blue-nb bottom-inner-btn"
+          @click="clear_search"
+          v-tippy="{ placement: 'top', arrow: true }"
+          title="Очистить поиск"
+        >
           <span>&times;</span>
         </button>
       </div>
     </div>
     <div class="bottom-picker" v-else-if="just_search" style="white-space: nowrap;">
-      <input type="text" placeholder="Поиск назначения (Enter для быстрого выбора и очистки)" class="form-control"
-             v-model="search" @keyup.enter="founded_select(true)" ref="fndsrc"
-             style="width: calc(100% - 68px);max-width: 100%;"
-             @show="check_found_tip" @shown="check_found_tip"
-             @keyup.alt.37="k('left')"
-             @keyup.alt.38="k('up')"
-             @keyup.alt.39="k('right')"
-             @keyup.alt.40="k('down')"
-             v-tippy="{
-               html: '#founded-n',
-               trigger: 'mouseenter focus input',
-               reactive: true,
-               arrow: true,
-               animation : 'fade',
-               duration : 0
-             }"/>
-      <button class="btn btn-blue-nb bottom-inner-btn" @click="founded_select"
-              v-tippy="{ placement : 'top', arrow: true }"
-              title="Быстрый выбор найденного">
+      <input
+        type="text"
+        placeholder="Поиск назначения (Enter для быстрого выбора и очистки)"
+        class="form-control"
+        v-model="search"
+        @keyup.enter="founded_select(true)"
+        ref="fndsrc"
+        style="width: calc(100% - 68px);max-width: 100%;"
+        @show="check_found_tip"
+        @shown="check_found_tip"
+        @keyup.alt.37="k('left')"
+        @keyup.alt.38="k('up')"
+        @keyup.alt.39="k('right')"
+        @keyup.alt.40="k('down')"
+        v-tippy="{
+          html: '#founded-n',
+          trigger: 'mouseenter focus input',
+          reactive: true,
+          arrow: true,
+          animation: 'fade',
+          duration: 0,
+        }"
+      />
+      <button
+        class="btn btn-blue-nb bottom-inner-btn"
+        @click="founded_select"
+        v-tippy="{ placement: 'top', arrow: true }"
+        title="Быстрый выбор найденного"
+      >
         <span class="fa fa-circle"></span>
       </button>
-      <button class="btn btn-blue-nb bottom-inner-btn" @click="clear_search"
-              v-tippy="{ placement : 'top', arrow: true }"
-              title="Очистить поиск">
+      <button
+        class="btn btn-blue-nb bottom-inner-btn"
+        @click="clear_search"
+        v-tippy="{ placement: 'top', arrow: true }"
+        title="Очистить поиск"
+      >
         <span>&times;</span>
       </button>
     </div>
@@ -221,17 +276,29 @@ export default {
     };
   },
   created() {
-    this.$store.watch((state) => state.templates, () => {
-      this.check_template();
-    }, { immediate: true });
+    this.$store.watch(
+      state => state.templates,
+      () => {
+        this.check_template();
+      },
+      { immediate: true },
+    );
 
-    this.$store.watch((state) => state.allTypes, () => {
-      this.checkType();
-    }, { immediate: true });
+    this.$store.watch(
+      state => state.allTypes,
+      () => {
+        this.checkType();
+      },
+      { immediate: true },
+    );
 
-    this.$store.watch((state) => state.templates, () => {
-      this.check_template();
-    }, { immediate: true });
+    this.$store.watch(
+      state => state.templates,
+      () => {
+        this.check_template();
+      },
+      { immediate: true },
+    );
   },
   async mounted() {
     this.$root.$on(`researches-picker:deselect${this.kk}`, this.deselect_research_ignore);
@@ -242,10 +309,7 @@ export default {
     if (!this.$store.getters.okDep || Object.keys(this.$store.getters.researches).length === 0) {
       await this.$store.dispatch(actions.INC_LOADING);
 
-      await Promise.all([
-        this.$store.dispatch(actions.GET_RESEARCHES),
-        this.$store.dispatch(actions.GET_TEMPLATES),
-      ]);
+      await Promise.all([this.$store.dispatch(actions.GET_RESEARCHES), this.$store.dispatch(actions.GET_TEMPLATES)]);
 
       await this.$store.dispatch(actions.DEC_LOADING);
     }
@@ -301,14 +365,19 @@ export default {
       return this.$store.getters.modules.l2_only_doc_call;
     },
     types() {
-      let result = this.$store.getters.allTypes.filter((row) => (
-        (row.pk !== '0' && row.pk !== '1' && !this.filter_types.includes(parseInt(row.pk, 10)))
-              && (this.typesOnly.length === 0 || this.typesOnly.includes(parseInt(row.pk, 10)))
-              && (!this.l2_only_doc_call || row.pk === '4') && row.pk !== '13'
-      ));
+      let result = this.$store.getters.allTypes.filter(
+        row => row.pk !== '0'
+          && row.pk !== '1'
+          && !this.filter_types.includes(parseInt(row.pk, 10))
+          && (this.typesOnly.length === 0 || this.typesOnly.includes(parseInt(row.pk, 10)))
+          && (!this.l2_only_doc_call || row.pk === '4')
+          && row.pk !== '13',
+      );
 
       if (this.typesOnly && this.typesOnly.length > 0) {
-        result = this.typesOnly.map((t) => result.find((r) => Number(r.pk) === Number(t))).filter(Boolean);
+        result = this.typesOnly.map(t => result.find(r => Number(r.pk) === Number(t))).filter(Boolean);
+      } else {
+        result = result.filter(r => Number(r.pk) !== 14);
       }
 
       return result;
@@ -322,7 +391,7 @@ export default {
       return { title: 'Не выбран тип', pk: '-1' };
     },
     selectedSubcategoryObj() {
-      return this.subcategories.find((c) => c.pk === this.selectedSubcategory) || {};
+      return this.subcategories.find(c => c.pk === this.selectedSubcategory) || {};
     },
     subcategory_base() {
       if (this.dep === 10001) {
@@ -338,12 +407,12 @@ export default {
         return [];
       }
       let sc = this.$store.getters.ex_dep[this.subcategory_base] || [];
-      sc = sc.map((c) => {
+      sc = sc.map(c => {
         const researches = this.researches_sub_categories(c.pk);
         const selected = researches.filter(({ pk }) => this.checked_researches.includes(pk)).length;
         return { ...c, researches, selected };
       });
-      return sc.filter((c) => c.researches.length > 0);
+      return sc.filter(c => c.researches.length > 0);
     },
     selected_type_i() {
       let i = 0;
@@ -409,25 +478,25 @@ export default {
   methods: {
     researches_sub_categories(sc_id) {
       const r = [];
-      for (const row of (this.$store.getters.researches[this.rev_t] || [])) {
+      for (const row of this.$store.getters.researches[this.rev_t] || []) {
         if (row.site_type_raw === sc_id && row.site_type === this.dep) {
           r.push(row);
         }
       }
-      return r.filter((x) => !this.filter_researches.includes(x.pk));
+      return r.filter(x => !this.filter_researches.includes(x.pk));
     },
     researches_dep_display(dep = this.dep) {
       let r = [];
       if (this.rev_t === -2 || dep === -13) {
         for (const d of Object.keys(this.$store.getters.researches)) {
-          for (const row of (this.$store.getters.researches[d] || [])) {
+          for (const row of this.$store.getters.researches[d] || []) {
             if ((row.doc_refferal || row.is_application) && row.site_type === dep) {
               r.push(row);
             }
           }
         }
       } else if (this.rev_t < -2) {
-        for (const row of (this.$store.getters.researches[this.rev_t] || [])) {
+        for (const row of this.$store.getters.researches[this.rev_t] || []) {
           if (row.site_type === dep || (dep === -1 && !row.site_type)) {
             r.push(row);
           }
@@ -435,7 +504,7 @@ export default {
       } else if (this.dep in this.$store.getters.researches) {
         r = this.$store.getters.researches[dep];
       }
-      return r.filter((x) => !this.filter_researches.includes(x.pk));
+      return r.filter(x => !this.filter_researches.includes(x.pk));
     },
     k(t) {
       let n = 0;
@@ -567,10 +636,10 @@ export default {
         return;
       }
       if (this.research_selected(pk)) {
-        this.checked_researches = this.checked_researches.filter((item) => item !== pk);
+        this.checked_researches = this.checked_researches.filter(item => item !== pk);
         const research = this.research_data(pk);
         if (this.autoselect === 'directions') {
-          for (const addto_pk of (research.addto || [])) {
+          for (const addto_pk of research.addto || []) {
             this.deselect_research_ignore(addto_pk);
           }
         }
@@ -610,7 +679,11 @@ export default {
     highlight_search(row) {
       const t = row.title.toLowerCase().trim();
       const ft = row.full_title.toLowerCase().trim();
-      const c = row.code.toLowerCase().trim().replace('а', 'a').replace('в', 'b');
+      const c = row.code
+        .toLowerCase()
+        .trim()
+        .replace('а', 'a')
+        .replace('в', 'b');
       const s = this.search.toLowerCase().trim();
       return s !== '' && (t.includes(s) || ft.includes(s) || c.startsWith(s.replace('а', 'a').replace('в', 'b')));
     },
@@ -632,16 +705,14 @@ export default {
       } else {
         for (const rpk of this.checked_researches) {
           const res = this.research_data(rpk);
-          if (
-            this.rev_t < -2
-            && res.department_pk === this.rev_t
-            && ((!res.site_type && !pk) || res.site_type === pk)
-          ) {
+          if (this.rev_t < -2 && res.department_pk === this.rev_t && ((!res.site_type && !pk) || res.site_type === pk)) {
             r.push(rpk);
-          } else if (this.rev_t >= -2
-              && ((res.department_pk === pk && (!res.doc_refferal || !this.is_doc_ref || pk === -2))
-                || (this.is_doc_ref && res.site_type === pk && res.doc_refferal)
-                || (!res.site_type && res.doc_refferal && pk === -2))) {
+          } else if (
+            this.rev_t >= -2
+            && ((res.department_pk === pk && (!res.doc_refferal || !this.is_doc_ref || pk === -2))
+              || (this.is_doc_ref && res.site_type === pk && res.doc_refferal)
+              || (!res.site_type && res.doc_refferal && pk === -2))
+          ) {
             r.push(rpk);
           }
         }
@@ -654,10 +725,10 @@ export default {
         const res = this.research_data(rpk);
         if (
           (res.type === pk && !res.doc_refferal && !res.treatment && !res.stom)
-            || (pk === '4' && res.doc_refferal)
-            || (pk === '5' && res.treatment)
-            || (pk === '6' && res.stom)
-            || (pk === '7' && res.is_hospital)
+          || (pk === '4' && res.doc_refferal)
+          || (pk === '5' && res.treatment)
+          || (pk === '6' && res.stom)
+          || (pk === '7' && res.is_hospital)
         ) {
           l++;
         }
@@ -670,10 +741,10 @@ export default {
         const res = this.research_data(rpk);
         if (
           (res.type === pk && !res.doc_refferal && !res.treatment && !res.stom)
-            || (pk === '4' && res.doc_refferal)
-            || (pk === '5' && res.treatment)
-            || (pk === '6' && res.stom)
-            || (pk === '7' && res.is_hospital)
+          || (pk === '4' && res.doc_refferal)
+          || (pk === '5' && res.treatment)
+          || (pk === '6' && res.stom)
+          || (pk === '7' && res.is_hospital)
         ) {
           l.push(res);
         }
@@ -683,9 +754,11 @@ export default {
     do_search_template(nv) {
       this.founded_templates = [];
       if (nv === '') return;
-      fetch(`/api/search-template?q=${encodeURIComponent(nv)}`).then((q) => q.json()).then((data) => {
-        this.founded_templates = (data.result || []).slice().reverse();
-      });
+      fetch(`/api/search-template?q=${encodeURIComponent(nv)}`)
+        .then(q => q.json())
+        .then(data => {
+          this.founded_templates = (data.result || []).slice().reverse();
+        });
     },
     do_select_researches(pks) {
       if (pks.length === 0) {
@@ -711,182 +784,188 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .top-picker, .bottom-picker {
-    height: 34px;
-    background-color: #AAB2BD;
-    position: absolute;
-    left: 0;
-    right: 0;
-  }
+.top-picker,
+.bottom-picker {
+  height: 34px;
+  background-color: #aab2bd;
+  position: absolute;
+  left: 0;
+  right: 0;
+}
 
-  .top-picker {
-    top: 0;
-  }
+.top-picker {
+  top: 0;
+}
 
-  .top-inner, .content-picker, .content-none {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: stretch;
-    align-content: center;
-    align-items: stretch;
-    overflow-y: auto;
-  }
+.top-inner,
+.content-picker,
+.content-none {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: stretch;
+  align-content: center;
+  align-items: stretch;
+  overflow-y: auto;
+}
 
-  .content-picker {
-    align-content: flex-start;
-  }
+.content-picker {
+  align-content: flex-start;
+}
 
-  .content-none {
-    align-items: center;
-    align-content: center;
-    justify-content: center;
-  }
+.content-none {
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+}
 
-  .top-inner {
-    position: absolute;
-    left: 139px;
-    top: 0;
-    right: 0;
-    height: 34px;
-    align-content: stretch;
-    overflow: hidden;
-  }
+.top-inner {
+  position: absolute;
+  left: 139px;
+  top: 0;
+  right: 0;
+  height: 34px;
+  align-content: stretch;
+  overflow: hidden;
+}
 
-  .top-inner-select, .research-select {
-    align-self: stretch;
-    display: flex;
-    align-items: center;
-    padding: 1px 2px 1px;
-    color: #000;
-    background-color: #fff;
-    text-decoration: none;
-    transition: .15s linear all;
-    cursor: pointer;
-    flex: 1;
-    margin: 0;
-    font-size: 12px;
-    min-width: 0;
-  }
+.top-inner-select,
+.research-select {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 1px 2px 1px;
+  color: #000;
+  background-color: #fff;
+  text-decoration: none;
+  transition: 0.15s linear all;
+  cursor: pointer;
+  flex: 1;
+  margin: 0;
+  font-size: 12px;
+  min-width: 0;
+}
 
-  .top-inner-select {
-    background-color: #AAB2BD;
-    color: #fff;
-  }
+.top-inner-select {
+  background-color: #aab2bd;
+  color: #fff;
+}
 
-  .category-title {
-    flex: 0 1 100%;
-    width: 100%;
-    height: 34px;
-    border: 1px solid #6C7A89 !important;
-    margin-bottom: 5px;
-    padding: 8px;
-    text-align: left;
-    font-weight: bold;
-  }
+.category-title {
+  flex: 0 1 100%;
+  width: 100%;
+  height: 34px;
+  border: 1px solid #6c7a89 !important;
+  margin-bottom: 5px;
+  padding: 8px;
+  text-align: left;
+  font-weight: bold;
+}
 
-  .research-select {
-    flex: 0 1 auto;
-    width: 25%;
-    height: 34px;
-    border: 1px solid #6C7A89 !important;
-    cursor: pointer;
-    text-align: left;
-    outline: transparent;
-  }
+.research-select {
+  flex: 0 1 auto;
+  width: 25%;
+  height: 34px;
+  border: 1px solid #6c7a89 !important;
+  cursor: pointer;
+  text-align: left;
+  outline: transparent;
+}
 
-  .top-inner-select.active, .research-select.active {
-    background: #049372 !important;
-    color: #fff;
-  }
+.top-inner-select.active,
+.research-select.active {
+  background: #049372 !important;
+  color: #fff;
+}
 
-  .top-inner-select > span {
-    display: block;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    word-break: keep-all;
-    max-height: 2.2em;
-    line-height: 1.1em;
-  }
+.top-inner-select > span {
+  display: block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  word-break: keep-all;
+  max-height: 2.2em;
+  line-height: 1.1em;
+}
 
-  .top-inner-select:hover {
-    background-color: #434a54;
-  }
+.top-inner-select:hover {
+  background-color: #434a54;
+}
 
-  .research-select:hover {
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, .8) !important;
-  }
+.research-select:hover {
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8) !important;
+}
 
-  .highlight_search {
-    background: #07f6bf;
-    color: #000;
-  }
+.highlight_search {
+  background: #07f6bf;
+  color: #000;
+}
 
-  .content-picker, .content-none {
-    position: absolute;
-    top: 34px;
+.content-picker,
+.content-none {
+  position: absolute;
+  top: 34px;
 
-    &:not(.hidetemplates) {
-      bottom: 34px;
-    }
-
-    &.hidetemplates {
-      bottom: 0;
-    }
-
-    left: 0;
-    right: 0;
-    overflow-y: auto;
-  }
-
-  .bottom-picker {
-    bottom: 0;
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-
-    input {
-      max-width: 350px;
-      width: 100%;
-      border-left: none;
-      border-bottom: none;
-      border-right: none;
-      border-radius: 0;
-    }
-  }
-
-  .bottom-inner-btn {
-    width: auto;
-    text-align: center;
-    border-radius: 0;
-  }
-
-  #templates-tip {
-    position: absolute;
+  &:not(.hidetemplates) {
     bottom: 34px;
-    left: 0;
-    right: 0;
-    background: #fff;
-    border-radius: 5px 5px 0 0;
-    overflow: hidden;
-    box-shadow: 0 -2px 2px rgba(0, 0, 0, .4);
   }
 
-  .founded-template {
-    padding: 6px 12px;
-    font-size: 14px;
-    cursor: pointer;
-
-    &:hover {
-      background: #049372;
-      color: #fff;
-    }
+  &.hidetemplates {
+    bottom: 0;
   }
 
-  .bt1 {
-    width: 139px;
-    text-align: left !important;
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+}
+
+.bottom-picker {
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+
+  input {
+    max-width: 350px;
+    width: 100%;
+    border-left: none;
+    border-bottom: none;
+    border-right: none;
     border-radius: 0;
-    padding: 7px 5px;
-    font-size: 13px;
   }
+}
+
+.bottom-inner-btn {
+  width: auto;
+  text-align: center;
+  border-radius: 0;
+}
+
+#templates-tip {
+  position: absolute;
+  bottom: 34px;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 5px 5px 0 0;
+  overflow: hidden;
+  box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.4);
+}
+
+.founded-template {
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+
+  &:hover {
+    background: #049372;
+    color: #fff;
+  }
+}
+
+.bt1 {
+  width: 139px;
+  text-align: left !important;
+  border-radius: 0;
+  padding: 7px 5px;
+  font-size: 13px;
+}
 </style>

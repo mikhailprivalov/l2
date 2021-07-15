@@ -1,18 +1,19 @@
 <template>
   <div class="root">
-    <div class="top-editor" :class="{ simpleEditor: simple, formEditor: ex_dep === 12, oneLine: ex_dep === 13 }">
+    <div class="top-editor" :class="{ simpleEditor: simple, formEditor: ex_dep === 12, oneLine: ex_dep === 13 || ex_dep === 14 }">
       <div class="left">
         <div class="input-group">
           <span class="input-group-addon" v-if="ex_dep === 12"> Название шаблона параметров направления ({{ loaded_pk }}) </span>
           <span class="input-group-addon" v-else-if="ex_dep === 13">
             Название заявления
           </span>
+          <span class="input-group-addon" v-else-if="ex_dep === 14">Название мониторинга</span>
           <span class="input-group-addon" v-else>Полное наименование</span>
           <input type="text" class="form-control" v-model="title" />
           <label v-if="ex_dep === 12" class="input-group-addon" style="height: 34px;text-align: left;">
             <input type="checkbox" v-model="is_global_direction_params" /> Глобальный
           </label>
-          <span class="input-group-btn" v-if="(ex_dep === 12 || simple) && fte">
+          <span class="input-group-btn" v-if="(ex_dep === 12 || simple) && fte && ex_dep !== 14">
             <button
               class="btn btn-blue-nb"
               type="button"
@@ -24,7 +25,7 @@
             </button>
           </span>
         </div>
-        <div class="input-group" v-if="ex_dep !== 12 && ex_dep !== 13">
+        <div class="input-group" v-if="ex_dep !== 12 && ex_dep !== 13 && ex_dep !== 14">
           <span class="input-group-addon">Краткое <small>(для создания направлений)</small></span>
           <input type="text" class="form-control" v-model="short_title" />
           <span class="input-group-addon">Профиль</span>
@@ -36,7 +37,7 @@
         </div>
       </div>
       <div class="right" v-if="!simple && ex_dep !== 12 && ex_dep !== 13">
-        <div class="row" style="margin-right: 0;" v-if="department < -1">
+        <div class="row" style="margin-right: 0;" v-if="department < -1 && ex_dep !== 14">
           <div class="col-xs-6" style="padding-right: 0">
             <div class="input-group" style="margin-right: -1px">
               <span class="input-group-addon">Код (ОМС)</span>
@@ -50,7 +51,7 @@
               <label
                 class="input-group-addon"
                 style="height: 34px;text-align: left;"
-                title="Показыать ли форму дополнительных услуг в протоколе"
+                title="Показывать ли форму дополнительных услуг в протоколе"
                 v-tippy
                 v-if="ex_dep !== 8 && ex_dep !== 13"
               >
@@ -63,6 +64,15 @@
             </div>
           </div>
         </div>
+        <div class="input-group" v-else-if="ex_dep === 14">
+          <span class="input-group-addon">Подраздел</span>
+          <select v-model="site_type" class="form-control">
+            <option v-for="r in ex_deps" :value="r.pk" :key="r.pk">{{ r.title }}</option>
+          </select>
+          <label class="input-group-addon" style="height: 34px;text-align: left;">
+            <input type="checkbox" v-model="hide" /> Скрыть
+          </label>
+        </div>
         <div class="input-group" v-else>
           <label class="input-group-addon" style="height: 34px;text-align: left;" v-if="ex_dep !== 8 && ex_dep !== 13">
             <input type="checkbox" v-model="show_more_services" /> Дополн. услуги
@@ -72,7 +82,7 @@
           <span class="input-group-addon">Код (внутр)</span>
           <input type="text" class="form-control f-code" v-model="internal_code" />
         </div>
-        <div class="input-group">
+        <div class="input-group" v-if="ex_dep !== 14">
           <span class="input-group-addon"> Ф.направления </span>
           <select class="form-control" v-model="direction_current_form">
             <option :value="d[0]" v-for="d in direction_forms" :key="d[0]">
@@ -111,7 +121,7 @@
     </div>
     <div class="content-editor">
       <template v-if="ex_dep !== 12 && ex_dep !== 13">
-        <div class="input-group" v-if="!simple">
+        <div class="input-group" v-if="!simple && ex_dep !== 14">
           <span class="input-group-addon nbr">Информация на направлении</span>
           <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
         </div>
@@ -132,7 +142,7 @@
             </div>
           </div>
           <div class="col-xs-6" style="padding-left: 0">
-            <div class="input-group">
+            <div class="input-group" v-if="ex_dep !== 14">
               <span class="input-group-addon nbr"> Ф.результатов </span>
               <select class="form-control nbr" v-model="result_current_form">
                 <option :value="d[0]" v-for="d in result_forms" :key="d[0]">
@@ -615,6 +625,7 @@ export default {
           '-9': 11,
           '-10': 12,
           '-11': 13,
+          '-12': 14,
         }[this.department] || this.department
       );
     },
@@ -824,6 +835,9 @@ export default {
           });
       } else {
         this.add_group();
+      }
+      if (this.ex_deps.length > 0 && this.site_type === null) {
+        this.site_type = this.ex_deps[0].pk;
       }
     },
     cancel() {
