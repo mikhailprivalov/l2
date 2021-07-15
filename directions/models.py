@@ -1279,14 +1279,15 @@ class MonitoringResult(models.Model):
     doc_confirmation = models.ForeignKey(
         DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль пользователя, подтвердившего результат', on_delete=models.SET_NULL
     )
-    doc_confirmation_string = models.CharField(max_length=64, null=True, blank=True, default=None)
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
     monitoring_group = models.ForeignKey(directory.ParaclinicInputGroups, default=None, blank=True, null=True, db_index=True, help_text='Группа результата', on_delete=models.CASCADE)
+    monitoring_order_group = models.IntegerField()
     field = models.ForeignKey(directory.ParaclinicInputField, default=None, blank=True, null=True, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
     field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
+    field_order = models.IntegerField()
     value_aggregate = models.IntegerField(default=None, blank=True, null=True)
-    value_text = models.TextField(default=None, blank=True, null=True)
-    type_period = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
+    value_text = models.TextField(default='', blank=True)
+    type_period = models.CharField(max_length=20, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
     period_param_hour = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     period_param_day = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     period_param_month = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
