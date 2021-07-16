@@ -399,7 +399,6 @@ class Napravleniya(models.Model):
     title_org_initiator = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Организация направитель')
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
 
-
     def get_doc_podrazdeleniye_title(self):
         if self.hospital and (self.is_external or not self.hospital.is_default):
             parts = [
@@ -686,6 +685,44 @@ class Napravleniya(models.Model):
 
         if rmis_data is None:
             rmis_data = {}
+        current_hospital = doc_current.hospital or Hospitals.get_default_hospital()
+
+        def monitoring_is_created_later(
+            type_period,
+            period_param_hour,
+            period_param_day,
+            period_param_week,
+            period_param_month,
+            period_param_quarter,
+            period_param_halfyear,
+            period_param_year,
+            current_hospital,
+        ):
+            monitoring_exists = None
+            if type_period == 'PERIOD_HOUR':
+                monitoring_exists = MonitoringResult.objects.filter(
+                    hospital=current_hospital,
+                    type_period=type_period,
+                    period_param_hour=period_param_hour,
+                    period_param_day=period_param_day,
+                    period_param_month=period_param_month,
+                    period_param_year=period_param_year,
+                ).first()
+            elif type_period == 'PERIOD_DAY':
+                monitoring_exists = MonitoringResult.objects.filter(
+                    hospital=current_hospital, type_period=type_period, period_param_day=period_param_day, period_param_month=period_param_month, period_param_year=period_param_year
+                ).first()
+            elif type_period == 'PERIOD_MONTH':
+                monitoring_exists = MonitoringResult.objects.filter(
+                    hospital=current_hospital, type_period=type_period, period_param_month=period_param_month, period_param_year=period_param_year
+                ).first()
+            elif type_period == 'PERIOD_QURTER':
+                monitoring_exists = MonitoringResult.objects.filter(hospital=current_hospital, period_param_quarter=period_param_quarter, period_param_year=period_param_year).first()
+            elif type_period == 'PERIOD_HALFYEAR':
+                monitoring_exists = MonitoringResult.objects.filter(hospital=current_hospital, period_param_halfyear=period_param_halfyear, period_param_year=period_param_year).first()
+            elif type_period == 'PERIOD_YEAR':
+                monitoring_exists = MonitoringResult.objects.filter(hospital=current_hospital, period_param_year=period_param_year).first()
+            return monitoring_exists
 
         childrens = {}
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
@@ -776,6 +813,42 @@ class Napravleniya(models.Model):
                     research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
                     if research_data_params:
                         dir_group = -1
+                    period_param_hour, period_param_day, period_param_week, period_param_month = None, None, None, None
+                    period_param_quarter, period_param_halfyear, period_param_year, type_period = None, None, None, None
+                    if research.is_monitoring:
+                        for i in research_data_params['groups'][0]['fields']:
+                            if i['title'] == "Час":
+                                period_param_hour = i['value']
+                            if i['title'] == "День":
+                                date = i['value'].split('-')
+                                period_param_day = date[2]
+                                period_param_month = date[1]
+                                period_param_year = date[0]
+                            if i['title'] == "Неделя":
+                                period_param_week = i['value']
+                            if i['title'] == "Месяц":
+                                period_param_month = i['value']
+                            if i['title'] == "Квартал":
+                                period_param_quarter = i['value']
+                            if i['title'] == "Полугодие":
+                                period_param_halfyear = i['value']
+                            if i['title'] == "Год":
+                                period_param_year = i['value']
+                        type_period = research.type_period
+
+                        if monitoring_is_created_later(
+                            type_period,
+                            period_param_hour,
+                            period_param_day,
+                            period_param_week,
+                            period_param_month,
+                            period_param_quarter,
+                            period_param_halfyear,
+                            period_param_year,
+                            current_hospital
+                        ):
+                            result["message"] = "Данный мониторинг уже создан"
+                            return result
 
                     if (dir_group > -1 and dir_group not in directions_for_researches.keys()) or (dir_group == dir_group_onlylab and dir_group not in directions_for_researches.keys()):
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(
@@ -873,7 +946,15 @@ class Napravleniya(models.Model):
                     if research.is_monitoring:
                         monitoring = MonitoringResult(napravleniye=directions_for_researches[dir_group], research=research, issledovaniye=issledovaniye)
                         monitoring.type_period = research.type_period
-                        monitoring.hospital = doc_current.hospital or Hospitals.get_default_hospital()
+                        monitoring.hospital = current_hospital
+                        monitoring.period_param_hour = period_param_hour
+                        monitoring.period_param_day = period_param_day
+                        monitoring.period_param_week = period_param_week
+                        monitoring.period_param_month = period_param_month
+                        monitoring.period_param_quarter = period_param_quarter
+                        monitoring.period_param_halfyear = period_param_halfyear
+                        monitoring.period_param_year = period_param_year
+                        monitoring.type_period = research.type_period
                         monitoring.save()
 
                     if issledovaniye.pk not in childrens:
@@ -1087,6 +1168,7 @@ class Issledovaniya(models.Model):
     """
     Направления на исследования
     """
+
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
     tubes = models.ManyToManyField(TubesRegistration, help_text='Ёмкости, необходимые для исследования', db_index=True)
@@ -1277,9 +1359,7 @@ class MonitoringResult(models.Model):
     research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид мониторинга/исследования из справочника', db_index=True, on_delete=models.CASCADE)
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Заказ на мониторинг, для которого сохранен результат', on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, on_delete=models.SET_NULL)
-    doc_confirmation = models.ForeignKey(
-        DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль пользователя, подтвердившего результат', on_delete=models.SET_NULL
-    )
+    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль пользователя, подтвердившего результат', on_delete=models.SET_NULL)
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
     monitoring_group = models.ForeignKey(directory.ParaclinicInputGroups, default=None, blank=True, null=True, db_index=True, help_text='Группа результата', on_delete=models.CASCADE)
     monitoring_order_group = models.IntegerField(default=None, blank=True, null=True)
@@ -1294,7 +1374,7 @@ class MonitoringResult(models.Model):
     period_param_month = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     period_param_quarter = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     period_param_halfyear = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
-    period_year = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
+    period_param_year = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
 
 
 class MethodsOfTaking(models.Model):

@@ -66,14 +66,19 @@ def directions_generate(request):
     result = {"ok": False, "directions": [], "directionsStationar": [], "message": ""}
     if request.method == "POST":
         p = json.loads(request.body)
-        type_card = Card.objects.get(pk=p.get("card_pk"))
+        card_pk = p.get("card_pk")
+        if card_pk == -1:
+            card_pk = 460701
+        print(card_pk)
+
+        type_card = Card.objects.get(pk=card_pk)
         if type_card.base.forbidden_create_napr:
             result["message"] = "Для данного типа карт нельзя создать направления"
             return JsonResponse(result)
         fin_source = p.get("fin_source", -1)
         fin_source_pk = int(fin_source) if (isinstance(fin_source, int) or str(fin_source).isdigit()) else fin_source
         args = [
-            p.get("card_pk"),
+            card_pk,
             p.get("diagnos"),
             fin_source_pk,
             p.get("history_num"),

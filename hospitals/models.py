@@ -1,8 +1,7 @@
 from typing import Optional
-
 from django.db import models
-
 from appconf.manager import SettingManager
+from clients.models import Card
 
 
 class Hospitals(models.Model):
