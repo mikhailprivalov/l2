@@ -1535,9 +1535,11 @@ def directions_paraclinic_result(request):
                 continue
             if iss.research.is_monitoring:
                 print("Print -> group", group)
-                monitoring_result: MonitoringResult = MonitoringResult.objects.filter(issledovaniye=iss).first()
-                monitoring_result.monitoring_group_id = group['pk']
-                monitoring_result.monitoring_order_group = group['pk']
+                if not MonitoringResult.objects.filter(issledovaniye=iss, group_id=group['pk']).exists():
+                    monitoring_result: MonitoringResult = MonitoringResult.objects.filter(issledovaniye=iss).first()
+                    monitoring_result.group_id = group['pk']
+                    monitoring_result.group_order = group['order']
+                    monitoring_result.save()
             for field in group["fields"]:
                 if not v_f.get(str(field["pk"]), True):
                     ParaclinicResult.objects.filter(issledovaniye=iss, field__pk=field["pk"]).delete()
@@ -1549,6 +1551,10 @@ def directions_paraclinic_result(request):
                     continue
                 if not ParaclinicResult.objects.filter(issledovaniye=iss, field=f).exists():
                     f_result = ParaclinicResult(issledovaniye=iss, field=f, value="")
+                if iss.research.is_monitoring:
+                    if not MonitoringResult.objects.filter(issledovaniye=iss, group_id=group['pk'], field_id=field["pk"]).exists():
+                        m_result = MonitoringResult(issledovaniye=iss, group_id=group['pk']).exists()
+
 
                 else:
                     f_result = ParaclinicResult.objects.filter(issledovaniye=iss, field=f)[0]

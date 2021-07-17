@@ -1409,8 +1409,6 @@ class MonitoringResult(models.Model):
     research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид мониторинга/исследования из справочника', db_index=True, on_delete=models.CASCADE)
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Заказ на мониторинг, для которого сохранен результат', on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, on_delete=models.SET_NULL)
-    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль пользователя, подтвердившего результат', on_delete=models.SET_NULL)
-    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
     group_id = models.IntegerField(default=None, blank=True, null=True, db_index=True, help_text='Группа результата')
     group_order = models.IntegerField(default=None, blank=True, null=True)
     field_id = models.IntegerField(default=None, blank=True, null=True, db_index=True, help_text='Поле результата')
