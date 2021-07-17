@@ -5,7 +5,6 @@ import unicodedata
 from datetime import date
 from typing import Optional
 
-import pytz
 import simplejson as json
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import User
@@ -19,7 +18,6 @@ import users.models as umodels
 import cases.models as cases
 from api.models import Application
 from hospitals.models import Hospitals
-from laboratory.settings import TIME_ZONE
 from laboratory.utils import strdate, localtime, current_time
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.processor import RefProcessor
@@ -848,7 +846,7 @@ class Napravleniya(models.Model):
                     research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
                     if research_data_params:
                         dir_group = -1
-                    period_param_hour, period_param_day, period_param_week, period_param_month = None, None, None, None
+                    period_param_hour, period_param_day, period_param_month = None, None, None
                     period_param_quarter, period_param_halfyear, period_param_year, type_period = None, None, None, None
                     period_param_week_date_start, period_param_week_day_start, week_date_start_end = None, None, None
                     if research.is_monitoring:
@@ -876,7 +874,6 @@ class Napravleniya(models.Model):
 
                         if type_period == "PERIOD_WEEK":
                             week_date_start_end = monitoring_week_correct(period_param_week_day_start, period_param_week_date_start)
-                            print("week=", week_date_start_end)
                             if not week_date_start_end:
                                 result["message"] = "Ошибка в параметрах недели"
                                 return result
