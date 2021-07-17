@@ -35,7 +35,8 @@ from directions.models import (
     MicrobiologyResultCultureAntibiotic,
     DirectionToUserWatch,
     IstochnikiFinansirovaniya,
-    DirectionsHistory, MonitoringResult,
+    DirectionsHistory,
+    MonitoringResult,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings
@@ -72,7 +73,7 @@ def directions_generate(request):
             if hosp_card.client:
                 card_pk = hosp_card.client.pk
             else:
-                pass #TODO создать программно карту
+                pass  # TODO создать программно карту
         type_card = Card.objects.get(pk=card_pk)
         if type_card.base.forbidden_create_napr:
             result["message"] = "Для данного типа карт нельзя создать направления"
@@ -1128,20 +1129,15 @@ def directions_paraclinic_form(request):
                     "procedure_list": [],
                     "is_form": i.research.is_form,
                     "children_directions": [
-                        {
-                            "pk": x.pk,
-                            "services": [
-                                y.research.get_title()
-                                for y in Issledovaniya.objects.filter(napravleniye=x)
-                            ]
-                        }
-                        for x in Napravleniya.objects.filter(parent=i)
+                        {"pk": x.pk, "services": [y.research.get_title() for y in Issledovaniya.objects.filter(napravleniye=x)]} for x in Napravleniya.objects.filter(parent=i)
                     ],
-                    "parentDirection": None if not i.napravleniye.parent else {
+                    "parentDirection": None
+                    if not i.napravleniye.parent
+                    else {
                         "pk": i.napravleniye.parent.napravleniye_id,
                         "service": i.napravleniye.parent.research.get_title(),
                         "is_hospital": i.napravleniye.parent.research.is_hospital,
-                    }
+                    },
                 }
 
                 if i.research.is_microbiology:
@@ -1529,17 +1525,11 @@ def directions_paraclinic_result(request):
             iss.napravleniye.microbiology_n = tube.get("n", "")
             iss.napravleniye.save()
 
+        count = 0
         for group in request_data["research"]["groups"]:
             if not v_g.get(str(group["pk"]), True):
                 ParaclinicResult.objects.filter(issledovaniye=iss, field__group__pk=group["pk"]).delete()
                 continue
-            if iss.research.is_monitoring:
-                print("Print -> group", group)
-                if not MonitoringResult.objects.filter(issledovaniye=iss, group_id=group['pk']).exists():
-                    monitoring_result: MonitoringResult = MonitoringResult.objects.filter(issledovaniye=iss).first()
-                    monitoring_result.group_id = group['pk']
-                    monitoring_result.group_order = group['order']
-                    monitoring_result.save()
             for field in group["fields"]:
                 if not v_f.get(str(field["pk"]), True):
                     ParaclinicResult.objects.filter(issledovaniye=iss, field__pk=field["pk"]).delete()
@@ -1551,16 +1541,31 @@ def directions_paraclinic_result(request):
                     continue
                 if not ParaclinicResult.objects.filter(issledovaniye=iss, field=f).exists():
                     f_result = ParaclinicResult(issledovaniye=iss, field=f, value="")
-                if iss.research.is_monitoring:
-                    if not MonitoringResult.objects.filter(issledovaniye=iss, group_id=group['pk'], field_id=field["pk"]).exists():
-                        m_result = MonitoringResult(issledovaniye=iss, group_id=group['pk']).exists()
-
-
                 else:
                     f_result = ParaclinicResult.objects.filter(issledovaniye=iss, field=f)[0]
                 f_result.value = field["value"]
                 f_result.field_type = f.field_type
                 f_result.save()
+                if iss.research.is_monitoring:
+                    if not MonitoringResult.objects.filter(issledovaniye=iss, research=iss.research, napravleniye=iss.napravleniye, field_id=field["pk"]).exists():
+                        monitoring_result = MonitoringResult.objects.filter(issledovaniye=iss, research=iss.research, napravleniye=iss.napravleniye)[0]
+                        monitoring_result.group_id = group['pk']
+                        monitoring_result.group_order = group['order']
+                        monitoring_result.field_order = field['order']
+                        monitoring_result.field_id = field["pk"]
+                        monitoring_result.value_text = ""
+                        if count > 0:
+                            monitoring_result.pk = None
+                    else:
+                        monitoring_result: MonitoringResult = MonitoringResult.objects.filter(issledovaniye=iss, research=iss.research, napravleniye=iss.napravleniye, field_id=field["pk"])[
+                            0]
+                        monitoring_result.value_text = ""
+                    if field['field_type'] == 18:
+                        monitoring_result.value_aggregate = field["value"]
+                    else:
+                        monitoring_result.value_text = field["value"]
+                    monitoring_result.field_type = field['field_type']
+                    monitoring_result.save()
                 if f.field_type in [16, 17] and iss.napravleniye.parent and iss.napravleniye.parent.research.is_hospital:
                     try:
                         val = json.loads(str(field["value"]))
@@ -1588,6 +1593,7 @@ def directions_paraclinic_result(request):
                         else:
                             iss.napravleniye.parent.aggregate_desc = None
                     iss.napravleniye.parent.save()
+                count += 1
 
         iss.doc_save = request.user.doctorprofile
         iss.time_save = timezone.now()
@@ -2395,9 +2401,7 @@ def get_research_for_direction_params(pk):
                     "title": field.title,
                     "hide": field.hide,
                     "values_to_input": ([] if not field.required or field_type not in [10, 12] else ['- Не выбрано']) + json.loads(field.input_templates),
-                    "value": (field.default_value if field_type not in [3, 11, 13, 14] else '')
-                    if field_type not in [1, 20]
-                    else (get_default_for_field(field_type)),
+                    "value": (field.default_value if field_type not in [3, 11, 13, 14] else '') if field_type not in [1, 20] else (get_default_for_field(field_type)),
                     "field_type": field_type,
                     "default_value": field.default_value,
                     "visibility": field.visibility,

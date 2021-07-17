@@ -1005,6 +1005,7 @@ class Napravleniya(models.Model):
                         monitoring.period_param_halfyear = period_param_halfyear
                         monitoring.period_param_year = period_param_year
                         monitoring.type_period = research.type_period
+
                         monitoring.save()
 
                     if issledovaniye.pk not in childrens:
