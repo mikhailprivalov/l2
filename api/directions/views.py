@@ -35,7 +35,7 @@ from directions.models import (
     MicrobiologyResultCultureAntibiotic,
     DirectionToUserWatch,
     IstochnikiFinansirovaniya,
-    DirectionsHistory,
+    DirectionsHistory, MonitoringResult,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings
@@ -1533,6 +1533,10 @@ def directions_paraclinic_result(request):
             if not v_g.get(str(group["pk"]), True):
                 ParaclinicResult.objects.filter(issledovaniye=iss, field__group__pk=group["pk"]).delete()
                 continue
+            if iss.research.is_monitoring:
+                print("Print -> group", group)
+                # monitoring_result: MonitoringResult = MonitoringResult.objects.filter(issledovaniye=iss).first()
+                # monitoring_result.monitoring_group = group
             for field in group["fields"]:
                 if not v_f.get(str(field["pk"]), True):
                     ParaclinicResult.objects.filter(issledovaniye=iss, field__pk=field["pk"]).delete()
@@ -1544,6 +1548,7 @@ def directions_paraclinic_result(request):
                     continue
                 if not ParaclinicResult.objects.filter(issledovaniye=iss, field=f).exists():
                     f_result = ParaclinicResult(issledovaniye=iss, field=f, value="")
+
                 else:
                     f_result = ParaclinicResult.objects.filter(issledovaniye=iss, field=f)[0]
                 f_result.value = field["value"]
