@@ -220,8 +220,8 @@
         <button
           class="btn btn-blue-nb top-inner-select"
           :disabled="!can_save"
-          @click="generate('direction')"
-          title="Сохранить и заполнить протокол"
+          @click="generate('fill-and-save')"
+          title="Сохранить и заполнить монитиринг"
           v-tippy
         >
           <span>Сохранить и заполнить монитиринг</span>
@@ -914,8 +914,11 @@ export default {
       return { pk: -1, title: '', default_diagnos: '' };
     },
     select_fin(pkOrig) {
+      if (this.monitoring) {
+        return;
+      }
       let pk = pkOrig;
-      if (this.base.fin_sources.length === 1 && pk === -1) {
+      if (this.base && this.base.fin_sources && this.base.fin_sources.length === 1 && pk === -1) {
         pk = this.base.fin_sources[0].pk;
       }
       const cfin = this.fin;

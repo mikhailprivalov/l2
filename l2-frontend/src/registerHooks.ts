@@ -133,7 +133,7 @@ export default (instance: Vue): void => {
         if (type === 'create_and_open') {
           instance.$root.$emit('open-direction-form', data.directions[0]);
 
-          instance.$root.$emit('msg', 'ok', `Направления создано: ${data.directions[0]}`);
+          instance.$root.$emit('msg', 'ok', `Направление создано: ${data.directions[0]}`);
         } else if (type === 'direction') {
           if (needContract) {
             instance.$root.$emit('print:directions:contract', data.directions);
@@ -144,6 +144,9 @@ export default (instance: Vue): void => {
           instance.$root.$emit('print:barcodes', data.directions, data.directionsStationar);
         } else if (type === 'just-save' || type === 'barcode') {
           instance.$root.$emit('msg', 'ok', `Направления созданы: ${data.directions.join(', ')}`);
+        } else if (type === 'fill-and-save' && monitoring) {
+          instance.$root.$emit('msg', 'ok', `Мониторинг создан: ${data.directions.join(', ')}`);
+          window.open(`/mainmenu/results/paraclinic#{"pk":${data.directions[0]}}`, '_blank');
         }
         instance.$root.$emit(`researches-picker:clear_all${kk}`);
         instance.$root.$emit(`researches-picker:directions_created${kk}`);
