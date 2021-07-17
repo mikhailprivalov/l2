@@ -5,6 +5,7 @@ import unicodedata
 from datetime import date
 from typing import Optional
 
+import pytz
 import simplejson as json
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import User
@@ -18,6 +19,7 @@ import users.models as umodels
 import cases.models as cases
 from api.models import Application
 from hospitals.models import Hospitals
+from laboratory.settings import TIME_ZONE
 from laboratory.utils import strdate, localtime, current_time
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.processor import RefProcessor
@@ -694,8 +696,7 @@ class Napravleniya(models.Model):
             type_period,
             period_param_hour,
             period_param_day,
-            period_param_week_date_start,
-            period_param_week_date_end,
+            week_date_start_end,
             period_param_month,
             period_param_quarter,
             period_param_halfyear,
@@ -710,31 +711,48 @@ class Napravleniya(models.Model):
                     type_period=type_period,
                     period_param_hour=period_param_hour,
                     period_param_day=period_param_day,
-                    period_param_week_date_start=period_param_week_date_start,
-                    period_param_week_date_end=period_param_week_date_end,
                     period_param_month=period_param_month,
                     period_param_year=period_param_year,
                 ).first()
             elif type_period == 'PERIOD_DAY':
                 monitoring_exists = MonitoringResult.objects.filter(
-                    hospital=current_hospital, type_period=type_period, period_param_day=period_param_day, period_param_month=period_param_month, period_param_year=period_param_year
+                    research=research,
+                    hospital=current_hospital,
+                    type_period=type_period,
+                    period_param_day=period_param_day,
+                    period_param_month=period_param_month,
+                    period_param_year=period_param_year,
+                ).first()
+            elif type_period == 'PERIOD_WEEK':
+                monitoring_exists = MonitoringResult.objects.filter(
+                    research=research,
+                    hospital=current_hospital,
+                    type_period=type_period,
+                    period_param_week_description=week_date_start_end[0],
+                    period_param_week_date_start=week_date_start_end[1],
+                    period_param_week_date_end=week_date_start_end[2],
+                    period_param_year=period_param_year,
                 ).first()
             elif type_period == 'PERIOD_MONTH':
                 monitoring_exists = MonitoringResult.objects.filter(
-                    hospital=current_hospital, type_period=type_period, period_param_month=period_param_month, period_param_year=period_param_year
+                    research=research, hospital=current_hospital, type_period=type_period, period_param_month=period_param_month, period_param_year=period_param_year
                 ).first()
             elif type_period == 'PERIOD_QURTER':
-                monitoring_exists = MonitoringResult.objects.filter(hospital=current_hospital, period_param_quarter=period_param_quarter, period_param_year=period_param_year).first()
+                monitoring_exists = MonitoringResult.objects.filter(
+                    research=research, hospital=current_hospital, period_param_quarter=period_param_quarter, period_param_year=period_param_year
+                ).first()
             elif type_period == 'PERIOD_HALFYEAR':
-                monitoring_exists = MonitoringResult.objects.filter(hospital=current_hospital, period_param_halfyear=period_param_halfyear, period_param_year=period_param_year).first()
+                monitoring_exists = MonitoringResult.objects.filter(
+                    research=research, hospital=current_hospital, period_param_halfyear=period_param_halfyear, period_param_year=period_param_year
+                ).first()
             elif type_period == 'PERIOD_YEAR':
-                monitoring_exists = MonitoringResult.objects.filter(hospital=current_hospital, period_param_year=period_param_year).first()
+                monitoring_exists = MonitoringResult.objects.filter(research=research, hospital=current_hospital, period_param_year=period_param_year).first()
             return monitoring_exists
 
         def monitoring_week_correct(period_param_week_day_start, period_param_week_date_start):
-            week_days = {"Воскресенье": 0, "Понедельник": 1, "Всторник": 2, "Среда": 3, "Четверг": 4, "Пятница": 5, "Суббота": 6}
-            short_week_days = {0: "Вc", 1: "Пнд", 2: "Вт", 3: "Ср", 4: "Чт", 5: "Пт", 6: "Сб"}
-            start_day = datetime.datetime.strptime(period_param_week_date_start, "%Y-%m-%d")
+            week_days = {"Понедельник": 0, "Всторник": 1, "Среда": 2, "Четверг": 3, "Пятница": 4, "Суббота": 5, "Воскресенье": 6}
+            short_week_days = {0: "пн", 1: "вт", 2: "ср", 3: "чт", 4: "пт", 5: "сб", 6: "вc"}
+            start_day = datetime.datetime.strptime(period_param_week_date_start, '%Y-%m-%d').date()
             if week_days.get(period_param_week_day_start) != start_day.weekday():
                 return False
             else:
@@ -844,7 +862,7 @@ class Napravleniya(models.Model):
                                 period_param_year = date[0]
                             if i['title'] == "С":
                                 period_param_week_day_start = i['value']
-                            if i['title'] == "Отсчет с":
+                            if i['title'] == "Дата отсчета":
                                 period_param_week_date_start = i['value']
                             if i['title'] == "Месяц":
                                 period_param_month = i['value']
@@ -858,6 +876,7 @@ class Napravleniya(models.Model):
 
                         if type_period == "PERIOD_WEEK":
                             week_date_start_end = monitoring_week_correct(period_param_week_day_start, period_param_week_date_start)
+                            print("week=", week_date_start_end)
                             if not week_date_start_end:
                                 result["message"] = "Ошибка в параметрах недели"
                                 return result
@@ -976,7 +995,11 @@ class Napravleniya(models.Model):
                         monitoring.hospital = current_hospital
                         monitoring.period_param_hour = period_param_hour
                         monitoring.period_param_day = period_param_day
-                        monitoring.period_param_week = period_param_week
+                        if type_period == 'PERIOD_WEEK':
+                            monitoring.period_param_week_description = week_date_start_end[0]
+                            monitoring.period_param_week_date_start = week_date_start_end[1]
+                            monitoring.period_param_week_date_end = week_date_start_end[2]
+                            period_param_year = period_param_week_date_start.split('-')[0]
                         monitoring.period_param_month = period_param_month
                         monitoring.period_param_quarter = period_param_quarter
                         monitoring.period_param_halfyear = period_param_halfyear
@@ -1398,6 +1421,7 @@ class MonitoringResult(models.Model):
     type_period = models.CharField(max_length=20, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
     period_param_hour = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     period_param_day = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
+    period_param_week_description = models.CharField(max_length=5, blank=True, null=True, default=None, help_text="Описание недельного периода")
     period_param_week_date_start = models.DateField(blank=True, null=True, default=None, help_text="Дата начала недельного периода")
     period_param_week_date_end = models.DateField(blank=True, null=True, default=None, help_text="Дата окончания недельного периода")
     period_param_month = models.PositiveSmallIntegerField(default=None, blank=True, null=True)

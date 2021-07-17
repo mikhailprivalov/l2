@@ -68,9 +68,11 @@ def directions_generate(request):
         p = json.loads(request.body)
         card_pk = p.get("card_pk")
         if card_pk == -1:
-            card_pk = 460701
-        print(card_pk)
-
+            hosp_card = request.user.doctorprofile.get_hospital()
+            if hosp_card.client:
+                card_pk = hosp_card.client.pk
+            else:
+                pass #TODO создать программно карту
         type_card = Card.objects.get(pk=card_pk)
         if type_card.base.forbidden_create_napr:
             result["message"] = "Для данного типа карт нельзя создать направления"
