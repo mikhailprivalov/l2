@@ -1,4 +1,5 @@
 import collections
+from hospitals.models import Hospitals
 import operator
 import re
 import time
@@ -68,14 +69,30 @@ def directions_generate(request):
     if request.method == "POST":
         p = json.loads(request.body)
         card_pk = p.get("card_pk")
+        card = None
         if card_pk == -1:
-            hosp_card = request.user.doctorprofile.get_hospital()
-            if hosp_card.client:
-                card_pk = hosp_card.client.pk
+            hospital: Hospitals = request.user.doctorprofile.get_hospital()
+            if hospital.client:
+                card = hospital.client
             else:
-                pass  # TODO создать программно карту
-        type_card = Card.objects.get(pk=card_pk)
-        if type_card.base.forbidden_create_napr:
+                card = Individual.import_from_tfoms(
+                    {
+                        "enp": f"1010{hospital.code_tfoms}",
+                        "family": "Больница",
+                        "given": hospital.safe_short_title[:120],
+                        "patronymic": "",
+                        "gender": 'м',
+                        "birthdate": '2000-01-01',
+                    },
+                    need_return_card=True,
+                )
+            if card:
+                card_pk = card.pk
+                hospital.client = card
+                hospital.save()
+        else:
+            card = Card.objects.get(pk=card_pk)
+        if card.base.forbidden_create_napr:
             result["message"] = "Для данного типа карт нельзя создать направления"
             return JsonResponse(result)
         fin_source = p.get("fin_source", -1)
@@ -1004,6 +1021,7 @@ def directions_paraclinic_form(request):
                         | Q(research__is_citology=True)
                         | Q(research__is_gistology=True)
                         | Q(research__is_form=True)
+                        | Q(research__is_monitoring=True)
                     )
                 )
                 .select_related('research', 'research__microbiology_tube', 'research__podrazdeleniye')
@@ -1273,6 +1291,14 @@ def directions_paraclinic_form(request):
                     for field in group.paraclinicinputfield_set.all():
                         result_field: ParaclinicResult = ParaclinicResult.objects.filter(issledovaniye=i, field=field).first()
                         field_type = field.field_type if not result_field else result_field.get_field_type()
+                        values_to_input = ([] if not field.required or field_type not in [10, 12] or i.research.is_monitoring else ['- Не выбрано']) + json.loads(field.input_templates)
+                        value = (
+                            ((field.default_value if field_type not in [3, 11, 13, 14] else '') if not result_field else result_field.value)
+                            if field_type not in [1, 20]
+                            else (get_default_for_field(field_type) if not result_field else result_field.value)
+                        )
+                        if field_type in [10, 12] and not value and len(values_to_input) > 0:
+                            value = values_to_input[0]
                         g["fields"].append(
                             {
                                 "pk": field.pk,
@@ -1280,10 +1306,8 @@ def directions_paraclinic_form(request):
                                 "lines": field.lines,
                                 "title": field.title,
                                 "hide": field.hide,
-                                "values_to_input": ([] if not field.required or field_type not in [10, 12] else ['- Не выбрано']) + json.loads(field.input_templates),
-                                "value": ((field.default_value if field_type not in [3, 11, 13, 14] else '') if not result_field else result_field.value)
-                                if field_type not in [1, 20]
-                                else (get_default_for_field(field_type) if not result_field else result_field.value),
+                                "values_to_input": values_to_input,
+                                "value": value,
                                 "field_type": field_type,
                                 "default_value": field.default_value,
                                 "visibility": field.visibility,

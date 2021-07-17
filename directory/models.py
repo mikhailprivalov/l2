@@ -233,7 +233,6 @@ class Researches(models.Model):
     show_more_services = models.BooleanField(blank=True, default=True, help_text="Показывать Дополнительные услуги")
     type_period = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
 
-
     @staticmethod
     def filter_type(t):
         ts = {
@@ -289,6 +288,7 @@ class Researches(models.Model):
             or self.is_gistology
             or self.is_form
             or self.is_direction_params
+            or self.is_monitoring
         )
 
     @property

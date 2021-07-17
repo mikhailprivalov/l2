@@ -3,7 +3,7 @@ import re
 import time
 import unicodedata
 from datetime import date
-from typing import Optional
+from typing import Optional, Union
 
 import simplejson as json
 from dateutil.relativedelta import relativedelta
@@ -518,12 +518,12 @@ class Napravleniya(models.Model):
         diagnos: str,
         historynum: str,
         doc_current: DoctorProfile,
-        ofname_id: [int, None],
+        ofname_id: Union[int, None],
         ofname: DoctorProfile,
-        issledovaniya: [list, None] = None,
+        issledovaniya: Union[list, None] = None,
         save: bool = True,
         for_rmis: bool = False,
-        rmis_data: [dict, None] = None,
+        rmis_data: Union[dict, None] = None,
         parent_id=None,
         parent_auto_gen_id=None,
         parent_slave_hosp_id=None,
@@ -646,6 +646,76 @@ class Napravleniya(models.Model):
         return res_data
 
     @staticmethod
+    def monitoring_is_created_later(
+        research,
+        type_period,
+        period_param_hour,
+        period_param_day,
+        week_date_start_end,
+        period_param_month,
+        period_param_quarter,
+        period_param_halfyear,
+        period_param_year,
+        current_hospital,
+    ):
+        monitoring_exists = None
+        if type_period == 'PERIOD_HOUR':
+            monitoring_exists = MonitoringResult.objects.filter(
+                research=research,
+                hospital=current_hospital,
+                type_period=type_period,
+                period_param_hour=period_param_hour,
+                period_param_day=period_param_day,
+                period_param_month=period_param_month,
+                period_param_year=period_param_year,
+            ).first()
+        elif type_period == 'PERIOD_DAY':
+            monitoring_exists = MonitoringResult.objects.filter(
+                research=research,
+                hospital=current_hospital,
+                type_period=type_period,
+                period_param_day=period_param_day,
+                period_param_month=period_param_month,
+                period_param_year=period_param_year,
+            ).first()
+        elif type_period == 'PERIOD_WEEK':
+            monitoring_exists = MonitoringResult.objects.filter(
+                research=research,
+                hospital=current_hospital,
+                type_period=type_period,
+                period_param_week_description=week_date_start_end[0],
+                period_param_week_date_start=week_date_start_end[1],
+                period_param_week_date_end=week_date_start_end[2],
+                period_param_year=period_param_year,
+            ).first()
+        elif type_period == 'PERIOD_MONTH':
+            monitoring_exists = MonitoringResult.objects.filter(
+                research=research, hospital=current_hospital, type_period=type_period, period_param_month=period_param_month, period_param_year=period_param_year
+            ).first()
+        elif type_period == 'PERIOD_QURTER':
+            monitoring_exists = MonitoringResult.objects.filter(
+                research=research, hospital=current_hospital, period_param_quarter=period_param_quarter, period_param_year=period_param_year
+            ).first()
+        elif type_period == 'PERIOD_HALFYEAR':
+            monitoring_exists = MonitoringResult.objects.filter(
+                research=research, hospital=current_hospital, period_param_halfyear=period_param_halfyear, period_param_year=period_param_year
+            ).first()
+        elif type_period == 'PERIOD_YEAR':
+            monitoring_exists = MonitoringResult.objects.filter(research=research, hospital=current_hospital, period_param_year=period_param_year).first()
+        return monitoring_exists
+
+    @staticmethod
+    def monitoring_week_correct(period_param_week_day_start, period_param_week_date_start):
+        week_days = {"Понедельник": 0, "Всторник": 1, "Среда": 2, "Четверг": 3, "Пятница": 4, "Суббота": 5, "Воскресенье": 6}
+        short_week_days = {0: "пн", 1: "вт", 2: "ср", 3: "чт", 4: "пт", 5: "сб", 6: "вc"}
+        start_day = datetime.datetime.strptime(period_param_week_date_start, '%Y-%m-%d').date()
+        if week_days.get(period_param_week_day_start) != start_day.weekday():
+            return False
+        else:
+            end_date = start_day + relativedelta(days=+6)
+            return (f"{short_week_days[start_day.weekday()]}-{short_week_days[end_date.weekday()]}", start_day, end_date)
+
+    @staticmethod
     def gen_napravleniya_by_issledovaniya(
         client_id,
         diagnos,
@@ -688,74 +758,6 @@ class Napravleniya(models.Model):
         if rmis_data is None:
             rmis_data = {}
         current_hospital = doc_current.hospital or Hospitals.get_default_hospital()
-
-        def monitoring_is_created_later(
-            research,
-            type_period,
-            period_param_hour,
-            period_param_day,
-            week_date_start_end,
-            period_param_month,
-            period_param_quarter,
-            period_param_halfyear,
-            period_param_year,
-            current_hospital,
-        ):
-            monitoring_exists = None
-            if type_period == 'PERIOD_HOUR':
-                monitoring_exists = MonitoringResult.objects.filter(
-                    research=research,
-                    hospital=current_hospital,
-                    type_period=type_period,
-                    period_param_hour=period_param_hour,
-                    period_param_day=period_param_day,
-                    period_param_month=period_param_month,
-                    period_param_year=period_param_year,
-                ).first()
-            elif type_period == 'PERIOD_DAY':
-                monitoring_exists = MonitoringResult.objects.filter(
-                    research=research,
-                    hospital=current_hospital,
-                    type_period=type_period,
-                    period_param_day=period_param_day,
-                    period_param_month=period_param_month,
-                    period_param_year=period_param_year,
-                ).first()
-            elif type_period == 'PERIOD_WEEK':
-                monitoring_exists = MonitoringResult.objects.filter(
-                    research=research,
-                    hospital=current_hospital,
-                    type_period=type_period,
-                    period_param_week_description=week_date_start_end[0],
-                    period_param_week_date_start=week_date_start_end[1],
-                    period_param_week_date_end=week_date_start_end[2],
-                    period_param_year=period_param_year,
-                ).first()
-            elif type_period == 'PERIOD_MONTH':
-                monitoring_exists = MonitoringResult.objects.filter(
-                    research=research, hospital=current_hospital, type_period=type_period, period_param_month=period_param_month, period_param_year=period_param_year
-                ).first()
-            elif type_period == 'PERIOD_QURTER':
-                monitoring_exists = MonitoringResult.objects.filter(
-                    research=research, hospital=current_hospital, period_param_quarter=period_param_quarter, period_param_year=period_param_year
-                ).first()
-            elif type_period == 'PERIOD_HALFYEAR':
-                monitoring_exists = MonitoringResult.objects.filter(
-                    research=research, hospital=current_hospital, period_param_halfyear=period_param_halfyear, period_param_year=period_param_year
-                ).first()
-            elif type_period == 'PERIOD_YEAR':
-                monitoring_exists = MonitoringResult.objects.filter(research=research, hospital=current_hospital, period_param_year=period_param_year).first()
-            return monitoring_exists
-
-        def monitoring_week_correct(period_param_week_day_start, period_param_week_date_start):
-            week_days = {"Понедельник": 0, "Всторник": 1, "Среда": 2, "Четверг": 3, "Пятница": 4, "Суббота": 5, "Воскресенье": 6}
-            short_week_days = {0: "пн", 1: "вт", 2: "ср", 3: "чт", 4: "пт", 5: "сб", 6: "вc"}
-            start_day = datetime.datetime.strptime(period_param_week_date_start, '%Y-%m-%d').date()
-            if week_days.get(period_param_week_day_start) != start_day.weekday():
-                return False
-            else:
-                end_date = start_day + relativedelta(days=+6)
-                return (f"{short_week_days[start_day.weekday()]}-{short_week_days[end_date.weekday()]}", start_day, end_date)
 
         childrens = {}
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
@@ -873,12 +875,12 @@ class Napravleniya(models.Model):
                         type_period = research.type_period
 
                         if type_period == "PERIOD_WEEK":
-                            week_date_start_end = monitoring_week_correct(period_param_week_day_start, period_param_week_date_start)
+                            week_date_start_end = Napravleniya.monitoring_week_correct(period_param_week_day_start, period_param_week_date_start)
                             if not week_date_start_end:
                                 result["message"] = "Ошибка в параметрах недели"
                                 return result
 
-                        if monitoring_is_created_later(
+                        if Napravleniya.monitoring_is_created_later(
                             research,
                             type_period,
                             period_param_hour,

@@ -436,7 +436,6 @@ class Individual(models.Model):
         return r
 
     def fio(self, short=False, dots=False, full=False, direction=None, npf=False, bd=False):
-
         if not short:
             birthday_date = datetime.strptime(self.birthday, "%d.%m.%Y" if '.' in self.birthday else "%Y-%m-%d").date() if isinstance(self.birthday, str) else self.birthday
             if full:
@@ -512,7 +511,7 @@ class Individual(models.Model):
         return is_new, updated
 
     @staticmethod
-    def import_from_tfoms(data: Union[dict, List], individual: Union['Individual', None] = None, no_update=False, need_return_individual=False):
+    def import_from_tfoms(data: Union[dict, List], individual: Union['Individual', None] = None, no_update=False, need_return_individual=False, need_return_card=False):
         if isinstance(data, list):
             if len(data) > 0:
                 data = data[0]
@@ -528,6 +527,7 @@ class Individual(models.Model):
         bdate = data.get('birthdate', '').split(' ')[0]
 
         i = None
+        card = None
 
         if family and name and gender and bdate:
             enp = (data.get('enp') or '').strip()
@@ -642,13 +642,17 @@ class Individual(models.Model):
                 enp_doc = i.add_or_update_doc(enp_type, '', enp)
 
             print('Sync L2 card')  # noqa: T001
-            print(Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True, updated_data=updated_data))  # noqa: T001
+            card = Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True, updated_data=updated_data)
+            print(card)  # noqa: T001
 
             i.time_tfoms_last_sync = timezone.now()
             i.save(update_fields=['time_tfoms_last_sync'])
 
         if need_return_individual:
             return i
+
+        if need_return_card:
+            return card
 
         return updated_data
 
