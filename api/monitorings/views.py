@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from api.monitorings.sql_func import monitoring_sql_by_all_hospital
 from directory.models import Researches
+from hospitals.models import Hospitals
 
 
 @login_required
@@ -51,6 +52,8 @@ def search(request):
     step = 0
     old_group_title = None
     current_index = 0
+    requirement_research_hosp = list(Hospitals.objects.values_list('pk', flat=True).filter(research=771))
+
     for i in result_monitoring:
         if not title_group.get(i.group_title):
             title_group[i.group_title] = [i.field_title]
@@ -62,6 +65,8 @@ def search(request):
             rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"] = [[i.value_aggregate]]
             step = 0
             current_index = 0
+            if i.hospital_id in requirement_research_hosp:
+                requirement_research_hosp.remove(i.hospital_id)
 
         if (i.group_title != old_group_title) and (step != 0):
             rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"].append([i.value_aggregate])
@@ -84,9 +89,10 @@ def search(request):
         else:
             for external_index in range(len(v)):
                 for internal_index in range(len(v[external_index])):
-                    current_val = total[external_index][internal_index]
-                    current_val += v[external_index][internal_index]
+                    current_val = total[external_index][internal_index] + v[external_index][internal_index]
                     total[external_index][internal_index] = current_val
 
-    result = {"titles": titles_data, "rows": rows, "total": total}
+    empty_research_hosp = [Hospitals.objects.get(pk=i).short_title for i in requirement_research_hosp]
+    result = {"titles": titles_data, "rows": rows, "empty_hospital": empty_research_hosp, "total": total}
+
     return JsonResponse({'rows': result})

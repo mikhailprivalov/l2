@@ -11,6 +11,7 @@ from api.extra_notification.sql_func import extra_notification_sql
 from api.monitorings.sql_func import monitoring_sql_by_all_hospital
 from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
 from directory.models import ParaclinicInputGroups, ParaclinicInputField
+from hospitals.models import Hospitals
 from laboratory.decorators import group_required
 from laboratory.settings import EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
 from laboratory.utils import strdate
