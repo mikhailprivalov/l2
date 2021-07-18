@@ -3,17 +3,17 @@ from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
-def monitoring_sql_by_all_hospital(monitoring_research, type_period, period_param_hour, period_param_day, period_param_month, period_param_quarter,
-                          period_param_halfyear, period_param_year, period_param_week_day_start, period_param_week_day_end):
+def monitoring_sql_by_all_hospital(monitoring_research=None, type_period=None, period_param_hour=None, period_param_day=None, period_param_month=None, period_param_quarter=None,
+                          period_param_halfyear=None, period_param_year=None, period_param_week_date_start=None, period_param_week_date_end=None):
     with connection.cursor() as cursor:
         cursor.execute(
             """
             SELECT
+                hospitals_hospitals.short_title,
+                directions_monitoringresult.hospital_id,
                 directions_monitoringresult.napravleniye_id,
                 directions_monitoringresult.issledovaniye_id,
-                directions_issledovaniya.time_confirmation,
-                directions_monitoringresult.hospital_id,
-                hospitals_hospitals.short_title,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY HH:MM') as confirm,
                 directions_monitoringresult.research_id,
                 directions_monitoringresult.group_id,
                 directory_paraclinicinputgroups.title as group_title,
@@ -62,8 +62,8 @@ def monitoring_sql_by_all_hospital(monitoring_research, type_period, period_para
             WHEN %(type_period)s = 'PERIOD_WEEK' THEN 
                 directions_monitoringresult.type_period = 'PERIOD_WEEK' AND
                 directions_monitoringresult.period_param_year=%(period_param_year)s AND
-                directions_monitoringresult.period_param_week_date_start=%(period_param_week_day_start)s AND
-                directions_monitoringresult.period_param_week_date_end=%(period_param_week_day_end)s AND
+                directions_monitoringresult.period_param_week_date_start=%(period_param_week_date_start)s AND
+                directions_monitoringresult.period_param_week_date_end=%(period_param_week_date_end)s AND
                 directions_issledovaniya.time_confirmation is NOT NULL
             WHEN %(type_period)s = 'PERIOD_MONTH' THEN 
                 directions_monitoringresult.research_id=%(monitoring_research)s AND
@@ -98,8 +98,8 @@ def monitoring_sql_by_all_hospital(monitoring_research, type_period, period_para
                 'period_param_quarter': period_param_quarter,
                 'period_param_halfyear': period_param_halfyear,
                 'period_param_year': period_param_year,
-                'period_param_week_day_start': period_param_week_day_start,
-                'period_param_week_day_end': period_param_week_day_end
+                'period_param_week_date_start': period_param_week_date_start,
+                'period_param_week_date_end': period_param_week_date_end
             },
         )
         rows = namedtuplefetchall(cursor)
