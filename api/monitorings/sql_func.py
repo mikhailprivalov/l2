@@ -3,7 +3,7 @@ from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
-def monitoring_report_sql(hospital_id, monitoring_research, type_period, period_param_hour, period_param_day, period_param_month, period_param_quarter,
+def monitoring_sql_by_all_hospital(monitoring_research, type_period, period_param_hour, period_param_day, period_param_month, period_param_quarter,
                           period_param_halfyear, period_param_year, period_param_week_day_start, period_param_week_day_end):
     with connection.cursor() as cursor:
         cursor.execute(
@@ -91,7 +91,6 @@ def monitoring_report_sql(hospital_id, monitoring_research, type_period, period_
             params={
                 'tz': TIME_ZONE,
                 'monitoring_research': monitoring_research,
-                'hospital_id': hospital_id,
                 'type_period': type_period,
                 'period_param_hour': period_param_hour,
                 'period_param_day': period_param_day,
