@@ -1,4 +1,5 @@
 import collections
+from utils.response import status_response
 from hospitals.models import Hospitals
 import operator
 import re
@@ -1038,7 +1039,7 @@ def directions_paraclinic_form(request):
             )
         )
     )
-
+    d = None
     if dn.exists():
         d: Napravleniya = dn[0]
         df = d.issledovaniya_set.all()
@@ -1048,9 +1049,12 @@ def directions_paraclinic_form(request):
             response["has_doc_referral"] = False
             response["has_paraclinic"] = False
             response["has_microbiology"] = False
+            response["has_monitoring"] = False
             response["card_internal"] = d.client.base.internal_type
+            response["hospital_title"] = d.hospital_title
             response["patient"] = {
                 "fio_age": d.client.individual.fio(full=True),
+                "fio": d.client.individual.fio(),
                 "age": d.client.individual.age(),
                 "sex": d.client.individual.sex.lower(),
                 "card": d.client.number_with_type(),
@@ -1090,6 +1094,8 @@ def directions_paraclinic_form(request):
                     response["has_paraclinic"] = True
                 if i.research.is_microbiology and not response["has_microbiology"]:
                     response["has_microbiology"] = True
+                if i.research.is_monitoring:
+                    response["has_monitoring"] = True
                 if i.research.microbiology_tube:
                     tube = {
                         "type": i.research.microbiology_tube.title,
@@ -1120,6 +1126,7 @@ def directions_paraclinic_form(request):
                         "is_microbiology": i.research.is_microbiology,
                         "is_treatment": i.research.is_treatment,
                         "is_stom": i.research.is_stom,
+                        "is_monitoring": i.research.is_monitoring,
                         "wide_headers": i.research.wide_headers,
                         "comment": i.localization.title if i.localization else i.comment,
                         "groups": [],
@@ -1335,6 +1342,15 @@ def directions_paraclinic_form(request):
             response["medical_certificates"] = medical_certificates
 
             f = True
+
+    hospital = d and d.get_hospital()
+
+    hospital_access = not hospital or hospital == request.user.doctorprofile.hospital or request.user.is_superuser
+
+    # TODO: для полного запрета доступа из других организаций убрать response.get("has_monitoring") (так проверяется только для мониторингов)
+    if response.get("has_monitoring") and not hospital_access:
+        return status_response(False, "Нет доступа")
+
     if not f:
         response["message"] = "Направление не найдено"
     return JsonResponse(response)
