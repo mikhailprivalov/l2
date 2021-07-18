@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 
 from api.extra_notification.sql_func import extra_notification_sql
+from api.monitorings.sql_func import monitoring_sql_by_all_hospital
 from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
 from directory.models import ParaclinicInputGroups, ParaclinicInputField
 from laboratory.decorators import group_required
