@@ -52,7 +52,7 @@ def search(request):
     step = 0
     old_group_title = None
     current_index = 0
-    requirement_research_hosp = list(Hospitals.objects.values_list('pk', flat=True).filter(research=771))
+    requirement_research_hosp = list(Hospitals.objects.values_list('pk', flat=True).filter(research=research_pk))
 
     for i in result_monitoring:
         if not title_group.get(i.group_title):
