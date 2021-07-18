@@ -62,7 +62,7 @@
           </tr>
           <tr v-if="nextOffset !== null">
             <td class="text-center" colspan="7">
-              <button class="btn btn-blue-nb btn-sm" @click="loadNext">
+              <button class="btn btn-blue-nb btn-sm" @click="loadNext()">
                 <span class="hidden-spinner"><i class="fa fa-spinner"></i></span>
                 Загрузить ещё
                 <span :class="!listLoading && 'hidden-spinner'" class="loader"><i class="fa fa-spinner"></i></span>
@@ -127,8 +127,11 @@ interface Row {
     },
   },
   watch: {
-    filterResearches() {
-      this.reload();
+    filterResearches: {
+      handler() {
+        this.reload();
+      },
+      deep: true,
     },
   },
 })
