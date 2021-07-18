@@ -4,6 +4,7 @@ from laboratory.utils import strdatetime
 from directions.models import DirectionParamsResult, Issledovaniya, Napravleniya
 from hospitals.models import Hospitals
 import json
+from copy import deepcopy
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
@@ -11,6 +12,7 @@ from django.http import JsonResponse
 from api.monitorings.sql_func import monitoring_sql_by_all_hospital
 from directory.models import Researches
 from utils.data_verification import data_parse
+from hospitals.models import Hospitals
 
 
 @login_required
@@ -55,15 +57,21 @@ def search(request):
     step = 0
     old_group_title = None
     current_index = 0
+    requirement_research_hosp = list(Hospitals.objects.values_list('pk', flat=True).filter(research=research_pk))
+
     for i in result_monitoring:
         if not title_group.get(i.group_title):
             title_group[i.group_title] = [i.field_title]
         else:
-            title_group[i.group_title].append(i.field_title)
+            if i.field_title not in title_group[i.group_title]:
+                title_group[i.group_title].append(i.field_title)
 
         if not rows_data.get(f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"):
             rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"] = [[i.value_aggregate]]
+            step = 0
             current_index = 0
+            if i.hospital_id in requirement_research_hosp:
+                requirement_research_hosp.remove(i.hospital_id)
 
         if (i.group_title != old_group_title) and (step != 0):
             rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"].append([i.value_aggregate])
@@ -77,11 +85,21 @@ def search(request):
     for k, v in title_group.items():
         titles_data.append({"groupTitle": k, "fields": v})
 
+    total = []
     for k, v in rows_data.items():
         data = k.split('-')
         rows.append({"hospTitle": data[1], "direction": data[2], "confirm": data[3], "values": v})
+        if len(total) == 0:
+            total = deepcopy(v)
+        else:
+            for external_index in range(len(v)):
+                for internal_index in range(len(v[external_index])):
+                    current_val = total[external_index][internal_index] + v[external_index][internal_index]
+                    total[external_index][internal_index] = current_val
 
-    result = {"titles": titles_data, "rows": rows}
+    empty_research_hosp = [Hospitals.objects.get(pk=i).short_title for i in requirement_research_hosp]
+    result = {"titles": titles_data, "rows": rows, "empty_hospital": empty_research_hosp, "total": total}
+
     return JsonResponse({'rows': result})
 
 

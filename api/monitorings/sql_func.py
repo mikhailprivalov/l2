@@ -23,7 +23,7 @@ def monitoring_sql_by_all_hospital(
                 directions_monitoringresult.hospital_id,
                 directions_monitoringresult.napravleniye_id,
                 directions_monitoringresult.issledovaniye_id,
-                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY HH:MM') as confirm,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY HH24:MI') as confirm,
                 directions_monitoringresult.research_id,
                 directions_monitoringresult.group_id,
                 directory_paraclinicinputgroups.title as group_title,

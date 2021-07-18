@@ -64,7 +64,7 @@ from medical_certificates.models import ResearchesCertificate, MedicalCertificat
 
 
 @login_required
-@group_required("Лечащий врач", "Врач-лаборант", "Оператор лечащего врача")
+@group_required("Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Заполнение мониторингов")
 def directions_generate(request):
     result = {"ok": False, "directions": [], "directionsStationar": [], "message": ""}
     if request.method == "POST":
@@ -87,10 +87,10 @@ def directions_generate(request):
                     },
                     need_return_card=True,
                 )
-            if card:
-                card_pk = card.pk
                 hospital.client = card
                 hospital.save()
+            if card:
+                card_pk = card.pk
         else:
             card = Card.objects.get(pk=card_pk)
         if card.base.forbidden_create_napr:
@@ -125,7 +125,6 @@ def directions_generate(request):
             current_global_direction_params=p.get("current_global_direction_params", {}),
             hospital_department_override=p.get("hospital_department_override", -1),
         )
-
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
             result["ok"] = rc["r"]
@@ -1422,7 +1421,7 @@ def directions_anesthesia_load(request):
     return JsonResponse({'data': tb_data, 'row_category': row_category})
 
 
-@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p", "Заполнение мониторингов")
 def directions_paraclinic_result(request):
     TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
@@ -1450,6 +1449,7 @@ def directions_paraclinic_result(request):
             | Q(research__is_stom=True)
             | Q(research__is_gistology=True)
             | Q(research__is_form=True)
+            | Q(research__is_monitoring=True)
         ).exists()
         or request.user.is_staff
     ):

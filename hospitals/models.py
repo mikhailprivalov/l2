@@ -2,6 +2,7 @@ from typing import Optional
 from django.db import models
 from appconf.manager import SettingManager
 from clients.models import Card
+from directory.models import Researches
 
 
 class Hospitals(models.Model):
@@ -20,7 +21,8 @@ class Hospitals(models.Model):
     remote_url = models.CharField(max_length=128, blank=True, default='', help_text="Адрес L2")
     remote_token = models.CharField(max_length=128, blank=True, default='', help_text="Токен L2")
     license_data = models.CharField(max_length=128, blank=True, default='', help_text="Лицензия")
-    client = models.ForeignKey(Card, default=None, blank=True, null=True, db_index=True, help_text='Суррогатный пациент для мониторигна', on_delete=models.CASCADE)
+    client = models.ForeignKey(Card, default=None, blank=True, null=True, db_index=True, help_text='Суррогатный пациент для мониторигна', on_delete=models.SET_NULL)
+    research = models.ManyToManyField(Researches, blank=True, default=None, help_text="Обязательные мониторинги")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
