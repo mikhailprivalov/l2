@@ -45,7 +45,7 @@ def monitoring_sql_by_all_hospital(monitoring_research, type_period, period_para
             ON directions_issledovaniya.id = directions_monitoringresult.issledovaniye_id
             WHERE
             CASE 
-            WHEN %(type_period)s = 'PAREIOD_HOUR' THEN 
+            WHEN %(type_period)s = 'PERIOD_HOUR' THEN 
                 directions_monitoringresult.type_period = 'PERIOD_HOUR' AND
                 directions_monitoringresult.research_id=%(monitoring_research)s AND
                 directions_monitoringresult.period_param_hour=%(period_param_hour)s  AND
@@ -53,7 +53,7 @@ def monitoring_sql_by_all_hospital(monitoring_research, type_period, period_para
                 directions_monitoringresult.period_param_month=%(period_param_month)s AND
                 directions_monitoringresult.period_param_year=%(period_param_year)s AND
                 directions_issledovaniya.time_confirmation is NOT NULL
-            WHEN %(type_period)s = 'PAREIOD_DAY' THEN
+            WHEN %(type_period)s = 'PERIOD_DAY' THEN
                 directions_monitoringresult.type_period = 'PERIOD_DAY' AND
                 directions_monitoringresult.period_param_day=%(period_param_day)s  AND
                 directions_monitoringresult.period_param_month=%(period_param_month)s AND

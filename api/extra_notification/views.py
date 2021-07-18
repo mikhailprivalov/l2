@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 
 from api.extra_notification.sql_func import extra_notification_sql
+from api.monitorings.sql_func import monitoring_sql_by_all_hospital
 from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
 from directory.models import ParaclinicInputGroups, ParaclinicInputField
 from laboratory.decorators import group_required
@@ -59,6 +60,12 @@ def search(request):
                 'issPk': i.r_iss_id,
             }
         )
+
+    #временно 775-week, 771-day
+    result_monitoring = monitoring_sql_by_all_hospital(771, 'PERIOD_DAY', -1, 18, 7, -1, -1, 2021, '1970-01-01', '1970-01-01')
+    print(result_monitoring)
+    for i in result_monitoring:
+        print(i)
 
     return JsonResponse({'rows': result})
 
