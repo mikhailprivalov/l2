@@ -1,4 +1,8 @@
 import datetime
+from typing import Optional
+from laboratory.utils import strdatetime
+from directions.models import DirectionParamsResult, Issledovaniya, Napravleniya
+from hospitals.models import Hospitals
 import json
 
 from dateutil.relativedelta import relativedelta
@@ -6,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from api.monitorings.sql_func import monitoring_sql_by_all_hospital
 from directory.models import Researches
+from utils.data_verification import data_parse
 
 
 @login_required
@@ -78,3 +83,56 @@ def search(request):
 
     result = {"titles": titles_data, "rows": rows}
     return JsonResponse({'rows': result})
+
+
+@login_required
+def history(request):
+    data = data_parse(request.body, {'offset': int, 'pk': int, 'filterResearches': list}, {'pk': None, 'offset': None, 'filterResearches': None})
+    offset: Optional[int] = data[0]
+    pk: Optional[int] = data[1]
+    filter_researches: Optional[list] = data[2]
+    limit = 40
+    end = offset + limit if not pk else None
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+    directions = Napravleniya.objects.filter(issledovaniya__research__is_monitoring=True, hospital=hospital).order_by('-data_sozdaniya')
+    if pk:
+        directions = directions.filter(pk=pk)
+    if filter_researches and len(filter_researches) > 0:
+        directions = directions.filter(issledovaniya__research_id__in=filter_researches)
+    rows = []
+    next_offset = None
+
+    directions_chunk = directions[offset:end] if not pk else directions
+
+    d: Napravleniya
+    for d in directions_chunk:
+        direction_params = DirectionParamsResult.objects.filter(napravleniye=d).order_by('order')
+
+        i: Issledovaniya = d.issledovaniya_set.all()[0]
+
+        rows.append(
+            {
+                "pk": d.pk,
+                "title": i.research.get_title(),
+                "lastActionAt": strdatetime(i.time_confirmation or i.time_save or d.data_sozdaniya),
+                "isSaved": d.has_save(),
+                "isConfirmed": d.is_all_confirm(),
+                "author": str(d.doc_who_create or d.doc or ""),
+                "params": [
+                    {
+                        "title": " → ".join([x for x in [x.field.group.title, x.field.title] if x]),
+                        "value": x.string_value_normalized,
+                    }
+                    for x in direction_params
+                ],
+            }
+        )
+
+    total_count = None
+
+    if end:
+        total_count = directions.count()
+        if total_count > end:
+            next_offset = end
+
+    return JsonResponse({"nextOffset": next_offset, "rows": rows, "totalCount": total_count})

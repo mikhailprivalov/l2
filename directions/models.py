@@ -1078,6 +1078,13 @@ class Napravleniya(models.Model):
             result['list_id'].extend(res_children['list_id'])
         return result
 
+    def has_save(self):
+        """
+        Есть ли подтверждение у одного или более исследований в направлении
+        :return: True, если есть подтверждение у одного или более
+        """
+        return any([x.time_save is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
+
     def has_confirm(self):
         """
         Есть ли подтверждение у одного или более исследований в направлении
@@ -1607,6 +1614,14 @@ class DirectionParamsResult(models.Model):
                 result = f"{data['code']} – {data['title']}"
             except:
                 pass
+        return result
+
+    @property
+    def string_value_normalized(self):
+        result = self.string_value
+        parts = result.split('-')
+        if self.get_field_type() == 1 and len(parts) == 3:
+            result = f'{parts[2]}.{parts[1]}.{parts[0]}'
         return result
 
     @staticmethod

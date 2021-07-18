@@ -347,7 +347,7 @@
                 <a style="font-weight: normal" href="#" @click.prevent="open_results(row.pk)">
                   (другие результаты)
                 </a>
-                <div class="results-history" slot="dropdown">
+                <div class="results-history" :class="embedded && 'results-history-embedded'" slot="dropdown">
                   <ul>
                     <li v-for="r in research_history" :key="r.pk">
                       Результат от {{ r.date }}
@@ -370,7 +370,7 @@
                 >
                 <a href="#" class="btn btn-blue-nb" @click.prevent="print_results(data.direction.pk)">Печать</a>
               </template>
-              <template v-if="!data.has_microbiology && !data.has_monitoring">
+              <template v-if="!data.has_microbiology">
                 <a :href="row.pacs" class="btn btn-blue-nb" v-if="!!row.pacs" target="_blank" title="Снимок" v-tippy>
                   &nbsp;<i class="fa fa-camera"></i>&nbsp;
                 </a>
@@ -384,17 +384,27 @@
                   >
                     &nbsp;<i class="fa fa-save"></i>&nbsp;
                   </button>
-                  <button class="btn btn-blue-nb" @click="clear_vals(row)" title="Очистить протокол" v-tippy>
+                  <button
+                    class="btn btn-blue-nb"
+                    @click="clear_vals(row)"
+                    title="Очистить протокол"
+                    v-tippy
+                    v-if="!data.has_monitoring"
+                  >
                     &nbsp;<i class="fa fa-times"></i>&nbsp;
                   </button>
-                  <div class="right-f" v-if="fte">
+                  <div class="right-f" v-if="fte && !data.has_monitoring">
                     <select-picker-m
                       v-model="templates[row.pk]"
                       :search="true"
                       :options="row.templates.map(x => ({ label: x.title, value: x.pk }))"
                     />
                   </div>
-                  <button class="btn btn-blue-nb" @click="load_template(row, templates[row.pk])" v-if="fte">
+                  <button
+                    class="btn btn-blue-nb"
+                    @click="load_template(row, templates[row.pk])"
+                    v-if="fte && !data.has_monitoring"
+                  >
                     Загрузить шаблон
                   </button>
                 </template>
@@ -2013,6 +2023,11 @@ export default {
   background: #fff;
   border-radius: 4px;
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+
+  &-embedded {
+    margin-top: -65px;
+    margin-left: -100px;
+  }
 
   ul {
     padding-left: 20px;

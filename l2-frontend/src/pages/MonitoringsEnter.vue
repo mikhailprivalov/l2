@@ -27,7 +27,7 @@
     </div>
     <div class="d gutter gutter-row gutter-row-1"></div>
     <div class="e">
-      TODO
+      <MonitoringHistoryViewer />
     </div>
 
     <modal
@@ -62,12 +62,14 @@ import Split from 'split-grid';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
 import Modal from '@/ui-cards/Modal.vue';
+import MonitoringHistoryViewer from '@/ui-cards/MonitoringHistoryViewer.vue';
 
 export default {
   components: {
     ResearchesPicker,
     SelectedResearches,
     Modal,
+    MonitoringHistoryViewer,
   },
   data() {
     return {
@@ -111,6 +113,7 @@ export default {
       if (this.$refs.modalResults) {
         this.$refs.modalResults.$el.style.display = 'none';
       }
+      this.$root.$emit('embedded-form:hide', this.toEnter);
       this.toEnter = null;
     },
   },
