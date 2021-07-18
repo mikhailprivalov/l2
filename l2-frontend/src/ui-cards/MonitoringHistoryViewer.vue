@@ -1,6 +1,6 @@
 <template>
   <div class="table-root">
-    <div class="inner">
+    <div class="inner" ref="scroll">
       <div class="filters">
         <treeselect
           :multiple="true"
@@ -28,7 +28,11 @@
             <th>Последнее действие</th>
             <th>Автор</th>
             <th>Статус</th>
-            <th></th>
+            <th class="text-center">
+              <a class="a-under" href="#" @click.prevent="reload()" title="Перезагрузить список" v-tippy>
+                <i class="fa fa-refresh"></i>
+              </a>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -64,6 +68,9 @@
                 <span :class="!listLoading && 'hidden-spinner'" class="loader"><i class="fa fa-spinner"></i></span>
               </button>
             </td>
+          </tr>
+          <tr v-if="inited">
+            <td class="text-center" colspan="7">показано {{ rows.length }} из {{ total | pluralRecords }}</td>
           </tr>
         </tbody>
       </table>
@@ -103,7 +110,9 @@ interface Row {
     return {
       rows: [],
       nextOffset: 0,
+      total: 0,
       listLoading: false,
+      inited: false,
       filterResearches: [],
     };
   },
@@ -128,7 +137,11 @@ export default class MonitoringHistoryViewer extends Vue {
 
   nextOffset: number;
 
+  total: number;
+
   listLoading: boolean;
+
+  inited: boolean;
 
   researches: any;
 
@@ -141,9 +154,18 @@ export default class MonitoringHistoryViewer extends Vue {
     this.nextOffset = 0;
   }
 
-  reload() {
+  async reload() {
     this.nextOffset = 0;
-    this.loadNext(true);
+    await this.loadNext(true);
+    this.scrollToTop();
+  }
+
+  scrollToTop() {
+    setTimeout(() => {
+      if (this.$refs.scroll) {
+        window.$(this.$refs.scroll).scrollTop(0);
+      }
+    }, 0);
   }
 
   async reloadPk(pk) {
@@ -158,14 +180,16 @@ export default class MonitoringHistoryViewer extends Vue {
   async loadNext(replace = false) {
     this.listLoading = true;
     await this.$store.dispatch(actions.INC_LOADING);
-    const { rows, nextOffset } = await api('/monitorings/history', {
+    const { rows, nextOffset, totalCount } = await api('/monitorings/history', {
       offset: this.nextOffset,
       filterResearches: this.filterResearches,
     });
     this.rows = replace ? rows : [...this.rows, ...rows];
     this.nextOffset = nextOffset;
+    this.total = totalCount;
     await this.$store.dispatch(actions.DEC_LOADING);
     this.listLoading = false;
+    this.inited = true;
   }
 
   openForm(pk) {
