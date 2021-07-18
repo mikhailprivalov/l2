@@ -1,5 +1,6 @@
 import datetime
 import json
+from copy import deepcopy
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
@@ -54,10 +55,12 @@ def search(request):
         if not title_group.get(i.group_title):
             title_group[i.group_title] = [i.field_title]
         else:
-            title_group[i.group_title].append(i.field_title)
+            if i.field_title not in title_group[i.group_title]:
+                title_group[i.group_title].append(i.field_title)
 
         if not rows_data.get(f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"):
             rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"] = [[i.value_aggregate]]
+            step = 0
             current_index = 0
 
         if (i.group_title != old_group_title) and (step != 0):
@@ -72,9 +75,18 @@ def search(request):
     for k, v in title_group.items():
         titles_data.append({"groupTitle": k, "fields": v})
 
+    total = []
     for k, v in rows_data.items():
         data = k.split('-')
         rows.append({"hospTitle": data[1], "direction": data[2], "confirm": data[3], "values": v})
+        if len(total) == 0:
+            total = deepcopy(v)
+        else:
+            for external_index in range(len(v)):
+                for internal_index in range(len(v[external_index])):
+                    current_val = total[external_index][internal_index]
+                    current_val += v[external_index][internal_index]
+                    total[external_index][internal_index] = current_val
 
-    result = {"titles": titles_data, "rows": rows}
+    result = {"titles": titles_data, "rows": rows, "total": total}
     return JsonResponse({'rows': result})
