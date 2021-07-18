@@ -220,7 +220,7 @@
         <button
           class="btn btn-blue-nb top-inner-select"
           :disabled="!can_save"
-          @click="generate('fill-and-save')"
+          @click="generate('save-and-open-embedded-form')"
           title="Сохранить и заполнить монитиринг"
           v-tippy
         >

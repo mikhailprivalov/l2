@@ -29,6 +29,31 @@
     <div class="e">
       TODO
     </div>
+
+    <modal
+      v-if="toEnter"
+      ref="modalResults"
+      @close="hideModalResults"
+      white-bg="true"
+      width="100%"
+      marginLeftRight="34px"
+      margin-top="30px"
+      show-footer="true"
+    >
+      <span slot="header">Заполнение мониторинга</span>
+      <div slot="body" class="monitoring-body">
+        <iframe :src="toEnterUrl" name="toEnter"></iframe>
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-4">
+            <button @click="hideModalResults" class="btn btn-primary-nb btn-blue-nb" type="button">
+              Закрыть
+            </button>
+          </div>
+        </div>
+      </div>
+    </modal>
   </div>
 </template>
 
@@ -36,11 +61,13 @@
 import Split from 'split-grid';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
+import Modal from '@/ui-cards/Modal.vue';
 
 export default {
   components: {
     ResearchesPicker,
     SelectedResearches,
+    Modal,
   },
   data() {
     return {
@@ -53,6 +80,7 @@ export default {
       selected_card: {},
       card_pk: -1,
       base: {},
+      toEnter: null,
     };
   },
   mounted() {
@@ -73,6 +101,23 @@ export default {
         minSize: 200,
       });
     }
+
+    this.$root.$on('embedded-form:open', pk => {
+      this.toEnter = pk;
+    });
+  },
+  methods: {
+    hideModalResults() {
+      if (this.$refs.modalResults) {
+        this.$refs.modalResults.$el.style.display = 'none';
+      }
+      this.toEnter = null;
+    },
+  },
+  computed: {
+    toEnterUrl() {
+      return `/mainmenu/results/paraclinic?embedded=1#{"pk":${this.toEnter}}`;
+    },
   },
 };
 </script>
@@ -287,6 +332,18 @@ export default {
       height: 100%;
       width: 100%;
     }
+  }
+}
+
+.monitoring-body {
+  height: calc(100vh - 179px);
+  position: relative;
+
+  iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
   }
 }
 </style>

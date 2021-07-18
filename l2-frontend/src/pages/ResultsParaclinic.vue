@@ -1,6 +1,6 @@
 <template>
   <div ref="root" class="results-root">
-    <div :class="{ has_loc, opened: sidebarIsOpened || !data.ok }" class="results-sidebar">
+    <div :class="{ has_loc, opened: sidebarIsOpened || !data.ok }" class="results-sidebar" v-if="!embedded">
       <div class="sidebar-top">
         <div class="input-group">
           <span class="input-group-btn" v-if="l2_microbiology">
@@ -134,14 +134,19 @@
         </div>
       </div>
     </div>
-    <div class="burger" :class="{ active: sidebarIsOpened && data.ok }" @click="sidebarIsOpened = !sidebarIsOpened">
+    <div
+      class="burger"
+      :class="{ active: sidebarIsOpened && data.ok }"
+      @click="sidebarIsOpened = !sidebarIsOpened"
+      v-if="!embedded"
+    >
       <span class="burger-inner" v-if="data.ok">
         <i class="fa fa-bars"></i>&nbsp;&nbsp;
         {{ sidebarIsOpened ? 'закрыть поиск и результаты' : 'открыть поиск и результаты' }}
       </span>
       <div class="burger-lines" v-if="data.ok" />
     </div>
-    <div class="backdrop" v-if="sidebarIsOpened || !data.ok" @click="sidebarIsOpened = false">
+    <div class="backdrop" v-if="(sidebarIsOpened || !data.ok) && !embedded" @click="sidebarIsOpened = false">
       <div class="backdrop-inner" v-if="data.ok">
         <div>
           <div style="font-weight: bold;">Загруженное направление:</div>
@@ -154,7 +159,7 @@
         <div>направление не загружено</div>
       </div>
     </div>
-    <div class="results-content" v-if="data.ok">
+    <div class="results-content" :class="{ embedded }" v-if="data.ok">
       <div class="results-top">
         <div class="row">
           <div :class="data.has_monitoring ? 'col-xs-11' : 'col-xs-6'">
@@ -321,7 +326,7 @@
             <div v-else-if="data.patient.imported_org">Организация: {{ data.patient.imported_org }}</div>
           </div>
           <div class="col-xs-1">
-            <button type="button" class="close" @click="clear()">
+            <button type="button" class="close" @click="clear()" v-if="!embedded">
               <span>&times;</span>
             </button>
           </div>
@@ -1004,6 +1009,7 @@ export default {
         1: 'Направление зарегистрировано',
         2: 'Результат подтверждён',
       },
+      embedded: false,
     };
   },
   watch: {
@@ -1082,6 +1088,9 @@ export default {
     }
 
     this.$root.$on('open-direction-form', pk => this.load_pk(pk));
+
+    const urlParams = new URLSearchParams(window.location.search);
+    this.embedded = urlParams.get('embedded') === '1';
   },
   methods: {
     async load_location() {
@@ -1936,6 +1945,11 @@ export default {
   @media (max-width: 1366px) {
     padding-left: 36px;
     width: 100%;
+  }
+
+  &.embedded {
+    padding-left: 0 !important;
+    width: 100% !important;
   }
 }
 

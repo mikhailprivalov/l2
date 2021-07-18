@@ -17,7 +17,7 @@
 {% endblock %}
 
 {% block content %}
-    <results-paraclinic style="position: absolute;top: 36px; right: 0; bottom: 0; left: 0;"/>
+    <results-paraclinic style="position: absolute;top: {% if request.GET.embedded == '1' %}0{% else %}36px{% endif %}; right: 0; bottom: 0; left: 0;"/>
 {% endblock %}
 
 {% block head_cn %}

@@ -144,9 +144,8 @@ export default (instance: Vue): void => {
           instance.$root.$emit('print:barcodes', data.directions, data.directionsStationar);
         } else if (type === 'just-save' || type === 'barcode') {
           instance.$root.$emit('msg', 'ok', `Направления созданы: ${data.directions.join(', ')}`);
-        } else if (type === 'fill-and-save' && monitoring) {
-          instance.$root.$emit('msg', 'ok', `Мониторинг создан: ${data.directions.join(', ')}`);
-          window.open(`/mainmenu/results/paraclinic#{"pk":${data.directions[0]}}`, '_blank');
+        } else if (type === 'save-and-open-embedded-form' && monitoring) {
+          instance.$root.$emit('embedded-form:open', data.directions[0]);
         }
         instance.$root.$emit(`researches-picker:clear_all${kk}`);
         instance.$root.$emit(`researches-picker:directions_created${kk}`);
