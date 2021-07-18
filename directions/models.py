@@ -1414,7 +1414,7 @@ class MonitoringResult(models.Model):
     field_id = models.IntegerField(default=None, blank=True, null=True, db_index=True, help_text='Поле результата')
     field_order = models.IntegerField(default=None, blank=True, null=True)
     field_type = models.SmallIntegerField(default=None, blank=True, choices=directory.ParaclinicInputField.TYPES, null=True)
-    value_aggregate = models.IntegerField(default=None, blank=True, null=True)
+    value_aggregate = models.DecimalField(max_digits=12, decimal_places=2, default=None, blank=True, null=True)
     value_text = models.TextField(default='', blank=True)
     type_period = models.CharField(max_length=20, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
     period_param_hour = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
