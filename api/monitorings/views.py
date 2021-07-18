@@ -1,8 +1,5 @@
 import datetime
 from typing import Optional
-from laboratory.utils import strdatetime
-from directions.models import DirectionParamsResult, Issledovaniya, Napravleniya
-from hospitals.models import Hospitals
 import json
 from copy import deepcopy
 
@@ -12,6 +9,8 @@ from django.http import JsonResponse
 from api.monitorings.sql_func import monitoring_sql_by_all_hospital
 from directory.models import Researches
 from utils.data_verification import data_parse
+from laboratory.utils import strdatetime
+from directions.models import DirectionParamsResult, Issledovaniya, Napravleniya
 from hospitals.models import Hospitals
 
 
