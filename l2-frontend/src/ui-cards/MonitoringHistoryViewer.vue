@@ -155,6 +155,7 @@ export default class MonitoringHistoryViewer extends Vue {
   }
 
   async reload() {
+    this.inited = false;
     this.nextOffset = 0;
     await this.loadNext(true);
     this.scrollToTop();
