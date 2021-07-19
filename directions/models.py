@@ -1435,6 +1435,24 @@ class MonitoringResult(models.Model):
     period_param_year = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
 
 
+class MonitoringStatus(models.Model):
+    STATUS_PREPARED = 'PREPARED'
+    STATUS_APPROVED = 'APPROVED'
+    STATUS_REJECTED = 'REJECTED'
+
+    STATUS_TYPES = (
+        (STATUS_PREPARED, 'Подготовлен'),
+        (STATUS_APPROVED, 'Утвержден'),
+        (STATUS_REJECTED, 'Отклонен'),
+    )
+
+    napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
+    type_status = models.CharField(max_length=20, db_index=True, choices=STATUS_TYPES, help_text="Cтатус мониторинга")
+    time_change_status = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время изменения статуса')
+    comment = models.CharField(max_length=255, default="", blank=True, help_text='Комментарий в случае отклонения')
+    who_change_status = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль пользователя изменившего статус', on_delete=models.SET_NULL)
+
+
 class MethodsOfTaking(models.Model):
     drug_prescription = models.CharField(max_length=128, db_index=True)
     method_of_taking = models.CharField(max_length=128, db_index=True)
