@@ -239,7 +239,6 @@ export default {
 
   table {
     table-layout: fixed;
-    margin-bottom: 2000px;
     background: #fff;
 
     thead {
