@@ -5,6 +5,7 @@ from copy import deepcopy
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
+from laboratory.decorators import group_required
 from django.http import JsonResponse
 from api.monitorings.sql_func import monitoring_sql_by_all_hospital
 from directory.models import Researches
@@ -15,9 +16,10 @@ from hospitals.models import Hospitals
 
 
 @login_required
+@group_required("Просмотр мониторингов")
 def search(request):
     request_data = json.loads(request.body)
-    research_pk = int(request_data.get("research_pk", 2))
+    research_pk = request_data["research"]
     date = request_data["date"]
 
     prepare_date = date.split("-")
@@ -27,10 +29,12 @@ def search(request):
     start_date, end_date = None, None
     param_hour, param_day, param_month, param_quarter, param_halfyear, param_year = None, None, None, None, None, None
     param_hour = request_data["hour"]
+    if param_hour == '-':
+        param_hour = None
 
     if type_period == "PERIOD_WEEK":
         start_date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
-        end_date = start_date + relativedelta(days=+6)
+        end_date = start_date + relativedelta(days=6)
 
     if type_period == "PERIOD_DAY" or type_period == "PERIOD_HOUR":
         param_day = prepare_date[2]

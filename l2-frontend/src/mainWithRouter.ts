@@ -87,6 +87,16 @@ const router = new Router({
         module: 'l2_monitorings',
       },
     },
+    {
+      path: '/ui/monitorings/report',
+      name: 'monitorings_report',
+      component: () => import('@/pages/MonitoringsReport/index.vue'),
+      meta: {
+        title: 'Просмотр мониторингов',
+        groups: ['Просмотр мониторингов'],
+        module: 'l2_monitorings',
+      },
+    },
   ],
 });
 

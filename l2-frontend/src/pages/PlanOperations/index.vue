@@ -1,8 +1,7 @@
 <template>
   <div>
-    <h3>{{title}}</h3>
-    <Filters :filters="filters" :hirurgs="hirurgsWithEmpty" :anestesiologs="anestesiologsWithEmpty"
-             :departments="departments"/>
+    <h3>{{ title }}</h3>
+    <Filters :filters="filters" :hirurgs="hirurgsWithEmpty" :anestesiologs="anestesiologsWithEmpty" :departments="departments" />
     <div class="buttons">
       <button class="btn btn-blue-nb" @click="load_data">
         Обновить
@@ -13,37 +12,43 @@
     </div>
     <table class="table table-bordered" style="table-layout: fixed">
       <colgroup>
-        <col width='85'/>
-        <col width='90'/>
-        <col/>
-        <col width='155'/>
-        <col width='155'/>
-        <col width='155'/>
-        <col width='320'/>
-        <col width='55'/>
+        <col width="85" />
+        <col width="90" />
+        <col />
+        <col width="155" />
+        <col width="155" />
+        <col width="155" />
+        <col width="320" />
+        <col width="55" />
       </colgroup>
       <thead>
-      <tr>
-        <th>Дата</th>
-        <th>История</th>
-        <th>Пациент</th>
-        <th>Вид операции</th>
-        <th>Врач-хирург</th>
-        <th>Отделение</th>
-        <th>Анестезиолог</th>
-        <th></th>
-      </tr>
+        <tr>
+          <th>Дата</th>
+          <th>История</th>
+          <th>Пациент</th>
+          <th>Вид операции</th>
+          <th>Врач-хирург</th>
+          <th>Отделение</th>
+          <th>Анестезиолог</th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-      <Row :data="row" :key="row.pk_plan" v-for="row in data" :hirurgs="hirurgsReversed"
-           :anestesiologs="anestesiologsWithEmpty"
-           v-tippy="{ placement: 'top', arrow: true, interactive: true, theme: 'dark longread'}"
-           :title="row.tooltip_data"/>
-      <tr v-if="data.length === 0"><td colspan="8" style="text-align: center">нет данных</td></tr>
+        <Row
+          :data="row"
+          :key="row.pk_plan"
+          v-for="row in data"
+          :hirurgs="hirurgsReversed"
+          :anestesiologs="anestesiologsWithEmpty"
+          v-tippy="{ placement: 'top', arrow: true, interactive: true, theme: 'dark longread' }"
+          :title="row.tooltip_data"
+        />
+        <tr v-if="data.length === 0">
+          <td colspan="8" style="text-align: center">нет данных</td>
+        </tr>
       </tbody>
     </table>
   </div>
-
 </template>
 
 <script lang="ts">
@@ -72,7 +77,12 @@ export default {
       anestesiologs: [],
       departments: [],
       filters: {
-        date: [moment().format('DD.MM.YYYY'), moment().add(7, 'days').format('DD.MM.YYYY')],
+        date: [
+          moment().format('DD.MM.YYYY'),
+          moment()
+            .add(7, 'days')
+            .format('DD.MM.YYYY'),
+        ],
         doc_anesthetist_pk: -1,
         doc_operate_pk: -1,
         department_pk: -1,
@@ -102,11 +112,13 @@ export default {
       return [{ id: -1, label: 'Анестезиолог не выбран' }, ...this.anestesiologs];
     },
     hirurgsReversed() {
-      return flatten(this.hirurgsWithEmpty.map((x) => x.children).filter(Boolean))
-        .reduce((a: any, b: any) => ({ ...a, [b.id]: b }), {});
+      return flatten(this.hirurgsWithEmpty.map(x => x.children).filter(Boolean)).reduce(
+        (a: any, b: any) => ({ ...a, [b.id]: b }),
+        {},
+      );
     },
     forms() {
-      return planOperations.map((f) => ({
+      return planOperations.map(f => ({
         ...f,
         url: valuesToString(f.url, {
           pks_plan: this.pks_plan,
@@ -166,9 +178,8 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .buttons {
-    margin-bottom: 5px;
-    color: #cacfd2;
-  }
-
+.buttons {
+  margin-bottom: 5px;
+  color: #cacfd2;
+}
 </style>
