@@ -34,10 +34,9 @@ from utils.dates import normalize_date, valid_date
 from . import sql_if
 from directions.models import Napravleniya
 from .models import ExternalService
+from laboratory.settings import COVID_RESEARCHES_PK
 
 logger = logging.getLogger("IF")
-from laboratory.settings import COVID_RESEARCHES_PK
-from utils.dates import now as now_time
 
 
 @api_view()
@@ -380,8 +379,7 @@ def check_enp(request):
 @api_view(['POST'])
 def patient_results_covid19(request):
     days = 15
-    date_start = now_time() + relativedelta(days=-days)
-    date_end = now_time()
+    results = []
     if data_parse(request.body, {'enp': str})[0]:
         p_enp = data_parse(request.body, {'enp': str})[0]
         if p_enp:
@@ -389,7 +387,13 @@ def patient_results_covid19(request):
             card_type = CardBase.objects.get(internal_type=True)
             cards = Card.objects.filter(base=card_type, individual__in=objects, is_archive=False)
             card = cards.filter(carddocusage__document__number=p_enp, carddocusage__document__document_type__title='Полис ОМС').first()
+            date_start = current_time() + relativedelta(days=-days)
+            date_end = current_time()
             results_covid = last_results_researches_by_time_ago(card.pk, COVID_RESEARCHES_PK, date_start, date_end)
+            for i in results_covid:
+                results.append({'date': i.confirm, 'result': i.value})
+            if len(results) > 0:
+                return Response({"ok": True, 'results': results})
 
     rmis_id = data_parse(request.body, {'rmis_id': str})[0]
 
@@ -400,8 +404,6 @@ def patient_results_covid19(request):
     now = current_time().date()
 
     variants = ['РНК вируса SARS-CоV2 не обнаружена', 'РНК вируса SARS-CоV2 обнаружена']
-
-    results = []
 
     for i in range(days):
         date = now - datetime.timedelta(days=i)

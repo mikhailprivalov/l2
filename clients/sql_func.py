@@ -47,7 +47,8 @@ def last_results_researches_by_time_ago(client_id, researches, date_start, date_
                 directions_napravleniya.client_id as card_id, 
                 directions_issledovaniya.napravleniye_id as dir_id,
                 directions_issledovaniya.research_id as research_id,
-                directions_issledovaniya.time_confirmation as confirm,
+                directions_issledovaniya.time_confirmation,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YY') as confirm,
                 directions_result.fraction_id,
                 directory_fractions.title,
                 directions_result.value
