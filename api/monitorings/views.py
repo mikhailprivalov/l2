@@ -68,19 +68,23 @@ def search(request):
         else:
             if i.field_title not in title_group[i.group_title]:
                 title_group[i.group_title].append(i.field_title)
+        if i.field_type == 18 or i.field_type == 3:
+            data_value = i.value_aggregate
+        else:
+            data_value = i.value_text
 
         if not rows_data.get(f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"):
-            rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"] = [[i.value_aggregate]]
+            rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"] = [[data_value]]
             step = 0
             current_index = 0
             if i.hospital_id in requirement_research_hosp:
                 requirement_research_hosp.remove(i.hospital_id)
 
         if (i.group_title != old_group_title) and (step != 0):
-            rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"].append([i.value_aggregate])
+            rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"].append([data_value])
             current_index += 1
         elif step != 0:
-            rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"][current_index].append(i.value_aggregate)
+            rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"][current_index].append(data_value)
 
         old_group_title = i.group_title
         step += 1
@@ -97,6 +101,14 @@ def search(request):
         else:
             for external_index in range(len(v)):
                 for internal_index in range(len(v[external_index])):
+                    try:
+                        int(total[external_index][internal_index])
+                        is_digit = True
+                    except ValueError:
+                        is_digit = False
+                    if not is_digit:
+                        total[external_index][internal_index] = ""
+                        continue
                     current_val = total[external_index][internal_index] + v[external_index][internal_index]
                     total[external_index][internal_index] = current_val
 

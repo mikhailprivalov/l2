@@ -1600,9 +1600,11 @@ def directions_paraclinic_result(request):
                         monitoring_result: MonitoringResult = MonitoringResult.objects.filter(issledovaniye=iss, research=iss.research, napravleniye=iss.napravleniye, field_id=field["pk"])[
                             0]
                         monitoring_result.value_text = ""
+
                     if field['field_type'] == 18 or field['field_type'] == 3:
                         monitoring_result.value_aggregate = field["value"]
                     else:
+                        monitoring_result.value_aggregate = None
                         monitoring_result.value_text = field["value"]
                     monitoring_result.field_type = field['field_type']
                     monitoring_result.save()
