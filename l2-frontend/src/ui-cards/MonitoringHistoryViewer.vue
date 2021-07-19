@@ -36,7 +36,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :key="r.pk">
+          <tr v-for="r in rows" :key="r.pk" :class="[r.isSaved && 'row-saved', r.isConfirmed && 'row-confirmed']">
             <td>{{ r.pk }}</td>
             <td>{{ r.title }}</td>
             <td>
@@ -258,5 +258,13 @@ export default class MonitoringHistoryViewer extends Vue {
   to {
     transform: rotate(360deg);
   }
+}
+
+.row-saved {
+  background: #fcfbe3;
+}
+
+.row-confirmed {
+  background: #e3fce8;
 }
 </style>
