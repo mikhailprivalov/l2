@@ -48,13 +48,13 @@
           <th rowspan="2">Организация</th>
           <th rowspan="2">Подтверждено</th>
           <th rowspan="2">№</th>
-          <th v-for="(t, i) in data.titles" :key="i" :colspan="t.fields.length">
+          <th v-for="(t, i) in data.titles" :key="i" :colspan="t.fields.length" class="param-title">
             {{ t.groupTitle }}
           </th>
         </tr>
         <tr>
           <template v-for="(t, i) in data.titles">
-            <th v-for="(f, j) in t.fields" :key="`${i}_${j}`">
+            <th v-for="(f, j) in t.fields" :key="`${i}_${j}`" class="param-title">
               {{ f }}
             </th>
           </template>
@@ -155,5 +155,10 @@ export default {
 
 .filters {
   margin-bottom: 10px;
+}
+
+.param-title {
+  font-size: 12px;
+  word-break: break-word;
 }
 </style>
