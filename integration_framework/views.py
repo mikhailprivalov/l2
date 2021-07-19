@@ -380,20 +380,19 @@ def check_enp(request):
 def patient_results_covid19(request):
     days = 15
     results = []
-    if data_parse(request.body, {'enp': str})[0]:
+    if data_parse(request.body, {'enp': str}, {})[0]:
         p_enp = data_parse(request.body, {'enp': str})[0]
-        if p_enp:
-            objects = list(Individual.objects.filter(document__number=p_enp, document__document_type__title='Полис ОМС'))
-            card_type = CardBase.objects.get(internal_type=True)
-            cards = Card.objects.filter(base=card_type, individual__in=objects, is_archive=False)
-            card = cards.filter(carddocusage__document__number=p_enp, carddocusage__document__document_type__title='Полис ОМС').first()
-            date_start = current_time() + relativedelta(days=-days)
-            date_end = current_time()
-            results_covid = last_results_researches_by_time_ago(card.pk, COVID_RESEARCHES_PK, date_start, date_end)
-            for i in results_covid:
-                results.append({'date': i.confirm, 'result': i.value})
-            if len(results) > 0:
-                return Response({"ok": True, 'results': results})
+        objects = list(Individual.objects.filter(document__number=p_enp, document__document_type__title='Полис ОМС'))
+        card_type = CardBase.objects.get(internal_type=True)
+        cards = Card.objects.filter(base=card_type, individual__in=objects, is_archive=False)
+        card = cards.filter(carddocusage__document__number=p_enp, carddocusage__document__document_type__title='Полис ОМС').first()
+        date_start = current_time() + relativedelta(days=-days)
+        date_end = current_time()
+        results_covid = last_results_researches_by_time_ago(card.pk, COVID_RESEARCHES_PK, date_start, date_end)
+        for i in results_covid:
+            results.append({'date': i.confirm, 'result': i.value})
+        if len(results) > 0:
+            return Response({"ok": True, 'results': results})
 
     rmis_id = data_parse(request.body, {'rmis_id': str})[0]
 
