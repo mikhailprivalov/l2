@@ -15,7 +15,7 @@ from rest_framework.response import Response
 
 import directions.models as directions
 from appconf.manager import SettingManager
-from clients.models import Individual, Card
+from clients.models import Individual, Card, CardBase
 from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
@@ -375,6 +375,14 @@ def check_enp(request):
 
 @api_view(['POST'])
 def patient_results_covid19(request):
+    if data_parse(request.body, {'enp': str})[0]:
+        p_enp = data_parse(request.body, {'enp': str})[0]
+        if p_enp:
+            objects = list(Individual.objects.filter(document__number=p_enp, document__document_type__title='Полис ОМС'))
+            card_type = CardBase.objects.get(internal_type=True)
+            cards = Card.objects.filter(base=card_type, individual__in=objects, is_archive=False)
+            card = cards.filter(carddocusage__document__number=p_enp, carddocusage__document__document_type__title='Полис ОМС').first()
+
     rmis_id = data_parse(request.body, {'rmis_id': str})[0]
 
     logger.exception(f'patient_results_covid19: {rmis_id}')
