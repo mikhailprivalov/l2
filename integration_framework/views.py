@@ -6,6 +6,7 @@ import re
 
 import petrovna
 import simplejson as json
+from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
@@ -16,6 +17,7 @@ from rest_framework.response import Response
 import directions.models as directions
 from appconf.manager import SettingManager
 from clients.models import Individual, Card, CardBase
+from clients.sql_func import last_results_researches_by_time_ago
 from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
@@ -34,6 +36,8 @@ from directions.models import Napravleniya
 from .models import ExternalService
 
 logger = logging.getLogger("IF")
+from laboratory.settings import COVID_RESEARCHES_PK
+from utils.dates import now as now_time
 
 
 @api_view()
@@ -375,6 +379,9 @@ def check_enp(request):
 
 @api_view(['POST'])
 def patient_results_covid19(request):
+    days = 15
+    date_start = now_time() + relativedelta(days=-days)
+    date_end = now_time()
     if data_parse(request.body, {'enp': str})[0]:
         p_enp = data_parse(request.body, {'enp': str})[0]
         if p_enp:
@@ -382,6 +389,7 @@ def patient_results_covid19(request):
             card_type = CardBase.objects.get(internal_type=True)
             cards = Card.objects.filter(base=card_type, individual__in=objects, is_archive=False)
             card = cards.filter(carddocusage__document__number=p_enp, carddocusage__document__document_type__title='Полис ОМС').first()
+            results_covid = last_results_researches_by_time_ago(card.pk, COVID_RESEARCHES_PK, date_start, date_end)
 
     rmis_id = data_parse(request.body, {'rmis_id': str})[0]
 
@@ -390,7 +398,7 @@ def patient_results_covid19(request):
     c = Client(modules=['directions', 'rendered_services'])
 
     now = current_time().date()
-    days = 15
+
     variants = ['РНК вируса SARS-CоV2 не обнаружена', 'РНК вируса SARS-CоV2 обнаружена']
 
     results = []
@@ -398,7 +406,6 @@ def patient_results_covid19(request):
     for i in range(days):
         date = now - datetime.timedelta(days=i)
         rendered_services = c.rendered_services.client.searchServiceRend(patientUid=rmis_id, dateFrom=date)
-
         for rs in rendered_services[:5]:
             protocol = c.directions.get_protocol(rs)
             for v in variants:

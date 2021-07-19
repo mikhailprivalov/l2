@@ -38,7 +38,7 @@ def last_result_researches_years(client_id, years, researches):
     return rows
 
 
-def last_results_researches_time_ago(client_id, researches, date_start, date_end):
+def last_results_researches_by_time_ago(client_id, researches, date_start, date_end):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -47,16 +47,22 @@ def last_results_researches_time_ago(client_id, researches, date_start, date_end
                 directions_napravleniya.client_id as card_id, 
                 directions_issledovaniya.napravleniye_id as dir_id,
                 directions_issledovaniya.research_id as research_id,
-                directions_issledovaniya.time_confirmation as confirm
+                directions_issledovaniya.time_confirmation as confirm,
+                directions_result.fraction_id,
+                directory_fractions.title,
+                directions_result.value
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya
-                    ON directions_issledovaniya.napravleniye_id =directions_napravleniya.id
+                    ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+                LEFT JOIN directions_result
+                    ON directions_result.issledovaniye_id=directions_issledovaniya.id
+                LEFT JOIN directory_fractions
+                    ON directory_fractions.id=directions_result.fraction_id
                 WHERE 
                 directions_napravleniya.client_id = %(card_pk)s and 
                 directions_issledovaniya.research_id = ANY(ARRAY[%(researches)s]) and
-                date_part('year', directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s) = ANY(ARRAY[%(years)s])
-                ORDER BY directions_issledovaniya.time_confirmation DESC)
-                
+                directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(date_start)s AND %(date_end)s
+                ORDER BY directions_issledovaniya.time_confirmation DESC
             """,
             params={'tz': TIME_ZONE, 'card_pk': client_id, 'researches': researches, 'date_start': date_start, 'date_end': date_end},
         )
