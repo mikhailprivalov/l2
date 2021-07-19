@@ -37,8 +37,8 @@
     <table class="table table-bordered table-condensed table-striped" style="table-layout: fixed" v-if="data">
       <colgroup>
         <col style="width: 220px" />
-        <col style="width: 150px" />
-        <col style="width: 90px" />
+        <col style="width: 140px" />
+        <col style="width: 85px" />
         <template v-for="(t, i) in data.titles">
           <col v-for="(f, j) in t.fields" :key="`${i}_${j}`" />
         </template>
@@ -72,7 +72,7 @@
             {{ r.direction }}
           </td>
           <template v-for="(v, j) in r.values">
-            <td v-for="(rv, k) in v" :key="`${j}_${k}`">
+            <td v-for="(rv, k) in v" :key="`${i}_${j}_${k}`">
               {{ rv }}
             </td>
           </template>
@@ -80,12 +80,12 @@
         <tr v-if="data.total && data.total.length > 0">
           <th colspan="3">Итого</th>
           <template v-for="(v, j) in data.total">
-            <td v-for="(rv, k) in v" :key="`${j}_${k}`">
+            <td v-for="(rv, k) in v" :key="`total_${j}_${k}`">
               {{ rv }}
             </td>
           </template>
         </tr>
-        <tr v-for="(h, i) in data.empty_hospital" :key="i">
+        <tr v-for="(h, i) in data.empty_hospital" :key="`empty_${i}`">
           <th>{{ h }}</th>
           <th :colspan="2 + data.titles.reduce((a, b) => a + b.fields.length, 0)">Мониторинг не заполнен</th>
         </tr>
