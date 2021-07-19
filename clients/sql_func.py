@@ -36,3 +36,29 @@ def last_result_researches_years(client_id, years, researches):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def last_results_researches_time_ago(client_id, researches, date_start, date_end):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                directions_issledovaniya.id as iss_id, 
+                directions_napravleniya.client_id as card_id, 
+                directions_issledovaniya.napravleniye_id as dir_id,
+                directions_issledovaniya.research_id as research_id,
+                directions_issledovaniya.time_confirmation as confirm
+                FROM directions_issledovaniya
+                LEFT JOIN directions_napravleniya
+                    ON directions_issledovaniya.napravleniye_id =directions_napravleniya.id
+                WHERE 
+                directions_napravleniya.client_id = %(card_pk)s and 
+                directions_issledovaniya.research_id = ANY(ARRAY[%(researches)s]) and
+                date_part('year', directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s) = ANY(ARRAY[%(years)s])
+                ORDER BY directions_issledovaniya.time_confirmation DESC)
+                
+            """,
+            params={'tz': TIME_ZONE, 'card_pk': client_id, 'researches': researches, 'date_start': date_start, 'date_end': date_end},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
