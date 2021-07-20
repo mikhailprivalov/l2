@@ -48,6 +48,7 @@ export default (): void => {
   Vue.use(VueCollapse);
   Vue.use(PortalVue);
   Vue.filter('pluralAge', amount => `${amount} ${plural(amount, 'год', 'года', 'лет')}`);
+  Vue.filter('pluralRecords', amount => `${amount} ${plural(amount, 'запись', 'записи', 'записей')}`);
 
   Vue.directive('click-outside', {
     bind(el, binding, vnode) {

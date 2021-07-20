@@ -254,6 +254,8 @@ def researches_by_department(request):
             q = DResearches.objects.filter(is_direction_params=True).order_by("title")
         elif department_pk == -11:
             q = DResearches.objects.filter(is_application=True).order_by("title")
+        elif department_pk == -12:
+            q = DResearches.objects.filter(is_monitoring=True).order_by("title")
         else:
             q = DResearches.objects.filter(podrazdeleniye__pk=department_pk).order_by("title")
 
@@ -331,7 +333,7 @@ def researches_update(request):
         if tube == -1:
             tube = None
         stationar_slave = is_simple and -500 >= department_pk > -600 and main_service_pk != 1
-        desc = stationar_slave or department_pk in [-2, -3, -4, -5, -6, -7, -8, -9, -10, -11]
+        desc = stationar_slave or department_pk in [-2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12]
         if len(title) > 0 and (desc or Podrazdeleniya.objects.filter(pk=department_pk).exists()):
             department = None if desc else Podrazdeleniya.objects.filter(pk=department_pk)[0]
             res = None
@@ -356,6 +358,7 @@ def researches_update(request):
                     is_form=department_pk == -9,
                     is_direction_params=department_pk == -10,
                     is_application=department_pk == -11,
+                    is_monitoring=department_pk == -12,
                     is_slave_hospital=stationar_slave,
                     microbiology_tube_id=tube if department_pk == -6 else None,
                     site_type_id=site_type,
@@ -390,6 +393,7 @@ def researches_update(request):
                 res.is_form = department_pk == -9
                 res.is_direction_params = department_pk == -10
                 res.is_application = department_pk == -11
+                res.is_monitoring = department_pk == -12
                 res.microbiology_tube_id = tube if department_pk == -6 else None
                 res.paraclinic_info = info
                 res.hide = hide

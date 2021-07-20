@@ -106,7 +106,7 @@ export const PrepareFormula = (
         if (strict) {
           s = s.replace(r, `\`${v}\``);
         } else {
-          s = s.replace(r, v || '');
+          s = s.replace(r, String(v === 0 ? 0 : (v || '')));
         }
       }
     }

@@ -6,7 +6,7 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = '3'
+    VERSION = '4'
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'setting_manager_full_cached_l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'setting_manager_full_cached_en:v{VERSION}'
@@ -109,6 +109,7 @@ class SettingManager:
                     "eds",
                     "profcenter",
                     "extra_notifications",
+                    "monitorings",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
@@ -141,6 +142,7 @@ class SettingManager:
                 11: SettingManager.l2('forms'),
                 12: SettingManager.get("directions_params", default='false', default_type='b'),
                 13: SettingManager.l2("applications"),
+                14: SettingManager.l2("monitorings"),
             }
 
             cache.set(k, simplejson.dumps(result), 60 * 60 * 8)

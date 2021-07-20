@@ -40,7 +40,7 @@ def data_parse(data: Union[dict, str, bytes], keys_types: Dict[str, Union[Callab
             else:
                 if key not in data and key not in default_values:
                     raise Http404('{} not found!'.format(var))
-                if var_type is None:
+                if var_type is None or (var is None and default_values.get(key, True) is None):
                     typed_vars.append(None)
                 elif var_type == 'str_strip':
                     typed_vars.append(str(var).strip())

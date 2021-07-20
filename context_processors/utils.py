@@ -121,6 +121,8 @@ def menu(request):
                 {"url": '/ui/extra-notification', "title": "Экстренные извещения", "nt": False,
                  "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача", "Заполнение экстренных извещений"], "module": "l2_extra_notifications"},
                 {"url": '/mainmenu/procedure_list', "title": "Процедурный лист", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
+                {"url": '/ui/monitorings/enter', "title": "Заполнение мониторингов", "nt": False, "access": ["Заполнение мониторингов"], "module": "l2_monitorings"},
+                {"url": '/ui/monitorings/report', "title": "Просмотр мониторингов", "nt": False, "access": ["Просмотр мониторингов"], "module": "l2_monitorings"},
                 # {"url": '/cases/', "title": "Случаи обслуживания", "nt": False, "access": []},
             ]
 
