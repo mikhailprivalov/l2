@@ -341,7 +341,7 @@
               <dropdown
                 :visible="research_open_history === row.pk"
                 :position="['left', 'bottom', 'left', 'top']"
-                v-if="!data.has_microbiology"
+                v-if="!data.has_microbiology && !data.has_monitoring"
                 @clickout="hide_results"
               >
                 <a style="font-weight: normal" href="#" @click.prevent="open_results(row.pk)">
