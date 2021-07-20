@@ -3,9 +3,11 @@ import logging
 import random
 from collections import defaultdict
 import re
+import time
 
 import petrovna
 import simplejson as json
+from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
@@ -16,6 +18,7 @@ from rest_framework.response import Response
 import directions.models as directions
 from appconf.manager import SettingManager
 from clients.models import Individual, Card
+from clients.sql_func import last_results_researches_by_time_ago
 from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
@@ -32,6 +35,7 @@ from utils.dates import normalize_date, valid_date
 from . import sql_if
 from directions.models import Napravleniya
 from .models import ExternalService
+from laboratory.settings import COVID_RESEARCHES_PK
 
 logger = logging.getLogger("IF")
 
@@ -375,28 +379,51 @@ def check_enp(request):
 
 @api_view(['POST'])
 def patient_results_covid19(request):
-    rmis_id = data_parse(request.body, {'rmis_id': str})[0]
-
-    logger.exception(f'patient_results_covid19: {rmis_id}')
-
-    c = Client(modules=['directions', 'rendered_services'])
-
-    now = current_time().date()
     days = 15
-    variants = ['РНК вируса SARS-CоV2 не обнаружена', 'РНК вируса SARS-CоV2 обнаружена']
+    results = []
+    p_enp = data_parse(request.body, {'enp': str}, {'enp': ''})[0]
+    if p_enp:
+        logger.exception(f'patient_results_covid19 by enp: {p_enp}')
+        card = Card.objects.filter(base__internal_type=True, is_archive=False, carddocusage__document__number=p_enp, carddocusage__document__document_type__title='Полис ОМС').first()
+        if card:
+            date_end = current_time()
+            date_start = date_end + relativedelta(days=-days)
+            results_covid = last_results_researches_by_time_ago(card.pk, COVID_RESEARCHES_PK, date_start, date_end)
+            for i in results_covid:
+                results.append({'date': i.confirm, 'result': i.value})
+            if len(results) > 0:
+                return Response({"ok": True, 'results': results})
+
+    rmis_id = data_parse(request.body, {'rmis_id': str}, {'rmis_id': ''})[0]
 
     results = []
 
-    for i in range(days):
-        date = now - datetime.timedelta(days=i)
-        rendered_services = c.rendered_services.client.searchServiceRend(patientUid=rmis_id, dateFrom=date)
+    if rmis_id:
+        for i in range(3):
+            results = []
 
-        for rs in rendered_services[:5]:
-            protocol = c.directions.get_protocol(rs)
-            for v in variants:
-                if v in protocol:
-                    results.append({'date': date.strftime('%d.%m.%Y'), 'result': v})
-                    break
+            logger.exception(f'patient_results_covid19 by rmis id, try {i + 1}/3: {rmis_id}')
+
+            try:
+                c = Client(modules=['directions', 'rendered_services'])
+
+                now = current_time().date()
+
+                variants = ['РНК вируса SARS-CоV2 не обнаружена', 'РНК вируса SARS-CоV2 обнаружена']
+
+                for i in range(days):
+                    date = now - datetime.timedelta(days=i)
+                    rendered_services = c.rendered_services.client.searchServiceRend(patientUid=rmis_id, dateFrom=date)
+                    for rs in rendered_services[:5]:
+                        protocol = c.directions.get_protocol(rs)
+                        for v in variants:
+                            if v in protocol:
+                                results.append({'date': date.strftime('%d.%m.%Y'), 'result': v})
+                                break
+                break
+            except Exception as e:
+                logger.exception(e)
+            time.sleep(2)
 
     return Response({"ok": True, 'results': results})
 
@@ -726,8 +753,6 @@ def external_research_create(request):
     if birthdate and sex not in ['м', 'ж']:
         return Response({"ok": False, 'message': 'individual.sex должно быть "м" или "ж"'})
 
-    has_tfoms = False
-
     if enp:
         individuals = Individual.objects.filter(tfoms_enp=enp)
         if not individuals.exists():
@@ -740,16 +765,12 @@ def external_research_create(request):
                 individuals = Individual.objects.filter(tfoms_enp=enp)
 
             individual = individuals.first()
-        if individual:
-            has_tfoms = True
 
     if not individual and lastname:
         tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
         if tfoms_data:
             Individual.import_from_tfoms(tfoms_data)
             individual = Individual.objects.filter(tfoms_enp=enp).first()
-        if individual:
-            has_tfoms = True
 
     if not individual and passport_serial:
         individuals = Individual.objects.filter(document__serial=passport_serial, document__number=passport_number, document__document_type__title='Паспорт гражданина РФ')
