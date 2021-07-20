@@ -62,7 +62,7 @@
           </tr>
           <tr v-if="nextOffset !== null">
             <td class="text-center" colspan="7">
-              <button class="btn btn-blue-nb btn-sm" @click="loadNext()">
+              <button class="btn btn-blue-nb btn-sm" @click="loadNext()" ref="loadButton">
                 <span class="hidden-spinner"><i class="fa fa-spinner"></i></span>
                 Загрузить ещё
                 <span :class="!listLoading && 'hidden-spinner'" class="loader"><i class="fa fa-spinner"></i></span>
@@ -194,6 +194,9 @@ export default class MonitoringHistoryViewer extends Vue {
     await this.$store.dispatch(actions.DEC_LOADING);
     this.listLoading = false;
     this.inited = true;
+    if (this.$refs.loadButton) {
+      window.$(this.$refs.loadButton).blur();
+    }
   }
 
   openForm(pk) {
