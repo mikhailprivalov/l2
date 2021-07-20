@@ -16,7 +16,6 @@ from utils.data_verification import data_parse
 from laboratory.utils import strdatetime
 from directions.models import DirectionParamsResult, Issledovaniya, Napravleniya
 from hospitals.models import Hospitals
-from utils.dates import normalize_dots_date
 
 
 @login_required
@@ -123,7 +122,6 @@ def search(request):
 
     empty_research_hosp = [Hospitals.objects.get(pk=i).short_title for i in requirement_research_hosp]
     result = {"titles": titles_data, "rows": rows, "empty_hospital": empty_research_hosp, "total": total}
-    print(result)
 
     return JsonResponse({'rows': result})
 

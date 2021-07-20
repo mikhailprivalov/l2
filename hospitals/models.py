@@ -90,11 +90,9 @@ class HospitalsGroup(models.Model):
     research = models.ManyToManyField(Researches, blank=True, default=None, help_text="Обязательные мониторинги")
     type_hospital = models.CharField(default=None, blank=True, null=True, max_length=100, db_index=True, choices=HOSPITAL_TYPES, help_text="Тип группы")
 
-
     def __str__(self):
         return f"{self.title}"
 
     class Meta:
         verbose_name = 'Группа больница'
         verbose_name_plural = 'Группы больницы'
-

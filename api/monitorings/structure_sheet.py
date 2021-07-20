@@ -27,11 +27,10 @@ def monitoring_xlsx(ws1, monitoring_title, table_data, date):
     # строим заголовки
     for column_group in table_data['titles']:
         end_column = current_column + len(column_group['fields']) - 1
-        #Заголовок группы
+        # Заголовок группы
         ws1.merge_cells(start_row=current_row, start_column=current_column, end_row=current_row, end_column=end_column)
         ws1.cell(row=current_row, column=current_column).value = f'{column_group["groupTitle"]}'
         ws1.cell(row=current_row, column=end_column).style = style_border
-
         # Заголовок поля
         current_row += 1
         current_column = end_column - len(column_group['fields'])
