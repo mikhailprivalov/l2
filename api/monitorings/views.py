@@ -61,7 +61,7 @@ def search(request):
     old_group_title = None
     current_index = 0
     requirement_research_hosp = list(Hospitals.objects.values_list('pk', flat=True).filter(research=research_pk))
-    requirement_group_hosp = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__research__pk=771, hospitalsgroup__type_hospital='REQUIREMENT_MONITORING_HOSP'))
+    requirement_group_hosp = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__research__pk=research_pk, hospitalsgroup__type_hospital='REQUIREMENT_MONITORING_HOSP'))
     requirement_research_hosp.extend(requirement_group_hosp)
     requirement_research_hosp = list(set(requirement_research_hosp))
 
