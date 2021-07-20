@@ -3,16 +3,20 @@ from typing import Optional
 import json
 from copy import deepcopy
 
+import openpyxl
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
+
+from api.monitorings import structure_sheet
 from laboratory.decorators import group_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from api.monitorings.sql_func import monitoring_sql_by_all_hospital
 from directory.models import Researches
 from utils.data_verification import data_parse
 from laboratory.utils import strdatetime
 from directions.models import DirectionParamsResult, Issledovaniya, Napravleniya
-from hospitals.models import Hospitals, HospitalsGroup
+from hospitals.models import Hospitals
+from utils.dates import normalize_dots_date
 
 
 @login_required
@@ -61,7 +65,9 @@ def search(request):
     old_group_title = None
     current_index = 0
     requirement_research_hosp = list(Hospitals.objects.values_list('pk', flat=True).filter(research=research_pk))
-    requirement_group_hosp = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__research__pk=research_pk, hospitalsgroup__type_hospital='REQUIREMENT_MONITORING_HOSP'))
+    requirement_group_hosp = list(
+        Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__research__pk=research_pk, hospitalsgroup__type_hospital='REQUIREMENT_MONITORING_HOSP')
+    )
     requirement_research_hosp.extend(requirement_group_hosp)
     requirement_research_hosp = list(set(requirement_research_hosp))
 
@@ -117,6 +123,7 @@ def search(request):
 
     empty_research_hosp = [Hospitals.objects.get(pk=i).short_title for i in requirement_research_hosp]
     result = {"titles": titles_data, "rows": rows, "empty_hospital": empty_research_hosp, "total": total}
+    print(result)
 
     return JsonResponse({'rows': result})
 
@@ -172,3 +179,27 @@ def history(request):
             next_offset = end
 
     return JsonResponse({"nextOffset": next_offset, "rows": rows, "totalCount": total_count})
+
+
+@login_required
+@group_required("Просмотр мониторингов")
+def filexlsx(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        table_data = data.get("data")
+        date = data.get("date")
+
+        research_pk = data.get("research")
+        monitoring = Researches.objects.get(pk=research_pk)
+        symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")  # Словарь для транслитерации
+        tr = {ord(a): ord(b) for a, b in zip(*symbols)}  # Перевод словаря для транслита
+
+        response = HttpResponse(content_type='application/ms-excel')
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet(f'{monitoring.title}')
+        ws = structure_sheet.monitoring_xlsx(ws, monitoring.title, table_data, date)
+
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Мониторинг.xlsx\"", tr)
+        wb.save(response)
+        return response
