@@ -12,7 +12,7 @@ from directory.models import Researches
 from utils.data_verification import data_parse
 from laboratory.utils import strdatetime
 from directions.models import DirectionParamsResult, Issledovaniya, Napravleniya
-from hospitals.models import Hospitals
+from hospitals.models import Hospitals, HospitalsGroup
 
 
 @login_required
@@ -61,6 +61,9 @@ def search(request):
     old_group_title = None
     current_index = 0
     requirement_research_hosp = list(Hospitals.objects.values_list('pk', flat=True).filter(research=research_pk))
+    requirement_group_hosp = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__research__pk=771, hospitalsgroup__type_hospital='REQUIREMENT_MONITORING_HOSP'))
+    requirement_research_hosp.extend(requirement_group_hosp)
+    requirement_research_hosp = list(set(requirement_research_hosp))
 
     for i in result_monitoring:
         if not title_group.get(i.group_title):

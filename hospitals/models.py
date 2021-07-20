@@ -71,3 +71,30 @@ class Hospitals(models.Model):
     class Meta:
         verbose_name = 'Больница'
         verbose_name_plural = 'Больницы'
+
+
+class HospitalsGroup(models.Model):
+
+    REQUIREMENT_MONITORING_HOSP = 'REQUIREMENT_MONITORING_HOSP'
+    REGION_HOSP = 'REGION_HOSP'
+    CHILD_HOSP = 'CHILD_HOSP'
+
+    HOSPITAL_TYPES = (
+        (REQUIREMENT_MONITORING_HOSP, 'Обязательные моиторинги'),
+        (REGION_HOSP, 'По районам'),
+        (CHILD_HOSP, 'Детские'),
+    )
+
+    title = models.CharField(max_length=255, help_text="Наименование")
+    hospital = models.ManyToManyField(Hospitals, blank=True, default=None, help_text="Какие больница")
+    research = models.ManyToManyField(Researches, blank=True, default=None, help_text="Обязательные мониторинги")
+    type_hospital = models.CharField(default=None, blank=True, null=True, max_length=100, db_index=True, choices=HOSPITAL_TYPES, help_text="Тип группы")
+
+
+    def __str__(self):
+        return f"{self.title}"
+
+    class Meta:
+        verbose_name = 'Группа больница'
+        verbose_name_plural = 'Группы больницы'
+

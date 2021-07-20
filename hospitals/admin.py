@@ -18,3 +18,4 @@ class RefHospitals(admin.ModelAdmin):
 
 
 admin.site.register(models.Hospitals, RefHospitals)
+admin.site.register(models.HospitalsGroup)
