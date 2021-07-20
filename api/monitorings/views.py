@@ -198,6 +198,6 @@ def filexlsx(request):
         ws = wb.create_sheet(f'{monitoring.title}')
         ws = structure_sheet.monitoring_xlsx(ws, monitoring.title, table_data, date)
 
-        response['Content-Disposition'] = str.translate("attachment; filename=\"Мониторинг.xlsx\"", tr)
+        response['Content-Disposition'] = str.translate(f"attachment; filename=\"{monitoring.title}, {date}.xlsx\"", tr)
         wb.save(response)
         return response

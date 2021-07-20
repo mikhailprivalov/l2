@@ -36,9 +36,19 @@
             </select>
           </div>
         </div>
-        <div class="col-xs-3 col-md-2">
-          <button class="btn btn-blue-n btn-block" @click="load_data" :disabled="research === null" ref="loadButton">
+        <div class="col-xs-3">
+          <button class="btn btn-blue-n" @click="load_data" :disabled="research === null" ref="loadButton">
             Загрузить<span class="hidden-sm hidden-xs"> данные</span>
+          </button>
+
+          <button
+            class="btn btn-blue-n"
+            @click="print_data"
+            :disabled="!data"
+            title="Сохранение отображённых данных в XLSX"
+            v-tippy
+          >
+            <i class="fas fa-download"></i>
           </button>
         </div>
       </div>
@@ -69,7 +79,7 @@
             </td>
           </tr>
           <tr v-if="data.total && data.total.length > 0">
-            <th colspan="2">Итого</th>
+            <th colspan="2" class="text-right">Итого</th>
           </tr>
         </tbody>
         <thead v-if="data.rows.length > 0">
@@ -85,7 +95,7 @@
         <tbody v-if="data.empty_hospital.length > 0">
           <tr v-for="(h, i) in data.empty_hospital" :key="`empty_${i}`">
             <th :title="h" v-tippy>{{ h }}</th>
-            <th>Мониторинг не заполнен</th>
+            <th>пусто</th>
           </tr>
         </tbody>
       </table>
@@ -146,7 +156,7 @@
                 v-for="(rv, k) in v"
                 :key="`total_${j}_${k}`"
                 :class="[k === 0 && 'group-start', k + 1 === v.length && 'group-end']"
-                :title="`${data.titles[j].groupTitle} — ${data.titles[j].fields[k]}: ${rv}`"
+                :title="`Итого — ${data.titles[j].groupTitle} — ${data.titles[j].fields[k]}: ${rv}`"
                 v-tippy
               >
                 {{ rv }}
@@ -184,7 +194,7 @@
         </thead>
         <tbody v-if="data.titles.reduce((a, b) => a + b.fields.length, 0) > 0 && data.empty_hospital.length > 0">
           <tr v-for="(h, i) in data.empty_hospital" :key="`empty_${i}`">
-            <td :colspan="data.titles.reduce((a, b) => a + b.fields.length, 0)"></td>
+            <td :colspan="data.titles.reduce((a, b) => a + b.fields.length, 0)">&nbsp;</td>
           </tr>
         </tbody>
       </table>
@@ -195,10 +205,12 @@
 <script lang="ts">
 import { mapGetters } from 'vuex';
 import moment from 'moment';
+import axios from 'axios';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import api from '@/api';
 import * as actions from '@/store/action-types';
+import * as Cookies from 'es-cookie';
 
 const HOURS = [{ id: '-', label: 'нет' }];
 
@@ -219,7 +231,9 @@ export default {
     return {
       title: 'Просмотр мониторингов',
       research: null,
+      loadedResearch: null,
       date: moment().format('YYYY-MM-DD'),
+      loadedDate: '',
       hour: '-',
       HOURS,
       data: null,
@@ -246,6 +260,8 @@ export default {
   methods: {
     async load_data() {
       await this.$store.dispatch(actions.INC_LOADING);
+      this.loadedResearch = this.research;
+      this.loadedDate = this.date;
       const { rows } = await api('/monitorings/search', this, ['research', 'date', 'hour']);
       this.data = rows;
       await this.$store.dispatch(actions.DEC_LOADING);
@@ -258,6 +274,47 @@ export default {
     },
     decFont() {
       this.fontSize = Math.max(MIN_FONT, this.fontSize - 1);
+    },
+    print_data() {
+      axios({
+        method: 'post',
+        url: '/api/monitorings/filexlsx',
+        data: {
+          research: this.loadedResearch,
+          date: this.loadedDate,
+          data: this.data,
+        },
+        responseType: 'blob',
+        headers: {
+          'X-CSRFToken': Cookies.get('csrftoken'),
+        },
+      })
+        .then(response => {
+          const blob = new Blob([response.data], { type: 'application/ms-excel' });
+          const downloadUrl = window.URL.createObjectURL(blob);
+          let filename = '';
+          const disposition = response.headers['content-disposition'];
+          if (disposition && disposition.indexOf('attachment') !== -1) {
+            const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            const matches = filenameRegex.exec(disposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+          const a = document.createElement('a');
+          if (typeof a.download === 'undefined') {
+            window.location.href = downloadUrl;
+          } else {
+            a.href = downloadUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+          }
+        })
+        .catch(error => {
+          console.error(error);
+          this.$root.$emit('msg', 'error', 'Сохранить данные в виде XLSX не удалось');
+        });
     },
   },
 };

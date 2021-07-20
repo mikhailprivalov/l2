@@ -13,9 +13,11 @@ def monitoring_xlsx(ws1, monitoring_title, table_data, date):
     style_border.font = Font(bold=False, size=12)
     style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
-    ws1.merge_cells(start_row=1, start_column=1, end_row=1, end_column=8)
-    ws1.cell(row=1, column=1).value = f'Мониторинг - {monitoring_title}'
-    ws1.cell(row=1, column=1).style = style_border
+    header_size = 8
+    ws1.merge_cells(start_row=1, start_column=1, end_row=1, end_column=header_size)
+    ws1.cell(row=1, column=1).value = f'Мониторинг - {monitoring_title}, от {date}'
+    for i in range(header_size):
+        ws1.cell(row=1, column=1 + i).style = style_border
 
     ws1.column_dimensions[get_column_letter(1)].width = 22
 
@@ -30,13 +32,15 @@ def monitoring_xlsx(ws1, monitoring_title, table_data, date):
         # Заголовок группы
         ws1.merge_cells(start_row=current_row, start_column=current_column, end_row=current_row, end_column=end_column)
         ws1.cell(row=current_row, column=current_column).value = f'{column_group["groupTitle"]}'
-        ws1.cell(row=current_row, column=end_column).style = style_border
+        for i in range(end_column - current_column + 1):
+            ws1.cell(row=current_row, column=current_column + i).style = style_border
+
         # Заголовок поля
         current_row += 1
         current_column = end_column - len(column_group['fields'])
         for field_colimn in column_group['fields']:
             current_column += 1
-            ws1.column_dimensions[get_column_letter(current_column)].width = 10
+            ws1.column_dimensions[get_column_letter(current_column)].width = 15
             ws1.cell(row=current_row, column=current_column).value = f'{field_colimn}'
             ws1.cell(row=current_row, column=current_column).style = style_border
         current_row -= 1
