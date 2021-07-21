@@ -71,7 +71,7 @@
         </thead>
         <tbody v-if="data.rows.length > 0">
           <tr v-for="(r, i) in data.rows" :key="i">
-            <td :title="`${r.hospTitle} – ${r.confirm}`" v-tippy>
+            <td :title="`${r.hospTitle} – ${r.confirm}`" v-tippy v-html="r.hospTitle || '&nbsp;'">
               {{ r.hospTitle }}
             </td>
             <td>
@@ -94,7 +94,7 @@
         </thead>
         <tbody v-if="data.empty_hospital.length > 0">
           <tr v-for="(h, i) in data.empty_hospital" :key="`empty_${i}`">
-            <th :title="h" v-tippy>{{ h }}</th>
+            <th :title="h" v-tippy v-html="h || '&nbsp;'"></th>
             <th>пусто</th>
           </tr>
         </tbody>
@@ -117,9 +117,8 @@
               class="param-title group-start group-end"
               :title="t.groupTitle"
               v-tippy
-            >
-              {{ t.groupTitle }}
-            </th>
+              v-html="t.groupTitle || '&nbsp;'"
+            ></th>
           </tr>
           <tr>
             <template v-for="(t, i) in data.titles">
@@ -130,9 +129,8 @@
                 :class="[j === 0 && 'group-start', j + 1 === t.fields.length && 'group-end']"
                 :title="`${t.groupTitle} — ${f}`"
                 v-tippy
-              >
-                {{ f }}
-              </th>
+                v-html="f || '&nbsp;'"
+              ></th>
             </template>
           </tr>
         </thead>
@@ -145,9 +143,8 @@
                 :class="[k === 0 && 'group-start', k + 1 === v.length && 'group-end']"
                 :title="`${data.titles[j].groupTitle} — ${data.titles[j].fields[k]}: ${rv}`"
                 v-tippy
-              >
-                {{ rv }}
-              </td>
+                v-html="rv || '&nbsp;'"
+              ></td>
             </template>
           </tr>
           <tr v-if="data.total && data.total.length > 0">
@@ -158,9 +155,8 @@
                 :class="[k === 0 && 'group-start', k + 1 === v.length && 'group-end']"
                 :title="`Итого — ${data.titles[j].groupTitle} — ${data.titles[j].fields[k]}: ${rv}`"
                 v-tippy
-              >
-                {{ rv }}
-              </td>
+                v-html="rv || '&nbsp;'"
+              ></td>
             </template>
           </tr>
         </tbody>
@@ -174,9 +170,8 @@
                 :class="[j === 0 && 'group-start', j + 1 === t.fields.length && 'group-end']"
                 :title="`${t.groupTitle} — ${f}`"
                 v-tippy
-              >
-                {{ f }}
-              </th>
+                v-html="f || '&nbsp;'"
+              ></th>
             </template>
           </tr>
           <tr>
@@ -187,9 +182,8 @@
               class="param-title group-start group-end"
               :title="t.groupTitle"
               v-tippy
-            >
-              {{ t.groupTitle }}
-            </th>
+              v-html="t.groupTitle || '&nbsp;'"
+            ></th>
           </tr>
         </thead>
         <tbody v-if="data.titles.reduce((a, b) => a + b.fields.length, 0) > 0 && data.empty_hospital.length > 0">

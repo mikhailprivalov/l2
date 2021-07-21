@@ -38,6 +38,6 @@ export default {
 
 .root {
   width: 100%;
-  min-width: 1000px;
+  min-width: 500px;
 }
 </style>

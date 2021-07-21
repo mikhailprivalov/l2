@@ -1,12 +1,14 @@
 <template>
-  <treeselect :multiple="false"
-              :disable-branch-nodes="true"
-              class="treeselect-wide"
-              :options="variantsTree"
-              :append-to-body="true"
-              :clearable="false"
-              :disabled="disabled"
-              v-model="val"
+  <treeselect
+    :multiple="false"
+    :disable-branch-nodes="true"
+    class="treeselect-wide"
+    :options="variantsTree"
+    :append-to-body="true"
+    :clearable="false"
+    :disabled="disabled"
+    v-model="val"
+    :zIndex="5001"
   />
 </template>
 

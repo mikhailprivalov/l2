@@ -119,6 +119,7 @@ interface Row {
   mounted() {
     this.loadNext();
     this.$root.$on('embedded-form:hide', pk => this.reloadPk(pk));
+    this.$root.$on('embedded-form:open', () => this.reload());
   },
   computed: {
     ...mapGetters(['researches']),

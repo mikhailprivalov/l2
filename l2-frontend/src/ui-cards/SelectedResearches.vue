@@ -192,7 +192,7 @@
     <div class="bottom-picker-inputs" v-if="pay_source && !create_and_open">
       <input
         v-model="count"
-        placeholder="Количество"
+        placeholder="Кол-во"
         title="Количество"
         v-tippy="{ placement: 'top', arrow: true, followCursor: true, distance: 15 }"
         type="number"
@@ -295,18 +295,18 @@
           style="table-layout: fixed;background-color: #fff;margin: 0 auto;"
         >
           <colgroup>
-            <col width="230" />
-            <col width="40" />
-            <col width="230" />
-            <col width="230" />
-            <col width="80" />
+            <col style="width: 40px;" />
+            <col />
+            <col />
+            <col />
+            <col style="width: 80px;" />
           </colgroup>
           <thead>
             <tr>
               <th colspan="2">Назначение</th>
               <th>Комментарий</th>
               <th>Место</th>
-              <th>Количество</th>
+              <th>Кол-во</th>
             </tr>
           </thead>
           <tbody>
