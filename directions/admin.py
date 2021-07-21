@@ -17,6 +17,7 @@ from .models import (
     PersonContract,
     ExternalOrganization,
     DirectionsHistory,
+    MonitoringResult
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -114,6 +115,20 @@ class ResDirectionsHistory(admin.ModelAdmin):
             return ""
 
 
+class ResMonitoringResult(admin.ModelAdmin):
+    list_display = (
+        'napravleniye',
+        'hospital',
+        'type_period',
+    )
+    search_fields = ('napravleniye',)
+
+    raw_id_fields = (
+        'napravleniye',
+        'issledovaniye',
+    )
+
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
 admin.site.register(FrequencyOfUseResearches)
@@ -127,3 +142,4 @@ admin.site.register(EmployeeJob, ResEmployeeJob)
 admin.site.register(KeyValue, ResKeyValue)
 admin.site.register(PersonContract, ResPersonContract)
 admin.site.register(DirectionsHistory, ResDirectionsHistory)
+admin.site.register(MonitoringResult, ResMonitoringResult)
