@@ -1434,6 +1434,10 @@ class MonitoringResult(models.Model):
     period_param_halfyear = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     period_param_year = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
 
+    class Meta:
+        verbose_name = 'Мониторинг результаты'
+        verbose_name_plural = 'Мониторинг результатыя'
+
 
 class MonitoringStatus(models.Model):
     STATUS_PREPARED = 'PREPARED'
