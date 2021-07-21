@@ -125,9 +125,7 @@ class ResMonitoringResult(admin.ModelAdmin):
 
     raw_id_fields = (
         'napravleniye',
-        'research',
         'issledovaniye',
-        'hospital',
     )
 
 

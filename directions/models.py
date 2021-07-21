@@ -1436,7 +1436,7 @@ class MonitoringResult(models.Model):
 
     class Meta:
         verbose_name = 'Мониторинг результаты'
-        verbose_name_plural = 'Мониторинг результатыя'
+        verbose_name_plural = 'Мониторинг результаты'
 
 
 class MonitoringStatus(models.Model):
