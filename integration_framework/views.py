@@ -373,6 +373,24 @@ def check_enp(request):
                         },
                     }
                 )
+    elif enp_mode == 'local':
+        logger.exception(f'enp: {enp}')
+        card = Card.objects.filter(base__internal_type=True, is_archive=False, carddocusage__document__number=enp, carddocusage__document__document_type__title='Полис ОМС').first()
+
+        if card:
+            logger.exception(f'card: {card}')
+            i: Individual = card.individual
+            bd_orig = f"{i.birthday:%Y-%m-%d}"
+            logger.exception(f'{bd_orig} == {bd}')
+            if bd_orig == bd:
+                return Response(
+                    {
+                        "ok": True,
+                        'patient_data': {
+                            "rmis_id": card.individual.get_rmis_uid_fast(),
+                        },
+                    }
+                )
 
     return Response({"ok": False, 'message': 'Неверные данные или нет прикрепления к поликлинике'})
 
