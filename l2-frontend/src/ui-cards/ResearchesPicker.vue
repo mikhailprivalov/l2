@@ -370,7 +370,7 @@ export default {
           && row.pk !== '1'
           && !this.filter_types.includes(parseInt(row.pk, 10))
           && (this.typesOnly.length === 0 || this.typesOnly.includes(parseInt(row.pk, 10)))
-          && (!this.l2_only_doc_call || row.pk === '4')
+          && (!this.l2_only_doc_call || row.pk === '4' || row.pk === '14')
           && row.pk !== '13',
       );
 
