@@ -324,12 +324,11 @@ def make_log(request):
 
 @api_view(['POST'])
 def check_enp(request):
-    enp, family, name, patronymic, bd, enp_mode =\
-        data_parse(
-            request.body,
-            {'enp': str, 'family': str, 'name': str, 'patronymic': str, 'bd': str, 'check_mode': str},
-            {'check_mode': 'tfoms', 'bd': None, 'name': None, 'patronymic': None, 'family': None, 'enp': None}
-        )
+    enp, family, name, patronymic, bd, enp_mode = data_parse(
+        request.body,
+        {'enp': str, 'family': str, 'name': str, 'patronymic': str, 'bd': str, 'check_mode': str},
+        {'check_mode': 'tfoms', 'bd': None, 'name': None, 'patronymic': None, 'family': None, 'enp': None},
+    )
     enp = enp.replace(' ', '')
 
     logger.exception(f'enp_mode: {enp_mode}')
@@ -402,7 +401,9 @@ def patient_results_covid19(request):
     p_enp = data_parse(request.body, {'enp': str}, {'enp': ''})[0]
     if p_enp:
         logger.exception(f'patient_results_covid19 by enp: {p_enp}')
-        card = Card.objects.filter(base__internal_type=True, is_archive=False, carddocusage__document__number=p_enp, carddocusage__document__document_type__title='Полис ОМС').first()
+        card = Card.objects.filter(
+            base__internal_type=True, is_archive=False, carddocusage__document__number=str(p_enp).replace(' ', ''), carddocusage__document__document_type__title='Полис ОМС'
+        ).first()
         logger.exception(f'patient_results_covid19 by enp [CARD]: {card}')
         if card:
             date_end = current_time()
@@ -485,10 +486,7 @@ def external_doc_call_create(request):
 
     date = current_time()
 
-    count = DoctorCall.objects.filter(
-        client=card, is_external=True,
-        exec_at__date=date.date()
-    ).count()
+    count = DoctorCall.objects.filter(client=card, is_external=True, exec_at__date=date.date()).count()
     if count >= MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY:
         logger.exception(f'TOO MANY REQUESTS PER DAY: already have {count} calls at {date:%d.%m.%Y}')
         return JsonResponse({"ok": False, "number": None, "tooManyRequests": True})
@@ -803,17 +801,20 @@ def external_research_create(request):
         individual = individuals.first()
 
     if not individual and lastname:
-        individual = Individual.import_from_tfoms({
-            "family": lastname,
-            "given": firstname,
-            "patronymic": patronymic,
-            "gender": sex,
-            "birthdate": birthdate,
-            "enp": enp,
-            "passport_serial": passport_serial,
-            "passport_number": passport_number,
-            "snils": snils,
-        }, need_return_individual=True)
+        individual = Individual.import_from_tfoms(
+            {
+                "family": lastname,
+                "given": firstname,
+                "patronymic": patronymic,
+                "gender": sex,
+                "birthdate": birthdate,
+                "enp": enp,
+                "passport_serial": passport_serial,
+                "passport_number": passport_number,
+                "snils": snils,
+            },
+            need_return_individual=True,
+        )
 
     if not individual:
         return Response({"ok": False, 'message': 'Физлицо не найдено'})
@@ -868,7 +869,7 @@ def external_research_create(request):
                     hospital=hospital,
                     id_in_hospital=id_in_hospital,
                     title_org_initiator=title_org_initiator,
-                    ogrn_org_initiator=ogrn_org_initiator
+                    ogrn_org_initiator=ogrn_org_initiator,
                 )
 
             research_to_filter = defaultdict(lambda: False)
@@ -1004,13 +1005,15 @@ def eds_get_user_data(request):
 
     doc = DoctorProfile.objects.filter(eds_token=token)[0]
 
-    return Response({
-        "ok": True,
-        "userData": {
-            "fio": doc.get_full_fio(),
-            "department": doc.podrazdeleniye.title if doc.podrazdeleniye else None,
+    return Response(
+        {
+            "ok": True,
+            "userData": {
+                "fio": doc.get_full_fio(),
+                "department": doc.podrazdeleniye.title if doc.podrazdeleniye else None,
+            },
         }
-    })
+    )
 
 
 @api_view(['POST'])
@@ -1032,17 +1035,19 @@ def eds_get_cda_data(request):
     card = n.client
     ind = n.client.individual
 
-    return Response({
-        "title": i.research.title,
-        "patient": {
-            'pk': card.number,
-            'family': ind.family,
-            'name': ind.name,
-            'patronymic': ind.patronymic,
-            'gender': ind.sex.lower(),
-            'birthdate': ind.birthday.strftime("%Y%m%d"),
-        },
-    })
+    return Response(
+        {
+            "title": i.research.title,
+            "patient": {
+                'pk': card.number,
+                'family': ind.family,
+                'name': ind.name,
+                'patronymic': ind.patronymic,
+                'gender': ind.sex.lower(),
+                'birthdate': ind.birthday.strftime("%Y%m%d"),
+            },
+        }
+    )
 
 
 @api_view(['POST'])
@@ -1054,49 +1059,64 @@ def external_check_result(request):
     external_service = ExternalService.objects.filter(token=token).first()
 
     if not token or not external_service:
-        return Response({
-            "ok": False,
-            "message": "Передан некорректный токен в заголовке HTTP_AUTHORIZATION",
-        }, status=403)
+        return Response(
+            {
+                "ok": False,
+                "message": "Передан некорректный токен в заголовке HTTP_AUTHORIZATION",
+            },
+            status=403,
+        )
 
     external_service: ExternalService = external_service
     if not external_service.is_active:
-        return Response({
-            "ok": False,
-            "message": "Доступ отключен",
-        }, status=403)
+        return Response(
+            {
+                "ok": False,
+                "message": "Доступ отключен",
+            },
+            status=403,
+        )
 
     if 'qr_check_result' not in external_service.rights:
-        return Response({
-            "ok": False,
-            "message": "Нет доступа",
-        }, status=403)
+        return Response(
+            {
+                "ok": False,
+                "message": "Нет доступа",
+            },
+            status=403,
+        )
 
     body = json.loads(request.body)
     instance_id = body.get("instanceId")
 
     if SettingManager.instance_id() != instance_id:
-        return Response({
-            "ok": False,
-            "message": "Некорректный instance_id",
-        })
+        return Response(
+            {
+                "ok": False,
+                "message": "Некорректный instance_id",
+            }
+        )
 
     pk = body.get("direction")
     direction = Napravleniya.objects.filter(pk=pk).first()
     if not direction:
-        return Response({
-            "ok": False,
-            "message": "Направление не найдено",
-        })
+        return Response(
+            {
+                "ok": False,
+                "message": "Направление не найдено",
+            }
+        )
 
     direction: Napravleniya
 
     direction_token = body.get("directionToken")
     if str(direction.qr_check_token) != direction_token:
-        return Response({
-            "ok": False,
-            "message": "Некорректный токен направления",
-        })
+        return Response(
+            {
+                "ok": False,
+                "message": "Некорректный токен направления",
+            }
+        )
 
     ind: Individual = direction.client.individual
     patient = {
@@ -1123,12 +1143,16 @@ def external_check_result(request):
             if not directions.Result.objects.filter(issledovaniye=i, fraction=f).exists():
                 continue
             r: directions.Result = directions.Result.objects.filter(issledovaniye=i, fraction=f)[0]
-            result["data"].append({
-                "title": f.title,
-                "value": r.value,
-            })
+            result["data"].append(
+                {
+                    "title": f.title,
+                    "value": r.value,
+                }
+            )
         results.append(result)
-    return Response({
-        "patient": patient,
-        "results": results,
-    })
+    return Response(
+        {
+            "patient": patient,
+            "results": results,
+        }
+    )
