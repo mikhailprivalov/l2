@@ -758,7 +758,7 @@ def hosp(request):
 
 
 @login_required
-@group_required("Врач параклиники", "Врач консультаций")
+@group_required("Врач параклиники", "Врач консультаций", "Заполнение мониторингов")
 @ensure_csrf_cookie
 def results_paraclinic(request):
     return render(request, 'dashboard/results_paraclinic.html')
