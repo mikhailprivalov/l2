@@ -980,7 +980,7 @@ def directions_results_report(request):
     return JsonResponse({"data": data})
 
 
-@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p")
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p", "Заполнение мониторингов")
 def directions_paraclinic_form(request):
     TADP = SettingManager.get("tadp", default='Температура', default_type='s')
     response = {"ok": False, "message": ""}
@@ -1456,7 +1456,9 @@ def directions_paraclinic_result(request):
         iss = Issledovaniya.objects.get(pk=pk)
         g = [str(x) for x in request.user.groups.all()]
         tadp = TADP in iss.research.title
-        more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g
+        more_forbidden = (
+            "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g and "t, ad, p" in g
+        )
 
         if forbidden_edit_dir(iss.napravleniye_id) or (more_forbidden and not tadp):
             response["message"] = "Редактирование запрещено"
@@ -1598,7 +1600,8 @@ def directions_paraclinic_result(request):
                             monitoring_result.pk = None
                     else:
                         monitoring_result: MonitoringResult = MonitoringResult.objects.filter(issledovaniye=iss, research=iss.research, napravleniye=iss.napravleniye, field_id=field["pk"])[
-                            0]
+                            0
+                        ]
                         monitoring_result.value_text = ""
 
                     if field['field_type'] == 18 or field['field_type'] == 3:
@@ -1886,7 +1889,7 @@ def directions_paraclinic_confirm_reset(request):
     return JsonResponse(response)
 
 
-@group_required("Врач параклиники", "Врач консультаций")
+@group_required("Врач параклиники", "Врач консультаций", "Заполнение мониторингов")
 def directions_paraclinic_history(request):
     response = {"directions": []}
     request_data = json.loads(request.body)
