@@ -46,6 +46,7 @@
         :result_forms="result_forms"
         :specialities="specialities"
         :permanent_directories="permanent_directories"
+        :period_types="period_types"
       />
     </div>
     <div class="construct-content" v-else>
@@ -91,6 +92,7 @@ export default {
       result_forms: [],
       specialities: [],
       permanent_directories: {},
+      period_types: [],
     };
   },
   methods: {
@@ -104,6 +106,7 @@ export default {
           this.result_forms = data.result_forms;
           this.specialities = data.specialities;
           this.permanent_directories = data.permanent_directories;
+          this.period_types = data.period_types;
         })
         .finally(() => {
           this.$store.dispatch(actions.DEC_LOADING);

@@ -161,6 +161,19 @@
                 </button>
               </span>
             </div>
+            <div class="input-group" v-else>
+              <span class="input-group-addon nbr"> Период мониторинга </span>
+              <treeselect
+                class="treeselect-noborder treeselect-wide"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="period_types"
+                placeholder="Период не выбран"
+                v-model="type_period"
+                :append-to-body="true"
+                :clearable="true"
+              />
+            </div>
           </div>
         </div>
       </template>
@@ -515,6 +528,11 @@ export default {
       required: false,
       default: () => ({}),
     },
+    period_types: {
+      type: Object,
+      required: false,
+      default: () => [],
+    },
   },
   created() {
     this.load();
@@ -555,6 +573,7 @@ export default {
       direction_params_all: [],
       direction_current_params: -1,
       assigned_to_params: [],
+      type_period: null,
     };
   },
   watch: {
@@ -802,6 +821,7 @@ export default {
       this.result_current_form = '';
       this.speciality = -1;
       this.hospital_research_department_pk = -1;
+      this.type_period = null;
       if (this.pk >= 0) {
         this.$store.dispatch(actions.INC_LOADING);
         construct_point
@@ -826,6 +846,7 @@ export default {
             this.assigned_to_params = data.assigned_to_params;
             this.show_more_services = data.show_more_services;
             this.is_paraclinic = data.is_paraclinic;
+            this.type_period = data.type_period;
             if (this.groups.length === 0) {
               this.add_group();
             }
@@ -867,6 +888,7 @@ export default {
         'hospital_research_department_pk',
         'direction_current_params',
         'show_more_services',
+        'type_period',
       ];
       const moreData = {
         info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),

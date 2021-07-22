@@ -17,7 +17,9 @@ from directory.models import (
     ParaclinicInputField,
     ParaclinicTemplateField,
     HospitalService,
-    DispensaryPlan, Localization, ServiceLocation,
+    DispensaryPlan,
+    Localization,
+    ServiceLocation,
 )
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
@@ -177,12 +179,7 @@ def get_researches(request):
 
 def by_direction_params(request):
     data = {}
-    res = (
-        DResearches.objects
-        .filter(hide=False, is_direction_params=True, is_global_direction_params=True)
-        .order_by('title')
-        .values('pk', 'title', 'short_title')
-    )
+    res = DResearches.objects.filter(hide=False, is_direction_params=True, is_global_direction_params=True).order_by('title').values('pk', 'title', 'short_title')
     for r in res:
         data[r['pk']] = {"title": r['short_title'] or r['title'], "full_title": r['title'], "research_data": {}}
 
@@ -231,9 +228,10 @@ def localization_save(request):
 def researches_by_department(request):
     direction_form = DResearches.DIRECTION_FORMS
     result_form = DResearches.RESULT_FORMS
+    period_types = [{'id': x[0], 'label': x[1]} for x in DResearches.PERIOD_TYPES]
     spec_data = [{"pk": -1, "title": "Не выбрано"}, *list(users.Speciality.objects.all().values('pk', 'title').order_by("title"))]
 
-    response = {"researches": [], "direction_forms": direction_form, "result_forms": result_form, "specialities": spec_data, "permanent_directories": NSI}
+    response = {"researches": [], "direction_forms": direction_form, "result_forms": result_form, "specialities": spec_data, "permanent_directories": NSI, "period_types": period_types}
     request_data = json.loads(request.body)
     department_pk = int(request_data["department"])
     if -500 >= department_pk > -600:
@@ -325,6 +323,7 @@ def researches_update(request):
         speciality = Speciality.objects.filter(pk=spec_pk).first()
         direction_current_form = request_data.get("direction_current_form", 0)
         result_current_form = request_data.get("result_current_form", 0)
+        type_period = request_data.get("type_period")
         direction_current_params = request_data.get("direction_current_params", -1)
         researche_direction_current_params = None
         if int(direction_current_params) > -1:
@@ -380,6 +379,7 @@ def researches_update(request):
                     internal_code=internal_code,
                     direction_form=direction_current_form,
                     result_form=result_current_form,
+                    type_period=type_period,
                     speciality=speciality,
                     bac_conclusion_templates=conclusion_templates,
                     bac_culture_comments_templates=culture_comments_templates,
@@ -417,6 +417,7 @@ def researches_update(request):
                 res.speciality = speciality
                 res.direction_form = direction_current_form
                 res.result_form = result_current_form
+                res.type_period = type_period
                 res.bac_conclusion_templates = conclusion_templates
                 res.bac_culture_comments_templates = culture_comments_templates
                 res.direction_params = researche_direction_current_params
@@ -533,6 +534,7 @@ def researches_details(request):
         response["direction_current_params"] = res.direction_params_id or -1
         response["is_global_direction_params"] = res.is_global_direction_params
         response["is_paraclinic"] = res.is_paraclinic
+        response["type_period"] = res.type_period
         response["assigned_to_params"] = []
         if res.is_direction_params:
             response["assigned_to_params"] = [f'{x.pk} – {x.get_full_short_title()}' for x in DResearches.objects.filter(direction_params=res)]
