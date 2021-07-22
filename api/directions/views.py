@@ -1456,9 +1456,7 @@ def directions_paraclinic_result(request):
         iss = Issledovaniya.objects.get(pk=pk)
         g = [str(x) for x in request.user.groups.all()]
         tadp = TADP in iss.research.title
-        more_forbidden = (
-            "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g and "t, ad, p" in g
-        )
+        more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g and "t, ad, p" in g
 
         if forbidden_edit_dir(iss.napravleniye_id) or (more_forbidden and not tadp):
             response["message"] = "Редактирование запрещено"
