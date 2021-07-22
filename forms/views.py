@@ -120,8 +120,6 @@ def covid_result(request):
     data_return = []
     count = 0
     for i in result:
-        if empty_data(i):
-            continue
         result_value = i.value_result
         if result_value == 'отрицательно':
             result_value = 0
@@ -150,10 +148,10 @@ def covid_result(request):
                 "order": {
                     "number": i.number_direction,
                     "depart": CENTRE_GIGIEN_EPIDEMIOLOGY,
-                    "laboratoryName": i.laboratoryname,
-                    "laboratoryOgrn": i.laboratoryogrn,
-                    "name": i.title_org_initiator,
-                    "ogrn": i.ogrn_org_initiator,
+                    "laboratoryName": i.laboratoryname or "",
+                    "laboratoryOgrn": i.laboratoryogrn or "",
+                    "name": i.title_org_initiator or "",
+                    "ogrn": i.ogrn_org_initiator or "",
                     "orderDate": i.get_tubes,
                     "serv": [
                         {
@@ -170,7 +168,7 @@ def covid_result(request):
                         "surname": i.pfam,
                         "name": i.pname,
                         "patronymic": i.twoname,
-                        "gender": sex,
+                        "gender": sex or "",
                         "birthday": i.birthday,
                         "phone": "",
                         "email": "",
@@ -199,7 +197,3 @@ def covid_result(request):
     response['Content-Disposition'] = f"attachment; filename=\"{date}-covid-{count}.json\""
     response.write(json.dumps(data_return, ensure_ascii=False))
     return response
-
-
-def empty_data(obj):
-    return any(not x for x in [obj.number_direction, obj.laboratoryname, obj.laboratoryogrn, obj.get_tubes, obj.title_org_initiator, obj.ogrn_org_initiator, obj.psex])
