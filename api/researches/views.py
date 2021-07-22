@@ -63,11 +63,11 @@ def get_researches(request):
         white_list_monitoring = [x for x in users.DoctorProfile.objects.values_list('white_list_monitoring', flat=True).filter(pk=doctorprofile.pk) if x is not None]
         restricted_monitoring = []
 
-        if len(white_list_monitoring) > 0 and white_list_monitoring[0] is not None:
+        if len(white_list_monitoring) > 0:
             restricted_monitoring = list(DResearches.objects.values_list('pk', flat=True).filter(hide=False, is_monitoring=True).exclude(pk__in=white_list_monitoring))
         else:
             black_list_monitoring = [x for x in users.DoctorProfile.objects.values_list('black_list_monitoring', flat=True).filter(pk=doctorprofile.pk) if x is not None]
-            if len(black_list_monitoring) > 0 and black_list_monitoring[0] is not None:
+            if len(black_list_monitoring) > 0:
                 restricted_monitoring = list(DResearches.objects.values_list('pk', flat=True).filter(hide=False, is_monitoring=True, pk__in=black_list_monitoring))
 
         restricted_to_direct.extend(restricted_monitoring)
