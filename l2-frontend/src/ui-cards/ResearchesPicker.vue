@@ -559,7 +559,7 @@ export default {
       window.$(this.$refs.fndsrc).focus();
     },
     checkType() {
-      if (this.type === '-1' && this.types.length > 0) {
+      if (this.types.length > 0 && !this.types.map(t => Number(t.pk)).includes(Number(this.type))) {
         this.type = JSON.parse(JSON.stringify(this.types[0].pk));
       }
       for (const row of this.departments_of_type) {
