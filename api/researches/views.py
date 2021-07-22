@@ -59,23 +59,24 @@ def get_researches(request):
     restricted_to_direct = cache.get(k)
     if not restricted_to_direct:
         restricted_to_direct = [x['pk'] for x in doctorprofile.restricted_to_direct.all().values('pk')]
+
+        white_list_monitoring = list(users.DoctorProfile.objects.values_list('white_list_monitoring', flat=True).filter(pk=doctorprofile.pk))
+        restricted_monitoring = []
+        if len(white_list_monitoring) > 0:
+            restricted_monitoring = list(DResearches.objects.values_list('pk', flat=True).filter(hide=False, is_monitoring=True).exclude(pk__in=white_list_monitoring))
+        else:
+            black_list_monitoring = list(users.DoctorProfile.objects.values_list('black_list_monitoring', flat=True).filter(pk=doctorprofile.pk))
+            if len(black_list_monitoring) > 0:
+                restricted_monitoring = list(DResearches.objects.values_list('pk', flat=True).filter(hide=False, is_monitoring=True, pk__in=black_list_monitoring))
+
+        restricted_to_direct.extend(restricted_monitoring)
+        restricted_to_direct = list(set(restricted_to_direct))
+
         cache.set(k, json.dumps(restricted_to_direct), 30)
     else:
         restricted_to_direct = json.loads(restricted_to_direct)
     mk = f'get_researches:result:{get_md5(";".join([str(x) for x in restricted_to_direct]))}'
     result = cache.get(mk)
-
-    white_list_monitoring = list(users.DoctorProfile.objects.values_list('white_list_monitoring', flat=True).filter(pk=doctorprofile.pk))
-    restricted_monitoring = []
-    if len(white_list_monitoring) > 0:
-        restricted_monitoring = list(DResearches.objects.values_list('pk', flat=True).filter(hide=False, is_monitoring=True).exclude(pk__in=white_list_monitoring))
-    else:
-        black_list_monitoring = list(users.DoctorProfile.objects.values_list('black_list_monitoring', flat=True).filter(pk=doctorprofile.pk))
-        if len(black_list_monitoring) > 0:
-            restricted_monitoring = list(DResearches.objects.values_list('pk', flat=True).filter(hide=False, is_monitoring=True, pk__in=black_list_monitoring))
-
-    restricted_to_direct.extend(restricted_monitoring)
-    restricted_to_direct = list(set(restricted_to_direct))
 
     if not result:
         res = (
