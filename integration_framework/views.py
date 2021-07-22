@@ -403,11 +403,14 @@ def patient_results_covid19(request):
     if p_enp:
         logger.exception(f'patient_results_covid19 by enp: {p_enp}')
         card = Card.objects.filter(base__internal_type=True, is_archive=False, carddocusage__document__number=p_enp, carddocusage__document__document_type__title='Полис ОМС').first()
+        logger.exception(f'patient_results_covid19 by enp [CARD]: {card}')
         if card:
             date_end = current_time()
             date_start = date_end + relativedelta(days=-days)
             date_end = date_end + relativedelta(days=1)
             results_covid = last_results_researches_by_time_ago(card.pk, COVID_RESEARCHES_PK, date_start, date_end)
+            logger.exception(f'patient_results_covid19 by enp params: {(card.pk, COVID_RESEARCHES_PK, date_start, date_end)}')
+            logger.exception(f'patient_results_covid19 by enp results count: {len(results_covid)}')
             for i in results_covid:
                 results.append({'date': i.confirm, 'result': i.value})
             if len(results) > 0:
