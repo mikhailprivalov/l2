@@ -406,6 +406,7 @@ def patient_results_covid19(request):
         if card:
             date_end = current_time()
             date_start = date_end + relativedelta(days=-days)
+            date_end = date_end + relativedelta(days=1)
             results_covid = last_results_researches_by_time_ago(card.pk, COVID_RESEARCHES_PK, date_start, date_end)
             for i in results_covid:
                 results.append({'date': i.confirm, 'result': i.value})
