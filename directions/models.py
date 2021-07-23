@@ -1480,6 +1480,19 @@ class DashboardGraphics(models.Model):
 
     )
 
+    title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие дашборда', db_index=True)
+    dashboard = models.ForeignKey(Dashboard, null=True, help_text='Дашборд', db_index=True, on_delete=models.CASCADE)
+    type = models.CharField(max_length=20, db_index=True, choices=GRAPHIC_TYPES, help_text="Тип графика")
+    order = models.SmallIntegerField(default=None, blank=True, null=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие графика', db_index=True)
+
+    class Meta:
+        verbose_name = 'Графики для дашборд'
+        verbose_name_plural = 'Графики для Дашборды'
+
+
+class GraphicFields(models.Model):
     REGION_HOSP = 'REGION_HOSP'
     CHILD_HOSP = 'CHILD_HOSP'
 
@@ -1488,21 +1501,12 @@ class DashboardGraphics(models.Model):
         (CHILD_HOSP, 'Детские'),
     )
 
-    title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие дашборда', db_index=True)
-    dashboard = models.ForeignKey(Dashboard, null=True, help_text='Дашборд', db_index=True, on_delete=models.CASCADE)
-    type = models.CharField(max_length=20, db_index=True, choices=GRAPHIC_TYPES, help_text="Тип графика")
-    type_hospital = models.CharField(default=None, blank=True, null=True, max_length=100, db_index=True, choices=HOSPITAL_TYPES, help_text="Тип группы")
-
-    class Meta:
-        verbose_name = 'Графики для дашборд'
-        verbose_name_plural = 'Графики для Дашборды'
-
-
-class GraphicFields(models.Model):
     graphic = models.ForeignKey(DashboardGraphics, null=True, help_text='График', db_index=True, on_delete=models.CASCADE)
     field = models.ForeignKey(directory.ParaclinicInputField, null=True, help_text='Поле', db_index=True, on_delete=models.CASCADE)
     title_for_graphic = models.CharField(max_length=255, default="", help_text='Переопределение название поля в графике', db_index=True)
+    type_hospital = models.CharField(default=None, blank=True, null=True, max_length=100, db_index=True, choices=HOSPITAL_TYPES, help_text="Тип группы")
+    order = models.SmallIntegerField(default=None, blank=True, null=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие поля', db_index=True)
 
     class Meta:
         verbose_name = 'Поле для графика'
@@ -1512,6 +1516,8 @@ class GraphicFields(models.Model):
 class MonitoringSumFieldByDay(models.Model):
     field = models.ForeignKey(directory.ParaclinicInputField, null=True, help_text='Поле', db_index=True, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default="", help_text='Заголовок данных', db_index=True)
+    order = models.SmallIntegerField(default=None, blank=True, null=True)
+
 
     class Meta:
         verbose_name = 'Поле сумма за день'
