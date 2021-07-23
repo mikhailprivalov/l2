@@ -17,7 +17,12 @@ from .models import (
     PersonContract,
     ExternalOrganization,
     DirectionsHistory,
-    MonitoringResult
+    MonitoringResult,
+    Dashboard,
+    DashboardGraphics,
+    GraphicFields,
+    MonitoringSumFieldByDay,
+    MonitoringSumFieldTotal,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -143,3 +148,8 @@ admin.site.register(KeyValue, ResKeyValue)
 admin.site.register(PersonContract, ResPersonContract)
 admin.site.register(DirectionsHistory, ResDirectionsHistory)
 admin.site.register(MonitoringResult, ResMonitoringResult)
+admin.site.register(Dashboard)
+admin.site.register(DashboardGraphics)
+admin.site.register(GraphicFields)
+admin.site.register(MonitoringSumFieldByDay)
+admin.site.register(MonitoringSumFieldTotal)

@@ -1461,6 +1461,9 @@ class Dashboard(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие дашборда', db_index=True)
 
+    def __str__(self):
+        return f"{self.title}"
+
     class Meta:
         verbose_name = 'Дашборд'
         verbose_name_plural = 'Дашборды'
@@ -1481,11 +1484,13 @@ class DashboardGraphics(models.Model):
     )
 
     title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие дашборда', db_index=True)
     dashboard = models.ForeignKey(Dashboard, null=True, help_text='Дашборд', db_index=True, on_delete=models.CASCADE)
     type = models.CharField(max_length=20, db_index=True, choices=GRAPHIC_TYPES, help_text="Тип графика")
     order = models.SmallIntegerField(default=None, blank=True, null=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие графика', db_index=True)
+
+    def __str__(self):
+        return f"{self.title} - {self.dashboard.title}"
 
     class Meta:
         verbose_name = 'Графики для дашборд'
@@ -1508,6 +1513,9 @@ class GraphicFields(models.Model):
     order = models.SmallIntegerField(default=None, blank=True, null=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие поля', db_index=True)
 
+    def __str__(self):
+        return f"{self.field.title} - {self.graphic.title} - {self.type_hospital}"
+
     class Meta:
         verbose_name = 'Поле для графика'
         verbose_name_plural = 'Поля для графика'
@@ -1518,6 +1526,8 @@ class MonitoringSumFieldByDay(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Заголовок данных', db_index=True)
     order = models.SmallIntegerField(default=None, blank=True, null=True)
 
+    def __str__(self):
+        return f"{self.field.title}"
 
     class Meta:
         verbose_name = 'Поле сумма за день'
@@ -1528,6 +1538,9 @@ class MonitoringSumFieldTotal(models.Model):
     field = models.ForeignKey(directory.ParaclinicInputField, null=True, help_text='Поле', db_index=True, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default="", help_text='Заголовок данных', db_index=True)
     date_start = models.DateField(blank=True, null=True, default=None, help_text="Дата начала отсчета")
+
+    def __str__(self):
+        return f"{self.field.title}"
 
     class Meta:
         verbose_name = 'Поле сумма за период от даты'

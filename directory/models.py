@@ -439,8 +439,8 @@ class ParaclinicInputGroups(models.Model):
         return f"{self.research.title} – {self.title}"
 
     class Meta:
-        verbose_name = 'Группы'
-        verbose_name_plural = 'Группы'
+        verbose_name = 'Группы описательного протокола'
+        verbose_name_plural = 'Группы описательного протокола'
 
 
 class ParaclinicInputField(models.Model):
@@ -520,8 +520,8 @@ class ParaclinicInputField(models.Model):
         return f"{self.group.research.title} - {self.title}"
 
     class Meta:
-        verbose_name = 'Поля'
-        verbose_name_plural = 'Поля'
+        verbose_name = 'Поля описательного протокола'
+        verbose_name_plural = 'Поля описательного протокола'
 
 
 class ParaclinicTemplateName(models.Model):
