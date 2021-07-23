@@ -1457,6 +1457,77 @@ class MonitoringStatus(models.Model):
     who_change_status = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль пользователя изменившего статус', on_delete=models.SET_NULL)
 
 
+class Dashboard(models.Model):
+    title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие дашборда', db_index=True)
+
+    class Meta:
+        verbose_name = 'Дашборд'
+        verbose_name_plural = 'Дашборды'
+
+
+class DashboardGraphics(models.Model):
+    COLUMN = 'COLUMN'
+    BAR = 'BAR'
+    PIE = 'PIE'
+    RADAR = 'RADAR'
+
+    GRAPHIC_TYPES = (
+        (COLUMN, 'Столбцы'),
+        (BAR, 'Полоса'),
+        (PIE, 'Пирог-куску'),
+        (RADAR, 'Радар'),
+
+    )
+
+    REGION_HOSP = 'REGION_HOSP'
+    CHILD_HOSP = 'CHILD_HOSP'
+
+    HOSPITAL_TYPES = (
+        (REGION_HOSP, 'По районам'),
+        (CHILD_HOSP, 'Детские'),
+    )
+
+    title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие дашборда', db_index=True)
+    dashboard = models.ForeignKey(Dashboard, null=True, help_text='Дашборд', db_index=True, on_delete=models.CASCADE)
+    type = models.CharField(max_length=20, db_index=True, choices=GRAPHIC_TYPES, help_text="Тип графика")
+    type_hospital = models.CharField(default=None, blank=True, null=True, max_length=100, db_index=True, choices=HOSPITAL_TYPES, help_text="Тип группы")
+
+    class Meta:
+        verbose_name = 'Графики для дашборд'
+        verbose_name_plural = 'Графики для Дашборды'
+
+
+class GraphicFields(models.Model):
+    graphic = models.ForeignKey(DashboardGraphics, null=True, help_text='График', db_index=True, on_delete=models.CASCADE)
+    field = models.ForeignKey(directory.ParaclinicInputField, null=True, help_text='Поле', db_index=True, on_delete=models.CASCADE)
+    title_for_graphic = models.CharField(max_length=255, default="", help_text='Переопределение название поля в графике', db_index=True)
+
+    class Meta:
+        verbose_name = 'Поле для графика'
+        verbose_name_plural = 'Поля для графика'
+
+
+class MonitoringSumFieldByDay(models.Model):
+    field = models.ForeignKey(directory.ParaclinicInputField, null=True, help_text='Поле', db_index=True, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default="", help_text='Заголовок данных', db_index=True)
+
+    class Meta:
+        verbose_name = 'Поле сумма за день'
+        verbose_name_plural = 'Поля сумм за день'
+
+
+class MonitoringSumFieldTotal(models.Model):
+    field = models.ForeignKey(directory.ParaclinicInputField, null=True, help_text='Поле', db_index=True, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default="", help_text='Заголовок данных', db_index=True)
+    date_start = models.DateField(blank=True, null=True, default=None, help_text="Дата начала отсчета")
+
+    class Meta:
+        verbose_name = 'Поле сумма за период от даты'
+        verbose_name_plural = 'Поля сумм за период от даты'
+
+
 class MethodsOfTaking(models.Model):
     drug_prescription = models.CharField(max_length=128, db_index=True)
     method_of_taking = models.CharField(max_length=128, db_index=True)
