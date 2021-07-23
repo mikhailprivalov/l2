@@ -19,8 +19,8 @@ from .models import (
     DirectionsHistory,
     MonitoringResult,
     Dashboard,
-    DashboardGraphics,
-    GraphicFields,
+    DashboardCharts,
+    ChartFields,
     MonitoringSumFieldByDay,
     MonitoringSumFieldTotal,
 )
@@ -149,7 +149,7 @@ admin.site.register(PersonContract, ResPersonContract)
 admin.site.register(DirectionsHistory, ResDirectionsHistory)
 admin.site.register(MonitoringResult, ResMonitoringResult)
 admin.site.register(Dashboard)
-admin.site.register(DashboardGraphics)
-admin.site.register(GraphicFields)
+admin.site.register(DashboardCharts)
+admin.site.register(ChartFields)
 admin.site.register(MonitoringSumFieldByDay)
 admin.site.register(MonitoringSumFieldTotal)

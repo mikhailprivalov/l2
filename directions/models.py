@@ -1469,7 +1469,7 @@ class Dashboard(models.Model):
         verbose_name_plural = 'Дашборды'
 
 
-class DashboardGraphics(models.Model):
+class DashboardCharts(models.Model):
     COLUMN = 'COLUMN'
     BAR = 'BAR'
     PIE = 'PIE'
@@ -1497,7 +1497,7 @@ class DashboardGraphics(models.Model):
         verbose_name_plural = 'Графики для Дашборды'
 
 
-class GraphicFields(models.Model):
+class ChartFields(models.Model):
     REGION_HOSP = 'REGION_HOSP'
     CHILD_HOSP = 'CHILD_HOSP'
 
@@ -1506,7 +1506,7 @@ class GraphicFields(models.Model):
         (CHILD_HOSP, 'Детские'),
     )
 
-    graphic = models.ForeignKey(DashboardGraphics, null=True, help_text='График', db_index=True, on_delete=models.CASCADE)
+    Charts = models.ForeignKey(DashboardCharts, null=True, help_text='График', db_index=True, on_delete=models.CASCADE)
     field = models.ForeignKey(directory.ParaclinicInputField, null=True, help_text='Поле', db_index=True, on_delete=models.CASCADE)
     title_for_graphic = models.CharField(max_length=255, default="", help_text='Переопределение название поля в графике', db_index=True)
     type_hospital = models.CharField(default=None, blank=True, null=True, max_length=100, db_index=True, choices=HOSPITAL_TYPES, help_text="Тип группы")
@@ -1514,7 +1514,7 @@ class GraphicFields(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие поля', db_index=True)
 
     def __str__(self):
-        return f"{self.field.title} - {self.graphic.title} - {self.type_hospital}"
+        return f"{self.field.title} - {self.Charts.title} - {self.type_hospital}"
 
     class Meta:
         verbose_name = 'Поле для графика'
