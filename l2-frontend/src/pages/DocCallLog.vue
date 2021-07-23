@@ -5,8 +5,7 @@
         <textarea class="form-control" placeholder="Запись в журнале" v-model="text"></textarea>
       </div>
       <div class="right">
-        <button class="btn btn-blue-nb btn-block" type="button" @click="createLog"
-                :disabled="!text && status === -1 && !file">
+        <button class="btn btn-blue-nb btn-block" type="button" @click="createLog" :disabled="!text && status === -1 && !file">
           Сохранить
         </button>
         <select v-model="status" class="form-control" style="margin-top: 5px">
@@ -19,20 +18,24 @@
       </div>
     </div>
     <div class="log-file">
-      <input type="file" ref="file" style="display: none"
-             @change="fileChange($event.target.files)"/>
+      <input type="file" ref="file" style="display: none" @change="fileChange($event.target.files)" />
       <template v-if="!file">
-        <a href="#" @click.prevent="$refs.file.click()" class="a-under-reversed">
-          <i class="fa fa-folder"></i> добавить файл
-        </a>
+        <a href="#" @click.prevent="$refs.file.click()" class="a-under-reversed"> <i class="fa fa-folder"></i> добавить файл </a>
         (не более 5 МБ, не более 10 штук на одну заявку)
       </template>
       <template v-else>
-        <a href="#" @click.prevent="file = ''; fileName = ''" class="a-under-reversed" title="Удалить файл" v-tippy>
+        <a
+          href="#"
+          @click.prevent="
+            file = '';
+            fileName = '';
+          "
+          class="a-under-reversed"
+          title="Удалить файл"
+          v-tippy
+        >
           <i class="fa fa-file"></i>
-          <span class="black">
-            {{ fileName }} ({{ fileSize }} МБ)
-          </span>
+          <span class="black"> {{ fileName }} ({{ fileSize }} МБ) </span>
           &nbsp;&nbsp;<i class="fa fa-times"></i>
         </a>
       </template>
@@ -66,6 +69,7 @@
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import axios from 'axios';
+import * as Cookies from 'es-cookie';
 
 export default {
   name: 'DocCallLog',
@@ -127,13 +131,12 @@ export default {
         data: {
           ok, message, status, executor, executor_fio, inLog,
         },
-      } = await axios.post('/api/doctor-call/add-log',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+      } = await axios.post('/api/doctor-call/add-log', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'X-CSRFToken': Cookies.get('csrftoken'),
+        },
+      });
 
       if (!ok) {
         this.$root.$emit('msg', 'error', message);
@@ -169,7 +172,8 @@ export default {
 .log-form {
   display: flex;
 
-  .left, .right {
+  .left,
+  .right {
     display: inline-block;
     height: 73px;
   }

@@ -4,23 +4,41 @@
       <a href="#" @click.prevent="doOpen">
         Загрузка файла
       </a>
-      <modal v-if="open" @close="open = false" show-footer="true" white-bg="true"
-             max-width="710px" width="100%" marginLeftRight="auto">
+      <modal
+        v-if="open"
+        @close="open = false"
+        show-footer="true"
+        white-bg="true"
+        max-width="710px"
+        width="100%"
+        marginLeftRight="auto"
+      >
         <span slot="header">Загрузка файла</span>
         <div slot="body">
           <div class="form-group">
             <label for="fileInput">PDF файл</label>
-            <input type="file" ref="file" class="form-control-file" id="fileInput" :readonly="loading"
-                   @change="handleFileUpload()">
+            <input
+              type="file"
+              ref="file"
+              class="form-control-file"
+              id="fileInput"
+              :readonly="loading"
+              @change="handleFileUpload()"
+            />
           </div>
-          <button style="width: 200px;"
-                  type="button" class="btn btn-primary" @click="submit()" :disabled="!Boolean(file) || loading">
+          <button
+            style="width: 200px;"
+            type="button"
+            class="btn btn-primary"
+            @click="submit()"
+            :disabled="!Boolean(file) || loading"
+          >
             <i class="fa fa-spinner" v-if="loading"></i>
             <span v-else>Загрузить</span>
           </button>
           <h5 v-if="results.length > 0">Сохранённые результаты</h5>
           <ul>
-            <li v-for="r in results" :key="r.pk">{{r.pk}} – {{r.result}}</li>
+            <li v-for="r in results" :key="r.pk">{{ r.pk }} – {{ r.result }}</li>
           </ul>
         </div>
         <div slot="footer">
@@ -40,6 +58,7 @@
 <script lang="ts">
 import Modal from '@/ui-cards/Modal.vue';
 import axios from 'axios';
+import * as Cookies from 'es-cookie';
 
 export default {
   components: { Modal },
@@ -68,13 +87,12 @@ export default {
         this.results = [];
         const formData = new FormData();
         formData.append('file', this.file);
-        const { data } = await axios.post('/api/parse-file/loadfile',
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
+        const { data } = await axios.post('/api/parse-file/loadfile', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'X-CSRFToken': Cookies.get('csrftoken'),
+          },
+        });
         this.results = data.results;
         this.$refs.file.value = '';
         this.file = '';
@@ -94,5 +112,4 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>
