@@ -201,3 +201,21 @@ def filexlsx(request):
         response['Content-Disposition'] = str.translate(f"attachment; filename=\"{monitoring.title}, {date}.xlsx\"", tr)
         wb.save(response)
         return response
+
+
+@login_required
+@group_required("Просмотр мониторингов")
+def dashboard(request):
+    # result = [{"titleChart": "",
+    #          "type": "",
+    #          "data": [{"title": "", "fields": [{"title": "", "value": ""}]}]}]
+
+    request_data = json.loads(request.body)
+    dashboard_pk = request_data["dashboard"]
+    date = request_data["date"]
+
+
+
+
+
+    return JsonResponse({'rows': result})

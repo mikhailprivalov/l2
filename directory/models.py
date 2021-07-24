@@ -517,7 +517,7 @@ class ParaclinicInputField(models.Model):
         return title
 
     def __str__(self):
-        return f"{self.group.research.title} - {self.title}"
+        return f"{self.group.research.title} - {self.group.title} - {self.title}"
 
     class Meta:
         verbose_name = 'Поля описательного протокола'

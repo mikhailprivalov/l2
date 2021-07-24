@@ -6,4 +6,5 @@ urlpatterns = [
     path('search', views.search),
     path('history', views.history),
     path('filexlsx', views.filexlsx),
+    path('dashboard', views.dashboard),
 ]
