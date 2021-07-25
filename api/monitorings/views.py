@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from api.monitorings import structure_sheet
 from laboratory.decorators import group_required
 from django.http import JsonResponse, HttpResponse
-from api.monitorings.sql_func import monitoring_sql_by_all_hospital
+from api.monitorings.sql_func import monitoring_sql_by_all_hospital, dashboard_sql_by_day
 from directory.models import Researches
 from utils.data_verification import data_parse
 from laboratory.utils import strdatetime
@@ -205,17 +205,54 @@ def filexlsx(request):
 
 @login_required
 @group_required("Просмотр мониторингов")
-def dashboard(request):
+def get_dashboard(request):
     # result = [{"titleChart": "",
     #          "type": "",
     #          "data": [{"title": "", "fields": [{"title": "", "value": ""}]}]}]
 
     request_data = json.loads(request.body)
     dashboard_pk = request_data["dashboard"]
+
     date = request_data["date"]
+    prepare_date = date.split("-")
+    param_day = prepare_date[2]
+    param_month = prepare_date[1]
+    param_year = prepare_date[0]
 
+    result_dashboard = dashboard_sql_by_day(dashboard_pk, param_day, param_month, param_year)
+    result = []
+    previous_chart_title = None
+    previous_hosp_short_title = None
+    previous_field_id = None
+    tmp_chart = {"titleChart": "", "type": "", "data": [{"title": "", "fields": []}]}
+    step = 0
+    current_index = 0
+    for i in result_dashboard:
+        if i.chart_title != previous_chart_title and step == 0:
+            tmp_chart["titleChart"] = i.chart_title
+            tmp_chart["type"] = i.chart_type
+            tmp_chart["data"] = [{"title": i.hosp_short_title, "fields": [{"title": i.title_for_field or i.field_title, "value": i.value_aggregate}]}]
+            previous_chart_title = i.chart_title
+            previous_hosp_short_title = i.hosp_short_title
+            previous_field_id = i.field_id
+        elif i.chart_title != previous_chart_title:
+            result.append(tmp_chart)
+            tmp_chart["titleChart"] = i.chart_title
+            tmp_chart["type"] = i.chart_type
+            tmp_chart["data"] = [{"title": i.hosp_short_title, "fields": [{"title": i.title_for_field or i.field_title, "value": i.value_aggregate}]}]
+            previous_chart_title = i.chart_title
+            previous_hosp_short_title = i.hosp_short_title
+            previous_field_id = i.field_id
+            current_index = 0
+        elif i.field_id != previous_field_id and i.hosp_short_title == previous_hosp_short_title:
+            tmp_chart["data"][current_index]["fields"].append({"title": i.title_for_field or i.field_title, "value": i.value_aggregate})
+            previous_field_id = i.field_id
+        elif i.hosp_short_title != previous_hosp_short_title:
+            tmp_chart["data"].append({"title": i.hosp_short_title, "fields": [{"title": i.title_for_field or i.field_title, "value": i.value_aggregate}]})
+            current_index += 1
+            previous_hosp_short_title = i.hosp_short_title
+            previous_field_id = i.field_id
+        step += 1
 
-
-
-
+    result.append(tmp_chart)
     return JsonResponse({'rows': result})

@@ -20,7 +20,7 @@ from .models import (
     MonitoringResult,
     Dashboard,
     DashboardCharts,
-    ChartFields,
+    DashboardChartFields,
     MonitoringSumFieldByDay,
     MonitoringSumFieldTotal,
 )
@@ -150,6 +150,6 @@ admin.site.register(DirectionsHistory, ResDirectionsHistory)
 admin.site.register(MonitoringResult, ResMonitoringResult)
 admin.site.register(Dashboard)
 admin.site.register(DashboardCharts)
-admin.site.register(ChartFields)
+admin.site.register(DashboardChartFields)
 admin.site.register(MonitoringSumFieldByDay)
 admin.site.register(MonitoringSumFieldTotal)

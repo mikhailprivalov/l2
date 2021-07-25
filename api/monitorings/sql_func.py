@@ -114,3 +114,79 @@ def monitoring_sql_by_all_hospital(
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def dashboard_sql_by_day(
+    dashboard=None,
+    period_param_day=None,
+    period_param_month=None,
+    period_param_year=None,
+):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            DISTINCT ON (
+                directions_dashboardcharts.id,
+                directions_monitoringresult.hospital_id,
+                directions_dashboardchartfields.order,
+                directions_dashboardchartfields.field_id,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year
+            )
+            
+                directions_dashboardcharts.id as chart_id,
+                directions_dashboardcharts.title as chart_title,
+                directions_dashboardcharts.type as chart_type,
+                directions_monitoringresult.hospital_id,
+                hospitals_hospitals.short_title as hosp_short_title,
+                hospitals_hospitals.title as hosp_title,
+                directions_dashboardchartfields.order as order_field, 
+                directions_dashboardchartfields.field_id,
+                title_for_field,
+                directory_paraclinicinputfield.title as field_title,
+                directions_monitoringresult.value_aggregate,
+                directions_monitoringresult.period_param_hour,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year
+            
+            FROM public.directions_dashboardchartfields
+            LEFT JOIN directions_dashboardcharts
+            ON directions_dashboardcharts.id = directions_dashboardchartfields.charts_id
+            
+            LEFT JOIN directory_paraclinicinputfield
+            ON directory_paraclinicinputfield.id = directions_dashboardchartfields.field_id
+            
+            LEFT JOIN directions_monitoringresult
+            ON directions_monitoringresult.field_id = directions_dashboardchartfields.field_id
+            
+            LEFT JOIN hospitals_hospitals
+            ON hospitals_hospitals.id = directions_monitoringresult.hospital_id
+
+            WHERE 
+                charts_id in (SELECT id FROM public.directions_dashboardcharts WHERE dashboard_id = %(dashboard_id)s) AND
+                directions_monitoringresult.period_param_day = %(period_param_day)s AND
+                directions_monitoringresult.period_param_month = %(period_param_month)s AND
+                directions_monitoringresult.period_param_year = %(period_param_year)s
+            ORDER BY 
+                directions_dashboardcharts.id, 
+                directions_monitoringresult.hospital_id,
+                directions_dashboardchartfields.order,
+                directions_dashboardchartfields.field_id,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year,
+                directions_monitoringresult.period_param_hour DESC                
+            """,
+            params={
+                'tz': TIME_ZONE,
+                'dashboard_id': dashboard,
+                'period_param_day': period_param_day,
+                'period_param_month': period_param_month,
+                'period_param_year': period_param_year,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

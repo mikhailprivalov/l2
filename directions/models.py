@@ -1493,7 +1493,7 @@ class DashboardCharts(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
     dashboard = models.ForeignKey(Dashboard, null=True, help_text='Дашборд', db_index=True, on_delete=models.CASCADE)
     type = models.CharField(max_length=20, db_index=True, choices=GRAPHIC_TYPES, help_text="Тип графика")
-    order = models.SmallIntegerField(default=None, blank=True, null=True)
+    order = models.SmallIntegerField(default=-99, blank=True, null=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие графика', db_index=True)
     type_hospital = models.CharField(default=None, blank=True, null=True, max_length=100, db_index=True, choices=HOSPITAL_TYPES, help_text="Тип группы")
     sum_by_field = models.BooleanField(default=False, blank=True, help_text='Суммировать по полю')
@@ -1506,11 +1506,11 @@ class DashboardCharts(models.Model):
         verbose_name_plural = 'Дашборд-Графики'
 
 
-class ChartFields(models.Model):
+class DashboardChartFields(models.Model):
     charts = models.ForeignKey(DashboardCharts, null=True, help_text='График', db_index=True, on_delete=models.CASCADE)
     field = models.ForeignKey(directory.ParaclinicInputField, null=True, help_text='Поле', db_index=True, on_delete=models.CASCADE)
     title_for_field = models.CharField(max_length=255, default="", help_text='Переопределение название поля в графике', db_index=True)
-    order = models.SmallIntegerField(default=None, blank=True, null=True)
+    order = models.SmallIntegerField(default=-99, blank=True, null=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие поля', db_index=True)
 
     def __str__(self):
