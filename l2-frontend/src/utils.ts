@@ -87,7 +87,7 @@ export const PrepareFormula = (
     for (const n of necessary) {
       let v = null;
       const vid = n.replace(/[{}]/g, '');
-      const vOrig = ((fields[vid] || {}).value || '').trim();
+      const vOrig = String((fields[vid] || {}).value || '').trim();
       if (returnLinks) {
         if (!links.find((l) => l.id === vid)) {
           links.push(new Link(LINK_FIELD, vid));
