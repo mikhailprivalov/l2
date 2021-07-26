@@ -123,52 +123,6 @@ def search(request):
     empty_research_hosp = [Hospitals.objects.get(pk=i).short_title for i in requirement_research_hosp]
     result = {"titles": titles_data, "rows": rows, "empty_hospital": empty_research_hosp, "total": total}
 
-
-    result_dashboard = dashboard_sql_by_day(1, 22, 7, 2021)
-    result1 = []
-    previous_chart_title = None
-    previous_hosp_short_title = None
-    previous_field_id = None
-    tmp_chart = {"titleChart": "", "pk": "", "type": "", "data": [{"title": "", "fields": []}]}
-    step = 0
-    current_index = 0
-    # result = [{ pk: 1, title: 'График 1', type: 'BAR',
-    #     fields: ['Поле 1', 'Поле 2'],
-    #     data: [{title: 'Больница 1', values: [10, 20],}, {title: 'Больница 2', values: [9, 43],}, {title: 'Больница 3', values: [22, 1],},],
-    #     },
-    # ]
-
-    for i in result_dashboard:
-        if i.chart_title != previous_chart_title and step == 0:
-            tmp_chart["titleChart"] = i.chart_title
-            tmp_chart["pk"] = i.chart_id
-            tmp_chart["type"] = i.chart_type
-            tmp_chart["data"] = [{"title": i.hosp_short_title, "fields": [i.title_for_field], "values": [i.value_aggregate]}]
-            previous_chart_title = i.chart_title
-            previous_hosp_short_title = i.hosp_short_title
-        elif i.chart_title != previous_chart_title:
-            tmp_chart["fields"] = tmp_chart["data"][current_index]["fields"]
-            result1.append(tmp_chart)
-            tmp_chart["titleChart"] = i.chart_title
-            tmp_chart["pk"] = i.chart_id
-            tmp_chart["type"] = i.chart_type
-            tmp_chart["data"] = [{"title": i.hosp_short_title, "fields": [i.title_for_field], "values": [i.value_aggregate]}]
-            previous_chart_title = i.chart_title
-            previous_hosp_short_title = i.hosp_short_title
-            current_index = 0
-        elif i.hosp_short_title != previous_hosp_short_title:
-            tmp_chart["data"].append({"title": i.hosp_short_title, "fields": [i.title_for_field], "values": [i.value_aggregate]})
-            current_index += 1
-            previous_hosp_short_title = i.hosp_short_title
-        else:
-            if i.title_for_field not in tmp_chart["data"][current_index]:
-                tmp_chart["data"][current_index]["fields"].append(i.title_for_field)
-            tmp_chart["data"][current_index]["values"].append(i.value_aggregate)
-        step += 1
-
-    tmp_chart["fields"] = tmp_chart["data"][current_index]["fields"]
-    result1.append(tmp_chart)
-
     return JsonResponse({'rows': result})
 
 
