@@ -149,7 +149,7 @@ def covid_result(request):
         data_return.append(
             {
                 "order": {
-                    "number": i.number_direction,
+                    "number": str(i.number_direction),
                     "depart": CENTRE_GIGIEN_EPIDEMIOLOGY,
                     "laboratoryName": i.laboratoryname or "",
                     "laboratoryOgrn": i.laboratoryogrn or "",
