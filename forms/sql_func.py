@@ -72,6 +72,7 @@ def get_covid_to_json(researches, d_s, d_e):
         cursor.execute(
             """
                 SELECT 
+                DISTINCT ON (directions_issledovaniya.napravleniye_id)
                     directions_issledovaniya.napravleniye_id as number_direction,
                     hospitals_hospitals.id as hosp_id,
                     hospitals_hospitals.title as laboratoryName,
