@@ -14,7 +14,7 @@ from api.monitorings.sql_func import monitoring_sql_by_all_hospital, dashboard_s
 from directory.models import Researches
 from utils.data_verification import data_parse
 from laboratory.utils import strdatetime
-from directions.models import DirectionParamsResult, Issledovaniya, Napravleniya
+from directions.models import DirectionParamsResult, Issledovaniya, Napravleniya, Dashboard
 from hospitals.models import Hospitals
 
 
@@ -256,3 +256,13 @@ def get_dashboard(request):
 
     result.append(tmp_chart)
     return JsonResponse({'rows': result})
+
+@login_required
+@group_required("Просмотр мониторингов")
+def dashboard_list(request):
+    result = []
+    dasboards = Dashboard.objects.filter(hide=False)
+    for dasboard in dasboards:
+        result.append({"title": dasboard.title, "pk": dasboard.pk})
+
+    return JsonResponse({"result": result})
