@@ -13,8 +13,7 @@ import datetime
 # from pdf2docx import Page
 # from appconf.manager import SettingManager
 from forms.sql_func import get_covid_to_json
-from laboratory.local_settings import EXCLUDE_HOSP_SEND_EPGU
-from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION
+from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION, EXCLUDE_HOSP_SEND_EPGU
 
 
 def pdf(request):
