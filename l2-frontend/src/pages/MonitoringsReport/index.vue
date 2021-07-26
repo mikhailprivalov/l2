@@ -365,8 +365,6 @@ export default {
       }
       if (this.dashboards.length > 0 && this.dashboardPk === null) {
         this.dashboardPk = this.dashboards[0].id;
-      }
-      if (this.dashboardPk !== null) {
         await this.loadDashboard();
       }
     },
