@@ -73,6 +73,7 @@ def get_covid_to_json(researches, d_s, d_e):
             """
                 SELECT 
                     directions_issledovaniya.napravleniye_id as number_direction,
+                    hospitals_hospitals.id as hosp_id,
                     hospitals_hospitals.title as laboratoryName,
                     hospitals_hospitals.ogrn laboratoryOgrn,
                     directions_napravleniya.title_org_initiator,

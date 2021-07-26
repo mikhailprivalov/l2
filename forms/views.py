@@ -13,6 +13,7 @@ import datetime
 # from pdf2docx import Page
 # from appconf.manager import SettingManager
 from forms.sql_func import get_covid_to_json
+from laboratory.local_settings import EXCLUDE_HOSP_SEND_EPGU
 from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION
 
 
@@ -120,6 +121,8 @@ def covid_result(request):
     data_return = []
     count = 0
     for i in result:
+        if i.hosp_id in EXCLUDE_HOSP_SEND_EPGU:
+            continue
         result_value = i.value_result
         if result_value == 'отрицательно':
             result_value = 0
