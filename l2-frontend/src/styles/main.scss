@@ -1834,6 +1834,16 @@ input[type=date].form-control {
   }
 }
 
+.treeselect-32px .vue-treeselect {
+  &__control {
+    height: 32px !important;
+  }
+
+  &__placeholder, &__single-value {
+    line-height: 32px !important;
+  }
+}
+
 .tube-pk {
   font-weight: 500;
   font-size: 120%;

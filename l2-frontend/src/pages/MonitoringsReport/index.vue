@@ -6,21 +6,23 @@
     <div v-if="mode === MODE_DASHBOARD" class="dashboard">
       <div class="filters">
         <div class="row">
-          <div class="col-xs-6">
-            <div class="input-group">
-              <treeselect
-                :multiple="false"
-                :disable-branch-nodes="true"
-                :options="dashboards"
-                placeholder="Дэшборд не выбран"
-                v-model="dashboardPk"
-                :append-to-body="true"
-              />
-            </div>
+          <div class="col-xs-6" style="padding-right: 5px">
+            <treeselect
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="dashboards"
+              placeholder="Дэшборд не выбран"
+              v-model="dashboardPk"
+              :append-to-body="true"
+              class="treeselect-wide treeselect-32px"
+            />
           </div>
-          <div class="col-xs-6">
+          <div class="col-xs-6" style="padding-left: 5px">
             <div class="input-group" style="max-width: 300px">
-              <span class="input-group-addon">Дата</span>
+              <span class="input-group-addon">
+                <span class="hidden-xs hidden-sm">Дата</span>
+                <i class="fa fa-calendar visible-xs visible-sm"></i>
+              </span>
               <input class="form-control" type="date" v-model="dateDashboard" />
               <span class="input-group-btn">
                 <button class="btn btn-blue-nb" @click="loadDashboard">
@@ -51,8 +53,7 @@
     <div v-else-if="mode === MODE_SEARCH" :style="`--font-size-mon: ${fontSize}px;`" class="report-root">
       <div class="filters">
         <div class="row">
-          <div class="hidden-xs hidden-sm col-md-1"></div>
-          <div class="col-xs-3">
+          <div class="col-xs-12 col-md-4" style="margin-bottom: 5px;">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">
                 <span class="hidden-xs hidden-sm">Мониторинг</span>
@@ -65,22 +66,26 @@
                 placeholder="Мониторинг не выбран"
                 v-model="research"
                 :append-to-body="true"
+                class="treeselect-wide"
               />
             </div>
           </div>
-          <div class="col-xs-6 col-md-5">
+          <div class="col-xs-9 col-md-6" style="padding-right: 5px">
             <div class="input-group">
-              <span class="input-group-addon">Дата<span class="hidden-xs hidden-sm"> или начало периода</span></span>
-              <input class="form-control" type="date" v-model="date" />
+              <span class="input-group-addon">
+                <span class="hidden-xs">Дата<span class="hidden-sm"> или начало периода</span></span>
+                <i class="fa fa-calendar visible-xs"></i>
+              </span>
+              <input class="form-control" type="date" v-model="date" style="min-width: 140px;width: 100%;" />
               <span class="input-group-addon">Час</span>
               <select class="form-control" v-model="hour" style="width: 80px">
                 <option v-for="h in HOURS" :key="h.id" :value="h.id">{{ h.label }}</option>
               </select>
             </div>
           </div>
-          <div class="col-xs-3">
+          <div class="col-xs-3 col-md-2" style="padding-left: 5px">
             <button class="btn btn-blue-nb" @click="loadSearch" :disabled="research === null" ref="loadButton">
-              Загрузить<span class="hidden-sm hidden-xs"> данные</span>
+              Загрузить
             </button>
 
             <button
@@ -524,9 +529,22 @@ export default {
 .filters {
   margin-bottom: 10px;
 
-  .row {
-    margin-left: 0;
-    margin-right: 0;
+  input,
+  select,
+  .btn,
+  .input-group-addon {
+    height: 32px;
+    line-height: 26px;
+    padding: 0 10px;
+  }
+  .btn,
+  .input-group-addon {
+    padding: 0 10px;
+    border: none !important;
+  }
+
+  .input-group-btn {
+    vertical-align: top;
   }
 }
 
