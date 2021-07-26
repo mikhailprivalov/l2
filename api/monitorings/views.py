@@ -268,6 +268,6 @@ def dashboard_list(request):
     result = []
     dasboards = Dashboard.objects.filter(hide=False)
     for dasboard in dasboards:
-        result.append({"title": dasboard.title, "pk": dasboard.pk})
+        result.append({"label": dasboard.title, "id": dasboard.pk})
 
-    return JsonResponse({"result": result})
+    return JsonResponse({"rows": result})

@@ -1,8 +1,8 @@
 {
   "name": "l2-frontend",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Frontend particles for L2 LIS",
+  "version": "2.0.0",
+  "license": "MIT",
+  "description": "Frontend particles for L2 MIS",
   "author": {
     "name": "Mikhail Privalov"
   },
@@ -98,7 +98,6 @@
   "browserslist": [
     "last 2 years"
   ],
-  "_id": "l2-frontend@1.0.0",
-  "license": "MIT",
+  "_id": "l2-frontend@2.0.0",
   "readme": "ERROR: No README data found!"
 }
