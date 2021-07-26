@@ -206,12 +206,6 @@ def filexlsx(request):
 @login_required
 @group_required("Просмотр мониторингов")
 def get_dashboard(request):
-    # result = [{ pk: 1, title: 'График 1', type: 'BAR',
-    #     fields: ['Поле 1', 'Поле 2'],
-    #     data: [{title: 'Больница 1', values: [10, 20],}, {title: 'Больница 2', values: [9, 43],}, {title: 'Больница 3', values: [22, 1],},],
-    #     },
-    # ]
-
     request_data = json.loads(request.body)
     dashboard_pk = request_data["dashboard"]
 
