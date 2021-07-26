@@ -1473,13 +1473,11 @@ class DashboardCharts(models.Model):
     COLUMN = 'COLUMN'
     BAR = 'BAR'
     PIE = 'PIE'
-    RADAR = 'RADAR'
 
     GRAPHIC_TYPES = (
         (COLUMN, 'Столбцы'),
         (BAR, 'Полоса'),
-        (PIE, 'Пирог-куску'),
-        (RADAR, 'Радар'),
+        (PIE, 'Пирог-куски'),
     )
 
     REGION_HOSP = 'REGION_HOSP'
