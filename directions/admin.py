@@ -17,7 +17,12 @@ from .models import (
     PersonContract,
     ExternalOrganization,
     DirectionsHistory,
-    MonitoringResult
+    MonitoringResult,
+    Dashboard,
+    DashboardCharts,
+    DashboardChartFields,
+    MonitoringSumFieldByDay,
+    MonitoringSumFieldTotal,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -129,6 +134,16 @@ class ResMonitoringResult(admin.ModelAdmin):
     )
 
 
+class ResDashboardChartFields(admin.ModelAdmin):
+    list_display = (
+        'charts',
+        'field',
+        'title_for_field',
+
+    )
+    search_fields = ('charts__title',)
+
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
 admin.site.register(FrequencyOfUseResearches)
@@ -143,3 +158,8 @@ admin.site.register(KeyValue, ResKeyValue)
 admin.site.register(PersonContract, ResPersonContract)
 admin.site.register(DirectionsHistory, ResDirectionsHistory)
 admin.site.register(MonitoringResult, ResMonitoringResult)
+admin.site.register(Dashboard)
+admin.site.register(DashboardCharts)
+admin.site.register(DashboardChartFields, ResDashboardChartFields)
+admin.site.register(MonitoringSumFieldByDay)
+admin.site.register(MonitoringSumFieldTotal)

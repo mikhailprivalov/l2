@@ -1457,6 +1457,94 @@ class MonitoringStatus(models.Model):
     who_change_status = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль пользователя изменившего статус', on_delete=models.SET_NULL)
 
 
+class Dashboard(models.Model):
+    title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие дашборда', db_index=True)
+
+    def __str__(self):
+        return f"{self.title}"
+
+    class Meta:
+        verbose_name = 'Дашборд'
+        verbose_name_plural = 'Дашборды'
+
+
+class DashboardCharts(models.Model):
+    COLUMN = 'COLUMN'
+    BAR = 'BAR'
+    PIE = 'PIE'
+
+    GRAPHIC_TYPES = (
+        (COLUMN, 'Столбцы'),
+        (BAR, 'Полоса'),
+        (PIE, 'Пирог-куски'),
+    )
+
+    REGION_HOSP = 'REGION_HOSP'
+    CHILD_HOSP = 'CHILD_HOSP'
+
+    HOSPITAL_TYPES = (
+        (REGION_HOSP, 'По районам'),
+        (CHILD_HOSP, 'Детские'),
+    )
+
+    title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
+    dashboard = models.ForeignKey(Dashboard, null=True, help_text='Дашборд', db_index=True, on_delete=models.CASCADE)
+    type = models.CharField(max_length=20, db_index=True, choices=GRAPHIC_TYPES, help_text="Тип графика")
+    order = models.SmallIntegerField(default=-99, blank=True, null=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие графика', db_index=True)
+    type_hospital = models.CharField(default=None, blank=True, null=True, max_length=100, db_index=True, choices=HOSPITAL_TYPES, help_text="Тип группы")
+    sum_by_field = models.BooleanField(default=False, blank=True, help_text='Суммировать по полю')
+
+    def __str__(self):
+        return f"{self.title} - Дашборд: {self.dashboard.title}"
+
+    class Meta:
+        verbose_name = 'Дашборд-Графики'
+        verbose_name_plural = 'Дашборд-Графики'
+
+
+class DashboardChartFields(models.Model):
+    charts = models.ForeignKey(DashboardCharts, null=True, help_text='График', db_index=True, on_delete=models.CASCADE)
+    field = models.ForeignKey(directory.ParaclinicInputField, null=True, help_text='Поле', db_index=True, on_delete=models.CASCADE)
+    title_for_field = models.CharField(max_length=255, default="", help_text='Переопределение название поля в графике', db_index=True)
+    order = models.SmallIntegerField(default=-99, blank=True, null=True)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие поля', db_index=True)
+
+    def __str__(self):
+        return f"{self.field.title} - {self.charts.title}"
+
+    class Meta:
+        verbose_name = 'Дашборд-Поле для графика'
+        verbose_name_plural = 'Дашборд-Поля для графика'
+
+
+class MonitoringSumFieldByDay(models.Model):
+    field = models.ForeignKey(directory.ParaclinicInputField, null=True, help_text='Поле', db_index=True, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default="", help_text='Заголовок данных', db_index=True)
+    order = models.SmallIntegerField(default=None, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.field.title}"
+
+    class Meta:
+        verbose_name = 'Поле сумма за день'
+        verbose_name_plural = 'Поля сумм за день'
+
+
+class MonitoringSumFieldTotal(models.Model):
+    field = models.ForeignKey(directory.ParaclinicInputField, null=True, help_text='Поле', db_index=True, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default="", help_text='Заголовок данных', db_index=True)
+    date_start = models.DateField(blank=True, null=True, default=None, help_text="Дата начала отсчета")
+
+    def __str__(self):
+        return f"{self.field.title}"
+
+    class Meta:
+        verbose_name = 'Поле сумма за период от даты'
+        verbose_name_plural = 'Поля сумм за период от даты'
+
+
 class MethodsOfTaking(models.Model):
     drug_prescription = models.CharField(max_length=128, db_index=True)
     method_of_taking = models.CharField(max_length=128, db_index=True)

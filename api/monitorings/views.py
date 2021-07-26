@@ -10,11 +10,11 @@ from django.contrib.auth.decorators import login_required
 from api.monitorings import structure_sheet
 from laboratory.decorators import group_required
 from django.http import JsonResponse, HttpResponse
-from api.monitorings.sql_func import monitoring_sql_by_all_hospital
+from api.monitorings.sql_func import monitoring_sql_by_all_hospital, dashboard_sql_by_day
 from directory.models import Researches
 from utils.data_verification import data_parse
 from laboratory.utils import strdatetime
-from directions.models import DirectionParamsResult, Issledovaniya, Napravleniya
+from directions.models import DirectionParamsResult, Issledovaniya, Napravleniya, Dashboard
 from hospitals.models import Hospitals
 
 
@@ -201,3 +201,67 @@ def filexlsx(request):
         response['Content-Disposition'] = str.translate(f"attachment; filename=\"{monitoring.title}, {date}.xlsx\"", tr)
         wb.save(response)
         return response
+
+
+@login_required
+@group_required("Просмотр мониторингов")
+def get_dashboard(request):
+    request_data = json.loads(request.body)
+    dashboard_pk = request_data["dashboard"]
+
+    date = request_data["date"]
+    prepare_date = date.split("-")
+    param_day = prepare_date[2]
+    param_month = prepare_date[1]
+    param_year = prepare_date[0]
+
+    result_dashboard = dashboard_sql_by_day(dashboard_pk, param_day, param_month, param_year)
+    result = []
+    previous_chart_title = None
+    previous_hosp_short_title = None
+    tmp_chart = {"titleChart": "", "type": "", "data": [{"title": "", "fields": []}]}
+    step = 0
+    current_index = 0
+    for i in result_dashboard:
+        if i.chart_title != previous_chart_title and step == 0:
+            tmp_chart["title"] = i.chart_title
+            tmp_chart["pk"] = i.chart_id
+            tmp_chart["type"] = i.chart_type
+            tmp_chart["data"] = [{"title": i.hosp_short_title, "fields": [i.title_for_field], "values": [i.value_aggregate]}]
+            previous_chart_title = i.chart_title
+            previous_hosp_short_title = i.hosp_short_title
+        elif i.chart_title != previous_chart_title:
+            tmp_chart["fields"] = tmp_chart["data"][current_index]["fields"]
+            result.append(tmp_chart)
+            tmp_chart["title"] = i.chart_title
+            tmp_chart["pk"] = i.chart_id
+            tmp_chart["type"] = i.chart_type
+            tmp_chart["data"] = [{"title": i.hosp_short_title, "fields": [i.title_for_field], "values": [i.value_aggregate]}]
+            previous_chart_title = i.chart_title
+            previous_hosp_short_title = i.hosp_short_title
+            current_index = 0
+        elif i.hosp_short_title != previous_hosp_short_title:
+            tmp_chart["data"].append({"title": i.hosp_short_title, "fields": [i.title_for_field], "values": [i.value_aggregate]})
+            current_index += 1
+            previous_hosp_short_title = i.hosp_short_title
+        else:
+            if i.title_for_field not in tmp_chart["data"][current_index]:
+                tmp_chart["data"][current_index]["fields"].append(i.title_for_field)
+            tmp_chart["data"][current_index]["values"].append(i.value_aggregate)
+        step += 1
+
+    tmp_chart["fields"] = tmp_chart["data"][current_index]["fields"]
+    result.append(tmp_chart)
+
+    return JsonResponse({'rows': result})
+
+
+@login_required
+@group_required("Просмотр мониторингов")
+def dashboard_list(request):
+    result = []
+    dasboards = Dashboard.objects.filter(hide=False)
+    for dasboard in dasboards:
+        result.append({"label": dasboard.title, "id": dasboard.pk})
+
+    return JsonResponse({"rows": result})
