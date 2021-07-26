@@ -175,7 +175,7 @@ def covid_result(request):
                         "birthday": i.birthday,
                         "phone": "",
                         "email": "",
-                        "documentType": "ПаспортгражданинаРФ",
+                        "documentType": "Паспорт гражданина РФ",
                         "documentNumber": passport_number,
                         "documentSerNumber": passport_serial,
                         "snils": snils_number,
