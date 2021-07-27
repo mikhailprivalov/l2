@@ -474,9 +474,10 @@ export default {
           },
         },
         dataLabels: {
-          dropShadow: {
-            enabled: true,
+          style: {
+            colors: ['#111'],
           },
+          [c.type === 'BAR' ? 'offsetX' : 'offsetY']: c.type === 'BAR' ? 20 : -20,
         },
       };
     },
