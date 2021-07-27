@@ -473,6 +473,11 @@ export default {
             },
           },
         },
+        dataLabels: {
+          dropShadow: {
+            enabled: true,
+          },
+        },
       };
     },
     getSeries(c) {
@@ -528,6 +533,10 @@ export default {
 
 .filters {
   margin-bottom: 10px;
+
+  input[type='date'] {
+    -webkit-appearance: textfield !important;
+  }
 
   input,
   select,

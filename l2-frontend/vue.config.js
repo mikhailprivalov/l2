@@ -6,7 +6,7 @@ const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const assetsPath = path.resolve(__dirname, '../assets/');
 
 module.exports = {
-  filenameHashing: false,
+  filenameHashing: true,
   pages: {
     app: {
       entry: 'src/main.ts',
@@ -41,6 +41,10 @@ module.exports = {
   publicPath: '/static/webpack_bundles/',
   outputDir: path.resolve(assetsPath, 'webpack_bundles'),
   configureWebpack: {
+    devtool: 'source-map',
+    output: {
+      filename: '[name].[hash:8].js'
+    },
     plugins: [
       new WebpackManifestPlugin({
         publicPath: 'webpack_bundles/',
