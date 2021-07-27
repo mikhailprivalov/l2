@@ -219,7 +219,7 @@ def get_dashboard(request):
     result = []
     previous_chart_title = None
     previous_hosp_short_title = None
-    tmp_chart = {"titleChart": "", "type": "", "data": [{"title": "", "fields": []}]}
+    tmp_chart = {"title": "", "type": "", "pk": "", "data": [{"title": "", "fields": [], "values": []}]}
     step = 0
     current_index = 0
     for i in result_dashboard:
@@ -232,7 +232,7 @@ def get_dashboard(request):
             previous_hosp_short_title = i.hosp_short_title
         elif i.chart_title != previous_chart_title:
             tmp_chart["fields"] = tmp_chart["data"][current_index]["fields"]
-            result.append(tmp_chart)
+            result.append(deepcopy(tmp_chart))
             tmp_chart["title"] = i.chart_title
             tmp_chart["pk"] = i.chart_id
             tmp_chart["type"] = i.chart_type
@@ -251,7 +251,7 @@ def get_dashboard(request):
         step += 1
 
     tmp_chart["fields"] = tmp_chart["data"][current_index]["fields"]
-    result.append(tmp_chart)
+    result.append(deepcopy(tmp_chart))
 
     return JsonResponse({'rows': result})
 
