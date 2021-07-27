@@ -6,7 +6,7 @@ const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const assetsPath = path.resolve(__dirname, '../assets/');
 
 module.exports = {
-  filenameHashing: true,
+  filenameHashing: false,
   pages: {
     app: {
       entry: 'src/main.ts',
@@ -34,6 +34,7 @@ module.exports = {
         options.compilerOptions.whitespace = 'preserve';
         return options;
       }),
+    config.output.chunkFilename('[name].[chunkhash:8].js'),
     config.plugins.delete('html'),
     config.plugins.delete('preload'),
     config.plugins.delete('prefetch'),
@@ -43,7 +44,7 @@ module.exports = {
   configureWebpack: {
     devtool: 'source-map',
     output: {
-      filename: '[name].[hash:8].js'
+      filename: '[name].[chunkhash:8].js'
     },
     plugins: [
       new WebpackManifestPlugin({
