@@ -126,7 +126,7 @@ class ResMonitoringResult(admin.ModelAdmin):
         'hospital',
         'type_period',
     )
-    search_fields = ('napravleniye',)
+    search_fields = ('napravleniye__pk',)
 
     raw_id_fields = (
         'napravleniye',

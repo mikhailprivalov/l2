@@ -17,7 +17,7 @@ import slog.models as slog
 import users.models as umodels
 import cases.models as cases
 from api.models import Application
-from hospitals.models import Hospitals
+from hospitals.models import Hospitals, HospitalsGroup
 from laboratory.utils import strdate, localtime, current_time
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.processor import RefProcessor
@@ -1460,6 +1460,7 @@ class MonitoringStatus(models.Model):
 class Dashboard(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие дашборда', db_index=True)
+    order = models.SmallIntegerField(default=-99, blank=True, null=True)
 
     def __str__(self):
         return f"{self.title}"
@@ -1480,20 +1481,12 @@ class DashboardCharts(models.Model):
         (PIE, 'Пирог-куски'),
     )
 
-    REGION_HOSP = 'REGION_HOSP'
-    CHILD_HOSP = 'CHILD_HOSP'
-
-    HOSPITAL_TYPES = (
-        (REGION_HOSP, 'По районам'),
-        (CHILD_HOSP, 'Детские'),
-    )
-
     title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
     dashboard = models.ForeignKey(Dashboard, null=True, help_text='Дашборд', db_index=True, on_delete=models.CASCADE)
     type = models.CharField(max_length=20, db_index=True, choices=GRAPHIC_TYPES, help_text="Тип графика")
     order = models.SmallIntegerField(default=-99, blank=True, null=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие графика', db_index=True)
-    type_hospital = models.CharField(default=None, blank=True, null=True, max_length=100, db_index=True, choices=HOSPITAL_TYPES, help_text="Тип группы")
+    hospitals_group = models.ForeignKey(HospitalsGroup, default=None, blank=True, null=True, db_index=True, help_text="Группа больниц", on_delete=models.CASCADE)
     sum_by_field = models.BooleanField(default=False, blank=True, help_text='Суммировать по полю')
 
     def __str__(self):
