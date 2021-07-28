@@ -132,6 +132,7 @@ def dashboard_sql_by_day(charts_id=None, period_param_day=None, period_param_mon
             )
             
                 directions_dashboardcharts.id as chart_id,
+                directions_dashboardcharts.order as chart_order,
                 directions_dashboardcharts.title as chart_title,
                 directions_dashboardcharts.type as chart_type,
                 directions_monitoringresult.hospital_id,
@@ -203,6 +204,7 @@ def dashboard_sql_by_day_filter_hosp(charts_id=None, period_param_day=None, peri
             )
 
                 directions_dashboardcharts.id as chart_id,
+                directions_dashboardcharts.order as chart_order,
                 directions_dashboardcharts.title as chart_title,
                 directions_dashboardcharts.type as chart_type,
                 directions_monitoringresult.hospital_id,
@@ -275,6 +277,7 @@ def sql_charts_sum_by_field_all_hospitals(charts_id=None, period_param_day=None,
             )
 
                 directions_dashboardcharts.id as chart_id,
+                directions_dashboardcharts.order as chart_order,
                 directions_dashboardcharts.title as chart_title,
                 directions_dashboardcharts.type as chart_type,
                 directions_dashboardchartfields.order as order_field, 
@@ -305,7 +308,7 @@ def sql_charts_sum_by_field_all_hospitals(charts_id=None, period_param_day=None,
                 directions_monitoringresult.period_param_month = %(period_param_month)s AND
                 directions_monitoringresult.period_param_year = %(period_param_year)s
             GROUP BY
-               directions_dashboardchartfields.field_id,
+                directions_dashboardchartfields.field_id,
                 directions_dashboardcharts.id,
                 directions_dashboardchartfields.order,
                 title_for_field,
@@ -349,6 +352,7 @@ def sql_charts_sum_by_field_filter_hospitals(charts_id=None, period_param_day=No
             )
 
                 directions_dashboardcharts.id as chart_id,
+                directions_dashboardcharts.order as chart_order,
                 directions_dashboardcharts.title as chart_title,
                 directions_dashboardcharts.type as chart_type,
                 directions_dashboardchartfields.order as order_field, 
