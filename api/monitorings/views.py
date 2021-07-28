@@ -44,6 +44,9 @@ def search(request):
         param_day = prepare_date[2]
         param_month = prepare_date[1]
 
+    if type_period == "PERIOD_MONTH":
+        param_month = prepare_date[1]
+
     param_year = prepare_date[0]
     result_monitoring = monitoring_sql_by_all_hospital(
         monitoring_research=research_pk,
@@ -248,11 +251,9 @@ def get_dashboard(request):
             result_dashboard = sql_charts_sum_by_field_filter_hospitals([chart_pk], param_day, param_month, param_year, need_hospitals)
             result = result_dashboard_func(result_dashboard, result, sum_by_field=True, default_charts=False)
 
-    result_out = [None for i in range(len(result))]
-    for i in result:
-        result_out[i["chart_order"] - 1] = i
+    result = sorted(result, key=lambda k: k['chart_order'])
 
-    return JsonResponse({'rows': result_out})
+    return JsonResponse({'rows': result})
 
 
 @login_required
