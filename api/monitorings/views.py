@@ -73,7 +73,7 @@ def search(request):
     )
     requirement_research_hosp.extend(requirement_group_hosp)
     requirement_research_hosp = list(set(requirement_research_hosp))
-
+    delimiter = "@"
     for i in result_monitoring:
         if not title_group.get(i.group_title):
             title_group[i.group_title] = [i.field_title]
@@ -86,17 +86,17 @@ def search(request):
             data_value = i.value_text
 
         if not rows_data.get(f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"):
-            rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"] = [[data_value]]
+            rows_data[f"{i.hospital_id}{delimiter}{i.short_title}{delimiter}{i.napravleniye_id}{delimiter}{i.confirm}"] = [[data_value]]
             step = 0
             current_index = 0
             if i.hospital_id in requirement_research_hosp:
                 requirement_research_hosp.remove(i.hospital_id)
 
         if (i.group_title != old_group_title) and (step != 0):
-            rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"].append([data_value])
+            rows_data[f"{i.hospital_id}{delimiter}{i.short_title}{delimiter}{i.napravleniye_id}{delimiter}{i.confirm}"].append([data_value])
             current_index += 1
         elif step != 0:
-            rows_data[f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"][current_index].append(data_value)
+            rows_data[f"{i.hospital_id}{delimiter}{i.short_title}{delimiter}{i.napravleniye_id}{delimiter}{i.confirm}"][current_index].append(data_value)
 
         old_group_title = i.group_title
         step += 1
@@ -106,7 +106,7 @@ def search(request):
 
     total = []
     for k, v in rows_data.items():
-        data = k.split('-')
+        data = k.split(delimiter)
         rows.append({"hospTitle": data[1], "direction": data[2], "confirm": data[3], "values": v})
         if len(total) == 0:
             total = deepcopy(v)
