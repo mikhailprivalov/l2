@@ -85,7 +85,7 @@ def search(request):
         else:
             data_value = i.value_text
 
-        if not rows_data.get(f"{i.hospital_id}-{i.short_title}-{i.napravleniye_id}-{i.confirm}"):
+        if not rows_data.get(f"{i.hospital_id}{delimiter}{i.short_title}{delimiter}{i.napravleniye_id}{delimiter}{i.confirm}"):
             rows_data[f"{i.hospital_id}{delimiter}{i.short_title}{delimiter}{i.napravleniye_id}{delimiter}{i.confirm}"] = [[data_value]]
             step = 0
             current_index = 0
