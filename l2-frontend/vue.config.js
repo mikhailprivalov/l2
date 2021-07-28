@@ -34,6 +34,7 @@ module.exports = {
         options.compilerOptions.whitespace = 'preserve';
         return options;
       }),
+    config.output.chunkFilename('[name].[chunkhash:8].js'),
     config.plugins.delete('html'),
     config.plugins.delete('preload'),
     config.plugins.delete('prefetch'),
@@ -41,6 +42,10 @@ module.exports = {
   publicPath: '/static/webpack_bundles/',
   outputDir: path.resolve(assetsPath, 'webpack_bundles'),
   configureWebpack: {
+    devtool: 'source-map',
+    output: {
+      filename: '[name].[chunkhash:8].js'
+    },
     plugins: [
       new WebpackManifestPlugin({
         publicPath: 'webpack_bundles/',

@@ -473,6 +473,12 @@ export default {
             },
           },
         },
+        dataLabels: {
+          style: {
+            colors: ['#111'],
+          },
+          [c.type === 'BAR' ? 'offsetX' : 'offsetY']: c.type === 'BAR' ? 20 : -20,
+        },
       };
     },
     getSeries(c) {
@@ -528,6 +534,10 @@ export default {
 
 .filters {
   margin-bottom: 10px;
+
+  input[type='date'] {
+    -webkit-appearance: textfield !important;
+  }
 
   input,
   select,
