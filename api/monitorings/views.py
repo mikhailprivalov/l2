@@ -44,6 +44,9 @@ def search(request):
         param_day = prepare_date[2]
         param_month = prepare_date[1]
 
+    if type_period == "PERIOD_MONTH":
+        param_month = prepare_date[1]
+
     param_year = prepare_date[0]
     result_monitoring = monitoring_sql_by_all_hospital(
         monitoring_research=research_pk,
@@ -248,6 +251,8 @@ def get_dashboard(request):
             result_dashboard = sql_charts_sum_by_field_filter_hospitals([chart_pk], param_day, param_month, param_year, need_hospitals)
             result = result_dashboard_func(result_dashboard, result, sum_by_field=True, default_charts=False)
 
+    result = sorted(result, key=lambda k: k['chart_order'])
+
     return JsonResponse({'rows': result})
 
 
@@ -265,7 +270,7 @@ def dashboard_list(request):
 def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True):
     previous_chart_title = None
     previous_hosp_short_title = None
-    tmp_chart = {"title": "", "type": "", "pk": "", "data": [{"title": "", "fields": [], "values": []}]}
+    tmp_chart = {"title": "", "type": "", "pk": "", "chart_order": -1, "data": [{"title": "", "fields": [], "values": []}]}
     step = 0
     current_index = 0
     hosp_short_title = ""
@@ -277,6 +282,7 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
         if i.chart_title != previous_chart_title and step == 0:
             tmp_chart["title"] = i.chart_title
             tmp_chart["pk"] = i.chart_id
+            tmp_chart["chart_order"] = i.chart_order
             tmp_chart["type"] = i.chart_type
             tmp_chart["data"] = [{"title": hosp_short_title, "fields": [i.title_for_field], "values": [i.value_aggregate]}]
             previous_chart_title = i.chart_title
@@ -287,6 +293,7 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             tmp_chart["title"] = i.chart_title
             tmp_chart["pk"] = i.chart_id
             tmp_chart["type"] = i.chart_type
+            tmp_chart["chart_order"] = i.chart_order
             tmp_chart["data"] = [{"title": hosp_short_title, "fields": [i.title_for_field], "values": [i.value_aggregate]}]
             previous_chart_title = i.chart_title
             previous_hosp_short_title = hosp_short_title
