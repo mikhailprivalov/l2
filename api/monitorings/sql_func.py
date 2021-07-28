@@ -65,12 +65,14 @@ def monitoring_sql_by_all_hospital(
                 directions_issledovaniya.time_confirmation is NOT NULL
             WHEN %(type_period)s = 'PERIOD_DAY' THEN
                 directions_monitoringresult.type_period = 'PERIOD_DAY' AND
+                directions_monitoringresult.research_id=%(monitoring_research)s AND
                 directions_monitoringresult.period_param_day=%(period_param_day)s  AND
                 directions_monitoringresult.period_param_month=%(period_param_month)s AND
                 directions_monitoringresult.period_param_year=%(period_param_year)s AND
                 directions_issledovaniya.time_confirmation is NOT NULL
             WHEN %(type_period)s = 'PERIOD_WEEK' THEN 
                 directions_monitoringresult.type_period = 'PERIOD_WEEK' AND
+                directions_monitoringresult.research_id=%(monitoring_research)s AND
                 directions_monitoringresult.period_param_year=%(period_param_year)s AND
                 directions_monitoringresult.period_param_week_date_start=%(period_param_week_date_start)s AND
                 directions_monitoringresult.period_param_week_date_end=%(period_param_week_date_end)s AND
