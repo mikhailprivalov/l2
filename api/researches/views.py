@@ -72,6 +72,17 @@ def get_researches(request):
             if len(black_list_monitoring) > 0:
                 restricted_monitoring = list(DResearches.objects.values_list('pk', flat=True).filter(hide=False, is_monitoring=True, pk__in=black_list_monitoring))
 
+        groups_black_list = list()
+        groups_white_list = list()
+        for i in HospitalsGroup.objects.filter(hospital__in=[doctorprofile.hospital]):
+            groups_black_list.extend([j.pk for j in i.accept_monitoring_black_list.get_queryset()])
+            groups_white_list.extend([j.pk for j in i.accept_monitoring_white_list.get_queryset()])
+
+        if len(groups_white_list) != 0:
+            restricted_monitoring.extend(list(DResearches.objects.values_list('pk', flat=True).filter(hide=False, is_monitoring=True).exclude(pk__in=list(set(groups_white_list)))))
+        else:
+            restricted_monitoring.extend(list(set(groups_black_list)))
+
         restricted_to_direct.extend(restricted_monitoring)
         restricted_to_direct = list(set(restricted_to_direct))
 
