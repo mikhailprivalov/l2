@@ -122,10 +122,10 @@ def covid_result(request):
     for i in result:
         if i.hosp_id in EXCLUDE_HOSP_SEND_EPGU:
             continue
-        result_value = i.value_result
-        if result_value == 'отрицательно':
+        result_value = i.value_result.lower()
+        if result_value.find('отрицат') != -1:
             result_value = 0
-        if result_value == 'положительно':
+        elif result_value.find('поло') != -1:
             result_value = 1
         enp = ""
         if i.oms_number:
@@ -145,22 +145,25 @@ def covid_result(request):
         elif i.psex == "м":
             sex = 1
 
+        laboratory_ogrn = i.laboratoryogrn or ""
+        laboratory_name = i.laboratoryname or ""
+        get_tubes = i.get_tubes or i.date_confirm
         data_return.append(
             {
                 "order": {
                     "number": str(i.number_direction),
                     "depart": CENTRE_GIGIEN_EPIDEMIOLOGY,
-                    "laboratoryName": i.laboratoryname or "",
-                    "laboratoryOgrn": i.laboratoryogrn or "",
-                    "name": i.title_org_initiator or "",
-                    "ogrn": i.ogrn_org_initiator or "",
-                    "orderDate": i.get_tubes,
+                    "laboratoryName": laboratory_name,
+                    "laboratoryOgrn": laboratory_ogrn,
+                    "name": i.title_org_initiator or laboratory_name,
+                    "ogrn": i.ogrn_org_initiator or laboratory_ogrn,
+                    "orderDate": get_tubes,
                     "serv": [
                         {
                             "code": i.fsli,
                             "name": i.title,
                             "testSystem": "",
-                            "biomaterDate": i.get_tubes,
+                            "biomaterDate": get_tubes,
                             "readyDate": i.date_confirm,
                             "result": result_value,
                             "type": 1,
@@ -198,4 +201,5 @@ def covid_result(request):
         count += 1
     response['Content-Disposition'] = f"attachment; filename=\"{date}-covid-{count}.json\""
     response.write(json.dumps(data_return, ensure_ascii=False))
+
     return response
