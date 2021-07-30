@@ -29,6 +29,7 @@ from slog.models import Log
 from users.models import Speciality
 from utils.nsi_directories import NSI
 from utils.response import status_response
+from hospitals.models import HospitalsGroup
 
 
 @login_required
