@@ -89,8 +89,8 @@ class HospitalsGroup(models.Model):
     hospital = models.ManyToManyField(Hospitals, blank=True, default=None, help_text="Какие больница")
     research = models.ManyToManyField(Researches, blank=True, default=None, help_text="Обязательные мониторинги")
     type_hospital = models.CharField(default=None, blank=True, null=True, max_length=100, db_index=True, choices=HOSPITAL_TYPES, help_text="Тип группы")
-    accept_monitoring_black_list = models.ManyToManyField(Researches, blank=True, default=None, help_text="Запрещенные мониторинги(Черный список)", related_name='ResearchesBlackList')
-    accept_monitoring_white_list = models.ManyToManyField(Researches, blank=True, default=None, help_text="Разрешенные мониторинги(Белый список)", related_name='ResearchesWhiteList')
+    access_black_list_edit_monitoring = models.ManyToManyField(Researches, blank=True, default=None, help_text="Запрещенные мониторинги(Черный список)", related_name='ResearchesBlackList')
+    access_white_list_edit_monitoring = models.ManyToManyField(Researches, blank=True, default=None, help_text="Разрешенные мониторинги(Белый список)", related_name='ResearchesWhiteList')
 
     def __str__(self):
         return f"{self.title}"
