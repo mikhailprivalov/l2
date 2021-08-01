@@ -65,12 +65,14 @@ def monitoring_sql_by_all_hospital(
                 directions_issledovaniya.time_confirmation is NOT NULL
             WHEN %(type_period)s = 'PERIOD_DAY' THEN
                 directions_monitoringresult.type_period = 'PERIOD_DAY' AND
+                directions_monitoringresult.research_id=%(monitoring_research)s AND
                 directions_monitoringresult.period_param_day=%(period_param_day)s  AND
                 directions_monitoringresult.period_param_month=%(period_param_month)s AND
                 directions_monitoringresult.period_param_year=%(period_param_year)s AND
                 directions_issledovaniya.time_confirmation is NOT NULL
             WHEN %(type_period)s = 'PERIOD_WEEK' THEN 
                 directions_monitoringresult.type_period = 'PERIOD_WEEK' AND
+                directions_monitoringresult.research_id=%(monitoring_research)s AND
                 directions_monitoringresult.period_param_year=%(period_param_year)s AND
                 directions_monitoringresult.period_param_week_date_start=%(period_param_week_date_start)s AND
                 directions_monitoringresult.period_param_week_date_end=%(period_param_week_date_end)s AND
@@ -116,12 +118,7 @@ def monitoring_sql_by_all_hospital(
     return rows
 
 
-def dashboard_sql_by_day(
-    dashboard=None,
-    period_param_day=None,
-    period_param_month=None,
-    period_param_year=None,
-):
+def dashboard_sql_by_day(charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -137,6 +134,7 @@ def dashboard_sql_by_day(
             )
             
                 directions_dashboardcharts.id as chart_id,
+                directions_dashboardcharts.order as chart_order,
                 directions_dashboardcharts.title as chart_title,
                 directions_dashboardcharts.type as chart_type,
                 directions_monitoringresult.hospital_id,
@@ -165,8 +163,8 @@ def dashboard_sql_by_day(
             LEFT JOIN hospitals_hospitals
             ON hospitals_hospitals.id = directions_monitoringresult.hospital_id
 
-            WHERE 
-                charts_id in (SELECT id FROM public.directions_dashboardcharts WHERE dashboard_id = %(dashboard_id)s) AND
+            WHERE
+                directions_dashboardcharts.id = ANY(ARRAY[%(charts_id)s]) AND 
                 directions_monitoringresult.period_param_day = %(period_param_day)s AND
                 directions_monitoringresult.period_param_month = %(period_param_month)s AND
                 directions_monitoringresult.period_param_year = %(period_param_year)s
@@ -182,7 +180,7 @@ def dashboard_sql_by_day(
             """,
             params={
                 'tz': TIME_ZONE,
-                'dashboard_id': dashboard,
+                'charts_id': charts_id,
                 'period_param_day': period_param_day,
                 'period_param_month': period_param_month,
                 'period_param_year': period_param_year,
@@ -190,3 +188,230 @@ def dashboard_sql_by_day(
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def dashboard_sql_by_day_filter_hosp(charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None, filter_hospitals=None):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            DISTINCT ON (
+                directions_dashboardcharts.id,
+                directions_monitoringresult.hospital_id,
+                directions_dashboardchartfields.order,
+                directions_dashboardchartfields.field_id,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year
+            )
+
+                directions_dashboardcharts.id as chart_id,
+                directions_dashboardcharts.order as chart_order,
+                directions_dashboardcharts.title as chart_title,
+                directions_dashboardcharts.type as chart_type,
+                directions_monitoringresult.hospital_id,
+                hospitals_hospitals.short_title as hosp_short_title,
+                hospitals_hospitals.title as hosp_title,
+                directions_dashboardchartfields.order as order_field, 
+                directions_dashboardchartfields.field_id,
+                title_for_field,
+                directory_paraclinicinputfield.title as field_title,
+                directions_monitoringresult.value_aggregate,
+                directions_monitoringresult.period_param_hour,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year
+
+            FROM public.directions_dashboardchartfields
+            LEFT JOIN directions_dashboardcharts
+            ON directions_dashboardcharts.id = directions_dashboardchartfields.charts_id
+
+            LEFT JOIN directory_paraclinicinputfield
+            ON directory_paraclinicinputfield.id = directions_dashboardchartfields.field_id
+
+            LEFT JOIN directions_monitoringresult
+            ON directions_monitoringresult.field_id = directions_dashboardchartfields.field_id
+
+            LEFT JOIN hospitals_hospitals
+            ON hospitals_hospitals.id = directions_monitoringresult.hospital_id
+
+            WHERE
+                directions_dashboardcharts.id = ANY(ARRAY[%(charts_id)s]) AND 
+                directions_monitoringresult.hospital_id = ANY(ARRAY[%(filter_hospitals)s]) AND  
+                directions_monitoringresult.period_param_day = %(period_param_day)s AND
+                directions_monitoringresult.period_param_month = %(period_param_month)s AND
+                directions_monitoringresult.period_param_year = %(period_param_year)s
+            ORDER BY 
+                directions_dashboardcharts.id, 
+                directions_monitoringresult.hospital_id,
+                directions_dashboardchartfields.order,
+                directions_dashboardchartfields.field_id,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year,
+                directions_monitoringresult.period_param_hour DESC                
+            """,
+            params={
+                'tz': TIME_ZONE,
+                'charts_id': charts_id,
+                'filter_hospitals': filter_hospitals,
+                'period_param_day': period_param_day,
+                'period_param_month': period_param_month,
+                'period_param_year': period_param_year,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def sql_charts_sum_by_field_all_hospitals(charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            DISTINCT ON (
+                directions_dashboardcharts.id,
+                directions_dashboardchartfields.order,
+                directions_dashboardchartfields.field_id,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year
+            )
+
+                directions_dashboardcharts.id as chart_id,
+                directions_dashboardcharts.order as chart_order,
+                directions_dashboardcharts.title as chart_title,
+                directions_dashboardcharts.type as chart_type,
+                directions_dashboardchartfields.order as order_field, 
+                directions_dashboardchartfields.field_id,
+                title_for_field,
+                sum(directions_monitoringresult.value_aggregate) as value_aggregate,
+                directions_monitoringresult.period_param_hour,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year
+
+            FROM public.directions_dashboardchartfields
+            LEFT JOIN directions_dashboardcharts
+            ON directions_dashboardcharts.id = directions_dashboardchartfields.charts_id
+
+            LEFT JOIN directory_paraclinicinputfield
+            ON directory_paraclinicinputfield.id = directions_dashboardchartfields.field_id
+
+            LEFT JOIN directions_monitoringresult
+            ON directions_monitoringresult.field_id = directions_dashboardchartfields.field_id
+
+            LEFT JOIN hospitals_hospitals
+            ON hospitals_hospitals.id = directions_monitoringresult.hospital_id
+
+            WHERE 
+                charts_id = ANY(ARRAY[%(charts_id)s]) AND
+                directions_monitoringresult.period_param_day = %(period_param_day)s AND
+                directions_monitoringresult.period_param_month = %(period_param_month)s AND
+                directions_monitoringresult.period_param_year = %(period_param_year)s
+            GROUP BY
+                directions_dashboardchartfields.field_id,
+                directions_dashboardcharts.id,
+                directions_dashboardchartfields.order,
+                title_for_field,
+                directions_monitoringresult.period_param_hour,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year
+            ORDER BY 
+                directions_dashboardcharts.id, 
+                directions_dashboardchartfields.order,
+                directions_dashboardchartfields.field_id,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year,
+                directions_monitoringresult.period_param_hour DESC                
+            """,
+            params={
+                'tz': TIME_ZONE,
+                'charts_id': charts_id,
+                'period_param_day': period_param_day,
+                'period_param_month': period_param_month,
+                'period_param_year': period_param_year,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def sql_charts_sum_by_field_filter_hospitals(charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None, filter_hospitals=None):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            DISTINCT ON (
+                directions_dashboardcharts.id,
+                directions_dashboardchartfields.order,
+                directions_dashboardchartfields.field_id,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year
+            )
+
+                directions_dashboardcharts.id as chart_id,
+                directions_dashboardcharts.order as chart_order,
+                directions_dashboardcharts.title as chart_title,
+                directions_dashboardcharts.type as chart_type,
+                directions_dashboardchartfields.order as order_field, 
+                directions_dashboardchartfields.field_id,
+                title_for_field,
+                sum(directions_monitoringresult.value_aggregate) as value_aggregate,
+                directions_monitoringresult.period_param_hour,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year
+
+            FROM public.directions_dashboardchartfields
+            LEFT JOIN directions_dashboardcharts
+            ON directions_dashboardcharts.id = directions_dashboardchartfields.charts_id
+
+            LEFT JOIN directory_paraclinicinputfield
+            ON directory_paraclinicinputfield.id = directions_dashboardchartfields.field_id
+
+            LEFT JOIN directions_monitoringresult
+            ON directions_monitoringresult.field_id = directions_dashboardchartfields.field_id
+
+            LEFT JOIN hospitals_hospitals
+            ON hospitals_hospitals.id = directions_monitoringresult.hospital_id
+
+            WHERE 
+                charts_id = ANY(ARRAY[%(charts_id)s]) AND
+                directions_monitoringresult.hospital_id = ANY(ARRAY[%(filter_hospitals)s]) AND
+                directions_monitoringresult.period_param_day = %(period_param_day)s AND
+                directions_monitoringresult.period_param_month = %(period_param_month)s AND
+                directions_monitoringresult.period_param_year = %(period_param_year)s
+            GROUP BY
+               directions_dashboardchartfields.field_id,
+                directions_dashboardcharts.id,
+                directions_dashboardchartfields.order,
+                title_for_field,
+                directions_monitoringresult.period_param_hour,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year
+            ORDER BY 
+                directions_dashboardcharts.id, 
+                directions_dashboardchartfields.order,
+                directions_dashboardchartfields.field_id,
+                directions_monitoringresult.period_param_day,
+                directions_monitoringresult.period_param_month,
+                directions_monitoringresult.period_param_year,
+                directions_monitoringresult.period_param_hour DESC                
+            """,
+            params={
+                'tz': TIME_ZONE,
+                'charts_id': charts_id,
+                'filter_hospitals': filter_hospitals,
+                'period_param_day': period_param_day,
+                'period_param_month': period_param_month,
+                'period_param_year': period_param_year,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+

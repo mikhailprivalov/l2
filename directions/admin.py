@@ -125,8 +125,9 @@ class ResMonitoringResult(admin.ModelAdmin):
         'napravleniye',
         'hospital',
         'type_period',
+        'value_aggregate',
     )
-    search_fields = ('napravleniye',)
+    search_fields = ('napravleniye__pk',)
 
     raw_id_fields = (
         'napravleniye',
@@ -144,6 +145,16 @@ class ResDashboardChartFields(admin.ModelAdmin):
     search_fields = ('charts__title',)
 
 
+class ResDashboardCharts(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'dashboard',
+    )
+
+    list_filter = ('dashboard__title',)
+    search_fields = ('title',)
+
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
 admin.site.register(FrequencyOfUseResearches)
@@ -159,7 +170,7 @@ admin.site.register(PersonContract, ResPersonContract)
 admin.site.register(DirectionsHistory, ResDirectionsHistory)
 admin.site.register(MonitoringResult, ResMonitoringResult)
 admin.site.register(Dashboard)
-admin.site.register(DashboardCharts)
+admin.site.register(DashboardCharts, ResDashboardCharts)
 admin.site.register(DashboardChartFields, ResDashboardChartFields)
 admin.site.register(MonitoringSumFieldByDay)
 admin.site.register(MonitoringSumFieldTotal)
