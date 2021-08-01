@@ -281,7 +281,6 @@ def get_dashboard(request):
             result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True)
 
     result = sorted(result, key=lambda k: k['chart_order'])
-    print(result)
 
     return JsonResponse({'rows': result})
 
@@ -304,11 +303,10 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
     step = 0
     current_index = 0
     hosp_short_title = ""
-    unique_dates = []
-    for i in result_dashboard:
-        unique_dates.append(f"{i.period_param_day}-{i.period_param_month}-{i.period_param_year}")
-    unique_dates = sorted(list(set(unique_dates)))
-    print(unique_dates)
+
+    unique_dates = {i.date for i in result_dashboard}
+    unique_dates = sorted(list(unique_dates))
+
     for i in result_dashboard:
         print(i)
         if sum_by_field:
