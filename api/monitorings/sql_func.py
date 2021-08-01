@@ -190,11 +190,15 @@ def dashboard_sql_by_day(charts_id=None, period_param_day=None, period_param_mon
     return rows
 
 
-def dashboard_sql_by_day_filter_hosp(charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None, filter_hospitals=None):
+def dashboard_sql_by_day_filter_hosp(
+    charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None, param_day_end=None, param_month_end=None, param_year_end=None, filter_hospitals=None
+):
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT
+            SELECT main_table.chart_id, main_table.chart_order, main_table.chart_title, main_table.chart_type, main_table.order_field, 
+                main_table.field_id, main_table.title_for_field, sum(main_table.value_aggregate) as value_aggregate FROM
+            (SELECT
             DISTINCT ON (
                 directions_dashboardcharts.id,
                 directions_monitoringresult.hospital_id,
@@ -238,9 +242,12 @@ def dashboard_sql_by_day_filter_hosp(charts_id=None, period_param_day=None, peri
             WHERE
                 directions_dashboardcharts.id = ANY(ARRAY[%(charts_id)s]) AND 
                 directions_monitoringresult.hospital_id = ANY(ARRAY[%(filter_hospitals)s]) AND  
-                directions_monitoringresult.period_param_day = %(period_param_day)s AND
-                directions_monitoringresult.period_param_month = %(period_param_month)s AND
-                directions_monitoringresult.period_param_year = %(period_param_year)s
+                directions_monitoringresult.period_param_day >= %(period_param_day)s AND
+                directions_monitoringresult.period_param_month >= %(period_param_month)s AND
+                directions_monitoringresult.period_param_year >= %(period_param_year)s AND
+                directions_monitoringresult.period_param_day <= %(param_day_end)s AND
+                directions_monitoringresult.period_param_month <= %(param_month_end)s AND
+                directions_monitoringresult.period_param_year <= %(param_year_end)s
             ORDER BY 
                 directions_dashboardcharts.id, 
                 directions_monitoringresult.hospital_id,
@@ -249,7 +256,9 @@ def dashboard_sql_by_day_filter_hosp(charts_id=None, period_param_day=None, peri
                 directions_monitoringresult.period_param_day,
                 directions_monitoringresult.period_param_month,
                 directions_monitoringresult.period_param_year,
-                directions_monitoringresult.period_param_hour DESC                
+                directions_monitoringresult.period_param_hour DESC) main_table  
+            GROUP BY main_table.chart_id, main_table.chart_order, main_table.chart_title, main_table.chart_type, 
+            main_table.field_id,  main_table.order_field, main_table.title_for_field;               
             """,
             params={
                 'tz': TIME_ZONE,
@@ -258,17 +267,24 @@ def dashboard_sql_by_day_filter_hosp(charts_id=None, period_param_day=None, peri
                 'period_param_day': period_param_day,
                 'period_param_month': period_param_month,
                 'period_param_year': period_param_year,
+                'param_day_end': param_day_end,
+                'param_month_end': param_month_end,
+                'param_year_end': param_year_end,
             },
         )
         rows = namedtuplefetchall(cursor)
     return rows
 
 
-def sql_charts_sum_by_field_all_hospitals(charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None):
+def sql_charts_sum_by_field_all_hospitals(
+    charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None, param_day_end=None, param_month_end=None, param_year_end=None
+):
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT
+            SELECT main_table.chart_id, main_table.chart_order, main_table.chart_title, main_table.chart_type, main_table.order_field, 
+                main_table.field_id, main_table.title_for_field, sum(main_table.value_aggregate) as value_aggregate FROM
+            (SELECT
             DISTINCT ON (
                 directions_dashboardcharts.id,
                 directions_dashboardchartfields.order,
@@ -283,7 +299,7 @@ def sql_charts_sum_by_field_all_hospitals(charts_id=None, period_param_day=None,
                 directions_dashboardcharts.title as chart_title,
                 directions_dashboardcharts.type as chart_type,
                 directions_dashboardchartfields.order as order_field, 
-                directions_dashboardchartfields.field_id,
+                directions_dashboardchartfields.field_id as field_id,
                 title_for_field,
                 sum(directions_monitoringresult.value_aggregate) as value_aggregate,
                 directions_monitoringresult.period_param_hour,
@@ -306,9 +322,12 @@ def sql_charts_sum_by_field_all_hospitals(charts_id=None, period_param_day=None,
 
             WHERE 
                 charts_id = ANY(ARRAY[%(charts_id)s]) AND
-                directions_monitoringresult.period_param_day = %(period_param_day)s AND
-                directions_monitoringresult.period_param_month = %(period_param_month)s AND
-                directions_monitoringresult.period_param_year = %(period_param_year)s
+                directions_monitoringresult.period_param_day >= %(period_param_day)s AND
+                directions_monitoringresult.period_param_month >= %(period_param_month)s AND
+                directions_monitoringresult.period_param_year >= %(period_param_year)s AND
+                directions_monitoringresult.period_param_day <= %(param_day_end)s AND
+                directions_monitoringresult.period_param_month <= %(param_month_end)s AND
+                directions_monitoringresult.period_param_year <= %(param_year_end)s
             GROUP BY
                 directions_dashboardchartfields.field_id,
                 directions_dashboardcharts.id,
@@ -325,7 +344,9 @@ def sql_charts_sum_by_field_all_hospitals(charts_id=None, period_param_day=None,
                 directions_monitoringresult.period_param_day,
                 directions_monitoringresult.period_param_month,
                 directions_monitoringresult.period_param_year,
-                directions_monitoringresult.period_param_hour DESC                
+                directions_monitoringresult.period_param_hour DESC) main_table  
+            GROUP BY main_table.chart_id, main_table.chart_order, main_table.chart_title, main_table.chart_type, 
+            main_table.field_id,  main_table.order_field, main_table.title_for_field;          
             """,
             params={
                 'tz': TIME_ZONE,
@@ -333,13 +354,16 @@ def sql_charts_sum_by_field_all_hospitals(charts_id=None, period_param_day=None,
                 'period_param_day': period_param_day,
                 'period_param_month': period_param_month,
                 'period_param_year': period_param_year,
+                'param_day_end': param_day_end,
+                'param_month_end': param_month_end,
+                'param_year_end': param_year_end,
             },
         )
         rows = namedtuplefetchall(cursor)
     return rows
 
 
-def sql_charts_sum_by_field_filter_hospitals(charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None, filter_hospitals=None):
+def sql_charts_sum_by_field_filter_hospitals(charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None, param_day_end=None, param_month_end=None, param_year_end=None, filter_hospitals=None):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -382,9 +406,12 @@ def sql_charts_sum_by_field_filter_hospitals(charts_id=None, period_param_day=No
             WHERE 
                 charts_id = ANY(ARRAY[%(charts_id)s]) AND
                 directions_monitoringresult.hospital_id = ANY(ARRAY[%(filter_hospitals)s]) AND
-                directions_monitoringresult.period_param_day = %(period_param_day)s AND
-                directions_monitoringresult.period_param_month = %(period_param_month)s AND
-                directions_monitoringresult.period_param_year = %(period_param_year)s
+                directions_monitoringresult.period_param_day >= %(period_param_day)s AND
+                directions_monitoringresult.period_param_month >= %(period_param_month)s AND
+                directions_monitoringresult.period_param_year >= %(period_param_year)s AND
+                directions_monitoringresult.period_param_day <= %(param_day_end)s AND
+                directions_monitoringresult.period_param_month <= %(param_month_end)s AND
+                directions_monitoringresult.period_param_year <= %(param_year_end)s
             GROUP BY
                directions_dashboardchartfields.field_id,
                 directions_dashboardcharts.id,
@@ -410,8 +437,10 @@ def sql_charts_sum_by_field_filter_hospitals(charts_id=None, period_param_day=No
                 'period_param_day': period_param_day,
                 'period_param_month': period_param_month,
                 'period_param_year': period_param_year,
+                'param_day_end': param_day_end,
+                'param_month_end': param_month_end,
+                'param_year_end': param_year_end
             },
         )
         rows = namedtuplefetchall(cursor)
     return rows
-

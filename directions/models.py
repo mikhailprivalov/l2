@@ -1488,6 +1488,7 @@ class DashboardCharts(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие графика', db_index=True)
     hospitals_group = models.ForeignKey(HospitalsGroup, default=None, blank=True, null=True, db_index=True, help_text="Группа больниц", on_delete=models.CASCADE)
     sum_by_field = models.BooleanField(default=False, blank=True, help_text='Суммировать по полю')
+    is_full_width = models.BooleanField(default=False, blank=True, help_text='На всю ширину страницы')
 
     def __str__(self):
         return f"{self.title} - Дашборд: {self.dashboard.title}"
