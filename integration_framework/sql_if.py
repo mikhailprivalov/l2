@@ -33,7 +33,7 @@ def direction_collect(d_s, type_integration, limit):
                    WHERE 
                      CASE 
                         WHEN %(type_integration)s = '*' THEN 
-                            time_confirmation > %(d_start)s ::timestamp AT TIME ZONE %(tz)s
+                            time_confirmation > %(d_start)s::timestamp AT TIME ZONE %(tz)s
                         ELSE time_confirmation > %(d_start)s::timestamp AT TIME ZONE %(tz)s AND (research_id IN (SELECT * FROM t_field))
                      END
              order by napravleniye_id),
