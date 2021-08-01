@@ -149,7 +149,8 @@ def dashboard_sql_by_day(charts_id=None, period_param_day=None, period_param_mon
                 directions_monitoringresult.period_param_day,
                 directions_monitoringresult.period_param_month,
                 directions_monitoringresult.period_param_year,
-                to_date(concat(directions_monitoringresult.period_param_day::text,'-', directions_monitoringresult.period_param_month::text, '-', directions_monitoringresult.period_param_year::text), 'DD-MM-YYYY') as date
+                to_date(concat(directions_monitoringresult.period_param_day::text,'-', 
+                    directions_monitoringresult.period_param_month::text, '-', directions_monitoringresult.period_param_year::text), 'DD-MM-YYYY') as date
                 
             
             FROM public.directions_dashboardchartfields
@@ -503,7 +504,8 @@ def sql_charts_sum_by_field_every_hospitals(
             WHERE 
                 charts_id = ANY(ARRAY[%(charts_id)s]) AND
                 directions_monitoringresult.hospital_id = ANY(ARRAY[%(filter_hospitals)s]) AND
-                to_date(concat(directions_monitoringresult.period_param_day::text,'-', directions_monitoringresult.period_param_month::text, '-', directions_monitoringresult.period_param_year::text), 'DD-MM-YYYY')
+                to_date(concat(directions_monitoringresult.period_param_day::text,'-', 
+                    directions_monitoringresult.period_param_month::text, '-', directions_monitoringresult.period_param_year::text), 'DD-MM-YYYY')
                 BETWEEN to_date(concat(%(period_param_day)s::text,'-', %(period_param_month)s::text, '-', %(period_param_year)s::text), 'DD-MM-YYYY')
                 AND
                 to_date(concat(%(param_day_end)s::text,'-', %(param_month_end)s::text, '-', %(param_year_end)s::text), 'DD-MM-YYYY')
