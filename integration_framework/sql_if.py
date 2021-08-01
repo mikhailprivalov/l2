@@ -18,7 +18,6 @@ def direction_collect(d_s, type_integration, limit):
     """
 
     with connection.cursor() as cursor:
-        print(cursor.connection.get_parameter_status("TimeZone"))
         cursor.execute(
             """WITH
         t_field AS ( SELECT research_id FROM integration_framework_integrationresearches WHERE 
