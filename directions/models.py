@@ -1481,6 +1481,14 @@ class DashboardCharts(models.Model):
         (PIE, 'Пирог-куски'),
     )
 
+    EVERY_HOSPITAL = 'EVERY_HOSPITAL'
+    ALL_HOSPITAL = 'ALL_HOSPITAL'
+
+    GROUP_BY_TYPES = (
+        (EVERY_HOSPITAL, 'Сумма по каждой больнице'),
+        (ALL_HOSPITAL, 'Сумма по всем больницам'),
+    )
+
     title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
     dashboard = models.ForeignKey(Dashboard, null=True, help_text='Дашборд', db_index=True, on_delete=models.CASCADE)
     type = models.CharField(max_length=20, db_index=True, choices=GRAPHIC_TYPES, help_text="Тип графика")
@@ -1489,6 +1497,7 @@ class DashboardCharts(models.Model):
     hospitals_group = models.ForeignKey(HospitalsGroup, default=None, blank=True, null=True, db_index=True, help_text="Группа больниц", on_delete=models.CASCADE)
     sum_by_field = models.BooleanField(default=False, blank=True, help_text='Суммировать по полю')
     is_full_width = models.BooleanField(default=False, blank=True, help_text='На всю ширину страницы')
+    group_by_type = models.CharField(max_length=20, default=None, blank=True, null=True, db_index=True, choices=GROUP_BY_TYPES, help_text="Тип группировки")
 
     def __str__(self):
         return f"{self.title} - Дашборд: {self.dashboard.title}"
