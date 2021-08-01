@@ -18,6 +18,7 @@ def direction_collect(d_s, type_integration, limit):
     """
 
     with connection.cursor() as cursor:
+        print(cursor.connection.get_parameter_status("TimeZone"))
         cursor.execute(
             """WITH
         t_field AS ( SELECT research_id FROM integration_framework_integrationresearches WHERE 
@@ -33,8 +34,8 @@ def direction_collect(d_s, type_integration, limit):
                    WHERE 
                      CASE 
                         WHEN %(type_integration)s = '*' THEN 
-                            time_confirmation > %(d_start)s AT TIME ZONE %(tz)s
-                        ELSE time_confirmation > %(d_start)s AT TIME ZONE %(tz)s AND (research_id IN (SELECT * FROM t_field))
+                            time_confirmation > %(d_start)s ::timestamp AT TIME ZONE %(tz)s
+                        ELSE time_confirmation > %(d_start)s::timestamp AT TIME ZONE %(tz)s AND (research_id IN (SELECT * FROM t_field))
                      END
              order by napravleniye_id),
         t_iss_null AS
@@ -105,6 +106,26 @@ def direction_resend_l2(limit):
             """
         SELECT id FROM public.directions_napravleniya
             WHERE need_resend_l2 = True
+            ORDER BY id DESC LIMIT %(limit)s """,
+            params={'limit': limit},
+        )
+
+        row = cursor.fetchall()
+    return row
+
+
+def direction_resend_crie(limit):
+    """
+    Вернуть:
+    Направления, в к-рых все исследования подтверждены, и подтверждены после определенной даты
+    в SQL:
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT id FROM public.directions_napravleniya
+            WHERE need_resend_crie = True
             ORDER BY id DESC LIMIT %(limit)s """,
             params={'limit': limit},
         )
