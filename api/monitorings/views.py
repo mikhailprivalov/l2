@@ -15,7 +15,8 @@ from api.monitorings.sql_func import (
     dashboard_sql_by_day,
     sql_charts_sum_by_field_all_hospitals,
     dashboard_sql_by_day_filter_hosp,
-    sql_charts_sum_by_field_filter_hospitals, sql_charts_sum_by_field_every_hospitals,
+    sql_charts_sum_by_field_filter_hospitals,
+    sql_charts_sum_by_field_every_hospitals,
 )
 from directory.models import Researches
 from utils.data_verification import data_parse
@@ -234,7 +235,6 @@ def get_dashboard(request):
     param_year_end = prepare_date_end[0]
 
     is_one_date = prepare_date == prepare_date_end
-    print(is_one_date)
 
     charts_objs = DashboardCharts.objects.filter(dashboard__pk=dashboard_pk, hide=False)
 
@@ -262,22 +262,26 @@ def get_dashboard(request):
         result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True, date=True)
     if chrart_only_some_hospitals:
         for chart_pk, need_hospitals in chrart_only_some_hospitals.items():
-            result_dashboard = dashboard_sql_by_day_filter_hosp([chart_pk], param_day_start, param_month_start, param_year_start,
-                                                                param_day_end, param_month_end, param_year_end, need_hospitals)
+            result_dashboard = dashboard_sql_by_day_filter_hosp(
+                [chart_pk], param_day_start, param_month_start, param_year_start, param_day_end, param_month_end, param_year_end, need_hospitals
+            )
             result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True, date=True)
     if charts_sum_by_field_all_hospitals:
-        result_dashboard = sql_charts_sum_by_field_all_hospitals(charts_sum_by_field_all_hospitals, param_day_start, param_month_start, param_year_start,
-                                                                 param_day_end, param_month_end, param_year_end)
+        result_dashboard = sql_charts_sum_by_field_all_hospitals(
+            charts_sum_by_field_all_hospitals, param_day_start, param_month_start, param_year_start, param_day_end, param_month_end, param_year_end
+        )
         result = result_dashboard_func(result_dashboard, result, sum_by_field=True, default_charts=False)
     if charts_sum_by_field_some_hospitals:
         for chart_pk, need_hospitals in charts_sum_by_field_some_hospitals.items():
-            result_dashboard = sql_charts_sum_by_field_filter_hospitals([chart_pk], param_day_start, param_month_start, param_year_start,
-                                                                        param_day_end, param_month_end, param_year_end, need_hospitals)
+            result_dashboard = sql_charts_sum_by_field_filter_hospitals(
+                [chart_pk], param_day_start, param_month_start, param_year_start, param_day_end, param_month_end, param_year_end, need_hospitals
+            )
             result = result_dashboard_func(result_dashboard, result, sum_by_field=True, default_charts=False)
     if chrart_every_hospitals:
         for chart_pk, need_hospitals in chrart_every_hospitals.items():
-            result_dashboard = sql_charts_sum_by_field_every_hospitals([chart_pk], param_day_start, param_month_start, param_year_start,
-                                                                        param_day_end, param_month_end, param_year_end, need_hospitals)
+            result_dashboard = sql_charts_sum_by_field_every_hospitals(
+                [chart_pk], param_day_start, param_month_start, param_year_start, param_day_end, param_month_end, param_year_end, need_hospitals
+            )
             result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True)
 
     result = sorted(result, key=lambda k: k['chart_order'])
@@ -308,7 +312,6 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
     unique_dates = sorted(list(unique_dates))
 
     for i in result_dashboard:
-        print(i)
         if sum_by_field:
             hosp_short_title = "Всего"
         elif default_charts:
