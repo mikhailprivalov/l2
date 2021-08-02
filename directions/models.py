@@ -1415,7 +1415,7 @@ class MonitoringResult(models.Model):
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид мониторинга/исследования из справочника', db_index=True, on_delete=models.CASCADE)
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Заказ на мониторинг, для которого сохранен результат', on_delete=models.CASCADE)
-    hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, on_delete=models.SET_NULL)
+    hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, db_index=True, on_delete=models.SET_NULL)
     group_id = models.IntegerField(default=None, blank=True, null=True, db_index=True, help_text='Группа результата')
     group_order = models.IntegerField(default=None, blank=True, null=True)
     field_id = models.IntegerField(default=None, blank=True, null=True, db_index=True, help_text='Поле результата')
@@ -1425,14 +1425,15 @@ class MonitoringResult(models.Model):
     value_text = models.TextField(default='', blank=True)
     type_period = models.CharField(max_length=20, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
     period_param_hour = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
-    period_param_day = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
+    period_param_day = models.PositiveSmallIntegerField(default=None, blank=True, null=True, db_index=True)
     period_param_week_description = models.CharField(max_length=5, blank=True, null=True, default=None, help_text="Описание недельного периода")
     period_param_week_date_start = models.DateField(blank=True, null=True, default=None, help_text="Дата начала недельного периода")
     period_param_week_date_end = models.DateField(blank=True, null=True, default=None, help_text="Дата окончания недельного периода")
-    period_param_month = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
+    period_param_month = models.PositiveSmallIntegerField(default=None, blank=True, null=True, db_index=True)
     period_param_quarter = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     period_param_halfyear = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
-    period_param_year = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
+    period_param_year = models.PositiveSmallIntegerField(default=None, blank=True, null=True, db_index=True)
+    period_date = models.DateField(blank=True, null=True, default=None, help_text="Фактическая дата для периодов")
 
     class Meta:
         verbose_name = 'Мониторинг результаты'

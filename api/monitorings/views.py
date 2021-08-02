@@ -285,6 +285,7 @@ def get_dashboard(request):
             result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True)
 
     result = sorted(result, key=lambda k: k['chart_order'])
+    print(result)
 
     return JsonResponse({'rows': result})
 
