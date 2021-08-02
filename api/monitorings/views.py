@@ -229,7 +229,7 @@ def get_dashboard(request):
     # даты конец
     # date_end = request_data["date_end"]
     # prepare_date_end = date_end.split("-")
-    prepare_date_end = [2021, 8, 1]
+    prepare_date_end = '2021-8-1'
     param_day_end = prepare_date_end[2]
     param_month_end = prepare_date_end[1]
     param_year_end = prepare_date_end[0]
@@ -258,7 +258,8 @@ def get_dashboard(request):
 
     result = []
     if default_charts:
-        result_dashboard = dashboard_sql_by_day(default_charts, param_day_start, param_month_start, param_year_start, param_day_end, param_month_end, param_year_end)
+        # result_dashboard = dashboard_sql_by_day(default_charts, param_day_start, param_month_start, param_year_start, param_day_end, param_month_end, param_year_end)
+        result_dashboard = dashboard_sql_by_day(default_charts, date, prepare_date_end)
         result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True, date=True)
     if chrart_only_some_hospitals:
         for chart_pk, need_hospitals in chrart_only_some_hospitals.items():
@@ -268,19 +269,20 @@ def get_dashboard(request):
             result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True, date=True)
     if charts_sum_by_field_all_hospitals:
         result_dashboard = sql_charts_sum_by_field_all_hospitals(
-            charts_sum_by_field_all_hospitals, param_day_start, param_month_start, param_year_start, param_day_end, param_month_end, param_year_end
+            charts_sum_by_field_all_hospitals, date, prepare_date_end
+            # charts_sum_by_field_all_hospitals, param_day_start, param_month_start, param_year_start, param_day_end, param_month_end, param_year_end
         )
         result = result_dashboard_func(result_dashboard, result, sum_by_field=True, default_charts=False)
     if charts_sum_by_field_some_hospitals:
         for chart_pk, need_hospitals in charts_sum_by_field_some_hospitals.items():
             result_dashboard = sql_charts_sum_by_field_filter_hospitals(
-                [chart_pk], param_day_start, param_month_start, param_year_start, param_day_end, param_month_end, param_year_end, need_hospitals
+                [chart_pk], date, prepare_date_end, need_hospitals
             )
             result = result_dashboard_func(result_dashboard, result, sum_by_field=True, default_charts=False)
     if chrart_every_hospitals:
         for chart_pk, need_hospitals in chrart_every_hospitals.items():
             result_dashboard = sql_charts_sum_by_field_every_hospitals(
-                [chart_pk], param_day_start, param_month_start, param_year_start, param_day_end, param_month_end, param_year_end, need_hospitals
+                [chart_pk], date, prepare_date_end, need_hospitals
             )
             result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True)
 
