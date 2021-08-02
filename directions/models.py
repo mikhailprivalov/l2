@@ -440,7 +440,7 @@ class Napravleniya(models.Model):
         return SettingManager.get("org_title")
 
     def get_title_org_initiator(self):
-        return (self.title_org_initiator or "").replace("\"", " ")
+        return (self.title_org_initiator or self.hospital_title or "").replace("\"", " ")
 
     @property
     def hospital_ogrn(self):
@@ -450,7 +450,7 @@ class Napravleniya(models.Model):
         return SettingManager.get("org_ogrn")
 
     def get_ogrn_org_initiator(self):
-        return self.ogrn_org_initiator or ""
+        return self.ogrn_org_initiator or self.hospital_ogrn or ""
 
     @property
     def hospital_short_title(self):
