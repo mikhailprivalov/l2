@@ -29,6 +29,7 @@ from slog.models import Log
 from users.models import Speciality
 from utils.nsi_directories import NSI
 from utils.response import status_response
+from hospitals.models import HospitalsGroup
 
 
 @login_required
@@ -71,6 +72,17 @@ def get_researches(request):
             black_list_monitoring = [x for x in users.DoctorProfile.objects.values_list('black_list_monitoring', flat=True).filter(pk=doctorprofile.pk) if x is not None]
             if len(black_list_monitoring) > 0:
                 restricted_monitoring = list(DResearches.objects.values_list('pk', flat=True).filter(hide=False, is_monitoring=True, pk__in=black_list_monitoring))
+
+        groups_black_list = []
+        groups_white_list = []
+        for i in HospitalsGroup.objects.filter(hospital__in=[doctorprofile.get_hospital()]):
+            groups_black_list.extend(i.access_black_list_edit_monitoring.all().values_list('pk', flat=True))
+            groups_white_list.extend(i.access_white_list_edit_monitoring.all().values_list('pk', flat=True))
+
+        if groups_white_list:
+            restricted_monitoring.extend(list(DResearches.objects.values_list('pk', flat=True).filter(hide=False, is_monitoring=True).exclude(pk__in=groups_white_list)))
+        else:
+            restricted_monitoring.extend(groups_black_list)
 
         restricted_to_direct.extend(restricted_monitoring)
         restricted_to_direct = list(set(restricted_to_direct))
