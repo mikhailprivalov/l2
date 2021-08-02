@@ -1,3 +1,4 @@
+from directions.models import Napravleniya
 import uuid
 
 from django.db import models
@@ -30,9 +31,10 @@ class IntegrationResearches(models.Model):
     TYPES = (
         ('mbu', 'MBU'),
         ('amd', 'AMD'),
+        ('crie', 'CRIE'),
     )
 
-    type_integration = models.CharField(max_length=3, choices=TYPES, db_index=True)
+    type_integration = models.CharField(max_length=4, choices=TYPES, db_index=True)
     research = models.ForeignKey(Researches, on_delete=models.CASCADE)
 
 
@@ -63,3 +65,9 @@ class ExternalService(models.Model):
         verbose_name = 'Внешний сервис'
         verbose_name_plural = 'Внешние сервисы'
 
+
+class CrieOrder(models.Model):
+    local_direction = models.ForeignKey(Napravleniya, db_index=True, on_delete=models.CASCADE)
+    system_id = models.IntegerField(db_index=True, null=True, blank=True)
+    status = models.CharField(max_length=12, blank=True, default='null', db_index=True)
+    error = models.TextField(blank=True, default='')

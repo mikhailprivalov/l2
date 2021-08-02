@@ -1,284 +1,398 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative" :class="[pay_source && !create_and_open && 'pay_source']">
     <div :class="['top-picker', need_vich_code && 'need-vich-code', hide_diagnosis && 'hide_diagnosis']" v-if="!simple">
-      <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos"
-              v-if="!hide_diagnosis"
-              v-tippy="{ placement : 'bottom', arrow: true }"
-              title="Очистить диагноз и подставить из картотеки">
+      <button
+        class="btn btn-blue-nb top-inner-btn"
+        @click="clear_diagnos"
+        v-if="!hide_diagnosis"
+        v-tippy="{ placement: 'bottom', arrow: true }"
+        title="Очистить диагноз и подставить из картотеки"
+      >
         <span>&times;</span>
       </button>
-      <m-k-b-field v-model="diagnos" v-if="!hide_diagnosis"/>
+      <m-k-b-field v-model="diagnos" v-if="!hide_diagnosis" />
       <div class="vich-code" v-if="need_vich_code && !hide_diagnosis">
-        <TypeAhead src="/api/vich_code?keyword=:keyword" :getResponse="getResponse" :onHit="onHitVich" ref="v"
-                   placeholder="Код"
-                   v-model="vich_code" maxlength="12" :delayTime="delayTime" :minChars="minChars"
-                   :render="renderItems"
-                   :limit="limit" :highlighting="highlighting" :selectFirst="selectFirst"
+        <TypeAhead
+          src="/api/vich_code?keyword=:keyword"
+          :getResponse="getResponse"
+          :onHit="onHitVich"
+          ref="v"
+          placeholder="Код"
+          v-model="vich_code"
+          maxlength="12"
+          :delayTime="delayTime"
+          :minChars="minChars"
+          :render="renderItems"
+          :limit="limit"
+          :highlighting="highlighting"
+          :selectFirst="selectFirst"
         />
       </div>
       <div class="top-inner">
-        <a href="#" @click.prevent="select_fin(row.pk)" class="top-inner-select"
-           :class="{ active: row.pk === fin}"
-           :key="row.pk"
-           v-for="row in base.fin_sources"><span>{{ row.title }}</span></a>
+        <a
+          href="#"
+          @click.prevent="select_fin(row.pk)"
+          class="top-inner-select"
+          :class="{ active: row.pk === fin }"
+          :key="row.pk"
+          v-for="row in base.fin_sources"
+          ><span>{{ row.title }}</span></a
+        >
       </div>
     </div>
-    <div :class="['content-picker', simple ? 'simple': '']" style="margin: 5px">
-      <div v-if="Object.keys(researches_departments).length === 0"
-           style="padding: 10px;color: gray;text-align: center;width: 100%;">
+    <div :class="['content-picker', simple ? 'simple' : '']" style="margin: 5px">
+      <div
+        v-if="Object.keys(researches_departments).length === 0"
+        style="padding: 10px;color: gray;text-align: center;width: 100%;"
+      >
         Услуги не выбраны
       </div>
       <table class="table table-bordered table-condensed" style="table-layout: fixed; margin-bottom: 10px;">
         <colgroup>
-          <col width="130">
-          <col>
-          <col width="38" v-if="!readonly">
+          <col width="130" />
+          <col />
+          <col width="38" v-if="!readonly" />
         </colgroup>
         <tbody>
-        <tr v-for="(row, key) in researches_departments" :key="key">
-          <td>{{ row.title }}</td>
-          <td class="pb0">
-            <research-display v-for="(res, idx) in row.researches" :simple="simple"
-                              :key="`${res.pk}_${hasNotFilled(res.pk)}`"
-                              :title="res.title" :pk="res.pk" :n="idx"
-                              :kk="kk"
-                              :comment="(localizations[res.pk] || {}).label || comments[res.pk]"
-                              :count="counts[res.pk]"
-                              :service_location="(service_locations[res.pk] || {}).label"
-                              :category="res.show_category ? categories[res.site_type_raw] : ''"
-                              :has_not_filled="hasNotFilled(res.pk)"
-                              :has_params="Boolean(form_params[res.pk])"
-                              :not_filled_fields="hasNotFilled(res.pk) ? r_list(form_params[res.pk]) : []"
-                              :readonly="readonly"
-                              :nof="row.researches.length"/>
-          </td>
-          <td v-if="!readonly" class="cl-td clean-btn-td">
-            <button class="btn last btn-blue-nb nbr" type="button"
-                    v-tippy="{ placement : 'bottom', arrow: true }"
-                    :title="`Очистить категорию ${row.title}`" @click.prevent="clear_department(parseInt(key, 10))">
-              <i class="fa fa-times"></i>
-            </button>
-          </td>
-        </tr>
-        <tr v-if="Object.keys(researches_departments).length > 1 && !readonly">
-          <td colspan="2"></td>
-          <td class="cl-td clean-btn-td">
-            <button class="btn last btn-blue-nb nbr" type="button"
-                    v-tippy="{ placement : 'bottom', arrow: true }"
-                    title="Очистить всё" @click.prevent="clear_all">
-              <i class="fa fa-times-circle"></i>
-            </button>
-          </td>
-        </tr>
+          <tr v-for="(row, key) in researches_departments" :key="key">
+            <td>{{ row.title }}</td>
+            <td class="pb0">
+              <research-display
+                v-for="(res, idx) in row.researches"
+                :simple="simple"
+                :key="`${res.pk}_${hasNotFilled(res.pk)}`"
+                :title="res.title"
+                :pk="res.pk"
+                :n="idx"
+                :kk="kk"
+                :comment="(localizations[res.pk] || {}).label || comments[res.pk]"
+                :count="counts[res.pk]"
+                :service_location="(service_locations[res.pk] || {}).label"
+                :category="res.show_category ? categories[res.site_type_raw] : ''"
+                :has_not_filled="hasNotFilled(res.pk)"
+                :has_params="Boolean(form_params[res.pk])"
+                :not_filled_fields="hasNotFilled(res.pk) ? r_list(form_params[res.pk]) : []"
+                :readonly="readonly"
+                :nof="row.researches.length"
+              />
+            </td>
+            <td v-if="!readonly" class="cl-td clean-btn-td">
+              <button
+                class="btn last btn-blue-nb nbr"
+                type="button"
+                v-tippy="{ placement: 'bottom', arrow: true }"
+                :title="`Очистить категорию ${row.title}`"
+                @click.prevent="clear_department(parseInt(key, 10))"
+              >
+                <i class="fa fa-times"></i>
+              </button>
+            </td>
+          </tr>
+          <tr v-if="Object.keys(researches_departments).length > 1 && !readonly">
+            <td colspan="2"></td>
+            <td class="cl-td clean-btn-td">
+              <button
+                class="btn last btn-blue-nb nbr"
+                type="button"
+                v-tippy="{ placement: 'bottom', arrow: true }"
+                title="Очистить всё"
+                @click.prevent="clear_all"
+              >
+                <i class="fa fa-times-circle"></i>
+              </button>
+            </td>
+          </tr>
         </tbody>
       </table>
       <table class="table table-bordered table-condensed more-params" style="table-layout: fixed" v-if="show_additions">
         <colgroup>
-          <col width="185">
-          <col>
+          <col width="185" />
+          <col />
         </colgroup>
         <tbody>
-        <tr v-if="direction_purpose_enabled && !hide_params">
-          <th>Цель направления:</th>
-          <td class="cl-td">
-            <SelectFieldTitled v-model="direction_purpose" :variants="purposes"/>
-          </td>
-        </tr>
-        <tr v-if="external_organizations_enabled && !hide_params">
-          <th>Внешняя организация:</th>
-          <td class="cl-td">
-            <SelectFieldTitled v-model="external_organization" :variants="externalOrganizations"/>
-          </td>
-        </tr>
-        <tr v-if="!has_only_stationar && !hide_params">
-          <th>Кол-во повторений:</th>
-          <td class="cl-td">
-            <input v-model="directions_count" min="1" max="10"
-                   style="max-width: 165px;display: inline-block;" class="form-control" type="number" step="1"
-            />
-            <span v-if="directions_count > 1" class="small">
-              выбранное&nbsp;будет&nbsp;назначено&nbsp;{{
-                directions_count
-              }}&nbsp;раз{{ (directions_count === 0 || directions_count > 5) ? '' : 'а' }}
-            </span>
-          </td>
-        </tr>
-        <tr v-else-if="!hide_params">
-          <th>Отделение стационара</th>
-          <td class="cl-td">
-            <treeselect :multiple="false" :disable-branch-nodes="true"
-                        class="treeselect-noborder treeselect-wide"
-                        :options="hospital_department_overrides" :append-to-body="true"
-                        placeholder="По умолчанию" :clearable="false"
-                        v-model="hospital_department_override"
-            />
-          </td>
-        </tr>
-        <tr v-if="directions_params_enabled">
-          <td class="cl-td" v-if="global_current_direction_param !== -1">
-            <button class="btn btn-blue-nb nbr full-inner-btn" @click="global_research_direction_param.show = true">
-              Заполнить параметры
-            </button>
-          </td>
-          <th v-else>
-            Параметры:
-          </th>
-          <td class="cl-td">
-            <treeselect :multiple="false" :disable-branch-nodes="true"
-                        class="treeselect-noborder"
-                        :options="global_direction_params" :append-to-body="true"
-                        placeholder="Тип не выбран" :clearable="false"
-                        v-model="global_current_direction_param"
-            />
-          </td>
-        </tr>
-        <tr v-if="directions_params_enabled && !r(global_research_direction_param)">
-          <td colspan="2">
-            <div class="status-list empty-block">
-              <div class="status status-none">Не заполнены:&nbsp;</div>
-              <div class="status status-none" :key="rl" v-for="rl in r_list(global_research_direction_param)">{{
-                  rl
-                }};
+          <tr v-if="direction_purpose_enabled && !hide_params">
+            <th>Цель направления:</th>
+            <td class="cl-td">
+              <SelectFieldTitled v-model="direction_purpose" :variants="purposes" />
+            </td>
+          </tr>
+          <tr v-if="external_organizations_enabled && !hide_params">
+            <th>Внешняя организация:</th>
+            <td class="cl-td">
+              <SelectFieldTitled v-model="external_organization" :variants="externalOrganizations" />
+            </td>
+          </tr>
+          <tr v-if="!has_only_stationar && !hide_params">
+            <th>Кол-во повторений:</th>
+            <td class="cl-td">
+              <input
+                v-model="directions_count"
+                min="1"
+                max="10"
+                style="max-width: 165px;display: inline-block;"
+                class="form-control"
+                type="number"
+                step="1"
+              />
+              <span v-if="directions_count > 1" class="small">
+                выбранное&nbsp;будет&nbsp;назначено&nbsp;{{ directions_count }}&nbsp;раз{{
+                  directions_count === 0 || directions_count > 5 ? '' : 'а'
+                }}
+              </span>
+            </td>
+          </tr>
+          <tr v-else-if="!hide_params">
+            <th>Отделение стационара</th>
+            <td class="cl-td">
+              <treeselect
+                :multiple="false"
+                :disable-branch-nodes="true"
+                class="treeselect-noborder treeselect-wide"
+                :options="hospital_department_overrides"
+                :append-to-body="true"
+                placeholder="По умолчанию"
+                :clearable="false"
+                v-model="hospital_department_override"
+              />
+            </td>
+          </tr>
+          <tr v-if="directions_params_enabled && !monitoring">
+            <td class="cl-td" v-if="global_current_direction_param !== -1">
+              <button class="btn btn-blue-nb nbr full-inner-btn" @click="global_research_direction_param.show = true">
+                Заполнить параметры
+              </button>
+            </td>
+            <th v-else>
+              Параметры:
+            </th>
+            <td class="cl-td">
+              <treeselect
+                :multiple="false"
+                :disable-branch-nodes="true"
+                class="treeselect-noborder"
+                :options="global_direction_params"
+                :append-to-body="true"
+                placeholder="Тип не выбран"
+                :clearable="false"
+                v-model="global_current_direction_param"
+              />
+            </td>
+          </tr>
+          <tr v-if="directions_params_enabled && !r(global_research_direction_param)">
+            <td colspan="2">
+              <div class="status-list empty-block">
+                <div class="status status-none">Не заполнены:&nbsp;</div>
+                <div class="status status-none" :key="rl" v-for="rl in r_list(global_research_direction_param)">{{ rl }};</div>
               </div>
-            </div>
-          </td>
-        </tr>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
     <div class="bottom-picker-inputs" v-if="pay_source && !create_and_open">
-      <input v-model="count" placeholder="Количество" title="Количество"
-             v-tippy="{ placement : 'top', arrow: true, followCursor: true, distance : 15 }"
-             type="number" min="1" max="1000" class="form-control"/>
-      <input v-model="discount" placeholder="Скидка"
-             v-tippy="{ placement : 'top', arrow: true, followCursor: true, distance : 15 }"
-             title="Скидка" type="number" min="0" max="100" class="form-control"/>
+      <input
+        v-model="count"
+        placeholder="Кол-во"
+        title="Количество"
+        v-tippy="{ placement: 'top', arrow: true, followCursor: true, distance: 15 }"
+        type="number"
+        min="1"
+        max="1000"
+        class="form-control"
+      />
+      <input
+        v-model="discount"
+        placeholder="Скидка"
+        v-tippy="{ placement: 'top', arrow: true, followCursor: true, distance: 15 }"
+        title="Скидка"
+        type="number"
+        min="0"
+        max="100"
+        class="form-control"
+      />
       <div class="bottom-picker-inputs-over">
-        кол.<br/>
+        кол.<br />
         -%
       </div>
     </div>
     <div class="bottom-picker" v-if="!simple">
-      <template v-if="create_and_open">
-        <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('create_and_open')"
-                title="Сохранить и заполнить протокол" v-tippy>
+      <template v-if="monitoring">
+        <button
+          class="btn btn-blue-nb top-inner-select"
+          :disabled="!can_save"
+          @click="generate('save-and-open-embedded-form')"
+          title="Сохранить и заполнить монитиринг"
+          v-tippy
+        >
+          <span>Сохранить и заполнить монитиринг</span>
+        </button>
+      </template>
+      <template v-else-if="create_and_open">
+        <button
+          class="btn btn-blue-nb top-inner-select"
+          :disabled="!can_save"
+          @click="generate('create_and_open')"
+          title="Сохранить и заполнить протокол"
+          v-tippy
+        >
           <span>Сохранить и заполнить протокол</span>
         </button>
-        <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('direction')"
-                title="Сохранить и распечатать направления" v-tippy>
+        <button
+          class="btn btn-blue-nb top-inner-select"
+          :disabled="!can_save"
+          @click="generate('direction')"
+          title="Сохранить и распечатать направления"
+          v-tippy
+        >
           <span>Сохранить и распечатать направления</span>
         </button>
       </template>
       <template v-else>
-        <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('direction')"
-                title="Сохранить и распечатать направления" v-tippy>
+        <button
+          class="btn btn-blue-nb top-inner-select"
+          :disabled="!can_save"
+          @click="generate('direction')"
+          title="Сохранить и распечатать направления"
+          v-tippy
+        >
           <span>Сохранить и распечатать</span>
         </button>
-        <button class="btn btn-blue-nb top-inner-select hidden-small" :disabled="!can_save"
-                @click="generate('barcode')"
-                title="Сохранить и распечатать штрих-коды" v-tippy>
+        <button
+          class="btn btn-blue-nb top-inner-select hidden-small"
+          :disabled="!can_save"
+          @click="generate('barcode')"
+          title="Сохранить и распечатать штрих-коды"
+          v-tippy
+        >
           <span>Сохранить и распечатать штрих-коды</span>
         </button>
-        <button class="btn btn-blue-nb top-inner-select" :disabled="!can_save" @click="generate('just-save')"
-                title="Сохранить без печати" v-tippy>
+        <button
+          class="btn btn-blue-nb top-inner-select"
+          :disabled="!can_save"
+          @click="generate('just-save')"
+          title="Сохранить без печати"
+          v-tippy
+        >
           <span>Сохранить без печати</span>
         </button>
       </template>
     </div>
 
-    <modal ref="modal" @close="cancel_update" show-footer="true"
-           overflow-unset="true" resultsEditor
-           v-show="visible && need_update_comment.length > 0 && !hide_window_update && !simple || show_global_direction_params">
+    <modal
+      ref="modal"
+      @close="cancel_update"
+      show-footer="true"
+      overflow-unset="true"
+      resultsEditor
+      v-show="(visible && need_update_comment.length > 0 && !hide_window_update && !simple) || show_global_direction_params"
+    >
       <span v-if="show_global_direction_params" slot="header">Настройка общих параметров для направления</span>
       <span v-else slot="header">Настройка назначений</span>
       <div slot="body" class="overflow-unset">
-        <table v-if="!show_global_direction_params" class="table table-bordered table-responsive"
-               style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
+        <table
+          v-if="!show_global_direction_params"
+          class="table table-bordered table-responsive"
+          style="table-layout: fixed;background-color: #fff;margin: 0 auto;"
+        >
           <colgroup>
-            <col width="230">
-            <col width="40">
-            <col width="230">
-            <col width="230">
-            <col width="80">
+            <col style="width: 40px;" />
+            <col />
+            <col />
+            <col />
+            <col style="width: 80px;" />
           </colgroup>
           <thead>
-          <tr>
-            <th colspan="2">Назначение</th>
-            <th>Комментарий</th>
-            <th>Место</th>
-            <th>Количество</th>
-          </tr>
+            <tr>
+              <th colspan="2">Назначение</th>
+              <th>Комментарий</th>
+              <th>Место</th>
+              <th>Кол-во</th>
+            </tr>
           </thead>
           <tbody>
-          <template v-for="(row, i) in need_update_object">
-            <!-- eslint-disable-next-line vue/require-v-for-key -->
-            <tr>
-              <td class="cl-td" :colspan="(need_update_object.length > 1 && i === 0) ? 1 : 2">
-                <div style="width:100%; overflow: hidden; text-overflow: ellipsis;" :title="row.title">
-                  <span v-if="row.direction_params > -1" title="Параметры направления" v-tippy>
-                    <button type="button" class="btn btn-blue-nb nbr"
-                            @click="form_params[row.pk].show = !form_params[row.pk].show">
-                    <i v-if="form_params[row.pk].show" class="glyphicon glyphicon-arrow-up"></i>
-                      <i v-else class="glyphicon glyphicon-arrow-down"></i>
-                    </button>
-                  </span>
-                  <div style="display: inline-block; margin: 0 5px;">
-                    {{ row.title }}
+            <template v-for="(row, i) in need_update_object">
+              <!-- eslint-disable-next-line vue/require-v-for-key -->
+              <tr>
+                <td class="cl-td" :colspan="need_update_object.length > 1 && i === 0 ? 1 : 2">
+                  <div style="width:100%; overflow: hidden; text-overflow: ellipsis;" :title="row.title">
+                    <span v-if="row.direction_params > -1" title="Параметры направления" v-tippy>
+                      <button
+                        type="button"
+                        class="btn btn-blue-nb nbr"
+                        @click="form_params[row.pk].show = !form_params[row.pk].show"
+                      >
+                        <i v-if="form_params[row.pk].show" class="glyphicon glyphicon-arrow-up"></i>
+                        <i v-else class="glyphicon glyphicon-arrow-down"></i>
+                      </button>
+                    </span>
+                    <div style="display: inline-block; margin: 0 5px;">
+                      {{ row.title }}
+                    </div>
+                    <div class="status-list empty-block" v-if="row.direction_params > -1 && !r(form_params[row.pk])">
+                      <div class="status status-none">Не заполнены:&nbsp;</div>
+                      <div class="status status-none" :key="rl" v-for="rl in r_list(form_params[row.pk])">{{ rl }};</div>
+                    </div>
                   </div>
-                  <div class="status-list empty-block" v-if="row.direction_params > -1 && !r(form_params[row.pk])">
-                    <div class="status status-none">Не заполнены:&nbsp;</div>
-                    <div class="status status-none" :key="rl" v-for="rl in r_list(form_params[row.pk])">{{ rl }};</div>
+                </td>
+                <td class="cl-td" v-if="need_update_object.length > 1 && i === 0">
+                  <button
+                    class="btn last btn-blue-nb nbr"
+                    type="button"
+                    v-tippy="{ placement: 'bottom', arrow: true }"
+                    v-if="row.site_type_raw !== -13"
+                    title="Назначить всем исследованиям те же параметры"
+                    @click="applyAllFromFirst"
+                  >
+                    <i class="fa fa-circle"></i>
+                  </button>
+                </td>
+                <td class="cl-td">
+                  <v-select
+                    :clearable="false"
+                    :options="row.localizations"
+                    :searchable="false"
+                    v-if="row.localizations && row.localizations.length > 0"
+                    v-model="localizations[row.pk]"
+                  />
+                  <v-select :options="row.options" taggable v-else-if="row.site_type_raw !== -13" v-model="comments[row.pk]">
+                    <div slot="no-options">Нет вариантов по умолчанию</div>
+                  </v-select>
+                </td>
+                <td class="cl-td">
+                  <v-select
+                    :clearable="false"
+                    :options="row.service_locations"
+                    :searchable="false"
+                    v-if="row.service_locations && row.service_locations.length > 0"
+                    v-model="service_locations[row.pk]"
+                  />
+                  <div class="empty-variants" v-else-if="row.site_type_raw !== -13">
+                    нет доступных вариантов
                   </div>
-                </div>
-              </td>
-              <td class="cl-td" v-if="need_update_object.length > 1 && i === 0">
-                <button class="btn last btn-blue-nb nbr" type="button"
-                        v-tippy="{ placement : 'bottom', arrow: true }"
-                        v-if="row.site_type_raw !== -13"
-                        title="Назначить всем исследованиям те же параметры" @click="applyAllFromFirst">
-                  <i class="fa fa-circle"></i>
-                </button>
-              </td>
-              <td class="cl-td">
-                <v-select :clearable="false" :options="row.localizations"
-                          :searchable="false" v-if="row.localizations && row.localizations.length > 0"
-                          v-model="localizations[row.pk]"/>
-                <v-select :options="row.options" taggable v-else-if="row.site_type_raw !== -13"
-                          v-model="comments[row.pk]">
-                  <div slot="no-options">Нет вариантов по умолчанию</div>
-                </v-select>
-              </td>
-              <td class="cl-td">
-                <v-select :clearable="false" :options="row.service_locations"
-                          :searchable="false" v-if="row.service_locations && row.service_locations.length > 0"
-                          v-model="service_locations[row.pk]"/>
-                <div class="empty-variants" v-else-if="row.site_type_raw !== -13">
-                  нет доступных вариантов
-                </div>
-              </td>
-              <td class="cl-td">
-                <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]"
-                       v-if="row.site_type_raw !== -13"/>
-              </td>
-            </tr>
-            <template v-if="form_params[row.pk]">
-              <tr :key="row.pk">
-                <td colspan="5">
-                  <SelectedResearchesParams
-                    :research="form_params[row.pk]"
-                    :selected_card="selected_card"
+                </td>
+                <td class="cl-td">
+                  <input
+                    class="form-control"
+                    type="number"
+                    min="1"
+                    max="1000"
+                    v-model="counts[row.pk]"
+                    v-if="row.site_type_raw !== -13"
                   />
                 </td>
               </tr>
+              <template v-if="form_params[row.pk]">
+                <tr :key="row.pk">
+                  <td colspan="5">
+                    <SelectedResearchesParams :research="form_params[row.pk]" :selected_card="selected_card" />
+                  </td>
+                </tr>
+              </template>
             </template>
-          </template>
           </tbody>
         </table>
         <template v-else>
-          <SelectedResearchesParams
-            :research="global_research_direction_param"
-            :selected_card="selected_card"
-          />
+          <SelectedResearchesParams :research="global_research_direction_param" :selected_card="selected_card" />
         </template>
       </div>
       <div slot="footer" class="text-center">
@@ -321,6 +435,10 @@ export default {
   },
   props: {
     simple: {
+      type: Boolean,
+      default: false,
+    },
+    monitoring: {
       type: Boolean,
       default: false,
     },
@@ -460,10 +578,10 @@ export default {
       const service_locations = {};
       const localizations = {};
       const counts = {};
-      this.need_update_comment = this.need_update_comment.filter((e) => this.researches.indexOf(e) !== -1);
-      this.need_update_localization = this.need_update_localization.filter((e) => this.researches.indexOf(e) !== -1);
-      this.need_update_service_location = this.need_update_service_location.filter((e) => this.researches.indexOf(e) !== -1);
-      this.need_update_direction_params = this.need_update_direction_params.filter((e) => this.researches.indexOf(e) !== -1);
+      this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1);
+      this.need_update_localization = this.need_update_localization.filter(e => this.researches.indexOf(e) !== -1);
+      this.need_update_service_location = this.need_update_service_location.filter(e => this.researches.indexOf(e) !== -1);
+      this.need_update_direction_params = this.need_update_direction_params.filter(e => this.researches.indexOf(e) !== -1);
       let needShowWindow = false;
       for (const pk of this.researches) {
         if (!this.comments[pk] && !this.localizations[pk] && !this.service_locations[pk] && !this.form_params[pk]) {
@@ -504,9 +622,7 @@ export default {
                 this.need_update_direction_params.push(pk);
                 this.form_params[pk] = {};
                 needShowWindow = true;
-                form_params[pk] = _.cloneDeep(
-                  await this.load_direction_params_data(res.direction_params),
-                );
+                form_params[pk] = _.cloneDeep(await this.load_direction_params_data(res.direction_params));
                 form_params[pk].show = true;
               } else if (this.form_params[pk]) {
                 form_params[pk] = this.form_params[pk];
@@ -546,20 +662,79 @@ export default {
     diagnos() {
       if (/^[a-zA-Zа-яА-Я]\d.*/g.test(this.diagnos)) {
         this.diagnos = this.diagnos.toUpperCase();
-        const replace = ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ',
-          'ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э',
-          'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю'];
+        const replace = [
+          'й',
+          'ц',
+          'у',
+          'к',
+          'е',
+          'н',
+          'г',
+          'ш',
+          'щ',
+          'з',
+          'х',
+          'ъ',
+          'ф',
+          'ы',
+          'в',
+          'а',
+          'п',
+          'р',
+          'о',
+          'л',
+          'д',
+          'ж',
+          'э',
+          'я',
+          'ч',
+          'с',
+          'м',
+          'и',
+          'т',
+          'ь',
+          'б',
+          'ю',
+        ];
 
-        const search = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '\\[', '\\]',
-          'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'',
-          'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.'];
+        const search = [
+          'q',
+          'w',
+          'e',
+          'r',
+          't',
+          'y',
+          'u',
+          'i',
+          'o',
+          'p',
+          '\\[',
+          '\\]',
+          'a',
+          's',
+          'd',
+          'f',
+          'g',
+          'h',
+          'j',
+          'k',
+          'l',
+          ';',
+          "'",
+          'z',
+          'x',
+          'c',
+          'v',
+          'b',
+          'n',
+          'm',
+          ',',
+          '.',
+        ];
 
         for (let i = 0; i < replace.length; i++) {
           const reg = new RegExp(replace[i], 'mig');
-          this.diagnos = this.diagnos.replace(
-            reg,
-            (a) => (a === a.toLowerCase() ? search[i] : search[i].toUpperCase()),
-          );
+          this.diagnos = this.diagnos.replace(reg, a => (a === a.toLowerCase() ? search[i] : search[i].toUpperCase()));
         }
       }
       this.$root.$emit('update_diagnos', this.diagnos);
@@ -618,16 +793,14 @@ export default {
         this.global_research_direction_param = {};
         return;
       }
-      this.global_research_direction_param = _.cloneDeep(
-        await this.load_direction_params_data(pk),
-      );
+      this.global_research_direction_param = _.cloneDeep(await this.load_direction_params_data(pk));
       this.global_research_direction_param.show = true;
     },
     async load_direction_params() {
       const data = await api('researches/by-direction-params');
       this.global_direction_params = [
         { id: -1, label: 'Не выбрано' },
-        ...Object.keys(data).map((id) => ({ id, label: data[id].title })),
+        ...Object.keys(data).map(id => ({ id, label: data[id].title })),
       ];
       this.researches_direction_params = data;
     },
@@ -657,10 +830,7 @@ export default {
     applyAllFromFirst() {
       const { pk: fpk } = this.need_update_object[0];
       for (const row of this.need_update_object.slice(1)) {
-        if (
-          this.localizations[fpk]
-          && (row.localizations || []).find(({ code }) => code === this.localizations[fpk].code)
-        ) {
+        if (this.localizations[fpk] && (row.localizations || []).find(({ code }) => code === this.localizations[fpk].code)) {
           this.localizations[row.pk] = this.localizations[fpk];
         }
         if ((row.options || []).includes(this.comments[fpk]) || this.comments[fpk] === '') {
@@ -668,9 +838,7 @@ export default {
         }
         if (
           this.service_locations[fpk]
-          && (row.service_locations || []).find(
-            ({ code }) => code === this.service_locations[fpk].code,
-          )
+          && (row.service_locations || []).find(({ code }) => code === this.service_locations[fpk].code)
         ) {
           this.service_locations[row.pk] = this.service_locations[fpk];
         }
@@ -701,10 +869,10 @@ export default {
     getResponse(resp) {
       return [...resp.data.data];
     },
-    renderItems: (items) => items.map((i) => `${i.code} ${i.title}`),
+    renderItems: items => items.map(i => `${i.code} ${i.title}`),
     get_def_diagnosis(finOrig) {
       const fin = finOrig || this.fin;
-      return (`${this.main_diagnosis} ${this.get_fin_obj(fin).default_diagnos}`).trim();
+      return `${this.main_diagnosis} ${this.get_fin_obj(fin).default_diagnos}`.trim();
     },
     clear_diagnos() {
       this.diagnos = this.get_def_diagnosis();
@@ -746,8 +914,11 @@ export default {
       return { pk: -1, title: '', default_diagnos: '' };
     },
     select_fin(pkOrig) {
+      if (this.monitoring) {
+        return;
+      }
       let pk = pkOrig;
-      if (this.base.fin_sources.length === 1 && pk === -1) {
+      if (this.base && this.base.fin_sources && this.base.fin_sources.length === 1 && pk === -1) {
         pk = this.base.fin_sources[0].pk;
       }
       const cfin = this.fin;
@@ -762,12 +933,12 @@ export default {
       this.$root.$emit(`researches-picker:deselect_department${this.kk}`, pk, this.researches_departments_simple()[pk]);
     },
     generate(type) {
-      if (this.diagnos === '' && this.current_fin !== 'Платно' && !this.pay_source && !this.create_and_open) {
+      if (this.diagnos === '' && this.current_fin !== 'Платно' && !this.pay_source && !this.create_and_open && !this.monitoring) {
         window.$(this.$refs.d).focus();
         this.$root.$emit('msg', 'error', 'Диагноз не указан.\nЕсли не требуется, то укажите прочерк ("-")');
         return;
       }
-      if (this.need_vich_code && this.vich_code === '') {
+      if (this.need_vich_code && this.vich_code === '' && !this.monitoring) {
         window.$(this.$refs.v).focus();
         this.$root.$emit('msg', 'error', 'Не указан код для направления на ВИЧ');
         return;
@@ -799,6 +970,7 @@ export default {
         direction_form_params: this.form_params,
         current_global_direction_params: this.global_research_direction_param,
         hospital_department_override: this.hospital_department_override,
+        monitoring: this.monitoring,
       });
     },
     clear_all() {
@@ -846,8 +1018,11 @@ export default {
         let n = 0;
         for (const f of g.fields) {
           n++;
-          if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)
-            && (vField(g, research.groups, f.visibility, this.simulated_patient))) {
+          if (
+            f.required
+            && (f.value === '' || f.value === '- Не выбрано' || !f.value)
+            && vField(g, research.groups, f.visibility, this.simulated_patient)
+          ) {
             l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));
           }
         }
@@ -917,6 +1092,7 @@ export default {
         '-9998': { title: 'Морфология' },
         '-9': { title: 'Формы' },
         '-11': { title: 'Заявления' },
+        '-12': { title: 'Мониторинги' },
       };
       for (const dep of this.$store.getters.allDepartments) {
         deps[dep.pk] = dep;
@@ -925,7 +1101,7 @@ export default {
       for (const pk of this.researches) {
         if (this.$store.getters.researches_obj[pk]) {
           const res = this.$store.getters.researches_obj[pk];
-          const d = (res.department_pk && !res.doc_refferal) ? res.department_pk : -2;
+          const d = res.department_pk && !res.doc_refferal ? res.department_pk : -2;
           if (!(d in r)) {
             r[d] = {
               pk: d,
@@ -949,17 +1125,18 @@ export default {
     },
     need_vich_code() {
       for (const pk of this.researches) {
-        if (
-          pk in this.$store.getters.researches_obj
-          && this.$store.getters.researches_obj[pk].need_vich_code
-        ) {
+        if (pk in this.$store.getters.researches_obj && this.$store.getters.researches_obj[pk].need_vich_code) {
           return true;
         }
       }
       return false;
     },
     can_save() {
-      if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1) {
+      if (this.monitoring) {
+        if (this.researches.filter(r => r !== -1).length === 0) {
+          return false;
+        }
+      } else if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1) {
         return false;
       }
 
@@ -967,7 +1144,7 @@ export default {
         return false;
       }
 
-      return !this.researches.find((pk) => {
+      return !this.researches.find(pk => {
         if (!this.form_params[pk]) {
           return false;
         }
@@ -1009,9 +1186,10 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.top-picker, .bottom-picker {
+.top-picker,
+.bottom-picker {
   height: 34px;
-  background-color: #AAB2BD;
+  background-color: #aab2bd;
   position: absolute;
   left: 0;
   right: 0;
@@ -1021,7 +1199,9 @@ export default {
   top: 0;
 }
 
-.top-inner, .content-picker, .bottom-picker {
+.top-inner,
+.content-picker,
+.bottom-picker {
   display: flex;
   flex-wrap: wrap;
   justify-content: stretch;
@@ -1065,7 +1245,7 @@ export default {
 .top-picker ::v-deep .form-control {
   border-radius: 0 !important;
   border: none;
-  border-bottom: 1px solid #AAB2BD;
+  border-bottom: 1px solid #aab2bd;
 
   &:first-child {
     width: 180px;
@@ -1096,15 +1276,16 @@ export default {
 .top-picker ::v-deep ul li {
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 2px .25rem;
-  margin: 0 .2rem;
+  padding: 2px 0.25rem;
+  margin: 0 0.2rem;
 
   a {
     padding: 2px 10px;
   }
 }
 
-.top-inner-select, .top-inner-select.btn {
+.top-inner-select,
+.top-inner-select.btn {
   border-radius: 0;
   border: none !important;
   align-self: stretch;
@@ -1117,7 +1298,7 @@ export default {
   margin: 0;
   font-size: 12px;
   min-width: 0;
-  background-color: #AAB2BD;
+  background-color: #aab2bd;
   color: #fff;
 
   &:hover {
@@ -1132,8 +1313,8 @@ export default {
   &:disabled {
     color: #fff;
     cursor: not-allowed;
-    opacity: .8;
-    background-color: rgba(255, 255, 255, .7) !important;
+    opacity: 0.8;
+    background-color: rgba(255, 255, 255, 0.7) !important;
   }
 
   span {
@@ -1151,14 +1332,15 @@ export default {
   flex: 0 1 auto;
   width: 25%;
   height: 34px;
-  border: 1px solid #6C7A89 !important;
+  border: 1px solid #6c7a89 !important;
 }
 
 .research-select:hover {
-  box-shadow: inset 0 0 8px rgba(0, 0, 0, .8) !important;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8) !important;
 }
 
-.content-picker, .content-none {
+.content-picker,
+.content-none {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -1239,7 +1421,10 @@ export default {
 }
 
 .more-params {
-  select, input, ::v-deep select, ::v-deep input {
+  select,
+  input,
+  ::v-deep select,
+  ::v-deep input {
     border-radius: 0;
     border: none;
   }
@@ -1259,13 +1444,13 @@ export default {
 }
 
 .status-none {
-  color: #CF3A24
+  color: #cf3a24;
 }
 
 .empty-block {
   border-radius: 4px;
-  border: 1px solid #CF3A24;
-  background: rgba(#CF3A24, .1);
+  border: 1px solid #cf3a24;
+  background: rgba(#cf3a24, 0.1);
   padding: 3px;
   margin: 3px;
 }
@@ -1284,6 +1469,6 @@ export default {
   text-align: center;
   padding: 3px;
   color: lightslategray;
-  font-size: 90%
+  font-size: 90%;
 }
 </style>

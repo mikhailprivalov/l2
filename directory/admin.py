@@ -160,6 +160,7 @@ class ResParaclinicInputField(admin.ModelAdmin):
     list_display = (
         'title',
         'group',
+
     )
     list_display_links = (
         'title',

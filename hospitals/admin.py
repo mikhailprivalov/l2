@@ -14,6 +14,12 @@ class RefHospitals(admin.ModelAdmin):
         'code_tfoms',
     )
     search_fields = ('title',)
+    raw_id_fields = ('client',)
+
+
+class ResHospitalsGroup(admin.ModelAdmin):
+    filter_horizontal = ('hospital', 'research')
 
 
 admin.site.register(models.Hospitals, RefHospitals)
+admin.site.register(models.HospitalsGroup, ResHospitalsGroup)

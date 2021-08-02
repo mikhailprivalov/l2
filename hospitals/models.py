@@ -1,8 +1,8 @@
 from typing import Optional
-
 from django.db import models
-
 from appconf.manager import SettingManager
+from clients.models import Card
+from directory.models import Researches
 
 
 class Hospitals(models.Model):
@@ -21,6 +21,8 @@ class Hospitals(models.Model):
     remote_url = models.CharField(max_length=128, blank=True, default='', help_text="Адрес L2")
     remote_token = models.CharField(max_length=128, blank=True, default='', help_text="Токен L2")
     license_data = models.CharField(max_length=128, blank=True, default='', help_text="Лицензия")
+    client = models.ForeignKey(Card, default=None, blank=True, null=True, db_index=True, help_text='Суррогатный пациент для мониторигна', on_delete=models.SET_NULL)
+    research = models.ManyToManyField(Researches, blank=True, default=None, help_text="Обязательные мониторинги")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
@@ -69,3 +71,28 @@ class Hospitals(models.Model):
     class Meta:
         verbose_name = 'Больница'
         verbose_name_plural = 'Больницы'
+
+
+class HospitalsGroup(models.Model):
+
+    REQUIREMENT_MONITORING_HOSP = 'REQUIREMENT_MONITORING_HOSP'
+    REGION_HOSP = 'REGION_HOSP'
+    CHILD_HOSP = 'CHILD_HOSP'
+
+    HOSPITAL_TYPES = (
+        (REQUIREMENT_MONITORING_HOSP, 'Обязательные моиторинги'),
+        (REGION_HOSP, 'По районам'),
+        (CHILD_HOSP, 'Детские'),
+    )
+
+    title = models.CharField(max_length=255, help_text="Наименование")
+    hospital = models.ManyToManyField(Hospitals, blank=True, default=None, help_text="Какие больница")
+    research = models.ManyToManyField(Researches, blank=True, default=None, help_text="Обязательные мониторинги")
+    type_hospital = models.CharField(default=None, blank=True, null=True, max_length=100, db_index=True, choices=HOSPITAL_TYPES, help_text="Тип группы")
+
+    def __str__(self):
+        return f"{self.title}"
+
+    class Meta:
+        verbose_name = 'Группа больница'
+        verbose_name_plural = 'Группы больницы'

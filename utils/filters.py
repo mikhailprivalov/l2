@@ -9,6 +9,6 @@ class RequestDataFilter(logging.Filter):
         record.path = record.request.path
         record.body = Truncator(record.request.body.decode()).chars(300)
         record.data = dict(record.request.GET if record.request.method == "GET" else record.request.POST)
-        record.user = record.request.user.username if record.request.user.is_authenticated else 'GUEST'
+        record.user = record.request.user.username if hasattr(record.request, 'user') and record.request.user.is_authenticated else 'GUEST'
         return True
 

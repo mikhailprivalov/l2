@@ -446,7 +446,7 @@ def form(request):
             "ref": current_ref,
             "selectedReference": selected_reference,
             "norm": r.get_is_norm(recalc=True)[0] if r else None,
-            "value": r.value if r else '',
+            "value": str(r.value if r else '').replace('&lt;', '<').replace('&gt;', '>'),
         })
 
     return JsonResponse({

@@ -3,9 +3,11 @@ import logging
 import random
 from collections import defaultdict
 import re
+import time
 
 import petrovna
 import simplejson as json
+from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
@@ -16,10 +18,11 @@ from rest_framework.response import Response
 import directions.models as directions
 from appconf.manager import SettingManager
 from clients.models import Individual, Card
+from clients.sql_func import last_results_researches_by_time_ago
 from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
-from laboratory.settings import AFTER_DATE, MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY
+from laboratory.settings import AFTER_DATE, CENTRE_GIGIEN_EPIDEMIOLOGY, MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY, REGION
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
@@ -31,7 +34,8 @@ from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
 from . import sql_if
 from directions.models import Napravleniya
-from .models import ExternalService
+from .models import CrieOrder, ExternalService
+from laboratory.settings import COVID_RESEARCHES_PK
 
 logger = logging.getLogger("IF")
 
@@ -81,6 +85,17 @@ def get_dir_n3(request):
 def resend_dir_l2(request):
     next_n = int(request.GET.get("nextN", 5))
     dirs = sql_if.direction_resend_l2(next_n)
+    result = {"ok": False, "next": []}
+    if dirs:
+        result = {"ok": True, "next": [i[0] for i in dirs]}
+
+    return Response(result)
+
+
+@api_view()
+def resend_dir_crie(request):
+    next_n = int(request.GET.get("nextN", 5))
+    dirs = sql_if.direction_resend_crie(next_n)
     result = {"ok": False, "next": []}
     if dirs:
         result = {"ok": True, "next": [i[0] for i in dirs]}
@@ -141,12 +156,19 @@ def direction_data(request):
             },
             "issledovaniya": [x.pk for x in iss],
             "timeConfirmation": iss[iss_index].time_confirmation,
+            "timeTube": iss[iss_index].material_date,
             "docLogin": iss[iss_index].doc_confirmation.rmis_login if iss[iss_index].doc_confirmation else None,
             "docPassword": iss[iss_index].doc_confirmation.rmis_password if iss[iss_index].doc_confirmation else None,
             "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid if iss[iss_index].doc_confirmation else None,
             "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else 'ОМС',
             "oldPk": direction.core_id,
             "isExternal": direction.is_external,
+            "titleInitiator": direction.get_title_org_initiator(),
+            "ogrnInitiator": direction.get_ogrn_org_initiator(),
+            "titleLaboratory": direction.hospital_title.replace("\"", " "),
+            "ogrnLaboratory": direction.hospital_ogrn,
+            "REGION": REGION,
+            "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
         }
     )
 
@@ -260,10 +282,13 @@ def issledovaniye_data_multi(request):
             results_data.append(
                 {
                     "pk": r.pk,
+                    "issTitle": i.research.title,
+                    "title": r.fraction.title,
                     "fsli": r.fraction.get_fsli_code(),
                     "value": r.value.replace(',', '.'),
                     "units": r.get_units(),
                     "ref": refs,
+                    "confirmed": i.time_confirmation,
                 }
             )
 
@@ -318,14 +343,52 @@ def make_log(request):
     return Response({"ok": True})
 
 
+@api_view(['GET'])
+def crie_status(request):
+    pk = request.GET.get("direction")
+    system_id = request.GET.get("system_id")
+    status = request.GET.get("status") or 'null'
+    error = request.GET.get("error") or ''
+
+    direction = directions.Napravleniya.objects.filter(pk=pk).first()
+
+    if direction:
+        if direction.need_resend_crie:
+            direction.need_resend_crie = False
+            direction.save(update_fields=['need_resend_crie'])
+        order = CrieOrder.objects.filter(local_direction=direction).first()
+        if not order:
+            order = CrieOrder.objects.create(local_direction=direction, system_id=system_id, status=status, error=error)
+            updated = ['system_id', 'status', 'error', 'local_direction']
+        else:
+            updated = []
+            if order.system_id != system_id:
+                order.system_id = system_id
+                updated.append('system_id')
+
+            if order.status != status:
+                order.status = status
+                updated.append('status')
+
+            if order.error != error:
+                order.error = error
+                updated.append('error')
+
+            if updated:
+                order.save(update_fields=updated)
+        if updated:
+            Log.log(key=pk, type=60006, body={'updated': updated, 'order_id': order.pk})
+        return Response({"ok": True, "order": order.pk})
+    return Response({"ok": False})
+
+
 @api_view(['POST'])
 def check_enp(request):
-    enp, family, name, patronymic, bd, enp_mode =\
-        data_parse(
-            request.body,
-            {'enp': str, 'family': str, 'name': str, 'patronymic': str, 'bd': str, 'check_mode': str},
-            {'check_mode': 'tfoms', 'bd': None, 'name': None, 'patronymic': None, 'family': None, 'enp': None}
-        )
+    enp, family, name, patronymic, bd, enp_mode = data_parse(
+        request.body,
+        {'enp': str, 'family': str, 'name': str, 'patronymic': str, 'bd': str, 'check_mode': str},
+        {'check_mode': 'tfoms', 'bd': None, 'name': None, 'patronymic': None, 'family': None, 'enp': None},
+    )
     enp = enp.replace(' ', '')
 
     logger.exception(f'enp_mode: {enp_mode}')
@@ -369,34 +432,81 @@ def check_enp(request):
                         },
                     }
                 )
+    elif enp_mode == 'local':
+        logger.exception(f'enp: {enp}')
+        card = Card.objects.filter(base__internal_type=True, is_archive=False, carddocusage__document__number=enp, carddocusage__document__document_type__title='Полис ОМС').first()
+
+        if card:
+            logger.exception(f'card: {card}')
+            i: Individual = card.individual
+            bd_orig = f"{i.birthday:%Y-%m-%d}"
+            logger.exception(f'{bd_orig} == {bd}')
+            if bd_orig == bd:
+                return Response(
+                    {
+                        "ok": True,
+                        'patient_data': {
+                            "rmis_id": card.individual.get_rmis_uid_fast(),
+                        },
+                    }
+                )
 
     return Response({"ok": False, 'message': 'Неверные данные или нет прикрепления к поликлинике'})
 
 
 @api_view(['POST'])
 def patient_results_covid19(request):
-    rmis_id = data_parse(request.body, {'rmis_id': str})[0]
-
-    logger.exception(f'patient_results_covid19: {rmis_id}')
-
-    c = Client(modules=['directions', 'rendered_services'])
-
-    now = current_time().date()
     days = 15
-    variants = ['РНК вируса SARS-CоV2 не обнаружена', 'РНК вируса SARS-CоV2 обнаружена']
+    results = []
+    p_enp = data_parse(request.body, {'enp': str}, {'enp': ''})[0]
+    if p_enp:
+        logger.exception(f'patient_results_covid19 by enp: {p_enp}')
+        card = Card.objects.filter(
+            base__internal_type=True, is_archive=False, carddocusage__document__number=str(p_enp).replace(' ', ''), carddocusage__document__document_type__title='Полис ОМС'
+        ).first()
+        logger.exception(f'patient_results_covid19 by enp [CARD]: {card}')
+        if card:
+            date_end = current_time()
+            date_start = date_end + relativedelta(days=-days)
+            date_end = date_end + relativedelta(days=1)
+            results_covid = last_results_researches_by_time_ago(card.pk, COVID_RESEARCHES_PK, date_start, date_end)
+            logger.exception(f'patient_results_covid19 by enp params: {(card.pk, COVID_RESEARCHES_PK, date_start, date_end)}')
+            logger.exception(f'patient_results_covid19 by enp results count: {len(results_covid)}')
+            for i in results_covid:
+                results.append({'date': i.confirm, 'result': i.value})
+            if len(results) > 0:
+                return Response({"ok": True, 'results': results})
+
+    rmis_id = data_parse(request.body, {'rmis_id': str}, {'rmis_id': ''})[0]
 
     results = []
 
-    for i in range(days):
-        date = now - datetime.timedelta(days=i)
-        rendered_services = c.rendered_services.client.searchServiceRend(patientUid=rmis_id, dateFrom=date)
+    if rmis_id:
+        for i in range(3):
+            results = []
 
-        for rs in rendered_services[:5]:
-            protocol = c.directions.get_protocol(rs)
-            for v in variants:
-                if v in protocol:
-                    results.append({'date': date.strftime('%d.%m.%Y'), 'result': v})
-                    break
+            logger.exception(f'patient_results_covid19 by rmis id, try {i + 1}/3: {rmis_id}')
+
+            try:
+                c = Client(modules=['directions', 'rendered_services'])
+
+                now = current_time().date()
+
+                variants = ['РНК вируса SARS-CоV2 не обнаружена', 'РНК вируса SARS-CоV2 обнаружена']
+
+                for i in range(days):
+                    date = now - datetime.timedelta(days=i)
+                    rendered_services = c.rendered_services.client.searchServiceRend(patientUid=rmis_id, dateFrom=date)
+                    for rs in rendered_services[:5]:
+                        protocol = c.directions.get_protocol(rs)
+                        for v in variants:
+                            if v in protocol:
+                                results.append({'date': date.strftime('%d.%m.%Y'), 'result': v})
+                                break
+                break
+            except Exception as e:
+                logger.exception(e)
+            time.sleep(2)
 
     return Response({"ok": True, 'results': results})
 
@@ -436,10 +546,7 @@ def external_doc_call_create(request):
 
     date = current_time()
 
-    count = DoctorCall.objects.filter(
-        client=card, is_external=True,
-        exec_at__date=date.date()
-    ).count()
+    count = DoctorCall.objects.filter(client=card, is_external=True, exec_at__date=date.date()).count()
     if count >= MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY:
         logger.exception(f'TOO MANY REQUESTS PER DAY: already have {count} calls at {date:%d.%m.%Y}')
         return JsonResponse({"ok": False, "number": None, "tooManyRequests": True})
@@ -726,8 +833,6 @@ def external_research_create(request):
     if birthdate and sex not in ['м', 'ж']:
         return Response({"ok": False, 'message': 'individual.sex должно быть "м" или "ж"'})
 
-    has_tfoms = False
-
     if enp:
         individuals = Individual.objects.filter(tfoms_enp=enp)
         if not individuals.exists():
@@ -740,16 +845,12 @@ def external_research_create(request):
                 individuals = Individual.objects.filter(tfoms_enp=enp)
 
             individual = individuals.first()
-        if individual:
-            has_tfoms = True
 
     if not individual and lastname:
         tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
         if tfoms_data:
             Individual.import_from_tfoms(tfoms_data)
             individual = Individual.objects.filter(tfoms_enp=enp).first()
-        if individual:
-            has_tfoms = True
 
     if not individual and passport_serial:
         individuals = Individual.objects.filter(document__serial=passport_serial, document__number=passport_number, document__document_type__title='Паспорт гражданина РФ')
@@ -760,17 +861,20 @@ def external_research_create(request):
         individual = individuals.first()
 
     if not individual and lastname:
-        individual = Individual.import_from_tfoms({
-            "family": lastname,
-            "given": firstname,
-            "patronymic": patronymic,
-            "gender": sex,
-            "birthdate": birthdate,
-            "enp": enp,
-            "passport_serial": passport_serial,
-            "passport_number": passport_number,
-            "snils": snils,
-        }, need_return_individual=True)
+        individual = Individual.import_from_tfoms(
+            {
+                "family": lastname,
+                "given": firstname,
+                "patronymic": patronymic,
+                "gender": sex,
+                "birthdate": birthdate,
+                "enp": enp,
+                "passport_serial": passport_serial,
+                "passport_number": passport_number,
+                "snils": snils,
+            },
+            need_return_individual=True,
+        )
 
     if not individual:
         return Response({"ok": False, 'message': 'Физлицо не найдено'})
@@ -825,7 +929,7 @@ def external_research_create(request):
                     hospital=hospital,
                     id_in_hospital=id_in_hospital,
                     title_org_initiator=title_org_initiator,
-                    ogrn_org_initiator=ogrn_org_initiator
+                    ogrn_org_initiator=ogrn_org_initiator,
                 )
 
             research_to_filter = defaultdict(lambda: False)
@@ -961,13 +1065,15 @@ def eds_get_user_data(request):
 
     doc = DoctorProfile.objects.filter(eds_token=token)[0]
 
-    return Response({
-        "ok": True,
-        "userData": {
-            "fio": doc.get_full_fio(),
-            "department": doc.podrazdeleniye.title if doc.podrazdeleniye else None,
+    return Response(
+        {
+            "ok": True,
+            "userData": {
+                "fio": doc.get_full_fio(),
+                "department": doc.podrazdeleniye.title if doc.podrazdeleniye else None,
+            },
         }
-    })
+    )
 
 
 @api_view(['POST'])
@@ -989,17 +1095,19 @@ def eds_get_cda_data(request):
     card = n.client
     ind = n.client.individual
 
-    return Response({
-        "title": i.research.title,
-        "patient": {
-            'pk': card.number,
-            'family': ind.family,
-            'name': ind.name,
-            'patronymic': ind.patronymic,
-            'gender': ind.sex.lower(),
-            'birthdate': ind.birthday.strftime("%Y%m%d"),
-        },
-    })
+    return Response(
+        {
+            "title": i.research.title,
+            "patient": {
+                'pk': card.number,
+                'family': ind.family,
+                'name': ind.name,
+                'patronymic': ind.patronymic,
+                'gender': ind.sex.lower(),
+                'birthdate': ind.birthday.strftime("%Y%m%d"),
+            },
+        }
+    )
 
 
 @api_view(['POST'])
@@ -1011,49 +1119,64 @@ def external_check_result(request):
     external_service = ExternalService.objects.filter(token=token).first()
 
     if not token or not external_service:
-        return Response({
-            "ok": False,
-            "message": "Передан некорректный токен в заголовке HTTP_AUTHORIZATION",
-        }, status=403)
+        return Response(
+            {
+                "ok": False,
+                "message": "Передан некорректный токен в заголовке HTTP_AUTHORIZATION",
+            },
+            status=403,
+        )
 
     external_service: ExternalService = external_service
     if not external_service.is_active:
-        return Response({
-            "ok": False,
-            "message": "Доступ отключен",
-        }, status=403)
+        return Response(
+            {
+                "ok": False,
+                "message": "Доступ отключен",
+            },
+            status=403,
+        )
 
     if 'qr_check_result' not in external_service.rights:
-        return Response({
-            "ok": False,
-            "message": "Нет доступа",
-        }, status=403)
+        return Response(
+            {
+                "ok": False,
+                "message": "Нет доступа",
+            },
+            status=403,
+        )
 
     body = json.loads(request.body)
     instance_id = body.get("instanceId")
 
     if SettingManager.instance_id() != instance_id:
-        return Response({
-            "ok": False,
-            "message": "Некорректный instance_id",
-        })
+        return Response(
+            {
+                "ok": False,
+                "message": "Некорректный instance_id",
+            }
+        )
 
     pk = body.get("direction")
     direction = Napravleniya.objects.filter(pk=pk).first()
     if not direction:
-        return Response({
-            "ok": False,
-            "message": "Направление не найдено",
-        })
+        return Response(
+            {
+                "ok": False,
+                "message": "Направление не найдено",
+            }
+        )
 
     direction: Napravleniya
 
     direction_token = body.get("directionToken")
     if str(direction.qr_check_token) != direction_token:
-        return Response({
-            "ok": False,
-            "message": "Некорректный токен направления",
-        })
+        return Response(
+            {
+                "ok": False,
+                "message": "Некорректный токен направления",
+            }
+        )
 
     ind: Individual = direction.client.individual
     patient = {
@@ -1080,12 +1203,16 @@ def external_check_result(request):
             if not directions.Result.objects.filter(issledovaniye=i, fraction=f).exists():
                 continue
             r: directions.Result = directions.Result.objects.filter(issledovaniye=i, fraction=f)[0]
-            result["data"].append({
-                "title": f.title,
-                "value": r.value,
-            })
+            result["data"].append(
+                {
+                    "title": f.title,
+                    "value": r.value,
+                }
+            )
         results.append(result)
-    return Response({
-        "patient": patient,
-        "results": results,
-    })
+    return Response(
+        {
+            "patient": patient,
+            "results": results,
+        }
+    )

@@ -15,6 +15,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     FORMS = 11
     DIRECTIONPARAMS = 12
     APPLICATIONS = 13
+    MONITORINGS = 14
 
     TYPES = (
         (HIDDEN, "Скрыто"),
@@ -29,6 +30,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         (FORMS, "Формы"),
         (DIRECTIONPARAMS, "Параметры для направления"),
         (APPLICATIONS, "Заявления"),
+        (MONITORINGS, "Мониторинги"),
     )
 
     title = models.CharField(max_length=255)  # Название подразделения

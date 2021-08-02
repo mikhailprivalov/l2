@@ -1,17 +1,15 @@
 <template>
   <div v-if="research.show" class="root">
-    <ResultsByYear :card_pk="selected_card.pk" isDocReferral/>
-    <ResultsByYear :card_pk="selected_card.pk" isParaclinic/>
-    <ResultsByYear :card_pk="selected_card.pk" isLab/>
-    <DescriptiveForm
-      :research="research"
-      :confirmed="false"
-      :patient="selected_card"/>
+    <template v-if="selected_card.pk">
+      <ResultsByYear :card_pk="selected_card.pk" isDocReferral />
+      <ResultsByYear :card_pk="selected_card.pk" isParaclinic />
+      <ResultsByYear :card_pk="selected_card.pk" isLab />
+    </template>
+    <DescriptiveForm :research="research" :confirmed="false" :patient="selected_card" />
   </div>
 </template>
 
 <script lang="ts">
-
 export default {
   name: 'SelectedResearchesParams',
   components: {
@@ -40,6 +38,6 @@ export default {
 
 .root {
   width: 100%;
-  min-width: 1000px;
+  min-width: 500px;
 }
 </style>

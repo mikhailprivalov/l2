@@ -68,6 +68,7 @@ class ResearchSite(models.Model):
         (3, 'Стационар'),
         (4, 'Микробиология'),
         (7, 'Формы'),
+        (10, 'Мониторинги'),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
@@ -151,6 +152,24 @@ class Researches(models.Model):
         (1, 'Альбомный А4'),
     )
 
+    PERIOD_HOUR = 'PERIOD_HOUR'
+    PERIOD_DAY = 'PERIOD_DAY'
+    PERIOD_WEEK = 'PERIOD_WEEK'
+    PERIOD_MONTH = 'PERIOD_MONTH'
+    PERIOD_QURTER = 'PERIOD_QURTER'
+    PERIOD_HALFYEAR = 'PERIOD_HALFYEAR'
+    PERIOD_YEAR = 'PERIOD_YEAR'
+
+    PERIOD_TYPES = (
+        (PERIOD_HOUR, 'Час'),
+        (PERIOD_DAY, 'День'),
+        (PERIOD_WEEK, 'Неделя'),
+        (PERIOD_MONTH, 'Месяц'),
+        (PERIOD_QURTER, 'Квартал'),
+        (PERIOD_HALFYEAR, 'Полгода'),
+        (PERIOD_YEAR, 'Год'),
+    )
+
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления', on_delete=models.SET_NULL)
     title = models.CharField(max_length=255, default="", help_text='Название исследования', db_index=True)
     short_title = models.CharField(max_length=255, default='', blank=True)
@@ -181,8 +200,8 @@ class Researches(models.Model):
     is_application = models.BooleanField(default=False, blank=True, help_text="Это заявление", db_index=True)
     is_direction_params = models.BooleanField(default=False, blank=True, help_text="Суррогатная услуга - параметры направления", db_index=True)
     is_global_direction_params = models.BooleanField(default=False, blank=True, help_text="Глобальные параметры", db_index=True)
+    is_monitoring = models.BooleanField(default=False, blank=True, help_text="Это мониторинг", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
-
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
     instructions = models.TextField(blank=True, default="", help_text="Памятка для направления")
@@ -212,6 +231,7 @@ class Researches(models.Model):
     has_own_form_result = models.BooleanField(blank=True, default=False, help_text="Собственная форма результатов")
     direction_params = models.ForeignKey('self', related_name='direction_params_p', help_text="Параметры направления", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     show_more_services = models.BooleanField(blank=True, default=True, help_text="Показывать Дополнительные услуги")
+    type_period = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
 
     @staticmethod
     def filter_type(t):
@@ -227,6 +247,7 @@ class Researches(models.Model):
             12: dict(is_form=True),
             13: dict(is_direction_params=True),
             14: dict(is_application=True),
+            15: dict(is_monitoring=True),
         }
         return ts.get(t + 1, {})
 
@@ -248,6 +269,8 @@ class Researches(models.Model):
             return -10
         if self.is_application:
             return -11
+        if self.is_monitoring:
+            return -12
         if self.is_microbiology or self.is_citology or self.is_gistology:
             return 2 - Podrazdeleniya.MORFOLOGY
         return self.podrazdeleniye_id or -2
@@ -265,6 +288,7 @@ class Researches(models.Model):
             or self.is_gistology
             or self.is_form
             or self.is_direction_params
+            or self.is_monitoring
         )
 
     @property
@@ -415,8 +439,8 @@ class ParaclinicInputGroups(models.Model):
         return f"{self.research.title} – {self.title}"
 
     class Meta:
-        verbose_name = 'Группы'
-        verbose_name_plural = 'Группы'
+        verbose_name = 'Группы описательного протокола'
+        verbose_name_plural = 'Группы описательного протокола'
 
 
 class ParaclinicInputField(models.Model):
@@ -467,6 +491,7 @@ class ParaclinicInputField(models.Model):
     for_extract_card = models.BooleanField(default=False, help_text='В выписку', blank=True)
     for_med_certificate = models.BooleanField(default=False, help_text='В справку', blank=True)
     attached = models.CharField(max_length=20, help_text='Скреплено с полем другой услуги', blank=True, default=None, null=True, db_index=True)
+    not_edit = models.BooleanField(default=False, help_text='Не редактируемое', blank=True)
 
     def get_title(self, force_type=None, recursive=False):
         field_type = force_type or self.field_type
@@ -492,11 +517,11 @@ class ParaclinicInputField(models.Model):
         return title
 
     def __str__(self):
-        return f"{self.group.research.title} - {self.title}"
+        return f"{self.group.research.title} - {self.group.title} - {self.title}"
 
     class Meta:
-        verbose_name = 'Поля'
-        verbose_name_plural = 'Поля'
+        verbose_name = 'Поля описательного протокола'
+        verbose_name_plural = 'Поля описательного протокола'
 
 
 class ParaclinicTemplateName(models.Model):

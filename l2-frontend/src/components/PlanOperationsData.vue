@@ -3,55 +3,76 @@
     <div class="form-row">
       <div class="row-t">
         Пациент (карта)
-        <a @click.prevent="open_patient_picker" :class="{unvisible: patient_fio}" href="#"
-           style="float: right; padding-right: 5px; color: #ffffff;">Найти</a>
+        <a
+          @click.prevent="open_patient_picker"
+          :class="{ unvisible: patient_fio }"
+          href="#"
+          style="float: right; padding-right: 5px; color: #ffffff;"
+          >Найти</a
+        >
       </div>
       <div class="row-v">
-        <input class="form-control" v-model="patient_data" readonly>
+        <input class="form-control" v-model="patient_data" readonly />
       </div>
     </div>
     <div class="form-row">
       <div class="row-t">№ Истории</div>
-      <input class="form-control" v-model="current_direction" readonly>
+      <input class="form-control" v-model="current_direction" readonly />
     </div>
     <div class="form-row">
       <div class="row-t">Дата операции</div>
-      <input class="form-control" type="date" :min="timeValue" v-model="current_time">
+      <input class="form-control" type="date" :min="timeValue" v-model="current_time" />
     </div>
     <div class="form-row">
       <div class="row-t">Врач-хирург</div>
       <div class="row-v">
-        <treeselect class="treeselect-noborder" :multiple="false" :disable-branch-nodes="true" :options="hirurgs"
-                    placeholder="Хирург не выбран" v-model="current_hirurg"
+        <treeselect
+          class="treeselect-noborder"
+          :multiple="false"
+          :disable-branch-nodes="true"
+          :options="hirurgs"
+          placeholder="Хирург не выбран"
+          v-model="current_hirurg"
         />
       </div>
     </div>
     <div class="form-row">
       <div class="row-t">Вид операции</div>
       <div class="row-v">
-        <input class="form-control" v-model="type_operation">
+        <input class="form-control" v-model="type_operation" />
       </div>
     </div>
 
     <div class="buttons">
       <div class="cancel-message" v-if="cancel_operation">Операция отменена</div>
 
-      <button class="btn btn-blue-nb btn-sm" @click="save_to_plan"
-              :class="[{btndisable: !current_hirurg || !current_direction || !card_pk || !current_time}]">
-        {{pk_plan && pk_plan > -1 ? 'Сохранить изменения' : 'Добавить новую запись в план' }}
+      <button
+        class="btn btn-blue-nb btn-sm"
+        @click="save_to_plan"
+        :class="[{ btndisable: !current_hirurg || !current_direction || !card_pk || !current_time }]"
+      >
+        {{ pk_plan && pk_plan > -1 ? 'Сохранить изменения' : 'Добавить новую запись в план' }}
       </button>
 
       <button class="btn btn-blue-nb btn-sm" @click="cancel_from_plan" v-if="pk_plan && pk_plan > -1">
-        {{cancel_operation ? 'Убрать отмену' : 'Отменить операцию' }}
+        {{ cancel_operation ? 'Убрать отмену' : 'Отменить операцию' }}
       </button>
     </div>
-    <modal v-if="patient_to_edit" ref="modalPatientEdit" @close="hide_modal_patient_edit" show-footer="true"
-           white-bg="true"
-           max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+    <modal
+      v-if="patient_to_edit"
+      ref="modalPatientEdit"
+      @close="hide_modal_patient_edit"
+      show-footer="true"
+      white-bg="true"
+      max-width="710px"
+      width="100%"
+      marginLeftRight="auto"
+      margin-top
+    >
       <span slot="header">Поиск пациента</span>
       <div slot="body" style="min-height: 140px" class="registry-body">
         <div style="height: 110px">
-          <patient-small-picker v-model="card_pk" :base_pk="base_pk"/>
+          <patient-small-picker v-model="card_pk" :base_pk="base_pk" />
         </div>
       </div>
       <div slot="footer">
@@ -70,8 +91,8 @@
 <script lang="ts">
 import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';
-import Modal from '../ui-cards/Modal.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import Modal from '../ui-cards/Modal.vue';
 import * as actions from '../store/action-types';
 import usersPoint from '../api/user-point';
 import PatientSmallPicker from '../ui-cards/PatientSmallPicker.vue';
@@ -141,9 +162,12 @@ export default {
     },
   },
   created() {
-    this.$store.watch((state) => state.bases, () => {
-      this.check_base();
-    });
+    this.$store.watch(
+      state => state.bases,
+      () => {
+        this.check_base();
+      },
+    );
     this.check_base();
     this.load_hirurgs();
     if (this.patient_fio && this.card_pk) {
@@ -153,7 +177,7 @@ export default {
   },
   computed: {
     bases() {
-      return this.$store.getters.bases.filter((b) => !b.hide);
+      return this.$store.getters.bases.filter(b => !b.hide);
     },
   },
   methods: {
@@ -233,86 +257,90 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .btndisable {
-    cursor: not-allowed;
-    pointer-events: none;
+.btndisable {
+  cursor: not-allowed;
+  pointer-events: none;
 
-    color: #c0c0c0;
-    background-color: #ffffff;
+  color: #c0c0c0;
+  background-color: #ffffff;
+}
+
+.unvisible {
+  visibility: hidden;
+}
+
+.color-bottom {
+  border-bottom: 1px solid #434a54;
+}
+
+.form-row {
+  width: 100%;
+  display: flex;
+  border-bottom: 1px solid #434a54;
+
+  &:first-child:not(.nbt-i) {
+    border-top: 1px solid #434a54;
   }
 
-  .unvisible {
-    visibility: hidden;
+  justify-content: stretch;
+
+  .row-t {
+    background-color: #aab2bd;
+    padding: 7px 0 0 10px;
+    width: 35%;
+    flex: 0 35%;
+    color: #fff;
   }
 
-  .color-bottom {
-    border-bottom: 1px solid #434a54;
+  .input-group {
+    flex: 0 65%;
   }
 
-  .form-row {
-    width: 100%;
-    display: flex;
-    border-bottom: 1px solid #434a54;
+  input,
+  .row-v,
+  ::v-deep input {
+    background: #fff;
+    border: none;
+    border-radius: 0 !important;
+    width: 60%;
+    flex: 0 65%;
+    height: 36px;
+  }
 
-    &:first-child:not(.nbt-i) {
-      border-top: 1px solid #434a54;
-    }
-
-    justify-content: stretch;
-
+  &.sm-f {
     .row-t {
-      background-color: #AAB2BD;
-      padding: 7px 0 0 10px;
-      width: 35%;
-      flex: 0 35%;
-      color: #fff;
+      padding: 2px 0 0 10px;
     }
 
-    .input-group {
-      flex: 0 65%;
-    }
-
-    input, .row-v, ::v-deep input {
-      background: #fff;
-      border: none;
-      border-radius: 0 !important;
-      width: 60%;
-      flex: 0 65%;
-      height: 36px;
-    }
-
-    &.sm-f {
-      .row-t {
-        padding: 2px 0 0 10px;
-      }
-
-      input, .row-v, ::v-deep input {
-        height: 26px;
-      }
-    }
-
+    input,
+    .row-v,
     ::v-deep input {
-      width: 100% !important;
-    }
-
-    .row-v {
-      padding: 0 0 0 0;
-    }
-
-    ::v-deep .input-group {
-      border-radius: 0;
+      height: 26px;
     }
   }
 
-  .buttons {
-    padding: 10px;
-    text-align: center;
+  ::v-deep input {
+    width: 100% !important;
   }
 
-  .cancel-message {
-    font-size: 16px;
-    font-weight: bold;
-    color: #f00;
-    margin: 10px;
+  .row-v {
+    padding: 0 0 0 0;
   }
+
+  ::v-deep .input-group {
+    border-radius: 0;
+  }
+}
+
+.buttons {
+  padding: 10px;
+  text-align: center;
+}
+
+.cancel-message {
+  font-size: 16px;
+  font-weight: bold;
+  color: #f00;
+  margin: 10px;
+}
 </style>

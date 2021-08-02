@@ -45,6 +45,7 @@ class DoctorProfile(models.Model):
         (1, "Врач"),
         (2, "Лаборант"),
     )
+
     user = models.OneToOneField(User, null=True, blank=True, help_text='Ссылка на Django-аккаунт', on_delete=models.CASCADE)
     specialities = models.ForeignKey(Speciality, blank=True, default=None, null=True, help_text='Специальности пользователя', on_delete=models.CASCADE)
     fio = models.CharField(max_length=255, help_text='ФИО')  # DEPRECATED
@@ -55,7 +56,6 @@ class DoctorProfile(models.Model):
     isLDAP_user = models.BooleanField(default=False, blank=True, help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
     labtype = models.IntegerField(choices=labtypes, default=0, blank=True, help_text='Категория профиля для лаборатории')
     login_id = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Код авторизации')
-
     restricted_to_direct = models.ManyToManyField('directory.Researches', blank=True, help_text='Запрет на выдачу направлений с исследованиями')
     users_services = models.ManyToManyField('directory.Researches', related_name='users_services', blank=True, help_text='Услуги, оказываемые пользователем')
     personal_code = models.CharField(default='0', blank=True, max_length=5, help_text='Код врача для ТФОМС внутри МО')
@@ -66,10 +66,11 @@ class DoctorProfile(models.Model):
     rmis_resource_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
     rmis_employee_id = models.CharField(max_length=20, blank=True, default=None, null=True, help_text='РМИС employee id')
     rmis_service_id_time_table = models.CharField(max_length=20, blank=True, default=None, null=True, help_text='РМИС service id для расписания')
-
     hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, blank=True, default=None, null=True, on_delete=models.SET_NULL)
     all_hospitals_users_control = models.BooleanField(default=False, blank=True, help_text="Может настраивать пользователей во всех организациях")
     eds_token = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Токен для L2 EDS')
+    white_list_monitoring = models.ManyToManyField('directory.Researches', related_name='white_list_monitoring', blank=True, help_text='Доступные для просмотра мониторинги')
+    black_list_monitoring = models.ManyToManyField('directory.Researches', related_name='black_list_monitoring', blank=True, help_text='Запрещены для просмотра мониторинги')
 
     def get_eds_token(self):
         if not self.eds_token:

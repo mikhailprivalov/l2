@@ -13,7 +13,7 @@ import datetime
 # from pdf2docx import Page
 # from appconf.manager import SettingManager
 from forms.sql_func import get_covid_to_json
-from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION
+from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION, EXCLUDE_HOSP_SEND_EPGU
 
 
 def pdf(request):
@@ -120,12 +120,12 @@ def covid_result(request):
     data_return = []
     count = 0
     for i in result:
-        if empty_data(i):
+        if i.hosp_id in EXCLUDE_HOSP_SEND_EPGU:
             continue
-        result_value = i.value_result
-        if result_value == 'отрицательно':
+        result_value = i.value_result.lower()
+        if result_value.find('отрицат') != -1:
             result_value = 0
-        if result_value == 'положительно':
+        elif result_value.find('поло') != -1:
             result_value = 1
         enp = ""
         if i.oms_number:
@@ -145,22 +145,25 @@ def covid_result(request):
         elif i.psex == "м":
             sex = 1
 
+        laboratory_ogrn = i.laboratoryogrn or ""
+        laboratory_name = i.laboratoryname or ""
+        get_tubes = i.get_tubes or i.date_confirm
         data_return.append(
             {
                 "order": {
-                    "number": i.number_direction,
+                    "number": str(i.number_direction),
                     "depart": CENTRE_GIGIEN_EPIDEMIOLOGY,
-                    "laboratoryName": i.laboratoryname,
-                    "laboratoryOgrn": i.laboratoryogrn,
-                    "name": i.title_org_initiator,
-                    "ogrn": i.ogrn_org_initiator,
-                    "orderDate": i.get_tubes,
+                    "laboratoryName": laboratory_name,
+                    "laboratoryOgrn": laboratory_ogrn,
+                    "name": i.title_org_initiator or laboratory_name,
+                    "ogrn": i.ogrn_org_initiator or laboratory_ogrn,
+                    "orderDate": get_tubes,
                     "serv": [
                         {
                             "code": i.fsli,
                             "name": i.title,
                             "testSystem": "",
-                            "biomaterDate": i.get_tubes,
+                            "biomaterDate": get_tubes,
                             "readyDate": i.date_confirm,
                             "result": result_value,
                             "type": 1,
@@ -170,11 +173,11 @@ def covid_result(request):
                         "surname": i.pfam,
                         "name": i.pname,
                         "patronymic": i.twoname,
-                        "gender": sex,
+                        "gender": sex or "",
                         "birthday": i.birthday,
                         "phone": "",
                         "email": "",
-                        "documentType": "ПаспортгражданинаРФ",
+                        "documentType": "Паспорт гражданина РФ",
                         "documentNumber": passport_number,
                         "documentSerNumber": passport_serial,
                         "snils": snils_number,
@@ -198,8 +201,5 @@ def covid_result(request):
         count += 1
     response['Content-Disposition'] = f"attachment; filename=\"{date}-covid-{count}.json\""
     response.write(json.dumps(data_return, ensure_ascii=False))
+
     return response
-
-
-def empty_data(obj):
-    return any(not x for x in [obj.number_direction, obj.laboratoryname, obj.laboratoryogrn, obj.get_tubes, obj.title_org_initiator, obj.ogrn_org_initiator, obj.psex])
