@@ -849,8 +849,7 @@ def external_research_create(request):
     if not individual and lastname:
         tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
         if tfoms_data:
-            Individual.import_from_tfoms(tfoms_data)
-            individual = Individual.objects.filter(tfoms_enp=enp).first()
+            individual = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
 
     if not individual and passport_serial:
         individuals = Individual.objects.filter(document__serial=passport_serial, document__number=passport_number, document__document_type__title='Паспорт гражданина РФ')
@@ -1038,6 +1037,7 @@ def external_research_create(request):
                         "patient": body.get("patient"),
                         "financingSource": body.get("financingSource"),
                         "resultsCount": len(body.get("results")),
+                        "results": body.get("results"),
                     },
                 )
             except Exception as e:
