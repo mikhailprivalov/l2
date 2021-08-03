@@ -833,31 +833,37 @@ def external_research_create(request):
     if birthdate and sex not in ['м', 'ж']:
         return Response({"ok": False, 'message': 'individual.sex должно быть "м" или "ж"'})
 
+    individual_status = "unknown"
+
     if enp:
         individuals = Individual.objects.filter(tfoms_enp=enp)
         if not individuals.exists():
             individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title='Полис ОМС') | Q(document__document_type__title='ЕНП'))
             individual = individuals.first()
+            individual_status = "local_enp"
         if not individual:
             tfoms_data = match_enp(enp)
             if tfoms_data:
-                Individual.import_from_tfoms(tfoms_data)
-                individuals = Individual.objects.filter(tfoms_enp=enp)
+                individuals = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
+                individual_status = "tfoms_match_enp"
 
             individual = individuals.first()
 
     if not individual and lastname:
         tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
         if tfoms_data:
+            individual_status = "tfoms_match_patient"
             individual = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
 
     if not individual and passport_serial:
         individuals = Individual.objects.filter(document__serial=passport_serial, document__number=passport_number, document__document_type__title='Паспорт гражданина РФ')
         individual = individuals.first()
+        individual_status = "passport"
 
     if not individual and snils:
         individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
         individual = individuals.first()
+        individual_status = "snils"
 
     if not individual and lastname:
         individual = Individual.import_from_tfoms(
@@ -874,6 +880,7 @@ def external_research_create(request):
             },
             need_return_individual=True,
         )
+        individual_status = "new_local"
 
     if not individual:
         return Response({"ok": False, 'message': 'Физлицо не найдено'})
@@ -1035,6 +1042,7 @@ def external_research_create(request):
                     body={
                         "org": body.get("org"),
                         "patient": body.get("patient"),
+                        "individualStatus": individual_status,
                         "financingSource": body.get("financingSource"),
                         "resultsCount": len(body.get("results")),
                         "results": body.get("results"),
