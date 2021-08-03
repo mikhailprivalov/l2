@@ -121,7 +121,9 @@ def search(request):
                             is_digit = False
                     except ValueError:
                         is_digit = False
-                    if len(total) < external_index + 1 or len(total[external_index]) < internal_index + 1:
+                    if len(total) < external_index + 1:
+                        total.append([])
+                    if len(total[external_index]) < internal_index + 1:
                         total[external_index].append("")
                     if not is_digit:
                         total[external_index][internal_index] = ""
