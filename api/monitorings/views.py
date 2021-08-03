@@ -114,10 +114,15 @@ def search(request):
             for external_index in range(len(v)):
                 for internal_index in range(len(v[external_index])):
                     try:
-                        int(total[external_index][internal_index])
-                        is_digit = True
+                        if len(total) >= external_index + 1 and len(total[external_index]) >= internal_index + 1:
+                            int(total[external_index][internal_index])
+                            is_digit = True
+                        else:
+                            is_digit = False
                     except ValueError:
                         is_digit = False
+                    if len(total) < external_index + 1 or len(total[external_index]) < internal_index + 1:
+                        total[external_index].append("")
                     if not is_digit:
                         total[external_index][internal_index] = ""
                         continue
