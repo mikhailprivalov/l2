@@ -39,10 +39,7 @@
       </div>
     </div>
     <div class="content-picker">
-      <table
-        class="table table-responsive table-bordered"
-        style="table-layout: fixed;margin-bottom: 0;position:sticky;top:0;background-color: #fff"
-      >
+      <table class="table table-responsive table-bordered table-one">
         <colgroup>
           <col width="66" />
           <col width="70" />
@@ -62,10 +59,7 @@
           </tr>
         </thead>
       </table>
-      <table
-        class="table table-responsive table-bordered no-first-border-top table-hover"
-        style="table-layout: fixed;margin-bottom: 0"
-      >
+      <table class="table table-responsive table-bordered no-first-border-top table-hover table-two">
         <colgroup>
           <col width="66" />
           <col width="70" />
@@ -703,5 +697,19 @@ th:not(.nopd):not(.button-td) {
 
 .noel {
   text-overflow: clip;
+}
+
+.table-one {
+  table-layout: fixed;
+  margin-bottom: 0;
+  position: sticky;
+  top: 0;
+  background-color: #fff;
+  z-index: 1;
+}
+
+.table-two {
+  table-layout: fixed;
+  margin-bottom: 0;
 }
 </style>

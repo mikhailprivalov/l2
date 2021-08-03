@@ -2,7 +2,6 @@ from django.db import models
 
 from clients.models import Card
 from directory.models import Researches
-from podrazdeleniya.models import Rooms, Podrazdeleniya
 from users.models import DoctorProfile, Speciality
 from utils.models import ChoiceArrayField
 
@@ -10,8 +9,9 @@ from utils.models import ChoiceArrayField
 class ScheduleResource(models.Model):
     executor = models.ForeignKey(DoctorProfile, db_index=True, null=True, help_text='Исполнитель', on_delete=models.CASCADE)
     service = models.ForeignKey(Researches, help_text='Услуга', db_index=True, on_delete=models.CASCADE)
-    room = models.ForeignKey(Rooms, help_text='Кабинет', db_index=True, on_delete=models.CASCADE)
-    departmnent = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
+    room = models.ForeignKey('podrazdeleniya.Room', related_name='scheduleresourceroom', help_text='Кабинет', db_index=True, on_delete=models.CASCADE)
+    departmnent = models.ForeignKey('podrazdeleniya.Podrazdeleniya', null=True, blank=True, help_text='Подразделение',
+                                    db_index=True, related_name='scheduleresourcedepartmnent', on_delete=models.CASCADE)
     speciality = models.ForeignKey(Speciality, null=True, blank=True, help_text='Специальность', db_index=True, on_delete=models.CASCADE)
 
 

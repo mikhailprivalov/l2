@@ -57,5 +57,5 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         verbose_name_plural = 'Подразделения'
 
 
-class Rooms(models.Model):
+class Room(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Название кабинета', db_index=True)
