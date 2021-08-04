@@ -32,7 +32,7 @@
                   </div>
                 </template>
               </div>
-              <div class="info">L2 {{ menu.version }}</div>
+              <div class="info">L2 {{ version }}</div>
             </div>
           </li>
         </ul>
@@ -47,7 +47,12 @@
           </li>
         </ul>
         <ul class="nav navbar-right navbar-nav">
-          <li>
+          <li v-if="hasNewVersion">
+            <button type="button" class="btn btn-blue btn-blue-nb btn-reload" @click="reload">
+              L2 обновилась! Перезагрузить страницу
+            </button>
+          </li>
+          <li v-else>
             <span class="navbar-brand org-title"> Организация: {{ user_hospital_title || $orgTitle() }} </span>
           </li>
         </ul>
@@ -98,6 +103,8 @@ import { mapGetters } from 'vuex';
     'menu',
     'fio_short',
     'user_hospital_title',
+    'version',
+    'hasNewVersion',
   ]),
   components: {
     CardReader: () => import('@/ui-cards/CardReader.vue'),
@@ -112,6 +119,10 @@ export default class Navbar extends Vue {
   inLoading: boolean;
 
   loadingLabel: string;
+
+  version: string | null;
+
+  hasNewVersion: boolean;
 
   loaderInHeader: boolean;
 
@@ -137,6 +148,11 @@ export default class Navbar extends Vue {
 
   get metaTitle() {
     return String(this?.$route?.meta?.title || '');
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  reload() {
+    window.location.reload();
   }
 }
 </script>
@@ -179,5 +195,9 @@ export default class Navbar extends Vue {
 a.dash-active {
   background: #048493 !important;
   border: 1px solid #048493 !important;
+}
+
+.btn-reload {
+  margin-top: 1px;
 }
 </style>

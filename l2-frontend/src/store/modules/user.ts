@@ -15,6 +15,7 @@ const stateInitial = {
     version: 'loading',
   },
   directive_from: [],
+  hasNewVersion: false,
 };
 
 const getters = {
@@ -49,6 +50,8 @@ const getters = {
   directive_from: state => state.directive_from,
   modules: state => state.data.modules || {},
   menu: (state): Menu => state.menu as Menu,
+  version: (state, g) => (g.menu || {}).version || null,
+  hasNewVersion: state => state.hasNewVersion,
 };
 
 const actions = {
@@ -69,6 +72,9 @@ const actions = {
     const { data: directive_from } = await user_point.getDirectiveFrom();
     commit(mutation_types.SET_DIRECTIVE_FROM, { directive_from });
   },
+  async [actionsTypes.HAS_NEW_VERSION]({ commit }) {
+    commit(mutation_types.SET_HAS_NEW_VERSION);
+  },
 };
 
 const mutations = {
@@ -77,6 +83,9 @@ const mutations = {
       ...state.data,
       ...data,
     };
+  },
+  [mutation_types.SET_HAS_NEW_VERSION](state) {
+    state.hasNewVersion = true;
   },
   [mutation_types.SET_MENU](state, { data }) {
     state.menu = {

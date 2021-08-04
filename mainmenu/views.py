@@ -21,7 +21,7 @@ import slog.models as slog
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya
-from laboratory import settings
+from laboratory import VERSION, settings
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from mainmenu.rproxy import proxy_view
@@ -37,7 +37,7 @@ from utils.dates import try_parse_range
 def dashboard(request):
     if not request.is_ajax():
         return redirect('/ui/menu')
-    return HttpResponse(f"OK:{request.user.username}")
+    return HttpResponse(f"OK:{request.user.username}:{VERSION}")
 
 
 @login_required

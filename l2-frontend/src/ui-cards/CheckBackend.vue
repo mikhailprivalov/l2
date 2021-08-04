@@ -10,7 +10,7 @@ import * as actions from '@/store/action-types';
 import { POSITION } from 'vue-toastification/src/ts/constants';
 
 @Component({
-  computed: mapGetters(['authenticated', 'user_data']),
+  computed: mapGetters(['authenticated', 'user_data', 'version']),
   data() {
     return {
       userIsIdle: false,
@@ -29,6 +29,8 @@ export default class CheckBackend extends Vue {
   aliveTimer: number | void;
 
   user_data: any;
+
+  version: string | null;
 
   mounted() {
     setTimeout(() => this.check(), 8000);
@@ -97,19 +99,26 @@ export default class CheckBackend extends Vue {
         window.$('input').blur();
       })
       .done(data => {
-        if (!this.authenticated && String(data).startsWith('OK')) {
+        const [status, login, version] = String(data).split(':');
+        const isOk = status === 'OK';
+
+        if (!this.authenticated && isOk) {
           const urlParams = new URLSearchParams(window.location.search);
           const nextPath = urlParams.get('next');
           this.$router.push(nextPath || { name: 'menu' });
         }
 
-        if (this.authenticated && !String(data).startsWith('OK')) {
+        if (this.authenticated && !isOk) {
           this.$router.push(`/ui/login?next=${encodeURIComponent(window.location.href.replace(window.location.origin, ''))}`);
           return;
         }
 
-        if (this.authenticated && this.user_data && !this.user_data.loading && data !== `OK:${this.user_data.username}`) {
+        if (this.authenticated && this.user_data && !this.user_data.loading && this.user_data.username !== login) {
           window.location.reload();
+        }
+
+        if (this.version && this.version !== version) {
+          this.$store.dispatch(actions.HAS_NEW_VERSION);
         }
 
         if (this.hasError) {
