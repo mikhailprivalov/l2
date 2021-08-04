@@ -10,16 +10,24 @@
         v-for="(s, i) in edsStatus.signatures"
         :key="i"
         :title="
-        `Есть подписи: ${s.executors.join('; ') || 'пусто'}` +
-        (s.needSignatures.length > 0 ? `; Нужны подписи: ${s.needSignatures.join('; ')}`: '')
+          `Есть подписи: ${s.executors.join('; ') || 'пусто'}` +
+            (s.needSignatures.length > 0 ? `; Нужны подписи: ${s.needSignatures.join('; ')}` : '')
         "
         v-tippy
       >
         <i class="fa fa-certificate"></i> {{ s.type }}
       </div>
     </template>
-    <modal v-if="modal_opened" ref="modal" @close="hide_modal" show-footer="true"
-           white-bg="true" width="100%" marginLeftRight="34px" margin-top="30px">
+    <modal
+      v-if="modal_opened"
+      ref="modal"
+      @close="hide_modal"
+      show-footer="true"
+      white-bg="true"
+      width="100%"
+      marginLeftRight="34px"
+      margin-top="30px"
+    >
       <span slot="header">Подписать ЭЦП результат направления {{ direction.pk }}</span>
       <div slot="body" class="eds-body">
         <iframe :src="eds_base" name="eds"></iframe>
@@ -83,7 +91,7 @@ export default {
       this.loadStatus();
     },
     edsMessage(e) {
-      if (e && e.data && e.data.event === 'eds:mounted') {
+      if (e?.data?.event === 'eds:mounted') {
         this.edsMounted = true;
       }
     },
@@ -121,15 +129,20 @@ export default {
       } else {
         this.$root.$emit('msg', 'error', 'CDA XML не получен');
       }
-      window.frames.eds.passEvent('set-data', {
-        ...this.directionData,
-        confirmedAt: this.issData.confirmed_at,
-      }, documents, {
-        token: this.eds_token,
-        requiredSignatures: this.requiredSignatures,
-        requiredEDSDocTypes: this.requiredEDSDocTypes,
-        allowedSign: this.eds_allowed_sign,
-      });
+      window.frames.eds.passEvent(
+        'set-data',
+        {
+          ...this.directionData,
+          confirmedAt: this.issData.confirmed_at,
+        },
+        documents,
+        {
+          token: this.eds_token,
+          requiredSignatures: this.requiredSignatures,
+          requiredEDSDocTypes: this.requiredEDSDocTypes,
+          allowedSign: this.eds_allowed_sign,
+        },
+      );
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async archive() {
@@ -152,16 +165,21 @@ export default {
       this.requiredSignatures = requiredResult.signsRequired || ['Врач'];
       this.requiredEDSDocTypes = requiredResult.needCda ? ['PDF', 'CDA'] : ['PDF'];
 
-      this.edsStatus = (await EDS_API.post('signature-status', {
-        token: this.eds_token,
-        pk: this.directionData.direction.pk,
-        confirmedAt: this.issData.confirmed_at,
-        hospitalTFOMSCode: this.directionData.direction.hospitalTFOMSCode,
-        requiredSignatures: requiredResult.signsRequired,
-        requiredEDSDocTypes: this.requiredEDSDocTypes,
-      })).data;
+      this.edsStatus = (
+        await EDS_API.post('signature-status', {
+          token: this.eds_token,
+          pk: this.directionData.direction.pk,
+          confirmedAt: this.issData.confirmed_at,
+          hospitalTFOMSCode: this.directionData.direction.hospitalTFOMSCode,
+          requiredSignatures: requiredResult.signsRequired,
+          requiredEDSDocTypes: this.requiredEDSDocTypes,
+        })
+      ).data;
 
-      this.$root.$emit('EDS:has-signs', (this.edsStatus.signatures || []).some(s => s.executors.length > 0));
+      this.$root.$emit(
+        'EDS:has-signs',
+        (this.edsStatus.signatures || []).some(s => s.executors.length > 0),
+      );
     },
   },
   watch: {

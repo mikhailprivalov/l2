@@ -966,11 +966,11 @@ export default {
       this.hosp_services = [];
       this.direction_service = -1;
 
-      if (this.$refs.modalStationar && this.$refs.modalStationar.$el) {
+      if (this.$refs.modalStationar?.$el) {
         this.$refs.modalStationar.$el.style.display = 'none';
       }
 
-      if (this.$refs.modalStationar2 && this.$refs.modalStationar2.$el) {
+      if (this.$refs.modalStationar2?.$el) {
         this.$refs.modalStationar2.$el.style.display = 'none';
       }
 

@@ -805,12 +805,7 @@ export default {
       this.researches_direction_params = data;
     },
     async load_direction_params_data(pk) {
-      if (
-        this.researches_direction_params[pk]
-        && this.researches_direction_params[pk].research_data
-        && this.researches_direction_params[pk].research_data.research
-        && this.researches_direction_params[pk].research_data.research.status !== 'NOT_LOADED'
-      ) {
+      if (this.researches_direction_params?.[pk].research_data?.research?.status !== 'NOT_LOADED') {
         return this.researches_direction_params[pk].research_data.research;
       }
       await this.$store.dispatch(actions.INC_LOADING);
@@ -918,7 +913,7 @@ export default {
         return;
       }
       let pk = pkOrig;
-      if (this.base && this.base.fin_sources && this.base.fin_sources.length === 1 && pk === -1) {
+      if (this.base?.fin_sources?.length === 1 && pk === -1) {
         pk = this.base.fin_sources[0].pk;
       }
       const cfin = this.fin;
@@ -1056,7 +1051,7 @@ export default {
       return true;
     },
     show_global_direction_params() {
-      return this.global_research_direction_param && this.global_research_direction_param.show;
+      return Boolean(this.global_research_direction_param?.show);
     },
     direction_purpose_enabled() {
       return this.$store.getters.modules.l2_direction_purpose && this.kk !== 'stationar';

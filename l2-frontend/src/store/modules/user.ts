@@ -18,7 +18,7 @@ const stateInitial = {
 };
 
 const getters = {
-  user_data: (state) => state.data,
+  user_data: state => state.data,
   fio_short: (state, g) => {
     if (!g.user_data || !g.user_data.fio) {
       return 'Unauthenticated';
@@ -41,13 +41,13 @@ const getters = {
       .join('')
       .trim();
   },
-  user_hospital_title: state => state.data && state.data.hospital_title,
-  authenticated: (state) => Boolean(state.data && state.data.auth),
-  user_groups: (state) => (state.data && state.data.groups) || [],
-  authenticateLoading: (state) => Boolean(state.data && state.data.loading),
-  ex_dep: (state) => state.data.extended_departments || [],
-  directive_from: (state) => state.directive_from,
-  modules: (state) => state.data.modules || {},
+  user_hospital_title: state => state.data?.hospital_title,
+  authenticated: state => Boolean(state.data?.auth),
+  user_groups: state => state.data?.groups || [],
+  authenticateLoading: state => Boolean(state.data?.loading),
+  ex_dep: state => state.data.extended_departments || [],
+  directive_from: state => state.directive_from,
+  modules: state => state.data.modules || {},
   menu: (state): Menu => state.menu as Menu,
 };
 

@@ -3,26 +3,37 @@
     <div class="input-group" style="width: 100%;">
       <template v-if="!selected_card.pk || selected_card.pk === -1">
         <div class="autocomplete">
-          <input type="text" class="form-control bob" v-model="query" placeholder="Поиск по пациенту" ref="q"
-                 maxlength="255" @keyup.enter="search" @keypress="keypress" @keydown="keypress_arrow"
-                 @click="click_input" @blur="blur"
-                 @keyup.esc="suggests.open = false"
-                 :disabled="disabled"
-                 @focus="suggests_focus">
+          <input
+            type="text"
+            class="form-control bob"
+            v-model="query"
+            placeholder="Поиск по пациенту"
+            ref="q"
+            maxlength="255"
+            @keyup.enter="search"
+            @keypress="keypress"
+            @keydown="keypress_arrow"
+            @click="click_input"
+            @blur="blur"
+            @keyup.esc="suggests.open = false"
+            :disabled="disabled"
+            @focus="suggests_focus"
+          />
           <div class="suggestions" v-if="(suggests.open && normalized_query.length > 0) || suggests.loading">
             <div class="item" v-if="suggests.loading && suggests.data.length === 0">поиск...</div>
             <div class="item" v-else-if="suggests.data.length === 0">не найдено карт в L2</div>
             <template v-else>
-              <div class="item item-selectable" :class="{'item-selectable-focused': i === suggests.focused}"
-                   v-for="(row, i) in suggests.data"
-                   :key="row.pk"
-                   @mouseover="suggests.focused = i"
-                   @click.stop="select_suggest(i)">
+              <div
+                class="item item-selectable"
+                :class="{ 'item-selectable-focused': i === suggests.focused }"
+                v-for="(row, i) in suggests.data"
+                :key="row.pk"
+                @mouseover="suggests.focused = i"
+                @click.stop="select_suggest(i)"
+              >
                 {{ row.family }} {{ row.name }} {{ row.twoname }}, {{ row.sex }}, {{ row.birthday }} ({{ row.age }})
                 <div>
-                  <span class="b" style="display: inline-block;margin-right: 4px;">
-                    {{ row.type_title }} {{ row.num }}
-                  </span>
+                  <span class="b" style="display: inline-block;margin-right: 4px;"> {{ row.type_title }} {{ row.num }} </span>
                   <span class="item-doc" v-for="d in row.docs" :key="d.pk">
                     {{ d.type_title }}: {{ d.serial }} {{ d.number }};
                   </span>
@@ -34,15 +45,19 @@
       </template>
       <template v-else>
         <span class="input-group-btn bcl">
-          <button class="btn last btn-blue-nb nbr" type="button"
-                  v-tippy="{ placement : 'bottom'}"
-                  title="Очистить" @click="clear_selected_card">
+          <button
+            class="btn last btn-blue-nb nbr"
+            type="button"
+            v-tippy="{ placement: 'bottom' }"
+            title="Очистить"
+            @click="clear_selected_card"
+          >
             X
           </button>
         </span>
         <span class="input-group-addon" style="width: 100%;">
-          {{ selected_card.family }} {{ selected_card.name }} {{ selected_card.twoname }},
-          {{ selected_card.birthday }}, {{ selected_card.age }}, {{ selected_card.sex }}
+          {{ selected_card.family }} {{ selected_card.name }} {{ selected_card.twoname }}, {{ selected_card.birthday }},
+          {{ selected_card.age }}, {{ selected_card.sex }}
         </span>
       </template>
     </div>
@@ -95,17 +110,21 @@ export default {
     };
   },
   created() {
-    this.$store.watch((state) => state.bases, () => {
-      this.check_base();
-    }, { immediate: true });
+    this.$store.watch(
+      state => state.bases,
+      () => {
+        this.check_base();
+      },
+      { immediate: true },
+    );
     this.$root.$on('search', () => {
       this.search();
     });
-    this.$root.$on('search-value', (value) => {
+    this.$root.$on('search-value', value => {
       this.query = value;
       this.search();
     });
-    this.$root.$on('select_card', (data) => {
+    this.$root.$on('select_card', data => {
       this.base = data.base_pk;
       this.query = `card_pk:${data.card_pk}`;
       this.search_after_loading = true;
@@ -144,7 +163,7 @@ export default {
   },
   computed: {
     bases() {
-      return this.$store.getters.bases.filter((b) => !b.hide);
+      return this.$store.getters.bases.filter(b => !b.hide);
     },
     selected_base() {
       for (const b of this.bases) {
@@ -197,8 +216,12 @@ export default {
     },
     ...mapGetters(['user_data']),
     fixedQuery() {
-      return this.query.split(' ')
-        .map((s) => s.split('-').map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
+      return this.query
+        .split(' ')
+        .map(s => s
+          .split('-')
+          .map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
+          .join('-'))
         .join(' ');
     },
   },
@@ -221,7 +244,8 @@ export default {
         e.stopPropagation();
         e.cancelBubble = true;
         return true;
-      } if (e.keyCode === 40) {
+      }
+      if (e.keyCode === 40) {
         this.move_focus(1);
         e.preventDefault();
         e.stopPropagation();
@@ -269,15 +293,17 @@ export default {
       this.suggests.loading = true;
       this.suggests.open = true;
 
-      this.suggests.data = (await patientsPoint.searchCard({
-        type: this.base,
-        query: this.normalized_query,
-        list_all_cards: false,
-        inc_rmis: false,
-        inc_tfoms: false,
-        suggests: true,
-        always_phone_search: true,
-      })).results;
+      this.suggests.data = (
+        await patientsPoint.searchCard({
+          type: this.base,
+          query: this.normalized_query,
+          list_all_cards: false,
+          inc_rmis: false,
+          inc_tfoms: false,
+          suggests: true,
+          always_phone_search: true,
+        })
+      ).results;
 
       if (this.suggests.data.length === 0) {
         this.suggests.focused = -1;
@@ -315,9 +341,11 @@ export default {
           this.directive_departments_select.push({ label: dep.title, value: dep.pk });
         }
 
-        if (this.$store.getters.user_data
-          && this.$store.getters.user_data.department
-          && this.local_directive_departments.length > 0 && this.ofname_to_set === '-1') {
+        if (
+          this.$store.getters.user_data?.department
+          && this.local_directive_departments.length > 0
+          && this.ofname_to_set === '-1'
+        ) {
           for (const dep of this.local_directive_departments) {
             if (dep.pk === this.$store.getters.user_data.department.pk) {
               this.directive_department = `${dep.pk}`;
@@ -337,7 +365,8 @@ export default {
     format_number(a) {
       if (a.length === 6) {
         return `${a.slice(0, 2)}-${a.slice(2, 4)}-${a.slice(4, 6)}`;
-      } if (a.length === 11) {
+      }
+      if (a.length === 11) {
         if (a.charAt(1) !== '9' && a.charAt(1) !== '8') {
           return `${a.slice(0, 1)}-${a.slice(1, 5)}-${a.slice(5, 7)}-${a.slice(7, 9)}-${a.slice(9, 11)}`;
         }
@@ -495,23 +524,27 @@ export default {
     },
     open_as_l2_card() {
       this.$store.dispatch(actions.ENABLE_LOADING, { loadingLabel: 'Загрузка' });
-      patientsPoint.searchL2Card({ card_pk: this.selected_card.pk }).then((result) => {
-        this.clear();
-        if (result.results) {
-          this.founded_cards = result.results;
-          if (this.founded_cards.length > 1) {
-            this.showModal = true;
-          } else if (this.founded_cards.length === 1) {
-            this.select_card(0);
+      patientsPoint
+        .searchL2Card({ card_pk: this.selected_card.pk })
+        .then(result => {
+          this.clear();
+          if (result.results) {
+            this.founded_cards = result.results;
+            if (this.founded_cards.length > 1) {
+              this.showModal = true;
+            } else if (this.founded_cards.length === 1) {
+              this.select_card(0);
+            }
+          } else {
+            this.$root.$emit('msg', 'error', 'Ошибка на сервере');
           }
-        } else {
-          this.$root.$emit('msg', 'error', 'Ошибка на сервере');
-        }
-      }).catch((error) => {
-        this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
-      }).finally(() => {
-        this.$store.dispatch(actions.DISABLE_LOADING);
-      });
+        })
+        .catch(error => {
+          this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
+        })
+        .finally(() => {
+          this.$store.dispatch(actions.DISABLE_LOADING);
+        });
     },
     search() {
       if (!this.query_valid || this.inLoading) return;
@@ -528,40 +561,44 @@ export default {
         window.$(this).trigger('blur');
       });
       this.$store.dispatch(actions.ENABLE_LOADING, { loadingLabel: 'Поиск карты' });
-      patientsPoint.searchCard({
-        type: this.base,
-        query: q,
-        list_all_cards: false,
-        inc_rmis: this.inc_rmis || this.search_after_loading,
-        inc_tfoms: this.inc_tfoms && this.tfoms_query,
-        always_phone_search: true,
-      }).then((result) => {
-        this.clear();
-        if (result.results) {
-          this.founded_cards = result.results;
-          if (this.founded_cards.length > 1) {
-            this.showModal = true;
-          } else if (this.founded_cards.length === 1) {
-            this.select_card(0);
-            if (this.open_edit_after_loading) {
-              this.open_editor();
+      patientsPoint
+        .searchCard({
+          type: this.base,
+          query: q,
+          list_all_cards: false,
+          inc_rmis: this.inc_rmis || this.search_after_loading,
+          inc_tfoms: this.inc_tfoms && this.tfoms_query,
+          always_phone_search: true,
+        })
+        .then(result => {
+          this.clear();
+          if (result.results) {
+            this.founded_cards = result.results;
+            if (this.founded_cards.length > 1) {
+              this.showModal = true;
+            } else if (this.founded_cards.length === 1) {
+              this.select_card(0);
+              if (this.open_edit_after_loading) {
+                this.open_editor();
+              }
+            } else {
+              this.$root.$emit('msg', 'error', 'Карт по такому запросу не найдено');
             }
           } else {
-            this.$root.$emit('msg', 'error', 'Карт по такому запросу не найдено');
+            this.$root.$emit('msg', 'error', 'Ошибка на сервере');
           }
-        } else {
-          this.$root.$emit('msg', 'error', 'Ошибка на сервере');
-        }
-        if (this.search_after_loading) {
-          this.search_after_loading = false;
-          this.query = '';
-        }
-      }).catch((error) => {
-        this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
-      }).finally(() => {
-        this.open_edit_after_loading = false;
-        this.$store.dispatch(actions.DISABLE_LOADING);
-      });
+          if (this.search_after_loading) {
+            this.search_after_loading = false;
+            this.query = '';
+          }
+        })
+        .catch(error => {
+          this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
+        })
+        .finally(() => {
+          this.open_edit_after_loading = false;
+          this.$store.dispatch(actions.DISABLE_LOADING);
+        });
     },
     add_researches(pks, full = false) {
       for (const pk of pks) {
@@ -619,9 +656,10 @@ td:not(.select-td) {
   overflow-x: hidden;
 }
 
-.top-picker, .bottom-picker {
+.top-picker,
+.bottom-picker {
   height: 34px;
-  background-color: #AAB2BD;
+  background-color: #aab2bd;
   position: absolute;
   left: 0;
   right: 0;
@@ -656,14 +694,14 @@ td:not(.select-td) {
     align-items: center;
     padding: 1px 2px 1px;
     text-decoration: none;
-    transition: .15s linear all;
+    transition: 0.15s linear all;
     cursor: pointer;
     flex: 1;
     margin: 0;
     font-size: 12px;
     min-width: 0;
     max-width: 150px;
-    background-color: #AAB2BD;
+    background-color: #aab2bd;
     color: #fff;
     text-align: right;
     justify-content: center;
@@ -739,7 +777,7 @@ td:not(.select-td) {
 
     .hovershow2 {
       opacity: 1;
-      transition: .5s ease-in opacity;
+      transition: 0.5s ease-in opacity;
     }
   }
 }
@@ -778,7 +816,7 @@ td:not(.select-td) {
   padding: 5px;
   border-radius: 5px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  transition: all .2s cubic-bezier(.25, .8, .25, 1);
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
 
   &:hover {
@@ -806,11 +844,17 @@ td:not(.select-td) {
     }
   }
 
-  &_need, &_need:focus, &_need:active, &_need:hover {
-    background: #F4D03F !important;
+  &_need,
+  &_need:focus,
+  &_need:active,
+  &_need:hover {
+    background: #f4d03f !important;
   }
 
-  &_finished, &_finished:focus, &_finished:active, &_finished:hover {
+  &_finished,
+  &_finished:focus,
+  &_finished:active,
+  &_finished:hover {
     background: #049372 !important;
   }
 
@@ -825,11 +869,13 @@ td:not(.select-td) {
   display: inline-block;
   width: 76px;
 
-  &_need, &_need a {
+  &_need,
+  &_need a {
     color: #ff0000 !important;
   }
 
-  &_finished, &_finished a {
+  &_finished,
+  &_finished a {
     color: #049372 !important;
   }
 
@@ -886,7 +932,7 @@ td:not(.select-td) {
         cursor: pointer;
 
         &-focused {
-          background: rgba(#3bafda, .1);
+          background: rgba(#3bafda, 0.1);
         }
       }
     }
@@ -900,10 +946,10 @@ td:not(.select-td) {
     right: 0;
     width: 34px;
     height: 34px;
-    opacity: .6;
+    opacity: 0.6;
 
     &:hover {
-      background: rgba(0, 0, 0, .15);
+      background: rgba(0, 0, 0, 0.15);
       opacity: 1;
     }
 
