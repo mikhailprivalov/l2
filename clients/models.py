@@ -542,13 +542,16 @@ class Individual(models.Model):
             q_enp = dict(tfoms_enp=enp or '##fakeenp##')
 
             if not individual:
-                indv = (
-                    Individual.objects.filter(
-                        Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)
+                if snils or enp or q_idp:
+                    indv = (
+                        Individual.objects.filter(
+                            Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)
+                        )
+                        if snils
+                        else Individual.objects.filter(Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
                     )
-                    if snils
-                    else Individual.objects.filter(Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
-                )
+                else:
+                    indv = None
             else:
                 indv = Individual.objects.filter(pk=individual.pk)
 

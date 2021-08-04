@@ -1050,6 +1050,13 @@ def external_research_create(request):
                 )
             except Exception as e:
                 logger.exception(e)
+            individual = None
+            card = None
+            passport_serial = None
+            passport_number = None
+            snils = None
+            enp = None
+
             return Response({"ok": True, 'id': str(direction.pk)})
 
     except InvalidData as e:
@@ -1057,6 +1064,12 @@ def external_research_create(request):
     except Exception as e:
         logger.exception(e)
         message = 'Серверная ошибка'
+    individual = None
+    card = None
+    passport_serial = None
+    passport_number = None
+    snils = None
+    enp = None
 
     return Response({"ok": False, 'message': message})
 
