@@ -832,11 +832,7 @@ export default {
         this.directive_departments_select.push({ label: dep.title, id: dep.pk });
       }
 
-      if (
-        this.$store.getters?.user_data?.department
-        && this.local_directive_departments.length > 0
-        && this.ofname_to_set === -1
-      ) {
+      if (this.$store.getters.user_data?.department && this.local_directive_departments.length > 0 && this.ofname_to_set === -1) {
         for (const dep of this.local_directive_departments) {
           if (dep.pk === this.$store.getters.user_data.department.pk) {
             this.directive_department = dep.pk;

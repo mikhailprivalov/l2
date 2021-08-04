@@ -41,7 +41,7 @@ export default class CheckBackend extends Vue {
       clearTimeout(this.aliveTimer);
     }
 
-    if (this?.$route?.name === 'login' && this.authenticated) {
+    if (this.$route?.name === 'login' && this.authenticated) {
       const urlParams = new URLSearchParams(window.location.search);
       const nextPath = urlParams.get('next');
       this.$router.push(nextPath || { name: 'menu' });

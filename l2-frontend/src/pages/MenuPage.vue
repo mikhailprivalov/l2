@@ -81,7 +81,7 @@ import { Menu, Button } from '@/types/menu';
       return this.menu.buttons.filter(b => !b.not_show_home && !b.hr);
     },
     fio_dep() {
-      return [this.user_data.fio, this.user_data?.department.title].filter(Boolean).join(', ');
+      return [this.user_data?.fio, this.user_data?.department.title].filter(Boolean).join(', ');
     },
   },
 })
