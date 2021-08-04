@@ -18,7 +18,7 @@ import users.models as umodels
 import cases.models as cases
 from api.models import Application
 from hospitals.models import Hospitals, HospitalsGroup
-from laboratory.utils import strdate, localtime, current_time
+from laboratory.utils import strdate, localtime, current_time, strfdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
@@ -384,6 +384,7 @@ class Napravleniya(models.Model):
     need_resend_amd = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в АМД?')
     need_resend_n3 = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в N3?')
     need_resend_l2 = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в L2.Core?')
+    need_resend_crie = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в CRIE')
     core_id = models.CharField(max_length=32, default=None, blank=True, null=True, db_index=True, help_text='Номер документа в L2.Core')
     amd_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='Номер документа в АМД')
     error_amd = models.BooleanField(default=False, blank=True, help_text='Ошибка отправка в АМД?')
@@ -437,6 +438,19 @@ class Napravleniya(models.Model):
         if hosp:
             return hosp.title
         return SettingManager.get("org_title")
+
+    def get_title_org_initiator(self):
+        return (self.title_org_initiator or self.hospital_title or "").replace("\"", " ")
+
+    @property
+    def hospital_ogrn(self):
+        hosp = self.get_hospital()
+        if hosp:
+            return hosp.ogrn
+        return SettingManager.get("org_ogrn")
+
+    def get_ogrn_org_initiator(self):
+        return self.ogrn_org_initiator or self.hospital_ogrn or ""
 
     @property
     def hospital_short_title(self):
@@ -1339,6 +1353,14 @@ class Issledovaniya(models.Model):
         :return: True, если весь материал взят
         """
         return self.tubes.filter().exists() and all([x.doc_get is not None for x in self.tubes.filter()])
+
+    @property
+    def material_date(self):
+        dt = self.time_confirmation
+        if self.tubes.filter(time_get__isnull=False).exists():
+            t = self.tubes.filter(time_get__isnull=False)[0]
+            dt = t.time_get
+        return strfdatetime(dt, '%Y-%m-%d')
 
     def get_visit_date(self, force=False):
         if not self.time_confirmation and not force:

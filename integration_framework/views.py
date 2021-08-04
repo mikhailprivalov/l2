@@ -22,7 +22,7 @@ from clients.sql_func import last_results_researches_by_time_ago
 from directory.models import Researches, Fractions, ReleationsFT
 from doctor_call.models import DoctorCall
 from hospitals.models import Hospitals
-from laboratory.settings import AFTER_DATE, MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY
+from laboratory.settings import AFTER_DATE, CENTRE_GIGIEN_EPIDEMIOLOGY, MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY, REGION
 from laboratory.utils import current_time, strfdatetime
 from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
@@ -34,7 +34,7 @@ from utils.data_verification import data_parse
 from utils.dates import normalize_date, valid_date
 from . import sql_if
 from directions.models import Napravleniya
-from .models import ExternalService
+from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
 
 logger = logging.getLogger("IF")
@@ -85,6 +85,17 @@ def get_dir_n3(request):
 def resend_dir_l2(request):
     next_n = int(request.GET.get("nextN", 5))
     dirs = sql_if.direction_resend_l2(next_n)
+    result = {"ok": False, "next": []}
+    if dirs:
+        result = {"ok": True, "next": [i[0] for i in dirs]}
+
+    return Response(result)
+
+
+@api_view()
+def resend_dir_crie(request):
+    next_n = int(request.GET.get("nextN", 5))
+    dirs = sql_if.direction_resend_crie(next_n)
     result = {"ok": False, "next": []}
     if dirs:
         result = {"ok": True, "next": [i[0] for i in dirs]}
@@ -145,12 +156,19 @@ def direction_data(request):
             },
             "issledovaniya": [x.pk for x in iss],
             "timeConfirmation": iss[iss_index].time_confirmation,
+            "timeTube": iss[iss_index].material_date,
             "docLogin": iss[iss_index].doc_confirmation.rmis_login if iss[iss_index].doc_confirmation else None,
             "docPassword": iss[iss_index].doc_confirmation.rmis_password if iss[iss_index].doc_confirmation else None,
             "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid if iss[iss_index].doc_confirmation else None,
             "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else 'ОМС',
             "oldPk": direction.core_id,
             "isExternal": direction.is_external,
+            "titleInitiator": direction.get_title_org_initiator(),
+            "ogrnInitiator": direction.get_ogrn_org_initiator(),
+            "titleLaboratory": direction.hospital_title.replace("\"", " "),
+            "ogrnLaboratory": direction.hospital_ogrn,
+            "REGION": REGION,
+            "DEPART": CENTRE_GIGIEN_EPIDEMIOLOGY,
         }
     )
 
@@ -264,10 +282,13 @@ def issledovaniye_data_multi(request):
             results_data.append(
                 {
                     "pk": r.pk,
+                    "issTitle": i.research.title,
+                    "title": r.fraction.title,
                     "fsli": r.fraction.get_fsli_code(),
                     "value": r.value.replace(',', '.'),
                     "units": r.get_units(),
                     "ref": refs,
+                    "confirmed": i.time_confirmation,
                 }
             )
 
@@ -320,6 +341,45 @@ def make_log(request):
             Log.log(key=k, type=t, body=body.get(k, {}))
 
     return Response({"ok": True})
+
+
+@api_view(['GET'])
+def crie_status(request):
+    pk = request.GET.get("direction")
+    system_id = request.GET.get("system_id")
+    status = request.GET.get("status") or 'null'
+    error = request.GET.get("error") or ''
+
+    direction = directions.Napravleniya.objects.filter(pk=pk).first()
+
+    if direction:
+        if direction.need_resend_crie:
+            direction.need_resend_crie = False
+            direction.save(update_fields=['need_resend_crie'])
+        order = CrieOrder.objects.filter(local_direction=direction).first()
+        if not order:
+            order = CrieOrder.objects.create(local_direction=direction, system_id=system_id, status=status, error=error)
+            updated = ['system_id', 'status', 'error', 'local_direction']
+        else:
+            updated = []
+            if order.system_id != system_id:
+                order.system_id = system_id
+                updated.append('system_id')
+
+            if order.status != status:
+                order.status = status
+                updated.append('status')
+
+            if order.error != error:
+                order.error = error
+                updated.append('error')
+
+            if updated:
+                order.save(update_fields=updated)
+        if updated:
+            Log.log(key=pk, type=60006, body={'updated': updated, 'order_id': order.pk})
+        return Response({"ok": True, "order": order.pk})
+    return Response({"ok": False})
 
 
 @api_view(['POST'])
@@ -773,32 +833,37 @@ def external_research_create(request):
     if birthdate and sex not in ['м', 'ж']:
         return Response({"ok": False, 'message': 'individual.sex должно быть "м" или "ж"'})
 
+    individual_status = "unknown"
+
     if enp:
         individuals = Individual.objects.filter(tfoms_enp=enp)
         if not individuals.exists():
             individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title='Полис ОМС') | Q(document__document_type__title='ЕНП'))
             individual = individuals.first()
+            individual_status = "local_enp"
         if not individual:
             tfoms_data = match_enp(enp)
             if tfoms_data:
-                Individual.import_from_tfoms(tfoms_data)
-                individuals = Individual.objects.filter(tfoms_enp=enp)
+                individuals = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
+                individual_status = "tfoms_match_enp"
 
             individual = individuals.first()
 
     if not individual and lastname:
         tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
         if tfoms_data:
-            Individual.import_from_tfoms(tfoms_data)
-            individual = Individual.objects.filter(tfoms_enp=enp).first()
+            individual_status = "tfoms_match_patient"
+            individual = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
 
     if not individual and passport_serial:
         individuals = Individual.objects.filter(document__serial=passport_serial, document__number=passport_number, document__document_type__title='Паспорт гражданина РФ')
         individual = individuals.first()
+        individual_status = "passport"
 
     if not individual and snils:
         individuals = Individual.objects.filter(document__number=snils, document__document_type__title='СНИЛС')
         individual = individuals.first()
+        individual_status = "snils"
 
     if not individual and lastname:
         individual = Individual.import_from_tfoms(
@@ -815,6 +880,7 @@ def external_research_create(request):
             },
             need_return_individual=True,
         )
+        individual_status = "new_local"
 
     if not individual:
         return Response({"ok": False, 'message': 'Физлицо не найдено'})
@@ -976,8 +1042,10 @@ def external_research_create(request):
                     body={
                         "org": body.get("org"),
                         "patient": body.get("patient"),
+                        "individualStatus": individual_status,
                         "financingSource": body.get("financingSource"),
                         "resultsCount": len(body.get("results")),
+                        "results": body.get("results"),
                     },
                 )
             except Exception as e:

@@ -4,6 +4,9 @@ from utils.db import namedtuplefetchall
 
 
 def last_result_researches_years(client_id, years, researches):
+    if not researches or not years:
+        return []
+
     with connection.cursor() as cursor:
         cursor.execute(
             """
