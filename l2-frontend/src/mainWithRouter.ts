@@ -110,6 +110,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/schedule',
+      name: 'schedule',
+      component: () => import('@/pages/Schedule/index.vue'),
+      meta: {
+        title: 'Расписание',
+        groups: ['Лечащий врач', 'Оператор лечащего врача', 'Врач консультаций', 'Врач стационара', 'Врач параклиники'],
+        module: 'l2_schedule',
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},

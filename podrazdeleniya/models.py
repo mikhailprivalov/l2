@@ -55,7 +55,18 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     class Meta:
         verbose_name = 'Подразделение'
         verbose_name_plural = 'Подразделения'
+        ordering = ['-id']
 
 
 class Room(models.Model):
-    title = models.CharField(max_length=255, default="", help_text='Название кабинета', db_index=True)
+    hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, on_delete=models.CASCADE)
+    title = models.CharField(max_length=64, help_text='Название кабинета')
+    hide = models.BooleanField(default=False, blank=True, db_index=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Кабинет'
+        verbose_name_plural = 'Кабинеты'
+        ordering = ['-id']
