@@ -143,11 +143,11 @@ export default class Navbar extends Vue {
   }
 
   get meta() {
-    return this?.$route?.meta || {};
+    return this.$route?.meta || {};
   }
 
   get metaTitle() {
-    return String(this?.$route?.meta?.title || '');
+    return String(this.$route?.meta?.title || '');
   }
 
   // eslint-disable-next-line class-methods-use-this

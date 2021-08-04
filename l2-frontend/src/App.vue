@@ -33,7 +33,7 @@ import CheckBackend from '@/ui-cards/CheckBackend.vue';
   computed: mapGetters(['inLoading', 'fullPageLoader', 'authenticated']),
   metaInfo() {
     return {
-      title: `${this?.$route?.meta?.title || 'L2'} — ${this.$orgTitle()}`,
+      title: `${this.$route?.meta?.title || 'L2'} — ${this.$orgTitle()}`,
     };
   },
   data() {
