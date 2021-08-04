@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <Navbar />
+    <Navbar v-if="!embedded" />
 
-    <div :class="$route.meta.narrowLayout && 'container'">
+    <div :class="isNarrowLayout && 'container'">
       <router-view v-if="!fullPageLoader"></router-view>
     </div>
 
@@ -33,8 +33,17 @@ import CheckBackend from '@/ui-cards/CheckBackend.vue';
   computed: mapGetters(['inLoading', 'fullPageLoader', 'authenticated']),
   metaInfo() {
     return {
-      title: `${this.$route.meta.title || 'L2'} — ${this.$orgTitle()}`,
+      title: `${this?.$route?.meta?.title || 'L2'} — ${this.$orgTitle()}`,
     };
+  },
+  data() {
+    return {
+      embedded: false,
+    };
+  },
+  mounted() {
+    const urlParams = new URLSearchParams(window.location.search);
+    this.embedded = urlParams.get('embedded') === '1';
   },
 })
 export default class App extends Vue {
@@ -43,6 +52,12 @@ export default class App extends Vue {
   fullPageLoader: boolean;
 
   authenticated: boolean;
+
+  embedded: boolean;
+
+  get isNarrowLayout() {
+    return Boolean(this?.$route?.meta?.narrowLayout);
+  }
 }
 </script>
 

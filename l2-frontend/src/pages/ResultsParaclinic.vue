@@ -1,5 +1,5 @@
 <template>
-  <div ref="root" class="results-root">
+  <div ref="root" class="results-root" :class="embedded && 'embedded'">
     <div :class="{ has_loc, opened: sidebarIsOpened || !data.ok }" class="results-sidebar" v-if="!embedded">
       <div class="sidebar-top">
         <div class="input-group">
@@ -1099,6 +1099,10 @@ export default {
 
     this.$root.$on('open-direction-form', pk => this.load_pk(pk));
 
+    this.$root.$on('preselect-args-ok', () => {
+      this.hasPreselectOk = true;
+    });
+
     const urlParams = new URLSearchParams(window.location.search);
     this.embedded = urlParams.get('embedded') === '1';
   },
@@ -1284,10 +1288,16 @@ export default {
             this.data = data;
             this.sidebarIsOpened = false;
             this.hasEDSigns = false;
-            setTimeout(
-              () => this.$root.$emit('preselect-args', { card_pk: data.patient.card_pk, base_pk: data.patient.base }),
-              300,
-            );
+            this.hasPreselectOk = false;
+            setTimeout(async () => {
+              for (let i = 0; i < 10; i++) {
+                await new Promise(r => setTimeout(r, 100));
+                if (this.hasPreselectOk) {
+                  break;
+                }
+              }
+              this.$root.$emit('preselect-args', { card_pk: data.patient.card_pk, base_pk: data.patient.base });
+            }, 100);
             if (data.card_internal && data.status_disp === 'need' && data.has_doc_referral) {
               this.$root.$emit('msg', 'error', 'Диспансеризация не пройдена');
             }
@@ -1816,11 +1826,20 @@ export default {
 
 <style scoped lang="scss">
 .results-root {
+  position: absolute;
+  top: 36px;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: stretch;
   flex-direction: row;
   flex-wrap: nowrap;
   align-content: stretch;
+
+  &.embedded {
+    top: 0;
+  }
 
   & > div {
     align-self: stretch;

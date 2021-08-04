@@ -119,7 +119,7 @@ export default {
   },
   computed: {
     toEnterUrl() {
-      return `/mainmenu/results/paraclinic?embedded=1#{"pk":${this.toEnter}}`;
+      return `/ui/results/descriptive?embedded=1#{"pk":${this.toEnter}}`;
     },
   },
 };

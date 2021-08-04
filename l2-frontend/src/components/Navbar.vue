@@ -2,63 +2,66 @@
   <nav class="navbar navbar-inverse" :class="loaderInHeader && 'show-loader'">
     <div class="nav-cont" v-if="!loading">
       <div class="navbar-header">
-        <router-link :to="authenticated ? '/ui/menu' : '/ui/login'" class="navbar-left logo">
-          L<sup>2</sup>
-        </router-link>
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
-                data-target="#navbar">
+        <router-link :to="authenticated ? '/ui/menu' : '/ui/login'" class="navbar-left logo"> L<sup>2</sup> </router-link>
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
         <router-link to="/ui/menu" v-if="authenticated">
-          <span class="navbar-brand"><small>{{ fio_short }}</small></span>
+          <span class="navbar-brand">
+            <small>{{ fio_short }}</small>
+          </span>
         </router-link>
-        <span class="navbar-brand" v-else><small class="page-title">{{ $route.meta.title }}</small></span>
+        <span class="navbar-brand" v-else>
+          <small class="page-title">{{ metaTitle }}</small>
+        </span>
       </div>
       <div id="navbar" class="navbar-collapse collapse">
         <ul class="nav navbar-nav" v-if="authenticated">
           <li class="dropdown dropdown-large">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-              Меню <b class="caret"></b>
-            </a>
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown"> Меню <b class="caret"></b> </a>
             <div class="dropdown-menu dropdown-menu-large">
               <div class="dash-buttons text-center">
                 <template v-for="(b, i) in menu.buttons">
                   <div v-if="b.hr" :key="i" class="menu-hr"></div>
                   <div v-else class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn" :key="b.url">
-                    <router-link :to="b.url" class="panel-body"
-                                 active-class="dash-active"
-                                 :target="b.nt && '_blank'">
+                    <router-link :to="b.url" class="panel-body" active-class="dash-active" :target="b.nt && '_blank'">
                       <span>{{ b.title }}</span>
                     </router-link>
                   </div>
                 </template>
               </div>
-              <div class="info">
-                L2 {{ menu.version }}
-              </div>
+              <div class="info">L2 {{ menu.version }}</div>
             </div>
           </li>
         </ul>
-        <extended-patient-search v-if="$route.meta.showExtendedPatientSearch"/>
-        <card-reader v-if="$route.meta.showCardReader"/>
+        <extended-patient-search v-if="meta.showExtendedPatientSearch" />
+        <card-reader v-if="meta.showCardReader" />
+        <ul class="nav navbar-nav" v-if="meta.showCreateDirection">
+          <create-descriptive-direction />
+        </ul>
+        <ul class="nav navbar-nav" v-if="meta.showRmisLinkSchedule">
+          <li>
+            <rmis-link isSchedule />
+          </li>
+        </ul>
         <ul class="nav navbar-right navbar-nav">
           <li>
-            <span class="navbar-brand org-title">
-                Организация: {{ user_hospital_title || $orgTitle() }}
-            </span>
+            <span class="navbar-brand org-title"> Организация: {{ user_hospital_title || $orgTitle() }} </span>
           </li>
         </ul>
       </div>
     </div>
     <div class="nav-loader center" v-else>
       <div class="navbar-header">
-        <div class="navbar-left logo">
-          L<sup>2</sup>
-        </div>
-        <span class="navbar-brand" v-if="authenticated"><small>{{ fio_short }}</small></span>
-        <span class="navbar-brand" v-else><small class="page-title">{{ $route.meta.title }}</small></span>
+        <div class="navbar-left logo">L<sup>2</sup></div>
+        <span class="navbar-brand" v-if="authenticated">
+          <small>{{ fio_short }}</small>
+        </span>
+        <span class="navbar-brand" v-else>
+          <small class="page-title">{{ metaTitle }}</small>
+        </span>
       </div>
       <div class="din-spinner">
         <div class="sk-fading-circle">
@@ -99,6 +102,8 @@ import { mapGetters } from 'vuex';
   components: {
     CardReader: () => import('@/ui-cards/CardReader.vue'),
     ExtendedPatientSearch: () => import('@/ui-cards/ExtendedPatientSearch/index.vue'),
+    CreateDescriptiveDirection: () => import('@/ui-cards/CreateDescriptiveDirection.vue'),
+    RmisLink: () => import('@/ui-cards/RmisLink.vue'),
   },
 })
 export default class Navbar extends Vue {
@@ -112,12 +117,26 @@ export default class Navbar extends Vue {
 
   fio_short: string;
 
+  user_hospital_title: string | null;
+
+  $orgTitle: () => string;
+
+  menu: any;
+
   get loading() {
     return this.inLoading && this.loaderInHeader;
   }
 
   get loadingText() {
     return (this.loadingLabel || 'Загрузка').toUpperCase();
+  }
+
+  get meta() {
+    return this?.$route?.meta || {};
+  }
+
+  get metaTitle() {
+    return String(this?.$route?.meta?.title || '');
   }
 }
 </script>

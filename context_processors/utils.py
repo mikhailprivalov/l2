@@ -100,7 +100,7 @@ def menu(request):
                     "module": "paraclinic_module",
                 },
                 {
-                    "url": "/mainmenu/results/paraclinic",
+                    "url": "/ui/results/descriptive",
                     "title": "Ввод описательных результатов",
                     "nt": False,
                     "access": ["Врач параклиники", "Врач консультаций"],

@@ -425,9 +425,7 @@ export default {
           if (disposition && disposition.indexOf('attachment') !== -1) {
             const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
             const matches = filenameRegex.exec(disposition);
-            if (matches != null && matches[1]) {
-              filename = matches[1].replace(/['"]/g, '');
-            }
+            filename = matches?.[1].replace(/['"]/g, '') || '';
           }
           const a = document.createElement('a');
           if (typeof a.download === 'undefined') {
@@ -565,8 +563,8 @@ export default {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  align-items: start;
-  justify-content: start;
+  align-items: flex-start;
+  justify-content: flex-start;
   margin-left: -10px;
   margin-right: -10px;
   position: absolute;
