@@ -194,7 +194,7 @@ def dashboard_sql_by_day(charts_id=None, start_date=None, end_date=None):
 
 
 def dashboard_sql_by_day_filter_hosp(
-    charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None, param_day_end=None, param_month_end=None, param_year_end=None, filter_hospitals=None
+    charts_id=None, start_date=None, end_date=None, filter_hospitals=None
 ):
     with connection.cursor() as cursor:
         cursor.execute(
@@ -243,11 +243,10 @@ def dashboard_sql_by_day_filter_hosp(
             WHERE
                 directions_dashboardcharts.id = ANY(ARRAY[%(charts_id)s]) AND 
                 directions_monitoringresult.hospital_id = ANY(ARRAY[%(filter_hospitals)s]) AND  
-                to_date(concat(directions_monitoringresult.period_param_day::text,'-', 
-                    directions_monitoringresult.period_param_month::text, '-', directions_monitoringresult.period_param_year::text), 'DD-MM-YYYY')
-                BETWEEN to_date(concat(%(period_param_day)s::text,'-', %(period_param_month)s::text, '-', %(period_param_year)s::text), 'DD-MM-YYYY')
+                directions_monitoringresult.period_date
+                BETWEEN %(start_date)s::date
                 AND
-                to_date(concat(%(param_day_end)s::text,'-', %(param_month_end)s::text, '-', %(param_year_end)s::text), 'DD-MM-YYYY')
+                %(end_date)s::date
             ORDER BY 
                 directions_dashboardcharts.id, 
                 directions_monitoringresult.hospital_id,
@@ -262,21 +261,15 @@ def dashboard_sql_by_day_filter_hosp(
                 'tz': TIME_ZONE,
                 'charts_id': charts_id,
                 'filter_hospitals': filter_hospitals,
-                'period_param_day': period_param_day,
-                'period_param_month': period_param_month,
-                'period_param_year': period_param_year,
-                'param_day_end': param_day_end,
-                'param_month_end': param_month_end,
-                'param_year_end': param_year_end,
+                'start_date': start_date,
+                'end_date': end_date,
             },
         )
         rows = namedtuplefetchall(cursor)
     return rows
 
 
-def sql_charts_sum_by_field_all_hospitals(
-    charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None, param_day_end=None, param_month_end=None, param_year_end=None
-):
+def sql_charts_sum_by_field_all_hospitals(charts_id=None, start_date=None, end_date=None):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -320,11 +313,10 @@ def sql_charts_sum_by_field_all_hospitals(
 
             WHERE 
                 charts_id = ANY(ARRAY[%(charts_id)s]) AND
-                to_date(concat(directions_monitoringresult.period_param_day::text,'-', 
-                    directions_monitoringresult.period_param_month::text, '-', directions_monitoringresult.period_param_year::text), 'DD-MM-YYYY')
-                BETWEEN to_date(concat(%(period_param_day)s::text,'-', %(period_param_month)s::text, '-', %(period_param_year)s::text), 'DD-MM-YYYY')
+                directions_monitoringresult.period_date
+                BETWEEN %(start_date)s::date
                 AND
-                to_date(concat(%(param_day_end)s::text,'-', %(param_month_end)s::text, '-', %(param_year_end)s::text), 'DD-MM-YYYY')
+                %(end_date)s::date
             GROUP BY
                 directions_dashboardchartfields.field_id,
                 directions_dashboardcharts.id,
@@ -348,21 +340,15 @@ def sql_charts_sum_by_field_all_hospitals(
             params={
                 'tz': TIME_ZONE,
                 'charts_id': charts_id,
-                'period_param_day': period_param_day,
-                'period_param_month': period_param_month,
-                'period_param_year': period_param_year,
-                'param_day_end': param_day_end,
-                'param_month_end': param_month_end,
-                'param_year_end': param_year_end,
+                'start_date': start_date,
+                'end_date': end_date,
             },
         )
         rows = namedtuplefetchall(cursor)
     return rows
 
 
-def sql_charts_sum_by_field_filter_hospitals(
-    charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None, param_day_end=None, param_month_end=None, param_year_end=None, filter_hospitals=None
-):
+def sql_charts_sum_by_field_filter_hospitals(charts_id=None, start_date=None, end_date=None, filter_hospitals=None):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -405,11 +391,10 @@ def sql_charts_sum_by_field_filter_hospitals(
             WHERE 
                 charts_id = ANY(ARRAY[%(charts_id)s]) AND
                 directions_monitoringresult.hospital_id = ANY(ARRAY[%(filter_hospitals)s]) AND
-                to_date(concat(directions_monitoringresult.period_param_day::text,'-', 
-                    directions_monitoringresult.period_param_month::text, '-', directions_monitoringresult.period_param_year::text), 'DD-MM-YYYY')
-                BETWEEN to_date(concat(%(period_param_day)s::text,'-', %(period_param_month)s::text, '-', %(period_param_year)s::text), 'DD-MM-YYYY')
+                directions_monitoringresult.period_date
+                BETWEEN %(start_date)s::date
                 AND
-                to_date(concat(%(param_day_end)s::text,'-', %(param_month_end)s::text, '-', %(param_year_end)s::text), 'DD-MM-YYYY')
+                %(end_date)s::date
             GROUP BY
                directions_dashboardchartfields.field_id,
                 directions_dashboardcharts.id,
@@ -432,21 +417,15 @@ def sql_charts_sum_by_field_filter_hospitals(
                 'tz': TIME_ZONE,
                 'charts_id': charts_id,
                 'filter_hospitals': filter_hospitals,
-                'period_param_day': period_param_day,
-                'period_param_month': period_param_month,
-                'period_param_year': period_param_year,
-                'param_day_end': param_day_end,
-                'param_month_end': param_month_end,
-                'param_year_end': param_year_end,
+                'start_date': start_date,
+                'end_date': end_date,
             },
         )
         rows = namedtuplefetchall(cursor)
     return rows
 
 
-def sql_charts_sum_by_field_every_hospitals(
-    charts_id=None, period_param_day=None, period_param_month=None, period_param_year=None, param_day_end=None, param_month_end=None, param_year_end=None, filter_hospitals=None
-):
+def sql_charts_sum_by_field_every_hospitals(charts_id=None, start_date=None, end_date=None, filter_hospitals=None):
     # в разрезе по МО
     with connection.cursor() as cursor:
         cursor.execute(
@@ -498,11 +477,10 @@ def sql_charts_sum_by_field_every_hospitals(
             WHERE 
                 charts_id = ANY(ARRAY[%(charts_id)s]) AND
                 directions_monitoringresult.hospital_id = ANY(ARRAY[%(filter_hospitals)s]) AND
-                to_date(concat(directions_monitoringresult.period_param_day::text,'-', 
-                    directions_monitoringresult.period_param_month::text, '-', directions_monitoringresult.period_param_year::text), 'DD-MM-YYYY')
-                BETWEEN to_date(concat(%(period_param_day)s::text,'-', %(period_param_month)s::text, '-', %(period_param_year)s::text), 'DD-MM-YYYY')
+                directions_monitoringresult.period_date
+                BETWEEN %(start_date)s::date
                 AND
-                to_date(concat(%(param_day_end)s::text,'-', %(param_month_end)s::text, '-', %(param_year_end)s::text), 'DD-MM-YYYY')
+                %(end_date)s::date
             GROUP BY
                 directions_dashboardcharts.id,
                 directions_monitoringresult.hospital_id,
@@ -532,12 +510,8 @@ def sql_charts_sum_by_field_every_hospitals(
                 'tz': TIME_ZONE,
                 'charts_id': charts_id,
                 'filter_hospitals': filter_hospitals,
-                'period_param_day': period_param_day,
-                'period_param_month': period_param_month,
-                'period_param_year': period_param_year,
-                'param_day_end': param_day_end,
-                'param_month_end': param_month_end,
-                'param_year_end': param_year_end,
+                'start_date': start_date,
+                'end_date': end_date,
             },
         )
         rows = namedtuplefetchall(cursor)
