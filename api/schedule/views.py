@@ -58,6 +58,9 @@ def days(request):
                 })
         rows.append(date_data)
 
+    if end_time and end_time >= timedelta(hours=24):
+        end_time = timedelta(hours=23)
+
     start_calendar_time = delta_to_string(start_time)
     end_calendar_time = delta_to_string(end_time)
 
