@@ -50,7 +50,6 @@
     "vue-full-loading": "^1.2.1",
     "vue-input-tag": "^2.0.7",
     "vue-longpress": "git+https://github.com/moodpulse/vuelongpress.git",
-    "vue-meeting-selector": "^1.1.0",
     "vue-meta": "^2.4.0",
     "vue-my-dropdown": "^2.1.0",
     "vue-property-decorator": "^9.1.2",

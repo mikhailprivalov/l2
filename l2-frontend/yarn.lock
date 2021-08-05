@@ -9433,13 +9433,6 @@ vue-loader@^15.9.2:
   dependencies:
     vue "^2.1.10"
 
-vue-meeting-selector@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/vue-meeting-selector/-/vue-meeting-selector-1.1.0.tgz#1473d94daccfad0ebbcefc6f3c16e75d8d57e443"
-  integrity sha512-KzqoeciV3RQIWJ0vjO4CwNuC/zkzovTuRaIuWDmWtuh/DKu7/Dwteyq4uW9dhDDqi3TcEByqVgdgs6Wcz1u6nw==
-  dependencies:
-    vue "^2.6.10"
-
 vue-meta@^2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/vue-meta/-/vue-meta-2.4.0.tgz#a419fb4b4135ce965dab32ec641d1989c2ee4845"
