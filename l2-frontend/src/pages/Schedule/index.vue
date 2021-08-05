@@ -1,92 +1,80 @@
 <template>
-  <div>
-    <vue-meeting-selector
-      v-model="meeting"
-      :date="date"
-      :loading="loading"
-      :meetings-days="meetingsDays"
-      :calendar-options="calendarOptions"
-      @next-date="nextDate"
-      @previous-date="previousDate"
-    />
+  <div class="root">
+    <Day v-for="d in days" :key="d.date" :day="d" :start-time="startTime" :end-time="endTime" />
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import moment from 'moment';
-// @ts-ignore
-import VueMeetingSelector from 'vue-meeting-selector';
+import moment, { Moment } from 'moment';
 import api from '@/api';
+import Day from './Day.vue';
 
 @Component({
   components: {
-    VueMeetingSelector,
+    Day,
   },
   data() {
     return {
-      date: moment()
-        .startOf('isoWeek')
-        .toDate(),
-      meeting: null,
-      loading: false,
-      meetingsDays: [],
-      calendarOptions: {
-        loadingLabel: 'Загрузка',
-        limit: 24,
-        daysLabel: ['Вск', 'Пнд', 'Втр', 'Срд', 'Чтв', 'Птн', 'Суб', 'Вск'],
-        monthsLabel: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
-        disabledDate() {
-          return false;
-        },
-      },
+      date: moment().startOf('isoWeek'),
+      days: [],
+      startTime: null,
+      endTime: null,
     };
   },
-  async mounted() {
-    this.loading = true;
-    this.meetingsDays = await this.getMeetings(this.date);
-    this.loading = false;
+  mounted() {
+    this.getScheduleWeek();
   },
 })
 export default class Schedule extends Vue {
   loading: boolean;
 
-  date: Date;
+  date: Moment;
 
-  meetingsDays: any[];
+  days: any[];
 
-  meeting: any;
+  startTime: string | null;
 
-  calendarOptions: any;
+  endTime: string | null;
 
-  // eslint-disable-next-line class-methods-use-this
-  async getMeetings(date) {
-    const { days } = await api('/schedule/days', {
-      date: typeof date === 'string' ? date : moment(date).format('YYYY-MM-DD'),
+  async getScheduleWeek() {
+    const { days, startTime, endTime } = await api('/schedule/days', {
+      date: this.date.format('YYYY-MM-DD'),
     });
 
-    return days;
+    this.days = days;
+    this.startTime = startTime;
+    this.endTime = endTime;
   }
 
   async nextDate() {
-    this.loading = true;
-    const date = new Date(this.date);
-    date.setDate(date.getDate() + 7);
-    this.meetingsDays = await this.getMeetings(date);
-    this.date = date;
-    this.loading = false;
+    this.date = moment(this.date).add(7, 'weeks');
+    await this.getScheduleWeek();
   }
 
   async previousDate() {
-    this.loading = true;
-    const date = new Date(this.date);
-    date.setDate(date.getDate() - 7);
-    this.meetingsDays = await this.getMeetings(date);
-    this.date = date;
-    this.loading = false;
+    this.date = moment(this.date).subtract(7, 'weeks');
+    await this.getScheduleWeek();
   }
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.root {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+
+  position: absolute;
+  top: 36px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+</style>

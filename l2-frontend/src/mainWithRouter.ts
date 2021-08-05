@@ -134,6 +134,10 @@ const router = new Router({
 
 router.beforeEach(async (to, from, next) => {
   if (to.name === '404') {
+    if (to.hash && !to.hash.startsWith('/ui')) {
+      window.location.href = to.hash;
+      return;
+    }
     router.app.$toast.warning(`Страница ${to.hash} не найдена.`, {
       position: POSITION.BOTTOM_RIGHT,
       timeout: 8000,
