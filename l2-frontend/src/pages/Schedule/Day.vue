@@ -72,6 +72,11 @@ export default class Day extends Vue {
     for (let m = moment(this.startTime, 'HH:mm'); m.diff(endMoment, 'hours') < 0; m.add(1, 'hour')) {
       h.push(m.format('HH:mm'));
     }
+
+    if (!h.includes(this.endTime)) {
+      h.push(this.endTime);
+    }
+
     return h;
   }
 

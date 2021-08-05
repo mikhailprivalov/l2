@@ -1,3 +1,4 @@
+import math
 import datetime
 from datetime import timedelta
 from doctor_schedule.models import ScheduleResource, SlotPlan
@@ -39,7 +40,8 @@ def days(request):
                 duration = s.duration_minutes
 
                 current_slot_time = timedelta(hours=max(slot_datetime.hour, 0))
-                current_slot_end_time = timedelta(hours=min(slot_datetime.hour + 1, 24))
+                hours_duration = int(math.ceil(duration / 60))
+                current_slot_end_time = timedelta(hours=min(slot_datetime.hour + hours_duration, 24))
 
                 if not start_time or start_time > current_slot_time:
                     start_time = current_slot_time
