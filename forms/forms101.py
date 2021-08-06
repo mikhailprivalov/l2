@@ -104,7 +104,7 @@ def form_02(request_data):
     agent_status = False
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
-        agent_status = True
+        agent_status = bool(p_agent)
 
     # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
     who_patient = 'пациента'
@@ -344,7 +344,7 @@ def form_03(request_data):
     agent_status = False
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
-        agent_status = True
+        agent_status = bool(p_agent)
 
     # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
     who_patient = 'пациента'
@@ -951,7 +951,7 @@ def form_06(request_data):
     buffer.close()
     return pdf
 
-                          
+
 def form_09(request_data):
     """
     ИНФОРМИРОВАННОЕ СОГЛАСИЕ ПАЦИЕНТА
@@ -963,7 +963,7 @@ def form_09(request_data):
     agent_status = False
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
-        agent_status = True
+        agent_status = bool(p_agent)
 
     # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
     who_patient = 'пациента'
@@ -1191,7 +1191,7 @@ def form_09(request_data):
     styleSign.firstLineIndent = 0
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('\"___\"____________{} '.format(date_year), styleSign))
- 
+
     objs.append(PageBreak())  # Генерировать втрое согласие pdf-Лист 
 
     objs.append(
@@ -1537,7 +1537,7 @@ def form_10(request_data):
     agent_status = False
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
-        agent_status = True
+        agent_status = bool(p_agent)
 
     if agent_status:
         person_data = p_agent.get_data_individual()
@@ -1918,11 +1918,11 @@ def form_10(request_data):
         ('SPAN', (0, 23), (0, 24)),
         ('SPAN', (0, 25), (1, 25)),
     ]
-                          
+
     table_style += [
         ('SPAN', (0, i + 1), (1, i + 1)) for i in range(15)
     ]
-                          
+
     table_style += [
         ('SPAN', (0, i + 18), (1, i + 18)) for i in range(5)
     ]
@@ -2218,15 +2218,15 @@ def form_10(request_data):
         ('SPAN', (0, 11), (0, 12)),
         ('SPAN', (0, 13), (0, 14)),
     ]
-        
+
     table_style += [
         ('SPAN', (0, i), (1, i)) for i in range(11)
     ]
-                          
+
     table_style += [
         ('SPAN', (0, i + 15), (1, i + 15)) for i in range(5)
     ]
-                          
+
     tbl.setStyle(TableStyle(table_style))
 
     objs.append(tbl)
@@ -2499,7 +2499,7 @@ def form_10(request_data):
     table_style += [
         ('SPAN', (2, 4 + (i * 2)), (2, 4 + (i * 2) + 1)) for i in range(8)
     ]
-    
+
     tbl.setStyle(TableStyle(table_style))
     objs.append(tbl)
 
@@ -2575,7 +2575,7 @@ def form_11(request_data):
     agent_status = False
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
-        agent_status = True
+        agent_status = bool(p_agent)
 
     # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
     who_patient = 'пациента'
@@ -2804,8 +2804,8 @@ def form_11(request_data):
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
-              
-                          
+
+
 def form_12(request_data):
     """
     Добровольное информированное согласие 
@@ -2818,7 +2818,7 @@ def form_12(request_data):
     agent_status = False
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
-        agent_status = True
+        agent_status = bool(p_agent)
 
     if agent_status:
         person_data = p_agent.get_data_individual()
@@ -2891,7 +2891,7 @@ def form_12(request_data):
             'Добровольное информированное согласие пациента <br/>'
             'на вакцинацию против новой коронавирусной инфекции или отказ от неё<br/> ', styleCenterBold),
     )
-    
+
     d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
     date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
 
@@ -2984,7 +2984,7 @@ def form_12(request_data):
     objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('Я свидетельствую, что разъяснил все вопросы, связанные с проведением прививок и дал ответы на все вопросы.', style))
-    
+
     objs.append(Paragraph('{}'.format(space_bottom), style))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
     objs.append(Paragraph('(подпись){0}(Ф.И.О. врача){1}'.format(33 * space_bottom, 43 * space_bottom), styleCenter))

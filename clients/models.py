@@ -50,6 +50,9 @@ class Individual(models.Model):
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
+    def first(self):
+        return self
+
     def join_individual(self, b: 'Individual', out: OutputWrapper = None):
         if out:
             out.write("Карт для переноса: %s" % Card.objects.filter(individual=b).count())
@@ -542,19 +545,22 @@ class Individual(models.Model):
             q_enp = dict(tfoms_enp=enp or '##fakeenp##')
 
             if not individual:
-                indv = (
-                    Individual.objects.filter(
-                        Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)
+                if idp or enp or snils:
+                    indv = (
+                        Individual.objects.filter(
+                            Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)
+                        )
+                        if snils
+                        else Individual.objects.filter(Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
                     )
-                    if snils
-                    else Individual.objects.filter(Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
-                )
+                else:
+                    indv = None
             else:
                 indv = Individual.objects.filter(pk=individual.pk)
 
             enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
 
-            if not indv.exists():
+            if not indv or not indv.exists():
                 i = Individual(
                     family=family,
                     name=name,

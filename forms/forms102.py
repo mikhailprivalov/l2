@@ -52,7 +52,7 @@ def form_01(request_data):
     p_agent = None
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
-        agent_status = True
+        agent_status = bool(p_agent)
 
     # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
     who_patient = 'пациента'

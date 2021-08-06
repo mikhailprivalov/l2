@@ -665,7 +665,7 @@ def external_doc_call_send(request):
         Individual.import_from_tfoms(tfoms_data)
         individuals = Individual.objects.filter(tfoms_enp=enp)
 
-    individual = individuals.first()
+    individual = individuals if isinstance(individuals, Individual) else individuals.first()
     if not individual:
         return Response({"ok": False, 'message': 'Физлицо не найдено'})
 
