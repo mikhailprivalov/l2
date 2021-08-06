@@ -50,6 +50,9 @@ class Individual(models.Model):
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
+    def first(self):
+        return self
+
     def join_individual(self, b: 'Individual', out: OutputWrapper = None):
         if out:
             out.write("Карт для переноса: %s" % Card.objects.filter(individual=b).count())
