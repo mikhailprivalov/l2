@@ -16,8 +16,9 @@ class SlotPlanAdmin(admin.ModelAdmin):
 
 class SlotFactAdmin(admin.ModelAdmin):
     list_display = ('pk', 'plan', 'patient', 'status', 'external_slot_id')
-    autocomplete_fields = ('plan', 'patient')
+    autocomplete_fields = ('plan', 'patient', 'service')
     search_fields = ('pk', 'plan', 'patient', 'status', 'external_slot_id')
+    raw_id_fields = ('direction',)
 
 
 admin.site.register(ScheduleResource, ScheduleResourceAdmin)

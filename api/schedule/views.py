@@ -1,7 +1,8 @@
+from clients.models import Card
 import math
 import datetime
 from datetime import timedelta
-from doctor_schedule.models import ScheduleResource, SlotPlan
+from doctor_schedule.models import ScheduleResource, SlotFact, SlotPlan
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
@@ -49,6 +50,42 @@ def days(request):
                 if not end_time or end_time < current_slot_end_time:
                     end_time = current_slot_end_time
 
+                slot_fact = SlotFact.objects.filter(plan=s).order_by('-pk').first()
+
+                status = 'empty'
+
+                patient = None
+                service = None
+                direction = None
+
+                if slot_fact:
+                    status = {
+                        0: 'reserved',
+                        1: 'cancelled',
+                        2: 'succes',
+                    }[slot_fact.status]
+
+                    if slot_fact.patient:
+                        card: Card = slot_fact.patient
+                        patient = {
+                            'cardId': card.pk,
+                            'base': card.base_id,
+                            'number': card.number_with_type(),
+                            'fio': card.individual.fio(full=True),
+                            'birthday': card.individual.bd(),
+                        }
+
+                    if slot_fact.service:
+                        service = {
+                            'id': slot_fact.service_id,
+                            'title': slot_fact.service.get_title(),
+                        }
+
+                    if slot_fact.direction:
+                        direction = {
+                            'id': slot_fact.direction_id,
+                        }
+
                 date_data['slots'].append({
                     'id': s.pk,
                     'date': datetime.datetime.strftime(slot_datetime, '%Y-%m-%d'),
@@ -57,6 +94,10 @@ def days(request):
                     'hourValue': slot_datetime.hour,
                     'minute': slot_datetime.minute,
                     'duration': duration,
+                    'status': status,
+                    'patient': patient,
+                    'service': service,
+                    'direction': direction,
                 })
         rows.append(date_data)
 

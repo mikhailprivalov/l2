@@ -4,11 +4,12 @@ from clients.models import Card
 from directory.models import Researches
 from users.models import DoctorProfile, Speciality
 from utils.models import ChoiceArrayField
+from directions.models import Napravleniya
 
 
 class ScheduleResource(models.Model):
     executor = models.ForeignKey(DoctorProfile, db_index=True, null=True, verbose_name='Исполнитель', on_delete=models.CASCADE)
-    service = models.ForeignKey(Researches, verbose_name='Услуга', db_index=True, on_delete=models.CASCADE)
+    service = models.ForeignKey(Researches, verbose_name='Услуга', db_index=True, on_delete=models.CASCADE)  # TODO: может быть несколько
     room = models.ForeignKey('podrazdeleniya.Room', related_name='scheduleresourceroom', verbose_name='Кабинет', db_index=True, on_delete=models.CASCADE)
     department = models.ForeignKey('podrazdeleniya.Podrazdeleniya', null=True, blank=True, verbose_name='Подразделение',
                                    db_index=True, related_name='scheduleresourcedepartment', on_delete=models.CASCADE)
@@ -66,6 +67,8 @@ class SlotFact(models.Model):
     patient = models.ForeignKey(Card, verbose_name='Карта пациента', db_index=True, null=True, on_delete=models.SET_NULL)
     status = models.PositiveSmallIntegerField(choices=STATUS, blank=True, db_index=True, verbose_name='Статус')
     external_slot_id = models.CharField(max_length=255, default='', blank=True, verbose_name='Внешний ИД')
+    service = models.ForeignKey(Researches, verbose_name='Услуга', db_index=True, null=True, blank=True, on_delete=models.CASCADE)
+    direction = models.ForeignKey(Napravleniya, verbose_name='Направление', db_index=True, null=True, blank=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.pk} — {self.patient} {self.get_status_display()} {self.plan}"

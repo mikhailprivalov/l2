@@ -1,6 +1,6 @@
 <template>
   <div class="root">
-    <Day v-for="d in days" :key="d.date" :day="d" :start-time="startTime" :end-time="endTime" />
+    <Day v-for="d in days" :key="d.date" :day="d" :all-hours="allHours" :all-hours-values="allHoursValues" :today="today" />
   </div>
 </template>
 
@@ -21,6 +21,7 @@ import Day from './Day.vue';
       days: [],
       startTime: null,
       endTime: null,
+      today: '',
     };
   },
   mounted() {
@@ -38,7 +39,10 @@ export default class Schedule extends Vue {
 
   endTime: string | null;
 
+  today: string;
+
   async getScheduleWeek() {
+    this.today = moment().format('YYYY-MM-DD');
     const { days, startTime, endTime } = await api('/schedule/days', {
       date: this.date.format('YYYY-MM-DD'),
     });
@@ -56,6 +60,30 @@ export default class Schedule extends Vue {
   async previousDate() {
     this.date = moment(this.date).subtract(7, 'weeks');
     await this.getScheduleWeek();
+  }
+
+  get allHours() {
+    const h = [];
+
+    if (!this.startTime || !this.endTime) {
+      return h;
+    }
+
+    const endMoment = moment(this.endTime, 'HH:mm');
+
+    for (let m = moment(this.startTime, 'HH:mm'); m.diff(endMoment, 'hours') < 0; m.add(1, 'hour')) {
+      h.push(m.format('HH:mm'));
+    }
+
+    if (!h.includes(this.endTime)) {
+      h.push(this.endTime);
+    }
+
+    return h;
+  }
+
+  get allHoursValues() {
+    return this.allHours.map(h => Number(h.split(':')[0]));
   }
 }
 </script>

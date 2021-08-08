@@ -1,13 +1,21 @@
 from django.contrib import admin
 from pharmacotherapy import models
 
-admin.site.register(models.Drugs)
-admin.site.register(models.FormRelease)
-admin.site.register(models.MethodsReception)
+
+class DrugsAdmin(admin.ModelAdmin):
+    search_fields = ('mnn', 'trade_name')
+
+
+class FormReleaseAdmin(admin.ModelAdmin):
+    search_fields = ('title',)
+
+
+class MethodsReceptionAdmin(admin.ModelAdmin):
+    search_fields = ('title',)
 
 
 class ResProcedureList(admin.ModelAdmin):
-    raw_id_fields = (
+    autocomplete_fields = (
         'history',
         'diary',
         'card',
@@ -27,7 +35,7 @@ class ResProcedureList(admin.ModelAdmin):
 
 
 class ResProcedureListTimes(admin.ModelAdmin):
-    raw_id_fields = (
+    autocomplete_fields = (
         'prescription',
         'executor',
         'who_cancel',
@@ -41,5 +49,8 @@ class ResProcedureListTimes(admin.ModelAdmin):
     search_fields = ('pk',)
 
 
+admin.site.register(models.Drugs, DrugsAdmin)
+admin.site.register(models.FormRelease, FormReleaseAdmin)
+admin.site.register(models.MethodsReception, MethodsReceptionAdmin)
 admin.site.register(models.ProcedureList, ResProcedureList)
 admin.site.register(models.ProcedureListTimes, ResProcedureListTimes)
