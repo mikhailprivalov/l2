@@ -125,9 +125,11 @@ span.isloading-wrapper {
 }
 
 .isloading-wrapper i {
-  -webkit-animation: spin 4s linear infinite;
-  -moz-animation: spin 4s linear infinite;
   animation: spin 4s linear infinite;
+}
+
+.fa-spinner {
+  animation: spin 1.5s linear infinite;
 }
 
 .isloading-overlay {

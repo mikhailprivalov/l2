@@ -1,4 +1,4 @@
-from clients.models import Card
+from clients.models import Card, CardBase
 import math
 import datetime
 from datetime import timedelta
@@ -8,6 +8,7 @@ from django.http import JsonResponse
 
 from utils.data_verification import data_parse
 from laboratory.utils import localtime
+from utils.response import status_response
 
 
 def delta_to_string(d):
@@ -86,19 +87,21 @@ def days(request):
                             'id': slot_fact.direction_id,
                         }
 
-                date_data['slots'].append({
-                    'id': s.pk,
-                    'date': datetime.datetime.strftime(slot_datetime, '%Y-%m-%d'),
-                    'time': datetime.datetime.strftime(slot_datetime, '%X'),
-                    'hour': delta_to_string(current_slot_time),
-                    'hourValue': slot_datetime.hour,
-                    'minute': slot_datetime.minute,
-                    'duration': duration,
-                    'status': status,
-                    'patient': patient,
-                    'service': service,
-                    'direction': direction,
-                })
+                date_data['slots'].append(
+                    {
+                        'id': s.pk,
+                        'date': datetime.datetime.strftime(slot_datetime, '%Y-%m-%d'),
+                        'time': datetime.datetime.strftime(slot_datetime, '%X'),
+                        'hour': delta_to_string(current_slot_time),
+                        'hourValue': slot_datetime.hour,
+                        'minute': slot_datetime.minute,
+                        'duration': duration,
+                        'status': status,
+                        'patient': patient,
+                        'service': service,
+                        'direction': direction,
+                    }
+                )
         rows.append(date_data)
 
     if end_time and end_time >= timedelta(hours=24):
@@ -107,8 +110,108 @@ def days(request):
     start_calendar_time = delta_to_string(start_time)
     end_calendar_time = delta_to_string(end_time)
 
-    return JsonResponse({
-        'days': rows,
-        'startTime': start_calendar_time,
-        'endTime': end_calendar_time,
-    })
+    return JsonResponse(
+        {
+            'days': rows,
+            'startTime': start_calendar_time,
+            'endTime': end_calendar_time,
+        }
+    )
+
+
+@login_required
+def details(request):
+    pk = data_parse(request.body, {'id': int})[0]
+
+    s: SlotPlan = SlotPlan.objects.filter(pk=pk).first()
+
+    if s:
+        slot_datetime = localtime(s.datetime)
+        duration = s.duration_minutes
+
+        current_slot_time = timedelta(hours=max(slot_datetime.hour, 0))
+
+        slot_fact = SlotFact.objects.filter(plan=s).order_by('-pk').first()
+
+        status = 'empty'
+
+        card_pk = None
+        service = None
+        direction = None
+        base_pk = CardBase.objects.filter(internal_type=True)[0].pk
+
+        if slot_fact:
+            status = {
+                0: 'reserved',
+                1: 'cancelled',
+                2: 'succes',
+            }[slot_fact.status]
+
+            if slot_fact.patient:
+                card: Card = slot_fact.patient
+
+                card_pk = card.pk
+
+            if slot_fact.service:
+                service = {
+                    'id': slot_fact.service_id,
+                    'title': slot_fact.service.get_title(),
+                }
+
+            if slot_fact.direction:
+                direction = {
+                    'id': slot_fact.direction_id,
+                }
+
+        return status_response(
+            True,
+            data={
+                'data': {
+                    'id': s.pk,
+                    'date': datetime.datetime.strftime(slot_datetime, '%Y-%m-%d'),
+                    'time': datetime.datetime.strftime(slot_datetime, '%X'),
+                    'hour': delta_to_string(current_slot_time),
+                    'hourValue': slot_datetime.hour,
+                    'minute': slot_datetime.minute,
+                    'duration': duration,
+                    'status': status,
+                    'cardId': card_pk,
+                    'baseId': base_pk,
+                    'service': service,
+                    'direction': direction,
+                },
+            },
+        )
+
+    return status_response(False)
+
+
+@login_required
+def save(request):
+    data = data_parse(request.body, {'id': int, 'cardId': int, 'status': str})
+
+    pk: int = data[0]
+    card_pk: int = data[1]
+    status: str = data[2]
+
+    s: SlotPlan = SlotPlan.objects.filter(pk=pk).first()
+
+    if s:
+        status = {
+            'reserved': 0,
+            'cancelled': 1,
+            'succes': 2,
+        }.get(status, 0)
+        slot_fact: SlotFact = SlotFact.objects.filter(plan=s).order_by('-pk').first()
+
+        if not slot_fact:
+            slot_fact = SlotFact.objects.create(plan=s, status=status)
+
+        slot_fact.patient_id = card_pk
+        slot_fact.status = status
+
+        slot_fact.save(update_fields=['patient', 'status'])
+
+        return status_response(True)
+
+    return status_response(False, 'Слот не найден')

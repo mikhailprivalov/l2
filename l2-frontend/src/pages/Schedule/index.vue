@@ -26,6 +26,7 @@ import Day from './Day.vue';
   },
   mounted() {
     this.getScheduleWeek();
+    this.$root.$on('reload-slots', () => this.getScheduleWeek());
   },
 })
 export default class Schedule extends Vue {
