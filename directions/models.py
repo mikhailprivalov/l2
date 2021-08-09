@@ -24,6 +24,8 @@ from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
 import contracts.models as contracts
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, Place
+from django.contrib.postgres.fields import ArrayField
+
 
 from appconf.manager import SettingManager
 
@@ -1494,33 +1496,39 @@ class Dashboard(models.Model):
 
 
 class DashboardCharts(models.Model):
-    COLUMN = 'COLUMN'
-    BAR = 'BAR'
-    PIE = 'PIE'
+    # available_types = ['BAR', 'COLUMN', 'PIE', 'TABLE', 'LINE' ]
+    # 1 элемент - по умолчанию
 
-    GRAPHIC_TYPES = (
-        (COLUMN, 'Столбцы'),
-        (BAR, 'Полоса'),
-        (PIE, 'Пирог-куски'),
-    )
+    MANY_PARAMETERS_BY_EVERY_DATE_BY_EVERY_HOSPITAL = 'MANY_PARAMETERS_BY_EVERY_DATE_BY_EVERY_HOSPITAL'
+    MANY_PARAMETERS_BY_EVERY_DATE_BY_GROUP_HOSPITAL = 'MANY_PARAMETERS_BY_EVERY_DATE_BY_GROUP_HOSPITAL'
 
-    EVERY_HOSPITAL = 'EVERY_HOSPITAL'
-    ALL_HOSPITAL = 'ALL_HOSPITAL'
+    ONE_PARAMETER_BY_EVERY_DATE_BY_EVERY_HOSPITAL = 'ONE_PARAMETER_BY_EVERY_DATE_BY_EVERY_HOSPITAL'
+    ONE_PARAMETER_BY_EVERY_DATE_BY_GROUP_HOSPITAL = 'ONE_PARAMETER_BY_EVERY_DATE_BY_GROUP_HOSPITAL'
+
+    MANY_PARAMETERS_BY_PERIOD_BY_EVERY_HOSPITAL = 'MANY_PARAMETERS_BY_PERIOD_BY_EVERY_HOSPITAL'
+    MANY_PARAMETERS_BY_PERIOD_BY_GROUP_HOSPITAL = 'MANY_PARAMETERS_BY_PERIOD_BY_GROUP_HOSPITAL'
 
     GROUP_BY_TYPES = (
-        (EVERY_HOSPITAL, 'Сумма по каждой больнице'),
-        (ALL_HOSPITAL, 'Сумма по всем больницам'),
+        (MANY_PARAMETERS_BY_EVERY_DATE_BY_EVERY_HOSPITAL, 'Нес-ко параметров по каждой дате по каждой МО'),
+        (MANY_PARAMETERS_BY_EVERY_DATE_BY_GROUP_HOSPITAL, 'Нес-ко параметров по каждой дате по одной группе МО'),
+
+        (ONE_PARAMETER_BY_EVERY_DATE_BY_EVERY_HOSPITAL, 'ОДИН параметр по каждой дате по каждой МО'),
+        (ONE_PARAMETER_BY_EVERY_DATE_BY_GROUP_HOSPITAL, 'ОДИН параметр по каждой дате по одной группе МО'),
+
+        (MANY_PARAMETERS_BY_PERIOD_BY_EVERY_HOSPITAL, 'Нес-ко параметров за период по каждой МО'),
+        (MANY_PARAMETERS_BY_PERIOD_BY_GROUP_HOSPITAL, 'Нес-ко параметров за период по одной группе МО'),
     )
 
     title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
     dashboard = models.ForeignKey(Dashboard, null=True, help_text='Дашборд', db_index=True, on_delete=models.CASCADE)
-    type = models.CharField(max_length=20, db_index=True, choices=GRAPHIC_TYPES, help_text="Тип графика")
     order = models.SmallIntegerField(default=-99, blank=True, null=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие графика', db_index=True)
     hospitals_group = models.ForeignKey(HospitalsGroup, default=None, blank=True, null=True, db_index=True, help_text="Группа больниц", on_delete=models.CASCADE)
-    sum_by_field = models.BooleanField(default=False, blank=True, help_text='Суммировать по полю')
     is_full_width = models.BooleanField(default=False, blank=True, help_text='На всю ширину страницы')
-    group_by_type = models.CharField(max_length=20, default=None, blank=True, null=True, db_index=True, choices=GROUP_BY_TYPES, help_text="Тип группировки")
+    group_by_type = models.CharField(max_length=100, default=None, blank=True, null=True, db_index=True, choices=GROUP_BY_TYPES, help_text="Тип группировки")
+    available_types = ArrayField(models.CharField(max_length=200), default=None, null=True, blank=True)
+    sum_by_field = models.BooleanField(default=False, blank=True, help_text='Суммирвоать по полю')
+
 
     def __str__(self):
         return f"{self.title} - Дашборд: {self.dashboard.title}"

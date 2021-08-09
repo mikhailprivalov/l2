@@ -119,6 +119,7 @@ def monitoring_sql_by_all_hospital(
 
 
 def dashboard_sql_by_day(charts_id=None, start_date=None, end_date=None):
+    # в разрезе По всем МО за даты
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -136,7 +137,7 @@ def dashboard_sql_by_day(charts_id=None, start_date=None, end_date=None):
                 directions_dashboardcharts.id as chart_id,
                 directions_dashboardcharts.order as chart_order,
                 directions_dashboardcharts.title as chart_title,
-                directions_dashboardcharts.type as chart_type,
+                directions_dashboardcharts.available_types as available_types,
                 directions_monitoringresult.hospital_id,
                 hospitals_hospitals.short_title as hosp_short_title,
                 hospitals_hospitals.title as hosp_title,
@@ -193,9 +194,8 @@ def dashboard_sql_by_day(charts_id=None, start_date=None, end_date=None):
     return rows
 
 
-def dashboard_sql_by_day_filter_hosp(
-    charts_id=None, start_date=None, end_date=None, filter_hospitals=None
-):
+def dashboard_sql_by_day_filter_hosp(charts_id=None, start_date=None, end_date=None, filter_hospitals=None):
+    # в разрезе по указанным МО за даты
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -213,7 +213,7 @@ def dashboard_sql_by_day_filter_hosp(
                 directions_dashboardcharts.id as chart_id,
                 directions_dashboardcharts.order as chart_order,
                 directions_dashboardcharts.title as chart_title,
-                directions_dashboardcharts.type as chart_type,
+                directions_dashboardcharts.available_types as available_types,
                 directions_monitoringresult.hospital_id,
                 hospitals_hospitals.short_title as hosp_short_title,
                 hospitals_hospitals.title as hosp_title,
@@ -225,7 +225,8 @@ def dashboard_sql_by_day_filter_hosp(
                 directions_monitoringresult.period_param_hour,
                 directions_monitoringresult.period_param_day,
                 directions_monitoringresult.period_param_month,
-                directions_monitoringresult.period_param_year
+                directions_monitoringresult.period_param_year,
+                directions_monitoringresult.period_date as date
 
             FROM public.directions_dashboardchartfields
             LEFT JOIN directions_dashboardcharts
@@ -270,10 +271,11 @@ def dashboard_sql_by_day_filter_hosp(
 
 
 def sql_charts_sum_by_field_all_hospitals(charts_id=None, start_date=None, end_date=None):
+    # итоговая сумма по всем найденным МО
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT main_table.chart_id, main_table.chart_order, main_table.chart_title, main_table.chart_type, main_table.order_field, 
+            SELECT main_table.chart_id, main_table.chart_order, main_table.chart_title, main_table.order_field, 
                 main_table.field_id, main_table.title_for_field, sum(main_table.value_aggregate) as value_aggregate FROM
             (SELECT
             DISTINCT ON (
@@ -288,7 +290,7 @@ def sql_charts_sum_by_field_all_hospitals(charts_id=None, start_date=None, end_d
                 directions_dashboardcharts.id as chart_id,
                 directions_dashboardcharts.order as chart_order,
                 directions_dashboardcharts.title as chart_title,
-                directions_dashboardcharts.type as chart_type,
+                directions_dashboardcharts.available_types as available_types,
                 directions_dashboardchartfields.order as order_field, 
                 directions_dashboardchartfields.field_id as field_id,
                 title_for_field,
@@ -296,7 +298,8 @@ def sql_charts_sum_by_field_all_hospitals(charts_id=None, start_date=None, end_d
                 directions_monitoringresult.period_param_hour,
                 directions_monitoringresult.period_param_day,
                 directions_monitoringresult.period_param_month,
-                directions_monitoringresult.period_param_year
+                directions_monitoringresult.period_param_year,
+                directions_monitoringresult.period_date as date
 
             FROM public.directions_dashboardchartfields
             LEFT JOIN directions_dashboardcharts
@@ -334,7 +337,7 @@ def sql_charts_sum_by_field_all_hospitals(charts_id=None, start_date=None, end_d
                 directions_monitoringresult.period_param_month,
                 directions_monitoringresult.period_param_year,
                 directions_monitoringresult.period_param_hour DESC) main_table  
-            GROUP BY main_table.chart_id, main_table.chart_order, main_table.chart_title, main_table.chart_type, 
+            GROUP BY main_table.chart_id, main_table.chart_order, main_table.chart_title, 
             main_table.field_id,  main_table.order_field, main_table.title_for_field;          
             """,
             params={
@@ -349,6 +352,7 @@ def sql_charts_sum_by_field_all_hospitals(charts_id=None, start_date=None, end_d
 
 
 def sql_charts_sum_by_field_filter_hospitals(charts_id=None, start_date=None, end_date=None, filter_hospitals=None):
+    # итоговая сумма по указанным МО
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -365,7 +369,7 @@ def sql_charts_sum_by_field_filter_hospitals(charts_id=None, start_date=None, en
                 directions_dashboardcharts.id as chart_id,
                 directions_dashboardcharts.order as chart_order,
                 directions_dashboardcharts.title as chart_title,
-                directions_dashboardcharts.type as chart_type,
+                directions_dashboardcharts.available_types as available_types,
                 directions_dashboardchartfields.order as order_field, 
                 directions_dashboardchartfields.field_id,
                 title_for_field,
@@ -373,7 +377,8 @@ def sql_charts_sum_by_field_filter_hospitals(charts_id=None, start_date=None, en
                 directions_monitoringresult.period_param_hour,
                 directions_monitoringresult.period_param_day,
                 directions_monitoringresult.period_param_month,
-                directions_monitoringresult.period_param_year
+                directions_monitoringresult.period_param_year,
+                directions_monitoringresult.period_date as date
 
             FROM public.directions_dashboardchartfields
             LEFT JOIN directions_dashboardcharts
@@ -426,11 +431,11 @@ def sql_charts_sum_by_field_filter_hospitals(charts_id=None, start_date=None, en
 
 
 def sql_charts_sum_by_field_every_hospitals(charts_id=None, start_date=None, end_date=None, filter_hospitals=None):
-    # в разрезе по МО
+    # Итоговая сумма в по каждой МО за дату
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT main_table.chart_id, main_table.chart_order, main_table.chart_title, main_table.chart_type, 
+            SELECT main_table.chart_id, main_table.chart_order, main_table.chart_title, 
                 main_table.hosp_short_title,
                 main_table.order_field, 
                 main_table.field_id, main_table.title_for_field, sum(main_table.value_aggregate) as value_aggregate FROM
@@ -449,7 +454,7 @@ def sql_charts_sum_by_field_every_hospitals(charts_id=None, start_date=None, end
                 directions_dashboardcharts.id as chart_id,
                 directions_dashboardcharts.order as chart_order,
                 directions_dashboardcharts.title as chart_title,
-                directions_dashboardcharts.type as chart_type,
+                directions_dashboardcharts.available_types as available_types,
                 directions_monitoringresult.hospital_id,
                 hospitals_hospitals.short_title as hosp_short_title,
                 directions_dashboardchartfields.order as order_field, 
@@ -459,7 +464,8 @@ def sql_charts_sum_by_field_every_hospitals(charts_id=None, start_date=None, end
                 directions_monitoringresult.period_param_hour,
                 directions_monitoringresult.period_param_day,
                 directions_monitoringresult.period_param_month,
-                directions_monitoringresult.period_param_year
+                directions_monitoringresult.period_param_year,
+                directions_monitoringresult.period_date as date
 
             FROM public.directions_dashboardchartfields
             LEFT JOIN directions_dashboardcharts
@@ -501,7 +507,7 @@ def sql_charts_sum_by_field_every_hospitals(charts_id=None, start_date=None, end
                 directions_monitoringresult.period_param_month,
                 directions_monitoringresult.period_param_year,
                 directions_monitoringresult.period_param_hour DESC) main_table
-                GROUP BY main_table.chart_id, main_table.chart_order, main_table.chart_title, main_table.chart_type, 
+                GROUP BY main_table.chart_id, main_table.chart_order, main_table.chart_title,
                 main_table.hosp_short_title,
                 main_table.order_field, 
                 main_table.field_id, main_table.title_for_field;               
