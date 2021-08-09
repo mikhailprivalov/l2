@@ -350,6 +350,7 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
         "defaultType": "table",
         "dates": [],
         "fields": [],
+        "columnTotal": [],
     }
 
     step = 0
@@ -357,7 +358,6 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
     hosp_short_title = ""
     unique_elements = None
     values = None
-    total = None
 
     for i in result_dashboard:
         if sum_by_field:
@@ -375,8 +375,8 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             tmp_chart["dates"] = unique_elements["date_str"]
             values = ['' for i in range(unique_elements["len_elements"])]
             values[0] = i.value_aggregate
-            tmp_chart["total"] = [0 for i in range(unique_elements["len_elements"])]
-            tmp_chart["total"][0] = i.value_aggregate
+            tmp_chart["columnTotal"] = [0 for i in range(unique_elements["len_elements"])]
+            tmp_chart["columnTotal"][0] = i.value_aggregate
             tmp_chart["data"] = [{"title": hosp_short_title, "values": values}]
             previous_chart_title = i.chart_title
             previous_hosp_short_title = hosp_short_title
@@ -392,9 +392,10 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             tmp_chart["dates"] = unique_elements["date_str"]
             values = ['' for i in range(unique_elements["len_elements"])]
             values[0] = i.value_aggregate
-            tmp_chart["total"] = [0 for i in range(unique_elements["len_elements"])]
-            tmp_chart["total"][0] = i.value_aggregate
-            tmp_chart[  "data"] = [{"title": hosp_short_title, "values": values}]
+
+            tmp_chart["columnTotal"] = [0 for i in range(unique_elements["len_elements"])]
+            tmp_chart["columnTotal"][0] = i.value_aggregate
+            tmp_chart["data"] = [{"title": hosp_short_title, "values": values}]
             previous_chart_title = i.chart_title
             previous_hosp_short_title = hosp_short_title
             current_index = 0
@@ -405,7 +406,7 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
 
             values = ['' for i in range(unique_elements["len_elements"])]
             values[element_position] = i.value_aggregate
-            tmp_chart["total"][element_position] += i.value_aggregate
+            tmp_chart["columnTotal"][element_position] += i.value_aggregate
             tmp_chart["data"].append({"title": hosp_short_title, "values": values})
             current_index += 1
             previous_hosp_short_title = hosp_short_title
@@ -414,7 +415,7 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             field_index_position = unique_elements["unique_fields_title"].index(i.title_for_field)
             element_position = date_index_position * len(unique_elements["unique_fields_title"]) + field_index_position
             values[element_position] = i.value_aggregate
-            tmp_chart["total"][element_position] += i.value_aggregate
+            tmp_chart["columnTotal"][element_position] += i.value_aggregate
             tmp_chart["data"][current_index]["values"] = values
         step += 1
 
