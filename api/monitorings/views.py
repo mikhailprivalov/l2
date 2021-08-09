@@ -407,7 +407,7 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             values = ['' for i in range(unique_elements["len_elements"])]
             values[element_position] = i.value_aggregate
             tmp_chart["columnTotal"][element_position] += i.value_aggregate
-            tmp_chart["data"].append({"title": hosp_short_title, "values": values})
+            tmp_chart["data"].append({"title": hosp_short_title, "values": values,})
             current_index += 1
             previous_hosp_short_title = hosp_short_title
         else:
@@ -421,6 +421,7 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
 
     if step > 0:
         result.append(deepcopy(tmp_chart))
+    print(result)
 
     return result
 
