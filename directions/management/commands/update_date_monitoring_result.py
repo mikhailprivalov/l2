@@ -13,9 +13,7 @@ class Command(BaseCommand):
         for mr in monitoring_result:
             if mr.research.type_period == "PERIOD_HOUR" or mr.research.type_period == "PERIOD_DAY":
                 if None in [mr.period_param_year, mr.period_param_month, mr.period_param_day]:
-                    print(mr.napravleniye)
                     continue
-
                 mr.period_date = date(mr.period_param_year, mr.period_param_month, mr.period_param_day)
                 mr.save()
             if mr.research.type_period == "PERIOD_MONTH":
