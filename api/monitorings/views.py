@@ -263,7 +263,7 @@ def get_chart_data(request):
     elif chart_hospital_group_pk:
         charts_filters_by_group_mo[chart_pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=chart_hospital_group_pk))
     elif charts_objs.hospitals_group:
-        charts_filters_by_group_mo[chart_pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=c.hospitals_group.pk))
+        charts_filters_by_group_mo[chart_pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=charts_objs.hospitals_group.pk))
     else:
         default_charts.append(chart_pk)
 

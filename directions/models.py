@@ -24,7 +24,6 @@ from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
 import contracts.models as contracts
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, Place
-from django.contrib.postgres.fields import ArrayField
 
 
 from appconf.manager import SettingManager
