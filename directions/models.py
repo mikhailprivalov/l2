@@ -1496,29 +1496,6 @@ class Dashboard(models.Model):
 
 
 class DashboardCharts(models.Model):
-    # available_types = ['BAR', 'COLUMN', 'PIE', 'TABLE', 'LINE' ]
-    # 1 элемент - по умолчанию
-
-    MANY_PARAMETERS_BY_EVERY_DATE_BY_EVERY_HOSPITAL = 'MANY_PARAMETERS_BY_EVERY_DATE_BY_EVERY_HOSPITAL'
-    MANY_PARAMETERS_BY_EVERY_DATE_BY_GROUP_HOSPITAL = 'MANY_PARAMETERS_BY_EVERY_DATE_BY_GROUP_HOSPITAL'
-
-    ONE_PARAMETER_BY_EVERY_DATE_BY_EVERY_HOSPITAL = 'ONE_PARAMETER_BY_EVERY_DATE_BY_EVERY_HOSPITAL'
-    ONE_PARAMETER_BY_EVERY_DATE_BY_GROUP_HOSPITAL = 'ONE_PARAMETER_BY_EVERY_DATE_BY_GROUP_HOSPITAL'
-
-    MANY_PARAMETERS_BY_PERIOD_BY_EVERY_HOSPITAL = 'MANY_PARAMETERS_BY_PERIOD_BY_EVERY_HOSPITAL'
-    MANY_PARAMETERS_BY_PERIOD_BY_GROUP_HOSPITAL = 'MANY_PARAMETERS_BY_PERIOD_BY_GROUP_HOSPITAL'
-
-    GROUP_BY_TYPES = (
-        (MANY_PARAMETERS_BY_EVERY_DATE_BY_EVERY_HOSPITAL, 'Нес-ко параметров по каждой дате по каждой МО'),
-        (MANY_PARAMETERS_BY_EVERY_DATE_BY_GROUP_HOSPITAL, 'Нес-ко параметров по каждой дате по одной группе МО'),
-
-        (ONE_PARAMETER_BY_EVERY_DATE_BY_EVERY_HOSPITAL, 'ОДИН параметр по каждой дате по каждой МО'),
-        (ONE_PARAMETER_BY_EVERY_DATE_BY_GROUP_HOSPITAL, 'ОДИН параметр по каждой дате по одной группе МО'),
-
-        (MANY_PARAMETERS_BY_PERIOD_BY_EVERY_HOSPITAL, 'Нес-ко параметров за период по каждой МО'),
-        (MANY_PARAMETERS_BY_PERIOD_BY_GROUP_HOSPITAL, 'Нес-ко параметров за период по одной группе МО'),
-    )
-
     COLUMN = 'COLUMN'
     BAR = 'BAR'
     PIE = 'PIE'
@@ -1539,8 +1516,6 @@ class DashboardCharts(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие графика', db_index=True)
     hospitals_group = models.ForeignKey(HospitalsGroup, default=None, blank=True, null=True, db_index=True, help_text="Группа больниц", on_delete=models.CASCADE)
     is_full_width = models.BooleanField(default=False, blank=True, help_text='На всю ширину страницы')
-    group_by_type = models.CharField(max_length=100, default=None, blank=True, null=True, db_index=True, choices=GROUP_BY_TYPES, help_text="Тип группировки")
-    available_types = ArrayField(models.CharField(max_length=200), default=None, null=True, blank=True)
     default_type = models.CharField(max_length=20, db_index=True, choices=DEFAULT_TYPE, help_text="Тип графика по умолчанию")
 
     def __str__(self):

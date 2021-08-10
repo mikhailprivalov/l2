@@ -13,11 +13,9 @@ from django.http import JsonResponse, HttpResponse
 from api.monitorings.sql_func import (
     monitoring_sql_by_all_hospital,
     dashboard_sql_by_day,
-    sql_charts_sum_by_field_all_hospitals,
     dashboard_sql_by_day_filter_hosp,
-    sql_charts_sum_by_field_filter_hospitals,
-    sql_charts_sum_by_field_every_hospitals,
 )
+
 from directory.models import Researches
 from utils.data_verification import data_parse
 from laboratory.utils import strdatetime
@@ -226,94 +224,20 @@ def get_dashboard(request):
     request_data = json.loads(request.body)
     dashboard_pk = request_data["dashboard"]
 
-    # даты начала
-    date = request_data["date"]
-    prepare_date = date.split("-")
-
-    # даты конец
-    # date_end = request_data["date_end"]
-    # prepare_date_end = date_end.split("-")
-    prepare_date_end = '2021-07-28'
-
+    date_start = request_data["date"]
+    date_end = request_data["date_end"]
     charts_objs = DashboardCharts.objects.filter(dashboard__pk=dashboard_pk, hide=False)
 
-    many_days_mane_params_many_mo_only_some_hospitals = {}
-
-    charts_sum_by_field_all_hospitals = []
-    charts_sum_by_field_some_hospitals = {}
-
-    chrart_every_hospitals = {}
-    charts_many_param_many_dates_many_mo = []
-    charts_many_param_many_dates_only_one_group_mo = []
-
-    # for c in charts_objs:
-    #     if c.sum_by_field and c.hospitals_group is None:
-    #         charts_sum_by_field_all_hospitals.append(c.pk)
-    #     elif c.sum_by_field and c.hospitals_group:
-    #         if c.group_by_type and c.group_by_type == "EVERY_HOSPITAL":
-    #             chrart_every_hospitals[c.pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=c.hospitals_group.pk))
-    #         else:
-    #             charts_sum_by_field_some_hospitals[c.pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=c.hospitals_group.pk))
-    #     elif not c.sum_by_field and c.hospitals_group:
-    #         chrart_only_some_hospitals[c.pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=c.hospitals_group.pk))
-    #     else:
-    #         default_charts.append(c.pk)
-
-    charts_many_param_many_dates_many_mo = []
-    charts_many_param_many_dates_group_mo = {}
-    charts_many_param_many_dates_all_mo = []
-
-    charts_one_param_many_dates_many_mo = []
-    charts_one_param_many_dates_group_mo = {}
-    charts_one_param_many_dates_all_mo = []
-
-    charts_many_param_period_dates_many_mo = []
-    charts_many_param_period_dates_group_mo = {}
-    charts_many_param_period_dates_all_mo = []
+    default_charts = []
+    charts_filters_by_group_mo = {}
 
     for c in charts_objs:
-        if c.group_by_type == 'MANY_PARAMETERS_BY_EVERY_DATE_BY_EVERY_HOSPITAL':
-            charts_many_param_many_dates_many_mo.append(c.pk)
-        elif c.group_by_type == 'MANY_PARAMETERS_BY_EVERY_DATE_BY_GROUP_HOSPITAL':
-            charts_many_param_many_dates_group_mo[c.pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=c.hospitals_group.pk))
-        elif c.group_by_type == 'MANY_PARAMETERS_BY_EVERY_DATE_BY_ALLHOSPITAL':
-            charts_many_param_many_dates_all_mo.append(c.pk)
+        if c.hospitals_group:
+            charts_filters_by_group_mo[c.pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=c.hospitals_group.pk))
+        else:
+            default_charts.append(c.pk)
 
-        elif c.group_by_type == 'ONE_PARAMETER_BY_EVERY_DATE_BY_EVERY_HOSPITAL':
-            charts_one_param_many_dates_many_mo.append(c.pk)
-        elif c.group_by_type == 'ONE_PARAMETER_BY_EVERY_DATE_BY_GROUP_HOSPITAL':
-            charts_one_param_many_dates_group_mo[c.pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=c.hospitals_group.pk))
-        elif c.group_by_type == 'ONE_PARAMETER_BY_EVERY_DATE_BY_ALLHOSPITAL':
-            charts_one_param_many_dates_all_mo.append(c.pk)
-
-        elif c.group_by_type == 'MANY_PARAMETERS_BY_PERIOD_BY_EVERY_HOSPITAL':
-            charts_many_param_period_dates_many_mo.append(c.pk)
-        elif c.group_by_type == 'MANY_PARAMETERS_BY_PERIOD_BY_GROUP_HOSPITAL':
-            charts_many_param_period_dates_group_mo[c.pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=c.hospitals_group.pk))
-        elif c.group_by_type == 'MANY_PARAMETERS_BY_PERIOD_BY_ALLHOSPITAL':
-            charts_many_param_period_dates_all_mo.append(c.pk)
-
-    result = []
-
-    if charts_many_param_many_dates_many_mo:
-        result_dashboard = dashboard_sql_by_day(charts_many_param_many_dates_many_mo, date, prepare_date_end)
-        result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True)
-    if many_days_mane_params_many_mo_only_some_hospitals:
-        for chart_pk, need_hospitals in many_days_mane_params_many_mo_only_some_hospitals.items():
-            result_dashboard = dashboard_sql_by_day_filter_hosp([chart_pk], date, prepare_date_end, need_hospitals)
-            result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True)
-    if charts_sum_by_field_all_hospitals:
-        result_dashboard = sql_charts_sum_by_field_all_hospitals(charts_sum_by_field_all_hospitals, date, prepare_date_end)
-        result = result_dashboard_func(result_dashboard, result, sum_by_field=True, default_charts=False)
-    if charts_sum_by_field_some_hospitals:
-        for chart_pk, need_hospitals in charts_sum_by_field_some_hospitals.items():
-            result_dashboard = sql_charts_sum_by_field_filter_hospitals([chart_pk], date, prepare_date_end, need_hospitals)
-            result = result_dashboard_func(result_dashboard, result, sum_by_field=True, default_charts=False)
-    if chrart_every_hospitals:
-        for chart_pk, need_hospitals in chrart_every_hospitals.items():
-            result_dashboard = sql_charts_sum_by_field_every_hospitals([chart_pk], date, prepare_date_end, need_hospitals)
-            result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True)
-
+    result = get_charts_data(default_charts, charts_filters_by_group_mo, date_start, date_end)
     result = sorted(result, key=lambda k: k['chart_order'])
 
     return JsonResponse({'rows': result})
@@ -321,11 +245,52 @@ def get_dashboard(request):
 
 @login_required
 @group_required("Просмотр мониторингов")
+def get_chart_data(request):
+    request_data = json.loads(request.body)
+    chart_pk = request_data["chart_pk"]
+    chart_hospital_group_pk = request_data["group_pk"]
+    chart_hospital_pk = request_data["hospital_pk"]
+    chart_date_start = request_data["chart_date_start"]
+    chart_date_end = request_data["chart_date_end"]
+
+    charts_objs = DashboardCharts.objects.filter(pk=chart_pk, hide=False).first()
+
+    default_charts = []
+    charts_filters_by_group_mo = {}
+
+    if chart_hospital_pk:
+        charts_filters_by_group_mo[chart_pk] = [chart_hospital_pk]
+    elif chart_hospital_group_pk:
+        charts_filters_by_group_mo[chart_pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=chart_hospital_group_pk))
+    elif charts_objs.hospitals_group:
+        charts_filters_by_group_mo[chart_pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=c.hospitals_group.pk))
+    else:
+        default_charts.append(chart_pk)
+
+    result = get_charts_data(default_charts, charts_filters_by_group_mo, chart_date_start, chart_date_end)
+
+    return JsonResponse({'rows': result})
+
+
+def get_charts_data(default_charts, charts_filters_by_group_mo, start_date, end_date):
+    result = []
+    if default_charts:
+        result_dashboard = dashboard_sql_by_day(default_charts, start_date, end_date)
+        result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True)
+    if charts_filters_by_group_mo:
+        for chart_pk, need_hospitals in charts_filters_by_group_mo.items():
+            result_dashboard = dashboard_sql_by_day_filter_hosp([chart_pk], start_date, end_date, need_hospitals)
+            result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True)
+
+    return result
+
+
+@login_required
+@group_required("Просмотр мониторингов")
 def dashboard_list(request):
     result = []
-    dasboards = Dashboard.objects.filter(hide=False)
-    for dasboard in dasboards:
-        result.append({"label": dasboard.title, "id": dasboard.pk})
+    for dashboard in Dashboard.objects.filter(hide=False):
+        result.append({"label": dashboard.title, "id": dashboard.pk})
 
     return JsonResponse({"rows": result})
 
@@ -343,12 +308,11 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
                 "title": "",
                 "fields": [],
                 "values": [],
-                "stringTotlal": [],
+                "stringTotal": [],
             }
         ],
         "availableTypes": ["BAR", "COLUMN", "PIE", "LINE", "TABLE"],
         "isFullWidth": False,
-        "defaultType": "table",
         "dates": [],
         "fields": [],
         "columnTotal": [],
@@ -370,6 +334,7 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             tmp_chart["pk"] = i.chart_id
             tmp_chart["chart_order"] = i.chart_order
             tmp_chart["type"] = i.default_type
+            tmp_chart["isFullWidth"] = i.is_full_width
 
             unique_elements = unique_date_field(i.chart_id, result_dashboard)
             tmp_chart["fields"] = unique_elements["unique_fields_title"]
@@ -378,7 +343,8 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             values[0] = i.value_aggregate
             tmp_chart["columnTotal"] = [0 for i in range(unique_elements["len_elements"])]
             tmp_chart["columnTotal"][0] = i.value_aggregate
-            tmp_chart["data"] = [{"title": hosp_short_title, "values": values}]
+            tmp_chart["data"] = [{"title": hosp_short_title, "values": values, "stringTotal": [0 for i in range(len(unique_elements["unique_fields_title"]))]}]
+            tmp_chart["data"][0]["stringTotal"][0] = i.value_aggregate
             previous_chart_title = i.chart_title
             previous_hosp_short_title = hosp_short_title
         elif i.chart_title != previous_chart_title:
@@ -387,6 +353,7 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             tmp_chart["pk"] = i.chart_id
             tmp_chart["type"] = i.default_type
             tmp_chart["chart_order"] = i.chart_order
+            tmp_chart["isFullWidth"] = i.is_full_width
 
             unique_elements = unique_date_field(i.chart_id, result_dashboard)
             tmp_chart["fields"] = unique_elements["unique_fields_title"]
@@ -396,7 +363,8 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
 
             tmp_chart["columnTotal"] = [0 for i in range(unique_elements["len_elements"])]
             tmp_chart["columnTotal"][0] = i.value_aggregate
-            tmp_chart["data"] = [{"title": hosp_short_title, "values": values}]
+            tmp_chart["data"] = [{"title": hosp_short_title, "values": values, "stringTotal": [0 for i in range(len(unique_elements["unique_fields_title"]))]}]
+            tmp_chart["data"][0]["stringTotal"][0] = i.value_aggregate
             previous_chart_title = i.chart_title
             previous_hosp_short_title = hosp_short_title
             current_index = 0
@@ -408,8 +376,9 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             values = ['' for i in range(unique_elements["len_elements"])]
             values[element_position] = i.value_aggregate
             tmp_chart["columnTotal"][element_position] += i.value_aggregate
-            tmp_chart["data"].append({"title": hosp_short_title, "values": values,})
+            tmp_chart["data"].append({"title": hosp_short_title, "values": values, "stringTotal": [0 for i in range(len(unique_elements["unique_fields_title"]))]})
             current_index += 1
+            tmp_chart["data"][current_index]["stringTotal"][field_index_position] += i.value_aggregate
             previous_hosp_short_title = hosp_short_title
         else:
             date_index_position = unique_elements["unique_dates"].index(i.date)
@@ -418,11 +387,12 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             values[element_position] = i.value_aggregate
             tmp_chart["columnTotal"][element_position] += i.value_aggregate
             tmp_chart["data"][current_index]["values"] = values
+
+            tmp_chart["data"][current_index]["stringTotal"][field_index_position] += i.value_aggregate
         step += 1
 
     if step > 0:
         result.append(deepcopy(tmp_chart))
-    print(result)
 
     return result
 
