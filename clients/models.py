@@ -651,6 +651,8 @@ class Individual(models.Model):
             card = Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True, updated_data=updated_data)
             print(card)  # noqa: T001
 
+            card.get_card_documents()
+
             i.time_tfoms_last_sync = timezone.now()
             i.save(update_fields=['time_tfoms_last_sync'])
 
