@@ -137,7 +137,7 @@ def dashboard_sql_by_day(charts_id=None, start_date=None, end_date=None):
                 directions_dashboardcharts.id as chart_id,
                 directions_dashboardcharts.order as chart_order,
                 directions_dashboardcharts.title as chart_title,
-                directions_dashboardcharts.available_types as available_types,
+                directions_dashboardcharts.default_type as default_type,
                 directions_monitoringresult.hospital_id,
                 hospitals_hospitals.short_title as hosp_short_title,
                 hospitals_hospitals.title as hosp_title,

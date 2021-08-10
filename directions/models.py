@@ -1519,6 +1519,20 @@ class DashboardCharts(models.Model):
         (MANY_PARAMETERS_BY_PERIOD_BY_GROUP_HOSPITAL, 'Нес-ко параметров за период по одной группе МО'),
     )
 
+    COLUMN = 'COLUMN'
+    BAR = 'BAR'
+    PIE = 'PIE'
+    LINE = 'LINE'
+    TABLE = 'TABLE'
+
+    DEFAULT_TYPE = (
+        (COLUMN, 'Столбцы'),
+        (BAR, 'Полоса'),
+        (PIE, 'Пирог-куски'),
+        (LINE, 'Линейная диаграмма'),
+        (TABLE, 'Таблица'),
+    )
+
     title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
     dashboard = models.ForeignKey(Dashboard, null=True, help_text='Дашборд', db_index=True, on_delete=models.CASCADE)
     order = models.SmallIntegerField(default=-99, blank=True, null=True)
@@ -1527,8 +1541,7 @@ class DashboardCharts(models.Model):
     is_full_width = models.BooleanField(default=False, blank=True, help_text='На всю ширину страницы')
     group_by_type = models.CharField(max_length=100, default=None, blank=True, null=True, db_index=True, choices=GROUP_BY_TYPES, help_text="Тип группировки")
     available_types = ArrayField(models.CharField(max_length=200), default=None, null=True, blank=True)
-    sum_by_field = models.BooleanField(default=False, blank=True, help_text='Суммирвоать по полю')
-
+    default_type = models.CharField(max_length=20, db_index=True, choices=DEFAULT_TYPE, help_text="Тип графика по умолчанию")
 
     def __str__(self):
         return f"{self.title} - Дашборд: {self.dashboard.title}"

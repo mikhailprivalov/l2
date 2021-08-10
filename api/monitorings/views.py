@@ -342,10 +342,11 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             {
                 "title": "",
                 "fields": [],
-                "values": []
+                "values": [],
+                "stringTotlal": [],
             }
         ],
-        "availableTypes": ["chart", "table"],
+        "availableTypes": ["BAR", "COLUMN", "PIE", "LINE", "TABLE"],
         "isFullWidth": False,
         "defaultType": "table",
         "dates": [],
@@ -368,7 +369,7 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             tmp_chart["title"] = i.chart_title
             tmp_chart["pk"] = i.chart_id
             tmp_chart["chart_order"] = i.chart_order
-            tmp_chart["type"] = i.available_types[0]
+            tmp_chart["type"] = i.default_type
 
             unique_elements = unique_date_field(i.chart_id, result_dashboard)
             tmp_chart["fields"] = unique_elements["unique_fields_title"]
@@ -384,7 +385,7 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             result.append(deepcopy(tmp_chart))
             tmp_chart["title"] = i.chart_title
             tmp_chart["pk"] = i.chart_id
-            tmp_chart["type"] = i.available_types[0]
+            tmp_chart["type"] = i.default_type
             tmp_chart["chart_order"] = i.chart_order
 
             unique_elements = unique_date_field(i.chart_id, result_dashboard)
