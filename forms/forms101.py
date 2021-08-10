@@ -1537,7 +1537,7 @@ def form_10(request_data):
     agent_status = False
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
-        agent_status = True
+        agent_status = bool(p_agent)
 
     if agent_status:
         person_data = p_agent.get_data_individual()
