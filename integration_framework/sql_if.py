@@ -3,7 +3,7 @@ from django.db import connection
 from laboratory.settings import TIME_ZONE
 
 
-def direction_collect(d_s, researches, limit):
+def direction_collect(d_s, researches, is_research, limit):
     """
     парам: d_s - date-start, researches - списко исследований которые требуются
 
@@ -26,7 +26,7 @@ def direction_collect(d_s, researches, limit):
              FROM public.directions_issledovaniya
              WHERE
              CASE 
-             WHEN %(researches)s = -1 THEN
+             WHEN %(is_research)s = -1 THEN
                  time_confirmation > %(d_start)s::timestamp AT TIME ZONE %(tz)s
              ELSE
                  time_confirmation > %(d_start)s::timestamp AT TIME ZONE %(tz)s AND (research_id=ANY(ARRAY[%(researches)s]))
@@ -41,7 +41,7 @@ def direction_collect(d_s, researches, limit):
             
             SELECT napravleniye_id, research_id, time_confirmation, t_confirm FROM t_all WHERE napr_null IS NULL
             ORDER BY time_confirmation LIMIT %(limit)s """,
-            params={'d_start': d_s if str(d_s) != 'None' else '2018-01-01', 'tz': TIME_ZONE, 'researches': researches, 'limit': limit},
+            params={'d_start': d_s if str(d_s) != 'None' else '2018-01-01', 'tz': TIME_ZONE, 'researches': researches, 'is_research': is_research, 'limit': limit},
         )
 
         row = cursor.fetchall()
