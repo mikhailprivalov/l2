@@ -32,6 +32,7 @@ class IntegrationResearches(models.Model):
         ('mbu', 'MBU'),
         ('amd', 'AMD'),
         ('crie', 'CRIE'),
+        ('L2L2', 'L2L2'),
     )
 
     type_integration = models.CharField(max_length=4, choices=TYPES, db_index=True)
