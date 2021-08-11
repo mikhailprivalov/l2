@@ -51,7 +51,7 @@ def next_result_direction(request):
     d_start = f'{after_date}'
     researches = -1
     if type_researches != '*':
-        researches = type_researches.split(',')
+        researches = [int(i) for i in type_researches.split(',')]
     dirs = sql_if.direction_collect(d_start, researches, next_n) or []
 
     next_time = None

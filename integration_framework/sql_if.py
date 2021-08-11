@@ -41,7 +41,7 @@ def direction_collect(d_s, researches, limit):
             
             SELECT napravleniye_id, research_id, time_confirmation, t_confirm FROM t_all WHERE napr_null IS NULL
             ORDER BY time_confirmation LIMIT %(limit)s """,
-            params={'d_start': d_s if str(d_s) != 'None' else '2018-01-01', 'tz': TIME_ZONE, 'type_integration': researches, 'limit': limit},
+            params={'d_start': d_s if str(d_s) != 'None' else '2018-01-01', 'tz': TIME_ZONE, 'researches': researches, 'limit': limit},
         )
 
         row = cursor.fetchall()
