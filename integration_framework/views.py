@@ -49,10 +49,12 @@ def next_result_direction(request):
     next_n = int(request.GET.get("nextN", 1))
     type_researches = request.GET.get("research", '*')
     d_start = f'{after_date}'
-    researches = -1
+    is_research = -1
+    researches = [-999]
     if type_researches != '*':
-        researches = type_researches.split(',')
-    dirs = sql_if.direction_collect(d_start, researches, next_n) or []
+        researches = [int(i) for i in type_researches.split(',')]
+        is_research = 1
+    dirs = sql_if.direction_collect(d_start, researches, is_research, next_n) or []
 
     next_time = None
     naprs = [d[0] for d in dirs]
