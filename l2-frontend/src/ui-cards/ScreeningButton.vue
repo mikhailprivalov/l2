@@ -71,25 +71,22 @@ export default {
 
       for (const r of researches) {
         for (const a of r.ages) {
-          const ages = (a.values || []).map(x => (x ? x.age : -1));
+          const ages = (a.values || []).map(x => (x ? x.age : null));
+          const facts = (a.values || []).map(x => x && x.fact).filter(Boolean);
 
           if (ages.length === 0 || ages[ages.length - 1] < patientAge) {
             continue;
           }
-
-          const facts = (a.values || []).map(x => x.fact).filter(Boolean);
 
           if (ages.includes(patientAge) && facts.length === 0) {
             hasNoCurrentFact = true;
             continue;
           }
 
-          if (!ages.includes(patientAge) && ages[0] === patientAge + 1) {
+          if (!ages.includes(patientAge) && ages[0] !== null && ages[0] === patientAge + 1 && !a.plan) {
             hasNoFeaturePlan = true;
             continue;
           }
-
-          break;
         }
       }
 
