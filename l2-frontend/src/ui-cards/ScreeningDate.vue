@@ -1,20 +1,37 @@
 <template>
-  <date-picker class="td-calendar" v-model="a.plan" ref="datepicker"
-               :key="a.plan" is-dark color="teal"
-               :available-dates='avDates'
-               @popoverWillShow="onShow"
-               :masks="masks">
+  <date-picker
+    class="td-calendar"
+    v-model="a.plan"
+    ref="datepicker"
+    :key="a.plan"
+    is-dark
+    color="teal"
+    :available-dates="avDates"
+    @popoverWillShow="onShow"
+    :masks="masks"
+  >
     <template v-slot="{ togglePopover }">
-      <div class="td-calendar-inner" @click="togglePopover"
-           v-tippy="{html: '#' + tippyId, ...commonTippy, trigger: a.planYear === v.year ? 'mouseenter focus' : 'manual'}">
+      <div v-if="embedded" class="td-calendar-inner td-r" @click="togglePopover">
         <template v-if="a.planYear === v.year">
           {{ a.plan.replace(`.${v.year}`, '') }}
+          <a href="#" @click.prevent.exact="clearPlan" class="a-under-reversed"><i class="fas fa-times"></i></a>
         </template>
       </div>
-      <div class="tp" :id="tippyId" v-if="a.planYear === v.year">
-        <button class="btn btn-blue-nb btn-transparent btn-sm" @click="clearPlan">
-          <i class="fas fa-times"></i>
-        </button>
+      <div v-else>
+        <div
+          class="td-calendar-inner"
+          @click="togglePopover"
+          v-tippy="{ html: '#' + tippyId, ...commonTippy, trigger: a.planYear === v.year ? 'mouseenter focus' : 'manual' }"
+        >
+          <template v-if="a.planYear === v.year">
+            {{ a.plan.replace(`.${v.year}`, '') }}
+          </template>
+        </div>
+        <div class="tp" :id="tippyId" v-if="a.planYear === v.year">
+          <button class="btn btn-blue-nb btn-transparent btn-sm" @click="clearPlan">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
       </div>
     </template>
   </date-picker>
@@ -45,6 +62,10 @@ import DatePicker from 'v-calendar/lib/components/date-picker.umd';
       type: Object,
       required: true,
     },
+    embedded: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
@@ -71,7 +92,7 @@ import DatePicker from 'v-calendar/lib/components/date-picker.umd';
 
       let hasChanges = false;
 
-      const newDate = (typeof this.planDate === 'string' && this.planDate.split('.').length === 3)
+      const newDate = typeof this.planDate === 'string' && this.planDate.split('.').length === 3
         ? this.planDate
         : moment(this.planDate).format('DD.MM.YYYY');
 
@@ -104,6 +125,8 @@ export default class ScreeningDate extends Vue {
 
   masks: any;
 
+  embedded: boolean;
+
   get avDates() {
     return { start: new Date(this.v.year, 0, 1), end: new Date(this.v.year, 11, 31) };
   }
@@ -122,7 +145,7 @@ export default class ScreeningDate extends Vue {
     if (!this.planDate) {
       date = new Date(this.v.year, 0, 1);
     } else {
-      const newDate = (typeof this.planDate === 'string' && this.planDate.split('.').length === 3)
+      const newDate = typeof this.planDate === 'string' && this.planDate.split('.').length === 3
         ? this.planDate
         : moment(this.planDate).format('DD.MM.YYYY');
       date = moment(newDate, 'DD.MM.YYYY');
@@ -139,7 +162,7 @@ export default class ScreeningDate extends Vue {
       return false;
     }
 
-    const currentDate = (typeof this.planDate === 'string' && this.planDate.split('.').length === 3)
+    const currentDate = typeof this.planDate === 'string' && this.planDate.split('.').length === 3
       ? this.planDate
       : moment(this.planDate).format('DD.MM.YYYY');
     return moment(currentDate, 'DD.MM.YYYY').year() === this.v.year;
@@ -155,7 +178,8 @@ export default class ScreeningDate extends Vue {
 </script>
 
 <style scoped lang="scss">
-.td-calendar, .td-calendar-inner {
+.td-calendar,
+.td-calendar-inner {
   display: block;
   height: 100%;
 }
@@ -165,14 +189,26 @@ export default class ScreeningDate extends Vue {
 }
 
 .btn-transparent {
-  background: transparent!important;
-  border: 1px solid #fff!important;
-  color: #fff!important;
+  background: transparent !important;
+  border: 1px solid #fff !important;
+  color: #fff !important;
 
   &:hover {
-    background: #fff!important;
-    border: 1px solid #fff!important;
-    color: #000!important;
+    background: #fff !important;
+    border: 1px solid #fff !important;
+    color: #000 !important;
+  }
+}
+
+.td-r {
+  .a-under-reversed {
+    opacity: 0;
+
+    color: #fff;
+  }
+
+  &:hover .a-under-reversed {
+    opacity: 1;
   }
 }
 </style>

@@ -7,6 +7,7 @@
       class="table table-bordered table-condensed table-sm-pd"
       :style="yearWidth"
       v-else-if="researches && researches.length > 0"
+      :class="embedded && 'table-embedded-screening'"
     >
       <colgroup>
         <col />
@@ -50,7 +51,10 @@
                 ]"
               >
                 <div v-if="!v" />
-                <ScreeningDate v-else :a="a" :v="v" :research-pk="r.pk" @updated="updatedDate" />
+                <div v-else-if="embedded">
+                  {{ a && a.plan && a.planYear === v.year ? a.plan.replace(`.${v.year}`, '') : '' }}
+                </div>
+                <ScreeningDate v-else :a="a" :v="v" :research-pk="r.pk" @updated="updatedDate" :embedded="embedded" />
               </td>
             </template>
           </tr>
@@ -106,10 +110,17 @@ import api from '@/api';
       type: String,
       required: false,
     },
+    embedded: {
+      type: Boolean,
+      required: false,
+    },
+    externalData: {
+      type: Object,
+      required: false,
+    },
   },
   watch: {
     cardPk: {
-      immediate: true,
       handler() {
         this.loadData();
       },
@@ -124,6 +135,9 @@ import api from '@/api';
       researches: [],
       loading: true,
     };
+  },
+  mounted() {
+    this.loadData();
   },
 })
 export default class ScreeningDisplay extends Vue {
@@ -141,9 +155,13 @@ export default class ScreeningDisplay extends Vue {
 
   selectedResearches: any[];
 
+  externalData: any;
+
   kk: any;
 
   loading: boolean;
+
+  embedded: boolean;
 
   get yearWidth() {
     return `--year-width: calc(573px / ${this.years.length})`;
@@ -154,14 +172,18 @@ export default class ScreeningDisplay extends Vue {
   }
 
   async updatedDate(researchPk, ageGroup) {
-    this.$forceUpdate();
-    await this.$store.dispatch(actions.INC_LOADING);
+    if (!this.embedded) {
+      this.$forceUpdate();
+      await this.$store.dispatch(actions.INC_LOADING);
+    }
     await api('/patients/save-screening-plan', {
       cardPk: this.cardPk,
       researchPk,
       ageGroup,
     });
-    await this.$store.dispatch(actions.DEC_LOADING);
+    if (!this.embedded) {
+      await this.$store.dispatch(actions.DEC_LOADING);
+    }
   }
 
   addResearch(pk, title) {
@@ -171,12 +193,21 @@ export default class ScreeningDisplay extends Vue {
 
   async loadData() {
     this.loading = true;
-    const { data } = await api('patients/individuals/load-screening', this, 'cardPk');
-    this.patientAge = data.patientAge;
-    this.currentYear = data.currentYear;
-    this.years = data.years;
-    this.ages = data.ages;
-    this.researches = data.researches;
+    if (this.externalData) {
+      const data = this.externalData;
+      this.patientAge = data.patientAge;
+      this.currentYear = data.currentYear;
+      this.years = data.years;
+      this.ages = data.ages;
+      this.researches = data.researches;
+    } else {
+      const { data } = await api('patients/individuals/load-screening', this, 'cardPk');
+      this.patientAge = data.patientAge;
+      this.currentYear = data.currentYear;
+      this.years = data.years;
+      this.ages = data.ages;
+      this.researches = data.researches;
+    }
     this.loading = false;
   }
 }
