@@ -880,7 +880,7 @@ def load_dreg(request):
 
 
 def load_screening(request):
-    card_pk: int = data_parse(request.body, {'card_pk': int})[0]
+    card_pk: int = data_parse(request.body, {'cardPk': int})[0]
     screening = ScreeningRegPlan.get_screening_data(card_pk)
 
     return JsonResponse({"data": screening})
