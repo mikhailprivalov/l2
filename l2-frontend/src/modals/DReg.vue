@@ -85,16 +85,7 @@
             <tr>
               <td :colspan="3 + monthes.length">
                 <div class="years">
-                  <div
-                    class="year"
-                    @click="
-                      year = y;
-                      load_data();
-                    "
-                    :class="{ active: y === year }"
-                    v-for="y in years"
-                    :key="y"
-                  >
+                  <div class="year" @click="load_data(false, y)" :class="{ active: y === year }" v-for="y in years" :key="y">
                     {{ y }}
                   </div>
                 </div>
@@ -550,12 +541,16 @@ export default {
       this.hide_edit();
       this.load_data(true);
     },
-    load_data(isInitial = false) {
+    load_data(isInitial = false, newYear = null) {
+      if (newYear) {
+        this.year = newYear;
+      }
       this.$store.dispatch(actions.INC_LOADING);
-      api('patients/individuals/load-dreg', this, ['card_pk', 'year'])
-        .then(({
-          rows, researches_data, year, screening_data,
-        }) => {
+      Promise.all([
+        api('patients/individuals/load-dreg', this, ['card_pk', 'year']),
+        api('patients/individuals/load-screening', this, ['card_pk']),
+      ])
+        .then(([{ rows, researches_data, year }, { data: screening_data }]) => {
           this.rows = rows;
           this.researches_data = researches_data;
           this.screening = screening_data;

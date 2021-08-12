@@ -1515,7 +1515,7 @@ class DashboardCharts(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие графика', db_index=True)
     hospitals_group = models.ForeignKey(HospitalsGroup, default=None, blank=True, null=True, db_index=True, help_text="Группа больниц", on_delete=models.CASCADE)
     is_full_width = models.BooleanField(default=False, blank=True, help_text='На всю ширину страницы')
-    default_type = models.CharField(max_length=20, db_index=True, choices=DEFAULT_TYPE, help_text="Тип графика по умолчанию")
+    default_type = models.CharField(max_length=20, db_index=True, choices=DEFAULT_TYPE, default=COLUMN, help_text="Тип графика по умолчанию")
 
     def __str__(self):
         return f"{self.title} - Дашборд: {self.dashboard.title}"
