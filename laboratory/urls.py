@@ -49,6 +49,7 @@ urlpatterns = [
     path('laboratory/', include('results.urls')),
     path('statistic', statistic.views.statistic_page),
     path('statistic/xls', statistic.views.statistic_xls),
+    path('statistic/screening', statistic.views.screening_by_month),
     path('ajax_select/', include(ajax_select_urls)),
     path('admin/', admin.site.urls),
     path('construct/', include('construct.urls')),

@@ -560,6 +560,7 @@ def researches_details(request):
                         "helper": field.helper,
                         "new_value": "",
                         "attached": field.attached,
+                        "controlParam": field.control_param,
                     }
                 )
             response["groups"].append(g)

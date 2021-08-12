@@ -26,6 +26,7 @@ from utils.dates import try_parse_range, normalize_date
 from . import sql_func
 from . import structure_sheet
 from directory.models import HospitalService
+import datetime
 
 
 @csrf_exempt
@@ -90,7 +91,6 @@ def statistic_xls(request):
     from directions.models import Issledovaniya
     import xlwt
     import openpyxl
-    import datetime
     from collections import OrderedDict
 
     wb = xlwt.Workbook(encoding='utf-8')
@@ -734,8 +734,6 @@ def statistic_xls(request):
         ws = structure_sheet.statistic_research_data(ws, researches_sql)
 
     elif tp == "journal-get-material":
-        import datetime
-
         access_to_all = 'Просмотр статистики' in request.user.groups.values_list('name', flat=True) or request.user.is_superuser
         users = [x for x in json.loads(users_o) if (access_to_all or (x.isdigit() and int(x) == request.user.doctorprofile.pk)) and DoctorProfile.objects.filter(pk=x).exists()]
         date_values = json.loads(date_values_o)
@@ -1053,7 +1051,7 @@ def statistic_xls(request):
         response['Content-Disposition'] = str.translate(
             "attachment; filename=\"Статистика_Исполнители_Лаборатория_{0}_{1}-{2}.xls\"".format(lab.title.replace(" ", "_"), date_start_o, date_end_o), tr
         )
-        import datetime
+
         import directions.models as d
         from operator import itemgetter
 
@@ -1528,3 +1526,21 @@ def statistic_xls(request):
 
     wb.save(response)
     return response
+
+
+@csrf_exempt
+@login_required
+def screening_by_month(request):
+    request_data = request.POST if request.method == "POST" else request.GET
+    tp = request_data.get("type", "")
+    month = request_data.get("month", "")
+    year = request_data.get("year", "")
+    month_obj = int(month) + 1
+
+    # Число женщин 18 - 69
+
+
+
+    print(tp)
+    print(month)
+    return True

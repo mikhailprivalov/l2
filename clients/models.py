@@ -1,3 +1,4 @@
+import calendar
 import inspect
 import math
 import sys
@@ -319,6 +320,7 @@ class Individual(models.Model):
         last_date = datetime.strptime(f'31.12.{year_today}', '%d.%m.%Y').date()
         born_date = self.birthday
         return last_date.year - born_date.year - ((last_date.month, last_date.day) < (born_date.month, born_date.day))
+
 
     def age(self, iss=None, days_monthes_years=False):
         """

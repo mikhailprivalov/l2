@@ -1202,6 +1202,7 @@ export default {
             f.required
             && (f.value === '' || f.value === '- Не выбрано' || !f.value)
             && vField(g, research.research.groups, f.visibility, this.data.patient)
+            && vField(g, research.research.groups, f.controlParam, this.data.patient)
           ) {
             l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));
           }
