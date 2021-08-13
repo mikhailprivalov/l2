@@ -377,10 +377,8 @@
             </tr>
           </thead>
           <tbody>
-            <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
             <tr
-              v-for="t in card.agent_types"
-              v-if="!card.excluded_types.includes(t.key)"
+              v-for="t in agent_types_excluded"
               :key="t.key"
               :class="{ nonPrior: card.who_is_agent !== t.key, prior: card.who_is_agent === t.key }"
             >
@@ -892,6 +890,9 @@ export default {
     can_change_owner_directions() {
       return (this.$store.getters.user_data.groups || []).includes('Управление иерархией истории');
     },
+    agent_types_excluded() {
+      return this.card.agent_types.filter(t => !this.card.excluded_types.includes(t.key));
+    },
   },
   watch: {
     sex() {
@@ -1233,8 +1234,8 @@ export default {
         return;
       }
       try {
-        // eslint-disable-next-line max-len
         await this.$dialog.confirm(
+          // eslint-disable-next-line max-len
           `Перенести все услуги из карты № ${this.card.number}-${this.card.family} ${this.card.name} ${this.card.patronymic}) в карту № ${this.new_card_num} -${individual_fio} ?`,
         );
       } catch (e) {
