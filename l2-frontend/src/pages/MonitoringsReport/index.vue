@@ -565,8 +565,8 @@ export default {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  align-items: start;
-  justify-content: start;
+  align-items: flex-start;
+  justify-content: flex-start;
   margin-left: -10px;
   margin-right: -10px;
   position: absolute;
