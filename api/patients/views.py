@@ -43,6 +43,7 @@ from slog.models import Log
 from statistics_tickets.models import VisitPurpose
 from tfoms.integration import match_enp, match_patient
 from directory.models import DispensaryPlan
+from utils.data_verification import data_parse
 
 
 logger = logging.getLogger(__name__)
@@ -874,9 +875,15 @@ def load_dreg(request):
                 specialities_data[index_spec]['diagnoses_time'].append({"diagnos": i.diagnos, "times": i.repeat})
 
     researches_data.extend(specialities_data)
-    screening = ScreeningRegPlan.get_screening_data(request_data["card_pk"])
 
-    return JsonResponse({"rows": data, "researches_data": researches_data, "year": year, "screening_data": screening})
+    return JsonResponse({"rows": data, "researches_data": researches_data, "year": year})
+
+
+def load_screening(request):
+    card_pk: int = data_parse(request.body, {'cardPk': int})[0]
+    screening = ScreeningRegPlan.get_screening_data(card_pk)
+
+    return JsonResponse({"data": screening})
 
 
 def research_last_result_every_month(researches: List[Researches], card: Card, year: str, visits: Optional[List[VisitPurpose]] = None):

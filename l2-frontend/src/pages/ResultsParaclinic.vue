@@ -235,6 +235,13 @@
                   <li v-if="dreg_rows.length === 0">нет активных записей</li>
                 </ul>
               </div>
+
+              <ScreeningButton
+                :card-pk="data.patient.card_pk"
+                v-if="data.card_internal && (data.has_doc_referral || data.has_paraclinic)"
+                @openScreening="dreg = true"
+              />
+
               <a
                 style="margin-left: 3px"
                 href="#"
@@ -930,6 +937,7 @@ import Benefit from '../modals/Benefit.vue';
 import DirectionsHistory from '../ui-cards/DirectionsHistory/index.vue';
 import RecipeInput from '../ui-cards/RecipeInput.vue';
 import ResultsViewer from '../modals/ResultsViewer.vue';
+import ScreeningButton from '../ui-cards/ScreeningButton.vue';
 import LastResult from '../ui-cards/LastResult.vue';
 import IssStatus from '../ui-cards/IssStatus.vue';
 import DescriptiveForm from '../forms/DescriptiveForm.vue';
@@ -963,6 +971,7 @@ export default {
     MedicalCertificates,
     ResultsByYear,
     RmisLink,
+    ScreeningButton,
   },
   data() {
     return {
