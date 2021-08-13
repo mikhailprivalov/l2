@@ -11,27 +11,19 @@
     :masks="masks"
   >
     <template v-slot="{ togglePopover }">
-      <div v-if="embedded" class="td-calendar-inner td-r" @click="togglePopover">
+      <div
+        class="td-calendar-inner"
+        @click="togglePopover"
+        v-tippy="{ html: '#' + tippyId, ...commonTippy, trigger: a.planYear === v.year ? 'mouseenter focus' : 'manual' }"
+      >
         <template v-if="a.planYear === v.year">
           {{ a.plan.replace(`.${v.year}`, '') }}
-          <a href="#" @click.prevent.exact="clearPlan" class="a-under-reversed"><i class="fas fa-times"></i></a>
         </template>
       </div>
-      <div v-else>
-        <div
-          class="td-calendar-inner"
-          @click="togglePopover"
-          v-tippy="{ html: '#' + tippyId, ...commonTippy, trigger: a.planYear === v.year ? 'mouseenter focus' : 'manual' }"
-        >
-          <template v-if="a.planYear === v.year">
-            {{ a.plan.replace(`.${v.year}`, '') }}
-          </template>
-        </div>
-        <div class="tp" :id="tippyId" v-if="a.planYear === v.year">
-          <button class="btn btn-blue-nb btn-transparent btn-sm" @click="clearPlan">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
+      <div class="tp" :id="tippyId" v-if="a.planYear === v.year">
+        <button class="btn btn-blue-nb btn-transparent btn-sm" @click="clearPlan">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
     </template>
   </date-picker>
@@ -60,10 +52,6 @@ import DatePicker from 'v-calendar/lib/components/date-picker.umd';
     },
     v: {
       type: Object,
-      required: true,
-    },
-    embedded: {
-      type: Boolean,
       required: true,
     },
   },
@@ -124,8 +112,6 @@ export default class ScreeningDate extends Vue {
   v: any;
 
   masks: any;
-
-  embedded: boolean;
 
   get avDates() {
     return { start: new Date(this.v.year, 0, 1), end: new Date(this.v.year, 11, 31) };

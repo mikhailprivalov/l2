@@ -54,7 +54,7 @@
                 <div v-else-if="embedded">
                   {{ a && a.plan && a.planYear === v.year ? a.plan.replace(`.${v.year}`, '') : '' }}
                 </div>
-                <ScreeningDate v-else :a="a" :v="v" :research-pk="r.pk" @updated="updatedDate" :embedded="embedded" />
+                <ScreeningDate v-else :a="a" :v="v" :research-pk="r.pk" @updated="updatedDate" />
               </td>
             </template>
           </tr>
@@ -181,6 +181,7 @@ export default class ScreeningDisplay extends Vue {
       researchPk,
       ageGroup,
     });
+    this.$root.$emit('updated:screening-plan');
     if (!this.embedded) {
       await this.$store.dispatch(actions.DEC_LOADING);
     }

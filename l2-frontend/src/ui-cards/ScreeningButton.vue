@@ -103,6 +103,7 @@ export default {
   },
   mounted() {
     this.load();
+    this.$root.$on('updated:screening-plan', () => this.load());
   },
   methods: {
     async load() {
