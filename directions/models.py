@@ -25,6 +25,7 @@ from users.models import DoctorProfile
 import contracts.models as contracts
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, Place
 
+
 from appconf.manager import SettingManager
 
 
@@ -1437,7 +1438,7 @@ class MonitoringResult(models.Model):
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид мониторинга/исследования из справочника', db_index=True, on_delete=models.CASCADE)
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Заказ на мониторинг, для которого сохранен результат', on_delete=models.CASCADE)
-    hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, on_delete=models.SET_NULL)
+    hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, db_index=True, on_delete=models.SET_NULL)
     group_id = models.IntegerField(default=None, blank=True, null=True, db_index=True, help_text='Группа результата')
     group_order = models.IntegerField(default=None, blank=True, null=True)
     field_id = models.IntegerField(default=None, blank=True, null=True, db_index=True, help_text='Поле результата')
@@ -1447,14 +1448,15 @@ class MonitoringResult(models.Model):
     value_text = models.TextField(default='', blank=True)
     type_period = models.CharField(max_length=20, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
     period_param_hour = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
-    period_param_day = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
+    period_param_day = models.PositiveSmallIntegerField(default=None, blank=True, null=True, db_index=True)
     period_param_week_description = models.CharField(max_length=5, blank=True, null=True, default=None, help_text="Описание недельного периода")
     period_param_week_date_start = models.DateField(blank=True, null=True, default=None, help_text="Дата начала недельного периода")
     period_param_week_date_end = models.DateField(blank=True, null=True, default=None, help_text="Дата окончания недельного периода")
-    period_param_month = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
+    period_param_month = models.PositiveSmallIntegerField(default=None, blank=True, null=True, db_index=True)
     period_param_quarter = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     period_param_halfyear = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
-    period_param_year = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
+    period_param_year = models.PositiveSmallIntegerField(default=None, blank=True, null=True, db_index=True)
+    period_date = models.DateField(blank=True, null=True, default=None, help_text="Фактическая дата для периодов")
 
     class Meta:
         verbose_name = 'Мониторинг результаты'
@@ -1496,20 +1498,24 @@ class DashboardCharts(models.Model):
     COLUMN = 'COLUMN'
     BAR = 'BAR'
     PIE = 'PIE'
+    LINE = 'LINE'
+    TABLE = 'TABLE'
 
-    GRAPHIC_TYPES = (
+    DEFAULT_TYPE = (
         (COLUMN, 'Столбцы'),
         (BAR, 'Полоса'),
         (PIE, 'Пирог-куски'),
+        (LINE, 'Линейная диаграмма'),
+        (TABLE, 'Таблица'),
     )
 
     title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
     dashboard = models.ForeignKey(Dashboard, null=True, help_text='Дашборд', db_index=True, on_delete=models.CASCADE)
-    type = models.CharField(max_length=20, db_index=True, choices=GRAPHIC_TYPES, help_text="Тип графика")
     order = models.SmallIntegerField(default=-99, blank=True, null=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие графика', db_index=True)
     hospitals_group = models.ForeignKey(HospitalsGroup, default=None, blank=True, null=True, db_index=True, help_text="Группа больниц", on_delete=models.CASCADE)
-    sum_by_field = models.BooleanField(default=False, blank=True, help_text='Суммировать по полю')
+    is_full_width = models.BooleanField(default=False, blank=True, help_text='На всю ширину страницы')
+    default_type = models.CharField(max_length=20, db_index=True, choices=DEFAULT_TYPE, default=COLUMN, help_text="Тип графика по умолчанию")
 
     def __str__(self):
         return f"{self.title} - Дашборд: {self.dashboard.title}"

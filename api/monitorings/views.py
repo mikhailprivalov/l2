@@ -10,8 +10,12 @@ from django.contrib.auth.decorators import login_required
 from api.monitorings import structure_sheet
 from laboratory.decorators import group_required
 from django.http import JsonResponse, HttpResponse
-from api.monitorings.sql_func import monitoring_sql_by_all_hospital, dashboard_sql_by_day, sql_charts_sum_by_field_all_hospitals, dashboard_sql_by_day_filter_hosp, \
-    sql_charts_sum_by_field_filter_hospitals
+from api.monitorings.sql_func import (
+    monitoring_sql_by_all_hospital,
+    dashboard_sql_by_day,
+    dashboard_sql_by_day_filter_hosp,
+)
+
 from directory.models import Researches
 from utils.data_verification import data_parse
 from laboratory.utils import strdatetime
@@ -220,44 +224,20 @@ def get_dashboard(request):
     request_data = json.loads(request.body)
     dashboard_pk = request_data["dashboard"]
 
-    date = request_data["date"]
-    prepare_date = date.split("-")
-    param_day = prepare_date[2]
-    param_month = prepare_date[1]
-    param_year = prepare_date[0]
-
-    charts_objs = DashboardCharts.objects.filter(dashboard__pk=dashboard_pk)
+    date_start = request_data["date"]
+    date_end = request_data["date_end"]
+    charts_objs = DashboardCharts.objects.filter(dashboard__pk=dashboard_pk, hide=False)
 
     default_charts = []
-    charts_sum_by_field_all_hospitals = []
-    charts_sum_by_field_some_hospitals = {}
-    chrart_only_some_hospitals = {}
+    charts_filters_by_group_mo = {}
+
     for c in charts_objs:
-        if c.sum_by_field and c.hospitals_group is None:
-            charts_sum_by_field_all_hospitals.append(c.pk)
-        elif c.sum_by_field and c.hospitals_group:
-            charts_sum_by_field_some_hospitals[c.pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=c.hospitals_group.pk))
-        elif not c.sum_by_field and c.hospitals_group:
-            chrart_only_some_hospitals[c.pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=c.hospitals_group.pk))
+        if c.hospitals_group:
+            charts_filters_by_group_mo[c.pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=c.hospitals_group.pk))
         else:
             default_charts.append(c.pk)
 
-    result = []
-    if default_charts:
-        result_dashboard = dashboard_sql_by_day(default_charts, param_day, param_month, param_year)
-        result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True)
-    if charts_sum_by_field_all_hospitals:
-        result_dashboard = sql_charts_sum_by_field_all_hospitals(charts_sum_by_field_all_hospitals, param_day, param_month, param_year)
-        result = result_dashboard_func(result_dashboard, result, sum_by_field=True, default_charts=False)
-    if chrart_only_some_hospitals:
-        for chart_pk, need_hospitals in chrart_only_some_hospitals.items():
-            result_dashboard = dashboard_sql_by_day_filter_hosp([chart_pk], param_day, param_month, param_year, need_hospitals)
-            result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True)
-    if charts_sum_by_field_some_hospitals:
-        for chart_pk, need_hospitals in charts_sum_by_field_some_hospitals.items():
-            result_dashboard = sql_charts_sum_by_field_filter_hospitals([chart_pk], param_day, param_month, param_year, need_hospitals)
-            result = result_dashboard_func(result_dashboard, result, sum_by_field=True, default_charts=False)
-
+    result = get_charts_data(default_charts, charts_filters_by_group_mo, date_start, date_end)
     result = sorted(result, key=lambda k: k['chart_order'])
 
     return JsonResponse({'rows': result})
@@ -265,22 +245,85 @@ def get_dashboard(request):
 
 @login_required
 @group_required("Просмотр мониторингов")
+def get_chart_data(request):
+    request_data = json.loads(request.body)
+    chart_pk = request_data["chart_pk"]
+    chart_hospital_group_pk = request_data["group_pk"]
+    chart_hospital_pk = request_data["hospital_pk"]
+    chart_date_start = request_data["chart_date_start"]
+    chart_date_end = request_data["chart_date_end"]
+
+    charts_objs = DashboardCharts.objects.filter(pk=chart_pk, hide=False).first()
+
+    default_charts = []
+    charts_filters_by_group_mo = {}
+
+    if chart_hospital_pk:
+        charts_filters_by_group_mo[chart_pk] = [chart_hospital_pk]
+    elif chart_hospital_group_pk:
+        charts_filters_by_group_mo[chart_pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=chart_hospital_group_pk))
+    elif charts_objs.hospitals_group:
+        charts_filters_by_group_mo[chart_pk] = list(Hospitals.objects.values_list('pk', flat=True).filter(hospitalsgroup__pk=charts_objs.hospitals_group.pk))
+    else:
+        default_charts.append(chart_pk)
+
+    result = get_charts_data(default_charts, charts_filters_by_group_mo, chart_date_start, chart_date_end)
+
+    return JsonResponse({'rows': result})
+
+
+def get_charts_data(default_charts, charts_filters_by_group_mo, start_date, end_date):
+    result = []
+    if default_charts:
+        result_dashboard = dashboard_sql_by_day(default_charts, start_date, end_date)
+        result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True)
+    if charts_filters_by_group_mo:
+        for chart_pk, need_hospitals in charts_filters_by_group_mo.items():
+            result_dashboard = dashboard_sql_by_day_filter_hosp([chart_pk], start_date, end_date, need_hospitals)
+            result = result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True)
+
+    return result
+
+
+@login_required
+@group_required("Просмотр мониторингов")
 def dashboard_list(request):
     result = []
-    dasboards = Dashboard.objects.filter(hide=False)
-    for dasboard in dasboards:
-        result.append({"label": dasboard.title, "id": dasboard.pk})
+    for dashboard in Dashboard.objects.filter(hide=False):
+        result.append({"label": dashboard.title, "id": dashboard.pk})
 
     return JsonResponse({"rows": result})
 
 
-def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True):
+def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_charts=True, date=False):
     previous_chart_title = None
     previous_hosp_short_title = None
-    tmp_chart = {"title": "", "type": "", "pk": "", "chart_order": -1, "data": [{"title": "", "fields": [], "values": []}]}
+    tmp_chart = {
+        "title": "",
+        "type": "",
+        "pk": "",
+        "chart_order": -1,
+        "data": [
+            {
+                "title": "",
+                "fields": [],
+                "values": [],
+                "stringTotal": [],
+            }
+        ],
+        "availableTypes": ["BAR", "COLUMN", "PIE", "LINE", "TABLE"],
+        "isFullWidth": False,
+        "dates": [],
+        "fields": [],
+        "columnTotal": [],
+    }
+
     step = 0
     current_index = 0
     hosp_short_title = ""
+    unique_elements = None
+    values = None
+
     for i in result_dashboard:
         if sum_by_field:
             hosp_short_title = "Всего"
@@ -290,37 +333,77 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
             tmp_chart["title"] = i.chart_title
             tmp_chart["pk"] = i.chart_id
             tmp_chart["chart_order"] = i.chart_order
-            tmp_chart["type"] = i.chart_type
-            tmp_chart["data"] = [{"title": hosp_short_title, "fields": [i.title_for_field], "values": [i.value_aggregate]}]
+            tmp_chart["type"] = i.default_type
+            tmp_chart["isFullWidth"] = i.is_full_width
+
+            unique_elements = unique_date_field(i.chart_id, result_dashboard)
+            tmp_chart["fields"] = unique_elements["unique_fields_title"]
+            tmp_chart["dates"] = unique_elements["date_str"]
+            values = ['' for i in range(unique_elements["len_elements"])]
+            values[0] = i.value_aggregate
+            tmp_chart["columnTotal"] = [0 for i in range(unique_elements["len_elements"])]
+            tmp_chart["columnTotal"][0] = i.value_aggregate
+            tmp_chart["data"] = [{"title": hosp_short_title, "values": values, "stringTotal": [0 for i in range(len(unique_elements["unique_fields_title"]))]}]
+            tmp_chart["data"][0]["stringTotal"][0] = i.value_aggregate
             previous_chart_title = i.chart_title
             previous_hosp_short_title = hosp_short_title
         elif i.chart_title != previous_chart_title:
-            tmp_chart["fields"] = tmp_chart["data"][current_index]["fields"]
             result.append(deepcopy(tmp_chart))
             tmp_chart["title"] = i.chart_title
             tmp_chart["pk"] = i.chart_id
-            tmp_chart["type"] = i.chart_type
+            tmp_chart["type"] = i.default_type
             tmp_chart["chart_order"] = i.chart_order
-            tmp_chart["data"] = [{"title": hosp_short_title, "fields": [i.title_for_field], "values": [i.value_aggregate]}]
+            tmp_chart["isFullWidth"] = i.is_full_width
+
+            unique_elements = unique_date_field(i.chart_id, result_dashboard)
+            tmp_chart["fields"] = unique_elements["unique_fields_title"]
+            tmp_chart["dates"] = unique_elements["date_str"]
+            values = ['' for i in range(unique_elements["len_elements"])]
+            values[0] = i.value_aggregate
+
+            tmp_chart["columnTotal"] = [0 for i in range(unique_elements["len_elements"])]
+            tmp_chart["columnTotal"][0] = i.value_aggregate
+            tmp_chart["data"] = [{"title": hosp_short_title, "values": values, "stringTotal": [0 for i in range(len(unique_elements["unique_fields_title"]))]}]
+            tmp_chart["data"][0]["stringTotal"][0] = i.value_aggregate
             previous_chart_title = i.chart_title
             previous_hosp_short_title = hosp_short_title
             current_index = 0
         elif hosp_short_title != previous_hosp_short_title:
-            tmp_chart["data"].append({"title": hosp_short_title, "fields": [i.title_for_field], "values": [i.value_aggregate]})
+            date_index_position = unique_elements["unique_dates"].index(i.date)
+            field_index_position = unique_elements["unique_fields_title"].index(i.title_for_field)
+            element_position = date_index_position * len(unique_elements["unique_fields_title"]) + field_index_position
+
+            values = ['' for i in range(unique_elements["len_elements"])]
+            values[element_position] = i.value_aggregate
+            tmp_chart["columnTotal"][element_position] += i.value_aggregate
+            tmp_chart["data"].append({"title": hosp_short_title, "values": values, "stringTotal": [0 for i in range(len(unique_elements["unique_fields_title"]))]})
             current_index += 1
+            tmp_chart["data"][current_index]["stringTotal"][field_index_position] += i.value_aggregate
             previous_hosp_short_title = hosp_short_title
         else:
-            if i.title_for_field not in tmp_chart["data"][current_index]:
-                tmp_chart["data"][current_index]["fields"].append(i.title_for_field)
-            tmp_chart["data"][current_index]["values"].append(i.value_aggregate)
+            date_index_position = unique_elements["unique_dates"].index(i.date)
+            field_index_position = unique_elements["unique_fields_title"].index(i.title_for_field)
+            element_position = date_index_position * len(unique_elements["unique_fields_title"]) + field_index_position
+            values[element_position] = i.value_aggregate
+            tmp_chart["columnTotal"][element_position] += i.value_aggregate
+            tmp_chart["data"][current_index]["values"] = values
+
+            tmp_chart["data"][current_index]["stringTotal"][field_index_position] += i.value_aggregate
         step += 1
 
-    tmp_chart["fields"] = tmp_chart["data"][current_index]["fields"]
     if step > 0:
         result.append(deepcopy(tmp_chart))
 
     return result
 
 
+def unique_date_field(chart_id, result_sql_select):
 
+    unique_dates = {i.date for i in result_sql_select if i.chart_id == chart_id}
+    unique_dates = sorted(list(unique_dates))
+    date_str = [i.strftime("%d.%m") for i in unique_dates]
+    unique_fields_title = {i.title_for_field: i.order_field for i in result_sql_select if i.chart_id == chart_id}
+    unique_fields_title = dict(sorted(unique_fields_title.items(), key=lambda item: item[1]))
+    unique_fields_title = list(unique_fields_title.keys())
 
+    return {"unique_dates": unique_dates, "unique_fields_title": unique_fields_title, "len_elements": len(unique_dates) * len(unique_fields_title), "date_str": date_str}
