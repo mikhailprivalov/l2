@@ -72,7 +72,7 @@ export default {
       for (const r of researches) {
         for (const a of r.ages) {
           const ages = (a.values || []).map(x => (x ? x.age : null));
-          const facts = (a.values || []).map(x => x && x.fact).filter(Boolean);
+          const facts = (a.values || []).map(x => x?.fact).filter(Boolean);
 
           if (ages.length === 0 || ages[ages.length - 1] < patientAge) {
             continue;

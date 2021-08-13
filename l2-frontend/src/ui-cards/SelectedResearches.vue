@@ -406,11 +406,11 @@
 // @ts-ignore
 import vSelect from 'vue-select';
 import _ from 'lodash';
-import { vField, vGroup } from '@/components/visibility-triggers';
-import api from '@/api';
 import Treeselect from '@riophae/vue-treeselect';
 // @ts-ignore
 import TypeAhead from 'vue2-typeahead';
+import api from '@/api';
+import { vField, vGroup } from '@/components/visibility-triggers';
 import directionsPoint from '../api/directions-point';
 import * as actions from '../store/action-types';
 import ResearchDisplay from './ResearchDisplay.vue';
