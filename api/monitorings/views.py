@@ -225,7 +225,9 @@ def get_dashboard(request):
     dashboard_pk = request_data["dashboard"]
 
     date_start = request_data["date"]
-    date_end = request_data["date_end"]
+    date_end = request_data.get("date_end", "")
+    if not date_end:
+        date_end = date_start
     charts_objs = DashboardCharts.objects.filter(dashboard__pk=dashboard_pk, hide=False)
 
     default_charts = []

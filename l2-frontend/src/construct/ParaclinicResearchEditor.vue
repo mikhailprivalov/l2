@@ -368,8 +368,12 @@
                   <textarea class="form-control" v-model="row.helper"></textarea>
                 </div>
                 <div>
-                  <strong>Условие видимости:</strong>
+                  <strong>Видимость:</strong>
                   <textarea class="form-control" v-model="row.visibility"></textarea>
+                </div>
+                <div>
+                  <strong>Контроль:</strong>
+                  <textarea class="form-control" v-model="row.controlParam"></textarea>
                 </div>
                 <div>
                   <label> <input type="checkbox" v-model="row.hide" /> скрыть поле </label>
