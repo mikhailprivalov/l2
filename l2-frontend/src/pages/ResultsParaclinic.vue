@@ -733,7 +733,7 @@
             </template>
             <EDSButton :key="`${data.direction.pk}_${row.confirmed}`" :iss-data="row" :direction-data="data" />
             <div class="status-list" v-if="!r(row) && !row.confirmed">
-              <div class="status status-none">Не заполнено:</div>
+              <div class="status status-none">Не верно:</div>
               <div class="status status-none" v-for="rl in r_list(row)" :key="rl">{{ rl }};</div>
             </div>
           </div>
@@ -1207,10 +1207,12 @@ export default {
         let n = 0;
         for (const f of g.fields) {
           n++;
+          console.log(f.title, f.controlParam);
           if (
-            f.required
+            (f.required
             && (f.value === '' || f.value === '- Не выбрано' || !f.value)
-            && vField(g, research.research.groups, f.visibility, this.data.patient)
+            && vField(g, research.research.groups, f.visibility, this.data.patient))
+            || (f.controlParam && !vField(g, research.research.groups, f.controlParam, this.data.patient))
           ) {
             l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));
           }

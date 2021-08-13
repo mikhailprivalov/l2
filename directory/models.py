@@ -492,6 +492,7 @@ class ParaclinicInputField(models.Model):
     for_med_certificate = models.BooleanField(default=False, help_text='В справку', blank=True)
     attached = models.CharField(max_length=20, help_text='Скреплено с полем другой услуги', blank=True, default=None, null=True, db_index=True)
     not_edit = models.BooleanField(default=False, help_text='Не редактируемое', blank=True)
+    control_param = models.TextField(default='', blank=True)
 
     def get_title(self, force_type=None, recursive=False):
         field_type = force_type or self.field_type
