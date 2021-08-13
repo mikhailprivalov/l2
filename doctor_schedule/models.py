@@ -8,11 +8,14 @@ from directions.models import Napravleniya
 
 
 class ScheduleResource(models.Model):
-    executor = models.ForeignKey(DoctorProfile, db_index=True, null=True, verbose_name='Исполнитель', on_delete=models.CASCADE)
+    executor = models.ForeignKey(DoctorProfile, db_index=True, null=True, verbose_name='Исполнитель', on_delete=models.SET_NULL)
     service = models.ForeignKey(Researches, verbose_name='Услуга', db_index=True, on_delete=models.CASCADE)  # TODO: может быть несколько
-    room = models.ForeignKey('podrazdeleniya.Room', related_name='scheduleresourceroom', verbose_name='Кабинет', db_index=True, on_delete=models.CASCADE)
-    department = models.ForeignKey('podrazdeleniya.Podrazdeleniya', null=True, blank=True, verbose_name='Подразделение',
-                                   db_index=True, related_name='scheduleresourcedepartment', on_delete=models.CASCADE)
+    room = models.ForeignKey(
+        'podrazdeleniya.Room', related_name='scheduleresourceroom', verbose_name='Кабинет', db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
+    )
+    department = models.ForeignKey(
+        'podrazdeleniya.Podrazdeleniya', null=True, blank=True, verbose_name='Подразделение', db_index=True, related_name='scheduleresourcedepartment', on_delete=models.CASCADE
+    )
     speciality = models.ForeignKey(Speciality, null=True, blank=True, verbose_name='Специальность', db_index=True, on_delete=models.CASCADE)
 
     def __str__(self):
