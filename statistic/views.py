@@ -1526,21 +1526,3 @@ def statistic_xls(request):
 
     wb.save(response)
     return response
-
-
-@csrf_exempt
-@login_required
-def screening_by_month(request):
-    request_data = request.POST if request.method == "POST" else request.GET
-    tp = request_data.get("type", "")
-    month = request_data.get("month", "")
-    year = request_data.get("year", "")
-    month_obj = int(month) + 1
-
-    # Число женщин 18 - 69
-
-
-
-    print(tp)
-    print(month)
-    return True
