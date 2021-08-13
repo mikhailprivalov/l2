@@ -56,9 +56,9 @@
 </template>
 
 <script lang="ts">
-import Modal from '@/ui-cards/Modal.vue';
 import axios from 'axios';
 import * as Cookies from 'es-cookie';
+import Modal from '@/ui-cards/Modal.vue';
 
 export default {
   components: { Modal },

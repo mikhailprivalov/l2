@@ -263,10 +263,10 @@
 </template>
 
 <script lang="ts">
-import api from '@/api';
 import moment from 'moment';
 import { cloneDeep } from 'lodash';
 import { mapGetters } from 'vuex';
+import api from '@/api';
 import * as actions from '@/store/action-types';
 import ConfigureDispenseryResearch from '@/fields/ConfigureDispenseryResearch.vue';
 import ResearchPickById from '@/ui-cards/ResearchPickById.vue';

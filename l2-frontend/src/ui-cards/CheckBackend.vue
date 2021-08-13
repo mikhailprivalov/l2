@@ -6,8 +6,8 @@
 import Vue from 'vue';
 import { mapGetters } from 'vuex';
 import Component from 'vue-class-component';
-import * as actions from '@/store/action-types';
 import { POSITION } from 'vue-toastification/src/ts/constants';
+import * as actions from '@/store/action-types';
 
 @Component({
   computed: mapGetters(['authenticated', 'user_data', 'version']),

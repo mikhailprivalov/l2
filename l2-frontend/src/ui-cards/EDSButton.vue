@@ -46,9 +46,9 @@
 </template>
 
 <script lang="ts">
+import axios from 'axios';
 import Modal from '@/ui-cards/Modal.vue';
 import * as actions from '@/store/action-types';
-import axios from 'axios';
 
 export const EDS_API = axios.create({
   baseURL: '/mainmenu/eds/eds',

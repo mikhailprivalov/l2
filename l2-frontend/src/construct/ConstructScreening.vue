@@ -194,9 +194,9 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import * as actions from '@/store/action-types';
 import Vue2Filters from 'vue2-filters';
 import { mapGetters } from 'vuex';
+import * as actions from '@/store/action-types';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import api from '@/api';
 

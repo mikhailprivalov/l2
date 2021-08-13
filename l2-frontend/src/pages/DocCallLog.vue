@@ -66,10 +66,10 @@
 </template>
 
 <script lang="ts">
-import * as actions from '@/store/action-types';
-import api from '@/api';
 import axios from 'axios';
 import * as Cookies from 'es-cookie';
+import api from '@/api';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'DocCallLog',

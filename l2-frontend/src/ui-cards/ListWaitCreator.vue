@@ -9,14 +9,14 @@
       </div>
       <div class="form-row sm-f">
         <div class="row-t">Телефон</div>
-        <input class="form-control" v-model="card.phone" v-mask="'8 999 9999999'">
+        <input class="form-control" v-model="card.phone" v-mask="'8 999 9999999'" />
       </div>
       <div class="form-row sm-header">
         Данные для листа ожидания
       </div>
       <div class="form-row sm-f">
         <div class="row-t">Дата</div>
-        <input class="form-control" type="date" v-model="date" :min="td">
+        <input class="form-control" type="date" v-model="date" :min="td" />
       </div>
       <div class="form-row sm-f">
         <div class="row-t">Комментарий</div>
@@ -27,11 +27,16 @@
           Услуги
         </div>
         <div class="researches">
-          <research-display v-for="(res, idx) in disp_researches" :simple="true"
-                            :no_tooltip="true"
-                            :key="res.pk"
-                            :title="res.title" :pk="res.pk" :n="idx"
-                            :nof="disp_researches.length"/>
+          <research-display
+            v-for="(res, idx) in disp_researches"
+            :simple="true"
+            :no_tooltip="true"
+            :key="res.pk"
+            :title="res.title"
+            :pk="res.pk"
+            :n="idx"
+            :nof="disp_researches.length"
+          />
         </div>
         <div class="controls">
           <button class="btn btn-primary-nb btn-blue-nb" type="button" @click="save">Создать записи в лист ожидания</button>
@@ -42,31 +47,33 @@
       </div>
 
       <div class="rows" v-if="rows_count > 0">
-        <table class="table table-bordered table-condensed table-sm-pd"
-               style="table-layout: fixed; font-size: 12px; margin-top: 0;">
+        <table
+          class="table table-bordered table-condensed table-sm-pd"
+          style="table-layout: fixed; font-size: 12px; margin-top: 0;"
+        >
           <colgroup>
-            <col width="75">
-            <col/>
-            <col/>
-            <col width="100"/>
-            <col width="75"/>
+            <col width="75" />
+            <col />
+            <col />
+            <col width="100" />
+            <col width="75" />
           </colgroup>
           <thead>
-          <tr>
-            <th>Дата</th>
-            <th>Услуга</th>
-            <th>Комментарий</th>
-            <th>Телефон</th>
-            <th>Статус</th>
-          </tr>
+            <tr>
+              <th>Дата</th>
+              <th>Услуга</th>
+              <th>Комментарий</th>
+              <th>Телефон</th>
+              <th>Статус</th>
+            </tr>
           </thead>
           <tbody>
             <tr v-for="r in rows_mapped" :key="r.pk">
-              <td>{{r.date}}</td>
-              <td>{{r.service}}</td>
-              <td style="white-space: pre-wrap">{{r.comment}}</td>
-              <td>{{r.phone}}</td>
-              <td>{{STATUSES[r.status]}}</td>
+              <td>{{ r.date }}</td>
+              <td>{{ r.service }}</td>
+              <td style="white-space: pre-wrap">{{ r.comment }}</td>
+              <td>{{ r.phone }}</td>
+              <td>{{ STATUSES[r.status] }}</td>
             </tr>
           </tbody>
         </table>
@@ -76,9 +83,9 @@
 </template>
 
 <script lang="ts">
+import moment from 'moment';
 import * as actions from '@/store/action-types';
 import api from '@/api';
-import moment from 'moment';
 import ResearchDisplay from '@/ui-cards/ResearchDisplay.vue';
 import patientsPoint from '@/api/patients-point';
 
@@ -139,13 +146,9 @@ export default {
   methods: {
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const result = await api(
-        'list-wait/create', this,
-        ['card_pk', 'researches', 'date', 'comment'],
-        {
-          phone: this.card.phone,
-        },
-      );
+      const result = await api('list-wait/create', this, ['card_pk', 'researches', 'date', 'comment'], {
+        phone: this.card.phone,
+      });
       await this.load_data();
       await this.$store.dispatch(actions.DEC_LOADING);
       if (result.ok) {
@@ -174,13 +177,13 @@ export default {
   },
   computed: {
     disp_researches() {
-      return this.researches.map((id) => this.$store.getters.researches_obj[id]);
+      return this.researches.map(id => this.$store.getters.researches_obj[id]);
     },
     rows_count() {
       return this.rows.length;
     },
     rows_mapped() {
-      return this.rows.map((r) => ({
+      return this.rows.map(r => ({
         pk: r.pk,
         date: moment(r.exec_at).format('DD.MM.YYYY'),
         service: r.research__title,
@@ -194,41 +197,43 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .root, .empty {
-    position: absolute;
-    top: 0 !important;
-    left: 0;
-    right: 0;
-    bottom: 0;
-  }
+.root,
+.empty {
+  position: absolute;
+  top: 0 !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
 
-  .empty {
-    color: gray;
-    display: flex;
-    justify-content: center;
+.empty {
+  color: gray;
+  display: flex;
+  justify-content: center;
 
-    div {
-      align-self: center;
-    }
+  div {
+    align-self: center;
   }
+}
 
-  .root {
-    overflow: auto;
-  }
+.root {
+  overflow: auto;
+}
 
-  .col-form {
-    padding-bottom: 10px;
-  }
+.col-form {
+  padding-bottom: 10px;
+}
 
-  .researches, .controls {
-    padding: 5px;
-  }
+.researches,
+.controls {
+  padding: 5px;
+}
 
-  .controls {
-    padding-top: 0;
-  }
+.controls {
+  padding-top: 0;
+}
 
-  .rows {
-    margin-top: 5px;
-  }
+.rows {
+  margin-top: 5px;
+}
 </style>

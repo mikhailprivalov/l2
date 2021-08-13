@@ -448,6 +448,8 @@
 <script lang="ts">
 import Vue from 'vue';
 import Vue2Filters from 'vue2-filters';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import construct_point from '@/api/construct-point';
 import * as actions from '@/store/action-types';
@@ -459,8 +461,6 @@ import FieldHelper from '@/ui-cards/FieldHelper.vue';
 
 import api from '@/api';
 
-import Treeselect from '@riophae/vue-treeselect';
-import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import TableConstructor from '@/construct/TableConstructor.vue';
 import Localizations from '@/construct/Localizations.vue';
 import PermanentDirectories from '@/construct/PermanentDirectories.vue';

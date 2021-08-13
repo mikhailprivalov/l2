@@ -59,12 +59,21 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
 
 
 class Room(models.Model):
-    hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, on_delete=models.CASCADE)
-    title = models.CharField(max_length=64, help_text='Название кабинета')
-    hide = models.BooleanField(default=False, blank=True, db_index=True)
+    COMMON = 0
+    BIOMATERIAL_GET = 1
+
+    TYPES = (
+        (COMMON, 'Общий'),
+        (BIOMATERIAL_GET, 'Забор материала'),
+    )
+
+    hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, verbose_name='Больница', on_delete=models.CASCADE)
+    title = models.CharField(max_length=64, verbose_name='Название кабинета')
+    type = models.PositiveSmallIntegerField(choices=TYPES, default=COMMON, db_index=True, verbose_name='Тип')
+    hide = models.BooleanField(default=False, blank=True, db_index=True, verbose_name='Скрыть')
 
     def __str__(self):
-        return self.title
+        return f"{self.hospital} — {self.title}"
 
     class Meta:
         verbose_name = 'Кабинет'

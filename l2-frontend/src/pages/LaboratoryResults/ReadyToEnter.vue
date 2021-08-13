@@ -2,61 +2,58 @@
   <div>
     <div class="filters">
       <div class="filters-header">
-        <a
-          href="#"
-          class="a-under-reversed"
-          @click.prevent="load"
-          title="Перезагрузить направления и ёмкости"
-          v-tippy
-        >
+        <a href="#" class="a-under-reversed" @click.prevent="load" title="Перезагрузить направления и ёмкости" v-tippy>
           <i class="fa fa-refresh"></i> обновить
         </a>
         Дата приёма материала:
       </div>
-      <date-range v-model="date_range"/>
+      <date-range v-model="date_range" />
     </div>
     <div class="work-list">
       <div class="work-list-left" ref="directions">
         <table class="table table-bordered table-condensed">
           <thead>
-          <tr>
-            <th>
-              Направления
-              <small class="badge">{{ directions.length }}</small>
-            </th>
-          </tr>
+            <tr>
+              <th>
+                Направления
+                <small class="badge">{{ directions.length }}</small>
+              </th>
+            </tr>
           </thead>
           <tbody>
-          <tr v-for="d in directions" :data-pk="d.pk" :key="d.pk">
-            <td class='num' @click="searchDirection(d.pk)" :class="activeDirections.includes(d.pk) && 'num-active'">
-              <span>{{ d.date }}</span> {{ d.pk }}
-            </td>
-          </tr>
+            <tr v-for="d in directions" :data-pk="d.pk" :key="d.pk">
+              <td class="num" @click="searchDirection(d.pk)" :class="activeDirections.includes(d.pk) && 'num-active'">
+                <span>{{ d.date }}</span> {{ d.pk }}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
       <div class="work-list-right" ref="tubes">
         <table class="table table-bordered table-condensed">
           <thead>
-          <tr>
-            <th>
-              Ёмкости
-              <small class="badge">{{ tubes.length }}</small>
-            </th>
-          </tr>
+            <tr>
+              <th>
+                Ёмкости
+                <small class="badge">{{ tubes.length }}</small>
+              </th>
+            </tr>
           </thead>
           <tbody>
-          <tr class='select-tube' :title='t.tube.title' v-for="t in tubes" :key="t.pk" :data-pk="t.pk">
-            <td class='num' @click="searchTube(t.pk)"
+            <tr class="select-tube" :title="t.tube.title" v-for="t in tubes" :key="t.pk" :data-pk="t.pk">
+              <td
+                class="num"
+                @click="searchTube(t.pk)"
                 :class="[
                   activeTubes.includes(t.pk) && 'num-active',
                   tubesInGroups[t.pk] && `tb-group-big-${tubesInGroups[t.pk]}`,
-              ]">
-              <span>{{ t.date }}</span>
-              <div :style='`background-color: ${t.tube.color};color: ${t.tube.color};`' class='circle'></div>
-              {{ t.pk }}
-            </td>
-          </tr>
+                ]"
+              >
+                <span>{{ t.date }}</span>
+                <div :style="`background-color: ${t.tube.color};color: ${t.tube.color};`" class="circle"></div>
+                {{ t.pk }}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -76,10 +73,10 @@
 
 <script lang="ts">
 import moment from 'moment';
+import _ from 'lodash';
 import DateRange from '@/ui-cards/DateRange.vue';
 import api from '@/api';
 import * as actions from '@/store/action-types';
-import _ from 'lodash';
 import { SEARCH_MODES } from '@/pages/LaboratoryResults/constants';
 
 export default {
@@ -118,10 +115,7 @@ export default {
   },
   computed: {
     watchParams() {
-      return _.pick(this, [
-        'laboratory',
-        'date_range',
-      ]);
+      return _.pick(this, ['laboratory', 'date_range']);
     },
   },
   watch: {
@@ -190,7 +184,7 @@ export default {
   height: 34px;
 
   &.disabled {
-    opacity: .4;
+    opacity: 0.4;
   }
 }
 
@@ -201,7 +195,8 @@ export default {
   right: 0;
   bottom: 0;
 
-  .work-list-left, .work-list-right {
+  .work-list-left,
+  .work-list-right {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -216,11 +211,12 @@ export default {
       white-space: nowrap;
       position: sticky;
       top: 0;
-      box-shadow: 0 1px 1px rgba(0, 0, 0, .2);
+      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
       z-index: 11;
     }
 
-    td, th {
+    td,
+    th {
       background-color: #fff;
     }
   }
@@ -250,7 +246,7 @@ export default {
   }
 
   &-active {
-    background-color: #6C7A89 !important;
+    background-color: #6c7a89 !important;
     color: #fff;
   }
 }

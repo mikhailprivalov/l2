@@ -3,19 +3,30 @@
     <form class="form-signin" @submit.prevent="auth">
       <div class="panel panel-flt">
         <div class="panel-body">
-          <input type="text" id="input-username" class="form-control input-lg" name='username'
-                 v-model="username" placeholder="Логин или штрих-код" ref="username">
-          <input type="password" id="input-password" class="form-control input-lg" name='password'
-                 v-model="password" placeholder="Пароль">
+          <input
+            type="text"
+            id="input-username"
+            class="form-control input-lg"
+            name="username"
+            v-model="username"
+            placeholder="Логин или штрих-код"
+            ref="username"
+          />
+          <input
+            type="password"
+            id="input-password"
+            class="form-control input-lg"
+            name="password"
+            v-model="password"
+            placeholder="Пароль"
+          />
           <button class="btn btn-lg btn-primary-nb btn-block" type="submit">Вход</button>
           <button class="btn btn-reset btn-block" @click.prevent="clear">
             Очистить форму
           </button>
         </div>
       </div>
-      <div class="version">
-        L2 {{ menu.version }}
-      </div>
+      <div class="version">L2 {{ menu.version }}</div>
     </form>
   </div>
 </template>
@@ -23,10 +34,10 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import api from '@/api/index';
-import * as actions from '@/store/action-types';
 import { mapGetters } from 'vuex';
 import { POSITION } from 'vue-toastification/src/ts/constants';
+import api from '@/api/index';
+import * as actions from '@/store/action-types';
 import { Menu } from '@/types/menu';
 
 @Component({
