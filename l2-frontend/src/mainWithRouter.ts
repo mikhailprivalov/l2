@@ -120,6 +120,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/biomaterial/get',
+      name: 'biomaterial_get',
+      component: () => import('@/pages/BiomaterialGet.vue'),
+      meta: {
+        title: 'Забор биоматериала',
+        groups: ['Заборщик биоматериала'],
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},
