@@ -1526,3 +1526,9 @@ def statistic_xls(request):
 
     wb.save(response)
     return response
+
+
+@csrf_exempt
+@login_required
+def sreening_xls(request):
+    return True
