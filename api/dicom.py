@@ -1,10 +1,9 @@
 import socket
 from functools import reduce
-
-from beren import Orthanc
-
 from directions.models import Issledovaniya
 from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_PORT, DICOM_ADDRESS
+import requests
+import simplejson as json
 
 
 def sum(x, y):
@@ -51,14 +50,14 @@ def search_dicom_study(direction=None):
                 check_sum = check_sum_ean13(ean13_dir)
                 ean13_dir = f'{ean13_dir}{check_sum}'
 
-                orthanc = Orthanc(DICOM_SERVER, warn_insecure=False)
                 for tag in DICOM_SEARCH_TAGS:
                     for dir in [ean13_dir, str_dir]:
-                        query = {"Modality": "*", "StudyDate": "*", tag: dir}
-                        dicom_study = orthanc.find(query, level='Study')
-                        if len(dicom_study) > 0:
-                            Issledovaniya.objects.filter(napravleniye=direction).update(study_instance_uid=dicom_study[0])
-                            return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study[0]}'
+                        data = {'Level': 'Study', 'Query': {tag: dir}}
+                        dicom_study = requests.post(f'{DICOM_SERVER}/tools/find', data=json.dumps(data))
+                        if len(dicom_study.json()) > 0:
+                            Issledovaniya.objects.filter(napravleniye=direction).update(study_instance_uid=dicom_study.json()[0])
+                            return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study.json()[0]}'
+
             except Exception as e:
                 print(e)  # noqa: T001
     return ''
