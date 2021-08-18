@@ -283,7 +283,7 @@ export default class BiomaterialSearch extends Vue {
     }
 
     const sym = String.fromCharCode(event.which);
-    if (Number.isNaN(sym)) {
+    if (Number.isNaN(Number(sym))) {
       return;
     }
 
