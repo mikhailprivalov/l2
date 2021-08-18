@@ -1,3 +1,4 @@
+import calendar
 import datetime
 import re
 import time
@@ -1014,12 +1015,18 @@ class Napravleniya(models.Model):
                             monitoring.period_param_week_date_start = week_date_start_end[1]
                             monitoring.period_param_week_date_end = week_date_start_end[2]
                             period_param_year = period_param_week_date_start.split('-')[0]
+                            monitoring.period_date = week_date_start_end[1]
                         monitoring.period_param_month = period_param_month
                         monitoring.period_param_quarter = period_param_quarter
                         monitoring.period_param_halfyear = period_param_halfyear
                         monitoring.period_param_year = period_param_year
                         monitoring.type_period = research.type_period
 
+                        if type_period == "PERIOD_HOUR" or type_period == "PERIOD_DAY":
+                            monitoring.period_date = datetime.date(period_param_year, period_param_month, period_param_day)
+                        if type_period == "PERIOD_MONTH":
+                            last_day_month = calendar.monthrange(period_param_year, period_param_month)[1]
+                            monitoring.period_date = datetime.date(period_param_year, period_param_month, last_day_month)
                         monitoring.save()
 
                     if issledovaniye.pk not in childrens:
