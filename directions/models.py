@@ -18,7 +18,7 @@ import users.models as umodels
 import cases.models as cases
 from api.models import Application
 from hospitals.models import Hospitals, HospitalsGroup
-from laboratory.utils import strdate, localtime, current_time, strfdatetime
+from laboratory.utils import strdate, localtime, current_time, strdatetime, strfdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
@@ -188,6 +188,14 @@ class TubesRegistration(models.Model):
         if self.barcode and self.barcode.isnumeric():
             return self.barcode
         return self.id
+
+    def get_details(self):
+        if not self.time_get or not self.doc_get:
+            return None
+        return {
+            "datetime": strdatetime(self.time_get),
+            "executor": str(self.doc_get),
+        }
 
     class Meta:
         verbose_name = 'Ёмкость для направления'

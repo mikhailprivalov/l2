@@ -693,12 +693,12 @@ import {
 } from '@/utils';
 import { GENDERS } from '@/constants';
 import api from '@/api';
-import patientsPoint from '../api/patients-point';
-import Modal from '../ui-cards/Modal.vue';
-import forms from '../forms';
-import RadioField from '../fields/RadioField.vue';
-import * as actions from '../store/action-types';
-import PatientSmallPicker from '../ui-cards/PatientSmallPicker.vue';
+import patientsPoint from '@/api/patients-point';
+import Modal from '@/ui-cards/Modal.vue';
+import forms from '@/forms';
+import RadioField from '@/fields/RadioField.vue';
+import * as actions from '@/store/action-types';
+import PatientSmallPicker from '@/ui-cards/PatientSmallPicker.vue';
 
 const MEDBOOK_TYPES = [
   { type: 'none', title: 'нет' },

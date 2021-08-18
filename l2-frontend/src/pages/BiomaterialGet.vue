@@ -1,6 +1,8 @@
 <template>
   <div class="root">
-    <div class="a">1</div>
+    <div class="a">
+      <BiomaterialSearch />
+    </div>
     <div class="b">2</div>
     <div class="d">3</div>
   </div>
@@ -9,8 +11,13 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
+import BiomaterialSearch from '@/ui-cards/BiomaterialSearch.vue';
 
-@Component({})
+@Component({
+  components: {
+    BiomaterialSearch,
+  },
+})
 export default class BiomaterialGet extends Vue {}
 </script>
 
@@ -29,6 +36,7 @@ export default class BiomaterialGet extends Vue {}
   .b,
   .d {
     position: absolute;
+    overflow-y: auto;
   }
 
   .a {

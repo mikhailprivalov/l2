@@ -155,7 +155,7 @@ span.isloading-wrapper {
   }
 }
 
-.table-sm-pd td:not(.ref):not(.cl-td) {
+.table-sm-pd td:not(.ref):not(.cl-td):not(.x-cell) {
   padding: 3px !important;
 }
 
@@ -1374,14 +1374,14 @@ body > .container-fluid {
   font-size: 14px !important;
 }
 
-.cl-td {
+.cl-td, .x-cell {
   padding: 0 !important;
 
   button {
     border-radius: 0;
   }
 
-  input:not(.vs__search),
+  input:not(.vs__search):not([type="checkbox"]),
   textarea {
     border-radius: 0;
     width: 100%;
@@ -1395,10 +1395,13 @@ body > .container-fluid {
     min-height: 34px;
     justify-content: center;
     align-items: center;
-    cursor: pointer;
+    
+    &:not(.disabled) {
+      cursor: pointer;
 
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.1);
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
     }
 
     input {
@@ -1411,6 +1414,20 @@ body > .container-fluid {
 @media (max-width: 991px) {
   .text-left-xs {
     text-align: left;
+  }
+}
+
+.x-cell {
+  position: relative;
+
+  label, div {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    text-align: center;
+    min-height: 10px;
   }
 }
 

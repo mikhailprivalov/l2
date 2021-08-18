@@ -49,14 +49,15 @@ export default (): void => {
   Vue.use(PortalVue);
   Vue.filter('pluralAge', amount => `${amount} ${plural(amount, 'год', 'года', 'лет')}`);
   Vue.filter('pluralRecords', amount => `${amount} ${plural(amount, 'запись', 'записи', 'записей')}`);
+  Vue.filter('pluralCount', amount => `${amount} ${plural(amount, 'штука', 'штуки', 'штук')}`);
 
   Vue.directive('click-outside', {
     bind(el, binding, vnode) {
-    // @ts-ignore
-    // eslint-disable-next-line no-param-reassign
+      // @ts-ignore
+      // eslint-disable-next-line no-param-reassign
       el.clickOutsideEvent = function (event) {
         if (!(el === event.target || el.contains(event.target))) {
-        // @ts-ignore
+          // @ts-ignore
           vnode.context[binding.expression](event);
         }
       };
@@ -64,7 +65,7 @@ export default (): void => {
       document.body.addEventListener('click', el.clickOutsideEvent);
     },
     unbind(el) {
-    // @ts-ignore
+      // @ts-ignore
       document.body.removeEventListener('click', el.clickOutsideEvent);
     },
   });
