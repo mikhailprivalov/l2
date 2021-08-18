@@ -27,6 +27,9 @@ from . import sql_func
 from . import structure_sheet
 from directory.models import HospitalService
 import datetime
+import calendar
+
+from .sql_func import screening_regplan_for_month, screening_age_for_month
 
 
 @csrf_exempt
@@ -570,8 +573,6 @@ def statistic_xls(request):
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
 
-        import calendar
-
         if request_data.get("date_type") == 'd':
             d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
             d2 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
@@ -710,8 +711,6 @@ def statistic_xls(request):
         research_id = int(pk)
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
-
-        import calendar
 
         if request_data.get("date_type") == 'd':
             d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
@@ -1531,4 +1530,20 @@ def statistic_xls(request):
 @csrf_exempt
 @login_required
 def sreening_xls(request):
+    request_data = request.POST if request.method == "POST" else request.GET
+    month = request_data.get("month", "")
+    year = request_data.get("year", "")
+    month_obj = int(month)
+    _, num_days = calendar.monthrange(int(year), month_obj)
+    d1 = datetime.date(int(year), month_obj, 1)
+    d2 = datetime.date(int(year), month_obj, num_days)
+    datetime_start = f"{d1.strftime('%Y-%m-%d')} 00:00:00"
+    datetime_end = f"{d2.strftime('%Y-%m-%d')} 23:59:59:999999"
+    date_for_age = f"{d2.strftime('%Y-%m-%d')}"
+
+    count_age_for_month = screening_age_for_month(date_for_age)
+    print(count_age_for_month)
+    count_regplan_for_month = screening_regplan_for_month(year, month)
+    print(count_regplan_for_month)
+
     return True

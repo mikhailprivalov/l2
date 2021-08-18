@@ -371,4 +371,37 @@ def message_ticket_purpose_total(hospitals_id, d_s, d_e):
     return rows
 
 
+def screening_age_for_month(date_for_age=None):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT COUNT(id) FROM clients_card
+            WHERE clients_card.individual_id IN (SELECT id FROM clients_individual WHERE (date_part('year', age(%(date_for_age)s, birthday))::int BETWEEN 18 and 65) and sex='ж')
+            """,
+            params={
+                'date_for_age': date_for_age,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def screening_regplan_for_month(date_plan_year, date_plan_month):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT count(DISTINCT card_id) FROM public.clients_screeningregplan
+            WHERE date_part('year', clients_screeningregplan.date)::int = %(date_plan_year)s AND
+            date_part('month', clients_screeningregplan.date)::int = %(date_plan_month)s
+            """,
+            params={
+                'date_plan_year': date_plan_year,
+                'date_plan_month': date_plan_month,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+
 
