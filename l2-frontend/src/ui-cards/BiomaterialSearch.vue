@@ -1,19 +1,25 @@
 <template>
   <div class="b-root">
-    <div class="input-group">
-      <input
-        type="text"
-        class="form-control"
-        v-model="query"
-        placeholder="Номер направления"
-        autofocus
-        maxlength="20"
-        @keyup.enter="search"
-        :readonly="loading"
-      />
-      <span class="input-group-btn">
-        <button class="btn btn-blue-nb" @click="search" type="button">Поиск</button>
-      </span>
+    <div class="top-search">
+      <div class="confirm-list-wrapper">
+        <button class="btn btn-primary-nb btn-ell" @click="openConfirmationList()" type="button">Лист подтверждений</button>
+      </div>
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          v-model="query"
+          placeholder="Номер направления"
+          autofocus
+          maxlength="20"
+          @keyup.enter="search"
+          :readonly="loading"
+          ref="q"
+        />
+        <span class="input-group-btn">
+          <button class="btn btn-blue-nb" @click="search" type="button">Поиск</button>
+        </span>
+      </div>
     </div>
 
     <table class="table table-bordered table-condensed main-table">
@@ -153,9 +159,7 @@
                 {{ t.researches.join('; ') }}
               </td>
               <td>
-                <div :style="`background-color: ${t.color};color: ${t.color};`" class="circle"></div>
-
-                {{ t.title }}
+                <ColorTitled :color="t.color" :title="t.title" />
               </td>
               <td class="x-cell" :rowspan="!!details[t.id] ? 2 : 1">
                 <div class="tube_id">
@@ -174,8 +178,8 @@
             </tr>
             <tr :key="`details-${t.id}`" v-if="details[t.id]">
               <td colspan="2">
-                <div>Исполнитель: {{ details[t.id].executor }}</div>
-                <div>Дата и время: {{ details[t.id].datetime }}</div>
+                <div><strong>Исполнитель:</strong> {{ details[t.id].executor }}</div>
+                <div><strong>Дата и время:</strong> {{ details[t.id].datetime }}</div>
               </td>
             </tr>
           </template>
@@ -197,9 +201,7 @@
       <tbody>
         <tr v-for="(t, title) in typesChecked" :key="title">
           <td>
-            <div :style="`background-color: ${t.color};color: ${t.color};`" class="circle"></div>
-
-            {{ title }}
+            <ColorTitled :color="t.color" :title="title" />
           </td>
           <td>
             {{ t.count | pluralCount }}
@@ -214,6 +216,85 @@
         </tr>
       </tbody>
     </table>
+    <MountingPortal mountTo="#portal-place-modal" name="TimeSlotPopup" append>
+      <transition name="fade">
+        <modal
+          v-if="showConfirmList"
+          @close="showConfirmList = false"
+          show-footer="true"
+          white-bg="true"
+          max-width="710px"
+          width="100%"
+          marginLeftRight="auto"
+        >
+          <span slot="header">Лист подтверждений</span>
+          <div slot="body" class="popup-body">
+            <div class="preloader" v-if="loading"><i class="fa fa-spinner"></i> загрузка</div>
+            <div v-else>
+              <table class="table table-bordered table-condensed table-hover">
+                <colgroup>
+                  <col />
+                  <col style="width: 85px" />
+                  <col style="width: 85px" />
+                  <col style="width: 210px" />
+                  <col style="width: 25px" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>ФИО</th>
+                    <th>№ напр.</th>
+                    <th>№ ёмкости</th>
+                    <th>Тип</th>
+                    <th class="x-cell" :key="`check_confirm_${globalCheckConfirm}`">
+                      <label @click.prevent="toggleGlobalCheckConfirm">
+                        <input type="checkbox" :checked="globalCheckConfirm" />
+                      </label>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="t in tubesForConfirm" :key="`${t.pk}_${t.checked}`">
+                    <td @click="t.checked = !t.checked" class="cursor-pointer">
+                      {{ t.patient }}
+                    </td>
+                    <td @click="t.checked = !t.checked" class="cursor-pointer">
+                      {{ t.direction }}
+                      <br /><small><a @click.stop.prevent="cancel(t.direction)" href="#">отменить</a></small>
+                    </td>
+                    <td @click="t.checked = !t.checked" class="cursor-pointer">
+                      {{ t.pk }}
+                      <br /><small><a @click.stop.prevent="printBarcodes(t.pk)" href="#">печать ш/к</a></small>
+                    </td>
+                    <td @click="t.checked = !t.checked">
+                      <ColorTitled :color="t.color" :title="t.title" />
+                    </td>
+                    <td class="x-cell">
+                      <label>
+                        <input type="checkbox" v-model="t.checked" />
+                      </label>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div slot="footer">
+            <div class="row">
+              <div class="col-xs-6">
+                <button @click="showConfirmList = false" class="btn btn-blue-nb" type="button">
+                  Закрыть
+                </button>
+              </div>
+              <div class="col-xs-6 text-right">
+                <button @click="saveList" class="btn btn-blue-nb" type="button">
+                  Подтвердить выбранные
+                </button>
+              </div>
+            </div>
+          </div>
+        </modal>
+      </transition>
+    </MountingPortal>
   </div>
 </template>
 
@@ -223,8 +304,14 @@ import Component from 'vue-class-component';
 import { debounce } from 'lodash/function';
 import api from '@/api';
 import * as actions from '@/store/action-types';
+import ColorTitled from '@/ui-cards/ColorTitled.vue';
+import Modal from '@/ui-cards/Modal.vue';
 
 @Component({
+  components: {
+    ColorTitled,
+    Modal,
+  },
   data() {
     return {
       query: '',
@@ -236,8 +323,10 @@ import * as actions from '@/store/action-types';
       direction: null,
       tubes: null,
       types: null,
-      loading: false,
       details: {},
+      tubesForConfirm: [],
+      loading: false,
+      showConfirmList: false,
     };
   },
   created() {
@@ -277,8 +366,12 @@ export default class BiomaterialSearch extends Vue {
 
   loading: boolean;
 
+  showConfirmList: boolean;
+
+  tubesForConfirm: any[];
+
   onKeyPress(event) {
-    if (window.$('input').is(':focus')) {
+    if (window.$('input').is(':focus') || this.loading) {
       return;
     }
 
@@ -431,29 +524,42 @@ export default class BiomaterialSearch extends Vue {
     }
   }
 
-  async cancel() {
+  async cancel(pk = null) {
     try {
       await this.$dialog.confirm('Подтвердите смену статуса отмены');
     } catch (_) {
       return;
     }
     await this.$store.dispatch(actions.INC_LOADING);
-    const { cancel } = await api('/directions/cancel', { pk: this.direction.pk });
-    this.direction.cancel = cancel;
+    const { cancel } = await api('/directions/cancel', { pk: pk || this.direction.pk });
+    if (this.direction && (!pk || this.direction.pk === pk)) {
+      this.direction.cancel = cancel;
+    }
     await this.$store.dispatch(actions.DEC_LOADING);
+
+    if (pk) {
+      await this.openConfirmationList(true);
+    }
   }
 
-  async save(needPrintBarcodes) {
+  saveList() {
+    const pks = this.tubesForConfirm.filter(t => t.checked).map(t => t.pk);
+
+    this.save(false, pks);
+  }
+
+  async save(needPrintBarcodes, toConfirmPks = null) {
     await this.$store.dispatch(actions.INC_LOADING);
-    const pks = Object.values<any>(this.tubes).reduce(
-      (a, tubes) => [
-        ...a,
-        ...Object.values<any>(tubes)
-          .filter(v => v.checked && !v.status)
-          .reduce((x, v) => [...x, v.id], []),
-      ],
-      [],
-    );
+    const pks = toConfirmPks
+      || Object.values<any>(this.tubes).reduce(
+        (a, tubes) => [
+          ...a,
+          ...Object.values<any>(tubes)
+            .filter(v => v.checked && !v.status)
+            .reduce((x, v) => [...x, v.id], []),
+        ],
+        [],
+      );
     const { ok, details } = await api('/directions/tubes-register-get', { pks });
     await this.$store.dispatch(actions.DEC_LOADING);
     if (needPrintBarcodes && ok) {
@@ -477,7 +583,33 @@ export default class BiomaterialSearch extends Vue {
       );
 
       this.$root.$emit('msg', 'ok', 'Забор материала зарегистрирован');
+
+      if (toConfirmPks) {
+        await this.openConfirmationList(true);
+      } else {
+        window.$(this.$refs.q).focus();
+      }
     }
+  }
+
+  async openConfirmationList(hidden = false) {
+    this.showConfirmList = true;
+    this.loading = !hidden;
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { rows } = await api('/directions/tubes-for-confirm');
+    this.tubesForConfirm = rows;
+    await this.$store.dispatch(actions.DEC_LOADING);
+    this.loading = false;
+  }
+
+  get globalCheckConfirm() {
+    return this.tubesForConfirm.every(t => t.checked);
+  }
+
+  toggleGlobalCheckConfirm() {
+    const newChecked = !this.globalCheckConfirm;
+
+    this.tubesForConfirm = this.tubesForConfirm.map(t => ({ ...t, checked: newChecked }));
   }
 }
 </script>
@@ -523,17 +655,6 @@ export default class BiomaterialSearch extends Vue {
   table-layout: fixed;
 }
 
-.circle {
-  width: 13px;
-  height: 13px;
-  border-radius: 4px;
-  display: inline-block;
-  vertical-align: middle;
-  margin-bottom: 3px;
-  border: 1px #e2e2e2 solid;
-  box-shadow: 0 0 3px;
-}
-
 .tube_id {
   display: flex;
   margin-bottom: 0;
@@ -551,5 +672,20 @@ export default class BiomaterialSearch extends Vue {
 
 .row-checked {
   background-color: rgba(#049372, 0.05);
+}
+
+.top-search {
+  display: flex;
+  justify-content: stretch;
+
+  .input-group {
+    flex: 1 calc(100% - 185px);
+  }
+}
+
+.confirm-list-wrapper {
+  padding-right: 8px;
+  width: 185px;
+  flex: 0 185px;
 }
 </style>

@@ -6,7 +6,7 @@ import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch
 from django.http import HttpResponse, JsonResponse
 from django.utils import dateformat
 from django.utils import timezone
@@ -899,20 +899,6 @@ def update_direction(request):
     return JsonResponse(res)
 
 
-@csrf_exempt
-@login_required
-def group_confirm_get(request):
-    """Функция группового подтвержения взятия материала"""
-    res = {"r": False}
-    if request.method == 'POST':  # Проверка типа запроса
-        checked = json.loads(request.POST["checked"])
-
-        for t in TubesRegistration.objects.filter(pk__in=checked, doc_get__isnull=True):
-            t.set_get(request.user.doctorprofile)
-
-    return JsonResponse(res)
-
-
 @login_required
 def load_history(request):
     """Получение истории заборов материала за текущий день"""
@@ -927,33 +913,6 @@ def load_history(request):
         res["rows"].append(
             {"type": v.type.tube.title, "researches": ', '.join(str(x) for x in iss_list), "time": strtime(v.time_get), "dir_id": iss[0].napravleniye_id, "tube_id": v.id}
         )  # Добавление пробирки с исследованиями в вывод
-    return JsonResponse(res)
-
-
-@login_required
-def get_worklist(request):
-    """Получение необходимых пробирок для взятия"""
-    tmprows = {}
-    res = {"rows": []}
-    from datetime import timedelta
-
-    date_start = datetime.now() - timedelta(days=6)
-    date_end = datetime.now()
-    # if date_start.weekday() == 6: date_start -= timedelta(days=2)
-    # if date_start.weekday() == 5: date_start -= timedelta(days=1)
-    naps = Napravleniya.objects.filter(
-        Q(data_sozdaniya__range=(date_start, date_end), doc_who_create=request.user.doctorprofile, cancel=False)
-        | Q(data_sozdaniya__range=(date_start, date_end), doc=request.user.doctorprofile, cancel=False)
-    )
-    for n in naps:
-        for i in Issledovaniya.objects.filter(napravleniye=n):
-            for t in i.tubes.filter(doc_get__isnull=True):
-                tmprows[t.pk] = {"direction": n.pk, "patient": n.client.individual.fio(short=True, dots=True), "title": t.type.tube.title, "pk": t.pk, "color": t.type.tube.color}
-    for pk in tmprows.keys():
-        res["rows"].append(tmprows[pk])
-    res["rows"] = sorted(res["rows"], key=lambda k: k['pk'])
-    res["rows"] = sorted(res["rows"], key=lambda k: k['patient'])
-
     return JsonResponse(res)
 
 
@@ -1349,23 +1308,6 @@ def order_researches(request):
             CustomResearchOrdering(research=directory.Researches.objects.get(pk=order[i]), user=request.user.doctorprofile, weight=w).save()
 
     return JsonResponse(1, safe=False)
-
-
-@login_required
-def resend(request):
-    t = request.GET.get("type", "directions")
-    pks = json.loads(request.GET.get("pks", "[]"))
-    from rmis_integration.client import Client
-
-    c = Client()
-    d = []
-    r = []
-    for direction in Napravleniya.objects.filter(pk__in=pks):
-        if t in ["directions", "full"]:
-            d.append(c.directions.delete_direction(direction=direction, user=request.user.doctorprofile))
-        if t in ["results", "full"]:
-            r.append(c.directions.delete_services(direction=direction, user=request.user.doctorprofile))
-    return JsonResponse(all(d) if t == "directions" else [d, r], safe=False)
 
 
 def py(y=0.0):

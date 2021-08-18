@@ -41,7 +41,6 @@ def menu(request):
                     "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Лаборант", "Врач-лаборант", "Просмотр журнала"],
                 },
                 {"url": "/mainmenu/directions/multiprint", "title": "Печать направлений", "nt": False, "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача"]},
-                # {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
                 {"url": "/ui/results-by-department-or-doctor", "title": "Печать по отделению или врачу", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
                 {"url": "/ui/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
                 {"url": "/mainmenu/receive", "title": "Приём биоматериала", "nt": False, "access": ["Получатель биоматериала"]},
@@ -49,7 +48,6 @@ def menu(request):
                 {"url": "/mainmenu/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
                 {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
                 {"url": "/laboratory/results", "title": "Лабораторные результаты", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
-                # {"url": "/results/enter", "title": "Ввод результатов (устаревший)", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
                 {
                     "url": "/mainmenu/employee-job",
                     "title": "Учёт косвенных услуг по лаборатории",
@@ -84,12 +82,9 @@ def menu(request):
                     "access": ["Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники", "Врач консультаций"],
                 },
                 {"url": "/mainmenu/discharge", "title": "Выписки", "nt": False, "access": ["Загрузка выписок", "Поиск выписок"], "module": "discharge_module"},
-                # {"url": "/mainmenu/create_user", "title": "Создать пользователя", "nt": False, "access": ["Создание и редактирование пользователей"]},
-                # {"url": "/mainmenu/change_password", "title": "Настройка профилей пользователей", "nt": False, "access": ["Создание и редактирование пользователей"]},
                 {"url": "/mainmenu/create_podr", "title": "Управление подразделениями", "nt": False, "access": ["Создание и редактирование пользователей"]},
                 {"url": "/mainmenu/profiles", "title": "Профили пользователей", "nt": False, "access": ["Создание и редактирование пользователей"]},
                 {"url": "/mainmenu/view_log", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},
-                # {"url": "/reports", "title": "Отчёты", "nt": False, "access": []},
                 {"url": "/admin", "title": "Администрирование L2", "nt": False, "access": []},
                 {
                     "url": "/mainmenu/direction_visit",

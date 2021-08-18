@@ -4,7 +4,7 @@ from hospitals.models import Hospitals
 import operator
 import re
 import time
-from datetime import datetime, time as dtime
+from datetime import datetime, time as dtime, timedelta
 from operator import itemgetter
 
 import pytz
@@ -2637,3 +2637,33 @@ def tubes_register_get(request):
         get_details[pk] = val.get_details()
 
     return status_response(True, data={'details': get_details})
+
+
+@login_required
+def tubes_for_confirm(request):
+    tmprows = {}
+    res = {"rows": []}
+
+    date_start = datetime.now() - timedelta(days=6)
+    date_end = datetime.now()
+    naps = Napravleniya.objects.filter(
+        Q(data_sozdaniya__range=(date_start, date_end), doc_who_create=request.user.doctorprofile, cancel=False)
+        | Q(data_sozdaniya__range=(date_start, date_end), doc=request.user.doctorprofile, cancel=False)
+    )
+    for n in naps:
+        for i in Issledovaniya.objects.filter(napravleniye=n):
+            for t in i.tubes.filter(doc_get__isnull=True):
+                tmprows[t.pk] = {
+                    "direction": n.pk,
+                    "patient": n.client.individual.fio(short=True, dots=True),
+                    "title": t.type.tube.title,
+                    "pk": t.pk,
+                    "color": t.type.tube.color,
+                    "checked": True,
+                }
+    for pk in tmprows.keys():
+        res["rows"].append(tmprows[pk])
+    res["rows"] = sorted(res["rows"], key=lambda k: k['pk'])
+    res["rows"] = sorted(res["rows"], key=lambda k: k['patient'])
+
+    return JsonResponse(res)

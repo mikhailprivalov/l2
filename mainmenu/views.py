@@ -6,8 +6,7 @@ from urllib.parse import urljoin
 import simplejson as json
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User, Group
-from django.db import IntegrityError
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
@@ -57,69 +56,6 @@ def view_log(request):
 @ensure_csrf_cookie
 def profiles(request):
     return render(request, 'dashboard/profiles.html')
-
-
-@csrf_exempt
-@login_required
-@group_required("Создание и редактирование пользователей")
-@ensure_csrf_cookie
-def change_password(request):
-    if request.method == "POST":
-        if not request.user.is_superuser:
-            doc = DoctorProfile.objects.get(pk=request.POST["pk"], user__is_superuser=False)
-        else:
-            doc = DoctorProfile.objects.get(pk=request.POST["pk"])
-        if request.POST.get("apply_groups") == "1":
-            doc.user.groups.clear()
-            for g in json.loads(request.POST.get("groups", "[]")) or []:
-                group = Group.objects.get(pk=g)
-                doc.user.groups.add(group)
-        elif request.POST.get("update_fio") == "1":
-            doc.fio = request.POST.get("fio", "ФИО")
-            doc.family = None
-            doc.save()
-        elif request.POST.get("update_username") == "1":
-            un = request.POST.get("username", "").strip()
-            if un:
-                try:
-                    doc.user.username = un
-                    doc.user.save()
-                except IntegrityError:
-                    return JsonResponse({"ok": False, "msg": "Имя пользователя занято"})
-
-        else:
-            doc.podrazdeleniye = Podrazdeleniya.objects.get(pk=request.POST["podr"])
-            doc.save()
-        return JsonResponse({"ok": True})
-    if request.is_ajax():
-        doc = DoctorProfile.objects.get(pk=request.GET["pk"])
-        groups = [{"pk": str(x.pk), "title": x.name} for x in doc.user.groups.all()]
-        return HttpResponse(json.dumps({"groups": groups, "fio": doc.fio, "username": doc.user.username, "user_pk": doc.user_id}), content_type="application/json")
-    otds = {}
-    podr = Podrazdeleniya.objects.all().order_by("title")
-    for x in podr:
-        otds[x.title] = []
-        docs = DoctorProfile.objects.filter(podrazdeleniye=x).order_by('fio')
-        if not request.user.is_superuser:
-            docs = docs.filter(user__is_superuser=False)
-        for y in docs:
-            otds[x.title].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username, "podr": y.podrazdeleniye_id})
-    return render(request, 'dashboard/change_password.html', {"otds": otds, "podrs": podr, "g": Group.objects.all()})
-
-
-@csrf_exempt
-@login_required
-@group_required("Создание и редактирование пользователей")
-@ensure_csrf_cookie
-def update_pass(request):
-    userid = int(request.POST.get("pk", "-1"))
-    password = request.POST.get("pass", "")
-    if request.method == "POST" and userid >= 0 and len(password) > 0:
-        user = DoctorProfile.objects.get(pk=userid).user
-        user.set_password(password)
-        user.save()
-        return JsonResponse({"ok": True})
-    return JsonResponse({"ok": False})
 
 
 @csrf_exempt
@@ -233,63 +169,6 @@ def confirm_reset(request):
             else:
                 result["msg"] = "Сброс подтверждения разрешен в течении %s минут" % (str(SettingManager.get("lab_reset_confirm_time_min")))
     return JsonResponse(result)
-
-
-@login_required
-@group_required("Создание и редактирование пользователей")
-@ensure_csrf_cookie
-def create_user(request):  # Страница создания пользователя
-    registered = False
-    podr = Podrazdeleniya.objects.filter(hide=False).order_by("title")  # Получение всех подразделений
-    podrpost = 0
-    groups = Group.objects.all()  # Получение всех групп
-    if request.method == 'POST':
-        username = request.POST['username']  # Имя пользователя
-        password = request.POST['password']  # Пароль
-        podrpost = request.POST['podr']  # Подразделение
-        fio = request.POST['fio']  # ФИО
-        groups_user = request.POST.getlist('groups')  # Группы
-
-        if username and password and fio:  # Проверка наличия всех полей
-            if not User.objects.filter(username=username).exists():  # Проверка существования пользователя
-                user = User.objects.create_user(username)  # Создание пользователя
-                user.set_password(password)  # Установка пароля
-                user.is_active = True  # Активация пользователя
-                user.save()  # Сохранение пользователя
-                for g in groups_user:  # Перебор выбранных групп
-                    gTmp = Group.objects.get(pk=g)  # Выбор группы
-                    gTmp.user_set.add(user)  # Установка группы
-                profile = DoctorProfile.objects.create()  # Создание профиля
-                profile.user = user  # Привязка профиля к пользователю
-                profile.fio = fio  # ФИО
-                profile.podrazdeleniye = podr.get(pk=podrpost)  # Привязка подразделения
-                profile.isLDAP_user = False
-                profile.save()  # Сохранение профиля
-                registered = True
-                slog.Log(key=str(profile.pk), user=request.user.doctorprofile, type=16, body=json.dumps({"username": username, "password": "(скрыт)", "podr": podrpost, "fio": fio})).save()
-            else:
-                return render(
-                    request,
-                    'dashboard/create_user.html',
-                    {
-                        'error': True,
-                        'mess': 'Пользователь с таким именем пользователя уже существует',
-                        'uname': username,
-                        'fio': fio,
-                        'status': registered,
-                        'podr': podr,
-                        'podrpost': podrpost,
-                        'g': groups,
-                    },
-                )  # Вывод
-        else:
-            return render(
-                request,
-                'dashboard/create_user.html',
-                {'error': True, 'mess': 'Данные введены неверно', 'uname': username, 'fio': fio, 'status': registered, 'podr': podr, 'podrpost': podrpost, 'g': groups},
-            )  # Вывод
-
-    return render(request, 'dashboard/create_user.html', {'error': False, 'mess': '', 'uname': '', 'fio': '', 'status': registered, 'podr': podr, 'podrpost': podrpost, 'g': groups})  # Вывод
 
 
 @csrf_exempt
@@ -733,28 +612,12 @@ def ratelimited(request, e):
     return render(request, 'dashboard/error.html', {"message": "Запрос выполняется слишком часто, попробуйте позднее", "update": True})
 
 
-@ensure_csrf_cookie
-def cards(request):
-    if not SettingManager.get("mis_module", default='false', default_type='b'):
-        from django.http import Http404
-
-        raise Http404()
-    return render(request, 'dashboard/cards.html')
-
-
 def v404(request, exception=None):
     return render(request, 'dashboard/error.html', {"message": "Ошибка 404 - страница не найдена", "update": False, "to_home": True}, status=404)
 
 
 def v500(request, exception=None):
     return render(request, 'dashboard/error.html', {"message": "Ошибка 500 - проблемы на сервере. Сообщите администратору или попробуйте позднее", "update": True, "no_nt": True}, status=500)
-
-
-@login_required
-@group_required("Госпитализация")
-@ensure_csrf_cookie
-def hosp(request):
-    return render(request, 'dashboard/hosp.html')
 
 
 @login_required

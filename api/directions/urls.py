@@ -40,4 +40,5 @@ urlpatterns = [
     path('change-owner-direction', views.change_owner_direction),
     path('tubes-for-get', views.tubes_for_get),
     path('tubes-register-get', views.tubes_register_get),
+    path('tubes-for-confirm', views.tubes_for_confirm),
 ]

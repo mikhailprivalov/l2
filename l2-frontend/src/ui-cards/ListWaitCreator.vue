@@ -177,7 +177,7 @@ export default {
   },
   computed: {
     disp_researches() {
-      return this.researches.map(id => this.$store.getters.researches_obj[id]);
+      return this.researches.map(id => this.$store.getters.researches_obj[id]).filter(Boolean);
     },
     rows_count() {
       return this.rows.length;
