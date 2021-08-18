@@ -2512,9 +2512,9 @@ def tubes_for_get(request):
     data["tubes"] = {}
     tubes_buffer = {}
 
-    fresearches = set()
-    fuppers = set()
-    flowers = set()
+    fresearches = {}
+    fuppers = {}
+    flowers = {}
 
     iss_cached = list(direction.issledovaniya_set.all())
 
@@ -2522,48 +2522,49 @@ def tubes_for_get(request):
         for fr in i.research.fractions_set.all():
             absor = fr.fupper.all()
             if absor.exists():
-                fuppers.add(fr.pk)
-                fresearches.add(fr.research_id)
+                fuppers[fr.pk] = True
+                fresearches[fr.research_id] = True
                 for absor_obj in absor:
-                    flowers.add(absor_obj.flower_id)
-                    fresearches.add(absor_obj.flower.research_id)
+                    flowers[absor_obj.flower_id] = True
+                    fresearches[absor_obj.flower.research_id] = True
 
     for v in iss_cached:
         if data["direction"]["full_confirm"] and not i.time_confirmation:
             data["direction"]["full_confirm"] = False
+        has_rels = {x.type_id: x for x in v.tubes.all()}
+        new_tubes = []
         for val in v.research.fractions_set.all():
             vrpk = val.relation_id
             rel = val.relation
-            has_rels = {x.type: x for x in v.tubes.all()}
-            if val.research_id in fresearches and val.pk in flowers:
+
+            if vrpk not in has_rels and i.time_confirmation:
+                continue
+
+            if val.research_id in fresearches and val.pk in flowers and not i.time_confirmation:
                 absor = val.flower.all().first()
                 if absor.fupper_id in fuppers:
                     vrpk = absor.fupper.relation_id
                     rel = absor.fupper.relation
 
-            if rel not in has_rels and i.time_confirmation:
-                continue
-
-            existed = False
             if vrpk not in tubes_buffer:
-                if rel not in has_rels:
+                if vrpk not in has_rels:
                     ntube = TubesRegistration(type=rel)
                     ntube.save()
+                    has_rels[vrpk] = ntube
+                    new_tubes.append(ntube)
                 else:
-                    ntube = has_rels[rel]
-                    existed = True
+                    ntube = has_rels[vrpk]
                 tubes_buffer[vrpk] = {"researches": set(), "labs": set(), "tube": ntube}
             else:
                 ntube = tubes_buffer[vrpk]["tube"]
-
-            if not existed and rel not in has_rels:
-                v.tubes.add(ntube)
 
             tubes_buffer[vrpk]["researches"].add(v.research.title)
 
             podr = v.research.get_podrazdeleniye()
             if podr:
                 tubes_buffer[vrpk]["labs"].add(podr.get_title())
+        if new_tubes:
+            v.tubes.add(*new_tubes)
 
     data["types"] = {}
     data["details"] = {}
