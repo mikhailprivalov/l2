@@ -1,10 +1,18 @@
 <template>
   <transition name="modal">
-    <div class="modal-mask">
-      <div class="panel panel-flt"
-           :style="{
-          minWidth, maxWidth, alignSelf, marginTop, width, marginLeft: marginLeftRight, marginRight: marginLeftRight
-        }">
+    <div class="modal-mask" :style="{ zIndex }">
+      <div
+        class="panel panel-flt"
+        :style="{
+          minWidth,
+          maxWidth,
+          alignSelf,
+          marginTop,
+          width,
+          marginLeft: marginLeftRight,
+          marginRight: marginLeftRight,
+        }"
+      >
         <div class="panel-heading">
           <h3 class="panel-title">
             <slot name="header">
@@ -14,13 +22,13 @@
           </h3>
         </div>
         <div v-if="resultsEditor" class="results-editor">
-          <div class="panel-body" :class="{white_bg: whiteBg === 'true', overflowUnset: overflowUnset === 'true'}">
+          <div class="panel-body" :class="{ white_bg: whiteBg === 'true', overflowUnset: overflowUnset === 'true' }">
             <slot name="body">
               default body
             </slot>
           </div>
         </div>
-        <div v-else class="panel-body" :class="{white_bg: whiteBg === 'true', overflowUnset: overflowUnset === 'true'}">
+        <div v-else class="panel-body" :class="{ white_bg: whiteBg === 'true', overflowUnset: overflowUnset === 'true' }">
           <slot name="body">
             default body
           </slot>
@@ -85,6 +93,11 @@ export default {
       required: false,
       default: false,
     },
+    zIndex: {
+      type: Number,
+      required: false,
+      default: null,
+    },
   },
 };
 </script>
@@ -107,11 +120,11 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, .5);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity .3s ease;
+  transition: opacity 0.3s ease;
   overflow: auto;
 }
 

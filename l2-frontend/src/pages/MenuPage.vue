@@ -14,7 +14,7 @@
           </div>
         </li>
         <li class="list-group-item">
-          Группы:
+          Ваши права доступа и группы:
           <div class="row dash-buttons groups-btns">
             <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5" v-for="g in user_data.groups" :key="g">
               <div class="label label-default bw100 btn-ell" :title="g">{{ g }}</div>
@@ -38,14 +38,14 @@
         </router-link>
       </div>
     </div>
-    <hr/>
+    <hr />
     <div class="row dash-buttons text-center">
       <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 mb10 dash-btn dash-info">
         <div class="panel-body">
-                <span>
-                    <span>L2</span><br/>
-                    <span>{{ menu.version }}</span>
-                </span>
+          <span>
+            <span>L2</span><br />
+            <span>{{ menu.version }}</span>
+          </span>
         </div>
       </div>
       <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 mb10 dash-btn dash-info" v-if="menu.region === '38'">
@@ -55,9 +55,9 @@
       </div>
       <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4 mb10 dash-btn dash-info" v-else-if="menu.region === 'DEMO'">
         <div class="panel-body">
-            <span>
-                <span>DEMO</span>
-            </span>
+          <span>
+            <span>DEMO</span>
+          </span>
         </div>
       </div>
     </div>
@@ -81,9 +81,7 @@ import { Menu, Button } from '@/types/menu';
       return this.menu.buttons.filter(b => !b.not_show_home && !b.hr);
     },
     fio_dep() {
-      return [this.user_data.fio, this.user_data.department && this.user_data.department.title]
-        .filter(Boolean)
-        .join(', ');
+      return [this.user_data?.fio, this.user_data?.department.title].filter(Boolean).join(', ');
     },
   },
 })
@@ -100,7 +98,7 @@ export default class MenuPage extends Vue {
 .groups-btns {
   padding: 0;
   margin-right: 0;
-  margin-left: 0
+  margin-left: 0;
 }
 
 .mb5 {
@@ -116,7 +114,7 @@ export default class MenuPage extends Vue {
 }
 
 .menu.row.dash-buttons {
-    margin-right: -2px;
-    margin-left: -2px;
+  margin-right: -2px;
+  margin-left: -2px;
 }
 </style>

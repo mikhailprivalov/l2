@@ -320,7 +320,6 @@ class Individual(models.Model):
         born_date = self.birthday
         return last_date.year - born_date.year - ((last_date.month, last_date.day) < (born_date.month, born_date.day))
 
-
     def age(self, iss=None, days_monthes_years=False):
         """
         Функция подсчета возраста

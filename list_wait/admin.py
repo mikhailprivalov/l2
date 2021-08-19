@@ -3,7 +3,7 @@ from .models import ListWait
 
 
 class ResListWait(admin.ModelAdmin):
-    raw_id_fields = ('client',)
+    autocomplete_fields = ('client',)
     list_display = ('client', 'exec_at', 'create_at', 'research')
     list_display_links = ('client', 'exec_at', 'create_at')
 

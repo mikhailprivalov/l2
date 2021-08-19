@@ -1,36 +1,68 @@
 <template>
-  <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%"
-         marginLeftRight="auto" margin-top>
+  <modal
+    ref="modal"
+    @close="hide_modal"
+    show-footer="true"
+    white-bg="true"
+    max-width="680px"
+    width="100%"
+    marginLeftRight="auto"
+    margin-top
+  >
     <span slot="header">Регистратура L2</span>
     <div slot="body" style="min-height: 200px" class="registry-body">
       <form autocomplete="off" class="row" onsubmit.prevent>
-        <input type="hidden" autocomplete="off"/>
+        <input type="hidden" autocomplete="off" />
         <div class="col-xs-6 col-form left">
           <div class="form-row">
             <div class="row-t">Фамилия</div>
-            <TypeAhead :delayTime="100" :getResponse="getResponse"
-                       :highlighting="highlighting" :limit="10"
-                       name="f"
-                       :minChars="1" :onHit="onHit('family')" :selectFirst="true" maxlength="36"
-                       ref="f" src="/api/autocomplete?value=:keyword&type=family" v-model="card.family"
+            <TypeAhead
+              :delayTime="100"
+              :getResponse="getResponse"
+              :highlighting="highlighting"
+              :limit="10"
+              name="f"
+              :minChars="1"
+              :onHit="onHit('family')"
+              :selectFirst="true"
+              maxlength="36"
+              ref="f"
+              src="/api/autocomplete?value=:keyword&type=family"
+              v-model="card.family"
             />
           </div>
           <div class="form-row">
             <div class="row-t">Имя</div>
-            <TypeAhead :delayTime="100" :getResponse="getResponse" :highlighting="highlighting"
-                       :limit="10"
-                       name="n"
-                       :minChars="1" :onHit="onHit('name')" :selectFirst="true" maxlength="36"
-                       ref="n" src="/api/autocomplete?value=:keyword&type=name" v-model="card.name"
+            <TypeAhead
+              :delayTime="100"
+              :getResponse="getResponse"
+              :highlighting="highlighting"
+              :limit="10"
+              name="n"
+              :minChars="1"
+              :onHit="onHit('name')"
+              :selectFirst="true"
+              maxlength="36"
+              ref="n"
+              src="/api/autocomplete?value=:keyword&type=name"
+              v-model="card.name"
             />
           </div>
           <div class="form-row">
             <div class="row-t">Отчество</div>
-            <TypeAhead :delayTime="100" :getResponse="getResponse"
-                       :highlighting="highlighting" :limit="10"
-                       name="pn"
-                       :minChars="1" :onHit="onHit('patronymic')" :selectFirst="true" maxlength="36"
-                       ref="pn" src="/api/autocomplete?value=:keyword&type=patronymic" v-model="card.patronymic"
+            <TypeAhead
+              :delayTime="100"
+              :getResponse="getResponse"
+              :highlighting="highlighting"
+              :limit="10"
+              name="pn"
+              :minChars="1"
+              :onHit="onHit('patronymic')"
+              :selectFirst="true"
+              maxlength="36"
+              ref="pn"
+              src="/api/autocomplete?value=:keyword&type=patronymic"
+              v-model="card.patronymic"
             />
           </div>
         </div>
@@ -43,19 +75,19 @@
           </div>
           <div class="form-row">
             <div class="row-t">Дата рождения</div>
-            <input class="form-control" type="date" v-model="card.birthday">
+            <input class="form-control" type="date" v-model="card.birthday" />
           </div>
           <div class="form-row">
             <div class="row-t">Пол</div>
-            <radio-field v-model="card.sex" :variants="GENDERS" fullWidth/>
+            <radio-field v-model="card.sex" :variants="GENDERS" fullWidth />
           </div>
         </div>
       </form>
       <div class="row" v-if="card_pk < 0">
         <div class="col-xs-6">
           <label class="info-row" style="cursor: pointer">
-            <input :checked="card.new_individual || individuals.length === 0" @click="toggleNewIndividual"
-                   type="checkbox"/> – новое физлицо
+            <input :checked="card.new_individual || individuals.length === 0" @click="toggleNewIndividual" type="checkbox" /> –
+            новое физлицо
           </label>
         </div>
         <div class="col-xs-6">
@@ -70,43 +102,47 @@
             : {{ individuals.length }}
           </div>
         </div>
-        <div class="col-xs-12"
-             v-if="!card.new_individual && individuals.map(i => i.l2_cards.length).reduce((a, b) => a + b, 0) > 0">
+        <div
+          class="col-xs-12"
+          v-if="!card.new_individual && individuals.map(i => i.l2_cards.length).reduce((a, b) => a + b, 0) > 0"
+        >
           <div class="alert-warning" style="padding: 10px">
-            <strong>Внимание:</strong> найдены существующие карты или созданы автоматически.<br/>
-            Выберите подходящую, нажав на номер карты или продолжайте создание новой при необходимости
-            или не совпадении физ. лиц
+            <strong>Внимание:</strong> найдены существующие карты или созданы автоматически.<br />
+            Выберите подходящую, нажав на номер карты или продолжайте создание новой при необходимости или не совпадении физ. лиц
           </div>
         </div>
         <div class="col-xs-12" v-if="!card.new_individual && individuals.length > 0">
           <div @click="select_individual(i.pk)" class="info-row individual" v-for="i in individuals" :key="i.pk">
-            <input :checked="i.pk === card.individual" type="checkbox"/> {{ i.fio }}<br/>
+            <input :checked="i.pk === card.individual" type="checkbox" /> {{ i.fio }}<br />
             <table class="table table-bordered table-condensed">
               <thead>
-              <tr>
-                <th>Тип</th>
-                <th>Серия</th>
-                <th>Номер</th>
-              </tr>
+                <tr>
+                  <th>Тип</th>
+                  <th>Серия</th>
+                  <th>Номер</th>
+                </tr>
               </thead>
               <tbody>
-              <tr v-for="d in i.docs" :key="`${d.type_title}_${d.serial}_${d.number}`">
-                <td>{{ d.type_title }}</td>
-                <td>{{ d.serial }}</td>
-                <td>{{ d.number }}</td>
-              </tr>
-              <tr v-if="i.l2_cards.length > 0">
-                <th>Активные карты L2</th>
-                <td colspan="2">
-                  <div v-for="c in i.l2_cards" :key="c.pk">
-                    <a :href="`/ui/directions?card_pk=${c.pk}&base_pk=${base_pk}&open_edit=true`"
-                       class="a-under c-pointer"
-                       title="Открыть существующую карту" v-tippy>
-                      <strong>{{ c.number }}</strong>
-                    </a>
-                  </div>
-                </td>
-              </tr>
+                <tr v-for="d in i.docs" :key="`${d.type_title}_${d.serial}_${d.number}`">
+                  <td>{{ d.type_title }}</td>
+                  <td>{{ d.serial }}</td>
+                  <td>{{ d.number }}</td>
+                </tr>
+                <tr v-if="i.l2_cards.length > 0">
+                  <th>Активные карты L2</th>
+                  <td colspan="2">
+                    <div v-for="c in i.l2_cards" :key="c.pk">
+                      <a
+                        :href="`/ui/directions?card_pk=${c.pk}&base_pk=${base_pk}&open_edit=true`"
+                        class="a-under c-pointer"
+                        title="Открыть существующую карту"
+                        v-tippy
+                      >
+                        <strong>{{ c.number }}</strong>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -121,7 +157,7 @@
             <a href="#" class="a-under" @click.prevent="sync_tfoms" tabindex="-1">сверка</a>
           </div>
         </div>
-        <div class="text-right" :class="{'col-xs-6': l2_tfoms, 'col-xs-12': !l2_tfoms}">
+        <div class="text-right" :class="{ 'col-xs-6': l2_tfoms, 'col-xs-12': !l2_tfoms }">
           <div class="info-row">
             Связь с РМИС – {{ card.has_rmis_card ? 'ЕСТЬ' : 'НЕТ' }}
             <strong v-if="card.has_rmis_card">{{ card.rmis_uid }}</strong>
@@ -139,20 +175,36 @@
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
               <div class="row-t">Адрес регистрации</div>
-              <TypeAhead :delayTime="400" :getResponse="getResponse"
-                         :highlighting="highlighting" :limit="10"
-                         name="ar"
-                         :minChars="4" :onHit="onHit('main_address', true)" :selectFirst="true" maxlength="110"
-                         ref="ar" :src="`/api/autocomplete?value=:keyword&type=fias`" v-model="card.main_address"
+              <TypeAhead
+                :delayTime="400"
+                :getResponse="getResponse"
+                :highlighting="highlighting"
+                :limit="10"
+                name="ar"
+                :minChars="4"
+                :onHit="onHit('main_address', true)"
+                :selectFirst="true"
+                maxlength="110"
+                ref="ar"
+                :src="`/api/autocomplete?value=:keyword&type=fias`"
+                v-model="card.main_address"
               />
             </div>
             <div class="form-row sm-f">
               <div class="row-t">Адрес проживания</div>
-              <TypeAhead :delayTime="400" :getResponse="getResponse"
-                         :highlighting="highlighting" :limit="10"
-                         name="af"
-                         :minChars="4" :onHit="onHit('fact_address', true)" :selectFirst="true" maxlength="110"
-                         ref="af" :src="`/api/autocomplete?value=:keyword&type=fias`" v-model="card.fact_address"
+              <TypeAhead
+                :delayTime="400"
+                :getResponse="getResponse"
+                :highlighting="highlighting"
+                :limit="10"
+                name="af"
+                :minChars="4"
+                :onHit="onHit('fact_address', true)"
+                :selectFirst="true"
+                maxlength="110"
+                ref="af"
+                :src="`/api/autocomplete?value=:keyword&type=fias`"
+                v-model="card.fact_address"
               />
             </div>
             <div class="form-row sm-f">
@@ -175,22 +227,39 @@
               <div class="col-xs-6" style="padding-right: 0">
                 <div class="form-row nbt-i sm-f">
                   <div class="row-t" style="display: flex;width: 45%;flex: 0 45%;">
-                    <input type="checkbox" v-model="card.custom_workplace" title="Ручной ввод названия"
-                           v-tippy="{ placement : 'bottom', arrow: true }"
-                           style="height: auto;flex: 0 23px;"/>
+                    <input
+                      type="checkbox"
+                      v-model="card.custom_workplace"
+                      title="Ручной ввод названия"
+                      v-tippy="{ placement: 'bottom', arrow: true }"
+                      style="height: auto;flex: 0 23px;"
+                    />
                     Место работы
                   </div>
-                  <TypeAhead v-if="card.custom_workplace"
-                             :delayTime="100" :getResponse="getResponse"
-                             :highlighting="highlighting" :limit="10"
-                             :minChars="1" :onHit="onHit('work_place')" :selectFirst="true" maxlength="128"
-                             ref="wp" src="/api/autocomplete?value=:keyword&type=work_place" v-model="card.work_place"
+                  <TypeAhead
+                    v-if="card.custom_workplace"
+                    :delayTime="100"
+                    :getResponse="getResponse"
+                    :highlighting="highlighting"
+                    :limit="10"
+                    :minChars="1"
+                    :onHit="onHit('work_place')"
+                    :selectFirst="true"
+                    maxlength="128"
+                    ref="wp"
+                    src="/api/autocomplete?value=:keyword&type=work_place"
+                    v-model="card.work_place"
                   />
                   <div style="width: 55%;" v-else>
-                    <treeselect class="treeselect-noborder treeselect-26px"
-                                :multiple="false" :disable-branch-nodes="true" :append-to-body="true" :zIndex="99999"
-                                :options="companiesTreeselect(card.av_companies)" placeholder="НЕ ВЫБРАНО"
-                                v-model="card.work_place_db"
+                    <treeselect
+                      class="treeselect-noborder treeselect-26px"
+                      :multiple="false"
+                      :disable-branch-nodes="true"
+                      :append-to-body="true"
+                      :zIndex="99999"
+                      :options="companiesTreeselect(card.av_companies)"
+                      placeholder="НЕ ВЫБРАНО"
+                      v-model="card.work_place_db"
                     />
                   </div>
                 </div>
@@ -198,142 +267,164 @@
               <div class="col-xs-6" style="padding-left: 0">
                 <div class="form-row nbt-i sm-f">
                   <div class="row-t">Должность</div>
-                  <TypeAhead :delayTime="100" :getResponse="getResponse"
-                             :highlighting="highlighting" :limit="10"
-                             :minChars="1" :onHit="onHit('work_position')" :selectFirst="true" maxlength="128"
-                             ref="wpos" src="/api/autocomplete?value=:keyword&type=work_position"
-                             v-model="card.work_position"
+                  <TypeAhead
+                    :delayTime="100"
+                    :getResponse="getResponse"
+                    :highlighting="highlighting"
+                    :limit="10"
+                    :minChars="1"
+                    :onHit="onHit('work_position')"
+                    :selectFirst="true"
+                    maxlength="128"
+                    ref="wpos"
+                    src="/api/autocomplete?value=:keyword&type=work_position"
+                    v-model="card.work_position"
                   />
                 </div>
               </div>
             </div>
             <div class="form-row sm-f">
               <div class="row-t">Основной диагноз</div>
-              <TypeAhead :delayTime="100" :getResponse="getResponse"
-                         :highlighting="highlighting" :limit="10"
-                         :minChars="1" :onHit="onHit('main_diagnosis')" :selectFirst="true" maxlength="36"
-                         ref="md" src="/api/autocomplete?value=:keyword&type=main_diagnosis"
-                         v-model="card.main_diagnosis"
+              <TypeAhead
+                :delayTime="100"
+                :getResponse="getResponse"
+                :highlighting="highlighting"
+                :limit="10"
+                :minChars="1"
+                :onHit="onHit('main_diagnosis')"
+                :selectFirst="true"
+                maxlength="36"
+                ref="md"
+                src="/api/autocomplete?value=:keyword&type=main_diagnosis"
+                v-model="card.main_diagnosis"
               />
             </div>
           </div>
         </div>
         <table class="table table-bordered table-condensed table-sm-pd">
           <colgroup>
-            <col width="70"/>
-            <col/>
-            <col/>
-            <col/>
-            <col/>
-            <col/>
+            <col width="70" />
+            <col />
+            <col />
+            <col />
+            <col />
+            <col />
           </colgroup>
           <thead>
-          <tr>
-            <th>ПРИОР.</th>
-            <th>Тип документа</th>
-            <th>Серия</th>
-            <th>Номер</th>
-            <th>Действие</th>
-            <th></th>
-          </tr>
+            <tr>
+              <th>ПРИОР.</th>
+              <th>Тип документа</th>
+              <th>Серия</th>
+              <th>Номер</th>
+              <th>Действие</th>
+              <th></th>
+            </tr>
           </thead>
           <tbody>
-          <tr v-for="d in card.docs" :title="d.who_give" :key="d.id"
-              :class="{nonPrior: card.main_docs[d.document_type] !== d.id,
-            prior: card.main_docs[d.document_type] === d.id}">
-            <td>
-              <input type="radio" :name="`card-doc${d.document_type}`"
-                     @click="update_cdu(d.id)"
-                     :checked="card.main_docs[d.document_type] === d.id"/>
-            </td>
-            <td>
-              {{ d.type_title }}
-            </td>
-            <td>
-              {{ d.serial }}
-            </td>
-            <td>
-              {{ d.number }}
-            </td>
-            <td>
-              {{ d.is_active ? 'действ.' : 'не действителен' }}
-            </td>
-            <td>
-              <a @click.prevent="edit_document(d.id)" href="#" v-if="!d.from_rmis"><i class="fa fa-pencil"></i></a>
-              <span v-else>импорт</span>
-            </td>
-          </tr>
-          <tr>
-            <td class="text-center" colspan="6">
-              <a @click.prevent="edit_document(-1)" href="#">добавить документ</a>
-            </td>
-          </tr>
+            <tr
+              v-for="d in card.docs"
+              :title="d.who_give"
+              :key="d.id"
+              :class="{ nonPrior: card.main_docs[d.document_type] !== d.id, prior: card.main_docs[d.document_type] === d.id }"
+            >
+              <td>
+                <input
+                  type="radio"
+                  :name="`card-doc${d.document_type}`"
+                  @click="update_cdu(d.id)"
+                  :checked="card.main_docs[d.document_type] === d.id"
+                />
+              </td>
+              <td>
+                {{ d.type_title }}
+              </td>
+              <td>
+                {{ d.serial }}
+              </td>
+              <td>
+                {{ d.number }}
+              </td>
+              <td>
+                {{ d.is_active ? 'действ.' : 'не действителен' }}
+              </td>
+              <td>
+                <a @click.prevent="edit_document(d.id)" href="#" v-if="!d.from_rmis"><i class="fa fa-pencil"></i></a>
+                <span v-else>импорт</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center" colspan="6">
+                <a @click.prevent="edit_document(-1)" href="#">добавить документ</a>
+              </td>
+            </tr>
           </tbody>
         </table>
         <table class="table table-bordered table-condensed table-sm-pd">
           <colgroup>
-            <col width="70"/>
-            <col width="120"/>
-            <col/>
-            <col width="150"/>
-            <col width="40"/>
+            <col width="70" />
+            <col width="120" />
+            <col />
+            <col width="150" />
+            <col width="40" />
           </colgroup>
           <thead>
-          <tr>
-            <th>ВЫБОР</th>
-            <th>Статус</th>
-            <th>ФИО</th>
-            <th>Докум.-основание</th>
-            <th></th>
-          </tr>
+            <tr>
+              <th>ВЫБОР</th>
+              <th>Статус</th>
+              <th>ФИО</th>
+              <th>Докум.-основание</th>
+              <th></th>
+            </tr>
           </thead>
           <tbody>
-          <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
-          <tr v-for="t in card.agent_types" v-if="!card.excluded_types.includes(t.key)" :key="t.key"
-              :class="{nonPrior: card.who_is_agent !== t.key, prior: card.who_is_agent === t.key}">
-            <td>
-              <input type="radio" name="agent"
-                     @click="update_wia(t.key)" v-if="!card.excluded_types.includes(t.key)"
-                     :checked="card.who_is_agent === t.key"/>
-            </td>
-            <td>
-              {{ t.title }}
-            </td>
-            <td :colspan="agent_need_doc(t.key) ? 1 : 2">{{ card[t.key] }}</td>
-            <td v-if="agent_need_doc(t.key)">{{ card[`${t.key}_doc_auth`] }}</td>
-            <td>
-              <a @click.prevent="edit_agent(t.key)" href="#"><i class="fa fa-pencil"></i></a>
-            </td>
-          </tr>
-          <tr :class="{nonPrior: card.who_is_agent !== '',
-            prior: card.who_is_agent === ''}">
-            <td>
-              <input type="radio" name="agent"
-                     @click="update_wia('')"
-                     :checked="card.who_is_agent === ''"/>
-            </td>
-            <td colspan="4">НЕ ВЫБРАНО</td>
-          </tr>
-          <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
-          <tr v-for="t in card.agent_types" :key="t.key" class="prior" v-if="card.excluded_types.includes(t.key)">
-            <td>
-            </td>
-            <td>
-              {{ t.title }}
-            </td>
-            <td :colspan="agent_need_doc(t.key) ? 1 : 2">{{ card[t.key] }}</td>
-            <td v-if="agent_need_doc(t.key)">{{ card[`${t.key}_doc_auth`] }}</td>
-            <td>
-              <a @click.prevent="edit_agent(t.key)" href="#"><i class="fa fa-pencil"></i></a>
-            </td>
-          </tr>
+            <tr
+              v-for="t in agent_types_excluded"
+              :key="t.key"
+              :class="{ nonPrior: card.who_is_agent !== t.key, prior: card.who_is_agent === t.key }"
+            >
+              <td>
+                <input
+                  type="radio"
+                  name="agent"
+                  @click="update_wia(t.key)"
+                  v-if="!card.excluded_types.includes(t.key)"
+                  :checked="card.who_is_agent === t.key"
+                />
+              </td>
+              <td>
+                {{ t.title }}
+              </td>
+              <td :colspan="agent_need_doc(t.key) ? 1 : 2">{{ card[t.key] }}</td>
+              <td v-if="agent_need_doc(t.key)">{{ card[`${t.key}_doc_auth`] }}</td>
+              <td>
+                <a @click.prevent="edit_agent(t.key)" href="#"><i class="fa fa-pencil"></i></a>
+              </td>
+            </tr>
+            <tr :class="{ nonPrior: card.who_is_agent !== '', prior: card.who_is_agent === '' }">
+              <td>
+                <input type="radio" name="agent" @click="update_wia('')" :checked="card.who_is_agent === ''" />
+              </td>
+              <td colspan="4">НЕ ВЫБРАНО</td>
+            </tr>
+            <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
+            <tr v-for="t in card.agent_types" :key="t.key" class="prior" v-if="card.excluded_types.includes(t.key)">
+              <td></td>
+              <td>
+                {{ t.title }}
+              </td>
+              <td :colspan="agent_need_doc(t.key) ? 1 : 2">{{ card[t.key] }}</td>
+              <td v-if="agent_need_doc(t.key)">{{ card[`${t.key}_doc_auth`] }}</td>
+              <td>
+                <a @click.prevent="edit_agent(t.key)" href="#"><i class="fa fa-pencil"></i></a>
+              </td>
+            </tr>
           </tbody>
         </table>
         <div class="row" style="margin-bottom: 10px">
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
               <div class="row-t">Телефон</div>
-              <input class="form-control" v-model="card.phone" v-mask="'8 999 9999999'">
+              <input class="form-control" v-model="card.phone" v-mask="'8 999 9999999'" />
             </div>
           </div>
         </div>
@@ -341,7 +432,7 @@
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
               <div class="row-t">Номер карты ТФОМС</div>
-              <input class="form-control" v-model="card.number_poli" maxlength="20">
+              <input class="form-control" v-model="card.number_poli" maxlength="20" />
             </div>
           </div>
         </div>
@@ -349,10 +440,18 @@
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
               <div class="row-t">Фактор вредности</div>
-              <TypeAhead :delayTime="100" :getResponse="getResponse"
-                         :highlighting="highlighting" :limit="10"
-                         :minChars="1" :onHit="onHit('harmful')" :selectFirst="true" maxlength="255"
-                         ref="n" src="/api/autocomplete?value=:keyword&type=harmful" v-model="card.harmful"
+              <TypeAhead
+                :delayTime="100"
+                :getResponse="getResponse"
+                :highlighting="highlighting"
+                :limit="10"
+                :minChars="1"
+                :onHit="onHit('harmful')"
+                :selectFirst="true"
+                maxlength="255"
+                ref="n"
+                src="/api/autocomplete?value=:keyword&type=harmful"
+                v-model="card.harmful"
               />
             </div>
           </div>
@@ -369,19 +468,27 @@
           <div class="col-xs-6" style="padding-left: 0">
             <div class="form-row sm-f" style="height: 28px;">
               <div class="input-group" style="flex: 1 100%;" v-if="card.medbookType === 'custom'">
-                <input type="number" class="form-control"
-                       maxlength="16"
-                       :max="medbook_auto_start - 1"
-                       min="1"
-                       v-model="card.medbookNumberCustom"
-                       :placeholder="`Введите номер книжки до ${medbook_auto_start}`">
-                <span class="input-group-btn"
-                      v-if="card.medbookNumberCustomOriginal && card.medbookNumberCustomOriginal !== card.medbookNumberCustom">
-                    <button class="btn row-t-btn" title="Вернуть предыдущий номер"
-                            @click="card.medbookNumberCustom = card.medbookNumberCustomOriginal"
-                            v-tippy="{ placement : 'bottom', arrow: true }">
-                        <i class="fas fa-undo"></i>
-                    </button>
+                <input
+                  type="number"
+                  class="form-control"
+                  maxlength="16"
+                  :max="medbook_auto_start - 1"
+                  min="1"
+                  v-model="card.medbookNumberCustom"
+                  :placeholder="`Введите номер книжки до ${medbook_auto_start}`"
+                />
+                <span
+                  class="input-group-btn"
+                  v-if="card.medbookNumberCustomOriginal && card.medbookNumberCustomOriginal !== card.medbookNumberCustom"
+                >
+                  <button
+                    class="btn row-t-btn"
+                    title="Вернуть предыдущий номер"
+                    @click="card.medbookNumberCustom = card.medbookNumberCustomOriginal"
+                    v-tippy="{ placement: 'bottom', arrow: true }"
+                  >
+                    <i class="fas fa-undo"></i>
+                  </button>
                 </span>
               </div>
               <div v-else-if="card.medbookType !== 'custom'" style="line-height: 26px;padding-left: 10px;">
@@ -402,11 +509,20 @@
               <i class="glyphicon glyphicon-arrow-right"></i>
             </button>
           </div>
-          <input type="text" class="form-control" placeholder="Введите номер карты" v-model="new_card_num">
+          <input type="text" class="form-control" placeholder="Введите номер карты" v-model="new_card_num" />
         </div>
       </div>
-      <modal v-if="document_to_edit > -2" ref="modalDocEdit" @close="hide_modal_doc_edit" show-footer="true"
-             white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+      <modal
+        v-if="document_to_edit > -2"
+        ref="modalDocEdit"
+        @close="hide_modal_doc_edit"
+        show-footer="true"
+        white-bg="true"
+        max-width="710px"
+        width="100%"
+        marginLeftRight="auto"
+        margin-top
+      >
         <span slot="header">
           Редактор документов (карта {{ card.number }} пациента {{ card.family }} {{ card.name }} {{ card.patronymic }})
         </span>
@@ -420,38 +536,48 @@
           </div>
           <div class="form-group" v-show="doc_edit_fields.serial">
             <label for="de-f2">Серия (при наличии):</label>
-            <input class="form-control" id="de-f2" v-model="document.serial">
+            <input class="form-control" id="de-f2" v-model="document.serial" />
           </div>
           <div class="form-group" v-show="is_snils">
             <label for="de-f3">Номер СНИЛС:</label>
-            <input class="form-control" id="de-f3" v-model="document.number" v-if="is_snils"
-                   v-mask="doc_edit_fields.masks.number">
+            <input
+              class="form-control"
+              id="de-f3"
+              v-model="document.number"
+              v-if="is_snils"
+              v-mask="doc_edit_fields.masks.number"
+            />
           </div>
           <div class="form-group" v-show="!is_snils">
             <label for="de-f3-2">Номер:</label>
-            <input class="form-control" id="de-f3-2" v-model="document.number">
+            <input class="form-control" id="de-f3-2" v-model="document.number" />
           </div>
           <div class="form-group" v-show="doc_edit_fields.dates">
             <label for="de-f4">Дата выдачи:</label>
-            <input class="form-control" type="date" id="de-f4" v-model="document.date_start">
+            <input class="form-control" type="date" id="de-f4" v-model="document.date_start" />
           </div>
           <div class="form-group" v-show="doc_edit_fields.dates">
             <label for="de-f5">Дата окончания:</label>
-            <input class="form-control" type="date" id="de-f5" v-model="document.date_end">
+            <input class="form-control" type="date" id="de-f5" v-model="document.date_end" />
           </div>
           <div class="form-group str" v-show="doc_edit_fields.who_give">
             <label>Выдал:</label>
-            <TypeAhead :delayTime="100" :getResponse="getResponse"
-                       :highlighting="highlighting" :limit="10"
-                       :minChars="1" :onHit="onHitDocWhoGive" :selectFirst="true" maxlength="128"
-                       ref="dwg" :src="`/api/autocomplete?value=:keyword&type=who_give:` + document.document_type"
-                       v-model="document.who_give"
+            <TypeAhead
+              :delayTime="100"
+              :getResponse="getResponse"
+              :highlighting="highlighting"
+              :limit="10"
+              :minChars="1"
+              :onHit="onHitDocWhoGive"
+              :selectFirst="true"
+              maxlength="128"
+              ref="dwg"
+              :src="`/api/autocomplete?value=:keyword&type=who_give:` + document.document_type"
+              v-model="document.who_give"
             />
           </div>
           <div class="checkbox" style="padding-left: 15px;">
-            <label>
-              <input type="checkbox" v-model="document.is_active"> действителен
-            </label>
+            <label> <input type="checkbox" v-model="document.is_active" /> действителен </label>
           </div>
         </div>
         <div slot="footer">
@@ -469,26 +595,34 @@
           </div>
         </div>
       </modal>
-      <modal v-if="agent_to_edit" ref="modalAgentEdit" @close="hide_modal_agent_edit" show-footer="true" white-bg="true"
-             max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+      <modal
+        v-if="agent_to_edit"
+        ref="modalAgentEdit"
+        @close="hide_modal_agent_edit"
+        show-footer="true"
+        white-bg="true"
+        max-width="710px"
+        width="100%"
+        marginLeftRight="auto"
+        margin-top
+      >
         <span slot="header">
-          Редактор – {{ agent_type_by_key(agent_to_edit) }}&nbsp;
-          (карта {{ card.number }} пациента {{ card.family }} {{ card.name }} {{ card.patronymic }})
+          Редактор – {{ agent_type_by_key(agent_to_edit) }}&nbsp; (карта {{ card.number }} пациента {{ card.family }}
+          {{ card.name }} {{ card.patronymic }})
         </span>
         <div slot="body" style="min-height: 140px" class="registry-body">
           <div v-show="!agent_clear">
             <div style="height: 110px">
-              <patient-small-picker v-model="agent_card_selected" :base_pk="base_pk"/>
+              <patient-small-picker v-model="agent_card_selected" :base_pk="base_pk" />
             </div>
             <div class="form-group" v-if="agent_need_doc(agent_to_edit)" style="padding: 10px">
               <label for="ae-f2">Документ-основание:</label>
-              <input class="form-control" id="ae-f2" v-model="agent_doc">
+              <input class="form-control" id="ae-f2" v-model="agent_doc" />
             </div>
           </div>
           <div class="checkbox" style="padding-left: 35px;padding-top: 10px" v-if="!!card[agent_to_edit]">
             <label>
-              <input type="checkbox" v-model="agent_clear"> очистить представителя
-              ({{ agent_type_by_key(agent_to_edit) }})
+              <input type="checkbox" v-model="agent_clear" /> очистить представителя ({{ agent_type_by_key(agent_to_edit) }})
             </label>
           </div>
         </div>
@@ -500,8 +634,7 @@
               </button>
             </div>
             <div class="col-xs-4">
-              <button :disabled="!valid_agent" @click="save_agent()" class="btn btn-primary-nb btn-blue-nb"
-                      type="button">
+              <button :disabled="!valid_agent" @click="save_agent()" class="btn btn-primary-nb btn-blue-nb" type="button">
                 Сохранить
               </button>
             </div>
@@ -513,8 +646,7 @@
       <div class="row">
         <div class="col-xs-3">
           <div class="dropup" v-if="card_pk >= 0">
-            <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-                    style="width: 100%">
+            <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown" style="width: 100%">
               Печатн. формы <span class="caret"></span>
             </button>
             <ul class="dropdown-menu multi-level">
@@ -555,18 +687,17 @@ import TypeAhead from 'vue2-typeahead';
 import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import _ from 'lodash';
 import {
   normalizeNamePart, swapLayouts, validateSnils, valuesToString,
 } from '@/utils';
 import { GENDERS } from '@/constants';
-import api from '@/api';
-import _ from 'lodash';
-import patientsPoint from '../api/patients-point';
-import Modal from '../ui-cards/Modal.vue';
-import forms from '../forms';
-import RadioField from '../fields/RadioField.vue';
-import * as actions from '../store/action-types';
-import PatientSmallPicker from '../ui-cards/PatientSmallPicker.vue';
+import patientsPoint from '@/api/patients-point';
+import Modal from '@/ui-cards/Modal.vue';
+import forms from '@/forms';
+import RadioField from '@/fields/RadioField.vue';
+import * as actions from '@/store/action-types';
+import PatientSmallPicker from '@/ui-cards/PatientSmallPicker.vue';
 
 const MEDBOOK_TYPES = [
   { type: 'none', title: 'нет' },
@@ -577,7 +708,11 @@ const MEDBOOK_TYPES = [
 export default {
   name: 'l2-card-create',
   components: {
-    Modal, TypeAhead, PatientSmallPicker, RadioField, Treeselect,
+    Modal,
+    TypeAhead,
+    PatientSmallPicker,
+    RadioField,
+    Treeselect,
   },
   props: {
     card_pk: {
@@ -694,7 +829,7 @@ export default {
     doc_edit_type_title() {
       const t = this.document.document_type;
       if (!t) return '';
-      return (this.card.doc_types.find((x) => x.pk === t) || {}).title || '';
+      return (this.card.doc_types.find(x => x.pk === t) || {}).title || '';
     },
     is_snils() {
       const tt = this.doc_edit_type_title;
@@ -733,8 +868,7 @@ export default {
       if (!this.card.family || !this.card.name || !this.card.birthday) {
         return false;
       }
-      return !!(this.card.family.length > 0
-        && this.card.name.length > 0 && this.card.birthday.match(/\d{4}-\d{2}-\d{2}/gm));
+      return !!(this.card.family.length > 0 && this.card.name.length > 0 && this.card.birthday.match(/\d{4}-\d{2}-\d{2}/gm));
     },
     birthday() {
       return this.card.birthday;
@@ -754,6 +888,9 @@ export default {
     },
     can_change_owner_directions() {
       return (this.$store.getters.user_data.groups || []).includes('Управление иерархией истории');
+    },
+    agent_types_excluded() {
+      return this.card.agent_types.filter(t => !this.card.excluded_types.includes(t.key));
     },
   },
   watch: {
@@ -801,24 +938,26 @@ export default {
   },
   methods: {
     makeForms(formsBase) {
-      return formsBase.map(f => {
-        if (f.isGroup) {
+      return formsBase
+        .map(f => {
+          if (f.isGroup) {
+            return {
+              ...f,
+              forms: this.makeForms(f.forms),
+            };
+          }
           return {
             ...f,
-            forms: this.makeForms(f.forms),
+            url: valuesToString(f.url, {
+              card: this.card_pk,
+              individual: this.card.individual,
+            }),
           };
-        }
-        return {
-          ...f,
-          url: valuesToString(f.url, {
-            card: this.card_pk,
-            individual: this.card.individual,
-          }),
-        };
-      }).filter(f => !f.not_internal);
+        })
+        .filter(f => !f.not_internal);
     },
     companiesTreeselect(companies) {
-      return companies.map((c) => ({ id: c.id, label: c.short_title || c.title }));
+      return companies.map(c => ({ id: c.id, label: c.short_title || c.title }));
     },
     agent_type_by_key(key) {
       for (const t of this.card.agent_types) {
@@ -851,16 +990,38 @@ export default {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const data = await patientsPoint.sendCard(this.card,
-        ['family', 'name', 'patronymic', 'birthday', 'sex', 'new_individual', 'base_pk',
-          'fact_address', 'main_address', 'work_place', 'main_diagnosis', 'work_position', 'work_place_db',
-          'custom_workplace', 'district', 'phone', 'number_poli', 'harmful',
-          'medbookNumber', 'medbookType', 'medbookNumberCustom'], {
+      const data = await patientsPoint.sendCard(
+        this.card,
+        [
+          'family',
+          'name',
+          'patronymic',
+          'birthday',
+          'sex',
+          'new_individual',
+          'base_pk',
+          'fact_address',
+          'main_address',
+          'work_place',
+          'main_diagnosis',
+          'work_position',
+          'work_place_db',
+          'custom_workplace',
+          'district',
+          'phone',
+          'number_poli',
+          'harmful',
+          'medbookNumber',
+          'medbookType',
+          'medbookNumberCustom',
+        ],
+        {
           card_pk: this.card_pk,
           individual_pk: this.card.individual,
           gin_district: this.card.ginekolog_district,
           base_pk: this.base_pk,
-        });
+        },
+      );
       if (data.result !== 'ok') {
         this.$root.$emit('msg', 'error', 'Сохранение прошло не удачно');
         await this.$store.dispatch(actions.DEC_LOADING);
@@ -940,7 +1101,10 @@ export default {
             window.$('input', t.$el).focus();
           } else {
             const index = window.$('input', this.$el).index(window.$('input', t.$el)) + 1;
-            window.$('input', this.$el).eq(index).focus();
+            window
+              .$('input', this.$el)
+              .eq(index)
+              .focus();
           }
         }
         if (!item) {
@@ -956,27 +1120,32 @@ export default {
         return Promise.resolve({});
       }
       this.$store.dispatch(actions.INC_LOADING);
-      return patientsPoint.getCard(this, 'card_pk').then((data) => {
-        this.card = data;
-      }).finally(() => {
-        this.$store.dispatch(actions.DEC_LOADING);
-        this.loaded = true;
-      });
+      return patientsPoint
+        .getCard(this, 'card_pk')
+        .then(data => {
+          this.card = data;
+        })
+        .finally(() => {
+          this.$store.dispatch(actions.DEC_LOADING);
+          this.loaded = true;
+        });
     },
     individuals_search: _.debounce(function () {
       this.individuals_search_main();
     }, 500),
     async individuals_search_main() {
-      if (!this.valid || this.card_pk !== -1
-        || this.card.family === '' || this.card.name === '' || this.card.new_individual) {
+      if (!this.valid || this.card_pk !== -1 || this.card.family === '' || this.card.name === '' || this.card.new_individual) {
         return;
       }
 
       this.loading = true;
 
-      const {
-        result, forced_gender,
-      } = await patientsPoint.individualsSearch(this.card, ['family', 'name', 'patronymic', 'birthday']);
+      const { result, forced_gender } = await patientsPoint.individualsSearch(this.card, [
+        'family',
+        'name',
+        'patronymic',
+        'birthday',
+      ]);
 
       this.individuals = result;
       this.card.individual = result.length === 0 ? -1 : result[0].pk;
@@ -1005,7 +1174,7 @@ export default {
         date_start: null,
         date_end: null,
         who_give: null,
-        ...(this.card.docs.find((x) => x.id === pk) || {}),
+        ...(this.card.docs.find(x => x.id === pk) || {}),
       };
       this.document_to_edit = pk;
     },
@@ -1026,14 +1195,12 @@ export default {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      await patientsPoint.editDoc(this.document,
-        ['serial', 'number', 'is_active', 'date_start', 'date_end', 'who_give'],
-        {
-          card_pk: this.card_pk,
-          pk: this.document_to_edit,
-          type: this.document.document_type,
-          individual_pk: this.card.individual,
-        });
+      await patientsPoint.editDoc(this.document, ['serial', 'number', 'is_active', 'date_start', 'date_end', 'who_give'], {
+        card_pk: this.card_pk,
+        pk: this.document_to_edit,
+        type: this.document.document_type,
+        individual_pk: this.card.individual,
+      });
       await this.load_data();
       this.document = {
         number: '',
@@ -1058,7 +1225,7 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async change_directions_owner() {
-      const { ok, individual_fio } = await api('patients/is-card', {
+      const { ok, individual_fio } = await this.$api('patients/is-card', {
         number: this.new_card_num,
       });
       if (!ok) {
@@ -1066,14 +1233,16 @@ export default {
         return;
       }
       try {
-        // eslint-disable-next-line max-len
-        await this.$dialog.confirm(`Перенести все услуги из карты № ${this.card.number}-${this.card.family} ${this.card.name} ${this.card.patronymic}) в карту № ${this.new_card_num} -${individual_fio} ?`);
+        await this.$dialog.confirm(
+          // eslint-disable-next-line max-len
+          `Перенести все услуги из карты № ${this.card.number}-${this.card.family} ${this.card.name} ${this.card.patronymic}) в карту № ${this.new_card_num} -${individual_fio} ?`,
+        );
       } catch (e) {
         // pass
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const data = await api('directions/change-owner-direction', {
+      const data = await this.$api('directions/change-owner-direction', {
         old_card_number: this.card.number,
         new_card_number: this.new_card_num,
       });
@@ -1087,7 +1256,7 @@ export default {
 
 <style scoped lang="scss">
 .nonPrior {
-  opacity: .7;
+  opacity: 0.7;
 
   &:hover {
     opacity: 1;
@@ -1095,7 +1264,7 @@ export default {
 }
 
 .prior {
-  background-color: rgba(#000, .05);
+  background-color: rgba(#000, 0.05);
 }
 
 .modal-mask {
@@ -1126,7 +1295,7 @@ export default {
   cursor: pointer;
 
   &:hover {
-    background-color: rgba(0, 0, 0, .15);
+    background-color: rgba(0, 0, 0, 0.15);
   }
 }
 
@@ -1140,7 +1309,9 @@ export default {
 }
 
 .c-pointer {
-  &, & strong, &:hover {
+  &,
+  & strong,
+  &:hover {
     cursor: pointer !important;
   }
 }

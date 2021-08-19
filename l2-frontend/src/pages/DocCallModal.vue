@@ -1,6 +1,15 @@
 <template>
-  <modal ref="modal" @close="hide" show-footer="true" white-bg="true"
-         max-width="1024px" width="100%" marginLeftRight="auto" margin-top class="an">
+  <modal
+    ref="modal"
+    @close="hide"
+    show-footer="true"
+    white-bg="true"
+    max-width="1024px"
+    width="100%"
+    marginLeftRight="auto"
+    margin-top
+    class="an"
+  >
     <span slot="header">Управление заявкой</span>
     <div slot="body" class="an-body">
       <div class="an-sidebar wide">
@@ -15,7 +24,9 @@
             {{ r.createdAt }}&nbsp;{{ r.createdAtTime }}
           </div>
           <div class="an-sidebar-content-row">
-            <div>{{ r.card }}, <strong>{{ r.phone }}</strong></div>
+            <div>
+              {{ r.card }}, <strong>{{ r.phone }}</strong>
+            </div>
           </div>
           <div class="an-sidebar-content-row">
             <div>{{ r.address }}</div>
@@ -61,12 +72,12 @@
           </div>
           <div class="an-sidebar-content-row">
             <div class="an-sidebar-content-row-header">Статус:</div>
-            <div>{{statusText}}</div>
+            <div>{{ statusText }}</div>
           </div>
         </div>
       </div>
       <div class="an-content with-wide-sidebar">
-        <DocCallLog :r="r"/>
+        <DocCallLog :r="r" />
       </div>
     </div>
     <div slot="footer">
@@ -82,7 +93,6 @@
 </template>
 
 <script lang="ts">
-import api from '@/api';
 import * as actions from '@/store/action-types';
 import Modal from '@/ui-cards/Modal.vue';
 import DocCallLog from './DocCallLog.vue';
@@ -110,8 +120,11 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const {
         ok, message, status, executor, executor_fio, inLog,
-      } = await api(
-        'doctor-call/change-executor', this.r, ['pk'], { prevExecutor: this.r.executor },
+      } = await this.$api(
+        'doctor-call/change-executor',
+        this.r,
+        ['pk'],
+        { prevExecutor: this.r.executor },
       );
       if (!ok) {
         this.$root.$emit('msg', 'error', message);

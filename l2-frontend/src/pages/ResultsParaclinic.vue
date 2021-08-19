@@ -1,5 +1,5 @@
 <template>
-  <div ref="root" class="results-root">
+  <div ref="root" class="results-root" :class="embedded && 'embedded'">
     <div :class="{ has_loc, opened: sidebarIsOpened || !data.ok }" class="results-sidebar" v-if="!embedded">
       <div class="sidebar-top">
         <div class="input-group">
@@ -916,7 +916,6 @@ import dropdown from 'vue-my-dropdown';
 import { mapGetters } from 'vuex';
 import { vField, vGroup } from '@/components/visibility-triggers';
 import { enter_field, leave_field } from '@/forms/utils';
-import api from '@/api';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import RmisLink from '@/ui-cards/RmisLink.vue';
 import EDSButton from '@/ui-cards/EDSButton.vue';
@@ -1108,6 +1107,10 @@ export default {
 
     this.$root.$on('open-direction-form', pk => this.load_pk(pk));
 
+    this.$root.$on('preselect-args-ok', () => {
+      this.hasPreselectOk = true;
+    });
+
     const urlParams = new URLSearchParams(window.location.search);
     this.embedded = urlParams.get('embedded') === '1';
   },
@@ -1143,7 +1146,9 @@ export default {
     },
     async load_dreg_rows() {
       this.dreg_rows_loading = true;
-      this.dreg_rows = (await api('patients/individuals/load-dreg', this.data.patient, 'card_pk')).rows.filter(r => !r.date_end);
+      this.dreg_rows = (await this.$api('patients/individuals/load-dreg', this.data.patient, 'card_pk')).rows.filter(
+        r => !r.date_end,
+      );
       this.data.patient.has_dreg = this.dreg_rows.length > 0;
       this.dreg_rows_loading = false;
     },
@@ -1210,8 +1215,8 @@ export default {
           console.log(f.title, f.controlParam);
           if (
             (f.required
-            && (f.value === '' || f.value === '- Не выбрано' || !f.value)
-            && vField(g, research.research.groups, f.visibility, this.data.patient))
+              && (f.value === '' || f.value === '- Не выбрано' || !f.value)
+              && vField(g, research.research.groups, f.visibility, this.data.patient))
             || (f.controlParam && !vField(g, research.research.groups, f.controlParam, this.data.patient))
           ) {
             l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));
@@ -1295,10 +1300,16 @@ export default {
             this.data = data;
             this.sidebarIsOpened = false;
             this.hasEDSigns = false;
-            setTimeout(
-              () => this.$root.$emit('preselect-args', { card_pk: data.patient.card_pk, base_pk: data.patient.base }),
-              300,
-            );
+            this.hasPreselectOk = false;
+            setTimeout(async () => {
+              for (let i = 0; i < 10; i++) {
+                await new Promise(r => setTimeout(r, 100));
+                if (this.hasPreselectOk) {
+                  break;
+                }
+              }
+              this.$root.$emit('preselect-args', { card_pk: data.patient.card_pk, base_pk: data.patient.base });
+            }, 100);
             if (data.card_internal && data.status_disp === 'need' && data.has_doc_referral) {
               this.$root.$emit('msg', 'error', 'Диспансеризация не пройдена');
             }
@@ -1827,11 +1838,20 @@ export default {
 
 <style scoped lang="scss">
 .results-root {
+  position: absolute;
+  top: 36px;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: stretch;
   flex-direction: row;
   flex-wrap: nowrap;
   align-content: stretch;
+
+  &.embedded {
+    top: 0;
+  }
 
   & > div {
     align-self: stretch;

@@ -10,7 +10,7 @@ class IndividualAdmin(admin.ModelAdmin):
         'patronymic',
         'birthday',
     )
-    search_fields = ('family',)
+    search_fields = ('family', 'name', 'patronymic')
 
 
 @admin.register(models.DocumentType)
@@ -20,7 +20,8 @@ class DocumentTypeAdmin(admin.ModelAdmin):
 
 @admin.register(models.Document)
 class DocumentAdmin(admin.ModelAdmin):
-    raw_id_fields = ('individual',)
+    autocomplete_fields = ('individual',)
+    search_fields = ('number', 'serial', 'individual')
 
 
 @admin.register(models.CardBase)
@@ -30,7 +31,7 @@ class CardBaseAdmin(admin.ModelAdmin):
 
 @admin.register(models.Card)
 class CardAdmin(admin.ModelAdmin):
-    raw_id_fields = (
+    autocomplete_fields = (
         'individual',
         'polis',
         'mother',
@@ -40,12 +41,12 @@ class CardAdmin(admin.ModelAdmin):
         'payer',
     )
 
-    search_fields = ('individual__family',)
+    search_fields = ('individual', 'pk',)
 
 
 @admin.register(models.ScreeningRegPlan)
 class ScreeningRegPlanAdmin(admin.ModelAdmin):
-    raw_id_fields = (
+    autocomplete_fields = (
         'card',
     )
 
@@ -73,7 +74,7 @@ class DistrictAdmin(admin.ModelAdmin):
 
 @admin.register(models.DispensaryReg)
 class DispensaryRegAdmin(admin.ModelAdmin):
-    raw_id_fields = ('card',)
+    autocomplete_fields = ('card',)
 
 
 @admin.register(models.BenefitType)
@@ -83,12 +84,12 @@ class BenefitTypeAdmin(admin.ModelAdmin):
 
 @admin.register(models.BenefitReg)
 class BenefitRegAdmin(admin.ModelAdmin):
-    raw_id_fields = ('card',)
+    autocomplete_fields = ('card',)
 
 
 @admin.register(models.DispensaryRegPlans)
 class ResDispensaryRegPlans(admin.ModelAdmin):
-    raw_id_fields = ('card',)
+    autocomplete_fields = ('card',)
     list_display = (
         'card',
         'research',

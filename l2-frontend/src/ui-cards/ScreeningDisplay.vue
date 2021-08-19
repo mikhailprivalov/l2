@@ -90,7 +90,6 @@ import Component from 'vue-class-component';
 import ScreeningDate from '@/ui-cards/ScreeningDate.vue';
 import ResearchPickById from '@/ui-cards/ResearchPickById.vue';
 import * as actions from '@/store/action-types';
-import api from '@/api';
 
 @Component({
   components: {
@@ -176,7 +175,7 @@ export default class ScreeningDisplay extends Vue {
       this.$forceUpdate();
       await this.$store.dispatch(actions.INC_LOADING);
     }
-    await api('/patients/save-screening-plan', {
+    await this.$api('/patients/save-screening-plan', {
       cardPk: this.cardPk,
       researchPk,
       ageGroup,
@@ -202,7 +201,7 @@ export default class ScreeningDisplay extends Vue {
       this.ages = data.ages;
       this.researches = data.researches;
     } else {
-      const { data } = await api('patients/individuals/load-screening', this, 'cardPk');
+      const { data } = await this.$api('patients/individuals/load-screening', this, 'cardPk');
       this.patientAge = data.patientAge;
       this.currentYear = data.currentYear;
       this.years = data.years;

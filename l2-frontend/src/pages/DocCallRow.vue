@@ -1,22 +1,22 @@
 <template>
   <div v-frag>
-    <td v-tippy="{html: '#template-' + r.pk + '-1', ...commonTippy}">
+    <td v-tippy="{ html: '#template-' + r.pk + '-1', ...commonTippy }">
       {{ r.num }}{{ r.externalNum ? ` — ${r.externalNum}` : '' }}
       <div v-if="r.isMainExternal">в больнице</div>
     </td>
-    <td v-tippy="{html: '#template-' + r.pk + '-2', ...commonTippy}">
-      {{ r.createdAt }}<br/>
+    <td v-tippy="{ html: '#template-' + r.pk + '-2', ...commonTippy }">
+      {{ r.createdAt }}<br />
       {{ r.createdAtTime }}
     </td>
-    <td v-tippy="{html: '#template-' + r.pk + '-3', ...commonTippy}">
+    <td v-tippy="{ html: '#template-' + r.pk + '-3', ...commonTippy }">
       <div>{{ r.card }}</div>
       <div>{{ r.address }}</div>
       <div v-if="r.email">{{ r.email }}</div>
     </td>
-    <td v-tippy="{html: '#template-' + r.pk + '-4', ...commonTippy}">{{ r.phone }}</td>
-    <td v-tippy="{html: '#template-' + r.pk + '-5', ...commonTippy}">{{ r.purpose }}</td>
-    <td v-tippy="{html: '#template-' + r.pk + '-6', ...commonTippy}">{{ r.comment }}</td>
-    <td v-tippy="{html: '#template-' + r.pk + '-7', ...commonTippy}">
+    <td v-tippy="{ html: '#template-' + r.pk + '-4', ...commonTippy }">{{ r.phone }}</td>
+    <td v-tippy="{ html: '#template-' + r.pk + '-5', ...commonTippy }">{{ r.purpose }}</td>
+    <td v-tippy="{ html: '#template-' + r.pk + '-6', ...commonTippy }">{{ r.comment }}</td>
+    <td v-tippy="{ html: '#template-' + r.pk + '-7', ...commonTippy }">
       <div v-if="r.isMainExternal">
         внешняя больница
       </div>
@@ -30,7 +30,7 @@
         <a href="#" @click.prevent="setMeAsExecutor" class="a-under">назначить меня</a>
       </div>
     </td>
-    <td v-tippy="{html: '#template-' + r.pk + '-8', ...commonTippy}">
+    <td v-tippy="{ html: '#template-' + r.pk + '-8', ...commonTippy }">
       <select v-model="r.status" @change="onChangeStatus" :readonly="r.isMainExternal || !r.canEdit">
         <option :value="1">Новая заявка</option>
         <option :value="2">В работе</option>
@@ -39,34 +39,30 @@
       </select>
     </td>
     <td>
-      <button type="button" class="btn btn-blue-nb btn-sm" @click="showModal = true"
-              v-if="!r.isMainExternal && r.canEdit" style="margin-top: 3px;">
+      <button
+        type="button"
+        class="btn btn-blue-nb btn-sm"
+        @click="showModal = true"
+        v-if="!r.isMainExternal && r.canEdit"
+        style="margin-top: 3px;"
+      >
         История заявки
       </button>
 
       <div>Записей: {{ r.inLog }}</div>
 
-      <DocCallModal :r="r" v-if="showModal"/>
+      <DocCallModal :r="r" v-if="showModal" />
     </td>
 
     <div :id="`template-${r.pk}-${t}`" :key="t" class="tp" v-for="t in tpls">
-      <div>
-        Больница: {{ r.hospital || 'нет' }}
-      </div>
-      <div>
-        Участок: {{ r.district || 'нет' }}
-      </div>
-      <div>
-        Услуга: {{ r.research || 'нет' }}
-      </div>
-      <div>
-        Врач: {{ r.docAssigned || 'нет' }}
-      </div>
+      <div>Больница: {{ r.hospital || 'нет' }}</div>
+      <div>Участок: {{ r.district || 'нет' }}</div>
+      <div>Услуга: {{ r.research || 'нет' }}</div>
+      <div>Врач: {{ r.docAssigned || 'нет' }}</div>
     </div>
   </div>
 </template>
 <script lang="ts">
-import api from '@/api';
 import * as actions from '@/store/action-types';
 import DocCallModal from '@/pages/DocCallModal.vue';
 
@@ -88,7 +84,10 @@ export default {
       showModal: false,
       tpls,
       commonTippy: {
-        reactive: true, animateFill: false, duration: 200, delay: [250, 0],
+        reactive: true,
+        animateFill: false,
+        duration: 200,
+        delay: [250, 0],
       },
     };
   },
@@ -96,7 +95,7 @@ export default {
     this.$root.$on('doc-call:row:modal:hide', () => {
       this.showModal = false;
     });
-    this.$root.$on('doc-call:status:updated', (pk) => {
+    this.$root.$on('doc-call:status:updated', pk => {
       if (pk === this.r.pk) {
         this.status = this.r.status;
       }
@@ -107,8 +106,11 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const {
         ok, message, status, executor, executor_fio, inLog,
-      } = await api(
-        'doctor-call/change-status', this.r, ['pk', 'status'], { prevStatus: this.status },
+      } = await this.$api(
+        'doctor-call/change-status',
+        this.r,
+        ['pk', 'status'],
+        { prevStatus: this.status },
       );
       if (!ok) {
         this.$root.$emit('msg', 'error', message);
@@ -126,8 +128,13 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const {
         ok, message, status, executor, executor_fio, inLog,
-      } = await api(
-        'doctor-call/change-executor', this.r, ['pk'], { prevExecutor: this.r.executor },
+      } = await this.$api(
+        'doctor-call/change-executor',
+        this.r,
+        ['pk'],
+        {
+          prevExecutor: this.r.executor,
+        },
       );
       if (!ok) {
         this.$root.$emit('msg', 'error', message);

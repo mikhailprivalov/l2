@@ -39,10 +39,7 @@
       </div>
     </div>
     <div class="content-picker">
-      <table
-        class="table table-responsive table-bordered"
-        style="table-layout: fixed;margin-bottom: 0;position:sticky;top:0;background-color: #fff"
-      >
+      <table class="table table-responsive table-bordered table-one">
         <colgroup>
           <col width="66" />
           <col width="70" />
@@ -62,10 +59,7 @@
           </tr>
         </thead>
       </table>
-      <table
-        class="table table-responsive table-bordered no-first-border-top table-hover"
-        style="table-layout: fixed;margin-bottom: 0"
-      >
+      <table class="table table-responsive table-bordered no-first-border-top table-hover table-two">
         <colgroup>
           <col width="66" />
           <col width="70" />
@@ -91,7 +85,7 @@
                 </a>
               </span>
               <span v-else-if="!!row.has_descriptive && role_can_use_descriptive">
-                <a :href="`/mainmenu/results/paraclinic#{%22pk%22:${row.pk}}`" target="_blank" class="a-under">
+                <a :href="`/ui/results/descriptive#{%22pk%22:${row.pk}}`" target="_blank" class="a-under">
                   {{ row.pk }}
                 </a>
               </span>
@@ -703,5 +697,19 @@ th:not(.nopd):not(.button-td) {
 
 .noel {
   text-overflow: clip;
+}
+
+.table-one {
+  table-layout: fixed;
+  margin-bottom: 0;
+  position: sticky;
+  top: 0;
+  background-color: #fff;
+  z-index: 1;
+}
+
+.table-two {
+  table-layout: fixed;
+  margin-bottom: 0;
 }
 </style>

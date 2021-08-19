@@ -15,10 +15,11 @@ const stateInitial = {
     version: 'loading',
   },
   directive_from: [],
+  hasNewVersion: false,
 };
 
 const getters = {
-  user_data: (state) => state.data,
+  user_data: state => state.data,
   fio_short: (state, g) => {
     if (!g.user_data || !g.user_data.fio) {
       return 'Unauthenticated';
@@ -41,14 +42,16 @@ const getters = {
       .join('')
       .trim();
   },
-  user_hospital_title: state => state.data && state.data.hospital_title,
-  authenticated: (state) => Boolean(state.data && state.data.auth),
-  user_groups: (state) => (state.data && state.data.groups) || [],
-  authenticateLoading: (state) => Boolean(state.data && state.data.loading),
-  ex_dep: (state) => state.data.extended_departments || [],
-  directive_from: (state) => state.directive_from,
-  modules: (state) => state.data.modules || {},
+  user_hospital_title: state => state.data?.hospital_title,
+  authenticated: state => Boolean(state.data?.auth),
+  user_groups: state => state.data?.groups || [],
+  authenticateLoading: state => Boolean(state.data?.loading),
+  ex_dep: state => state.data.extended_departments || [],
+  directive_from: state => state.directive_from,
+  modules: state => state.data.modules || {},
   menu: (state): Menu => state.menu as Menu,
+  version: (state, g) => (g.menu || {}).version || null,
+  hasNewVersion: state => state.hasNewVersion,
 };
 
 const actions = {
@@ -69,6 +72,9 @@ const actions = {
     const { data: directive_from } = await user_point.getDirectiveFrom();
     commit(mutation_types.SET_DIRECTIVE_FROM, { directive_from });
   },
+  async [actionsTypes.HAS_NEW_VERSION]({ commit }) {
+    commit(mutation_types.SET_HAS_NEW_VERSION);
+  },
 };
 
 const mutations = {
@@ -77,6 +83,9 @@ const mutations = {
       ...state.data,
       ...data,
     };
+  },
+  [mutation_types.SET_HAS_NEW_VERSION](state) {
+    state.hasNewVersion = true;
   },
   [mutation_types.SET_MENU](state, { data }) {
     state.menu = {

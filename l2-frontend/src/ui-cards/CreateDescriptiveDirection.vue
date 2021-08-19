@@ -3,39 +3,54 @@
     <a href="#" @click.prevent="doOpen">
       Создать направление
     </a>
-    <modal v-if="open" @close="hide_window" show-footer="true" white-bg="true"
-           ref="modal" max-width="1600px" width="100%" marginLeftRight="41px" margin-top class="an">
+    <modal
+      v-if="open"
+      @close="hide_window"
+      show-footer="true"
+      white-bg="true"
+      ref="modal"
+      max-width="1600px"
+      width="100%"
+      marginLeftRight="41px"
+      margin-top
+      class="an"
+    >
       <span slot="header">Создать направление</span>
       <div slot="body" class="an-body">
         <div class="d-root">
           <div>
             <div class="overflow-visible">
-              <patient-picker v-model="selected_card" history_n="false" :hide_card_editor="true"/>
+              <patient-picker v-model="selected_card" history_n="false" :hide_card_editor="true" />
+            </div>
+          </div>
+          <div>
+            <div></div>
+          </div>
+          <div>
+            <div>
+              <researches-picker
+                :hidetemplates="true"
+                :oneselect="true"
+                :autoselect="false"
+                :types-only="[4, 3, 11]"
+                kk="cdd"
+                :just_search="true"
+                v-model="research"
+              />
             </div>
           </div>
           <div>
             <div>
-            </div>
-          </div>
-          <div>
-            <div>
-              <researches-picker :hidetemplates="true" :oneselect="true"
-                                 :autoselect="false"
-                                 :types-only="[4, 3, 11]" kk="cdd"
-                                 :just_search="true" v-model="research"/>
-            </div>
-          </div>
-          <div>
-            <div>
-              <selected-researches :researches="research ? [research] : []"
-                                   :card_pk="card_pk"
-                                   :selected_card="selected_card"
-                                   :valid="true"
-                                   :hide_diagnosis="true"
-                                   :hide_params="true"
-                                   :create_and_open="true"
-                                   kk="cdd"
-                                   :base="bases_obj[internal_base]"
+              <selected-researches
+                :researches="research ? [research] : []"
+                :card_pk="card_pk"
+                :selected_card="selected_card"
+                :valid="true"
+                :hide_diagnosis="true"
+                :hide_params="true"
+                :create_and_open="true"
+                kk="cdd"
+                :base="bases_obj[internal_base]"
               />
             </div>
           </div>
@@ -63,7 +78,10 @@ import PatientPicker from '@/ui-cards/PatientPicker.vue';
 
 export default {
   components: {
-    PatientPicker, SelectedResearches, ResearchesPicker, Modal,
+    PatientPicker,
+    SelectedResearches,
+    ResearchesPicker,
+    Modal,
   },
   name: 'CreateDescriptiveDirection',
   data() {
@@ -75,13 +93,14 @@ export default {
     };
   },
   mounted() {
-    this.$root.$on('preselect-args', (data) => {
+    this.$root.$on('preselect-args', data => {
       if (!data) {
         this.args_to_preselect = null;
       } else {
         this.args_to_preselect = data;
       }
     });
+    this.$root.$emit('preselect-args-ok');
     this.$root.$on('open-direction-form', () => this.hide_window());
   },
   methods: {
@@ -111,10 +130,13 @@ export default {
       bases: 'bases',
     }),
     bases_obj() {
-      return this.bases.reduce((a, b) => ({
-        ...a,
-        [b.pk]: b,
-      }), {});
+      return this.bases.reduce(
+        (a, b) => ({
+          ...a,
+          [b.pk]: b,
+        }),
+        {},
+      );
     },
     internal_base() {
       for (const b of this.bases) {
@@ -156,7 +178,7 @@ export default {
 
     > div {
       height: 100%;
-      border: 1px solid rgba(0, 0, 0, .3);
+      border: 1px solid rgba(0, 0, 0, 0.3);
       overflow-x: hidden;
       overflow-y: auto;
 

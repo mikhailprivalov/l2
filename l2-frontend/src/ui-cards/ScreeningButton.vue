@@ -38,8 +38,6 @@
 </template>
 
 <script lang="ts">
-import api from '@/api';
-
 export default {
   name: 'ScreeningButton',
   components: {
@@ -72,7 +70,7 @@ export default {
       for (const r of researches) {
         for (const a of r.ages) {
           const ages = (a.values || []).map(x => (x ? x.age : null));
-          const facts = (a.values || []).map(x => x && x.fact).filter(Boolean);
+          const facts = (a.values || []).map(x => x?.fact).filter(Boolean);
 
           if (ages.length === 0 || ages[ages.length - 1] < patientAge) {
             continue;
@@ -108,7 +106,7 @@ export default {
   methods: {
     async load() {
       this.loading = true;
-      const { data } = await api('patients/individuals/load-screening', this, 'cardPk');
+      const { data } = await this.$api('patients/individuals/load-screening', this, 'cardPk');
       this.data = data;
       this.loading = false;
     },

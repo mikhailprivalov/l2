@@ -61,4 +61,5 @@ urlpatterns = [
     path('procedural-list/', include('api.procedure_list.urls')),
     path('parse-file/', include('api.parse_file.urls')),
     path('users/', include('api.users.urls')),
+    path('schedule/', include('api.schedule.urls')),
 ]

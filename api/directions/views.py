@@ -4,7 +4,7 @@ from hospitals.models import Hospitals
 import operator
 import re
 import time
-from datetime import datetime, time as dtime
+from datetime import datetime, time as dtime, timedelta
 from operator import itemgetter
 
 import pytz
@@ -39,13 +39,14 @@ from directions.models import (
     IstochnikiFinansirovaniya,
     DirectionsHistory,
     MonitoringResult,
+    TubesRegistration,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches
 from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE
-from laboratory.utils import strdatetime, strdate, tsdatetime, start_end_year, strfdatetime, current_time
+from laboratory.utils import strdatetime, strdate, strtime, tsdatetime, start_end_year, strfdatetime, current_time
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
 from results.views import result_normal
@@ -61,6 +62,7 @@ from .sql_func import get_history_dir, get_confirm_direction, filter_direction_d
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
+from utils.data_verification import data_parse
 
 
 @login_required
@@ -2456,3 +2458,232 @@ def get_research_for_direction_params(pk):
         response["research"]["groups"].append(g)
 
     return response
+
+
+@login_required
+def tubes_for_get(request):
+    parse_params = {
+        'pk': str,
+    }
+
+    try:
+        direction_pk = data_parse(request.body, parse_params)[0]
+        direction = (
+            Napravleniya.objects.select_related('hospital')
+            .select_related('doc')
+            .select_related('doc__podrazdeleniye')
+            .select_related('imported_org')
+            .select_related('client')
+            .select_related('client__individual')
+            .prefetch_related(
+                Prefetch(
+                    'issledovaniya_set',
+                    Issledovaniya.objects.filter(research__fractions__isnull=False)
+                    .select_related('research')
+                    .select_related('research__podrazdeleniye')
+                    .prefetch_related(
+                        Prefetch('research__fractions_set', Fractions.objects.filter(hide=False).select_related('relation').prefetch_related('fupper').prefetch_related('flower'))
+                    )
+                    .prefetch_related(Prefetch('tubes', TubesRegistration.objects.select_related('type').select_related('doc_get').select_related('type__tube')))
+                    .order_by("research__title"),
+                )
+            )
+            .get(pk=direction_pk)
+        )
+    except:
+        return status_response(False, "Направление не найдено")
+
+    if direction.get_hospital() != request.user.doctorprofile.get_hospital():
+        return status_response(False, "Направление для другой организации")
+
+    data = {}
+
+    data["direction"] = {
+        "pk": direction.pk,
+        "cancel": direction.cancel,
+        "date": str(dateformat.format(direction.data_sozdaniya.date(), settings.DATE_FORMAT)),
+        "doc": {"fio": "" if not direction.doc else direction.doc.get_fio(), "otd": "" if not direction.doc else direction.doc.podrazdeleniye.title},
+        "imported_from_rmis": direction.imported_from_rmis,
+        "imported_org": "" if not direction.imported_org else direction.imported_org.title,
+        "full_confirm": True,
+        "has_not_completed": False,
+    }
+
+    data["tubes"] = {}
+    tubes_buffer = {}
+
+    fresearches = {}
+    fuppers = {}
+    flowers = {}
+
+    iss_cached = list(direction.issledovaniya_set.all())
+
+    for i in iss_cached:
+        for fr in i.research.fractions_set.all():
+            absor = fr.fupper.all()
+            if absor.exists():
+                fuppers[fr.pk] = True
+                fresearches[fr.research_id] = True
+                for absor_obj in absor:
+                    flowers[absor_obj.flower_id] = True
+                    fresearches[absor_obj.flower.research_id] = True
+
+    for v in iss_cached:
+        if data["direction"]["full_confirm"] and not i.time_confirmation:
+            data["direction"]["full_confirm"] = False
+        has_rels = {x.type_id: x for x in v.tubes.all()}
+        new_tubes = []
+        for val in v.research.fractions_set.all():
+            vrpk = val.relation_id
+            rel = val.relation
+
+            if vrpk not in has_rels and i.time_confirmation:
+                continue
+
+            if val.research_id in fresearches and val.pk in flowers and not i.time_confirmation:
+                absor = val.flower.all().first()
+                if absor.fupper_id in fuppers:
+                    vrpk = absor.fupper.relation_id
+                    rel = absor.fupper.relation
+
+            if vrpk not in tubes_buffer:
+                if vrpk not in has_rels:
+                    ntube = TubesRegistration(type=rel)
+                    ntube.save()
+                    has_rels[vrpk] = ntube
+                    new_tubes.append(ntube)
+                else:
+                    ntube = has_rels[vrpk]
+                tubes_buffer[vrpk] = {"researches": set(), "labs": set(), "tube": ntube}
+            else:
+                ntube = tubes_buffer[vrpk]["tube"]
+
+            tubes_buffer[vrpk]["researches"].add(v.research.title)
+
+            podr = v.research.get_podrazdeleniye()
+            if podr:
+                tubes_buffer[vrpk]["labs"].add(podr.get_title())
+        if new_tubes:
+            v.tubes.add(*new_tubes)
+
+    data["details"] = {}
+
+    for key in tubes_buffer:
+        v = tubes_buffer[key]
+        tube = v["tube"]
+
+        barcode = ""
+        if tube.barcode:
+            barcode = tube.barcode
+
+        lab = '; '.join(sorted(v["labs"]))
+
+        if lab not in data["tubes"]:
+            data["tubes"][lab] = {}
+
+        if tube.pk not in data["tubes"][lab]:
+            tube_title = tube.type.tube.title
+            tube_color = tube.type.tube.color
+
+            status = tube.getstatus()
+
+            data["tubes"][lab][tube.pk] = {
+                "researches": list(v["researches"]),
+                "status": status,
+                "checked": True,
+                "color": tube_color,
+                "title": tube_title,
+                "id": tube.pk,
+                "barcode": barcode,
+            }
+
+            data['details'][tube.pk] = tube.get_details()
+
+            if not data["direction"]["has_not_completed"] and not status:
+                data["direction"]["has_not_completed"] = True
+
+    if not data["tubes"]:
+        return status_response(False, 'Направление не в лабораторию')
+
+    individual = direction.client.individual
+    data["client"] = {
+        "card": direction.client.number_with_type(),
+        "fio": individual.fio(),
+        "sex": individual.sex,
+        "birthday": individual.bd(),
+        "age": individual.age_s(direction=direction),
+    }
+    return status_response(True, data=data)
+
+
+@login_required
+def tubes_register_get(request):
+    pks = data_parse(request.body, {'pks': list})[0]
+
+    get_details = {}
+
+    for pk in pks:
+        val = TubesRegistration.objects.get(id=pk)
+        if not val.doc_get and not val.time_get:
+            val.set_get(request.user.doctorprofile)
+        get_details[pk] = val.get_details()
+
+    return status_response(True, data={'details': get_details})
+
+
+@login_required
+def tubes_for_confirm(request):
+    tmprows = {}
+    res = {"rows": []}
+
+    date_start = datetime.now() - timedelta(days=6)
+    date_end = datetime.now()
+    naps = Napravleniya.objects.filter(
+        Q(data_sozdaniya__range=(date_start, date_end), doc_who_create=request.user.doctorprofile, cancel=False)
+        | Q(data_sozdaniya__range=(date_start, date_end), doc=request.user.doctorprofile, cancel=False)
+    )
+    for n in naps:
+        for i in Issledovaniya.objects.filter(napravleniye=n):
+            for t in i.tubes.filter(doc_get__isnull=True):
+                tmprows[t.pk] = {
+                    "direction": n.pk,
+                    "patient": n.client.individual.fio(short=True, dots=True),
+                    "title": t.type.tube.title,
+                    "pk": t.pk,
+                    "color": t.type.tube.color,
+                    "checked": True,
+                }
+    for pk in tmprows.keys():
+        res["rows"].append(tmprows[pk])
+    res["rows"] = sorted(res["rows"], key=lambda k: k['pk'])
+    res["rows"] = sorted(res["rows"], key=lambda k: k['patient'])
+
+    return JsonResponse(res)
+
+
+@login_required
+def tubes_get_history(request):
+    data = json.loads(request.body)
+    pks = data.get('pks')
+
+    res = {"rows": []}
+    tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('-time_get').exclude(time_get__lt=datetime.now().date())
+
+    if pks:
+        tubes = tubes.filter(pk__in=pks)
+
+    for v in tubes:
+        iss = Issledovaniya.objects.filter(tubes__pk=v.pk)
+
+        res["rows"].append(
+            {
+                "pk": v.pk,
+                "direction": iss[0].napravleniye_id,
+                "title": v.type.tube.title,
+                "color": v.type.tube.color,
+                "researches": ', '.join(str(x.research.title) for x in iss),
+                "time": strtime(v.time_get),
+                "checked": True,
+            }
+        )
+    return JsonResponse(res)
