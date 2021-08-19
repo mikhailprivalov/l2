@@ -117,7 +117,7 @@ export default class CheckBackend extends Vue {
           window.location.reload();
         }
 
-        if (this.version && this.version !== version) {
+        if (this.authenticated && this.version && this.version !== version) {
           this.$store.dispatch(actions.HAS_NEW_VERSION);
         }
 
