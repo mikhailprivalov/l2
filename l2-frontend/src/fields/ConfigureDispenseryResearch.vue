@@ -1,60 +1,67 @@
 <template>
   <div style="margin-top: 10px">
-     <h5 style="text-align: center">Глобальная настройка для всей системы</h5>
+    <h5 style="text-align: center">Глобальная настройка для всей системы</h5>
     <table class="table table-bordered">
       <colgroup>
-        <col width='110'/>
-        <col/>
-        <col width='70'/>
-        <col width='30'/>
+        <col width="110" />
+        <col />
+        <col width="70" />
+        <col width="30" />
       </colgroup>
       <thead>
-      <tr>
-        <th>Тип</th>
-        <th>Наименование</th>
-        <th>Кол-во в год</th>
-        <th>Посещение</th>
-        <th></th>
-      </tr>
+        <tr>
+          <th>Тип</th>
+          <th>Наименование</th>
+          <th>Кол-во в год</th>
+          <th>Посещение</th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="(val, index) in tb_data" :key="index">
-        <td class="cl-td">
-          <select class="form-control" style="border: none" v-model="val.type">
-            <option :value="t" v-for="t in types" :key="t">{{ t }}</option>
-          </select>
-        </td>
-        <td class="cl-td">
-          <treeselect v-if="val.type==='Услуга'" class="treeselect-noborder" :multiple="false" :options="researches"
-                      placeholder="Не выбран" v-model="val.current_researches"
-          />
-          <treeselect v-if="val.type==='Врач'" class="treeselect-noborder" :multiple="false" :options="specialities"
-                      placeholder="Не выбран" v-model="val.current_researches"
-          />
-        </td>
-        <td class="cl-td">
-          <div class="input-group">
-            <input type="number" class="form-control" style="border: none" v-model="val.count"
-                   placeholder="Кол-во в год">
-          </div>
-        </td>
-        <td class="text-center cl-td">
-          <label>
-            <input type="checkbox" v-model="val.is_visit">
-          </label>
-        </td>
-        <td class="text-center cl-td">
-          <button class="btn btn-blue-nb" @click="delete_row(index)" v-tippy="{ placement: 'bottom'}"
-                  title="Удалить строку">
-            <i class="fa fa-times"/>
-          </button>
-        </td>
-      </tr>
+        <tr v-for="(val, index) in tb_data" :key="index">
+          <td class="cl-td">
+            <select class="form-control" style="border: none" v-model="val.type">
+              <option :value="t" v-for="t in types" :key="t">{{ t }}</option>
+            </select>
+          </td>
+          <td class="cl-td">
+            <treeselect
+              v-if="val.type === 'Услуга'"
+              class="treeselect-noborder"
+              :multiple="false"
+              :options="researches"
+              placeholder="Не выбран"
+              v-model="val.current_researches"
+            />
+            <treeselect
+              v-if="val.type === 'Врач'"
+              class="treeselect-noborder"
+              :multiple="false"
+              :options="specialities"
+              placeholder="Не выбран"
+              v-model="val.current_researches"
+            />
+          </td>
+          <td class="cl-td">
+            <div class="input-group">
+              <input type="number" class="form-control" style="border: none" v-model="val.count" placeholder="Кол-во в год" />
+            </div>
+          </td>
+          <td class="text-center cl-td">
+            <label>
+              <input type="checkbox" v-model="val.is_visit" />
+            </label>
+          </td>
+          <td class="text-center cl-td">
+            <button class="btn btn-blue-nb" @click="delete_row(index)" v-tippy="{ placement: 'bottom' }" title="Удалить строку">
+              <i class="fa fa-times" />
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
     <div class="row">
-      <div class="col-xs-8">
-      </div>
+      <div class="col-xs-8"></div>
       <div class="col-xs-2">
         <button class="btn btn-blue-nb add-row" @click="save_dispensary_data(tb_data)">
           Сохранить
@@ -73,7 +80,6 @@
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
-import api from '@/api';
 
 const types = ['Услуга', 'Врач'];
 const makeDefaultRow = (type = null) => ({ type: type || types[0], is_visit: false });
@@ -96,20 +102,20 @@ export default {
     };
   },
   mounted() {
-    api('researches/research-dispensary').then((rows) => {
+    this.$api('researches/research-dispensary').then(rows => {
       this.researches = rows;
     });
-    api('researches/research-specialities').then((rows) => {
+    this.$api('researches/research-specialities').then(rows => {
       this.specialities = rows;
     });
-    api('researches/load-research-by-diagnos', { diagnos_code: this.diagnos_code }).then((rows) => {
+    this.$api('researches/load-research-by-diagnos', { diagnos_code: this.diagnos_code }).then(rows => {
       this.tb_data = rows;
     });
   },
   methods: {
     async save_dispensary_data(tb_data) {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await api('researches/save-dispensary-data', {
+      const { ok, message } = await this.$api('researches/save-dispensary-data', {
         diagnos: this.diagnos_code,
         tb_data,
       });
@@ -155,5 +161,4 @@ export default {
     justify-content: left;
   }
 }
-
 </style>

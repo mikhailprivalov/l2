@@ -1,8 +1,7 @@
 <template>
   <div v-frag>
     <div>
-      <button class="btn btn-blue-nb btn-ell dropdown-toggle bt1"
-              type="button" data-toggle="dropdown">
+      <button class="btn btn-blue-nb btn-ell dropdown-toggle bt1" type="button" data-toggle="dropdown">
         {{ selected_laboratory }}
         <span class="caret"></span>
       </button>
@@ -17,13 +16,12 @@
 
 <script lang="ts">
 import * as actions from '@/store/action-types';
-import api from '@/api';
 
 export default {
   name: 'LaboratorySelector',
   async mounted() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { rows, active } = await api('laboratory/laboratories');
+    const { rows, active } = await this.$api('laboratory/laboratories');
     this.laboratory = active;
     this.laboratories = rows;
     await this.$store.dispatch(actions.DEC_LOADING);
@@ -77,7 +75,7 @@ export default {
 .bt1 {
   border-radius: 0;
   height: 36px;
-  background-color: #656D78 !important;
+  background-color: #656d78 !important;
   border: none !important;
 
   &:hover {

@@ -1,8 +1,7 @@
 <template>
   <div>
     <div class="row" style="margin-top: 100px;min-height: 400px;">
-      <div class="col-xs-4">
-      </div>
+      <div class="col-xs-4"></div>
       <div class="col-xs-4">
         <div class="panel panel-default panel-flt">
           <div class="panel-heading">
@@ -16,9 +15,9 @@
                 </label>
               </div>
               <div class="col-xs-5">
-                <date-range v-model="date"/>
+                <date-range v-model="date" />
               </div>
-              <div class="col-xs-4"/>
+              <div class="col-xs-4" />
             </div>
             <div class="row" style="margin-top: 10px">
               <div class="col-xs-3" style="text-align: right; line-height: 1.26; margin-top: 10px;">
@@ -27,17 +26,20 @@
                 </label>
               </div>
               <div class="col-xs-9">
-                <treeselect :multiple="false" :disable-branch-nodes="true" :options="researches"
-                    placeholder="Все услуги" v-model="research"
-                    :append-to-body="true"
+                <treeselect
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :options="researches"
+                  placeholder="Все услуги"
+                  v-model="research"
+                  :append-to-body="true"
                 />
               </div>
             </div>
             <div class="row">
               <div class="col-xs-9"></div>
               <div class="col-xs-3">
-                <div class="btn btn-blue-nb" style="margin-bottom: 5px;margin-top: 15px; margin-left: 20px;"
-                     @click="print()">
+                <div class="btn btn-blue-nb" style="margin-bottom: 5px;margin-top: 15px; margin-left: 20px;" @click="print()">
                   Печать
                 </div>
               </div>
@@ -53,7 +55,6 @@
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import moment from 'moment';
-import api from '@/api';
 import DateRange from '../ui-cards/DateRange.vue';
 
 export default {
@@ -67,7 +68,7 @@ export default {
     };
   },
   mounted() {
-    api('researches/descriptive-research').then((rows) => {
+    this.$api('researches/descriptive-research').then(rows => {
       this.researches = rows;
     });
   },
@@ -77,5 +78,4 @@ export default {
     },
   },
 };
-
 </script>

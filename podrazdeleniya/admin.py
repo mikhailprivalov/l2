@@ -1,0 +1,18 @@
+from django.contrib import admin
+from podrazdeleniya.models import Podrazdeleniya, Room
+
+
+class PodrazdeleniyaAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'title', 'hospital', 'p_type', 'hide')
+    autocomplete_fields = ('hospital',)
+    search_fields = ('title', 'hospital')
+
+
+class RoomAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'title', 'hospital', 'hide')
+    autocomplete_fields = ('hospital',)
+    search_fields = ('title', 'hospital')
+
+
+admin.site.register(Podrazdeleniya, PodrazdeleniyaAdmin)
+admin.site.register(Room, RoomAdmin)

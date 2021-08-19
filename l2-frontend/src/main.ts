@@ -46,8 +46,6 @@ new Vue({
     ExecutionList: () => import('@/ui-cards/ExecutionList.vue'),
     LaboratoryJournal: () => import('@/ui-cards/LaboratoryJournal.vue'),
     LaboratoryPrintResults: () => import('@/ui-cards/LaboratoryPrintResults.vue'),
-    CreateDescriptiveDirection: () => import('@/ui-cards/CreateDescriptiveDirection.vue'),
-    RmisLink: () => import('@/ui-cards/RmisLink.vue'),
     PlanPharmacotherapy: () => import('@/pages/PlanPharmacotherapy/index.vue'),
     LaboratoryResults: () => import('@/pages/LaboratoryResults/index.vue'),
   },

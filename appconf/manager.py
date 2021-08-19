@@ -110,11 +110,13 @@ class SettingManager:
                     "profcenter",
                     "extra_notifications",
                     "monitorings",
+                    "schedule",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
             "directions_params": SettingManager.get("directions_params", default='false', default_type='b'),
             "morfology": SettingManager.is_morfology_enabled(SettingManager.en()),
+            "paraclinic_module": SettingManager.get("paraclinic_module", default='false', default_type='b'),
             "eds_base_url": SettingManager.get_eds_base_url(),
             "medbook_auto_start": SettingManager.get_medbook_auto_start(),
         }

@@ -7,22 +7,20 @@ import random
 import re
 import uuid
 from copy import deepcopy
-from decimal import Decimal
 from io import BytesIO
 from typing import Optional
 
-import bleach
 import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q, Prefetch, Count
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 from django.utils import dateformat
 from django.utils import timezone
 from django.utils.text import Truncator
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt
 from pdfrw import PdfReader, PdfWriter
 from reportlab.graphics import renderPDF
 from reportlab.graphics.barcode import qr
@@ -46,8 +44,8 @@ import slog.models as slog
 from api.stationar.stationar_func import hosp_get_hosp_direction
 from appconf.manager import SettingManager
 from clients.models import CardBase
-from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe
-from laboratory.decorators import group_required, logged_in_or_token
+from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe
+from laboratory.decorators import logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
@@ -69,262 +67,8 @@ pdfmetrics.registerFont(TTFont('cour', os.path.join(FONTS_FOLDER, 'cour.ttf')))
 
 
 @login_required
-@group_required("Лечащий врач", "Зав. отделением")
-@csrf_exempt
-@ensure_csrf_cookie
-def results_search(request):
-    """ Представление для поиска результатов исследований у пациента """
-    if request.method == "POST":
-        dirs = set()
-        result = {"directions": [], "client_id": int(request.POST["client_id"]), "research_id": int(request.POST["research_id"]), "other_dirs": []}
-        for r in Result.objects.filter(
-            fraction__research_id=result["research_id"], issledovaniye__napravleniye__client_id=result["client_id"], issledovaniye__time_confirmation__isnull=False
-        ):
-            dirs.add(r.issledovaniye.napravleniye_id)
-        for d in Napravleniya.objects.filter(client_id=result["client_id"], issledovaniya__research_id=result["research_id"]):
-            tmp_d = {"pk": d.pk}
-            if d.pk in dirs:
-                tc = Issledovaniya.objects.filter(napravleniye=d).first().time_confirmation
-                tmp_d["date"] = "не подтверждено" if tc is None else strdate(tc)
-                result["directions"].append(tmp_d)
-            else:
-                tmp_d["get_material"] = all([x.is_get_material() for x in Issledovaniya.objects.filter(napravleniye=d)])
-                tmp_d["is_receive_material"] = all([x.is_receive_material() for x in Issledovaniya.objects.filter(napravleniye=d)])
-                tmp_d["is_has_deff"] = d.is_has_deff()
-                tmp_d["type"] = 0
-                if tmp_d["get_material"]:
-                    tmp_d["type"] = 1
-                if tmp_d["is_receive_material"]:
-                    tmp_d["type"] = 2
-                if tmp_d["is_has_deff"]:
-                    tmp_d["type"] = 3
-                tmp_d["date"] = strdate(d.data_sozdaniya)
-                result["other_dirs"].append(tmp_d)
-        return HttpResponse(json.dumps(result), content_type="application/json")
-
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации")
-    return render(request, 'dashboard/results_search.html', {"labs": labs})
-
-
-@login_required
-@group_required("Врач-лаборант", "Лаборант")
 def enter(request):
-    """ Представление для страницы ввода результатов """
-    # lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
-    # labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
-    # if lab.p_type != Podrazdeleniya.LABORATORY:
-    #     lab = labs[0]
-    # podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
-    # return render(
-    #     request,
-    #     'dashboard/resultsenter.html',
-    #     {
-    #         "podrazdeleniya": podrazdeleniya,
-    #         "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("pk").order_by("base"),
-    #         "groups": directory.ResearchGroup.objects.filter(lab=lab),
-    #         "lab": lab,
-    #         "labs": labs,
-    #     },
-    # )
     return redirect('/laboratory/results')
-
-
-@csrf_exempt
-@login_required
-def loadready(request):
-    """ Представление, возвращающее JSON со списками пробирок и направлений, принятых в лабораторию """
-    result = {"tubes": [], "directions": []}
-    if request.method == "POST":
-        date_start = request.POST["datestart"]
-        date_end = request.POST["dateend"]
-        deff = int(request.POST["def"])
-        lab = Podrazdeleniya.objects.get(pk=request.POST.get("lab", request.user.doctorprofile.podrazdeleniye_id))
-    else:
-        date_start = request.GET["datestart"]
-        date_end = request.GET["dateend"]
-        deff = int(request.GET["def"])
-        lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab", request.user.doctorprofile.podrazdeleniye_id))
-
-    date_start, date_end = try_parse_range(date_start, date_end)
-    dates_cache = {}
-    tubes = set()
-    dirs = set()
-
-    if deff == 0:
-        tlist = TubesRegistration.objects.filter(
-            doc_recive__isnull=False,
-            time_recive__range=(date_start, date_end),
-            issledovaniya__time_confirmation__isnull=True,
-            issledovaniya__research__podrazdeleniye=lab,
-            issledovaniya__isnull=False,
-        )
-    else:
-        tlist = TubesRegistration.objects.filter(
-            doc_recive__isnull=False,
-            time_get__isnull=False,
-            issledovaniya__time_confirmation__isnull=True,
-            issledovaniya__research__podrazdeleniye=lab,
-            issledovaniya__deferred=True,
-            issledovaniya__isnull=False,
-        )
-
-    tlist = tlist.filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
-
-    for tube in tlist.prefetch_related('issledovaniya_set__napravleniye'):
-        direction = None
-        if tube.pk not in tubes:
-            if not direction:
-                direction = tube.issledovaniya_set.first().napravleniye
-            if tube.time_recive.date() not in dates_cache:
-                dates_cache[tube.time_recive.date()] = dateformat.format(tube.time_recive, 'd.m.y')
-            tubes.add(tube.pk)
-            dicttube = {
-                "id": tube.pk,
-                "direction": direction.pk,
-                "date": dates_cache[tube.time_recive.date()],
-                "tube": {"title": tube.type.tube.title, "color": tube.type.tube.color},
-            }  # Временный словарь с информацией о пробирке
-            result["tubes"].append(dicttube)  # Добавление временного словаря к ответу
-
-        if tube.issledovaniya_set.first().napravleniye_id not in dirs:
-            if not direction:
-                direction = tube.issledovaniya_set.first().napravleniye
-            if direction.data_sozdaniya.date() not in dates_cache:
-                dates_cache[direction.data_sozdaniya.date()] = dateformat.format(direction.data_sozdaniya, 'd.m.y')
-            dirs.add(direction.pk)
-            dictdir = {"id": direction.pk, "date": dates_cache[direction.data_sozdaniya.date()]}  # Временный словарь с информацией о направлении
-            result["directions"].append(dictdir)  # Добавление временного словаря к ответу
-
-    result["tubes"].sort(key=lambda k: k['id'])
-    result["directions"].sort(key=lambda k: k['id'])
-    return HttpResponse(json.dumps(result), content_type="application/json")
-
-
-@csrf_exempt
-@login_required
-def results_save(request):
-    """ Сохранение результатов """
-    result = {"ok": False}
-    if request.method == "POST":
-        fractions = json.loads(request.POST["fractions"])  # Загрузка фракций из запроса
-        fractions_ref = json.loads(request.POST.get("fractions_ref", "{}"))  # Загрузка фракций из запроса
-        issledovaniye = Issledovaniya.objects.get(pk=int(request.POST["issledovaniye"]))  # Загрузка исследования из запроса и выборка из базы данных
-        if issledovaniye:  # Если исследование найдено
-
-            for t in TubesRegistration.objects.filter(issledovaniya=issledovaniye):
-                if not t.rstatus():
-                    t.set_r(request.user.doctorprofile)
-
-            for key in fractions.keys():  # Перебор фракций из запроса
-                created = False
-                if Result.objects.filter(issledovaniye=issledovaniye, fraction__pk=key).exists():
-                    fraction_result = Result.objects.filter(issledovaniye=issledovaniye, fraction__pk=key).order_by("-pk")[0]
-                else:
-                    fraction_result = Result(issledovaniye=issledovaniye, fraction_id=key)  # Создание нового результата
-                    created = True
-                tv = bleach.clean(fractions[key], tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div']).replace("<br>", "<br/>")  # Установка значения
-                fv = "" if created else fraction_result.value
-                fraction_result.value = tv
-                need_save = True
-                if fraction_result.value == "":
-                    need_save = False
-                    if not created:
-                        fraction_result.delete()
-                elif tv == fv:
-                    need_save = False
-                if need_save:
-                    fraction_result.get_units(needsave=False)
-                    fraction_result.iteration = 1  # Установка итерации
-                    if key in fractions_ref:
-                        r = fractions_ref[key]
-                        fraction_result.ref_title = r["title"]
-                        fraction_result.ref_about = r["about"]
-                        fraction_result.ref_m = r["m"]
-                        fraction_result.ref_f = r["f"]
-                        fraction_result.save()
-                    else:
-                        fraction_result.ref_title = "Default"
-                        fraction_result.ref_about = ""
-                        fraction_result.ref_m = None
-                        fraction_result.ref_f = None
-                        fraction_result.get_ref(re_save=True, needsave=False)
-                        fraction_result.save()
-            issledovaniye.doc_save = request.user.doctorprofile  # Кто сохранил
-
-            issledovaniye.time_save = timezone.now()  # Время сохранения
-            issledovaniye.lab_comment = request.POST.get("comment", "")
-            issledovaniye.co_executor_id = None if request.POST.get("co_executor", '-1') == '-1' else int(request.POST["co_executor"])
-            issledovaniye.def_uet = 0
-            issledovaniye.co_executor_uet = 0
-
-            if not request.user.doctorprofile.has_group("Врач-лаборант"):
-                for r in Result.objects.filter(issledovaniye=issledovaniye):
-                    issledovaniye.def_uet += r.fraction.uet_co_executor_1
-            else:
-                for r in Result.objects.filter(issledovaniye=issledovaniye):
-                    issledovaniye.def_uet += r.fraction.uet_doc
-                if issledovaniye.co_executor_id:
-                    for r in Result.objects.filter(issledovaniye=issledovaniye):
-                        issledovaniye.co_executor_uet += r.fraction.uet_co_executor_1
-
-            issledovaniye.co_executor2_id = None if request.POST.get("co_executor2", '-1') == '-1' else int(request.POST["co_executor2"])
-            issledovaniye.co_executor2_uet = 0
-            if issledovaniye.co_executor2_id:
-                for r in Result.objects.filter(issledovaniye=issledovaniye):
-                    issledovaniye.co_executor2_uet += r.fraction.uet_co_executor_2
-            issledovaniye.save()
-            result = {"ok": True}
-
-            slog.Log(key=request.POST["issledovaniye"], type=13, body=request.POST["fractions"], user=request.user.doctorprofile).save()
-    return HttpResponse(json.dumps(result), content_type="application/json")
-
-
-@csrf_exempt
-@login_required
-def result_confirm(request):
-    """ Подтверждение результатов """
-    result = {"ok": False}
-    if request.method == "POST":
-        issledovaniye = Issledovaniya.objects.get(pk=int(request.POST["pk"]))
-        if issledovaniye.doc_save:  # Если исследование сохранено
-            issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
-            if issledovaniye.napravleniye:
-                issledovaniye.napravleniye.qr_check_token = None
-                issledovaniye.napravleniye.save(update_fields=['qr_check_token'])
-            for r in Result.objects.filter(issledovaniye=issledovaniye):
-                r.get_ref()
-            issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
-            issledovaniye.save()
-            slog.Log(key=request.POST["pk"], type=14, body=json.dumps({"dir": issledovaniye.napravleniye_id}), user=request.user.doctorprofile).save()
-
-    return HttpResponse(json.dumps(result), content_type="application/json")
-
-
-@csrf_exempt
-@login_required
-def result_confirm_list(request):
-    """ Пакетное подтверждение результатов """
-    result = {"ok": False}
-    if request.method == "POST":
-        iss_pks = json.loads(request.POST["list"])
-        for pk in iss_pks:
-            issledovaniye = Issledovaniya.objects.get(pk=int(pk))
-            if issledovaniye.doc_save and not issledovaniye.time_confirmation:  # Если исследование сохранено
-                for r in Result.objects.filter(issledovaniye=issledovaniye):
-                    r.get_ref()
-                issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
-                if issledovaniye.napravleniye:
-                    issledovaniye.napravleniye.qr_check_token = None
-                    issledovaniye.napravleniye.save(update_fields=['qr_check_token'])
-                issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
-                if not request.user.doctorprofile.has_group("Врач-лаборант"):
-                    issledovaniye.co_executor = request.user.doctorprofile
-                    for r in Result.objects.filter(issledovaniye=issledovaniye):
-                        issledovaniye.def_uet += Decimal(r.fraction.uet_co_executor_1)
-                issledovaniye.save()
-                slog.Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
-        result["ok"] = True
-    return HttpResponse(json.dumps(result), content_type="application/json")
 
 
 def lr(s, ll=7, r=17):

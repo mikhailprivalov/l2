@@ -406,11 +406,10 @@
 // @ts-ignore
 import vSelect from 'vue-select';
 import _ from 'lodash';
-import { vField, vGroup } from '@/components/visibility-triggers';
-import api from '@/api';
 import Treeselect from '@riophae/vue-treeselect';
 // @ts-ignore
 import TypeAhead from 'vue2-typeahead';
+import { vField, vGroup } from '@/components/visibility-triggers';
 import directionsPoint from '../api/directions-point';
 import * as actions from '../store/action-types';
 import ResearchDisplay from './ResearchDisplay.vue';
@@ -797,7 +796,7 @@ export default {
       this.global_research_direction_param.show = true;
     },
     async load_direction_params() {
-      const data = await api('researches/by-direction-params');
+      const data = await this.$api('researches/by-direction-params');
       this.global_direction_params = [
         { id: -1, label: 'Не выбрано' },
         ...Object.keys(data).map(id => ({ id, label: data[id].title })),
@@ -805,12 +804,7 @@ export default {
       this.researches_direction_params = data;
     },
     async load_direction_params_data(pk) {
-      if (
-        this.researches_direction_params[pk]
-        && this.researches_direction_params[pk].research_data
-        && this.researches_direction_params[pk].research_data.research
-        && this.researches_direction_params[pk].research_data.research.status !== 'NOT_LOADED'
-      ) {
+      if (this.researches_direction_params?.[pk].research_data?.research?.status !== 'NOT_LOADED') {
         return this.researches_direction_params[pk].research_data.research;
       }
       await this.$store.dispatch(actions.INC_LOADING);
@@ -820,7 +814,7 @@ export default {
       if (!this.researches_direction_params[pk].research_data) {
         this.researches_direction_params[pk].research_data = {};
       }
-      this.researches_direction_params[pk].research_data.research = await api('researches/get-direction-params', { pk });
+      this.researches_direction_params[pk].research_data.research = await this.$api('researches/get-direction-params', { pk });
       await this.$store.dispatch(actions.DEC_LOADING);
       return this.researches_direction_params[pk].research_data.research;
     },
@@ -918,7 +912,7 @@ export default {
         return;
       }
       let pk = pkOrig;
-      if (this.base && this.base.fin_sources && this.base.fin_sources.length === 1 && pk === -1) {
+      if (this.base?.fin_sources?.length === 1 && pk === -1) {
         pk = this.base.fin_sources[0].pk;
       }
       const cfin = this.fin;
@@ -1034,7 +1028,7 @@ export default {
       return res.department_pk === -5;
     },
     async load_stationar_deparments() {
-      const { data } = await api('procedural-list/suitable-departments');
+      const { data } = await this.$api('procedural-list/suitable-departments');
       this.hospital_department_overrides = [{ id: -1, label: 'По умолчанию' }, ...data];
     },
   },
@@ -1056,7 +1050,7 @@ export default {
       return true;
     },
     show_global_direction_params() {
-      return this.global_research_direction_param && this.global_research_direction_param.show;
+      return Boolean(this.global_research_direction_param?.show);
     },
     direction_purpose_enabled() {
       return this.$store.getters.modules.l2_direction_purpose && this.kk !== 'stationar';

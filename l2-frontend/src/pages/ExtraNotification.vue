@@ -6,9 +6,14 @@
           <div class="col-xs-6">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Больница</span>
-              <treeselect :multiple="false" :disable-branch-nodes="true" :options="visibleHospitals"
-                          placeholder="Больница не выбрана" v-model="params.hospital"
-                          :clearable="false" class="treeselect-wide"
+              <treeselect
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="visibleHospitals"
+                placeholder="Больница не выбрана"
+                v-model="params.hospital"
+                :clearable="false"
+                class="treeselect-wide"
               />
             </div>
           </div>
@@ -16,7 +21,7 @@
             <div class="input-group date-time treeselect-noborder-left">
               <span class="input-group-addon">Дата</span>
               <span class="input-group-addon" style="padding: 0;border: none;">
-                <DateFieldNav2 v-model="params.date" right w="140px" :brn="false"/>
+                <DateFieldNav2 v-model="params.date" right w="140px" :brn="false" />
               </span>
               <span class="input-group-addon">Статус</span>
               <select v-model="params.status" class="form-control">
@@ -28,7 +33,7 @@
           </div>
         </div>
         <div style="margin-top: 5px">
-          <a class="a-under pull-right" href="#" @click.prevent="load()" >перезагрузить данные</a>
+          <a class="a-under pull-right" href="#" @click.prevent="load()">перезагрузить данные</a>
           <a v-if="canEdit" class="a-under pull-right" href="#" @click.prevent="covid()" style="padding-right: 10px">
             covid-json
           </a>
@@ -36,78 +41,85 @@
       </div>
     </form>
     <div class="not-loaded" v-if="!loaded">
-      Данные не загружены<br/>
+      Данные не загружены<br />
       <a class="a-under" href="#" @click.prevent="load()">загрузить</a>
     </div>
     <div v-else class="data">
       <table class="table table-bordered table-condensed table-hover table-list">
         <colgroup>
-          <col>
-          <col>
-          <col style="width: 120px">
-          <col style="width: 120px">
-          <col style="width: 260px">
-          <col style="width: 120px">
-          <col style="width: 120px">
-          <col style="width: 34px">
+          <col />
+          <col />
+          <col style="width: 120px" />
+          <col style="width: 120px" />
+          <col style="width: 260px" />
+          <col style="width: 120px" />
+          <col style="width: 120px" />
+          <col style="width: 34px" />
         </colgroup>
         <thead>
-        <tr>
-          <th>Медицинская организация</th>
-          <th>Пациент</th>
-          <th>№ заявки</th>
-          <th>Дата заявки</th>
-          <th>Эпид №</th>
-          <th>Эпид № - дата</th>
-          <th>№ в базе</th>
-          <th class="text-center">
-            <a href="#" @click.prevent="print" class="a-under" title="Печать выбранных"
-               v-if="toPrintNumbers.length > 0"
-               v-tippy>
-              <i class="fas fa-print"></i>
-            </a>
-          </th>
-        </tr>
+          <tr>
+            <th>Медицинская организация</th>
+            <th>Пациент</th>
+            <th>№ заявки</th>
+            <th>Дата заявки</th>
+            <th>Эпид №</th>
+            <th>Эпид № - дата</th>
+            <th>№ в базе</th>
+            <th class="text-center">
+              <a
+                href="#"
+                @click.prevent="print"
+                class="a-under"
+                title="Печать выбранных"
+                v-if="toPrintNumbers.length > 0"
+                v-tippy
+              >
+                <i class="fas fa-print"></i>
+              </a>
+            </th>
+          </tr>
         </thead>
         <tbody>
-        <tr v-for="r in rows" :key="r.mainDirection">
-          <td>
-            {{ r.hospital }}
-          </td>
-          <td>
-            {{ r.patient }} {{ r.born }}
-          </td>
-          <td>
-            <a :href='`/mainmenu/results/paraclinic#{"pk":${r.mainDirection}}`' target="_blank" class="a-under">
-              {{ r.mainDirection }}
-            </a>
-          </td>
-          <td>
-            {{ r.mainConfirm }}
-          </td>
-          <td class="cl-td">
-            <ExtraNotificationFastEditor :data="r" :can-edit="canEdit"/>
-          </td>
-          <td>
-            {{ r.slaveConfirm || '–' }}
-          </td>
-          <td>
-            <a :href='`/mainmenu/results/paraclinic#{"pk":${r.slaveDir}}`' class="a-under" target="_blank"
-               v-if="r.slaveDir">
-              {{ r.slaveDir }}
-            </a>
-          </td>
-          <td class="text-center cl-td">
-            <label v-if="r.slaveConfirm">
-              <input type="checkbox" v-model="toPrint[r.slaveDir]">
-            </label>
-          </td>
-        </tr>
-        <tr v-if="rows.length === 0">
-          <td colspan="8" class="text-center">
-            не найдено
-          </td>
-        </tr>
+          <tr v-for="r in rows" :key="r.mainDirection">
+            <td>
+              {{ r.hospital }}
+            </td>
+            <td>{{ r.patient }} {{ r.born }}</td>
+            <td>
+              <a :href="`/ui/results/descriptive#{&quot;pk&quot;:${r.mainDirection}}`" target="_blank" class="a-under">
+                {{ r.mainDirection }}
+              </a>
+            </td>
+            <td>
+              {{ r.mainConfirm }}
+            </td>
+            <td class="cl-td">
+              <ExtraNotificationFastEditor :data="r" :can-edit="canEdit" />
+            </td>
+            <td>
+              {{ r.slaveConfirm || '–' }}
+            </td>
+            <td>
+              <a
+                :href="`/ui/results/descriptive#{&quot;pk&quot;:${r.slaveDir}}`"
+                class="a-under"
+                target="_blank"
+                v-if="r.slaveDir"
+              >
+                {{ r.slaveDir }}
+              </a>
+            </td>
+            <td class="text-center cl-td">
+              <label v-if="r.slaveConfirm">
+                <input type="checkbox" v-model="toPrint[r.slaveDir]" />
+              </label>
+            </td>
+          </tr>
+          <tr v-if="rows.length === 0">
+            <td colspan="8" class="text-center">
+              не найдено
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -122,7 +134,6 @@ import _ from 'lodash';
 
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import api from '@/api';
 import * as actions from '@/store/action-types';
 import DocCallRow from '@/pages/DocCallRow.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
@@ -130,9 +141,9 @@ import ExtraNotificationFastEditor from '@/ui-cards/ExtraNotificationFastEditor.
 import { ExtraNotificationData } from '@/types/extraNotification';
 
 interface Params {
-  date: string,
-  status: number,
-  hospital: number,
+  date: string;
+  status: number;
+  hospital: number;
 }
 
 const EMPTY_ROWS: ExtraNotificationData[] = [];
@@ -158,11 +169,15 @@ const EMPTY_ROWS: ExtraNotificationData[] = [];
     };
   },
   beforeMount() {
-    this.$store.watch((state) => state.user.data, (oldValue, newValue) => {
-      if (this.params.hospital === -1 && newValue) {
-        this.params.hospital = newValue.hospital || -1;
-      }
-    }, { immediate: true });
+    this.$store.watch(
+      state => state.user.data,
+      (oldValue, newValue) => {
+        if (this.params.hospital === -1 && newValue) {
+          this.params.hospital = newValue.hospital || -1;
+        }
+      },
+      { immediate: true },
+    );
     this.$store.dispatch(actions.GET_USER_DATA);
   },
   watch: {
@@ -181,7 +196,7 @@ const EMPTY_ROWS: ExtraNotificationData[] = [];
   },
   async mounted() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { hospitals } = await api('hospitals', { filterByUserHospital: true });
+    const { hospitals } = await this.$api('hospitals', { filterByUserHospital: true });
     this.hospitals = hospitals;
     await this.$store.dispatch(actions.DEC_LOADING);
   },
@@ -198,7 +213,7 @@ export default class ExtraNotification extends Vue {
   toPrint: any;
 
   get canEdit() {
-    for (const g of (this.$store.getters.user_data.groups || [])) {
+    for (const g of this.$store.getters.user_data.groups || []) {
       if (g === 'Заполнение экстренных извещений') {
         return true;
       }
@@ -207,17 +222,11 @@ export default class ExtraNotification extends Vue {
   }
 
   get watchParams() {
-    return _.pick(this.params, [
-      'date',
-      'status',
-      'hospital',
-    ]);
+    return _.pick(this.params, ['date', 'status', 'hospital']);
   }
 
   get visibleHospitals() {
-    return this.canEdit
-      ? this.hospitals
-      : this.hospitals.filter(h => h.id === this.$store.getters.user_data.hospital);
+    return this.canEdit ? this.hospitals : this.hospitals.filter(h => h.id === this.$store.getters.user_data.hospital);
   }
 
   get toPrintNumbers() {
@@ -234,7 +243,7 @@ export default class ExtraNotification extends Vue {
 
   async load() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const data = await api('extra-notification/search', this.params);
+    const data = await this.$api('extra-notification/search', this.params);
     this.rows = data.rows;
     this.toPrint = data.rows.reduce((a, r) => ({ ...a, [r.slaveDir]: false }), {});
     await this.$store.dispatch(actions.DEC_LOADING);
@@ -245,7 +254,6 @@ export default class ExtraNotification extends Vue {
     window.open(`/forms/covid-result?date=${this.params.date}`);
   }
 }
-
 </script>
 
 <style>
@@ -274,7 +282,7 @@ export default class ExtraNotification extends Vue {
   background-color: #fff;
 
   &.disabled {
-    opacity: .4;
+    opacity: 0.4;
   }
 }
 

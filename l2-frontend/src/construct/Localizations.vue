@@ -47,7 +47,6 @@
 
 <script lang="ts">
 import Modal from '@/ui-cards/Modal.vue';
-import api from '@/api';
 import * as actions from '@/store/action-types';
 
 export default {
@@ -83,7 +82,7 @@ export default {
     async load_data() {
       await this.$store.dispatch(actions.INC_LOADING);
       this.loaded = false;
-      const { localizations, selected } = await api('researches/localization', { pk: this.research_pk });
+      const { localizations, selected } = await this.$api('researches/localization', { pk: this.research_pk });
       this.localizations = localizations;
       this.selected = localizations.reduce((a, { pk }) => ({ ...a, [pk]: selected.includes(pk) }), {});
       this.loaded = true;
@@ -95,7 +94,7 @@ export default {
     },
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
-      await api('researches/localization/save', {
+      await this.$api('researches/localization/save', {
         pk: this.research_pk,
         selected: Object.keys(this.selected).filter(pk => this.selected[pk]),
       });

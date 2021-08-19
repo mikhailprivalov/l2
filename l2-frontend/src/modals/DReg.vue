@@ -263,7 +263,6 @@
 </template>
 
 <script lang="ts">
-import api from '@/api';
 import moment from 'moment';
 import { cloneDeep } from 'lodash';
 import { mapGetters } from 'vuex';
@@ -484,7 +483,7 @@ export default {
           identified_index: 0,
         };
       } else {
-        const d = await api('patients/individuals/load-dreg-detail', { pk });
+        const d = await this.$api('patients/individuals/load-dreg-detail', { pk });
         this.edit_data = {
           ...this.edit_data,
           ...d,
@@ -509,7 +508,7 @@ export default {
     },
     async save_plan() {
       await this.$store.dispatch(actions.INC_LOADING);
-      await api('patients/individuals/save-plan-dreg', this, ['card_pk', 'researches_data', 'researches_data_def', 'year']);
+      await this.$api('patients/individuals/save-plan-dreg', this, ['card_pk', 'researches_data', 'researches_data_def', 'year']);
       await this.$store.dispatch(actions.DEC_LOADING);
       this.$root.$emit('msg', 'ok', 'План сохранён');
     },
@@ -519,7 +518,7 @@ export default {
     },
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
-      await api('patients/individuals/save-dreg', { card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data });
+      await this.$api('patients/individuals/save-dreg', { card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data });
       await this.$store.dispatch(actions.DEC_LOADING);
       this.$root.$emit('msg', 'ok', 'Сохранено');
       this.hide_edit();
@@ -530,7 +529,7 @@ export default {
         this.year = newYear;
       }
       this.$store.dispatch(actions.INC_LOADING);
-      api('patients/individuals/load-dreg', this, ['card_pk', 'year'])
+      this.$api('patients/individuals/load-dreg', this, ['card_pk', 'year'])
         .then(({ rows, researches_data, year }) => {
           this.rows = rows;
           this.researches_data = researches_data;

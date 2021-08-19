@@ -80,7 +80,12 @@
           </label>
         </span>
         <span class="input-group-btn">
-          <button class="btn last btn-blue-nb nbr" type="button" :disabled="!query_valid || inLoading" @click="search">
+          <button
+            class="btn last btn-blue-nb nbr"
+            type="button"
+            :disabled="!query_valid || inLoading"
+            @click="search({ source: 'button' })"
+          >
             Поиск
           </button>
         </span>
@@ -827,12 +832,7 @@ export default {
         this.directive_departments_select.push({ label: dep.title, id: dep.pk });
       }
 
-      if (
-        this.$store.getters.user_data
-        && this.$store.getters.user_data.department
-        && this.local_directive_departments.length > 0
-        && this.ofname_to_set === -1
-      ) {
+      if (this.$store.getters.user_data?.department && this.local_directive_departments.length > 0 && this.ofname_to_set === -1) {
         for (const dep of this.local_directive_departments) {
           if (dep.pk === this.$store.getters.user_data.department.pk) {
             this.directive_department = dep.pk;
@@ -1099,11 +1099,12 @@ export default {
           this.$store.dispatch(actions.DISABLE_LOADING);
         });
     },
-    search() {
+    search(args) {
+      const source = args?.source || 'js';
       if (!this.query_valid || this.inLoading) return;
       this.suggests.open = false;
       this.suggests.loading = false;
-      if (this.suggests.focused > -1 && this.suggests.data.length > 0) {
+      if (this.suggests.focused > -1 && this.suggests.data.length > 0 && source !== 'button') {
         this.select_suggest(this.suggests.focused);
         return;
       }

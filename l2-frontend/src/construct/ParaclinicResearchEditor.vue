@@ -448,6 +448,8 @@
 <script lang="ts">
 import Vue from 'vue';
 import Vue2Filters from 'vue2-filters';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import construct_point from '@/api/construct-point';
 import * as actions from '@/store/action-types';
@@ -457,10 +459,6 @@ import RichTextEditor from '@/fields/RichTextEditor.vue';
 import NumberField from '@/fields/NumberField.vue';
 import FieldHelper from '@/ui-cards/FieldHelper.vue';
 
-import api from '@/api';
-
-import Treeselect from '@riophae/vue-treeselect';
-import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import TableConstructor from '@/construct/TableConstructor.vue';
 import Localizations from '@/construct/Localizations.vue';
 import PermanentDirectories from '@/construct/PermanentDirectories.vue';
@@ -913,7 +911,7 @@ export default {
         });
     },
     async load_deparments() {
-      const { data } = await api('procedural-list/suitable-departments');
+      const { data } = await this.$api('procedural-list/suitable-departments');
       this.departments = [{ id: -1, label: 'Отделение не выбрано' }, ...data];
     },
   },

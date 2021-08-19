@@ -19,12 +19,13 @@ module.exports = {
     "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"],
     'no-continue': 'off',
     'no-await-in-loop': 'off',
-    'max-len': ["error", {"code": 130}],
+    'max-len': ["error", { "code": 130 }],
     'camelcase': 'off',
     'arrow-parens': 'off',
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-explicit-any": "off",
     'func-names': 'off',
+    "@typescript-eslint/prefer-optional-chain": "error",
   },
   "overrides": [
     {

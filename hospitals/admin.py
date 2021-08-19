@@ -14,7 +14,7 @@ class RefHospitals(admin.ModelAdmin):
         'code_tfoms',
     )
     search_fields = ('title',)
-    raw_id_fields = ('client',)
+    autocomplete_fields = ('client',)
 
 
 class ResHospitalsGroup(admin.ModelAdmin):

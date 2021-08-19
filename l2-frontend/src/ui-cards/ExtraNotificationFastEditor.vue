@@ -37,7 +37,6 @@
 import Vue, { PropType } from 'vue';
 import Component from 'vue-class-component';
 import { ExtraNotificationData } from '@/types/extraNotification';
-import api from '@/api';
 import * as actions from '@/store/action-types';
 
 @Component({
@@ -100,7 +99,7 @@ export default class ExtraNotificationFastEditor extends Vue {
     await this.$store.dispatch(actions.INC_LOADING);
     const {
       ok, message, value, slaveConfirm,
-    } = await api('extra-notification/save', {
+    } = await this.$api('extra-notification/save', {
       pk: this.data.slaveDir,
       value: this.localValue.trim(),
       withConfirm,

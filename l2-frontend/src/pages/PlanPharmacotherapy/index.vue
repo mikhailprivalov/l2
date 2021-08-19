@@ -1,26 +1,31 @@
 <template>
   <div style="min-height: 500px;margin-top: 25px">
-    <Filters :filters="filters" :departments="departments"/>
-    <aggregate-pharmaco-therapy-department :dateRange="dateRange" :department_pk="deapartment"/>
+    <Filters :filters="filters" :departments="departments" />
+    <aggregate-pharmaco-therapy-department :dateRange="dateRange" :department_pk="deapartment" />
   </div>
 </template>
 
 <script lang="ts">
 import moment from 'moment';
-import api from '@/api';
 import Filters from './components/Filters.vue';
 import AggregatePharmacoTherapyDepartment from './components/AggregatePharmacoTherapyDepartment.vue';
 
 export default {
   components: {
-    Filters, AggregatePharmacoTherapyDepartment,
+    Filters,
+    AggregatePharmacoTherapyDepartment,
   },
   name: 'PlanPharmacotherapy',
   data() {
     return {
       departments: [],
       filters: {
-        date: [moment().format('DD.MM.YYYY'), moment().add(7, 'days').format('DD.MM.YYYY')],
+        date: [
+          moment().format('DD.MM.YYYY'),
+          moment()
+            .add(7, 'days')
+            .format('DD.MM.YYYY'),
+        ],
         department_pk: -1,
       },
     };
@@ -43,7 +48,7 @@ export default {
   },
   methods: {
     async init() {
-      const { data } = await api('procedural-list/suitable-departments');
+      const { data } = await this.$api('procedural-list/suitable-departments');
       this.departments = [{ id: -1, label: 'Отделение не выбрано' }, ...data];
     },
   },
@@ -51,9 +56,8 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .buttons {
-    margin-bottom: 5px;
-    color: #cacfd2;
-  }
-
+.buttons {
+  margin-bottom: 5px;
+  color: #cacfd2;
+}
 </style>

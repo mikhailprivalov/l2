@@ -31,7 +31,7 @@ class Command(BaseCommand):
                     pasport_num = cells.index("номер")
                     snils = cells.index("снилс")
                     polis = cells.index("полис")
-                    base_l2 = clients.CardBase.objects.get(internal_type=True)
+                    base_l2 = clients.CardBase.objects.filter(internal_type=True)[0]
             else:
                 # если есть индивидуал по документам
                 ind = clients.Document.objects.filter(
