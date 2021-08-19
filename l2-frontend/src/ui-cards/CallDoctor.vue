@@ -174,7 +174,6 @@ import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
-import api from '@/api';
 import patientsPoint from '@/api/patients-point';
 import ResearchDisplay from '@/ui-cards/ResearchDisplay.vue';
 
@@ -270,7 +269,7 @@ export default {
         return;
       }
       if (!this.visible) {
-        this.rows = await api('doctor-call/actual-rows', this, 'card_pk');
+        this.rows = await this.$api('doctor-call/actual-rows', this, 'card_pk');
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
@@ -279,8 +278,8 @@ export default {
         docs, purposes, hospitals, hospitalId,
       }, rows] = await Promise.all([
         patientsPoint.getCard(this, 'card_pk'),
-        api('actual-districts', this, 'card_pk'),
-        api('doctor-call/actual-rows', this, 'card_pk'),
+        this.$api('actual-districts', this, 'card_pk'),
+        this.$api('doctor-call/actual-rows', this, 'card_pk'),
       ]);
       this.card = card;
       this.card.doc = -1;
@@ -295,7 +294,7 @@ export default {
     },
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const result = await api('doctor-call/create', this, ['card_pk', 'researches', 'date', 'comment', 'asExecuted'], {
+      const result = await this.$api('doctor-call/create', this, ['card_pk', 'researches', 'date', 'comment', 'asExecuted'], {
         fact_address: this.card.fact_address,
         district: this.card.district,
         doc: this.card.doc,
@@ -316,7 +315,7 @@ export default {
     },
     async cancel_doc_call(pk) {
       await this.$store.dispatch(actions.INC_LOADING);
-      await api('doctor-call/cancel-row', {
+      await this.$api('doctor-call/cancel-row', {
         pk,
       });
       await this.load_data();

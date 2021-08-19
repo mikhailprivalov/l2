@@ -98,7 +98,6 @@
 
 <script lang="ts">
 import moment from 'moment';
-import api from '@/api';
 import ResultDetails from './ResultDetails.vue';
 
 export default {
@@ -147,7 +146,7 @@ export default {
   },
   methods: {
     async load() {
-      const result = await api('directions/result-patient-year', this, [
+      const result = await this.$api('directions/result-patient-year', this, [
         'card_pk',
         'current_year',
         'isLab',

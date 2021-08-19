@@ -916,7 +916,6 @@ import dropdown from 'vue-my-dropdown';
 import { mapGetters } from 'vuex';
 import { vField, vGroup } from '@/components/visibility-triggers';
 import { enter_field, leave_field } from '@/forms/utils';
-import api from '@/api';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import RmisLink from '@/ui-cards/RmisLink.vue';
 import EDSButton from '@/ui-cards/EDSButton.vue';
@@ -1147,7 +1146,9 @@ export default {
     },
     async load_dreg_rows() {
       this.dreg_rows_loading = true;
-      this.dreg_rows = (await api('patients/individuals/load-dreg', this.data.patient, 'card_pk')).rows.filter(r => !r.date_end);
+      this.dreg_rows = (await this.$api('patients/individuals/load-dreg', this.data.patient, 'card_pk')).rows.filter(
+        r => !r.date_end,
+      );
       this.data.patient.has_dreg = this.dreg_rows.length > 0;
       this.dreg_rows_loading = false;
     },
@@ -1214,8 +1215,8 @@ export default {
           console.log(f.title, f.controlParam);
           if (
             (f.required
-            && (f.value === '' || f.value === '- Не выбрано' || !f.value)
-            && vField(g, research.research.groups, f.visibility, this.data.patient))
+              && (f.value === '' || f.value === '- Не выбрано' || !f.value)
+              && vField(g, research.research.groups, f.visibility, this.data.patient))
             || (f.controlParam && !vField(g, research.research.groups, f.controlParam, this.data.patient))
           ) {
             l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));

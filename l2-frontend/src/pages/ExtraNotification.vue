@@ -134,7 +134,6 @@ import _ from 'lodash';
 
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import api from '@/api';
 import * as actions from '@/store/action-types';
 import DocCallRow from '@/pages/DocCallRow.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
@@ -197,7 +196,7 @@ const EMPTY_ROWS: ExtraNotificationData[] = [];
   },
   async mounted() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { hospitals } = await api('hospitals', { filterByUserHospital: true });
+    const { hospitals } = await this.$api('hospitals', { filterByUserHospital: true });
     this.hospitals = hospitals;
     await this.$store.dispatch(actions.DEC_LOADING);
   },
@@ -244,7 +243,7 @@ export default class ExtraNotification extends Vue {
 
   async load() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const data = await api('extra-notification/search', this.params);
+    const data = await this.$api('extra-notification/search', this.params);
     this.rows = data.rows;
     this.toPrint = data.rows.reduce((a, r) => ({ ...a, [r.slaveDir]: false }), {});
     await this.$store.dispatch(actions.DEC_LOADING);

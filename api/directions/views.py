@@ -46,7 +46,7 @@ from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE
-from laboratory.utils import strdatetime, strdate, tsdatetime, start_end_year, strfdatetime, current_time
+from laboratory.utils import strdatetime, strdate, strtime, tsdatetime, start_end_year, strfdatetime, current_time
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
 from results.views import result_normal
@@ -2566,7 +2566,6 @@ def tubes_for_get(request):
         if new_tubes:
             v.tubes.add(*new_tubes)
 
-    data["types"] = {}
     data["details"] = {}
 
     for key in tubes_buffer:
@@ -2585,13 +2584,6 @@ def tubes_for_get(request):
         if tube.pk not in data["tubes"][lab]:
             tube_title = tube.type.tube.title
             tube_color = tube.type.tube.color
-            if tube_title not in data["types"]:
-                data["types"][tube_title] = {
-                    "count": 0,
-                    "color": tube_color,
-                }
-
-            data["types"][tube_title]["count"] += 1
 
             status = tube.getstatus()
 
@@ -2619,7 +2611,7 @@ def tubes_for_get(request):
         "fio": individual.fio(),
         "sex": individual.sex,
         "birthday": individual.bd(),
-        "age": individual.age_s(),
+        "age": individual.age_s(direction=direction),
     }
     return status_response(True, data=data)
 
@@ -2666,4 +2658,32 @@ def tubes_for_confirm(request):
     res["rows"] = sorted(res["rows"], key=lambda k: k['pk'])
     res["rows"] = sorted(res["rows"], key=lambda k: k['patient'])
 
+    return JsonResponse(res)
+
+
+@login_required
+def tubes_get_history(request):
+    data = json.loads(request.body)
+    pks = data.get('pks')
+
+    res = {"rows": []}
+    tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('-time_get').exclude(time_get__lt=datetime.now().date())
+
+    if pks:
+        tubes = tubes.filter(pk__in=pks)
+
+    for v in tubes:
+        iss = Issledovaniya.objects.filter(tubes__pk=v.pk)
+
+        res["rows"].append(
+            {
+                "pk": v.pk,
+                "direction": iss[0].napravleniye_id,
+                "title": v.type.tube.title,
+                "color": v.type.tube.color,
+                "researches": ', '.join(str(x.research.title) for x in iss),
+                "time": strtime(v.time_get),
+                "checked": True,
+            }
+        )
     return JsonResponse(res)

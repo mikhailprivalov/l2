@@ -25,7 +25,6 @@ from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from mainmenu.rproxy import proxy_view
 from podrazdeleniya.models import Podrazdeleniya
-from researches.models import Tubes
 from rmis_integration.client import Client
 from users.models import DoctorProfile
 from utils.dates import try_parse_range
@@ -107,13 +106,8 @@ def load_logs(request):
     return JsonResponse(result)
 
 
-# @cache_page(60 * 15)
-@login_required
-@group_required("Заборщик биоматериала")
-@ensure_csrf_cookie
 def researches_control(request):
-    tubes = Tubes.objects.all()
-    return render(request, 'dashboard/get_biomaterial.html', {"tubes": tubes})
+    return redirect('/ui/biomaterial/get')
 
 
 @login_required

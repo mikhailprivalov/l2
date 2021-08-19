@@ -68,7 +68,6 @@
 <script lang="ts">
 import axios from 'axios';
 import * as Cookies from 'es-cookie';
-import api from '@/api';
 import * as actions from '@/store/action-types';
 
 export default {
@@ -159,7 +158,7 @@ export default {
     },
     async loadRows() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { rows } = await api('doctor-call/log', this.r, 'pk');
+      const { rows } = await this.$api('doctor-call/log', this.r, 'pk');
       this.rows = rows;
       this.r.inLog = rows.length;
       await this.$store.dispatch(actions.DEC_LOADING);

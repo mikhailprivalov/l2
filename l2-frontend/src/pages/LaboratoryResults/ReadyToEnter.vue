@@ -75,7 +75,6 @@
 import moment from 'moment';
 import _ from 'lodash';
 import DateRange from '@/ui-cards/DateRange.vue';
-import api from '@/api';
 import * as actions from '@/store/action-types';
 import { SEARCH_MODES } from '@/pages/LaboratoryResults/constants';
 
@@ -130,7 +129,7 @@ export default {
   methods: {
     async load() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { directions, tubes } = await api('laboratory/ready', this, ['date_range', 'laboratory']);
+      const { directions, tubes } = await this.$api('laboratory/ready', this, ['date_range', 'laboratory']);
       this.directions = directions;
       this.tubes = tubes;
       await this.$store.dispatch(actions.DEC_LOADING);

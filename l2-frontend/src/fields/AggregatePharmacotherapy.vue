@@ -5,57 +5,54 @@
     </button>
     <table class="table table-responsive table-bordered table-condensed">
       <colgroup>
-        <col style="width: 300px"/>
-        <col v-for="d in dates" :key="d"/>
+        <col style="width: 300px" />
+        <col v-for="d in dates" :key="d" />
       </colgroup>
       <thead>
-      <tr>
-        <th rowspan="2" class="first-cell">Наименование ЛП</th>
-        <th v-for="d in dates" :key="d">{{ d }}</th>
-      </tr>
-      <tr>
-        <th v-for="d in dates" :key="d" class="cl-td">
-          <div class="time" v-for="t in timesInDates[d]" :key="t" :data-datetime="`${d} ${t}`">
-            {{ t.split(':')[0] }}
-          </div>
-        </th>
-      </tr>
+        <tr>
+          <th rowspan="2" class="first-cell">Наименование ЛП</th>
+          <th v-for="d in dates" :key="d">{{ d }}</th>
+        </tr>
+        <tr>
+          <th v-for="d in dates" :key="d" class="cl-td">
+            <div class="time" v-for="t in timesInDates[d]" :key="t" :data-datetime="`${d} ${t}`">
+              {{ t.split(':')[0] }}
+            </div>
+          </th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="r in rows" :key="r.pk">
-        <td>
-          <div class="drug" :class="{cancel: r.cancel}">{{ r.drug }}</div>
-          <span class="badge badge-primary" title="Форма выпуска" v-tippy>{{ r.form_release }}</span>
-          <span class="badge badge-primary" title="Способ применения" v-tippy>{{ r.method }}</span>
-          <span class="badge badge-info" title="Дозировка" v-tippy>{{ r.dosage }}</span>
-          <span class="badge badge-light" title="Дата создания" v-tippy>{{ r.created_at }}</span>
-          <span class="badge badge-warning" title="Шаг дней" v-tippy v-if="r.step > 1">шаг {{ r.step }} дн</span>
-          <template v-if="can_cancel">
-            <a class="badge badge-secondary" href="#" v-if="!r.cancel" @click.prevent="cancelRow(r.pk, true)">
-              <i class="fa fa-circle"/> отменить ЛП
-            </a>
-            <a class="badge badge-secondary" href="#" v-else @click.prevent="cancelRow(r.pk, false)">
-              <i class="fa fa-circle"/> вернуть ЛП
-            </a>
-          </template>
-          <div v-if="r.comment">
-            <strong>Комментарий:</strong>&nbsp;{{ r.comment }}
-          </div>
-        </td>
-        <td v-for="d in dates" :key="d" class="cl-td">
-          <PharmacotherapyTime :data="r.dates[d][t]" v-for="t in timesInDates[d]" :key="t"/>
-        </td>
-      </tr>
-      <tr v-if="rows.length === 0">
-        <td>Нет данных</td>
-      </tr>
+        <tr v-for="r in rows" :key="r.pk">
+          <td>
+            <div class="drug" :class="{ cancel: r.cancel }">{{ r.drug }}</div>
+            <span class="badge badge-primary" title="Форма выпуска" v-tippy>{{ r.form_release }}</span>
+            <span class="badge badge-primary" title="Способ применения" v-tippy>{{ r.method }}</span>
+            <span class="badge badge-info" title="Дозировка" v-tippy>{{ r.dosage }}</span>
+            <span class="badge badge-light" title="Дата создания" v-tippy>{{ r.created_at }}</span>
+            <span class="badge badge-warning" title="Шаг дней" v-tippy v-if="r.step > 1">шаг {{ r.step }} дн</span>
+            <template v-if="can_cancel">
+              <a class="badge badge-secondary" href="#" v-if="!r.cancel" @click.prevent="cancelRow(r.pk, true)">
+                <i class="fa fa-circle" /> отменить ЛП
+              </a>
+              <a class="badge badge-secondary" href="#" v-else @click.prevent="cancelRow(r.pk, false)">
+                <i class="fa fa-circle" /> вернуть ЛП
+              </a>
+            </template>
+            <div v-if="r.comment"><strong>Комментарий:</strong>&nbsp;{{ r.comment }}</div>
+          </td>
+          <td v-for="d in dates" :key="d" class="cl-td">
+            <PharmacotherapyTime :data="r.dates[d][t]" v-for="t in timesInDates[d]" :key="t" />
+          </td>
+        </tr>
+        <tr v-if="rows.length === 0">
+          <td>Нет данных</td>
+        </tr>
       </tbody>
     </table>
   </div>
 </template>
 
 <script lang="ts">
-import api from '@/api';
 import PharmacotherapyTime from '@/fields/PharmacotherapyTime.vue';
 import * as actions from '@/store/action-types';
 
@@ -75,7 +72,7 @@ export default {
   async mounted() {
     await this.load();
     this.$root.$on('pharmacotherapy-aggregation:reload', () => this.load());
-    window.$('.root-agg').on('mouseover mouseout', '[data-datetime]', (event) => {
+    window.$('.root-agg').on('mouseover mouseout', '[data-datetime]', event => {
       const t$ = window.$(event.target);
       const all$ = window.$(`[data-datetime="${t$.data('datetime')}"]`);
       if (event.type === 'mouseover') {
@@ -90,7 +87,7 @@ export default {
   },
   computed: {
     can_cancel() {
-      for (const g of (this.$store.getters.user_data.groups || [])) {
+      for (const g of this.$store.getters.user_data.groups || []) {
         if (g === 'Врач стационара' || g === 'Admin') {
           return true;
         }
@@ -102,11 +99,8 @@ export default {
     async load() {
       await this.$store.dispatch(actions.INC_LOADING);
       const {
-        result,
-        dates,
-        times,
-        timesInDates,
-      } = await api('procedural-list/get-procedure', this, 'direction');
+        result, dates, times, timesInDates,
+      } = await this.$api('procedural-list/get-procedure', this, 'direction');
       this.rows = result;
       this.dates = dates;
       this.times = times;
@@ -128,7 +122,7 @@ export default {
         }
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await api('procedural-list/procedure-cancel', { pk, cancel });
+      const { ok, message } = await this.$api('procedural-list/procedure-cancel', { pk, cancel });
       if (ok) {
         this.$root.$emit('msg', 'ok', message);
         this.$root.$emit('pharmacotherapy-aggregation:reload');
@@ -189,11 +183,12 @@ table {
   position: relative;
 }
 
-.table tr > td:first-child, .table .first-cell {
+.table tr > td:first-child,
+.table .first-cell {
   background-color: white;
   position: sticky;
   left: -1px;
   z-index: 2;
-  box-shadow: 2px 0 2px rgba(0, 0, 0, .1);
+  box-shadow: 2px 0 2px rgba(0, 0, 0, 0.1);
 }
 </style>

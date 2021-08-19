@@ -692,7 +692,6 @@ import {
   normalizeNamePart, swapLayouts, validateSnils, valuesToString,
 } from '@/utils';
 import { GENDERS } from '@/constants';
-import api from '@/api';
 import patientsPoint from '@/api/patients-point';
 import Modal from '@/ui-cards/Modal.vue';
 import forms from '@/forms';
@@ -1226,7 +1225,7 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async change_directions_owner() {
-      const { ok, individual_fio } = await api('patients/is-card', {
+      const { ok, individual_fio } = await this.$api('patients/is-card', {
         number: this.new_card_num,
       });
       if (!ok) {
@@ -1243,7 +1242,7 @@ export default {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const data = await api('directions/change-owner-direction', {
+      const data = await this.$api('directions/change-owner-direction', {
         old_card_number: this.card.number,
         new_card_number: this.new_card_num,
       });

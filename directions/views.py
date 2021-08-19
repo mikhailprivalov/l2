@@ -853,69 +853,6 @@ def setdef(request):
     return JsonResponse(response)
 
 
-@csrf_exempt
-@login_required
-def cancel_direction(request):
-    """Функция отмены направления"""
-
-    response = {"ok": False}
-    if "pk" in request.POST.keys() or "pk" in request.GET.keys():
-        cancel = False
-        if "status" in request.POST.keys() or "status" in request.GET.keys():
-            if request.method == "POST":
-                cancel = request.POST["status"]
-            else:
-                cancel = request.GET["status"]
-            if isinstance(cancel, str):
-                cancel = cancel == "true"
-        response["s"] = cancel
-        if request.method == "POST":
-            pk = request.POST["pk"]
-        else:
-            pk = request.GET["pk"]
-        nap = Napravleniya.objects.get(pk=int(pk))
-        nap.cancel = cancel
-        nap.save()
-    return JsonResponse(response)
-
-
-@csrf_exempt
-@login_required
-def update_direction(request):
-    """Функция обновления исследований в направлении"""
-
-    res = {"r": False, "o": []}
-    if request.method == 'POST':  # Проверка типа запроса
-        statuses = json.loads(request.POST["data"])
-
-        for k, v in statuses["statuses"].items():  # Перебор ключей и значений
-            val = TubesRegistration.objects.get(id=k)  # Выборка пробирки по ключу
-            if v and not val.doc_get and not val.time_get:  # Если статус выполнения забора установлен в True
-                val.set_get(request.user.doctorprofile)
-                res["o"].append(val.id)
-            res["dn"] = Issledovaniya.objects.filter(tubes__id=k).first().napravleniye_id
-        res["r"] = True
-
-    return JsonResponse(res)
-
-
-@login_required
-def load_history(request):
-    """Получение истории заборов материала за текущий день"""
-    res = {"rows": []}
-    tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(time_get__lt=datetime.now().date())
-
-    for v in tubes:  # Перебор пробирки
-        iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Выборка исследований по пробирке
-        iss_list = []
-        for val in iss:  # Перебор выбранных исследований
-            iss_list.append(val.research.title)  # Добавление в список исследований по пробирке
-        res["rows"].append(
-            {"type": v.type.tube.title, "researches": ', '.join(str(x) for x in iss_list), "time": strtime(v.time_get), "dir_id": iss[0].napravleniye_id, "tube_id": v.id}
-        )  # Добавление пробирки с исследованиями в вывод
-    return JsonResponse(res)
-
-
 @login_required
 def print_history(request):
     """Печать истории забора материала за день"""

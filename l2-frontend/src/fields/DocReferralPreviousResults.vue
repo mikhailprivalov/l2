@@ -52,7 +52,6 @@
 
 <script lang="ts">
 import { debounce } from 'lodash';
-import api from '@/api';
 import { Research } from '@/types/research';
 
 const makeDefaultRow = () => ({
@@ -102,7 +101,7 @@ export default {
       this.changeValue();
     }, 500),
     async insertParaclinicResult(direction) {
-      const result_data = await api('directions/result-patient-by-direction', {
+      const result_data = await this.$api('directions/result-patient-by-direction', {
         isLab: false,
         isDocReferral: true,
         isParaclinic: false,

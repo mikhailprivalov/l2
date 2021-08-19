@@ -50,7 +50,6 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import * as actions from '@/store/action-types';
-import api from '@/api';
 import Modal from '@/ui-cards/Modal.vue';
 import PatientSmallPicker from '@/ui-cards/PatientSmallPicker.vue';
 
@@ -100,7 +99,7 @@ export default class TimeSlot extends Vue {
   async loadData() {
     this.details = null;
     await this.$store.dispatch(actions.INC_LOADING);
-    const { ok, data } = await api('/schedule/details', this.data, 'id');
+    const { ok, data } = await this.$api('/schedule/details', this.data, 'id');
     this.details = data;
 
     if (!ok) {
@@ -128,7 +127,7 @@ export default class TimeSlot extends Vue {
 
   async save() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { ok, message } = await api('/schedule/save', {
+    const { ok, message } = await this.$api('/schedule/save', {
       ...this.data,
       ...this.details,
     });

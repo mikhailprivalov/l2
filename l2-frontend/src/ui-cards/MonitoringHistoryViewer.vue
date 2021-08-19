@@ -85,7 +85,6 @@ import { mapGetters } from 'vuex';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
-import api from '@/api';
 
 interface Param {
   title: string;
@@ -175,7 +174,7 @@ export default class MonitoringHistoryViewer extends Vue {
 
   async reloadPk(pk) {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { rows: [data] = [] } = await api('/monitorings/history', { pk });
+    const { rows: [data] = [] } = await this.$api('/monitorings/history', { pk });
     if (data) {
       this.rows = this.rows.map(r => (r.pk === pk ? data : r));
     }
@@ -185,7 +184,7 @@ export default class MonitoringHistoryViewer extends Vue {
   async loadNext(replace = false) {
     this.listLoading = true;
     await this.$store.dispatch(actions.INC_LOADING);
-    const { rows, nextOffset, totalCount } = await api('/monitorings/history', {
+    const { rows, nextOffset, totalCount } = await this.$api('/monitorings/history', {
       offset: this.nextOffset,
       filterResearches: this.filterResearches,
     });

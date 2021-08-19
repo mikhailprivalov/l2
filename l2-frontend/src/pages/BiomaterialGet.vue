@@ -3,8 +3,10 @@
     <div class="a">
       <BiomaterialSearch />
     </div>
-    <div class="b">2</div>
-    <div class="d">3</div>
+    <div class="b" v-if="needShowSchedule">2</div>
+    <div class="d" :class="!needShowSchedule && 'no-schedule'">
+      <BiomaterialHistory />
+    </div>
   </div>
 </template>
 
@@ -12,13 +14,17 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import BiomaterialSearch from '@/ui-cards/BiomaterialSearch.vue';
+import BiomaterialHistory from '@/ui-cards/BiomaterialHistory.vue';
 
 @Component({
   components: {
     BiomaterialSearch,
+    BiomaterialHistory,
   },
 })
-export default class BiomaterialGet extends Vue {}
+export default class BiomaterialGet extends Vue {
+  needShowSchedule = false;
+}
 </script>
 
 <style lang="scss" scoped>
@@ -62,6 +68,10 @@ export default class BiomaterialGet extends Vue {}
     border-top: 1px solid #aaa;
     top: 50%;
     bottom: 0;
+
+    &.no-schedule {
+      top: 0;
+    }
   }
 }
 </style>

@@ -1,19 +1,32 @@
 <template>
   <div class="row">
     <div class="col-xs-4" style="padding-right: 3px;">
-      <select-picker :val="date_type" :options="date_types" :func="change_type" :multiple="false" :actions_box="false"/>
+      <select-picker
+        :val="date_type"
+        :options="date_types"
+        :func="change_type"
+        :multiple="false"
+        :actions_box="false"
+        :dataContainer="dataContainer"
+      />
     </div>
     <div class="col-xs-8">
-      <div :class="[{hidden: date_type !== 'd'}]">
-        <date-field :val.sync="values.date" :def="values.date"/>
+      <div :class="[{ hidden: date_type !== 'd' }]">
+        <date-field :val.sync="values.date" :def="values.date" />
       </div>
-      <div class="row" :class="[{hidden: date_type !== 'm'}]">
+      <div class="row" :class="[{ hidden: date_type !== 'm' }]">
         <div class="col-xs-6" style="padding-right: 3px;">
-          <select-picker :val="values.month" :options="monthes" :func="change_month" :multiple="false"
-                         :actions_box="false"/>
+          <select-picker
+            :val="values.month"
+            :options="monthes"
+            :func="change_month"
+            :multiple="false"
+            :actions_box="false"
+            :dataContainer="dataContainer"
+          />
         </div>
         <div class="col-xs-6">
-          <input type="number" class="form-control year" v-model="values.year" min="2015" max="2100"/>
+          <input type="number" class="form-control year" v-model="values.year" min="2015" max="2100" />
         </div>
       </div>
     </div>
@@ -39,11 +52,17 @@ export default {
         };
       },
     },
+    dataContainer: {
+      default: null,
+    },
   },
   data() {
     return {
       date_type: 'd',
-      date_types: [{ value: 'd', label: 'За день' }, { value: 'm', label: 'За месяц' }],
+      date_types: [
+        { value: 'd', label: 'За день' },
+        { value: 'm', label: 'За месяц' },
+      ],
       monthes: [
         { value: '0', label: 'Январь' },
         { value: '1', label: 'Февраль' },
@@ -64,17 +83,21 @@ export default {
   watch: {
     date_type() {
       this.$emit('update:date_type', this.date_type);
+      this.$emit('updateDateType', this.date_type);
     },
     values: {
       handler() {
         this.$emit('update:values', this.values);
+        this.$emit('updateValues', this.values);
       },
       deep: true,
     },
   },
   created() {
     this.$emit('update:date_type', this.date_type);
+    this.$emit('updateDateType', this.date_type);
     this.$emit('update:values', this.values);
+    this.$emit('updateValues', this.values);
   },
   methods: {
     change_type(v) {

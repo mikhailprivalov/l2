@@ -198,7 +198,6 @@ import Vue2Filters from 'vue2-filters';
 import { mapGetters } from 'vuex';
 import * as actions from '@/store/action-types';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
-import api from '@/api';
 
 Vue.use(Vue2Filters);
 
@@ -262,7 +261,7 @@ export default class ConstructScreening extends Vue {
 
   async loadRows() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { rows } = await api('screening/get-directory');
+    const { rows } = await this.$api('screening/get-directory');
     this.rows = rows;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
@@ -325,7 +324,7 @@ export default class ConstructScreening extends Vue {
 
   async create() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { ok, message } = await api('screening/save', {
+    const { ok, message } = await this.$api('screening/save', {
       service: this.serviceToCreate,
       sex: this.sexToCreate,
       ageFrom: this.ageFromToCreate,
@@ -353,7 +352,7 @@ export default class ConstructScreening extends Vue {
 
   async saveRow(row, disableReloading = false) {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { ok, message } = await api('screening/save', {
+    const { ok, message } = await this.$api('screening/save', {
       screening: row.pk,
       service: row.research_id,
       sex: row.sex_client,

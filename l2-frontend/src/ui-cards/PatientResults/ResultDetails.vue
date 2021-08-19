@@ -47,7 +47,6 @@
 
 <script lang="ts">
 import _ from 'lodash';
-import api from '@/api';
 
 export default {
   name: 'ResultDetails',
@@ -87,9 +86,14 @@ export default {
         return;
       }
       this.active = true;
-      const result_data = await api('directions/result-patient-by-direction', this, ['isLab', 'isDocReferral', 'isParaclinic'], {
-        dir: this.direction,
-      });
+      const result_data = await this.$api(
+        'directions/result-patient-by-direction',
+        this,
+        ['isLab', 'isDocReferral', 'isParaclinic'],
+        {
+          dir: this.direction,
+        },
+      );
       this.result = result_data.results[0] || [];
     },
     hide_results() {

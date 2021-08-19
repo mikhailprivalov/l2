@@ -4,7 +4,6 @@
 </template>
 
 <script lang="ts">
-import api from '@/api';
 import * as actions from '@/store/action-types';
 
 export default {
@@ -29,7 +28,7 @@ export default {
         await this.get_auth();
       }
 
-      await new Promise((resolve) => {
+      await new Promise(resolve => {
         const openWindow = window.open(this.urlAuth, '_blank');
         setTimeout(() => {
           openWindow.close();
@@ -43,7 +42,7 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async get_auth() {
-      const params = await api('rmis-link');
+      const params = await this.$api('rmis-link');
       this.urlAuth = params.auth_param;
       if (this.isSchedule) {
         this.urlAddress = params.url_schedule;

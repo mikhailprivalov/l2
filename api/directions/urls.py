@@ -41,4 +41,5 @@ urlpatterns = [
     path('tubes-for-get', views.tubes_for_get),
     path('tubes-register-get', views.tubes_register_get),
     path('tubes-for-confirm', views.tubes_for_confirm),
+    path('tubes-get-history', views.tubes_get_history),
 ]

@@ -68,7 +68,6 @@
 <script lang="ts">
 import moment from 'moment';
 import * as actions from '@/store/action-types';
-import api from '@/api';
 import PharmacotherapyRow from '@/ui-cards/PharmacotherapyRow.vue';
 
 export default {
@@ -93,7 +92,7 @@ export default {
   },
   async mounted() {
     await this.$store.dispatch(actions.INC_LOADING);
-    this.params = await api('procedural-list/params');
+    this.params = await this.$api('procedural-list/params');
     await this.$store.dispatch(actions.DEC_LOADING);
   },
   methods: {

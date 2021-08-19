@@ -38,8 +38,6 @@
 </template>
 
 <script lang="ts">
-import api from '@/api';
-
 export default {
   name: 'ScreeningButton',
   components: {
@@ -108,7 +106,7 @@ export default {
   methods: {
     async load() {
       this.loading = true;
-      const { data } = await api('patients/individuals/load-screening', this, 'cardPk');
+      const { data } = await this.$api('patients/individuals/load-screening', this, 'cardPk');
       this.data = data;
       this.loading = false;
     },

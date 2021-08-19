@@ -85,7 +85,6 @@
 <script lang="ts">
 import moment from 'moment';
 import * as actions from '@/store/action-types';
-import api from '@/api';
 import ResearchDisplay from '@/ui-cards/ResearchDisplay.vue';
 import patientsPoint from '@/api/patients-point';
 
@@ -146,7 +145,7 @@ export default {
   methods: {
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const result = await api('list-wait/create', this, ['card_pk', 'researches', 'date', 'comment'], {
+      const result = await this.$api('list-wait/create', this, ['card_pk', 'researches', 'date', 'comment'], {
         phone: this.card.phone,
       });
       await this.load_data();
@@ -164,14 +163,14 @@ export default {
         return;
       }
       if (!this.visible) {
-        this.rows = await api('list-wait/actual-rows', this, 'card_pk');
+        this.rows = await this.$api('list-wait/actual-rows', this, 'card_pk');
         return;
       }
       this.loaded = false;
       await this.$store.dispatch(actions.INC_LOADING);
       this.card = await patientsPoint.getCard(this, 'card_pk');
       this.loaded = true;
-      this.rows = await api('list-wait/actual-rows', this, 'card_pk');
+      this.rows = await this.$api('list-wait/actual-rows', this, 'card_pk');
       await this.$store.dispatch(actions.DEC_LOADING);
     },
   },

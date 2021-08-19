@@ -8,7 +8,6 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import moment, { Moment } from 'moment';
-import api from '@/api';
 import Day from './Day.vue';
 
 @Component({
@@ -44,7 +43,7 @@ export default class Schedule extends Vue {
 
   async getScheduleWeek() {
     this.today = moment().format('YYYY-MM-DD');
-    const { days, startTime, endTime } = await api('/schedule/days', {
+    const { days, startTime, endTime } = await this.$api('/schedule/days', {
       date: this.date.format('YYYY-MM-DD'),
     });
 

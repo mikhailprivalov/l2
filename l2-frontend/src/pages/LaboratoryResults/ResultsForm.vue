@@ -169,7 +169,6 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import * as actions from '@/store/action-types';
-import api from '@/api';
 import Ref from '@/pages/LaboratoryResults/Ref.vue';
 import TextInputField from '@/pages/LaboratoryResults/TextInputField.vue';
 import BloodTypeField from '@/pages/LaboratoryResults/BloodTypeField.vue';
@@ -250,7 +249,7 @@ export default {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const { data } = await api('laboratory/form', { pk });
+      const { data } = await this.$api('laboratory/form', { pk });
       this.pk = data.pk;
       this.research = data.research;
       this.execData = data.execData;
@@ -289,7 +288,13 @@ export default {
     },
     async save(withoutReloading = false) {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await api('laboratory/save', this, ['pk', 'result', 'comment', 'co_executor', 'co_executor2']);
+      const { ok, message } = await this.$api('laboratory/save', this, [
+        'pk',
+        'result',
+        'comment',
+        'co_executor',
+        'co_executor2',
+      ]);
       if (!ok) {
         this.$root.$emit('msg', 'error', message);
       } else {
@@ -303,7 +308,7 @@ export default {
     },
     async confirm() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await api('laboratory/confirm', this, 'pk');
+      const { ok, message } = await this.$api('laboratory/confirm', this, 'pk');
       if (!ok) {
         this.$root.$emit('msg', 'error', message);
       } else {
@@ -328,7 +333,7 @@ export default {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await api('laboratory/reset-confirm', this, 'pk');
+      const { ok, message } = await this.$api('laboratory/reset-confirm', this, 'pk');
       if (!ok) {
         this.$root.$emit('msg', 'error', message);
       } else {

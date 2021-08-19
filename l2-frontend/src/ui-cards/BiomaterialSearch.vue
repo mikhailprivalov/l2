@@ -187,7 +187,7 @@
       </tbody>
     </table>
 
-    <table class="table table-bordered table-condensed tubes-table" v-if="types && needGlobalCheck">
+    <table class="table table-bordered table-condensed tubes-table" v-if="tubes && needGlobalCheck">
       <colgroup>
         <col style="width: 70%" />
         <col />
@@ -216,7 +216,7 @@
         </tr>
       </tbody>
     </table>
-    <MountingPortal mountTo="#portal-place-modal" name="TimeSlotPopup" append>
+    <MountingPortal mountTo="#portal-place-modal" name="ConfirmListPopup" append>
       <transition name="fade">
         <modal
           v-if="showConfirmList"
@@ -257,11 +257,11 @@
                     <td @click="t.checked = !t.checked" class="cursor-pointer">
                       {{ t.patient }}
                     </td>
-                    <td @click="t.checked = !t.checked" class="cursor-pointer">
+                    <td>
                       {{ t.direction }}
                       <br /><small><a @click.stop.prevent="cancel(t.direction)" href="#">отменить</a></small>
                     </td>
-                    <td @click="t.checked = !t.checked" class="cursor-pointer">
+                    <td>
                       {{ t.pk }}
                       <br /><small><a @click.stop.prevent="printBarcodes(t.pk)" href="#">печать ш/к</a></small>
                     </td>
@@ -302,7 +302,6 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { debounce } from 'lodash/function';
-import api from '@/api';
 import * as actions from '@/store/action-types';
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import Modal from '@/ui-cards/Modal.vue';
@@ -322,7 +321,6 @@ import Modal from '@/ui-cards/Modal.vue';
       client: null,
       direction: null,
       tubes: null,
-      types: null,
       details: {},
       tubesForConfirm: [],
       loading: false,
@@ -359,8 +357,6 @@ export default class BiomaterialSearch extends Vue {
   client: any;
 
   tubes: any;
-
-  types: any;
 
   details: any;
 
@@ -421,12 +417,11 @@ export default class BiomaterialSearch extends Vue {
     this.scannerBuffer = '';
     this.clearTimer = null;
     await this.$store.dispatch(actions.INC_LOADING);
-    const data = await api('/directions/tubes-for-get', { pk: q });
+    const data = await this.$api('/directions/tubes-for-get', { pk: q });
     if (data.ok) {
       this.direction = data.direction;
       this.client = data.client;
       this.tubes = data.tubes;
-      this.types = data.types;
       this.details = data.details;
     } else {
       const msg = data.message || 'Не найдено';
@@ -531,7 +526,7 @@ export default class BiomaterialSearch extends Vue {
       return;
     }
     await this.$store.dispatch(actions.INC_LOADING);
-    const { cancel } = await api('/directions/cancel', { pk: pk || this.direction.pk });
+    const { cancel } = await this.$api('/directions/cancel', { pk: pk || this.direction.pk });
     if (this.direction && (!pk || this.direction.pk === pk)) {
       this.direction.cancel = cancel;
     }
@@ -560,27 +555,33 @@ export default class BiomaterialSearch extends Vue {
         ],
         [],
       );
-    const { ok, details } = await api('/directions/tubes-register-get', { pks });
+    const { ok, details } = await this.$api('/directions/tubes-register-get', { pks });
     await this.$store.dispatch(actions.DEC_LOADING);
     if (needPrintBarcodes && ok) {
       this.printBarcodes(pks);
     }
 
-    this.details = { ...this.details, ...(details || {}) };
+    if (this.details) {
+      this.details = { ...this.details, ...(details || {}) };
+    }
 
     if (!ok) {
       this.$root.$emit('msg', 'error', 'Ошибка');
     } else {
-      this.tubes = Object.entries<any>(this.tubes).reduce(
-        (a, [lab, tubes]) => ({
-          ...a,
-          [lab]: Object.entries<any>(tubes).reduce(
-            (x, [k, v]) => ({ ...x, [k]: { ...v, status: v.status || pks.includes(v.id) } }),
-            {},
-          ),
-        }),
-        {},
-      );
+      if (this.tubes) {
+        this.tubes = Object.entries<any>(this.tubes).reduce(
+          (a, [lab, tubes]) => ({
+            ...a,
+            [lab]: Object.entries<any>(tubes).reduce(
+              (x, [k, v]) => ({ ...x, [k]: { ...v, status: v.status || pks.includes(v.id) } }),
+              {},
+            ),
+          }),
+          {},
+        );
+      }
+
+      this.$root.$emit('load-tubes', pks);
 
       this.$root.$emit('msg', 'ok', 'Забор материала зарегистрирован');
 
@@ -596,7 +597,7 @@ export default class BiomaterialSearch extends Vue {
     this.showConfirmList = true;
     this.loading = !hidden;
     await this.$store.dispatch(actions.INC_LOADING);
-    const { rows } = await api('/directions/tubes-for-confirm');
+    const { rows } = await this.$api('/directions/tubes-for-confirm');
     this.tubesForConfirm = rows;
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loading = false;

@@ -47,6 +47,7 @@ export default (): void => {
   Vue.use(VueInputMask);
   Vue.use(VueCollapse);
   Vue.use(PortalVue);
+  Vue.prototype.$api = api;
   Vue.filter('pluralAge', amount => `${amount} ${plural(amount, 'год', 'года', 'лет')}`);
   Vue.filter('pluralRecords', amount => `${amount} ${plural(amount, 'запись', 'записи', 'записей')}`);
   Vue.filter('pluralCount', amount => `${amount} ${plural(amount, 'штука', 'штуки', 'штук')}`);

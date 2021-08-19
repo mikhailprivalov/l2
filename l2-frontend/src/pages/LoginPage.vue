@@ -36,7 +36,6 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
 import { POSITION } from 'vue-toastification/src/ts/constants';
-import api from '@/api/index';
 import * as actions from '@/store/action-types';
 import { Menu } from '@/types/menu';
 
@@ -82,7 +81,7 @@ export default class LoginPage extends Vue {
 
   async auth() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { ok, message, fio } = await api('users/auth', this, ['username', 'password']);
+    const { ok, message, fio } = await this.$api('users/auth', this, ['username', 'password']);
     await this.$store.dispatch(actions.DEC_LOADING);
     if (!ok) {
       this.$toast.error(message, {
