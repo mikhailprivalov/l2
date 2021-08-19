@@ -372,7 +372,7 @@ def update_parent(request):
             return JsonResponse({"ok": False, "message": "Нет прав для стационарного изменения"})
 
     parent_iss = None
-    if parent > -1:
+    if parent is not None and parent > -1:
         parent_iss = Issledovaniya.objects.get(pk=parent)
         Napravleniya.objects.filter(pk__in=slave_dirs).update(parent=parent_iss)
     if parent == -1:
@@ -1504,7 +1504,7 @@ def directions_paraclinic_result(request):
                         step = 5
                     date_end = try_strptime(proc_data['dateEnd'], ('%d.%m.%Y', '%Y-%m-%d')).astimezone(user_timezone)
                     parent_child_data = rb.get('parent_child_data', None)
-                    if proc_data.get('isNew'):
+                    if proc_data.get('isNew') and parent_child_data:
                         iss_hosp = Issledovaniya.objects.get(napravleniye_id=parent_child_data['current_direction'])
                         proc_obj = ProcedureList(
                             research=iss_hosp.research,
@@ -1770,8 +1770,8 @@ def directions_paraclinic_result(request):
                 if parent == -1:
                     Napravleniya.objects.filter(pk=parent_child_data['current_direction']).update(parent=None)
 
-                parent = int(parent_child_data['current_iss'])
-                child = int(parent_child_data['child_iss'])
+                parent = int(parent_child_data.get('current_iss', -1))
+                child = int(parent_child_data.get('child_iss', -1))
                 if parent > -1 and child > -1:
                     parent_iss = Issledovaniya.objects.get(pk=parent)
                     child_iss = Issledovaniya.objects.values_list('napravleniye_id').get(pk=child)
@@ -2051,7 +2051,7 @@ def last_field_result(request):
         main_hosp_dir = hosp_get_hosp_direction(num_dir)[0]
         operations_data = hosp_get_operation_data(main_hosp_dir['direction'])
         field_is_aggregate_operation = True
-    elif request_data["fieldPk"].find('%proto_description') != -1:
+    elif request_data["fieldPk"].find('%proto_description') != -1 and 'iss_pk' in request_data:
         aggregate_data = hosp_get_text_iss(request_data['iss_pk'], True, 'desc')
         field_is_aggregate_proto_description = True
     elif request_data["fieldPk"].find("|") > -1:

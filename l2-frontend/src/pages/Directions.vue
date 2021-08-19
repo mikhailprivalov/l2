@@ -234,7 +234,27 @@ export default {
         minSize: 200,
       });
     }
-    window.$(window).on('beforeunload', () => {
+    window.$(window).on('beforeunload', this.unload);
+  },
+  beforeDestroy() {
+    window.$(window).off('beforeunload', this.unload);
+  },
+  async beforeRouteLeave(to, from, next) {
+    const msg = this.unload();
+
+    if (msg) {
+      try {
+        await this.$dialog.confirm(msg);
+      } catch (_) {
+        next(false);
+        return;
+      }
+    }
+
+    next();
+  },
+  methods: {
+    unload() {
       if (
         this.selected_card.pk === -1
         || this.selected_researches.length <= 0
@@ -246,10 +266,9 @@ export default {
         }
         return undefined;
       }
+
       return 'Исследования выбраны, но направления не созданы. Вы уверены, что хотите покинуть страницу?';
-    });
-  },
-  methods: {
+    },
     do_show_rmis_directions() {
       this.show_rmis_directions = true;
     },
