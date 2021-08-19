@@ -119,6 +119,7 @@ class SettingManager:
             "paraclinic_module": SettingManager.get("paraclinic_module", default='false', default_type='b'),
             "eds_base_url": SettingManager.get_eds_base_url(),
             "medbook_auto_start": SettingManager.get_medbook_auto_start(),
+            "descriptive_rich_text": SettingManager.get("descriptive_rich_text", default='false', default_type='b'),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
 
