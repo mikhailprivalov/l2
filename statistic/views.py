@@ -1541,9 +1541,16 @@ def sreening_xls(request):
     datetime_end = f"{d2.strftime('%Y-%m-%d')} 23:59:59:999999"
     date_for_age = f"{d2.strftime('%Y-%m-%d')}"
 
+    # кол-во прикрепленных по возрасту всего
     count_age_for_month = screening_age_for_month(date_for_age)
     print(count_age_for_month)
+    # кол-во в плане по скринингу в текущем месяце
     count_regplan_for_month = screening_regplan_for_month(year, month)
     print(count_regplan_for_month)
+
+    # из них подлежащих при диспансеризации (кол-во)
+
+    # полчить карты и "research(уникальные)" "возраста на конец года" из screening_regplan_for_month -> проверить возраст
+    # далее првоерить в DispensaryRouteSheet пары
 
     return True
