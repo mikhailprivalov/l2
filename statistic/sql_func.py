@@ -403,5 +403,41 @@ def screening_regplan_for_month(date_plan_year, date_plan_month):
     return rows
 
 
+def get_screening_for_month_and_must_dispensarization(screening_date_plan_year, date_plan_month, date_dispansarization):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+          SELECT count(distinct dispensarisation.card_id) FROM 
+            (SELECT 
+                  clients_screeningregplan.card_id, 
+                  directory_dispensaryroutesheet.research_id as dispensarisation_research
+                FROM clients_screeningregplan
+                LEFT JOIN clients_card
+                ON clients_card.id=clients_screeningregplan.card_id
+            
+                LEFT JOIN directory_researches 
+                ON directory_researches.id=clients_screeningregplan.research_id
+            
+                LEFT JOIN clients_individual
+                ON clients_individual.id=clients_card.individual_id
+                LEFT JOIN directory_dispensaryroutesheet
+                ON 
+                  clients_screeningregplan.research_id=directory_dispensaryroutesheet.research_id AND
+                  directory_dispensaryroutesheet.age_client = date_part('year', age(%(date_dispansarization)s, clients_individual.birthday))::int AND
+                  clients_individual.sex = directory_dispensaryroutesheet.sex_client
+                WHERE date_part('year', clients_screeningregplan.date)::int = %(screening_date_plan_year)s AND
+                date_part('month', clients_screeningregplan.date)::int = %(date_plan_month)s
+                ORDER BY clients_screeningregplan.card_id) dispensarisation
+                WHERE dispensarisation.dispensarisation_research is NOT NULL
+            """,
+            params={
+                'screening_date_plan_year': screening_date_plan_year,
+                'screening_date_plan_month': date_plan_month,
+                'date_dispansarization': date_dispansarization,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
 
 

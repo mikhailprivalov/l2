@@ -1550,7 +1550,7 @@ def sreening_xls(request):
 
     # из них подлежащих при диспансеризации (кол-во)
 
-    # полчить карты и "research(уникальные)" "возраста на конец года" из screening_regplan_for_month -> проверить возраст
+    # получить карты и "research(уникальные)" "возраста на конец года" из screening_regplan_for_month -> проверить возраст
     # далее првоерить в DispensaryRouteSheet пары
 
     return True
