@@ -1,9 +1,10 @@
 <template>
-  <div class="base" :class="{fullWidth, redesigned}">
-    <a href="#" @click.prevent="changeValue(v)" :class="{ active: v === val, disabled }"
-       :key="v"
-       v-for="v in variantsLocal">
-      <span>{{ v }} <span class="badge badge-warning" v-if="Boolean(bages[v])">{{ bages[v] }}</span></span>
+  <div class="base" :class="{ fullWidth, redesigned }">
+    <a href="#" @click.prevent="changeValue(v)" :class="{ active: v === val, disabled }" :key="v" v-for="v in variantsLocal">
+      <span>
+        {{ uppercase ? v.toUpperCase() : v }}
+        <span class="badge badge-warning" v-if="Boolean(bages[v])">{{ bages[v] }}</span>
+      </span>
     </a>
   </div>
 </template>
@@ -16,6 +17,11 @@ export default {
     },
     variants: {
       required: true,
+    },
+    uppercase: {
+      required: false,
+      default: false,
+      type: Boolean,
     },
     disabled: {
       required: false,
@@ -111,7 +117,7 @@ export default {
 
     &.disabled {
       cursor: not-allowed;
-      opacity: .8;
+      opacity: 0.8;
     }
 
     > span {
@@ -126,7 +132,7 @@ export default {
   }
 
   &:not(.redesigned) a {
-    background-color: #AAB2BD;
+    background-color: #aab2bd;
     color: #fff;
 
     &:hover:not(.disabled) {
@@ -154,7 +160,7 @@ export default {
 
     &.active {
       color: #049372 !important;
-      background-color: #ECF0F1;
+      background-color: #ecf0f1;
       box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
     }
 

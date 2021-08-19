@@ -8,6 +8,8 @@ urlpatterns = [
     path('create-l2-individual-from-card', views.create_l2_individual_from_card),
     path('card/<int:card_id>', views.patients_get_card_data),
     path('card/save', views.patients_card_save),
+    path('card/archive', views.patients_card_archive),
+    path('card/unarchive', views.patients_card_unarchive),
     path('individuals/search', views.individual_search),
     path('individuals/sex', views.get_sex_by_param),
     path('individuals/edit-doc', views.edit_doc),

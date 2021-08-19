@@ -7,34 +7,54 @@
         </a>
 
         <transition name="fade">
-          <modal v-if="opened" @close="close" show-footer="true" white-bg="true"
-                 max-width="710px" width="100%" marginLeftRight="auto" class="an">
+          <modal
+            v-if="opened"
+            @close="close"
+            show-footer="true"
+            white-bg="true"
+            max-width="710px"
+            width="100%"
+            marginLeftRight="auto"
+            class="an"
+          >
             <span slot="header">Расширенный поиск пациента</span>
-            <div slot="body" class="an-body">
+            <div slot="body" class="an-body search-body">
               <div class="d-root">
                 <form @submit.prevent="search" autocomplete="off">
-                  <PatientSearchForm v-model="form"/>
+                  <PatientSearchForm v-model="form" />
                   <div class="row mt15">
                     <div class="col-xs-5" style="padding-right: 10px">
                       <div class="input-group">
-                        <SelectFieldTitled v-model="base" :variants="basesFiltered"/>
+                        <SelectFieldTitled v-model="base" :variants="basesFiltered" />
                         <span class="input-group-btn">
-                        <button class="btn btn-primary-nb btn-blue-nb search-btn" type="submit"
-                                :disabled="!isValidForm">
-                          {{ loading ? 'Загрузка' : 'Поиск' }}
-                        </button>
-                      </span>
+                          <button class="btn btn-primary-nb btn-blue-nb search-btn" type="submit" :disabled="!isValidForm">
+                            {{ loading ? 'Загрузка' : 'Поиск' }}
+                          </button>
+                        </span>
                       </div>
                     </div>
                     <div class="col-xs-2" style="padding-left: 0">
-                      <button @click="restoreForm" class="btn btn-blue-nb" type="button" :disabled="loading"
-                              v-if="formFromSaved" title="Вернуться к предыдущему поиску" v-tippy>
+                      <button
+                        @click="restoreForm"
+                        class="btn btn-blue-nb"
+                        type="button"
+                        :disabled="loading"
+                        v-if="formFromSaved"
+                        title="Вернуться к предыдущему поиску"
+                        v-tippy
+                      >
                         <i class="fas fa-history"></i>
                       </button>
                     </div>
                     <div class="col-xs-5 text-right">
-                      <button @click="clearForm" class="btn btn-blue-nb" type="button"
-                              :disabled="loading" title="Очистить форму" v-tippy>
+                      <button
+                        @click="clearForm"
+                        class="btn btn-blue-nb"
+                        type="button"
+                        :disabled="loading"
+                        title="Очистить форму"
+                        v-tippy
+                      >
                         <i class="fas fa-times"></i>
                       </button>
                     </div>
@@ -46,18 +66,20 @@
                 </div>
                 <div v-else-if="searched" class="results">
                   <div class="founded" v-for="(row, i) in results" @click="select_card(i)" :key="row.pk">
-                    <div class="founded-row">Карта <span class="b">{{ row.type_title }} {{ row.num }}</span></div>
+                    <div class="founded-row is-archive" v-if="row.isArchive">
+                      Карта в архиве
+                    </div>
+                    <div class="founded-row">
+                      Карта <span class="b">{{ row.type_title }} {{ row.num }}</span>
+                    </div>
                     <div class="founded-row">
                       <span class="b">ФИО, пол:</span> {{ row.family }} {{ row.name }} {{ row.twoname }}, {{ row.sex }}
                     </div>
-                    <div class="founded-row"><span class="b">Дата рождения:</span> {{ row.birthday }} ({{ row.age }})
-                    </div>
+                    <div class="founded-row"><span class="b">Дата рождения:</span> {{ row.birthday }} ({{ row.age }})</div>
                     <div class="founded-row" v-for="d in row.docs" :key="d.pk">
                       <span class="b">{{ d.type_title }}:</span> {{ d.serial }} {{ d.number }}
                     </div>
-                    <div class="founded-row" v-for="(p, i) in row.phones" :key="i">
-                      <span class="b">Телефон:</span> {{ p }}
-                    </div>
+                    <div class="founded-row" v-for="(p, i) in row.phones" :key="i"><span class="b">Телефон:</span> {{ p }}</div>
                   </div>
                   <div class="results-msg">
                     <small>Показано не более 20 карт</small>
@@ -115,7 +137,7 @@ import { SimplePatient } from '@/types/patient';
         return false;
       }
 
-      return Object.keys(this.form).some(k => Boolean(this.form[k]));
+      return Object.keys(this.form).some(k => typeof this.form[k] !== 'boolean' && Boolean(this.form[k]));
     },
     ...mapGetters(['bases', 'user_data']),
     formSavedKey() {
@@ -283,6 +305,7 @@ export default class ExtendedPatientSearch extends Vue {
       base_pk: card.base_pk,
       card_pk: card.pk,
       hide: true,
+      inc_archive: card.isArchive,
     });
     this.close();
   }
@@ -326,7 +349,7 @@ export default class ExtendedPatientSearch extends Vue {
   padding: 5px;
   border-radius: 5px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  transition: all .2s cubic-bezier(.25, .8, .25, 1);
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
 
   &:hover {
@@ -334,5 +357,9 @@ export default class ExtendedPatientSearch extends Vue {
     box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
     z-index: 1;
   }
+}
+
+.search-body {
+  overflow-x: hidden;
 }
 </style>

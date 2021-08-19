@@ -605,6 +605,12 @@ export default {
     setTimeout(() => {
       this.has_unsaved = false;
     }, 300);
+    setTimeout(() => {
+      this.has_unsaved = false;
+    }, 1000);
+    setTimeout(() => {
+      this.has_unsaved = false;
+    }, 2000);
   },
   computed: {
     permanent_directories_keys() {
