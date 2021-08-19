@@ -79,7 +79,7 @@
           </div>
           <div class="form-row">
             <div class="row-t">Пол</div>
-            <radio-field v-model="card.sex" :variants="GENDERS" fullWidth />
+            <RadioField v-model="card.sex" :variants="GENDERS" fullWidth uppercase />
           </div>
         </div>
       </form>
@@ -502,7 +502,8 @@
             </div>
           </div>
         </div>
-        <div class="input-group" style="margin-bottom: 10px" v-if="can_change_owner_directions">
+
+        <div class="input-group form-row-simple" style="margin-bottom: 10px" v-if="can_change_owner_directions">
           <div class="input-group-btn">
             <button type="button" class="btn btn-blue-nb nbr" @click="change_directions_owner()">
               Перенести все услуги в другую карту
@@ -510,6 +511,17 @@
             </button>
           </div>
           <input type="text" class="form-control" placeholder="Введите номер карты" v-model="new_card_num" />
+        </div>
+
+        <div class="form-row force-bt" v-if="can_change_owner_directions" style="margin-bottom: 10px">
+          <div class="row-t row-t-error bold" v-if="card.isArchive">Карта в архиве <i class="fas fa-exclamation-circle"></i></div>
+          <div class="row-t" v-else>Карта не архивирована</div>
+          <button type="button" class="btn btn-blue-nb nbr button-f" @click="do_unarchive()" v-if="card.isArchive">
+            Отменить архивацию карты
+          </button>
+          <button type="button" class="btn btn-blue-nb nbr button-f" @click="do_archive()" v-else>
+            Архивировать карту
+          </button>
         </div>
       </div>
       <modal
@@ -780,6 +792,7 @@ export default {
         medbookNumberCustomOriginal: '',
         medbookType: MEDBOOK_TYPES[0].type,
         medbookTypePrev: MEDBOOK_TYPES[0].type,
+        isArchive: false,
       },
       individuals: [],
       document_to_edit: -2,
@@ -1045,6 +1058,7 @@ export default {
         card_pk: data ? data.card_pk : this.card_pk,
         base_pk: this.base_pk,
         hide: hide_after,
+        inc_archive: true,
       });
     },
     async update_cdu(doc) {
@@ -1235,10 +1249,9 @@ export default {
       try {
         await this.$dialog.confirm(
           // eslint-disable-next-line max-len
-          `Перенести все услуги из карты № ${this.card.number}-${this.card.family} ${this.card.name} ${this.card.patronymic}) в карту № ${this.new_card_num} -${individual_fio} ?`,
+          `Перенести все услуги из карты №${this.card.number} — ${this.card.family} ${this.card.name} ${this.card.patronymic} в карту №${this.new_card_num} — ${individual_fio} ?`,
         );
       } catch (e) {
-        // pass
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
@@ -1249,6 +1262,49 @@ export default {
       this.$root.$emit('msg', 'ok', 'Направления успешно перенесены');
       this.$root.$emit('msg', 'ok', `Номера: ${data.directions}`);
       await this.$store.dispatch(actions.DEC_LOADING);
+      this.$root.$emit('update_card_data');
+    },
+    async do_archive() {
+      try {
+        await this.$dialog.confirm(
+          // eslint-disable-next-line max-len
+          `Вы действительно хотите архивировать карту №${this.card.number} — ${this.card.family} ${this.card.name} ${this.card.patronymic}?`,
+        );
+      } catch (e) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      await this.$api('patients/card/archive', {
+        pk: this.card.id,
+      });
+      await this.load_data();
+      this.$root.$emit('msg', 'ok', 'Карта архивирована');
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.$root.$emit('update_card_data');
+      this.update_card();
+    },
+    async do_unarchive() {
+      try {
+        await this.$dialog.confirm(
+          // eslint-disable-next-line max-len
+          `Вы действительно хотите вернуть карту №${this.card.number} — ${this.card.family} ${this.card.name} ${this.card.patronymic}?`,
+        );
+      } catch (e) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('patients/card/unarchive', {
+        pk: this.card.id,
+      });
+      await this.load_data();
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Карта возвращена');
+        this.$root.$emit('update_card_data');
+        this.update_card();
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
     },
   },
 };
@@ -1325,5 +1381,9 @@ export default {
   height: 26px;
   border-radius: 0;
   font-size: 10px;
+}
+
+.button-f {
+  flex: 1;
 }
 </style>

@@ -1927,6 +1927,16 @@ input[type="date"].form-control {
   border-radius: 2px;
 }
 
+.form-row-simple {
+  border-top: 1px solid #434a54;
+  border-bottom: 1px solid #434a54;
+
+  .form-control {
+    border-radius: 0;
+    border: none;
+  }
+}
+
 .form-row {
   width: 100%;
   display: flex;
@@ -1936,7 +1946,7 @@ input[type="date"].form-control {
     border-right: 1px solid #434a54;
   }
 
-  &:first-child:not(.nbt-i) {
+  &:first-child:not(.nbt-i), &.force-bt {
     border-top: 1px solid #434a54;
   }
 
@@ -1948,6 +1958,10 @@ input[type="date"].form-control {
     width: 35%;
     flex: 0 35%;
     color: #fff;
+
+    &-error {
+      background-color: #e74c3c;
+    }
   }
 
   &.border-right .row-t {
@@ -2449,4 +2463,13 @@ input[type="date"].form-control {
   display: inline-block;
   padding: 2px 6px;
   margin: -2px -6px;
+}
+
+.is-archive {
+  font-weight: bold;
+  color: #f00;
+}
+
+.bold {
+  font-weight: bold;
 }

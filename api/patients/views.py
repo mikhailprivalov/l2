@@ -7,6 +7,7 @@ from typing import Optional, List
 import pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
+from laboratory.decorators import group_required
 from django.core.exceptions import ValidationError
 from django.db import transaction, connections
 from django.db.models import Prefetch, Q
@@ -99,13 +100,14 @@ def patients_search_card(request):
     p3 = re.compile(r'^[0-9]{1,15}$')
     p_enp_re = re.compile(r'^[0-9]{16}$')
     p_enp = bool(re.search(p_enp_re, query))
-    p4 = re.compile(r'card_pk:\d+', flags=re.IGNORECASE)
+    p4 = re.compile(r'card_pk:\d+(:(true|false))?', flags=re.IGNORECASE)
     p4i = bool(re.search(p4, query.lower()))
     p5 = re.compile(r'phone:.+')
     p5i = bool(re.search(p5, query))
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     c = None
     has_phone_search = False
+    inc_archive = form and form.get('archive', False)
 
     if extended_search and form:
         q = {}
@@ -249,7 +251,10 @@ def patients_search_card(request):
             if len(objects) == 0:
                 resync = False
                 try:
-                    objects = list(Individual.objects.filter(card__number=query.upper(), card__is_archive=False, card__base=card_type))
+                    objects = Individual.objects.filter(card__number=query.upper(), card__base=card_type)
+                    if not inc_archive:
+                        objects = objects.filter(card__is_archive=False)
+                    objects = list(objects)
                     if (card_type.is_rmis or card_type.internal_type) and len(objects) == 0 and len(query) == 16 and not suggests:
                         if not c:
                             c = Client(modules="patients")
@@ -284,9 +289,12 @@ def patients_search_card(request):
                     thread.start()
 
     if p4i:
-        cards = Card.objects.filter(pk=int(query.split(":")[1]))
+        parts = query.split(":")
+        cards = Card.objects.filter(pk=int(parts[1]))
+        inc_archive = inc_archive or (len(parts) > 2 and parts[2] == 'true')
     else:
-        cards = Card.objects.filter(base=card_type, individual__in=objects, is_archive=False)
+        cards = Card.objects.filter(base=card_type, individual__in=objects)
+
         if not has_phone_search and re.match(p3, query):
             cards = cards.filter(number=query)
 
@@ -303,9 +311,12 @@ def patients_search_card(request):
     if birthday_order:
         cards = cards.order_by('-individual__birthday')
 
+    if not inc_archive:
+        cards = cards.filter(is_archive=False)
+
     row: Card
     for row in (
-        cards.filter(is_archive=False)
+        cards
         .select_related("individual", "base")
         .prefetch_related(
             Prefetch(
@@ -344,6 +355,7 @@ def patients_search_card(request):
                 "fio_age": row.individual.fio(full=True),
                 "sex": row.individual.sex,
                 "individual_pk": row.individual_id,
+                "isArchive": row.is_archive,
                 "pk": row.pk,
                 "phones": Phones.phones_to_normalized_list(row.phones_set.all(), row.phone),
                 "main_diagnosis": row.main_diagnosis,
@@ -467,6 +479,7 @@ def patients_search_l2_card(request):
     return JsonResponse({"results": data})
 
 
+@login_required
 def patients_get_card_data(request, card_id):
     card = Card.objects.get(pk=card_id)
     c = model_to_dict(card)
@@ -513,10 +526,13 @@ def patients_get_card_data(request, card_id):
             "medbookNumberCustomOriginal": card.medbook_number if card.medbook_type == 'custom' else '',
             "medbookType": card.medbook_type,
             "medbookTypePrev": card.medbook_type,
+            "isArchive": card.is_archive,
         }
     )
 
 
+@login_required
+@group_required("Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Оператор Контакт-центра")
 def patients_card_save(request):
     request_data = json.loads(request.body)
     message = ""
@@ -610,6 +626,32 @@ def patients_card_save(request):
             messages.append("Синхронизация с РМИС не удалась")
     result = "ok"
     return JsonResponse({"result": result, "message": message, "messages": messages, "card_pk": card_pk, "individual_pk": individual_pk})
+
+
+@login_required
+@group_required("Управление иерархией истории")
+def patients_card_archive(request):
+    request_data = json.loads(request.body)
+    pk = request_data['pk']
+    card = Card.objects.get(pk=pk)
+    card.is_archive = True
+    card.save()
+    return JsonResponse({"ok": True})
+
+
+@login_required
+@group_required("Управление иерархией истории")
+def patients_card_unarchive(request):
+    request_data = json.loads(request.body)
+    pk = request_data['pk']
+    card = Card.objects.get(pk=pk)
+    if card.is_archive:
+        n = card.number
+        if Card.objects.filter(number=n, is_archive=False, base=card.base).exists():
+            return JsonResponse({"ok": False, "message": "fНомер {n} уже занят другой картой"})
+        card.is_archive = False
+        card.save()
+    return JsonResponse({"ok": True})
 
 
 def individual_search(request):

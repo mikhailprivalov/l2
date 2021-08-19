@@ -1067,13 +1067,6 @@ export default {
     },
   },
   mounted() {
-    window.$(window).on('beforeunload', () => {
-      if (this.has_changed) {
-        return 'Возможно имеются несохраненные изменения! Вы уверены, что хотите покинуть страницу?';
-      }
-
-      return undefined;
-    });
     this.load_history();
     this.$root.$on('hide_dreg', () => {
       this.load_dreg_rows();
@@ -1113,8 +1106,33 @@ export default {
 
     const urlParams = new URLSearchParams(window.location.search);
     this.embedded = urlParams.get('embedded') === '1';
+    window.$(window).on('beforeunload', this.unload);
+  },
+  beforeDestroy() {
+    window.$(window).off('beforeunload', this.unload);
+  },
+  async beforeRouteLeave(to, from, next) {
+    const msg = this.unload();
+
+    if (msg) {
+      try {
+        await this.$dialog.confirm(msg);
+      } catch (_) {
+        next(false);
+        return;
+      }
+    }
+
+    next();
   },
   methods: {
+    unload() {
+      if (!this.has_changed) {
+        return undefined;
+      }
+
+      return 'Возможно имеются несохраненные изменения! Вы уверены, что хотите покинуть страницу?';
+    },
     async load_location() {
       if (!this.has_loc) {
         return;

@@ -126,7 +126,7 @@ def get_departments_can_operate(request):
 def change_anestesiolog(request):
     request_data = json.loads(request.body)
     plan_pk = request_data['plan_pk']
-    doc_anesthetist_id = request_data['doc_anesthetist_pk']
+    doc_anesthetist_id = request_data.get('doc_anesthetist_pk', -1)
     plan = PlanOperations.objects.get(pk=plan_pk)
     plan.doc_anesthetist_id = None if doc_anesthetist_id == -1 else doc_anesthetist_id
     plan.save()

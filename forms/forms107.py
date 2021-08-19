@@ -111,7 +111,7 @@ def form_01(request_data):
     result = get_temperature_list(num_dir[0])
     titles = json.loads(request_data["titles"])
     count_in_graph = 26
-    if 'Температура (°C)' in titles:
+    if 'Температура (°C)' in titles and 'Температура (°C)' in result:
         result_data = result['Температура (°C)']
         min_max = result_data['min_max']
         count_param = count_len_param(result_data, count_in_graph)
@@ -125,7 +125,7 @@ def form_01(request_data):
             ]
             objs.append(KeepTogether(temp_obj))
 
-    if 'Пульс (уд/с)' in titles:
+    if 'Пульс (уд/с)' in titles and 'Пульс (уд/с)' in result:
         result_data = result['Пульс (уд/с)']
         min_max = result_data['min_max']
         count_param = count_len_param(result_data, count_in_graph)
@@ -139,9 +139,9 @@ def form_01(request_data):
             ]
             objs.append(KeepTogether(temp_obj))
 
-    if 'Давление' in titles:
-        diastolic = 'Диастолическое давление (мм рт.с)'
-        systolic = 'Систолическое давление (мм рт.с)'
+    diastolic = 'Диастолическое давление (мм рт.с)'
+    systolic = 'Диастолическое давление (мм рт.с)'
+    if 'Давление' in titles and diastolic in result and systolic in result:
         result_data = {diastolic: result[diastolic], systolic: result[systolic]}
         min_max_diastolic = result_data[diastolic]['min_max']
         min_max_systolic = result_data[systolic]['min_max']

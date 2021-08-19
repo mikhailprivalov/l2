@@ -1,37 +1,44 @@
 <template>
   <div>
     <div class="input-group">
-      <input class="form-control" placeholder="Фамилия" v-model="form.family" maxlength="120">
+      <input class="form-control" placeholder="Фамилия" v-model="form.family" maxlength="120" />
       <span class="input-group-btn" style="width:0"></span>
-      <input class="form-control" placeholder="Имя" v-model="form.name" maxlength="120">
+      <input class="form-control" placeholder="Имя" v-model="form.name" maxlength="120" />
       <span class="input-group-btn" style="width:0"></span>
-      <input class="form-control" placeholder="Отчество" v-model="form.patronymic" maxlength="120">
+      <input class="form-control" placeholder="Отчество" v-model="form.patronymic" maxlength="120" />
       <span class="input-group-btn" style="width:0"></span>
-      <input class="form-control" v-model="form.birthday" placeholder="Дата рождения" v-mask="'99.99.9999'">
+      <input class="form-control" v-model="form.birthday" placeholder="Дата рождения" v-mask="'99.99.9999'" />
     </div>
     <div class="input-group mt15">
       <span class="input-group-addon addon-fixed">Полис ОМС</span>
-      <input class='form-control' v-model="form.enp_s" placeholder="серия" maxlength="30"/>
+      <input class="form-control" v-model="form.enp_s" placeholder="серия" maxlength="30" />
       <span class="input-group-btn" style="width:0"></span>
-      <input class='form-control' v-model="form.enp_n" placeholder="номер" maxlength="30"/>
+      <input class="form-control" v-model="form.enp_n" placeholder="номер" maxlength="30" />
     </div>
     <div class="input-group mt5">
       <span class="input-group-addon addon-fixed">Паспорт</span>
-      <input class='form-control' v-model="form.pass_s" placeholder="серия" maxlength="30"/>
+      <input class="form-control" v-model="form.pass_s" placeholder="серия" maxlength="30" />
       <span class="input-group-btn" style="width:0"></span>
-      <input class='form-control' v-model="form.pass_n" placeholder="номер" maxlength="30"/>
+      <input class="form-control" v-model="form.pass_n" placeholder="номер" maxlength="30" />
     </div>
     <div class="input-group mt5">
       <span class="input-group-addon addon-fixed">СНИЛС</span>
-      <input class='form-control' v-model="form.snils" placeholder="номер" maxlength="30"/>
+      <input class="form-control" v-model="form.snils" placeholder="номер" maxlength="30" />
     </div>
     <div class="input-group mt5" v-if="l2_profcenter">
       <span class="input-group-addon addon-fixed">Мед.книжка</span>
-      <input class='form-control' v-model="form.medbookNumber" placeholder="номер" maxlength="16"/>
+      <input class="form-control" v-model="form.medbookNumber" placeholder="номер" maxlength="16" />
     </div>
-    <div class="input-group mt5">
-      <span class="input-group-addon addon-fixed">Телефон</span>
-      <input class='form-control' v-model="form.phone" placeholder="телефон" v-mask="'8 999 9999999'"/>
+    <div class="row mt5">
+      <div class="col-xs-8">
+        <div class="input-group">
+          <span class="input-group-addon addon-fixed">Телефон</span>
+          <input class="form-control" v-model="form.phone" placeholder="телефон" v-mask="'8 999 9999999'" />
+        </div>
+      </div>
+      <div class="col-xs-4 text-right">
+        <label class="form-label"><input type="checkbox" v-model="form.archive" /> включая архив</label>
+      </div>
     </div>
   </div>
 </template>
@@ -54,6 +61,7 @@ const makeForm = (): PatientForm => ({
   snils: '',
   phone: '',
   medbookNumber: '',
+  archive: false,
 });
 
 @Component({
@@ -97,6 +105,8 @@ const makeForm = (): PatientForm => ({
 export default class PatientSearchForm extends Vue {
   form: PatientForm;
 
+  l2_profcenter: boolean;
+
   clearForm() {
     this.form = makeForm();
   }
@@ -106,7 +116,13 @@ export default class PatientSearchForm extends Vue {
   }, 100);
 
   emit() {
-    this.$emit('modified', Object.keys(this.form).reduce((a, k) => ({ ...a, [k]: this.form[k].trim() }), {}));
+    this.$emit(
+      'modified',
+      Object.keys(this.form).reduce(
+        (a, k) => ({ ...a, [k]: typeof this.form[k] === 'string' ? this.form[k].trim() : this.form[k] }),
+        {},
+      ),
+    );
   }
 }
 </script>
@@ -124,4 +140,11 @@ export default class PatientSearchForm extends Vue {
   width: 100%;
 }
 
+.form-label {
+  line-height: 34px;
+
+  input[type='checkbox'] {
+    vertical-align: text-top;
+  }
+}
 </style>

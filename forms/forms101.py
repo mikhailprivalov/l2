@@ -668,7 +668,7 @@ def form_05(request_data):
     types = [
         (30010, "Данные физлица"),
         (30008, "Данные документов"),
-        (30007, "Данные карт"),
+        (30007, "Данные карты"),
         (30009, "Использование документов в картах"),
     ]
 
@@ -1943,11 +1943,11 @@ def form_10(request_data):
         ('SPAN', (0, 27), (0, 28)),
         ('SPAN', (0, 29), (1, 29)),
     ]
-                          
+
     table_style += [
         ('SPAN', (0, i + 1), (1, i + 1)) for i in range(17)
     ]
-                          
+
     table_style += [
         ('SPAN', (0, i + 20), (1, i + 20)) for i in range(7)
     ]
@@ -2250,15 +2250,15 @@ def form_10(request_data):
         ('SPAN', (0, 11), (0, 12)),
         ('SPAN', (0, 13), (0, 14)),
     ]
-        
+
     table_style += [
         ('SPAN', (0, i), (1, i)) for i in range(11)
     ]
-                          
+
     table_style += [
         ('SPAN', (0, i + 15), (1, i + 15)) for i in range(5)
     ]
-                          
+
     tbl.setStyle(TableStyle(table_style))
 
     objs.append(tbl)
@@ -2531,7 +2531,7 @@ def form_10(request_data):
     table_style += [
         ('SPAN', (2, 4 + (i * 2)), (2, 4 + (i * 2) + 1)) for i in range(8)
     ]
-    
+
     tbl.setStyle(TableStyle(table_style))
     objs.append(tbl)
 

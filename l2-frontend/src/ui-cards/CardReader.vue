@@ -3,7 +3,7 @@
     <ul class="nav navbar-nav" v-show="Boolean(readerId)">
       <li>
         <a href="#" @click.prevent="clickPlus" v-tippy title="Найти или импортировать пациента">
-          <i class="fa fa-circle status" :class="`status-${status}`"></i> {{textStatus}}
+          <i class="fa fa-circle status" :class="`status-${status}`"></i> {{ textStatus }}
         </a>
       </li>
     </ul>
@@ -58,7 +58,10 @@ export default {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      await patientsPoint.createIndividualFromCard(this.details);
+      await patientsPoint.createIndividualFromCard({
+        ...this.details,
+        polis: this.details.polis || this.polis,
+      });
       await this.$store.dispatch(actions.DEC_LOADING);
 
       this.$root.$emit('search-value', this.polis || '');
@@ -79,21 +82,21 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .status {
-    text-shadow: 0 0 1px #fff;
-    display: inline-block;
-    margin-right: 2px;
+.status {
+  text-shadow: 0 0 1px #fff;
+  display: inline-block;
+  margin-right: 2px;
 
-    &-none {
-      color: #CF3A24
-    }
-
-    &-wait {
-      color: #F4D03F
-    }
-
-    &-inserted {
-      color: #049372;
-    }
+  &-none {
+    color: #cf3a24;
   }
+
+  &-wait {
+    color: #f4d03f;
+  }
+
+  &-inserted {
+    color: #049372;
+  }
+}
 </style>

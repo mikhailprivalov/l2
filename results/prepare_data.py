@@ -139,7 +139,7 @@ def lab_iss_to_pdf(data1):
 
 def gen_table(data, const_width, row_count, type_disposition):
     if row_count == 0:
-        return ' '
+        return Spacer(1, 1 * mm)
     width_one_column = const_width / row_count
     width_one_column = round(width_one_column, 1)
     row_widths = [width_one_column * mm] * row_count
