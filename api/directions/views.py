@@ -1644,7 +1644,7 @@ def directions_paraclinic_result(request):
         iss.doc_save = request.user.doctorprofile
         iss.time_save = timezone.now()
         if iss.research.is_doc_refferal:
-            iss.medical_examination = request_data.get("examination_date", timezone.now().date())
+            iss.medical_examination = request_data.get("examination_date") or timezone.now().date()
         if with_confirm:
             iss.doc_confirmation = request.user.doctorprofile
             iss.time_confirmation = timezone.now()

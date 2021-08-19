@@ -738,8 +738,8 @@ def statistics_tickets_send(request):
         doc = users.DoctorProfile.objects.get(pk=ofname)
     t = StatisticsTicket(
         card=Card.objects.get(pk=rd["card_pk"]),
-        purpose=VisitPurpose.objects.get(pk=rd["visit"]),
-        result=ResultOfTreatment.objects.get(pk=rd["result"]),
+        purpose=VisitPurpose.objects.filter(pk=rd["visit"]).first(),
+        result=ResultOfTreatment.objects.filter(pk=rd["result"]).first(),
         info=rd["info"].strip(),
         first_time=rd["first_time"],
         primary_visit=rd["primary_visit"],
