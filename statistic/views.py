@@ -29,7 +29,7 @@ from directory.models import HospitalService
 import datetime
 import calendar
 
-from .sql_func import screening_regplan_for_month, screening_age_for_month
+from .sql_func import attached_female_on_month, screening_plan_for_month_all_patient, must_dispensarization_from_screening_plan_for_month, sql_pass_screening
 
 
 @csrf_exempt
@@ -1539,18 +1539,27 @@ def sreening_xls(request):
     d2 = datetime.date(int(year), month_obj, num_days)
     datetime_start = f"{d1.strftime('%Y-%m-%d')} 00:00:00"
     datetime_end = f"{d2.strftime('%Y-%m-%d')} 23:59:59:999999"
-    date_for_age = f"{d2.strftime('%Y-%m-%d')}"
+    last_day_month = f"{d2.strftime('%Y-%m-%d')}"
 
     # кол-во прикрепленных по возрасту всего
-    count_age_for_month = screening_age_for_month(date_for_age)
+    min_age = 18
+    max_age = 69
+    count_age_for_month = attached_female_on_month(last_day_month, min_age, max_age)
     print(count_age_for_month)
     # кол-во в плане по скринингу в текущем месяце
-    count_regplan_for_month = screening_regplan_for_month(year, month)
+    count_regplan_for_month = screening_plan_for_month_all_patient(year, month)
     print(count_regplan_for_month)
 
     # из них подлежащих при диспансеризации (кол-во)
-
     # получить карты и "research(уникальные)" "возраста на конец года" из screening_regplan_for_month -> проверить возраст
     # далее првоерить в DispensaryRouteSheet пары
+    count_dispensarization_from_screening = must_dispensarization_from_screening_plan_for_month(2021, 8, '2021-12-31')
+    print(count_dispensarization_from_screening)
+
+    # Число женщин 30-65 лет, прошедших скрининг
+
+    pass_screening = sql_pass_screening(year, month)
+
+    # из них при диспансеризации
 
     return True

@@ -135,7 +135,7 @@ def params(request):
         "methods": list(MethodsReception.objects.all().order_by('title').values('pk', 'title')),
         "times": TIMES,
         "units": [
-            "мл", "мг", "мкг", "ед",
+            "мл", "мг", "мкг", "ед", "капля",
         ]
     })
 
