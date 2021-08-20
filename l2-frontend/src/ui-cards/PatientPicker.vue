@@ -107,7 +107,10 @@
                 {{ selected_card.family }} {{ selected_card.name }} {{ selected_card.twoname }}
               </td>
               <td style="max-width: 54px;" class="table-header-row">{{ selected_card.is_rmis ? 'ID' : 'Карта' }}:</td>
-              <td style="max-width: 99%;" class="table-content-row">{{ selected_card.num }}</td>
+              <td style="max-width: 99%;" class="table-content-row">
+                {{ selected_card.num }}
+                <span class="is-archive" v-if="selected_card.isArchive">в архиве</span>
+              </td>
             </tr>
             <tr>
               <td class="table-header-row">Дата рождения:</td>
@@ -515,7 +518,7 @@ export default {
     });
     this.$root.$on('select_card', data => {
       this.base = data.base_pk;
-      this.query = `card_pk:${data.card_pk}`;
+      this.query = `card_pk:${data.card_pk}:${data.inc_archive}`;
       this.search_after_loading = true;
       window.$(this.$refs.q).focus();
       this.emit_input();
@@ -1060,6 +1063,7 @@ export default {
         birthday: this.selected_card.birthday,
         age: this.selected_card.age,
         main_diagnosis: this.selected_card.main_diagnosis,
+        isArchive: this.selected_card.isArchive,
       });
       if (pk !== -1 && !from_hn) {
         window.$('#fndsrc').focus();

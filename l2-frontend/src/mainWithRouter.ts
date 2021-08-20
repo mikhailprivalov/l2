@@ -142,11 +142,32 @@ const router = new Router({
 });
 
 router.beforeEach(async (to, from, next) => {
+  if (
+    to.fullPath.startsWith('/ui/https://')
+    || to.fullPath.startsWith('/ui/http://')
+    || to.fullPath.startsWith('ui/https://')
+    || to.fullPath.startsWith('ui/http://')
+  ) {
+    window.location.replace(to.fullPath.split('ui/')[1]);
+    return;
+  }
+
   if (to.name === '404') {
     if (to.hash && !to.hash.startsWith('/ui')) {
       window.location.href = to.hash;
       return;
     }
+
+    if (
+      to.hash.startsWith('/ui/https://')
+      || to.hash.startsWith('/ui/http://')
+      || to.hash.startsWith('ui/https://')
+      || to.hash.startsWith('ui/http://')
+    ) {
+      window.location.replace(to.hash.split('ui/')[1]);
+      return;
+    }
+
     router.app.$toast.warning(`Страница ${to.hash} не найдена.`, {
       position: POSITION.BOTTOM_RIGHT,
       timeout: 8000,
@@ -158,16 +179,6 @@ router.beforeEach(async (to, from, next) => {
   }
 
   await router.app.$store.dispatch(actions.RESET_G_LOADING);
-
-  if (
-    to.fullPath.startsWith('/ui/https://')
-    || to.fullPath.startsWith('/ui/http://')
-    || to.fullPath.startsWith('ui/https://')
-    || to.fullPath.startsWith('ui/http://')
-  ) {
-    window.location.replace(to.fullPath.split('ui/')[1]);
-    return;
-  }
 
   if (to.fullPath.startsWith('/https://') || to.fullPath.startsWith('/http://')) {
     window.location.replace(to.fullPath.replace('/', ''));

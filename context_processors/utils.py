@@ -140,13 +140,23 @@ def menu(request):
                 pages.append({"url": "/silk/", "title": "Профилирование", "nt": False, "access": []})
             pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "nt": False, "access": []})
 
-            if SettingManager.get("home_page", default="false") != "false":
-                pages.append({"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница", "nt": True, "access": ["*"]})
+            hp = SettingManager.get(key="home_page", default="false")
+            if hp not in ['', 'false']:
+                if not hp.startswith('http'):
+                    hp = f"http://{hp}"
+                pages.append({"url": hp, "title": "Домашняя страница", "nt": True, "access": ["*"]})
 
-            if SettingManager.get("support", default="false") != "false":
-                pages.append({"url": SettingManager.get(key="support", default="false"), "title": "Техническая поддержка", "nt": True, "access": ["*"]})
-            if SettingManager.get("vks", default="false") != "false":
-                pages.append({"url": SettingManager.get(key="vks", default="false"), "title": "ВКС", "nt": True, "access": ["*"]})
+            sp = SettingManager.get("support", default="false")
+            if sp not in ['', 'false']:
+                if not sp.startswith('http'):
+                    sp = f"http://{sp}"
+                pages.append({"url": sp, "title": "Техническая поддержка", "nt": True, "access": ["*"]})
+
+            vp = SettingManager.get("vks", default="false")
+            if vp not in ['', 'false']:
+                if not vp.startswith('http'):
+                    vp = f"http://{vp}"
+                pages.append({"url": vp, "title": "ВКС", "nt": True, "access": ["*"]})
 
             data = make_menu(pages, groups, request.user.is_superuser, request.path)
             cache.set(k, simplejson.dumps(data), 300)

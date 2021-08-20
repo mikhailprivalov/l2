@@ -125,7 +125,7 @@ def counts(request):
 @group_required("Врач стационара", "t, ad, p")
 def hosp_services_by_type(request):
     data = json.loads(request.body)
-    base_direction_pk = int(data["direction"])
+    base_direction_pk = int(data["direction"] or 0)
     r_type = data["r_type"]
     result = []
     type_by_key = HospitalService.TYPES_BY_KEYS.get(r_type, -1)
@@ -175,7 +175,7 @@ def make_service(request):
 @login_required
 def directions_by_key(request):
     data = json.loads(request.body)
-    base_direction_pk = int(data["direction"])
+    base_direction_pk = int(data["direction"] or 0)
     r_type = data["r_type"]
     every = data.get("every", False)
     level = -1 if every else 2

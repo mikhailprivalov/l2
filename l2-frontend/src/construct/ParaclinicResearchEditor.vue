@@ -400,7 +400,7 @@
                       <option value="12">Радио</option>
                       <option value="13">Поле описательного результата</option>
                       <option value="14">Поле описательного результата без заголовка</option>
-                      <option value="15">Текст с форматированием</option>
+                      <option v-if="rich_text_enabled || row.field_type === 15" value="15">Текст с форматированием</option>
                       <option value="16">(Стационар) агрегация по лаборатории</option>
                       <option value="17">(Стационар) агрегация по описательным</option>
                       <option value="18">Число</option>
@@ -605,6 +605,12 @@ export default {
     setTimeout(() => {
       this.has_unsaved = false;
     }, 300);
+    setTimeout(() => {
+      this.has_unsaved = false;
+    }, 1000);
+    setTimeout(() => {
+      this.has_unsaved = false;
+    }, 2000);
   },
   computed: {
     permanent_directories_keys() {
@@ -652,6 +658,9 @@ export default {
     },
     ex_deps() {
       return this.$store.getters.ex_dep[this.ex_dep] || [];
+    },
+    rich_text_enabled() {
+      return this.$store.getters.modules.descriptive_rich_text;
     },
   },
   methods: {

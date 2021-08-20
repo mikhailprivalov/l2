@@ -1130,7 +1130,7 @@ export default {
         if (this.researches.filter(r => r !== -1).length === 0) {
           return false;
         }
-      } else if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1) {
+      } else if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1 || this.selected_card?.isArchive) {
         return false;
       }
 
