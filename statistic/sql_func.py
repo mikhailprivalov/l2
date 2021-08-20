@@ -418,9 +418,6 @@ def must_dispensarization_from_screening_plan_for_month(year, month, date_dispan
                 LEFT JOIN clients_card
                 ON clients_card.id=clients_screeningregplan.card_id
             
-                LEFT JOIN directory_researches 
-                ON directory_researches.id=clients_screeningregplan.research_id
-            
                 LEFT JOIN clients_individual
                 ON clients_individual.id=clients_card.individual_id
                 LEFT JOIN directory_dispensaryroutesheet
@@ -443,7 +440,7 @@ def must_dispensarization_from_screening_plan_for_month(year, month, date_dispan
     return rows
 
 
-def sql_pass_screening(year, month):
+def sql_pass_screening(year, month, start_time_confirm, end_time_confirm):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -463,16 +460,16 @@ def sql_pass_screening(year, month):
                 ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
                 WHERE 
                     directions_napravleniya.client_id in (SELECT distinct on (clients_screeningregplan.card_id) 
-                    clients_screeningregplan.card_id FROM clients_screeningregplan WHERE date_part('year', clients_screeningregplan.date)::int = 2021 AND
-                    date_part('month', clients_screeningregplan.date)::int = 8
+                    clients_screeningregplan.card_id FROM clients_screeningregplan WHERE date_part('year', clients_screeningregplan.date)::int = %(screening_date_plan_year)s AND
+                    date_part('month', clients_screeningregplan.date)::int = %(screening_date_plan_month)s
                 ORDER BY clients_screeningregplan.card_id) 
                 AND
                     directions_issledovaniya.research_id in (SELECT 
                         distinct on (clients_screeningregplan.research_id) clients_screeningregplan.research_id 
-                        FROM clients_screeningregplan WHERE date_part('year', clients_screeningregplan.date)::int = 2021 AND
-                        date_part('month', clients_screeningregplan.date)::int = 8) 
+                        FROM clients_screeningregplan WHERE date_part('year', clients_screeningregplan.date)::int = %(screening_date_plan_year)s AND
+                        date_part('month', clients_screeningregplan.date)::int = %(screening_date_plan_month)s) 
                 AND
-                    date_part('year', directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/IRKUTSK') = ANY(ARRAY[2021])
+                    (directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/IRKUTSK' BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)
                 ORDER BY 
                     directions_napravleniya.client_id, 
                     directions_issledovaniya.research_id, 
@@ -481,6 +478,85 @@ def sql_pass_screening(year, month):
             params={
                 'screening_date_plan_year': year,
                 'screening_date_plan_month': month,
+                'start_time_confirm': start_time_confirm,
+                'end_time_confirm': end_time_confirm,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def sql_pass_screening_in_dispensarization(year, month, start_time_confirm, end_time_confirm, date_dispansarization):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT count(distinct client_result.client_id) FROM 
+                    (SELECT
+                        distinct on (directions_napravleniya.client_id, directions_issledovaniya.research_id)
+                        directions_napravleniya.client_id as client_id, 
+                        directions_issledovaniya.napravleniye_id as dir_id,
+                        directions_issledovaniya.research_id as research_id,
+                        directions_issledovaniya.time_confirmation as confirm
+                    FROM directions_issledovaniya
+                    LEFT JOIN directions_napravleniya
+                    ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+                    WHERE 
+                        directions_napravleniya.client_id in 
+                        (
+                            SELECT distinct ON (dispensarisation_card.card_id) dispensarisation_card.card_id FROM 
+                                (
+                                    SELECT clients_screeningregplan.card_id, directory_dispensaryroutesheet.research_id as dispensarisation_research
+                                        FROM clients_screeningregplan
+                                        LEFT JOIN clients_card
+                                        ON clients_card.id=clients_screeningregplan.card_id
+                                        
+                                        LEFT JOIN clients_individual
+                                        ON clients_individual.id=clients_card.individual_id
+                                        LEFT JOIN directory_dispensaryroutesheet
+                                        ON 
+                                        clients_screeningregplan.research_id=directory_dispensaryroutesheet.research_id AND
+                                        directory_dispensaryroutesheet.age_client = date_part('year', age(%(date_dispansarization)s, clients_individual.birthday))::int AND
+                                        clients_individual.sex = directory_dispensaryroutesheet.sex_client
+                                    WHERE date_part('year', clients_screeningregplan.date)::int = %(screening_date_plan_year)s AND
+                                          date_part('month', clients_screeningregplan.date)::int = %(screening_date_plan_month)s
+                                    ORDER BY clients_screeningregplan.card_id
+                                ) dispensarisation_card
+                            WHERE dispensarisation_card.dispensarisation_research is NOT NULL
+                        )
+                    AND
+                        directions_issledovaniya.research_id in 
+                        (
+                            SELECT distinct on (dispensarisation.research_id) dispensarisation.research_id FROM
+                                (
+                                    SELECT  directory_dispensaryroutesheet.research_id, directory_dispensaryroutesheet.research_id as dispensarisation_research
+                                        FROM clients_screeningregplan
+                                        LEFT JOIN clients_card
+                                        ON clients_card.id=clients_screeningregplan.card_id
+                                        
+                                        LEFT JOIN clients_individual
+                                        ON clients_individual.id=clients_card.individual_id
+                                        LEFT JOIN directory_dispensaryroutesheet
+                                        ON 
+                                        clients_screeningregplan.research_id=directory_dispensaryroutesheet.research_id AND
+                                        directory_dispensaryroutesheet.age_client = date_part('year', age(%(date_dispansarization)s, clients_individual.birthday))::int AND
+                                        clients_individual.sex = directory_dispensaryroutesheet.sex_client
+                                    WHERE date_part('year', clients_screeningregplan.date)::int = %(screening_date_plan_year)s AND
+                                          date_part('month', clients_screeningregplan.date)::int = %(screening_date_plan_month)s
+                                    ORDER BY clients_screeningregplan.card_id
+                                ) dispensarisation
+                                WHERE dispensarisation.dispensarisation_research is NOT NULL
+                        ) 
+                    AND
+                    (directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/IRKUTSK' BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)  
+                    ORDER BY directions_napravleniya.client_id, directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation DESC) client_result
+            
+            """,
+            params={
+                'screening_date_plan_year': year,
+                'screening_date_plan_month': month,
+                'start_time_confirm': start_time_confirm,
+                'end_time_confirm': end_time_confirm,
+                'date_dispansarization': date_dispansarization,
             },
         )
         rows = namedtuplefetchall(cursor)
