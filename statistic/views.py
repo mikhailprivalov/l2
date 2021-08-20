@@ -30,7 +30,7 @@ import datetime
 import calendar
 
 from .sql_func import attached_female_on_month, screening_plan_for_month_all_patient, must_dispensarization_from_screening_plan_for_month, sql_pass_screening, \
-    sql_pass_screening_in_dispensarization
+    sql_pass_screening_in_dispensarization, screening_plan_for_month_all_count
 
 
 @csrf_exempt
@@ -1548,8 +1548,13 @@ def sreening_xls(request):
     count_age_for_month = attached_female_on_month(last_day_month, min_age, max_age)
     print("прикреплено", count_age_for_month)
     # кол-во в плане по скринингу в текущем месяце
-    count_regplan_for_month = screening_plan_for_month_all_patient(year, month)
-    print("На месяц скрининг", count_regplan_for_month)
+    count_regplan_for_month = screening_plan_for_month_all_count(year, month)
+
+
+    sreening_plan_people = screening_plan_for_month_all_patient(year, month)
+    print("список пациентов", sreening_plan_people)
+    sreening_people_str = ", ".join(str(i.card_id) for i in sreening_plan_people)
+    print("На месяц скрининг", sreening_people_str)
 
     # из них подлежащих при диспансеризации (кол-во)
     # получить карты и "research(уникальные)" "возраста на конец года" из screening_regplan_for_month -> проверить возраст

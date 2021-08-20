@@ -389,11 +389,28 @@ def attached_female_on_month(last_day_month_for_age, min_age, max_age):
     return rows
 
 
-def screening_plan_for_month_all_patient(date_plan_year, date_plan_month):
+def screening_plan_for_month_all_count(date_plan_year, date_plan_month):
     with connection.cursor() as cursor:
         cursor.execute(
             """
             SELECT count(DISTINCT card_id) FROM public.clients_screeningregplan
+            WHERE date_part('year', clients_screeningregplan.date)::int = %(date_plan_year)s AND
+            date_part('month', clients_screeningregplan.date)::int = %(date_plan_month)s
+            """,
+            params={
+                'date_plan_year': date_plan_year,
+                'date_plan_month': date_plan_month,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def screening_plan_for_month_all_patient(date_plan_year, date_plan_month):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT DISTINCT ON (card_id) card_id FROM public.clients_screeningregplan
             WHERE date_part('year', clients_screeningregplan.date)::int = %(date_plan_year)s AND
             date_part('month', clients_screeningregplan.date)::int = %(date_plan_month)s
             """,
@@ -549,7 +566,6 @@ def sql_pass_screening_in_dispensarization(year, month, start_time_confirm, end_
                     AND
                     (directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/IRKUTSK' BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)  
                     ORDER BY directions_napravleniya.client_id, directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation DESC) client_result
-            
             """,
             params={
                 'screening_date_plan_year': year,
