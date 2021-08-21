@@ -38,6 +38,7 @@ from .sql_func import (
     screening_plan_for_month_all_count,
     sql_pass_pap_analysis_count,
     sql_pass_pap_fraction_result_value,
+    sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value,
 )
 
 from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID
@@ -1565,20 +1566,20 @@ def sreening_xls(request):
     count_dispensarization_from_screening = must_dispensarization_from_screening_plan_for_month(year, month, f'{year}-12-31')
 
     # Число женщин 30-65 лет, прошедших скрининг
-    pass_screening = sql_pass_screening(year, month, datetime_start, datetime_end, tuple(sreening_people_cards))
+    pass_screening = sql_pass_screening(year, month, datetime_start, datetime_end, sreening_people_cards)
 
     # Число женщин 30-65 лет, прошедших скрининг из них при диспансеризации
     pass_screening_in_dispensarization = sql_pass_screening_in_dispensarization(year, month, datetime_start, datetime_end, f'{year}-12-31')
 
     # кто прошел тест папаниколау
-    pass_pap_analysis = sql_pass_pap_analysis_count(datetime_start, datetime_end, tuple(sreening_people_cards), tuple(PAP_ANALYSIS_ID))
+    pass_pap_analysis = sql_pass_pap_analysis_count(datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID))
 
     # адекватных
     pass_pap_adequate_result_value = sql_pass_pap_fraction_result_value(
         datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "адекватный")
 
     # недостаточно адекватный
-    pass_pap_not_adequate_result_value = sql_pass_pap_fraction_result_value(
+    pass_pap_not_enough_adequate_result_value = sql_pass_pap_fraction_result_value(
         datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "недостаточно адекватный"
     )
 
@@ -1586,6 +1587,13 @@ def sreening_xls(request):
     pass_pap_not_adequate_result_value = sql_pass_pap_fraction_result_value(
         datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "неадекватный"
     )
+
+    # карты с недостаточно адекватный и неадекватным результатом к-рым дважды взяли мазок
+    pass_pap_not_not_enough_adequate_result_value = sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "неадекватный", "недостаточно адекватный", count_param=2
+    )
+    # people_cards_not_not_enough_adequate = tuple([i.client_id for i in pass_pap_not_not_enough_adequate_result_value])
+    count_people_dublicate = len(pass_pap_not_not_enough_adequate_result_value)
 
     # АSCUS
     pass_pap_ascus_result_value = sql_pass_pap_fraction_result_value(datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "ASCUS"
