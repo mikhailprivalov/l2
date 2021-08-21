@@ -25,19 +25,26 @@
     </div>
     <div class="root" ref="root" v-show="pk">
       <table class="table table-bordered table-sm-pd" v-if="pk">
+        <colgroup>
+          <col style="width: 29%" />
+          <col style="width: 31px" />
+          <col />
+          <col v-if="!noRefs" style="width: 21%" />
+          <col v-if="!noRefs" style="width: 21%" />
+        </colgroup>
         <thead>
           <tr>
-            <td colspan="4">
+            <td colspan="5">
               <strong>
                 {{ research.title }}
               </strong>
             </td>
           </tr>
           <tr class="table-header">
-            <th style="width: 29%">Фракция</th>
-            <td :colspan="noRefs ? 3 : 1" class="cl-td">
+            <th>Фракция</th>
+            <td class="x-cell">
               <button
-                class="btn btn-blue-nb btn-sm"
+                class="btn btn-sm btn-cell"
                 @click.prevent="clearAll"
                 v-if="!confirmed"
                 title="Очистить все значения"
@@ -45,10 +52,10 @@
               >
                 <i class="fa fa-times"></i>
               </button>
-              <strong>Значение</strong>
             </td>
-            <th style="width: 23%" v-if="!noRefs">Нормы М</th>
-            <th style="width: 23%" v-if="!noRefs">Нормы Ж</th>
+            <th>Значение</th>
+            <th v-if="!noRefs">Нормы М</th>
+            <th v-if="!noRefs">Нормы Ж</th>
           </tr>
         </thead>
         <tbody>
@@ -57,20 +64,32 @@
               <label class="fraction-title" :for="`fraction-${r.fraction.pk}`">{{ r.fraction.title }}</label>
             </td>
             <BloodTypeField v-if="research.template === 2 && i === 0" :readonly="confirmed || !loaded" :r="r" />
-            <TextInputField
-              v-else
-              :readonly="confirmed || !loaded"
-              :move-focus-next="moveFocusNext"
-              :r="r"
-              :allDirPks="allDirPks"
-              :dirData="dirData"
-            />
+            <template v-else>
+              <td class="x-cell">
+                <button
+                  class="btn btn-sm btn-cell"
+                  @click.prevent="clear(r)"
+                  v-if="!confirmed"
+                  :title="`Очистить ${r.fraction.title}`"
+                  v-tippy
+                >
+                  <i class="fa fa-times"></i>
+                </button>
+              </td>
+              <TextInputField
+                :readonly="confirmed || !loaded"
+                :move-focus-next="moveFocusNext"
+                :r="r"
+                :allDirPks="allDirPks"
+                :dirData="dirData"
+              />
+            </template>
             <Ref :data="r.ref.m" v-if="!noRefs" />
             <Ref :data="r.ref.f" v-if="!noRefs" />
           </tr>
           <tr v-if="research.can_comment">
             <td><label class="fraction-title" for="result_comment">Комментарий</label></td>
-            <td colspan="3">
+            <td colspan="4">
               <textarea
                 class="noresize form-control result-field"
                 :readonly="confirmed || !loaded"
@@ -82,7 +101,7 @@
           </tr>
           <template v-if="research.co_executor_mode > 0 && laborants.length > 0">
             <tr>
-              <td colspan="4">
+              <td colspan="5">
                 <hr />
               </td>
             </tr>
@@ -90,7 +109,7 @@
               <td>
                 <label for="laborant">Лаборант</label>
               </td>
-              <td colspan="3">
+              <td colspan="4">
                 <treeselect
                   :multiple="false"
                   :disable-branch-nodes="true"
@@ -108,7 +127,7 @@
               <td>
                 <label for="co_executor2">{{ research.co_executor_title }}</label>
               </td>
-              <td colspan="3">
+              <td colspan="4">
                 <treeselect
                   :multiple="false"
                   :disable-branch-nodes="true"
@@ -286,6 +305,12 @@ export default {
         i.value = '';
       }
     },
+    clear(r) {
+      // eslint-disable-next-line no-param-reassign
+      r.value = '';
+      this.$root.$emit('msg', 'ok', `Очищено: ${r.fraction.title}`, 2000);
+      setTimeout(() => window.$(`#fraction-${r.fraction.pk}`).focus(), 50);
+    },
     async save(withoutReloading = false) {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await this.$api('laboratory/save', this, [
@@ -408,12 +433,6 @@ export default {
   td {
     strong {
       padding: 2px 2px 2px 8px;
-    }
-
-    .btn {
-      float: right;
-      height: 24px;
-      line-height: 1;
     }
   }
 }
