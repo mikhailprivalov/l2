@@ -142,6 +142,11 @@ const router = new Router({
 });
 
 router.beforeEach(async (to, from, next) => {
+  if (to.path === from.path && to.hash !== from.hash) {
+    next();
+    return;
+  }
+
   if (
     to.fullPath.startsWith('/ui/https://')
     || to.fullPath.startsWith('/ui/http://')
