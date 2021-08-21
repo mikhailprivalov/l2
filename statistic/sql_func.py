@@ -483,7 +483,7 @@ def sql_pass_screening(year, month, start_time_confirm, end_time_confirm, list_c
                         FROM clients_screeningregplan WHERE date_part('year', clients_screeningregplan.date)::int = %(screening_date_plan_year)s AND
                         date_part('month', clients_screeningregplan.date)::int = %(screening_date_plan_month)s) 
                 AND
-                    (directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/IRKUTSK' BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)
+                    (directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)
                 ORDER BY 
                     directions_napravleniya.client_id, 
                     directions_issledovaniya.research_id, 
@@ -494,7 +494,8 @@ def sql_pass_screening(year, month, start_time_confirm, end_time_confirm, list_c
                 'screening_date_plan_month': month,
                 'start_time_confirm': start_time_confirm,
                 'end_time_confirm': end_time_confirm,
-                'list_card': list_card
+                'list_card': list_card,
+                'tz': TIME_ZONE
             },
         )
         rows = namedtuplefetchall(cursor)
@@ -562,7 +563,7 @@ def sql_pass_screening_in_dispensarization(year, month, start_time_confirm, end_
                                 WHERE dispensarisation.dispensarisation_research is NOT NULL
                         ) 
                     AND
-                    (directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/IRKUTSK' BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)  
+                    (directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)  
                     ORDER BY directions_napravleniya.client_id, directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation DESC) client_result
             """,
             params={
@@ -571,6 +572,7 @@ def sql_pass_screening_in_dispensarization(year, month, start_time_confirm, end_
                 'start_time_confirm': start_time_confirm,
                 'end_time_confirm': end_time_confirm,
                 'date_dispansarization': date_dispansarization,
+                'tz': TIME_ZONE,
             },
         )
         rows = namedtuplefetchall(cursor)
@@ -596,7 +598,7 @@ def sql_pass_pap_analysis_count(start_time_confirm, end_time_confirm, list_card,
                 AND
                 directions_issledovaniya.research_id in %(pap_id_analysis)s
                 AND
-                (directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/IRKUTSK' BETWEEN '2021-08-01 00:00:00' AND '2021-08-31 23:59:59')  
+                (directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)  
                 ORDER BY directions_napravleniya.client_id, directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation DESC)
             result_papa  
             """,
@@ -604,14 +606,15 @@ def sql_pass_pap_analysis_count(start_time_confirm, end_time_confirm, list_card,
                 'start_time_confirm': start_time_confirm,
                 'end_time_confirm': end_time_confirm,
                 'list_card': list_card,
-                'pap_id_analysis': pap_id_analysis
+                'pap_id_analysis': pap_id_analysis,
+                'tz': TIME_ZONE
             },
         )
         rows = namedtuplefetchall(cursor)
     return rows
 
 
-def sql_pass_pap_adequate_result_value(start_time_confirm, end_time_confirm, list_card, pap_id_analysis, fraction_id, value_result):
+def sql_pass_pap_fraction_result_value(start_time_confirm, end_time_confirm, list_card, pap_id_analysis, fraction_id, value_result1, value_result2="", count_param=1):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -634,11 +637,15 @@ def sql_pass_pap_adequate_result_value(start_time_confirm, end_time_confirm, lis
                 AND
                 directions_issledovaniya.research_id in %(pap_id_analysis)s
                 AND
-                (directions_issledovaniya.time_confirmation AT TIME ZONE 'ASIA/IRKUTSK' BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)
+                (directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)
                 AND
                 directions_result.fraction_id in %(fraction_id)s
                 AND 
-                LOWER(directions_result.value)=LOWER(%(value_result)s)
+                    CASE WHEN %(count_param)s > 1 THEN
+                      directions_result.value ILIKE %(value_result1)s or  directions_result.value ILIKE %(value_result2)s
+                    ELSE
+                      directions_result.value ILIKE %(value_result1)s
+                    END
                 ORDER BY directions_napravleniya.client_id, 
                 directions_issledovaniya.research_id, 
                 directions_issledovaniya.time_confirmation DESC) 
@@ -650,7 +657,10 @@ def sql_pass_pap_adequate_result_value(start_time_confirm, end_time_confirm, lis
                 'list_card': list_card,
                 'pap_id_analysis': pap_id_analysis,
                 'fraction_id': fraction_id,
-                'value_result': value_result
+                'tz': TIME_ZONE,
+                'count_param': count_param,
+                'value_result1': value_result1,
+                'value_result2': value_result2
             },
         )
         rows = namedtuplefetchall(cursor)

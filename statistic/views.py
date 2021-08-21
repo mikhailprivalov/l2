@@ -29,8 +29,16 @@ from directory.models import HospitalService
 import datetime
 import calendar
 
-from .sql_func import attached_female_on_month, screening_plan_for_month_all_patient, must_dispensarization_from_screening_plan_for_month, sql_pass_screening, \
-    sql_pass_screening_in_dispensarization, screening_plan_for_month_all_count, sql_pass_pap_analysis_count, sql_pass_pap_adequate_result_value
+from .sql_func import (
+    attached_female_on_month,
+    screening_plan_for_month_all_patient,
+    must_dispensarization_from_screening_plan_for_month,
+    sql_pass_screening,
+    sql_pass_screening_in_dispensarization,
+    screening_plan_for_month_all_count,
+    sql_pass_pap_analysis_count,
+    sql_pass_pap_fraction_result_value,
+)
 
 from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID
 
@@ -82,9 +90,7 @@ def statistic_page(request):
             "statistics_researches_res": json.dumps(
                 [{"pk": -1, "title": 'Услуга не выбрана'}, *[{"pk": str(x.pk), "title": x.title} for x in statistics_researches_res], *extract_data, *epicris_transfer_data]
             ),
-            "companies_res": json.dumps(
-                [{"id": "-1", "label": "Компания не выбрана"}, *[{"id": str(x.pk), "label": x.short_title if x.short_title else x.title} for x in companies_res]]
-            )
+            "companies_res": json.dumps([{"id": "-1", "label": "Компания не выбрана"}, *[{"id": str(x.pk), "label": x.short_title if x.short_title else x.title} for x in companies_res]]),
         },
     )
 
@@ -132,9 +138,7 @@ def statistic_xls(request):
         delta = date_end - date_start
         if abs(delta.days) > 60:
             slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
-            return JsonResponse({
-                "error": "period max - 60 days"
-            })
+            return JsonResponse({"error": "period max - 60 days"})
 
     if date_start_o != "" and date_end_o != "":
         slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
@@ -1547,38 +1551,63 @@ def sreening_xls(request):
     # кол-во прикрепленных по возрасту всего
     min_age = 18
     max_age = 69
-    count_age_for_month = attached_female_on_month(last_day_month, min_age, max_age)
-    print("прикреплено", count_age_for_month)
+    attached_count_age_for_month = attached_female_on_month(last_day_month, min_age, max_age)
 
     # кол-во в плане по скринингу в текущем месяце
     count_regplan_for_month = screening_plan_for_month_all_count(year, month)
 
     sreening_plan_individuals = screening_plan_for_month_all_patient(year, month)
-    print("список пациентов", sreening_plan_individuals)
-    sreening_people_cards = [i.card_id for i in sreening_plan_individuals]
-    print("На месяц скрининг", tuple(sreening_people_cards))
+    sreening_people_cards = tuple([i.card_id for i in sreening_plan_individuals])
 
     # из них подлежащих при диспансеризации (кол-во)
     # получить карты и "research(уникальные)" "возраста на конец года" из screening_regplan_for_month -> проверить возраст
     # далее првоерить в DispensaryRouteSheet пары
     count_dispensarization_from_screening = must_dispensarization_from_screening_plan_for_month(year, month, f'{year}-12-31')
-    print("В рамках диспансеризации должен", count_dispensarization_from_screening)
 
     # Число женщин 30-65 лет, прошедших скрининг
     pass_screening = sql_pass_screening(year, month, datetime_start, datetime_end, tuple(sreening_people_cards))
-    print("pass_screening -прошли скрининг", pass_screening)
 
-    # из них при диспансеризации
+    # Число женщин 30-65 лет, прошедших скрининг из них при диспансеризации
     pass_screening_in_dispensarization = sql_pass_screening_in_dispensarization(year, month, datetime_start, datetime_end, f'{year}-12-31')
-    print("прошли скрининг в ачет диспансеризации", pass_screening_in_dispensarization)
 
     # кто прошел тест папаниколау
     pass_pap_analysis = sql_pass_pap_analysis_count(datetime_start, datetime_end, tuple(sreening_people_cards), tuple(PAP_ANALYSIS_ID))
-    print("прошли pap", pass_pap_analysis)
 
-    print(PAP_ANALYSIS_ID)
-    pass_pap_adequate_result_value = sql_pass_pap_adequate_result_value(datetime_start, datetime_end, tuple(sreening_people_cards), tuple(PAP_ANALYSIS_ID), "адекватный")
-    print("кол-во адекватных", pass_pap_adequate_result_value)
+    # адекватных
+    pass_pap_adequate_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "адекватный")
 
+    # недостаточно адекватный
+    pass_pap_not_adequate_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "недостаточно адекватный"
+    )
+
+    # неадекватный
+    pass_pap_not_adequate_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "неадекватный"
+    )
+
+    # АSCUS
+    pass_pap_ascus_result_value = sql_pass_pap_fraction_result_value(datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "ASCUS"
+    )
+
+    # CIN-I
+    pass_pap_cin_i_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-I%"
+    )
+
+    # CIN I-II, II
+    pass_pap_cin_i_ii_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-I-II%", "%CIN-II%", count_param=2
+    )
+
+    # CIN-II-III, III
+    pass_pap_cin_ii_iii_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-II-III%", "%CIN-III%", count_param=2
+    )
+
+    # cr in situ
+    pass_pap_cr_in_situ_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%cr in situ%")
 
     return True
