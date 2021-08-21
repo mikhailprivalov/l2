@@ -495,7 +495,7 @@ def sql_pass_screening(year, month, start_time_confirm, end_time_confirm, list_c
                 'start_time_confirm': start_time_confirm,
                 'end_time_confirm': end_time_confirm,
                 'list_card': list_card,
-                'tz': TIME_ZONE
+                'tz': TIME_ZONE,
             },
         )
         rows = namedtuplefetchall(cursor)
@@ -602,13 +602,7 @@ def sql_pass_pap_analysis_count(start_time_confirm, end_time_confirm, list_card,
                 ORDER BY directions_napravleniya.client_id, directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation DESC)
             result_papa  
             """,
-            params={
-                'start_time_confirm': start_time_confirm,
-                'end_time_confirm': end_time_confirm,
-                'list_card': list_card,
-                'pap_id_analysis': pap_id_analysis,
-                'tz': TIME_ZONE
-            },
+            params={'start_time_confirm': start_time_confirm, 'end_time_confirm': end_time_confirm, 'list_card': list_card, 'pap_id_analysis': pap_id_analysis, 'tz': TIME_ZONE},
         )
         rows = namedtuplefetchall(cursor)
     return rows
@@ -660,14 +654,16 @@ def sql_pass_pap_fraction_result_value(start_time_confirm, end_time_confirm, lis
                 'tz': TIME_ZONE,
                 'count_param': count_param,
                 'value_result1': value_result1,
-                'value_result2': value_result2
+                'value_result2': value_result2,
             },
         )
         rows = namedtuplefetchall(cursor)
     return rows
 
 
-def sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value(start_time_confirm, end_time_confirm, list_card, pap_id_analysis, fraction_id, value_result1, value_result2="", count_param=1):
+def sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value(
+    start_time_confirm, end_time_confirm, list_card, pap_id_analysis, fraction_id, value_result1, value_result2="", count_param=1
+):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -707,7 +703,7 @@ def sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value(st
                 'tz': TIME_ZONE,
                 'count_param': count_param,
                 'value_result1': value_result1,
-                'value_result2': value_result2
+                'value_result2': value_result2,
             },
         )
         rows = namedtuplefetchall(cursor)
