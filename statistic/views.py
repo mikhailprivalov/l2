@@ -30,7 +30,9 @@ import datetime
 import calendar
 
 from .sql_func import attached_female_on_month, screening_plan_for_month_all_patient, must_dispensarization_from_screening_plan_for_month, sql_pass_screening, \
-    sql_pass_screening_in_dispensarization, screening_plan_for_month_all_count
+    sql_pass_screening_in_dispensarization, screening_plan_for_month_all_count, sql_pass_pap_analysis_count, sql_pass_pap_adequate_result_value
+
+from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID
 
 
 @csrf_exempt
@@ -1547,27 +1549,36 @@ def sreening_xls(request):
     max_age = 69
     count_age_for_month = attached_female_on_month(last_day_month, min_age, max_age)
     print("прикреплено", count_age_for_month)
+
     # кол-во в плане по скринингу в текущем месяце
     count_regplan_for_month = screening_plan_for_month_all_count(year, month)
 
-
-    sreening_plan_people = screening_plan_for_month_all_patient(year, month)
-    print("список пациентов", sreening_plan_people)
-    sreening_people_str = ", ".join(str(i.card_id) for i in sreening_plan_people)
-    print("На месяц скрининг", sreening_people_str)
+    sreening_plan_individuals = screening_plan_for_month_all_patient(year, month)
+    print("список пациентов", sreening_plan_individuals)
+    sreening_people_cards = [i.card_id for i in sreening_plan_individuals]
+    print("На месяц скрининг", tuple(sreening_people_cards))
 
     # из них подлежащих при диспансеризации (кол-во)
     # получить карты и "research(уникальные)" "возраста на конец года" из screening_regplan_for_month -> проверить возраст
     # далее првоерить в DispensaryRouteSheet пары
-    count_dispensarization_from_screening = must_dispensarization_from_screening_plan_for_month(2021, 8, '2021-12-31')
+    count_dispensarization_from_screening = must_dispensarization_from_screening_plan_for_month(year, month, f'{year}-12-31')
     print("В рамках диспансеризации должен", count_dispensarization_from_screening)
 
     # Число женщин 30-65 лет, прошедших скрининг
-    pass_screening = sql_pass_screening(year, month, datetime_start, datetime_end)
+    pass_screening = sql_pass_screening(year, month, datetime_start, datetime_end, tuple(sreening_people_cards))
     print("pass_screening -прошли скрининг", pass_screening)
 
     # из них при диспансеризации
-    pass_screening_in_dispensarization = sql_pass_screening_in_dispensarization(year, month, datetime_start, datetime_end, '2021-12-31')
+    pass_screening_in_dispensarization = sql_pass_screening_in_dispensarization(year, month, datetime_start, datetime_end, f'{year}-12-31')
     print("прошли скрининг в ачет диспансеризации", pass_screening_in_dispensarization)
+
+    # кто прошел тест папаниколау
+    pass_pap_analysis = sql_pass_pap_analysis_count(datetime_start, datetime_end, tuple(sreening_people_cards), tuple(PAP_ANALYSIS_ID))
+    print("прошли pap", pass_pap_analysis)
+
+    print(PAP_ANALYSIS_ID)
+    pass_pap_adequate_result_value = sql_pass_pap_adequate_result_value(datetime_start, datetime_end, tuple(sreening_people_cards), tuple(PAP_ANALYSIS_ID), "адекватный")
+    print("кол-во адекватных", pass_pap_adequate_result_value)
+
 
     return True
