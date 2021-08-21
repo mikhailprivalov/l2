@@ -28,6 +28,7 @@ from . import structure_sheet
 from directory.models import HospitalService
 import datetime
 import calendar
+import openpyxl
 
 from .sql_func import (
     attached_female_on_month,
@@ -103,7 +104,6 @@ def statistic_xls(request):
     """ Генерация XLS """
     from directions.models import Issledovaniya
     import xlwt
-    import openpyxl
     from collections import OrderedDict
 
     wb = xlwt.Workbook(encoding='utf-8')
@@ -1552,10 +1552,14 @@ def sreening_xls(request):
     # кол-во прикрепленных по возрасту всего
     min_age = 18
     max_age = 69
+    screening_data = {}
+
     attached_count_age_for_month = attached_female_on_month(last_day_month, min_age, max_age)
+    screening_data['attached_count_age_for_month'] = attached_count_age_for_month
 
     # кол-во в плане по скринингу в текущем месяце
     count_regplan_for_month = screening_plan_for_month_all_count(year, month)
+    screening_data['count_regplan_for_month'] = count_regplan_for_month
 
     sreening_plan_individuals = screening_plan_for_month_all_patient(year, month)
     sreening_people_cards = tuple([i.card_id for i in sreening_plan_individuals])
@@ -1564,30 +1568,37 @@ def sreening_xls(request):
     # получить карты и "research(уникальные)" "возраста на конец года" из screening_regplan_for_month -> проверить возраст
     # далее првоерить в DispensaryRouteSheet пары
     count_dispensarization_from_screening = must_dispensarization_from_screening_plan_for_month(year, month, f'{year}-12-31')
+    screening_data['count_dispensarization_from_screening'] = count_dispensarization_from_screening
 
     # Число женщин 30-65 лет, прошедших скрининг
     pass_screening = sql_pass_screening(year, month, datetime_start, datetime_end, sreening_people_cards)
+    screening_data['pass_screening'] = pass_screening
 
     # Число женщин 30-65 лет, прошедших скрининг из них при диспансеризации
     pass_screening_in_dispensarization = sql_pass_screening_in_dispensarization(year, month, datetime_start, datetime_end, f'{year}-12-31')
+    screening_data['pass_screening_in_dispensarization'] = pass_screening_in_dispensarization
 
     # кто прошел тест папаниколау
     pass_pap_analysis = sql_pass_pap_analysis_count(datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID))
+    screening_data['pass_pap_analysis'] = pass_pap_analysis
 
     # адекватных
     pass_pap_adequate_result_value = sql_pass_pap_fraction_result_value(
         datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "адекватный"
     )
+    screening_data['pass_pap_adequate_result_value'] = pass_pap_adequate_result_value
 
     # недостаточно адекватный
     pass_pap_not_enough_adequate_result_value = sql_pass_pap_fraction_result_value(
         datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "недостаточно адекватный"
     )
+    screening_data['pass_pap_not_enough_adequate_result_value'] = pass_pap_not_enough_adequate_result_value
 
     # неадекватный
     pass_pap_not_adequate_result_value = sql_pass_pap_fraction_result_value(
         datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "неадекватный"
     )
+    screening_data['pass_pap_not_adequate_result_value'] = pass_pap_not_adequate_result_value
 
     # карты с недостаточно адекватный и неадекватным результатом к-рым дважды взяли мазок
     pass_pap_not_not_enough_adequate_result_value = sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value(
@@ -1595,30 +1606,48 @@ def sreening_xls(request):
     )
     # people_cards_not_not_enough_adequate = tuple([i.client_id for i in pass_pap_not_not_enough_adequate_result_value])
     count_people_dublicate = len(pass_pap_not_not_enough_adequate_result_value)
+    screening_data['count_people_dublicate'] = count_people_dublicate
 
     # АSCUS
     pass_pap_ascus_result_value = sql_pass_pap_fraction_result_value(
         datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "ASCUS"
     )
+    screening_data['pass_pap_ascus_result_value'] = pass_pap_ascus_result_value
 
     # CIN-I
     pass_pap_cin_i_result_value = sql_pass_pap_fraction_result_value(
         datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-I%"
     )
+    screening_data['pass_pap_cin_i_result_value'] = pass_pap_cin_i_result_value
 
     # CIN I-II, II
     pass_pap_cin_i_ii_result_value = sql_pass_pap_fraction_result_value(
         datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-I-II%", "%CIN-II%", count_param=2
     )
+    screening_data['pass_pap_cin_i_ii_result_value'] = pass_pap_cin_i_ii_result_value
 
     # CIN-II-III, III
     pass_pap_cin_ii_iii_result_value = sql_pass_pap_fraction_result_value(
         datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-II-III%", "%CIN-III%", count_param=2
     )
+    screening_data['pass_pap_cin_ii_iii_result_value'] = pass_pap_cin_ii_iii_result_value
 
     # cr in situ
     pass_pap_cr_in_situ_result_value = sql_pass_pap_fraction_result_value(
         datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%cr in situ%"
     )
+    screening_data['pass_pap_cr_in_situ_result_value'] = pass_pap_cr_in_situ_result_value
 
-    return True
+
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = f"attachment; filename=\"Screening.xlsx\""
+    wb = openpyxl.Workbook()
+    wb.remove(wb.get_sheet_by_name('Sheet'))
+    ws = wb.create_sheet("Обращения")
+    styles_obj = structure_sheet.style_sheet()
+    wb.add_named_style(styles_obj[0])
+    ws = structure_sheet.statistic_screening_month_data(ws, screening_data, month, year)
+    wb.save(response)
+
+
+    return response

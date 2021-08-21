@@ -655,3 +655,6 @@ def statistic_message_purpose_total_data(ws1, message_total, d1, d2, style_borde
     ws1.cell(row=r + 1, column=3).style = style_border_res
 
     return ws1
+
+def statistic_screening_month_data(ws1):
+    return ws1
