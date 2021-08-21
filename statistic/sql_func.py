@@ -671,15 +671,9 @@ def sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value(st
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            --select age, count(age) from dummy_table group by age having count(age)>1;
             SELECT client_result.client_id FROM
              (SELECT
-                directions_napravleniya.client_id as client_id, 
-                directions_issledovaniya.napravleniye_id as dir_id,
-                directions_issledovaniya.research_id as research_id,
-                directions_issledovaniya.time_confirmation as confirm,
-                directions_result.value,
-                directions_result.fraction_id
+                directions_napravleniya.client_id as client_id
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya
                 ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
@@ -718,58 +712,3 @@ def sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value(st
         )
         rows = namedtuplefetchall(cursor)
     return rows
-
-
-# def sql_card_pass_pap_fraction_result_value(start_time_confirm, end_time_confirm, list_card, pap_id_analysis, fraction_id, value_result1, value_result2="", count_param=1):
-#     with connection.cursor() as cursor:
-#         cursor.execute(
-#             """
-#             SELECT distinct on (client_result.client_id) client_result.client_id FROM
-#              (SELECT
-#                 distinct on (directions_napravleniya.client_id, directions_issledovaniya.research_id)
-#                 directions_napravleniya.client_id as client_id,
-#                 directions_issledovaniya.napravleniye_id as dir_id,
-#                 directions_issledovaniya.research_id as research_id,
-#                 directions_issledovaniya.time_confirmation as confirm,
-#                 directions_result.value,
-#                 directions_result.fraction_id
-#                 FROM directions_issledovaniya
-#                 LEFT JOIN directions_napravleniya
-#                 ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
-#                 LEFT JOIN directions_result
-#                 ON directions_result.issledovaniye_id=directions_issledovaniya.id
-#                 WHERE
-#                 directions_napravleniya.client_id in %(list_card)s
-#                 AND
-#                 directions_issledovaniya.research_id in %(pap_id_analysis)s
-#                 AND
-#                 (directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)
-#                 AND
-#                 directions_result.fraction_id in %(fraction_id)s
-#                 AND
-#                     CASE WHEN %(count_param)s > 1 THEN
-#                       directions_result.value ILIKE %(value_result1)s or  directions_result.value ILIKE %(value_result2)s
-#                     ELSE
-#                       directions_result.value ILIKE %(value_result1)s
-#                     END
-#                 ORDER BY directions_napravleniya.client_id,
-#                 directions_issledovaniya.research_id,
-#                 directions_issledovaniya.time_confirmation) client_result
-#             """,
-#             params={
-#                 'start_time_confirm': start_time_confirm,
-#                 'end_time_confirm': end_time_confirm,
-#                 'list_card': list_card,
-#                 'pap_id_analysis': pap_id_analysis,
-#                 'fraction_id': fraction_id,
-#                 'tz': TIME_ZONE,
-#                 'count_param': count_param,
-#                 'value_result1': value_result1,
-#                 'value_result2': value_result2
-#             },
-#         )
-#         rows = namedtuplefetchall(cursor)
-#     return rows
-
-
-
