@@ -656,6 +656,7 @@ def statistic_message_purpose_total_data(ws1, message_total, d1, d2, style_borde
 
     return ws1
 
+
 def statistic_screening_month_data(ws1, data, month, year, style_border_res):
     ws1.cell(row=1, column=1).value = 'Скрининг'
     ws1.cell(row=2, column=1).value = 'Период:'

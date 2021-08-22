@@ -1639,7 +1639,7 @@ def sreening_xls(request):
     screening_data['pass_pap_cr_in_situ_result_value'] = pass_pap_cr_in_situ_result_value[0].count
 
     response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = f"attachment; filename=\"Screening.xlsx\""
+    response['Content-Disposition'] = "attachment; filename=\"Screening.xlsx\""
     wb = openpyxl.Workbook()
     wb.remove(wb.get_sheet_by_name('Sheet'))
     ws = wb.create_sheet("Обращения")
@@ -1647,6 +1647,5 @@ def sreening_xls(request):
     wb.add_named_style(styles_obj[0])
     ws = structure_sheet.statistic_screening_month_data(ws, screening_data, month, year, styles_obj[3])
     wb.save(response)
-
 
     return response
