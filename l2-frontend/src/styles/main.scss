@@ -1737,6 +1737,37 @@ body > .container-fluid {
   }
 }
 
+.mkb .typeahead-dropdown-container {
+  top: 5px !important;
+}
+
+.mkb .input-group {
+  border-radius: 0;
+  width: 100%;
+}
+
+.mkb input {
+  border-radius: 0 !important;
+}
+
+.mkb ul {
+  width: auto;
+  font-size: 12px;
+  z-index: 20000;
+  min-width: 600px;
+}
+
+.mkb ul li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 1px 0.25rem;
+  margin: 0 0.2rem;
+
+  a {
+    padding: 1px 5px;
+  }
+}
+
 .table > tbody + tbody {
   border-top: 1px solid #000 !important;
 }
