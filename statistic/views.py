@@ -46,7 +46,7 @@ from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_I
 @csrf_exempt
 @login_required
 def statistic_xls(request):
-    """ Генерация XLS """
+    """Генерация XLS"""
     from directions.models import Issledovaniya
     import xlwt
     from collections import OrderedDict
