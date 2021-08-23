@@ -1866,6 +1866,7 @@ export default {
   flex-direction: row;
   flex-wrap: nowrap;
   align-content: stretch;
+  overflow-x: hidden;
 
   &.embedded {
     top: 0;

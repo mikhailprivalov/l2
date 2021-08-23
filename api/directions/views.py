@@ -2425,6 +2425,7 @@ def get_research_for_direction_params(pk):
         "wide_headers": research_obj.wide_headers,
         "groups": [],
         "show": False,
+        "status": 'LOADED',
     }
     for group in research_obj.paraclinicinputgroups_set.all().filter(hide=False):
         g = {
