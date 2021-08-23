@@ -1,4 +1,3 @@
-from contracts.models import Company
 import logging
 import threading
 import time
@@ -24,6 +23,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
+from contracts.models import Company
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
