@@ -275,6 +275,17 @@ const STATS_CATEGORIES = {
       },
     },
   },
+  screening: {
+    title: 'Скрининг',
+    groups: ['Статистика скрининга'],
+    reports: {
+      screening: {
+        title: 'Отчёт по скринингу',
+        params: [PARAMS_TYPES.MONTH_YEAR],
+        url: '/statistic/screening?month=<month>&year=<year>',
+      },
+    },
+  },
   common: {
     title: 'Общая статистика',
     groups: ['Просмотр статистики'],
@@ -288,11 +299,6 @@ const STATS_CATEGORIES = {
         title: 'Онкоподозрение',
         params: [PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-onco&date-start=<date-start>&date-end=<date-end>',
-      },
-      screening: {
-        title: 'Скрининг',
-        params: [PARAMS_TYPES.MONTH_YEAR],
-        url: '/statistic/screening?month=<month>&year=<year>',
       },
     },
   },
@@ -380,6 +386,10 @@ export default class Statistics extends Vue {
 
   research: number | null;
 
+  get userGroups() {
+    return this.$store.getters.user_data.groups || [];
+  }
+
   async loadUsers() {
     await this.$store.dispatch(actions.INC_LOADING);
     const { users } = await usersPoint.loadUsersByGroup({ group: '*' });
@@ -399,7 +409,9 @@ export default class Statistics extends Vue {
   }
 
   get categories() {
-    return Object.keys(this.STATS_CATEGORIES).map(id => ({ id, label: this.STATS_CATEGORIES[id].title }));
+    return Object.keys(this.STATS_CATEGORIES)
+      .filter(id => this.STATS_CATEGORIES[id].groups.some(g => this.userGroups.includes(g)))
+      .map(id => ({ id, label: this.STATS_CATEGORIES[id].title }));
   }
 
   get currentCategory() {

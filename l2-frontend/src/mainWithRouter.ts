@@ -134,7 +134,7 @@ const router = new Router({
       component: () => import('@/pages/Statistics.vue'),
       meta: {
         title: 'Статистика',
-        groups: ['Просмотр статистики', 'Врач-лаборант'],
+        groups: ['Просмотр статистики', 'Врач-лаборант', 'Статистика скрининга'],
       },
     },
     {
