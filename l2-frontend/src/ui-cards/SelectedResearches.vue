@@ -804,7 +804,8 @@ export default {
       this.researches_direction_params = data;
     },
     async load_direction_params_data(pk) {
-      if (this.researches_direction_params?.[pk].research_data?.research?.status !== 'NOT_LOADED') {
+      const status = this.researches_direction_params?.[pk].research_data?.research?.status || 'NOT_LOADED';
+      if (status !== 'NOT_LOADED') {
         return this.researches_direction_params[pk].research_data.research;
       }
       await this.$store.dispatch(actions.INC_LOADING);
