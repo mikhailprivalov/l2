@@ -129,6 +129,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/statistic',
+      name: 'statistic',
+      component: () => import('@/pages/Statistics.vue'),
+      meta: {
+        title: 'Статистика',
+        groups: ['Просмотр статистики', 'Врач-лаборант'],
+      },
+    },
+    {
       path: '/404',
       name: '404',
       meta: {},

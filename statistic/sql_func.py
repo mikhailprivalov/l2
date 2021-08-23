@@ -458,6 +458,9 @@ def must_dispensarization_from_screening_plan_for_month(year, month, date_dispan
 
 
 def sql_pass_screening(year, month, start_time_confirm, end_time_confirm, list_card):
+    if not list_card:
+        return []
+
     with connection.cursor() as cursor:
         cursor.execute(
             """

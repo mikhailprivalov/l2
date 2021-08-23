@@ -6,14 +6,12 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
 from django.utils import timezone, dateformat
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt
 
 import directory.models as directory
 import slog.models as slog
 from clients.models import CardBase
-from contracts.models import Company
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
 from hospitals.models import Hospitals
@@ -25,7 +23,6 @@ from users.models import Podrazdeleniya
 from utils.dates import try_parse_range, normalize_date
 from . import sql_func
 from . import structure_sheet
-from directory.models import HospitalService
 import datetime
 import calendar
 
@@ -42,58 +39,6 @@ from .sql_func import (
 )
 
 from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID
-
-
-@csrf_exempt
-@login_required
-@ensure_csrf_cookie
-def statistic_page(request):
-    """ Страница статистики """
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации")  # Лаборатории
-    tubes = directory.Tubes.objects.all()  # Пробирки
-    podrs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)  # Подлазделения
-    getters_material = DoctorProfile.objects.filter(user__groups__name='Заборщик биоматериала').distinct()
-    statistics_tickets_users = DoctorProfile.objects.filter(user__groups__name__in=['Оформление статталонов', 'Лечащий врач', 'Лаборант', 'Врач-лаборант']).distinct()
-    statistics_tickets_deps = Podrazdeleniya.objects.all().order_by('title')
-    statistics_researches_res = Researches.objects.filter(hide=False, is_slave_hospital=False, is_hospital=False).order_by('title')
-    companies_res = Company.objects.filter(active_status=True).order_by('short_title')
-
-    type_by_key_extract = HospitalService.TYPES_BY_KEYS.get('extracts', -1)
-    extract_research = None
-    if type_by_key_extract > -1:
-        extract_research = HospitalService.objects.filter(site_type=type_by_key_extract, hide=False)
-    extract_data = [{"pk": -1, "title": 'Стационар-выписок нет'}]
-    if extract_research:
-        extract_data = [{"pk": str(x.slave_research.pk), "title": f"{x.main_research.title} - {x.slave_research.title}"} for x in extract_research]
-
-    type_by_epicris = HospitalService.TYPES_BY_KEYS.get('epicrisis', -1)
-    epicris_transfer_research = None
-    if type_by_epicris > -1:
-        epicris_transfer_research = HospitalService.objects.filter(site_type=type_by_epicris, hide=False)
-    epicris_transfer_data = [{"pk": -1, "title": 'Стационар-переводов нет'}]
-    if epicris_transfer_research:
-        epicris_transfer_data = [
-            {"pk": str(x.slave_research.pk), "title": f"{x.main_research.title} - {x.slave_research.title}"}
-            for x in epicris_transfer_research
-            if x.slave_research.title.lower().find('перевод') != -1
-        ]
-
-    return render(
-        request,
-        'statistic.html',
-        {
-            "labs": labs,
-            "tubes": tubes,
-            "podrs": podrs,
-            "getters_material": json.dumps([{"pk": str(x.pk), "fio": str(x)} for x in getters_material]),
-            "statistics_tickets_users": json.dumps([{"pk": -1, "fio": 'Пользователь не выбран'}, *[{"pk": str(x.pk), "fio": str(x)} for x in statistics_tickets_users]]),
-            "statistics_tickets_deps": json.dumps([{"pk": -1, "title": 'Подразделение не выбрано'}, *[{"pk": str(x.pk), "title": x.title} for x in statistics_tickets_deps]]),
-            "statistics_researches_res": json.dumps(
-                [{"pk": -1, "title": 'Услуга не выбрана'}, *[{"pk": str(x.pk), "title": x.title} for x in statistics_researches_res], *extract_data, *epicris_transfer_data]
-            ),
-            "companies_res": json.dumps([{"id": "-1", "label": "Компания не выбрана"}, *[{"id": str(x.pk), "label": x.short_title if x.short_title else x.title} for x in companies_res]]),
-        },
-    )
 
 
 # @ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
@@ -119,6 +64,9 @@ def statistic_xls(request):
     date_values_o = request_data.get("values", "{}")
     date_type = request_data.get("date_type", "d")
     depart_o = request_data.get("department")
+
+    if tp == 'lab' and pk == '0':
+        tp = 'all-labs'
 
     symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")  # Словарь для транслитерации
     tr = {ord(a): ord(b) for a, b in zip(*symbols)}  # Перевод словаря для транслита
