@@ -6,14 +6,12 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
 from django.utils import timezone, dateformat
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt
 
 import directory.models as directory
 import slog.models as slog
 from clients.models import CardBase
-from contracts.models import Company
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
 from hospitals.models import Hospitals
@@ -25,72 +23,32 @@ from users.models import Podrazdeleniya
 from utils.dates import try_parse_range, normalize_date
 from . import sql_func
 from . import structure_sheet
-from directory.models import HospitalService
 import datetime
+import calendar
+import openpyxl
 
+from .sql_func import (
+    attached_female_on_month,
+    screening_plan_for_month_all_patient,
+    must_dispensarization_from_screening_plan_for_month,
+    sql_pass_screening,
+    sql_pass_screening_in_dispensarization,
+    screening_plan_for_month_all_count,
+    sql_pass_pap_analysis_count,
+    sql_pass_pap_fraction_result_value,
+    sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value,
+)
 
-@csrf_exempt
-@login_required
-@ensure_csrf_cookie
-def statistic_page(request):
-    """ Страница статистики """
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации")  # Лаборатории
-    tubes = directory.Tubes.objects.all()  # Пробирки
-    podrs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)  # Подлазделения
-    getters_material = DoctorProfile.objects.filter(user__groups__name='Заборщик биоматериала').distinct()
-    statistics_tickets_users = DoctorProfile.objects.filter(user__groups__name__in=['Оформление статталонов', 'Лечащий врач', 'Лаборант', 'Врач-лаборант']).distinct()
-    statistics_tickets_deps = Podrazdeleniya.objects.all().order_by('title')
-    statistics_researches_res = Researches.objects.filter(hide=False, is_slave_hospital=False, is_hospital=False).order_by('title')
-    companies_res = Company.objects.filter(active_status=True).order_by('short_title')
-
-    type_by_key_extract = HospitalService.TYPES_BY_KEYS.get('extracts', -1)
-    extract_research = None
-    if type_by_key_extract > -1:
-        extract_research = HospitalService.objects.filter(site_type=type_by_key_extract, hide=False)
-    extract_data = [{"pk": -1, "title": 'Стационар-выписок нет'}]
-    if extract_research:
-        extract_data = [{"pk": str(x.slave_research.pk), "title": f"{x.main_research.title} - {x.slave_research.title}"} for x in extract_research]
-
-    type_by_epicris = HospitalService.TYPES_BY_KEYS.get('epicrisis', -1)
-    epicris_transfer_research = None
-    if type_by_epicris > -1:
-        epicris_transfer_research = HospitalService.objects.filter(site_type=type_by_epicris, hide=False)
-    epicris_transfer_data = [{"pk": -1, "title": 'Стационар-переводов нет'}]
-    if epicris_transfer_research:
-        epicris_transfer_data = [
-            {"pk": str(x.slave_research.pk), "title": f"{x.main_research.title} - {x.slave_research.title}"}
-            for x in epicris_transfer_research
-            if x.slave_research.title.lower().find('перевод') != -1
-        ]
-
-    return render(
-        request,
-        'statistic.html',
-        {
-            "labs": labs,
-            "tubes": tubes,
-            "podrs": podrs,
-            "getters_material": json.dumps([{"pk": str(x.pk), "fio": str(x)} for x in getters_material]),
-            "statistics_tickets_users": json.dumps([{"pk": -1, "fio": 'Пользователь не выбран'}, *[{"pk": str(x.pk), "fio": str(x)} for x in statistics_tickets_users]]),
-            "statistics_tickets_deps": json.dumps([{"pk": -1, "title": 'Подразделение не выбрано'}, *[{"pk": str(x.pk), "title": x.title} for x in statistics_tickets_deps]]),
-            "statistics_researches_res": json.dumps(
-                [{"pk": -1, "title": 'Услуга не выбрана'}, *[{"pk": str(x.pk), "title": x.title} for x in statistics_researches_res], *extract_data, *epicris_transfer_data]
-            ),
-            "companies_res": json.dumps(
-                [{"id": "-1", "label": "Компания не выбрана"}, *[{"id": str(x.pk), "label": x.short_title if x.short_title else x.title} for x in companies_res]]
-            )
-        },
-    )
+from laboratory.settings import PAP_ANALYSIS_ID, PAP_ANALYSIS_FRACTION_QUALITY_ID, PAP_ANALYSIS_FRACTION_CONTAIN_ID
 
 
 # @ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
 @csrf_exempt
 @login_required
 def statistic_xls(request):
-    """ Генерация XLS """
+    """Генерация XLS"""
     from directions.models import Issledovaniya
     import xlwt
-    import openpyxl
     from collections import OrderedDict
 
     wb = xlwt.Workbook(encoding='utf-8')
@@ -106,6 +64,9 @@ def statistic_xls(request):
     date_values_o = request_data.get("values", "{}")
     date_type = request_data.get("date_type", "d")
     depart_o = request_data.get("department")
+
+    if tp == 'lab' and pk == '0':
+        tp = 'all-labs'
 
     symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")  # Словарь для транслитерации
     tr = {ord(a): ord(b) for a, b in zip(*symbols)}  # Перевод словаря для транслита
@@ -126,9 +87,7 @@ def statistic_xls(request):
         delta = date_end - date_start
         if abs(delta.days) > 60:
             slog.Log(key=tp, type=101, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
-            return JsonResponse({
-                "error": "period max - 60 days"
-            })
+            return JsonResponse({"error": "period max - 60 days"})
 
     if date_start_o != "" and date_end_o != "":
         slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
@@ -570,8 +529,6 @@ def statistic_xls(request):
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
 
-        import calendar
-
         if request_data.get("date_type") == 'd':
             d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
             d2 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
@@ -710,8 +667,6 @@ def statistic_xls(request):
         research_id = int(pk)
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
-
-        import calendar
 
         if request_data.get("date_type") == 'd':
             d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
@@ -1525,4 +1480,120 @@ def statistic_xls(request):
         ws = structure_sheet.statistic_message_purpose_total_data(ws, message_total_purpose_sql, date_start_o, date_end_o, styles_obj[3])
 
     wb.save(response)
+    return response
+
+
+@csrf_exempt
+@login_required
+def sreening_xls(request):
+    request_data = request.POST if request.method == "POST" else request.GET
+    month = request_data.get("month", "")
+    year = request_data.get("year", "")
+    month_obj = int(month)
+    _, num_days = calendar.monthrange(int(year), month_obj)
+    d1 = datetime.date(int(year), month_obj, 1)
+    d2 = datetime.date(int(year), month_obj, num_days)
+    datetime_start = f"{d1.strftime('%Y-%m-%d')} 00:00:00"
+    datetime_end = f"{d2.strftime('%Y-%m-%d')} 23:59:59"
+    last_day_month = f"{d2.strftime('%Y-%m-%d')}"
+
+    # кол-во прикрепленных по возрасту всего
+    min_age = 18
+    max_age = 69
+    screening_data = {}
+
+    attached_count_age_for_month = attached_female_on_month(last_day_month, min_age, max_age)
+    screening_data['attached_count_age_for_month'] = attached_count_age_for_month[0].count
+
+    # кол-во в плане по скринингу в текущем месяце
+    count_regplan_for_month = screening_plan_for_month_all_count(year, month)
+    screening_data['count_regplan_for_month'] = count_regplan_for_month[0].count
+
+    sreening_plan_individuals = screening_plan_for_month_all_patient(year, month)
+    sreening_people_cards = tuple([i.card_id for i in sreening_plan_individuals])
+
+    # из них подлежащих при диспансеризации (кол-во)
+    # получить карты и "research(уникальные)" "возраста на конец года" из screening_regplan_for_month -> проверить возраст
+    # далее првоерить в DispensaryRouteSheet пары
+    count_dispensarization_from_screening = must_dispensarization_from_screening_plan_for_month(year, month, f'{year}-12-31')
+    screening_data['count_dispensarization_from_screening'] = count_dispensarization_from_screening[0].count
+
+    # Число женщин 30-65 лет, прошедших скрининг
+    pass_screening = sql_pass_screening(year, month, datetime_start, datetime_end, sreening_people_cards)
+    screening_data['pass_screening'] = pass_screening[0].count
+
+    # Число женщин 30-65 лет, прошедших скрининг из них при диспансеризации
+    pass_screening_in_dispensarization = sql_pass_screening_in_dispensarization(year, month, datetime_start, datetime_end, f'{year}-12-31')
+    screening_data['pass_screening_in_dispensarization'] = pass_screening_in_dispensarization[0].count
+
+    # кто прошел тест папаниколау
+    pass_pap_analysis = sql_pass_pap_analysis_count(datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID))
+    screening_data['pass_pap_analysis'] = pass_pap_analysis[0].count
+
+    # адекватных
+    pass_pap_adequate_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "адекватный"
+    )
+    screening_data['pass_pap_adequate_result_value'] = pass_pap_adequate_result_value[0].count
+
+    # недостаточно адекватный
+    pass_pap_not_enough_adequate_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "недостаточно адекватный"
+    )
+    screening_data['pass_pap_not_enough_adequate_result_value'] = pass_pap_not_enough_adequate_result_value[0].count
+
+    # неадекватный
+    pass_pap_not_adequate_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "неадекватный"
+    )
+    screening_data['pass_pap_not_adequate_result_value'] = pass_pap_not_adequate_result_value[0].count
+
+    # карты с недостаточно адекватный и неадекватным результатом к-рым дважды взяли мазок
+    pass_pap_not_not_enough_adequate_result_value = sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_QUALITY_ID), "неадекватный", "недостаточно адекватный", count_param=2
+    )
+    # people_cards_not_not_enough_adequate = tuple([i.client_id for i in pass_pap_not_not_enough_adequate_result_value])
+    count_people_dublicate = len(pass_pap_not_not_enough_adequate_result_value)
+    screening_data['count_people_dublicate'] = count_people_dublicate
+
+    # АSCUS
+    pass_pap_ascus_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "ASCUS"
+    )
+    screening_data['pass_pap_ascus_result_value'] = pass_pap_ascus_result_value[0].count
+
+    # CIN-I
+    pass_pap_cin_i_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-I%"
+    )
+    screening_data['pass_pap_cin_i_result_value'] = pass_pap_cin_i_result_value[0].count
+
+    # CIN I-II, II
+    pass_pap_cin_i_ii_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-I-II%", "%CIN-II%", count_param=2
+    )
+    screening_data['pass_pap_cin_i_ii_result_value'] = pass_pap_cin_i_ii_result_value[0].count
+
+    # CIN-II-III, III
+    pass_pap_cin_ii_iii_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%CIN-II-III%", "%CIN-III%", count_param=2
+    )
+    screening_data['pass_pap_cin_ii_iii_result_value'] = pass_pap_cin_ii_iii_result_value[0].count
+
+    # cr in situ
+    pass_pap_cr_in_situ_result_value = sql_pass_pap_fraction_result_value(
+        datetime_start, datetime_end, sreening_people_cards, tuple(PAP_ANALYSIS_ID), tuple(PAP_ANALYSIS_FRACTION_CONTAIN_ID), "%cr in situ%"
+    )
+    screening_data['pass_pap_cr_in_situ_result_value'] = pass_pap_cr_in_situ_result_value[0].count
+
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = "attachment; filename=\"Screening.xlsx\""
+    wb = openpyxl.Workbook()
+    wb.remove(wb.get_sheet_by_name('Sheet'))
+    ws = wb.create_sheet("Обращения")
+    styles_obj = structure_sheet.style_sheet()
+    wb.add_named_style(styles_obj[0])
+    ws = structure_sheet.statistic_screening_month_data(ws, screening_data, month, year, styles_obj[3])
+    wb.save(response)
+
     return response

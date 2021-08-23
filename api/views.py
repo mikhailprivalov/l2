@@ -23,6 +23,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
+from contracts.models import Company
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
@@ -43,7 +44,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from .sql_func import users_by_group
+from .sql_func import users_by_group, users_all
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
@@ -1082,7 +1083,10 @@ def laborants(request):
 @login_required
 def load_docprofile_by_group(request):
     request_data = json.loads(request.body)
-    users = users_by_group(request_data['group'])
+    if request_data['group'] == '*':
+        users = users_all()
+    else:
+        users = users_by_group(request_data['group'])
     users_grouped = {}
     for row in users:
         if row[2] not in users_grouped:
@@ -1588,3 +1592,10 @@ def screening_save(request):
         return status_response(False, 'Такой скрининг уже есть!')
 
     return status_response(True)
+
+
+@login_required
+def companies(request):
+    rows = [{'id': x.pk, 'label': x.short_title or x.title} for x in Company.objects.filter(active_status=True).order_by('short_title')]
+
+    return JsonResponse({'rows': rows})

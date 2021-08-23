@@ -371,4 +371,343 @@ def message_ticket_purpose_total(hospitals_id, d_s, d_e):
     return rows
 
 
+def attached_female_on_month(last_day_month_for_age, min_age, max_age):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT COUNT(id) FROM clients_card
+            WHERE clients_card.individual_id IN 
+              (SELECT id FROM clients_individual WHERE (date_part('year', age(%(last_day_month_for_age)s, birthday))::int BETWEEN %(min_age)s and %(max_age)s) and sex='ж')
+            """,
+            params={
+                'last_day_month_for_age': last_day_month_for_age,
+                'min_age': min_age,
+                'max_age': max_age,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
 
+
+def screening_plan_for_month_all_count(date_plan_year, date_plan_month):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT count(DISTINCT card_id) FROM public.clients_screeningregplan
+            WHERE date_part('year', clients_screeningregplan.date)::int = %(date_plan_year)s AND
+            date_part('month', clients_screeningregplan.date)::int = %(date_plan_month)s
+            """,
+            params={
+                'date_plan_year': date_plan_year,
+                'date_plan_month': date_plan_month,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def screening_plan_for_month_all_patient(date_plan_year, date_plan_month):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT DISTINCT ON (card_id) card_id FROM public.clients_screeningregplan
+            WHERE date_part('year', clients_screeningregplan.date)::int = %(date_plan_year)s AND
+            date_part('month', clients_screeningregplan.date)::int = %(date_plan_month)s
+            """,
+            params={
+                'date_plan_year': date_plan_year,
+                'date_plan_month': date_plan_month,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def must_dispensarization_from_screening_plan_for_month(year, month, date_dispansarization):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+          SELECT count(distinct dispensarisation.card_id) FROM 
+            (SELECT 
+                  clients_screeningregplan.card_id, 
+                  directory_dispensaryroutesheet.research_id as dispensarisation_research
+                FROM clients_screeningregplan
+                LEFT JOIN clients_card
+                ON clients_card.id=clients_screeningregplan.card_id
+            
+                LEFT JOIN clients_individual
+                ON clients_individual.id=clients_card.individual_id
+                LEFT JOIN directory_dispensaryroutesheet
+                ON 
+                  clients_screeningregplan.research_id=directory_dispensaryroutesheet.research_id AND
+                  directory_dispensaryroutesheet.age_client = date_part('year', age(%(date_dispansarization)s, clients_individual.birthday))::int AND
+                  clients_individual.sex = directory_dispensaryroutesheet.sex_client
+                WHERE date_part('year', clients_screeningregplan.date)::int = %(screening_date_plan_year)s AND
+                date_part('month', clients_screeningregplan.date)::int = %(screening_date_plan_month)s
+                ORDER BY clients_screeningregplan.card_id) dispensarisation
+                WHERE dispensarisation.dispensarisation_research is NOT NULL
+            """,
+            params={
+                'screening_date_plan_year': year,
+                'screening_date_plan_month': month,
+                'date_dispansarization': date_dispansarization,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def sql_pass_screening(year, month, start_time_confirm, end_time_confirm, list_card):
+    if not list_card:
+        return []
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT count(distinct client_result.client_id) FROM 
+                (SELECT
+                    distinct on (directions_napravleniya.client_id, directions_issledovaniya.research_id)
+                    date_part('year', directions_issledovaniya.time_confirmation) as year_date,
+                    date_part('month', directions_issledovaniya.time_confirmation) as month_date,
+                    date_part('day', directions_issledovaniya.time_confirmation) as day_date, 
+                    directions_issledovaniya.id as iss_id, 
+                    directions_napravleniya.client_id as client_id, 
+                    directions_issledovaniya.napravleniye_id as dir_id,
+                    directions_issledovaniya.research_id as research_id,
+                    directions_issledovaniya.time_confirmation as confirm
+                FROM directions_issledovaniya
+                LEFT JOIN directions_napravleniya
+                ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+                WHERE 
+                    directions_napravleniya.client_id in %(list_card)s
+                AND
+                    directions_issledovaniya.research_id in (SELECT 
+                        distinct on (clients_screeningregplan.research_id) clients_screeningregplan.research_id 
+                        FROM clients_screeningregplan WHERE date_part('year', clients_screeningregplan.date)::int = %(screening_date_plan_year)s AND
+                        date_part('month', clients_screeningregplan.date)::int = %(screening_date_plan_month)s) 
+                AND
+                    (directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)
+                ORDER BY 
+                    directions_napravleniya.client_id, 
+                    directions_issledovaniya.research_id, 
+                    directions_issledovaniya.time_confirmation DESC) client_result
+            """,
+            params={
+                'screening_date_plan_year': year,
+                'screening_date_plan_month': month,
+                'start_time_confirm': start_time_confirm,
+                'end_time_confirm': end_time_confirm,
+                'list_card': list_card,
+                'tz': TIME_ZONE,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def sql_pass_screening_in_dispensarization(year, month, start_time_confirm, end_time_confirm, date_dispansarization):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT count(distinct client_result.client_id) FROM 
+                    (SELECT
+                        distinct on (directions_napravleniya.client_id, directions_issledovaniya.research_id)
+                        directions_napravleniya.client_id as client_id, 
+                        directions_issledovaniya.napravleniye_id as dir_id,
+                        directions_issledovaniya.research_id as research_id,
+                        directions_issledovaniya.time_confirmation as confirm
+                    FROM directions_issledovaniya
+                    LEFT JOIN directions_napravleniya
+                    ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+                    WHERE 
+                        directions_napravleniya.client_id in 
+                        (
+                            SELECT distinct ON (dispensarisation_card.card_id) dispensarisation_card.card_id FROM 
+                                (
+                                    SELECT clients_screeningregplan.card_id, directory_dispensaryroutesheet.research_id as dispensarisation_research
+                                        FROM clients_screeningregplan
+                                        LEFT JOIN clients_card
+                                        ON clients_card.id=clients_screeningregplan.card_id
+                                        
+                                        LEFT JOIN clients_individual
+                                        ON clients_individual.id=clients_card.individual_id
+                                        LEFT JOIN directory_dispensaryroutesheet
+                                        ON 
+                                        clients_screeningregplan.research_id=directory_dispensaryroutesheet.research_id AND
+                                        directory_dispensaryroutesheet.age_client = date_part('year', age(%(date_dispansarization)s, clients_individual.birthday))::int AND
+                                        clients_individual.sex = directory_dispensaryroutesheet.sex_client
+                                    WHERE date_part('year', clients_screeningregplan.date)::int = %(screening_date_plan_year)s AND
+                                          date_part('month', clients_screeningregplan.date)::int = %(screening_date_plan_month)s
+                                    ORDER BY clients_screeningregplan.card_id
+                                ) dispensarisation_card
+                            WHERE dispensarisation_card.dispensarisation_research is NOT NULL
+                        )
+                    AND
+                        directions_issledovaniya.research_id in 
+                        (
+                            SELECT distinct on (dispensarisation.research_id) dispensarisation.research_id FROM
+                                (
+                                    SELECT  directory_dispensaryroutesheet.research_id, directory_dispensaryroutesheet.research_id as dispensarisation_research
+                                        FROM clients_screeningregplan
+                                        LEFT JOIN clients_card
+                                        ON clients_card.id=clients_screeningregplan.card_id
+                                        
+                                        LEFT JOIN clients_individual
+                                        ON clients_individual.id=clients_card.individual_id
+                                        LEFT JOIN directory_dispensaryroutesheet
+                                        ON 
+                                        clients_screeningregplan.research_id=directory_dispensaryroutesheet.research_id AND
+                                        directory_dispensaryroutesheet.age_client = date_part('year', age(%(date_dispansarization)s, clients_individual.birthday))::int AND
+                                        clients_individual.sex = directory_dispensaryroutesheet.sex_client
+                                    WHERE date_part('year', clients_screeningregplan.date)::int = %(screening_date_plan_year)s AND
+                                          date_part('month', clients_screeningregplan.date)::int = %(screening_date_plan_month)s
+                                    ORDER BY clients_screeningregplan.card_id
+                                ) dispensarisation
+                                WHERE dispensarisation.dispensarisation_research is NOT NULL
+                        ) 
+                    AND
+                    (directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)  
+                    ORDER BY directions_napravleniya.client_id, directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation DESC) client_result
+            """,
+            params={
+                'screening_date_plan_year': year,
+                'screening_date_plan_month': month,
+                'start_time_confirm': start_time_confirm,
+                'end_time_confirm': end_time_confirm,
+                'date_dispansarization': date_dispansarization,
+                'tz': TIME_ZONE,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def sql_pass_pap_analysis_count(start_time_confirm, end_time_confirm, list_card, pap_id_analysis):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT count(distinct result_papa.client_id) FROM
+                (SELECT
+                    distinct on (directions_napravleniya.client_id, directions_issledovaniya.research_id)
+                    directions_napravleniya.client_id as client_id, 
+                    directions_issledovaniya.napravleniye_id as dir_id,
+                    directions_issledovaniya.research_id as research_id,
+                    directions_issledovaniya.time_confirmation as confirm
+                FROM directions_issledovaniya
+                LEFT JOIN directions_napravleniya
+                ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+                WHERE 
+                directions_napravleniya.client_id in %(list_card)s
+                AND
+                directions_issledovaniya.research_id in %(pap_id_analysis)s
+                AND
+                (directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)  
+                ORDER BY directions_napravleniya.client_id, directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation DESC)
+            result_papa  
+            """,
+            params={'start_time_confirm': start_time_confirm, 'end_time_confirm': end_time_confirm, 'list_card': list_card, 'pap_id_analysis': pap_id_analysis, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def sql_pass_pap_fraction_result_value(start_time_confirm, end_time_confirm, list_card, pap_id_analysis, fraction_id, value_result1, value_result2="", count_param=1):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT count(distinct client_result.client_id) FROM 
+                (SELECT
+                distinct on (directions_napravleniya.client_id, directions_issledovaniya.research_id)
+                directions_napravleniya.client_id as client_id, 
+                directions_issledovaniya.napravleniye_id as dir_id,
+                directions_issledovaniya.research_id as research_id,
+                directions_issledovaniya.time_confirmation as confirm,
+                directions_result.value,
+                directions_result.fraction_id
+                FROM directions_issledovaniya
+                LEFT JOIN directions_napravleniya
+                ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+                LEFT JOIN directions_result
+                ON directions_result.issledovaniye_id=directions_issledovaniya.id 
+                WHERE 
+                directions_napravleniya.client_id in %(list_card)s
+                AND
+                directions_issledovaniya.research_id in %(pap_id_analysis)s
+                AND
+                (directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)
+                AND
+                directions_result.fraction_id in %(fraction_id)s
+                AND 
+                    CASE WHEN %(count_param)s > 1 THEN
+                      directions_result.value ILIKE %(value_result1)s or  directions_result.value ILIKE %(value_result2)s
+                    ELSE
+                      directions_result.value ILIKE %(value_result1)s
+                    END
+                ORDER BY directions_napravleniya.client_id, 
+                directions_issledovaniya.research_id, 
+                directions_issledovaniya.time_confirmation DESC) 
+            client_result
+            """,
+            params={
+                'start_time_confirm': start_time_confirm,
+                'end_time_confirm': end_time_confirm,
+                'list_card': list_card,
+                'pap_id_analysis': pap_id_analysis,
+                'fraction_id': fraction_id,
+                'tz': TIME_ZONE,
+                'count_param': count_param,
+                'value_result1': value_result1,
+                'value_result2': value_result2,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value(
+    start_time_confirm, end_time_confirm, list_card, pap_id_analysis, fraction_id, value_result1, value_result2="", count_param=1
+):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT client_result.client_id FROM
+             (SELECT
+                directions_napravleniya.client_id as client_id
+                FROM directions_issledovaniya
+                LEFT JOIN directions_napravleniya
+                ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+                LEFT JOIN directions_result
+                ON directions_result.issledovaniye_id=directions_issledovaniya.id 
+                WHERE 
+                directions_napravleniya.client_id in %(list_card)s
+                AND
+                directions_issledovaniya.research_id in %(pap_id_analysis)s
+                AND
+                (directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(start_time_confirm)s AND %(end_time_confirm)s)
+                AND
+                directions_result.fraction_id in %(fraction_id)s
+                AND 
+                    CASE WHEN %(count_param)s > 1 THEN
+                      directions_result.value ILIKE %(value_result1)s or  directions_result.value ILIKE %(value_result2)s
+                    ELSE
+                      directions_result.value ILIKE %(value_result1)s
+                    END
+                ORDER BY directions_napravleniya.client_id, 
+                directions_issledovaniya.research_id, 
+                directions_issledovaniya.time_confirmation) client_result
+                group by client_result.client_id having count(client_result.client_id)>1
+            """,
+            params={
+                'start_time_confirm': start_time_confirm,
+                'end_time_confirm': end_time_confirm,
+                'list_card': list_card,
+                'pap_id_analysis': pap_id_analysis,
+                'fraction_id': fraction_id,
+                'tz': TIME_ZONE,
+                'count_param': count_param,
+                'value_result1': value_result1,
+                'value_result2': value_result2,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
