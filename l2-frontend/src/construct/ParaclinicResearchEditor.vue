@@ -245,7 +245,7 @@
                     <span class="input-group-addon">ID-скрепки</span>
                     <input type="text" class="form-control" v-model="row.attached" />
                   </div>
-                  <div v-if="row.field_type === 0">
+                  <div v-if="row.field_type === 0 || row.field_type === 29">
                     <strong>Значение по умолчанию:</strong>
                     <textarea v-model="row.default" :rows="row.lines" class="form-control" v-if="row.lines > 1"></textarea>
                     <input v-model="row.default" class="form-control" v-else />
@@ -414,6 +414,7 @@
                       <option value="26">Результаты консультаций</option>
                       <option value="27">Таблица</option>
                       <option value="28">НСИ-справочник</option>
+                      <option value="29">Адрес по ФИАС</option>
                     </select>
                   </label>
                 </div>

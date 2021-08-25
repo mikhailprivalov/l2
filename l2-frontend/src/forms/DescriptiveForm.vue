@@ -1,38 +1,48 @@
 <template>
   <div>
-    <visibility-group-wrapper :group="group"
-                              :groups="groups"
-                              :patient="patient"
-                              :key="group.pk"
-                              v-for="group in research.groups">
+    <visibility-group-wrapper :group="group" :groups="groups" :patient="patient" :key="group.pk" v-for="group in research.groups">
       <div class="group">
-        <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
+        <div class="group-title" v-if="group.title !== ''">{{ group.title }}</div>
         <div class="fields">
-          <visibility-field-wrapper :formula="field.visibility" :group="group" :groups="research.groups"
-                                    :patient="patient"
-                                    :key="field.pk"
-                                    v-for="field in group.fields">
-
+          <visibility-field-wrapper
+            :formula="field.visibility"
+            :group="group"
+            :groups="research.groups"
+            :patient="patient"
+            :key="field.pk"
+            v-for="field in group.fields"
+          >
             <div class="wide-field-title" v-if="field.title !== '' && research.wide_headers">
-              <template v-if="field.title.endsWith('?')">{{field.title}}</template>
-              <template v-else>{{field.title}}:</template>
+              <template v-if="field.title.endsWith('?')">{{ field.title }}</template>
+              <template v-else>{{ field.title }}:</template>
             </div>
-            <div :class="{disabled: confirmed,
-            empty: notFilled.includes(field.pk),
-            'field-vertical-simple': [16, 17].includes(field.field_type) && pk,
-            required: field.required}" :title="field.required && 'обязательно для заполнения'"
-                 v-on="{
-                  mouseenter: enter_field(field.values_to_input.length > 0),
-                  mouseleave: leave_field(field.values_to_input.length > 0),
-                 }" class="field">
+            <div
+              :class="{
+                disabled: confirmed,
+                empty: notFilled.includes(field.pk),
+                'field-vertical-simple': [16, 17].includes(field.field_type) && pk,
+                required: field.required,
+              }"
+              :title="field.required && 'обязательно для заполнения'"
+              v-on="{
+                mouseenter: enter_field(field.values_to_input.length > 0),
+                mouseleave: leave_field(field.values_to_input.length > 0),
+              }"
+              class="field"
+            >
               <div class="field-title" v-if="field.title !== '' && !research.wide_headers">
-                {{field.title}}
+                {{ field.title }}
               </div>
-              <longpress :confirm-time="0"
-                         :duration="400"
-                         :on-confirm="clear_val" :value="field"
-                         action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                         v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21, 24, 25, 26, 27, 28].includes(field.field_type)">
+              <longpress
+                :confirm-time="0"
+                :duration="400"
+                :on-confirm="clear_val"
+                :value="field"
+                action-text="×"
+                class="btn btn-default btn-field"
+                pressing-text="×"
+                v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21, 24, 25, 26, 27, 28].includes(field.field_type)"
+              >
                 ×
               </longpress>
               <FastTemplates
@@ -44,69 +54,66 @@
                 :field_title="field.title"
               />
               <div class="field-value" v-if="field.field_type === 0">
-                <textarea :readonly="confirmed" :rows="field.lines" class="form-control"
-                          v-if="field.lines > 1" v-model="field.value"></textarea>
-                <input :readonly="confirmed" class="form-control" v-else v-model="field.value"/>
+                <textarea
+                  :readonly="confirmed"
+                  :rows="field.lines"
+                  class="form-control"
+                  v-if="field.lines > 1"
+                  v-model="field.value"
+                ></textarea>
+                <input :readonly="confirmed" class="form-control" v-else v-model="field.value" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 1">
-                <input :readonly="confirmed" class="form-control" style="width: 160px" type="date"
-                       v-model="field.value"/>
+                <input :readonly="confirmed" class="form-control" style="width: 160px" type="date" v-model="field.value" />
               </div>
               <div class="field-value mkb10" v-else-if="field.field_type === 2 && !confirmed">
-                <MKBFieldForm :short="false" @input="change_mkb(field)" v-model="field.value"/>
+                <MKBFieldForm :short="false" @input="change_mkb(field)" v-model="field.value" />
               </div>
               <div class="field-value mkb10" v-else-if="field.field_type === 3">
-                <FormulaField :fields="research.groups.reduce((a, b) => a.concat(b.fields), [])"
-                              :formula="field.default_value"
-                              :patient="patient"
-                              v-model="field.value"/>
+                <FormulaField
+                  :fields="research.groups.reduce((a, b) => a.concat(b.fields), [])"
+                  :formula="field.default_value"
+                  :patient="patient"
+                  v-model="field.value"
+                />
               </div>
               <div class="field-value" v-else-if="field.field_type === 2 && confirmed">
-                <input :readonly="true" class="form-control" v-model="field.value"/>
+                <input :readonly="true" class="form-control" v-model="field.value" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 10">
-                <TreeSelectField
-                  :disabled="confirmed" :variants="field.values_to_input"
-                  v-model="field.value"
-                />
+                <TreeSelectField :disabled="confirmed" :variants="field.values_to_input" v-model="field.value" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 11">
-                <SearchFractionValueField :readonly="confirmed"
-                                          :fraction-pk="field.default_value"
-                                          :client-pk="patient.card_pk"
-                                          v-model="field.value"/>
+                <SearchFractionValueField
+                  :readonly="confirmed"
+                  :fraction-pk="field.default_value"
+                  :client-pk="patient.card_pk"
+                  v-model="field.value"
+                />
               </div>
               <div class="field-value" v-else-if="field.field_type === 12">
-                <RadioField
-                  :disabled="confirmed" :variants="field.values_to_input"
-                  v-model="field.value"
-                />
+                <RadioField :disabled="confirmed" :variants="field.values_to_input" v-model="field.value" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 13 || field.field_type === 14 || field.field_type === 23">
-                <SearchFieldValueField :readonly="confirmed"
-                                       :field-pk="field.default_value"
-                                       :client-pk="patient.card_pk"
-                                       :lines="field.lines"
-                                       :raw="field.field_type === 14 || field.field_type === 23"
-                                       :not_autoload_result="field.field_type === 23"
-                                       :iss_pk="pk"
-                                       v-model="field.value"/>
-              </div>
-              <div class="field-value" v-else-if="field.field_type === 15">
-                <RichTextEditor :readonly="confirmed"
-                                :disabled="confirmed"
-                                v-model="field.value"/>
-              </div>
-              <div class="field-value" v-else-if="field.field_type === 16 && pk">
-                <AggregateLaboratory :pk="pk" extract v-model="field.value" :disabled="confirmed"/>
-              </div>
-              <div class="field-value" v-else-if="field.field_type === 17 && pk && hospital_r_type">
-                <AggregateDesc
-                  :pk="pk"
-                  extract
-                  :r_type="hospital_r_type"
+                <SearchFieldValueField
+                  :readonly="confirmed"
+                  :field-pk="field.default_value"
+                  :client-pk="patient.card_pk"
+                  :lines="field.lines"
+                  :raw="field.field_type === 14 || field.field_type === 23"
+                  :not_autoload_result="field.field_type === 23"
+                  :iss_pk="pk"
                   v-model="field.value"
                 />
+              </div>
+              <div class="field-value" v-else-if="field.field_type === 15">
+                <RichTextEditor :readonly="confirmed" :disabled="confirmed" v-model="field.value" />
+              </div>
+              <div class="field-value" v-else-if="field.field_type === 16 && pk">
+                <AggregateLaboratory :pk="pk" extract v-model="field.value" :disabled="confirmed" />
+              </div>
+              <div class="field-value" v-else-if="field.field_type === 17 && pk && hospital_r_type">
+                <AggregateDesc :pk="pk" extract :r_type="hospital_r_type" v-model="field.value" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 18">
                 <NumberField v-model="field.value" :disabled="confirmed" />
@@ -115,43 +122,49 @@
                 <NumberRangeField :variants="field.values_to_input" v-model="field.value" :disabled="confirmed" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 20">
-                <input :readonly="confirmed" class="form-control" style="width: 110px" type="time"
-                       v-model="field.value"/>
+                <input :readonly="confirmed" class="form-control" style="width: 110px" type="time" v-model="field.value" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 21">
-                <AnesthesiaProcess :fields="field.values_to_input" :iss="pk" :field_pk="field.pk" :disabled="confirmed"/>
+                <AnesthesiaProcess :fields="field.values_to_input" :iss="pk" :field_pk="field.pk" :disabled="confirmed" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 22">
-                <TextareaAutocomplete
-                  :disabled="confirmed"
-                  v-model="field.value"
-                />
+                <TextareaAutocomplete :disabled="confirmed" v-model="field.value" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 24">
-                <LaboratoryPreviousResults v-model="field.value" :disabled="confirmed"/>
+                <LaboratoryPreviousResults v-model="field.value" :disabled="confirmed" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 25">
-                <DiagnosticPreviousResults v-model="field.value" :disabled="confirmed"/>
+                <DiagnosticPreviousResults v-model="field.value" :disabled="confirmed" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 26">
-                <DocReferralPreviousResults v-model="field.value" :disabled="confirmed"/>
+                <DocReferralPreviousResults v-model="field.value" :disabled="confirmed" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 27">
                 <TableField :variants="field.values_to_input" v-model="field.value" :disabled="confirmed" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 28">
-                <PermanentDirectoryField :oid="field.values_to_input" v-model="field.value"
-                                         :field-title="field.title"
-                                         :disabled="confirmed" />
+                <PermanentDirectoryField
+                  :oid="field.values_to_input"
+                  v-model="field.value"
+                  :field-title="field.title"
+                  :disabled="confirmed"
+                />
               </div>
-              <div :title="field.helper" class="field-helper" v-if="field.helper"
-                   v-tippy="{
-                    placement: 'left',
-                    arrow: true,
-                    interactive: true,
-                    theme: 'dark longread',
-                  }">
-                <i class="fa fa-question"/>
+              <div class="field-value mkb" v-else-if="field.field_type === 29">
+                <AddressFiasField v-model="field.value" :disabled="confirmed" :client-pk="patient.card_pk" />
+              </div>
+              <div
+                :title="field.helper"
+                class="field-helper"
+                v-if="field.helper"
+                v-tippy="{
+                  placement: 'left',
+                  arrow: true,
+                  interactive: true,
+                  theme: 'dark longread',
+                }"
+              >
+                <i class="fa fa-question" />
               </div>
             </div>
           </visibility-field-wrapper>
@@ -194,6 +207,7 @@ export default {
     DiagnosticPreviousResults: () => import('../fields/DiagnosticPreviousResults.vue'),
     DocReferralPreviousResults: () => import('../fields/DocReferralPreviousResults.vue'),
     PermanentDirectoryField: () => import('../fields/PermanentDirectoryField.vue'),
+    AddressFiasField: () => import('../fields/AddressFiasField.vue'),
   },
   props: {
     research: {
@@ -269,14 +283,19 @@ export default {
       this.research.version = (this.research.version || 0) + 1;
     },
     updateValue(field) {
-      return (newValue) => {
+      return newValue => {
         // eslint-disable-next-line no-param-reassign
         field.value = newValue;
       };
     },
     clear_val(field) {
-      // eslint-disable-next-line no-param-reassign
-      field.value = '';
+      if (field.field_type === 29) {
+        // eslint-disable-next-line no-param-reassign
+        field.value = JSON.stringify({ address: '', fias: null });
+      } else {
+        // eslint-disable-next-line no-param-reassign
+        field.value = '';
+      }
     },
     enter_field(...args) {
       return enter_field.apply(this, args);
@@ -289,11 +308,9 @@ export default {
 </script>
 
 <style scoped lang="scss">
-
 .title_anesthesia {
   flex: 1 0 70px;
   padding-left: 5px;
   padding-top: 5px;
 }
-
 </style>

@@ -1018,6 +1018,8 @@ def autocomplete(request):
                 data = [x.harmful_factor for x in p]
         elif t == "fias":
             data = fias.suggest(v)
+        elif t == "fias-extended":
+            data = fias.suggest(v, count=limit, detalized=True)
         elif t == "name":
             p = Individual.objects.filter(name__istartswith=v).distinct('name')[:limit]
             if p.exists():

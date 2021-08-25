@@ -474,6 +474,7 @@ class ParaclinicInputField(models.Model):
         (26, 'Consultation result'),
         (27, 'Table'),
         (28, 'NSI directory'),
+        (29, 'FIAS address'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')

@@ -2016,6 +2016,8 @@ def last_field_result(request):
         result = {"value": hosp_title}
     elif request_data["fieldPk"].find('%main_address') != -1:
         result = {"value": c.main_address}
+    elif request_data["fieldPk"].find('%full_main_address') != -1:
+        result = {"value": c.main_address_full}
     elif request_data["fieldPk"].find('%docprofile') != -1:
         result = {"value": request.user.doctorprofile.get_full_fio()}
     elif request_data["fieldPk"].find('%patient_fio') != -1:
@@ -2028,6 +2030,8 @@ def last_field_result(request):
         result = {"value": data['enp']}
     elif request_data["fieldPk"].find('%fact_address') != -1:
         result = {"value": c.fact_address}
+    elif request_data["fieldPk"].find('%full_fact_address') != -1:
+        result = {"value": c.fact_address_full}
     elif request_data["fieldPk"].find('%phone') != -1:
         result = {"value": c.phone}
     elif request_data["fieldPk"].find('%work_position') != -1:

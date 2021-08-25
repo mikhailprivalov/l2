@@ -175,37 +175,11 @@
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
               <div class="row-t">Адрес регистрации</div>
-              <TypeAhead
-                :delayTime="400"
-                :getResponse="getResponse"
-                :highlighting="highlighting"
-                :limit="10"
-                name="ar"
-                :minChars="4"
-                :onHit="onHit('main_address', true)"
-                :selectFirst="true"
-                maxlength="110"
-                ref="ar"
-                :src="`/api/autocomplete?value=:keyword&type=fias`"
-                v-model="card.main_address"
-              />
+              <AddressFiasField ref="ar" name="ar" v-model="card.main_address_full" :form="true" />
             </div>
             <div class="form-row sm-f">
               <div class="row-t">Адрес проживания</div>
-              <TypeAhead
-                :delayTime="400"
-                :getResponse="getResponse"
-                :highlighting="highlighting"
-                :limit="10"
-                name="af"
-                :minChars="4"
-                :onHit="onHit('fact_address', true)"
-                :selectFirst="true"
-                maxlength="110"
-                ref="af"
-                :src="`/api/autocomplete?value=:keyword&type=fias`"
-                v-model="card.fact_address"
-              />
+              <AddressFiasField ref="af" name="af" v-model="card.fact_address_full" :form="true" />
             </div>
             <div class="form-row sm-f">
               <div class="row-t">Участок</div>
@@ -708,6 +682,7 @@ import patientsPoint from '@/api/patients-point';
 import Modal from '@/ui-cards/Modal.vue';
 import forms from '@/forms';
 import RadioField from '@/fields/RadioField.vue';
+import AddressFiasField from '@/fields/AddressFiasField.vue';
 import * as actions from '@/store/action-types';
 import PatientSmallPicker from '@/ui-cards/PatientSmallPicker.vue';
 
@@ -725,6 +700,7 @@ export default {
     PatientSmallPicker,
     RadioField,
     Treeselect,
+    AddressFiasField,
   },
   props: {
     card_pk: {
@@ -743,8 +719,8 @@ export default {
       card: {
         number: '',
         number_poli: '',
-        main_address: '',
-        fact_address: '',
+        main_address_full: JSON.stringify({ address: '', fias: null }),
+        fact_address_full: JSON.stringify({ address: '', fias: null }),
         work_place: '',
         work_position: '',
         family: '',
@@ -1013,8 +989,8 @@ export default {
           'sex',
           'new_individual',
           'base_pk',
-          'fact_address',
-          'main_address',
+          'main_address_full',
+          'fact_address_full',
           'work_place',
           'main_diagnosis',
           'work_position',
