@@ -28,6 +28,8 @@
           <div class="alert-address">
             Выберите из списка, если адрес найден
           </div>
+
+          <div class="address-header">Новый адрес:</div>
           <TypeAhead
             classes="vtypeahed"
             src="/api/autocomplete?value=:keyword&type=fias-extended"
@@ -45,6 +47,24 @@
             :selectFirst="true"
             :name="name"
           />
+
+          <div class="input-group nd f-row">
+            <span class="input-group-addon">Номер адреса объекта ФИАС</span>
+            <input
+              type="text"
+              class="form-control form-control-forced-last"
+              :class="!fias && 'has-error'"
+              :value="fias || 'пусто, адрес не выбран из списка'"
+              readonly
+            />
+          </div>
+
+          <div class="input-group nd">
+            <span class="input-group-addon">Предыдущий адрес</span>
+            <div class="form-control form-control-area form-control-forced-last">
+              {{ prevAddress || 'пусто' }}
+            </div>
+          </div>
 
           <div class="row btn-row">
             <div class="col-xs-6 text-right">
@@ -248,6 +268,7 @@ export default class AddressFiasField extends Vue {
       this.address = '';
       this.fias = null;
     }
+    this.changeValue();
   }
 
   cancel() {
@@ -255,9 +276,16 @@ export default class AddressFiasField extends Vue {
     this.edit = false;
   }
 
-  confirm() {
+  async confirm() {
+    if (!this.fias) {
+      try {
+        await this.$dialog.confirm('Вы действительно хотите использовать адрес без кода ФИАС?');
+      } catch (e) {
+        return;
+      }
+    }
     this.changeValue();
-    this.$root.$emit('msg', 'ok', 'Адрес применён');
+    this.$root.$emit('msg', 'ok', 'Адрес применён', 2000);
     this.edit = false;
   }
 }
@@ -288,19 +316,40 @@ export default class AddressFiasField extends Vue {
   }
 }
 
+.form-control-forced-last {
+  width: 100% !important;
+  border-radius: 0 4px 4px 0 !important;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 8%) !important;
+  border: 1px solid #aab2bd;
+  min-height: 34px;
+  padding: 6px 12px;
+
+  &.has-error {
+    border-color: #f00;
+  }
+}
+
 .address-body {
   padding: 10px;
 }
 
 .alert-address {
-  margin: 5px 0 15px 0;
+  margin: 0 0 15px 0;
   padding: 10px;
-  font-weight: bold;
   background-color: rgba(0, 0, 0, 8%);
   border-radius: 4px;
 }
 
+.address-header {
+  font-weight: bold;
+}
+
 .btn-row {
-  margin-top: 25px;
+  margin-top: 20px;
+}
+
+.f-row {
+  margin-top: 20px;
+  margin-bottom: 10px;
 }
 </style>

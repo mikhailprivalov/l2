@@ -1643,8 +1643,8 @@ body > .container-fluid {
     margin-top: 8px;
   }
 
-  .input-group {
-    display: flex;
+  &-address > .input-group:not(.vtypeahead) {
+    display: flex !important;
   }
 }
 

@@ -150,7 +150,7 @@
                   :disabled="confirmed"
                 />
               </div>
-              <div class="field-value mkb" v-else-if="field.field_type === 29">
+              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 29">
                 <AddressFiasField
                   v-model="field.value"
                   :disabled="confirmed"
