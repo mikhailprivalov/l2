@@ -173,13 +173,13 @@
       <div v-else>
         <div class="row" style="margin-bottom: 10px">
           <div class="col-xs-12 col-form mid">
-            <div class="form-row sm-f">
-              <div class="row-t">Адрес регистрации</div>
-              <AddressFiasField ref="ar" name="ar" v-model="card.main_address_full" :form="true" />
+            <div class="form-row-address">
+              <div class="row-address-header">Адрес регистрации</div>
+              <AddressFiasField ref="ar" name="ar" v-model="card.main_address_full" :form="true" edit-title="Адрес регистрации" />
             </div>
-            <div class="form-row sm-f">
-              <div class="row-t">Адрес проживания</div>
-              <AddressFiasField ref="af" name="af" v-model="card.fact_address_full" :form="true" />
+            <div class="form-row-address">
+              <div class="row-address-header">Адрес проживания</div>
+              <AddressFiasField ref="af" name="af" v-model="card.fact_address_full" :form="true" edit-title="Адрес проживания" />
             </div>
             <div class="form-row sm-f">
               <div class="row-t">Участок</div>

@@ -151,7 +151,12 @@
                 />
               </div>
               <div class="field-value mkb" v-else-if="field.field_type === 29">
-                <AddressFiasField v-model="field.value" :disabled="confirmed" :client-pk="patient.card_pk" />
+                <AddressFiasField
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  :client-pk="patient.card_pk"
+                  :edit-title="`${group.title} ${field.title}`.trim()"
+                />
               </div>
               <div
                 :title="field.helper"

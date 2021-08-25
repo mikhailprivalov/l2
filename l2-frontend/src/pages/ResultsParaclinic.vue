@@ -2509,8 +2509,4 @@ textarea {
     padding-left: 20px;
   }
 }
-
-.cursor-pointer {
-  cursor: pointer;
-}
 </style>

@@ -1,26 +1,66 @@
 <template>
   <div v-frag>
-    <div class="div-address" v-if="disabled">
-      {{ address }}
+    <div class="input-group" :class="form && 'form-row'" v-if="!disabled">
+      <button
+        title="Редактировать адрес"
+        class="btn btn-blue-nb nbr btn-address"
+        type="button"
+        v-tippy
+        tabindex="-1"
+        @click="edit = true"
+      >
+        <i class="fa fa-pencil"></i>
+      </button>
+      <div class="form-control form-control-area cursor-pointer" title="Редактировать адрес" v-tippy @click="edit = true">
+        {{ prevAddress }}
+      </div>
     </div>
-    <TypeAhead
-      :classes="form ? 'field-form' : ''"
-      src="/api/autocomplete?value=:keyword&type=fias-extended"
-      :getResponse="getResponse"
-      :onHit="onHit"
-      placeholder="Адрес по ФИАС"
-      NoResultText="Адрес не найден в ФИАС. Проверьте правильность ввода"
-      v-model="address"
-      maxlength="255"
-      :delayTime="400"
-      :minChars="4"
-      :render="items => items.map(i => i.unrestricted_value)"
-      :limit="10"
-      :highlighting="highlighting"
-      :selectFirst="true"
-      :name="name"
-      v-else
-    />
+    <div class="input-group" :class="form && 'form-row'" v-else>
+      <div class="form-control form-control-area">
+        {{ address }}
+      </div>
+    </div>
+    <transition name="fade">
+      <Modal @close="cancel" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" :zIndex="5001" v-if="edit">
+        <span slot="header" v-if="editTitle">{{ editTitle }} — редактирование</span>
+        <span slot="header" v-else>Редактирование адреса</span>
+        <div slot="body" class="address-body mkb">
+          <div class="alert-address">
+            Выберите из списка, если адрес найден
+          </div>
+          <TypeAhead
+            classes="vtypeahed"
+            src="/api/autocomplete?value=:keyword&type=fias-extended"
+            :getResponse="getResponse"
+            :onHit="onHit"
+            placeholder="Адрес по ФИАС"
+            NoResultText="Адрес не найден в ФИАС. Проверьте правильность ввода"
+            v-model="address"
+            maxlength="255"
+            :delayTime="400"
+            :minChars="3"
+            :render="items => items.map(i => i.unrestricted_value)"
+            :limit="10"
+            :highlighting="highlighting"
+            :selectFirst="true"
+            :name="name"
+          />
+
+          <div class="row btn-row">
+            <div class="col-xs-6 text-right">
+              <button @click="cancel" class="btn btn-blue-nb" type="button">
+                Отмена
+              </button>
+            </div>
+            <div class="col-xs-6">
+              <button @click="confirm" class="btn btn-blue-nb" type="button">
+                Подтвердить
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+    </transition>
   </div>
 </template>
 
@@ -29,12 +69,17 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import TypeAhead from 'vue2-typeahead';
 import _ from 'lodash';
-import { debounce } from 'lodash/function';
 
 import directionsPoint from '@/api/directions-point';
+import Modal from '@/ui-cards/Modal.vue';
 
 @Component({
   props: {
+    editTitle: {
+      type: String,
+      required: false,
+      default: null,
+    },
     value: {
       type: String,
       required: true,
@@ -60,13 +105,16 @@ import directionsPoint from '@/api/directions-point';
   },
   components: {
     TypeAhead,
+    Modal,
   },
   data() {
     return {
       address: '',
+      prevAddress: '',
       fias: null,
       loadedData: false,
       clearFiasTimer: null,
+      edit: false,
     };
   },
   model: {
@@ -75,29 +123,7 @@ import directionsPoint from '@/api/directions-point';
   watch: {
     value: {
       handler() {
-        let data;
-        try {
-          data = JSON.parse(this.value);
-        } catch (e) {
-          data = {};
-          if (this.value && !this.value.includes('{')) {
-            data.address = this.value;
-          }
-        }
-
-        if (_.has(data, 'address')) {
-          this.address = data.address;
-        }
-
-        if (_.has(data, 'fias')) {
-          this.fias = data.fias;
-        } else {
-          this.fias = null;
-        }
-
-        if (!this.loadedData) {
-          setTimeout(() => this.loadData(), 15);
-        }
+        this.setDataFromValue();
       },
       immediate: true,
     },
@@ -105,11 +131,9 @@ import directionsPoint from '@/api/directions-point';
       this.clearFiasTimer = setTimeout(() => {
         this.fias = null;
       }, 50);
-      this.debouncedChangeValue();
     },
     fias() {
       clearTimeout(this.clearFiasTimer);
-      this.debouncedChangeValue();
     },
   },
 })
@@ -117,6 +141,8 @@ export default class AddressFiasField extends Vue {
   value: string;
 
   address: string;
+
+  prevAddress: string;
 
   name: string | null;
 
@@ -128,9 +154,48 @@ export default class AddressFiasField extends Vue {
 
   loadedData: boolean;
 
+  edit: boolean;
+
   clientPk: number | null;
 
   clearFiasTimer: any;
+
+  editTitle: string | null;
+
+  get addressValue() {
+    if (!this.edit) {
+      return this.address;
+    }
+
+    return this.prevAddress;
+  }
+
+  setDataFromValue(forced = false) {
+    let data;
+    try {
+      data = JSON.parse(this.value);
+    } catch (e) {
+      data = {};
+      if (this.value && !this.value.includes('{')) {
+        data.address = this.value;
+      }
+    }
+
+    if (_.has(data, 'address') || forced) {
+      this.address = data.address || '';
+      this.prevAddress = data.address || '';
+    }
+
+    if (_.has(data, 'fias') || forced) {
+      this.fias = data.fias || null;
+    } else {
+      this.fias = null;
+    }
+
+    if (!this.loadedData) {
+      setTimeout(() => this.loadData(), 15);
+    }
+  }
 
   onHit(itm, vue, index) {
     const item = vue.data[index];
@@ -161,12 +226,9 @@ export default class AddressFiasField extends Vue {
       address: this.address,
       fias: this.fias,
     });
+    this.prevAddress = this.address;
     this.$emit('modified', v);
   }
-
-  debouncedChangeValue = debounce(function () {
-    this.changeValue();
-  }, 100);
 
   async loadData() {
     this.loadedData = true;
@@ -179,6 +241,7 @@ export default class AddressFiasField extends Vue {
     try {
       const v = JSON.parse(result.value);
       this.address = v.address;
+      this.prevAddress = v.address;
       this.fias = v.fias;
     } catch (e) {
       console.error(e);
@@ -186,15 +249,58 @@ export default class AddressFiasField extends Vue {
       this.fias = null;
     }
   }
+
+  cancel() {
+    this.setDataFromValue(true);
+    this.edit = false;
+  }
+
+  confirm() {
+    this.changeValue();
+    this.$root.$emit('msg', 'ok', 'Адрес применён');
+    this.edit = false;
+  }
 }
 </script>
 
 <style scoped lang="scss">
-:not(.field-form) ::v-deep .typeahead-dropdown-container {
-  top: -28px;
+::v-deep .dropdown-menu > li > a {
+  white-space: normal !important;
 }
 
-.div-address {
-  padding: 3px;
+.form-row {
+  border-bottom: none;
+}
+
+::v-deep .panel-flt {
+  align-self: stretch !important;
+}
+
+::v-deep {
+  .vtypeahed {
+    width: 100%;
+
+    .form-control {
+      width: 100% !important;
+      border-radius: 4px !important;
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 8%) !important;
+    }
+  }
+}
+
+.address-body {
+  padding: 10px;
+}
+
+.alert-address {
+  margin: 5px 0 15px 0;
+  padding: 10px;
+  font-weight: bold;
+  background-color: rgba(0, 0, 0, 8%);
+  border-radius: 4px;
+}
+
+.btn-row {
+  margin-top: 25px;
 }
 </style>

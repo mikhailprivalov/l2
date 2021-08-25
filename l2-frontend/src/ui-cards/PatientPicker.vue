@@ -1199,10 +1199,6 @@ td:not(.select-td):not(.cl-td) {
   vertical-align: middle;
 }
 
-.cursor-pointer {
-  cursor: pointer;
-}
-
 .content-picker {
   position: absolute;
   top: 34px;
