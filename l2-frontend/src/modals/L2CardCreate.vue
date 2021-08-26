@@ -193,6 +193,7 @@
                     v-model="card.main_address_full"
                     v-if="card.main_address_full"
                     :area-full="true"
+                    :hide-if-empty="true"
                   >
                     <template v-slot:input-group-disabled-prepend>
                       <span class="input-group-addon">

@@ -15,7 +15,7 @@
         {{ prevAddress }}
       </div>
     </div>
-    <div class="input-group" :class="[form && 'form-row', areaFull && 'input-group-flex']" v-else>
+    <div class="input-group" :class="[form && 'form-row', areaFull && 'input-group-flex']" v-else-if="!hideIfEmpty || address">
       <slot name="input-group-disabled-prepend"></slot>
       <div class="form-control form-control-area" :class="areaFull && 'form-control-area-full'">
         {{ address }}
@@ -132,6 +132,11 @@ import Modal from '@/ui-cards/Modal.vue';
       required: false,
       default: false,
     },
+    hideIfEmpty: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
     clientPk: {
       type: Number,
       required: false,
@@ -207,6 +212,8 @@ export default class AddressFiasField extends Vue {
   areaFull: boolean;
 
   receiveCopy: boolean;
+
+  hideIfEmpty: boolean;
 
   edit: boolean;
 
