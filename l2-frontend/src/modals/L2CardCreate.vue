@@ -179,7 +179,45 @@
             </div>
             <div class="form-row-address">
               <div class="row-address-header">Адрес проживания</div>
-              <AddressFiasField ref="af" name="af" v-model="card.fact_address_full" :form="true" edit-title="Адрес проживания" />
+              <AddressFiasField
+                ref="af"
+                name="af"
+                v-model="card.fact_address_full"
+                :form="true"
+                :receive-copy="true"
+                edit-title="Адрес проживания"
+              >
+                <template v-slot:extended-edit>
+                  <AddressFiasField
+                    :disabled="true"
+                    v-model="card.main_address_full"
+                    v-if="card.main_address_full"
+                    :area-full="true"
+                  >
+                    <template v-slot:input-group-disabled-prepend>
+                      <span class="input-group-addon">
+                        <span class="input-group-addon-inner">
+                          Адрес регистрации
+                        </span>
+                      </span>
+                    </template>
+                    <template v-slot:input-group-disabled-append>
+                      <span class="input-group-btn">
+                        <button
+                          title="Скопировать адрес регистрации в адрес проживания"
+                          class="btn btn-blue-nb"
+                          type="button"
+                          v-tippy
+                          tabindex="-1"
+                          @click="$root.$emit('address-copy', card.main_address_full)"
+                        >
+                          скопировать
+                        </button>
+                      </span>
+                    </template>
+                  </AddressFiasField>
+                </template>
+              </AddressFiasField>
             </div>
             <div class="form-row sm-f">
               <div class="row-t">Участок</div>

@@ -15,10 +15,12 @@
         {{ prevAddress }}
       </div>
     </div>
-    <div class="input-group" :class="form && 'form-row'" v-else>
-      <div class="form-control form-control-area">
+    <div class="input-group" :class="[form && 'form-row', areaFull && 'input-group-flex']" v-else>
+      <slot name="input-group-disabled-prepend"></slot>
+      <div class="form-control form-control-area" :class="areaFull && 'form-control-area-full'">
         {{ address }}
       </div>
+      <slot name="input-group-disabled-append"></slot>
     </div>
     <transition name="fade">
       <Modal @close="cancel" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" :zIndex="5001" v-if="edit">
@@ -49,7 +51,7 @@
           />
 
           <div class="input-group nd f-row">
-            <span class="input-group-addon">Номер адреса объекта ФИАС</span>
+            <span class="input-group-addon">Номер объекта в ФИАС</span>
             <input
               type="text"
               class="form-control form-control-forced-last"
@@ -61,10 +63,12 @@
 
           <div class="input-group nd">
             <span class="input-group-addon">Предыдущий адрес</span>
-            <div class="form-control form-control-area form-control-forced-last">
+            <div class="form-control form-control-area form-control-area-full form-control-forced-last">
               {{ prevAddress || 'пусто' }}
             </div>
           </div>
+
+          <slot name="extended-edit"></slot>
 
           <div class="row btn-row">
             <div class="col-xs-6 text-right">
@@ -118,6 +122,16 @@ import Modal from '@/ui-cards/Modal.vue';
       required: false,
       default: false,
     },
+    areaFull: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    receiveCopy: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
     clientPk: {
       type: Number,
       required: false,
@@ -156,6 +170,22 @@ import Modal from '@/ui-cards/Modal.vue';
       clearTimeout(this.clearFiasTimer);
     },
   },
+  mounted() {
+    this.$root.$on('address-copy', addressJSON => {
+      let data;
+      try {
+        data = JSON.parse(addressJSON);
+      } catch (e) {
+        data = {};
+        if (addressJSON && !addressJSON.includes('{')) {
+          data.address = addressJSON;
+        }
+      }
+
+      this.address = data.address || '';
+      this.fias = data.fias || null;
+    });
+  },
 })
 export default class AddressFiasField extends Vue {
   value: string;
@@ -173,6 +203,10 @@ export default class AddressFiasField extends Vue {
   form: boolean;
 
   loadedData: boolean;
+
+  areaFull: boolean;
+
+  receiveCopy: boolean;
 
   edit: boolean;
 
@@ -346,6 +380,7 @@ export default class AddressFiasField extends Vue {
 
 .btn-row {
   margin-top: 20px;
+  margin-bottom: 20px;
 
   .btn {
     min-width: 85px;
@@ -355,5 +390,9 @@ export default class AddressFiasField extends Vue {
 .f-row {
   margin-top: 20px;
   margin-bottom: 10px;
+}
+
+.nd + .input-group {
+  margin-top: 10px;
 }
 </style>

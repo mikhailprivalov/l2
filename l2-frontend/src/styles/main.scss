@@ -1994,9 +1994,41 @@ input[type="date"].form-control {
   }
 }
 
-.form-row {
+.form-row,
+.input-group-flex {
   width: 100%;
   display: flex;
+  justify-content: stretch;
+}
+
+.input-group-flex {
+  > .input-group-addon {
+    flex: 1 160px;
+
+    .input-group-addon-inner {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  > .form-control {
+    flex: 0 calc(100% - 300px);
+  }
+
+  > .input-group-btn {
+    flex: 1 140px;
+
+    > .btn {
+      height: 100%;
+      width: 100%;
+    }
+  }
+}
+
+.form-row {
   border-bottom: 1px solid #434a54;
 
   &.border-right {
@@ -2007,8 +2039,6 @@ input[type="date"].form-control {
   &.force-bt {
     border-top: 1px solid #434a54;
   }
-
-  justify-content: stretch;
 
   .row-t {
     background-color: #aab2bd;
@@ -2162,18 +2192,22 @@ input[type="date"].form-control {
     flex: 0 65%;
   }
 
-  .form-control-area {
+  .form-control-area:not(.form-control-area-full) {
     background: #fff;
     border: none;
     border-radius: 0 !important;
     width: 65%;
     flex: 0 65%;
+    padding: 2px 4px;
   }
 
   .form-control-area {
-    padding: 2px 4px;
     height: unset;
     min-height: 26px;
+
+    &.form-control-area-full {
+      min-height: 34px;
+    }
   }
 
   .btn-address {
