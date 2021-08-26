@@ -1669,6 +1669,12 @@ class ParaclinicResult(models.Model):
                 result = f"{data['code']} – {data['title']}"
             except:
                 pass
+        if self.get_field_type() == 29:
+            try:
+                data = json.loads(result)
+                result = data['address']
+            except:
+                pass
         return result
 
     @staticmethod
@@ -1758,6 +1764,12 @@ class DirectionParamsResult(models.Model):
             try:
                 data = json.loads(result)
                 result = f"{data['code']} – {data['title']}"
+            except:
+                pass
+        if self.get_field_type() == 29:
+            try:
+                data = json.loads(result)
+                result = data['address']
             except:
                 pass
         return result

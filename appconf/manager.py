@@ -2,11 +2,12 @@ import simplejson
 from django.core.cache import cache
 from django.db.models.signals import post_save
 
+import laboratory
 import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = '4'
+    VERSION = laboratory.VERSION
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'setting_manager_full_cached_l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'setting_manager_full_cached_en:v{VERSION}'

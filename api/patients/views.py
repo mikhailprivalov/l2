@@ -496,6 +496,8 @@ def patients_get_card_data(request, card_id):
             **c,
             "docs": docs,
             "main_docs": card.get_card_documents(),
+            "main_address_full": card.main_address_full,
+            "fact_address_full": card.fact_address_full,
             "has_rmis_card": rc.exists(),
             "av_companies": [{"id": -1, "title": "НЕ ВЫБРАНО", "short_title": ""}, *[model_to_dict(x) for x in Company.objects.filter(active_status=True).order_by('title')]],
             "custom_workplace": card.work_place != "",
@@ -579,8 +581,23 @@ def patients_card_save(request):
         c = Card.objects.get(pk=card_pk)
         individual_pk = request_data["individual_pk"]
     c.main_diagnosis = request_data["main_diagnosis"]
-    c.main_address = request_data["main_address"]
-    c.fact_address = request_data["fact_address"]
+
+    try:
+        vals = json.loads(request_data["main_address_full"])
+        c.main_address = vals['address']
+        c.main_address_fias = vals['fias']
+    except:
+        c.main_address = request_data["main_address"]
+        c.main_address_fias = None
+
+    try:
+        vals = json.loads(request_data["fact_address_full"])
+        c.fact_address = vals['address']
+        c.fact_address_fias = vals['fias']
+    except:
+        c.fact_address = request_data["fact_address"]
+        c.fact_address_fias = None
+
     c.number_poliklinika = request_data.get("number_poli", "")
     if request_data["custom_workplace"] or not Company.objects.filter(pk=request_data.get("work_place_db", -1)).exists():
         c.work_place_db = None

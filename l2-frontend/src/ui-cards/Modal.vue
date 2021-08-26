@@ -11,6 +11,7 @@
           width,
           marginLeft: marginLeftRight,
           marginRight: marginLeftRight,
+          withoutFooter: showFooter === 'true',
         }"
       >
         <div class="panel-heading">
@@ -139,5 +140,9 @@ export default {
 
 .panel-body.overflowUnset {
   overflow: unset;
+}
+
+.withoutFooter {
+  border-radius: 0 0 4px 4px;
 }
 </style>

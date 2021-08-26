@@ -299,20 +299,19 @@ span.isloading-wrapper {
   border: 1px solid #434a54 !important;
 }
 
-
 .btn-cell,
 .btn-cell:active,
 .btn-cell:focus {
   background-color: #fff !important;
   border: 1px solid #fff !important;
-  color: #5a6370!important;
-  transition: all .15s linear;
+  color: #5a6370 !important;
+  transition: all 0.15s linear;
 }
 
 .btn-cell:hover {
   background-color: #707c8d !important;
   border: 1px solid #707c8d !important;
-  color: #fff!important;
+  color: #fff !important;
 }
 
 .btn-blue2-nb {
@@ -1390,7 +1389,8 @@ body > .container-fluid {
   font-size: 14px !important;
 }
 
-.cl-td, .x-cell {
+.cl-td,
+.x-cell {
   padding: 0 !important;
 
   button {
@@ -1411,7 +1411,7 @@ body > .container-fluid {
     min-height: 34px;
     justify-content: center;
     align-items: center;
-    
+
     &:not(.disabled) {
       cursor: pointer;
 
@@ -1436,7 +1436,9 @@ body > .container-fluid {
 .x-cell {
   position: relative;
 
-  label, div, .btn-cell {
+  label,
+  div,
+  .btn-cell {
     width: 100%;
     height: 100%;
     position: absolute;
@@ -1639,6 +1641,10 @@ body > .container-fluid {
 
   input[type="checkbox"] {
     margin-top: 8px;
+  }
+
+  &-address > .input-group:not(.vtypeahead) {
+    display: flex !important;
   }
 }
 
@@ -1997,7 +2003,8 @@ input[type="date"].form-control {
     border-right: 1px solid #434a54;
   }
 
-  &:first-child:not(.nbt-i), &.force-bt {
+  &:first-child:not(.nbt-i),
+  &.force-bt {
     border-top: 1px solid #434a54;
   }
 
@@ -2037,6 +2044,7 @@ input[type="date"].form-control {
 
   input:not([type="checkbox"]),
   .row-v,
+  .form-control,
   select,
   textarea {
     background: #fff;
@@ -2082,6 +2090,12 @@ input[type="date"].form-control {
       padding: 2px 0 0 10px;
     }
 
+    .form-control-area {
+      padding: 2px 4px;
+      height: unset;
+      min-height: 26px;
+    }
+
     input,
     .row-v,
     select {
@@ -2123,6 +2137,50 @@ input[type="date"].form-control {
     a {
       padding: 2px 10px;
     }
+  }
+}
+
+.form-row-address {
+  width: 100%;
+  border-bottom: 1px solid #434a54;
+  display: flex;
+  justify-content: stretch;
+
+  &:first-child {
+    border-top: 1px solid #434a54;
+  }
+
+  .row-address-header {
+    background-color: #aab2bd;
+    padding: 2px 0 0 10px;
+    width: calc(35% - 40px);
+    flex: 0 calc(35% - 40px);
+    color: #fff;
+  }
+
+  > .input-group {
+    flex: 0 65%;
+  }
+
+  .form-control-area {
+    background: #fff;
+    border: none;
+    border-radius: 0 !important;
+    width: 65%;
+    flex: 0 65%;
+  }
+
+  .form-control-area {
+    padding: 2px 4px;
+    height: unset;
+    min-height: 26px;
+  }
+
+  .btn-address {
+    font-size: 12px;
+    min-height: 26px;
+    padding: 2px 12px;
+    width: 40px;
   }
 }
 
@@ -2523,4 +2581,8 @@ input[type="date"].form-control {
 
 .bold {
   font-weight: bold;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
