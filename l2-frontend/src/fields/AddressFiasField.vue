@@ -68,13 +68,13 @@
 
           <div class="row btn-row">
             <div class="col-xs-6 text-right">
-              <button @click="cancel" class="btn btn-blue-nb" type="button">
+              <button @click="cancel" class="btn btn-blue-nb" type="button" title="Оставить предыдущий адрес" v-tippy>
                 Отмена
               </button>
             </div>
             <div class="col-xs-6">
-              <button @click="confirm" class="btn btn-blue-nb" type="button">
-                Подтвердить
+              <button @click="confirm" class="btn btn-blue-nb" type="button" title="Применить адрес" v-tippy>
+                Ок
               </button>
             </div>
           </div>
@@ -346,6 +346,10 @@ export default class AddressFiasField extends Vue {
 
 .btn-row {
   margin-top: 20px;
+
+  .btn {
+    min-width: 85px;
+  }
 }
 
 .f-row {
