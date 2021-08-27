@@ -32,7 +32,7 @@ class FrameData(Flowable):
         data_text = [Paragraph(f'{self.text}', self.style)]
         if self.tbl:
             data_text = [self.tbl]
-        data_frame = Frame(self.x * mm, self.y, self.width * mm, self.height * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
+        data_frame = Frame(self.x * mm, self.y, self.width * mm, self.height * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=1)
         data_inframe = KeepInFrame(
             self.width * mm,
             self.height * mm,
@@ -41,4 +41,31 @@ class FrameData(Flowable):
             fakeWidth=False,
         )
         data_frame.addFromList([data_inframe], self.canv)
+        self.canv.restoreState()
+
+
+class FrameDataUniversal(Flowable):
+    def __init__(self, x=0, y=0, width=0, height=0, text=None):
+        Flowable.__init__(self)
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.text = text
+
+    def draw(self):
+        self.canv.saveState()
+        data_text = None
+        if self.text:
+            data_text = self.text
+        if data_text:
+            data_frame = Frame(self.x * mm, self.y * mm, self.width * mm, self.height * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=1)
+            data_inframe = KeepInFrame(
+                self.width * mm,
+                self.height * mm,
+                data_text,
+                vAlign='TOP',
+                fakeWidth=False,
+            )
+            data_frame.addFromList([data_inframe], self.canv)
         self.canv.restoreState()
