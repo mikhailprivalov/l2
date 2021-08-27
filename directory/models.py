@@ -4,7 +4,7 @@ from jsonfield import JSONField
 
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
-from users.models import Speciality
+from users.models import DoctorProfile, Speciality
 
 
 class DirectionsGroup(models.Model):
@@ -553,7 +553,16 @@ class ParaclinicTemplateField(models.Model):
     value = models.TextField(help_text='Значение')
 
     def __str__(self):
-        return "%s (Лаб. %s, Скрыт=%s)" % (self.template_name, self.input_field.title, self.value)
+        return "%s (%s, %s)" % (self.template_name, self.input_field.title, self.value)
+
+
+class ParaclinicUserInputTemplateField(models.Model):
+    doc = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, db_index=True)
+    field = models.ForeignKey(ParaclinicInputField, on_delete=models.CASCADE, db_index=True)
+    value = models.TextField(help_text='Значение')
+
+    def __str__(self):
+        return f"{self.field}, {self.value}"
 
 
 class AutoAdd(models.Model):

@@ -29,7 +29,7 @@ from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document, District
 from context_processors.utils import menu
-from directory.models import Fractions, ParaclinicInputField, ResearchSite, Culture, Antibiotic, ResearchGroup, Researches as DResearches, ScreeningPlan
+from directory.models import Fractions, ParaclinicInputField, ParaclinicUserInputTemplateField, ResearchSite, Culture, Antibiotic, ResearchGroup, Researches as DResearches, ScreeningPlan
 from doctor_call.models import DoctorCall
 from external_system.models import FsliRefbookTest
 from hospitals.models import Hospitals
@@ -1601,3 +1601,38 @@ def companies(request):
     rows = [{'id': x.pk, 'label': x.short_title or x.title} for x in Company.objects.filter(active_status=True).order_by('short_title')]
 
     return JsonResponse({'rows': rows})
+
+
+@login_required
+def input_templates_add(request):
+    data = json.loads(request.body)
+    pk = data["pk"]
+    value = str(data["value"]).strip()
+    doc = request.user.doctorprofile
+    if ParaclinicUserInputTemplateField.objects.filter(field_id=pk, doc=doc, value=value).exists():
+        return JsonResponse({"ok": False})
+
+    t = ParaclinicUserInputTemplateField.objects.create(field_id=pk, doc=doc, value=value)
+
+    return JsonResponse({"ok": True, "pk": t.pk})
+
+
+@login_required
+def input_templates_get(request):
+    data = json.loads(request.body)
+    pk = data["pk"]
+    doc = request.user.doctorprofile
+    rows = [{"pk": x.pk, "value": x.value} for x in ParaclinicUserInputTemplateField.objects.filter(field_id=pk, doc=doc).order_by("pk")]
+
+    return JsonResponse({"rows": rows})
+
+
+@login_required
+def input_templates_delete(request):
+    data = json.loads(request.body)
+    pk = data["pk"]
+    doc = request.user.doctorprofile
+
+    ParaclinicUserInputTemplateField.objects.filter(pk=pk, doc=doc).delete()
+
+    return JsonResponse({"ok": True})
