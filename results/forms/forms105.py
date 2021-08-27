@@ -1,3 +1,5 @@
+from reportlab.lib.colors import HexColor
+
 from utils.dates import normalize_date
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
@@ -56,22 +58,22 @@ def add_template(iss: Issledovaniya, direction, offset=0):
 
     styleT = deepcopy(style)
     styleT.alignment = TA_LEFT
-    styleT.fontSize = 10
-    styleT.leading = 4.5 * mm
+    styleT.fontSize = 9
+    styleT.leading = 3 * mm
 
     text = []
     text.append(Paragraph("КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О СМЕРТИ", styleCentreBold))
     text.append(Paragraph("К УЧЕТНОЙ ФОРМЕ № 106/У", styleCentreBold))
     serial = "2XX"
     number = "12345678"
-    text.append(Spacer(1, 1.5 * mm))
+    text.append(Spacer(1, 1 * mm))
     text.append(Paragraph(f"СЕРИЯ {serial} No {number}", styleCentreBold))
     date_issue = "20.08.2021"
     text.append(Paragraph(f"Дата выдачи {date_issue}", styleCentreBold))
     final, preparatory, instead_preparatory, instead_final = "окончательного", "предварительного", "взамен предварительного", "взамен окончательного"
     text.append(Paragraph(f"({final}, {preparatory}, {instead_preparatory}, {instead_final}) (подчеркнуть)", styleCentre))
     fio = "Ивано Иван Иванович"
-    text.append(Spacer(1, 1.5 * mm))
+    text.append(Spacer(1, 1 * mm))
     text.append(Paragraph(f"1.Фамилия, имя, отчество (при наличии) умершего(ей) <u>{fio}</u>", style))
 
     # Пол
@@ -85,7 +87,7 @@ def add_template(iss: Issledovaniya, direction, offset=0):
         ],
     ]
 
-    tbl = Table(opinion, colWidths=(12 * mm, 18 * mm, 6 * mm, 19 * mm, 6 * mm), rowHeights=(5 * mm), hAlign='LEFT')
+    tbl = Table(opinion, colWidths=(12 * mm, 18 * mm, 6 * mm, 19 * mm, 6 * mm), rowHeights=(4 * mm), hAlign='LEFT')
     tbl.setStyle(
         TableStyle(
             [
@@ -98,7 +100,7 @@ def add_template(iss: Issledovaniya, direction, offset=0):
             ]
         )
     )
-    text.append(Spacer(1, 1.5 * mm))
+    text.append(Spacer(1, 0.3 * mm))
     text.append(tbl)
 
     # Дата рождения
@@ -153,7 +155,6 @@ def add_template(iss: Issledovaniya, direction, offset=0):
                 ('LINEBELOW', (2, 0), (2, 0), 0.75, colors.black),
                 ('LINEBELOW', (4, 0), (4, 0), 0.75, colors.black),
                 ('LINEBELOW', (6, 0), (6, 0), 0.75, colors.black),
-
                 ('LINEBELOW', (2, 1), (2, 1), 0.75, colors.black),
                 ('LINEBELOW', (4, 1), (4, 1), 0.75, colors.black),
                 ('LINEBELOW', (6, 1), (6, 1), 0.75, colors.black),
@@ -163,7 +164,7 @@ def add_template(iss: Issledovaniya, direction, offset=0):
         )
     )
 
-    text.append(Spacer(1, 1 * mm))
+    text.append(Spacer(1, 0.3 * mm))
     text.append(tbl)
 
     region = "Область Иркутская"
@@ -187,8 +188,155 @@ def add_template(iss: Issledovaniya, direction, offset=0):
         )
     )
 
-    text.append(Spacer(1, 0.5 * mm))
+    text.append(Spacer(1, 0.3 * mm))
     text.append(tbl)
+
+    region_town = ""
+    city = "Иркутск"
+    opinion = [
+        [
+            Paragraph('район', styleT),
+            Paragraph(f'{region_town}', styleT),
+            Paragraph('город', styleT),
+            Paragraph(f'{city}', styleT),
+        ],
+    ]
+
+    tbl = Table(
+        opinion,
+        colWidths=(
+            17 * mm,
+            77 * mm,
+            16 * mm,
+            80 * mm,
+        ),
+        hAlign='LEFT',
+    )
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+                ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+                ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
+                ('LINEBELOW', (3, 0), (3, 0), 0.75, colors.black),
+            ]
+        )
+    )
+
+    text.append(Spacer(1, 0.3 * mm))
+    text.append(tbl)
+
+    localcity = ""
+    street = "Иркутск"
+    opinion = [
+        [
+            Paragraph('населенный пункт', styleT),
+            Paragraph(f'{localcity}', styleT),
+            Paragraph('улица', styleT),
+            Paragraph(f'{street}', styleT),
+        ],
+    ]
+
+    tbl = Table(
+        opinion,
+        colWidths=(
+            37 * mm,
+            67 * mm,
+            16 * mm,
+            70 * mm,
+        ),
+        hAlign='LEFT',
+    )
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+                ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+                ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
+                ('LINEBELOW', (3, 0), (3, 0), 0.75, colors.black),
+            ]
+        )
+    )
+
+    text.append(Spacer(1, 0.3 * mm))
+    text.append(tbl)
+
+    localcity = ""
+    street = "Иркутск"
+    opinion = [
+        [
+            Paragraph('дом', styleT),
+            Paragraph(f'', styleT),
+            Paragraph('стр.', styleT),
+            Paragraph(f'', styleT),
+            Paragraph('корп.', styleT),
+            Paragraph(f'', styleT),
+            Paragraph('кв.', styleT),
+            Paragraph(f'', styleT),
+            Paragraph('комн.', styleT),
+            Paragraph(f'', styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, colWidths=(14 * mm, 15 * mm, 12 * mm, 12 * mm, 14* mm, 15 * mm, 12 * mm, 15 * mm, 14 * mm, 15 * mm,), hAlign='LEFT',)
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+                ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+                ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
+                ('LINEBELOW', (3, 0), (3, 0), 0.75, colors.black),
+                ('LINEBELOW', (5, 0), (5, 0), 0.75, colors.black),
+                ('LINEBELOW', (7, 0), (7, 0), 0.75, colors.black),
+                ('LINEBELOW', (9, 0), (9, 0), 0.75, colors.black),
+            ]
+        )
+    )
+
+    text.append(Spacer(1, 0.3 * mm))
+    text.append(tbl)
+
+    thick_dashed_for_symbol = 0.7
+    step_round_dash = (0.03 * mm, 1 * mm)
+    round_dash = 'round'
+
+    type_dash = 'round'
+    step_dash = step_round_dash
+    # color_dash_for_symbol = HexColor('#5b5e5c')
+    color_dash_for_symbol = HexColor('#b3b3b3')
+
+    objs = []
+    space_symbol = '&nbsp;'
+
+    opinion = [
+        [
+            Paragraph(' ', ),
+            Paragraph('линия отреза', style),
+            Paragraph('', style),
+        ],
+    ]
+    tbl = Table(opinion, hAlign='LEFT', colWidths=(82 * mm, 25 * mm, 83 * mm))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LINEABOVE', (0, 0), (0, 0), 1.5, colors.black, 'round', step_round_dash),
+                ('LINEABOVE', (2, 0), (2, 0), 1.5, colors.black, 'round', step_round_dash),
+                ('TOPPADDING', (1, 0), (1, 0), -1.7 * mm),
+
+            ]
+        )
+    )
+    text.append(Spacer(1, 35 * mm))
+    text.append(tbl)
+
+
 
 
     opinion = [
