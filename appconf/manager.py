@@ -2,11 +2,12 @@ import simplejson
 from django.core.cache import cache
 from django.db.models.signals import post_save
 
+import laboratory
 import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = '4'
+    VERSION = laboratory.VERSION
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'setting_manager_full_cached_l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'setting_manager_full_cached_en:v{VERSION}'
@@ -110,13 +111,16 @@ class SettingManager:
                     "profcenter",
                     "extra_notifications",
                     "monitorings",
+                    "schedule",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
             "directions_params": SettingManager.get("directions_params", default='false', default_type='b'),
             "morfology": SettingManager.is_morfology_enabled(SettingManager.en()),
+            "paraclinic_module": SettingManager.get("paraclinic_module", default='false', default_type='b'),
             "eds_base_url": SettingManager.get_eds_base_url(),
             "medbook_auto_start": SettingManager.get_medbook_auto_start(),
+            "descriptive_rich_text": SettingManager.get("descriptive_rich_text", default='false', default_type='b'),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
 

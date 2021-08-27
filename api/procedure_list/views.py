@@ -135,7 +135,7 @@ def params(request):
         "methods": list(MethodsReception.objects.all().order_by('title').values('pk', 'title')),
         "times": TIMES,
         "units": [
-            "мл", "мг", "мкг", "ед",
+            "мл", "мг", "мкг", "ед", "капля",
         ]
     })
 
@@ -240,6 +240,7 @@ def procedure_aggregate(request):
     return JsonResponse({"result": list(data.values()), "dates": unique_dates, "timesInDates": times_in_dates})
 
 
+@login_required
 def get_suitable_departments(request):
     hospital_pk = request.user.doctorprofile.get_hospital_id()
     pdr = get_hospitals_podrazdeleniya(hospital_pk)

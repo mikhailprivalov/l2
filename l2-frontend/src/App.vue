@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <Navbar />
+    <Navbar v-if="!embedded" />
 
-    <div :class="$route.meta.narrowLayout && 'container'">
+    <div :class="isNarrowLayout && 'container'">
       <router-view v-if="!fullPageLoader"></router-view>
     </div>
 
@@ -11,8 +11,7 @@
     <transition name="fade">
       <div id="full-page-loader" v-if="fullPageLoader">
         <div class="loader-inner">
-          <div class="rotated-circle">
-          </div>
+          <div class="rotated-circle"></div>
           <div class="fixed-loader-text">L<span>2</span></div>
         </div>
       </div>
@@ -34,16 +33,31 @@ import CheckBackend from '@/ui-cards/CheckBackend.vue';
   computed: mapGetters(['inLoading', 'fullPageLoader', 'authenticated']),
   metaInfo() {
     return {
-      title: `${this.$route.meta.title || 'L2'} — ${this.$orgTitle()}`,
+      title: `${this.$route?.meta?.title || 'L2'} — ${this.$orgTitle()}`,
     };
+  },
+  data() {
+    return {
+      embedded: false,
+    };
+  },
+  mounted() {
+    const urlParams = new URLSearchParams(window.location.search);
+    this.embedded = urlParams.get('embedded') === '1';
   },
 })
 export default class App extends Vue {
-    inLoading: boolean;
+  inLoading: boolean;
 
-    fullPageLoader: boolean;
+  fullPageLoader: boolean;
 
-    authenticated: boolean;
+  authenticated: boolean;
+
+  embedded: boolean;
+
+  get isNarrowLayout() {
+    return Boolean(this?.$route?.meta?.narrowLayout);
+  }
 }
 </script>
 
@@ -58,7 +72,7 @@ export default class App extends Vue {
   position: fixed;
   height: 100%;
   width: 100%;
-  background-color: rgba(0, 0, 0, .68);
+  background-color: rgba(0, 0, 0, 0.68);
   left: 0;
   top: 0;
   z-index: 100000;
@@ -86,7 +100,7 @@ export default class App extends Vue {
   left: 0;
   right: 0;
   z-index: 100000;
-  background: radial-gradient(#CECECE, #fff);
+  background: radial-gradient(#cecece, #fff);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -96,11 +110,11 @@ export default class App extends Vue {
     height: 350px;
     border-radius: 100%;
     background: linear-gradient(
-        165deg,
-        rgba(240, 240, 240, 1) 0%,
-        rgb(220, 220, 220) 60%,
-        rgb(170, 170, 170) 99%,
-        rgb(10, 10, 10) 100%
+      165deg,
+      rgba(240, 240, 240, 1) 0%,
+      rgb(220, 220, 220) 60%,
+      rgb(170, 170, 170) 99%,
+      rgb(10, 10, 10) 100%
     );
     position: relative;
 
@@ -119,7 +133,7 @@ export default class App extends Vue {
       span {
         font-size: 40px;
         position: relative;
-        bottom: .8ex;
+        bottom: 0.8ex;
       }
     }
 
@@ -131,15 +145,9 @@ export default class App extends Vue {
       border-radius: 100%;
       border-bottom: 0 solid #04937205;
 
-      box-shadow: 0 -10px 20px 20px #04937240 inset,
-      0 -5px 15px 10px #04937250 inset,
-      0 -2px 5px #04937280 inset,
-      0 -3px 2px #049372BB inset,
-      0 2px 0px #049372BB,
-      0 2px 3px #049372BB,
-      0 5px 5px #04937290,
-      0 10px 15px #04937260,
-      0 10px 20px 20px #04937240;
+      box-shadow: 0 -10px 20px 20px #04937240 inset, 0 -5px 15px 10px #04937250 inset, 0 -2px 5px #04937280 inset,
+        0 -3px 2px #049372bb inset, 0 2px 0px #049372bb, 0 2px 3px #049372bb, 0 5px 5px #04937290, 0 10px 15px #04937260,
+        0 10px 20px 20px #04937240;
       filter: blur(4px);
       animation: 3s rotate linear infinite;
     }
@@ -148,7 +156,7 @@ export default class App extends Vue {
 
 @keyframes rotate {
   0% {
-    transform: rotate(0deg)
+    transform: rotate(0deg);
   }
 
   100% {
@@ -158,11 +166,13 @@ export default class App extends Vue {
 </style>
 
 <style lang="scss">
-.fade-enter-active, .fade-leave-active {
-  transition: opacity .7s;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.7s;
 }
 
-.fade-enter, .fade-leave-to {
+.fade-enter,
+.fade-leave-to {
   opacity: 0;
 }
 </style>

@@ -1,4 +1,5 @@
 import inspect
+import json
 import math
 import sys
 from datetime import date, datetime
@@ -49,6 +50,9 @@ class Individual(models.Model):
     time_tfoms_last_sync = models.DateTimeField(default=None, null=True, blank=True)
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
+
+    def first(self):
+        return self
 
     def join_individual(self, b: 'Individual', out: OutputWrapper = None):
         if out:
@@ -542,19 +546,26 @@ class Individual(models.Model):
             q_enp = dict(tfoms_enp=enp or '##fakeenp##')
 
             if not individual:
-                indv = (
-                    Individual.objects.filter(
-                        Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(document__document_type__title='Полис ОМС', document__number=enp)
+                if enp:
+                    q_more = dict(document__document_type__title='Полис ОМС', document__number=enp)
+                else:
+                    q_more = {}
+                if idp or enp or snils:
+                    indv = (
+                        Individual.objects.filter(
+                            Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='СНИЛС', document__number=snils) | Q(**q_more)
+                        )
+                        if snils
+                        else Individual.objects.filter(Q(**q_idp) | Q(**q_enp) | Q(**q_more))
                     )
-                    if snils
-                    else Individual.objects.filter(Q(**q_idp) | Q(**q_enp) | Q(document__document_type__title='Полис ОМС', document__number=enp))
-                )
+                else:
+                    indv = None
             else:
                 indv = Individual.objects.filter(pk=individual.pk)
 
             enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
 
-            if not indv.exists():
+            if not indv or not indv.exists():
                 i = Individual(
                     family=family,
                     name=name,
@@ -644,6 +655,8 @@ class Individual(models.Model):
             print('Sync L2 card')  # noqa: T001
             card = Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True, updated_data=updated_data)
             print(card)  # noqa: T001
+
+            card.get_card_documents()
 
             i.time_tfoms_last_sync = timezone.now()
             i.save(update_fields=['time_tfoms_last_sync'])
@@ -879,11 +892,13 @@ class Card(models.Model):
     number = models.CharField(max_length=20, blank=True, help_text="Идетификатор карты", db_index=True)
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)
     individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
-    is_archive = models.BooleanField(default=False, blank=True, db_index=True)
+    is_archive = models.BooleanField(default=False, blank=True, db_index=True, help_text="Карта в архиве")
     polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     main_diagnosis = models.CharField(max_length=36, blank=True, default='', help_text="Основной диагноз", db_index=True)
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
+    main_address_fias = models.CharField(max_length=128, blank=True, default=None, null=True, help_text="ФИАС Адрес регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
+    fact_address_fias = models.CharField(max_length=128, blank=True, default=None, null=True, help_text="ФИАС Адрес факт. проживания")
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
     work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
@@ -909,6 +924,14 @@ class Card(models.Model):
     medbook_type = models.CharField(max_length=6, choices=MEDBOOK_TYPES, blank=True, default=MEDBOOK_TYPES[0][0], help_text="Тип номера мед.книжки")
 
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
+
+    @property
+    def main_address_full(self):
+        return json.dumps({'address': self.main_address, 'fias': self.main_address_fias})
+
+    @property
+    def fact_address_full(self):
+        return json.dumps({'address': self.fact_address, 'fias': self.fact_address_fias})
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)

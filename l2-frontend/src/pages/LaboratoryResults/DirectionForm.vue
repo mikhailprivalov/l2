@@ -9,8 +9,7 @@
         <button class="btn btn-blue-nb btn-right" @click="reload()" title="Перезагрузить данные" v-tippy>
           <i class="fa fa-refresh"></i>
         </button>
-        <button class="btn btn-blue-nb btn-right" :disabled="!allConfirmed" @click="print"
-                title="Печать результатов" v-tippy>
+        <button class="btn btn-blue-nb btn-right" :disabled="!allConfirmed" @click="print" title="Печать результатов" v-tippy>
           <i class="fa fa-print"></i>
         </button>
       </template>
@@ -18,67 +17,67 @@
     <div class="root">
       <table class="table table-bordered table-condensed table-responsive">
         <colgroup>
-          <col width="26%">
-          <col width="32%">
-          <col width="21%">
-          <col width="21%">
+          <col width="26%" />
+          <col width="32%" />
+          <col width="21%" />
+          <col width="21%" />
         </colgroup>
         <tbody>
-        <tr>
-          <th>№ направл.</th>
-          <td>
-            <a v-if="direction.pk" :href='`/directions/pdf?napr_id=[${direction.pk}]`' target='_blank' class="a-under">
-              {{ direction.pk }}
-            </a>
-          </td>
-          <th>Финанс.</th>
-          <td>
-            {{ direction.fin_source }}
-            <template v-if="fromRmis">внеш.орг</template>
-          </td>
-        </tr>
-        <tr>
-          <th>Пациент</th>
-          <td :colspan="patient.diagnosis ? 2 : 3">
-            {{ patient.fio }}
-          </td>
-          <td v-if="patient.diagnosis" title="Диагноз" v-tippy>
-            {{ patient.diagnosis }}
-          </td>
-        </tr>
-        <tr>
-          <th>Пол</th>
-          <td>{{ patient.sex }}</td>
-          <th>Возраст</th>
-          <td>{{ patient.age }}</td>
-        </tr>
-        <tr v-if="patient.history_num">
-          <th>Карта</th>
-          <td>{{ patient.card }}</td>
-          <th>Истор.</th>
-          <td title="Номер истории" v-tippy>{{ patient.history_num }}</td>
-        </tr>
-        <tr v-else>
-          <th>Карта</th>
-          <td colspan="3">{{ patient.card }}</td>
-        </tr>
-        <tr title="Лечащий врач" v-if="!fromRmis" v-tippy>
-          <th>Леч. врач</th>
-          <td colspan="3">{{ direction.directioner }}</td>
-        </tr>
-        <tr v-if="!fromRmis">
-          <th>Отделение</th>
-          <td colspan="3">{{ direction.otd }}</td>
-        </tr>
-        <tr v-if="fromRmis">
-          <th>Организация</th>
-          <td colspan="3">{{ direction.imported_org }}</td>
-        </tr>
+          <tr>
+            <th>№ направл.</th>
+            <td>
+              <a v-if="direction.pk" :href="`/directions/pdf?napr_id=[${direction.pk}]`" target="_blank" class="a-under">
+                {{ direction.pk }}
+              </a>
+            </td>
+            <th>Финанс.</th>
+            <td>
+              {{ direction.fin_source }}
+              <template v-if="fromRmis">внеш.орг</template>
+            </td>
+          </tr>
+          <tr>
+            <th>Пациент</th>
+            <td :colspan="patient.diagnosis ? 2 : 3">
+              {{ patient.fio }}
+            </td>
+            <td v-if="patient.diagnosis" title="Диагноз" v-tippy>
+              {{ patient.diagnosis }}
+            </td>
+          </tr>
+          <tr>
+            <th>Пол</th>
+            <td>{{ patient.sex }}</td>
+            <th>Возраст</th>
+            <td>{{ patient.age }}</td>
+          </tr>
+          <tr v-if="patient.history_num">
+            <th>Карта</th>
+            <td>{{ patient.card }}</td>
+            <th>Истор.</th>
+            <td title="Номер истории" v-tippy>{{ patient.history_num }}</td>
+          </tr>
+          <tr v-else>
+            <th>Карта</th>
+            <td colspan="3">{{ patient.card }}</td>
+          </tr>
+          <tr title="Лечащий врач" v-if="!fromRmis" v-tippy>
+            <th>Леч. врач</th>
+            <td colspan="3">{{ direction.directioner }}</td>
+          </tr>
+          <tr v-if="!fromRmis">
+            <th>Отделение</th>
+            <td colspan="3">{{ direction.otd }}</td>
+          </tr>
+          <tr v-if="fromRmis">
+            <th>Организация</th>
+            <td colspan="3">{{ direction.imported_org }}</td>
+          </tr>
         </tbody>
       </table>
       <div class="issledovaniya-scroll-wrapper" v-if="loaded">
         <div class="empty-issledovaniya" v-if="issledovaniya.length === 0">
-          Нет исследований для выбранной лаборатории.<br/><br/>
+          Нет исследований для выбранной лаборатории.<br /><br />
           Назначения в направлении:
           <ul>
             <li v-for="l in labs" :key="l.pk">
@@ -90,17 +89,18 @@
         <template v-else>
           <ul class="issledovaniya">
             <li
-              :class='[
-            `issledovaniya-isnorm-${i.is_norm}`,
-            active !== i.pk && `tb-group-${i.group}`,
-            active === i.pk && `tb-group-full-${i.group} tb-group-active-${i.group} active`
-          ]'
+              :class="[
+                `issledovaniya-isnorm-${i.is_norm}`,
+                active !== i.pk && `tb-group-${i.group}`,
+                active === i.pk && `tb-group-full-${i.group} tb-group-active-${i.group} active`,
+              ]"
               @click="select(i.pk)"
               :key="i.pk"
-              v-for="i in issledovaniya">
-              <div :class='`status status-${getStatusClass(i)}`'>{{ getStatus(i) }}</div>
+              v-for="i in issledovaniya"
+            >
+              <div :class="`status status-${getStatusClass(i)}`">{{ getStatus(i) }}</div>
               {{ i.title }}
-              <br/>
+              <br />
               <small v-if="i.tubes.length > 0">Ёмкость: {{ i.tubes.map(t => t.pk).join(', ') }}</small>
               <div class="fastlinks hiddenlinks" v-if="i.confirmed && i.allow_reset_confirm">
                 <a href="#" @click.prevent.stop="resetConfirmation(i)">сброс подтверждения</a>
@@ -124,7 +124,6 @@
 <script lang="ts">
 import _ from 'lodash';
 import * as actions from '@/store/action-types';
-import api from '@/api';
 
 export default {
   name: 'DirectionForm',
@@ -172,10 +171,12 @@ export default {
         }
       }
 
-      this.$root.$emit('laboratory:results:activate-pks',
+      this.$root.$emit(
+        'laboratory:results:activate-pks',
         [data.direction.pk],
-        _.uniq(_.flatten(data.issledovaniya.map((i) => i.tubes.map((t) => t.pk)))),
-        tubesInGroups);
+        _.uniq(_.flatten(data.issledovaniya.map(i => i.tubes.map(t => t.pk)))),
+        tubesInGroups,
+      );
 
       setTimeout(() => {
         if (this.otherLabs.length > 0) {
@@ -185,14 +186,14 @@ export default {
     });
 
     this.$root.$on('laboratory:reload-direction:with-open-first', () => this.reload());
-    this.$root.$on('laboratory:reload-direction:with-open-pk', (pk) => this.reload(pk));
+    this.$root.$on('laboratory:reload-direction:with-open-pk', pk => this.reload(pk));
   },
   computed: {
     fromRmis() {
       return this.loaded && this.direction && this.direction.imported_from_rmis;
     },
     otherLabs() {
-      return this.labs.filter((l) => l.islab && l.pk !== this.laboratory);
+      return this.labs.filter(l => l.islab && l.pk !== this.laboratory);
     },
   },
   methods: {
@@ -215,16 +216,24 @@ export default {
       const status = this.getStatusClass(i);
 
       return {
-        n: 'Не обработан', s: 'Обработан', c: 'Подтверждён', o: 'Отложен',
+        n: 'Не обработан',
+        s: 'Обработан',
+        c: 'Подтверждён',
+        o: 'Отложен',
       }[status];
     },
     select(pk) {
       this.active = pk;
-      this.$root.$emit('laboratory:results:open-form', pk, this.issledovaniya.map((i) => ({
-        pk: i.pk,
-        research_pk: i.research_pk,
-        title: i.title,
-      })), this.direction.dirData);
+      this.$root.$emit(
+        'laboratory:results:open-form',
+        pk,
+        this.issledovaniya.map(i => ({
+          pk: i.pk,
+          research_pk: i.research_pk,
+          title: i.title,
+        })),
+        this.direction.dirData,
+      );
     },
     reload(pk) {
       this.$root.$emit('laboratory:results:search', this.q.mode, String(this.q.text), pk);
@@ -234,7 +243,7 @@ export default {
     },
     async confirmAll() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await api('laboratory/confirm-list', this.direction, 'pk');
+      const { ok, message } = await this.$api('laboratory/confirm-list', this.direction, 'pk');
       if (!ok) {
         this.$root.$emit('msg', 'error', message);
       } else {
@@ -256,7 +265,7 @@ export default {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await api('laboratory/reset-confirm', iss, 'pk');
+      const { ok, message } = await this.$api('laboratory/reset-confirm', iss, 'pk');
       if (!ok) {
         this.$root.$emit('msg', 'error', message);
       } else {
@@ -287,7 +296,8 @@ table {
   margin-bottom: 0;
   min-height: 145px;
 
-  td, th {
+  td,
+  th {
     padding: 3px !important;
     font-size: 12px;
   }
@@ -312,19 +322,19 @@ table {
     border-left-width: 3px;
     border-radius: 3px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-    transition: left .15s linear;
+    transition: left 0.15s linear;
     position: relative;
     left: 3px;
     padding: 6px 6px 6px 9px;
 
     & small {
-      color: rgba(0, 0, 0, .5);
+      color: rgba(0, 0, 0, 0.5);
       font-size: 8pt;
     }
 
     .hiddenlinks {
       opacity: 0;
-      transition: .1s linear;
+      transition: 0.1s linear;
     }
 
     .fastlinks {
@@ -346,7 +356,7 @@ table {
       }
 
       small {
-        color: #000
+        color: #000;
       }
     }
 
@@ -356,23 +366,24 @@ table {
     }
 
     &:not(.active) {
-      border: 1px solid #ECF0F1;
+      border: 1px solid #ecf0f1;
     }
 
     &:not(.issledovaniya-isnorm-maybe):not(.issledovaniya-isnorm-not_normal) {
       padding-right: 8px;
     }
 
-    &.issledovaniya-isnorm-maybe, &.issledovaniya-isnorm-not_normal {
+    &.issledovaniya-isnorm-maybe,
+    &.issledovaniya-isnorm-not_normal {
       border-right-width: 3px !important;
     }
 
     &.issledovaniya-isnorm-not_normal {
-      border-right-color: #E68364 !important;
+      border-right-color: #e68364 !important;
     }
 
     &.issledovaniya-isnorm-maybe {
-      border-right-color: #F5D76E !important;
+      border-right-color: #f5d76e !important;
     }
 
     .status {
@@ -388,20 +399,20 @@ table {
     }
 
     .status-n {
-      color: #CF3A24;
+      color: #cf3a24;
       font-weight: bold;
     }
 
     .status-s {
-      color: #4B77BE;
+      color: #4b77be;
     }
 
     .status-c {
-      color: #049372
+      color: #049372;
     }
 
     .status-o {
-      color: #F7CA18;
+      color: #f7ca18;
     }
   }
 }

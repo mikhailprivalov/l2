@@ -238,10 +238,6 @@ export default {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
-  .cursor-pointer {
-    cursor: pointer;
-  }
 </style>
 
 <style lang="scss">

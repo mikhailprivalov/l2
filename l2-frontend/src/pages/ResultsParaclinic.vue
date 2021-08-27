@@ -1,5 +1,5 @@
 <template>
-  <div ref="root" class="results-root">
+  <div ref="root" class="results-root" :class="embedded && 'embedded'">
     <div :class="{ has_loc, opened: sidebarIsOpened || !data.ok }" class="results-sidebar" v-if="!embedded">
       <div class="sidebar-top">
         <div class="input-group">
@@ -235,6 +235,13 @@
                   <li v-if="dreg_rows.length === 0">нет активных записей</li>
                 </ul>
               </div>
+
+              <ScreeningButton
+                :card-pk="data.patient.card_pk"
+                v-if="data.card_internal && (data.has_doc_referral || data.has_paraclinic)"
+                @openScreening="dreg = true"
+              />
+
               <a
                 style="margin-left: 3px"
                 href="#"
@@ -726,7 +733,7 @@
             </template>
             <EDSButton :key="`${data.direction.pk}_${row.confirmed}`" :iss-data="row" :direction-data="data" />
             <div class="status-list" v-if="!r(row) && !row.confirmed">
-              <div class="status status-none">Не заполнено:</div>
+              <div class="status status-none">Не верно:</div>
               <div class="status status-none" v-for="rl in r_list(row)" :key="rl">{{ rl }};</div>
             </div>
           </div>
@@ -909,7 +916,6 @@ import dropdown from 'vue-my-dropdown';
 import { mapGetters } from 'vuex';
 import { vField, vGroup } from '@/components/visibility-triggers';
 import { enter_field, leave_field } from '@/forms/utils';
-import api from '@/api';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import RmisLink from '@/ui-cards/RmisLink.vue';
 import EDSButton from '@/ui-cards/EDSButton.vue';
@@ -930,6 +936,7 @@ import Benefit from '../modals/Benefit.vue';
 import DirectionsHistory from '../ui-cards/DirectionsHistory/index.vue';
 import RecipeInput from '../ui-cards/RecipeInput.vue';
 import ResultsViewer from '../modals/ResultsViewer.vue';
+import ScreeningButton from '../ui-cards/ScreeningButton.vue';
 import LastResult from '../ui-cards/LastResult.vue';
 import IssStatus from '../ui-cards/IssStatus.vue';
 import DescriptiveForm from '../forms/DescriptiveForm.vue';
@@ -963,6 +970,7 @@ export default {
     MedicalCertificates,
     ResultsByYear,
     RmisLink,
+    ScreeningButton,
   },
   data() {
     return {
@@ -1059,13 +1067,6 @@ export default {
     },
   },
   mounted() {
-    window.$(window).on('beforeunload', () => {
-      if (this.has_changed) {
-        return 'Возможно имеются несохраненные изменения! Вы уверены, что хотите покинуть страницу?';
-      }
-
-      return undefined;
-    });
     this.load_history();
     this.$root.$on('hide_dreg', () => {
       this.load_dreg_rows();
@@ -1099,10 +1100,39 @@ export default {
 
     this.$root.$on('open-direction-form', pk => this.load_pk(pk));
 
+    this.$root.$on('preselect-args-ok', () => {
+      this.hasPreselectOk = true;
+    });
+
     const urlParams = new URLSearchParams(window.location.search);
     this.embedded = urlParams.get('embedded') === '1';
+    window.$(window).on('beforeunload', this.unload);
+  },
+  beforeDestroy() {
+    window.$(window).off('beforeunload', this.unload);
+  },
+  async beforeRouteLeave(to, from, next) {
+    const msg = this.unload();
+
+    if (msg) {
+      try {
+        await this.$dialog.confirm(msg);
+      } catch (_) {
+        next(false);
+        return;
+      }
+    }
+
+    next();
   },
   methods: {
+    unload() {
+      if (!this.has_changed) {
+        return undefined;
+      }
+
+      return 'Возможно имеются несохраненные изменения! Вы уверены, что хотите покинуть страницу?';
+    },
     async load_location() {
       if (!this.has_loc) {
         return;
@@ -1134,7 +1164,9 @@ export default {
     },
     async load_dreg_rows() {
       this.dreg_rows_loading = true;
-      this.dreg_rows = (await api('patients/individuals/load-dreg', this.data.patient, 'card_pk')).rows.filter(r => !r.date_end);
+      this.dreg_rows = (await this.$api('patients/individuals/load-dreg', this.data.patient, 'card_pk')).rows.filter(
+        r => !r.date_end,
+      );
       this.data.patient.has_dreg = this.dreg_rows.length > 0;
       this.dreg_rows_loading = false;
     },
@@ -1198,10 +1230,12 @@ export default {
         let n = 0;
         for (const f of g.fields) {
           n++;
+          console.log(f.title, f.controlParam);
           if (
-            f.required
-            && (f.value === '' || f.value === '- Не выбрано' || !f.value)
-            && vField(g, research.research.groups, f.visibility, this.data.patient)
+            (f.required
+              && (f.value === '' || f.value === '- Не выбрано' || !f.value)
+              && vField(g, research.research.groups, f.visibility, this.data.patient))
+            || (f.controlParam && !vField(g, research.research.groups, f.controlParam, this.data.patient))
           ) {
             l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));
           }
@@ -1284,10 +1318,16 @@ export default {
             this.data = data;
             this.sidebarIsOpened = false;
             this.hasEDSigns = false;
-            setTimeout(
-              () => this.$root.$emit('preselect-args', { card_pk: data.patient.card_pk, base_pk: data.patient.base }),
-              300,
-            );
+            this.hasPreselectOk = false;
+            setTimeout(async () => {
+              for (let i = 0; i < 10; i++) {
+                await new Promise(r => setTimeout(r, 100));
+                if (this.hasPreselectOk) {
+                  break;
+                }
+              }
+              this.$root.$emit('preselect-args', { card_pk: data.patient.card_pk, base_pk: data.patient.base });
+            }, 100);
             if (data.card_internal && data.status_disp === 'need' && data.has_doc_referral) {
               this.$root.$emit('msg', 'error', 'Диспансеризация не пройдена');
             }
@@ -1816,11 +1856,21 @@ export default {
 
 <style scoped lang="scss">
 .results-root {
+  position: absolute;
+  top: 36px;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: stretch;
   flex-direction: row;
   flex-wrap: nowrap;
   align-content: stretch;
+  overflow-x: hidden;
+
+  &.embedded {
+    top: 0;
+  }
 
   & > div {
     align-self: stretch;
@@ -2458,9 +2508,5 @@ textarea {
     margin: 0;
     padding-left: 20px;
   }
-}
-
-.cursor-pointer {
-  cursor: pointer;
 }
 </style>

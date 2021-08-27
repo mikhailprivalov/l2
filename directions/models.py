@@ -1,3 +1,4 @@
+import calendar
 import datetime
 import re
 import time
@@ -18,12 +19,13 @@ import users.models as umodels
 import cases.models as cases
 from api.models import Application
 from hospitals.models import Hospitals, HospitalsGroup
-from laboratory.utils import strdate, localtime, current_time, strfdatetime
+from laboratory.utils import strdate, localtime, current_time, strdatetime, strfdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
 import contracts.models as contracts
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, Place
+
 
 from appconf.manager import SettingManager
 
@@ -187,6 +189,14 @@ class TubesRegistration(models.Model):
         if self.barcode and self.barcode.isnumeric():
             return self.barcode
         return self.id
+
+    def get_details(self):
+        if not self.time_get or not self.doc_get:
+            return None
+        return {
+            "datetime": strdatetime(self.time_get),
+            "executor": str(self.doc_get),
+        }
 
     class Meta:
         verbose_name = 'Ёмкость для направления'
@@ -352,7 +362,7 @@ class Napravleniya(models.Model):
     rmis_resend_services = models.BooleanField(default=False, blank=True, help_text='Переотправить услуги?', db_index=True)
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create", help_text='Создатель направления', on_delete=models.SET_NULL)
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена направления')
-    rmis_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
+    rmis_number = models.CharField(max_length=20, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
     result_rmis_send = models.BooleanField(default=False, blank=True, help_text='Результат отправлен в РМИС?', db_index=True)
     imported_from_rmis = models.BooleanField(default=False, blank=True, db_index=True, help_text='Направление создано на основе направления из РМИС?')
     imported_org = models.ForeignKey(RMISOrgs, default=None, blank=True, null=True, on_delete=models.SET_NULL)
@@ -375,7 +385,7 @@ class Napravleniya(models.Model):
     parent_slave_hosp = models.ForeignKey(
         'Issledovaniya', related_name='parent_slave_hosp', help_text="Из стационарного протокола", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
     )
-    rmis_slot_id = models.CharField(max_length=15, blank=True, null=True, default=None, help_text="РМИС слот")
+    rmis_slot_id = models.CharField(max_length=20, blank=True, null=True, default=None, help_text="РМИС слот")
     microbiology_n = models.CharField(max_length=10, blank=True, default='', help_text="Номер в микробиологической лаборатории")
     time_microbiology_receive = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата/время приёма материала микробиологии')
     doc_microbiology_receive = models.ForeignKey(
@@ -386,7 +396,7 @@ class Napravleniya(models.Model):
     need_resend_l2 = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в L2.Core?')
     need_resend_crie = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в CRIE')
     core_id = models.CharField(max_length=32, default=None, blank=True, null=True, db_index=True, help_text='Номер документа в L2.Core')
-    amd_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='Номер документа в АМД')
+    amd_number = models.CharField(max_length=20, default=None, blank=True, null=True, db_index=True, help_text='Номер документа в АМД')
     error_amd = models.BooleanField(default=False, blank=True, help_text='Ошибка отправка в АМД?')
     amd_excluded = models.BooleanField(default=False, blank=True, help_text='Исключить из выгрузки в АМД?')
     purpose = models.CharField(max_length=64, null=True, blank=True, default=None, db_index=True, choices=PURPOSES, help_text="Цель направления")
@@ -394,10 +404,10 @@ class Napravleniya(models.Model):
     harmful_factor = models.CharField(max_length=255, blank=True, default='')
     workplace = models.CharField(max_length=255, blank=True, default='', db_index=True)
     hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, on_delete=models.SET_NULL)
-    id_in_hospital = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='Номер документа во внешней организации')
+    id_in_hospital = models.CharField(max_length=20, default=None, blank=True, null=True, db_index=True, help_text='Номер документа во внешней организации')
     is_external = models.BooleanField(default=False, blank=True, null=True)
-    rmis_case_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='ID случая в РМИС')
-    rmis_visit_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='ID посещения в РМИС')
+    rmis_case_number = models.CharField(max_length=20, default=None, blank=True, null=True, db_index=True, help_text='ID случая в РМИС')
+    rmis_visit_number = models.CharField(max_length=20, default=None, blank=True, null=True, db_index=True, help_text='ID посещения в РМИС')
     qr_check_token = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Токен для проверки результата по QR внешним сервисом')
     title_org_initiator = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Организация направитель')
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
@@ -1013,12 +1023,18 @@ class Napravleniya(models.Model):
                             monitoring.period_param_week_date_start = week_date_start_end[1]
                             monitoring.period_param_week_date_end = week_date_start_end[2]
                             period_param_year = period_param_week_date_start.split('-')[0]
+                            monitoring.period_date = week_date_start_end[1]
                         monitoring.period_param_month = period_param_month
                         monitoring.period_param_quarter = period_param_quarter
                         monitoring.period_param_halfyear = period_param_halfyear
                         monitoring.period_param_year = period_param_year
                         monitoring.type_period = research.type_period
 
+                        if type_period == "PERIOD_HOUR" or type_period == "PERIOD_DAY":
+                            monitoring.period_date = datetime.date(period_param_year, period_param_month, period_param_day)
+                        if type_period == "PERIOD_MONTH":
+                            last_day_month = calendar.monthrange(period_param_year, period_param_month)[1]
+                            monitoring.period_date = datetime.date(period_param_year, period_param_month, last_day_month)
                         monitoring.save()
 
                     if issledovaniye.pk not in childrens:
@@ -1437,7 +1453,7 @@ class MonitoringResult(models.Model):
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид мониторинга/исследования из справочника', db_index=True, on_delete=models.CASCADE)
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Заказ на мониторинг, для которого сохранен результат', on_delete=models.CASCADE)
-    hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, on_delete=models.SET_NULL)
+    hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, db_index=True, on_delete=models.SET_NULL)
     group_id = models.IntegerField(default=None, blank=True, null=True, db_index=True, help_text='Группа результата')
     group_order = models.IntegerField(default=None, blank=True, null=True)
     field_id = models.IntegerField(default=None, blank=True, null=True, db_index=True, help_text='Поле результата')
@@ -1447,14 +1463,15 @@ class MonitoringResult(models.Model):
     value_text = models.TextField(default='', blank=True)
     type_period = models.CharField(max_length=20, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
     period_param_hour = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
-    period_param_day = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
+    period_param_day = models.PositiveSmallIntegerField(default=None, blank=True, null=True, db_index=True)
     period_param_week_description = models.CharField(max_length=5, blank=True, null=True, default=None, help_text="Описание недельного периода")
     period_param_week_date_start = models.DateField(blank=True, null=True, default=None, help_text="Дата начала недельного периода")
     period_param_week_date_end = models.DateField(blank=True, null=True, default=None, help_text="Дата окончания недельного периода")
-    period_param_month = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
+    period_param_month = models.PositiveSmallIntegerField(default=None, blank=True, null=True, db_index=True)
     period_param_quarter = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     period_param_halfyear = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
-    period_param_year = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
+    period_param_year = models.PositiveSmallIntegerField(default=None, blank=True, null=True, db_index=True)
+    period_date = models.DateField(blank=True, null=True, default=None, help_text="Фактическая дата для периодов")
 
     class Meta:
         verbose_name = 'Мониторинг результаты'
@@ -1496,20 +1513,24 @@ class DashboardCharts(models.Model):
     COLUMN = 'COLUMN'
     BAR = 'BAR'
     PIE = 'PIE'
+    LINE = 'LINE'
+    TABLE = 'TABLE'
 
-    GRAPHIC_TYPES = (
+    DEFAULT_TYPE = (
         (COLUMN, 'Столбцы'),
         (BAR, 'Полоса'),
         (PIE, 'Пирог-куски'),
+        (LINE, 'Линейная диаграмма'),
+        (TABLE, 'Таблица'),
     )
 
     title = models.CharField(max_length=255, default="", help_text='Название дашборда', db_index=True)
     dashboard = models.ForeignKey(Dashboard, null=True, help_text='Дашборд', db_index=True, on_delete=models.CASCADE)
-    type = models.CharField(max_length=20, db_index=True, choices=GRAPHIC_TYPES, help_text="Тип графика")
     order = models.SmallIntegerField(default=-99, blank=True, null=True)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие графика', db_index=True)
     hospitals_group = models.ForeignKey(HospitalsGroup, default=None, blank=True, null=True, db_index=True, help_text="Группа больниц", on_delete=models.CASCADE)
-    sum_by_field = models.BooleanField(default=False, blank=True, help_text='Суммировать по полю')
+    is_full_width = models.BooleanField(default=False, blank=True, help_text='На всю ширину страницы')
+    default_type = models.CharField(max_length=20, db_index=True, choices=DEFAULT_TYPE, default=COLUMN, help_text="Тип графика по умолчанию")
 
     def __str__(self):
         return f"{self.title} - Дашборд: {self.dashboard.title}"
@@ -1648,6 +1669,12 @@ class ParaclinicResult(models.Model):
                 result = f"{data['code']} – {data['title']}"
             except:
                 pass
+        if self.get_field_type() == 29:
+            try:
+                data = json.loads(result)
+                result = data['address']
+            except:
+                pass
         return result
 
     @staticmethod
@@ -1737,6 +1764,12 @@ class DirectionParamsResult(models.Model):
             try:
                 data = json.loads(result)
                 result = f"{data['code']} – {data['title']}"
+            except:
+                pass
+        if self.get_field_type() == 29:
+            try:
+                data = json.loads(result)
+                result = data['address']
             except:
                 pass
         return result

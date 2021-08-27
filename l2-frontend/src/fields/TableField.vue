@@ -2,47 +2,53 @@
   <div style="max-width: 1024px;">
     <table class="table table-bordered table-condensed" style="table-layout: fixed;" v-if="settings">
       <colgroup>
-        <col width="36" v-if="params.dynamicRows && !disabled">
-        <col v-for="(_, i) in params.columns.titles" :key="i" :width="settings[i].width">
+        <col width="36" v-if="params.dynamicRows && !disabled" />
+        <col v-for="(_, i) in params.columns.titles" :key="i" :width="settings[i].width" />
       </colgroup>
       <thead>
-      <tr>
-        <td v-if="params.dynamicRows && !disabled"></td>
-        <th v-for="(t, i) in params.columns.titles" :key="i">
-          {{ t }}
-        </th>
-      </tr>
+        <tr>
+          <td v-if="params.dynamicRows && !disabled"></td>
+          <th v-for="(t, i) in params.columns.titles" :key="i">
+            {{ t }}
+          </th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="(r, j) in rows" :key="j">
-        <td class="cl-td" v-if="params.dynamicRows && !disabled">
-          <button class="btn btn-blue-nb nbr" @click="deleteRow(j)" title="Удалить строку" v-tippy>
-            <i class="fa fa-times"></i>
-          </button>
-        </td>
-        <td v-for="(_, i) in params.columns.titles" :key="i" class="cl-td">
-          <div v-if="settings[i].type === 'rowNumber' || disabled" class="just-val"
-               :class="settings[i].type === 'rowNumber' && 'rowNumber'">
-            {{ r[i] }}
-          </div>
-          <template v-else-if="settings[i].type === 0">
-            <textarea :rows="settings[i].lines" class="form-control"
-                      v-if="settings[i].lines > 1" v-model="r[i]"></textarea>
-            <input class="form-control" v-else v-model="r[i]"/>
-          </template>
-          <DateFieldWithNow v-else-if="settings[i].type === 1" v-model="r[i]"/>
-          <SelectField :variants="settings[i].variants" class="form-control fw"
-                       v-else-if="settings[i].type === 10" v-model="r[i]"/>
-          <RadioField :variants="settings[i].variants"
-                      v-else-if="settings[i].type === 12" v-model="r[i]"/>
-          <input class="form-control" v-else-if="settings[i].type === 18" v-model="r[i]" type="number"/>
-        </td>
-      </tr>
-      <tr v-if="params.dynamicRows && !disabled">
-        <td :colspan="params.columns.count + 1">
-          <button class="btn btn-blue-nb" @click="addRow">добавить строку</button>
-        </td>
-      </tr>
+        <tr v-for="(r, j) in rows" :key="j">
+          <td class="cl-td" v-if="params.dynamicRows && !disabled">
+            <button class="btn btn-blue-nb nbr" @click="deleteRow(j)" title="Удалить строку" v-tippy>
+              <i class="fa fa-times"></i>
+            </button>
+          </td>
+          <td v-for="(_, i) in params.columns.titles" :key="i" class="cl-td" :class="settings[i].type === 2 && 'mkb'">
+            <div
+              v-if="settings[i].type === 'rowNumber' || disabled"
+              class="just-val"
+              :class="settings[i].type === 'rowNumber' && 'rowNumber'"
+            >
+              {{ r[i] }}
+            </div>
+            <template v-else-if="settings[i].type === 0">
+              <textarea :rows="settings[i].lines" class="form-control" v-if="settings[i].lines > 1" v-model="r[i]"></textarea>
+              <input class="form-control" v-else v-model="r[i]" />
+            </template>
+            <DateFieldWithNow v-else-if="settings[i].type === 1" v-model="r[i]" />
+            <SelectField
+              :variants="settings[i].variants"
+              class="form-control fw"
+              v-else-if="settings[i].type === 10"
+              v-model="r[i]"
+            />
+            <RadioField :variants="settings[i].variants" v-else-if="settings[i].type === 12" v-model="r[i]" />
+            <input class="form-control" v-else-if="settings[i].type === 18" v-model="r[i]" type="number" />
+            <MKBFieldForm v-else-if="settings[i].type === 2" :short="false" v-model="r[i]" />
+          </td>
+        </tr>
+        <tr v-if="params.dynamicRows && !disabled">
+          <td :colspan="params.columns.count + 1">
+            <button class="btn btn-blue-nb" @click="addRow">добавить строку</button>
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -52,6 +58,7 @@ import _ from 'lodash';
 import SelectField from '@/fields/SelectField.vue';
 import RadioField from '@/fields/RadioField.vue';
 import DateFieldWithNow from '@/fields/DateFieldWithNow.vue';
+import MKBFieldForm from '@/fields/MKBFieldForm.vue';
 
 const DEFAULT_SETTINGS = () => ({
   type: 0,
@@ -62,7 +69,12 @@ const DEFAULT_SETTINGS = () => ({
 
 export default {
   name: 'TableField',
-  components: { DateFieldWithNow, RadioField, SelectField },
+  components: {
+    DateFieldWithNow,
+    RadioField,
+    SelectField,
+    MKBFieldForm,
+  },
   props: {
     value: {
       required: false,
@@ -97,7 +109,7 @@ export default {
       return {
         columns: {
           titles: this.params.columns.titles,
-          settings: this.settings.map((s) => _.pick(s, ['type', 'width'])),
+          settings: this.settings.map(s => _.pick(s, ['type', 'width'])),
         },
         rows: this.rows,
       };
@@ -154,7 +166,7 @@ export default {
         params.columns.settings[i] = { ...DEFAULT_SETTINGS(), ...s };
       }
 
-      value.rows = value.rows.filter((r) => Array.isArray(r) && r.every((v) => _.isString(v)));
+      value.rows = value.rows.filter(r => Array.isArray(r) && r.every(v => _.isString(v)));
 
       this.params = params;
       this.rows = value.rows;

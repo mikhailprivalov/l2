@@ -655,3 +655,87 @@ def statistic_message_purpose_total_data(ws1, message_total, d1, d2, style_borde
     ws1.cell(row=r + 1, column=3).style = style_border_res
 
     return ws1
+
+
+def statistic_screening_month_data(ws1, data, month, year, style_border_res):
+    ws1.cell(row=1, column=1).value = 'Скрининг'
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=2, column=2).value = f'{month_dict[int(month)]}-{year}'
+
+    size = 12
+    columns = [
+        ('Месяц', 10),
+        ('Число женщин 18-69 лет, проживающих на прикрепленной территории', size),
+        ('Число женщин 30 -65 лет, подлежащих скринингу (всего)', size),
+        ('Число женщин 30 -65 лет, подлежащих скринингу при диспансеризации', size),
+        ('Число женщин  30-65 лет, прошедших  скрининг', size),
+        ('Число женщин 30 -65 лет, подлежащих скринингу при диспансеризации', size),
+        ('Число  женщин, которым выполнен ПАП-тест от общего числа прошедших скрининг', size),
+        ('Число женщин,  по препаратам которых получили цитологический  результат', size),
+        ('Из них, препараты признаны адекватными', size),
+        ('Недостаточно адекватными', size),
+        ('Не адекватными', size),
+        ('Из числа женщин с недостаточно адекватным, неадекватным результатом, число вызванных женщин,  у которых повторно взят материал на цитологическое исследование', size),
+        ('В т.ч. АSCUS', size),
+        ('В т.ч. легкое интраэпителиальное  поражение CIN I, признаки ВПЧ', size),
+        ('Умеренное  интраэпителиальное поражение CIN I-II, II', size),
+        ('Тяжелое интраэпителиальное поражение CIN II-III, III', size),
+        ('cr in situ', size),
+        ('Подозрение на ЗНО шейки матки', size),
+    ]
+
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=5, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=5, column=idx).style = style_border_res
+
+    ws1.cell(row=6, column=1).value = f'{month_dict[int(month)]}'
+    ws1.cell(row=6, column=1).style = style_border_res
+    for k, v in data.items():
+        if k == "attached_count_age_for_month":
+            ws1.cell(row=6, column=2).value = v
+            ws1.cell(row=6, column=2).style = style_border_res
+        if k == "count_regplan_for_month":
+            ws1.cell(row=6, column=3).value = v
+            ws1.cell(row=6, column=3).style = style_border_res
+        if k == "count_dispensarization_from_screening":
+            ws1.cell(row=6, column=4).value = v
+            ws1.cell(row=6, column=4).style = style_border_res
+        if k == "pass_screening":
+            ws1.cell(row=6, column=5).value = v
+            ws1.cell(row=6, column=5).style = style_border_res
+        if k == "pass_screening_in_dispensarization":
+            ws1.cell(row=6, column=6).value = v
+            ws1.cell(row=6, column=6).style = style_border_res
+        if k == "pass_pap_analysis":
+            ws1.cell(row=6, column=7).value = v
+            ws1.cell(row=6, column=7).style = style_border_res
+        if k == "pass_pap_adequate_result_value":
+            ws1.cell(row=6, column=9).value = v
+            ws1.cell(row=6, column=9).style = style_border_res
+        if k == "pass_pap_not_enough_adequate_result_value":
+            ws1.cell(row=6, column=10).value = v
+            ws1.cell(row=6, column=10).style = style_border_res
+        if k == "pass_pap_not_adequate_result_value":
+            ws1.cell(row=6, column=11).value = v
+            ws1.cell(row=6, column=11).style = style_border_res
+        if k == "count_people_dublicate":
+            ws1.cell(row=6, column=12).value = v
+            ws1.cell(row=6, column=12).style = style_border_res
+        if k == "pass_pap_ascus_result_value":
+            ws1.cell(row=6, column=13).value = v
+            ws1.cell(row=6, column=13).style = style_border_res
+        if k == "pass_pap_cin_i_result_value":
+            ws1.cell(row=6, column=14).value = v
+            ws1.cell(row=6, column=14).style = style_border_res
+        if k == "pass_pap_cin_i_ii_result_value":
+            ws1.cell(row=6, column=15).value = v
+            ws1.cell(row=6, column=15).style = style_border_res
+        if k == "pass_pap_cin_ii_iii_result_value":
+            ws1.cell(row=6, column=16).value = v
+            ws1.cell(row=6, column=16).style = style_border_res
+        if k == "pass_pap_cr_in_situ_result_value":
+            ws1.cell(row=6, column=17).value = v
+            ws1.cell(row=6, column=17).style = style_border_res
+
+    return ws1

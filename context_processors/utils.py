@@ -33,8 +33,7 @@ def menu(request):
                 {"url": "/ui/menu", "title": "Меню L2", "nt": False, "access": ["*"], "not_show_home": True},
                 {"url": "/logout", "title": "Выход из профиля", "nt": False, "access": ["*"], "not_show_home": True},
                 {"hr": True, "access": ["*"]},
-                {"url": "/ui/directions", "title": "Направления и картотека", "nt": False,
-                 "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Оператор Контакт-центра"]},
+                {"url": "/ui/directions", "title": "Направления и картотека", "nt": False, "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Оператор Контакт-центра"]},
                 {
                     "url": "/mainmenu/direction/info",
                     "title": "История направления",
@@ -42,15 +41,13 @@ def menu(request):
                     "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Лаборант", "Врач-лаборант", "Просмотр журнала"],
                 },
                 {"url": "/mainmenu/directions/multiprint", "title": "Печать направлений", "nt": False, "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача"]},
-                # {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
                 {"url": "/ui/results-by-department-or-doctor", "title": "Печать по отделению или врачу", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
-                {"url": "/mainmenu/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
+                {"url": "/ui/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
                 {"url": "/mainmenu/receive", "title": "Приём биоматериала", "nt": False, "access": ["Получатель биоматериала"]},
                 {"url": "/mainmenu/statistics-tickets", "title": "Статталоны", "nt": False, "access": ["Оформление статталонов", "Лечащий врач", "Оператор лечащего врача"]},
                 {"url": "/mainmenu/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
                 {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
                 {"url": "/laboratory/results", "title": "Лабораторные результаты", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
-                # {"url": "/results/enter", "title": "Ввод результатов (устаревший)", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
                 {
                     "url": "/mainmenu/employee-job",
                     "title": "Учёт косвенных услуг по лаборатории",
@@ -71,7 +68,7 @@ def menu(request):
                         "Конструктор: Группировка исследований по направлениям",
                     ],
                 },
-                {"url": "/statistic", "title": "Статистика", "nt": False, "access": ["Просмотр статистики", "Врач-лаборант"]},
+                {"url": "/ui/statistic", "title": "Статистика", "nt": False, "access": ["Просмотр статистики", "Врач-лаборант", 'Статистика скрининга']},
                 {
                     "url": "/mainmenu/results_history",
                     "title": "Поиск",
@@ -85,12 +82,9 @@ def menu(request):
                     "access": ["Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники", "Врач консультаций"],
                 },
                 {"url": "/mainmenu/discharge", "title": "Выписки", "nt": False, "access": ["Загрузка выписок", "Поиск выписок"], "module": "discharge_module"},
-                # {"url": "/mainmenu/create_user", "title": "Создать пользователя", "nt": False, "access": ["Создание и редактирование пользователей"]},
-                # {"url": "/mainmenu/change_password", "title": "Настройка профилей пользователей", "nt": False, "access": ["Создание и редактирование пользователей"]},
                 {"url": "/mainmenu/create_podr", "title": "Управление подразделениями", "nt": False, "access": ["Создание и редактирование пользователей"]},
                 {"url": "/mainmenu/profiles", "title": "Профили пользователей", "nt": False, "access": ["Создание и редактирование пользователей"]},
                 {"url": "/mainmenu/view_log", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},
-                # {"url": "/reports", "title": "Отчёты", "nt": False, "access": []},
                 {"url": "/admin", "title": "Администрирование L2", "nt": False, "access": []},
                 {
                     "url": "/mainmenu/direction_visit",
@@ -100,7 +94,7 @@ def menu(request):
                     "module": "paraclinic_module",
                 },
                 {
-                    "url": "/mainmenu/results/paraclinic",
+                    "url": "/ui/results/descriptive",
                     "title": "Ввод описательных результатов",
                     "nt": False,
                     "access": ["Врач параклиники", "Врач консультаций"],
@@ -118,11 +112,23 @@ def menu(request):
                 {"url": '/mainmenu/rmis_confirm', "title": "Подтверждение отправки результатов в РМИС", "nt": False, "access": ["Подтверждение отправки результатов в РМИС"]},
                 {"url": '/mainmenu/list_wait', "title": "Листы ожидания", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"], "module": "l2_list_wait"},
                 {"url": '/mainmenu/doc_call', "title": "Вызовы врача и заявки", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача"], "module": "l2_doc_call"},
-                {"url": '/ui/extra-notification', "title": "Экстренные извещения", "nt": False,
-                 "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача", "Заполнение экстренных извещений"], "module": "l2_extra_notifications"},
+                {
+                    "url": '/ui/extra-notification',
+                    "title": "Экстренные извещения",
+                    "nt": False,
+                    "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача", "Заполнение экстренных извещений"],
+                    "module": "l2_extra_notifications",
+                },
                 {"url": '/mainmenu/procedure_list', "title": "Процедурный лист", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
                 {"url": '/ui/monitorings/enter', "title": "Заполнение мониторингов", "nt": False, "access": ["Заполнение мониторингов"], "module": "l2_monitorings"},
                 {"url": '/ui/monitorings/report', "title": "Просмотр мониторингов", "nt": False, "access": ["Просмотр мониторингов"], "module": "l2_monitorings"},
+                {
+                    "url": '/ui/schedule',
+                    "title": "Расписание",
+                    "nt": False,
+                    "access": ["Лечащий врач", "Оператор лечащего врача", "Врач консультаций", "Врач стационара", 'Врач параклиники'],
+                    "module": "l2_schedule",
+                },
                 # {"url": '/cases/', "title": "Случаи обслуживания", "nt": False, "access": []},
             ]
 
@@ -134,13 +140,23 @@ def menu(request):
                 pages.append({"url": "/silk/", "title": "Профилирование", "nt": False, "access": []})
             pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "nt": False, "access": []})
 
-            if SettingManager.get("home_page", default="false") != "false":
-                pages.append({"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница", "nt": True, "access": ["*"]})
+            hp = SettingManager.get(key="home_page", default="false")
+            if hp not in ['', 'false']:
+                if not hp.startswith('http'):
+                    hp = f"http://{hp}"
+                pages.append({"url": hp, "title": "Домашняя страница", "nt": True, "access": ["*"]})
 
-            if SettingManager.get("support", default="false") != "false":
-                pages.append({"url": SettingManager.get(key="support", default="false"), "title": "Техническая поддержка", "nt": True, "access": ["*"]})
-            if SettingManager.get("vks", default="false") != "false":
-                pages.append({"url": SettingManager.get(key="vks", default="false"), "title": "ВКС", "nt": True, "access": ["*"]})
+            sp = SettingManager.get("support", default="false")
+            if sp not in ['', 'false']:
+                if not sp.startswith('http'):
+                    sp = f"http://{sp}"
+                pages.append({"url": sp, "title": "Техническая поддержка", "nt": True, "access": ["*"]})
+
+            vp = SettingManager.get("vks", default="false")
+            if vp not in ['', 'false']:
+                if not vp.startswith('http'):
+                    vp = f"http://{vp}"
+                pages.append({"url": vp, "title": "ВКС", "nt": True, "access": ["*"]})
 
             data = make_menu(pages, groups, request.user.is_superuser, request.path)
             cache.set(k, simplejson.dumps(data), 300)

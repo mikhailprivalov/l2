@@ -66,10 +66,9 @@
 </template>
 
 <script lang="ts">
-import * as actions from '@/store/action-types';
-import api from '@/api';
 import axios from 'axios';
 import * as Cookies from 'es-cookie';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'DocCallLog',
@@ -159,7 +158,7 @@ export default {
     },
     async loadRows() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { rows } = await api('doctor-call/log', this.r, 'pk');
+      const { rows } = await this.$api('doctor-call/log', this.r, 'pk');
       this.rows = rows;
       this.r.inLog = rows.length;
       await this.$store.dispatch(actions.DEC_LOADING);

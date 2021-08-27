@@ -1,18 +1,23 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
     <div class="top-picker">
-      <div style="align-self: stretch;display: inline-flex;align-items: center;padding: 1px 0 1px 5px;
-      flex: 1;margin: 0;font-size: 12px;width: 101px;color:#fff">
-        <span
-          style="display: block;max-height: 2.2em;line-height: 1.1em;vertical-align: top">Дата<br/>подтверждения:</span>
+      <div
+        style="align-self: stretch;display: inline-flex;align-items: center;padding: 1px 0 1px 5px;
+      flex: 1;margin: 0;font-size: 12px;width: 101px;color:#fff"
+      >
+        <span style="display: block;max-height: 2.2em;line-height: 1.1em;vertical-align: top">Дата<br />подтверждения:</span>
       </div>
       <div style="width: 186px;display: inline-block;vertical-align: top">
-        <date-range v-model="date_range"/>
+        <date-range v-model="date_range" />
       </div>
       <div class="top-inner">
-        <button class="btn btn-blue-nb btn-ell"
-                style="display: inline-block;vertical-align: top;border-radius: 0;width: auto;" title="Загрузить данные"
-                @click="load_history" v-if="individual_pk > -1 && params.length > 0">
+        <button
+          class="btn btn-blue-nb btn-ell"
+          style="display: inline-block;vertical-align: top;border-radius: 0;width: auto;"
+          title="Загрузить данные"
+          @click="load_history"
+          v-if="individual_pk > -1 && params.length > 0"
+        >
           <i class="glyphicon glyphicon-list-alt"></i> Загрузить данные
         </button>
         <!--<button class="btn btn-blue-nb btn-ell"
@@ -26,40 +31,43 @@
     <div class="content-picker" v-if="rows.length > 0">
       <table class="table table-bordered table-smm">
         <colgroup>
-          <col width="90">
-          <col width="120">
-          <col>
-          <col>
-          <col width="120">
-          <col width="110">
+          <col width="90" />
+          <col width="120" />
+          <col />
+          <col />
+          <col width="120" />
+          <col width="110" />
         </colgroup>
         <thead>
-        <tr>
-          <th>Дата</th>
-          <th>Исследование</th>
-          <th>Параметр</th>
-          <th>Значение</th>
-          <th>Референс</th>
-          <th>Результат</th>
-        </tr>
+          <tr>
+            <th>Дата</th>
+            <th>Исследование</th>
+            <th>Параметр</th>
+            <th>Значение</th>
+            <th>Референс</th>
+            <th>Результат</th>
+          </tr>
         </thead>
         <tbody>
-        <tr v-for="r in rows" :key="r.pk" :class="{not_norm: r.is_norm !== 'normal'}">
-          <td>{{r.date}}</td>
-          <td class="research">{{get_param_name(r.research, r.pk).research}}</td>
-          <td>{{get_param_name(r.research, r.pk).title}}</td>
-          <td v-if="r.active_ref" class="v-field">
-            <span v-if="r.not_norm_dir === 'n_up'">&uarr;</span>
-            <span v-if="r.not_norm_dir === 'up'">&uarr;&uarr;</span>
-            <span v-if="r.not_norm_dir === 'n_down'">&darr;</span>
-            <span v-if="r.not_norm_dir === 'down'">&darr;&darr;</span>
-            {{r.value}} <span class="units">{{r.units}}</span>
-          </td>
-          <td v-if="r.active_ref">{{r.active_ref}}</td>
-          <td v-else colspan="2">{{r.value}} <span class="units">{{r.units}}</span></td>
-          <td><a href="#" @click.prevent="print_results(r.direction)" title="Печать результатов направления">{{r.direction}}</a>
-          </td>
-        </tr>
+          <tr v-for="r in rows" :key="r.pk" :class="{ not_norm: r.is_norm !== 'normal' }">
+            <td>{{ r.date }}</td>
+            <td class="research">{{ get_param_name(r.research, r.pk).research }}</td>
+            <td>{{ get_param_name(r.research, r.pk).title }}</td>
+            <td v-if="r.active_ref" class="v-field">
+              <span v-if="r.not_norm_dir === 'n_up'">&uarr;</span>
+              <span v-if="r.not_norm_dir === 'up'">&uarr;&uarr;</span>
+              <span v-if="r.not_norm_dir === 'n_down'">&darr;</span>
+              <span v-if="r.not_norm_dir === 'down'">&darr;&darr;</span>
+              {{ r.value }} <span class="units">{{ r.units }}</span>
+            </td>
+            <td v-if="r.active_ref">{{ r.active_ref }}</td>
+            <td v-else colspan="2">
+              {{ r.value }} <span class="units">{{ r.units }}</span>
+            </td>
+            <td>
+              <a href="#" @click.prevent="print_results(r.direction)" title="Печать результатов направления">{{ r.direction }}</a>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -96,7 +104,12 @@ export default {
   },
   data() {
     return {
-      date_range: [moment().subtract(3, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+      date_range: [
+        moment()
+          .subtract(3, 'month')
+          .format('DD.MM.YYYY'),
+        moment().format('DD.MM.YYYY'),
+      ],
       is_created: false,
       rows: [],
       show_charts: false,
@@ -122,7 +135,7 @@ export default {
     },
     get_param_name(rpk, ppk) {
       const pt = this.params_titles();
-      if (pt[rpk] && pt[rpk][ppk]) {
+      if (pt?.[rpk][ppk]) {
         return pt[rpk][ppk];
       }
       return { title: '', research: '' };
@@ -144,17 +157,20 @@ export default {
       this.$root.$emit('validate-datepickers');
       this.is_created = false;
       this.$store.dispatch(actions.INC_LOADING);
-      directionsPoint.getResultsReport({
-        individual: this.individual_pk,
-        params: this.params,
-        date_start: this.date_range[0],
-        date_end: this.date_range[1],
-      }).then((data) => {
-        this.rows = data.data;
-      }).finally(() => {
-        this.$store.dispatch(actions.DEC_LOADING);
-        this.is_created = true;
-      });
+      directionsPoint
+        .getResultsReport({
+          individual: this.individual_pk,
+          params: this.params,
+          date_start: this.date_range[0],
+          date_end: this.date_range[1],
+        })
+        .then(data => {
+          this.rows = data.data;
+        })
+        .finally(() => {
+          this.$store.dispatch(actions.DEC_LOADING);
+          this.is_created = true;
+        });
     },
     clear() {
       this.rows = [];
@@ -169,115 +185,119 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.table-smm {
+  table-layout: fixed;
 
-  .table-smm {
-    table-layout: fixed;
+  td,
+  th {
+    padding: 2px;
+    word-break: break-all;
+  }
+}
 
-    td, th {
-      padding: 2px;
-      word-break: break-all;
+.research {
+  font-size: 12px;
+  word-break: break-word !important;
+}
+
+.units {
+  font-size: 12px;
+  color: #8d8d8d;
+}
+
+tr:hover .units {
+  color: #000;
+}
+
+.not_norm {
+  background-color: #f1f1f1;
+
+  td:not(:first-child) {
+    border-left-color: #ffa04d;
+  }
+  td:not(:last-child) {
+    border-right-color: #ffa04d;
+  }
+
+  .v-field {
+    font-weight: bold;
+    span {
+      padding-right: 4px;
+      font-weight: normal;
     }
   }
+}
 
-  .research {
-    font-size: 12px;
-    word-break: break-word!important;
-  }
+.top-picker,
+.bottom-picker {
+  height: 34px;
+  background-color: #aab2bd;
+  position: absolute;
+  left: 0;
+  right: 0;
+}
 
-  .units {
-    font-size: 12px;
-    color: #8d8d8d;
-  }
+.top-picker {
+  top: 0;
+  white-space: nowrap;
 
-  tr:hover .units {
-    color: #000
-  }
-
-  .not_norm {
-    background-color: #f1f1f1;
-
-    td:not(:first-child) {
-      border-left-color: #ffa04d;
-    }
-    td:not(:last-child) {
-      border-right-color: #ffa04d;
+  ::v-deep {
+    input {
+      border-radius: 0;
+      border: none;
+      border-bottom: 1px solid #aab2bd;
+      background: #fff;
     }
 
-    .v-field {
-      font-weight: bold;
-      span {
-        padding-right: 4px;
-        font-weight: normal;
-      }
+    .input-group-addon {
+      border: 1px solid #aab2bd;
+      border-top: none;
     }
   }
+}
 
-  .top-picker, .bottom-picker {
-    height: 34px;
-    background-color: #AAB2BD;
-    position: absolute;
-    left: 0;
-    right: 0;
-  }
+.content-picker,
+.content-none,
+.bottom-inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: stretch;
+  align-content: center;
+  align-items: stretch;
+  overflow-y: auto;
+}
 
-  .top-picker {
-    top: 0;
-    white-space: nowrap;
+.content-picker {
+  align-content: flex-start;
+}
 
-    ::v-deep {
-      input {
-        border-radius: 0;
-        border: none;
-        border-bottom: 1px solid #AAB2BD;
-        background: #fff;
-      }
+.content-none {
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+}
 
-      .input-group-addon {
-        border: 1px solid #AAB2BD;
-        border-top: none;
-      }
-    }
-  }
+.top-inner {
+  position: absolute;
+  left: 290px;
+  top: 0;
+  right: 0;
+  height: 34px;
+  overflow: visible;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
+}
 
-  .content-picker, .content-none, .bottom-inner {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: stretch;
-    align-content: center;
-    align-items: stretch;
-    overflow-y: auto;
-  }
-
-  .content-picker {
-    align-content: flex-start;
-  }
-
-  .content-none {
-    align-items: center;
-    align-content: center;
-    justify-content: center;
-  }
-
-  .top-inner {
-    position: absolute;
-    left: 290px;
-    top: 0;
-    right: 0;
-    height: 34px;
-    overflow: visible;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: stretch;
-    justify-content: flex-start;
-  }
-
-  .content-picker, .content-none {
-    position: absolute;
-    top: 34px;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    overflow-y: auto;
-  }
+.content-picker,
+.content-none {
+  position: absolute;
+  top: 34px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+}
 </style>

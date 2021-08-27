@@ -245,7 +245,7 @@
                     <span class="input-group-addon">ID-скрепки</span>
                     <input type="text" class="form-control" v-model="row.attached" />
                   </div>
-                  <div v-if="row.field_type === 0">
+                  <div v-if="row.field_type === 0 || row.field_type === 29">
                     <strong>Значение по умолчанию:</strong>
                     <textarea v-model="row.default" :rows="row.lines" class="form-control" v-if="row.lines > 1"></textarea>
                     <input v-model="row.default" class="form-control" v-else />
@@ -368,8 +368,12 @@
                   <textarea class="form-control" v-model="row.helper"></textarea>
                 </div>
                 <div>
-                  <strong>Условие видимости:</strong>
+                  <strong>Видимость:</strong>
                   <textarea class="form-control" v-model="row.visibility"></textarea>
+                </div>
+                <div>
+                  <strong>Контроль:</strong>
+                  <textarea class="form-control" v-model="row.controlParam"></textarea>
                 </div>
                 <div>
                   <label> <input type="checkbox" v-model="row.hide" /> скрыть поле </label>
@@ -396,7 +400,7 @@
                       <option value="12">Радио</option>
                       <option value="13">Поле описательного результата</option>
                       <option value="14">Поле описательного результата без заголовка</option>
-                      <option value="15">Текст с форматированием</option>
+                      <option v-if="rich_text_enabled || row.field_type === 15" value="15">Текст с форматированием</option>
                       <option value="16">(Стационар) агрегация по лаборатории</option>
                       <option value="17">(Стационар) агрегация по описательным</option>
                       <option value="18">Число</option>
@@ -410,6 +414,7 @@
                       <option value="26">Результаты консультаций</option>
                       <option value="27">Таблица</option>
                       <option value="28">НСИ-справочник</option>
+                      <option value="29">Адрес по ФИАС</option>
                     </select>
                   </label>
                 </div>
@@ -444,6 +449,8 @@
 <script lang="ts">
 import Vue from 'vue';
 import Vue2Filters from 'vue2-filters';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import construct_point from '@/api/construct-point';
 import * as actions from '@/store/action-types';
@@ -453,10 +460,6 @@ import RichTextEditor from '@/fields/RichTextEditor.vue';
 import NumberField from '@/fields/NumberField.vue';
 import FieldHelper from '@/ui-cards/FieldHelper.vue';
 
-import api from '@/api';
-
-import Treeselect from '@riophae/vue-treeselect';
-import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import TableConstructor from '@/construct/TableConstructor.vue';
 import Localizations from '@/construct/Localizations.vue';
 import PermanentDirectories from '@/construct/PermanentDirectories.vue';
@@ -603,6 +606,12 @@ export default {
     setTimeout(() => {
       this.has_unsaved = false;
     }, 300);
+    setTimeout(() => {
+      this.has_unsaved = false;
+    }, 1000);
+    setTimeout(() => {
+      this.has_unsaved = false;
+    }, 2000);
   },
   computed: {
     permanent_directories_keys() {
@@ -650,6 +659,9 @@ export default {
     },
     ex_deps() {
       return this.$store.getters.ex_dep[this.ex_dep] || [];
+    },
+    rich_text_enabled() {
+      return this.$store.getters.modules.descriptive_rich_text;
     },
   },
   methods: {
@@ -909,7 +921,7 @@ export default {
         });
     },
     async load_deparments() {
-      const { data } = await api('procedural-list/suitable-departments');
+      const { data } = await this.$api('procedural-list/suitable-departments');
       this.departments = [{ id: -1, label: 'Отделение не выбрано' }, ...data];
     },
   },

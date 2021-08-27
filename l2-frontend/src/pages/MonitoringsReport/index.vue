@@ -260,7 +260,6 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import VueApexCharts from 'vue-apexcharts';
 
-import api from '@/api';
 import * as actions from '@/store/action-types';
 import RadioField from '@/fields/RadioField.vue';
 
@@ -364,7 +363,7 @@ export default {
     async entryToDashboard() {
       if (Object.keys(this.dashboards).length === 0) {
         await this.$store.dispatch(actions.INC_LOADING);
-        const { rows } = await api('/monitorings/listdashboard');
+        const { rows } = await this.$api('/monitorings/listdashboard');
         this.dashboards = rows;
         await this.$store.dispatch(actions.DEC_LOADING);
       }
@@ -377,7 +376,7 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       this.loadedResearch = this.research;
       this.loadedDate = this.date;
-      const { rows } = await api('/monitorings/search', this, ['research', 'date', 'hour']);
+      const { rows } = await this.$api('/monitorings/search', this, ['research', 'date', 'hour']);
       this.data = rows;
       await this.$store.dispatch(actions.DEC_LOADING);
       if (this.$refs.loadButton) {
@@ -390,7 +389,7 @@ export default {
       this.dashboard = {
         title: (this.dashboards.find(d => d.id === this.dashboardPk) || {}).label,
       };
-      const { rows } = await api('/monitorings/dashboard', {
+      const { rows } = await this.$api('/monitorings/dashboard', {
         dashboard: this.dashboardPk,
         date: this.dateDashboard,
       });
@@ -425,9 +424,7 @@ export default {
           if (disposition && disposition.indexOf('attachment') !== -1) {
             const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
             const matches = filenameRegex.exec(disposition);
-            if (matches != null && matches[1]) {
-              filename = matches[1].replace(/['"]/g, '');
-            }
+            filename = matches?.[1].replace(/['"]/g, '') || '';
           }
           const a = document.createElement('a');
           if (typeof a.download === 'undefined') {
@@ -565,8 +562,8 @@ export default {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  align-items: start;
-  justify-content: start;
+  align-items: flex-start;
+  justify-content: flex-start;
   margin-left: -10px;
   margin-right: -10px;
   position: absolute;

@@ -29,23 +29,25 @@ admin.site.register(IstochnikiFinansirovaniya)
 
 
 @admin.register(Napravleniya)
-class CardAdmin(admin.ModelAdmin):
-    raw_id_fields = (
+class NapravleniyaAdmin(admin.ModelAdmin):
+    autocomplete_fields = (
         'client',
         'case',
         'parent',
         'parent_auto_gen',
         'parent_slave_hosp',
     )
-    search_fields = ('pk',)
+    search_fields = ('pk', 'client')
 
 
 @admin.register(Issledovaniya)
 class IssAdmin(admin.ModelAdmin):
-    raw_id_fields = (
+    autocomplete_fields = (
         'napravleniye',
         'research',
         'parent',
+    )
+    raw_id_fields = (
         'tubes',
     )
     search_fields = ('napravleniye__pk',)
@@ -99,7 +101,7 @@ class ResPersonContract(admin.ModelAdmin):
 
 
 class ResDirectionsHistory(admin.ModelAdmin):
-    raw_id_fields = (
+    autocomplete_fields = (
         'direction',
         'old_card',
         'new_card',
@@ -129,7 +131,7 @@ class ResMonitoringResult(admin.ModelAdmin):
     )
     search_fields = ('napravleniye__pk',)
 
-    raw_id_fields = (
+    autocomplete_fields = (
         'napravleniye',
         'issledovaniye',
     )

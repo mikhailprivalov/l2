@@ -2,21 +2,25 @@
   <div>
     <div class="filters">
       <form autocomplete="off" @submit.prevent>
-        <input autocomplete="false" name="hidden" type="text" style="display: none;"/>
+        <input autocomplete="false" name="hidden" type="text" style="display: none;" />
         <div class="input-group">
           <span class="input-group-btn" v-for="(title, key) in modes" :key="`${key}-${title}`">
-            <a href="#" class="top-inner-select"
-               :class="key === mode && 'active'" @click.prevent="mode = key">
+            <a href="#" class="top-inner-select" :class="key === mode && 'active'" @click.prevent="mode = key">
               <span>{{ title }}</span>
             </a>
           </span>
-          <input type="text" maxlength="13" class="form-control" autofocus
-                 ref="q" v-model="q" @keyup.enter="search"
-                 :placeholder="mode === 'direction' ? 'номер направления' : 'номер ёмкости'"/>
+          <input
+            type="text"
+            maxlength="13"
+            class="form-control"
+            autofocus
+            ref="q"
+            v-model="q"
+            @keyup.enter="search"
+            :placeholder="mode === 'direction' ? 'номер направления' : 'номер ёмкости'"
+          />
           <span class="input-group-btn">
-            <button style="margin-right: -1px;" type="button"
-                    @click="search"
-                    class="btn btn-blue-nb">Поиск</button>
+            <button style="margin-right: -1px;" type="button" @click="search" class="btn btn-blue-nb">Поиск</button>
           </span>
         </div>
       </form>
@@ -27,7 +31,6 @@
 <script lang="ts">
 import { SEARCH_MODES, SEARCH_MODES_TITLES } from '@/pages/LaboratoryResults/constants';
 import * as actions from '@/store/action-types';
-import api from '@/api';
 
 export default {
   name: 'SearchToEnter',
@@ -64,7 +67,7 @@ export default {
   methods: {
     async search() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, data, msg } = await api('laboratory/search', this, ['q', 'mode', 'laboratory']);
+      const { ok, data, msg } = await this.$api('laboratory/search', this, ['q', 'mode', 'laboratory']);
       if (ok) {
         this.q = '';
         this.$root.$emit('laboratory:results:show-direction', data, this.pkAfterSearch);
@@ -83,7 +86,9 @@ export default {
   background-color: #edeeef;
 
   form {
-    .btn, .form-control, .top-inner-select {
+    .btn,
+    .form-control,
+    .top-inner-select {
       border-radius: 0 !important;
       padding: 6px 4px !important;
       font-size: 12px;
@@ -102,7 +107,7 @@ export default {
   margin: 0;
   font-size: 12px;
   min-width: 0;
-  background-color: #AAB2BD;
+  background-color: #aab2bd;
   color: #fff;
 
   &:hover {
@@ -117,8 +122,8 @@ export default {
   &.disabled {
     color: #fff;
     cursor: not-allowed;
-    opacity: .8;
-    background-color: rgba(255, 255, 255, .7) !important;
+    opacity: 0.8;
+    background-color: rgba(255, 255, 255, 0.7) !important;
   }
 
   span {

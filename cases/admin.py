@@ -3,7 +3,8 @@ from .models import Case
 
 
 class CaseAdmin(admin.ModelAdmin):
-    raw_id_fields = ('card',)
+    autocomplete_fields = ('card',)
+    search_fields = ('card', 'doctor', 'case_type')
 
 
 admin.site.register(Case, CaseAdmin)

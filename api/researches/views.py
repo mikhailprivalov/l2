@@ -484,6 +484,7 @@ def researches_update(request):
                                     helper=field.get("helper", ''),
                                     required=field.get("required", False),
                                     attached=field.get("attached", ''),
+                                    control_param=field.get("controlParam", ""),
                                 )
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
@@ -502,6 +503,7 @@ def researches_update(request):
                                 f.for_med_certificate = field.get("for_med_certificate", False)
                                 f.helper = field.get("helper", '')
                                 f.attached = field.get("attached", '')
+                                f.control_param = field.get("controlParam", '')
                             if f:
                                 f.save()
 
@@ -569,6 +571,7 @@ def researches_details(request):
                         "helper": field.helper,
                         "new_value": "",
                         "attached": field.attached,
+                        "controlParam": field.control_param,
                     }
                 )
             response["groups"].append(g)
@@ -603,6 +606,7 @@ def paraclinic_details(request):
                     "field_type": field.field_type,
                     "required": field.required,
                     "for_talon": field.for_talon,
+                    "controlParam": field.control_param,
                 }
             )
         response["groups"].append(g)

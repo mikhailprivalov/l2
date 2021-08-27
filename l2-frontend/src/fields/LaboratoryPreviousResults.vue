@@ -2,52 +2,85 @@
   <div>
     <table class="table table-bordered table-condensed" style="table-layout: fixed">
       <colgroup>
-        <col width='14%'/>
+        <col width="14%" />
         <col />
-        <col width='14%'/>
-        <col width='14%'/>
-        <col width='14%'/>
-        <col width='14%'/>
-        <col width='36'/>
+        <col width="14%" />
+        <col width="14%" />
+        <col width="14%" />
+        <col width="14%" />
+        <col width="36" />
       </colgroup>
       <thead>
-      <tr>
-        <th>Анализ</th>
-        <th>Тест</th>
-        <th>Значение</th>
-        <th>Ед. изм</th>
-        <th>Дата</th>
-        <th>Исполнитель</th>
-        <th class="cl-td">
-          <button class="btn btn-blue-nb" @click="delete_rows" :disabled="disabled" v-tippy="{ placement : 'bottom'}"
-                  title="Очистить строки">
-            <i class="fa fa-times"/>
-          </button>
-        </th>
-      </tr>
+        <tr>
+          <th>Анализ</th>
+          <th>Тест</th>
+          <th>Значение</th>
+          <th>Ед. изм</th>
+          <th>Дата</th>
+          <th>Исполнитель</th>
+          <th class="cl-td">
+            <button
+              class="btn btn-blue-nb"
+              @click="delete_rows"
+              :disabled="disabled"
+              v-tippy="{ placement: 'bottom' }"
+              title="Очистить строки"
+            >
+              <i class="fa fa-times" />
+            </button>
+          </th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="(val, index) in tb_data" :key="`${val.researchTitle}_${val.fractionTitle}_${index}`">
-        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Анализ-наименование"
-                                 v-model="val.researchTitle"></td>
-        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Тест-наименование"
-                                 v-model="val.fractionTitle"></td>
-        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Значение"
-                                 v-model="val.value"></td>
-        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Ед. изм"
-                                 v-model="val.units"></td>
-        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Дата"
-                                 v-model="val.date"></td>
-        <td class="cl-td"><input type="text" class="form-control" :readonly="disabled" placeholder="Исполнитель"
-                                 v-model="val.docConfirm"></td>
-        <td class="cl-td">
-          <button class="btn btn-blue-nb" @click="delete_row(index)" :disabled="disabled"
-                  v-tippy="{ placement : 'bottom'}"
-                  title="Удалить строку">
-            <i class="fa fa-times"/>
-          </button>
-        </td>
-      </tr>
+        <tr v-for="(val, index) in tb_data" :key="`${val.researchTitle}_${val.fractionTitle}_${index}`">
+          <td class="cl-td">
+            <input
+              type="text"
+              class="form-control"
+              :readonly="disabled"
+              placeholder="Анализ-наименование"
+              v-model="val.researchTitle"
+            />
+          </td>
+
+          <td class="cl-td">
+            <input
+              type="text"
+              class="form-control"
+              :readonly="disabled"
+              placeholder="Тест-наименование"
+              v-model="val.fractionTitle"
+            />
+          </td>
+
+          <td class="cl-td">
+            <input type="text" class="form-control" :readonly="disabled" placeholder="Значение" v-model="val.value" />
+          </td>
+
+          <td class="cl-td">
+            <input type="text" class="form-control" :readonly="disabled" placeholder="Ед. изм" v-model="val.units" />
+          </td>
+
+          <td class="cl-td">
+            <input type="text" class="form-control" :readonly="disabled" placeholder="Дата" v-model="val.date" />
+          </td>
+
+          <td class="cl-td">
+            <input type="text" class="form-control" :readonly="disabled" placeholder="Исполнитель" v-model="val.docConfirm" />
+          </td>
+
+          <td class="cl-td">
+            <button
+              class="btn btn-blue-nb"
+              @click="delete_row(index)"
+              :disabled="disabled"
+              v-tippy="{ placement: 'bottom' }"
+              title="Удалить строку"
+            >
+              <i class="fa fa-times" />
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
     <button class="btn btn-blue-nb add-row" @click="add_new_row" :disabled="disabled">
@@ -58,11 +91,15 @@
 
 <script lang="ts">
 import { debounce } from 'lodash';
-import api from '@/api';
 import { Research } from '@/types/research';
 
 const makeDefaultRow = () => ({
-  researchTitle: '', fractionTitle: '', value: '', units: '', date: '', docConfirm: '',
+  researchTitle: '',
+  fractionTitle: '',
+  value: '',
+  units: '',
+  date: '',
+  docConfirm: '',
 });
 
 export default {
@@ -79,12 +116,12 @@ export default {
   },
   data() {
     return {
-      tb_data: ((this.value && this.value !== 'undefined') ? JSON.parse(this.value) : null) || [],
+      tb_data: (this.value && this.value !== 'undefined' ? JSON.parse(this.value) : null) || [],
       result: [],
     };
   },
   mounted() {
-    this.$root.$on('protocol:laboratoryResult', (direction) => {
+    this.$root.$on('protocol:laboratoryResult', direction => {
       this.insertLaboratoryResult(direction);
     });
   },
@@ -105,10 +142,12 @@ export default {
       this.changeValue();
     }, 500),
     async insertLaboratoryResult(direction) {
-      const result_data = await api('directions/result-patient-by-direction',
-        {
-          isLab: true, isDocReferral: false, isParaclinic: false, dir: direction,
-        });
+      const result_data = await this.$api('directions/result-patient-by-direction', {
+        isLab: true,
+        isDocReferral: false,
+        isParaclinic: false,
+        dir: direction,
+      });
       this.result = result_data.results[0] || {};
       const researches: Research[] = Object.values(this.result.researches);
 

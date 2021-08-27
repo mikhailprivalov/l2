@@ -23,6 +23,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import api.models as models
 import directions.models as directions
 import users.models as users
+from contracts.models import Company
 from api import fias
 from appconf.manager import SettingManager
 from barcodes.views import tubes
@@ -43,7 +44,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from .sql_func import users_by_group
+from .sql_func import users_by_group, users_all
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
@@ -738,8 +739,8 @@ def statistics_tickets_send(request):
         doc = users.DoctorProfile.objects.get(pk=ofname)
     t = StatisticsTicket(
         card=Card.objects.get(pk=rd["card_pk"]),
-        purpose=VisitPurpose.objects.get(pk=rd["visit"]),
-        result=ResultOfTreatment.objects.get(pk=rd["result"]),
+        purpose=VisitPurpose.objects.filter(pk=rd["visit"]).first(),
+        result=ResultOfTreatment.objects.filter(pk=rd["result"]).first(),
         info=rd["info"].strip(),
         first_time=rd["first_time"],
         primary_visit=rd["primary_visit"],
@@ -1017,6 +1018,8 @@ def autocomplete(request):
                 data = [x.harmful_factor for x in p]
         elif t == "fias":
             data = fias.suggest(v)
+        elif t == "fias-extended":
+            data = fias.suggest(v, count=limit, detalized=True)
         elif t == "name":
             p = Individual.objects.filter(name__istartswith=v).distinct('name')[:limit]
             if p.exists():
@@ -1082,7 +1085,10 @@ def laborants(request):
 @login_required
 def load_docprofile_by_group(request):
     request_data = json.loads(request.body)
-    users = users_by_group(request_data['group'])
+    if request_data['group'] == '*':
+        users = users_all()
+    else:
+        users = users_by_group(request_data['group'])
     users_grouped = {}
     for row in users:
         if row[2] not in users_grouped:
@@ -1515,7 +1521,10 @@ def rmis_link(request):
     d_pass = urllib.parse.quote(d.rmis_password or '')
     d_login = d.rmis_login or ''
     auth_param = URL_RMIS_AUTH.replace('userlogin', d_login).replace('userpassword', d_pass)
-    url_schedule = URL_SCHEDULE.replace('organization_param', d.hospital.rmis_org_id).replace('service_param', d.rmis_service_id_time_table).replace('employee_param', d.rmis_employee_id)
+    if d.hospital.rmis_org_id and d.rmis_service_id_time_table and d.rmis_employee_id:
+        url_schedule = URL_SCHEDULE.replace('organization_param', d.hospital.rmis_org_id).replace('service_param', d.rmis_service_id_time_table).replace('employee_param', d.rmis_employee_id)
+    else:
+        url_schedule = None
     return JsonResponse({'auth_param': auth_param, 'url_eln': URL_ELN_MADE, 'url_schedule': url_schedule})
 
 
@@ -1585,3 +1594,10 @@ def screening_save(request):
         return status_response(False, 'Такой скрининг уже есть!')
 
     return status_response(True)
+
+
+@login_required
+def companies(request):
+    rows = [{'id': x.pk, 'label': x.short_title or x.title} for x in Company.objects.filter(active_status=True).order_by('short_title')]
+
+    return JsonResponse({'rows': rows})

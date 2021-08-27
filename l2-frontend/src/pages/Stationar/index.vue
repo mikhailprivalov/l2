@@ -589,6 +589,7 @@
 <script lang="ts">
 import { mapGetters } from 'vuex';
 import dropdown from 'vue-my-dropdown';
+import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import stationar_point from '@/api/stationar-point';
@@ -602,7 +603,6 @@ import patientsPoint from '@/api/patients-point';
 import UrlData from '@/UrlData';
 import AmbulatoryData from '@/modals/AmbulatoryData.vue';
 import RadioField from '@/fields/RadioField.vue';
-import Treeselect from '@riophae/vue-treeselect';
 import Favorite from './Favorite.vue';
 import DisplayDirection from './DisplayDirection.vue';
 import PatientCard from './PatientCard.vue';
@@ -966,11 +966,11 @@ export default {
       this.hosp_services = [];
       this.direction_service = -1;
 
-      if (this.$refs.modalStationar && this.$refs.modalStationar.$el) {
+      if (this.$refs.modalStationar?.$el) {
         this.$refs.modalStationar.$el.style.display = 'none';
       }
 
-      if (this.$refs.modalStationar2 && this.$refs.modalStationar2.$el) {
+      if (this.$refs.modalStationar2?.$el) {
         this.$refs.modalStationar2.$el.style.display = 'none';
       }
 

@@ -25,109 +25,135 @@
     </div>
     <div class="root" ref="root" v-show="pk">
       <table class="table table-bordered table-sm-pd" v-if="pk">
+        <colgroup>
+          <col style="width: 29%" />
+          <col style="width: 31px" />
+          <col />
+          <col v-if="!noRefs" style="width: 21%" />
+          <col v-if="!noRefs" style="width: 21%" />
+        </colgroup>
         <thead>
-        <tr>
-          <td colspan="4">
-            <strong>
-              {{ research.title }}
-            </strong>
-          </td>
-        </tr>
-        <tr class="table-header">
-          <th style="width: 29%">Фракция</th>
-          <td :colspan="noRefs ? 3 : 1" class="cl-td">
-            <button class="btn btn-blue-nb btn-sm"
-                    @click.prevent="clearAll" v-if="!confirmed" title="Очистить все значения" v-tippy>
-              <i class="fa fa-times"></i>
-            </button>
-            <strong>Значение</strong>
-          </td>
-          <th style="width: 23%" v-if="!noRefs">Нормы М</th>
-          <th style="width: 23%" v-if="!noRefs">Нормы Ж</th>
-        </tr>
+          <tr>
+            <td colspan="5">
+              <strong>
+                {{ research.title }}
+              </strong>
+            </td>
+          </tr>
+          <tr class="table-header">
+            <th>Фракция</th>
+            <td class="x-cell">
+              <button
+                class="btn btn-sm btn-cell"
+                @click.prevent="clearAll"
+                v-if="!confirmed"
+                title="Очистить все значения"
+                v-tippy
+              >
+                <i class="fa fa-times"></i>
+              </button>
+            </td>
+            <th>Значение</th>
+            <th v-if="!noRefs">Нормы М</th>
+            <th v-if="!noRefs">Нормы Ж</th>
+          </tr>
         </thead>
         <tbody>
-        <tr v-for="(r, i) in result" :key="r.fraction.pk">
-          <td>
-            <label class="fraction-title" :for="`fraction-${r.fraction.pk}`">{{ r.fraction.title }}</label>
-          </td>
-          <BloodTypeField
-            v-if="research.template === 2 && i === 0"
-            :readonly="confirmed || !loaded"
-            :r="r"
-          />
-          <TextInputField
-            v-else
-            :readonly="confirmed || !loaded"
-            :move-focus-next="moveFocusNext"
-            :r="r"
-            :allDirPks="allDirPks"
-            :dirData="dirData"
-          />
-          <Ref :data="r.ref.m" v-if="!noRefs"/>
-          <Ref :data="r.ref.f" v-if="!noRefs"/>
-        </tr>
-        <tr v-if="research.can_comment">
-          <td><label class="fraction-title" for="result_comment">Комментарий</label></td>
-          <td colspan="3">
-            <textarea class="noresize form-control result-field"
-                      :readonly="confirmed || !loaded"
-                      v-autosize="comment" v-model="comment" id="result_comment"></textarea>
-          </td>
-        </tr>
-        <template v-if="research.co_executor_mode > 0 && laborants.length > 0">
-          <tr>
+          <tr v-for="(r, i) in result" :key="r.fraction.pk">
+            <td>
+              <label class="fraction-title" :for="`fraction-${r.fraction.pk}`">{{ r.fraction.title }}</label>
+            </td>
+            <BloodTypeField v-if="research.template === 2 && i === 0" :readonly="confirmed || !loaded" :r="r" />
+            <template v-else>
+              <td class="x-cell">
+                <button
+                  class="btn btn-sm btn-cell"
+                  @click.prevent="clear(r)"
+                  v-if="!confirmed"
+                  :title="`Очистить ${r.fraction.title}`"
+                  v-tippy
+                >
+                  <i class="fa fa-times"></i>
+                </button>
+              </td>
+              <TextInputField
+                :readonly="confirmed || !loaded"
+                :move-focus-next="moveFocusNext"
+                :r="r"
+                :allDirPks="allDirPks"
+                :dirData="dirData"
+              />
+            </template>
+            <Ref :data="r.ref.m" v-if="!noRefs" />
+            <Ref :data="r.ref.f" v-if="!noRefs" />
+          </tr>
+          <tr v-if="research.can_comment">
+            <td><label class="fraction-title" for="result_comment">Комментарий</label></td>
             <td colspan="4">
-              <hr/>
+              <textarea
+                class="noresize form-control result-field"
+                :readonly="confirmed || !loaded"
+                v-autosize="comment"
+                v-model="comment"
+                id="result_comment"
+              ></textarea>
             </td>
           </tr>
-          <tr>
-            <td>
-              <label for="laborant">Лаборант</label>
-            </td>
-            <td colspan="3">
-              <treeselect :multiple="false"
-                          :disable-branch-nodes="true"
-                          :options="laborants"
-                          placeholder="Лаборант не выбран"
-                          v-model="co_executor"
-                          :append-to-body="true"
-                          :clearable="false"
-                          id="laborant"
-                          :disabled="confirmed"
-              />
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label for="co_executor2">{{ research.co_executor_title }}</label>
-            </td>
-            <td colspan="3">
-              <treeselect :multiple="false"
-                          :disable-branch-nodes="true"
-                          :options="laborants"
-                          placeholder="Соисполнитель не выбран"
-                          v-model="co_executor2"
-                          :append-to-body="true"
-                          :clearable="false"
-                          id="co_executor2"
-                          :disabled="confirmed"
-              />
-            </td>
-          </tr>
-        </template>
+          <template v-if="research.co_executor_mode > 0 && laborants.length > 0">
+            <tr>
+              <td colspan="5">
+                <hr />
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label for="laborant">Лаборант</label>
+              </td>
+              <td colspan="4">
+                <treeselect
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :options="laborants"
+                  placeholder="Лаборант не выбран"
+                  v-model="co_executor"
+                  :append-to-body="true"
+                  :clearable="false"
+                  id="laborant"
+                  :disabled="confirmed"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label for="co_executor2">{{ research.co_executor_title }}</label>
+              </td>
+              <td colspan="4">
+                <treeselect
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :options="laborants"
+                  placeholder="Соисполнитель не выбран"
+                  v-model="co_executor2"
+                  :append-to-body="true"
+                  :clearable="false"
+                  id="co_executor2"
+                  :disabled="confirmed"
+                />
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
       <table class="table table-bordered table-condensed" v-if="pk && execParams.length > 0">
         <colgroup>
-          <col width="208"/>
-          <col/>
+          <col width="208" />
+          <col />
         </colgroup>
         <tbody>
-        <tr v-for="r in execParams" :key="`${r[0]}_${r[1]}`">
-          <th>{{ r[0] }}</th>
-          <td>{{ r[1] }}</td>
-        </tr>
+          <tr v-for="r in execParams" :key="`${r[0]}_${r[1]}`">
+            <th>{{ r[0] }}</th>
+            <td>{{ r[1] }}</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -154,16 +180,14 @@
         </template>
       </template>
     </div>
-    <RefSettings v-if="showRefSettings" :close="hideRefSettings" :result="result"/>
+    <RefSettings v-if="showRefSettings" :close="hideRefSettings" :result="result" />
   </div>
 </template>
 <script lang="ts">
-import * as actions from '@/store/action-types';
-import api from '@/api';
-
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
+import * as actions from '@/store/action-types';
 import Ref from '@/pages/LaboratoryResults/Ref.vue';
 import TextInputField from '@/pages/LaboratoryResults/TextInputField.vue';
 import BloodTypeField from '@/pages/LaboratoryResults/BloodTypeField.vue';
@@ -172,7 +196,11 @@ import RefSettings from '@/pages/LaboratoryResults/RefSettings.vue';
 export default {
   name: 'ResultsForm',
   components: {
-    RefSettings, TextInputField, BloodTypeField, Ref, Treeselect,
+    RefSettings,
+    TextInputField,
+    BloodTypeField,
+    Ref,
+    Treeselect,
   },
   mounted() {
     this.$root.$on('laboratory:results:open-form', (pk, allDirPks, dirData) => {
@@ -240,7 +268,7 @@ export default {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const { data } = await api('laboratory/form', { pk });
+      const { data } = await this.$api('laboratory/form', { pk });
       this.pk = data.pk;
       this.research = data.research;
       this.execData = data.execData;
@@ -258,7 +286,7 @@ export default {
         setTimeout(() => {
           const $rf = window.$('.result-field:not([readonly]):not([disabled])');
           if ($rf.length) {
-            const idx = data.result.findIndex((r) => !r.value);
+            const idx = data.result.findIndex(r => !r.value);
             if (idx !== -1) {
               $rf.eq(idx).focus();
             }
@@ -277,13 +305,21 @@ export default {
         i.value = '';
       }
     },
+    clear(r) {
+      // eslint-disable-next-line no-param-reassign
+      r.value = '';
+      this.$root.$emit('msg', 'ok', `Очищено: ${r.fraction.title}`, 2000);
+      setTimeout(() => window.$(`#fraction-${r.fraction.pk}`).focus(), 50);
+    },
     async save(withoutReloading = false) {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await api(
-        'laboratory/save',
-        this,
-        ['pk', 'result', 'comment', 'co_executor', 'co_executor2'],
-      );
+      const { ok, message } = await this.$api('laboratory/save', this, [
+        'pk',
+        'result',
+        'comment',
+        'co_executor',
+        'co_executor2',
+      ]);
       if (!ok) {
         this.$root.$emit('msg', 'error', message);
       } else {
@@ -297,7 +333,7 @@ export default {
     },
     async confirm() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await api('laboratory/confirm', this, 'pk');
+      const { ok, message } = await this.$api('laboratory/confirm', this, 'pk');
       if (!ok) {
         this.$root.$emit('msg', 'error', message);
       } else {
@@ -322,7 +358,7 @@ export default {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await api('laboratory/reset-confirm', this, 'pk');
+      const { ok, message } = await this.$api('laboratory/reset-confirm', this, 'pk');
       if (!ok) {
         this.$root.$emit('msg', 'error', message);
       } else {
@@ -381,12 +417,13 @@ export default {
 }
 
 .table-header {
-  th, td {
+  th,
+  td {
     position: sticky;
     top: -1px;
     background-color: white;
     z-index: 101;
-    box-shadow: 2px 0 2px rgba(0, 0, 0, .1);
+    box-shadow: 2px 0 2px rgba(0, 0, 0, 0.1);
   }
 
   th {
@@ -396,12 +433,6 @@ export default {
   td {
     strong {
       padding: 2px 2px 2px 8px;
-    }
-
-    .btn {
-      float: right;
-      height: 24px;
-      line-height: 1;
     }
   }
 }

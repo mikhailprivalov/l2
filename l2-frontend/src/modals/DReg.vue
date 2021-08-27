@@ -85,16 +85,7 @@
             <tr>
               <td :colspan="3 + monthes.length">
                 <div class="years">
-                  <div
-                    class="year"
-                    @click="
-                      year = y;
-                      load_data();
-                    "
-                    :class="{ active: y === year }"
-                    v-for="y in years"
-                    :key="y"
-                  >
+                  <div class="year" @click="load_data(false, y)" :class="{ active: y === year }" v-for="y in years" :key="y">
                     {{ y }}
                   </div>
                 </div>
@@ -165,17 +156,8 @@
       <div v-else class="text-center empty-dreg">
         Нет данных для построения плана по диагнозам
       </div>
-      <ScreeningDisplay
-        v-if="screening.researches && screening.researches.length > 0"
-        :patientAge="screening.patientAge"
-        :currentYear="screening.currentYear"
-        :years="screening.years"
-        :ages="screening.ages"
-        :researches="screening.researches"
-        :selected-researches="selectedResearchesLocal"
-        :card-pk="card_pk"
-        :kk="kk"
-      />
+
+      <ScreeningDisplay :selected-researches="selectedResearchesLocal" :card-pk="card_pk" :kk="kk" />
 
       <div class="selected-researches" v-if="extendedResearches && card_pk && parent_iss">
         <selected-researches
@@ -281,7 +263,6 @@
 </template>
 
 <script lang="ts">
-import api from '@/api';
 import moment from 'moment';
 import { cloneDeep } from 'lodash';
 import { mapGetters } from 'vuex';
@@ -365,13 +346,6 @@ export default {
       variant_is_first_time: ['не указано', 'впервые', 'повторно'],
       variant_identified: ['не указано', 'обращении за лечением', 'профилактическом осмотре'],
       enable_construct: false,
-      screening: {
-        patientAge: -1,
-        years: [],
-        currentYear: -1,
-        ages: [],
-        researches: [],
-      },
       selectedResearchesDReg: [],
     };
   },
@@ -509,7 +483,7 @@ export default {
           identified_index: 0,
         };
       } else {
-        const d = await api('patients/individuals/load-dreg-detail', { pk });
+        const d = await this.$api('patients/individuals/load-dreg-detail', { pk });
         this.edit_data = {
           ...this.edit_data,
           ...d,
@@ -534,7 +508,7 @@ export default {
     },
     async save_plan() {
       await this.$store.dispatch(actions.INC_LOADING);
-      await api('patients/individuals/save-plan-dreg', this, ['card_pk', 'researches_data', 'researches_data_def', 'year']);
+      await this.$api('patients/individuals/save-plan-dreg', this, ['card_pk', 'researches_data', 'researches_data_def', 'year']);
       await this.$store.dispatch(actions.DEC_LOADING);
       this.$root.$emit('msg', 'ok', 'План сохранён');
     },
@@ -544,22 +518,21 @@ export default {
     },
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
-      await api('patients/individuals/save-dreg', { card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data });
+      await this.$api('patients/individuals/save-dreg', { card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data });
       await this.$store.dispatch(actions.DEC_LOADING);
       this.$root.$emit('msg', 'ok', 'Сохранено');
       this.hide_edit();
       this.load_data(true);
     },
-    load_data(isInitial = false) {
+    load_data(isInitial = false, newYear = null) {
+      if (newYear) {
+        this.year = newYear;
+      }
       this.$store.dispatch(actions.INC_LOADING);
-      api('patients/individuals/load-dreg', this, ['card_pk', 'year'])
-        .then(({
-          rows, researches_data, year, screening_data,
-        }) => {
+      this.$api('patients/individuals/load-dreg', this, ['card_pk', 'year'])
+        .then(({ rows, researches_data, year }) => {
           this.rows = rows;
           this.researches_data = researches_data;
-          this.screening = screening_data;
-          console.log(this.screening);
           this.researches_data_def = cloneDeep(researches_data);
           this.all_selected = false;
           if (researches_data && researches_data.length > 0 && !isInitial) {

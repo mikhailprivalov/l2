@@ -63,6 +63,7 @@ INSTALLED_APPS = (
     'hospitals.apps.HospitalsConfig',
     'pharmacotherapy',
     'command_utils',
+    'doctor_schedule',
 )
 
 MIDDLEWARE = [
@@ -71,7 +72,6 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
@@ -81,7 +81,6 @@ MIDDLEWARE_ADD = []
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'django.contrib.auth.backends.RemoteUserBackend',
 ]
 
 REST_FRAMEWORK = {'DEFAULT_AUTHENTICATION_CLASSES': ['integration_framework.authentication.TokenAuthentication']}
@@ -274,11 +273,16 @@ URL_ELN_MADE = ""
 URL_SCHEDULE = ""
 EXTRA_MASTER_RESEARCH_PK = None
 EXTRA_SLAVE_RESEARCH_PK = None
+PAP_ANALYSIS_ID = []
+PAP_ANALYSIS_FRACTION_QUALITY_ID = []
+PAP_ANALYSIS_FRACTION_CONTAIN_ID = []
+
 
 COVID_RESEARCHES_PK = []
 CENTRE_GIGIEN_EPIDEMIOLOGY = ""
 REGION = ""
 EXCLUDE_HOSP_SEND_EPGU = []
+
 
 SENTRY_DSN = "https://4a6968777ec240b190abd11cbf1c96e1@sentry.io/3083440"
 

@@ -1,40 +1,58 @@
 <template>
   <div>
     <div class="card-no-hover card card-1 filters">
-      <treeselect :multiple="false" :disable-branch-nodes="true"
-                  :options="can_edit_any_organization ? all_hospitals_with_none : own_hospital"
-                  placeholder="Больница не выбрана" v-model="selected_hospital"
-                  :append-to-body="true"
-                  :clearable="false"
+      <treeselect
+        :multiple="false"
+        :disable-branch-nodes="true"
+        :options="can_edit_any_organization ? all_hospitals_with_none : own_hospital"
+        placeholder="Больница не выбрана"
+        v-model="selected_hospital"
+        :append-to-body="true"
+        :clearable="false"
       />
     </div>
 
     <table class="table table-bordered table-responsive">
       <colgroup>
-        <col width="40">
-        <col width="500">
-        <col>
-        <col width="300">
-        <col width="50">
+        <col width="40" />
+        <col width="500" />
+        <col />
+        <col width="300" />
+        <col width="50" />
       </colgroup>
       <tbody>
-      <DepartmentEditRow :can_edit="can_edit" :department="department" :types_options="types_options"
-                         :selected_hospital="selected_hospital"
-                         v-for="department in departments" :key="department.pk"/>
-      <tr v-if="can_edit">
-        <td></td>
-        <td><input type="text" class="form-control" placeholder="Название" v-model="create.title"></td>
-        <td>
-          <treeselect :multiple="false" :disable-branch-nodes="true" :options="types_options"
-                      placeholder="Тип не выбран" v-model="create.type"
-                      :clearable="false"
-                      :append-to-body="true"
-          />
-          <br/>
-          <input type="button" class="btn btn-primary-nb form-control" @click="insert" value="Добавить"
-                 style="margin-top: 15px" :disabled="!create_valid">
-        </td>
-      </tr>
+        <DepartmentEditRow
+          :can_edit="can_edit"
+          :department="department"
+          :types_options="types_options"
+          :selected_hospital="selected_hospital"
+          v-for="department in departments"
+          :key="department.pk"
+        />
+        <tr v-if="can_edit">
+          <td></td>
+          <td><input type="text" class="form-control" placeholder="Название" v-model="create.title" /></td>
+          <td>
+            <treeselect
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="types_options"
+              placeholder="Тип не выбран"
+              v-model="create.type"
+              :clearable="false"
+              :append-to-body="true"
+            />
+            <br />
+            <input
+              type="button"
+              class="btn btn-primary-nb form-control"
+              @click="insert"
+              value="Добавить"
+              style="margin-top: 15px"
+              :disabled="!create_valid"
+            />
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -43,8 +61,8 @@
 <script lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import departments_directory from '@/api/departments-directory';
 import { mapGetters } from 'vuex';
+import departments_directory from '@/api/departments-directory';
 import DepartmentEditRow from '@/forms/DepartmentEditRow.vue';
 import * as actions from '../store/action-types';
 
@@ -102,11 +120,13 @@ export default {
     },
     async loadDepartments() {
       await this.$store.dispatch(actions.INC_LOADING);
-      this.departments = (await departments_directory.getDepartments({
-        method: 'GET',
-        hospital: this.selected_hospital,
-        withoutDefault: true,
-      })).departments;
+      this.departments = (
+        await departments_directory.getDepartments({
+          method: 'GET',
+          hospital: this.selected_hospital,
+          withoutDefault: true,
+        })
+      ).departments;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
