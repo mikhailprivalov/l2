@@ -1608,11 +1608,16 @@ def input_templates_add(request):
     data = json.loads(request.body)
     pk = data["pk"]
     value = str(data["value"]).strip()
+    value_lower = value.lower()
     doc = request.user.doctorprofile
     if ParaclinicUserInputTemplateField.objects.filter(field_id=pk, doc=doc, value=value).exists():
+        t = ParaclinicUserInputTemplateField.objects.filter(field_id=pk, doc=doc, value=value)[0]
+        if t.value_lower != value_lower:
+            t.value_lower = value_lower
+            t.save()
         return JsonResponse({"ok": False})
 
-    t = ParaclinicUserInputTemplateField.objects.create(field_id=pk, doc=doc, value=value)
+    t = ParaclinicUserInputTemplateField.objects.create(field_id=pk, doc=doc, value=value, value_lower=value_lower)
 
     return JsonResponse({"ok": True, "pk": t.pk})
 
@@ -1642,10 +1647,13 @@ def input_templates_delete(request):
 def input_templates_suggests(request):
     data = json.loads(request.body)
     pk = data["pk"]
-    value = str(data["value"]).strip()
+    value = str(data["value"]).strip().lower()
     doc = request.user.doctorprofile
     rows = list(
-        ParaclinicUserInputTemplateField.objects.filter(field_id=pk, doc=doc, value__istartswith=value).exclude(value__iexact=value).order_by('value').values_list('value', flat=True)[:4]
+        ParaclinicUserInputTemplateField.objects.filter(field_id=pk, doc=doc, value_lower__startswith=value)
+        .exclude(value_lower=value)
+        .order_by('value_lower')
+        .values_list('value', flat=True)[:4]
     )
 
     return JsonResponse({"rows": rows, "value": data["value"]})
