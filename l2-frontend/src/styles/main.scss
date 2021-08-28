@@ -1514,6 +1514,16 @@ body > .container-fluid {
   }
 }
 
+.field-value.field-value-with-templates {
+  position: relative;
+
+  &:hover {
+    .input-templates {
+      display: block;
+    }
+  }
+}
+
 .field {
   display: flex;
   flex-direction: row;
@@ -1570,6 +1580,16 @@ body > .container-fluid {
   position: relative;
 
   overflow: visible;
+
+  .text-suggests {
+    display: none;
+  }
+
+  &:hover {
+    .text-suggests {
+      display: block;
+    }
+  }
 
   &.open-field:not(.disabled) {
     background-color: #efefef;

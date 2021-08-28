@@ -56,15 +56,8 @@
                 :field_type="field.field_type"
                 :field_title="field.title"
               />
-              <div class="field-value" v-if="field.field_type === 0">
-                <textarea
-                  :readonly="confirmed"
-                  :rows="field.lines"
-                  class="form-control"
-                  v-if="field.lines > 1"
-                  v-model="field.value"
-                ></textarea>
-                <input :readonly="confirmed" class="form-control" v-else v-model="field.value" />
+              <div class="field-value field-value-with-templates" v-if="field.field_type === 0">
+                <TextFieldWithTemplates v-model="field.value" :confirmed="confirmed" :field-pk="field.pk" :lines="field.lines" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 1">
                 <input :readonly="confirmed" class="form-control" style="width: 160px" type="date" v-model="field.value" />
@@ -218,6 +211,7 @@ export default {
     DocReferralPreviousResults: () => import('../fields/DocReferralPreviousResults.vue'),
     PermanentDirectoryField: () => import('../fields/PermanentDirectoryField.vue'),
     AddressFiasField: () => import('../fields/AddressFiasField.vue'),
+    TextFieldWithTemplates: () => import('../fields/TextFieldWithTemplates.vue'),
   },
   props: {
     research: {

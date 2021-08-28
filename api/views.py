@@ -1636,3 +1636,16 @@ def input_templates_delete(request):
     ParaclinicUserInputTemplateField.objects.filter(pk=pk, doc=doc).delete()
 
     return JsonResponse({"ok": True})
+
+
+@login_required
+def input_templates_suggests(request):
+    data = json.loads(request.body)
+    pk = data["pk"]
+    value = str(data["value"]).strip()
+    doc = request.user.doctorprofile
+    rows = list(
+        ParaclinicUserInputTemplateField.objects.filter(field_id=pk, doc=doc, value__istartswith=value).exclude(value__iexact=value).order_by('value').values_list('value', flat=True)[:4]
+    )
+
+    return JsonResponse({"rows": rows, "value": data["value"]})

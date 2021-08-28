@@ -4,7 +4,7 @@
       <i class="fa fa-list-alt"></i>
     </button>
 
-    <MountingPortal mountTo="#portal-place-modal" name="InputTemplates" append>
+    <MountingPortal mountTo="#portal-place-modal" :name="`InputTemplates_${field.pk}`" append>
       <transition name="fade">
         <Modal
           v-if="open"

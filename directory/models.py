@@ -559,7 +559,7 @@ class ParaclinicTemplateField(models.Model):
 class ParaclinicUserInputTemplateField(models.Model):
     doc = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, db_index=True)
     field = models.ForeignKey(ParaclinicInputField, on_delete=models.CASCADE, db_index=True)
-    value = models.TextField(help_text='Значение')
+    value = models.TextField(help_text='Значение', db_index=True)
 
     def __str__(self):
         return f"{self.field}, {self.value}"
