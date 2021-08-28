@@ -1,6 +1,6 @@
 
 from utils.dates import normalize_date
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
@@ -49,11 +49,19 @@ styleTBold.fontName = "PTAstraSerifBold"
 
 def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     # Мед. св-во о смерти 106/у
-    template = add_template(iss, direction, 0)
+    template = add_template(iss, direction, 5 * mm)
     fwb.extend(template)
-    template = add_line_split(iss, direction, 107)
+    template = add_line_split(iss, direction, 4 * mm)
     fwb.extend(template)
-    template = death_data(iss, direction, 107)
+    template = death_data(iss, direction, 0 * mm)
+    fwb.extend(template)
+    fwb.append(PageBreak())
+
+    template = second_page_add_template(iss, direction, 0 * mm)
+    fwb.extend(template)
+    template = add_line_split(iss, direction, -1 * mm)
+    fwb.extend(template)
+    template = death_data(iss, direction, -5 * mm)
     fwb.extend(template)
 
     return fwb
@@ -107,7 +115,6 @@ def add_template(iss: Issledovaniya, direction, offset=0):
     ]
     col_width = (29 * mm, 17 * mm, 8 * mm, 15 * mm, 8 * mm, 10 * mm, 8 * mm, 24 * mm, 8 * mm, 20 * mm, 8 * mm, 15 * mm)
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
@@ -127,7 +134,18 @@ def add_template(iss: Issledovaniya, direction, offset=0):
     text = fio_tbl(text, "9. Фамилия, имя, отчество (при наличии) матери:", fio)
 
     obj = []
-    obj.append(FrameDataUniversal(0 * mm, 5 * mm, 190 * mm, 95 * mm, text=text))
+    obj.append(FrameDataUniversal(0 * mm,  offset, 190 * mm, 95 * mm, text=text))
+
+    return obj
+
+def second_page_add_template(iss: Issledovaniya, direction, offset=0):
+    #
+    text = []
+    text = back_size(text)
+    text = why_death(text, "")
+
+    obj = []
+    obj.append(FrameDataUniversal(0 * mm,  offset, 190 * mm, 95 * mm, text=text))
 
     return obj
 
@@ -137,8 +155,7 @@ def add_line_split(iss: Issledovaniya, direction, offset=0):
     text = []
     text = line_split(text)
 
-    obj = []
-    obj.append(FrameDataUniversal(0 * mm, 4 * mm, 190 * mm, 5 * mm, text=text))
+    obj = [(FrameDataUniversal(0 * mm, offset, 190 * mm, 5 * mm, text=text))]
 
     return obj
 
@@ -179,7 +196,7 @@ def death_data(iss: Issledovaniya, direction, offset=0):
     text = bottom_colontitul(text, "* В случае смерти детей, возраст которых указан в пунктах 13 - 14, пункты 15 - 17 заполняются в отношении их матерей.")
 
     obj = []
-    obj.append(FrameDataUniversal(0 * mm, 0 * mm, 190 * mm, 168 * mm, text=text))
+    obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 168 * mm, text=text))
 
     return obj
 
@@ -222,7 +239,6 @@ def fio_tbl(text, type, fio):
     ]
     col_width = (80 * mm, 110 * mm)
     tbl_style = [
-                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
                 ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
@@ -500,10 +516,13 @@ def where_death_start_tbl(text, params):
 def line_split(text):
     step_round_dash = (1.5 * mm, 1 * mm)
 
+    styleColor = deepcopy(style)
+    styleColor.textColor = colors.gray
+
     opinion = [
         [
             Paragraph('', style),
-            Paragraph('линия отреза', style),
+            Paragraph('линия отреза', styleColor),
             Paragraph('', style),
         ],
     ]
@@ -511,10 +530,9 @@ def line_split(text):
     tbl.setStyle(
         TableStyle(
             [
-                ('GRID', (0, 0), (-1, -1), 0.1 * mm, colors.white),
                 ('LINEBELOW', (0, 0), (0, 0),  0.2 * mm, colors.gray, 'round', step_round_dash),
                 ('LINEBELOW', (2, 0), (2, 0), 0.2 * mm, colors.gray, 'round', step_round_dash),
-                ('BOTTOMPADDING', (1, 0), (1, 0), 1 * mm),
+                ('BOTTOMPADDING', (1, 0), (1, 0), -0.5 * mm),
             ]
         )
     )
@@ -980,7 +998,8 @@ def title_med_organization(text, params):
     ]
     col_width = (125 * mm, 5 * mm, 60 * mm,)
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+        ('GRID', (0, 0), (0, 0), 0.75, colors.black),
+        ('GRID', (2, 0), (2, 0), 0.75, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
@@ -1013,3 +1032,186 @@ def bottom_colontitul(text, params):
     text.append(tbl)
 
     return text
+
+
+def back_size(text):
+    styleBack = deepcopy(styleT)
+    styleBack.fontSize = 7
+    opinion = [
+        [
+            Paragraph('Оборотная сторона', styleBack),
+        ],
+    ]
+    col_width = (190 * mm,)
+    tbl_style = [
+        ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 165 * mm),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.3 * mm))
+    text.append(tbl)
+    return text
+
+
+def why_death(text, params):
+    opinion = [
+        [
+            Paragraph('10. Причины смерти:', styleT),
+            Paragraph('Приблизительный период времени между началом патологического процесса и смертью', styleT),
+            Paragraph('Коды по МКБ', styleT),
+        ],
+    ]
+    col_width = (110 * mm, 40 * mm, 40 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
+        ('LEFTPADDING', (2, 0), (2, 0), 8 * mm),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.3 * mm))
+    text.append(tbl)
+
+    tbl = diagnos_tbl({"para": "I.", "item": "а)"})
+    text.append(Spacer(1, 0.3 * mm))
+    text.append(tbl)
+
+    tbl = about_diagnos("(болезнь или состояние, непосредственно приведшее к смерти)")
+    text.append(Spacer(1, 0.1 * mm))
+    text.append(tbl)
+
+    tbl = diagnos_tbl({"para": "", "item": "б)"})
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    tbl = about_diagnos("(патологическое состояние, которое привело к возникновению причины, указанной в пункте «а»)")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    tbl = diagnos_tbl({"para": "", "item": "в)"})
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    tbl = about_diagnos("(первоначальная причина смерти указывается последней)")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    tbl = diagnos_tbl({"para": "", "item": "в)"})
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    tbl = about_diagnos("(внешняя причина при травмах и отравлениях)")
+    text.append(Spacer(1, 0 * mm))
+    text.append(tbl)
+
+    opinion = [
+        [
+            Paragraph('II. Прочие важные состояния, способствовавшие смерти, но не связанные с болезнью или патологическим состоянием, приведшим к ней, включая употребление '
+                      'алкоголя, наркотических средств, психотропных и других токсических веществ, содержание их в крови, а также операции (название, дата)', styleT),
+        ],
+    ]
+    col_width = (190 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 1 * mm),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.1 * mm))
+    text.append(tbl)
+
+    count =1
+    for k in range(count):
+        tbl = diagnos_tbl({"para": "", "item": ""})
+        text.append(Spacer(1, 0 * mm))
+        text.append(tbl)
+
+    days30, days7 = "смерть наступила - в течение 30 суток", ", из них в течение 7 суток"
+    opinion = [
+        [
+            Paragraph('11.В случае смерти в результате ДТП:', styleT),
+            Paragraph(f' {days30}', styleT),
+            Paragraph('1', styleT),
+            Paragraph(f' {days7}', styleT),
+            Paragraph('2', styleT),
+        ],
+    ]
+    col_width = (55 * mm, 55 * mm, 6 * mm, 40 * mm, 6 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+        ('RIGHTPADDING', (1, 0), (-1, -1), -2 * mm),
+        ('GRID', (2, 0), (2, 0), 0.75, colors.black),
+        ('GRID', (4, 0), (4, 0), 0.75, colors.black),
+
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
+    text.append(tbl)
+
+
+    return text
+
+
+def diagnos_tbl(data):
+    opinion = [
+        [
+            Paragraph(f'{data["para"]}', styleT),
+            Paragraph(f'{data["item"]}', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('.', styleT),
+            Paragraph('', styleT),
+        ],
+    ]
+    col_width = (7 * mm, 7 * mm, 96 * mm, 40 * mm, 5 * mm, 7 * mm, 7 * mm, 7 * mm, 6 * mm, 7 * mm,)
+    tbl_style = [
+        ('GRID', (5, 0), (5, 0), 0.75, colors.black),
+        ('GRID', (6, 0), (6, 0), 0.75, colors.black),
+        ('GRID', (7, 0), (7, 0), 0.75, colors.black),
+        ('GRID', (9, 0), (9, 0), 0.75, colors.black),
+        ('LINEBELOW', (0, 0), (3, 0), 0.75, colors.black),
+        ('LINEBEFORE', (3, 0), (3, 0), 0.75, colors.black),
+        ('LINEAFTER', (3, 0), (3, 0), 0.75, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (2, 0), (2, 0), 30 * mm),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style, 4 * mm)
+    return tbl
+
+
+def about_diagnos(data):
+    styleMicro = deepcopy(styleT)
+    styleMicro.fontSize = 6
+    styleMicro.alignment = TA_CENTER
+    opinion = [
+        [
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph(f'{data}', styleMicro),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+            Paragraph('', styleT),
+        ],
+    ]
+    col_width = (7 * mm, 7 * mm, 96 * mm, 40 * mm, 5 * mm, 7 * mm, 7 * mm, 7 * mm, 6 * mm, 7 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), -0.5 * mm),
+        ('LINEBEFORE', (3, 0), (3, 0), 0.75, colors.black),
+        ('LINEAFTER', (3, 0), (3, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    return tbl
