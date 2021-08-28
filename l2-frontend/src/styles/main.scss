@@ -1520,16 +1520,6 @@ body > .container-fluid {
   align-items: stretch;
   justify-content: stretch;
 
-  .field-value.field-value-with-templates {
-    position: relative;
-
-    &:hover {
-      .input-templates {
-        display: block;
-      }
-    }
-  }
-
   &.field-vertical-simple {
     display: block;
 

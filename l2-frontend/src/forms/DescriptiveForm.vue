@@ -42,9 +42,12 @@
                 class="btn btn-default btn-field"
                 pressing-text="×"
                 v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21, 24, 25, 26, 27, 28].includes(field.field_type)"
+                title="Очистить поле (удерживайте кнопку)"
+                v-tippy
               >
                 ×
               </longpress>
+              <InputTemplates :field="field" :group="group" v-if="!confirmed && [0].includes(field.field_type)" />
               <FastTemplates
                 :update_value="updateValue(field)"
                 :value="field.value"
@@ -53,7 +56,7 @@
                 :field_type="field.field_type"
                 :field_title="field.title"
               />
-              <div class="field-value field-value-with-templates" v-if="field.field_type === 0">
+              <div class="field-value" v-if="field.field_type === 0">
                 <textarea
                   :readonly="confirmed"
                   :rows="field.lines"
@@ -62,7 +65,6 @@
                   v-model="field.value"
                 ></textarea>
                 <input :readonly="confirmed" class="form-control" v-else v-model="field.value" />
-                <InputTemplates :field="field" :group="group" v-if="!confirmed" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 1">
                 <input :readonly="confirmed" class="form-control" style="width: 160px" type="date" v-model="field.value" />

@@ -1,7 +1,7 @@
 <template>
-  <div class="input-templates">
-    <button class="btn btn-blue-nb2 btn-sm" @click="show">
-      Шаблоны поля ввода
+  <div v-frag>
+    <button class="btn btn-default btn-field" @click="show" title="Шаблоны поля ввода" v-tippy>
+      <i class="fa fa-grip-lines"></i>
     </button>
 
     <MountingPortal mountTo="#portal-place-modal" name="InputTemplates" append>
@@ -136,18 +136,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.input-templates {
-  position: absolute;
-  top: 100%;
-  left: 5px;
-  background: #fff;
-  padding: 5px;
-  border-radius: 0 0 5px 5px;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
-  display: none;
-  z-index: 5;
-}
-
 textarea {
   resize: none;
 }
