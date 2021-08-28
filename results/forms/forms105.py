@@ -179,7 +179,7 @@ def death_data(iss: Issledovaniya, direction, offset=0):
     text = bottom_colontitul(text, "* В случае смерти детей, возраст которых указан в пунктах 13 - 14, пункты 15 - 17 заполняются в отношении их матерей.")
 
     obj = []
-    obj.append(FrameDataUniversal(0 * mm, 0 * mm, 190 * mm, 158 * mm, text=text))
+    obj.append(FrameDataUniversal(0 * mm, 0 * mm, 190 * mm, 168 * mm, text=text))
 
     return obj
 
@@ -1005,7 +1005,7 @@ def bottom_colontitul(text, params):
     tbl_style = [
         ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('TOPPADDING', (0, 0), (-1, -1), 15 * mm),
+        ('TOPPADDING', (0, 0), (-1, -1), 10 * mm),
         ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
     ]
     tbl = gen_table(opinion, col_width, tbl_style)
@@ -1013,4 +1013,3 @@ def bottom_colontitul(text, params):
     text.append(tbl)
 
     return text
-

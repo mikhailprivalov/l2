@@ -129,9 +129,21 @@ def result_print(request):
         title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])),
         invariant=1
     )
+    temp_iss = Issledovaniya.objects.get(napravleniye_id=pk[0])
+    left_padding = 15
+    right_padding = 5
+    top_padding = 5
+    bottom_padding = 18
+    if temp_iss.research.paddings_size:
+        data_padding = temp_iss.research.paddings_size.split('|')
+        left_padding = float(data_padding[0])
+        top_padding = float(data_padding[1])
+        right_padding = float(data_padding[2])
+        bottom_padding = float(data_padding[3])
     p_frame = Frame(
-        0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else 15) * mm, rightPadding=15 * mm, topPadding=5 * mm, bottomPadding=18 * mm, id='portrait_frame', showBoundary=0
-    )
+            0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=(27 if leftnone else left_padding) * mm, rightPadding=right_padding * mm, topPadding=top_padding * mm, bottomPadding=bottom_padding * mm, id='portrait_frame', showBoundary=0
+        )
+
     l_frame = Frame(
         0 * mm, 0 * mm, 297 * mm, 210 * mm, leftPadding=10 * mm, rightPadding=15 * mm, topPadding=(27 if leftnone else 15) * mm, bottomPadding=18 * mm, id='landscape_frame', showBoundary=0
     )
