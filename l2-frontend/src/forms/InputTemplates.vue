@@ -1,7 +1,7 @@
 <template>
   <div v-frag>
     <button class="btn btn-default btn-field" @click="show" title="Шаблоны поля ввода" v-tippy>
-      <i class="fa fa-grip-lines"></i>
+      <i class="fa fa-list-alt"></i>
     </button>
 
     <MountingPortal mountTo="#portal-place-modal" name="InputTemplates" append>
