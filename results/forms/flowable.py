@@ -32,7 +32,7 @@ class FrameData(Flowable):
         data_text = [Paragraph(f'{self.text}', self.style)]
         if self.tbl:
             data_text = [self.tbl]
-        data_frame = Frame(self.x * mm, self.y, self.width * mm, self.height * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=1)
+        data_frame = Frame(self.x * mm, self.y, self.width * mm, self.height * mm, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=0)
         data_inframe = KeepInFrame(
             self.width * mm,
             self.height * mm,
