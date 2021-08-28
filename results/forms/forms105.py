@@ -43,6 +43,16 @@ styleT.alignment = TA_LEFT
 styleT.fontSize = 9
 styleT.leading = 3 * mm
 
+styleOrg = deepcopy(styleT)
+styleOrg.fontSize = 8
+
+styleColontitul = deepcopy(styleT)
+styleColontitul.fontSize = 7
+styleColontitul.leading = 2 * mm
+
+styleColontitulBold = deepcopy(styleColontitul)
+styleColontitulBold.fontName = "PTAstraSerifBold"
+
 styleTBold = deepcopy(styleT)
 styleTBold.fontName = "PTAstraSerifBold"
 
@@ -271,7 +281,6 @@ def sex_tbl(text, sex):
     ]
     col_width = (11 * mm, 17 * mm, 6 * mm, 19 * mm, 6 * mm)
     tbl_style = [
-                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
                 ('GRID', (2, 0), (2, 0), 0.75, colors.black),
@@ -303,7 +312,6 @@ def born_tbl(text, born_data):
     ]
 
     tbl_style = [
-                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
                 ('LEFTPADDING', (0, 1), (0, 1), 0 * mm),
@@ -350,7 +358,6 @@ def death_tbl(text, number, death_data):
     ]
 
     tbl_style = [
-                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
                 ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
                 ('LEFTPADDING', (0, 1), (0, 1), 0 * mm),
                 ('TOPPADDING', (0, 0), (-1, -1), -1 * mm),
@@ -379,7 +386,6 @@ def address_tbl(text, data_address, type_address):
     ]
     col_widths = (135 * mm, 55 * mm)
     tbl_style = [
-                ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
                 ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -394,7 +400,6 @@ def address_tbl(text, data_address, type_address):
     city = "Иркутск"
     opinion = [[Paragraph('район', styleT), Paragraph(f'{region_town}', styleT), Paragraph('город', styleT), Paragraph(f'{city}', styleT), ], ]
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -412,7 +417,6 @@ def address_tbl(text, data_address, type_address):
     opinion = [[Paragraph('населенный пункт', styleT), Paragraph(f'{localcity}', styleT), Paragraph('улица', styleT), Paragraph(f'{street}', styleT), ], ]
     col_width = (37 * mm, 67 * mm, 16 * mm, 70 * mm,)
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -440,7 +444,6 @@ def address_tbl(text, data_address, type_address):
     ]
     col_width = (14 * mm, 15 * mm, 12 * mm, 12 * mm, 14 * mm, 15 * mm, 12 * mm, 15 * mm, 14 * mm, 15 * mm,)
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -473,7 +476,6 @@ def where_death_start_tbl(text, params):
     ]
     col_width = (30 * mm, 36 * mm, 6 * mm, 42 * mm, 6 * mm, 24 * mm, 6 * mm, 12 * mm, 6 * mm,)
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
@@ -498,7 +500,6 @@ def where_death_start_tbl(text, params):
     ]
     col_width = (50 * mm, 6 * mm, 24 * mm, 6 * mm,)
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
@@ -553,7 +554,6 @@ def patient_passport(text, data_document):
     ]
 
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
         ('LINEBELOW', (1,0), (1, 0), 0.75, colors.black),
         ('LINEBELOW', (3, 0), (3, 0), 0.75, colors.black),
@@ -577,7 +577,6 @@ def who_issue_passport(text, data_document):
     ]
 
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
         ('LINEBELOW', (1,0), (1, 0), 0.75, colors.black),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -599,7 +598,6 @@ def patient_snils(text, snils_number):
     ]
 
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
         ('LINEBELOW', (1,0), (1, 0), 0.75, colors.black),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -621,7 +619,6 @@ def patient_polis(text, polis_number):
     ]
 
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
         ('LINEBELOW', (1,0), (1, 0), 0.75, colors.black),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -655,7 +652,6 @@ def type_city(text, type):
     ]
     col_width = (21 * mm, 19 * mm, 6 * mm, 18 * mm, 6 * mm)
     tbl_style = [
-                ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
                 ('GRID', (2, 0), (2, 0), 0.75, colors.black),
@@ -680,7 +676,6 @@ def child_death_befor_month(text, params):
     ]
     col_width = (84 * mm, 42 * mm, 6 * mm, 50 * mm, 6 * mm, )
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
@@ -700,7 +695,6 @@ def child_death_befor_month(text, params):
     ]
     col_width = (55 * mm, 6 * mm,)
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
@@ -726,7 +720,6 @@ def child_death_befor_year(text, params):
     ]
     col_width = (82 * mm, 50 * mm, 12 * mm, 12 * mm, 6 * mm, )
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
@@ -748,7 +741,6 @@ def child_death_befor_year(text, params):
     ]
     col_width = (125 * mm, 6 * mm, 5 * mm, 6 * mm,)
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.2, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
@@ -773,7 +765,6 @@ def child_death_befor_year(text, params):
     ]
     col_width = (40 * mm, 15 * mm, 5 * mm, 6 * mm, 45 * mm, 15 * mm, 5 * mm, 6 * mm,)
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.2, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
@@ -805,7 +796,6 @@ def child_death_befor_year(text, params):
     ]
     col_width = (30 * mm, 25 * mm, 5 * mm, 6 * mm, 14 * mm, 20 * mm, 5 * mm, 6 * mm, 40 * mm, 25 * mm, 5 * mm, 6 * mm,)
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.2, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
@@ -838,7 +828,6 @@ def family_status(text, params):
     ]
     col_width = (38 * mm, 56 * mm, 6 * mm, 60 * mm, 6 * mm, 18 * mm, 6 * mm, )
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
@@ -871,7 +860,6 @@ def education(text, params):
     ]
     col_width = (27 * mm, 40 * mm, 6 * mm, 30 * mm, 6 * mm, 41 * mm, 6 * mm,  26 * mm, 6 * mm, )
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
@@ -902,7 +890,6 @@ def education(text, params):
     ]
     col_width = (20 * mm, 6 * mm, 20 * mm, 6 * mm, 21 * mm, 6 * mm,  50 * mm, 6 * mm, 19 * mm, 6 * mm, )
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
@@ -937,7 +924,6 @@ def work_position(text, params):
     ]
     col_width = (24 * mm, 18 * mm, 6 * mm, 80 * mm, 6 * mm, 24 * mm, 6 * mm,  20 * mm, 6 * mm, )
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
@@ -964,7 +950,6 @@ def work_position(text, params):
     ]
     col_width = (26 * mm, 6 * mm, 17 * mm, 6 * mm, 21 * mm, 6 * mm, )
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
@@ -983,9 +968,6 @@ def work_position(text, params):
 
 
 def title_med_organization(text, params):
-    styleOrg = deepcopy(styleT)
-    styleOrg.fontSize = 8
-    # styleOrg.leading = 2 * mm
     opinion = [
         [
             Paragraph(f'Наименование медицинской организации (индивидуального предпринимателя,осуществляющего медицинскую деятельность)<br/>{params["full_title"]}<br/>'
@@ -1012,17 +994,13 @@ def title_med_organization(text, params):
 
 
 def bottom_colontitul(text, params):
-    styleOrg = deepcopy(styleT)
-    styleOrg.fontSize = 7
-    styleOrg.leading = 2 * mm
     opinion = [
         [
-            Paragraph(f'{params}', styleOrg),
+            Paragraph(f'{params}', styleColontitul),
         ],
     ]
     col_width = (190 * mm)
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 10 * mm),
         ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
@@ -1035,19 +1013,16 @@ def bottom_colontitul(text, params):
 
 
 def back_size(text):
-    styleBack = deepcopy(styleT)
-    styleBack.fontSize = 7
     opinion = [
         [
-            Paragraph('Оборотная сторона', styleBack),
+            Paragraph('Оборотная сторона', styleColontitulBold),
         ],
     ]
     col_width = (190 * mm,)
     tbl_style = [
-        ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
-        ('LEFTPADDING', (-1, -1), (-1, -1), 165 * mm),
+        ('LEFTPADDING', (-1, -1), (-1, -1), 166 * mm),
     ]
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.3 * mm))
@@ -1059,8 +1034,8 @@ def why_death(text, params):
     opinion = [
         [
             Paragraph('10. Причины смерти:', styleT),
-            Paragraph('Приблизительный период времени между началом патологического процесса и смертью', styleT),
-            Paragraph('Коды по МКБ', styleT),
+            Paragraph('Приблизительный период времени между началом патологического процесса и смертью', styleOrg),
+            Paragraph('Коды по МКБ', styleOrg),
         ],
     ]
     col_width = (110 * mm, 40 * mm, 40 * mm,)
@@ -1109,7 +1084,7 @@ def why_death(text, params):
     opinion = [
         [
             Paragraph('II. Прочие важные состояния, способствовавшие смерти, но не связанные с болезнью или патологическим состоянием, приведшим к ней, включая употребление '
-                      'алкоголя, наркотических средств, психотропных и других токсических веществ, содержание их в крови, а также операции (название, дата)', styleT),
+                      'алкоголя, наркотических средств, психотропных и других токсических веществ, содержание их в крови, а также операции (название, дата)', styleColontitul),
         ],
     ]
     col_width = (190 * mm,)
@@ -1149,7 +1124,70 @@ def why_death(text, params):
 
     ]
     tbl = gen_table(opinion, col_width, tbl_style)
-    text.append(Spacer(1, 0.4 * mm))
+    text.append(Spacer(1, 0.2 * mm))
+    text.append(tbl)
+
+    pregnant, process_birth = "В случае смерти беременной (независимо от срока и локализации)", ", в процессе родов"
+    opinion = [
+        [
+            Paragraph('12. ', styleT),
+            Paragraph(f' {pregnant}', styleT),
+            Paragraph('1', styleT),
+            Paragraph(f' {process_birth}', styleT),
+            Paragraph('2', styleT),
+        ],
+    ]
+    col_width = (7 * mm, 92 * mm, 6 * mm, 30 * mm, 6 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+        ('LEFTPADDING', (1, 0), (1, 0), -2 * mm),
+        ('RIGHTPADDING', (1, 0), (-1, -1), -2 * mm),
+        ('GRID', (2, 0), (2, 0), 0.75, colors.black),
+        ('GRID', (4, 0), (4, 0), 0.75, colors.black),
+
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.2 * mm))
+    text.append(tbl)
+
+    final_process_birth_42days, final_process_birth_365days  = "в течение 42 дней после окончания беременности, родов", ", кроме того в течение 43-365 дней после окончания беременности"
+    opinion = [
+        [
+            Paragraph(f' {final_process_birth_42days}', styleT),
+            Paragraph('3', styleT),
+            Paragraph(f' {final_process_birth_365days}', styleT),
+            Paragraph('4', styleT),
+        ],
+    ]
+    col_width = (83 * mm, 6 * mm, 94 * mm, 6 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 4 * mm),
+        ('RIGHTPADDING', (1, 0), (-1, -1), -2 * mm),
+        ('GRID', (1, 0), (1, 0), 0.75, colors.black),
+        ('GRID', (3, 0), (3, 0), 0.75, colors.black),
+
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.2 * mm))
+    text.append(tbl)
+
+    opinion = [
+        [
+            Paragraph(f'{13}.Фамилия, имя, отчество (при наличии) врача (фельдшера, акушерки), заполнившего Медицинское свидетельство о смерти', styleT),
+        ],
+    ]
+    col_width = (190* mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.2 * mm))
     text.append(tbl)
 
 
