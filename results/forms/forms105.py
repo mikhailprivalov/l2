@@ -1,7 +1,6 @@
-from reportlab.lib.colors import HexColor
 
 from utils.dates import normalize_date
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
@@ -10,7 +9,6 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 import directory.models as directory
 from directions.models import ParaclinicResult
 from appconf.manager import SettingManager
-from results.prepare_data import text_to_bold
 import os.path
 from laboratory.settings import FONTS_FOLDER
 from reportlab.pdfbase import pdfmetrics
@@ -148,6 +146,7 @@ def add_line_split(iss: Issledovaniya, direction, offset=0):
 def death_data(iss: Issledovaniya, direction, offset=0):
     # Лини отреза
     text = []
+    text = title_med_organization(text, "")
     text = title_data(text, "2xx", "123456789", "20.08.2021", "взамен окончательного")
     fio = "Ивано Иван Иванович Ивано Иван"
     text.append(Spacer(1, 1.7 * mm))
@@ -172,10 +171,13 @@ def death_data(iss: Issledovaniya, direction, offset=0):
     text = type_city(text, "город")
     text = where_death_start_tbl(text, "")
     text = child_death_befor_month(text, "")
-    text = child_death_befor_year(text, {"weight": 3500, "child_count": 1, "mother_born": "", "mother_age": ""})
+    text = child_death_befor_year(text, {"weight": 3500, "child_count": 1, "mother_born": "", "mother_age": "", "mother_family": "", "mother_name": "", "mother_patronimyc": ""})
+    text = family_status(text, "")
+    text = education(text, "")
+    text = work_position(text, "")
 
     obj = []
-    obj.append(FrameDataUniversal(0 * mm, 0 * mm, 190 * mm, 160 * mm, text=text))
+    obj.append(FrameDataUniversal(0 * mm, 0 * mm, 190 * mm, 158 * mm, text=text))
 
     return obj
 
@@ -764,11 +766,221 @@ def child_death_befor_year(text, params):
     text.append(Spacer(1, 0.5 * mm))
     text.append(tbl)
 
+    opinion = [
+        [
+            Paragraph('фамилия матери', styleT),
+            Paragraph(f' {params["mother_family"]}', styleT),
+            Paragraph("", styleT),
+            Paragraph('5', styleT),
+            Paragraph(', имя', styleT),
+            Paragraph(f' {params["mother_name"]}', styleT),
+            Paragraph("", styleT),
+            Paragraph('6', styleT),
+            Paragraph(', отчество (при наличии)', styleT),
+            Paragraph(f' {params["mother_patronimyc"]}', styleT),
+            Paragraph("", styleT),
+            Paragraph('7', styleT),
 
+        ],
+    ]
+    col_width = (30 * mm, 25 * mm, 5 * mm, 6 * mm, 14 * mm, 20 * mm, 5 * mm, 6 * mm, 40 * mm, 25 * mm, 5 * mm, 6 * mm,)
+    tbl_style = [
+        ('GRID', (0, 0), (-1, -1), 0.2, colors.white),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+        ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
+        ('GRID', (3, 0), (3, 0), 0.75, colors.black),
+        ('LINEBELOW', (5, 0), (5, 0), 0.75, colors.black),
+        ('GRID', (7, 0), (7, 0), 0.75, colors.black),
+        ('LINEBELOW', (9, 0), (9, 0), 0.75, colors.black),
+        ('GRID', (11, 0), (11, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.5 * mm))
+    text.append(tbl)
 
     return text
 
 
+def family_status(text, params):
+    brak, not_brak, not_known = "состоял(а) в зарегистрированном браке", "не состоял(а) в зарегистрированном браке", "неизвестно"
+    opinion = [
+        [
+            Paragraph('15.*Семейное положение:', styleT),
+            Paragraph(f' {brak}', styleT),
+            Paragraph('1', styleT),
+            Paragraph(f' {not_brak}', styleT),
+            Paragraph('2', styleT),
+            Paragraph(f' {not_known}', styleT),
+            Paragraph('3', styleT),
+        ],
+    ]
+    col_width = (38 * mm, 56 * mm, 6 * mm, 60 * mm, 6 * mm, 18 * mm, 6 * mm, )
+    tbl_style = [
+        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+        ('RIGHTPADDING', (1, 0), (-1, -1), -2 * mm),
+        ('GRID', (2, 0), (2, 0), 0.75, colors.black),
+        ('GRID', (4, 0), (4, 0), 0.75, colors.black),
+        ('GRID', (6, 0), (6, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
+    text.append(tbl)
+
+    return text
 
 
+def education(text, params):
+    high_prof, not_high_prof, middle_prof, middle_common = "профессиональное: высшее", ", неполное высшее", ", среднее профессиональное", "общее: среднее"
+    opinion = [
+        [
+            Paragraph('16.* Образование:', styleT),
+            Paragraph(f' {high_prof}', styleT),
+            Paragraph('1', styleT),
+            Paragraph(f' {not_high_prof}', styleT),
+            Paragraph('2', styleT),
+            Paragraph(f' {middle_prof}', styleT),
+            Paragraph('3', styleT),
+            Paragraph(f' {middle_common}', styleT),
+            Paragraph('4', styleT),
+        ],
+    ]
+    col_width = (27 * mm, 40 * mm, 6 * mm, 30 * mm, 6 * mm, 41 * mm, 6 * mm,  26 * mm, 6 * mm, )
+    tbl_style = [
+        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+        ('RIGHTPADDING', (1, 0), (-1, -1), -2 * mm),
+        ('GRID', (2, 0), (2, 0), 0.75, colors.black),
+        ('GRID', (4, 0), (4, 0), 0.75, colors.black),
+        ('GRID', (6, 0), (6, 0), 0.75, colors.black),
+        ('GRID', (8, 0), (8, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
+    text.append(tbl)
 
+    common, start, before_school, not_has_start, not_known = "основное", ", начальное", ", дошкольное", ", не имеет начального образования", ", неизвестно"
+    opinion = [
+        [
+            Paragraph(f' {common}', styleT),
+            Paragraph('5', styleT),
+            Paragraph(f' {start}', styleT),
+            Paragraph('6', styleT),
+            Paragraph(f' {before_school}', styleT),
+            Paragraph('7', styleT),
+            Paragraph(f' {not_has_start}', styleT),
+            Paragraph('8', styleT),
+            Paragraph(f' {not_known}', styleT),
+            Paragraph('9', styleT),
+        ],
+    ]
+    col_width = (20 * mm, 6 * mm, 20 * mm, 6 * mm, 21 * mm, 6 * mm,  50 * mm, 6 * mm, 19 * mm, 6 * mm, )
+    tbl_style = [
+        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+        ('RIGHTPADDING', (1, 0), (-1, -1), -2 * mm),
+        ('GRID', (1, 0), (1, 0), 0.75, colors.black),
+        ('GRID', (3, 0), (3, 0), 0.75, colors.black),
+        ('GRID', (5, 0), (5, 0), 0.75, colors.black),
+        ('GRID', (7, 0), (7, 0), 0.75, colors.black),
+        ('GRID', (9, 0), (9, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
+    text.append(tbl)
+
+    return text
+
+
+def work_position(text, params):
+    worked, military, pensioner, student = "работал(а)", ", проходил(а) военную или приравненную к ней службу", ", пенсионер(ка)", "студент(ка)"
+    opinion = [
+        [
+            Paragraph('17. * Занятость:', styleT),
+            Paragraph(f' {worked}', styleT),
+            Paragraph('1', styleT),
+            Paragraph(f' {military}', styleT),
+            Paragraph('2', styleT),
+            Paragraph(f' {pensioner}', styleT),
+            Paragraph('3', styleT),
+            Paragraph(f' {student}', styleT),
+            Paragraph('4', styleT),
+        ],
+    ]
+    col_width = (24 * mm, 18 * mm, 6 * mm, 80 * mm, 6 * mm, 24 * mm, 6 * mm,  20 * mm, 6 * mm, )
+    tbl_style = [
+        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+        ('RIGHTPADDING', (1, 0), (-1, -1), -2 * mm),
+        ('GRID', (2, 0), (2, 0), 0.75, colors.black),
+        ('GRID', (4, 0), (4, 0), 0.75, colors.black),
+        ('GRID', (6, 0), (6, 0), 0.75, colors.black),
+        ('GRID', (8, 0), (8, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
+    text.append(tbl)
+
+    not_work, others, not_known = "не работал(а)", ", прочие", ", неизвестно"
+    opinion = [
+        [
+            Paragraph(f' {not_work}', styleT),
+            Paragraph('5', styleT),
+            Paragraph(f' {others}', styleT),
+            Paragraph('6', styleT),
+            Paragraph(f' {not_known}', styleT),
+            Paragraph('7', styleT),
+        ],
+    ]
+    col_width = (26 * mm, 6 * mm, 17 * mm, 6 * mm, 21 * mm, 6 * mm, )
+    tbl_style = [
+        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+        ('RIGHTPADDING', (1, 0), (-1, -1), -2 * mm),
+        ('GRID', (1, 0), (1, 0), 0.75, colors.black),
+        ('GRID', (3, 0), (3, 0), 0.75, colors.black),
+        ('GRID', (5, 0), (5, 0), 0.75, colors.black),
+        ('GRID', (7, 0), (7, 0), 0.75, colors.black),
+        ('GRID', (9, 0), (9, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
+    text.append(tbl)
+
+    return text
+
+
+def title_med_organization(text, params):
+
+    opinion = [
+        [
+            Paragraph(f'Наименование медицинской организации (индивидуального предпринимателя,осуществляющего медицинскую деятельность)<br/>{params["full_title"]}<br/>'
+                      f'адрес места нахождения {params["org_address"]}<br/>', styleT),
+            Paragraph('', styleT),
+            Paragraph('Код формы по ОКУД _______<br/>Медицинская документация<br/>Учётная форма № 106/У<br/>Утверждена приказом Минздрава России <br/>от «15» апреля 2021 г. № 352н', styleT),
+        ],
+    ]
+    col_width = (114 * mm, 6 * mm, 70 * mm,)
+    tbl_style = [
+        ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.3 * mm))
+    text.append(tbl)
+
+    return text
