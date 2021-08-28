@@ -127,7 +127,7 @@ def add_template(iss: Issledovaniya, direction, offset=0):
     text = fio_tbl(text, "9. Фамилия, имя, отчество (при наличии) матери:", fio)
 
     obj = []
-    obj.append(FrameDataUniversal(0 * mm, 5 * mm, 190 * mm, 100 * mm, text=text))
+    obj.append(FrameDataUniversal(0 * mm, 5 * mm, 190 * mm, 95 * mm, text=text))
 
     return obj
 
@@ -146,7 +146,8 @@ def add_line_split(iss: Issledovaniya, direction, offset=0):
 def death_data(iss: Issledovaniya, direction, offset=0):
     # Лини отреза
     text = []
-    text = title_med_organization(text, "")
+    text = title_med_organization(text, {"full_title": "Государственное бюджетное учреждение здравоохранения Иркутское областное бюро судебномедицинской экспертизы",
+                                         "org_address": "обл Иркутская, г Усолье-Сибирское, ул Менделеева, ДОМ 21", "org_license": "", "org_okpo": ""})
     text = title_data(text, "2xx", "123456789", "20.08.2021", "взамен окончательного")
     fio = "Ивано Иван Иванович Ивано Иван"
     text.append(Spacer(1, 1.7 * mm))
@@ -175,6 +176,7 @@ def death_data(iss: Issledovaniya, direction, offset=0):
     text = family_status(text, "")
     text = education(text, "")
     text = work_position(text, "")
+    text = bottom_colontitul(text, "* В случае смерти детей, возраст которых указан в пунктах 13 - 14, пункты 15 - 17 заполняются в отношении их матерей.")
 
     obj = []
     obj.append(FrameDataUniversal(0 * mm, 0 * mm, 190 * mm, 158 * mm, text=text))
@@ -963,24 +965,52 @@ def work_position(text, params):
 
 
 def title_med_organization(text, params):
-
+    styleOrg = deepcopy(styleT)
+    styleOrg.fontSize = 8
+    # styleOrg.leading = 2 * mm
     opinion = [
         [
             Paragraph(f'Наименование медицинской организации (индивидуального предпринимателя,осуществляющего медицинскую деятельность)<br/>{params["full_title"]}<br/>'
-                      f'адрес места нахождения {params["org_address"]}<br/>', styleT),
-            Paragraph('', styleT),
-            Paragraph('Код формы по ОКУД _______<br/>Медицинская документация<br/>Учётная форма № 106/У<br/>Утверждена приказом Минздрава России <br/>от «15» апреля 2021 г. № 352н', styleT),
+                      f'адрес места нахождения {params["org_address"]}<br/>'
+                      f'Код по ОКПО {params["org_okpo"]}<br/>'
+                      f'Номер и дата выдачи лицензии на осуществление медицинской деятельности: <br/>{params["org_license"]}<br/>', styleOrg),
+            Paragraph('', styleOrg),
+            Paragraph('Код формы по ОКУД _______<br/>Медицинская документация<br/>Учётная форма № 106/У<br/>Утверждена приказом Минздрава России <br/>от «15» апреля 2021 г. № 352н', styleOrg),
         ],
     ]
-    col_width = (114 * mm, 6 * mm, 70 * mm,)
+    col_width = (125 * mm, 5 * mm, 60 * mm,)
     tbl_style = [
         ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
-        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+        ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
     ]
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.3 * mm))
     text.append(tbl)
 
     return text
+
+
+def bottom_colontitul(text, params):
+    styleOrg = deepcopy(styleT)
+    styleOrg.fontSize = 7
+    styleOrg.leading = 2 * mm
+    opinion = [
+        [
+            Paragraph(f'{params}', styleOrg),
+        ],
+    ]
+    col_width = (190 * mm)
+    tbl_style = [
+        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 15 * mm),
+        ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.3 * mm))
+    text.append(tbl)
+
+    return text
+
