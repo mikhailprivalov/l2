@@ -43,7 +43,7 @@ export const swapLayouts = (origStr: string): string => {
     k: 'л',
     l: 'д',
     ';': 'ж',
-    '\'': 'э',
+    "'": 'э',
     z: 'я',
     x: 'ч',
     c: 'с',
@@ -77,7 +77,11 @@ interface Field {
 }
 
 export const PrepareFormula = (
-  fields: Field[], formula: string, patient = {}, strict = false, returnLinks = false,
+  fields: Field[],
+  formula: string,
+  patient = {},
+  strict = false,
+  returnLinks = false,
 ): string | Link[] => {
   let s = formula;
   const necessary = s.match(/{(\d+)}/g);
@@ -88,13 +92,13 @@ export const PrepareFormula = (
       let v = null;
       const vid = n.replace(/[{}]/g, '');
       const vFromField = (fields[vid] || {}).value;
-      const vOrig = String(Number(vFromField) === 0 ? 0 : (vFromField || '')).trim();
+      const vOrig = String(Number(vFromField) === 0 ? 0 : vFromField || '').trim();
       if (returnLinks) {
-        if (!links.find((l) => l.id === vid)) {
+        if (!links.find(l => l.id === vid)) {
           links.push(new Link(LINK_FIELD, vid));
         }
       } else {
-        if ((/^\d+([,.]\d+)?$/).test(vOrig) && !strict) {
+        if (/^\d+([,.]\d+)?$/.test(vOrig) && !strict) {
           if (fields[vid]) {
             v = parseFloat(vOrig.trim().replace(',', '.'));
           }
@@ -107,7 +111,7 @@ export const PrepareFormula = (
         if (strict) {
           s = s.replace(r, `\`${v}\``);
         } else {
-          s = s.replace(r, String(v === 0 ? 0 : (v || '')));
+          s = s.replace(r, String(v === 0 ? 0 : v || ''));
         }
       }
     }
@@ -134,9 +138,7 @@ export const PrepareFormula = (
   return `return (${s});`;
 };
 
-export const CalculateFormula = (
-  fields: Field[], formula: string, patient = {}, strict = false,
-): string | number => {
+export const CalculateFormula = (fields: Field[], formula: string, patient = {}, strict = false): string | number => {
   const s = PrepareFormula(fields, formula, patient, strict);
 
   if (Array.isArray(s)) {
@@ -146,10 +148,10 @@ export const CalculateFormula = (
   try {
     if (!FUNCTION_CACHE[s]) {
       // eslint-disable-next-line no-new-func
-      const result = (new Function(s)());
-      FUNCTION_CACHE[s] = (typeof result === 'boolean' || result) ? result : 0;
+      const result = new Function(s)();
+      FUNCTION_CACHE[s] = typeof result === 'boolean' || result ? result : 0;
     }
-    console.log(FUNCTION_CACHE);
+    // console.log(FUNCTION_CACHE);
     return FUNCTION_CACHE[s];
   } catch (e) {
     FUNCTION_CACHE[s] = null;
@@ -159,15 +161,17 @@ export const CalculateFormula = (
   }
 };
 
-export const CalculateVisibility = (
-  fields: Field[], rule: string, patient = {},
-): boolean => Boolean(CalculateFormula(fields, rule, patient, true));
+export const CalculateVisibility = (f: Field[], rule: string, p = {}): boolean => Boolean(CalculateFormula(f, rule, p, true));
 
-interface Error {code?: number, message?: string}
+interface Error {
+  code?: number;
+  message?: string;
+}
 
 export const validateSnils = (
-  snilsOrig: string | number, returnErrors?: boolean,
-) : boolean | {result: boolean, errors: Error} => {
+  snilsOrig: string | number,
+  returnErrors?: boolean,
+): boolean | { result: boolean; errors: Error } => {
   let result = false;
   let snils = snilsOrig;
   const errors: Error = {};
@@ -234,8 +238,10 @@ export const normalizeNamePart = (stringOrig: string): string => {
 
 export const replaceAll = (s: string, a: string, b: string) => s.replace(new RegExp(a, 'gm'), b);
 
-export const valuesToString = (origStr: string, values: StringDict) => Object.keys(values)
-  .reduce((s, k) => replaceAll(s, `{${k}}`, values[k]), origStr);
+const keys = (values: StringDict) => Object.keys(values);
+const v2s = (origStr: string, values: StringDict) => keys(values).reduce((s, k) => replaceAll(s, `{${k}}`, values[k]), origStr);
+
+export const valuesToString = v2s;
 
 export const getFormattedDate = (date: Date | void): string => {
   if (!date) {

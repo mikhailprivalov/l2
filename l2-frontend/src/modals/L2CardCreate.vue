@@ -758,8 +758,8 @@ export default {
       card: {
         number: '',
         number_poli: '',
-        main_address_full: JSON.stringify({ address: '', fias: null }),
-        fact_address_full: JSON.stringify({ address: '', fias: null }),
+        main_address_full: JSON.stringify({ address: '', fias: null, details: null }),
+        fact_address_full: JSON.stringify({ address: '', fias: null, details: null }),
         work_place: '',
         work_position: '',
         family: '',

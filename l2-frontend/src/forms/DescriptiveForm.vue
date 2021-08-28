@@ -275,7 +275,13 @@ export default {
 
       for (const g of this.research.groups) {
         for (const f of g.fields) {
-          if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
+          if (
+            f.required
+            && (f.value === ''
+              || f.value === '- Не выбрано'
+              || !f.value
+              || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""'))))
+          ) {
             l.push(f.pk);
           }
         }

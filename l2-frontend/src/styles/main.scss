@@ -979,6 +979,14 @@ body.showloader #page-preloader {
   z-index: 100000;
 }
 
+.dg-backdrop {
+  z-index: 49999 !important;
+}
+
+.dg-container {
+  z-index: 50000 !important;
+}
+
 .sk-fading-circle {
   width: 20px;
   height: 20px;
@@ -1495,6 +1503,15 @@ body > .container-fluid {
   background-color: #fafafa;
   font-weight: bold;
   padding-left: 5px;
+}
+
+.form-control-area {
+  height: unset;
+  min-height: 26px;
+
+  &.form-control-area-full {
+    min-height: 34px;
+  }
 }
 
 .field {

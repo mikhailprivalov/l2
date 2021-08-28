@@ -1015,7 +1015,10 @@ export default {
           n++;
           if (
             f.required
-            && (f.value === '' || f.value === '- Не выбрано' || !f.value)
+            && (f.value === ''
+              || f.value === '- Не выбрано'
+              || !f.value
+              || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""'))))
             && vField(g, research.groups, f.visibility, this.simulated_patient)
           ) {
             l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));
