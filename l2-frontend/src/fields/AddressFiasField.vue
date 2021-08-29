@@ -599,11 +599,8 @@ export default class AddressFiasField extends Vue {
 
     this.address = unrestricted_value;
     this.details = getDetails(details);
-    if (Number(fias_level) > 7) {
-      this.fias = fias_id;
-    } else {
-      this.fias = null;
-    }
+    this.fias = fias_id;
+    clearTimeout(this.clearFiasTimer);
   }
 
   // eslint-disable-next-line class-methods-use-this
