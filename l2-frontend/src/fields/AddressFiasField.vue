@@ -67,17 +67,34 @@
               />
             </div>
 
+            <div v-if="details.custom" class="alert-address alert-top">
+              Обязательно выберите тип объекта. <br />
+              Например для "ул. Ленина" выбрать <strong>ул.</strong> и в значение <strong>Ленина</strong>
+            </div>
+
             <label class="nd"><input type="checkbox" v-model="details.custom" /> Ввести адрес вручную</label>
 
-            <div class="input-group input-multiple nd">
+            <div class="input-group treeselect-input-group input-multiple nd">
               <span class="input-group-addon form-group">Область</span>
               <input
                 type="text"
                 class="form-control form-control-forced-last"
-                :class="details.custom && !details.region_type && 'has-error'"
                 v-model="details.region_type"
-                :readonly="!details.custom"
-                :placeholder="details.custom && 'Тип (напр обл, респ)'"
+                readonly
+                v-if="!details.custom"
+              />
+              <treeselect
+                v-else
+                class="treeselect-wide"
+                :class="details.custom && details.region && !details.region_type && 'has-error'"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="REGION_TYPES"
+                placeholder="Тип области не выбран"
+                v-model="details.region_type"
+                :append-to-body="true"
+                :clearable="true"
+                :zIndex="6000"
               />
               <input
                 type="text"
@@ -85,79 +102,131 @@
                 :class="details.custom && !details.region && 'has-error'"
                 v-model="details.region"
                 :readonly="!details.custom"
-                :placeholder="details.custom && 'значение'"
+                :placeholder="details.custom && 'область'"
               />
             </div>
 
-            <div class="input-group input-multiple nd">
+            <div class="input-group treeselect-input-group input-multiple nd">
               <span class="input-group-addon form-group">Район</span>
               <input
                 type="text"
                 class="form-control form-control-forced-last"
                 v-model="details.area_type"
-                :readonly="!details.custom"
-                :placeholder="details.custom && 'Тип (напр район)'"
+                readonly
+                v-if="!details.custom"
+              />
+              <treeselect
+                v-else
+                class="treeselect-wide"
+                :class="details.custom && details.area && !details.area_type && 'has-error'"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="AREA_TYPES"
+                placeholder="Тип района не выбран"
+                v-model="details.area_type"
+                :append-to-body="true"
+                :clearable="true"
+                :zIndex="6000"
               />
               <input
                 type="text"
                 class="form-control form-control-forced-last"
                 v-model="details.area"
                 :readonly="!details.custom"
-                :placeholder="details.custom && 'значение'"
+                :placeholder="details.custom && 'район'"
               />
             </div>
 
-            <div class="input-group input-multiple nd">
+            <div class="input-group treeselect-input-group input-multiple nd">
               <span class="input-group-addon form-group">Город</span>
               <input
                 type="text"
                 class="form-control form-control-forced-last"
                 v-model="details.city_type"
-                :readonly="!details.custom"
-                :placeholder="details.custom && 'Тип (напр г, город)'"
+                readonly
+                v-if="!details.custom"
+              />
+              <treeselect
+                v-else
+                class="treeselect-wide"
+                :class="details.custom && details.city && !details.city_type && 'has-error'"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="CITY_TYPES"
+                placeholder="Тип города не выбран"
+                v-model="details.city_type"
+                :append-to-body="true"
+                :clearable="true"
+                :zIndex="6000"
               />
               <input
                 type="text"
                 class="form-control form-control-forced-last"
                 v-model="details.city"
                 :readonly="!details.custom"
-                :placeholder="details.custom && 'значение'"
+                :placeholder="details.custom && 'город'"
               />
             </div>
 
-            <div class="input-group input-multiple nd">
+            <div class="input-group treeselect-input-group input-multiple nd">
               <span class="input-group-addon form-group">Населённый пункт</span>
               <input
                 type="text"
                 class="form-control form-control-forced-last"
                 v-model="details.settlement_type"
-                :readonly="!details.custom"
-                :placeholder="details.custom && 'Тип (напр д, пос)'"
+                readonly
+                v-if="!details.custom"
+              />
+              <treeselect
+                v-else
+                class="treeselect-wide"
+                :class="details.custom && details.settlement && !details.settlement_type && 'has-error'"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="SETTLEMENT_TYPES"
+                placeholder="Тип населённого пункта не выбран"
+                v-model="details.settlement_type"
+                :append-to-body="true"
+                :clearable="true"
+                :zIndex="6000"
               />
               <input
                 type="text"
                 class="form-control form-control-forced-last"
                 v-model="details.settlement"
                 :readonly="!details.custom"
-                :placeholder="details.custom && 'значение'"
+                :placeholder="details.custom && 'населённый пункт'"
               />
             </div>
 
-            <div class="input-group input-multiple nd">
+            <div class="input-group treeselect-input-group input-multiple nd">
               <span class="input-group-addon form-group">Улица</span>
               <input
                 type="text"
                 class="form-control form-control-forced-last"
                 v-model="details.street_type"
-                :readonly="!details.custom"
-                :placeholder="details.custom && 'Тип (напр ул, пр-кт)'"
+                readonly
+                v-if="!details.custom"
+              />
+              <treeselect
+                v-else
+                class="treeselect-wide"
+                :class="details.custom && details.street && !details.street_type && 'has-error'"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="STREET_TYPES"
+                placeholder="Тип улицы не выбран"
+                v-model="details.street_type"
+                :append-to-body="true"
+                :clearable="true"
+                :zIndex="6000"
               />
               <input
                 type="text"
                 class="form-control form-control-forced-last"
                 v-model="details.street"
                 :readonly="!details.custom"
-                :placeholder="details.custom && 'значение'"
+                :placeholder="details.custom && 'улица'"
               />
             </div>
 
@@ -166,6 +235,7 @@
               <input
                 type="text"
                 class="form-control form-control-forced-last"
+                :class="details.custom && details.house && !details.house_type && 'has-error'"
                 v-model="details.house_type"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'Тип (напр д, с)'"
@@ -175,7 +245,7 @@
                 class="form-control form-control-forced-last"
                 v-model="details.house"
                 :readonly="!details.custom"
-                :placeholder="details.custom && 'значение'"
+                :placeholder="details.custom && 'номер дома'"
               />
             </div>
 
@@ -184,9 +254,10 @@
               <input
                 type="text"
                 class="form-control form-control-forced-last"
+                :class="details.custom && details.flat && !details.flat_type && 'has-error'"
                 v-model="details.flat_type"
                 :readonly="!details.custom"
-                :placeholder="details.custom && 'Тип (напр кв, оф)'"
+                :placeholder="details.custom && 'номер квартиры'"
               />
               <input
                 type="text"
@@ -240,7 +311,12 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import TypeAhead from 'vue2-typeahead';
 import _ from 'lodash';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
+import {
+  REGION_TYPES, AREA_TYPES, CITY_TYPES, SETTLEMENT_TYPES, STREET_TYPES,
+} from '@/fias';
 import directionsPoint from '@/api/directions-point';
 import Modal from '@/ui-cards/Modal.vue';
 
@@ -271,10 +347,10 @@ const validateDetails = (details, strict) => Boolean(details?.region && (!strict
 
 const prependStr = (v, s) => {
   if (s) {
-    return `${v} ${s}`;
+    return `${v || ''} ${s || ''}`;
   }
 
-  return v;
+  return v || '';
 };
 
 @Component({
@@ -330,6 +406,7 @@ const prependStr = (v, s) => {
   components: {
     TypeAhead,
     Modal,
+    Treeselect,
   },
   data() {
     return {
@@ -342,6 +419,11 @@ const prependStr = (v, s) => {
       edit: false,
       details: getDetails(),
       prevDetails: getDetails(),
+      REGION_TYPES,
+      AREA_TYPES,
+      CITY_TYPES,
+      SETTLEMENT_TYPES,
+      STREET_TYPES,
     };
   },
   model: {
@@ -367,6 +449,12 @@ const prependStr = (v, s) => {
       handler() {
         if (!this.details.custom) {
           return;
+        }
+
+        for (const k of Object.keys(this.details)) {
+          if (this.details[k] === null || typeof this.details[k] === 'undefined') {
+            this.details[k] = '';
+          }
         }
 
         const region = prependStr(this.details.region, this.details.region_type);
@@ -439,6 +527,16 @@ export default class AddressFiasField extends Vue {
   details: any;
 
   prevDetails: any;
+
+  REGION_TYPES: typeof REGION_TYPES;
+
+  AREA_TYPES: typeof AREA_TYPES;
+
+  CITY_TYPES: typeof CITY_TYPES;
+
+  SETTLEMENT_TYPES: typeof SETTLEMENT_TYPES;
+
+  STREET_TYPES: typeof STREET_TYPES;
 
   get isValidDetails() {
     return validateDetails(this.details, this.strict);
@@ -607,10 +705,10 @@ export default class AddressFiasField extends Vue {
   border: 1px solid #aab2bd;
   min-height: 34px;
   padding: 6px 12px;
+}
 
-  &.has-error {
-    border-color: #f00;
-  }
+.has-error {
+  border-color: #f00 !important;
 }
 
 .address-body {
@@ -652,7 +750,15 @@ export default class AddressFiasField extends Vue {
   text-align: left;
 }
 
-.input-multiple .form-control {
-  width: 237px;
+.input-multiple {
+  .treeselect-wide,
+  .form-control {
+    display: table-cell;
+    width: 237px;
+  }
+
+  .treeselect-wide {
+    padding: 0;
+  }
 }
 </style>
