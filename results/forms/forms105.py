@@ -59,6 +59,8 @@ styleTBold.fontName = "PTAstraSerifBold"
 op_bold_tag = '<font face="PTAstraSerifBold">'
 cl_bold_tag = '</font>'
 
+space_symbol = '&nbsp;'
+
 
 def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     # Мед. св-во о смерти 106/у
@@ -142,6 +144,14 @@ def second_page_add_template(iss: Issledovaniya, direction, offset=0):
     text = []
     text = back_size(text)
     text = why_death(text, "")
+    fio = ""
+    text = fio_tbl(text, "14. Фамилия, имя, отчество (при наличии) получателя", fio)
+    text.append(Paragraph("Документ, удостоверяющий личность получателя (серия, номер, кем выдан)", styleT))
+    text = destination_person_passport(text, "")
+    text = destination_person_snils(text, "")
+    text.append(Spacer(1, 2 * mm))
+    text.append(Paragraph(f"«___» ___________ 20 ___ г.{space_symbol * 30} Подпись получателя _________________________", styleT))
+
 
     obj = []
     obj.append(FrameDataUniversal(0 * mm,  offset, 190 * mm, 95 * mm, text=text))
@@ -220,6 +230,11 @@ def title_data(text, serial, number, date_issue, type_death_document):
         instead_final = "<u><font face=\"PTAstraSerifBold\">предварительного</font></u>"
     text.append(Paragraph(f"({final}, {preparatory}, {instead_preparatory}, {instead_final}) (подчеркнуть)", styleCentre))
     return text
+
+
+def gen_opinion(data):
+    opinion = [[Paragraph(f"{k}", styleT) for k in data]]
+    return opinion
 
 
 def gen_table(opinion, col_width, tbl_style, row_height=None):
@@ -956,6 +971,29 @@ def about_diagnos(data):
     return tbl
 
 
-def gen_opinion(data):
-    opinion = [[Paragraph(f"{k}", styleT) for k in data]]
-    return opinion
+def destination_person_passport(text, data):
+    opinion = gen_opinion([data])
+    tbl_style = [
+        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+        ('LINEBELOW', (0, 0), (-1, -1), 0.75, colors.black),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+    ]
+    col_width = (190 * mm)
+    tbl = gen_table(opinion, col_width, tbl_style, 4 * mm)
+    text.append(Spacer(1, 0.2 * mm))
+    text.append(tbl)
+    return text
+
+
+def destination_person_snils(text, data):
+    opinion = gen_opinion(['СНИЛС получателя (при наличии)', data])
+    tbl_style = [
+        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+        ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+    ]
+    col_width = (50 * mm, 140 * mm)
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.2 * mm))
+    text.append(tbl)
+    return text
