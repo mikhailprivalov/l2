@@ -970,7 +970,7 @@ def work_position(text, params):
 def title_med_organization(text, params):
     opinion = [
         [
-            Paragraph(f'Наименование медицинской организации (индивидуального предпринимателя,осуществляющего медицинскую деятельность)<br/>{params["full_title"]}<br/>'
+            Paragraph(f'{params["full_title"]}<br/>'
                       f'адрес места нахождения {params["org_address"]}<br/>'
                       f'Код по ОКПО {params["org_okpo"]}<br/>'
                       f'Номер и дата выдачи лицензии на осуществление медицинской деятельности: <br/>{params["org_license"]}<br/>', styleOrg),
