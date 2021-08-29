@@ -56,6 +56,9 @@ styleColontitulBold.fontName = "PTAstraSerifBold"
 styleTBold = deepcopy(styleT)
 styleTBold.fontName = "PTAstraSerifBold"
 
+op_bold_tag = '<font face="PTAstraSerifBold">'
+cl_bold_tag = '</font>'
+
 
 def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     # Мед. св-во о смерти 106/у
@@ -107,22 +110,7 @@ def add_template(iss: Issledovaniya, direction, offset=0):
     text.append(Paragraph('Для детей, умерших в возрасте до 1 года:', styleBold))
     text.append(Spacer(1, 0.5 * mm))
 
-    opinion = [
-        [
-            Paragraph('7. Дата рождения:', styleT),
-            Paragraph(f'число', styleT),
-            Paragraph('', styleT),
-            Paragraph(', месяц', styleT),
-            Paragraph('', styleT),
-            Paragraph(', год', styleT),
-            Paragraph('', styleT),
-            Paragraph(', число месяцев', styleT),
-            Paragraph('', styleT),
-            Paragraph(', число дней', styleT),
-            Paragraph('', styleT),
-            Paragraph('жизни', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['7. Дата рождения', 'число', '', ', месяц', '', ', год', '', ', число месяцев', '', ', число дней', '', 'жизни'])
     col_width = (29 * mm, 17 * mm, 8 * mm, 15 * mm, 8 * mm, 10 * mm, 8 * mm, 24 * mm, 8 * mm, 20 * mm, 8 * mm, 15 * mm)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -147,6 +135,7 @@ def add_template(iss: Issledovaniya, direction, offset=0):
     obj.append(FrameDataUniversal(0 * mm,  offset, 190 * mm, 95 * mm, text=text))
 
     return obj
+
 
 def second_page_add_template(iss: Issledovaniya, direction, offset=0):
     #
@@ -230,7 +219,6 @@ def title_data(text, serial, number, date_issue, type_death_document):
     elif type_death_document.lower().find('предварительн') != -1:
         instead_final = "<u><font face=\"PTAstraSerifBold\">предварительного</font></u>"
     text.append(Paragraph(f"({final}, {preparatory}, {instead_preparatory}, {instead_final}) (подчеркнуть)", styleCentre))
-
     return text
 
 
@@ -241,12 +229,7 @@ def gen_table(opinion, col_width, tbl_style, row_height=None):
 
 
 def fio_tbl(text, type, fio):
-    opinion = [
-        [
-            Paragraph(f'{type}', styleT),
-            Paragraph(f'{fio}', styleT),
-        ],
-    ]
+    opinion = gen_opinion([type, fio])
     col_width = (80 * mm, 110 * mm)
     tbl_style = [
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -262,23 +245,15 @@ def fio_tbl(text, type, fio):
 
 def sex_tbl(text, sex):
     if sex == "м":
-        sex_m = Paragraph(', <u>мужской</u>', styleTBold)
+        sex_m = f'{op_bold_tag}<u>мужской</u>{cl_bold_tag}'
     else:
-        sex_m = Paragraph(' мужской', styleT)
+        sex_m = ' мужской'
     if sex == "ж":
-        sex_w = Paragraph(', <u>женский</u>', styleTBold)
+        sex_w = f'{op_bold_tag}<u>женский</u>{cl_bold_tag}'
     else:
-        sex_w = Paragraph(', женский', styleT)
+        sex_w = ', женский'
 
-    opinion = [
-        [
-            Paragraph(f'2.Пол:', styleT),
-            sex_m,
-            Paragraph('1', styleT),
-            sex_w,
-            Paragraph('2', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['2.Пол:', sex_m, '1', sex_w, '2' ])
     col_width = (11 * mm, 17 * mm, 6 * mm, 19 * mm, 6 * mm)
     tbl_style = [
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -299,17 +274,7 @@ def born_tbl(text, born_data):
     born_month = "01"
     born_year = "1970"
 
-    opinion = [
-        [
-            Paragraph(f'3.Дата рождения:', styleT),
-            Paragraph(f'число', styleT),
-            Paragraph(f'{born_day}', styleT),
-            Paragraph('месяц', styleT),
-            Paragraph(f'{born_month}', styleT),
-            Paragraph('год', styleT),
-            Paragraph(f'{born_year}', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['3.Дата рождения:', 'число', born_day, 'месяц', born_month, 'год', born_year])
 
     tbl_style = [
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -329,7 +294,6 @@ def born_tbl(text, born_data):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.2 * mm))
     text.append(tbl)
-
     return text
 
 
@@ -341,21 +305,7 @@ def death_tbl(text, number, death_data):
     death_hour = "23"
     death_min = "00"
 
-    opinion = [
-        [
-            Paragraph(f'{number}', styleT),
-            Paragraph(f'число', styleT),
-            Paragraph(f'{death_day}', styleT),
-            Paragraph('месяц', styleT),
-            Paragraph(f'{death_month}', styleT),
-            Paragraph('год', styleT),
-            Paragraph(f'{death_year}', styleT),
-            Paragraph('час.', styleT),
-            Paragraph(f'{death_hour}', styleT),
-            Paragraph('мин.', styleT),
-            Paragraph(f'{death_min}', styleT),
-        ],
-    ]
+    opinion = gen_opinion([number, 'число', death_day, 'месяц', death_month, 'год', death_year, 'час.', death_hour, 'мин.', death_min])
 
     tbl_style = [
                 ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
@@ -378,12 +328,7 @@ def death_tbl(text, number, death_data):
 
 def address_tbl(text, data_address, type_address):
     region = "Область Иркутская"
-    opinion = [
-        [
-            Paragraph(f'{type_address} субъект Российской Федерации:', styleT),
-            Paragraph(f'{region}', styleT),
-        ],
-    ]
+    opinion = gen_opinion([f'{type_address} субъект Российской Федерации:', region ])
     col_widths = (135 * mm, 55 * mm)
     tbl_style = [
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -398,7 +343,7 @@ def address_tbl(text, data_address, type_address):
     # город
     region_town = ""
     city = "Иркутск"
-    opinion = [[Paragraph('район', styleT), Paragraph(f'{region_town}', styleT), Paragraph('город', styleT), Paragraph(f'{city}', styleT), ], ]
+    opinion = gen_opinion(['район', region_town, 'город', city])
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
@@ -414,7 +359,7 @@ def address_tbl(text, data_address, type_address):
     # населенный пунк
     localcity = ""
     street = "Иркутск"
-    opinion = [[Paragraph('населенный пункт', styleT), Paragraph(f'{localcity}', styleT), Paragraph('улица', styleT), Paragraph(f'{street}', styleT), ], ]
+    opinion = gen_opinion(['населенный пункт', localcity, 'улица', street])
     col_width = (37 * mm, 67 * mm, 16 * mm, 70 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -428,20 +373,7 @@ def address_tbl(text, data_address, type_address):
     text.append(tbl)
 
     # дом, стр, корп, кв, комн
-    opinion = [
-        [
-            Paragraph('дом', styleT),
-            Paragraph(f'', styleT),
-            Paragraph('стр.', styleT),
-            Paragraph(f'', styleT),
-            Paragraph('корп.', styleT),
-            Paragraph(f'', styleT),
-            Paragraph('кв.', styleT),
-            Paragraph(f'', styleT),
-            Paragraph('комн.', styleT),
-            Paragraph(f'', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['дом', '', 'стр.', '', 'корп.', '', 'кв.', '', 'комн.', ''])
     col_width = (14 * mm, 15 * mm, 12 * mm, 12 * mm, 14 * mm, 15 * mm, 12 * mm, 15 * mm, 14 * mm, 15 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -456,24 +388,11 @@ def address_tbl(text, data_address, type_address):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.2 * mm))
     text.append(tbl)
-
     return text
 
 
 def where_death_start_tbl(text, params):
-    opinion = [
-        [
-            Paragraph('6.Смерть наступила:', styleT),
-            Paragraph(f' на месте происшествия', styleT),
-            Paragraph('1', styleT),
-            Paragraph(', в машине скорой помощи', styleT),
-            Paragraph('2', styleT),
-            Paragraph(f', в стационаре', styleT),
-            Paragraph('3', styleT),
-            Paragraph(f' , дома', styleT),
-            Paragraph('4', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['6.Смерть наступила:', ' на месте происшествия', '1', ', в машине скорой помощи', '2', ', в стационаре', '3', ' , дома', '4'])
     col_width = (30 * mm, 36 * mm, 6 * mm, 42 * mm, 6 * mm, 24 * mm, 6 * mm, 12 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -490,14 +409,7 @@ def where_death_start_tbl(text, params):
     text.append(tbl)
 
     # Смерть наступила
-    opinion = [
-        [
-            Paragraph('в образовательной организации', styleT),
-            Paragraph(f'5', styleT),
-            Paragraph('в другом месте', styleT),
-            Paragraph('6', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['в образовательной организации', '5', 'в другом месте', '6'])
     col_width = (50 * mm, 6 * mm, 24 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -510,7 +422,6 @@ def where_death_start_tbl(text, params):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.3 * mm))
     text.append(tbl)
-
     return text
 
 
@@ -520,13 +431,7 @@ def line_split(text):
     styleColor = deepcopy(style)
     styleColor.textColor = colors.gray
 
-    opinion = [
-        [
-            Paragraph('', style),
-            Paragraph('линия отреза', styleColor),
-            Paragraph('', style),
-        ],
-    ]
+    opinion = [[Paragraph('', style), Paragraph('линия отреза', styleColor), Paragraph('', style), ], ]
     tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=(80 * mm, 25 * mm, 80 * mm))
     tbl.setStyle(
         TableStyle(
@@ -542,17 +447,7 @@ def line_split(text):
 
 
 def patient_passport(text, data_document):
-    opinion = [
-        [
-            Paragraph(f'4.Документ, удостоверяющий личность умершего:', styleT),
-            Paragraph(f"{data_document['type']}", styleT),
-            Paragraph('серия', styleT),
-            Paragraph(f"{data_document['serial']}", styleT),
-            Paragraph('номер', styleT),
-            Paragraph(f"{data_document['number']}", styleT),
-        ],
-    ]
-
+    opinion = gen_opinion(['4.Документ, удостоверяющий личность умершего:', data_document["type"], 'серия', data_document["serial"], 'номер', data_document['number']])
     tbl_style = [
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
         ('LINEBELOW', (1,0), (1, 0), 0.75, colors.black),
@@ -564,18 +459,11 @@ def patient_passport(text, data_document):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.2 * mm))
     text.append(tbl)
-
     return text
 
 
 def who_issue_passport(text, data_document):
-    opinion = [
-        [
-            Paragraph(f'кем и когда выдан', styleT),
-            Paragraph(f"{data_document['who_issue']} {data_document['date_issue']}", styleT),
-        ],
-    ]
-
+    opinion = gen_opinion(['кем и когда выдан', f"{data_document['who_issue']} {data_document['date_issue']}"])
     tbl_style = [
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
         ('LINEBELOW', (1,0), (1, 0), 0.75, colors.black),
@@ -585,18 +473,11 @@ def who_issue_passport(text, data_document):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.2 * mm))
     text.append(tbl)
-
     return text
 
 
 def patient_snils(text, snils_number):
-    opinion = [
-        [
-            Paragraph(f'5. СНИЛС', styleT),
-            Paragraph(f"{snils_number}", styleT),
-        ],
-    ]
-
+    opinion = gen_opinion(['5.СНИЛС', snils_number ])
     tbl_style = [
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
         ('LINEBELOW', (1,0), (1, 0), 0.75, colors.black),
@@ -606,17 +487,11 @@ def patient_snils(text, snils_number):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.2 * mm))
     text.append(tbl)
-
     return text
 
 
 def patient_polis(text, polis_number):
-    opinion = [
-        [
-            Paragraph(f'6.Полис ОМС:', styleT),
-            Paragraph(f"{polis_number}", styleT),
-        ],
-    ]
+    opinion = gen_opinion(['6.Полис ОМС:', polis_number])
 
     tbl_style = [
         ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
@@ -627,29 +502,20 @@ def patient_polis(text, polis_number):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.2 * mm))
     text.append(tbl)
-
     return text
 
 
 def type_city(text, type):
     if type == "город":
-        type_gorod = Paragraph(' <u>городская</u>', styleTBold)
+        type_gorod = f'{op_bold_tag}<u>городская</u>{cl_bold_tag}'
     else:
-        type_gorod = Paragraph(' городская', styleT)
+        type_gorod = ' городская'
     if type == "село":
-        type_selo = Paragraph(', <u>сельская</u>', styleTBold)
+        type_selo = f'{op_bold_tag}<u>сельская</u>{cl_bold_tag}'
     else:
-        type_selo = Paragraph(', сельская', styleT)
+        type_selo = ', сельская'
 
-    opinion = [
-        [
-            Paragraph(f'9. Местность:', styleT),
-            type_gorod,
-            Paragraph('1', styleT),
-            type_selo,
-            Paragraph('2', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['9. Местность:', type_gorod, '1', type_selo, '2'])
     col_width = (21 * mm, 19 * mm, 6 * mm, 18 * mm, 6 * mm)
     tbl_style = [
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -665,15 +531,7 @@ def type_city(text, type):
 
 
 def child_death_befor_month(text, params):
-    opinion = [
-        [
-            Paragraph('13. * Для детей, умерших в возрасте от 168 час. до 1 месяца:', styleT),
-            Paragraph(f' доношенный (37-41 недель)', styleT),
-            Paragraph('1', styleT),
-            Paragraph(', недоношенный (менее 37 недель)', styleT),
-            Paragraph('2', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['13. * Для детей, умерших в возрасте от 168 час. до 1 месяца:', ' доношенный (37-41 недель)', '1', ', недоношенный (менее 37 недель)', '2'])
     col_width = (84 * mm, 42 * mm, 6 * mm, 50 * mm, 6 * mm, )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -687,12 +545,7 @@ def child_death_befor_month(text, params):
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
 
-    opinion = [
-        [
-            Paragraph('переношенный (42 недель и более)', styleT),
-            Paragraph(f'3', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['переношенный (42 недель и более)', '3'])
     col_width = (55 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -704,20 +557,11 @@ def child_death_befor_month(text, params):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.3 * mm))
     text.append(tbl)
-
     return text
 
 
 def child_death_befor_year(text, params):
-    opinion = [
-        [
-            Paragraph('14.*Для детей, умерших в возрасте от 168 час. до 1 года:', styleT),
-            Paragraph(f' масса тела ребёнка при рождении  ', styleT),
-            Paragraph(f' {params["weight"]}', styleT),
-            Paragraph(f' грамм', styleT),
-            Paragraph('1', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['14.*Для детей, умерших в возрасте от 168 час. до 1 года:', ' масса тела ребёнка при рождении', params["weight"], ' грамм', '1' ])
     col_width = (82 * mm, 50 * mm, 12 * mm, 12 * mm, 6 * mm, )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -731,14 +575,7 @@ def child_death_befor_year(text, params):
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
 
-    opinion = [
-        [
-            Paragraph('каким по счету был ребенок у матери (считая умерших и не считая мертворождённых)', styleT),
-            Paragraph(f' {params["child_count"]}', styleT),
-            Paragraph("", styleT),
-            Paragraph('2', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['каким по счету был ребенок у матери (считая умерших и не считая мертворождённых)',  params["child_count"], '', '2' ])
     col_width = (125 * mm, 6 * mm, 5 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -751,18 +588,7 @@ def child_death_befor_year(text, params):
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
 
-    opinion = [
-        [
-            Paragraph('дата рождения матери', styleT),
-            Paragraph(f' {params["mother_born"]}', styleT),
-            Paragraph("", styleT),
-            Paragraph('3', styleT),
-            Paragraph('возраст матери (полных лет)', styleT),
-            Paragraph(f' {params["mother_age"]}', styleT),
-            Paragraph("", styleT),
-            Paragraph('4', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['дата рождения матери', params["mother_born"], '', '3', 'возраст матери (полных лет)', params["mother_age"], '', '4'])
     col_width = (40 * mm, 15 * mm, 5 * mm, 6 * mm, 45 * mm, 15 * mm, 5 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -777,23 +603,7 @@ def child_death_befor_year(text, params):
     text.append(Spacer(1, 0.5 * mm))
     text.append(tbl)
 
-    opinion = [
-        [
-            Paragraph('фамилия матери', styleT),
-            Paragraph(f' {params["mother_family"]}', styleT),
-            Paragraph("", styleT),
-            Paragraph('5', styleT),
-            Paragraph(', имя', styleT),
-            Paragraph(f' {params["mother_name"]}', styleT),
-            Paragraph("", styleT),
-            Paragraph('6', styleT),
-            Paragraph(', отчество (при наличии)', styleT),
-            Paragraph(f' {params["mother_patronimyc"]}', styleT),
-            Paragraph("", styleT),
-            Paragraph('7', styleT),
-
-        ],
-    ]
+    opinion = gen_opinion(['фамилия матери', params["mother_family"], '', '5', ', имя', params["mother_name"], '', '6', ' , отчество (при наличии)', params["mother_patronimyc"], '', '7' ])
     col_width = (30 * mm, 25 * mm, 5 * mm, 6 * mm, 14 * mm, 20 * mm, 5 * mm, 6 * mm, 40 * mm, 25 * mm, 5 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -809,23 +619,12 @@ def child_death_befor_year(text, params):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.5 * mm))
     text.append(tbl)
-
     return text
 
 
 def family_status(text, params):
     brak, not_brak, not_known = "состоял(а) в зарегистрированном браке", "не состоял(а) в зарегистрированном браке", "неизвестно"
-    opinion = [
-        [
-            Paragraph('15.*Семейное положение:', styleT),
-            Paragraph(f' {brak}', styleT),
-            Paragraph('1', styleT),
-            Paragraph(f' {not_brak}', styleT),
-            Paragraph('2', styleT),
-            Paragraph(f' {not_known}', styleT),
-            Paragraph('3', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['15.*Семейное положение:', brak, '1', not_brak, '2', not_known, '3'  ])
     col_width = (38 * mm, 56 * mm, 6 * mm, 60 * mm, 6 * mm, 18 * mm, 6 * mm, )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -839,25 +638,12 @@ def family_status(text, params):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
-
     return text
 
 
 def education(text, params):
     high_prof, not_high_prof, middle_prof, middle_common = "профессиональное: высшее", ", неполное высшее", ", среднее профессиональное", "общее: среднее"
-    opinion = [
-        [
-            Paragraph('16.* Образование:', styleT),
-            Paragraph(f' {high_prof}', styleT),
-            Paragraph('1', styleT),
-            Paragraph(f' {not_high_prof}', styleT),
-            Paragraph('2', styleT),
-            Paragraph(f' {middle_prof}', styleT),
-            Paragraph('3', styleT),
-            Paragraph(f' {middle_common}', styleT),
-            Paragraph('4', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['16.* Образование:', high_prof, '1', not_high_prof, '2', middle_prof, '3', middle_common, '4'])
     col_width = (27 * mm, 40 * mm, 6 * mm, 30 * mm, 6 * mm, 41 * mm, 6 * mm,  26 * mm, 6 * mm, )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -874,20 +660,7 @@ def education(text, params):
     text.append(tbl)
 
     common, start, before_school, not_has_start, not_known = "основное", ", начальное", ", дошкольное", ", не имеет начального образования", ", неизвестно"
-    opinion = [
-        [
-            Paragraph(f' {common}', styleT),
-            Paragraph('5', styleT),
-            Paragraph(f' {start}', styleT),
-            Paragraph('6', styleT),
-            Paragraph(f' {before_school}', styleT),
-            Paragraph('7', styleT),
-            Paragraph(f' {not_has_start}', styleT),
-            Paragraph('8', styleT),
-            Paragraph(f' {not_known}', styleT),
-            Paragraph('9', styleT),
-        ],
-    ]
+    opinion = gen_opinion([common, '5', start, '6', before_school, '7', not_has_start, '8', not_known, '9'])
     col_width = (20 * mm, 6 * mm, 20 * mm, 6 * mm, 21 * mm, 6 * mm,  50 * mm, 6 * mm, 19 * mm, 6 * mm, )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -903,25 +676,13 @@ def education(text, params):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
-
     return text
 
 
 def work_position(text, params):
     worked, military, pensioner, student = "работал(а)", ", проходил(а) военную или приравненную к ней службу", ", пенсионер(ка)", "студент(ка)"
-    opinion = [
-        [
-            Paragraph('17. * Занятость:', styleT),
-            Paragraph(f' {worked}', styleT),
-            Paragraph('1', styleT),
-            Paragraph(f' {military}', styleT),
-            Paragraph('2', styleT),
-            Paragraph(f' {pensioner}', styleT),
-            Paragraph('3', styleT),
-            Paragraph(f' {student}', styleT),
-            Paragraph('4', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['17. * Занятость:', worked, '1', military, '2', pensioner, '3', student, '4'])
+
     col_width = (24 * mm, 18 * mm, 6 * mm, 80 * mm, 6 * mm, 24 * mm, 6 * mm,  20 * mm, 6 * mm, )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -938,16 +699,7 @@ def work_position(text, params):
     text.append(tbl)
 
     not_work, others, not_known = "не работал(а)", ", прочие", ", неизвестно"
-    opinion = [
-        [
-            Paragraph(f' {not_work}', styleT),
-            Paragraph('5', styleT),
-            Paragraph(f' {others}', styleT),
-            Paragraph('6', styleT),
-            Paragraph(f' {not_known}', styleT),
-            Paragraph('7', styleT),
-        ],
-    ]
+    opinion = gen_opinion([not_work, '5', others, '6', not_known, '6'])
     col_width = (26 * mm, 6 * mm, 17 * mm, 6 * mm, 21 * mm, 6 * mm, )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -963,7 +715,6 @@ def work_position(text, params):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
-
     return text
 
 
@@ -994,11 +745,7 @@ def title_med_organization(text, params):
 
 
 def bottom_colontitul(text, params):
-    opinion = [
-        [
-            Paragraph(f'{params}', styleColontitul),
-        ],
-    ]
+    opinion = [[Paragraph(f'{params}', styleColontitul), ], ]
     col_width = (190 * mm)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1013,11 +760,7 @@ def bottom_colontitul(text, params):
 
 
 def back_size(text):
-    opinion = [
-        [
-            Paragraph('Оборотная сторона', styleColontitulBold),
-        ],
-    ]
+    opinion = [[Paragraph('Оборотная сторона', styleColontitulBold),],]
     col_width = (190 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1104,15 +847,7 @@ def why_death(text, params):
         text.append(tbl)
 
     days30, days7 = "смерть наступила - в течение 30 суток", ", из них в течение 7 суток"
-    opinion = [
-        [
-            Paragraph('11.В случае смерти в результате ДТП:', styleT),
-            Paragraph(f' {days30}', styleT),
-            Paragraph('1', styleT),
-            Paragraph(f' {days7}', styleT),
-            Paragraph('2', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['11.В случае смерти в результате ДТП:', days30, '1', days7, '2'])
     col_width = (55 * mm, 55 * mm, 6 * mm, 40 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1128,15 +863,7 @@ def why_death(text, params):
     text.append(tbl)
 
     pregnant, process_birth = "В случае смерти беременной (независимо от срока и локализации)", ", в процессе родов"
-    opinion = [
-        [
-            Paragraph('12. ', styleT),
-            Paragraph(f' {pregnant}', styleT),
-            Paragraph('1', styleT),
-            Paragraph(f' {process_birth}', styleT),
-            Paragraph('2', styleT),
-        ],
-    ]
+    opinion = gen_opinion(['12. ', pregnant, '1', process_birth, '2'])
     col_width = (7 * mm, 92 * mm, 6 * mm, 30 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1153,14 +880,7 @@ def why_death(text, params):
     text.append(tbl)
 
     final_process_birth_42days, final_process_birth_365days  = "в течение 42 дней после окончания беременности, родов", ", кроме того в течение 43-365 дней после окончания беременности"
-    opinion = [
-        [
-            Paragraph(f' {final_process_birth_42days}', styleT),
-            Paragraph('3', styleT),
-            Paragraph(f' {final_process_birth_365days}', styleT),
-            Paragraph('4', styleT),
-        ],
-    ]
+    opinion = gen_opinion([final_process_birth_42days, '3', final_process_birth_365days, '4'])
     col_width = (83 * mm, 6 * mm, 94 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1175,11 +895,7 @@ def why_death(text, params):
     text.append(Spacer(1, 0.2 * mm))
     text.append(tbl)
 
-    opinion = [
-        [
-            Paragraph(f'{13}.Фамилия, имя, отчество (при наличии) врача (фельдшера, акушерки), заполнившего Медицинское свидетельство о смерти', styleT),
-        ],
-    ]
+    opinion = gen_opinion([f'{13}.Фамилия, имя, отчество (при наличии) врача (фельдшера, акушерки), заполнившего Медицинское свидетельство о смерти'])
     col_width = (190* mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1189,26 +905,11 @@ def why_death(text, params):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.2 * mm))
     text.append(tbl)
-
-
     return text
 
 
 def diagnos_tbl(data):
-    opinion = [
-        [
-            Paragraph(f'{data["para"]}', styleT),
-            Paragraph(f'{data["item"]}', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('', styleT),
-            Paragraph('.', styleT),
-            Paragraph('', styleT),
-        ],
-    ]
+    opinion = gen_opinion([data["para"], data["item"], '', '', '', '', '', '', '', ''])
     col_width = (7 * mm, 7 * mm, 96 * mm, 40 * mm, 5 * mm, 7 * mm, 7 * mm, 7 * mm, 6 * mm, 7 * mm,)
     tbl_style = [
         ('GRID', (5, 0), (5, 0), 0.75, colors.black),
@@ -1253,3 +954,8 @@ def about_diagnos(data):
     ]
     tbl = gen_table(opinion, col_width, tbl_style)
     return tbl
+
+
+def gen_opinion(data):
+    opinion = [[Paragraph(f"{k}", styleT) for k in data]]
+    return opinion
