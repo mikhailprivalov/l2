@@ -152,6 +152,7 @@
                   :disabled="confirmed"
                   :client-pk="patient.card_pk"
                   :edit-title="`${group.title} ${field.title}`.trim()"
+                  :strict="false"
                 />
               </div>
               <div

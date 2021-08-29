@@ -2657,3 +2657,16 @@ input[type="date"].form-control {
 .cursor-pointer {
   cursor: pointer;
 }
+
+.input-multiple > input.form-control {
+  width: auto;
+}
+
+.input-multiple > input.form-control + input.form-control {
+  border-left: 0;
+}
+
+.w-100 {
+  min-width: 100%;
+  width: 100% !important;
+}

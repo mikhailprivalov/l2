@@ -60,7 +60,7 @@
               <span class="input-group-addon">Номер объекта в ФИАС</span>
               <input
                 type="text"
-                class="form-control form-control-forced-last form-group"
+                class="form-control form-control-forced-last form-group w-100"
                 :class="!fias && 'has-error'"
                 :value="fias || 'пусто, адрес не выбран из списка'"
                 readonly
@@ -69,66 +69,131 @@
 
             <label class="nd"><input type="checkbox" v-model="details.custom" /> Ввести адрес вручную</label>
 
-            <div class="input-group nd">
+            <div class="input-group input-multiple nd">
               <span class="input-group-addon form-group">Область</span>
               <input
                 type="text"
                 class="form-control form-control-forced-last"
-                :class="!details.custom && !details.region && 'has-error'"
+                :class="details.custom && !details.region_type && 'has-error'"
+                v-model="details.region_type"
+                :readonly="!details.custom"
+                :placeholder="details.custom && 'Тип (напр обл, респ)'"
+              />
+              <input
+                type="text"
+                class="form-control form-control-forced-last"
+                :class="details.custom && !details.region && 'has-error'"
                 v-model="details.region"
                 :readonly="!details.custom"
+                :placeholder="details.custom && 'значение'"
               />
             </div>
 
-            <div class="input-group nd">
+            <div class="input-group input-multiple nd">
               <span class="input-group-addon form-group">Район</span>
+              <input
+                type="text"
+                class="form-control form-control-forced-last"
+                v-model="details.area_type"
+                :readonly="!details.custom"
+                :placeholder="details.custom && 'Тип (напр район)'"
+              />
               <input
                 type="text"
                 class="form-control form-control-forced-last"
                 v-model="details.area"
                 :readonly="!details.custom"
+                :placeholder="details.custom && 'значение'"
               />
             </div>
 
-            <div class="input-group nd">
+            <div class="input-group input-multiple nd">
+              <span class="input-group-addon form-group">Город</span>
+              <input
+                type="text"
+                class="form-control form-control-forced-last"
+                v-model="details.city_type"
+                :readonly="!details.custom"
+                :placeholder="details.custom && 'Тип (напр г, город)'"
+              />
+              <input
+                type="text"
+                class="form-control form-control-forced-last"
+                v-model="details.city"
+                :readonly="!details.custom"
+                :placeholder="details.custom && 'значение'"
+              />
+            </div>
+
+            <div class="input-group input-multiple nd">
               <span class="input-group-addon form-group">Населённый пункт</span>
               <input
                 type="text"
                 class="form-control form-control-forced-last"
-                :class="!details.custom && !details.city && 'has-error'"
-                v-model="details.city"
+                v-model="details.settlement_type"
                 :readonly="!details.custom"
+                :placeholder="details.custom && 'Тип (напр д, пос)'"
+              />
+              <input
+                type="text"
+                class="form-control form-control-forced-last"
+                v-model="details.settlement"
+                :readonly="!details.custom"
+                :placeholder="details.custom && 'значение'"
               />
             </div>
 
-            <div class="input-group nd">
+            <div class="input-group input-multiple nd">
               <span class="input-group-addon form-group">Улица</span>
+              <input
+                type="text"
+                class="form-control form-control-forced-last"
+                v-model="details.street_type"
+                :readonly="!details.custom"
+                :placeholder="details.custom && 'Тип (напр ул, пр-кт)'"
+              />
               <input
                 type="text"
                 class="form-control form-control-forced-last"
                 v-model="details.street"
                 :readonly="!details.custom"
+                :placeholder="details.custom && 'значение'"
               />
             </div>
 
-            <div class="input-group nd">
+            <div class="input-group input-multiple nd">
               <span class="input-group-addon form-group">Дом</span>
               <input
                 type="text"
                 class="form-control form-control-forced-last"
-                :class="!details.custom && !details.house && 'has-error'"
+                v-model="details.house_type"
+                :readonly="!details.custom"
+                :placeholder="details.custom && 'Тип (напр д, с)'"
+              />
+              <input
+                type="text"
+                class="form-control form-control-forced-last"
                 v-model="details.house"
                 :readonly="!details.custom"
+                :placeholder="details.custom && 'значение'"
               />
             </div>
 
-            <div class="input-group nd">
+            <div class="input-group input-multiple nd">
               <span class="input-group-addon form-group">Квартира</span>
+              <input
+                type="text"
+                class="form-control form-control-forced-last"
+                v-model="details.flat_type"
+                :readonly="!details.custom"
+                :placeholder="details.custom && 'Тип (напр кв, оф)'"
+              />
               <input
                 type="text"
                 class="form-control form-control-forced-last"
                 v-model="details.flat"
                 :readonly="!details.custom"
+                :placeholder="details.custom && 'значение'"
               />
             </div>
 
@@ -181,29 +246,32 @@ import Modal from '@/ui-cards/Modal.vue';
 
 const getDetails = (original = null) => {
   const details = original || {};
+
   return {
-    region: details.region_with_type || details.region || '',
-    area: details.area_with_type || details.area || '',
-    city: details.city_with_type || details.city || '',
-    street: details.street_with_type || details.street || '',
-    house: (details.house && details.house_type ? `${details.house_type} ` : '') + (details.house || ''),
-    flat: (details.flat && details.flat_type ? `${details.flat_type} ` : '') + (details.flat || ''),
+    region: details.region || '',
+    region_type: details.region_type || '',
+    area: details.area || '',
+    area_type: details.area_type || '',
+    city: details.city || '',
+    city_type: details.city_type || '',
+    settlement: details.settlement || '',
+    settlement_type: details.settlement_type || '',
+    street: details.street || '',
+    street_type: details.street_type || '',
+    house: details.house || '',
+    house_type: details.house_type || '',
+    flat: details.flat || '',
+    flat_type: details.flat_type || '',
     postal_code: details.postal_code || '',
     custom: details.custom || false,
   };
 };
 
-const validateDetails = details => Boolean(details?.region && details.city && details.house);
+const validateDetails = (details, strict) => Boolean(details?.region && (!strict || (details.city && details.house)));
 
-const nRe = /^\d+$/;
-
-function isNumeric(str) {
-  return nRe.test(str);
-}
-
-const prependStrIfNumeric = (v, s) => {
-  if (isNumeric(v)) {
-    return `${s} ${v}`;
+const prependStr = (v, s) => {
+  if (s) {
+    return `${v} ${s}`;
   }
 
   return v;
@@ -248,6 +316,11 @@ const prependStrIfNumeric = (v, s) => {
       type: Boolean,
       required: false,
       default: false,
+    },
+    strict: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
     clientPk: {
       type: Number,
@@ -296,18 +369,15 @@ const prependStrIfNumeric = (v, s) => {
           return;
         }
 
-        const house = prependStrIfNumeric(this.details.house, 'д');
-        const flat = prependStrIfNumeric(this.details.flat, 'кв');
+        const region = prependStr(this.details.region, this.details.region_type);
+        const area = prependStr(this.details.area, this.details.area_type);
+        const city = prependStr(this.details.city_type, this.details.city);
+        const street = prependStr(this.details.street_type, this.details.street);
+        const settlement = prependStr(this.details.settlement_type, this.details.settlement);
+        const house = prependStr(this.details.house_type, this.details.house);
+        const flat = prependStr(this.details.flat_type, this.details.flat);
 
-        const parts = [
-          this.details.postal_code,
-          this.details.region,
-          this.details.area,
-          this.details.city,
-          this.details.street,
-          house,
-          flat,
-        ];
+        const parts = [this.details.postal_code, region, area, city, settlement, street, house, flat];
 
         this.address = parts.filter(Boolean).join(', ');
       },
@@ -358,6 +428,8 @@ export default class AddressFiasField extends Vue {
 
   edit: boolean;
 
+  strict: boolean;
+
   clientPk: number | null;
 
   clearFiasTimer: any;
@@ -369,7 +441,7 @@ export default class AddressFiasField extends Vue {
   prevDetails: any;
 
   get isValidDetails() {
-    return validateDetails(this.details);
+    return validateDetails(this.details, this.strict);
   }
 
   get isValid() {
@@ -446,9 +518,6 @@ export default class AddressFiasField extends Vue {
   }
 
   changeValue() {
-    this.details.house = prependStrIfNumeric(this.details.house, 'д');
-    this.details.flat = prependStrIfNumeric(this.details.flat, 'кв');
-
     const v = JSON.stringify({
       address: this.address,
       fias: this.fias,
@@ -470,7 +539,7 @@ export default class AddressFiasField extends Vue {
 
     try {
       const v = JSON.parse(result.value);
-      if (validateDetails(v.details)) {
+      if (validateDetails(v.details, this.strict)) {
         this.details = getDetails(v.details);
         this.address = v.address;
         this.fias = v.fias;
@@ -528,8 +597,12 @@ export default class AddressFiasField extends Vue {
 }
 
 .form-control-forced-last {
-  width: 100% !important;
   border-radius: 0 4px 4px 0 !important;
+
+  &:not(:last-child) {
+    border-radius: 0 !important;
+  }
+
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 8%) !important;
   border: 1px solid #aab2bd;
   min-height: 34px;
@@ -577,5 +650,9 @@ export default class AddressFiasField extends Vue {
 .form-group {
   width: 185px;
   text-align: left;
+}
+
+.input-multiple .form-control {
+  width: 237px;
 }
 </style>
