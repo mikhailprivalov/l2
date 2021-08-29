@@ -175,7 +175,7 @@ def directory_researches_update_mode(request):
 @csrf_exempt
 @login_required
 def directory_researches_update_sort(request):
-    """POST: обновление сортировки """
+    """POST: обновление сортировки"""
     return_result = {"ok": False}
     if request.method == "POST":
         sort = json.loads(request.POST["sort"])

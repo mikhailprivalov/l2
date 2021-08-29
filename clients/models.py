@@ -897,8 +897,10 @@ class Card(models.Model):
     main_diagnosis = models.CharField(max_length=36, blank=True, default='', help_text="Основной диагноз", db_index=True)
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
     main_address_fias = models.CharField(max_length=128, blank=True, default=None, null=True, help_text="ФИАС Адрес регистрации")
+    main_address_details = models.JSONField(blank=True, null=True, help_text="Детали адреса регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
     fact_address_fias = models.CharField(max_length=128, blank=True, default=None, null=True, help_text="ФИАС Адрес факт. проживания")
+    fact_address_details = models.JSONField(blank=True, null=True, help_text="Детали факт адреса")
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
     work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
@@ -927,11 +929,11 @@ class Card(models.Model):
 
     @property
     def main_address_full(self):
-        return json.dumps({'address': self.main_address, 'fias': self.main_address_fias})
+        return json.dumps({'address': self.main_address, 'fias': self.main_address_fias, 'details': self.main_address_details})
 
     @property
     def fact_address_full(self):
-        return json.dumps({'address': self.fact_address, 'fias': self.fact_address_fias})
+        return json.dumps({'address': self.fact_address, 'fias': self.fact_address_fias, 'details': self.fact_address_details})
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)

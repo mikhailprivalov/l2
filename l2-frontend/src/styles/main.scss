@@ -979,6 +979,14 @@ body.showloader #page-preloader {
   z-index: 100000;
 }
 
+.dg-backdrop {
+  z-index: 49999 !important;
+}
+
+.dg-container {
+  z-index: 50000 !important;
+}
+
 .sk-fading-circle {
   width: 20px;
   height: 20px;
@@ -1495,6 +1503,25 @@ body > .container-fluid {
   background-color: #fafafa;
   font-weight: bold;
   padding-left: 5px;
+}
+
+.form-control-area {
+  height: unset;
+  min-height: 26px;
+
+  &.form-control-area-full {
+    min-height: 34px;
+  }
+}
+
+.field-value.field-value-with-templates {
+  position: relative;
+
+  &:hover {
+    .input-templates {
+      display: block;
+    }
+  }
 }
 
 .field {
@@ -2619,4 +2646,17 @@ input[type="date"].form-control {
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+.input-multiple > input.form-control {
+  width: auto;
+}
+
+.input-multiple > input.form-control + input.form-control {
+  border-left: 0;
+}
+
+.w-100 {
+  min-width: 100%;
+  width: 100% !important;
 }

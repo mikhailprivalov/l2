@@ -1,6 +1,8 @@
-<template>
+<template functional>
   <div>
-    <span class="rps">{{ category.title }}<span v-if="category.selected > 0"> ({{category.selected}})</span></span>
+    <span class="rps">
+      {{ category.title }}<span v-if="category.selected > 0"> ({{ category.selected }})</span>
+    </span>
   </div>
 </template>
 
@@ -17,13 +19,13 @@ export default {
 </script>
 
 <style scoped>
-  .rps {
-    display: block;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    word-break: keep-all;
-    max-height: 2.2em;
-    line-height: 1.1em;
-    cursor: pointer;
-  }
+.rps {
+  display: block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  word-break: keep-all;
+  max-height: 2.2em;
+  line-height: 1.1em;
+  cursor: pointer;
+}
 </style>
