@@ -1581,16 +1581,6 @@ body > .container-fluid {
 
   overflow: visible;
 
-  .text-suggests {
-    display: none;
-  }
-
-  &:hover {
-    .text-suggests {
-      display: block;
-    }
-  }
-
   &.open-field:not(.disabled) {
     background-color: #efefef;
 

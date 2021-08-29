@@ -20,13 +20,7 @@
       ref="t"
     />
     <div v-if="focused && suggests.length > 0 && !confirmed" class="text-suggests">
-      <div
-        class="suggestion-template"
-        v-for="s in suggests"
-        @click.stop.prevent.capture="selectSuggestion(s)"
-        v-html="s"
-        :key="s"
-      />
+      <div class="suggestion-template" v-for="s in suggests" @click.capture="selectSuggestion(s)" v-html="s" :key="s" />
       <div class="suggests-header">
         Предложения по вашим шаблонам <span>(<a href="#" class="a-under" @click.prevent="templatesOpen">настроить</a>)</span>
       </div>
@@ -79,7 +73,7 @@ export default {
       } else {
         this.focusTimeout = setTimeout(() => {
           this.focused = false;
-        }, 100);
+        }, 120);
       }
     },
     async loadSuggests() {
