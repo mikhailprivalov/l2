@@ -27,6 +27,9 @@
         v-html="s"
         :key="s"
       />
+      <div class="suggests-header">
+        Предложения по вашим шаблонам <span>(<a href="#" class="a-under" @click.prevent="templatesOpen">настроить</a>)</span>
+      </div>
     </div>
   </div>
 </template>
@@ -64,6 +67,9 @@ export default {
     event: 'modified',
   },
   methods: {
+    templatesOpen() {
+      this.$root.$emit(`templates-open:${this.fieldPk}`);
+    },
     changeFocused(f) {
       if (this.focusTimeout) {
         clearTimeout(this.focusTimeout);
@@ -127,6 +133,16 @@ export default {
 
   & + & {
     margin-top: 5px;
+  }
+}
+
+.suggests-header {
+  font-weight: bold;
+  margin-top: 5px;
+  font-size: 12px;
+
+  span {
+    font-weight: normal;
   }
 }
 </style>

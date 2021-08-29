@@ -91,6 +91,9 @@ export default {
       value: '',
     };
   },
+  mounted() {
+    this.$root.$on(`templates-open:${this.field.pk}`, () => this.show());
+  },
   methods: {
     async show() {
       this.value = '';
