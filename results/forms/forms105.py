@@ -232,7 +232,6 @@ def death_data2(iss: Issledovaniya, direction, offset=0):
     text = check_person_data(text, "")
     text = bottom_colontitul(text, '** В случае, установленном частью 10 статьи 9 Федерального закона от 5 июня 2012 г. № 50-ФЗ "О регулировании деятельности российских граждан и '
                                    'российских юридических лиц в Антарктике" (Собрание законодательства Российской Федерации, 2012, № 24, ст. 3067). ')
-
     obj = []
     obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 168 * mm, text=text))
 
