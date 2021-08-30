@@ -59,6 +59,24 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/menu',
+      name: 'construct_menu',
+      component: () => import('@/construct/ConstructMenu.vue'),
+      meta: {
+        title: 'Конструктор справочника',
+        groups: [
+          'Конструктор: Лабораторные исследования',
+          'Конструктор: Параклинические (описательные) исследования',
+          'Конструктор: Консультации',
+          'Конструктор: Ёмкости для биоматериала',
+          'Конструктор: Настройка УЕТов',
+          'Конструктор: Группировка исследований по направлениям',
+          'Конструктор: Настройка скрининга',
+        ],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/screening',
       name: 'construct_screening',
       component: () => import('@/construct/ConstructScreening.vue'),

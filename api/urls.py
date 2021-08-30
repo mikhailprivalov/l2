@@ -52,6 +52,7 @@ urlpatterns = [
     path('input-templates/get', views.input_templates_get),
     path('input-templates/delete', views.input_templates_delete),
     path('input-templates/suggests', views.input_templates_suggests),
+    path('construct-menu-data', views.construct_menu_data),
     path('researches/', include('api.researches.urls')),
     path('patients/', include('api.patients.urls')),
     path('directions/', include('api.directions.urls')),
