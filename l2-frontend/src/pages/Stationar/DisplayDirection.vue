@@ -1,4 +1,4 @@
-<template functional>
+<template>
   <div
     class="root-dd"
     v-tippy="{

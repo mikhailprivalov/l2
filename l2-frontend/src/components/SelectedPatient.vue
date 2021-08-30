@@ -1,4 +1,4 @@
-<template functional>
+<template>
   <div class="top-root">
     <div class="param"><strong>Пациент:</strong></div>
     <div class="param" v-if="card.pk === -1">

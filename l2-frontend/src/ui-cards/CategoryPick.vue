@@ -1,4 +1,4 @@
-<template functional>
+<template>
   <div>
     <span class="rps">
       {{ category.title }}<span v-if="category.selected > 0"> ({{ category.selected }})</span>
