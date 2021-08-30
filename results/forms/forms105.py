@@ -76,8 +76,8 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.extend(template)
     template = add_line_split(iss, direction, -1 * mm)
     fwb.extend(template)
-    template = death_data(iss, direction, -5 * mm)
-    fwb.extend(template)
+    # template = death_data(iss, direction, -5 * mm)
+    # fwb.extend(template)
 
     return fwb
 
@@ -139,26 +139,6 @@ def add_template(iss: Issledovaniya, direction, offset=0):
     return obj
 
 
-def second_page_add_template(iss: Issledovaniya, direction, offset=0):
-    #
-    text = []
-    text = back_size(text)
-    text = why_death(text, "")
-    fio = ""
-    text = fio_tbl(text, "14. Фамилия, имя, отчество (при наличии) получателя", fio)
-    text.append(Paragraph("Документ, удостоверяющий личность получателя (серия, номер, кем выдан)", styleT))
-    text = destination_person_passport(text, "")
-    text = destination_person_snils(text, "")
-    text.append(Spacer(1, 2 * mm))
-    text.append(Paragraph(f"«___» ___________ 20 ___ г.{space_symbol * 30} Подпись получателя _________________________", styleT))
-
-
-    obj = []
-    obj.append(FrameDataUniversal(0 * mm,  offset, 190 * mm, 95 * mm, text=text))
-
-    return obj
-
-
 def add_line_split(iss: Issledovaniya, direction, offset=0):
     # Лини отреза
     text = []
@@ -177,6 +157,61 @@ def death_data(iss: Issledovaniya, direction, offset=0):
     text = title_data(text, "2xx", "123456789", "20.08.2021", "взамен окончательного")
     fio = "Ивано Иван Иванович Ивано Иван"
     text.append(Spacer(1, 1.7 * mm))
+    text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fio)
+
+    # Пол
+    text.append(Spacer(1, 0.3 * mm))
+    text = sex_tbl(text, "ж")
+
+    # Дата рождения
+    born_day = "01"
+    born_month = "01"
+    born_year = "1970"
+    text = born_tbl(text, "")
+
+    text = patient_passport(text, {"type": "Паспорт гражданина РФ (России)", "serial": "2504", "number": "000000"})
+    text = who_issue_passport(text, {"who_issue": "УВД Свердловского района гор Иркутска", "date_issue": "20.00.2000"})
+    text = patient_snils(text, "1234567890123")
+    text = patient_polis(text, "0000 0000 0000 0000")
+    text = death_tbl(text, "7. Дата смерти:", "")
+    text = address_tbl(text, "", "8. Регистрация по месту жительства (пребывания) умершего(ей):")
+    text = type_city(text, "город")
+    text = where_death_start_tbl(text, "")
+    text = child_death_befor_month(text, "")
+    text = child_death_befor_year(text, {"weight": 3500, "child_count": 1, "mother_born": "", "mother_age": "", "mother_family": "", "mother_name": "", "mother_patronimyc": ""})
+    text = family_status(text, "")
+    text = education(text, "")
+    text = work_position(text, "")
+    text = bottom_colontitul(text, "* В случае смерти детей, возраст которых указан в пунктах 13 - 14, пункты 15 - 17 заполняются в отношении их матерей.")
+
+    obj = []
+    obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 168 * mm, text=text))
+
+    return obj
+
+
+def second_page_add_template(iss: Issledovaniya, direction, offset=0):
+    #
+    text = []
+    text = back_size(text)
+    text = why_death(text, "")
+    fio = ""
+    text = fio_tbl(text, "14. Фамилия, имя, отчество (при наличии) получателя", fio)
+    text.append(Paragraph("Документ, удостоверяющий личность получателя (серия, номер, кем выдан)", styleT))
+    text = destination_person_passport(text, "")
+    text = destination_person_snils(text, "")
+    text.append(Spacer(1, 2 * mm))
+    text.append(Paragraph(f"«___» ___________ 20 ___ г.{space_symbol * 30} Подпись получателя _________________________", styleT))
+
+    obj = []
+    obj.append(FrameDataUniversal(0 * mm,  offset, 190 * mm, 95 * mm, text=text))
+
+    return obj
+
+
+def death_data2(iss: Issledovaniya, direction, offset=0):
+    text = []
+
     text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fio)
 
     # Пол
@@ -995,5 +1030,44 @@ def destination_person_snils(text, data):
     col_width = (50 * mm, 140 * mm)
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.2 * mm))
+    text.append(tbl)
+    return text
+
+
+def death_happaned(text, params):
+    ill, unfortunate_not_work, unfortunate_work = "от заболевания", "несчастного случая: не связанного с производством", "связанного с производством", "убийства"
+    opinion = gen_opinion(['18. Смерть произошла:', ill, '1', unfortunate_not_work, '2', unfortunate_work, '3', kill, '4'])
+
+    col_width = (24 * mm, 18 * mm, 6 * mm, 80 * mm, 6 * mm, 24 * mm, 6 * mm,  20 * mm, 6 * mm, )
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+        ('RIGHTPADDING', (1, 0), (-1, -1), -2 * mm),
+        ('GRID', (2, 0), (2, 0), 0.75, colors.black),
+        ('GRID', (4, 0), (4, 0), 0.75, colors.black),
+        ('GRID', (6, 0), (6, 0), 0.75, colors.black),
+        ('GRID', (8, 0), (8, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
+    text.append(tbl)
+
+    kill, self_kill, military, terrorist, not_know = "убийства", "самоубийства", ", в ходе действий: военных", "террористических", ", неизвестно"
+    opinion = gen_opinion([not_work, '5', others, '6', not_known, '6'])
+    col_width = (26 * mm, 6 * mm, 17 * mm, 6 * mm, 21 * mm, 6 * mm, )
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+        ('RIGHTPADDING', (1, 0), (-1, -1), -2 * mm),
+        ('GRID', (1, 0), (1, 0), 0.75, colors.black),
+        ('GRID', (3, 0), (3, 0), 0.75, colors.black),
+        ('GRID', (5, 0), (5, 0), 0.75, colors.black),
+        ('GRID', (7, 0), (7, 0), 0.75, colors.black),
+        ('GRID', (9, 0), (9, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
     return text
