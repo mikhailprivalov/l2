@@ -42,9 +42,12 @@
                 class="btn btn-default btn-field"
                 pressing-text="×"
                 v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21, 24, 25, 26, 27, 28].includes(field.field_type)"
+                title="Очистить поле (удерживайте кнопку)"
+                v-tippy
               >
                 ×
               </longpress>
+              <InputTemplates :field="field" :group="group" v-if="!confirmed && [0].includes(field.field_type)" />
               <FastTemplates
                 :update_value="updateValue(field)"
                 :value="field.value"
@@ -53,15 +56,8 @@
                 :field_type="field.field_type"
                 :field_title="field.title"
               />
-              <div class="field-value" v-if="field.field_type === 0">
-                <textarea
-                  :readonly="confirmed"
-                  :rows="field.lines"
-                  class="form-control"
-                  v-if="field.lines > 1"
-                  v-model="field.value"
-                ></textarea>
-                <input :readonly="confirmed" class="form-control" v-else v-model="field.value" />
+              <div class="field-value field-value-with-templates" v-if="field.field_type === 0">
+                <TextFieldWithTemplates v-model="field.value" :confirmed="confirmed" :field-pk="field.pk" :lines="field.lines" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 1">
                 <input :readonly="confirmed" class="form-control" style="width: 160px" type="date" v-model="field.value" />
@@ -156,6 +152,7 @@
                   :disabled="confirmed"
                   :client-pk="patient.card_pk"
                   :edit-title="`${group.title} ${field.title}`.trim()"
+                  :strict="false"
                 />
               </div>
               <div
@@ -185,12 +182,14 @@ import Longpress from 'vue-longpress';
 import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
 import FastTemplates from './FastTemplates.vue';
+import InputTemplates from './InputTemplates.vue';
 import { enter_field, leave_field } from './utils';
 
 export default {
   name: 'DescriptiveForm',
   components: {
     FastTemplates,
+    InputTemplates,
     VisibilityGroupWrapper,
     VisibilityFieldWrapper,
     Longpress,
@@ -213,6 +212,7 @@ export default {
     DocReferralPreviousResults: () => import('../fields/DocReferralPreviousResults.vue'),
     PermanentDirectoryField: () => import('../fields/PermanentDirectoryField.vue'),
     AddressFiasField: () => import('../fields/AddressFiasField.vue'),
+    TextFieldWithTemplates: () => import('../fields/TextFieldWithTemplates.vue'),
   },
   props: {
     research: {
@@ -272,7 +272,13 @@ export default {
 
       for (const g of this.research.groups) {
         for (const f of g.fields) {
-          if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
+          if (
+            f.required
+            && (f.value === ''
+              || f.value === '- Не выбрано'
+              || !f.value
+              || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""'))))
+          ) {
             l.push(f.pk);
           }
         }

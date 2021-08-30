@@ -1230,10 +1230,12 @@ export default {
         let n = 0;
         for (const f of g.fields) {
           n++;
-          console.log(f.title, f.controlParam);
           if (
             (f.required
-              && (f.value === '' || f.value === '- Не выбрано' || !f.value)
+              && (f.value === ''
+                || f.value === '- Не выбрано'
+                || !f.value
+                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""'))))
               && vField(g, research.research.groups, f.visibility, this.data.patient))
             || (f.controlParam && !vField(g, research.research.groups, f.controlParam, this.data.patient))
           ) {

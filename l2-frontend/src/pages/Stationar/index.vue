@@ -1167,7 +1167,10 @@ export default {
           if (
             f.required
             && f.field_type !== 3
-            && (f.value === '' || f.value === '- Не выбрано' || !f.value)
+            && (f.value === ''
+              || f.value === '- Не выбрано'
+              || !f.value
+              || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""'))))
             && vField(g, research.research.groups, f.visibility, this.patient_form)
           ) {
             l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));

@@ -586,17 +586,21 @@ def patients_card_save(request):
         vals = json.loads(request_data["main_address_full"])
         c.main_address = vals['address']
         c.main_address_fias = vals['fias']
+        c.main_address_details = vals['details']
     except:
         c.main_address = request_data["main_address"]
         c.main_address_fias = None
+        c.main_address_details = None
 
     try:
         vals = json.loads(request_data["fact_address_full"])
         c.fact_address = vals['address']
         c.fact_address_fias = vals['fias']
+        c.fact_address_details = vals['details']
     except:
         c.fact_address = request_data["fact_address"]
         c.fact_address_fias = None
+        c.fact_address_details = None
 
     c.number_poliklinika = request_data.get("number_poli", "")
     if request_data["custom_workplace"] or not Company.objects.filter(pk=request_data.get("work_place_db", -1)).exists():

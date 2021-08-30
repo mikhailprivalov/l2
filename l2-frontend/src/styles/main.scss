@@ -979,6 +979,14 @@ body.showloader #page-preloader {
   z-index: 100000;
 }
 
+.dg-backdrop {
+  z-index: 49999 !important;
+}
+
+.dg-container {
+  z-index: 50000 !important;
+}
+
 .sk-fading-circle {
   width: 20px;
   height: 20px;
@@ -1497,6 +1505,25 @@ body > .container-fluid {
   padding-left: 5px;
 }
 
+.form-control-area {
+  height: unset;
+  min-height: 26px;
+
+  &.form-control-area-full {
+    min-height: 34px;
+  }
+}
+
+.field-value.field-value-with-templates {
+  position: relative;
+
+  &:hover {
+    .input-templates {
+      display: block;
+    }
+  }
+}
+
 .field {
   display: flex;
   flex-direction: row;
@@ -1946,8 +1973,44 @@ input[type="date"].form-control {
   }
 }
 
+.treeselect-input-group {
+  height: 34px;
+  max-height: 34px;
+  display: flex;
+  justify-content: stretch;
+
+  .input-group-addon {
+    height: 34px;
+    line-height: 18px;
+    vertical-align: middle;
+  }
+
+  .vue-treeselect {
+    &__control {
+      border-left: none !important;
+      border-radius: 0 !important;
+      height: 34px !important;
+    }
+
+    &__placeholder,
+    &__single-value {
+      line-height: 34px !important;
+    }
+  }
+
+  .has-error {
+    .vue-treeselect__control {
+      border-color: #f00 !important;
+    }
+  }
+}
+
 .treeselect-noborder .vue-treeselect__control {
   border: none !important;
+  border-radius: 0 !important;
+}
+
+.treeselect-nbr .vue-treeselect__control {
   border-radius: 0 !important;
 }
 
@@ -1970,6 +2033,17 @@ input[type="date"].form-control {
   &__placeholder,
   &__single-value {
     line-height: 32px !important;
+  }
+}
+
+.treeselect-34px .vue-treeselect {
+  &__control {
+    height: 34px !important;
+  }
+
+  &__placeholder,
+  &__single-value {
+    line-height: 34px !important;
   }
 }
 
@@ -2619,4 +2693,17 @@ input[type="date"].form-control {
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+.input-multiple > input.form-control {
+  width: auto;
+}
+
+.input-multiple > input.form-control + input.form-control {
+  border-left: 0;
+}
+
+.w-100 {
+  min-width: 100%;
+  width: 100% !important;
 }
