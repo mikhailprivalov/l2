@@ -94,6 +94,24 @@ const getRe = (re: string, m: any) => {
   return RE_CACHE[k];
 };
 
+const BRACKETS_REPLACE_CACHE = {};
+
+const replaceBrackets = (str: string) => {
+  if (!BRACKETS_REPLACE_CACHE[str]) {
+    BRACKETS_REPLACE_CACHE[str] = str.replace(reOpen, '\\{').replace(reClose, '\\}');
+  }
+  return BRACKETS_REPLACE_CACHE[str];
+};
+
+const BRACKETS_CLEAN_CACHE = {};
+
+const cleanBrackets = (str: string) => {
+  if (!BRACKETS_CLEAN_CACHE[str]) {
+    BRACKETS_CLEAN_CACHE[str] = str.replace(reBrackets, '');
+  }
+  return BRACKETS_CLEAN_CACHE[str];
+};
+
 export const PrepareFormula = (
   fields: Field[],
   formula: string,
@@ -108,7 +126,7 @@ export const PrepareFormula = (
   if (necessary) {
     for (const n of necessary) {
       let v = null;
-      const vid = n.replace(reBrackets, '');
+      const vid = cleanBrackets(n);
       const vFromField = (fields[vid] || {}).value;
       const vOrig = String(Number(vFromField) === 0 ? 0 : vFromField || '').trim();
       if (returnLinks) {
@@ -125,7 +143,7 @@ export const PrepareFormula = (
         } else {
           v = vOrig;
         }
-        const r = getRe(n.replace(reOpen, '\\{').replace(reClose, '\\}'), 'g');
+        const r = getRe(replaceBrackets(n), 'g');
         if (strict) {
           s = s.replace(r, `\`${v}\``);
         } else {
