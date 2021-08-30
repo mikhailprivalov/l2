@@ -347,7 +347,7 @@ const validateDetails = (details, strict) => Boolean(details?.region && (!strict
 
 const prependStr = (v, s) => {
   if (s) {
-    return `${v || ''} ${s || ''}`;
+    return `${v || ''} ${s}`;
   }
 
   return v || '';
