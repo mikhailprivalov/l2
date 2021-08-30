@@ -275,6 +275,7 @@
                 class="form-control form-control-forced-last"
                 v-model="details.postal_code"
                 :readonly="!details.custom"
+                :maxlength="6"
               />
             </div>
 
@@ -468,6 +469,8 @@ const prependStr = (v, s) => {
         const parts = [this.details.postal_code, region, area, city, settlement, street, house, flat];
 
         this.address = parts.filter(Boolean).join(', ');
+
+        this.details.postal_code = this.details.postal_code.replace(/\D/g, '');
       },
     },
   },
