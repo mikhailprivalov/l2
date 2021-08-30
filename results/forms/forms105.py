@@ -76,8 +76,8 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.extend(template)
     template = add_line_split(iss, direction, -1 * mm)
     fwb.extend(template)
-    # template = death_data(iss, direction, -5 * mm)
-    # fwb.extend(template)
+    template = death_data2(iss, direction, -5 * mm)
+    fwb.extend(template)
 
     return fwb
 
@@ -211,33 +211,27 @@ def second_page_add_template(iss: Issledovaniya, direction, offset=0):
 
 def death_data2(iss: Issledovaniya, direction, offset=0):
     text = []
-
-    text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fio)
-
-    # Пол
-    text.append(Spacer(1, 0.3 * mm))
-    text = sex_tbl(text, "ж")
-
-    # Дата рождения
-    born_day = "01"
-    born_month = "01"
-    born_year = "1970"
-    text = born_tbl(text, "")
-
-    text = patient_passport(text, {"type": "Паспорт гражданина РФ (России)", "serial": "2504", "number": "000000"})
-    text = who_issue_passport(text, {"who_issue": "УВД Свердловского района гор Иркутска", "date_issue": "20.00.2000"})
-    text = patient_snils(text, "1234567890123")
-    text = patient_polis(text, "0000 0000 0000 0000")
-    text = death_tbl(text, "7. Дата смерти:", "")
-    text = address_tbl(text, "", "8. Регистрация по месту жительства (пребывания) умершего(ей):")
-    text = type_city(text, "город")
-    text = where_death_start_tbl(text, "")
-    text = child_death_befor_month(text, "")
-    text = child_death_befor_year(text, {"weight": 3500, "child_count": 1, "mother_born": "", "mother_age": "", "mother_family": "", "mother_name": "", "mother_patronimyc": ""})
-    text = family_status(text, "")
-    text = education(text, "")
-    text = work_position(text, "")
-    text = bottom_colontitul(text, "* В случае смерти детей, возраст которых указан в пунктах 13 - 14, пункты 15 - 17 заполняются в отношении их матерей.")
+    text = death_happaned(text, "")
+    date, month, year, hour, min = "____", "____", "_________", "____", "____"
+    unfortunate_and_other_info = "________________________________________________________________________________________________________________________"
+    text.append(Paragraph(
+        f"19. В случае смерти от несчастного случая, убийства, самоубийства, от военных и террористических действий, при неустановленном роде смерти - указать дату травмы (отравления): "
+        f"число {date} месяц {month} год {year} час. {hour} мин. {min} , а также место и обстоятельства, при",
+        styleT))
+    text.append(Paragraph(f"{unfortunate_and_other_info}", styleT))
+    text = who_set_death(text, "")
+    text = doctor_fio(text, "")
+    text.append(Spacer(1, 1 * mm))
+    text = why_death(text, "")
+    text.append(Spacer(1, 2 * mm))
+    text.append(Paragraph("<u>Руководитель (иное уполномоченное лицо **) медицинской организации</u>, индивидуальный предприниматель, осуществляющий медицинскую деятельность (подчеркнуть)", styleT))
+    text.append(Spacer(1, 2 * mm))
+    text = hospital_manager_stamp(text, "")
+    text.append(Spacer(1, 2 * mm))
+    text.append(Paragraph("26 Свидетельство проверено ответственным за правильность заполнения медицинских свидетельств.", styleT))
+    text = check_person_data(text, "")
+    text = bottom_colontitul(text, '** В случае, установленном частью 10 статьи 9 Федерального закона от 5 июня 2012 г. № 50-ФЗ "О регулировании деятельности российских граждан и '
+                                   'российских юридических лиц в Антарктике" (Собрание законодательства Российской Федерации, 2012, № 24, ст. 3067). ')
 
     obj = []
     obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 168 * mm, text=text))
@@ -955,11 +949,26 @@ def why_death(text, params):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.2 * mm))
     text.append(tbl)
+
+    fio_write_doc = ""
+    opinion = gen_opinion([f'{fio_write_doc}', 'Подпись', ''])
+    col_width = (140 * mm, 20 * mm, 30 * mm)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+        ('LINEBELOW', (0, 0), (0, 0), 0.75, colors.black),
+        ('LINEBELOW', (2, 0), (2, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.2 * mm))
+    text.append(tbl)
+
     return text
 
 
 def diagnos_tbl(data):
-    opinion = gen_opinion([data["para"], data["item"], '', '', '', '', '', '', '', ''])
+    opinion = gen_opinion([data["para"], data["item"], '', '', '', '', '', '', '.', ''])
     col_width = (7 * mm, 7 * mm, 96 * mm, 40 * mm, 5 * mm, 7 * mm, 7 * mm, 7 * mm, 6 * mm, 7 * mm,)
     tbl_style = [
         ('GRID', (5, 0), (5, 0), 0.75, colors.black),
@@ -1035,10 +1044,10 @@ def destination_person_snils(text, data):
 
 
 def death_happaned(text, params):
-    ill, unfortunate_not_work, unfortunate_work = "от заболевания", "несчастного случая: не связанного с производством", "связанного с производством", "убийства"
-    opinion = gen_opinion(['18. Смерть произошла:', ill, '1', unfortunate_not_work, '2', unfortunate_work, '3', kill, '4'])
+    ill, unfortunate_not_work, unfortunate_work = "от заболевания", "несчастного случая: не связанного с производством", "связанного с производством"
+    opinion = gen_opinion(['18. Смерть произошла:', ill, '1', unfortunate_not_work, '2', unfortunate_work, '3'])
 
-    col_width = (24 * mm, 18 * mm, 6 * mm, 80 * mm, 6 * mm, 24 * mm, 6 * mm,  20 * mm, 6 * mm, )
+    col_width = (34 * mm, 23 * mm, 6 * mm, 74 * mm, 6 * mm, 43 * mm, 6 * mm, )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1054,8 +1063,8 @@ def death_happaned(text, params):
     text.append(tbl)
 
     kill, self_kill, military, terrorist, not_know = "убийства", "самоубийства", ", в ходе действий: военных", "террористических", ", неизвестно"
-    opinion = gen_opinion([not_work, '5', others, '6', not_known, '6'])
-    col_width = (26 * mm, 6 * mm, 17 * mm, 6 * mm, 21 * mm, 6 * mm, )
+    opinion = gen_opinion([kill, '4', self_kill, '5', military, '6', terrorist, '7', not_know, '8'])
+    col_width = (20 * mm, 6 * mm, 23 * mm, 6 * mm, 40 * mm, 6 * mm, 28 * mm, 6 * mm, 20 * mm, 6 * mm, )
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1071,3 +1080,161 @@ def death_happaned(text, params):
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
     return text
+
+
+def who_set_death(text, params):
+    only_doc_death, doc_work, paramedic = "врачом, только установившем смерть", "лечащим врачом", "фельдшером (акушеркой)"
+    opinion = gen_opinion(['20. Причины смерти установлены:', only_doc_death, '1', doc_work, '2', paramedic, '3'])
+
+    col_width = (49 * mm, 54 * mm, 6 * mm, 27 * mm, 6 * mm, 37 * mm, 6 * mm, )
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+        ('RIGHTPADDING', (1, 0), (-1, -1), -2 * mm),
+        ('GRID', (2, 0), (2, 0), 0.75, colors.black),
+        ('GRID', (4, 0), (4, 0), 0.75, colors.black),
+        ('GRID', (6, 0), (6, 0), 0.75, colors.black),
+        ('GRID', (8, 0), (8, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.9 * mm))
+    text.append(tbl)
+
+    doc_anatomy, expert = "врачом-патологоанатомом", "судебно-медицинским экспертом"
+    opinion = gen_opinion([doc_anatomy, '4', expert, '5'])
+    col_width = (45 * mm, 6 * mm, 50 * mm, 6 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+        ('RIGHTPADDING', (1, 0), (-1, -1), -2 * mm),
+        ('GRID', (1, 0), (1, 0), 0.75, colors.black),
+        ('GRID', (3, 0), (3, 0), 0.75, colors.black),
+        ('GRID', (5, 0), (5, 0), 0.75, colors.black),
+        ('GRID', (7, 0), (7, 0), 0.75, colors.black),
+        ('GRID', (9, 0), (9, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
+    text.append(tbl)
+    return text
+
+
+def doctor_fio(text, params):
+    doc_fio = ""
+    opinion = gen_opinion(['21. Я, врач (фельдшер, акушерка)', doc_fio])
+
+    col_width = (50 * mm, 140 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 0 * mm),
+        ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
+    text.append(tbl)
+
+    doc_position = ""
+    opinion = gen_opinion(['должность', doc_position])
+    col_width = (25 * mm, 165 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+        ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
+    text.append(tbl)
+
+    opinion = gen_opinion(['удостоверяю, что на основании:', 'осмотра трупа', '1', ', записей в медицинской документации', '2'])
+    col_width = (53 * mm, 24 * mm, 6 * mm, 58 * mm, 6 * mm, )
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+        ('GRID', (2, 0), (2, 0), 0.75, colors.black),
+        ('GRID', (4, 0), (4, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
+    text.append(tbl)
+
+    opinion = gen_opinion(['предшествующего наблюдения за больным(ой)', '3', ', вскрытия', '4', ' мною установлены причины смерти'])
+    col_width = (72 * mm, 6 * mm, 19 * mm, 6 * mm, 70 * mm)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+        ('GRID', (1, 0), (1, 0), 0.75, colors.black),
+        ('GRID', (3, 0), (3, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
+    text.append(tbl)
+
+    return text
+
+
+def hospital_manager_stamp(text, params):
+    fio_manager = ""
+    opinion = gen_opinion(['','', '', '', ''])
+    col_width = (45 * mm, 5 * mm, 45 * mm, 5 * mm, 90 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+        ('LINEBELOW', (0, 0), (0, 0), 0.75, colors.black),
+        ('LINEBELOW', (2, 0), (2, 0), 0.75, colors.black),
+        ('LINEBELOW', (4, 0), (4, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 3 * mm))
+    text.append(tbl)
+
+    fio_manager = ""
+    opinion = gen_opinion(['печать', 'подпись', '(фамилия, имя, отчество (при наличии)'])
+    col_width = (45 * mm, 45 * mm, 100 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 15 * mm),
+        ('LEFTPADDING', (1, 0), (1, 0), 15 * mm),
+        ('LEFTPADDING', (2, 0), (2, 0), 15 * mm),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 0.4 * mm))
+    text.append(tbl)
+
+
+    # opinion = gen_opinion(['печать', 'подпись', '(фамилия, имя, отчество (при наличии)'])
+    # col_width = (53 * mm, 24 * mm, 6 * mm, 58 * mm, 6 * mm,)
+    # tbl_style = [
+    #     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    #     ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+    #     ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+    # ]
+    # tbl = gen_table(opinion, col_width, tbl_style)
+    # text.append(Spacer(1, 0.4 * mm))
+    # text.append(tbl)
+
+    return text
+
+
+def check_person_data(text, params):
+    date_value = "«___» ___________ 20 ___ г."
+    opinion = gen_opinion([date_value, ''])
+    col_width = (60 * mm, 130 * mm,)
+    tbl_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
+        ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
+        ('LINEBELOW', (1, 0), (1, 0), 0.75, colors.black),
+    ]
+    tbl = gen_table(opinion, col_width, tbl_style)
+    text.append(Spacer(1, 3 * mm))
+    text.append(tbl)
+    return text
+
