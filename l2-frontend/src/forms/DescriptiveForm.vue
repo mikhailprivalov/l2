@@ -136,7 +136,13 @@
                 <DocReferralPreviousResults v-model="field.value" :disabled="confirmed" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 27">
-                <TableField :variants="field.values_to_input" v-model="field.value" :disabled="confirmed" />
+                <TableField
+                  :variants="field.values_to_input"
+                  :fields="research.groups.reduce((a, b) => a.concat(b.fields), [])"
+                  :field-pk="field.pk"
+                  v-model="field.value"
+                  :disabled="confirmed"
+                />
               </div>
               <div class="field-value" v-else-if="field.field_type === 28">
                 <PermanentDirectoryField

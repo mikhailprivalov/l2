@@ -113,7 +113,7 @@
             v-autosize="columns.settings[i].variants"
           ></textarea>
         </div>
-        <v-collapse-wrapper>
+        <v-collapse-wrapper v-if="columns.settings[i].type !== 'rowNumber'">
           <div class="header" v-collapse-toggle>
             <a href="#" class="a-under" @click.prevent>
               Проверка корректности ячеек колонки
@@ -131,14 +131,23 @@
                 </strong>
                 <ul>
                   <li><code>currentRowN</code> – текущая строка (начинается с 1)</li>
-                  <li><code>currentCellN</code> – текущая ячейка (начинается с 1)</li>
+                  <li><code>currentColumnN</code> – текущая колонка (начинается с 1)</li>
                   <li><code>currentFieldId</code> – id текущего поля</li>
-                  <li><code>getCellContent(rowN, cellN, fieldId)</code> – получение значения ячейки из таблицы поля</li>
-                  <li><code>getCellContent</code> – вернёт null, если поле или строка или ячейка не найдены</li>
+                  <li><code>getCellContent(rowN, columnN, fieldId)</code> – получение значения ячейки из таблицы поля</li>
+                  <li><code>getFieldText(fieldId)</code> – получение текстового значения поля</li>
+                  <li>
+                    <code>getCellContent</code> и <code>getFieldText</code> – вернёт null, если поле или строка или ячейка не
+                    найдены
+                  </li>
                 </ul>
               </div>
             </div>
-            <vue-codeditor v-model="columns.settings[i].validator" mode="javascript" theme="cobalt" />
+            <vue-codeditor
+              v-model.lazy="columns.settings[i].validator"
+              mode="javascript"
+              theme="cobalt"
+              @input="updateValidator(i, $event)"
+            />
           </div>
         </v-collapse-wrapper>
       </div>
@@ -149,6 +158,7 @@
 </template>
 <script lang="ts">
 import _ from 'lodash';
+import { debounce } from 'lodash/function';
 import VueCodeditor from 'vue-codeditor';
 import SelectField from '@/fields/SelectField.vue';
 import RadioField from '@/fields/RadioField.vue';
@@ -221,11 +231,18 @@ export default {
     result: {
       deep: true,
       handler() {
-        this.row.values_to_input = [JSON.stringify(this.result)];
+        this.updateValue();
       },
     },
   },
   methods: {
+    updateValidator: debounce(function (i, v) {
+      this.columns.settings[i].validator = v;
+      this.updateValue();
+    }, 100),
+    updateValue: debounce(function () {
+      this.row.values_to_input = [JSON.stringify(this.result)];
+    }, 100),
     checkTable() {
       let params = this.row.values_to_input[0] || '{}';
       try {
