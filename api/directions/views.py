@@ -2034,7 +2034,7 @@ def last_field_result(request):
         result = {"value": c.fact_address_full}
     elif request_data["fieldPk"].find('%phone') != -1:
         result = {"value": c.phone}
-    elif request_data["fieldPk"].find('hospital_current_manager') != - 1:
+    elif request_data["fieldPk"].find('current_manager') != - 1:
         current_iss = request_data["iss_pk"]
         num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
         hospital_manager = Napravleniya.objects.get(pk=num_dir).hospital.current_manager
