@@ -58,6 +58,12 @@
               placeholder="Значение по умолчанию"
             />
             <MKBFieldForm v-else-if="columns.settings[i].type === 2" :short="false" v-model="r[i]" />
+            <input
+              class="form-control"
+              v-else-if="columns.settings[i].type === 23"
+              v-model="r[i]"
+              placeholder="Ссылка на значение"
+            />
             <div v-else-if="columns.settings[i].type === 'rowNumber'" style="padding: 5px;">
               <strong>{{ r[i] }}</strong>
             </div>
@@ -176,6 +182,7 @@ const COLUMN_TYPES = [
   [18, 'Число'],
   ['rowNumber', 'Номер строки'],
   [2, 'Диагноз по МКБ'],
+  [23, 'Ссылка без автозагрузки'],
 ];
 
 const DEFAULT_SETTINGS = () => ({

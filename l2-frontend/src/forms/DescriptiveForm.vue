@@ -36,14 +36,20 @@
               <longpress
                 :confirm-time="0"
                 :duration="400"
-                :on-confirm="clear_val"
-                :value="field"
+                :on-confirm="clear_val_by_pk"
+                :value="field.pk"
                 action-text="×"
                 class="btn btn-default btn-field"
                 pressing-text="×"
-                v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21, 24, 25, 26, 27, 28].includes(field.field_type)"
+                v-if="
+                  !confirmed &&
+                    !{ 3: 1, 10: 1, 12: 1, 15: 1, 16: 1, 17: 1, 18: 1, 19: 1, 21: 1, 24: 1, 25: 1, 26: 1, 27: 1, 28: 1 }[
+                      field.field_type
+                    ]
+                "
                 title="Очистить поле (удерживайте кнопку)"
                 v-tippy
+                :key="`longpress-${field.pk}`"
               >
                 ×
               </longpress>
@@ -142,6 +148,8 @@
                   :field-pk="field.pk"
                   v-model="field.value"
                   :disabled="confirmed"
+                  :card_pk="patient.card_pk"
+                  :iss_pk="pk"
                 />
               </div>
               <div class="field-value" v-else-if="field.field_type === 28">
@@ -321,6 +329,12 @@ export default {
       } else {
         // eslint-disable-next-line no-param-reassign
         field.value = '';
+      }
+    },
+    clear_val_by_pk(pk) {
+      const field = this.research.groups.reduce((a, b) => a.concat(b.fields), []).find(f => f.pk === pk);
+      if (field) {
+        this.clear_val(field);
       }
     },
     enter_field(...args) {

@@ -60,6 +60,18 @@
               :short="false"
               v-model="r[i]"
             />
+            <SearchFieldValueField
+              v-else-if="settings[i].type === 23"
+              :readonly="false"
+              :field-pk-initial="r[i]"
+              :client-pk="card_pk"
+              :lines="1"
+              :raw="true"
+              :not_autoload_result="true"
+              :iss_pk="iss_pk"
+              v-model="r[i]"
+              :once="true"
+            />
 
             <div v-if="errors[`${fieldPk}_${j}_${i}`]" class="has-error-message">
               {{ errors[`${fieldPk}_${j}_${i}`] }}
@@ -82,6 +94,7 @@ import SelectField from '@/fields/SelectField.vue';
 import RadioField from '@/fields/RadioField.vue';
 import DateFieldWithNow from '@/fields/DateFieldWithNow.vue';
 import MKBFieldForm from '@/fields/MKBFieldForm.vue';
+import SearchFieldValueField from '@/fields/SearchFieldValueField.vue';
 
 const DEFAULT_SETTINGS = () => ({
   type: 0,
@@ -98,6 +111,7 @@ export default {
     RadioField,
     SelectField,
     MKBFieldForm,
+    SearchFieldValueField,
   },
   props: {
     value: {
@@ -117,12 +131,14 @@ export default {
       default: false,
       type: Boolean,
     },
+    card_pk: Number,
+    iss_pk: Number,
   },
   mounted() {
     this.checkTable();
   },
   beforeDestroy() {
-    this.$root.$emit('table-field:errors:set', this.fieldPk, false);
+    this.hasErrors = false;
   },
   data() {
     return {
@@ -138,6 +154,7 @@ export default {
       validators: {},
       errors: {},
       errorsCounter: 0,
+      hasErrors: false,
     };
   },
   computed: {
@@ -175,6 +192,12 @@ export default {
       deep: true,
       handler() {
         this.errorsCounter += 1;
+      },
+    },
+    hasErrors: {
+      immediate: true,
+      handler() {
+        this.$root.$emit('table-field:errors:set', this.fieldPk, this.hasErrors);
       },
     },
   },
@@ -244,6 +267,7 @@ export default {
       this.rows = value.rows;
       this.validators = validators;
       this.errors = {};
+      this.hasErrors = false;
 
       this.validate();
     },
@@ -345,7 +369,7 @@ export default {
         }
       }
       this.errors = { ...this.errors };
-      this.$root.$emit('table-field:errors:set', this.fieldPk, hasInvalid);
+      this.hasErrors = hasInvalid;
     },
     validateRowsLength() {
       const c = this.params.columns.count;
