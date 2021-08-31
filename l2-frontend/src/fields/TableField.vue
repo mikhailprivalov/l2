@@ -305,6 +305,8 @@ export default {
       this.validateRowsValues(...args);
     }, 300),
     validateRowsValues(onlyValidator = false) {
+      let hasInvalid = false;
+
       for (let i = 0; i < this.settings.length; i++) {
         const t = this.settings[i].type;
 
@@ -327,7 +329,6 @@ export default {
           }
         }
 
-        let hasInvalid = false;
         if (t !== 'rowNumber') {
           const validator = this.validators[i] || (() => false);
 
@@ -342,9 +343,9 @@ export default {
             }
           }
         }
-        this.errors = { ...this.errors };
-        this.$root.$emit('table-field:errors:set', this.fieldPk, hasInvalid);
       }
+      this.errors = { ...this.errors };
+      this.$root.$emit('table-field:errors:set', this.fieldPk, hasInvalid);
     },
     validateRowsLength() {
       const c = this.params.columns.count;

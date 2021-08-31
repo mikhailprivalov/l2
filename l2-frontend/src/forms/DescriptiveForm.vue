@@ -253,6 +253,7 @@ export default {
       prev_scroll: 0,
       prev_scrollHeightTop: 0,
       versionTickTimer: null,
+      tableFieldsErrors: {},
     };
   },
   watch: {
@@ -265,6 +266,13 @@ export default {
   },
   mounted() {
     this.versionTickTimer = setInterval(() => this.inc_version(), 2000);
+
+    this.$root.$on('table-field:errors:set', (fieldPk, hasInvalid) => {
+      this.tableFieldsErrors = {
+        ...this.tableFieldsErrors,
+        [fieldPk]: hasInvalid,
+      };
+    });
   },
   beforeDestroy() {
     clearInterval(this.versionTickTimer);
@@ -279,11 +287,12 @@ export default {
       for (const g of this.research.groups) {
         for (const f of g.fields) {
           if (
-            f.required
-            && (f.value === ''
-              || f.value === '- Не выбрано'
-              || !f.value
-              || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""'))))
+            (f.required
+              && (f.value === ''
+                || f.value === '- Не выбрано'
+                || !f.value
+                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))
+            || this.tableFieldsErrors[f.pk]
           ) {
             l.push(f.pk);
           }

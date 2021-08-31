@@ -1028,6 +1028,7 @@ export default {
         2: 'Результат подтверждён',
       },
       embedded: false,
+      tableFieldsErrors: {},
     };
   },
   watch: {
@@ -1102,6 +1103,13 @@ export default {
 
     this.$root.$on('preselect-args-ok', () => {
       this.hasPreselectOk = true;
+    });
+
+    this.$root.$on('table-field:errors:set', (fieldPk, hasInvalid) => {
+      this.tableFieldsErrors = {
+        ...this.tableFieldsErrors,
+        [fieldPk]: hasInvalid,
+      };
     });
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -1231,11 +1239,12 @@ export default {
         for (const f of g.fields) {
           n++;
           if (
-            (f.required
+            (((f.required
               && (f.value === ''
                 || f.value === '- Не выбрано'
                 || !f.value
-                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""'))))
+                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))
+              || this.tableFieldsErrors[f.pk])
               && vField(g, research.research.groups, f.visibility, this.data.patient))
             || (f.controlParam && !vField(g, research.research.groups, f.controlParam, this.data.patient))
           ) {
@@ -1533,6 +1542,7 @@ export default {
       this.dreg_rows = [];
       this.benefit_rows_loading = false;
       this.benefit_rows = [];
+      this.tableFieldsErrors = {};
       this.$root.$emit('preselect-card', null);
     },
     print_direction(pk) {
