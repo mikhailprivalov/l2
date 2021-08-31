@@ -303,7 +303,7 @@ export default {
     },
     validateRowsValuesDebounced: debounce(function (...args) {
       this.validateRowsValues(...args);
-    }, 300),
+    }, 100),
     validateRowsValues(onlyValidator = false) {
       let hasInvalid = false;
 
