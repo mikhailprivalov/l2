@@ -2477,7 +2477,10 @@ def tubes_for_get(request):
     }
 
     try:
-        direction_pk = data_parse(request.body, parse_params)[0]
+        direction_pk = int(data_parse(request.body, parse_params)[0])
+        if direction_pk >= 4600000000000:
+            direction_pk -= 4600000000000
+            direction_pk //= 10
         direction = (
             Napravleniya.objects.select_related('hospital')
             .select_related('doc')
