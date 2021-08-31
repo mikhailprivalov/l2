@@ -2707,3 +2707,8 @@ input[type="date"].form-control {
   min-width: 100%;
   width: 100% !important;
 }
+
+.formulate-input[data-classification="button"] button {
+  border-color: #049372;
+  background-color: #049372;
+}

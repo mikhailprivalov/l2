@@ -75,7 +75,7 @@
           </div>
           <div class="form-row">
             <div class="row-t">Дата рождения</div>
-            <input class="form-control" type="date" v-model="card.birthday" />
+            <input class="form-control" type="date" v-model="card.birthday" autocomplete="off" />
           </div>
           <div class="form-row">
             <div class="row-t">Пол</div>

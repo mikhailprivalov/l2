@@ -3,7 +3,7 @@
     <Navbar v-if="!embedded" />
 
     <div :class="isNarrowLayout && 'container'">
-      <router-view v-if="!fullPageLoader"></router-view>
+      <router-view></router-view>
     </div>
 
     <div id="preloader" v-if="inLoading"></div>
@@ -168,7 +168,7 @@ export default class App extends Vue {
 <style lang="scss">
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.7s;
+  transition: opacity 0.5s;
 }
 
 .fade-enter,

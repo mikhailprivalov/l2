@@ -14,38 +14,7 @@ from podrazdeleniya.models import Podrazdeleniya
 @ensure_csrf_cookie
 @login_required
 def menu(request):
-    """ Меню конструктора """
-    groups = [str(x) for x in request.user.groups.all()]
-    pages = [
-        {"url": "/construct/tubes", "title": "Ёмкости для биоматериала", "access": ["Конструктор: Ёмкости для биоматериала"], "module": None},
-        {"url": "/construct/researches", "title": "Лабораторные исследования", "access": ["Конструктор: Лабораторные исследования"], "module": None},
-        {
-            "url": "/construct/researches-paraclinic",
-            "title": "Описательные исследования и консультации",
-            "access": ["Конструктор: Параклинические (описательные) исследования"],
-            "module": "paraclinic_module",
-        },
-        {"url": "/construct/directions_group", "title": "Группировка исследований по направлениям", "access": ["Конструктор: Группировка исследований по направлениям"], "module": None},
-        {"url": "/construct/uets", "title": "Настройка УЕТов", "access": ["Конструктор: Настройка УЕТов"], "module": None},
-        {"url": "/construct/templates", "title": "Настройка шаблонов", "access": ["Конструктор: Настройка шаблонов"], "module": None},
-        {"url": "/construct/bacteria", "title": "Бактерии и антибиотики", "access": ["Конструктор: Бактерии и антибиотики"], "module": None},
-        {"url": "/construct/dplan", "title": "Д-учет", "access": ["Конструктор: Д-учет"], "module": None},
-        {"url": "/ui/construct/screening", "title": "Настройка скрининга", "access": ["Конструктор: Настройка скрининга"], "module": None},
-    ]
-
-    from context_processors.utils import make_menu
-
-    menu = make_menu(pages, groups, request.user.is_superuser)
-
-    menu_st = [menu[i:i + 4] for i in range(0, len(menu), 4)]
-
-    return render(
-        request,
-        'construct_menu.html',
-        {
-            "menu": menu_st,
-        },
-    )
+    return redirect('/ui/construct/menu')
 
 
 @login_required
