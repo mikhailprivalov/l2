@@ -91,6 +91,7 @@ class Log(models.Model):
         (80004, 'Лист ожидания: отмена записи'),
         (90000, 'L2.Core: Приём результатов'),
         (100000, 'Стационар: Смена отделения'),
+        (110000, 'Настройка организации'),
     )
     key = models.CharField(max_length=2047)
     type = models.IntegerField(choices=TYPES)

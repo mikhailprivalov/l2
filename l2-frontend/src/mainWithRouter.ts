@@ -86,6 +86,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/org',
+      name: 'construct_org',
+      component: () => import('@/construct/ConstructOrg.vue'),
+      meta: {
+        title: 'Настройка организации',
+        groups: ['Конструктор: Настройка организации'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/extra-notification',
       name: 'extra_notification',
       component: () => import('@/pages/ExtraNotification.vue'),

@@ -23,9 +23,11 @@
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="{% static 'icon/ms-icon-144x144.png' %}">
     <meta name="theme-color" content="#ffffff">
+    {% autoescape off %}
     <title>
         {% firstof request.user.doctorprofile.hospital_safe_title org_title %}
     </title>
+    {% endautoescape %}
 
     <link rel="preload" href="{% manifest 'chunk-vendors.css' %}" as="style"/>
     <link rel="preload" href="{% manifest 'chunk-common.css' %}" as="style"/>
@@ -117,9 +119,11 @@
 <script src="{% static 'locales/bootstrap-datepicker.ru.min.js' %}"></script>
 <script src="{% manifest 'chunk-vendors.js' %}"></script>
 <script src="{% manifest 'chunk-common.js' %}"></script>
+{% autoescape off %}
 <script>
     window.ORG_TITLE = `{% firstof request.user.doctorprofile.hospital_safe_title org_title|safe %}`;
 </script>
+{% endautoescape %}
 <script src="{% manifest 'router.js' %}"></script>
 </body>
 </html>

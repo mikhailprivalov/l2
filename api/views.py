@@ -1677,6 +1677,7 @@ def construct_menu_data(request):
         {"url": "/construct/bacteria", "title": "Бактерии и антибиотики", "access": ["Конструктор: Бактерии и антибиотики"], "module": None},
         {"url": "/construct/dplan", "title": "Д-учет", "access": ["Конструктор: Д-учет"], "module": None},
         {"url": "/ui/construct/screening", "title": "Настройка скрининга", "access": ["Конструктор: Настройка скрининга"], "module": None},
+        {"url": "/ui/construct/org", "title": "Настройка организации", "access": ["Конструктор: Настройка организации"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -1688,3 +1689,97 @@ def construct_menu_data(request):
             "menu": menu,
         }
     )
+
+
+@login_required
+def current_org(request):
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    org = {
+        "pk": hospital.pk,
+        "title": hospital.title,
+        "shortTitle": hospital.short_title,
+        "address": hospital.address,
+        "phones": hospital.phones,
+        "ogrn": hospital.ogrn,
+        "www": hospital.www,
+        "email": hospital.email,
+        "licenseData": hospital.license_data,
+        "currentManager": hospital.current_manager,
+    }
+    return JsonResponse({"org": org})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def current_org_update(request):
+    parse_params = {
+        'title': str,
+        'shortTitle': str,
+        'address': str,
+        'phones': str,
+        'ogrn': str,
+        'currentManager': str,
+        'licenseData': str,
+        'www': str,
+        'email': str,
+    }
+
+    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
+
+    title: str = data[0].strip()
+    short_title: str = data[1].strip()
+    address: str = data[2].strip()
+    phones: str = data[3].strip()
+    ogrn: str = data[4].strip()
+    current_manager: str = data[5].strip()
+    license_data: str = data[6].strip()
+    www: str = data[7].strip()
+    email: str = data[8].strip()
+
+    if not title:
+        return status_response(False, 'Название не может быть пустым')
+
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    old_data = {
+        "title": hospital.title,
+        "short_title": hospital.short_title,
+        "address": hospital.address,
+        "phones": hospital.phones,
+        "ogrn": hospital.ogrn,
+        "current_manager": hospital.current_manager,
+        "license_data": hospital.license_data,
+        "www": hospital.www,
+        "email": hospital.email,
+    }
+
+    new_data = {
+        "title": title,
+        "short_title": short_title,
+        "address": address,
+        "phones": phones,
+        "ogrn": ogrn,
+        "current_manager": current_manager,
+        "license_data": license_data,
+        "www": www,
+        "email": email,
+    }
+
+    hospital.title = title
+    hospital.short_title = short_title
+    hospital.address = address
+    hospital.phones = phones
+    hospital.ogrn = ogrn
+    hospital.current_manager = current_manager
+    hospital.license_data = license_data
+    hospital.www = www
+    hospital.email = email
+    hospital.save()
+
+    Log.log(hospital.pk, 110000, request.user.doctorprofile, {
+        "oldData": old_data,
+        "newData": new_data,
+    })
+
+    return status_response(True)
