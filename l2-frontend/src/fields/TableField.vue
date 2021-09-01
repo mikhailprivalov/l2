@@ -29,19 +29,53 @@
               {{ r[i] }}
             </div>
             <template v-else-if="settings[i].type === 0">
-              <textarea :rows="settings[i].lines" class="form-control" v-if="settings[i].lines > 1" v-model="r[i]"></textarea>
-              <input class="form-control" v-else v-model="r[i]" />
+              <textarea
+                :rows="settings[i].lines"
+                class="form-control"
+                :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
+                v-if="settings[i].lines > 1"
+                v-model="r[i]"
+              ></textarea>
+              <input class="form-control" :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'" v-else v-model="r[i]" />
             </template>
             <DateFieldWithNow v-else-if="settings[i].type === 1" v-model="r[i]" />
             <SelectField
               :variants="settings[i].variants"
               class="form-control fw"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
               v-else-if="settings[i].type === 10"
               v-model="r[i]"
             />
             <RadioField :variants="settings[i].variants" v-else-if="settings[i].type === 12" v-model="r[i]" />
-            <input class="form-control" v-else-if="settings[i].type === 18" v-model="r[i]" type="number" />
-            <MKBFieldForm v-else-if="settings[i].type === 2" :short="false" v-model="r[i]" />
+            <input
+              class="form-control"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
+              v-else-if="settings[i].type === 18"
+              v-model="r[i]"
+              type="number"
+            />
+            <MKBFieldForm
+              v-else-if="settings[i].type === 2"
+              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
+              :short="false"
+              v-model="r[i]"
+            />
+            <SearchFieldValueField
+              v-else-if="settings[i].type === 23"
+              :readonly="false"
+              :field-pk-initial="r[i]"
+              :client-pk="card_pk"
+              :lines="1"
+              :raw="true"
+              :not_autoload_result="false"
+              :iss_pk="iss_pk"
+              v-model="r[i]"
+              :once="true"
+            />
+
+            <div v-if="errors[`${fieldPk}_${j}_${i}`]" class="has-error-message">
+              {{ errors[`${fieldPk}_${j}_${i}`] }}
+            </div>
           </td>
         </tr>
         <tr v-if="params.dynamicRows && !disabled">
@@ -55,16 +89,19 @@
 </template>
 <script lang="ts">
 import _ from 'lodash';
+import { debounce } from 'lodash/function';
 import SelectField from '@/fields/SelectField.vue';
 import RadioField from '@/fields/RadioField.vue';
 import DateFieldWithNow from '@/fields/DateFieldWithNow.vue';
 import MKBFieldForm from '@/fields/MKBFieldForm.vue';
+import SearchFieldValueField from '@/fields/SearchFieldValueField.vue';
 
 const DEFAULT_SETTINGS = () => ({
   type: 0,
   lines: 1,
   variants: '',
   width: '',
+  validator: '',
 });
 
 export default {
@@ -74,6 +111,7 @@ export default {
     RadioField,
     SelectField,
     MKBFieldForm,
+    SearchFieldValueField,
   },
   props: {
     value: {
@@ -82,14 +120,25 @@ export default {
     variants: {
       required: true,
     },
+    fieldPk: {
+      required: true,
+    },
+    fields: {
+      required: true,
+    },
     disabled: {
       required: false,
       default: false,
       type: Boolean,
     },
+    card_pk: Number,
+    iss_pk: Number,
   },
   mounted() {
     this.checkTable();
+  },
+  beforeDestroy() {
+    this.hasErrors = false;
   },
   data() {
     return {
@@ -102,6 +151,10 @@ export default {
         dynamicRows: true,
       },
       rows: [],
+      validators: {},
+      errors: {},
+      errorsCounter: 0,
+      hasErrors: false,
     };
   },
   computed: {
@@ -114,6 +167,9 @@ export default {
         rows: this.rows,
       };
     },
+    otherValues() {
+      return this.fields.reduce((a, b) => ({ ...a, [b.pk]: b.value }), {});
+    },
     settings() {
       return this.params.columns.settings || [];
     },
@@ -122,7 +178,26 @@ export default {
     result: {
       deep: true,
       handler() {
+        this.validateRowsValuesDebounced(true);
         this.changeValue(JSON.stringify(this.result));
+      },
+    },
+    otherValues: {
+      deep: true,
+      handler() {
+        this.validateRowsValuesDebounced(true);
+      },
+    },
+    errors: {
+      deep: true,
+      handler() {
+        this.errorsCounter += 1;
+      },
+    },
+    hasErrors: {
+      immediate: true,
+      handler() {
+        this.$root.$emit('table-field:errors:set', this.fieldPk, this.hasErrors);
       },
     },
   },
@@ -161,15 +236,38 @@ export default {
         params.columns.settings.push({});
       }
 
+      const validators = {};
+
       for (let i = 0; i < params.columns.settings.length; i++) {
         const s = params.columns.settings[i];
         params.columns.settings[i] = { ...DEFAULT_SETTINGS(), ...s };
+        const validatorSource = params.columns.settings[i].validator;
+
+        if (!this.disabled && validatorSource && typeof validatorSource === 'string') {
+          try {
+            // eslint-disable-next-line no-new-func
+            validators[i] = new Function(
+              'currentRowN',
+              'currentColumnN',
+              'currentFieldId',
+              'getCellContent',
+              'getFieldText',
+              validatorSource,
+            );
+          } catch (error) {
+            console.error(error);
+            this.$root.$emit('msg', 'error', `Некорректная функция валидации в колонке ${i + 1} поля ${this.fieldPk}`);
+          }
+        }
       }
 
       value.rows = value.rows.filter(r => Array.isArray(r) && r.every(v => _.isString(v)));
 
       this.params = params;
       this.rows = value.rows;
+      this.validators = validators;
+      this.errors = {};
+      this.hasErrors = false;
 
       this.validate();
     },
@@ -185,27 +283,93 @@ export default {
       this.validateRowsLength();
       this.validateRowsValues();
     },
-    validateRowsValues() {
+    getCellContent(row, column, fieldId) {
+      const r = row - 1;
+      const c = column - 1;
+
+      let rows = null;
+
+      if (fieldId === this.fieldPk) {
+        rows = this.rows;
+      } else {
+        const field = this.fields.find(f => f.pk === fieldId && f.field_type === 27);
+
+        if (field) {
+          let value = field.value || '{}';
+          try {
+            value = JSON.parse(value);
+          } catch (e) {
+            value = {};
+          }
+
+          if (Array.isArray(value.rows)) {
+            rows = value.rows;
+          }
+        }
+      }
+
+      if (rows && rows.length > r) {
+        if (rows[r].length > c) {
+          return rows[r][c];
+        }
+      }
+
+      return null;
+    },
+    getFieldText(fieldId) {
+      const field = this.fields.find(f => f.pk === fieldId);
+
+      if (field) {
+        return field.value;
+      }
+
+      return null;
+    },
+    validateRowsValuesDebounced: debounce(function (...args) {
+      this.validateRowsValues(...args);
+    }, 10),
+    validateRowsValues(onlyValidator = false) {
+      let hasInvalid = false;
+
       for (let i = 0; i < this.settings.length; i++) {
         const t = this.settings[i].type;
 
-        if (t === 'rowNumber') {
-          for (let j = 0; j < this.rows.length; j++) {
-            const r = this.rows[j];
-            r[i] = `${j + 1}`;
-          }
-        } else if (t === 10 || t === 12) {
-          const v = (this.settings[i].variants || '').split('\n');
-          for (let j = 0; j < this.rows.length; j++) {
-            const r = this.rows[j];
+        if (!onlyValidator) {
+          if (t === 'rowNumber') {
+            for (let j = 0; j < this.rows.length; j++) {
+              const r = this.rows[j];
+              r[i] = `${j + 1}`;
+            }
+          } else if (t === 10 || t === 12) {
+            const v = (this.settings[i].variants || '').split('\n');
+            for (let j = 0; j < this.rows.length; j++) {
+              const r = this.rows[j];
 
-            if (!v.includes(r[i])) {
-              // eslint-disable-next-line prefer-destructuring
-              r[i] = v[0];
+              if (!v.includes(r[i])) {
+                // eslint-disable-next-line prefer-destructuring
+                r[i] = v[0];
+              }
+            }
+          }
+        }
+
+        if (t !== 'rowNumber') {
+          const validator = this.validators[i] || (() => false);
+
+          for (let j = 0; j < this.rows.length; j++) {
+            const validateResult = validator(j + 1, i + 1, this.fieldPk, this.getCellContent, this.getFieldText);
+            const cellId = `${this.fieldPk}_${j}_${i}`;
+
+            this.errors[cellId] = validateResult;
+
+            if (validateResult) {
+              hasInvalid = true;
             }
           }
         }
       }
+      this.errors = { ...this.errors };
+      this.hasErrors = hasInvalid;
     },
     validateRowsLength() {
       const c = this.params.columns.count;

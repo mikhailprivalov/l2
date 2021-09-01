@@ -14,6 +14,7 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.db.models.signals import pre_save
 from django.utils import timezone
+from jsonfield import JSONField
 
 import slog.models as slog
 from appconf.manager import SettingManager
@@ -897,10 +898,10 @@ class Card(models.Model):
     main_diagnosis = models.CharField(max_length=36, blank=True, default='', help_text="Основной диагноз", db_index=True)
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
     main_address_fias = models.CharField(max_length=128, blank=True, default=None, null=True, help_text="ФИАС Адрес регистрации")
-    main_address_details = models.JSONField(blank=True, null=True, help_text="Детали адреса регистрации")
+    main_address_details = JSONField(blank=True, null=True, help_text="Детали адреса регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
     fact_address_fias = models.CharField(max_length=128, blank=True, default=None, null=True, help_text="ФИАС Адрес факт. проживания")
-    fact_address_details = models.JSONField(blank=True, null=True, help_text="Детали факт адреса")
+    fact_address_details = JSONField(blank=True, null=True, help_text="Детали факт адреса")
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
     work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
