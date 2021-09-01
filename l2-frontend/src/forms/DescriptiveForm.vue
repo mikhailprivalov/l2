@@ -33,20 +33,16 @@
               <div class="field-title" v-if="field.title !== '' && !research.wide_headers">
                 {{ field.title }}
               </div>
-              <longpress
-                :confirm-time="0"
-                :duration="400"
-                :on-confirm="clear_val"
-                :value="field"
-                action-text="×"
-                class="btn btn-default btn-field"
-                pressing-text="×"
-                v-if="!confirmed && ![3, 10, 12, 15, 16, 17, 18, 19, 21, 24, 25, 26, 27, 28].includes(field.field_type)"
-                title="Очистить поле (удерживайте кнопку)"
-                v-tippy
-              >
-                ×
-              </longpress>
+              <LPress
+                v-if="
+                  !confirmed &&
+                    !{ 3: 1, 10: 1, 12: 1, 15: 1, 16: 1, 17: 1, 18: 1, 19: 1, 21: 1, 24: 1, 25: 1, 26: 1, 27: 1, 28: 1 }[
+                      field.field_type
+                    ]
+                "
+                :pk="field.pk"
+                :on-confirm="clear_val_by_pk"
+              />
               <InputTemplates :field="field" :group="group" v-if="!confirmed && [0].includes(field.field_type)" />
               <FastTemplates
                 :update_value="updateValue(field)"
@@ -136,7 +132,15 @@
                 <DocReferralPreviousResults v-model="field.value" :disabled="confirmed" />
               </div>
               <div class="field-value" v-else-if="field.field_type === 27">
-                <TableField :variants="field.values_to_input" v-model="field.value" :disabled="confirmed" />
+                <TableField
+                  :variants="field.values_to_input"
+                  :fields="research.groups.reduce((a, b) => a.concat(b.fields), [])"
+                  :field-pk="field.pk"
+                  v-model="field.value"
+                  :disabled="confirmed"
+                  :card_pk="patient.card_pk"
+                  :iss_pk="pk"
+                />
               </div>
               <div class="field-value" v-else-if="field.field_type === 28">
                 <PermanentDirectoryField
@@ -177,8 +181,7 @@
 </template>
 
 <script lang="ts">
-// @ts-ignore
-import Longpress from 'vue-longpress';
+import LPress from '@/ui-cards/LPress.vue';
 import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
 import FastTemplates from './FastTemplates.vue';
@@ -192,7 +195,7 @@ export default {
     InputTemplates,
     VisibilityGroupWrapper,
     VisibilityFieldWrapper,
-    Longpress,
+    LPress,
     TextareaAutocomplete: () => import('../fields/TextareaAutocomplete.vue'),
     NumberRangeField: () => import('../fields/NumberRangeField.vue'),
     NumberField: () => import('../fields/NumberField.vue'),
@@ -247,6 +250,7 @@ export default {
       prev_scroll: 0,
       prev_scrollHeightTop: 0,
       versionTickTimer: null,
+      tableFieldsErrors: {},
     };
   },
   watch: {
@@ -259,6 +263,13 @@ export default {
   },
   mounted() {
     this.versionTickTimer = setInterval(() => this.inc_version(), 2000);
+
+    this.$root.$on('table-field:errors:set', (fieldPk, hasInvalid) => {
+      this.tableFieldsErrors = {
+        ...this.tableFieldsErrors,
+        [fieldPk]: hasInvalid,
+      };
+    });
   },
   beforeDestroy() {
     clearInterval(this.versionTickTimer);
@@ -273,11 +284,12 @@ export default {
       for (const g of this.research.groups) {
         for (const f of g.fields) {
           if (
-            f.required
-            && (f.value === ''
-              || f.value === '- Не выбрано'
-              || !f.value
-              || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""'))))
+            (f.required
+              && (f.value === ''
+                || f.value === '- Не выбрано'
+                || !f.value
+                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))
+            || this.tableFieldsErrors[f.pk]
           ) {
             l.push(f.pk);
           }
@@ -306,6 +318,12 @@ export default {
       } else {
         // eslint-disable-next-line no-param-reassign
         field.value = '';
+      }
+    },
+    clear_val_by_pk(pk) {
+      const field = this.research.groups.reduce((a, b) => a.concat(b.fields), []).find(f => f.pk === pk);
+      if (field) {
+        this.clear_val(field);
       }
     },
     enter_field(...args) {

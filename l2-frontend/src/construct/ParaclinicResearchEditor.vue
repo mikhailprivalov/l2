@@ -532,7 +532,7 @@ export default {
       default: () => ({}),
     },
     period_types: {
-      type: Object,
+      type: Array,
       required: false,
       default: () => [],
     },
@@ -1034,6 +1034,7 @@ export default {
 .content-editor {
   padding: 5px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .ed-group {

@@ -58,6 +58,12 @@
               placeholder="Значение по умолчанию"
             />
             <MKBFieldForm v-else-if="columns.settings[i].type === 2" :short="false" v-model="r[i]" />
+            <input
+              class="form-control"
+              v-else-if="columns.settings[i].type === 23"
+              v-model="r[i]"
+              placeholder="Ссылка на значение"
+            />
             <div v-else-if="columns.settings[i].type === 'rowNumber'" style="padding: 5px;">
               <strong>{{ r[i] }}</strong>
             </div>
@@ -113,6 +119,43 @@
             v-autosize="columns.settings[i].variants"
           ></textarea>
         </div>
+        <v-collapse-wrapper v-if="columns.settings[i].type !== 'rowNumber'">
+          <div class="header" v-collapse-toggle>
+            <a href="#" class="a-under" @click.prevent>
+              Проверка корректности ячеек колонки
+            </a>
+          </div>
+          <div v-collapse-content class="code-editor">
+            <div class="code-help">
+              Код ниже является телом функции-валидатора.<br />
+              Сделайте <code>return false;</code>, если значение корректно.<br />
+              Если значение некорректно, то верните сообщение об ошибке.<br />
+              Например <code>return "Ячейка не может быть пуста";</code>
+              <div>
+                <strong>
+                  Доступные параметры и функции
+                </strong>
+                <ul>
+                  <li><code>currentRowN</code> – текущая строка (начинается с 1)</li>
+                  <li><code>currentColumnN</code> – текущая колонка (начинается с 1)</li>
+                  <li><code>currentFieldId</code> – id текущего поля</li>
+                  <li><code>getCellContent(rowN, columnN, fieldId)</code> – получение значения ячейки из таблицы поля</li>
+                  <li><code>getFieldText(fieldId)</code> – получение текстового значения поля</li>
+                  <li>
+                    <code>getCellContent</code> и <code>getFieldText</code> – вернёт null, если поле или строка или ячейка не
+                    найдены
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <vue-codeditor
+              v-model.lazy="columns.settings[i].validator"
+              mode="javascript"
+              theme="cobalt"
+              @input="updateValidator(i, $event)"
+            />
+          </div>
+        </v-collapse-wrapper>
       </div>
     </div>
 
@@ -121,6 +164,8 @@
 </template>
 <script lang="ts">
 import _ from 'lodash';
+import { debounce } from 'lodash/function';
+import VueCodeditor from 'vue-codeditor';
 import SelectField from '@/fields/SelectField.vue';
 import RadioField from '@/fields/RadioField.vue';
 import MKBFieldForm from '@/fields/MKBFieldForm.vue';
@@ -137,6 +182,7 @@ const COLUMN_TYPES = [
   [18, 'Число'],
   ['rowNumber', 'Номер строки'],
   [2, 'Диагноз по МКБ'],
+  [23, 'Ссылка без автозагрузки'],
 ];
 
 const DEFAULT_SETTINGS = () => ({
@@ -144,11 +190,17 @@ const DEFAULT_SETTINGS = () => ({
   lines: 1,
   variants: '',
   width: '',
+  validator: '',
 });
 
 export default {
   name: 'TableConstructor',
-  components: { RadioField, SelectField, MKBFieldForm },
+  components: {
+    RadioField,
+    SelectField,
+    MKBFieldForm,
+    VueCodeditor,
+  },
   props: {
     row: {},
   },
@@ -186,11 +238,18 @@ export default {
     result: {
       deep: true,
       handler() {
-        this.row.values_to_input = [JSON.stringify(this.result)];
+        this.updateValue();
       },
     },
   },
   methods: {
+    updateValidator: debounce(function (i, v) {
+      this.columns.settings[i].validator = v;
+      this.updateValue();
+    }, 100),
+    updateValue: debounce(function () {
+      this.row.values_to_input = [JSON.stringify(this.result)];
+    }, 100),
     checkTable() {
       let params = this.row.values_to_input[0] || '{}';
       try {
@@ -266,6 +325,11 @@ export default {
           s = {};
         }
         this.columns.settings[i] = { ...DEFAULT_SETTINGS(), ...s };
+
+        if (typeof this.columns.settings[i].validator !== 'string') {
+          this.columns.settings[i].validator = '';
+        }
+
         if (!this.COLUMN_TYPES.map(t => t[0]).includes(this.columns.settings[i].type)) {
           // eslint-disable-next-line prefer-destructuring
           this.columns.settings[i].type = this.COLUMN_TYPES[0][0];
@@ -335,5 +399,26 @@ export default {
 <style scoped lang="scss">
 .column-card {
   padding: 5px;
+}
+
+.code-editor ::v-deep {
+  .ace_editor {
+    min-height: 100px;
+  }
+
+  .ace_editor,
+  .ace_editor * {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Droid Sans Mono', 'Consolas', monospace !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+  }
+}
+
+.code-help {
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 8%);
+  border-radius: 4px;
 }
 </style>
