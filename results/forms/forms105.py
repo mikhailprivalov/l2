@@ -67,7 +67,6 @@ space_symbol = '&nbsp;'
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     # Мед. св-во о смерти 106/у
     data_individual = direction.client.get_data_individual
-
     data = {}
 
     title_fields = [
@@ -158,7 +157,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         if i["title"] == "образование":
             data["education"] = i["value"]
             continue
-
 
     template = add_template(iss, direction, 5 * mm)
     fwb.extend(template)
