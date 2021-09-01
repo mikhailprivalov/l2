@@ -350,6 +350,7 @@
                 :position="['left', 'bottom', 'left', 'top']"
                 v-if="!data.has_microbiology && !data.has_monitoring"
                 @clickout="hide_results"
+                :key="`dd-${row.pk}`"
               >
                 <a style="font-weight: normal" href="#" @click.prevent="open_results(row.pk)">
                   (другие результаты)
@@ -424,6 +425,7 @@
             :patient="data.patient"
             :change_mkb="change_mkb(row)"
             :pk="row.pk"
+            :key="`df-${row.pk}`"
           />
           <div
             class="group"

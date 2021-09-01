@@ -29,6 +29,7 @@
                 mouseleave: leave_field(field.values_to_input.length > 0),
               }"
               class="field"
+              :key="`field-${field.pk}`"
             >
               <div class="field-title" v-if="field.title !== '' && !research.wide_headers">
                 {{ field.title }}
