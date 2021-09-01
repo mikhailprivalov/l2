@@ -33,26 +33,16 @@
               <div class="field-title" v-if="field.title !== '' && !research.wide_headers">
                 {{ field.title }}
               </div>
-              <longpress
-                :confirm-time="0"
-                :duration="400"
-                :on-confirm="clear_val_by_pk"
-                :value="field.pk"
-                action-text="×"
-                class="btn btn-default btn-field"
-                pressing-text="×"
+              <LPress
                 v-if="
                   !confirmed &&
                     !{ 3: 1, 10: 1, 12: 1, 15: 1, 16: 1, 17: 1, 18: 1, 19: 1, 21: 1, 24: 1, 25: 1, 26: 1, 27: 1, 28: 1 }[
                       field.field_type
                     ]
                 "
-                title="Очистить поле (удерживайте кнопку)"
-                v-tippy
-                :key="`longpress-${field.pk}`"
-              >
-                ×
-              </longpress>
+                :pk="field.pk"
+                :on-confirm="clear_val_by_pk"
+              />
               <InputTemplates :field="field" :group="group" v-if="!confirmed && [0].includes(field.field_type)" />
               <FastTemplates
                 :update_value="updateValue(field)"
@@ -191,8 +181,7 @@
 </template>
 
 <script lang="ts">
-// @ts-ignore
-import Longpress from 'vue-longpress';
+import LPress from '@/ui-cards/LPress.vue';
 import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
 import FastTemplates from './FastTemplates.vue';
@@ -206,7 +195,7 @@ export default {
     InputTemplates,
     VisibilityGroupWrapper,
     VisibilityFieldWrapper,
-    Longpress,
+    LPress,
     TextareaAutocomplete: () => import('../fields/TextareaAutocomplete.vue'),
     NumberRangeField: () => import('../fields/NumberRangeField.vue'),
     NumberField: () => import('../fields/NumberField.vue'),
