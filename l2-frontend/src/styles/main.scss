@@ -2006,7 +2006,10 @@ input[type="date"].form-control {
 }
 
 .has-error-field {
-  border-color: #f00 !important;
+  &,
+  .form-control {
+    border-color: #f00 !important;
+  }
 }
 
 .has-error-message {

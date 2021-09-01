@@ -14,6 +14,7 @@
     :limit="11"
     :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
     :selectFirst="true"
+    :classes="classes"
   />
 </template>
 
@@ -23,6 +24,10 @@ import TypeAhead from 'vue2-typeahead';
 export default {
   props: {
     value: String,
+    classes: {
+      type: String,
+      required: false,
+    },
     short: {
       type: Boolean,
       default: true,
