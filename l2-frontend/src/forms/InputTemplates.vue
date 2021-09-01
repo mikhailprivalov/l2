@@ -1,6 +1,6 @@
 <template>
   <div v-frag>
-    <button class="btn btn-default btn-field" @click="show" title="Шаблоны поля ввода" v-tippy>
+    <button class="btn btn-default btn-field" @click="show" title="Шаблоны поля ввода" v-tippy tabindex="-1">
       <i class="fa fa-list-alt"></i>
     </button>
 
