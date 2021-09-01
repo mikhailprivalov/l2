@@ -893,7 +893,7 @@ def table_part_result(value):
     return tbl
 
 
-def fields_result_only_title_fields(iss, title_fields):
+def fields_result_only_title_fields(iss, title_fields, is_bold=True):
     result = []
     title = ''
     if not title_fields:
@@ -910,7 +910,8 @@ def fields_result_only_title_fields(iss, title_fields):
                 v = v.replace('&lt;/sub&gt;', '</sub>')
                 v = v.replace('&lt;sup&gt;', '<sup>')
                 v = v.replace('&lt;/sup&gt;', '</sup>')
-                v = text_to_bold(v)
+                if is_bold:
+                    v = text_to_bold(v)
                 if field_type == 1:
                     vv = v.split('-')
                     if len(vv) == 3:
