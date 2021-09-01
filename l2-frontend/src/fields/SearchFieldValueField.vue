@@ -119,6 +119,9 @@ export default {
       this.loadLast();
     } else if (this.not_autoload_result && (!this.once || this.isStaticLink)) {
       this.val = '';
+    } else if (!this.not_autoload_result && this.once && this.isStaticLink) {
+      this.val = '';
+      this.loadLast();
     }
   },
   watch: {

@@ -67,7 +67,7 @@
               :client-pk="card_pk"
               :lines="1"
               :raw="true"
-              :not_autoload_result="true"
+              :not_autoload_result="false"
               :iss_pk="iss_pk"
               v-model="r[i]"
               :once="true"
