@@ -117,7 +117,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         if i["title"] == "Номер":
             data["number"] = i["value"]
             continue
-
         if i["title"] == "Дата выдачи":
             data["date_issue"] = i["value"]
             continue
@@ -154,9 +153,78 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         if i["title"] == "Семейное положение":
             data["family_status"] = i["value"]
             continue
-        if i["title"] == "образование":
+        if i["title"] == "Образование":
             data["education"] = i["value"]
             continue
+        if i["title"] == "Социальная группа":
+            data["education"] = i["value"]
+            continue
+        if i["title"] == "Тип ДУЛ":
+            data["doc_type"] = i["value"]
+            continue
+        if i["title"] == "ДУЛ":
+            data["doc_data"] = i["value"]
+            continue
+        if i["title"] == "Полис ОМС":
+            data["enp"] = i["value"]
+            continue
+        if i["title"] == "СНИЛС":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "Смерть от внешних причин":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "Дата смерти от внешних причин":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "Время смерти от внешних причин":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "Тип медицинского работника":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "Основания для определения причины смерти":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "а) Болезнь или состояние, напосредственно приведшее к смерти":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "б) патологическое состояние, которое привело к возникновению вышеуказанной причины:":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "в) первоначальная причина смерти:":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "г) внешняя причина при травмах и отравлениях:":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "II. Прочие важные состояния, способствовавшие смерти, но не связанные с болезнью или патологическим состоянием, приведшим к ней":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "ДТП":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "Связь смерти с ДТП":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "Беременность":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "Связь смерти с беременностью":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "Заполнил":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "Проверил":
+            data["snils"] = i["value"]
+            continue
+        if i["title"] == "Главный врач":
+            data["snils"] = i["value"]
+            continue
+
+
+
 
     template = add_template(iss, direction, 5 * mm)
     fwb.extend(template)

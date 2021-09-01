@@ -2028,6 +2028,31 @@ def last_field_result(request):
         result = {"value": data['snils']}
     elif request_data["fieldPk"].find('%polis_enp') != -1:
         result = {"value": data['enp']}
+    elif request_data["fieldPk"].find('%document_type') != -1:
+        if data['passport_num']:
+            result = {"value": "1-Паспорт гражданина Российской Федерации"}
+        elif not data['passport_num'] and data['bc_num']:
+            result = {"value": "6-Свидетельство о рождении"}
+    elif request_data["fieldPk"].find('%doc_serial') != -1:
+        if data['passport_num']:
+            result = {"value": data["passport_serial"]}
+        elif not data['passport_serial'] and data['bc_num']:
+            result = {"value": data["bc_serial"]}
+    elif request_data["fieldPk"].find('%doc_number') != -1:
+        if data['passport_num']:
+            result = {"value": data["passport_num"]}
+        elif not data['passport_serial'] and data['bc_num']:
+            result = {"value": data["bc_num"]}
+    elif request_data["fieldPk"].find('%doc_who_issue') != -1:
+        if data['passport_num']:
+            result = {"value": data["passport_issued"]}
+        elif not data['passport_serial'] and data['bc_num']:
+            result = {"value": data["bc_issued"]}
+    elif request_data["fieldPk"].find('%doc_date_issue') != -1:
+        if data['passport_num']:
+            result = {"value": data["passport_date_start"]}
+        elif not data['passport_serial'] and data['bc_num']:
+            result = {"value": data["bc_date_start"]}
     elif request_data["fieldPk"].find('%fact_address') != -1:
         result = {"value": c.fact_address}
     elif request_data["fieldPk"].find('%full_fact_address') != -1:
