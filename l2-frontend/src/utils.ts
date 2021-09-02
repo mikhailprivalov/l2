@@ -1,5 +1,7 @@
 import { StringDict } from '@/types/common';
 
+const DEBUG = false;
+
 const FUNCTION_CACHE = {};
 
 const patientProps = ['age', 'sex'];
@@ -128,7 +130,13 @@ export const PrepareFormula = (
       let v = null;
       const vid = cleanBrackets(n);
       const vFromField = (fields[vid] || {}).value;
-      const vOrig = String(Number(vFromField) === 0 ? 0 : vFromField || '').trim();
+      if (DEBUG) {
+        console.log('vFromField', vid, vFromField);
+      }
+      const vOrig = String(parseInt(vFromField || '', 10) === 0 ? 0 : vFromField || '').trim();
+      if (DEBUG) {
+        console.log('vOrig', vid, vOrig);
+      }
       if (returnLinks) {
         if (!links.find(l => l.id === vid)) {
           links.push(new Link(LINK_FIELD, vid));
@@ -171,14 +179,17 @@ export const PrepareFormula = (
 
   s = s.replace(reN, '\\n');
 
-  return `return (${s});`;
+  return `return /*strict=${strict}*/ (${s});`;
 };
 
-const isEmpty = v => !v || v === '0';
+const isEmpty = v => !v;
 const isFilled = v => !isEmpty(v);
 
 export const CalculateFormula = (fields: Field[], formula: string, patient = {}, strict = false): string | number => {
   const s = PrepareFormula(fields, formula, patient, strict);
+  if (DEBUG) {
+    console.log(s);
+  }
 
   if (Array.isArray(s)) {
     return '';
