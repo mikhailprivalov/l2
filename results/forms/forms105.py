@@ -66,7 +66,7 @@ space_symbol = '&nbsp;'
 
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     # Мед. св-во о смерти 106/у
-    data_individual = direction.client.get_data_individual
+    data_individual = direction.client.get_data_individual()
     data = {}
 
     title_fields = [
@@ -92,9 +92,13 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Социальная группа",
         "Полис ОМС",
         "СНИЛС",
-
+        "Тип ДУЛ",
+        "ДУЛ",
         "Род причины смерти",
         "Смерть от внешних причин",
+        "Дата смерти от внешних причин",
+        "Время смерти от внешних причин",
+
         "Тип медицинского работника",
         "Основания для определения причины смерти",
         "а) Болезнь или состояние, напосредственно приведшее к смерти",
@@ -102,169 +106,58 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "в) первоначальная причина смерти:",
         "г) внешняя причина при травмах и отравлениях:",
         "II. Прочие важные состояния, способствовавшие смерти, но не связанные с болезнью или патологическим состоянием, приведшим к ней",
+        "ДТП",
         "Связь смерти с ДТП",
+        "Беременность",
+        "Связь смерти с беременностью",
         "Заполнил",
         "Проверил",
         "Главный врач",
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
-        print(i)
-    for i in result:
-        if i["title"] == "Серия":
-            data["serial"] = i["value"]
-            continue
-        if i["title"] == "Номер":
-            data["number"] = i["value"]
-            continue
-        if i["title"] == "Дата выдачи":
-            data["date_issue"] = i["value"]
-            continue
-        if i["title"] == "Вид медицинского свидетельства о смерти":
-            data["type_doc"] = json.loads(i["value"])["code"]
-            continue
-        if i["title"] == "Дата рождения":
-            data["born_date"] = i["value"]
-            continue
-        if i["title"] == "Дата смерти":
-            data["death_date"] = i["value"]
-            continue
-        if i["title"] == "Время смерти":
-            data["death_time"] = i["value"]
-            continue
-        if i["title"] == "Место постоянного жительства (регистрации)":
-            data["place_live"] = i["value"]
-            continue
-        if i["title"] == "Вид места жительства":
-            data["type_live"] = i["value"]
-            continue
-        if i["title"] == "Место смерти":
-            data["death_address"] = i["value"]
-            continue
-        if i["title"] == "Вид места смерти":
-            data["death_type_place"] = i["value"]
-            continue
-        if i["title"] == "Типы мест наступления смерти":
-            data["death_where"] = i["value"]
-            continue
-        if i["title"] == "Новорожденый":
-            data["new_born_child"] = i["value"]
-            continue
-        if i["title"] == "Семейное положение":
-            data["family_status"] = i["value"]
-            continue
-        if i["title"] == "Образование":
-            data["education"] = i["value"]
-            continue
-        if i["title"] == "Социальная группа":
-            data["social_group"] = i["value"]
-            continue
-        if i["title"] == "Тип ДУЛ":
-            data["doc_type"] = i["value"]
-            continue
-        if i["title"] == "ДУЛ":
-            data["doc_data"] = i["value"]
-            print(i["value"])
-            continue
-        if i["title"] == "Полис ОМС":
-            data["enp"] = i["value"]
-            continue
-        if i["title"] == "СНИЛС":
-            data["snils"] = i["value"]
-            continue
-        if i["title"] == "Смерть от внешних причин":
-            data["death_external_why"] = i["value"]
-            continue
-        if i["title"] == "Дата смерти от внешних причин":
-            data["death_external_date"] = i["value"]
-            continue
-        if i["title"] == "Время смерти от внешних причин":
-            data["death_external_time"] = i["value"]
-            continue
-        if i["title"] == "Тип медицинского работника":
-            data["doctor_type"] = i["value"]
-            continue
-        if i["title"] == "Основания для определения причины смерти":
-            data["reason_why_death"] = i["value"]
-            continue
-        if i["title"] == "а) Болезнь или состояние, напосредственно приведшее к смерти":
-            data["a_deaht"] = i["value"]
-            continue
-        if i["title"] == "б) патологическое состояние, которое привело к возникновению вышеуказанной причины:":
-            data["b_deaht"] = i["value"]
-            continue
-        if i["title"] == "в) первоначальная причина смерти:":
-            data["v_deaht"] = i["value"]
-            continue
-        if i["title"] == "г) внешняя причина при травмах и отравлениях:":
-            data["g_deaht"] = i["value"]
-            continue
-        if i["title"] == "II. Прочие важные состояния, способствовавшие смерти, но не связанные с болезнью или патологическим состоянием, приведшим к ней":
-            data["other_death_reason"] = i["value"]
-            continue
-        if i["title"] == "ДТП":
-            data["dtp"] = i["value"]
-            continue
-        if i["title"] == "Связь смерти с ДТП":
-            data["dtp_data"] = i["value"]
-            continue
-        if i["title"] == "Беременность":
-            data["pregnant"] = i["value"]
-            continue
-        if i["title"] == "Связь смерти с беременностью":
-            data["pregnant_data"] = i["value"]
-            continue
-        if i["title"] == "Заполнил":
-            data["who_write"] = i["value"]
-            continue
-        if i["title"] == "Проверил":
-            data["who_check"] = i["value"]
-            continue
-        if i["title"] == "Главный врач":
-            data["hospital_manager"] = i["value"]
-            continue
+        data[i["title"]] = i["value"]
 
-    template = add_template(iss, direction, 5 * mm)
+    data['fio'] = data_individual["fio"]
+    data['sex'] = data_individual["sex"]
+
+    template = add_template(iss, direction, data, 5 * mm)
     fwb.extend(template)
     template = add_line_split(iss, direction, 4 * mm)
     fwb.extend(template)
-    template = death_data(iss, direction, 0 * mm)
+    template = death_data(iss, direction, data, 0 * mm)
     fwb.extend(template)
     fwb.append(PageBreak())
 
-    template = second_page_add_template(iss, direction, 0 * mm)
+    template = second_page_add_template(iss, direction, data, 0 * mm)
     fwb.extend(template)
     template = add_line_split(iss, direction, -1 * mm)
     fwb.extend(template)
-    template = death_data2(iss, direction, -5 * mm)
+    template = death_data2(iss, direction, data, -5 * mm)
     fwb.extend(template)
 
     return fwb
 
 
-def add_template(iss: Issledovaniya, direction, offset=0):
+def add_template(iss: Issledovaniya, direction, fields, offset=0):
     # Мед. св-во о смерти 106/у
     text = []
-    text = title_data(text, "2xx", "123456789", "20.08.2021", "взамен окончательного")
-    fio = "Ивано Иван Иванович Ивано Иван"
+    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], json.loads(fields["Вид медицинского свидетельства о смерти"]))
     text.append(Spacer(1, 1.7 * mm))
-    text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fio)
+    text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fields['fio'])
 
     # Пол
     text.append(Spacer(1, 0.3 * mm))
-    text = sex_tbl(text, "ж")
+    text = sex_tbl(text, fields['sex'])
 
     # Дата рождения
-    born_day = "01"
-    born_month = "01"
-    born_year = "1970"
-    text = born_tbl(text, "")
+    text = born_tbl(text, fields['Дата рождения'])
     text.append(Spacer(1, 0.3 * mm))
 
     # Дата смерти
-    text = death_tbl(text, "4. Дата смерти:", "",)
+    text = death_tbl(text, "4. Дата смерти:", fields['Дата смерти'], fields['Время смерти'])
 
-    text = address_tbl(text, "", "5. Регистрация по месту жительства (пребывания) умершего(ей):")
+    text = address_tbl(text, "5. Регистрация по месту жительства (пребывания) умершего(ей):", json.loads(fields["Место постоянного жительства (регистрации)"]))
 
     # Смерть наступила
     text = where_death_start_tbl(text, "")
@@ -290,8 +183,8 @@ def add_template(iss: Issledovaniya, direction, offset=0):
     text.append(tbl)
 
     # Место рождения
-    text = address_tbl(text, "", "8. Место рождения")
-    text = fio_tbl(text, "9. Фамилия, имя, отчество (при наличии) матери:", fio)
+    text = address_tbl(text, "8. Место рождения", json.loads(fields["Место постоянного жительства (регистрации)"]))
+    text = fio_tbl(text, "9. Фамилия, имя, отчество (при наличии) матери:", "")
 
     obj = []
     obj.append(FrameDataUniversal(0 * mm,  offset, 190 * mm, 95 * mm, text=text))
@@ -309,12 +202,12 @@ def add_line_split(iss: Issledovaniya, direction, offset=0):
     return obj
 
 
-def death_data(iss: Issledovaniya, direction, offset=0):
+def death_data(iss: Issledovaniya, direction, fields, offset=0):
     # Лини отреза
     text = []
     text = title_med_organization(text, {"full_title": "Государственное бюджетное учреждение здравоохранения Иркутское областное бюро судебномедицинской экспертизы",
                                          "org_address": "обл Иркутская, г Усолье-Сибирское, ул Менделеева, ДОМ 21", "org_license": "", "org_okpo": ""})
-    text = title_data(text, "2xx", "123456789", "20.08.2021", "взамен окончательного")
+    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], json.loads(fields["Вид медицинского свидетельства о смерти"]))
     fio = "Ивано Иван Иванович Ивано Иван"
     text.append(Spacer(1, 1.7 * mm))
     text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fio)
@@ -324,17 +217,14 @@ def death_data(iss: Issledovaniya, direction, offset=0):
     text = sex_tbl(text, "ж")
 
     # Дата рождения
-    born_day = "01"
-    born_month = "01"
-    born_year = "1970"
-    text = born_tbl(text, "")
+    text = born_tbl(text, fields['Дата рождения'])
 
     text = patient_passport(text, {"type": "Паспорт гражданина РФ (России)", "serial": "2504", "number": "000000"})
     text = who_issue_passport(text, {"who_issue": "УВД Свердловского района гор Иркутска", "date_issue": "20.00.2000"})
     text = patient_snils(text, "1234567890123")
     text = patient_polis(text, "0000 0000 0000 0000")
-    text = death_tbl(text, "7. Дата смерти:", "")
-    text = address_tbl(text, "", "8. Регистрация по месту жительства (пребывания) умершего(ей):")
+    text = death_tbl(text, "7. Дата смерти:", fields['Дата смерти'], fields['Время смерти'])
+    text = address_tbl(text, "8. Регистрация по месту жительства (пребывания) умершего(ей):", json.loads(fields["Место постоянного жительства (регистрации)"]))
     text = type_city(text, "город")
     text = where_death_start_tbl(text, "")
     text = child_death_befor_month(text, "")
@@ -350,7 +240,7 @@ def death_data(iss: Issledovaniya, direction, offset=0):
     return obj
 
 
-def second_page_add_template(iss: Issledovaniya, direction, offset=0):
+def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
     #
     text = []
     text = back_size(text)
@@ -369,7 +259,7 @@ def second_page_add_template(iss: Issledovaniya, direction, offset=0):
     return obj
 
 
-def death_data2(iss: Issledovaniya, direction, offset=0):
+def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text = []
     text = death_happaned(text, "")
     date, month, year, hour, min = "____", "____", "_________", "____", "____"
@@ -408,14 +298,14 @@ def title_data(text, serial, number, date_issue, type_death_document):
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph(f"Дата выдачи {date_issue}", styleCentreBold))
     final, preparatory, instead_preparatory, instead_final = "окончательного", "предварительного", "взамен предварительного", "взамен окончательного"
-    if type_death_document.lower().find('взамен окончательного') != -1:
-        instead_final = "<u><font face=\"PTAstraSerifBold\">взамен окончательного</font></u>"
-    elif type_death_document.lower().find('взамен предварительного') != -1:
-        instead_final = "<u><font face=\"PTAstraSerifBold\">взамен предварительного</font></u>"
-    elif type_death_document.lower().find('окончательн') != -1:
-        instead_final = "<u><font face=\"PTAstraSerifBold\">окончательного</font></u>"
-    elif type_death_document.lower().find('предварительн') != -1:
-        instead_final = "<u><font face=\"PTAstraSerifBold\">предварительного</font></u>"
+    if type_death_document["code"] == '4':
+        instead_final = f"<u>{op_bold_tag}взамен окончательного{cl_bold_tag}</u>"
+    elif type_death_document["code"] == '3':
+        instead_final = f"<u>{op_bold_tag}взамен предварительного{cl_bold_tag}</u>"
+    elif type_death_document["code"] == '1':
+        instead_final = f"{op_bold_tag}<u>окончательного</u>{cl_bold_tag}"
+    elif type_death_document["code"] == '2':
+        instead_final = f"<u>{op_bold_tag}предварительного{cl_bold_tag}</u>"
     text.append(Paragraph(f"({final}, {preparatory}, {instead_preparatory}, {instead_final}) (подчеркнуть)", styleCentre))
     return text
 
@@ -473,9 +363,10 @@ def sex_tbl(text, sex):
 
 def born_tbl(text, born_data):
     # Дата рождения
-    born_day = "01"
-    born_month = "01"
-    born_year = "1970"
+    born = born_data.split('.')
+    born_day = born[0]
+    born_month = born[1]
+    born_year = born[2]
 
     opinion = gen_opinion(['3.Дата рождения:', 'число', born_day, 'месяц', born_month, 'год', born_year])
 
@@ -500,13 +391,15 @@ def born_tbl(text, born_data):
     return text
 
 
-def death_tbl(text, number, death_data):
+def death_tbl(text, number, death_data, death_time):
     # Дата смерти
-    death_day = "01"
-    death_month = "01"
-    death_year = "1970"
-    death_hour = "23"
-    death_min = "00"
+    death_data = death_data.split('.')
+    death_day = death_data[0]
+    death_month = death_data[1]
+    death_year = death_data[2]
+    death_time = death_time.split(":")
+    death_hour = death_time[0]
+    death_min = death_time[1]
 
     opinion = gen_opinion([number, 'число', death_day, 'месяц', death_month, 'год', death_year, 'час.', death_hour, 'мин.', death_min])
 
@@ -529,9 +422,10 @@ def death_tbl(text, number, death_data):
     return text
 
 
-def address_tbl(text, data_address, type_address):
-    region = "Область Иркутская"
-    opinion = gen_opinion([f'{type_address} субъект Российской Федерации:', region ])
+def address_tbl(text, type_address, data_address):
+    print(type(data_address))
+    address_details = data_address["details"]
+    opinion = gen_opinion([f'{type_address} субъект Российской Федерации:', f"{address_details['region_type']} {address_details['region']}"])
     col_widths = (135 * mm, 55 * mm)
     tbl_style = [
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -544,9 +438,7 @@ def address_tbl(text, data_address, type_address):
     text.append(tbl)
 
     # город
-    region_town = ""
-    city = "Иркутск"
-    opinion = gen_opinion(['район', region_town, 'город', city])
+    opinion = gen_opinion(['район', f"{address_details['area_type']} {address_details['area']}", 'город', f"{address_details['city_type']} {address_details['city']}"])
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
@@ -560,9 +452,7 @@ def address_tbl(text, data_address, type_address):
     text.append(tbl)
 
     # населенный пунк
-    localcity = ""
-    street = "Иркутск"
-    opinion = gen_opinion(['населенный пункт', localcity, 'улица', street])
+    opinion = gen_opinion(['населенный пункт', f"{address_details['settlement_type']} {address_details['settlement']}", 'улица', f"{address_details['street_type']} {address_details['street']}"])
     col_width = (37 * mm, 67 * mm, 16 * mm, 70 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -576,7 +466,7 @@ def address_tbl(text, data_address, type_address):
     text.append(tbl)
 
     # дом, стр, корп, кв, комн
-    opinion = gen_opinion(['дом', '', 'стр.', '', 'корп.', '', 'кв.', '', 'комн.', ''])
+    opinion = gen_opinion(['дом', address_details['house'], 'стр.', '', 'корп.', '', 'кв.', '', 'комн.', ''])
     col_width = (14 * mm, 15 * mm, 12 * mm, 12 * mm, 14 * mm, 15 * mm, 12 * mm, 15 * mm, 14 * mm, 15 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
