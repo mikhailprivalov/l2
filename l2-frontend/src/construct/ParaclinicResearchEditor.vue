@@ -255,8 +255,11 @@
                     <input v-model="row.default" class="form-control" />
                   </div>
                   <div v-else-if="row.field_type === 30">
-                    <strong>Идентификатор номера:</strong>
-                    <input v-model="row.default" class="form-control" />
+                    <strong>Тип номера:</strong>
+                    <select v-model="row.default" class="form-control">
+                      <option value="">не выбрано</option>
+                      <option value="deathFormNumber">Номер свидетельства о смерти</option>
+                    </select>
                   </div>
                   <div v-else-if="row.field_type === 11">
                     <strong>ID фракции:</strong>
@@ -419,7 +422,7 @@
                       <option value="27">Таблица</option>
                       <option value="28">НСИ-справочник</option>
                       <option value="29">Адрес по ФИАС</option>
-                      <option value="30">Генератор номера документа</option>
+                      <option value="30" v-if="number_generator_field_enabled">Генератор номера документа</option>
                     </select>
                   </label>
                 </div>
@@ -667,6 +670,9 @@ export default {
     },
     rich_text_enabled() {
       return this.$store.getters.modules.descriptive_rich_text;
+    },
+    number_generator_field_enabled() {
+      return this.$store.getters.modules.number_generator_field;
     },
   },
   methods: {

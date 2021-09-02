@@ -2226,10 +2226,16 @@ class DirectionsHistory(models.Model):
 
 
 class NumberGenerator(models.Model):
+    DEATH_FORM_NUMBER = 'deathFormNumber'
+
+    KEYS = (
+        (DEATH_FORM_NUMBER, 'Номер свидетельства о смерти'),
+    )
+
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, db_index=True, verbose_name='Больница')
-    key = models.CharField(max_length=128, db_index=True, verbose_name='Идентификатор диапазона')
-    year = models.IntegerField(verbose_name='Год')
-    is_active = models.BooleanField(verbose_name='Активность диапазона')
+    key = models.CharField(choices=KEYS, max_length=128, db_index=True, verbose_name='Тип диапазона')
+    year = models.IntegerField(verbose_name='Год', db_index=True)
+    is_active = models.BooleanField(verbose_name='Активность диапазона', db_index=True)
     start = models.PositiveIntegerField(verbose_name='Начало диапазона')
     end = models.PositiveIntegerField(verbose_name='Конец диапазона')
     last = models.PositiveIntegerField(verbose_name='Последнее значение диапазона', null=True, blank=True)
