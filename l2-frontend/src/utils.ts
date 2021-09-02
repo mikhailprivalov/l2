@@ -174,6 +174,9 @@ export const PrepareFormula = (
   return `return (${s});`;
 };
 
+const isEmpty = v => !v || v === '0';
+const isFilled = v => !isEmpty(v);
+
 export const CalculateFormula = (fields: Field[], formula: string, patient = {}, strict = false): string | number => {
   const s = PrepareFormula(fields, formula, patient, strict);
 
@@ -184,7 +187,7 @@ export const CalculateFormula = (fields: Field[], formula: string, patient = {},
   try {
     if (!FUNCTION_CACHE[s]) {
       // eslint-disable-next-line no-new-func
-      const result = new Function(s)();
+      const result = new Function('isEmpty', 'isFilled', s)(isEmpty, isFilled);
       FUNCTION_CACHE[s] = typeof result === 'boolean' || result ? result : 0;
     }
     // console.log(FUNCTION_CACHE);
