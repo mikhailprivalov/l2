@@ -5,6 +5,7 @@ import time
 import unicodedata
 from datetime import date
 from typing import Optional, Union
+from django.contrib.postgres.fields.array import ArrayField
 
 import simplejson as json
 from dateutil.relativedelta import relativedelta
@@ -2222,3 +2223,18 @@ class DirectionsHistory(models.Model):
                 dir_history.save()
 
         return directions
+
+
+class NumberGenerator(models.Model):
+    hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, db_index=True, verbose_name='Больница')
+    key = models.CharField(max_length=128, db_index=True, verbose_name='Идентификатор диапазона')
+    year = models.IntegerField(verbose_name='Год')
+    is_active = models.BooleanField(verbose_name='Активность диапазона')
+    start = models.PositiveIntegerField(verbose_name='Начало диапазона')
+    end = models.PositiveIntegerField(verbose_name='Конец диапазона')
+    last = models.PositiveIntegerField(verbose_name='Последнее значение диапазона')
+    free_numbers = ArrayField(models.PositiveIntegerField(default=[], blank=True, verbose_name='Свободные номера'))
+
+    class Meta:
+        verbose_name = 'Диапазон номеров'
+        verbose_name_plural = 'Диапазоны номеров'
