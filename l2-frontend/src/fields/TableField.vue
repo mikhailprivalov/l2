@@ -188,6 +188,12 @@ export default {
         this.validateRowsValuesDebounced(true);
       },
     },
+    rows: {
+      deep: true,
+      handler() {
+        this.validateRowsValuesDebounced(true);
+      },
+    },
     errors: {
       deep: true,
       handler() {
@@ -369,6 +375,7 @@ export default {
         }
       }
       this.errors = { ...this.errors };
+      this.errorsCounter += 1;
       this.hasErrors = hasInvalid;
     },
     validateRowsLength() {

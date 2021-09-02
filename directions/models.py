@@ -2232,8 +2232,12 @@ class NumberGenerator(models.Model):
     is_active = models.BooleanField(verbose_name='Активность диапазона')
     start = models.PositiveIntegerField(verbose_name='Начало диапазона')
     end = models.PositiveIntegerField(verbose_name='Конец диапазона')
-    last = models.PositiveIntegerField(verbose_name='Последнее значение диапазона')
-    free_numbers = ArrayField(models.PositiveIntegerField(default=[], blank=True, verbose_name='Свободные номера'))
+    last = models.PositiveIntegerField(verbose_name='Последнее значение диапазона', null=True, blank=True)
+    free_numbers = ArrayField(models.PositiveIntegerField(verbose_name='Свободные номера'), default=list, blank=True)
+    prepend_length = models.PositiveSmallIntegerField(verbose_name='Длина номера', help_text='Если номер короче, впереди будет добавлено недостающее кол-во "0"')
+
+    def __str__(self):
+        return f"{self.hospital} {self.key} {self.year} {self.is_active} {self.start} — {self.end} ({self.last})"
 
     class Meta:
         verbose_name = 'Диапазон номеров'

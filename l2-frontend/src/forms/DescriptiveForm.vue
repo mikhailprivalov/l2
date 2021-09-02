@@ -37,7 +37,7 @@
               <LPress
                 v-if="
                   !confirmed &&
-                    !{ 3: 1, 10: 1, 12: 1, 15: 1, 16: 1, 17: 1, 18: 1, 19: 1, 21: 1, 24: 1, 25: 1, 26: 1, 27: 1, 28: 1 }[
+                    !{ 3: 1, 10: 1, 12: 1, 15: 1, 16: 1, 17: 1, 18: 1, 19: 1, 21: 1, 24: 1, 25: 1, 26: 1, 27: 1, 28: 1, 30: 1 }[
                       field.field_type
                     ]
                 "
@@ -160,6 +160,15 @@
                   :strict="false"
                 />
               </div>
+              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 30">
+                <NumberGeneratorField
+                  v-model="field.value"
+                  :number-key="field.default_value"
+                  :disabled="confirmed"
+                  :iss-pk="pk"
+                  :field-pk="field.pk"
+                />
+              </div>
               <div
                 :title="field.helper"
                 class="field-helper"
@@ -217,6 +226,7 @@ export default {
     PermanentDirectoryField: () => import('../fields/PermanentDirectoryField.vue'),
     AddressFiasField: () => import('../fields/AddressFiasField.vue'),
     TextFieldWithTemplates: () => import('../fields/TextFieldWithTemplates.vue'),
+    NumberGeneratorField: () => import('../fields/NumberGeneratorField.vue'),
   },
   props: {
     research: {
