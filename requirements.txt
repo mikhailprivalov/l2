@@ -9,7 +9,7 @@ chardet==4.0.0
 DAWG==0.8.0
 DAWG-Python==0.7.2
 defusedxml==0.7.1
-Django==3.2.6
+Django==3.2.7
 django-ajax-selects==2.1.0
 django-cors-headers
 django-logtail==0.3.0
