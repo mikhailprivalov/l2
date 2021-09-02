@@ -17,6 +17,10 @@ from .flowable import FrameDataUniversal
 from directions.models import Issledovaniya
 from ..prepare_data import fields_result_only_title_fields
 import simplejson as json
+import datetime
+from dateutil.relativedelta import relativedelta
+from hospitals.models import Hospitals
+
 
 pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
 pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
@@ -87,6 +91,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Вид места смерти",
         "Типы мест наступления смерти",
         "Новорожденый",
+        "Место рождения",
+        "ФИО матери",
         "Семейное положение",
         "Образование",
         "Социальная группа",
@@ -116,10 +122,32 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     for i in result:
+        print(i)
         data[i["title"]] = i["value"]
 
     data['fio'] = data_individual["fio"]
     data['sex'] = data_individual["sex"]
+
+    ends = datetime.datetime.strptime(data["Дата рождения"], '%d.%m.%Y')
+    start = datetime.datetime.strptime(data["Дата смерти"], '%d.%m.%Y')
+    diff = relativedelta(start, ends)
+
+    if diff.years == 0:
+        data['число месяцев жизни'] = diff.months
+        data['число дней жизни'] = diff.days
+    else:
+        data['число месяцев жизни'] = ""
+        data['число дней жизни'] = ""
+
+    if not data.get("Место рождения", None):
+        data["Место рождения"] = {"": ""}
+
+    if not data.get("ФИО матери"):
+        data["ФИО матери"] = ""
+
+    hospital_obj: Hospitals = user.doctorprofile.get_hospital()
+    data['org'] = {"full_title": hospital_obj.title, "org_address": hospital_obj.address, "org_license": hospital_obj.license_data,
+                   "org_okpo": hospital_obj.okpo}
 
     template = add_template(iss, direction, data, 5 * mm)
     fwb.extend(template)
@@ -142,7 +170,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 def add_template(iss: Issledovaniya, direction, fields, offset=0):
     # Мед. св-во о смерти 106/у
     text = []
-    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], json.loads(fields["Вид медицинского свидетельства о смерти"]))
+    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"])
     text.append(Spacer(1, 1.7 * mm))
     text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fields['fio'])
 
@@ -157,16 +185,21 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     # Дата смерти
     text = death_tbl(text, "4. Дата смерти:", fields['Дата смерти'], fields['Время смерти'])
 
-    text = address_tbl(text, "5. Регистрация по месту жительства (пребывания) умершего(ей):", json.loads(fields["Место постоянного жительства (регистрации)"]))
+    text = address_tbl(text, "5. Регистрация по месту жительства (пребывания) умершего(ей):", fields["Место постоянного жительства (регистрации)"])
 
     # Смерть наступила
-    text = where_death_start_tbl(text, "")
+    text = where_death_start_tbl(text, fields["Типы мест наступления смерти"])
     text.append(Spacer(1, 0.2 * mm))
+
     text.append(Paragraph('Для детей, умерших в возрасте до 1 года:', styleBold))
     text.append(Spacer(1, 0.5 * mm))
 
-    opinion = gen_opinion(['7. Дата рождения', 'число', '', ', месяц', '', ', год', '', ', число месяцев', '', ', число дней', '', 'жизни'])
-    col_width = (29 * mm, 17 * mm, 8 * mm, 15 * mm, 8 * mm, 10 * mm, 8 * mm, 24 * mm, 8 * mm, 20 * mm, 8 * mm, 15 * mm)
+    opinion = gen_opinion(['7. Дата рождения', 'число', fields['Дата рождения'].split('.')[0],
+                                               ', месяц', fields['Дата рождения'].split('.')[1],
+                                               ', год', fields['Дата рождения'].split('.')[2],
+                                               ', число месяцев', fields["число месяцев жизни"],
+                                               ', число дней', fields["число дней жизни"], 'жизни'])
+    col_width = (29 * mm, 17 * mm, 8 * mm, 15 * mm, 8 * mm, 10 * mm, 12 * mm, 24 * mm, 8 * mm, 20 * mm, 8 * mm, 15 * mm)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -183,8 +216,8 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(tbl)
 
     # Место рождения
-    text = address_tbl(text, "8. Место рождения", json.loads(fields["Место постоянного жительства (регистрации)"]))
-    text = fio_tbl(text, "9. Фамилия, имя, отчество (при наличии) матери:", "")
+    text = address_tbl(text, "8. Место рождения", fields["Место рождения"])
+    text = fio_tbl(text, "9. Фамилия, имя, отчество (при наличии) матери:", fields["ФИО матери"])
 
     obj = []
     obj.append(FrameDataUniversal(0 * mm,  offset, 190 * mm, 95 * mm, text=text))
@@ -205,12 +238,11 @@ def add_line_split(iss: Issledovaniya, direction, offset=0):
 def death_data(iss: Issledovaniya, direction, fields, offset=0):
     # Лини отреза
     text = []
-    text = title_med_organization(text, {"full_title": "Государственное бюджетное учреждение здравоохранения Иркутское областное бюро судебномедицинской экспертизы",
-                                         "org_address": "обл Иркутская, г Усолье-Сибирское, ул Менделеева, ДОМ 21", "org_license": "", "org_okpo": ""})
-    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], json.loads(fields["Вид медицинского свидетельства о смерти"]))
-    fio = "Ивано Иван Иванович Ивано Иван"
+
+    text = title_med_organization(text, fields['org'])
+    text = title_data(text, fields["Серия"], fields["Номер"], fields["Дата выдачи"], fields["Вид медицинского свидетельства о смерти"])
     text.append(Spacer(1, 1.7 * mm))
-    text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fio)
+    text = fio_tbl(text, "1. Фамилия, имя, отчество (при наличии) умершего(ей):", fields["fio"])
 
     # Пол
     text.append(Spacer(1, 0.3 * mm))
@@ -219,14 +251,16 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
     # Дата рождения
     text = born_tbl(text, fields['Дата рождения'])
 
-    text = patient_passport(text, {"type": "Паспорт гражданина РФ (России)", "serial": "2504", "number": "000000"})
+    print(fields["Тип ДУЛ"])
+    print(fields["ДУЛ"])
+    text = patient_passport(text, {"type": fields["Тип ДУЛ"], "serial": "2504", "number": "000000"})
     text = who_issue_passport(text, {"who_issue": "УВД Свердловского района гор Иркутска", "date_issue": "20.00.2000"})
     text = patient_snils(text, "1234567890123")
     text = patient_polis(text, "0000 0000 0000 0000")
     text = death_tbl(text, "7. Дата смерти:", fields['Дата смерти'], fields['Время смерти'])
-    text = address_tbl(text, "8. Регистрация по месту жительства (пребывания) умершего(ей):", json.loads(fields["Место постоянного жительства (регистрации)"]))
+    text = address_tbl(text, "8. Регистрация по месту жительства (пребывания) умершего(ей):", fields["Место постоянного жительства (регистрации)"])
     text = type_city(text, "город")
-    text = where_death_start_tbl(text, "")
+    text = where_death_start_tbl(text, fields["Типы мест наступления смерти"])
     text = child_death_befor_month(text, "")
     text = child_death_befor_year(text, {"weight": 3500, "child_count": 1, "mother_born": "", "mother_age": "", "mother_family": "", "mother_name": "", "mother_patronimyc": ""})
     text = family_status(text, "")
@@ -289,7 +323,7 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
 
 
 # общие функции
-def title_data(text, serial, number, date_issue, type_death_document):
+def title_data(text, serial, number, date_issue, type_document):
     text.append(Paragraph("КОРЕШОК МЕДИЦИНСКОГО СВИДЕТЕЛЬСТВА О СМЕРТИ", styleCentreBold))
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph("К УЧЕТНОЙ ФОРМЕ № 106/У", styleCentreBold))
@@ -298,6 +332,8 @@ def title_data(text, serial, number, date_issue, type_death_document):
     text.append(Spacer(1, 0.1 * mm))
     text.append(Paragraph(f"Дата выдачи {date_issue}", styleCentreBold))
     final, preparatory, instead_preparatory, instead_final = "окончательного", "предварительного", "взамен предварительного", "взамен окончательного"
+
+    type_death_document = json.loads(type_document)
     if type_death_document["code"] == '4':
         instead_final = f"<u>{op_bold_tag}взамен окончательного{cl_bold_tag}</u>"
     elif type_death_document["code"] == '3':
@@ -422,8 +458,8 @@ def death_tbl(text, number, death_data, death_time):
     return text
 
 
-def address_tbl(text, type_address, data_address):
-    print(type(data_address))
+def address_tbl(text, type_address, address):
+    data_address = json.loads(address)
     address_details = data_address["details"]
     opinion = gen_opinion([f'{type_address} субъект Российской Федерации:', f"{address_details['region_type']} {address_details['region']}"])
     col_widths = (135 * mm, 55 * mm)
@@ -485,7 +521,17 @@ def address_tbl(text, type_address, data_address):
 
 
 def where_death_start_tbl(text, params):
-    opinion = gen_opinion(['6.Смерть наступила:', ' на месте происшествия', '1', ', в машине скорой помощи', '2', ', в стационаре', '3', ' , дома', '4'])
+    whera_data = json.loads(params)
+    place, car, hospital, home = ' на месте происшествия', ', в машине скорой помощи', ', в стационаре', ', дома'
+    if whera_data["code"] == '1':
+        place = f"<u>{op_bold_tag}{place}{cl_bold_tag}</u>"
+    elif whera_data["code"] == '2':
+        place = f"<u>{op_bold_tag}{car}{cl_bold_tag}</u>"
+    elif whera_data["code"] == '3':
+        hospital = f"<u>{op_bold_tag}{hospital}{cl_bold_tag}</u>"
+    elif whera_data["code"] == '4':
+        home = f"<u>{op_bold_tag}{home}{cl_bold_tag}</u>"
+    opinion = gen_opinion(['6.Смерть наступила:', place, '1', car, '2', hospital, '3', home, '4'])
     col_width = (30 * mm, 36 * mm, 6 * mm, 42 * mm, 6 * mm, 24 * mm, 6 * mm, 12 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),

@@ -24,6 +24,7 @@
             <FormulateInput type="text" name="licenseData" label="Лицензия" />
             <FormulateInput type="text" name="www" label="Сайт" />
             <FormulateInput type="text" name="email" label="Email" />
+            <FormulateInput type="text" name="okpo" label="ОКПО" />
           </div>
         </div>
         <FormulateInput type="submit" label="Сохранить" :disabled="loading" />

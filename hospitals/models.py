@@ -24,6 +24,7 @@ class Hospitals(models.Model):
     client = models.ForeignKey(Card, default=None, blank=True, null=True, db_index=True, help_text='Суррогатный пациент для мониторигна', on_delete=models.SET_NULL)
     research = models.ManyToManyField(Researches, blank=True, default=None, help_text="Обязательные мониторинги")
     current_manager = models.CharField(max_length=128, blank=True, default='', help_text="Руководитель/ИО учреждения")
+    okpo = models.CharField(max_length=10, blank=True, default='', help_text="ОКПО")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:

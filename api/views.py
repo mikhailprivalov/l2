@@ -1706,6 +1706,7 @@ def current_org(request):
         "email": hospital.email,
         "licenseData": hospital.license_data,
         "currentManager": hospital.current_manager,
+        "okpo": hospital.okpo,
     }
     return JsonResponse({"org": org})
 
@@ -1723,6 +1724,7 @@ def current_org_update(request):
         'licenseData': str,
         'www': str,
         'email': str,
+        'okpo': str
     }
 
     data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
@@ -1736,6 +1738,7 @@ def current_org_update(request):
     license_data: str = data[6].strip()
     www: str = data[7].strip()
     email: str = data[8].strip()
+    okpo: str = data[9].strip()
 
     if not title:
         return status_response(False, 'Название не может быть пустым')
@@ -1752,6 +1755,7 @@ def current_org_update(request):
         "license_data": hospital.license_data,
         "www": hospital.www,
         "email": hospital.email,
+        "okpo": hospital.okpo,
     }
 
     new_data = {
@@ -1764,6 +1768,7 @@ def current_org_update(request):
         "license_data": license_data,
         "www": www,
         "email": email,
+        "okpo": okpo,
     }
 
     hospital.title = title
@@ -1775,6 +1780,7 @@ def current_org_update(request):
     hospital.license_data = license_data
     hospital.www = www
     hospital.email = email
+    hospital.okpo = okpo
     hospital.save()
 
     Log.log(hospital.pk, 110000, request.user.doctorprofile, {
