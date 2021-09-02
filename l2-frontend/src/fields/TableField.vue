@@ -56,7 +56,7 @@
             />
             <MKBFieldForm
               v-else-if="settings[i].type === 2"
-              :class="errors[`${fieldPk}_${j}_${i}`] && 'has-error-field'"
+              :classes="errors[`${fieldPk}_${j}_${i}`] ? 'has-error-field' : ''"
               :short="false"
               v-model="r[i]"
             />

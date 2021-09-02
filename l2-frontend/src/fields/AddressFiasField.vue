@@ -14,6 +14,7 @@
       <div class="form-control form-control-area cursor-pointer" title="Редактировать адрес" v-tippy @click="edit = true">
         {{ prevAddress || 'не заполнено' }}
       </div>
+      <slot name="input-group-append"></slot>
     </div>
     <div class="input-group" :class="[form && 'form-row', areaFull && 'input-group-flex']" v-else-if="!hideIfEmpty || address">
       <slot name="input-group-disabled-prepend"></slot>
@@ -484,6 +485,9 @@ const prependStr = (v, s) => {
   },
   mounted() {
     this.$root.$on('address-copy', addressJSON => {
+      if (!this.receiveCopy) {
+        return;
+      }
       let data;
       try {
         data = JSON.parse(addressJSON);
@@ -497,6 +501,27 @@ const prependStr = (v, s) => {
       this.address = data.address || '';
       this.fias = data.fias || null;
       this.details = getDetails(data.details);
+    });
+
+    this.$root.$on('address-copy-fast', addressJSON => {
+      if (!this.receiveCopy) {
+        return;
+      }
+      let data;
+      try {
+        data = JSON.parse(addressJSON);
+      } catch (e) {
+        data = {};
+        if (addressJSON && !addressJSON.includes('{')) {
+          data.address = addressJSON;
+        }
+      }
+
+      this.address = data.address || '';
+      this.fias = data.fias || null;
+      this.details = getDetails(data.details);
+
+      this.confirm();
     });
   },
 })

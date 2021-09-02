@@ -187,6 +187,19 @@
                 :receive-copy="true"
                 edit-title="Адрес проживания"
               >
+                <template v-slot:input-group-append>
+                  <button
+                    title="Скопировать из адреса регистрации"
+                    class="btn btn-blue-nb nbr btn-address"
+                    type="button"
+                    v-tippy
+                    tabindex="-1"
+                    @click="$root.$emit('address-copy-fast', card.main_address_full)"
+                    v-if="card.main_address_full"
+                  >
+                    <i class="fa fa-paste"></i>
+                  </button>
+                </template>
                 <template v-slot:extended-edit>
                   <AddressFiasField
                     :disabled="true"

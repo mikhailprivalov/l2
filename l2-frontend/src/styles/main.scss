@@ -2006,7 +2006,10 @@ input[type="date"].form-control {
 }
 
 .has-error-field {
-  border-color: #f00 !important;
+  &,
+  .form-control {
+    border-color: #f00 !important;
+  }
 }
 
 .has-error-message {
@@ -2271,15 +2274,15 @@ input[type="date"].form-control {
   }
 
   > .input-group {
-    flex: 0 65%;
+    flex: 0 calc(65% + 40px);
   }
 
   .form-control-area:not(.form-control-area-full) {
     background: #fff;
     border: none;
     border-radius: 0 !important;
-    width: 65%;
-    flex: 0 65%;
+    width: 100%;
+    flex: 1;
     padding: 2px 4px;
   }
 
