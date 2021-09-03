@@ -140,7 +140,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         data['число дней жизни'] = ""
 
     if not data.get("Место рождения", None):
-        data["Место рождения"] = {"": ""}
+        data["Место рождения"]= '{"details": {"region": "", "region_type": "", "area": "", "area_type": "", "city": "", "city_type": "", "settlement": "", "settlement_type": "", "street": "", "street_type": "", "house": "", "house_type": "", "flat": "", "flat_type": "", "postal_code": "", "custom": false}}'
 
     if not data.get("ФИО матери"):
         data["ФИО матери"] = ""
