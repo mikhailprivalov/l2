@@ -47,6 +47,7 @@
 
 <script lang="ts">
 import axios from 'axios';
+import * as Cookies from 'es-cookie';
 import Modal from '@/ui-cards/Modal.vue';
 import * as actions from '@/store/action-types';
 
@@ -103,10 +104,18 @@ export default {
       const config = {
         method: 'GET',
       };
-      const cdaResult = await EDS_API.post('cda', {
-        token: this.eds_token,
-        pk: this.directionData.direction.pk,
-      }).then(r => r.data);
+      const cdaResult = await EDS_API.post(
+        'cda',
+        {
+          token: this.eds_token,
+          pk: this.directionData.direction.pk,
+        },
+        {
+          headers: {
+            'X-CSRFToken': Cookies.get('csrftoken'),
+          },
+        },
+      ).then(r => r.data);
       if (!cdaResult.ok || !cdaResult.savedPDF) {
         const pdfResult = await fetch(urlPdf, config).then(r => r.arrayBuffer());
         documents.push({
@@ -146,34 +155,58 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async archive() {
-      await EDS_API.post('archive-document', {
-        token: this.eds_token,
-        pk: this.directionData.direction.pk,
-        confirmedAt: this.issData.confirmed_at,
-        hospitalTFOMSCode: this.directionData.direction.hospitalTFOMSCode,
-      });
+      await EDS_API.post(
+        'archive-document',
+        {
+          token: this.eds_token,
+          pk: this.directionData.direction.pk,
+          confirmedAt: this.issData.confirmed_at,
+          hospitalTFOMSCode: this.directionData.direction.hospitalTFOMSCode,
+        },
+        {
+          headers: {
+            'X-CSRFToken': Cookies.get('csrftoken'),
+          },
+        },
+      );
     },
     async loadStatus() {
-      const requiredResult = await EDS_API.post('cda', {
-        token: this.eds_token,
-        pk: this.directionData.direction.pk,
-        confirmedAt: this.issData.confirmed_at,
-        hospitalTFOMSCode: this.directionData.direction.hospitalTFOMSCode,
-        withoutRender: true,
-      }).then(r => r.data);
+      const requiredResult = await EDS_API.post(
+        'cda',
+        {
+          token: this.eds_token,
+          pk: this.directionData.direction.pk,
+          confirmedAt: this.issData.confirmed_at,
+          hospitalTFOMSCode: this.directionData.direction.hospitalTFOMSCode,
+          withoutRender: true,
+        },
+        {
+          headers: {
+            'X-CSRFToken': Cookies.get('csrftoken'),
+          },
+        },
+      ).then(r => r.data);
 
       this.requiredSignatures = requiredResult.signsRequired || ['Врач'];
       this.requiredEDSDocTypes = requiredResult.needCda ? ['PDF', 'CDA'] : ['PDF'];
 
       this.edsStatus = (
-        await EDS_API.post('signature-status', {
-          token: this.eds_token,
-          pk: this.directionData.direction.pk,
-          confirmedAt: this.issData.confirmed_at,
-          hospitalTFOMSCode: this.directionData.direction.hospitalTFOMSCode,
-          requiredSignatures: requiredResult.signsRequired,
-          requiredEDSDocTypes: this.requiredEDSDocTypes,
-        })
+        await EDS_API.post(
+          'signature-status',
+          {
+            token: this.eds_token,
+            pk: this.directionData.direction.pk,
+            confirmedAt: this.issData.confirmed_at,
+            hospitalTFOMSCode: this.directionData.direction.hospitalTFOMSCode,
+            requiredSignatures: requiredResult.signsRequired,
+            requiredEDSDocTypes: this.requiredEDSDocTypes,
+          },
+          {
+            headers: {
+              'X-CSRFToken': Cookies.get('csrftoken'),
+            },
+          },
+        )
       ).data;
 
       this.$root.$emit(

@@ -89,7 +89,7 @@
 </template>
 <script lang="ts">
 import _ from 'lodash';
-import { debounce } from 'lodash/function';
+import { debounce } from 'debounce';
 import SelectField from '@/fields/SelectField.vue';
 import RadioField from '@/fields/RadioField.vue';
 import DateFieldWithNow from '@/fields/DateFieldWithNow.vue';
@@ -178,14 +178,20 @@ export default {
     result: {
       deep: true,
       handler() {
-        this.validateRowsValuesDebounced(true);
+        this.validateOnlyRowsValuesDebounced(true);
         this.changeValue(JSON.stringify(this.result));
       },
     },
     otherValues: {
       deep: true,
       handler() {
-        this.validateRowsValuesDebounced(true);
+        this.validateRowsValues();
+      },
+    },
+    rows: {
+      deep: true,
+      handler() {
+        this.validateOnlyRowsValuesDebounced();
       },
     },
     errors: {
@@ -207,6 +213,9 @@ export default {
   methods: {
     changeValue(newVal) {
       this.$emit('modified', newVal);
+      setTimeout(() => {
+        this.validateOnlyRowsValuesDebounced();
+      }, 10);
     },
     checkTable() {
       let params = this.variants[0] || '{}';
@@ -317,16 +326,17 @@ export default {
       return null;
     },
     getFieldText(fieldId) {
-      const field = this.fields.find(f => f.pk === fieldId);
-
-      if (field) {
-        return field.value;
+      return this.otherValues[fieldId] || null;
+    },
+    callValidator(column, ...args) {
+      if (this.validators[column]) {
+        return this.validators[column](...args);
       }
 
-      return null;
+      return false;
     },
-    validateRowsValuesDebounced: debounce(function (...args) {
-      this.validateRowsValues(...args);
+    validateOnlyRowsValuesDebounced: debounce(function () {
+      this.validateRowsValues(true);
     }, 10),
     validateRowsValues(onlyValidator = false) {
       let hasInvalid = false;
@@ -354,10 +364,8 @@ export default {
         }
 
         if (t !== 'rowNumber') {
-          const validator = this.validators[i] || (() => false);
-
           for (let j = 0; j < this.rows.length; j++) {
-            const validateResult = validator(j + 1, i + 1, this.fieldPk, this.getCellContent, this.getFieldText);
+            const validateResult = this.callValidator(i, j + 1, i + 1, this.fieldPk, this.getCellContent, this.getFieldText);
             const cellId = `${this.fieldPk}_${j}_${i}`;
 
             this.errors[cellId] = validateResult;
@@ -369,6 +377,7 @@ export default {
         }
       }
       this.errors = { ...this.errors };
+      this.errorsCounter += 1;
       this.hasErrors = hasInvalid;
     },
     validateRowsLength() {

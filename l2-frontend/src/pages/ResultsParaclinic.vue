@@ -917,6 +917,7 @@ import moment from 'moment';
 import dropdown from 'vue-my-dropdown';
 import { mapGetters } from 'vuex';
 import { vField, vGroup } from '@/components/visibility-triggers';
+import { cleanCaches } from '@/utils';
 import { enter_field, leave_field } from '@/forms/utils';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import RmisLink from '@/ui-cards/RmisLink.vue';
@@ -1545,6 +1546,7 @@ export default {
       this.benefit_rows_loading = false;
       this.benefit_rows = [];
       this.tableFieldsErrors = {};
+      cleanCaches();
       this.$root.$emit('preselect-card', null);
     },
     print_direction(pk) {

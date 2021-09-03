@@ -114,6 +114,20 @@ const cleanBrackets = (str: string) => {
   return BRACKETS_CLEAN_CACHE[str];
 };
 
+const cleanObject = (obj: any) => {
+  for (const key of Object.keys(obj)) {
+    // eslint-disable-next-line no-param-reassign
+    delete obj[key];
+  }
+};
+
+export const cleanCaches = () => {
+  cleanObject(FUNCTION_CACHE);
+  cleanObject(RE_CACHE);
+  cleanObject(BRACKETS_REPLACE_CACHE);
+  cleanObject(BRACKETS_CLEAN_CACHE);
+};
+
 export const PrepareFormula = (
   fields: Field[],
   formula: string,
