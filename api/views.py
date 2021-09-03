@@ -14,7 +14,7 @@ import yaml
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
-from django.db import connections
+from django.db import connections, transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 from django.utils import timezone
@@ -1777,9 +1777,67 @@ def current_org_update(request):
     hospital.email = email
     hospital.save()
 
-    Log.log(hospital.pk, 110000, request.user.doctorprofile, {
-        "oldData": old_data,
-        "newData": new_data,
-    })
+    Log.log(
+        hospital.pk,
+        110000,
+        request.user.doctorprofile,
+        {
+            "oldData": old_data,
+            "newData": new_data,
+        },
+    )
+
+    return status_response(True)
+
+
+@login_required
+def org_generators(request):
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    rows = []
+
+    g: directions.NumberGenerator
+    for g in directions.NumberGenerator.objects.filter(hospital=hospital).order_by('pk'):
+        rows.append(
+            {
+                "pk": g.pk,
+                "key": g.key,
+                "keyDisplay": g.get_key_display(),
+                "year": g.year,
+                "isActive": g.is_active,
+                "start": g.start,
+                "end": g.end,
+                "last": g.last,
+                "prependLength": g.prepend_length,
+            }
+        )
+
+    return JsonResponse({"rows": rows})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def org_generators_add(request):
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    parse_params = {
+        'key': str,
+        'year': int,
+        'start': int,
+        'end': int,
+        'prependLength': int,
+    }
+
+    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
+
+    key: str = data[0]
+    year: int = data[1]
+    start: int = data[2]
+    end: int = data[3]
+    prepend_length: int = data[4]
+
+    with transaction.atomic():
+        directions.NumberGenerator.objects.filter(hospital=hospital, key=key, year=year).update(is_active=False)
+        directions.NumberGenerator.objects.create(hospital=hospital, key=key, year=year, start=start, end=end, prepend_length=prepend_length, is_active=True)
 
     return status_response(True)
