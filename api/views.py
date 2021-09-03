@@ -1840,4 +1840,17 @@ def org_generators_add(request):
         directions.NumberGenerator.objects.filter(hospital=hospital, key=key, year=year).update(is_active=False)
         directions.NumberGenerator.objects.create(hospital=hospital, key=key, year=year, start=start, end=end, prepend_length=prepend_length, is_active=True)
 
+        Log.log(
+            hospital.pk,
+            110000,
+            request.user.doctorprofile,
+            {
+                "key": key,
+                "year": year,
+                "start": start,
+                "end": end,
+                "prepend_length": prepend_length,
+            },
+        )
+
     return status_response(True)
