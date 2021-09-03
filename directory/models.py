@@ -233,7 +233,7 @@ class Researches(models.Model):
     direction_params = models.ForeignKey('self', related_name='direction_params_p', help_text="Параметры направления", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     show_more_services = models.BooleanField(blank=True, default=True, help_text="Показывать Дополнительные услуги")
     type_period = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
-    paddings_size = models.CharField(max_length=10, null=True, blank=True, default=None, help_text="Отступы для бланка результатов (лево| вверх|право|низ)" )
+    paddings_size = models.CharField(max_length=10, null=True, blank=True, default=None, help_text="Отступы для бланка результатов (лево| вверх|право|низ)")
 
     @staticmethod
     def filter_type(t):
@@ -477,6 +477,7 @@ class ParaclinicInputField(models.Model):
         (27, 'Table'),
         (28, 'NSI directory'),
         (29, 'FIAS address'),
+        (30, 'Генератор номера документа'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
