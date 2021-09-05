@@ -1164,15 +1164,13 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     text.append(tbl)
 
     pregnant, process_birth = "(независимо от срока и локализации)", ", в процессе родов"
-    pregnant_data= json.loads(params["Связь смерти с беременностью"])
+    pregnant_data = json.loads(params["Связь смерти с беременностью"])
     if pregnant_data["code"] == "1":
         pregnant = f"{op_bold_tag}<u>{pregnant}</u>{cl_bold_tag}"
     elif pregnant_data["code"] == "2":
         process_birth = f"{op_bold_tag}<u>{process_birth}</u>{cl_bold_tag}"
 
     opinion = gen_opinion([f'{item_pregnant}.В случае смерти беременной', pregnant, '1', process_birth, '2'])
-
-
     col_width = (50 * mm, 52 * mm, 6 * mm, 30 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1399,7 +1397,7 @@ def who_set_death(text, params):
         only_doc_death = f"{op_bold_tag}<u>{only_doc_death}</u>{cl_bold_tag}"
     elif param_who_set["code"] == "2" or param_who_set["code"] == "7":
         doc_work = f"{op_bold_tag}<u>{doc_work}</u>{cl_bold_tag}"
-    elif param_who_set["code"] == "3" or param_who_set["code"] == "8" or param_who_set["code"] == "9" :
+    elif param_who_set["code"] == "3" or param_who_set["code"] == "8" or param_who_set["code"] == "9":
         paramedic = f"{op_bold_tag}<u>{paramedic}</u>{cl_bold_tag}"
 
     opinion = gen_opinion(['20. Причины смерти установлены:', only_doc_death, '1', doc_work, '2', paramedic, '3'])
@@ -1498,7 +1496,6 @@ def doctor_fio(text, params):
     elif base_diagnos["code"] == "4":
         open_body = f"{op_bold_tag}<u>{open_body}</u>{cl_bold_tag}"
     opinion = gen_opinion([see_patient, '3', open_body, '4', ' мною установлены причины смерти'])
-
 
     col_width = (75 * mm, 6 * mm, 19 * mm, 6 * mm, 70 * mm)
     tbl_style = [
