@@ -1,12 +1,10 @@
-from utils.dates import normalize_date
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
-import directory.models as directory
-from directions.models import ParaclinicResult, Napravleniya
+from directions.models import Napravleniya
 from appconf.manager import SettingManager
 import os.path
 from laboratory.settings import FONTS_FOLDER
@@ -308,13 +306,11 @@ def add_template(iss: Issledovaniya, direction, fields, offset=0):
     text.append(Spacer(1, 0.3 * mm))
     text.append(tbl)
 
-    # Место рождения
     text = address_tbl(text, "8. Место рождения", fields["Место рождения"])
     text = fio_tbl(text, "9. Фамилия, имя, отчество (при наличии) матери:", fields["mother_fio"])
 
     obj = []
     obj.append(FrameDataUniversal(0 * mm, offset, 190 * mm, 95 * mm, text=text))
-
     return obj
 
 
@@ -322,9 +318,7 @@ def add_line_split(iss: Issledovaniya, direction, offset=0):
     # Лини отреза
     text = []
     text = line_split(text)
-
     obj = [(FrameDataUniversal(0 * mm, offset, 190 * mm, 5 * mm, text=text))]
-
     return obj
 
 
@@ -375,11 +369,9 @@ def death_data(iss: Issledovaniya, direction, fields, offset=0):
 
 
 def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
-    #
     text = []
     text = back_size(text)
     text = why_death(text, fields, '10', '11', '12', '13')
-    fio = ""
     text = fio_tbl(text, "14. Фамилия, имя, отчество (при наличии) получателя", fields["ФИО (получатель)"])
     text.append(Paragraph("Документ, удостоверяющий личность получателя (серия, номер, кем выдан)", styleT))
     text = destination_person_passport(text, f'{fields["Документ (получатель)"]} {fields["Серия (получатель)"]} {fields["Номер (получатель)"]} {fields["Кем и когда выдан (получатель)"]}')
@@ -1228,7 +1220,6 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     text.append(Spacer(1, 0.2 * mm))
     text.append(tbl)
 
-    fio_write_doc = ""
     opinion = gen_opinion([f'{params["Заполнил"]}', 'Подпись', ''])
     col_width = (140 * mm, 20 * mm, 30 * mm)
     tbl_style = [
