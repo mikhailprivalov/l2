@@ -62,6 +62,7 @@ styleTBold.fontName = "PTAstraSerifBold"
 
 styleOrgBold = deepcopy(styleOrg)
 styleOrgBold.fontName = "PTAstraSerifBold"
+styleOrgBold.leading = 2 * mm
 
 op_bold_tag = '<font face="PTAstraSerifBold">'
 cl_bold_tag = '</font>'
@@ -122,6 +123,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         "Связь смерти с ДТП",
         "Беременность",
         "Связь смерти с беременностью",
+        "ФИО (получатель)",
+        "Документ (получатель)",
+        "Серия (получатель)",
+        "Номер (получатель)",
+        "Кем и когда выдан (получатель)",
+        "СНИЛС (получатель)",
         "Заполнил",
         "Проверил",
         "Главный врач",
@@ -157,6 +164,21 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     if not data.get("Доношенность новорожденного", None):
         data["Доношенность новорожденного"] = '{"code": "", "title": ""}'
 
+    if not data.get("Связь смерти с ДТП", None):
+        data["Связь смерти с ДТП"] = '{"code": "", "title": ""}'
+
+    if not data.get("Связь смерти с беременностью", None):
+        data["Связь смерти с беременностью"] = '{"code": "", "title": ""}'
+
+    if not data.get("Тип медицинского работника", None):
+        data["Тип медицинского работника"] = '{"code": "", "title": ""}'
+
+    if not data.get("Основания для определения причины смерти", None):
+        data["Основания для определения причины смерти"] = '{"code": "", "title": ""}'
+
+    if not data.get("Род причины смерти", None):
+        data["Род причины смерти"] = '{"code": "", "title": ""}'
+
     if not data.get("Масса тела ребёнка при рождении", None):
         data["Масса тела ребёнка при рождении"] = ""
 
@@ -168,6 +190,33 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     if not data.get("Возраст матери", None):
         data["Возраст матери"] = ""
+
+    if not data.get("ФИО (получатель)", None):
+        data["ФИО (получатель)"] = ""
+
+    if not data.get("Документ (получатель)", None):
+        data["Документ (получатель)"] = ""
+
+    if not data.get("Серия (получатель)", None):
+        data["Серия (получатель)"] = ""
+
+    if not data.get("Номер (получатель)", None):
+        data["Номер (получатель)"] = ""
+
+    if not data.get("Кем и когда выдан (получатель)", None):
+        data["Кем и когда выдан (получатель)"] = ""
+
+    if not data.get("СНИЛС (получатель)", None):
+        data["СНИЛС (получатель)"] = ""
+
+    if not data.get("Заполнил", None):
+        data["Заполнил"] = ""
+
+    if not data.get("Проверил", None):
+        data["Проверил"] = ""
+
+    if not data.get("Главный врач", None):
+        data["Главный врач"] = ""
 
     if not data.get("ФИО матери"):
         data["ФИО матери"] = '{"columns":{"titles":["Фамилия","Имя","Отчество"], "rows":[["иванова","Марья","Олеговна"]]}'
@@ -191,6 +240,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     data["б"] = json.loads(data["б) патологическое состояние, которое привело к возникновению вышеуказанной причины:"])
     data["в"] = json.loads(data["в) первоначальная причина смерти:"])
     data["г"] = json.loads(data["г) внешняя причина при травмах и отравлениях:"])
+    data["ii"] = json.loads(data["II. Прочие важные состояния, способствовавшие смерти, но не связанные с болезнью или патологическим состоянием, приведшим к ней"])
 
     template = add_template(iss, direction, data, 5 * mm)
     fwb.extend(template)
@@ -330,10 +380,10 @@ def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
     text = back_size(text)
     text = why_death(text, fields, '10', '11', '12', '13')
     fio = ""
-    text = fio_tbl(text, "14. Фамилия, имя, отчество (при наличии) получателя", fio)
+    text = fio_tbl(text, "14. Фамилия, имя, отчество (при наличии) получателя", fields["ФИО (получатель)"])
     text.append(Paragraph("Документ, удостоверяющий личность получателя (серия, номер, кем выдан)", styleT))
-    text = destination_person_passport(text, "")
-    text = destination_person_snils(text, "")
+    text = destination_person_passport(text, f'{fields["Документ (получатель)"]} {fields["Серия (получатель)"]} {fields["Номер (получатель)"]} {fields["Кем и когда выдан (получатель)"]}')
+    text = destination_person_snils(text, f'{fields["СНИЛС (получатель)"]}')
     text.append(Spacer(1, 2 * mm))
     text.append(Paragraph(f"«___» ___________ 20 ___ г.{space_symbol * 30} Подпись получателя _________________________", styleT))
 
@@ -345,7 +395,7 @@ def second_page_add_template(iss: Issledovaniya, direction, fields, offset=0):
 
 def death_data2(iss: Issledovaniya, direction, fields, offset=0):
     text = []
-    text = death_happaned(text, "")
+    text = death_happaned(text, fields["Род причины смерти"])
     date, month, year, hour, min = "____", "____", "_________", "____", "____"
     unfortunate_and_other_info = "________________________________________________________________________________________________________________________"
     text.append(Paragraph(
@@ -353,18 +403,18 @@ def death_data2(iss: Issledovaniya, direction, fields, offset=0):
         f"число {date} месяц {month} год {year} час. {hour} мин. {min} , а также место и обстоятельства, при",
         styleT))
     text.append(Paragraph(f"{unfortunate_and_other_info}", styleT))
-    text = who_set_death(text, "")
-    text = doctor_fio(text, "")
+    text = who_set_death(text, fields["Тип медицинского работника"])
+    text = doctor_fio(text, fields)
     text.append(Spacer(1, 1 * mm))
     text = why_death(text, fields, "22", "23", "24", "25")
     text.append(Spacer(1, 2 * mm))
     text.append(
         Paragraph("<u>Руководитель (иное уполномоченное лицо **) медицинской организации</u>, индивидуальный предприниматель, осуществляющий медицинскую деятельность (подчеркнуть)", styleT))
     text.append(Spacer(1, 2 * mm))
-    text = hospital_manager_stamp(text, "")
+    text = hospital_manager_stamp(text, fields["Главный врач"])
     text.append(Spacer(1, 2 * mm))
     text.append(Paragraph("26 Свидетельство проверено ответственным за правильность заполнения медицинских свидетельств.", styleT))
-    text = check_person_data(text, "")
+    text = check_person_data(text, fields["Проверил"])
     text = bottom_colontitul(text, '** В случае, установленном частью 10 статьи 9 Федерального закона от 5 июня 2012 г. № 50-ФЗ "О регулировании деятельности российских граждан и '
                                    'российских юридических лиц в Антарктике" (Собрание законодательства Российской Федерации, 2012, № 24, ст. 3067). ')
     obj = []
@@ -1043,7 +1093,7 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.3 * mm))
     text.append(tbl)
-    tbl = diagnos_tbl({"para": "I", "item": "а)", "result": params["а"]})
+    tbl = diagnos_tbl({"para": "I", "item": "а)", "result": params["а"]["rows"][0]})
     text.append(Spacer(1, 0.3 * mm))
     text.append(tbl)
 
@@ -1051,7 +1101,7 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     text.append(Spacer(1, 0.1 * mm))
     text.append(tbl)
 
-    tbl = diagnos_tbl({"para": "", "item": "б)", "result": params["б"]})
+    tbl = diagnos_tbl({"para": "", "item": "б)", "result": params["б"]["rows"][0]})
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
@@ -1059,7 +1109,7 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = diagnos_tbl({"para": "", "item": "в)", "result": params["в"]})
+    tbl = diagnos_tbl({"para": "", "item": "в)", "result": params["в"]["rows"][0]})
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
@@ -1067,7 +1117,7 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
-    tbl = diagnos_tbl({"para": "", "item": "г)", "result": params["г"]})
+    tbl = diagnos_tbl({"para": "", "item": "г)", "result": params["г"]["rows"][0]})
     text.append(Spacer(1, 0 * mm))
     text.append(tbl)
 
@@ -1090,14 +1140,22 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     tbl = gen_table(opinion, col_width, tbl_style)
     text.append(Spacer(1, 0.1 * mm))
     text.append(tbl)
+    text.append(Spacer(1, 0.6 * mm))
 
-    count = 1
-    for k in range(count):
-        tbl = diagnos_tbl({"para": "", "item": "", "result": params["г"]})
+    data_ii = params["ii"]["rows"]
+    for k in range(len(data_ii)):
+        tbl = diagnos_tbl({"para": "", "item": "", "result": data_ii[k], "top_padd": -1.2 * mm})
         text.append(Spacer(1, 0 * mm))
         text.append(tbl)
 
     days30, days7 = "смерть наступила - в течение 30 суток", ", из них в течение 7 суток"
+    dtp_death = json.loads(params["Связь смерти с ДТП"])
+
+    if dtp_death["code"] == "1":
+        days30 = f"{op_bold_tag}<u>{days30}</u>{cl_bold_tag}"
+    elif dtp_death["code"] == "2":
+        days7 = f"{op_bold_tag}<u>{days7}</u>{cl_bold_tag}"
+
     opinion = gen_opinion([f'{item_dtp}.В случае смерти в результате ДТП:', days30, '1', days7, '2'])
     col_width = (55 * mm, 55 * mm, 6 * mm, 40 * mm, 6 * mm,)
     tbl_style = [
@@ -1113,9 +1171,17 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     text.append(Spacer(1, 0.2 * mm))
     text.append(tbl)
 
-    pregnant, process_birth = "В случае смерти беременной (независимо от срока и локализации)", ", в процессе родов"
-    opinion = gen_opinion([f'{item_pregnant}. ', pregnant, '1', process_birth, '2'])
-    col_width = (7 * mm, 92 * mm, 6 * mm, 30 * mm, 6 * mm,)
+    pregnant, process_birth = "(независимо от срока и локализации)", ", в процессе родов"
+    pregnant_data= json.loads(params["Связь смерти с беременностью"])
+    if pregnant_data["code"] == "1":
+        pregnant = f"{op_bold_tag}<u>{pregnant}</u>{cl_bold_tag}"
+    elif pregnant_data["code"] == "2":
+        process_birth = f"{op_bold_tag}<u>{process_birth}</u>{cl_bold_tag}"
+
+    opinion = gen_opinion([f'{item_pregnant}.В случае смерти беременной', pregnant, '1', process_birth, '2'])
+
+
+    col_width = (50 * mm, 52 * mm, 6 * mm, 30 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1131,8 +1197,13 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     text.append(tbl)
 
     final_process_birth_42days, final_process_birth_365days = "в течение 42 дней после окончания беременности, родов", ", кроме того в течение 43-365 дней после окончания беременности"
+    if pregnant_data["code"] == "3":
+        final_process_birth_42days = f"{op_bold_tag}<u>{final_process_birth_42days}</u>{cl_bold_tag}"
+    elif pregnant_data["code"] == "4":
+        final_process_birth_365days = f"{op_bold_tag}<u>{final_process_birth_365days}</u>{cl_bold_tag}"
+
     opinion = gen_opinion([final_process_birth_42days, '3', final_process_birth_365days, '4'])
-    col_width = (83 * mm, 6 * mm, 94 * mm, 6 * mm,)
+    col_width = (84 * mm, 6 * mm, 98 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1158,7 +1229,7 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
     text.append(tbl)
 
     fio_write_doc = ""
-    opinion = gen_opinion([f'{fio_write_doc}', 'Подпись', ''])
+    opinion = gen_opinion([f'{params["Заполнил"]}', 'Подпись', ''])
     col_width = (140 * mm, 20 * mm, 30 * mm)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1175,7 +1246,7 @@ def why_death(text, params, item_why, item_dtp, item_pregnant, item_doc):
 
 
 def diagnos_tbl(data):
-    description_diag = data["result"]["rows"][0][2].split(' ')
+    description_diag = data["result"][2].split(' ')
     decription = ''
     mkb10 = {0: "", 1: "", 2: "", 3: "", 4: ""}
     period = ""
@@ -1189,8 +1260,11 @@ def diagnos_tbl(data):
             count += 1
         decription = ' '.join(decription)
         if len(list(decription)) > 72:
-            top_padd = -2.3 * mm
-        period = f'{data["result"]["rows"][0][0]} {data["result"]["rows"][0][1]}'
+            top_padd = -2 * mm
+        period = f'{data["result"][0]} {data["result"][1]}'
+
+    if data.get("top_padd", None):
+        top_padd = data.get("top_padd")
 
     opinion = gen_opinion_diag([data["para"], data["item"], decription, period, '', mkb10[0], mkb10[1], mkb10[2], '.', mkb10[4]])
     col_width = (6 * mm, 7 * mm, 102 * mm, 36 * mm, 5 * mm, 7 * mm, 7 * mm, 7 * mm, 6 * mm, 7 * mm,)
@@ -1271,6 +1345,14 @@ def destination_person_snils(text, data):
 
 def death_happaned(text, params):
     ill, unfortunate_not_work, unfortunate_work = "от заболевания", "несчастного случая: не связанного с производством", "связанного с производством"
+    type_happend = json.loads(params)
+    if type_happend["code"] == "1":
+        ill = f"{op_bold_tag}<u>{ill}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "2":
+        unfortunate_not_work = f"{op_bold_tag}<u>{unfortunate_not_work}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "3":
+        unfortunate_work = f"{op_bold_tag}<u>{unfortunate_work}</u>{cl_bold_tag}"
+
     opinion = gen_opinion(['18. Смерть произошла:', ill, '1', unfortunate_not_work, '2', unfortunate_work, '3'])
 
     col_width = (34 * mm, 23 * mm, 6 * mm, 74 * mm, 6 * mm, 43 * mm, 6 * mm,)
@@ -1288,9 +1370,20 @@ def death_happaned(text, params):
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
 
-    kill, self_kill, military, terrorist, not_know = "убийства", "самоубийства", ", в ходе действий: военных", "террористических", ", неизвестно"
+    kill, self_kill, military, terrorist, not_know = "убийства", "самоубийства", ", в ходе действий: военных", "террористических", ", род смерти не установлен"
+    if type_happend["code"] == "4":
+        kill = f"{op_bold_tag}<u>{kill}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "5":
+        self_kill = f"{op_bold_tag}<u>{self_kill}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "6":
+        military = f"{op_bold_tag}<u>{military}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "7":
+        terrorist = f"{op_bold_tag}<u>{terrorist}</u>{cl_bold_tag}"
+    elif type_happend["code"] == "8":
+        not_know = f"{op_bold_tag}<u>{not_know}</u>{cl_bold_tag}"
+
     opinion = gen_opinion([kill, '4', self_kill, '5', military, '6', terrorist, '7', not_know, '8'])
-    col_width = (20 * mm, 6 * mm, 23 * mm, 6 * mm, 40 * mm, 6 * mm, 28 * mm, 6 * mm, 20 * mm, 6 * mm,)
+    col_width = (20 * mm, 6 * mm, 23 * mm, 6 * mm, 40 * mm, 6 * mm, 30 * mm, 6 * mm, 40 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1310,9 +1403,17 @@ def death_happaned(text, params):
 
 def who_set_death(text, params):
     only_doc_death, doc_work, paramedic = "врачом, только установившем смерть", "лечащим врачом", "фельдшером (акушеркой)"
+    param_who_set = json.loads(params)
+    if param_who_set["code"] == "1":
+        only_doc_death = f"{op_bold_tag}<u>{only_doc_death}</u>{cl_bold_tag}"
+    elif param_who_set["code"] == "2" or param_who_set["code"] == "7":
+        doc_work = f"{op_bold_tag}<u>{doc_work}</u>{cl_bold_tag}"
+    elif param_who_set["code"] == "3" or param_who_set["code"] == "8" or param_who_set["code"] == "9" :
+        paramedic = f"{op_bold_tag}<u>{paramedic}</u>{cl_bold_tag}"
+
     opinion = gen_opinion(['20. Причины смерти установлены:', only_doc_death, '1', doc_work, '2', paramedic, '3'])
 
-    col_width = (49 * mm, 54 * mm, 6 * mm, 27 * mm, 6 * mm, 37 * mm, 6 * mm,)
+    col_width = (49 * mm, 54 * mm, 6 * mm, 27 * mm, 6 * mm, 40 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1328,6 +1429,10 @@ def who_set_death(text, params):
     text.append(tbl)
 
     doc_anatomy, expert = "врачом-патологоанатомом", "судебно-медицинским экспертом"
+    if param_who_set["code"] == "4":
+        doc_anatomy = f"{op_bold_tag}<u>{doc_anatomy}</u>{cl_bold_tag}"
+    elif param_who_set["code"] == "5" or param_who_set["code"] == "7":
+        expert = f"{op_bold_tag}<u>{expert}</u>{cl_bold_tag}"
     opinion = gen_opinion([doc_anatomy, '4', expert, '5'])
     col_width = (45 * mm, 6 * mm, 50 * mm, 6 * mm,)
     tbl_style = [
@@ -1375,7 +1480,15 @@ def doctor_fio(text, params):
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
 
-    opinion = gen_opinion(['удостоверяю, что на основании:', 'осмотра трупа', '1', ', записей в медицинской документации', '2'])
+    see_body, write_medical_dicument = 'осмотра трупа', ', записей в медицинской документации',
+
+    base_diagnos = json.loads(params["Основания для определения причины смерти"])
+    if base_diagnos["code"] == "1":
+        see_body = f"{op_bold_tag}<u>{see_body}</u>{cl_bold_tag}"
+    elif base_diagnos["code"] == "2":
+        write_medical_dicument = f"{op_bold_tag}<u>{write_medical_dicument}</u>{cl_bold_tag}"
+    opinion = gen_opinion(['удостоверяю, что на основании:', see_body, '1', write_medical_dicument, '2'])
+
     col_width = (53 * mm, 24 * mm, 6 * mm, 58 * mm, 6 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1388,8 +1501,15 @@ def doctor_fio(text, params):
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
 
-    opinion = gen_opinion(['предшествующего наблюдения за больным(ой)', '3', ', вскрытия', '4', ' мною установлены причины смерти'])
-    col_width = (72 * mm, 6 * mm, 19 * mm, 6 * mm, 70 * mm)
+    see_patient, open_body = 'предшествующего наблюдения за больным(ой)', ', вскрытия',
+    if base_diagnos["code"] == "4":
+        see_patient = f"{op_bold_tag}<u>{see_patient}</u>{cl_bold_tag}"
+    elif base_diagnos["code"] == "4":
+        open_body = f"{op_bold_tag}<u>{open_body}</u>{cl_bold_tag}"
+    opinion = gen_opinion([see_patient, '3', open_body, '4', ' мною установлены причины смерти'])
+
+
+    col_width = (75 * mm, 6 * mm, 19 * mm, 6 * mm, 70 * mm)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
@@ -1404,9 +1524,8 @@ def doctor_fio(text, params):
     return text
 
 
-def hospital_manager_stamp(text, params):
-    fio_manager = ""
-    opinion = gen_opinion(['', '', '', '', ''])
+def hospital_manager_stamp(text, fio_manager):
+    opinion = gen_opinion(['', '', '', '', fio_manager])
     col_width = (45 * mm, 5 * mm, 45 * mm, 5 * mm, 90 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1420,7 +1539,6 @@ def hospital_manager_stamp(text, params):
     text.append(Spacer(1, 3 * mm))
     text.append(tbl)
 
-    fio_manager = ""
     opinion = gen_opinion(['печать', 'подпись', '(фамилия, имя, отчество (при наличии)'])
     col_width = (45 * mm, 45 * mm, 100 * mm,)
     tbl_style = [
@@ -1434,23 +1552,12 @@ def hospital_manager_stamp(text, params):
     text.append(Spacer(1, 0.4 * mm))
     text.append(tbl)
 
-    # opinion = gen_opinion(['печать', 'подпись', '(фамилия, имя, отчество (при наличии)'])
-    # col_width = (53 * mm, 24 * mm, 6 * mm, 58 * mm, 6 * mm,)
-    # tbl_style = [
-    #     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    #     ('TOPPADDING', (0, 0), (-1, -1), 0 * mm),
-    #     ('LEFTPADDING', (0, 0), (0, 0), 5 * mm),
-    # ]
-    # tbl = gen_table(opinion, col_width, tbl_style)
-    # text.append(Spacer(1, 0.4 * mm))
-    # text.append(tbl)
-
     return text
 
 
-def check_person_data(text, params):
+def check_person_data(text, fio_check):
     date_value = "«___» ___________ 20 ___ г."
-    opinion = gen_opinion([date_value, ''])
+    opinion = gen_opinion([date_value, fio_check])
     col_width = (60 * mm, 130 * mm,)
     tbl_style = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
