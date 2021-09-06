@@ -423,6 +423,7 @@
                       <option value="28">НСИ-справочник</option>
                       <option value="29">Адрес по ФИАС</option>
                       <option value="30" v-if="number_generator_field_enabled">Генератор номера документа</option>
+                      <option value="31" v-if="tfoms_attachment_field_enabled">Сведения о прикреплении застрахованного лица (ТФОМС)</option>
                     </select>
                   </label>
                 </div>
@@ -673,6 +674,9 @@ export default {
     },
     number_generator_field_enabled() {
       return this.$store.getters.modules.number_generator_field;
+    },
+    tfoms_attachment_field_enabled() {
+      return this.$store.getters.modules.tfoms_attachment_field;
     },
   },
   methods: {

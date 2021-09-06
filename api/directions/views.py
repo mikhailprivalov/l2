@@ -2029,6 +2029,16 @@ def last_field_result(request):
         result = {"value": data['snils']}
     elif request_data["fieldPk"].find('%polis_enp') != -1:
         result = {"value": data['enp']}
+    elif request_data["fieldPk"].find('%tfoms-attachment') != -1:
+        tfoms_data = c.individual.match_tfoms()
+        if not tfoms_data or not isinstance(tfoms_data, dict):
+            return status_response(False, 'Пациент не найден в базе ТФОМС', {'value': '000000 — не найдено'})
+        idt = tfoms_data['idt']
+        from tfoms.integration import get_attachment_by_idt
+        attachment_data = get_attachment_by_idt(idt)
+        if not attachment_data or not isinstance(attachment_data, dict) or not attachment_data.get('unit_code') or not attachment_data.get('area_name'):
+            return status_response(False, 'Не найдено прикрепление пациента по базе ТФОМС', {'value': '000000 — не найдено'})
+        return status_response(True, data={'value': f'{attachment_data["unit_code"]} — {attachment_data["area_name"]}'})
     elif request_data["fieldPk"].find('%document_type') != -1:
         if data['passport_num']:
             result = {"value": "1-Паспорт гражданина Российской Федерации"}

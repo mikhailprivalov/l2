@@ -515,6 +515,24 @@ class Individual(models.Model):
 
         return is_new, updated
 
+    def match_tfoms(self):
+        enp_doc: Union[Document, None] = Document.objects.filter(document_type__title__startswith="Полис ОМС", individual=self).first()
+
+        tfoms_data = None
+        if enp_doc and enp_doc.number:
+            from tfoms.integration import match_enp
+
+            tfoms_data = match_enp(enp_doc.number)
+
+        if not tfoms_data:
+            from tfoms.integration import match_patient
+
+            tfoms_data = match_patient(self.family, self.name, self.patronymic, strfdatetime(self.birthday, '%Y-%m-%d'))
+
+            tfoms_data = None if not isinstance(tfoms_data, list) or len(tfoms_data) == 0 else tfoms_data[0]
+
+        return tfoms_data
+
     @staticmethod
     def import_from_tfoms(data: Union[dict, List], individual: Union['Individual', None] = None, no_update=False, need_return_individual=False, need_return_card=False):
         if isinstance(data, list):

@@ -37,9 +37,23 @@
               <LPress
                 v-if="
                   !confirmed &&
-                    !{ 3: 1, 10: 1, 12: 1, 15: 1, 16: 1, 17: 1, 18: 1, 19: 1, 21: 1, 24: 1, 25: 1, 26: 1, 27: 1, 28: 1, 30: 1 }[
-                      field.field_type
-                    ]
+                    !{
+                      3: 1,
+                      10: 1,
+                      12: 1,
+                      15: 1,
+                      16: 1,
+                      17: 1,
+                      18: 1,
+                      19: 1,
+                      21: 1,
+                      24: 1,
+                      25: 1,
+                      26: 1,
+                      27: 1,
+                      28: 1,
+                      30: 1,
+                    }[field.field_type]
                 "
                 :pk="field.pk"
                 :on-confirm="clear_val_by_pk"
@@ -169,6 +183,9 @@
                   :field-pk="field.pk"
                 />
               </div>
+              <div class="field-value field-value-address mkb" v-else-if="field.field_type === 31">
+                <TfomsAttachmentField v-model="field.value" :disabled="confirmed" :client-pk="patient.card_pk" />
+              </div>
               <div
                 :title="field.helper"
                 class="field-helper"
@@ -227,6 +244,7 @@ export default {
     AddressFiasField: () => import('../fields/AddressFiasField.vue'),
     TextFieldWithTemplates: () => import('../fields/TextFieldWithTemplates.vue'),
     NumberGeneratorField: () => import('../fields/NumberGeneratorField.vue'),
+    TfomsAttachmentField: () => import('../fields/TfomsAttachmentField.vue'),
   },
   props: {
     research: {
