@@ -25,8 +25,10 @@
         <div class="bold" v-if="fieldsAndGroups.ids.length === 1">Одно поле или группа</div>
         <ul>
           <li v-for="fg in fieldsAndGroups.ids" :key="fg">
-            <u>{{ fg.endsWith('@') ? 'Группа' : 'Поле' }} {{ fg.replace('@', '') }}</u
-            >:
+            <u>
+              {{ fg.endsWith('@') ? 'Группа' : fg.startsWith('%') ? 'Ссылка на значение в базе' : 'Поле' }}
+              {{ fg.replace('@', '') }}:
+            </u>
             <span v-if="loading">загрузка</span>
             <span v-else-if="fieldsAndGroupsCache[fg]">{{ fieldsAndGroupsCache[fg] }}</span>
             <strong v-else>не найдено</strong>
@@ -57,6 +59,27 @@ const modeTitles = {
   fraction: 'Ссылка на фракцию (лаборатория)',
 };
 
+const DB_LINKS = {
+  '%work_place': 'Место работы пациента',
+  '%hospital': 'Больница направления',
+  '%main_address': 'Адрес регистрации пациента (строкой)',
+  '%full_main_address': 'Адрес регистрации пациента (полный)',
+  '%docprofile': 'Текущий пользователь (врач)',
+  '%patient_fio': 'ФИО пациента',
+  '%patient_born': 'Дата рождения пациента',
+  '%snils': 'СНИЛС пациента',
+  '%polis_enp': 'ЕНП пациента',
+  '%fact_address': 'Адрес фактического проживания пациента (строкой)',
+  '%full_fact_address': 'Адрес фактического проживания пациента (полный)',
+  '%phone': 'Телефон пациента',
+  '%current_manager': 'Главный врач болницы направления',
+  '%work_position': 'Должность пациента',
+  '%work_department': 'Подразделение места работы пациента',
+  '%harmful_factor': 'Фактор вредности пациента',
+  '%proto_operation': 'proto_operation',
+  '%proto_description': 'proto_description',
+};
+
 export default {
   name: 'FieldHelper',
   props: {
@@ -82,7 +105,9 @@ export default {
         LINK_PATIENT: 'Данные пациента',
       },
       fractions: {},
-      fieldsAndGroupsCache: {},
+      fieldsAndGroupsCache: {
+        ...DB_LINKS,
+      },
       loading: false,
     };
   },

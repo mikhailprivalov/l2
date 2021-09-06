@@ -2005,6 +2005,17 @@ input[type="date"].form-control {
   }
 }
 
+.has-error-field {
+  &,
+  .form-control {
+    border-color: #f00 !important;
+  }
+}
+
+.has-error-message {
+  color: #f00;
+}
+
 .treeselect-noborder .vue-treeselect__control {
   border: none !important;
   border-radius: 0 !important;
@@ -2706,4 +2717,9 @@ input[type="date"].form-control {
 .w-100 {
   min-width: 100%;
   width: 100% !important;
+}
+
+.formulate-input[data-classification="button"] button {
+  border-color: #049372;
+  background-color: #049372;
 }

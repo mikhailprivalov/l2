@@ -350,6 +350,7 @@
                 :position="['left', 'bottom', 'left', 'top']"
                 v-if="!data.has_microbiology && !data.has_monitoring"
                 @clickout="hide_results"
+                :key="`dd-${row.pk}`"
               >
                 <a style="font-weight: normal" href="#" @click.prevent="open_results(row.pk)">
                   (другие результаты)
@@ -424,6 +425,7 @@
             :patient="data.patient"
             :change_mkb="change_mkb(row)"
             :pk="row.pk"
+            :key="`df-${row.pk}`"
           />
           <div
             class="group"
@@ -915,6 +917,7 @@ import moment from 'moment';
 import dropdown from 'vue-my-dropdown';
 import { mapGetters } from 'vuex';
 import { vField, vGroup } from '@/components/visibility-triggers';
+import { cleanCaches } from '@/utils';
 import { enter_field, leave_field } from '@/forms/utils';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import RmisLink from '@/ui-cards/RmisLink.vue';
@@ -1028,6 +1031,7 @@ export default {
         2: 'Результат подтверждён',
       },
       embedded: false,
+      tableFieldsErrors: {},
     };
   },
   watch: {
@@ -1102,6 +1106,13 @@ export default {
 
     this.$root.$on('preselect-args-ok', () => {
       this.hasPreselectOk = true;
+    });
+
+    this.$root.$on('table-field:errors:set', (fieldPk, hasInvalid) => {
+      this.tableFieldsErrors = {
+        ...this.tableFieldsErrors,
+        [fieldPk]: hasInvalid,
+      };
     });
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -1231,11 +1242,12 @@ export default {
         for (const f of g.fields) {
           n++;
           if (
-            (f.required
+            (((f.required
               && (f.value === ''
                 || f.value === '- Не выбрано'
                 || !f.value
-                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""'))))
+                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))
+              || this.tableFieldsErrors[f.pk])
               && vField(g, research.research.groups, f.visibility, this.data.patient))
             || (f.controlParam && !vField(g, research.research.groups, f.controlParam, this.data.patient))
           ) {
@@ -1533,6 +1545,8 @@ export default {
       this.dreg_rows = [];
       this.benefit_rows_loading = false;
       this.benefit_rows = [];
+      this.tableFieldsErrors = {};
+      cleanCaches();
       this.$root.$emit('preselect-card', null);
     },
     print_direction(pk) {

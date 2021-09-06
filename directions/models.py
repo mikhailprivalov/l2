@@ -5,6 +5,7 @@ import time
 import unicodedata
 from datetime import date
 from typing import Optional, Union
+from django.contrib.postgres.fields.array import ArrayField
 
 import simplejson as json
 from dateutil.relativedelta import relativedelta
@@ -2222,3 +2223,28 @@ class DirectionsHistory(models.Model):
                 dir_history.save()
 
         return directions
+
+
+class NumberGenerator(models.Model):
+    DEATH_FORM_NUMBER = 'deathFormNumber'
+
+    KEYS = (
+        (DEATH_FORM_NUMBER, 'Номер свидетельства о смерти'),
+    )
+
+    hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, db_index=True, verbose_name='Больница')
+    key = models.CharField(choices=KEYS, max_length=128, db_index=True, verbose_name='Тип диапазона')
+    year = models.IntegerField(verbose_name='Год', db_index=True)
+    is_active = models.BooleanField(verbose_name='Активность диапазона', db_index=True)
+    start = models.PositiveIntegerField(verbose_name='Начало диапазона')
+    end = models.PositiveIntegerField(verbose_name='Конец диапазона')
+    last = models.PositiveIntegerField(verbose_name='Последнее значение диапазона', null=True, blank=True)
+    free_numbers = ArrayField(models.PositiveIntegerField(verbose_name='Свободные номера'), default=list, blank=True)
+    prepend_length = models.PositiveSmallIntegerField(verbose_name='Длина номера', help_text='Если номер короче, впереди будет добавлено недостающее кол-во "0"')
+
+    def __str__(self):
+        return f"{self.hospital} {self.key} {self.year} {self.is_active} {self.start} — {self.end} ({self.last})"
+
+    class Meta:
+        verbose_name = 'Диапазон номеров'
+        verbose_name_plural = 'Диапазоны номеров'

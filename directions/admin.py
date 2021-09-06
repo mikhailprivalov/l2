@@ -23,6 +23,7 @@ from .models import (
     DashboardChartFields,
     MonitoringSumFieldByDay,
     MonitoringSumFieldTotal,
+    NumberGenerator,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -51,6 +52,23 @@ class IssAdmin(admin.ModelAdmin):
         'tubes',
     )
     search_fields = ('napravleniye__pk',)
+
+
+@admin.register(NumberGenerator)
+class NumberGeneratorAdmin(admin.ModelAdmin):
+    autocomplete_fields = (
+        'hospital',
+    )
+    search_fields = ('hospital', 'year', 'key')
+    list_display = (
+        'hospital',
+        'key',
+        'year',
+        'is_active',
+        'start',
+        'end',
+        'last',
+    )
 
 
 class ResTypeJob(admin.ModelAdmin):

@@ -104,6 +104,7 @@
                 v-model="details.region"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'область'"
+                autocomplete="new-password"
               />
             </div>
 
@@ -135,6 +136,7 @@
                 v-model="details.area"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'район'"
+                autocomplete="new-password"
               />
             </div>
 
@@ -166,6 +168,7 @@
                 v-model="details.city"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'город'"
+                autocomplete="new-password"
               />
             </div>
 
@@ -190,6 +193,7 @@
                 :append-to-body="true"
                 :clearable="true"
                 :zIndex="6000"
+                autocomplete="new-password"
               />
               <input
                 type="text"
@@ -221,6 +225,7 @@
                 :append-to-body="true"
                 :clearable="true"
                 :zIndex="6000"
+                autocomplete="new-password"
               />
               <input
                 type="text"
@@ -247,6 +252,7 @@
                 v-model="details.house"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'номер дома'"
+                autocomplete="new-password"
               />
             </div>
 
@@ -258,7 +264,7 @@
                 :class="details.custom && details.flat && !details.flat_type && 'has-error'"
                 v-model="details.flat_type"
                 :readonly="!details.custom"
-                :placeholder="details.custom && 'номер квартиры'"
+                :placeholder="details.custom && 'Тип (напр кв, оф)'"
               />
               <input
                 type="text"
@@ -266,6 +272,7 @@
                 v-model="details.flat"
                 :readonly="!details.custom"
                 :placeholder="details.custom && 'значение'"
+                autocomplete="new-password"
               />
             </div>
 
@@ -277,6 +284,7 @@
                 v-model="details.postal_code"
                 :readonly="!details.custom"
                 :maxlength="6"
+                autocomplete="new-password"
               />
             </div>
 
@@ -621,7 +629,7 @@ export default class AddressFiasField extends Vue {
   onHit(itm, vue, index) {
     const item = vue.data[index];
     const {
-      data: { fias_id, fias_level, ...details },
+      data: { fias_id, ...details },
       unrestricted_value,
     } = item;
 

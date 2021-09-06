@@ -28,6 +28,7 @@ from clients.models import Card, Individual, DispensaryReg, BenefitReg
 from directions.models import (
     Napravleniya,
     Issledovaniya,
+    NumberGenerator,
     Result,
     ParaclinicResult,
     Recipe,
@@ -46,7 +47,7 @@ from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
 from laboratory.settings import DICOM_SERVER, TIME_ZONE
-from laboratory.utils import strdatetime, strdate, strtime, tsdatetime, start_end_year, strfdatetime, current_time
+from laboratory.utils import current_year, strdatetime, strdate, strtime, tsdatetime, start_end_year, strfdatetime, current_time
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
 from results.views import result_normal
@@ -1301,7 +1302,7 @@ def directions_paraclinic_form(request):
                         field_type = field.field_type if not result_field else result_field.get_field_type()
                         values_to_input = ([] if not field.required or field_type not in [10, 12] or i.research.is_monitoring else ['- Не выбрано']) + json.loads(field.input_templates)
                         value = (
-                            ((field.default_value if field_type not in [3, 11, 13, 14] else '') if not result_field else result_field.value)
+                            ((field.default_value if field_type not in [3, 11, 13, 14, 30] else '') if not result_field else result_field.value)
                             if field_type not in [1, 20]
                             else (get_default_for_field(field_type) if not result_field else result_field.value)
                         )
@@ -2028,12 +2029,42 @@ def last_field_result(request):
         result = {"value": data['snils']}
     elif request_data["fieldPk"].find('%polis_enp') != -1:
         result = {"value": data['enp']}
+    elif request_data["fieldPk"].find('%document_type') != -1:
+        if data['passport_num']:
+            result = {"value": "1-Паспорт гражданина Российской Федерации"}
+        elif not data['passport_num'] and data['bc_num']:
+            result = {"value": "6-Свидетельство о рождении"}
+    elif request_data["fieldPk"].find('%doc_serial') != -1:
+        if data['passport_num']:
+            result = {"value": data["passport_serial"]}
+        elif not data['passport_serial'] and data['bc_num']:
+            result = {"value": data["bc_serial"]}
+    elif request_data["fieldPk"].find('%doc_number') != -1:
+        if data['passport_num']:
+            result = {"value": data["passport_num"]}
+        elif not data['passport_serial'] and data['bc_num']:
+            result = {"value": data["bc_num"]}
+    elif request_data["fieldPk"].find('%doc_who_issue') != -1:
+        if data['passport_num']:
+            result = {"value": data["passport_issued"]}
+        elif not data['passport_serial'] and data['bc_num']:
+            result = {"value": data["bc_issued"]}
+    elif request_data["fieldPk"].find('%doc_date_issue') != -1:
+        if data['passport_num']:
+            result = {"value": data["passport_date_start"]}
+        elif not data['passport_serial'] and data['bc_num']:
+            result = {"value": data["bc_date_start"]}
     elif request_data["fieldPk"].find('%fact_address') != -1:
         result = {"value": c.fact_address}
     elif request_data["fieldPk"].find('%full_fact_address') != -1:
         result = {"value": c.fact_address_full}
     elif request_data["fieldPk"].find('%phone') != -1:
         result = {"value": c.phone}
+    elif request_data["fieldPk"].find('%current_manager') != -1:
+        current_iss = request_data["iss_pk"]
+        num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+        hospital_manager = Napravleniya.objects.get(pk=num_dir).hospital.current_manager
+        result = {"value": hospital_manager}
     elif request_data["fieldPk"].find('%work_position') != -1:
         work_position = ""
         work_data = c.work_position.split(';')
@@ -2695,3 +2726,102 @@ def tubes_get_history(request):
             }
         )
     return JsonResponse(res)
+
+
+@login_required
+def gen_number(request):
+    data = json.loads(request.body)
+    key = data['numberKey']
+    iss_pk = data['issPk']
+    field_pk = data['fieldPk']
+
+    with transaction.atomic():
+        iss: Issledovaniya = Issledovaniya.objects.get(pk=iss_pk)
+
+        if iss.time_confirmation:
+            return status_response(False, 'Протокол уже подтверджён')
+
+        gen: NumberGenerator = NumberGenerator.objects.select_for_update().filter(key=key, year=current_year(), hospital=iss.napravleniye.get_hospital(), is_active=True).first()
+
+        if not gen:
+            return status_response(False, 'Активный генератор на текущий год для организации направления не зарегистрирован')
+
+        field: ParaclinicResult = ParaclinicResult.objects.filter(issledovaniye=iss, field_id=field_pk).first()
+
+        if not field:
+            field = ParaclinicResult.objects.create(issledovaniye=iss, field_id=field_pk, field_type=30)
+
+        if field.field_type != 30:
+            field.field_type = 30
+            field.save()
+
+        if field.value:
+            return status_response(True, 'Значение уже было сгенерировано', {'number': field.value})
+
+        next_value = None
+
+        min_last_value = gen.last if gen.last else (gen.start - 1)
+
+        if gen.free_numbers:
+            min_last_value = min(min_last_value, *gen.free_numbers)
+
+        if not gen.last or gen.last == min_last_value:
+            next_value = min_last_value + 1
+            if next_value > gen.end:
+                return status_response(False, 'Значения генератора закончились')
+            gen.last = next_value
+        else:
+            next_value = min_last_value
+
+        gen.free_numbers = [x for x in gen.free_numbers if x != next_value]
+
+        gen.save(update_fields=['last', 'free_numbers'])
+
+        total_free_numbers = len([x for x in gen.free_numbers if x <= gen.last]) + (gen.end - gen.last)
+        total_numbers = (gen.end - gen.start) + 1
+
+        number = str(next_value).zfill(gen.prepend_length)
+        field.value = number
+        field.save()
+        return status_response(True, None, {'number': number, 'totalFreeNumbers': total_free_numbers, 'totalNumbers': total_numbers})
+
+
+@login_required
+def free_number(request):
+    data = json.loads(request.body)
+    key = data['numberKey']
+    iss_pk = data['issPk']
+    field_pk = data['fieldPk']
+
+    with transaction.atomic():
+        iss: Issledovaniya = Issledovaniya.objects.get(pk=iss_pk)
+
+        if iss.time_confirmation:
+            return status_response(False, 'Протокол уже подтверджён')
+
+        gen: NumberGenerator = NumberGenerator.objects.select_for_update().filter(key=key, year=current_year(), hospital=iss.napravleniye.get_hospital(), is_active=True).first()
+
+        if not gen:
+            return status_response(False, 'Активный генератор на текущий год для организации направления не зарегистрирован')
+
+        field: ParaclinicResult = ParaclinicResult.objects.filter(issledovaniye=iss, field_id=field_pk).first()
+
+        if not field:
+            field = ParaclinicResult.objects.create(issledovaniye=iss, field_id=field_pk, field_type=30)
+
+        if field.field_type != 30:
+            field.field_type = 30
+            field.save()
+
+        if not field.value:
+            return status_response(True)
+
+        value = int(field.value)
+        field.value = ''
+        field.save()
+
+        if value >= gen.start and value <= gen.end:
+            gen.free_numbers = [*gen.free_numbers, value]
+            gen.save(update_fields=['free_numbers'])
+
+        return status_response(True)

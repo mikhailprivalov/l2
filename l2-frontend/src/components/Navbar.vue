@@ -1,6 +1,6 @@
 <template>
   <nav class="navbar navbar-inverse" :class="loaderInHeader && 'show-loader'">
-    <div class="nav-cont" v-if="!loading">
+    <div class="nav-cont" v-show="!loading">
       <div class="navbar-header">
         <router-link :to="authenticated ? '/ui/menu' : '/ui/login'" class="navbar-left logo"> L<sup>2</sup> </router-link>
         <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
@@ -21,19 +21,7 @@
         <ul class="nav navbar-nav" v-if="authenticated">
           <li class="dropdown dropdown-large">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown"> Меню <b class="caret"></b> </a>
-            <div class="dropdown-menu dropdown-menu-large">
-              <div class="dash-buttons text-center">
-                <template v-for="(b, i) in menu.buttons">
-                  <div v-if="b.hr" :key="i" class="menu-hr"></div>
-                  <div v-else class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn" :key="b.url">
-                    <router-link :to="b.url" class="panel-body" active-class="dash-active" :target="b.nt && '_blank'">
-                      <span>{{ b.title }}</span>
-                    </router-link>
-                  </div>
-                </template>
-              </div>
-              <div class="info">L2 {{ version }}</div>
-            </div>
+            <NavbarDropdownContent />
           </li>
         </ul>
         <extended-patient-search v-if="meta.showExtendedPatientSearch" />
@@ -58,7 +46,7 @@
         </ul>
       </div>
     </div>
-    <div class="nav-loader center" v-else>
+    <div class="nav-loader center" v-show="loading">
       <div class="navbar-header">
         <div class="navbar-left logo">L<sup>2</sup></div>
         <span class="navbar-brand" v-if="authenticated">
@@ -93,6 +81,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
+import NavbarDropdownContent from '@/components/NavbarDropdownContent.vue';
 
 @Component({
   computed: mapGetters([
@@ -100,13 +89,12 @@ import { mapGetters } from 'vuex';
     'loadingLabel',
     'loaderInHeader',
     'authenticated',
-    'menu',
     'fio_short',
     'user_hospital_title',
-    'version',
     'hasNewVersion',
   ]),
   components: {
+    NavbarDropdownContent,
     CardReader: () => import('@/ui-cards/CardReader.vue'),
     ExtendedPatientSearch: () => import('@/ui-cards/ExtendedPatientSearch/index.vue'),
     CreateDescriptiveDirection: () => import('@/ui-cards/CreateDescriptiveDirection.vue'),
@@ -120,8 +108,6 @@ export default class Navbar extends Vue {
 
   loadingLabel: string;
 
-  version: string | null;
-
   hasNewVersion: boolean;
 
   loaderInHeader: boolean;
@@ -131,8 +117,6 @@ export default class Navbar extends Vue {
   user_hospital_title: string | null;
 
   $orgTitle: () => string;
-
-  menu: any;
 
   get loading() {
     return this.inLoading && this.loaderInHeader;
@@ -181,20 +165,6 @@ export default class Navbar extends Vue {
 
 .page-title {
   text-transform: uppercase;
-}
-
-.menu-hr {
-  width: 100%;
-}
-
-.dash-buttons .panel-body span {
-  font-size: 18px;
-  font-weight: 300;
-}
-
-a.dash-active {
-  background: #048493 !important;
-  border: 1px solid #048493 !important;
 }
 
 .btn-reload {

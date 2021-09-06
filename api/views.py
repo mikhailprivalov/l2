@@ -14,7 +14,7 @@ import yaml
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
-from django.db import connections
+from django.db import connections, transaction
 from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 from django.utils import timezone
@@ -1657,3 +1657,206 @@ def input_templates_suggests(request):
     )
 
     return JsonResponse({"rows": rows, "value": data["value"]})
+
+
+@login_required
+def construct_menu_data(request):
+    groups = [str(x) for x in request.user.groups.all()]
+    pages = [
+        {"url": "/construct/tubes", "title": "Ёмкости для биоматериала", "access": ["Конструктор: Ёмкости для биоматериала"], "module": None},
+        {"url": "/construct/researches", "title": "Лабораторные исследования", "access": ["Конструктор: Лабораторные исследования"], "module": None},
+        {
+            "url": "/construct/researches-paraclinic",
+            "title": "Описательные исследования и консультации",
+            "access": ["Конструктор: Параклинические (описательные) исследования"],
+            "module": "paraclinic_module",
+        },
+        {"url": "/construct/directions_group", "title": "Группировка исследований по направлениям", "access": ["Конструктор: Группировка исследований по направлениям"], "module": None},
+        {"url": "/construct/uets", "title": "Настройка УЕТов", "access": ["Конструктор: Настройка УЕТов"], "module": None},
+        {"url": "/construct/templates", "title": "Настройка шаблонов", "access": ["Конструктор: Настройка шаблонов"], "module": None},
+        {"url": "/construct/bacteria", "title": "Бактерии и антибиотики", "access": ["Конструктор: Бактерии и антибиотики"], "module": None},
+        {"url": "/construct/dplan", "title": "Д-учет", "access": ["Конструктор: Д-учет"], "module": None},
+        {"url": "/ui/construct/screening", "title": "Настройка скрининга", "access": ["Конструктор: Настройка скрининга"], "module": None},
+        {"url": "/ui/construct/org", "title": "Настройка организации", "access": ["Конструктор: Настройка организации"], "module": None},
+    ]
+
+    from context_processors.utils import make_menu
+
+    menu = make_menu(pages, groups, request.user.is_superuser)
+
+    return JsonResponse(
+        {
+            "menu": menu,
+        }
+    )
+
+
+@login_required
+def current_org(request):
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    org = {
+        "pk": hospital.pk,
+        "title": hospital.title,
+        "shortTitle": hospital.short_title,
+        "address": hospital.address,
+        "phones": hospital.phones,
+        "ogrn": hospital.ogrn,
+        "www": hospital.www,
+        "email": hospital.email,
+        "licenseData": hospital.license_data,
+        "currentManager": hospital.current_manager,
+        "okpo": hospital.okpo,
+    }
+    return JsonResponse({"org": org})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def current_org_update(request):
+    parse_params = {
+        'title': str,
+        'shortTitle': str,
+        'address': str,
+        'phones': str,
+        'ogrn': str,
+        'currentManager': str,
+        'licenseData': str,
+        'www': str,
+        'email': str,
+        'okpo': str
+    }
+
+    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
+
+    title: str = data[0].strip()
+    short_title: str = data[1].strip()
+    address: str = data[2].strip()
+    phones: str = data[3].strip()
+    ogrn: str = data[4].strip()
+    current_manager: str = data[5].strip()
+    license_data: str = data[6].strip()
+    www: str = data[7].strip()
+    email: str = data[8].strip()
+    okpo: str = data[9].strip()
+
+    if not title:
+        return status_response(False, 'Название не может быть пустым')
+
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    old_data = {
+        "title": hospital.title,
+        "short_title": hospital.short_title,
+        "address": hospital.address,
+        "phones": hospital.phones,
+        "ogrn": hospital.ogrn,
+        "current_manager": hospital.current_manager,
+        "license_data": hospital.license_data,
+        "www": hospital.www,
+        "email": hospital.email,
+        "okpo": hospital.okpo,
+    }
+
+    new_data = {
+        "title": title,
+        "short_title": short_title,
+        "address": address,
+        "phones": phones,
+        "ogrn": ogrn,
+        "current_manager": current_manager,
+        "license_data": license_data,
+        "www": www,
+        "email": email,
+        "okpo": okpo,
+    }
+
+    hospital.title = title
+    hospital.short_title = short_title
+    hospital.address = address
+    hospital.phones = phones
+    hospital.ogrn = ogrn
+    hospital.current_manager = current_manager
+    hospital.license_data = license_data
+    hospital.www = www
+    hospital.email = email
+    hospital.okpo = okpo
+    hospital.save()
+
+    Log.log(
+        hospital.pk,
+        110000,
+        request.user.doctorprofile,
+        {
+            "oldData": old_data,
+            "newData": new_data,
+        },
+    )
+
+    return status_response(True)
+
+
+@login_required
+def org_generators(request):
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    rows = []
+
+    g: directions.NumberGenerator
+    for g in directions.NumberGenerator.objects.filter(hospital=hospital).order_by('pk'):
+        rows.append(
+            {
+                "pk": g.pk,
+                "key": g.key,
+                "keyDisplay": g.get_key_display(),
+                "year": g.year,
+                "isActive": g.is_active,
+                "start": g.start,
+                "end": g.end,
+                "last": g.last,
+                "prependLength": g.prepend_length,
+            }
+        )
+
+    return JsonResponse({"rows": rows})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def org_generators_add(request):
+    hospital: Hospitals = request.user.doctorprofile.get_hospital()
+
+    parse_params = {
+        'key': str,
+        'year': int,
+        'start': int,
+        'end': int,
+        'prependLength': int,
+    }
+
+    data = data_parse(request.body, parse_params, {'screening': None, 'hide': False})
+
+    key: str = data[0]
+    year: int = data[1]
+    start: int = data[2]
+    end: int = data[3]
+    prepend_length: int = data[4]
+
+    with transaction.atomic():
+        directions.NumberGenerator.objects.filter(hospital=hospital, key=key, year=year).update(is_active=False)
+        directions.NumberGenerator.objects.create(hospital=hospital, key=key, year=year, start=start, end=end, prepend_length=prepend_length, is_active=True)
+
+        Log.log(
+            hospital.pk,
+            110000,
+            request.user.doctorprofile,
+            {
+                "key": key,
+                "year": year,
+                "start": start,
+                "end": end,
+                "prepend_length": prepend_length,
+            },
+        )
+
+    return status_response(True)
