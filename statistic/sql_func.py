@@ -251,6 +251,35 @@ def statistics_research(research_id, d_s, d_e):
     return row
 
 
+def statistics_death_research(research_id, d_s, d_e):
+    """
+    на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
+    :return:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                directions_paraclinicresult.issledovaniye_id,
+                directions_paraclinicresult.field_id,
+                directory_paraclinicinputfield.title,
+                directions_paraclinicresult.value,
+                directions_paraclinicresult.value_json::json
+                FROM public.directions_paraclinicresult
+                LEFT JOIN directory_paraclinicinputfield
+                ON directory_paraclinicinputfield.id = directions_paraclinicresult.field_id
+                where issledovaniye_id in (
+                SELECT id FROM public.directions_issledovaniya
+                where research_id = 765 and time_confirmation is not Null)
+                order by issledovaniye_id
+            """,
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+
+        rows = cursor.fetchall()
+    return rows
+
+
 def disp_diagnos(diagnos, d_s, d_e):
     with connection.cursor() as cursor:
         cursor.execute(
