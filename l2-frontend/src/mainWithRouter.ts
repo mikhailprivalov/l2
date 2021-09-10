@@ -126,6 +126,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/monitoring/evaluation-monitoring',
+      name: 'evaluation_monitoring',
+      component: () => import('@/pages/EvaluationMonitoring.vue'),
+      meta: {
+        title: 'Мониторинг показателей эффективности',
+        groups: ['Просмотр мониторингов'],
+        module: 'l2_monitorings',
+      },
+    },
+    {
       path: '/ui/results/descriptive',
       name: 'results_descriptive',
       component: () => import('@/pages/ResultsParaclinic.vue'),
