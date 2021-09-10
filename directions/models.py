@@ -2248,3 +2248,14 @@ class NumberGenerator(models.Model):
     class Meta:
         verbose_name = 'Диапазон номеров'
         verbose_name_plural = 'Диапазоны номеров'
+
+
+class CuratorGrade(models.Model):
+    monitoring_field = models.ForeignKey(MonitoringResult, on_delete=models.CASCADE, help_text='Результат мониторига')
+    grade_values = models.JSONField(help_text='Данные оценки куратора')
+    curator = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, help_text='Куратор')
+    confirm_date_time = models.DateTimeField(auto_now_add=True, blank=True, help_text='Время изменения')
+
+    class Meta:
+        verbose_name = 'Оценка куратора'
+        verbose_name_plural = 'Оценки кураторов'
