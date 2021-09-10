@@ -8,7 +8,7 @@ from hospitals.models import Hospitals
 from directions.models import MonitoringResult, Issledovaniya, Napravleniya, CuratorGrade
 from directory.models import ParaclinicInputField, Researches
 from users.models import DoctorProfile
-from laboratory.settings import NAPRAVLENIE_MONITORINGA, NAPRAVLENIE_MONITORINGA_GODOVOE
+from laboratory.settings import EVALUATION_MONITORING_QUARTERLY_DIRECTIONS, EVALUATION_MONITORING_YEAR_DIRECTIONS
 
 
 
@@ -26,7 +26,7 @@ def load(request):
     year = int(request_data['year'])
     sql_result = sql_load(
         hospital_pk=hospital_pk,
-        research_pk=NAPRAVLENIE_MONITORINGA if request_data['quarter'] != -1 else NAPRAVLENIE_MONITORINGA_GODOVOE,
+        research_pk=EVALUATION_MONITORING_QUARTERLY_DIRECTIONS if request_data['quarter'] != -1 else EVALUATION_MONITORING_YEAR_DIRECTIONS,
         type_period=type_period,
         quarter=quarter,
         year=year,
