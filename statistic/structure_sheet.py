@@ -633,10 +633,10 @@ def statistic_research_death_data(ws1, researches):
 
     for i in researches:
         r += 1
-
+        # print(type(i["Вид медицинского свидетельства о смерти"]))
         ws1.cell(row=r, column=1).value = i["Серия"]
         ws1.cell(row=r, column=2).value = i["Номер"]
-        ws1.cell(row=r, column=3).value = i["Вид медицинского свидетельства о смерти"]["title"]
+        ws1.cell(row=r, column=3).value = i["Вид медицинского свидетельства о смерти"]
         ws1.cell(row=r, column=4).value = "ГИМДКБ"
         # ws1.cell(row=r, column=5).value = i["Прикрепление пациента"]
         # ws1.cell(row=r, column=6).value = i["Участок"]

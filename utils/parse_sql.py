@@ -12,6 +12,7 @@ def death_form_result_parse(data):
             tmp_data = {}
         if i.json_value:
             tmp_data[i.title] = i.json_value
+            print("json", i)
         else:
             tmp_data[i.title] = i.value
         prev_issledovaniye_id = i.issledovaniye_id
