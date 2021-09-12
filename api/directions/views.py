@@ -1589,7 +1589,7 @@ def directions_paraclinic_result(request):
                     f_result = ParaclinicResult.objects.filter(issledovaniye=iss, field=f)[0]
                 f_result.value = field["value"]
                 f_result.field_type = f.field_type
-                if f.is_json_value or f.field_type in [27, 28, 29]:
+                if f.field_type in [27, 28, 29]:
                     try:
                         val = json.loads(field["value"])
                     except:
