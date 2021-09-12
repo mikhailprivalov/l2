@@ -21,6 +21,7 @@ from researches.models import Tubes
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
 from utils.dates import try_parse_range, normalize_date
+from utils.parse_sql import death_form_result_parse
 from . import sql_func
 from . import structure_sheet
 import datetime
@@ -682,11 +683,17 @@ def statistic_xls(request):
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Отчет")
         research_title = Researches.objects.values_list('title').get(pk=research_id)
-        ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
-        researches_sql = sql_func.statistics_research(research_id, start_date, end_date)
-        ws = structure_sheet.statistic_research_data(ws, researches_sql)
+        if research_id == DEATH_RESEARCH_PK:
+            researches_sql = sql_func.statistics_death_research(research_id, start_date, end_date)
+            data_death = death_form_result_parse(researches_sql)
+            ws = structure_sheet.statistic_research_death_base(ws, d1, d2, research_title[0])
+            ws = structure_sheet.statistic_research_death_data(ws, data_death)
+        else:
+            ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
+            researches_sql = sql_func.statistics_research(research_id, start_date, end_date)
+            ws = structure_sheet.statistic_research_data(ws, researches_sql)
 
     elif tp == "journal-get-material":
         access_to_all = 'Просмотр статистики' in request.user.groups.values_list('name', flat=True) or request.user.is_superuser

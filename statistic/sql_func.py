@@ -1,5 +1,5 @@
 from django.db import connection
-from laboratory.settings import TIME_ZONE
+from laboratory.settings import TIME_ZONE, DEATH_RESEARCH_PK
 from utils.db import namedtuplefetchall
 
 
@@ -251,7 +251,7 @@ def statistics_research(research_id, d_s, d_e):
     return row
 
 
-def statistics_death_research(research_id, d_s, d_e):
+def statistics_death_research(research_id: object, d_s: object, d_e: object) -> object:
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон
     :return:
@@ -264,19 +264,27 @@ def statistics_death_research(research_id, d_s, d_e):
                 directions_paraclinicresult.field_id,
                 directory_paraclinicinputfield.title,
                 directions_paraclinicresult.value,
-                directions_paraclinicresult.value_json::json
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS confirm_time,
+                directions_paraclinicresult.value_json::json as json_value,
+                value_json::jsonb #>> '{rows, 0, 2}' as diag,
+                concat(value_json::jsonb #>> '{title}', value_json::jsonb #>> '{rows, 0, 2}') as result,
+                directions_issledovaniya.napravleniye_id
                 FROM public.directions_paraclinicresult
+                LEFT JOIN directions_issledovaniya
+                ON directions_issledovaniya.id = directions_paraclinicresult.issledovaniye_id
                 LEFT JOIN directory_paraclinicinputfield
                 ON directory_paraclinicinputfield.id = directions_paraclinicresult.field_id
+                LEFT JOIN directions_napravleniya
+                ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
                 where issledovaniye_id in (
                 SELECT id FROM public.directions_issledovaniya
-                where research_id = 765 and time_confirmation is not Null)
+                where research_id = %(death_research_id)s and time_confirmation is not Null)
                 order by issledovaniye_id
             """,
-            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'death_research_id': DEATH_RESEARCH_PK},
         )
 
-        rows = cursor.fetchall()
+        rows = namedtuplefetchall(cursor)
     return rows
 
 
